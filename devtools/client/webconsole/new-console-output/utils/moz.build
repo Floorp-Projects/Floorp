@@ -7,5 +7,4 @@ DevToolsModules(
     'context-menu.js',
     'id-generator.js',
     'messages.js',
-    'variables-view.js',
 )

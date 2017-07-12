@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
 
 const FILE_UPDATE_LOCALE                  = "update.locale";
@@ -63,25 +62,35 @@ this.UpdateUtils = {
    * @return The formatted URL.
    */
   formatUpdateURL(url) {
-    url = url.replace(/%PRODUCT%/g, Services.appinfo.name);
-    url = url.replace(/%VERSION%/g, Services.appinfo.version);
-    url = url.replace(/%BUILD_ID%/g, Services.appinfo.appBuildID);
-    url = url.replace(/%BUILD_TARGET%/g, Services.appinfo.OS + "_" + this.ABI);
-    url = url.replace(/%OS_VERSION%/g, this.OSVersion);
-    url = url.replace(/%SYSTEM_CAPABILITIES%/g, getSystemCapabilities());
-    if (/%LOCALE%/.test(url)) {
-      url = url.replace(/%LOCALE%/g, this.Locale);
-    }
-    url = url.replace(/%CHANNEL%/g, this.UpdateChannel);
-    url = url.replace(/%PLATFORM_VERSION%/g, Services.appinfo.platformVersion);
-    url = url.replace(/%DISTRIBUTION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
-    url = url.replace(/%DISTRIBUTION_VERSION%/g,
-                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
-    url = url.replace(/%CUSTOM%/g, Preferences.get(PREF_APP_UPDATE_CUSTOM, ""));
-    url = url.replace(/\+/g, "%2B");
-
-    return url;
+    return url.replace(/%(\w+)%/g, (match, name) => {
+      switch (name) {
+        case "PRODUCT":
+          return Services.appinfo.name;
+        case "VERSION":
+          return Services.appinfo.version;
+        case "BUILD_ID":
+          return Services.appinfo.appBuildID;
+        case "BUILD_TARGET":
+          return Services.appinfo.OS + "_" + this.ABI;
+        case "OS_VERSION":
+          return this.OSVersion;
+        case "LOCALE":
+          return this.Locale;
+        case "CHANNEL":
+          return this.UpdateChannel;
+        case "PLATFORM_VERSION":
+          return Services.appinfo.platformVersion;
+        case "SYSTEM_CAPABILITIES":
+          return getSystemCapabilities();
+        case "CUSTOM":
+          return Services.prefs.getStringPref(PREF_APP_UPDATE_CUSTOM, "");
+        case "DISTRIBUTION":
+          return getDistributionPrefValue(PREF_APP_DISTRIBUTION);
+        case "DISTRIBUTION_VERSION":
+          return getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION);
+      }
+      return match;
+    }).replace(/\+/g, "%2B");
   }
 };
 

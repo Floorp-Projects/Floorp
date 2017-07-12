@@ -47,21 +47,14 @@ window.onload = function () {
       onViewSourceInScratchpad: () => {},
       // A mock source map service.
       sourceMapService: {
-	originalPositionFor: function (url, line, column) {
+	subscribe: function (url, line, column, callback) {
 	  let newLine = line === 99 ? 1 : 7;
-	  // Return a phony promise-like thing that resolves
-	  // immediately.
-	  return {
-	    then: function (consequence) {
-	      consequence({
-		sourceId: "whatever",
-		sourceUrl: "https://bugzilla.mozilla.org/original.js",
-		line: newLine,
-		column,
-	      });
-	    },
-	  };
-	}
+	  // Resolve immediately.
+	  callback(true, "https://bugzilla.mozilla.org/original.js",
+		   newLine, column);
+	},
+        unsubscribe: function (url, line, column, callback) {
+        },
       },
     };
 

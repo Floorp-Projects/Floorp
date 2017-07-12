@@ -9,7 +9,7 @@
 
 #if defined( WIN32 )
 #include <windows.h>
-#include <Shlobj.h>
+#include <shlobj.h>
 
 #undef GetEnvironmentVariable
 #elif defined OSX
@@ -23,7 +23,9 @@
 #include <algorithm>
 
 #ifndef VRLog
-	#if defined( WIN32 )
+	#if defined( __MINGW32__ )
+		#define VRLog(args...)		fprintf(stderr, args)
+	#elif defined( WIN32 )
 		#define VRLog(fmt, ...)		fprintf(stderr, fmt, __VA_ARGS__)
 	#else
 		#define VRLog(args...)		fprintf(stderr, args)

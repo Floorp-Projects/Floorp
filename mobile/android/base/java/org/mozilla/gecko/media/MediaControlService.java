@@ -167,7 +167,11 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
 
         Log.d(LOGTAG, "initialize");
         getGeckoPreference();
-        initMediaSession();
+        if (!initMediaSession()) {
+             Log.e(LOGTAG, "initialization fail!");
+             stopSelf();
+             return;
+        }
 
         coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
         minCoverSize = getResources().getDimensionPixelSize(R.dimen.favicon_bg);
@@ -280,12 +284,17 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         PrefsHelper.addObserver(mPrefs, mPrefsObserver);
     }
 
-    private void initMediaSession() {
+    private boolean initMediaSession() {
         // Android MediaSession is introduced since version L.
-        mSession = new MediaSession(getApplicationContext(),
-                "fennec media session");
-        mController = new MediaController(getApplicationContext(),
-                mSession.getSessionToken());
+        try {
+            mSession = new MediaSession(getApplicationContext(),
+                                        "fennec media session");
+            mController = new MediaController(getApplicationContext(),
+                                              mSession.getSessionToken());
+        } catch (IllegalStateException e) {
+            Log.e(LOGTAG, "can't create MediaSession and MediaController!");
+            return false;
+        }
 
         int volumeControl = mController.getPlaybackInfo().getVolumeControl();
         if (volumeControl == VolumeProvider.VOLUME_CONTROL_ABSOLUTE ||
@@ -332,7 +341,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 mTabReference = new WeakReference<>(null);
             }
         });
-
+        return true;
     }
 
     private void setMediaStateForTab(boolean isTabPlaying) {

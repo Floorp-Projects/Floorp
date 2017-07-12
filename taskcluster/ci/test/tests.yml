@@ -35,7 +35,6 @@ cppunit:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['mozilla-central', 'try']
@@ -184,7 +183,6 @@ gtest:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
@@ -273,7 +271,6 @@ jsreftest:
         by-test-platform:
             windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     mozharness:
@@ -337,7 +334,6 @@ marionette:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     mozharness:
@@ -483,7 +479,6 @@ mochitest-a11y:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
@@ -600,6 +595,7 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: tc-M(c)
     loopback-video: true
+    virtualization: hardware
     docker-image: {"in-tree": "desktop1604-test"}
     instance-size:
         by-test-platform:
@@ -614,7 +610,7 @@ mochitest-chrome:
     e10s: false
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows.*: ['try']
             default: built-projects
     mozharness:
         by-test-platform:
@@ -678,6 +674,7 @@ mochitest-clipboard:
     suite: mochitest/clipboard
     treeherder-symbol: tc-M(cl)
     loopback-video: true
+    virtualization: hardware
     docker-image: {"in-tree": "desktop1604-test"}
     instance-size: xlarge
     e10s:
@@ -686,7 +683,7 @@ mochitest-clipboard:
         default: both
     run-on-projects:
         by-test-platform:
-            windows10.*: []
+            windows.*: ['try']
             default: built-projects
     mozharness:
         by-test-platform:
@@ -740,7 +737,6 @@ mochitest-devtools-chrome:
         by-test-platform:
             windows10.*: []
             windows7.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     e10s:
@@ -781,6 +777,7 @@ mochitest-gpu:
     suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
     loopback-video: true
+    virtualization: virtual-with-gpu
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
@@ -836,7 +833,6 @@ mochitest-jetpack:
         by-test-platform:
             windows10-64-asan/opt: built-projects  # exception to windows.*, below
             windows.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     mozharness:
@@ -970,6 +966,7 @@ mochitest-webgl:
     description: "Mochitest webgl run"
     suite: mochitest/mochitest-gl
     treeherder-symbol: tc-M(gl)
+    virtualization: virtual-with-gpu
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
@@ -1039,6 +1036,7 @@ reftest:
         by-test-platform:
             android.*: xlarge
             default: default
+    virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 48
@@ -1090,6 +1088,7 @@ reftest-no-accel:
     description: "Reftest not accelerated run"
     suite: reftest/reftest-no-accel
     treeherder-symbol: tc-R(Ru)
+    virtualization: virtual-with-gpu
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
@@ -1189,10 +1188,12 @@ talos-chrome:
     suite: talos
     try-name: chromez
     treeherder-symbol: tc-T(c)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1203,6 +1204,8 @@ talos-chrome:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1215,10 +1218,12 @@ talos-dromaeojs:
     suite: talos
     try-name: dromaeojs
     treeherder-symbol: tc-T(d)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1229,6 +1234,8 @@ talos-dromaeojs:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1241,10 +1248,12 @@ talos-g1:
     suite: talos
     try-name: g1
     treeherder-symbol: tc-T(g1)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 7200
     e10s: true
@@ -1255,6 +1264,8 @@ talos-g1:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1267,11 +1278,13 @@ talos-g2:
     suite: talos
     try-name: g2
     treeherder-symbol: tc-T(g2)
+    virtualization: hardware
     max-run-time: 7200
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     e10s: true
     mozharness:
@@ -1281,6 +1294,8 @@ talos-g2:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1293,6 +1308,7 @@ talos-g3:
     suite: talos
     try-name: g3
     treeherder-symbol: tc-T(g3)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
@@ -1307,6 +1323,8 @@ talos-g3:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1319,10 +1337,12 @@ talos-g4:
     suite: talos
     try-name: g4
     treeherder-symbol: tc-T(g4)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1333,6 +1353,8 @@ talos-g4:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1345,10 +1367,12 @@ talos-g5:
     suite: talos
     try-name: g5
     treeherder-symbol: tc-T(g5)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1359,6 +1383,8 @@ talos-g5:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
                     - remove_executables.py
@@ -1372,10 +1398,12 @@ talos-other:
     suite: talos
     try-name: other
     treeherder-symbol: tc-T(o)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta','mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1386,6 +1414,8 @@ talos-other:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1398,10 +1428,12 @@ talos-perf-reftest:
     suite: talos
     try-name: perf-reftest
     treeherder-symbol: tc-T(p)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central', 'try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1410,6 +1442,8 @@ talos-perf-reftest:
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1420,10 +1454,12 @@ talos-svgr:
     suite: talos
     try-name: svgr
     treeherder-symbol: tc-T(s)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1434,6 +1470,8 @@ talos-svgr:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1446,10 +1484,12 @@ talos-tp5o:
     suite: talos
     try-name: tp5o
     treeherder-symbol: tc-T(tp)
+    virtualization: hardware
     run-on-projects:
         by-test-platform:
             linux64-stylo-sequential/.*: ['mozilla-central','try']
             linux64-stylo/.*: ['mozilla-central', 'try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
@@ -1460,6 +1500,8 @@ talos-tp5o:
             by-test-platform:
                 macosx.*:
                     - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1487,7 +1529,6 @@ web-platform-tests:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     mozharness:
@@ -1521,7 +1562,6 @@ web-platform-tests-reftests:
         by-test-platform:
             windows10.*: ['mozilla-central', 'try']
             windows7.*: ['mozilla-central', 'try']
-            windows7-32-vm/debug: built-projects
             windows7-32/debug: built-projects
             default: built-projects
     mozharness:

@@ -192,7 +192,7 @@ CompositorBridgeChild::Destroy()
   // CompositorBridgeChild before it gets destroyed. It suffices to ensure that
   // events already in the MessageLoop get processed before the
   // CompositorBridgeChild is destroyed, so we add a task to the MessageLoop to
-  // handle compositor desctruction.
+  // handle compositor destruction.
 
   // From now on we can't send any message message.
   MessageLoop::current()->PostTask(NewRunnableMethod(

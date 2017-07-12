@@ -10,8 +10,6 @@ const SUGGEST_TYPES = ["history", "bookmark", "openpage"];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
 var os = Cc["@mozilla.org/observer-service;1"].
          getService(Ci.nsIObserverService);
 var ps = Cc["@mozilla.org/preferences-service;1"].
@@ -77,57 +75,63 @@ AutoCompleteInput.prototype = {
 
 
 function check_results() {
-  let controller = Cc["@mozilla.org/autocomplete/controller;1"].
-                   getService(Ci.nsIAutoCompleteController);
-  let input = new AutoCompleteInput(["unifiedcomplete"]);
-  controller.input = input;
+  return new Promise(resolve => {
+    let controller = Cc["@mozilla.org/autocomplete/controller;1"].
+                     getService(Ci.nsIAutoCompleteController);
+    let input = new AutoCompleteInput(["unifiedcomplete"]);
+    controller.input = input;
 
-  input.onSearchComplete = function() {
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
-    do_check_eq(controller.matchCount, 0);
+    input.onSearchComplete = function() {
+      do_check_eq(controller.searchStatus,
+                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+      do_check_eq(controller.matchCount, 0);
 
-    PlacesUtils.bookmarks.eraseEverything().then(() => {
-      cleanup();
-      do_test_finished();
-    });
- };
+      PlacesUtils.bookmarks.eraseEverything().then(() => {
+        cleanup();
+        resolve();
+      });
+    };
 
-  controller.startSearch(SEARCH_STRING);
+    controller.startSearch(SEARCH_STRING);
+  });
 }
 
 
-function addAdaptiveFeedback(aUrl, aSearch, aCallback) {
-  let observer = {
-    observe(aSubject, aTopic, aData) {
-      os.removeObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
-      do_timeout(0, aCallback);
-    }
-  };
-  os.addObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
+function addAdaptiveFeedback(aUrl, aSearch) {
+  return new Promise(resolve => {
+    let observer = {
+      observe(aSubject, aTopic, aData) {
+        os.removeObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
+        do_timeout(0, resolve);
+      }
+    };
+    os.addObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
 
-  let thing = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
-                                           Ci.nsIAutoCompletePopup,
-                                           Ci.nsIAutoCompleteController]),
-    get popup() { return thing; },
-    get controller() { return thing; },
-    popupOpen: true,
-    selectedIndex: 0,
-    getValueAt: () => aUrl,
-    searchString: aSearch
-  };
+    let thing = {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
+                                             Ci.nsIAutoCompletePopup,
+                                             Ci.nsIAutoCompleteController]),
+      get popup() { return thing; },
+      get controller() { return thing; },
+      popupOpen: true,
+      selectedIndex: 0,
+      getValueAt: () => aUrl,
+      searchString: aSearch
+    };
 
-  os.notifyObservers(thing, "autocomplete-will-enter-text");
+    os.notifyObservers(thing, "autocomplete-will-enter-text");
+  });
 }
 
 
-function run_test() {
-  do_test_pending();
-
+add_task(async function test_adaptive_search_specific() {
   // Add a bookmark to our url.
-  bs.insertBookmark(bs.unfiledBookmarksFolder, uri(TEST_URL),
-                    bs.DEFAULT_INDEX, "test_book");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "test_book",
+    url: TEST_URL,
+  });
+
   // We want to search only history.
   for (let type of SUGGEST_TYPES) {
     type == "history" ? ps.setBoolPref("browser.urlbar.suggest." + type, true)
@@ -135,5 +139,9 @@ function run_test() {
   }
 
   // Add an adaptive entry.
-  addAdaptiveFeedback(TEST_URL, SEARCH_STRING, check_results);
-}
+  await addAdaptiveFeedback(TEST_URL, SEARCH_STRING);
+
+  await check_results();
+
+  await PlacesTestUtils.promiseAsyncUpdates();
+});

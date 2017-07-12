@@ -18,7 +18,7 @@ const {
 const {
   MESSAGE_ADD,
   MESSAGES_CLEAR,
-  REMOVED_MESSAGES_CLEAR,
+  REMOVED_ACTORS_CLEAR,
   PREFS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { reducers } = require("./reducers/index");
@@ -110,11 +110,11 @@ function enableActorReleaser(hud) {
       let type = action.type;
       let proxy = hud ? hud.proxy : null;
       if (proxy && (type == MESSAGE_ADD || type == MESSAGES_CLEAR)) {
-        releaseActors(state.messages.removedMessages, proxy);
+        releaseActors(state.messages.removedActors, proxy);
 
-        // Reset `removedMessages` in message reducer.
+        // Reset `removedActors` in message reducer.
         state = reducer(state, {
-          type: REMOVED_MESSAGES_CLEAR
+          type: REMOVED_ACTORS_CLEAR
         });
       }
 
@@ -128,19 +128,12 @@ function enableActorReleaser(hud) {
 /**
  * Helper function for releasing backend actors.
  */
-function releaseActors(removedMessages, proxy) {
+function releaseActors(removedActors, proxy) {
   if (!proxy) {
     return;
   }
 
-  removedMessages.forEach(msg => {
-    for (let i = 0; i < msg.parameters.length; i++) {
-      let param = msg.parameters[i];
-      if (param && param.actor) {
-        proxy.releaseActor(param.actor);
-      }
-    }
-  });
+  removedActors.forEach(actor => proxy.releaseActor(actor));
 }
 
 // Provide the store factory for test code so that each test is working with

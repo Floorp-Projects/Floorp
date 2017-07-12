@@ -8,5 +8,3 @@ DevToolsModules(
     'reps.css',
     'reps.js',
 )
-
-MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']

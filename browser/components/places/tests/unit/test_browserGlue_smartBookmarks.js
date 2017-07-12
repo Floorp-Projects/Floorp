@@ -39,11 +39,12 @@ add_task(async function setup() {
   // Initialize browserGlue, but remove it's listener to places-init-complete.
   Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver);
 
-  // Initialize Places.
-  PlacesUtils.history;
-
-  // Wait for Places init notification.
-  await promiseTopicObserved("places-browser-init-complete");
+  // Initialize Places through the History Service and check that a new
+  // database has been created.
+  let promiseComplete = promiseTopicObserved("places-browser-init-complete");
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_CREATE);
+  await promiseComplete;
 
   // Ensure preferences status.
   Assert.ok(!Services.prefs.getBoolPref(PREF_AUTO_EXPORT_HTML));

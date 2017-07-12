@@ -806,13 +806,13 @@ public:
                                         nsIDOMNode** outStartNode,
                                         int32_t* outStartOffset);
   static nsresult GetStartNodeAndOffset(Selection* aSelection,
-                                        nsINode** aStartNode,
+                                        nsINode** aStartContainer,
                                         int32_t* aStartOffset);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
                                       nsIDOMNode** outEndNode,
                                       int32_t* outEndOffset);
   static nsresult GetEndNodeAndOffset(Selection* aSelection,
-                                      nsINode** aEndNode,
+                                      nsINode** aEndContainer,
                                       int32_t* aEndOffset);
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode* aNode, int32_t indent = 0);
@@ -824,8 +824,8 @@ public:
    * Helpers to add a node to the selection.
    * Used by table cell selection methods.
    */
-  nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
-                       nsIDOMNode* aEndParent, int32_t aEndOffset,
+  nsresult CreateRange(nsIDOMNode* aStartContainer, int32_t aStartOffset,
+                       nsIDOMNode* aEndContainer, int32_t aEndOffset,
                        nsRange** aRange);
 
   /**
@@ -865,9 +865,9 @@ public:
                                   Selection* aSelection,
                                   nsIDOMNode* previousSelectedNode,
                                   int32_t previousSelectedOffset,
-                                  nsIDOMNode* aStartNode,
+                                  nsIDOMNode* aStartContainer,
                                   int32_t aStartOffset,
-                                  nsIDOMNode* aEndNode,
+                                  nsIDOMNode* aEndContainer,
                                   int32_t aEndOffset);
 
   virtual already_AddRefed<dom::EventTarget> GetDOMEventTarget() = 0;

@@ -272,10 +272,6 @@ const OBSERVE_LASTWINDOW_CLOSE_TOPICS = AppConstants.platform != "macosx";
 
 BrowserGlue.prototype = {
   _saveSession: false,
-  _isPlacesInitObserver: false,
-  _isPlacesLockedObserver: false,
-  _isPlacesShutdownObserver: false,
-  _isPlacesDatabaseLocked: false,
   _migrationImportsDefaultBookmarks: false,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
@@ -384,21 +380,9 @@ BrowserGlue.prototype = {
         subject.data = true;
         break;
       case "places-init-complete":
+        Services.obs.removeObserver(this, "places-init-complete");
         if (!this._migrationImportsDefaultBookmarks)
           this._initPlaces(false);
-
-        Services.obs.removeObserver(this, "places-init-complete");
-        this._isPlacesInitObserver = false;
-        // no longer needed, since history was initialized completely.
-        Services.obs.removeObserver(this, "places-database-locked");
-        this._isPlacesLockedObserver = false;
-        break;
-      case "places-database-locked":
-        this._isPlacesDatabaseLocked = true;
-        // Stop observing, so further attempts to load history service
-        // will not show the prompt.
-        Services.obs.removeObserver(this, "places-database-locked");
-        this._isPlacesLockedObserver = false;
         break;
       case "idle":
         this._backupBookmarks();
@@ -535,9 +519,6 @@ BrowserGlue.prototype = {
     os.addObserver(this, "weave:engine:clients:display-uris");
     os.addObserver(this, "session-save");
     os.addObserver(this, "places-init-complete");
-    this._isPlacesInitObserver = true;
-    os.addObserver(this, "places-database-locked");
-    this._isPlacesLockedObserver = true;
     os.addObserver(this, "distribution-customization-complete");
     os.addObserver(this, "handle-xul-text-link");
     os.addObserver(this, "profile-before-change");
@@ -589,10 +570,9 @@ BrowserGlue.prototype = {
       this._idleService.removeIdleObserver(this._mediaTelemetryIdleObserver, MEDIA_TELEMETRY_IDLE_TIME_SEC);
       delete this._mediaTelemetryIdleObserver;
     }
-    if (this._isPlacesInitObserver)
+    try {
       os.removeObserver(this, "places-init-complete");
-    if (this._isPlacesLockedObserver)
-      os.removeObserver(this, "places-database-locked");
+    } catch (ex) { /* Could have been removed already */ }
     os.removeObserver(this, "handle-xul-text-link");
     os.removeObserver(this, "profile-before-change");
     os.removeObserver(this, "keyword-search");
@@ -1080,12 +1060,6 @@ BrowserGlue.prototype = {
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))
       this._showUpdateNotification();
 
-    // Load the "more info" page for a locked places.sqlite
-    // This property is set earlier by places-database-locked topic.
-    if (this._isPlacesDatabaseLocked) {
-      this._showPlacesLockedNotificationBox();
-    }
-
     ExtensionsUI.init();
 
     let signingRequired;
@@ -1488,6 +1462,18 @@ BrowserGlue.prototype = {
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
     let dbStatus = PlacesUtils.history.databaseStatus;
+
+    // Show a notification with a "more info" link for a locked places.sqlite.
+    if (dbStatus == PlacesUtils.history.DATABASE_STATUS_LOCKED) {
+      // Note: initPlaces should always happen when the first window is ready,
+      // in any case, better safe than sorry.
+      this._firstWindowReady.then(() => {
+        this._showPlacesLockedNotificationBox();
+        Services.obs.notifyObservers(null, "places-browser-init-complete");
+      });
+      return;
+    }
+
     let importBookmarks = !aInitialMigrationPerformed &&
                           (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
                            dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT);

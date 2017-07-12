@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 
 #undef GetEnvironmentVariable
 #undef SetEnvironmentVariable

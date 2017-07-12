@@ -50,6 +50,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
+                                  "resource://testing-common/TestUtils.jsm");
 
 // This imports various other objects in addition to PlacesUtils.
 Cu.import("resource://gre/modules/PlacesUtils.jsm");

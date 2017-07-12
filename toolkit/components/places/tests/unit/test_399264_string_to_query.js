@@ -29,10 +29,7 @@ function folder_id(aQuery) {
   return folderID;
 }
 
-function run_test() {
-  var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-
+add_task(async function test_history_string_to_query() {
   const QUERIES = [
       "place:folder=PLACES_ROOT",
       "place:folder=BOOKMARKS_MENU",
@@ -41,16 +38,19 @@ function run_test() {
       "place:folder=TOOLBAR"
   ];
   const FOLDER_IDS = [
-      bs.placesRoot,
-      bs.bookmarksMenuFolder,
-      bs.tagsFolder,
-      bs.unfiledBookmarksFolder,
-      bs.toolbarFolder
+    PlacesUtils.placesRootId,
+    PlacesUtils.bookmarksMenuFolderId,
+    PlacesUtils.tagsFolderId,
+    PlacesUtils.unfiledBookmarksFolderId,
+    PlacesUtils.toolbarFolderId,
   ];
 
   // add something in the bookmarks menu folder so a query to it returns results
-  bs.insertBookmark(bs.bookmarksMenuFolder, uri("http://example.com/bmf/"),
-                    Ci.nsINavBookmarksService.DEFAULT_INDEX, "bmf");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "bmf",
+    url: "http://example.com/bmf/",
+  });
 
   // add something to the tags folder
   var ts = Cc["@mozilla.org/browser/tagging-service;1"].
@@ -58,16 +58,22 @@ function run_test() {
   ts.tagURI(uri("http://www.example.com/"), ["tag"]);
 
   // add something to the unfiled bookmarks folder
-  bs.insertBookmark(bs.unfiledBookmarksFolder, uri("http://example.com/ubf/"),
-                    Ci.nsINavBookmarksService.DEFAULT_INDEX, "ubf");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "ubf",
+    url: "http://example.com/ubf/",
+  });
 
   // add something to the toolbar folder
-  bs.insertBookmark(bs.toolbarFolder, uri("http://example.com/tf/"),
-                    Ci.nsINavBookmarksService.DEFAULT_INDEX, "tf");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "tf",
+    url: "http://example.com/tf/",
+  });
 
   for (var i = 0; i < QUERIES.length; i++) {
     var result = folder_id(QUERIES[i]);
     dump("expected " + FOLDER_IDS[i] + ", got " + result + "\n");
     do_check_eq(FOLDER_IDS[i], result);
   }
-}
+});
