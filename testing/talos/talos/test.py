@@ -169,7 +169,7 @@ class sessionrestore(TsBase):
     gecko_profile_entries = 10000000
     profile_path = '${talos}/startup_test/sessionrestore/profile'
     shutdown = False
-    reinstall = ['sessionstore.js', 'sessionCheckpoints.json']
+    reinstall = ['sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
     # Restore the session. We have to provide a URL, otherwise Talos
     # asks for a manifest URL.
     url = 'about:home'
