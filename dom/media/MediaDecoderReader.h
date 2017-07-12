@@ -135,6 +135,8 @@ public:
 
   void UpdateDuration(const media::TimeUnit& aDuration);
 
+  virtual void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>) {}
+
   // Resets all state related to decoding, emptying all buffers etc.
   // Cancels all pending Request*Data() request callbacks, rejects any
   // outstanding seek promises, and flushes the decode pipeline. The
