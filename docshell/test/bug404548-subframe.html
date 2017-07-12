@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-<body onload="setTimeout(function() { window.location = &quot;data:text/html,<body onload='window.opener.finishTest()'>&quot; }, 10)">
-<iframe src="data:text/html,<body onpagehide='var p = window.parent.opener; var e = window.frameElement; e.parentNode.removeChild(e); if (e.parentNode == null && e.contentWindow == null) { p.firstRemoved = true; }'>">
+<body onload="setTimeout(function() { window.location = 'bug404548-subframe_window.html'; }, 10)">
+<iframe srcdoc="<body onpagehide='var p = window.parent.opener; var e = window.frameElement; e.parentNode.removeChild(e); if (e.parentNode == null && e.contentWindow == null) { p.firstRemoved = true; }'>">
 </iframe>
-<iframe src="data:text/html,<body onpagehide='window.parent.opener.secondHidden = true;'>">
+<iframe srcdoc="<body onpagehide='window.parent.opener.secondHidden = true;'>">
 </iframe>

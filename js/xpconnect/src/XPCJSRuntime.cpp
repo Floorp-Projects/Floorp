@@ -3025,7 +3025,7 @@ XPCRootSetElem::AddToRootSet(XPCRootSetElem** listHead)
 void
 XPCRootSetElem::RemoveFromRootSet()
 {
-    JS::PokeGC(XPCJSContext::Get()->Context());
+    JS::NotifyGCRootsRemoved(XPCJSContext::Get()->Context());
 
     MOZ_ASSERT(mSelfp, "Must be linked");
 

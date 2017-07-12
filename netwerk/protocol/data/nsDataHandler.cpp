@@ -52,15 +52,9 @@ nsDataHandler::GetDefaultPort(int32_t *result) {
 
 NS_IMETHODIMP
 nsDataHandler::GetProtocolFlags(uint32_t *result) {
-    *result = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
-              URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE |
+    *result = URI_NORELATIVE | URI_NOAUTH | URI_INHERITS_SECURITY_CONTEXT |
+              URI_LOADABLE_BY_ANYONE | URI_NON_PERSISTABLE | URI_IS_LOCAL_RESOURCE |
               URI_SYNC_LOAD_IS_OK;
-
-    // Until Bug 1324406 and all it's dependencies are fixed
-    // data: URIs inherit the security context.
-    if (!nsIOService::IsDataURIUniqueOpaqueOrigin()) {
-        *result |= URI_INHERITS_SECURITY_CONTEXT;
-    }
     return NS_OK;
 }
 

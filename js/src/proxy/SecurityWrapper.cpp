@@ -87,11 +87,10 @@ SecurityWrapper<Base>::isArray(JSContext* cx, HandleObject obj, JS::IsArrayAnswe
 }
 
 template <class Base>
-bool
-SecurityWrapper<Base>::regexp_toShared(JSContext* cx, HandleObject obj,
-                                       MutableHandle<RegExpShared*> shared) const
+RegExpShared*
+SecurityWrapper<Base>::regexp_toShared(JSContext* cx, HandleObject obj) const
 {
-    return Base::regexp_toShared(cx, obj, shared);
+    return Base::regexp_toShared(cx, obj);
 }
 
 template <class Base>

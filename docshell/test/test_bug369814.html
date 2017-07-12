@@ -91,7 +91,7 @@ function loadErrorTest(test)
       finishTest();
     }, 0);
   }
-  var unloadDetector = "data:text/html,<script>window.onunload = function() { frameElement.unloading(); }</" + "script>";
+  var unloadDetector = "file_bug369814.html";
   gTestFrame.src = unloadDetector;
 }
 

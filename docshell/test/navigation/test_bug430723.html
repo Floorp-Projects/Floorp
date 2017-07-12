@@ -21,21 +21,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430723
 
 /** Test for Bug 430723 **/
 
-var gTallRedBoxURI = "data:text/html;charset=utf-8;base64,PGh0bWw%2BPGhlYWQ%2BPHNjcmlwdD53aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcigncGFnZXNob3cnLCBmdW5jdGlvbigpe29wZW5lci5uZXh0VGVzdCgpO30sIGZhbHNlKTs8L3NjcmlwdD48L2hlYWQ%2BPGJvZHk%2BPGRpdiBzdHlsZT0icG9zaXRpb246YWJzb2x1dGU7IGxlZnQ6MHB4OyB0b3A6MHB4OyB3aWR0aDo1MCU7IGhlaWdodDoxNTAlOyBiYWNrZ3JvdW5kLWNvbG9yOnJlZCI%2BPHA%2BVGhpcyBpcyBhIHZlcnkgdGFsbCByZWQgYm94LjwvcD48L2Rpdj48L2JvZHk%2BPC9odG1sPg%3D%3D";
-// <html><head>
-// < script > window.addEventListener("pageshow", function(){opener.nextTest();}, false); < /script > 
-// </head><body>
-// <div style="position:absolute; left:0px; top:0px; width:50%; height:150%; background-color:red">
-// <p>This is a very tall red box.</p>
-// </div></body></html>
-
-var gTallBlueBoxURI = "data:text/html;charset=utf-8;base64,PGh0bWw%2BPGhlYWQ%2BPHNjcmlwdD53aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcigncGFnZXNob3cnLCBmdW5jdGlvbigpe29wZW5lci5uZXh0VGVzdCgpO30sIGZhbHNlKTs8L3NjcmlwdD48L2hlYWQ%2BPGJvZHk%2BPGRpdiBzdHlsZT0icG9zaXRpb246YWJzb2x1dGU7IGxlZnQ6MHB4OyB0b3A6MHB4OyB3aWR0aDo1MCU7IGhlaWdodDoxNTAlOyBiYWNrZ3JvdW5kLWNvbG9yOmJsdWUiPjxwPlRoaXMgaXMgYSB2ZXJ5IHRhbGwgYmx1ZSBib3guPC9wPjwvZGl2PjwvYm9keT48L2h0bWw%2B";
-// <html><head>
-// < script > window.addEventListener("pageshow", function(){opener.nextTest();}, false); < /script > 
-// </head><body>
-// <div style="position:absolute; left:0px; top:0px; width:50%; height:150%; background-color:blue">
-// <p>This is a very tall blue box.</p>
-// </div></body></html>
+var BASE_URI = "http://mochi.test:8888/tests/docshell/test/navigation/";
+var gTallRedBoxURI = BASE_URI + "redbox_bug430723.html";
+var gTallBlueBoxURI = BASE_URI + "bluebox_bug430723.html";
 
 window.onload = runTest;
 

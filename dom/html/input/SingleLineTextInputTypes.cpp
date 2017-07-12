@@ -120,6 +120,14 @@ URLInputType::HasTypeMismatch() const
 
 }
 
+nsresult
+URLInputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationInvalidURL",
+                                            aMessage);
+}
+
 /* input type=email */
 
 bool
@@ -154,6 +162,22 @@ EmailInputType::HasBadInput() const
     }
   }
   return false;
+}
+
+nsresult
+EmailInputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationInvalidEmail",
+                                            aMessage);
+}
+
+nsresult
+EmailInputType::GetBadInputMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationInvalidEmail",
+                                            aMessage);
 }
 
 /* static */ bool

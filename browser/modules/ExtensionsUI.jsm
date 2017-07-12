@@ -47,7 +47,7 @@ this.ExtensionsUI = {
     Services.obs.addObserver(this, "webextension-install-notify");
     Services.obs.addObserver(this, "webextension-optional-permission-prompt");
 
-    await RecentWindow.getMostRecentBrowserWindow().delayedStartupPromise;
+    await Services.wm.getMostRecentWindow("navigator:browser").delayedStartupPromise;
 
     this._checkForSideloaded();
   },

@@ -1206,9 +1206,9 @@ JS::NotifyDidPaint(JSContext* cx)
 }
 
 JS_FRIEND_API(void)
-JS::PokeGC(JSContext* cx)
+JS::NotifyGCRootsRemoved(JSContext* cx)
 {
-    cx->runtime()->gc.poke();
+    cx->runtime()->gc.notifyRootsRemoved();
 }
 
 JS_FRIEND_API(JSCompartment*)

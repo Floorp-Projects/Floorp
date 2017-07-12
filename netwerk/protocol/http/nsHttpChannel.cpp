@@ -485,6 +485,14 @@ nsHttpChannel::Connect()
         // otherwise, let's just proceed without using the cache.
     }
 
+    // When racing, if OnCacheEntryAvailable is called before AsyncOpenURI
+    // returns, then we may not have started reading from the cache.
+    // If the content is valid, we should attempt to do so, as technically the
+    // cache has won the race.
+    if (sRCWNEnabled && mCachedContentIsValid && mNetworkTriggered) {
+        Unused << ReadFromCache(true);
+    }
+
     return TriggerNetwork(0);
 }
 

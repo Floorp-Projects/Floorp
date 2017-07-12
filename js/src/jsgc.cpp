@@ -928,7 +928,7 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     defaultTimeBudget_((int64_t) SliceBudget::UnlimitedTimeBudget),
     incrementalAllowed(true),
     compactingEnabled(true),
-    poked(false),
+    rootsRemoved(false),
 #ifdef JS_GC_ZEAL
     zealModeBits(0),
     zealFrequency(0),
@@ -969,7 +969,7 @@ const char* gc::ZealModeHelpText =
     "  \n"
     "  Values:\n"
     "    0: (None) Normal amount of collection (resets all modes)\n"
-    "    1: (Poke) Collect when roots are added or removed\n"
+    "    1: (RootsChange) Collect when roots are added or removed\n"
     "    2: (Alloc) Collect when every N allocations (default: 100)\n"
     "    3: (FrameGC) Collect when the window paints (browser only)\n"
     "    4: (VerifierPre) Verify pre write barriers between instructions\n"
@@ -1633,7 +1633,7 @@ void
 GCRuntime::removeRoot(Value* vp)
 {
     rootsHash.ref().remove(vp);
-    poke();
+    notifyRootsRemoved();
 }
 
 extern JS_FRIEND_API(bool)
@@ -3108,7 +3108,7 @@ GCRuntime::maybeGC(Zone* zone)
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
 #ifdef JS_GC_ZEAL
-    if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::Poke)) {
+    if (hasZealMode(ZealMode::Alloc) || hasZealMode(ZealMode::RootsChange)) {
         JS::PrepareForFullGC(rt->activeContextFromOwnThread());
         gc(GC_NORMAL, JS::gcreason::DEBUG_GC);
         return;
@@ -6461,6 +6461,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
         cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
         isCompacting = shouldCompact();
         lastMarkSlice = false;
+        rootsRemoved = false;
 
         incrementalState = State::MarkRoots;
 
@@ -6946,8 +6947,9 @@ bool
 GCRuntime::shouldRepeatForDeadZone(JS::gcreason::Reason reason)
 {
     MOZ_ASSERT_IF(reason == JS::gcreason::COMPARTMENT_REVIVED, !isIncremental);
+    MOZ_ASSERT(!isIncrementalGCInProgress());
 
-    if (!isIncremental || isIncrementalGCInProgress())
+    if (!isIncremental)
         return false;
 
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
@@ -6973,9 +6975,8 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
     AutoScheduleZonesForGC asz(rt);
 
-    bool repeat = false;
+    bool repeat;
     do {
-        poked = false;
         bool wasReset = gcCycle(nonincrementalByAPI, budget, reason) == IncrementalResult::Reset;
 
         if (reason == JS::gcreason::ABORT_GC) {
@@ -6983,27 +6984,29 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
             break;
         }
 
-        bool repeatForDeadZone = false;
-        if (poked && cleanUpEverything) {
-            /* Need to re-schedule all zones for GC. */
-            JS::PrepareForFullGC(rt->activeContextFromOwnThread());
-        } else if (shouldRepeatForDeadZone(reason) && !wasReset) {
-            /*
-             * This code makes an extra effort to collect compartments that we
-             * thought were dead at the start of the GC. See the large comment
-             * in beginMarkPhase.
-             */
-            repeatForDeadZone = true;
-            reason = JS::gcreason::COMPARTMENT_REVIVED;
-        }
-
         /*
-         * If we reset an existing GC, we need to start a new one. Also, we
-         * repeat GCs that happen during shutdown (the gcShouldCleanUpEverything
-         * case) until we can be sure that no additional garbage is created
-         * (which typically happens if roots are dropped during finalizers).
+         * Sometimes when we finish a GC we need to immediately start a new one.
+         * This happens in the following cases:
+         *  - when we reset the current GC
+         *  - when finalizers drop roots during shutdown (the cleanUpEverything
+         *    case)
+         *  - when zones that we thought were dead at the start of GC are
+         *    not collected (see the large comment in beginMarkPhase)
          */
-        repeat = (poked && cleanUpEverything) || wasReset || repeatForDeadZone;
+        repeat = false;
+        if (!isIncrementalGCInProgress()) {
+            if (wasReset) {
+                repeat = true;
+            } else if (rootsRemoved && cleanUpEverything) {
+                /* Need to re-schedule all zones for GC. */
+                JS::PrepareForFullGC(rt->activeContextFromOwnThread());
+                repeat = true;
+                reason = JS::gcreason::ROOTS_REMOVED;
+            } else if (shouldRepeatForDeadZone(reason)) {
+                repeat = true;
+                reason = JS::gcreason::COMPARTMENT_REVIVED;
+            }
+         }
     } while (repeat);
 
     if (reason == JS::gcreason::COMPARTMENT_REVIVED)
@@ -7568,6 +7571,18 @@ GCRuntime::setFullCompartmentChecks(bool enabled)
 {
     MOZ_ASSERT(!JS::CurrentThreadIsHeapMajorCollecting());
     fullCompartmentChecks = enabled;
+}
+
+void
+GCRuntime::notifyRootsRemoved()
+{
+    rootsRemoved = true;
+
+#ifdef JS_GC_ZEAL
+    /* Schedule a GC to happen "soon". */
+    if (hasZealMode(ZealMode::RootsChange))
+        nextScheduled = 1;
+#endif
 }
 
 #ifdef JS_GC_ZEAL

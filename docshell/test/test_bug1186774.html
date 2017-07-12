@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1186774
 var child;
 
 function runTest() {
-  child = window.open("data:text/html,<div style='height: 9000px;'></div>", "", "width=100,height=100");
+  child = window.open("file_bug1186774.html", "", "width=100,height=100");
   child.onload = function() {
     setTimeout(function() {
       child.scrollTo(0, 0);

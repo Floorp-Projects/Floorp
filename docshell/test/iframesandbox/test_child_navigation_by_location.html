@@ -13,8 +13,7 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
 <script>
   SimpleTest.waitForExplicitFinish();
 
-  var testHtml = "<script>function onNav() { parent.parent.postMessage('childIframe', '*'); } window.onload = onNav; window.onhashchange = onNav;<\/script>";
-  var testDataUri = "data:text/html," + testHtml;
+  var testDataUri = "file_child_navigation_by_location.html";
 
   function runScriptNavigationTest(testCase) {
     window.onmessage = function(event) {
@@ -86,7 +85,7 @@ html5 sandboxed iframe should not be able to perform top navigation with scripts
 Tests for Bug 785310
 </div>
 
-<iframe name="parentIframe" sandbox="allow-scripts allow-same-origin" src="data:text/html,<iframe name='sameOriginChildIframe'></iframe><iframe name='crossOriginChildIframe' sandbox='allow-scripts'></iframe>"</iframe>
+<iframe name="parentIframe" sandbox="allow-scripts allow-same-origin" srcdoc="<iframe name='sameOriginChildIframe'></iframe><iframe name='crossOriginChildIframe' sandbox='allow-scripts'></iframe>"</iframe>
 
 </body>
 </html>

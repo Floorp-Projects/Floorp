@@ -56,7 +56,7 @@ namespace JS {
     D(API)                                      \
     D(EAGER_ALLOC_TRIGGER)                      \
     D(DESTROY_RUNTIME)                          \
-    D(UNUSED0)                                  \
+    D(ROOTS_REMOVED)                            \
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
@@ -702,11 +702,9 @@ ExposeScriptToActiveJS(JSScript* script)
 
 /*
  * Internal to Firefox.
- *
- * Note: this is not related to the PokeGC in nsJSEnvironment.
  */
 extern JS_FRIEND_API(void)
-PokeGC(JSContext* cx);
+NotifyGCRootsRemoved(JSContext* cx);
 
 /*
  * Internal to Firefox.

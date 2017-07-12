@@ -191,8 +191,9 @@ U2FTokenManager::ClearTransaction()
   mTransactionParent = nullptr;
   // Drop managers at the end of all transactions
   mTokenManagerImpl = nullptr;
-  // Drop promise.
-  mResultPromise = nullptr;
+  // Drop promises.
+  mRegisterPromise = nullptr;
+  mSignPromise = nullptr;
   // Increase in case we're called by the WebAuthnTransactionParent.
   mTransactionId++;
 }
@@ -251,34 +252,34 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  nsTArray<uint8_t> reg;
-  mResultPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
-                                               aTransactionInfo.RpIdHash(),
-                                               aTransactionInfo.ClientDataHash(),
-                                               reg);
+  mRegisterPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
+                                                 aTransactionInfo.RpIdHash(),
+                                                 aTransactionInfo.ClientDataHash());
 
-  mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                       [tid, reg](nsresult rv) {
-                         MOZ_ASSERT(NS_SUCCEEDED(rv));
-                         U2FTokenManager* mgr = U2FTokenManager::Get();
-                         mgr->MaybeConfirmRegister(tid, reg);
-                       },
-                       [tid](nsresult rv) {
-                         MOZ_ASSERT(NS_FAILED(rv));
-                         U2FTokenManager* mgr = U2FTokenManager::Get();
-                         mgr->MaybeAbortTransaction(tid, rv);
-                       });
+  mRegisterPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                         [tid](U2FRegisterResult&& aResult) {
+                           U2FTokenManager* mgr = U2FTokenManager::Get();
+                           mgr->MaybeConfirmRegister(tid, aResult);
+                         },
+                         [tid](nsresult rv) {
+                           MOZ_ASSERT(NS_FAILED(rv));
+                           U2FTokenManager* mgr = U2FTokenManager::Get();
+                           mgr->MaybeAbortTransaction(tid, rv);
+                         });
 }
 
 void
 U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
-                                      const nsTArray<uint8_t>& aRegister)
+                                      U2FRegisterResult& aResult)
 {
   if (mTransactionId != aTransactionId) {
     return;
   }
 
-  Unused << mTransactionParent->SendConfirmRegister(aRegister);
+  nsTArray<uint8_t> registration;
+  aResult.ConsumeRegistration(registration);
+
+  Unused << mTransactionParent->SendConfirmRegister(registration);
   ClearTransaction();
 }
 
@@ -304,37 +305,36 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  nsTArray<uint8_t> id;
-  nsTArray<uint8_t> sig;
-  mResultPromise = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
-                                           aTransactionInfo.RpIdHash(),
-                                           aTransactionInfo.ClientDataHash(),
-                                           id,
-                                           sig);
+  mSignPromise = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
+                                         aTransactionInfo.RpIdHash(),
+                                         aTransactionInfo.ClientDataHash());
 
-  mResultPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                       [tid, id, sig](nsresult rv) {
-                         MOZ_ASSERT(NS_SUCCEEDED(rv));
-                         U2FTokenManager* mgr = U2FTokenManager::Get();
-                         mgr->MaybeConfirmSign(tid, id, sig);
-                       },
-                       [tid](nsresult rv) {
-                         MOZ_ASSERT(NS_FAILED(rv));
-                         U2FTokenManager* mgr = U2FTokenManager::Get();
-                         mgr->MaybeAbortTransaction(tid, rv);
-                       });
+  mSignPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                     [tid](U2FSignResult&& aResult) {
+                       U2FTokenManager* mgr = U2FTokenManager::Get();
+                       mgr->MaybeConfirmSign(tid, aResult);
+                     },
+                     [tid](nsresult rv) {
+                       MOZ_ASSERT(NS_FAILED(rv));
+                       U2FTokenManager* mgr = U2FTokenManager::Get();
+                       mgr->MaybeAbortTransaction(tid, rv);
+                     });
 }
 
 void
 U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
-                                  const nsTArray<uint8_t>& aKeyHandle,
-                                  const nsTArray<uint8_t>& aSignature)
+                                  U2FSignResult& aResult)
 {
   if (mTransactionId != aTransactionId) {
     return;
   }
 
-  Unused << mTransactionParent->SendConfirmSign(aKeyHandle, aSignature);
+  nsTArray<uint8_t> keyHandle;
+  aResult.ConsumeKeyHandle(keyHandle);
+  nsTArray<uint8_t> signature;
+  aResult.ConsumeSignature(signature);
+
+  Unused << mTransactionParent->SendConfirmSign(keyHandle, signature);
   ClearTransaction();
 }
 

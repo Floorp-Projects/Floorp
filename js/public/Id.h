@@ -180,6 +180,13 @@ namespace js {
 template <>
 struct BarrierMethods<jsid>
 {
+    static gc::Cell* asGCThingOrNull(jsid id) {
+        if (JSID_IS_STRING(id))
+            return reinterpret_cast<gc::Cell*>(JSID_TO_STRING(id));
+        if (JSID_IS_SYMBOL(id))
+            return reinterpret_cast<gc::Cell*>(JSID_TO_SYMBOL(id));
+        return nullptr;
+    }
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
     static void exposeToJS(jsid id) {
         if (JSID_IS_GCTHING(id))

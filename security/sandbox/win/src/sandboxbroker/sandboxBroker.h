@@ -65,6 +65,7 @@ public:
 
 private:
   static sandbox::BrokerServices *sBrokerService;
+  static bool sRunningFromNetworkDrive;
   sandbox::TargetPolicy *mPolicy;
 };
 

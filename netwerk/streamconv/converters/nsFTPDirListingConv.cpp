@@ -289,6 +289,13 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
         // MODIFIED DATE
         char buffer[256] = "";
+
+        // ParseFTPList can return time structure with invalid values.
+        // PR_NormalizeTime will set all values into valid limits.
+        result.fe_time.tm_params.tp_gmt_offset = 0;
+        result.fe_time.tm_params.tp_dst_offset = 0;
+        PR_NormalizeTime(&result.fe_time, PR_GMTParameters);
+
         // Note: The below is the RFC822/1123 format, as required by
         // the application/http-index-format specs
         // viewers of such a format can then reformat this into the
