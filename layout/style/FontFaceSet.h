@@ -265,7 +265,6 @@ private:
                          nsIPrincipal** aPrincipal,
                          bool* aBypassCache);
   bool IsFontLoadAllowed(nsIURI* aFontLocation, nsIPrincipal* aPrincipal);
-  bool GetPrivateBrowsing();
   nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
                             const gfxFontFaceSrc* aFontFaceSrc,
                             uint8_t*& aBuffer,
@@ -359,6 +358,10 @@ private:
   // Whether the docshell for our document indicated that loads should
   // bypass the cache.
   bool mBypassCache;
+
+  // Whether the docshell for our document indicates that we are in private
+  // browsing mode.
+  bool mPrivateBrowsing;
 };
 
 } // namespace dom
