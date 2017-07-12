@@ -20,18 +20,20 @@ var tests = [
 ];
 
 add_task(async function() {
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  let browser = gBrowser.selectedBrowser;
-  browser.stop(); // stop the about:blank load.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let browser = tab.linkedBrowser;
 
   // Test that a bookmark of each URI gets the corresponding default title.
   for (let i = 0; i < tests.length; ++i) {
-    let [uri, title] = tests[i];
+    let [url, title] = tests[i];
 
+    // We use promisePageLoaded rather than BrowserTestUtils.browserLoaded - see
+    // note on function definition below.
     let promiseLoaded = promisePageLoaded(browser);
-    BrowserTestUtils.loadURI(browser, uri);
+    BrowserTestUtils.loadURI(browser, url);
     await promiseLoaded;
-    await checkBookmark(uri, title);
+
+    await checkBookmark(url, title);
   }
 
   // Network failure test: now that dummy_page.html is in history, bookmarking
@@ -50,38 +52,41 @@ add_task(async function() {
   // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
   Services.cache2.clear();
 
-  let [uri, title] = tests[0];
+  let [url, title] = tests[0];
 
+  // We use promisePageLoaded rather than BrowserTestUtils.browserLoaded - see
+  // note on function definition below.
   let promiseLoaded = promisePageLoaded(browser);
-  BrowserTestUtils.loadURI(browser, uri);
+  BrowserTestUtils.loadURI(browser, url);
   await promiseLoaded;
 
   // The offline mode test is only good if the page failed to load.
   await ContentTask.spawn(browser, null, function() {
-    is(content.document.documentURI.substring(0, 14), "about:neterror",
-       "Offline mode successfully simulated network outage.");
+    Assert.equal(content.document.documentURI.substring(0, 14), "about:neterror",
+      "Offline mode successfully simulated network outage.");
   });
-  await checkBookmark(uri, title);
+  await checkBookmark(url, title);
 
-  gBrowser.removeCurrentTab();
+  await BrowserTestUtils.removeTab(tab);
 });
 
 // Bookmark the current page and confirm that the new bookmark has the expected
 // title. (Then delete the bookmark.)
-async function checkBookmark(uri, expected_title) {
-  is(gBrowser.selectedBrowser.currentURI.spec, uri,
-     "Trying to bookmark the expected uri");
+async function checkBookmark(url, expected_title) {
+  Assert.equal(gBrowser.selectedBrowser.currentURI.spec, url,
+    "Trying to bookmark the expected uri");
 
-  let promiseBookmark = promiseOnBookmarkItemAdded(gBrowser.selectedBrowser.currentURI);
+  let promiseBookmark = PlacesTestUtils.waitForNotification("onItemAdded",
+    (id, parentId, index, type, itemUrl) => itemUrl.equals(gBrowser.selectedBrowser.currentURI));
   PlacesCommandHook.bookmarkCurrentPage(false);
   await promiseBookmark;
 
-  let id = PlacesUtils.getMostRecentBookmarkForURI(PlacesUtils._uri(uri));
-  ok(id > 0, "Found the expected bookmark");
-  let title = PlacesUtils.bookmarks.getItemTitle(id);
-  is(title, expected_title, "Bookmark got a good default title.");
+  let bookmark = await PlacesUtils.bookmarks.fetch({url});
 
-  PlacesUtils.bookmarks.removeItem(id);
+  Assert.ok(bookmark, "Found the expected bookmark");
+  Assert.equal(bookmark.title, expected_title, "Bookmark got a good default title.");
+
+  await PlacesUtils.bookmarks.remove(bookmark);
 }
 
 // BrowserTestUtils.browserLoaded doesn't work for the about pages, so use a
