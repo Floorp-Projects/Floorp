@@ -11,8 +11,8 @@ import tarfile
 import tempfile
 import unittest
 
-from ..util import docker
-from mozunit import MockedOpen
+from taskgraph.util import docker
+from mozunit import main, MockedOpen
 
 
 MODE_STANDARD = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
@@ -210,3 +210,7 @@ class TestDocker(unittest.TestCase):
                 ])
         finally:
             shutil.rmtree(tmp)
+
+
+if __name__ == '__main__':
+    main()
