@@ -34,6 +34,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.InfoActivity;
@@ -535,6 +536,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 // We remove the whole task because otherwise the old session might still be
                 // partially visible in the app switcher.
                 getActivity().finishAndRemoveTask();
+
+                // We can't show a snackbar outside of the app. So let's show a toast instead.
+                Toast.makeText(getContext(), R.string.feedback_erase, Toast.LENGTH_SHORT).show();
             } else {
                 // Just go back to the home screen.
                 eraseAndShowHomeScreen();
