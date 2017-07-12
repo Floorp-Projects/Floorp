@@ -106,7 +106,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   , mHasLoadingFontFaces(false)
   , mHasLoadingFontFacesIsDirty(false)
   , mDelayedLoadCheck(false)
-  , mBypassCache(false)
 {
   MOZ_ASSERT(mDocument, "We should get a valid document from the caller!");
 
@@ -117,24 +116,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindowInner* aWindow, nsIDocument* aDocument)
   // to be created.
   if (global && PrefEnabled()) {
     mResolveLazilyCreatedReadyPromise = true;
-  }
-
-  // Record the state of the "bypass cache" flags from the docshell now,
-  // since we want to look at them from style worker threads, and we can
-  // only get to the docshell through a weak pointer (which is only
-  // possible on the main thread).
-  //
-  // In theory the load type of a docshell could change after the document
-  // is loaded, but handling that doesn't seem too important.
-  if (nsCOMPtr<nsIDocShell> docShell = mDocument->GetDocShell()) {
-    uint32_t loadType;
-    uint32_t flags;
-    if ((NS_SUCCEEDED(docShell->GetLoadType(&loadType)) &&
-         ((loadType >> 16) & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE)) ||
-        (NS_SUCCEEDED(docShell->GetDefaultLoadFlags(&flags)) &&
-         (flags & nsIRequest::LOAD_BYPASS_CACHE))) {
-      mBypassCache = true;
-    }
   }
 
   if (!mDocument->DidFireDOMContentLoaded()) {
@@ -1346,7 +1327,23 @@ FontFaceSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
     *aPrincipal = aFontFaceSrc->mOriginPrincipal;
   }
 
-  *aBypassCache = mBypassCache;
+  *aBypassCache = false;
+
+  nsCOMPtr<nsIDocShell> docShell = mDocument->GetDocShell();
+  if (docShell) {
+    uint32_t loadType;
+    if (NS_SUCCEEDED(docShell->GetLoadType(&loadType))) {
+      if ((loadType >> 16) & nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE) {
+        *aBypassCache = true;
+      }
+    }
+    uint32_t flags;
+    if (NS_SUCCEEDED(docShell->GetDefaultLoadFlags(&flags))) {
+      if (flags & nsIRequest::LOAD_BYPASS_CACHE) {
+        *aBypassCache = true;
+      }
+    }
+  }
 
   return NS_OK;
 }
