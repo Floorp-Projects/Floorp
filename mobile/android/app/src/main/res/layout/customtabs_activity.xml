@@ -27,6 +27,16 @@
         android:layout_height="match_parent"
         android:scrollbars="none"/>
 
+    <ProgressBar
+        android:id="@id/page_progress"
+        style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_alignTop="@id/gecko_view"
+        android:background="@drawable/url_bar_bg"
+        android:progressDrawable="@drawable/progressbar"
+        tools:progress="70"/>
+
     <View android:id="@+id/custom_tabs_doorhanger_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
