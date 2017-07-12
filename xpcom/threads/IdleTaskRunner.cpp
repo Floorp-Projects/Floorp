@@ -12,25 +12,32 @@
 namespace mozilla {
 
 already_AddRefed<IdleTaskRunner>
-IdleTaskRunner::Create(IdleTaskRunnerCallback aCallback, uint32_t aDelay,
-                       int64_t aBudget, bool aRepeating, void* aData)
+IdleTaskRunner::Create(const CallbackType& aCallback, uint32_t aDelay,
+                       int64_t aBudget, bool aRepeating,
+                       const MayStopProcessingCallbackType& aMayStopProcessing,
+                       TaskCategory aTaskCategory)
 {
-  if (sShuttingDown) {
+  if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
-    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating, aData);
+    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating,
+                       aMayStopProcessing, aTaskCategory);
   runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
 
-IdleTaskRunner::IdleTaskRunner(IdleTaskRunnerCallback aCallback,
+IdleTaskRunner::IdleTaskRunner(const CallbackType& aCallback,
                                uint32_t aDelay, int64_t aBudget,
-                               bool aRepeating, void* aData)
+                               bool aRepeating,
+                               const MayStopProcessingCallbackType& aMayStopProcessing,
+                               TaskCategory aTaskCategory)
   : mCallback(aCallback), mDelay(aDelay)
   , mBudget(TimeDuration::FromMilliseconds(aBudget))
-  , mRepeating(aRepeating), mTimerActive(false), mData(aData)
+  , mRepeating(aRepeating), mTimerActive(false)
+  , mMayStopProcessing(aMayStopProcessing)
+  , mTaskCategory(aTaskCategory)
 {
 }
 
@@ -42,18 +49,25 @@ IdleTaskRunner::Run()
   }
 
   // Deadline is null when called from timer.
+  TimeStamp now = TimeStamp::Now();
   bool deadLineWasNull = mDeadline.IsNull();
   bool didRun = false;
-  if (deadLineWasNull || ((TimeStamp::Now() + mBudget) < mDeadline)) {
+  bool allowIdleDispatch = false;
+  if (deadLineWasNull || ((now + mBudget) < mDeadline)) {
     CancelTimer();
-    didRun = mCallback(mDeadline, mData);
-  }
-
-  if (mCallback && (mRepeating || !didRun)) {
+    didRun = mCallback(mDeadline);
     // If we didn't do meaningful work, don't schedule using immediate
     // idle dispatch, since that could lead to a loop until the idle
     // period ends.
-    Schedule(didRun);
+    allowIdleDispatch = didRun;
+  } else if (now >= mDeadline) {
+    allowIdleDispatch = true;
+  }
+
+  if (mCallback && (mRepeating || !didRun)) {
+    Schedule(allowIdleDispatch);
+  } else {
+    mCallback = nullptr;
   }
 
   return NS_OK;
@@ -106,7 +120,7 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
     return;
   }
 
-  if (sShuttingDown) {
+  if (mMayStopProcessing && mMayStopProcessing()) {
     Cancel();
     return;
   }
@@ -134,7 +148,9 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
       } else {
         mScheduleTimer->Cancel();
       }
-      mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
+      if (TaskCategory::Count != mTaskCategory) {
+        mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(mTaskCategory));
+      }
       // We weren't allowed to do idle dispatch immediately, do it after a
       // short timeout.
       mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
@@ -162,7 +178,7 @@ IdleTaskRunner::CancelTimer()
   mTimerActive = false;
 }
 
-void 
+void
 IdleTaskRunner::SetTimerInternal(uint32_t aDelay)
 {
   if (mTimerActive) {
@@ -176,7 +192,9 @@ IdleTaskRunner::SetTimerInternal(uint32_t aDelay)
   }
 
   if (mTimer) {
-    mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
+    if (TaskCategory::Count != mTaskCategory) {
+      mTimer->SetTarget(SystemGroup::EventTargetFor(mTaskCategory));
+    }
     mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
                                       nsITimer::TYPE_ONE_SHOT,
                                       "IdleTaskRunner");
