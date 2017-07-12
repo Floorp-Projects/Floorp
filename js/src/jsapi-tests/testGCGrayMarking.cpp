@@ -817,15 +817,15 @@ static bool
 IsMarkedBlack(Cell* cell)
 {
     TenuredCell* tc = &cell->asTenured();
-    return tc->isMarked(BLACK) && !tc->isMarked(GRAY);
+    return tc->isMarkedAny() && !tc->isMarkedGray();
 }
 
 static bool
 IsMarkedGray(Cell* cell)
 {
     TenuredCell* tc = &cell->asTenured();
-    bool isGray = tc->isMarked(GRAY);
-    MOZ_ASSERT_IF(isGray, tc->isMarked(BLACK));
+    bool isGray = tc->isMarkedGray();
+    MOZ_ASSERT_IF(isGray, tc->isMarkedAny());
     return isGray;
 }
 
