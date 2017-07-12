@@ -68,7 +68,7 @@ public class FileTelemetryStorage implements TelemetryStorage {
                 final String path = bufferedReader.readLine();
                 final String serializedPing = bufferedReader.readLine();
 
-                boolean processed = callback.onTelemetryPingLoaded(path, serializedPing);
+                final boolean processed = serializedPing == null || callback.onTelemetryPingLoaded(path, serializedPing);
 
                 if (processed) {
                     if (!file.delete()) {
