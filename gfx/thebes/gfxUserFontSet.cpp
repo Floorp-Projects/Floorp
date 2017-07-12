@@ -540,7 +540,7 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
                     return;
                 }
 
-                gfxFontSrcPrincipal* principal = nullptr;
+                nsIPrincipal* principal = nullptr;
                 bool bypassCache;
                 nsresult rv = mFontSet->CheckFontLoad(&currSrc, &principal,
                                                       &bypassCache);
@@ -1155,7 +1155,9 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
     if (!IgnorePrincipal(mURI)) {
         NS_ASSERTION(mPrincipal && aKey->mPrincipal,
                      "only data: URIs are allowed to omit the principal");
-        if (!mPrincipal->Equals(aKey->mPrincipal)) {
+        bool result;
+        if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) ||
+            !result) {
             return false;
         }
     }
@@ -1220,7 +1222,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry)
     // For data: URIs, the principal is ignored; anyone who has the same
     // data: URI is able to load it and get an equivalent font.
     // Otherwise, the principal is used as part of the cache key.
-    gfxFontSrcPrincipal* principal;
+    nsIPrincipal* principal;
     if (IgnorePrincipal(data->mURI)) {
         principal = nullptr;
     } else {
@@ -1263,7 +1265,7 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry)
 
 gfxFontEntry*
 gfxUserFontSet::UserFontCache::GetFont(gfxFontSrcURI* aSrcURI,
-                                       gfxFontSrcPrincipal* aPrincipal,
+                                       nsIPrincipal* aPrincipal,
                                        gfxUserFontEntry* aUserFontEntry,
                                        bool aPrivate)
 {
@@ -1273,7 +1275,7 @@ gfxUserFontSet::UserFontCache::GetFont(gfxFontSrcURI* aSrcURI,
     }
 
     // Ignore principal when looking up a data: URI.
-    gfxFontSrcPrincipal* principal;
+    nsIPrincipal* principal;
     if (IgnorePrincipal(aSrcURI)) {
         principal = nullptr;
     } else {
@@ -1296,9 +1298,8 @@ gfxUserFontSet::UserFontCache::GetFont(gfxFontSrcURI* aSrcURI,
     } else {
         // Call IsFontLoadAllowed directly, since we are on the main thread.
         MOZ_ASSERT(NS_IsMainThread());
-	nsIPrincipal* principal = aPrincipal ? aPrincipal->get() : nullptr;
         allowed = aUserFontEntry->mFontSet->IsFontLoadAllowed(aSrcURI->get(),
-                                                              principal);
+                                                              aPrincipal);
         MOZ_ASSERT(!entry->IsFontSetAllowedKnown(aUserFontEntry->mFontSet) ||
                    entry->IsFontSetAllowed(aUserFontEntry->mFontSet) == allowed,
                    "why does IsFontLoadAllowed return a different value from "
@@ -1325,7 +1326,7 @@ gfxUserFontSet::UserFontCache::UpdateAllowedFontSets(
     for (auto iter = sUserFonts->Iter(); !iter.Done(); iter.Next()) {
         Entry* entry = iter.Get();
         if (!entry->IsFontSetAllowedKnown(aUserFontSet)) {
-            gfxFontSrcPrincipal* principal = entry->GetPrincipal();
+            nsIPrincipal* principal = entry->GetPrincipal();
             if (!principal) {
                 // This is a data: URI.  Just get the standard principal the
                 // font set uses.  (For cases when mUseOriginPrincipal is true,
@@ -1335,7 +1336,7 @@ gfxUserFontSet::UserFontCache::UpdateAllowedFontSets(
             }
             bool allowed =
                 aUserFontSet->IsFontLoadAllowed(entry->GetURI()->get(),
-                principal->get());
+                principal);
             entry->SetIsFontSetAllowed(aUserFontSet, allowed);
         }
     }
@@ -1429,7 +1430,7 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(
         }
         if (mPrincipal) {
             nsCOMPtr<nsIURI> uri;
-            mPrincipal->get()->GetURI(getter_AddRefs(uri));
+            mPrincipal->GetURI(getter_AddRefs(uri));
             if (uri) {
                 nsCString spec = uri->GetSpecOrDefault();
                 if (!spec.IsEmpty()) {
@@ -1489,13 +1490,13 @@ gfxUserFontSet::UserFontCache::Entry::Dump()
 
     if (mPrincipal) {
         nsCOMPtr<nsIURI> principalURI;
-        rv = mPrincipal->get()->GetURI(getter_AddRefs(principalURI));
+        rv = mPrincipal->GetURI(getter_AddRefs(principalURI));
         if (NS_SUCCEEDED(rv)) {
             principalURI->GetSpec(principalURISpec);
         }
 
         nsCOMPtr<nsIURI> domainURI;
-        mPrincipal->get()->GetDomain(getter_AddRefs(domainURI));
+        mPrincipal->GetDomain(getter_AddRefs(domainURI));
         if (domainURI) {
             setDomain = true;
         }
