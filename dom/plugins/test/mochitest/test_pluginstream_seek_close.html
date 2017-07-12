@@ -1,0 +1,45 @@
+<body>
+<head>
+  <title>NPAPI Seekable NPStream Test</title>
+  <script type="text/javascript" 
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+<script>
+  SimpleTest.expectAssertions(0, 1);
+
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  function frameLoaded() {
+    var testframe = document.getElementById('testframe');
+    var content = testframe.contentDocument.body.innerHTML;
+    if (!content.length)
+      return;
+
+    ok(true, "We didn't crash");
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body>
+  <p id="display"></p>
+
+  <iframe id="testframe" name="testframe" onload="frameLoaded()"></iframe>
+
+  <!--
+   - Tests a seekable stream.  Calls NPN_RequestRead with the specified
+   - range, and verifies that an NPP_Write call is made with the correct 
+   - parameters, including the buffer data for the byte range.  Once all 
+   - calls to NPP_Write have finished, the plugin calls NPN_DestroyStream 
+   - and then displays the entire stream's content in a browser frame via 
+   - NPN_GetURL.
+   -->
+  <embed src="neverending.sjs" streammode="seek" closestream
+         frame="testframe" streamchunksize="1024" range="100,100"
+         id="embedtest" style="width: 400px; height: 100px;"
+         type="application/x-test"></embed>
+
+</body>
+</html>
