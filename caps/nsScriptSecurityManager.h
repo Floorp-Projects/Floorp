@@ -68,7 +68,7 @@ public:
     static uint32_t SecurityHashURI(nsIURI* aURI);
 
     static nsresult
-    ReportError(JSContext* cx, const nsAString& messageTag,
+    ReportError(JSContext* cx, const char* aMessageTag,
                 nsIURI* aSource, nsIURI* aTarget);
 
     static uint32_t

@@ -510,11 +510,11 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLString title;
-    rv = bundle->GetStringFromName(u"emailPromptTitle", getter_Copies(title));
+    rv = bundle->GetStringFromName("emailPromptTitle", getter_Copies(title));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLString err;
-    rv = bundle->GetStringFromName(u"emailPromptMsg", getter_Copies(err));
+    rv = bundle->GetStringFromName("emailPromptMsg", getter_Copies(err));
     NS_ENSURE_SUCCESS(rv, rv);
     bool check = false;
     nsXPIDLString emailResult;

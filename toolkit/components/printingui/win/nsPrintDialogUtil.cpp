@@ -109,9 +109,7 @@ GetLocalizedString(nsIStringBundle* aStrBundle, const char* aKey, nsString& oVal
 
   // Determine default label from string bundle
   nsXPIDLString valUni;
-  nsAutoString key;
-  key.AssignWithConversion(aKey);
-  nsresult rv = aStrBundle->GetStringFromName(key.get(), getter_Copies(valUni));
+  nsresult rv = aStrBundle->GetStringFromName(aKey, getter_Copies(valUni));
   if (NS_SUCCEEDED(rv) && valUni) {
     oVal.Assign(valUni);
   } else {

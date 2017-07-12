@@ -49,7 +49,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
      */
     void flushConsoleMessages();
 
-    void logToConsole(const char16_t* aName,
+    void logToConsole(const char* aName,
                       const char16_t** aParams,
                       uint32_t aParamsLength,
                       const nsAString& aSourceName,

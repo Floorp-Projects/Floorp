@@ -288,7 +288,7 @@ nsHttpChannelAuthProvider::CheckForSuperfluousAuth()
     // contained a userpass, then (provided some other conditions are true),
     // we'll give the user an opportunity to abort the channel as this might be
     // an attempt to spoof a different site (see bug 232567).
-    if (!ConfirmAuth(NS_LITERAL_STRING("SuperfluousAuth"), true)) {
+    if (!ConfirmAuth("SuperfluousAuth", true)) {
         // calling cancel here sets our mStatus and aborts the HTTP
         // transaction, which prevents OnDataAvailable events.
         Unused << mAuthChannel->Cancel(NS_ERROR_ABORT);
@@ -929,7 +929,7 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     if (identFromURI) {
         // Warn the user before automatically using the identity from the URL
         // to automatically log them into a site (see bug 232567).
-        if (!ConfirmAuth(NS_LITERAL_STRING("AutomaticAuth"), false)) {
+        if (!ConfirmAuth("AutomaticAuth", false)) {
             // calling cancel here sets our mStatus and aborts the HTTP
             // transaction, which prevents OnDataAvailable events.
             rv = mAuthChannel->Cancel(NS_ERROR_ABORT);
@@ -1509,8 +1509,8 @@ nsHttpChannelAuthProvider::ContinueOnAuthAvailable(const nsACString& creds)
 }
 
 bool
-nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
-                                       bool            doYesNoPrompt)
+nsHttpChannelAuthProvider::ConfirmAuth(const char* bundleKey,
+                                       bool        doYesNoPrompt)
 {
     // skip prompting the user if
     //   1) we've already prompted the user
@@ -1587,7 +1587,7 @@ nsHttpChannelAuthProvider::ConfirmAuth(const nsString &bundleKey,
     const char16_t *strs[2] = { ucsHost.get(), ucsUser.get() };
 
     nsXPIDLString msg;
-    bundle->FormatStringFromName(bundleKey.get(), strs, 2, getter_Copies(msg));
+    bundle->FormatStringFromName(bundleKey, strs, 2, getter_Copies(msg));
     if (!msg)
         return true;
 

@@ -29,7 +29,16 @@ native nsStrBundleLoadedFunc(nsStrBundleLoadedFunc);
 interface nsIStringBundle : nsISupports
 {
   wstring GetStringFromID(in long aID);
-  wstring GetStringFromName(in wstring aName);
+
+  // This method is mostly used from JS, where AUTF8String is appropriate.
+  [binaryname(GetStringFromAUTF8Name)]
+  wstring GetStringFromName(in AUTF8String aName);
+
+  // This method is mostly used from C++, where |string| is appropriate because
+  // the names are most often 8-bit string literals (normally ASCII, though
+  // u8"foo" literals will also work).
+  [noscript, binaryname(GetStringFromName)]
+  wstring GetStringFromNameCpp(in string aName);
 
   // this is kind of like smprintf - except that you can
   // only pass it unicode strings, using the %S formatting character.
@@ -39,9 +48,21 @@ interface nsIStringBundle : nsISupports
   wstring formatStringFromID(in long aID,
                              [array, size_is(length)] in wstring params,
                              in unsigned long length);
-  wstring formatStringFromName(in wstring aName,
+
+  // This method is mostly used from JS, where AUTF8String is appropriate.
+  [binaryname(FormatStringFromAUTF8Name)]
+  wstring formatStringFromName(in AUTF8String aName,
                                [array, size_is(length)] in wstring params,
                                in unsigned long length);
+
+  // This method is mostly used from C++, where |string| is appropriate because
+  // the names are most often 8-bit string literals (normally ASCII, though
+  // u8"foo" literals will also work).
+  [noscript, binaryname(FormatStringFromName)]
+  wstring formatStringFromNameCpp(in string aName,
+                                  [array, size_is(length)] in wstring params,
+                                  in unsigned long length);
+
   /*
   Implements nsISimpleEnumerator, replaces nsIEnumerator 
   */
