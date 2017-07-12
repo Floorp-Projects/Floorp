@@ -819,6 +819,46 @@ struct PlayoutDelay {
   int max_ms;
 };
 
+// Class to represent RtpStreamId which is a string.
+// Unlike std::string, it can be copied with memcpy and cleared with memset.
+// Empty value represent unset RtpStreamId.
+class StreamId {
+ public:
+  // Stream id is limited to 16 bytes because it is the maximum length
+  // that can be encoded with one-byte header extensions.
+  static constexpr size_t kMaxSize = 16;
+
+  static bool IsLegalName(rtc::ArrayView<const char> name);
+
+  StreamId() { value_[0] = 0; }
+  explicit StreamId(rtc::ArrayView<const char> value) {
+    Set(value.data(), value.size());
+  }
+  StreamId(const StreamId&) = default;
+  StreamId& operator=(const StreamId&) = default;
+
+  bool empty() const { return value_[0] == 0; }
+  const char* data() const { return value_; }
+  size_t size() const { return strnlen(value_, kMaxSize); }
+
+  void Set(rtc::ArrayView<const uint8_t> value) {
+    Set(reinterpret_cast<const char*>(value.data()), value.size());
+  }
+  // mozilla: data() is guaranteed to be null terminated after Set completes
+  void Set(const char* data, size_t size);
+
+  friend bool operator==(const StreamId& lhs, const StreamId& rhs) {
+    return (lhs.size() == rhs.size() &&
+            strncmp(lhs.value_, rhs.value_, kMaxSize) == 0);
+  }
+  friend bool operator!=(const StreamId& lhs, const StreamId& rhs) {
+    return !(lhs == rhs);
+  }
+
+ private:
+  char value_[kMaxSize+1]; // mozilla: make sure we have space to null term.
+};
+
 struct RTPHeaderExtension {
   RTPHeaderExtension();
   RTPHeaderExtension(const RTPHeaderExtension& rhs);
@@ -845,9 +885,11 @@ struct RTPHeaderExtension {
 
   PlayoutDelay playout_delay = {-1, -1};
 
-  // RID values for simulcast; see draft-roach-avtext-rid
-  bool hasRID;
-  std::unique_ptr<char[]> rid; // UTF8 string
+  // For identification of a stream when ssrc is not signaled. See
+  // https://tools.ietf.org/html/draft-ietf-avtext-rid-09
+  // TODO(danilchap): Update url from draft to release version.
+  StreamId rtpStreamId;
+  StreamId repairedStreamId;
 };
 
 struct RTPHeader {

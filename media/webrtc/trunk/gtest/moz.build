@@ -368,6 +368,7 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
         '../webrtc/modules/rtp_rtcp/source/rtp_format_vp9_unittest.cc',
         '../webrtc/modules/rtp_rtcp/source/rtp_header_extension_unittest.cc',
         '../webrtc/modules/rtp_rtcp/source/rtp_packet_history_unittest.cc',
+        '../webrtc/modules/rtp_rtcp/source/rtp_packet_unittest.cc',
         '../webrtc/modules/rtp_rtcp/source/rtp_payload_registry_unittest.cc',
         '../webrtc/modules/rtp_rtcp/source/time_util_unittest.cc',
         '../webrtc/modules/rtp_rtcp/source/ulpfec_generator_unittest.cc',

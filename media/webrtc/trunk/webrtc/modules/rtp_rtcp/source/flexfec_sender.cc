@@ -64,6 +64,7 @@ FlexfecSender::FlexfecSender(
     uint32_t ssrc,
     uint32_t protected_media_ssrc,
     const std::vector<RtpExtension>& rtp_header_extensions,
+    rtc::ArrayView<const RtpExtensionSize> extension_sizes,
     Clock* clock)
     : clock_(clock),
       random_(clock_->TimeInMicroseconds()),
@@ -76,7 +77,9 @@ FlexfecSender::FlexfecSender(
       protected_media_ssrc_(protected_media_ssrc),
       seq_num_(random_.Rand(1, kMaxInitRtpSeqNumber)),
       ulpfec_generator_(ForwardErrorCorrection::CreateFlexfec()),
-      rtp_header_extension_map_(RegisterBweExtensions(rtp_header_extensions)) {
+      rtp_header_extension_map_(RegisterBweExtensions(rtp_header_extensions)),
+      header_extensions_size_(
+          rtp_header_extension_map_.GetTotalLengthInBytes(extension_sizes)) {
   // This object should not have been instantiated if FlexFEC is disabled.
   RTC_DCHECK_GE(payload_type, 0);
   RTC_DCHECK_LE(payload_type, 127);
@@ -148,8 +151,7 @@ std::vector<std::unique_ptr<RtpPacketToSend>> FlexfecSender::GetFecPackets() {
 
 // The overhead is BWE RTP header extensions and FlexFEC header.
 size_t FlexfecSender::MaxPacketOverhead() const {
-  return rtp_header_extension_map_.GetTotalLengthInBytes() +
-         kFlexfecMaxHeaderSize;
+  return header_extensions_size_ + kFlexfecMaxHeaderSize;
 }
 
 }  // namespace webrtc

@@ -804,8 +804,10 @@ TEST_F(RtpSenderTest, SendFlexfecPackets) {
   constexpr uint32_t kMediaSsrc = 1234;
   constexpr uint32_t kFlexfecSsrc = 5678;
   const std::vector<RtpExtension> kNoRtpExtensions;
+  const std::vector<RtpExtensionSize> kNoRtpExtensionSizes;
   FlexfecSender flexfec_sender(kFlexfecPayloadType, kFlexfecSsrc, kMediaSsrc,
-                               kNoRtpExtensions, &fake_clock_);
+                               kNoRtpExtensions, kNoRtpExtensionSizes,
+                               &fake_clock_);
 
   // Reset |rtp_sender_| to use FlexFEC.
   rtp_sender_.reset(new RTPSender(
@@ -858,8 +860,10 @@ TEST_F(RtpSenderTestWithoutPacer, SendFlexfecPackets) {
   constexpr uint32_t kMediaSsrc = 1234;
   constexpr uint32_t kFlexfecSsrc = 5678;
   const std::vector<RtpExtension> kNoRtpExtensions;
+  const std::vector<RtpExtensionSize> kNoRtpExtensionSizes;
   FlexfecSender flexfec_sender(kFlexfecPayloadType, kFlexfecSsrc, kMediaSsrc,
-                               kNoRtpExtensions, &fake_clock_);
+                               kNoRtpExtensions, kNoRtpExtensionSizes,
+                               &fake_clock_);
 
   // Reset |rtp_sender_| to use FlexFEC.
   rtp_sender_.reset(new RTPSender(false, &fake_clock_, &transport_, nullptr,

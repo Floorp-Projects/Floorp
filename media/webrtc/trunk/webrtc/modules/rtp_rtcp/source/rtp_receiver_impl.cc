@@ -69,8 +69,7 @@ RtpReceiverImpl::RtpReceiverImpl(
       current_remote_csrc_(),
       last_received_timestamp_(0),
       last_received_frame_time_ms_(-1),
-      last_received_sequence_number_(0),
-      rid_(NULL) {
+      last_received_sequence_number_(0) {
   assert(incoming_messages_callback);
 
   memset(current_remote_csrc_, 0, sizeof(current_remote_csrc_));
@@ -129,12 +128,12 @@ int32_t RtpReceiverImpl::CSRCs(uint32_t array_of_csrcs[kRtpCsrcSize]) const {
   return num_csrcs_;
 }
 
-void RtpReceiverImpl::GetRID(char rid[256]) const {
+void RtpReceiverImpl::GetRID(char rtp_stream_id[256]) const {
   rtc::CritScope lock(&critical_section_rtp_receiver_);
-  if (rid_) {
-    strncpy(rid, rid_, 256);
+  if (!rtp_stream_id_.empty()) {
+    strncpy(rtp_stream_id, rtp_stream_id_.data(), 256);
   } else {
-    rid[0] = '\0';
+    rtp_stream_id[0] = '\0';
   }
 }
 
@@ -199,13 +198,11 @@ bool RtpReceiverImpl::IncomingRtpPacket(
     last_received_payload_length_ = payload_data_length;
 
     // RID rarely if ever changes
-    if (rtp_header.extension.hasRID &&
-        (!rid_ || strcmp(rtp_header.extension.rid.get(), rid_) != 0)) {
-      delete [] rid_;
-      rid_ = new char[strlen(rtp_header.extension.rid.get())+1];
-      strcpy(rid_, rtp_header.extension.rid.get());
-      LOG(LS_INFO) << "Received new RID value: " << rid_;
-  }
+    if (!rtp_header.extension.rtpStreamId.empty() &&
+        (rtp_header.extension.rtpStreamId != rtp_stream_id_)) {
+      rtp_stream_id_ = rtp_header.extension.rtpStreamId;
+      LOG(LS_INFO) << "Received new RID value: " << rtp_stream_id_.data();
+    }
     if (in_order) {
       if (last_received_timestamp_ != rtp_header.timestamp) {
         last_received_timestamp_ = rtp_header.timestamp;

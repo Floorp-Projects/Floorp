@@ -390,8 +390,8 @@ bool RtpStreamReceiver::DeliverRtp(const uint8_t* rtp_packet,
         ss << ", toffset: " << header.extension.transmissionTimeOffset;
       if (header.extension.hasAbsoluteSendTime)
         ss << ", abs send time: " << header.extension.absoluteSendTime;
-			if (header.extension.hasRID)
-				ss << ", rid: " << header.extension.rid.get();
+      if (!header.extension.rtpStreamId.empty())
+        ss << ", rid: " << header.extension.rtpStreamId.data();
       LOG(LS_INFO) << ss.str();
       last_packet_log_ms_ = now_ms;
     }

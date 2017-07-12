@@ -76,7 +76,8 @@ enum RTPExtensionType {
   kRtpExtensionTransportSequenceNumber,
   kRtpExtensionPlayoutDelay,
   kRtpExtensionRtpStreamId,
-  kRtpExtensionNumberOfExtensions,
+  kRtpExtensionRepairedRtpStreamId,
+  kRtpExtensionNumberOfExtensions  // Must be the last entity in the enum.
 };
 
 enum RTCPAppSubTypes { kAppSubtypeBwe = 0x00 };
