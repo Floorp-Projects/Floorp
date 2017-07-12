@@ -238,7 +238,7 @@ nsNSSComponent::PIPBundleFormatStringFromName(const char* name,
 
   if (mPIPNSSBundle && name) {
     nsXPIDLString result;
-    rv = mPIPNSSBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(name).get(),
+    rv = mPIPNSSBundle->FormatStringFromName(name,
                                              params, numParams,
                                              getter_Copies(result));
     if (NS_SUCCEEDED(rv)) {
@@ -257,8 +257,7 @@ nsNSSComponent::GetPIPNSSBundleString(const char* name, nsAString& outString)
   outString.SetLength(0);
   if (mPIPNSSBundle && name) {
     nsXPIDLString result;
-    rv = mPIPNSSBundle->GetStringFromName(NS_ConvertASCIItoUTF16(name).get(),
-                                          getter_Copies(result));
+    rv = mPIPNSSBundle->GetStringFromName(name, getter_Copies(result));
     if (NS_SUCCEEDED(rv)) {
       outString = result;
       rv = NS_OK;
@@ -277,8 +276,7 @@ nsNSSComponent::GetNSSBundleString(const char* name, nsAString& outString)
   outString.SetLength(0);
   if (mNSSErrorsBundle && name) {
     nsXPIDLString result;
-    rv = mNSSErrorsBundle->GetStringFromName(NS_ConvertASCIItoUTF16(name).get(),
-                                             getter_Copies(result));
+    rv = mNSSErrorsBundle->GetStringFromName(name, getter_Copies(result));
     if (NS_SUCCEEDED(rv)) {
       outString = result;
       rv = NS_OK;

@@ -315,7 +315,7 @@ void InitBrandName()
     nsresult rv = stringBundleService->CreateBundle(kBrandBundleURL,
                                            getter_AddRefs(brandBundle));
     if (NS_SUCCEEDED(rv)) {
-      rv = brandBundle->GetStringFromName(u"brandShortName",
+      rv = brandBundle->GetStringFromName("brandShortName",
                                           getter_Copies(brandName));
       NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv), "Could not get the program name for a cubeb stream.");

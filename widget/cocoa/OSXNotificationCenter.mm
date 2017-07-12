@@ -299,7 +299,7 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   if (!hostPort.IsEmpty() && bundle) {
     const char16_t* formatStrings[] = { hostPort.get() };
     nsXPIDLString notificationSource;
-    bundle->FormatStringFromName(u"source.label",
+    bundle->FormatStringFromName("source.label",
                                  formatStrings,
                                  ArrayLength(formatStrings),
                                  getter_Copies(notificationSource));
@@ -318,18 +318,18 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   bool isActionable;
   if (bundle && NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) && isActionable) {
     nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
-    bundle->GetStringFromName(u"closeButton.title",
+    bundle->GetStringFromName("closeButton.title",
                               getter_Copies(closeButtonTitle));
-    bundle->GetStringFromName(u"actionButton.label",
+    bundle->GetStringFromName("actionButton.label",
                               getter_Copies(actionButtonTitle));
     if (!hostPort.IsEmpty()) {
       const char16_t* formatStrings[] = { hostPort.get() };
-      bundle->FormatStringFromName(u"webActions.disableForOrigin.label",
+      bundle->FormatStringFromName("webActions.disableForOrigin.label",
                                    formatStrings,
                                    ArrayLength(formatStrings),
                                    getter_Copies(disableButtonTitle));
     }
-    bundle->GetStringFromName(u"webActions.settings.label",
+    bundle->GetStringFromName("webActions.settings.label",
                               getter_Copies(settingsButtonTitle));
 
     notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);

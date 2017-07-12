@@ -55,12 +55,12 @@ static void DisplayError(void)
         return;
 
     nsXPIDLString title;
-    rv = bundle->GetStringFromName(u"readConfigTitle", getter_Copies(title));
+    rv = bundle->GetStringFromName("readConfigTitle", getter_Copies(title));
     if (NS_FAILED(rv))
         return;
 
     nsXPIDLString err;
-    rv = bundle->GetStringFromName(u"readConfigMsg", getter_Copies(err));
+    rv = bundle->GetStringFromName("readConfigMsg", getter_Copies(err));
     if (NS_FAILED(rv))
         return;
 
