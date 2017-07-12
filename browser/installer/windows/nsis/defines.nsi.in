@@ -121,10 +121,7 @@ VIAddVersionKey "ProductVersion"  "${AppVersion}"
 
 # Control positions in Dialog Units so they are placed correctly with
 # non-default DPI settings
-!define OPTIONS_ITEM_EDGE_DU 90u
-!define OPTIONS_ITEM_WIDTH_DU 356u
-!define OPTIONS_SUBITEM_EDGE_DU 119u
-!define OPTIONS_SUBITEM_WIDTH_DU 327u
+!define PROFILE_CLEANUP_LABEL_TOP_DU 39u
 !define NOW_INSTALLING_TOP_DU 70u
 !define INSTALL_BLURB_TOP_DU 137u
 !define INSTALL_FOOTER_TOP_DU -48u
