@@ -528,11 +528,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             goBack();
         } else {
             if (isStartedFromExternalApp()) {
-                // We have been started from a VIEW intent. Go back to the previous app immediately (No erase).
-                // However we need to finish the current session so that the custom tab config gets
-                // correctly cleared:
-                BrowsingSession.getInstance().stop();
-                getActivity().finish();
+                // We have been started from a VIEW intent. Go back to the previous app immediately
+                // and erase the current browsing session.
+                erase();
+
+                // We remove the whole task because otherwise the old session might still be
+                // partially visible in the app switcher.
+                getActivity().finishAndRemoveTask();
             } else {
                 // Just go back to the home screen.
                 eraseAndShowHomeScreen();
