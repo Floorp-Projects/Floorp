@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <title>Accessibility Table Mutation</title>
 <script src="a11y.js"></script>
+<script src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 </head>
 
 <body>
@@ -117,19 +118,24 @@ function mutateTable() {
 
   ensureAccessibleTree("start");
 
-  var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
+  TalosContentProfiler.resume("tablemutation start", true).then(() => {
+    var start = new Date(); // eslint-disable-line mozilla/avoid-Date-timing
 
-  // Cause all kinds of crazy events
-  Range.deleteContents();
-  Range.insertNode(Fragment);
+    // Cause all kinds of crazy events
+    Range.deleteContents();
+    Range.insertNode(Fragment);
 
-  document.documentElement.offsetLeft; // flush layout
+    document.documentElement.offsetLeft; // flush layout
 
-  setTimeout(postProcessingRecord, 0, start);
+    setTimeout(postProcessingRecord, 0, start);
+  });
 }
 
 function postProcessingRecord(s) {
   // alert(new Date() - s);
-  tpRecordTime(new Date() - s, s);  // eslint-disable-line mozilla/avoid-Date-timing
+  let delta = new Date() - s; // eslint-disable-line mozilla/avoid-Date-timing
+  TalosContentProfiler.pause("tablemutation finish", true).then(() => {
+    tpRecordTime(delta, s);
+  });
 }
 </script>

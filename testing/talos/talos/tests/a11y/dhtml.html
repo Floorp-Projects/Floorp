@@ -4,6 +4,7 @@
 <head>
 <title>accessibility perf for dhtml</title>
 <script src="a11y.js"></script>
+<script src="chrome://talos-powers-content/content/TalosContentProfiler.js"></script>
 <script>
   /* import-globals-from a11y.js */
   // based on: http://hacks.mozilla.org/2010/05/better-performance-with-lazy-frame-construction/
@@ -15,35 +16,40 @@
       return;
     }
 
-    var container = document.getElementById("container");
-    var lastchild = document.getElementById("lastchild");
-    var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
-    var i, div;
-    for (i = 0; i < 2000; i++) {
-      div = document.createElement("div");
-      div.innerHTML = "<input type='text' value='a bc def g hijkl mn op qrs'/>";
-      container.insertBefore(div, lastchild);
-    }
-    for (i = 0; i < 2000; i++) {
-      div = document.createElement("div");
-      div.innerHTML = "<ul><li>foo<ul><li>bar</li></ul></li><li>baz</li></ul>";
-      container.insertBefore(div, lastchild);
-    }
-    for (i = 0; i < 2000; i++) {
-      div = document.createElement("div");
+    TalosContentProfiler.resume("dhtml test start", true).then(() => {
+      var container = document.getElementById("container");
+      var lastchild = document.getElementById("lastchild");
+      var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
+      var i, div;
+      for (i = 0; i < 2000; i++) {
+        div = document.createElement("div");
+        div.innerHTML = "<input type='text' value='a bc def g hijkl mn op qrs'/>";
+        container.insertBefore(div, lastchild);
+      }
+      for (i = 0; i < 2000; i++) {
+        div = document.createElement("div");
+        div.innerHTML = "<ul><li>foo<ul><li>bar</li></ul></li><li>baz</li></ul>";
+        container.insertBefore(div, lastchild);
+      }
+      for (i = 0; i < 2000; i++) {
+        div = document.createElement("div");
 
-      // eslint-disable-next-line no-unsanitized/property
-      div.innerHTML = "<div role='progressbar'>progressbar</div>" +
-                      "<span id='span" + i + "'>cb</span>";
-      container.appendChild(div);
-    }
-    document.documentElement.offsetLeft; // flush layout
-    setTimeout(postProcessingRecord, 0, start);
+        // eslint-disable-next-line no-unsanitized/property
+        div.innerHTML = "<div role='progressbar'>progressbar</div>" +
+                        "<span id='span" + i + "'>cb</span>";
+        container.appendChild(div);
+      }
+      document.documentElement.offsetLeft; // flush layout
+      setTimeout(postProcessingRecord, 0, start);
+    });
   }
 
   function postProcessingRecord(s) {
     // alert(new Date() - s);
-    tpRecordTime(new Date() - s, s);  // eslint-disable-line mozilla/avoid-Date-timing
+    let delta = new Date() - s; // eslint-disable-line mozilla/avoid-Date-timing
+    TalosContentProfiler.pause("dhtml test finish", true).then(() => {
+      tpRecordTime(delta, s);
+    });
   }
 </script>
 </head>
