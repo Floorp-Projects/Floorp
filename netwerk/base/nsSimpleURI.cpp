@@ -31,6 +31,19 @@ static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
+/* static */ already_AddRefed<nsSimpleURI>
+nsSimpleURI::From(nsIURI* aURI)
+{
+    RefPtr<nsSimpleURI> uri;
+    nsresult rv = aURI->QueryInterface(kThisSimpleURIImplementationCID,
+                                       getter_AddRefs(uri));
+    if (NS_FAILED(rv)) {
+        return nullptr;
+    }
+
+    return uri.forget();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsSimpleURI methods:
 
