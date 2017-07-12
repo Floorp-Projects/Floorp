@@ -79,6 +79,8 @@ public:
 
   void SetVideoNullDecode(bool aIsNullDecode) override;
 
+  void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>) override;
+
 private:
   nsresult InitInternal() override;
 
@@ -519,11 +521,6 @@ private:
   void OnVideoSeekCompleted(media::TimeUnit aTime);
   void OnVideoSeekFailed(const MediaResult& aError);
   bool mSeekScheduled;
-
-  void NotifyCompositorUpdated(RefPtr<layers::KnowsCompositor> aKnowsCompositor)
-  {
-    mKnowsCompositor = aKnowsCompositor.forget();
-  }
 
   void DoAudioSeek();
   void OnAudioSeekCompleted(media::TimeUnit aTime);

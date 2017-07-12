@@ -1075,7 +1075,14 @@ MediaDecoder::NotifyCompositor()
 {
   RefPtr<KnowsCompositor> knowsCompositor = GetCompositor();
   if (knowsCompositor) {
-    mCompositorUpdatedEvent.Notify(knowsCompositor);
+    nsCOMPtr<nsIRunnable> r =
+      NewRunnableMethod<already_AddRefed<KnowsCompositor>&&>(
+        "MediaDecoderReader::UpdateCompositor",
+        mReader,
+        &MediaDecoderReader::UpdateCompositor,
+        knowsCompositor.forget());
+    mReader->OwnerThread()->Dispatch(r.forget(),
+                                     AbstractThread::DontAssertDispatchSuccess);
   }
 }
 
