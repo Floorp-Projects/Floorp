@@ -5,8 +5,8 @@
 #ifndef Utils_h__
 #define Utils_h__
 
-#include "plugin.h"
 #include "ThirdPartyPaths.h"
+#include "plugin.h"
 
 // Check if the given expression contains an assignment expression.
 // This can either take the form of a Binary Operator or a
@@ -34,7 +34,8 @@ inline bool hasSideEffectAssignment(const Expr *Expression) {
   return false;
 }
 
-template <class T> inline bool ASTIsInSystemHeader(const ASTContext &AC, const T &D) {
+template <class T>
+inline bool ASTIsInSystemHeader(const ASTContext &AC, const T &D) {
   auto &SourceManager = AC.getSourceManager();
   auto ExpansionLoc = SourceManager.getExpansionLoc(D.getLocStart());
   if (ExpansionLoc.isInvalid()) {
@@ -43,8 +44,7 @@ template <class T> inline bool ASTIsInSystemHeader(const ASTContext &AC, const T
   return SourceManager.isInSystemHeader(ExpansionLoc);
 }
 
-template<typename T>
-inline StringRef getNameChecked(const T& D) {
+template <typename T> inline StringRef getNameChecked(const T &D) {
   return D->getIdentifier() ? D->getName() : "";
 }
 
@@ -229,7 +229,8 @@ inline bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {
   return false;
 }
 
-inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call, const SourceManager &SM) {
+inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call,
+                                           const SourceManager &SM) {
   SourceLocation Loc = Call->getLocStart();
   SmallString<1024> FileName = SM.getFilename(Loc);
   llvm::sys::fs::make_absolute(FileName);
@@ -411,8 +412,7 @@ inline bool isPlacementNew(const CXXNewExpr *Expression) {
   if (Expression->getNumPlacementArgs() == 0)
     return false;
   const FunctionDecl *Declaration = Expression->getOperatorNew();
-  if (Declaration && hasCustomAnnotation(Declaration,
-                 "moz_heap_allocator")) {
+  if (Declaration && hasCustomAnnotation(Declaration, "moz_heap_allocator")) {
     return false;
   }
   return true;
