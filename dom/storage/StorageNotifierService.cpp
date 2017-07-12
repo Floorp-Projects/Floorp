@@ -67,10 +67,28 @@ StorageNotifierService::Broadcast(StorageEvent* aEvent,
   while (iter.HasMore()) {
     RefPtr<StorageNotificationObserver> observer = iter.GetNext();
 
+    // Enforce that the source storage area's private browsing state matches
+    // this window's state.  These flag checks and their maintenance independent
+    // from the principal's OriginAttributes matter because chrome docshells
+    // that are part of private browsing windows can be private browsing without
+    // having their OriginAttributes set (because they have the system
+    // principal).
+    if (aPrivateBrowsing != observer->IsPrivateBrowsing()) {
+      continue;
+    }
+
+    // No reasons to continue if the principal of the event doesn't match with
+    // the window's one.
+    if (!StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
+                                       observer->GetPrincipal())) {
+      continue;
+    }
+
     RefPtr<Runnable> r = NS_NewRunnableFunction(
       "StorageNotifierService::Broadcast",
       [observer, event, aStorageType, aPrivateBrowsing] () {
-        observer->ObserveStorageNotification(event, aStorageType, aPrivateBrowsing);
+        observer->ObserveStorageNotification(event, aStorageType,
+                                             aPrivateBrowsing);
       });
 
     if (aImmediateDispatch) {
