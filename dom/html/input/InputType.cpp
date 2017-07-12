@@ -16,6 +16,8 @@
 #include "NumericInputTypes.h"
 #include "SingleLineTextInputTypes.h"
 
+#include "nsContentUtils.h"
+
 const mozilla::Decimal InputType::kStepAny = mozilla::Decimal(0);
 
 /* static */ mozilla::UniquePtr<InputType, DoNotDelete>
@@ -198,6 +200,216 @@ bool
 InputType::HasBadInput() const
 {
   return false;
+}
+
+nsresult
+InputType::GetValidationMessage(nsAString& aValidationMessage,
+                                nsIConstraintValidation::ValidityStateType aType)
+{
+  nsresult rv = NS_OK;
+
+  switch (aType)
+  {
+    case nsIConstraintValidation::VALIDITY_STATE_TOO_LONG:
+    {
+      nsXPIDLString message;
+      int32_t maxLength = mInputElement->MaxLength();
+      int32_t textLength =
+        mInputElement->InputTextLength(mozilla::dom::CallerType::System);
+      nsAutoString strMaxLength;
+      nsAutoString strTextLength;
+
+      strMaxLength.AppendInt(maxLength);
+      strTextLength.AppendInt(textLength);
+
+      const char16_t* params[] = { strMaxLength.get(), strTextLength.get() };
+      rv = nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooLong",
+        params, message);
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_TOO_SHORT:
+    {
+      nsXPIDLString message;
+      int32_t minLength = mInputElement->MinLength();
+      int32_t textLength =
+        mInputElement->InputTextLength(mozilla::dom::CallerType::System);
+      nsAutoString strMinLength;
+      nsAutoString strTextLength;
+
+      strMinLength.AppendInt(minLength);
+      strTextLength.AppendInt(textLength);
+
+      const char16_t* params[] = { strMinLength.get(), strTextLength.get() };
+      rv = nsContentUtils::FormatLocalizedString(
+        nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooShort",
+        params, message);
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING:
+    {
+      nsXPIDLString message;
+      rv = GetValueMissingMessage(message);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_TYPE_MISMATCH:
+    {
+      nsXPIDLString message;
+      rv = GetTypeMismatchMessage(message);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_PATTERN_MISMATCH:
+    {
+      nsXPIDLString message;
+      nsAutoString title;
+      mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
+      if (title.IsEmpty()) {
+        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+          "FormValidationPatternMismatch", message);
+      } else {
+        if (title.Length() >
+            nsIConstraintValidation::sContentSpecifiedMaxLengthMessage) {
+          title.Truncate(
+            nsIConstraintValidation::sContentSpecifiedMaxLengthMessage);
+        }
+        const char16_t* params[] = { title.get() };
+        rv = nsContentUtils::FormatLocalizedString(
+          nsContentUtils::eDOM_PROPERTIES,
+          "FormValidationPatternMismatchWithTitle", params, message);
+      }
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_RANGE_OVERFLOW:
+    {
+      nsXPIDLString message;
+      rv = GetRangeOverflowMessage(message);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_RANGE_UNDERFLOW:
+    {
+      nsXPIDLString message;
+      rv = GetRangeUnderflowMessage(message);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_STEP_MISMATCH:
+    {
+      nsXPIDLString message;
+
+      mozilla::Decimal value = mInputElement->GetValueAsDecimal();
+      MOZ_ASSERT(!value.isNaN());
+
+      mozilla::Decimal step = mInputElement->GetStep();
+      MOZ_ASSERT(step != kStepAny && step > mozilla::Decimal(0));
+
+      mozilla::Decimal stepBase = mInputElement->GetStepBase();
+
+      mozilla::Decimal valueLow =
+        value - NS_floorModulo(value - stepBase, step);
+      mozilla::Decimal valueHigh =
+        value + step - NS_floorModulo(value - stepBase, step);
+
+      mozilla::Decimal maximum = mInputElement->GetMaximum();
+
+      if (maximum.isNaN() || valueHigh <= maximum) {
+        nsAutoString valueLowStr, valueHighStr;
+        ConvertNumberToString(valueLow, valueLowStr);
+        ConvertNumberToString(valueHigh, valueHighStr);
+
+        if (valueLowStr.Equals(valueHighStr)) {
+          const char16_t* params[] = { valueLowStr.get() };
+          rv = nsContentUtils::FormatLocalizedString(
+            nsContentUtils::eDOM_PROPERTIES,
+            "FormValidationStepMismatchOneValue", params, message);
+        } else {
+          const char16_t* params[] = { valueLowStr.get(), valueHighStr.get() };
+          rv = nsContentUtils::FormatLocalizedString(
+            nsContentUtils::eDOM_PROPERTIES,
+            "FormValidationStepMismatch", params, message);
+        }
+      } else {
+        nsAutoString valueLowStr;
+        ConvertNumberToString(valueLow, valueLowStr);
+
+        const char16_t* params[] = { valueLowStr.get() };
+        rv = nsContentUtils::FormatLocalizedString(
+          nsContentUtils::eDOM_PROPERTIES,
+          "FormValidationStepMismatchOneValue", params, message);
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    case nsIConstraintValidation::VALIDITY_STATE_BAD_INPUT:
+    {
+      nsXPIDLString message;
+      rv = GetBadInputMessage(message);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      aValidationMessage = message;
+      break;
+    }
+    default:
+      return NS_ERROR_UNEXPECTED;
+  }
+
+  return rv;
+}
+
+nsresult
+InputType::GetValueMissingMessage(nsXPIDLString& aMessage)
+{
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+    "FormValidationValueMissing", aMessage);
+}
+
+nsresult
+InputType::GetTypeMismatchMessage(nsXPIDLString& aMessage)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+InputType::GetRangeOverflowMessage(nsXPIDLString& aMessage)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+InputType::GetRangeUnderflowMessage(nsXPIDLString& aMessage)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+InputType::GetBadInputMessage(nsXPIDLString& aMessage)
+{
+  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult

@@ -71,6 +71,7 @@ const startupPhases = {
       "chrome://webcompat-reporter/content/TabListener.jsm",
       "resource:///modules/AboutNewTab.jsm",
       "resource:///modules/DirectoryLinksProvider.jsm",
+      "resource:///modules/RecentWindow.jsm",
       "resource://gre/modules/BookmarkHTMLUtils.jsm",
       "resource://gre/modules/Bookmarks.jsm",
       "resource://gre/modules/ContextualIdentityService.jsm",

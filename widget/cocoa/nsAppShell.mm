@@ -325,7 +325,12 @@ nsAppShell::Init()
     gAppShellMethodsSwizzled = true;
   }
 
-  if (nsCocoaFeatures::OnYosemiteOrLater()) {
+  // The bug that this works around was introduced in OS X 10.10.0
+  // and fixed in OS X 10.10.2. Order these version checks so as
+  // few as possible will actually end up running.
+  if (nsCocoaFeatures::OSXVersionMinor() == 10 &&
+      nsCocoaFeatures::OSXVersionBugFix() < 2 &&
+      nsCocoaFeatures::OSXVersionMajor() == 10) {
     // Explicitly turn off CGEvent logging.  This works around bug 1092855.
     // If there are already CGEvents in the log, turning off logging also
     // causes those events to be written to disk.  But at this point no

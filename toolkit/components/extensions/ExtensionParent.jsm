@@ -22,8 +22,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
+                                  "resource://gre/modules/DeferredSave.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
                                   "resource:///modules/E10SUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "IndexedDB",
                                   "resource://gre/modules/IndexedDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
@@ -40,6 +44,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
 XPCOMUtils.defineLazyServiceGetter(this, "gAddonPolicyService",
                                    "@mozilla.org/addons/policy-service;1",
                                    "nsIAddonPolicyService");
+XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
+                                   "@mozilla.org/addons/addon-manager-startup;1",
+                                   "amIAddonManagerStartup");
 
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -58,6 +65,7 @@ var {
   defineLazyGetter,
   promiseDocumentLoaded,
   promiseEvent,
+  promiseFileContents,
   promiseObserved,
 } = ExtensionUtils;
 
@@ -1338,65 +1346,73 @@ let IconDetails = {
 let StartupCache = {
   DB_NAME: "ExtensionStartupCache",
 
-  SCHEMA_VERSION: 4,
+  STORE_NAMES: Object.freeze(["locales", "manifests", "permissions", "schemas"]),
 
-  STORE_NAMES: Object.freeze(["locales", "manifests", "schemas"]),
+  get file() {
+    return FileUtils.getFile("ProfLD", ["startupCache", "webext.sc.lz4"]);
+  },
 
-  dbPromise: null,
-
-  initDB(db) {
-    for (let name of StartupCache.STORE_NAMES) {
-      try {
-        db.deleteObjectStore(name);
-      } catch (e) {
-        // Don't worry if the store doesn't already exist.
-      }
-      db.createObjectStore(name, {keyPath: "key"});
+  get saver() {
+    if (!this._saver) {
+      this._saver = new DeferredSave(this.file.path,
+                                     () => this.getBlob(),
+                                     {delay: 5000});
     }
+    return this._saver;
+  },
+
+  async save() {
+    return this.saver.saveChanges();
+  },
+
+  getBlob() {
+    return new Uint8Array(aomStartup.encodeBlob(this._data));
+  },
+
+  _data: null,
+  async _readData() {
+    let result = new Map();
+    try {
+      let data = await promiseFileContents(this.file);
+
+      result = aomStartup.decodeBlob(data);
+    } catch (e) {
+      if (!e.becauseNoSuchFile) {
+        Cu.reportError(e);
+      }
+    }
+
+    this._data = result;
+    return result;
+  },
+
+  get dataPromise() {
+    if (!this._dataPromise) {
+      this._dataPromise = this._readData();
+    }
+    return this._dataPromise;
   },
 
   clearAddonData(id) {
-    let range = IDBKeyRange.bound([id], [id, "\uFFFF"]);
-
     return Promise.all([
-      this.locales.delete(range),
-      this.manifests.delete(range),
+      this.locales.delete(id),
+      this.manifests.delete(id),
+      this.permissions.delete(id),
     ]).catch(e => {
       // Ignore the error. It happens when we try to flush the add-on
       // data after the AddonManager has flushed the entire startup cache.
-      this.dbPromise = this.reallyOpen(true).catch(e => {});
     });
-  },
-
-  async reallyOpen(invalidate = false) {
-    if (this.dbPromise) {
-      let db = await this.dbPromise;
-      db.close();
-    }
-
-    if (invalidate) {
-      IndexedDB.deleteDatabase(this.DB_NAME, {storage: "persistent"});
-    }
-
-    return IndexedDB.open(this.DB_NAME,
-                          {storage: "persistent", version: this.SCHEMA_VERSION},
-                          db => this.initDB(db));
-  },
-
-  async open() {
-    if (!this.dbPromise) {
-      this.dbPromise = this.reallyOpen();
-    }
-
-    return this.dbPromise;
   },
 
   observe(subject, topic, data) {
     if (topic === "startupcache-invalidate") {
-      this.dbPromise = this.reallyOpen(true).catch(e => {});
+      this._data = new Map();
+      this._dataPromise = Promise.resolve(this._data);
     }
   },
 };
+
+// void StartupCache.dataPromise;
 
 Services.obs.addObserver(StartupCache, "startupcache-invalidate");
 
@@ -1405,56 +1421,56 @@ class CacheStore {
     this.storeName = storeName;
   }
 
-  async get(key, createFunc) {
-    let db;
-    let result;
-    try {
-      db = await StartupCache.open();
+  async getStore(path = null) {
+    let data = await StartupCache.dataPromise;
 
-      result = await db.objectStore(this.storeName)
-                      .get(key);
-    } catch (e) {
-      Cu.reportError(e);
-
-      return createFunc(key);
+    let store = data.get(this.storeName);
+    if (!store) {
+      store = new Map();
+      data.set(this.storeName, store);
     }
 
-    if (result === undefined) {
-      let value = await createFunc(key);
-      result = {key, value};
-
-      try {
-        db.objectStore(this.storeName, "readwrite")
-          .put(result);
-      } catch (e) {
-        Cu.reportError(e);
+    let key = path;
+    if (Array.isArray(path)) {
+      for (let elem of path.slice(0, -1)) {
+        let next = store.get(elem);
+        if (!next) {
+          next = new Map();
+          store.set(elem, next);
+        }
+        store = next;
       }
+      key = path[path.length - 1];
     }
 
-    return result && result.value;
+    return [store, key];
   }
 
-  async getAll() {
-    let result = new Map();
-    try {
-      let db = await StartupCache.open();
+  async get(path, createFunc) {
+    let [store, key] = await this.getStore(path);
 
-      let results = await db.objectStore(this.storeName)
-                            .getAll();
-      for (let {key, value} of results) {
-        result.set(key, value);
-      }
-    } catch (e) {
-      Cu.reportError(e);
+    let result = store.get(key);
+
+    if (result === undefined) {
+      result = await createFunc(path);
+      store.set(key, result);
+      StartupCache.save();
     }
 
     return result;
   }
 
-  async delete(key) {
-    let db = await StartupCache.open();
+  async getAll() {
+    let [store] = await this.getStore();
 
-    return db.objectStore(this.storeName, "readwrite").delete(key);
+    return new Map(store);
+  }
+
+  async delete(path) {
+    let [store, key] = await this.getStore(path);
+
+    store.delete(key);
+    StartupCache.save();
   }
 }
 
