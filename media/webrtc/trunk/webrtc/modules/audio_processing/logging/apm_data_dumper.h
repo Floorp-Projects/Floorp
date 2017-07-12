@@ -21,20 +21,12 @@
 #include "webrtc/base/array_view.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/common_audio/wav_file.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 // Check to verify that the define is properly set.
 #if !defined(WEBRTC_APM_DEBUG_DUMP) || \
     (WEBRTC_APM_DEBUG_DUMP != 0 && WEBRTC_APM_DEBUG_DUMP != 1)
 #error "Set WEBRTC_APM_DEBUG_DUMP to either 0 or 1"
-#endif
-
-#if WEBRTC_APM_DEBUG_DUMP == 1
-extern "C" {
-  extern int AECDebug();
-  extern uint32_t AECDebugMaxSize();
-  extern void AECDebugEnable(uint32_t enable);
-  extern void AECDebugFilenameBase(char *buffer, size_t size);
-}
 #endif
 
 namespace webrtc {
@@ -70,7 +62,7 @@ class ApmDataDumper {
   // various formats.
   void DumpRaw(const char* name, int v_length, const float* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (AECDebug()) {
+    if (webrtc::Trace::aec_debug()) {
       FILE* file = GetRawFile(name);
       if (file) {
         fwrite(v, sizeof(v[0]), v_length, file);
@@ -87,7 +79,7 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const bool* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (AECDebug()) {
+    if (webrtc::Trace::aec_debug()) {
       FILE* file = GetRawFile(name);
       if (file) {
         for (int k = 0; k < v_length; ++k) {
@@ -107,7 +99,7 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const int16_t* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (AECDebug()) {
+    if (webrtc::Trace::aec_debug()) {
       FILE* file = GetRawFile(name);
       if (file) {
         fwrite(v, sizeof(v[0]), v_length, file);
@@ -124,7 +116,7 @@ class ApmDataDumper {
 
   void DumpRaw(const char* name, int v_length, const int32_t* v) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (AECDebug()) {
+    if (webrtc::Trace::aec_debug()) {
       FILE* file = GetRawFile(name);
       if (file) {
         fwrite(v, sizeof(v[0]), v_length, file);
@@ -145,7 +137,7 @@ class ApmDataDumper {
                int sample_rate_hz,
                int num_channels) {
 #if WEBRTC_APM_DEBUG_DUMP == 1
-    if (AECDebug()) {
+    if (webrtc::Trace::aec_debug()) {
       WavWriter* file = GetWavFile(name, sample_rate_hz, num_channels);
       file->WriteSamples(v, v_length);
       // Cheat and use aec_near as a stand-in for "size of the largest file"
@@ -183,8 +175,8 @@ class ApmDataDumper {
   void updateDebugWritten(uint32_t amount) {
     debug_written_ += amount;
     // Limit largest files to a specific (rough) size, to avoid filling up disk.
-    if (debug_written_ >= AECDebugMaxSize()) {
-      AECDebugEnable(0);
+    if (debug_written_ >= webrtc::Trace::aec_debug_size()) {
+      webrtc::Trace::set_aec_debug(false);
     }
   }
 

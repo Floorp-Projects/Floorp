@@ -29,11 +29,6 @@ std::string FormFileName(const char* name,
                          int instance_index,
                          int reinit_index,
                          const std::string& suffix) {
-  char path[1024];
-  AECDebugFilenameBase(path, sizeof(path));
-
-  char* end = path + strlen(path) - 1;
-
 #ifdef WEBRTC_WIN
   char sep = '\\';
 #else
@@ -41,10 +36,13 @@ std::string FormFileName(const char* name,
 #endif
 
   std::stringstream ss;
-  ss << path;
-  if (*end != sep) {
+  std::string base = webrtc::Trace::aec_debug_filename();
+  ss << base;
+
+  if (base.length() && base.back() != sep) {
     ss << sep;
   }
+
   ss << name << "_" << instance_index << "-" << reinit_index << suffix;
   return ss.str();
 }
