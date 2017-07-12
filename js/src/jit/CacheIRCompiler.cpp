@@ -1835,7 +1835,7 @@ CacheIRCompiler::emitLoadStringCharResult()
     // Bounds check, load string char.
     masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
                   index, failure->label());
-    masm.loadStringChar(str, index, scratch1, failure->label());
+    masm.loadStringChar(str, index, scratch2, scratch1, failure->label());
 
     // Load StaticString for this char.
     masm.branch32(Assembler::AboveOrEqual, scratch1, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
