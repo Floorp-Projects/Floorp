@@ -531,7 +531,8 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
 
         // src url ==> start the load process
         else if (currSrc.mSourceType == gfxFontFaceSrc::eSourceType_URL) {
-            if (gfxPlatform::GetPlatform()->IsFontFormatSupported(currSrc.mURI,
+            if (gfxPlatform::GetPlatform()->IsFontFormatSupported(
+                    currSrc.mURI->get(),
                     currSrc.mFormatFlags)) {
 
                 if (ServoStyleSet* set = ServoStyleSet::Current()) {
@@ -574,9 +575,7 @@ gfxUserFontEntry::DoLoadNextSrc(bool aForceAsync)
 
                     bool loadDoesntSpin = false;
                     if (!aForceAsync) {
-                        rv = NS_URIChainHasFlags(currSrc.mURI,
-                               nsIProtocolHandler::URI_SYNC_LOAD_IS_OK,
-                               &loadDoesntSpin);
+                        loadDoesntSpin = currSrc.mURI->SyncLoadIsOK();
                     }
 
                     if (NS_SUCCEEDED(rv) && loadDoesntSpin) {
@@ -1139,14 +1138,9 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
 }
 
 static bool
-IgnorePrincipal(nsIURI* aURI)
+IgnorePrincipal(gfxFontSrcURI* aURI)
 {
-    nsresult rv;
-    bool inherits = false;
-    rv = NS_URIChainHasFlags(aURI,
-                             nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                             &inherits);
-    return NS_SUCCEEDED(rv) && inherits;
+    return aURI->InheritsSecurityContext();
 }
 
 bool
@@ -1154,8 +1148,7 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
 {
     const gfxFontEntry* fe = aKey->mFontEntry;
 
-    bool result;
-    if (NS_FAILED(mURI->Equals(aKey->mURI, &result)) || !result) {
+    if (!mURI->Equals(aKey->mURI)) {
         return false;
     }
 
@@ -1163,6 +1156,7 @@ gfxUserFontSet::UserFontCache::Entry::KeyEquals(const KeyTypePointer aKey) const
     if (!IgnorePrincipal(mURI)) {
         NS_ASSERTION(mPrincipal && aKey->mPrincipal,
                      "only data: URIs are allowed to omit the principal");
+        bool result;
         if (NS_FAILED(mPrincipal->Equals(aKey->mPrincipal, &result)) ||
             !result) {
             return false;
@@ -1271,7 +1265,7 @@ gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry)
 }
 
 gfxFontEntry*
-gfxUserFontSet::UserFontCache::GetFont(nsIURI* aSrcURI,
+gfxUserFontSet::UserFontCache::GetFont(gfxFontSrcURI* aSrcURI,
                                        nsIPrincipal* aPrincipal,
                                        gfxUserFontEntry* aUserFontEntry,
                                        bool aPrivate)
@@ -1305,7 +1299,7 @@ gfxUserFontSet::UserFontCache::GetFont(nsIURI* aSrcURI,
     } else {
         // Call IsFontLoadAllowed directly, since we are on the main thread.
         MOZ_ASSERT(NS_IsMainThread());
-        allowed = aUserFontEntry->mFontSet->IsFontLoadAllowed(aSrcURI,
+        allowed = aUserFontEntry->mFontSet->IsFontLoadAllowed(aSrcURI->get(),
                                                               aPrincipal);
         MOZ_ASSERT(!entry->IsFontSetAllowedKnown(aUserFontEntry->mFontSet) ||
                    entry->IsFontSetAllowed(aUserFontEntry->mFontSet) == allowed,
@@ -1342,7 +1336,8 @@ gfxUserFontSet::UserFontCache::UpdateAllowedFontSets(
                 principal = aUserFontSet->GetStandardFontLoadPrincipal();
             }
             bool allowed =
-                aUserFontSet->IsFontLoadAllowed(entry->GetURI(), principal);
+                aUserFontSet->IsFontLoadAllowed(entry->GetURI()->get(),
+                principal);
             entry->SetIsFontSetAllowed(aUserFontSet, allowed);
         }
     }
@@ -1427,7 +1422,7 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(
             // Some fonts are loaded using horrendously-long data: URIs;
             // truncate those before reporting them.
             bool isData;
-            if (NS_SUCCEEDED(mURI->SchemeIs("data", &isData)) && isData &&
+            if (NS_SUCCEEDED(mURI->get()->SchemeIs("data", &isData)) && isData &&
                 spec.Length() > 255) {
                 spec.Truncate(252);
                 spec.Append("...");
@@ -1513,7 +1508,7 @@ gfxUserFontSet::UserFontCache::Entry::Dump()
     printf("userfontcache fontEntry: %p fonturihash: %8.8x "
            "family: %s domainset: %s principal: [%s]\n",
            mFontEntry,
-           nsURIHashKey::HashKey(mURI),
+           mURI->Hash(),
            NS_ConvertUTF16toUTF8(mFontEntry->FamilyName()).get(),
            setDomain ? "true" : "false",
            principalURISpec.get());
