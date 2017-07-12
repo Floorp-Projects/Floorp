@@ -9,8 +9,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/ctypes.jsm");
+Cu.importGlobalProperties(["fetch"]); /* globals fetch */
 
 const FILE_UPDATE_LOCALE                  = "update.locale";
 const PREF_APP_DISTRIBUTION               = "distribution.id";
@@ -19,6 +19,8 @@ const PREF_APP_UPDATE_CUSTOM              = "app.update.custom";
 
 
 this.UpdateUtils = {
+  _locale: undefined,
+
   /**
    * Read the update channel from defaults only.  We do this to ensure that
    * the channel is tightly coupled with the application and does not apply
@@ -61,7 +63,9 @@ this.UpdateUtils = {
    *         The URL to format.
    * @return The formatted URL.
    */
-  formatUpdateURL(url) {
+  async formatUpdateURL(url) {
+    const locale = await this.getLocale();
+
     return url.replace(/%(\w+)%/g, (match, name) => {
       switch (name) {
         case "PRODUCT":
@@ -75,7 +79,7 @@ this.UpdateUtils = {
         case "OS_VERSION":
           return this.OSVersion;
         case "LOCALE":
-          return this.Locale;
+          return locale;
         case "CHANNEL":
           return this.UpdateChannel;
         case "PLATFORM_VERSION":
@@ -91,6 +95,37 @@ this.UpdateUtils = {
       }
       return match;
     }).replace(/\+/g, "%2B");
+  },
+
+  /**
+   * Gets the locale from the update.locale file for replacing %LOCALE% in the
+   * update url. The update.locale file can be located in the application
+   * directory or the GRE directory with preference given to it being located in
+   * the application directory.
+   */
+  async getLocale() {
+    if (this._locale !== undefined) {
+      return this._locale;
+    }
+
+    for (let res of ["app", "gre"]) {
+      const url = "resource://" + res + "/" + FILE_UPDATE_LOCALE;
+      let data;
+      try {
+        data = await fetch(url);
+      } catch (e) {
+        continue;
+      }
+      const locale = await data.text();
+      if (locale) {
+        return this._locale = locale.trim();
+      }
+    }
+
+    Cu.reportError(FILE_UPDATE_LOCALE + " file doesn't exist in either the " +
+                   "application or GRE directories");
+
+    return this._locale = null;
   }
 };
 
@@ -98,35 +133,6 @@ this.UpdateUtils = {
 function getDistributionPrefValue(aPrefName) {
   return Services.prefs.getDefaultBranch(null).getCharPref(aPrefName, "default");
 }
-
-/**
- * Gets the locale from the update.locale file for replacing %LOCALE% in the
- * update url. The update.locale file can be located in the application
- * directory or the GRE directory with preference given to it being located in
- * the application directory.
- */
-XPCOMUtils.defineLazyGetter(UpdateUtils, "Locale", function() {
-  let channel;
-  let locale;
-  for (let res of ["app", "gre"]) {
-    channel = NetUtil.newChannel({
-      uri: "resource://" + res + "/" + FILE_UPDATE_LOCALE,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_XMLHTTPREQUEST,
-      loadUsingSystemPrincipal: true
-    });
-    try {
-      let inputStream = channel.open2();
-      locale = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-    } catch (e) {}
-    if (locale)
-      return locale.trim();
-  }
-
-  Cu.reportError(FILE_UPDATE_LOCALE + " file doesn't exist in either the " +
-                 "application or GRE directories");
-
-  return null;
-});
 
 function getSystemCapabilities() {
   return gInstructionSet + "," + getMemoryMB();

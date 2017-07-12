@@ -59,7 +59,7 @@ GMPInstallManager.prototype = {
   /**
    * Obtains a URL with replacement of vars
    */
-  _getURL() {
+  async _getURL() {
     let log = getScopedLogger("GMPInstallManager._getURL");
     // Use the override URL if it is specified.  The override URL is just like
     // the normal URL but it does not check the cert.
@@ -71,7 +71,7 @@ GMPInstallManager.prototype = {
       log.info("Using url: " + url);
     }
 
-    url = UpdateUtils.formatUpdateURL(url);
+    url = await UpdateUtils.formatUpdateURL(url);
 
     log.info("Using url (with replacement): " + url);
     return url;
@@ -88,14 +88,13 @@ GMPInstallManager.prototype = {
    *           status: The HTTP status code
    *           type: Sometimes specifies type of rejection
    */
-  checkForAddons() {
+  async checkForAddons() {
     let log = getScopedLogger("GMPInstallManager.checkForAddons");
     if (this._deferred) {
         log.error("checkForAddons already called");
         return Promise.reject({type: "alreadycalled"});
     }
     this._deferred = PromiseUtils.defer();
-    let url = this._getURL();
 
     let allowNonBuiltIn = true;
     let certs = null;
@@ -106,8 +105,10 @@ GMPInstallManager.prototype = {
       }
     }
 
+    let url = await this._getURL();
+
     let addonPromise = ProductAddonChecker
-      .getProductAddonList(url, allowNonBuiltIn, certs);
+        .getProductAddonList(url, allowNonBuiltIn, certs);
 
     addonPromise.then(res => {
       if (!res || !res.gmpAddons) {
@@ -121,7 +122,6 @@ GMPInstallManager.prototype = {
       this._deferred.reject(ex);
       delete this._deferred;
     });
-
     return this._deferred.promise;
   },
   /**
