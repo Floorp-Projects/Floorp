@@ -51,13 +51,12 @@ add_task(async function() {
   // Disable Smart Bookmarks creation.
   Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
 
+  let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
   // Initialize Places through the History Service and check that a new
   // database has been created.
   Assert.equal(PlacesUtils.history.databaseStatus,
                PlacesUtils.history.DATABASE_STATUS_CREATE);
-
   // Force distribution.
-  let glue = Cc["@mozilla.org/browser/browserglue;1"].getService(Ci.nsIObserver)
   glue.observe(null, TOPIC_BROWSERGLUE_TEST, TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
 
   // Test will continue on customization complete notification.

@@ -7,8 +7,27 @@ Cu.import("resource://services-sync/UIState.jsm");
 
 const UIStateInternal = UIState._internal;
 
-add_task(async function test_isReady() {
+add_task(async function test_isReady_unconfigured() {
   UIState.reset();
+
+  let refreshState = sinon.spy(UIStateInternal, "refreshState");
+
+  // On the first call, returns false
+  // Does not trigger a refresh of the state since services.sync.username is undefined
+  ok(!UIState.isReady());
+  ok(!refreshState.called);
+  refreshState.reset();
+
+  // On subsequent calls, only return true
+  ok(UIState.isReady());
+  ok(!refreshState.called);
+
+  refreshState.restore();
+});
+
+add_task(async function test_isReady_signedin() {
+  UIState.reset();
+  Services.prefs.setCharPref("services.sync.username", "foo");
 
   let refreshState = sinon.spy(UIStateInternal, "refreshState");
 

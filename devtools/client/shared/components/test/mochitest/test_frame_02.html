@@ -1,0 +1,97 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the frame component reacts to source-map pref changse.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Frame component source-map test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript"></script>
+<script type="application/javascript">
+window.onload = Task.async(function* () {
+  try {
+    const Services = browserRequire("Services");
+    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    let React = browserRequire("devtools/client/shared/vendor/react");
+    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/frame"));
+
+    const resolvedLocation = {
+      sourceId: "whatever",
+      line: 23,
+      sourceUrl: "https://bugzilla.mozilla.org/original.js",
+    };
+    let mockSourceMapService = {
+      _update: function () {
+        this._callback(Services.prefs.getBoolPref(PREF),
+                       resolvedLocation.sourceUrl,
+                       resolvedLocation.line);
+      },
+      subscribe: function (url, line, column, callback) {
+        this._callback = callback;
+	// Resolve immediately.
+        this._update();
+      },
+      unsubscribe: function (url, line, column, callback) {
+      },
+    };
+
+    let props = {
+      onClick: () => {},
+      frame: {
+	line: 97,
+	source: "https://bugzilla.mozilla.org/bundle.js",
+      },
+      sourceMapService: mockSourceMapService,
+    };
+
+    const PREF = "devtools.source-map.client-service.enabled";
+    Services.prefs.setBoolPref(PREF, false);
+
+    let frame = ReactDOM.render(Frame(props), window.document.body);
+    let el = ReactDOM.findDOMNode(frame);
+    let { source } = props.frame;
+
+    let expectedOriginal = {
+      file: "original.js",
+      line: resolvedLocation.line,
+      shouldLink: true,
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:23",
+      source: "https://bugzilla.mozilla.org/original.js",
+    };
+    let expectedGenerated = {
+      file: "bundle.js",
+      line: 97,
+      shouldLink: true,
+      tooltip: "View source in Debugger → https://bugzilla.mozilla.org/bundle.js:97",
+      source: "https://bugzilla.mozilla.org/bundle.js",
+    };
+
+    checkFrameString(Object.assign({ el, source }, expectedGenerated));
+
+    Services.prefs.setBoolPref(PREF, true);
+    mockSourceMapService._update();
+    checkFrameString(Object.assign({ el, source }, expectedOriginal));
+
+    Services.prefs.setBoolPref(PREF, false);
+    mockSourceMapService._update();
+    checkFrameString(Object.assign({ el, source }, expectedGenerated));
+
+    Services.prefs.clearUserPref(PREF);
+  } catch (e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

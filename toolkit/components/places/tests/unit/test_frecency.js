@@ -114,8 +114,6 @@ async function ensure_results_internal(uris, searchTerm) {
 try {
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
                 getService(Ci.nsITaggingService);
-  var bmksvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                getService(Ci.nsINavBookmarksService);
 } catch (ex) {
   do_throw("Could not get history service\n");
 }
@@ -129,13 +127,20 @@ async function task_setCountDate(aURI, aCount, aDate) {
   await PlacesTestUtils.addVisits(visits);
 }
 
-function setBookmark(aURI) {
-  bmksvc.insertBookmark(bmksvc.bookmarksMenuFolder, aURI, -1, "bleh");
+async function setBookmark(aURI) {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    url: aURI,
+    title: "bleh"
+  });
 }
 
-function tagURI(aURI, aTags) {
-  bmksvc.insertBookmark(bmksvc.unfiledBookmarksFolder, aURI,
-                        bmksvc.DEFAULT_INDEX, "bleh");
+async function tagURI(aURI, aTags) {
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: aURI,
+    title: "bleh",
+  });
   tagssvc.tagURI(aURI, aTags);
 }
 
@@ -158,28 +163,28 @@ async function() {
   print("TEST-INFO | Test 0: same count, different date");
   await task_setCountDate(uri1, c1, d1);
   await task_setCountDate(uri2, c1, d2);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri1, uri2], "");
 },
 async function() {
   print("TEST-INFO | Test 1: same count, different date");
   await task_setCountDate(uri1, c1, d2);
   await task_setCountDate(uri2, c1, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri2, uri1], "");
 },
 async function() {
   print("TEST-INFO | Test 2: different count, same date");
   await task_setCountDate(uri1, c1, d1);
   await task_setCountDate(uri2, c2, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri1, uri2], "");
 },
 async function() {
   print("TEST-INFO | Test 3: different count, same date");
   await task_setCountDate(uri1, c2, d1);
   await task_setCountDate(uri2, c1, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri2, uri1], "");
 },
 
@@ -188,72 +193,72 @@ async function() {
   print("TEST-INFO | Test 4: same count, different date");
   await task_setCountDate(uri1, c1, d1);
   await task_setCountDate(uri2, c1, d2);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri1, uri2], "site");
 },
 async function() {
   print("TEST-INFO | Test 5: same count, different date");
   await task_setCountDate(uri1, c1, d2);
   await task_setCountDate(uri2, c1, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri2, uri1], "site");
 },
 async function() {
   print("TEST-INFO | Test 6: different count, same date");
   await task_setCountDate(uri1, c1, d1);
   await task_setCountDate(uri2, c2, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri1, uri2], "site");
 },
 async function() {
   print("TEST-INFO | Test 7: different count, same date");
   await task_setCountDate(uri1, c2, d1);
   await task_setCountDate(uri2, c1, d1);
-  tagURI(uri1, ["site"]);
+  await tagURI(uri1, ["site"]);
   await ensure_results([uri2, uri1], "site");
 },
 // There are multiple tests for 8, hence the multiple functions
 // Bug 426166 section
 async function() {
   print("TEST-INFO | Test 8.1a: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "a");
 },
 async function() {
   print("TEST-INFO | Test 8.1b: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "aa");
 },
 async function() {
   print("TEST-INFO | Test 8.2: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "aaa");
 },
 async function() {
   print("TEST-INFO | Test 8.3: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "aaaa");
 },
 async function() {
   print("TEST-INFO | Test 8.4: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "aaa");
 },
 async function() {
   print("TEST-INFO | Test 8.5: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "aa");
 },
 async function() {
   print("TEST-INFO | Test 8.6: same count, same date");
-  setBookmark(uri3);
-  setBookmark(uri4);
+  await setBookmark(uri3);
+  await setBookmark(uri4);
   await ensure_results([uri4, uri3], "a");
 }
 ];

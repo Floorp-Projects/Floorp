@@ -202,11 +202,15 @@ nsFaviconService::ExpireAllFavicons()
   , removeIconsStmt.get()
   , unlinkIconsStmt.get()
   };
+  nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
+  if (!conn) {
+    return NS_ERROR_UNEXPECTED;
+  }
   nsCOMPtr<mozIStoragePendingStatement> ps;
   RefPtr<ExpireFaviconsStatementCallbackNotifier> callback =
     new ExpireFaviconsStatementCallbackNotifier();
-  return mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts),
-                                       callback, getter_AddRefs(ps));
+  return conn->ExecuteAsync(stmts, ArrayLength(stmts),
+                                        callback, getter_AddRefs(ps));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

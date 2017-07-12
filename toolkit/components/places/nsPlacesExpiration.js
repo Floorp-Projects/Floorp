@@ -841,26 +841,30 @@ nsPlacesExpiration.prototype = {
       let db;
       try {
         db = await PlacesUtils.promiseDBConnection();
+        if (db) {
+          let row = (await db.execute(`SELECT * FROM pragma_page_size(),
+                                                pragma_page_count(),
+                                                pragma_freelist_count(),
+                                                (SELECT count(*) FROM moz_places)`))[0];
+          let pageSize = row.getResultByIndex(0);
+          let pageCount = row.getResultByIndex(1);
+          let freelistCount = row.getResultByIndex(2);
+          let uriCount = row.getResultByIndex(3);
+          let dbSize = (pageCount - freelistCount) * pageSize;
+          let avgURISize = Math.ceil(dbSize / uriCount);
+          // For new profiles this value may be too large, due to the Sqlite header,
+          // or Infinity when there are no pages.  Thus we must limit it.
+          if (avgURISize > (URIENTRY_AVG_SIZE * 3)) {
+            avgURISize = URIENTRY_AVG_SIZE;
+          }
+          this._urisLimit = Math.ceil(optimalDatabaseSize / avgURISize);
+        }
       } catch (ex) {
         // We may have been initialized late in the shutdown process, maybe
         // by a call to clear history on shutdown.
         // If we're unable to get a connection clone, we'll just proceed with
         // the default value, it should not be critical at this point in the
         // application life-cycle.
-      }
-      if (db) {
-        let pageSize = (await db.execute(`PRAGMA page_size`))[0].getResultByIndex(0);
-        let pageCount = (await db.execute(`PRAGMA page_count`))[0].getResultByIndex(0);
-        let freelistCount = (await db.execute(`PRAGMA freelist_count`))[0].getResultByIndex(0);
-        let dbSize = (pageCount - freelistCount) * pageSize;
-        let uriCount = (await db.execute(`SELECT count(*) FROM moz_places`))[0].getResultByIndex(0);
-        let avgURISize = Math.ceil(dbSize / uriCount);
-        // For new profiles this value may be too large, due to the Sqlite header,
-        // or Infinity when there are no pages.  Thus we must limit it.
-        if (avgURISize > (URIENTRY_AVG_SIZE * 3)) {
-          avgURISize = URIENTRY_AVG_SIZE;
-        }
-        this._urisLimit = Math.ceil(optimalDatabaseSize / avgURISize);
       }
     }
 

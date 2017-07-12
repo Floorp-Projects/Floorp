@@ -237,6 +237,7 @@ double Gecko_GetPositionInSegment(
   RawGeckoAnimationPropertySegmentBorrowed aSegment,
   double aProgress,
   mozilla::ComputedTimingFunction::BeforeFlag aBeforeFlag);
+bool Gecko_IsFramesTimingEnabled();
 // Get servo's AnimationValue for |aProperty| from the cached base style
 // |aBaseStyles|.
 // |aBaseStyles| is nsRefPtrHashtable<nsUint32HashKey, RawServoAnimationValue>.

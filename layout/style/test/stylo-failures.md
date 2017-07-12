@@ -60,8 +60,6 @@ to mochitest command.
     * test_align_shorthand_serialization.html [6]
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
-  * serialize subprops to -moz-use-system-font when using system font bug 1364289
-    * test_value_storage.html `'font'` [240]
   * different serialization for gradient functions in computed value bug 1367274
     * test_computed_style.html `gradient` [13]
 * Unsupported pseudo-elements or anon boxes

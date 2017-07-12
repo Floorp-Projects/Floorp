@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "nsIEventTarget.h"
 #include "Shutdown.h"
+#include "nsCategoryCache.h"
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
@@ -22,8 +23,6 @@
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
-// Fired when initialization fails due to a locked database.
-#define TOPIC_DATABASE_LOCKED "places-database-locked"
 // This topic is received when the profile is about to be lost.  Places does
 // initial shutdown work and notifies TOPIC_PLACES_SHUTDOWN to all listeners.
 // Any shutdown work that requires the Places APIs should happen here.
@@ -95,12 +94,23 @@ public:
   static already_AddRefed<Database> GetDatabase();
 
   /**
+   * Actually initialized the connection on first need.
+   */
+  nsresult EnsureConnection();
+
+  /**
+   * Notifies that the connection has been initialized.
+   */
+  nsresult NotifyConnectionInitalized();
+
+  /**
    * Returns last known database status.
    *
    * @return one of the nsINavHistoryService::DATABASE_STATUS_* constants.
    */
-  uint16_t GetDatabaseStatus() const
+  uint16_t GetDatabaseStatus()
   {
+    mozilla::Unused << EnsureConnection();
     return mDatabaseStatus;
   }
 
@@ -109,8 +119,9 @@ public:
    *
    * @return The connection handle.
    */
-  mozIStorageConnection* MainConn() const
+  mozIStorageConnection* MainConn()
   {
+    mozilla::Unused << EnsureConnection();
     return mMainConn;
   }
 
@@ -121,9 +132,9 @@ public:
    * @param aEvent
    *        The runnable to be dispatched.
    */
-  void DispatchToAsyncThread(nsIRunnable* aEvent) const
+  void DispatchToAsyncThread(nsIRunnable* aEvent)
   {
-    if (mClosed) {
+    if (mClosed || NS_FAILED(EnsureConnection())) {
       return;
     }
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(mMainConn);
@@ -146,7 +157,7 @@ public:
    */
   template<int N>
   already_AddRefed<mozIStorageStatement>
-  GetStatement(const char (&aQuery)[N]) const
+  GetStatement(const char (&aQuery)[N])
   {
     nsDependentCString query(aQuery, N - 1);
     return GetStatement(query);
@@ -161,7 +172,7 @@ public:
    * @note Always null check the result.
    * @note Always use a scoper to reset the statement.
    */
-  already_AddRefed<mozIStorageStatement>  GetStatement(const nsACString& aQuery) const;
+  already_AddRefed<mozIStorageStatement>  GetStatement(const nsACString& aQuery);
 
   /**
    * Gets a cached asynchronous statement.
@@ -174,7 +185,7 @@ public:
    */
   template<int N>
   already_AddRefed<mozIStorageAsyncStatement>
-  GetAsyncStatement(const char (&aQuery)[N]) const
+  GetAsyncStatement(const char (&aQuery)[N])
   {
     nsDependentCString query(aQuery, N - 1);
     return GetAsyncStatement(query);
@@ -189,7 +200,7 @@ public:
    * @note Always null check the result.
    * @note AsyncStatements are automatically reset on execution.
    */
-  already_AddRefed<mozIStorageAsyncStatement> GetAsyncStatement(const nsACString& aQuery) const;
+  already_AddRefed<mozIStorageAsyncStatement> GetAsyncStatement(const nsACString& aQuery);
 
   uint32_t MaxUrlLength();
 
@@ -197,10 +208,8 @@ protected:
   /**
    * Finalizes the cached statements and closes the database connection.
    * A TOPIC_PLACES_CONNECTION_CLOSED notification is fired when done.
-   *
-   * @param Whether database init succeeded.
    */
-  void Shutdown(bool aInitSucceeded);
+  void Shutdown();
 
   bool IsShutdownStarted() const;
 
@@ -345,6 +354,9 @@ private:
   // they are slower to search through and cause abnormal database growth,
   // affecting the awesomebar fetch time.
   uint32_t mMaxUrlLength;
+
+  // Used to initialize components on places startup.
+  nsCategoryCache<nsIObserver> mCacheObservers;
 };
 
 } // namespace places

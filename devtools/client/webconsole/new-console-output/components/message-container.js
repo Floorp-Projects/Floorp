@@ -30,6 +30,7 @@ const MessageContainer = createClass({
   displayName: "MessageContainer",
 
   propTypes: {
+    messageId: PropTypes.string.isRequired,
     open: PropTypes.bool.isRequired,
     serviceContainer: PropTypes.object.isRequired,
     tableData: PropTypes.object,
@@ -37,6 +38,7 @@ const MessageContainer = createClass({
     repeat: PropTypes.number,
     networkMessageUpdate: PropTypes.object,
     getMessage: PropTypes.func.isRequired,
+    loadedObjectProperties: PropTypes.object,
   },
 
   getDefaultProps: function () {
@@ -53,12 +55,15 @@ const MessageContainer = createClass({
       this.props.timestampsVisible !== nextProps.timestampsVisible;
     const networkMessageUpdateChanged =
       this.props.networkMessageUpdate !== nextProps.networkMessageUpdate;
+    const loadedObjectPropertiesChanged =
+      this.props.loadedObjectProperties !== nextProps.loadedObjectProperties;
 
     return repeatChanged
       || openChanged
       || tableDataChanged
       || timestampVisibleChanged
-      || networkMessageUpdateChanged;
+      || networkMessageUpdateChanged
+      || loadedObjectPropertiesChanged;
   },
 
   render() {

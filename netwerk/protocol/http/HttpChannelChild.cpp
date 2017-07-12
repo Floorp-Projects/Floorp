@@ -1086,8 +1086,11 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
 
   if (mLoadFlags & LOAD_DOCUMENT_URI) {
     // Keep IPDL channel open, but only for updating security info.
-    mKeptAlive = true;
-    SendDocumentChannelCleanup();
+    // If IPDL is already closed, then do nothing.
+    if (mIPCOpen) {
+      mKeptAlive = true;
+      SendDocumentChannelCleanup();
+    }
   } else {
     // The parent process will respond by sending a DeleteSelf message and
     // making sure not to send any more messages after that.

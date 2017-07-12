@@ -33,8 +33,8 @@ public:
     // could potentially break the comparison logic. In reality, this is extremely
     // unlikely to occur (potentially impossible), but these nsCOMPtrs are safer.
     // They are never dereferenced.
-    nsCOMPtr<nsINode> mStartParent;
-    nsCOMPtr<nsINode> mEndParent;
+    nsCOMPtr<nsINode> mStartContainer;
+    nsCOMPtr<nsINode> mEndContainer;
 
     // XXX These are int32_ts on nsRange, but uint32_ts in the return value
     // of GetStart_, so I use uint32_ts here. See bug 1194256.

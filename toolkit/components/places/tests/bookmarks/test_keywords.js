@@ -77,7 +77,7 @@ add_task(function test_invalid_input() {
 });
 
 add_task(async function test_addBookmarkAndKeyword() {
-  check_keyword(URI1, null);
+  await check_keyword(URI1, null);
   let fc = await foreign_count(URI1);
   let observer = expectNotifications();
 
@@ -93,12 +93,13 @@ add_task(async function test_addBookmarkAndKeyword() {
                      arguments: [ itemId, "keyword", false, "keyword",
                                   bookmark.lastModified * 1000, bookmark.type,
                                   (await PlacesUtils.promiseItemId(bookmark.parentGuid)),
-                                  bookmark.guid, bookmark.parentGuid, "",
+                                  bookmark.guid, bookmark.parentGuid,
+                                  bookmark.url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  check_keyword(URI1, "keyword");
+  await check_keyword(URI1, "keyword");
   Assert.equal((await foreign_count(URI1)), fc + 2); // + 1 bookmark + 1 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
@@ -107,7 +108,7 @@ add_task(async function test_addBookmarkAndKeyword() {
 
 add_task(async function test_addBookmarkToURIHavingKeyword() {
   // The uri has already a keyword.
-  check_keyword(URI1, "keyword");
+  await check_keyword(URI1, "keyword");
   let fc = await foreign_count(URI1);
 
   let itemId =
@@ -115,12 +116,12 @@ add_task(async function test_addBookmarkToURIHavingKeyword() {
                                          URI1,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          "test");
-  check_keyword(URI1, "keyword");
+  await check_keyword(URI1, "keyword");
   Assert.equal((await foreign_count(URI1)), fc + 1); // + 1 bookmark
 
   PlacesUtils.bookmarks.removeItem(itemId);
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });
 
 add_task(async function test_sameKeywordDifferentURI() {
@@ -133,8 +134,8 @@ add_task(async function test_sameKeywordDifferentURI() {
                                          URI2,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          "test2");
-  check_keyword(URI1, "keyword");
-  check_keyword(URI2, null);
+  await check_keyword(URI1, "keyword");
+  await check_keyword(URI2, null);
 
   PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "kEyWoRd");
 
@@ -145,25 +146,27 @@ add_task(async function test_sameKeywordDifferentURI() {
                                   "keyword", false, "",
                                   bookmark1.lastModified * 1000, bookmark1.type,
                                   (await PlacesUtils.promiseItemId(bookmark1.parentGuid)),
-                                  bookmark1.guid, bookmark1.parentGuid, "",
+                                  bookmark1.guid, bookmark1.parentGuid,
+                                  bookmark1.url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ itemId, "keyword", false, "keyword",
                                   bookmark2.lastModified * 1000, bookmark2.type,
                                   (await PlacesUtils.promiseItemId(bookmark2.parentGuid)),
-                                  bookmark2.guid, bookmark2.parentGuid, "",
+                                  bookmark2.guid, bookmark2.parentGuid,
+                                  bookmark2.url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   await PlacesTestUtils.promiseAsyncUpdates();
 
   // The keyword should have been "moved" to the new URI.
-  check_keyword(URI1, null);
+  await check_keyword(URI1, null);
   Assert.equal((await foreign_count(URI1)), fc1 - 1); // - 1 keyword
-  check_keyword(URI2, "keyword");
+  await check_keyword(URI2, "keyword");
   Assert.equal((await foreign_count(URI2)), fc2 + 2); // + 1 bookmark + 1 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });
 
 add_task(async function test_sameURIDifferentKeyword() {
@@ -175,7 +178,7 @@ add_task(async function test_sameURIDifferentKeyword() {
                                          URI2,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          "test2");
-  check_keyword(URI2, "keyword");
+  await check_keyword(URI2, "keyword");
 
   PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword2");
 
@@ -186,23 +189,25 @@ add_task(async function test_sameURIDifferentKeyword() {
                                   "keyword", false, "keyword2",
                                   bookmarks[0].lastModified * 1000, bookmarks[0].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[0].parentGuid)),
-                                  bookmarks[0].guid, bookmarks[0].parentGuid, "",
+                                  bookmarks[0].guid, bookmarks[0].parentGuid,
+                                  bookmarks[0].url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (await PlacesUtils.promiseItemId(bookmarks[1].guid)),
                                   "keyword", false, "keyword2",
                                   bookmarks[1].lastModified * 1000, bookmarks[1].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[1].parentGuid)),
-                                  bookmarks[1].guid, bookmarks[1].parentGuid, "",
+                                  bookmarks[1].guid, bookmarks[1].parentGuid,
+                                  bookmarks[0].url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  check_keyword(URI2, "keyword2");
+  await check_keyword(URI2, "keyword2");
   Assert.equal((await foreign_count(URI2)), fc + 2); // + 1 bookmark + 1 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });
 
 add_task(async function test_removeBookmarkWithKeyword() {
@@ -216,11 +221,11 @@ add_task(async function test_removeBookmarkWithKeyword() {
    // The keyword should not be removed, since there are other bookmarks yet.
    PlacesUtils.bookmarks.removeItem(itemId);
 
-  check_keyword(URI2, "keyword2");
+  await check_keyword(URI2, "keyword2");
   Assert.equal((await foreign_count(URI2)), fc); // + 1 bookmark - 1 bookmark
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });
 
 add_task(async function test_unsetKeyword() {
@@ -244,30 +249,33 @@ add_task(async function test_unsetKeyword() {
                                   "keyword", false, "",
                                   bookmarks[0].lastModified * 1000, bookmarks[0].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[0].parentGuid)),
-                                  bookmarks[0].guid, bookmarks[0].parentGuid, "",
+                                  bookmarks[0].guid, bookmarks[0].parentGuid,
+                                  bookmarks[0].url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (await PlacesUtils.promiseItemId(bookmarks[1].guid)),
                                   "keyword", false, "",
                                   bookmarks[1].lastModified * 1000, bookmarks[1].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[1].parentGuid)),
-                                  bookmarks[1].guid, bookmarks[1].parentGuid, "",
+                                  bookmarks[1].guid, bookmarks[1].parentGuid,
+                                  bookmarks[1].url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] },
                     { name: "onItemChanged",
                      arguments: [ (await PlacesUtils.promiseItemId(bookmarks[2].guid)),
                                   "keyword", false, "",
                                   bookmarks[2].lastModified * 1000, bookmarks[2].type,
                                   (await PlacesUtils.promiseItemId(bookmarks[2].parentGuid)),
-                                  bookmarks[2].guid, bookmarks[2].parentGuid, "",
+                                  bookmarks[2].guid, bookmarks[2].parentGuid,
+                                  bookmarks[2].url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 
-  check_keyword(URI1, null);
-  check_keyword(URI2, null);
+  await check_keyword(URI1, null);
+  await check_keyword(URI2, null);
   Assert.equal((await foreign_count(URI2)), fc - 1); // + 1 bookmark - 2 keyword
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });
 
 add_task(async function test_addRemoveBookmark() {
@@ -289,14 +297,15 @@ add_task(async function test_addRemoveBookmark() {
                                   "keyword", false, "keyword",
                                   bookmark.lastModified * 1000, bookmark.type,
                                   parentId,
-                                  bookmark.guid, bookmark.parentGuid, "",
+                                  bookmark.guid, bookmark.parentGuid,
+                                  bookmark.url.href,
                                   Ci.nsINavBookmarksService.SOURCE_DEFAULT ] }
                  ]);
 
-  check_keyword(URI3, null);
+  await check_keyword(URI3, null);
   // Don't check the foreign count since the process is async.
   // The new test_keywords.js in unit is checking this though.
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  check_orphans();
+  await check_orphans();
 });

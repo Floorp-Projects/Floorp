@@ -126,6 +126,26 @@ public:
   void GetAppLocalesAsLangTags(nsTArray<nsCString>& aRetVal);
   void GetAppLocalesAsBCP47(nsTArray<nsCString>& aRetVal);
 
+
+  /**
+   * Returns a list of locales to use for any regional specific operations
+   * like date formatting, calendars, unit formatting etc.
+   *
+   * The result is a ordered list of valid locale IDs and it should be
+   * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
+   *
+   * This API always returns at least one locale.
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * Usage:
+   *   nsTArray<nsCString> rgLocales;
+   *   LocaleService::GetInstance()->GetRegionalPrefsLocales(rgLocales);
+   *
+   * (See mozILocaleService.idl for a JS-callable version of this.)
+   */
+  void GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal);
+
   /**
    * This method should only be called in the client mode.
    *

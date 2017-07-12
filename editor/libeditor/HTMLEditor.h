@@ -648,9 +648,9 @@ protected:
                          dom::DocumentFragment** aFragment, bool aTrustedInput);
   void CreateListOfNodesToPaste(dom::DocumentFragment& aFragment,
                                 nsTArray<OwningNonNull<nsINode>>& outNodeList,
-                                nsINode* aStartNode,
+                                nsINode* aStartContainer,
                                 int32_t aStartOffset,
-                                nsINode* aEndNode,
+                                nsINode* aEndContainer,
                                 int32_t aEndOffset);
   nsresult CreateTagStack(nsTArray<nsString>& aTagStack,
                           nsIDOMNode* aNode);

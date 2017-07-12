@@ -4,11 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Constants
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 // Fired by TelemetryController when async telemetry data should be collected.
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
@@ -16,11 +12,10 @@ const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 // Seconds between maintenance runs.
 const MAINTENANCE_INTERVAL_SECONDS = 7 * 86400;
 
-// Imports
-
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
                                   "resource://gre/modules/PlacesDBUtils.jsm");
 
@@ -31,32 +26,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
 function PlacesCategoriesStarter() {
   Services.obs.addObserver(this, TOPIC_GATHER_TELEMETRY);
   Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
-
-  // nsINavBookmarkObserver implementation.
-  let notify = () => {
-    if (!this._notifiedBookmarksSvcReady) {
-      // TODO (bug 1145424): for whatever reason, even if we remove this
-      // component from the category (and thus from the category cache we use
-      // to notify), we keep being notified.
-      this._notifiedBookmarksSvcReady = true;
-      // For perf reasons unregister from the category, since no further
-      // notifications are needed.
-      Cc["@mozilla.org/categorymanager;1"]
-        .getService(Ci.nsICategoryManager)
-        .deleteCategoryEntry("bookmark-observers", "PlacesCategoriesStarter", false);
-      // Directly notify PlacesUtils, to ensure it catches the notification.
-      PlacesUtils.observe(null, "bookmarks-service-ready", null);
-    }
-  };
-
-  [ "onItemAdded", "onItemRemoved", "onItemChanged", "onBeginUpdateBatch",
-    "onEndUpdateBatch", "onItemVisited", "onItemMoved"
-  ].forEach(aMethod => this[aMethod] = notify);
 }
 
 PlacesCategoriesStarter.prototype = {
-  // nsIObserver
-
   observe: function PCS_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case PlacesUtils.TOPIC_SHUTDOWN:
@@ -68,6 +40,10 @@ PlacesCategoriesStarter.prototype = {
         break;
       case TOPIC_GATHER_TELEMETRY:
         PlacesDBUtils.telemetry();
+        break;
+      case PlacesUtils.TOPIC_INIT_COMPLETE:
+        // Init keywords so it starts listening to bookmarks notifications.
+        PlacesUtils.keywords;
         break;
       case "idle-daily":
         // Once a week run places.sqlite maintenance tasks.
@@ -83,19 +59,12 @@ PlacesCategoriesStarter.prototype = {
     }
   },
 
-  // nsISupports
-
   classID: Components.ID("803938d5-e26d-4453-bf46-ad4b26e41114"),
-
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PlacesCategoriesStarter),
-
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIObserver,
-    Ci.nsINavBookmarkObserver
   ])
 };
-
-// Module Registration
 
 var components = [PlacesCategoriesStarter];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);

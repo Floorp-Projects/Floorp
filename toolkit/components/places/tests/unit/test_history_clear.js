@@ -31,24 +31,7 @@ function promiseOnClearHistoryObserved() {
   });
 }
 
-// This global variable is a promise object, initialized in run_test and waited
-// upon in the first asynchronous test.  It is resolved when the
-// "places-init-complete" notification is received. We cannot initialize it in
-// the asynchronous test, because then it's too late to register the observer.
-var promiseInit;
-
-function run_test() {
-  // places-init-complete is notified after run_test, and it will
-  // run a first frecency fix through async statements.
-  // To avoid random failures we have to run after all of this.
-  promiseInit = promiseTopicObserved(PlacesUtils.TOPIC_INIT_COMPLETE);
-
-  run_next_test();
-}
-
 add_task(async function test_history_clear() {
-  await promiseInit;
-
   await PlacesTestUtils.addVisits([
     { uri: uri("http://typed.mozilla.org/"),
       transition: TRANSITION_TYPED },

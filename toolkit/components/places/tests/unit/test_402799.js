@@ -12,14 +12,6 @@ try {
   do_throw("Could not get history services\n");
 }
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch (ex) {
-  do_throw("Could not get the nav-bookmarks-service\n");
-}
-
 // Get tagging service
 try {
   var tagssvc = Cc["@mozilla.org/browser/tagging-service;1"].
@@ -28,33 +20,39 @@ try {
   do_throw("Could not get tagging service\n");
 }
 
-
-// main
-function run_test() {
-  var uri1 = uri("http://foo.bar/");
+add_task(async function test_query_only_returns_bookmarks_not_tags() {
+  const url = "http://foo.bar/";
 
   // create 2 bookmarks on the same uri
-  bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri1,
-                       bmsvc.DEFAULT_INDEX, "title 1");
-  bmsvc.insertBookmark(bmsvc.toolbarFolder, uri1,
-                       bmsvc.DEFAULT_INDEX, "title 2");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "title 1",
+    url,
+  });
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "title 2",
+    url,
+  });
   // add some tags
-  tagssvc.tagURI(uri1, ["foo", "bar", "foobar", "foo bar"]);
+  tagssvc.tagURI(uri(url), ["foo", "bar", "foobar", "foo bar"]);
 
   // check that a generic bookmark query returns only real bookmarks
-  var options = histsvc.getNewQueryOptions();
+  let options = histsvc.getNewQueryOptions();
   options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
 
-  var query = histsvc.getNewQuery();
-  var result = histsvc.executeQuery(query, options);
-  var root = result.root;
+  let query = histsvc.getNewQuery();
+  let result = histsvc.executeQuery(query, options);
+  let root = result.root;
 
   root.containerOpen = true;
-  var cc = root.childCount;
+  let cc = root.childCount;
   do_check_eq(cc, 2);
-  var node1 = root.getChild(0);
-  do_check_eq(bmsvc.getFolderIdForItem(node1.itemId), bmsvc.bookmarksMenuFolder);
-  var node2 = root.getChild(1);
-  do_check_eq(bmsvc.getFolderIdForItem(node2.itemId), bmsvc.toolbarFolder);
+  let node1 = root.getChild(0);
+  node1 = await PlacesUtils.bookmarks.fetch(node1.bookmarkGuid);
+  do_check_eq(node1.parentGuid, PlacesUtils.bookmarks.menuGuid);
+  let node2 = root.getChild(1);
+  node2 = await PlacesUtils.bookmarks.fetch(node2.bookmarkGuid);
+  do_check_eq(node2.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
   root.containerOpen = false;
-}
+});

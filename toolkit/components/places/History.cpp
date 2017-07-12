@@ -2350,11 +2350,26 @@ History::GetSingleton()
 mozIStorageConnection*
 History::GetDBConn()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mShuttingDown)
     return nullptr;
   if (!mDB) {
     mDB = Database::GetDatabase();
     NS_ENSURE_TRUE(mDB, nullptr);
+    // This must happen on the main-thread, so when we try to use the connection
+    // later it's initialized.
+    mDB->EnsureConnection();
+    NS_ENSURE_TRUE(mDB, nullptr);
+  }
+  return mDB->MainConn();
+}
+
+const mozIStorageConnection*
+History::GetConstDBConn()
+{
+  MOZ_ASSERT(mDB || mShuttingDown);
+  if (mShuttingDown || !mDB) {
+    return nullptr;
   }
   return mDB->MainConn();
 }
@@ -2411,6 +2426,7 @@ History::VisitURI(nsIURI* aURI,
                   nsIURI* aLastVisitedURI,
                   uint32_t aFlags)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aURI);
 
   if (mShuttingDown) {
@@ -2627,6 +2643,7 @@ History::UnregisterVisitedCallback(nsIURI* aURI,
 NS_IMETHODIMP
 History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aURI);
 
   if (mShuttingDown) {

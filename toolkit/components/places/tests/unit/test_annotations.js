@@ -4,13 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get bookmark service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-} catch (ex) {
-  do_throw("Could not get nav-bookmarks-service\n");
-}
-
 // Get annotation service
 try {
   var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].getService(Ci.nsIAnnotationService);
@@ -49,16 +42,17 @@ var annoObserver = {
   }
 };
 
-// main
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_execute() {
-  var testURI = uri("http://mozilla.com/");
-  var testItemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
-  var testAnnoName = "moz-test-places/annotations";
-  var testAnnoVal = "test";
+  let testURI = uri("http://mozilla.com/");
+  let testItem = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "",
+    url: testURI,
+  });
+  let testItemId = await PlacesUtils.promiseItemId(testItem.guid);
+  let testAnnoName = "moz-test-places/annotations";
+  let testAnnoVal = "test";
+  let earlierDate = new Date(Date.now() - 1000);
 
   annosvc.addObserver(annoObserver);
   // create new string annotation
@@ -75,19 +69,27 @@ add_task(async function test_execute() {
   var storedAnnoVal = annosvc.getPageAnnotation(testURI, testAnnoName);
   do_check_true(testAnnoVal === storedAnnoVal);
   // string item-annotation
+  let item = await PlacesUtils.bookmarks.fetch(testItem.guid);
+
+  // Verify that lastModified equals dateAdded before we set the annotation.
+  do_check_eq(item.lastModified.getTime(), item.dateAdded.getTime());
+  // Workaround possible VM timers issues moving last modified to the past.
+  await PlacesUtils.bookmarks.update({
+    guid: item.guid,
+    dateAdded: earlierDate,
+    lastModified: earlierDate,
+  });
+
   try {
-    var lastModified = bmsvc.getItemLastModified(testItemId);
-    // Verify that lastModified equals dateAdded before we set the annotation.
-    do_check_eq(lastModified, bmsvc.getItemDateAdded(testItemId));
-    // Workaround possible VM timers issues moving last modified to the past.
-    bmsvc.setItemLastModified(testItemId, --lastModified);
     annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, 0);
-    var lastModified2 = bmsvc.getItemLastModified(testItemId);
-    // verify that setting the annotation updates the last modified time
-    do_check_true(lastModified2 > lastModified);
   } catch (ex) {
-    do_throw("unable to add item annotation");
+    do_throw("unable to add item annotation " + ex);
   }
+
+  let updatedItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
+
+  // verify that setting the annotation updates the last modified time
+  do_check_true(updatedItem.lastModified > item.lastModified);
   do_check_eq(annoObserver.ITEM_lastSet_Id, testItemId);
   do_check_eq(annoObserver.ITEM_lastSet_AnnoName, testAnnoName);
 
@@ -111,7 +113,12 @@ add_task(async function test_execute() {
   do_check_true(pages[0].equals(uri2) || pages[1].equals(uri2));
 
   // test getItemsWithAnnotation
-  var testItemId2 = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, uri2, -1, "");
+  let testItem2 = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "",
+    url: uri2,
+  });
+  let testItemId2 = await PlacesUtils.promiseItemId(testItem2.guid);
   annosvc.setItemAnnotation(testItemId2, testAnnoName, testAnnoVal, 0, 0);
   var items = annosvc.getItemsWithAnnotation(testAnnoName);
   do_check_eq(items.length, 2);
@@ -179,8 +186,18 @@ add_task(async function test_execute() {
 
   // copy annotations to another item
   newURI = uri("http://mozilla.org");
-  var newItemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, newURI, -1, "");
-  var itemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
+  let newItem = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "",
+    url: newURI,
+  });
+  let newItemId = await PlacesUtils.promiseItemId(newItem.guid);
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "",
+    url: testURI,
+  });
+  var itemId = await PlacesUtils.promiseItemId(item.guid);
   annosvc.setItemAnnotation(itemId, "oldAnno", "new", 0, 0);
   annosvc.setItemAnnotation(itemId, "testAnno", "test", 0, 0);
   annosvc.setItemAnnotation(newItemId, "oldAnno", "old", 0, 0);
@@ -264,11 +281,19 @@ add_task(async function test_execute() {
 
   annosvc.setItemAnnotation(testItemId, testAnnoName, testAnnoVal, 0, 0);
   // verify that removing an annotation updates the last modified date
-  var lastModified3 = bmsvc.getItemLastModified(testItemId);
+  testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
+
+  var lastModified3 = testItem.lastModified;
   // Workaround possible VM timers issues moving last modified to the past.
-  bmsvc.setItemLastModified(testItemId, --lastModified3);
+  await PlacesUtils.bookmarks.update({
+    guid: testItem.guid,
+    dateAdded: earlierDate,
+    lastModified: earlierDate,
+  });
   annosvc.removeItemAnnotation(testItemId, int32Key);
-  var lastModified4 = bmsvc.getItemLastModified(testItemId);
+
+  testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
+  var lastModified4 = testItem.lastModified;
   do_print("verify that removing an annotation updates the last modified date");
   do_print("lastModified3 = " + lastModified3);
   do_print("lastModified4 = " + lastModified4);
@@ -294,7 +319,12 @@ add_task(async function test_execute() {
   }
 
   // setting an annotation with EXPIRE_HISTORY for an item should throw
-  itemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
+  item = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "",
+    url: testURI,
+  });
+  itemId = await PlacesUtils.promiseItemId(item.guid);
   try {
     annosvc.setItemAnnotation(itemId, "foo", "bar", 0, annosvc.EXPIRE_WITH_HISTORY);
     do_throw("setting an item annotation with EXPIRE_HISTORY should throw");

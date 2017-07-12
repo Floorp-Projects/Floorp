@@ -21,11 +21,13 @@ const Message = createFactory(require("devtools/client/webconsole/new-console-ou
 ConsoleApiCall.displayName = "ConsoleApiCall";
 
 ConsoleApiCall.propTypes = {
+  dispatch: PropTypes.func.isRequired,
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
   serviceContainer: PropTypes.object.isRequired,
   indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
+  loadedObjectProperties: PropTypes.object,
 };
 
 ConsoleApiCall.defaultProps = {
@@ -43,6 +45,7 @@ function ConsoleApiCall(props) {
     indent,
     timestampsVisible,
     repeat,
+    loadedObjectProperties,
   } = props;
   const {
     id: messageId,
@@ -58,16 +61,25 @@ function ConsoleApiCall(props) {
   } = message;
 
   let messageBody;
+  const messageBodyConfig = {
+    dispatch,
+    loadedObjectProperties,
+    messageId,
+    parameters,
+    userProvidedStyles,
+    serviceContainer,
+  };
+
   if (type === "trace") {
     messageBody = dom.span({className: "cm-variable"}, "console.trace()");
   } else if (type === "assert") {
-    let reps = formatReps(parameters);
+    let reps = formatReps(messageBodyConfig);
     messageBody = dom.span({ className: "cm-variable" }, "Assertion failed: ", reps);
   } else if (type === "table") {
     // TODO: Chrome does not output anything, see if we want to keep this
     messageBody = dom.span({className: "cm-variable"}, "console.table()");
   } else if (parameters) {
-    messageBody = formatReps(parameters, userProvidedStyles, serviceContainer);
+    messageBody = formatReps(messageBodyConfig);
   } else {
     messageBody = messageText;
   }
@@ -114,16 +126,28 @@ function ConsoleApiCall(props) {
   });
 }
 
-function formatReps(parameters, userProvidedStyles, serviceContainer) {
+function formatReps(options = {}) {
+  const {
+    dispatch,
+    loadedObjectProperties,
+    messageId,
+    parameters,
+    serviceContainer,
+    userProvidedStyles,
+  } = options;
+
   return (
     parameters
       // Get all the grips.
       .map((grip, key) => GripMessageBody({
+        dispatch,
+        messageId,
         grip,
         key,
         userProvidedStyle: userProvidedStyles ? userProvidedStyles[key] : null,
         serviceContainer,
         useQuotes: false,
+        loadedObjectProperties,
       }))
       // Interleave spaces.
       .reduce((arr, v, i) => {

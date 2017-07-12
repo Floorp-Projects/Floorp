@@ -486,7 +486,10 @@ var gEditItemOverlay = {
   },
 
   onTagsFieldChange() {
-    if (this._paneInfo.isURI || this._paneInfo.bulkTagging) {
+    // Check for _paneInfo existing as the dialog may be closing but receiving
+    // async updates from unresolved promises.
+    if (this._paneInfo &&
+        (this._paneInfo.isURI || this._paneInfo.bulkTagging)) {
       this._updateTags().then(
         anyChanges => {
           if (anyChanges)
@@ -781,6 +784,11 @@ var gEditItemOverlay = {
   },
 
   onFolderMenuListCommand(aEvent) {
+    // Check for _paneInfo existing as the dialog may be closing but receiving
+    // async updates from unresolved promises.
+    if (!this._paneInfo) {
+      return;
+    }
     // Set a selectedIndex attribute to show special icons
     this._folderMenuList.setAttribute("selectedIndex",
                                       this._folderMenuList.selectedIndex);

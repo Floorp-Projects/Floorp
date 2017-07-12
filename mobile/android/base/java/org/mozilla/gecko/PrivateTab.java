@@ -11,8 +11,8 @@ import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserDB;
 
 public class PrivateTab extends Tab {
-    public PrivateTab(Context context, int id, String url, boolean external, int parentId, String title, TabType type) {
-        super(context, id, url, external, parentId, title, type);
+    public PrivateTab(Context context, int id, String url, boolean external, int parentId, String title) {
+        super(context, id, url, external, parentId, title);
     }
 
     @Override

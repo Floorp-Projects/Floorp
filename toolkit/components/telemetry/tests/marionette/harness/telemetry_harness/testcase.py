@@ -50,12 +50,16 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         # Firefox will be forced to restart with the prefs enforced.
         self.marionette.enforce_gecko_prefs(telemetry_prefs)
 
-    def wait_for_ping(self):
+    def wait_for_ping(self, ping_filter_func):
         if len(self.ping_list) == 0:
             try:
                 Wait(self.marionette, 60).until(lambda t: len(self.ping_list) > 0)
             except Exception as e:
                 self.fail('Error generating ping: {}'.format(e.message))
+
+        # Filter pings based on type and reason to make sure right ping is captured.
+        self.ping_list = [p for p in self.ping_list if ping_filter_func(p)]
+        assert len(self.ping_list) == 1
         return self.ping_list.pop()
 
     def toggle_update_pref(self):

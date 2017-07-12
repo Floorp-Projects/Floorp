@@ -1999,8 +1999,12 @@ nsAnnotationService::Observe(nsISupports *aSubject,
       , itemAnnoStmt.get()
       };
 
+      nsCOMPtr<mozIStorageConnection> conn = mDB->MainConn();
+      if (!conn) {
+        return NS_ERROR_UNEXPECTED;
+      }
       nsCOMPtr<mozIStoragePendingStatement> ps;
-      rv = mDB->MainConn()->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
+      rv = conn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
                                          getter_AddRefs(ps));
       NS_ENSURE_SUCCESS(rv, rv);
     }

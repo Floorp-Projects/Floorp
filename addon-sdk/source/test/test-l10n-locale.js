@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { findClosestLocale } = require("sdk/l10n/locale");
+const { Cu, Cc, Ci } = require("chrome");
+const { Services } = Cu.import('resource://gre/modules/Services.jsm');
+const { findClosestLocale,
+        getPreferedLocales } = require("sdk/l10n/locale");
 
 exports.testFindClosestLocale = function(assert) {
   // Second param of findClosestLocale (aMatchLocales) have to be in lowercase
@@ -42,6 +45,16 @@ exports.testFindClosestLocale = function(assert) {
                    "ja-JP", "We accept locale with 2 parts from locale with 3 parts");
   assert.equal(findClosestLocale(["ja"], ["ja-jp-mac"]),
                    "ja", "We accept locale with 1 part from locale with 3 parts");
+};
+
+exports.testGetPreferedLocales = function(assert) {
+  let currentLocales = Services.locale.getRequestedLocales();
+
+  Services.locale.setRequestedLocales(['pl']);
+
+  assert.equal(getPreferedLocales().includes('en-US'), true, "en-US should always be in the list");
+
+  Services.locale.setRequestedLocales(currentLocales);
 };
 
 require('sdk/test').run(exports);

@@ -23,8 +23,8 @@ add_task(async function() {
   // Expected length of grid
   let expectedValues = [1, 1, 1, 1, 8, 10];
 
-   // Values before setting new pref values (12 is the default value -> 6 x 2)
-  let previousValues = [12, 1, 1, 1, 1, 8];
+   // Values before setting new pref values (15 is the default value -> 5 x 3)
+  let previousValues = [15, 1, 1, 1, 1, 8];
 
   await addNewTabPageTab();
   let existingTab = gBrowser.selectedTab;

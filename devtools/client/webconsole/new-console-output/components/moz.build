@@ -18,6 +18,5 @@ DevToolsModules(
     'message-icon.js',
     'message-indent.js',
     'message-repeat.js',
-    'message.js',
-    'variables-view-link.js'
+    'message.js'
 )
