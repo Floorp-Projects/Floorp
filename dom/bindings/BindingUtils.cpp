@@ -1616,7 +1616,7 @@ DEBUG_CheckXBLCallable(JSContext *cx, JSObject *obj)
     // has been adopted into another compartment, those prototypes will now point
     // to a different XBL scope (which is ok).
     MOZ_ASSERT_IF(js::IsCrossCompartmentWrapper(obj),
-                  xpc::IsContentXBLScope(js::GetObjectCompartment(js::UncheckedUnwrap(obj))));
+                  xpc::IsInContentXBLScope(js::UncheckedUnwrap(obj)));
     MOZ_ASSERT(JS::IsCallable(obj));
 }
 
@@ -1715,7 +1715,7 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     // Make sure to assert that.
     JS::Rooted<JSObject*> maybeElement(cx, obj);
     Element* element;
-    if (xpc::ObjectScope(wrapper)->IsContentXBLScope() &&
+    if (xpc::IsInContentXBLScope(wrapper) &&
         NS_SUCCEEDED(UNWRAP_OBJECT(Element, &maybeElement, element))) {
       if (!nsContentUtils::LookupBindingMember(cx, element, id, desc)) {
         return false;
