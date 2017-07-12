@@ -215,8 +215,11 @@ const whitelist = [
   },
 ];
 
-function test() {
-  let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data.images;
+add_task(async function() {
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  await startupRecorder.done;
+
+  let data = startupRecorder.data.images;
   let filteredWhitelist = whitelist.filter(el => {
     return el.platforms.includes(AppConstants.platform) &&
            (el.photon === undefined || el.photon == AppConstants.MOZ_PHOTON_THEME);
@@ -255,4 +258,4 @@ function test() {
       }
     }
   }
-}
+});

@@ -33,6 +33,7 @@ function startupRecorder() {
     },
     code: {}
   };
+  this.done = new Promise(resolve => { this._resolve = resolve });
 }
 startupRecorder.prototype = {
   classID: Components.ID("{11c095b2-e42e-4bdf-9dd0-aed87595f6a4}"),
@@ -84,11 +85,23 @@ startupRecorder.prototype = {
       // We use idleDispatchToMainThread here to record the set of
       // loaded scripts after we are fully done with startup and ready
       // to react to user events.
-      Services.tm.idleDispatchToMainThread(
+      Services.tm.dispatchToMainThread(
         this.record.bind(this, "before handling user events"));
 
-      Services.obs.removeObserver(this, "image-drawing");
-      Services.obs.removeObserver(this, "image-loading");
+      // 10 is an arbitrary value here, it needs to be at least 2 to avoid
+      // races with code initializing itself using idle callbacks.
+      (function waitForIdle(callback, count = 10) {
+        if (count)
+          Services.tm.idleDispatchToMainThread(() => waitForIdle(callback, count - 1));
+        else
+          callback();
+      })(() => {
+        this.record("before becoming idle");
+        Services.obs.removeObserver(this, "image-drawing");
+        Services.obs.removeObserver(this, "image-loading");
+        this._resolve();
+        this._resolve = null;
+      });
     } else {
       const topicsToNames = {
         "profile-do-change": "before profile selection",
