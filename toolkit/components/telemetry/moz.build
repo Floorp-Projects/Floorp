@@ -95,6 +95,7 @@ EXTRA_JS_MODULES += [
     'TelemetryUtils.jsm',
     'ThirdPartyCookieProbe.jsm',
     'UITelemetry.jsm',
+    'UpdatePing.jsm',
 ]
 
 TESTING_JS_MODULES += [
