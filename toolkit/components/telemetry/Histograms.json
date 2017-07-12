@@ -5973,22 +5973,24 @@
     "description": "Firefox: Time in ms spent updating UI in response to a tab switch"
   },
   "FX_TAB_SWITCH_TOTAL_MS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "56",
+    "record_in_processes": ["main"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "expires_in_version": "57",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
     "releaseChannelCollection": "opt-out",
-    "description": "Firefox: Time in ms till a tab switch is complete including the first paint"
+    "description": "Firefox: Time in ms till a tab switch is complete including the first paint for non-e10s windows"
   },
   "FX_TAB_SWITCH_TOTAL_E10S_MS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "56",
+    "record_in_processes": ["main"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 20,
     "releaseChannelCollection": "opt-out",
-    "description": "Firefox: Time in ms between tab selection and tab content paint."
+    "description": "Firefox: Time in ms between tab selection and tab content paint in e10s windows"
   },
   "FX_TAB_SWITCH_SPINNER_VISIBLE_MS": {
     "record_in_processes": ["main", "content"],
@@ -13060,10 +13062,10 @@
     "description": "Time in MS that content is narrated in 10 second increments up to 5 minutes"
   },
   "TABCHILD_PAINT_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["content"],
     "alert_emails": ["mconley@mozilla.com"],
     "bug_numbers": [1313686],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 50,
