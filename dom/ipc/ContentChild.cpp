@@ -1418,25 +1418,23 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath, nsCString &aAppDir)
     return false;
   }
 
-  bool isLink;
-  app->IsSymlink(&isLink);
-  if (isLink) {
-    app->GetNativeTarget(aAppPath);
-  } else {
-    app->GetNativePath(aAppPath);
+  rv = app->Normalize();
+  if (NS_FAILED(rv)) {
+    return false;
   }
-  appBinary->IsSymlink(&isLink);
-  if (isLink) {
-    appBinary->GetNativeTarget(aAppBinaryPath);
-  } else {
-    appBinary->GetNativePath(aAppBinaryPath);
+  app->GetNativePath(aAppPath);
+
+  rv = appBinary->Normalize();
+  if (NS_FAILED(rv)) {
+    return false;
   }
-  appDirParent->IsSymlink(&isLink);
-  if (isLink) {
-    appDirParent->GetNativeTarget(aAppDir);
-  } else {
-    appDirParent->GetNativePath(aAppDir);
+  appBinary->GetNativePath(aAppBinaryPath);
+
+  rv = appDirParent->Normalize();
+  if (NS_FAILED(rv)) {
+    return false;
   }
+  appDirParent->GetNativePath(aAppDir);
 
   return true;
 }
