@@ -18,7 +18,7 @@ from .files import (
 DEFAULT_MTIME = 1451606400
 
 
-def create_tar_from_files(fp, files):
+def create_tar_from_files(fp, files, forcemode=None):
     """Create a tar file deterministically.
 
     Receives a dict mapping names of files in the archive to local filesystem
@@ -28,6 +28,8 @@ def create_tar_from_files(fp, files):
     for writing.
 
     Only regular files can be written.
+
+    Mode (permissions) of files is forced if a value for forcemode is passed.
 
     FUTURE accept a filename argument (or create APIs to write files)
     """
@@ -51,6 +53,10 @@ def create_tar_from_files(fp, files):
                 raise ValueError('cannot add file with setuid or setgid set: '
                                  '%s' % f)
 
+            # Force file mode (permissions) if 'forcemode' is passed
+            if forcemode is not None:
+                ti.mode = forcemode
+
             # Set uid, gid, username, and group as deterministic values.
             ti.uid = 0
             ti.gid = 0
@@ -70,7 +76,7 @@ def create_tar_from_files(fp, files):
                     tf.addfile(ti, fh)
 
 
-def create_tar_gz_from_files(fp, files, filename=None, compresslevel=9):
+def create_tar_gz_from_files(fp, files, filename=None, compresslevel=9, forcemode=None):
     """Create a tar.gz file deterministically from files.
 
     This is a glorified wrapper around ``create_tar_from_files`` that
@@ -78,13 +84,16 @@ def create_tar_gz_from_files(fp, files, filename=None, compresslevel=9):
 
     The passed file handle should be opened for writing in binary mode.
     When the function returns, all data has been written to the handle.
+
+    Mode (permissions) of files is forced if a value for forcemode is
+    passed.
     """
     # Offset 3-7 in the gzip header contains an mtime. Pin it to a known
     # value so output is deterministic.
     gf = gzip.GzipFile(filename=filename or '', mode='wb', fileobj=fp,
                        compresslevel=compresslevel, mtime=DEFAULT_MTIME)
     with gf:
-        create_tar_from_files(gf, files)
+        create_tar_from_files(gf, files, forcemode)
 
 
 class _BZ2Proxy(object):
