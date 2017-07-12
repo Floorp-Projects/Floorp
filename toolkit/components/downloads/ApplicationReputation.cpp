@@ -51,6 +51,7 @@
 #include "nsThreadUtils.h"
 
 #include "nsIContentPolicy.h"
+#include "nsICryptoHash.h"
 #include "nsILoadInfo.h"
 #include "nsContentUtils.h"
 #include "nsWeakReference.h"
@@ -185,8 +186,11 @@ private:
                                  bool* aShouldBlock,
                                  uint32_t* aVerdict);
 
+  // Return the hex-encoded hash of the whole URI.
+  nsresult GetSpecHash(nsACString& aSpec, nsACString& hexEncodedHash);
+
   // Strip url parameters, fragments, and user@pass fields from the URI spec
-  // using nsIURL. If aURI is not an nsIURL, returns the original nsIURI.spec.
+  // using nsIURL. Hash data URIs and return blob URIs unfiltered.
   nsresult GetStrippedSpec(nsIURI* aUri, nsACString& spec);
 
   // Escape '/' and '%' in certificate attribute values.
@@ -295,8 +299,11 @@ PendingDBLookup::LookupSpec(const nsACString& aSpec,
   mAllowlistOnly = aAllowlistOnly;
   nsresult rv = LookupSpecInternal(aSpec);
   if (NS_FAILED(rv)) {
-    LOG(("Error in LookupSpecInternal"));
-    return mPendingLookup->OnComplete(false, NS_OK);
+    nsAutoCString errorName;
+    mozilla::GetErrorName(rv, errorName);
+    LOG(("Error in LookupSpecInternal() [rv = %s, this = %p]",
+         errorName.get(), this));
+    return mPendingLookup->LookupNext(); // ignore this lookup and move to next
   }
   // LookupSpecInternal has called nsIUrlClassifierCallback.lookup, which is
   // guaranteed to call HandleEvent.
@@ -983,16 +990,82 @@ PendingLookup::StartLookup()
 }
 
 nsresult
-PendingLookup::GetStrippedSpec(nsIURI* aUri, nsACString& escaped)
+PendingLookup::GetSpecHash(nsACString& aSpec, nsACString& hexEncodedHash)
 {
-  // If aURI is not an nsIURL, we do not want to check the lists or send a
-  // remote query.
   nsresult rv;
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aUri, &rv);
+
+  nsCOMPtr<nsICryptoHash> cryptoHash =
+    do_CreateInstance("@mozilla.org/security/hash;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = cryptoHash->Init(nsICryptoHash::SHA256);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = url->GetScheme(escaped);
+  rv = cryptoHash->Update(reinterpret_cast<const uint8_t*>(aSpec.BeginReading()),
+                          aSpec.Length());
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString binaryHash;
+  rv = cryptoHash->Finish(false, binaryHash);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // This needs to match HexEncode() in Chrome's
+  // src/base/strings/string_number_conversions.cc
+  static const char* const hex = "0123456789ABCDEF";
+  hexEncodedHash.SetCapacity(2 * binaryHash.Length());
+  for (size_t i = 0; i < binaryHash.Length(); ++i) {
+    auto c = static_cast<const unsigned char>(binaryHash[i]);
+    hexEncodedHash.Append(hex[(c >> 4) & 0x0F]);
+    hexEncodedHash.Append(hex[c & 0x0F]);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PendingLookup::GetStrippedSpec(nsIURI* aUri, nsACString& escaped)
+{
+  if (NS_WARN_IF(!aUri)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+  rv = aUri->GetScheme(escaped);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (escaped.EqualsLiteral("blob")) {
+    aUri->GetSpec(escaped);
+    LOG(("PendingLookup::GetStrippedSpec(): blob URL left unstripped as '%s' [this = %p]",
+         PromiseFlatCString(escaped).get(), this));
+    return NS_OK;
+
+  } else if (escaped.EqualsLiteral("data")) {
+    // Replace URI with "data:<everything before comma>,SHA256(<whole URI>)"
+    aUri->GetSpec(escaped);
+    int32_t comma = escaped.FindChar(',');
+    if (comma > -1 &&
+        static_cast<nsCString::size_type>(comma) < escaped.Length() - 1) {
+      MOZ_ASSERT(comma > 4, "Data URIs start with 'data:'");
+      nsAutoCString hexEncodedHash;
+      rv = GetSpecHash(escaped, hexEncodedHash);
+      if (NS_SUCCEEDED(rv)) {
+        escaped.Truncate(comma + 1);
+        escaped.Append(hexEncodedHash);
+      }
+    }
+
+    LOG(("PendingLookup::GetStrippedSpec(): data URL stripped to '%s' [this = %p]",
+         PromiseFlatCString(escaped).get(), this));
+    return NS_OK;
+  }
+
+  // If aURI is not an nsIURL, we do not want to check the lists or send a
+  // remote query.
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aUri, &rv);
+  if (NS_FAILED(rv)) {
+    LOG(("PendingLookup::GetStrippedSpec(): scheme '%s' is not supported [this = %p]",
+         PromiseFlatCString(escaped).get(), this));
+    return rv;
+  }
 
   nsCString temp;
   rv = url->GetHostPort(temp);
@@ -1007,6 +1080,8 @@ PendingLookup::GetStrippedSpec(nsIURI* aUri, nsACString& escaped)
   // nsIUrl.filePath starts with '/'
   escaped.Append(temp);
 
+  LOG(("PendingLookup::GetStrippedSpec(): URL stripped to '%s' [this = %p]",
+       PromiseFlatCString(escaped).get(), this));
   return NS_OK;
 }
 
