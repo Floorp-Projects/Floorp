@@ -10,25 +10,28 @@
 namespace mozilla {
 
 already_AddRefed<IdleTaskRunner>
-IdleTaskRunner::Create(IdleTaskRunnerCallback aCallback, uint32_t aDelay,
-                       int64_t aBudget, bool aRepeating, void* aData)
+IdleTaskRunner::Create(const CallbackType& aCallback, uint32_t aDelay,
+                       int64_t aBudget, bool aRepeating,
+                       const MayStopProcessingCallbackType& aMayStopProcessing)
 {
-  if (sShuttingDown) {
+  if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
-    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating, aData);
+    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating, aMayStopProcessing);
   runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
 
-IdleTaskRunner::IdleTaskRunner(IdleTaskRunnerCallback aCallback,
+IdleTaskRunner::IdleTaskRunner(const CallbackType& aCallback,
                                uint32_t aDelay, int64_t aBudget,
-                               bool aRepeating, void* aData)
+                               bool aRepeating,
+                               const MayStopProcessingCallbackType& aMayStopProcessing)
   : mCallback(aCallback), mDelay(aDelay)
   , mBudget(TimeDuration::FromMilliseconds(aBudget))
-  , mRepeating(aRepeating), mTimerActive(false), mData(aData)
+  , mRepeating(aRepeating), mTimerActive(false)
+  , mMayStopProcessing(aMayStopProcessing)
 {
 }
 
@@ -40,18 +43,25 @@ IdleTaskRunner::Run()
   }
 
   // Deadline is null when called from timer.
+  TimeStamp now = TimeStamp::Now();
   bool deadLineWasNull = mDeadline.IsNull();
   bool didRun = false;
-  if (deadLineWasNull || ((TimeStamp::Now() + mBudget) < mDeadline)) {
+  bool allowIdleDispatch = false;
+  if (deadLineWasNull || ((now + mBudget) < mDeadline)) {
     CancelTimer();
-    didRun = mCallback(mDeadline, mData);
-  }
-
-  if (mCallback && (mRepeating || !didRun)) {
+    didRun = mCallback(mDeadline);
     // If we didn't do meaningful work, don't schedule using immediate
     // idle dispatch, since that could lead to a loop until the idle
     // period ends.
-    Schedule(didRun);
+    allowIdleDispatch = didRun;
+  } else if (now >= mDeadline) {
+    allowIdleDispatch = true;
+  }
+
+  if (mCallback && (mRepeating || !didRun)) {
+    Schedule(allowIdleDispatch);
+  } else {
+    mCallback = nullptr;
   }
 
   return NS_OK;
@@ -85,7 +95,7 @@ void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget)
   if (mTimer) {
     mTimer->SetTarget(mTarget);
     mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
-                                      nsITimer::TYPE_ONE_SHOT);
+                                      nsITimer::TYPE_ONE_SHOT, "IdleTaskRunner");
     mTimerActive = true;
   }
 }
@@ -114,11 +124,12 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
     return;
   }
 
-  if (sShuttingDown) {
+  if (mMayStopProcessing && mMayStopProcessing()) {
     Cancel();
     return;
   }
 
+  TimeStamp deadline = mDeadline;
   mDeadline = TimeStamp();
   TimeStamp now = TimeStamp::Now();
   TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
@@ -143,10 +154,18 @@ IdleTaskRunner::Schedule(bool aAllowIdleDispatch)
         mScheduleTimer->Cancel();
       }
 
-      // We weren't allowed to do idle dispatch immediately, do it after a
-      // short timeout.
-      mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, this, 16,
-                                                nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY);
+      uint32_t lateScheduleDelayMs;
+      if (deadline.IsNull()) {
+        lateScheduleDelayMs = 16;
+      } else {
+        lateScheduleDelayMs =
+          (uint32_t)((deadline - now).ToMilliseconds());
+      }
+      mScheduleTimer->InitWithNamedFuncCallback(ScheduleTimedOut, 
+                                                this, 
+                                                lateScheduleDelayMs,
+                                                nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY,
+                                                "IdleTaskRunner");
     }
   }
 }
