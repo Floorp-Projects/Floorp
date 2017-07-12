@@ -300,6 +300,7 @@ let addonSdkMethods = [
 let webExtensionsMethods = [
   "getTargetForTab",
   "getTheme",
+  "createWebExtensionInspectedWindowFront",
 ];
 
 for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {
