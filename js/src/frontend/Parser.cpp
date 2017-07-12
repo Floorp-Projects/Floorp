@@ -6847,58 +6847,68 @@ Parser<ParseHandler, CharT>::tryStatement(YieldHandling yieldHandling)
 
             /*
              * Legal catch forms are:
-             *   catch (lhs)
-             *   catch (lhs if <boolean_expression>)
+             *   catch (lhs) {
+             *   catch (lhs if <boolean_expression>) {
+             *   catch {
              * where lhs is a name or a destructuring left-hand side.
-             * (the latter is legal only #ifdef JS_HAS_CATCH_GUARD)
+             * The second is legal only #ifdef JS_HAS_CATCH_GUARD.
              */
-            MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
-
-            if (!tokenStream.getToken(&tt))
+            bool omittedBinding;
+            if (!tokenStream.matchToken(&omittedBinding, TOK_LC))
                 return null();
-            Node catchName;
-            switch (tt) {
-              case TOK_LB:
-              case TOK_LC:
-                catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
-                                                     yieldHandling, tt);
-                if (!catchName)
-                    return null();
-                break;
 
-              default: {
-                if (!TokenKindIsPossibleIdentifierName(tt)) {
-                    error(JSMSG_CATCH_IDENTIFIER);
+            Node catchName;
+            Node catchGuard = null();
+
+            if (omittedBinding) {
+                catchName = null();
+            } else {
+                MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_CATCH);
+
+                if (!tokenStream.getToken(&tt))
                     return null();
+                switch (tt) {
+                  case TOK_LB:
+                  case TOK_LC:
+                    catchName = destructuringDeclaration(DeclarationKind::CatchParameter,
+                                                         yieldHandling, tt);
+                    if (!catchName)
+                        return null();
+                    break;
+
+                  default: {
+                    if (!TokenKindIsPossibleIdentifierName(tt)) {
+                        error(JSMSG_CATCH_IDENTIFIER);
+                        return null();
+                    }
+
+                    catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
+                                                  yieldHandling);
+                    if (!catchName)
+                        return null();
+                    break;
+                  }
                 }
 
-                catchName = bindingIdentifier(DeclarationKind::SimpleCatchParameter,
-                                              yieldHandling);
-                if (!catchName)
-                    return null();
-                break;
-              }
-            }
-
-            Node catchGuard = null();
 #if JS_HAS_CATCH_GUARD
-            /*
-             * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
-             * to avoid conflicting with the JS2/ECMAv4 type annotation
-             * catchguard syntax.
-             */
-            bool matched;
-            if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
-                return null();
-            if (matched) {
-                catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
-                if (!catchGuard)
+                /*
+                 * We use 'catch (x if x === 5)' (not 'catch (x : x === 5)')
+                 * to avoid conflicting with the JS2/ECMAv4 type annotation
+                 * catchguard syntax.
+                 */
+                bool matched;
+                if (!tokenStream.matchToken(&matched, TOK_IF, TokenStream::Operand))
                     return null();
-            }
+                if (matched) {
+                    catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
+                    if (!catchGuard)
+                        return null();
+                }
 #endif
-            MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
+                MUST_MATCH_TOKEN_MOD(TOK_RP, TokenStream::Operand, JSMSG_PAREN_AFTER_CATCH);
 
-            MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+                MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CATCH);
+            }
 
             Node catchBody = catchBlockStatement(yieldHandling, scope);
             if (!catchBody)

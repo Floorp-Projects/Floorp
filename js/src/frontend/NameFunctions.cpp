@@ -650,8 +650,10 @@ class NameResolver
           // contain arbitrary expressions.
           case PNK_CATCH:
             MOZ_ASSERT(cur->isArity(PN_TERNARY));
-            if (!resolve(cur->pn_kid1, prefix))
-                return false;
+            if (cur->pn_kid1) {
+              if (!resolve(cur->pn_kid1, prefix))
+                  return false;
+            }
             if (cur->pn_kid2) {
                 if (!resolve(cur->pn_kid2, prefix))
                     return false;

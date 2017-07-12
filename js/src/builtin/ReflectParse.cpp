@@ -1457,7 +1457,7 @@ NodeBuilder::catchClause(HandleValue var, HandleValue guard, HandleValue body, T
 {
     RootedValue cb(cx, callbacks[AST_CATCH]);
     if (!cb.isNull())
-        return callback(cb, var, opt(guard), body, pos, dst);
+        return callback(cb, opt(var), opt(guard), body, pos, dst);
 
     return newNode(AST_CATCH, pos,
                    "param", var,
@@ -1709,6 +1709,14 @@ class ASTSerializer
     bool identifier(HandleAtom atom, TokenPos* pos, MutableHandleValue dst);
     bool identifier(ParseNode* pn, MutableHandleValue dst);
     bool literal(ParseNode* pn, MutableHandleValue dst);
+
+    bool optPattern(ParseNode* pn, MutableHandleValue dst) {
+        if (!pn) {
+            dst.setMagic(JS_SERIALIZE_NO_NODE);
+            return true;
+        }
+        return pattern(pn, dst);
+    }
 
     bool pattern(ParseNode* pn, MutableHandleValue dst);
     bool arrayPattern(ParseNode* pn, MutableHandleValue dst);
@@ -2168,13 +2176,13 @@ ASTSerializer::switchStatement(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::catchClause(ParseNode* pn, bool* isGuarded, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
+    MOZ_ASSERT_IF(pn->pn_kid1, pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
     MOZ_ASSERT_IF(pn->pn_kid2, pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
     MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid3->pn_pos));
 
     RootedValue var(cx), guard(cx), body(cx);
 
-    if (!pattern(pn->pn_kid1, &var) ||
+    if (!optPattern(pn->pn_kid1, &var) ||
         !optExpression(pn->pn_kid2, &guard)) {
         return false;
     }

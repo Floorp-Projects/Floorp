@@ -77,6 +77,16 @@ assertStmt("try { } catch (e if foo) { } catch (e if bar) { } catch (e) { } fina
                      catchClause(ident("e"), ident("bar"), blockStmt([])) ],
                    catchClause(ident("e"), null, blockStmt([])),
                    blockStmt([])));
+assertStmt("try { } catch { }",
+           tryStmt(blockStmt([]),
+                   [],
+       catchClause(null, null, blockStmt([])),
+                   null));
+assertStmt("try { } catch { } finally { }",
+           tryStmt(blockStmt([]),
+                   [],
+       catchClause(null, null, blockStmt([])),
+                   blockStmt([])));
 
 
 // Bug 632028: yield outside of a function should throw
