@@ -597,7 +597,7 @@ private:
 //   ThreadId
 //   Time
 //   ( NativeLeafAddr
-//   | CodeLocation EmbeddedString* LineNumber? Category?
+//   | Label DynamicStringFragment* LineNumber? Category?
 //   | JitReturnAddr
 //   )+
 //   Marker*
@@ -607,88 +607,98 @@ private:
 // )*
 //
 // The most complicated part is the stack entry sequence that begins with
-// CodeLocation. Here are some examples.
+// Label. Here are some examples.
 //
-// - PseudoStack entries without a dynamic string (or with privacy enabled so
-//   that the dynamic string is hidden):
+// - PseudoStack entries without a dynamic string:
 //
-//     CodeLocation("js::RunScript")
+//     Label("js::RunScript")
 //     Category(ProfileEntry::Category::JS)
 //
-//     CodeLocation("XREMain::XRE_main")
+//     Label("XREMain::XRE_main")
 //     LineNumber(4660)
 //     Category(ProfileEntry::Category::OTHER)
 //
-//     CodeLocation("ElementRestyler::ComputeStyleChangeFor")
+//     Label("ElementRestyler::ComputeStyleChangeFor")
 //     LineNumber(3003)
 //     Category(ProfileEntry::Category::CSS)
 //
 // - PseudoStack entries with a dynamic string:
 //
-//     CodeLocation("")
-//     EmbeddedString("nsObserv")
-//     EmbeddedString("erServic")
-//     EmbeddedString("e::Notif")
-//     EmbeddedString("yObserve")
-//     EmbeddedString("rs profi")
-//     EmbeddedString("ler-star")
-//     EmbeddedString "ted")
+//     Label("nsObserverService::NotifyObservers")
+//     DynamicStringFragment("domwindo")
+//     DynamicStringFragment("wopened")
 //     LineNumber(291)
 //     Category(ProfileEntry::Category::OTHER)
 //
-//     CodeLocation("")
-//     EmbeddedString("closeWin")
-//     EmbeddedString("dow (chr")
-//     EmbeddedString("ome://gl")
-//     EmbeddedString("obal/con")
-//     EmbeddedString("tent/glo")
-//     EmbeddedString("balOverl")
-//     EmbeddedString("ay.js:5)")
-//     EmbeddedString("")         # this string holds the closing '\0'
+//     Label("")
+//     DynamicStringFragment("closeWin")
+//     DynamicStringFragment("dow (chr")
+//     DynamicStringFragment("ome://gl")
+//     DynamicStringFragment("obal/con")
+//     DynamicStringFragment("tent/glo")
+//     DynamicStringFragment("balOverl")
+//     DynamicStringFragment("ay.js:5)")
+//     DynamicStringFragment("")          # this string holds the closing '\0'
 //     LineNumber(25)
 //     Category(ProfileEntry::Category::JS)
 //
-//     CodeLocation("")
-//     EmbeddedString("bound (s")
-//     EmbeddedString("elf-host")
-//     EmbeddedString("ed:914)")
+//     Label("")
+//     DynamicStringFragment("bound (s")
+//     DynamicStringFragment("elf-host")
+//     DynamicStringFragment("ed:914)")
 //     LineNumber(945)
 //     Category(ProfileEntry::Category::JS)
 //
+// - A pseudoStack entry with a dynamic string, but with privacy enabled:
+//
+//     Label("nsObserverService::NotifyObservers")
+//     DynamicStringFragment("(private")
+//     DynamicStringFragment(")")
+//     LineNumber(291)
+//     Category(ProfileEntry::Category::OTHER)
+//
+// - A pseudoStack entry with an overly long dynamic string:
+//
+//     Label("")
+//     DynamicStringFragment("(too lon")
+//     DynamicStringFragment("g)")
+//     LineNumber(100)
+//     Category(ProfileEntry::Category::NETWORK)
+//
 // - A wasm JIT frame entry:
 //
-//     CodeLocation("")
-//     EmbeddedString("wasm-fun")
-//     EmbeddedString("ction[87")
-//     EmbeddedString("36] (blo")
-//     EmbeddedString("b:http:/")
-//     EmbeddedString("/webasse")
-//     EmbeddedString("mbly.org")
-//     EmbeddedString("/3dc5759")
-//     EmbeddedString("4-ce58-4")
-//     EmbeddedString("626-975b")
-//     EmbeddedString("-08ad116")
-//     EmbeddedString("30bc1:38")
-//     EmbeddedString("29856)")
+//     Label("")
+//     DynamicStringFragment("wasm-fun")
+//     DynamicStringFragment("ction[87")
+//     DynamicStringFragment("36] (blo")
+//     DynamicStringFragment("b:http:/")
+//     DynamicStringFragment("/webasse")
+//     DynamicStringFragment("mbly.org")
+//     DynamicStringFragment("/3dc5759")
+//     DynamicStringFragment("4-ce58-4")
+//     DynamicStringFragment("626-975b")
+//     DynamicStringFragment("-08ad116")
+//     DynamicStringFragment("30bc1:38")
+//     DynamicStringFragment("29856)")
 //
 // - A JS frame entry in a synchronous sample:
 //
-//     CodeLocation("")
-//     EmbeddedString("u (https")
-//     EmbeddedString("://perf-")
-//     EmbeddedString("html.io/")
-//     EmbeddedString("ac0da204")
-//     EmbeddedString("aaa44d75")
-//     EmbeddedString("a800.bun")
-//     EmbeddedString("dle.js:2")
-//     EmbeddedString("5)")
+//     Label("")
+//     DynamicStringFragment("u (https")
+//     DynamicStringFragment("://perf-")
+//     DynamicStringFragment("html.io/")
+//     DynamicStringFragment("ac0da204")
+//     DynamicStringFragment("aaa44d75")
+//     DynamicStringFragment("a800.bun")
+//     DynamicStringFragment("dle.js:2")
+//     DynamicStringFragment("5)")
 //
 void
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime, JSContext* aContext,
                                    UniqueStacks& aUniqueStacks)
 {
-  UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxDynamicStringLength);
+  UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
   // Because this is a format entirely internal to the Profiler, any parsing
   // error indicates a bug in the ProfileBuffer writing or the parser itself,
@@ -765,38 +775,44 @@ skip_to_next_sample:
         stack.AppendFrame(UniqueStacks::OnStackFrameKey(buf));
         e.Next();
 
-      } else if (e.Get().isCodeLocation()) {
+      } else if (e.Get().isLabel()) {
         numFrames++;
-        const char* string = e.Get().u.mString;
+
+        // Copy the label into strbuf.
+        const char* label = e.Get().u.mString;
+        strncpy(strbuf.get(), label, kMaxFrameKeyLength);
+        size_t i = strlen(label);
         e.Next();
 
-        strbuf[0] = '\0';
-        char* p = &strbuf[0];
+        bool seenFirstDynamicStringFragment = false;
         while (e.Has()) {
-          if (e.Get().isEmbeddedString()) {
-            if (p < &strbuf[kMaxDynamicStringLength]) {
-              // Copy 8 chars at a time. This won't overflow strbuf so long as
-              // its length is a multiple of 8.
-              static_assert(kMaxDynamicStringLength % 8 == 0, "bad strbuf sz");
-              memcpy(p, e.Get().u.mChars, ProfileBufferEntry::kNumChars);
-              p += ProfileBufferEntry::kNumChars;
+          if (e.Get().isDynamicStringFragment()) {
+            // If this is the first dynamic string fragment and we have a
+            // non-empty label, insert a ' ' after the label and before the
+            // dynamic string.
+            if (!seenFirstDynamicStringFragment) {
+              if (i > 0 && i < kMaxFrameKeyLength) {
+                strbuf[i] = ' ';
+                i++;
+              }
+              seenFirstDynamicStringFragment = true;
             }
 
+            for (size_t j = 0; j < ProfileBufferEntry::kNumChars; j++) {
+              const char* chars = e.Get().u.mChars;
+              if (i < kMaxFrameKeyLength) {
+                strbuf[i] = chars[j];
+                i++;
+              }
+            }
             e.Next();
           } else {
             break;
           }
         }
-        strbuf[kMaxDynamicStringLength - 1] = '\0';
+        strbuf[kMaxFrameKeyLength - 1] = '\0';
 
-        if (strbuf[0] != '\0') {
-          // When we have EmbeddedStrings, the preceding CodeLocation's string
-          // is always empty.
-          MOZ_ASSERT(string[0] == '\0');
-          string = strbuf.get();
-        }
-
-        UniqueStacks::OnStackFrameKey frameKey(string);
+        UniqueStacks::OnStackFrameKey frameKey(strbuf.get());
 
         if (e.Has() && e.Get().isLineNumber()) {
           frameKey.mLine = Some(unsigned(e.Get().u.mInt));

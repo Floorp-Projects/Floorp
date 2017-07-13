@@ -42,9 +42,12 @@ public:
   // record the resulting generation and index in |aLS| if it's non-null.
   void addThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
 
-  // Maximum size of a dynamic string (including the terminating '\0' char)
-  // that we'll write to the ProfileBuffer.
-  static const size_t kMaxDynamicStringLength = 8192;
+  // Add to the buffer a dynamic string. It'll be spread across one or more
+  // DynamicStringFragment entries.
+  void addDynamicStringEntry(const char* aStr);
+
+  // Maximum size of a frameKey string that we'll handle.
+  static const size_t kMaxFrameKeyLength = 512;
 
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, JSContext* cx,
