@@ -629,12 +629,6 @@ void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
             roots->TraceJSAll(trc);
     }
 
-    // XPCJSObjectHolders don't participate in cycle collection, so always
-    // trace them here.
-    XPCRootSetElem* e;
-    for (e = mObjectHolderRoots; e; e = e->GetNextRoot())
-        static_cast<XPCJSObjectHolder*>(e)->TraceJS(trc);
-
     JSContext* cx = XPCJSContext::Get()->Context();
     dom::TraceBlackJS(trc, JS_GetGCParameter(cx, JSGC_NUMBER),
                       nsXPConnect::XPConnect()->IsShuttingDown());
@@ -2807,7 +2801,6 @@ XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
    mDoingFinalization(false),
    mVariantRoots(nullptr),
    mWrappedJSRoots(nullptr),
-   mObjectHolderRoots(nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
     MOZ_COUNT_CTOR_INHERITED(XPCJSRuntime, CycleCollectedJSRuntime);

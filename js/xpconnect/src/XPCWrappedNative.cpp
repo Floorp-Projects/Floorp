@@ -2238,20 +2238,8 @@ XPCJSObjectHolder::GetJSObject()
     return mJSObj;
 }
 
-XPCJSObjectHolder::XPCJSObjectHolder(JSObject* obj)
-    : mJSObj(obj)
+XPCJSObjectHolder::XPCJSObjectHolder(JSContext* cx, JSObject* obj)
+  : mJSObj(cx, obj)
 {
     MOZ_ASSERT(obj);
-    XPCJSRuntime::Get()->AddObjectHolderRoot(this);
-}
-
-XPCJSObjectHolder::~XPCJSObjectHolder()
-{
-    RemoveFromRootSet();
-}
-
-void
-XPCJSObjectHolder::TraceJS(JSTracer* trc)
-{
-    JS::TraceEdge(trc, &mJSObj, "XPCJSObjectHolder::mJSObj");
 }

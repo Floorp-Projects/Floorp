@@ -25,12 +25,6 @@ XPCJSRuntime::AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS)
     wrappedJS->AddToRootSet(&mWrappedJSRoots);
 }
 
-inline void
-XPCJSRuntime::AddObjectHolderRoot(XPCJSObjectHolder* holder)
-{
-    holder->AddToRootSet(&mObjectHolderRoots);
-}
-
 /***************************************************************************/
 
 inline bool
