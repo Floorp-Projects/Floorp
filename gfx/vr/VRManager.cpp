@@ -264,20 +264,26 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
    *       in the future.
    */
   for (uint32_t i = 0; i < mManagers.Length() && displays.Length() == 0; ++i) {
-    mManagers[i]->GetHMDs(displays);
+    if (mManagers[i]->GetHMDs(displays)) {
+      // GetHMDs returns true to indicate that no further enumeration from
+      // other managers should be performed.  This prevents erraneous
+      // redundant enumeration of the same HMD by multiple managers.
+      break;
+    }
   }
 
   bool displayInfoChanged = false;
+  bool displaySetChanged = false;
 
   if (displays.Length() != mVRDisplays.Count()) {
     // Catch cases where a VR display has been removed
-    displayInfoChanged = true;
+    displaySetChanged = true;
   }
 
   for (const auto& display: displays) {
     if (!GetDisplay(display->GetDisplayInfo().GetDisplayID())) {
       // This is a new display
-      displayInfoChanged = true;
+      displaySetChanged = true;
       break;
     }
 
@@ -288,14 +294,15 @@ VRManager::RefreshVRDisplays(bool aMustDispatch)
     }
   }
 
-  if (displayInfoChanged) {
+  // Rebuild the HashMap if there are additions or removals
+  if (displaySetChanged) {
     mVRDisplays.Clear();
     for (const auto& display: displays) {
       mVRDisplays.Put(display->GetDisplayInfo().GetDisplayID(), display);
     }
   }
 
-  if (displayInfoChanged || aMustDispatch) {
+  if (displayInfoChanged || displaySetChanged || aMustDispatch) {
     DispatchVRDisplayInfoUpdate();
   }
 }

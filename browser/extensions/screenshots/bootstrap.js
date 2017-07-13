@@ -81,7 +81,9 @@ function shutdown(data, reason) { // eslint-disable-line no-unused-vars
     id: ADDON_ID,
     resourceURI: addonResourceURI
   });
-  stop(webExtension, reason);
+  if (webExtension.started) {
+    stop(webExtension, reason);
+  }
 }
 
 function install(data, reason) {} // eslint-disable-line no-unused-vars

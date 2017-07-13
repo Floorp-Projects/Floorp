@@ -20,47 +20,62 @@ content.addEventListener(SERVICE_EVENT_TYPE, event => {
 
 // Forward messages from the test to the in-content service.
 addMessageListener(TEST_MSG, msg => {
-  // If the message is a search, stop the page from loading and then tell the
-  // test that it loaded.
-  if (msg.data.type == "Search") {
-    waitForLoadAndStopIt(msg.data.expectedURL, url => {
+  (async function() {
+    // If the message is a search, stop the page from loading and then tell the
+    // test that it loaded.
+    let loadPromise;
+    if (msg.data.type == "Search") {
+      loadPromise = waitForLoadAndStopIt(msg.data.expectedURL);
+    }
+
+    content.dispatchEvent(
+      new content.CustomEvent(CLIENT_EVENT_TYPE, {
+        detail: msg.data,
+      })
+    );
+
+    if (msg.data.type == "Search") {
+      let url = await loadPromise;
+
       sendAsyncMessage(TEST_MSG, {
         type: "loadStopped",
         url,
       });
-    });
-  }
-
-  content.dispatchEvent(
-    new content.CustomEvent(CLIENT_EVENT_TYPE, {
-      detail: msg.data,
-    })
-  );
+    }
+  })();
 });
 
-function waitForLoadAndStopIt(expectedURL, callback) {
-  let Ci = Components.interfaces;
-  let webProgress = content.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                             .getInterface(Ci.nsIWebProgress);
-  let listener = {
-    onStateChange(webProg, req, flags, status) {
-      if (req instanceof Ci.nsIChannel) {
-        let url = req.originalURI.spec;
-        dump("waitForLoadAndStopIt: onStateChange " + url + "\n");
-        let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
-                       Ci.nsIWebProgressListener.STATE_START;
-        if ((flags & docStart) && webProg.isTopLevel && url == expectedURL) {
-          webProgress.removeProgressListener(listener);
-          req.cancel(Components.results.NS_ERROR_FAILURE);
-          callback(url);
+// We need to keep a reference to the listener as webProgress records a weak
+// reference, hence we need to stop garbage collection cleaning it up before the
+// test is completed.
+var webProgressListener;
+
+function waitForLoadAndStopIt(expectedURL) {
+  return new Promise(resolve => {
+    let Ci = Components.interfaces;
+    let webProgress = content.document.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                                               .getInterface(Ci.nsIWebProgress);
+    webProgressListener = {
+      onStateChange(webProg, req, flags, status) {
+        if (req instanceof Ci.nsIChannel) {
+          let url = req.originalURI.spec;
+          dump("waitForLoadAndStopIt: onStateChange " + url + "\n");
+          let docStart = Ci.nsIWebProgressListener.STATE_IS_DOCUMENT |
+                         Ci.nsIWebProgressListener.STATE_START;
+          if ((flags & docStart) && webProg.isTopLevel && url == expectedURL) {
+            webProgress.removeProgressListener(webProgressListener);
+            webProgressListener = null;
+            req.cancel(Components.results.NS_ERROR_FAILURE);
+            resolve(url);
+          }
         }
-      }
-    },
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIWebProgressListener,
-      Ci.nsISupportsWeakReference,
-    ]),
-  };
-  webProgress.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
-  dump("waitForLoadAndStopIt: Waiting for URL to load: " + expectedURL + "\n");
+      },
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsIWebProgressListener,
+        Ci.nsISupportsWeakReference,
+      ]),
+    };
+    webProgress.addProgressListener(webProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+    dump("waitForLoadAndStopIt: Waiting for URL to load: " + expectedURL + "\n");
+  });
 }

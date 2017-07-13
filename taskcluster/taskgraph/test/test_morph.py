@@ -6,10 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from .. import morph
-from ..graph import Graph
-from ..taskgraph import TaskGraph
-from ..task import Task
+from taskgraph import morph
+from taskgraph.graph import Graph
+from taskgraph.taskgraph import TaskGraph
+from taskgraph.task import Task
 
 from mozunit import main
 
