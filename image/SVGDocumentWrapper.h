@@ -9,6 +9,7 @@
 #define mozilla_image_SVGDocumentWrapper_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/StyleBackendType.h"
 
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
@@ -39,7 +40,7 @@ class SVGDocumentWrapper final : public nsIStreamListener,
                                  nsSupportsWeakReference
 {
 public:
-  SVGDocumentWrapper();
+  explicit SVGDocumentWrapper(StyleBackendType aStyleBackendType = StyleBackendType::None);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
@@ -141,6 +142,7 @@ private:
   nsCOMPtr<nsIContentViewer>  mViewer;
   nsCOMPtr<nsILoadGroup>      mLoadGroup;
   nsCOMPtr<nsIStreamListener> mListener;
+  StyleBackendType            mStyleBackendType;
   bool                        mIgnoreInvalidation;
   bool                        mRegisteredForXPCOMShutdown;
 };
