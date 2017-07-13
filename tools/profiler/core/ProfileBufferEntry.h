@@ -80,10 +80,9 @@ public:
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
   #undef CTOR
 
-  Kind kind() const { return mKind; }
-  bool hasKind(Kind k) const { return kind() == k; }
+  Kind GetKind() const { return mKind; }
 
-  #define IS_KIND(k, t) bool is##k() const { return hasKind(Kind::k); }
+  #define IS_KIND(k, t) bool Is##k() const { return mKind == Kind::k; }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
   #undef IS_KIND
 
