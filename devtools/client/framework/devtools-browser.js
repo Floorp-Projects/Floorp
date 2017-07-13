@@ -12,7 +12,7 @@
  * browser window is ready (i.e. fired browser-delayed-startup-finished event)
  **/
 
-const {Cc, Ci, Cu} = require("chrome");
+const {Cc, Ci} = require("chrome");
 const Services = require("Services");
 const defer = require("devtools/shared/defer");
 const {gDevTools} = require("./devtools");
@@ -419,66 +419,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
   },
 
   /**
-   * Install Developer widget
-   */
-  installDeveloperWidget() {
-    let id = "developer-button";
-    let widget = CustomizableUI.getWidget(id);
-    if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
-      return;
-    }
-    let item = {
-      id: id,
-      type: "view",
-      viewId: "PanelUI-developer",
-      shortcutId: "key_devToolboxMenuItem",
-      tooltiptext: "developer-button.tooltiptext2",
-      defaultArea: AppConstants.MOZ_DEV_EDITION ?
-                     CustomizableUI.AREA_NAVBAR :
-                     CustomizableUI.AREA_PANEL,
-      onViewShowing(event) {
-        // Populate the subview with whatever menuitems are in the developer
-        // menu. We skip menu elements, because the menu panel has no way
-        // of dealing with those right now.
-        let doc = event.target.ownerDocument;
-
-        let menu = doc.getElementById("menuWebDeveloperPopup");
-
-        let itemsToDisplay = [...menu.children];
-        // Hardcode the addition of the "work offline" menuitem at the bottom:
-        itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
-        itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
-
-        let developerItems = doc.getElementById("PanelUI-developerItems");
-        // Import private helpers from CustomizableWidgets
-        let { clearSubview, fillSubviewFromMenuItems } =
-          Cu.import("resource:///modules/CustomizableWidgets.jsm", {});
-        clearSubview(developerItems);
-        fillSubviewFromMenuItems(itemsToDisplay, developerItems);
-      },
-      onInit(anchor) {
-        // Since onBeforeCreated already bails out when initialized, we can call
-        // it right away.
-        this.onBeforeCreated(anchor.ownerDocument);
-      },
-      onBeforeCreated(doc) {
-        // Bug 1223127, CUI should make this easier to do.
-        if (doc.getElementById("PanelUI-developerItems")) {
-          return;
-        }
-        let view = doc.createElement("panelview");
-        view.id = "PanelUI-developerItems";
-        let panel = doc.createElement("vbox");
-        panel.setAttribute("class", "panel-subview-body");
-        view.appendChild(panel);
-        doc.getElementById("PanelUI-multiView").appendChild(view);
-      }
-    };
-    CustomizableUI.createWidget(item);
-    CustomizableWidgets.push(item);
-  },
-
-  /**
    * Install WebIDE widget
    */
   // Used by itself
@@ -550,10 +490,6 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     gDevToolsBrowser._trackedBrowserWindows.add(win);
 
     BrowserMenus.addMenus(win.document);
-
-    // Register the Developer widget in the Hamburger menu or navbar
-    // only once menus are registered as it depends on it.
-    gDevToolsBrowser.installDeveloperWidget();
 
     this.updateCommandAvailability(win);
     this.updateDevtoolsThemeAttribute(win);
