@@ -96,3 +96,5 @@ fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2420) == frame-scrolling-attr-2.htm
 == propagated-overflow-style-2c.html propagated-overflow-style-2-ref.html
 == propagated-overflow-style-2d.html propagated-overflow-style-2-ref.html
 == propagated-overflow-style-2e.html propagated-overflow-style-2-ref.html
+
+fuzzy-if(Android,54-54,8-8) == xul-scrollbar-iterate.html xul-scrollbar-iterate-ref.html
