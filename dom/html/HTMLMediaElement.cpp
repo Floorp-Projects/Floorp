@@ -4845,13 +4845,6 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
     }
   }
 
-  MediaEventSource<void>* waitingForKeyProducer = mDecoder->WaitingForKeyEvent();
-  // Not every decoder will produce waitingForKey events, only add ones that can
-  if (waitingForKeyProducer) {
-    mWaitingForKeyListener = waitingForKeyProducer->Connect(
-      mAbstractMainThread, this, &HTMLMediaElement::NotifyWaitingForKey);
-  }
-
   if (mChannelLoader) {
     mChannelLoader->Done();
     mChannelLoader = nullptr;
