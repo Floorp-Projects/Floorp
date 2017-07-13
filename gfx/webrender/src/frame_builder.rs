@@ -6,8 +6,8 @@ use api::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipAndScrollInfo
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize};
-use api::{LayerToScrollTransform, LayerVector2D, LocalClip, PipelineId, RepeatMode, TileOffset};
-use api::{TransformStyle, WebGLContextId, WorldPixel, YuvColorSpace, YuvData};
+use api::{LayerToScrollTransform, LayerVector2D, LocalClip, PipelineId, RepeatMode, TextShadow};
+use api::{TileOffset, TransformStyle, WebGLContextId, WorldPixel, YuvColorSpace, YuvData};
 use app_units::Au;
 use frame::FrameId;
 use gpu_cache::GpuCache;
@@ -17,7 +17,7 @@ use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu};
 use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
-use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu};
+use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextShadowPrimitiveCpu};
 use prim_store::{BoxShadowPrimitiveCpu, TexelRect, YuvImagePrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
 use render_task::{AlphaRenderItem, ClipWorkItem, MaskCacheKey, RenderTask, RenderTaskIndex};
@@ -106,6 +106,37 @@ pub struct FrameBuilderConfig {
     pub cache_expiry_frames: u32,
 }
 
+struct PendingTextShadow {
+    shadow: TextShadow,
+    text_primitives: Vec<TextRunPrimitiveCpu>,
+    clip_and_scroll: ClipAndScrollInfo,
+    local_rect: LayerRect,
+    local_clip: LocalClip,
+}
+
+impl PendingTextShadow {
+    fn new(shadow: TextShadow,
+           clip_and_scroll: ClipAndScrollInfo,
+           local_clip: &LocalClip) -> PendingTextShadow {
+        PendingTextShadow {
+            shadow: shadow,
+            text_primitives: Vec::new(),
+            clip_and_scroll: clip_and_scroll,
+            local_clip: local_clip.clone(),
+            local_rect: LayerRect::zero(),
+        }
+    }
+
+    fn push(&mut self,
+            local_rect: LayerRect,
+            primitive: &TextRunPrimitiveCpu) {
+        self.text_primitives.push(primitive.clone());
+        let shadow_rect = local_rect.inflate(self.shadow.blur_radius,
+                                             self.shadow.blur_radius);
+        self.local_rect = self.local_rect.union(&shadow_rect);
+    }
+}
+
 pub struct FrameBuilder {
     screen_size: DeviceUintSize,
     background_color: Option<ColorF>,
@@ -116,6 +147,7 @@ pub struct FrameBuilder {
     stacking_context_store: Vec<StackingContext>,
     clip_scroll_group_store: Vec<ClipScrollGroup>,
     packed_layers: Vec<PackedLayer>,
+    pending_text_shadows: Vec<PendingTextShadow>,
 
     scrollbar_prims: Vec<ScrollbarPrimitive>,
 
@@ -144,6 +176,7 @@ impl FrameBuilder {
                     clip_scroll_group_store: recycle_vec(prev.clip_scroll_group_store),
                     cmds: recycle_vec(prev.cmds),
                     packed_layers: recycle_vec(prev.packed_layers),
+                    pending_text_shadows: recycle_vec(prev.pending_text_shadows),
                     scrollbar_prims: recycle_vec(prev.scrollbar_prims),
                     reference_frame_stack: recycle_vec(prev.reference_frame_stack),
                     stacking_context_stack: recycle_vec(prev.stacking_context_stack),
@@ -160,6 +193,7 @@ impl FrameBuilder {
                     clip_scroll_group_store: Vec::new(),
                     cmds: Vec::new(),
                     packed_layers: Vec::new(),
+                    pending_text_shadows: Vec::new(),
                     scrollbar_prims: Vec::new(),
                     reference_frame_stack: Vec::new(),
                     stacking_context_stack: Vec::new(),
@@ -287,6 +321,8 @@ impl FrameBuilder {
     pub fn pop_stacking_context(&mut self) {
         self.cmds.push(PrimitiveRunCmd::PopStackingContext);
         self.stacking_context_stack.pop();
+        assert!(self.pending_text_shadows.is_empty(),
+            "Found unpopped text shadows when popping stacking context!");
     }
 
     pub fn push_reference_frame(&mut self,
@@ -390,6 +426,37 @@ impl FrameBuilder {
 
     pub fn pop_reference_frame(&mut self) {
         self.reference_frame_stack.pop();
+    }
+
+    pub fn push_text_shadow(&mut self,
+                            shadow: TextShadow,
+                            clip_and_scroll: ClipAndScrollInfo,
+                            local_clip: &LocalClip) {
+        let text_shadow = PendingTextShadow::new(shadow,
+                                                 clip_and_scroll,
+                                                 local_clip);
+        self.pending_text_shadows.push(text_shadow);
+    }
+
+    pub fn pop_text_shadow(&mut self) {
+        let mut text_shadow = self.pending_text_shadows
+                                  .pop()
+                                  .expect("Too many PopTextShadows?");
+        if !text_shadow.text_primitives.is_empty() {
+            let prim_cpu = TextShadowPrimitiveCpu {
+                text_primitives: text_shadow.text_primitives,
+                shadow: text_shadow.shadow,
+            };
+
+            text_shadow.local_rect = text_shadow.local_rect
+                                                .translate(&text_shadow.shadow.offset);
+
+            self.add_primitive(text_shadow.clip_and_scroll,
+                               &text_shadow.local_rect,
+                               &text_shadow.local_clip,
+                               &[],
+                               PrimitiveContainer::TextShadow(prim_cpu));
+        }
     }
 
     pub fn add_solid_rectangle(&mut self,
@@ -732,21 +799,19 @@ impl FrameBuilder {
                     local_clip: &LocalClip,
                     font_key: FontKey,
                     size: Au,
-                    blur_radius: f32,
                     color: &ColorF,
                     glyph_range: ItemRange<GlyphInstance>,
                     glyph_count: usize,
                     glyph_options: Option<GlyphOptions>) {
-        if color.a == 0.0 {
+        let is_text_shadow = !self.pending_text_shadows.is_empty();
+
+        if color.a == 0.0 && !is_text_shadow {
             return
         }
 
         if size.0 <= 0 {
             return
         }
-
-        // Expand the rectangle of the text run by the blur radius.
-        let rect = rect.inflate(blur_radius, blur_radius);
 
         // TODO(gw): Use a proper algorithm to select
         // whether this item should be rendered with
@@ -757,7 +822,7 @@ impl FrameBuilder {
         // subpixel text rendering, even if enabled.
         if render_mode == FontRenderMode::Subpixel {
             // text-blur shadow needs to force alpha AA.
-            if blur_radius != 0.0 {
+            if is_text_shadow {
                 render_mode = FontRenderMode::Alpha;
             }
 
@@ -781,7 +846,6 @@ impl FrameBuilder {
         let prim_cpu = TextRunPrimitiveCpu {
             font_key,
             logical_font_size: size,
-            blur_radius,
             glyph_range,
             glyph_count,
             glyph_instances: Vec::new(),
@@ -790,11 +854,17 @@ impl FrameBuilder {
             glyph_options,
         };
 
-        self.add_primitive(clip_and_scroll,
-                           &rect,
-                           local_clip,
-                           &[],
-                           PrimitiveContainer::TextRun(prim_cpu));
+        if is_text_shadow {
+            for shadow in &mut self.pending_text_shadows {
+                shadow.push(rect, &prim_cpu);
+            }
+        } else {
+            self.add_primitive(clip_and_scroll,
+                               &rect,
+                               local_clip,
+                               &[],
+                               PrimitiveContainer::TextRun(prim_cpu));
+        }
     }
 
     pub fn fill_box_shadow_rect(&mut self,
