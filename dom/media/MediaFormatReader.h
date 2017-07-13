@@ -9,9 +9,11 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Mutex.h"
 
+#include "FrameStatistics.h"
 #include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
 #include "MediaMetadataManager.h"
@@ -23,7 +25,6 @@
 namespace mozilla {
 
 class CDMProxy;
-class FrameStatistics;
 class GMPCrashHelper;
 class MediaResource;
 class VideoFrameContainer;

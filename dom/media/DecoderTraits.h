@@ -14,7 +14,6 @@ class nsACString;
 
 namespace mozilla {
 
-class AbstractMediaDecoder;
 class ChannelMediaDecoder;
 class DecoderDoctorDiagnostics;
 class MediaContainerType;
