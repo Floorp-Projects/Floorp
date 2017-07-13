@@ -22,6 +22,14 @@ function checkIsChromeFullscreen(win, inFullscreen) {
 }
 
 SimpleTest.waitForExplicitFinish();
+
+// run these tests with animations enabled
+const origAnimationsPrefValue = SpecialPowers.getBoolPref("toolkit.cosmeticAnimations.enabled");
+SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", true);
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", origAnimationsPrefValue);
+});
+
 // XXX This actually exposes a true race condition, but it could rarely
 // happen in real world, because it only happens when requestFullscreen
 // is called immediately after exiting fullscreen in certain condition,
