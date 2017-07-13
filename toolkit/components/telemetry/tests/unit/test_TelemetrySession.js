@@ -579,6 +579,8 @@ add_task(async function test_simplePing() {
 
   // Restore the UUID generator so we don't mess with other tests.
   fakeGenerateUUID(TelemetryUtils.generateUUID, TelemetryUtils.generateUUID);
+
+  await TelemetryController.testShutdown();
 });
 
 // Saves the current session histograms, reloads them, performs a ping
@@ -616,6 +618,8 @@ add_task(async function test_saveLoadPing() {
   checkPayload(pings[0].payload, REASON_TEST_PING, 0, 1);
   checkPingFormat(pings[1], PING_TYPE_SAVED_SESSION, true, true);
   checkPayload(pings[1].payload, REASON_SAVED_SESSION, 0, 0);
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_checkSubsessionScalars() {
@@ -676,6 +680,8 @@ add_task(async function test_checkSubsessionScalars() {
                UINT_SCALAR + " must contain the expected value.");
   Assert.equal(subsession.processes.parent.scalars[STRING_SCALAR], expectedString,
                STRING_SCALAR + " must contain the expected value.");
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_checkSubsessionEvents() {
@@ -731,6 +737,8 @@ add_task(async function test_checkSubsessionEvents() {
   Assert.ok("events" in subsession.processes.parent, "Should have an events field in subsession payload.");
   events = subsession.processes.parent.events.filter(e => e[1] === "telemetry.test");
   Assert.equal(events.length, 0, "Should have no test events in the subsession payload now.");
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_checkSubsessionHistograms() {
@@ -915,6 +923,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 2);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["b"].sum, 1);
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_checkSubsessionData() {
@@ -963,6 +973,8 @@ add_task(async function test_checkSubsessionData() {
   Assert.equal(subsession.simpleMeasurements.activeTicks,
                expectedActiveTicks - activeTicksAtSubsessionStart,
                "Subsessions must count active ticks since the last new subsession.");
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_dailyCollection() {
@@ -984,7 +996,7 @@ add_task(async function test_dailyCollection() {
 
   // Init and check timer.
   await TelemetryStorage.testClearPendingPings();
-  await TelemetryController.testSetup();
+  await TelemetryController.testReset();
   TelemetrySend.setServer("http://localhost:" + PingServer.port);
 
   // Set histograms to expected state.
@@ -1456,7 +1468,6 @@ add_task(async function test_sendShutdownPing() {
   Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
   Preferences.reset(TelemetryUtils.Preferences.FirstRun);
   PingServer.resetPingHandler();
-  await TelemetryController.testReset();
 });
 
 add_task(async function test_savedSessionData() {
@@ -1533,8 +1544,7 @@ add_task(async function test_sessionData_ShortSession() {
 
   const SESSION_STATE_PATH = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
 
-  // Shut down Telemetry and remove the session state file.
-  await TelemetryController.testReset();
+  // Remove the session state file.
   await OS.File.remove(SESSION_STATE_PATH, { ignoreAbsent: true });
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_LOAD").clear();
   getHistogram("TELEMETRY_SESSIONDATA_FAILED_PARSE").clear();
@@ -1568,6 +1578,8 @@ add_task(async function test_sessionData_ShortSession() {
   Assert.equal(1, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_LOAD").sum);
   Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_PARSE").sum);
   Assert.equal(0, getSnapshot("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").sum);
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_invalidSessionData() {
@@ -1606,6 +1618,7 @@ add_task(async function test_invalidSessionData() {
   fakeGenerateUUID(() => expectedSessionUUID, () => expectedSubsessionUUID);
 
   // Start TelemetryController so that it loads the session data file.
+  await TelemetryController.testShutdown();
   await TelemetryController.testReset();
 
   let payload = TelemetrySession.getPayload();
@@ -1992,6 +2005,8 @@ add_task(async function test_pingExtendedStats() {
             "addonManager must be sent if the extended set is on.");
   Assert.ok("UITelemetry" in ping.payload.simpleMeasurements,
             "UITelemetry must be sent if the extended set is on.");
+
+  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_schedulerUserIdle() {
