@@ -25,6 +25,11 @@
 #include "nsAppRunner.h"
 #include "nsContentUtils.h"
 #include "nsIAddonInterposition.h"
+#include "nsIIOService.h"
+#include "nsIJARProtocolHandler.h"
+#include "nsIStringEnumerator.h"
+#include "nsIZipReader.h"
+#include "nsReadableUtils.h"
 #include "nsXULAppAPI.h"
 
 #include <stdlib.h>
@@ -245,6 +250,24 @@ ParseJSON(JSContext* cx, nsACString& jsonData, JS::MutableHandleValue result)
   jsonData.Truncate();
 
   return JS_ParseJSON(cx, str.Data(), str.Length(), result);
+}
+
+static Result<nsCOMPtr<nsIZipReaderCache>, nsresult>
+GetJarCache()
+{
+  nsCOMPtr<nsIIOService> ios = services::GetIOService();
+  NS_ENSURE_TRUE(ios, Err(NS_ERROR_FAILURE));
+
+  nsCOMPtr<nsIProtocolHandler> jarProto;
+  NS_TRY(ios->GetProtocolHandler("jar", getter_AddRefs(jarProto)));
+
+  nsCOMPtr<nsIJARProtocolHandler> jar = do_QueryInterface(jarProto);
+  MOZ_ASSERT(jar);
+
+  nsCOMPtr<nsIZipReaderCache> zipCache;
+  NS_TRY(jar->GetJARCache(getter_AddRefs(zipCache)));
+
+  return Move(zipCache);
 }
 
 
@@ -696,6 +719,43 @@ AddonManagerStartup::DecodeBlob(JS::HandleValue value, JSContext* cx, JS::Mutabl
   ErrorResult rv;
   holder.Read(cx, result, rv);
   return rv.StealNSResult();;
+}
+
+nsresult
+AddonManagerStartup::EnumerateZipFile(nsIFile* file, const nsACString& pattern,
+                                      uint32_t* countOut, char16_t*** entriesOut)
+{
+  NS_ENSURE_ARG_POINTER(file);
+  NS_ENSURE_ARG_POINTER(countOut);
+  NS_ENSURE_ARG_POINTER(entriesOut);
+
+  nsCOMPtr<nsIZipReaderCache> zipCache;
+  MOZ_TRY_VAR(zipCache, GetJarCache());
+
+  nsCOMPtr<nsIZipReader> zip;
+  NS_TRY(zipCache->GetZip(file, getter_AddRefs(zip)));
+
+  nsCOMPtr<nsIUTF8StringEnumerator> entries;
+  NS_TRY(zip->FindEntries(pattern, getter_AddRefs(entries)));
+
+  nsTArray<nsString> results;
+  bool hasMore;
+  while (NS_SUCCEEDED(entries->HasMore(&hasMore)) && hasMore) {
+    nsAutoCString name;
+    NS_TRY(entries->GetNext(name));
+
+    results.AppendElement(NS_ConvertUTF8toUTF16(name));
+  }
+
+  auto strResults = MakeUnique<char16_t*[]>(results.Length());
+  for (uint32_t i = 0; i < results.Length(); i++) {
+    strResults[i] = ToNewUnicode(results[i]);
+  }
+
+  *countOut = results.Length();
+  *entriesOut = strResults.release();
+
+  return NS_OK;
 }
 
 nsresult
