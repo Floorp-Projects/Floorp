@@ -31,6 +31,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+                                  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
+                                  "resource:///modules/CustomizableWidgets.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Bundle", function () {
   const kUrl = "chrome://devtools/locale/key-shortcuts.properties";
@@ -208,9 +212,86 @@ DevToolsStartup.prototype = {
     }
 
     this.hookWebDeveloperMenu(window);
+    this.hookDeveloperToggle(window);
   },
 
   /**
+   * Dynamically register a wrench icon in the customization menu.
+   * You can use this button by right clicking on Firefox toolbar
+   * and dragging it from the customization panel to the toolbar.
+   * (i.e. this isn't displayed by default to users!)
+   *
+   * _But_, the "Web Developer" entry in the hamburger menu (the menu with
+   * 3 horizontal lines), is using this "developer-button" view to populate
+   * its menu. So we have to register this button for the menu to work.
+   *
+   * Also, this menu duplicates its own entries from the "Web Developer"
+   * menu in the system menu, under "Tools" main menu item. The system
+   * menu is being hooked by "hookWebDeveloperMenu" which ends up calling
+   * devtools/client/framework/browser-menu to create the items for real,
+   * initDevTools, from onViewShowing is also calling browser-menu.
+   */
+  hookDeveloperToggle(window) {
+    let id = "developer-button";
+    let widget = CustomizableUI.getWidget(id);
+    if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
+      return;
+    }
+    let item = {
+      id: id,
+      type: "view",
+      viewId: "PanelUI-developer",
+      shortcutId: "key_toggleToolbox",
+      tooltiptext: "developer-button.tooltiptext2",
+      defaultArea: AppConstants.MOZ_DEV_EDITION ?
+                     CustomizableUI.AREA_NAVBAR :
+                     CustomizableUI.AREA_PANEL,
+      onViewShowing: (event) => {
+        // Ensure creating the menuitems in the system menu before trying to copy them.
+        this.initDevTools();
+
+        // Populate the subview with whatever menuitems are in the developer
+        // menu. We skip menu elements, because the menu panel has no way
+        // of dealing with those right now.
+        let doc = event.target.ownerDocument;
+
+        let menu = doc.getElementById("menuWebDeveloperPopup");
+
+        let itemsToDisplay = [...menu.children];
+        // Hardcode the addition of the "work offline" menuitem at the bottom:
+        itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
+        itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
+
+        let developerItems = doc.getElementById("PanelUI-developerItems");
+        // Import private helpers from CustomizableWidgets
+        let { clearSubview, fillSubviewFromMenuItems } =
+          Cu.import("resource:///modules/CustomizableWidgets.jsm", {});
+        clearSubview(developerItems);
+        fillSubviewFromMenuItems(itemsToDisplay, developerItems);
+      },
+      onInit(anchor) {
+        // Since onBeforeCreated already bails out when initialized, we can call
+        // it right away.
+        this.onBeforeCreated(anchor.ownerDocument);
+      },
+      onBeforeCreated(doc) {
+        // Bug 1223127, CUI should make this easier to do.
+        if (doc.getElementById("PanelUI-developerItems")) {
+          return;
+        }
+        let view = doc.createElement("panelview");
+        view.id = "PanelUI-developerItems";
+        let panel = doc.createElement("vbox");
+        panel.setAttribute("class", "panel-subview-body");
+        view.appendChild(panel);
+        doc.getElementById("PanelUI-multiView").appendChild(view);
+      }
+    };
+    CustomizableUI.createWidget(item);
+    CustomizableWidgets.push(item);
+  },
+
+  /*
    * We listen to the "Web Developer" system menu, which is under "Tools" main item.
    * This menu item is hardcoded empty in Firefox UI. We listen for its opening to
    * populate it lazily. Loading main DevTools module is going to populate it.
