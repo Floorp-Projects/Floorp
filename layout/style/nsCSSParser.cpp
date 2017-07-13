@@ -13624,8 +13624,11 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
     if (variantMask & VARIANT_NUMBER) {
       // Simplify the value immediately so we can check for division by
       // zero.
-      mozilla::css::ReduceNumberCalcOps ops;
-      float number = mozilla::css::ComputeCalc(*storage, ops);
+      float number;
+      mozilla::css::ReduceCalcOps<float, eCSSUnit_Number> ops;
+      if (!mozilla::css::ComputeCalc(number, *storage, ops)) {
+        MOZ_ASSERT_UNREACHABLE("unexpected unit");
+      }
       if (number == 0.0 && afterDivision)
         return false;
       storage->SetFloatValue(number, eCSSUnit_Number);
@@ -13639,12 +13642,18 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
                    "unexpected relationship to current storage");
         nsCSSValue &leftValue = aValue.GetArrayValue()->Item(0);
         if (variantMask & VARIANT_INTEGER) {
-          mozilla::css::ReduceIntegerCalcOps ops;
-          int integer = mozilla::css::ComputeCalc(leftValue, ops);
+          int integer;
+          mozilla::css::ReduceCalcOps<int, eCSSUnit_Integer> ops;
+          if (!mozilla::css::ComputeCalc(integer, leftValue, ops)) {
+            MOZ_ASSERT_UNREACHABLE("unexpected unit");
+          }
           leftValue.SetIntValue(integer, eCSSUnit_Integer);
         } else {
-          mozilla::css::ReduceNumberCalcOps ops;
-          float number = mozilla::css::ComputeCalc(leftValue, ops);
+          float number;
+          mozilla::css::ReduceCalcOps<float, eCSSUnit_Number> ops;
+          if (!mozilla::css::ComputeCalc(number, leftValue, ops)) {
+            MOZ_ASSERT_UNREACHABLE("unexpected unit");
+          }
           leftValue.SetFloatValue(number, eCSSUnit_Number);
         }
       }

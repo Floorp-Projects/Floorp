@@ -1020,6 +1020,8 @@ public:
     nscoord mLength;
     float mPercent;
 
+    ComputedCalc() {}
+
     ComputedCalc(nscoord aLength, float aPercent)
       : mLength(aLength), mPercent(aPercent) {}
   };
