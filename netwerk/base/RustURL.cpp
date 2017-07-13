@@ -443,6 +443,24 @@ RustURL::GetSpecIgnoringRef(nsACString & aSpecIgnoringRef)
 }
 
 NS_IMETHODIMP
+RustURL::GetDisplaySpec(nsACString &aUnicodeSpec)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RustURL::GetDisplayHostPort(nsACString &aUnicodeHostPort)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+RustURL::GetDisplayHost(nsACString &aUnicodeHost)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 RustURL::GetHasRef(bool *aHasRef)
 {
   *aHasRef = false;

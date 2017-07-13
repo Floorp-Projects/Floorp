@@ -9,7 +9,6 @@ package org.mozilla.gecko.mma;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
@@ -17,7 +16,6 @@ import com.leanplum.LeanplumActivityHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +25,7 @@ public class MmaLeanplumImp implements MmaInterface {
     private static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
 
     @Override
-    public void init(final Activity activity) {
+    public void init(final Activity activity, Map<String, ?> attributes) {
         if (activity == null) {
             return;
         }
@@ -41,15 +39,6 @@ public class MmaLeanplumImp implements MmaInterface {
             Leanplum.setAppIdForDevelopmentMode(MmaConstants.MOZ_LEANPLUM_SDK_CLIENTID, MmaConstants.MOZ_LEANPLUM_SDK_KEY);
         }
 
-        Map<String, Object> attributes = new HashMap<>();
-        boolean installedFocus = isPackageInstalled(activity, "org.mozilla.focus");
-        boolean installedKlar = isPackageInstalled(activity, "org.mozilla.klar");
-        if (installedFocus || installedKlar) {
-            attributes.put("focus", true);
-        } else {
-            attributes.put("focus", false);
-        }
-
         final SharedPreferences sharedPreferences = activity.getPreferences(0);
         String deviceId = sharedPreferences.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
         if (deviceId == null) {
@@ -57,7 +46,12 @@ public class MmaLeanplumImp implements MmaInterface {
             sharedPreferences.edit().putString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, deviceId).apply();
         }
         Leanplum.setDeviceId(deviceId);
-        Leanplum.start(activity, attributes);
+
+        if (attributes != null) {
+            Leanplum.start(activity, attributes);
+        } else {
+            Leanplum.start(activity);
+        }
 
         // this is special to Leanplum. Since we defer LeanplumActivityHelper's onResume call till
         // switchboard completes loading. We miss the call to LeanplumActivityHelper.onResume.
@@ -98,13 +92,4 @@ public class MmaLeanplumImp implements MmaInterface {
         Leanplum.stop();
     }
 
-    private static boolean isPackageInstalled(final Context context, String packageName) {
-        try {
-            PackageManager pm = context.getPackageManager();
-            pm.getPackageInfo(packageName, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
 }

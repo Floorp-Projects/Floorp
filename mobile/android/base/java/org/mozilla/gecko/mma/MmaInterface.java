@@ -9,9 +9,11 @@ package org.mozilla.gecko.mma;
 import android.app.Activity;
 import android.content.Context;
 
+import java.util.Map;
+
 
 public interface MmaInterface {
-    void init(Activity Activity);
+    void init(Activity Activity, Map<String, ?> attributes);
 
     void start(Context context);
 

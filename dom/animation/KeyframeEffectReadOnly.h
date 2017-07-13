@@ -384,7 +384,8 @@ protected:
   void EnsureBaseStyle(const AnimationProperty& aProperty,
                        CSSPseudoElementType aPseudoType,
                        nsPresContext* aPresContext,
-                       RefPtr<ServoComputedValues>& aBaseComputedValues);
+                       const ServoComputedValues* aComputedValues,
+                       RefPtr<const ServoComputedValues>& aBaseComputedValues);
 
   Maybe<OwningAnimationTarget> mTarget;
 

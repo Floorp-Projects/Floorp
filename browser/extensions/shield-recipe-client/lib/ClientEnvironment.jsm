@@ -36,11 +36,11 @@ this.ClientEnvironment = {
    * The server request is made lazily and is cached for the entire browser
    * session.
    */
-  async getClientClassification() {
+  getClientClassification() {
     if (!_classifyRequest) {
       _classifyRequest = NormandyApi.classifyClient();
     }
-    return await _classifyRequest;
+    return _classifyRequest;
   },
 
   clearClassifyCache() {

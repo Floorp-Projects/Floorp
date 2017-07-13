@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<script>
+'use strict';
+
+// This test supplements the web-platform-tests in:
+//
+//   web-animations/interfaces/Animatable/animate-no-browsing-context.html
+//
+// Specifically, it covers the case where we have a running animation
+// targetting an element in a document without a browsing context.
+//
+// Currently the behavior in this case is not well-defined. For example,
+// if we were to simply take an element from such a document, and do:
+//
+//  const xdoc = xhr.responseXML;
+//  const div = xdoc.getElementById('test');
+//  div.style.opacity = '0';
+//  alert(getComputedStyle(div).opacity);
+//
+// We'd get '0' in Firefox and Edge, but an empty string in Chrome.
+//
+// However, if instead of using the style attribute, we set style in a <style>
+// element in *either* the document we're calling from *or* the XHR doc and
+// do the same we get '1' in Firefox and Edge, but an empty string in Chrome.
+//
+// That is, no browser appears to apply styles to elements in a document without
+// a browsing context unless the styles are defined using the style attribute,
+// and even then Chrome does not.
+//
+// There is some prose in CSSOM which says,
+//
+//    Note: This means that even if obj is in a different document (e.g. one
+//    fetched via XMLHttpRequest) it will still use the style rules associated
+//    with the document that is associated with the global object on which
+//    getComputedStyle() was invoked to compute the CSS declaration block.[1]
+//
+// However, this text has been around since at least 2013 and does not appear
+// to be implemented.
+//
+// As a result, it's not really possible to write a cross-browser test for the
+// behavior for animations in this context since it's not clear what the result
+// should be. That said, we still want to exercise this particular code path so
+// we make this case a Mozilla-specific test. The other similar tests cases for
+// which the behavior is well-defined are covered by web-platform-tests.
+//
+// [1] https://drafts.csswg.org/cssom/#extensions-to-the-window-interface
+
+function getXHRDoc(t) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'xhr_doc.html');
+    xhr.responseType = 'document';
+    xhr.onload = t.step_func(() => {
+      assert_equals(xhr.readyState, xhr.DONE,
+                    'Request should complete successfully');
+      assert_equals(xhr.status, 200,
+                    'Response should be OK');
+      resolve(xhr.responseXML);
+    });
+    xhr.send();
+  });
+}
+
+promise_test(t => {
+  let anim;
+  return getXHRDoc(t).then(xhrdoc => {
+    const div = xhrdoc.getElementById('test');
+    anim = div.animate({ opacity: [ 0, 1 ] }, 1000);
+    // Give the animation an active timeline and kick-start it.
+    anim.timeline = document.timeline;
+    anim.startTime = document.timeline.currentTime;
+    assert_equals(anim.playState, 'running',
+                  'The animation should be running');
+    // Gecko currently skips applying animation styles to elements in documents
+    // without browsing contexts.
+    assert_not_equals(getComputedStyle(div).opacity, '0',
+                      'Style should NOT be updated');
+  });
+}, 'Forcing an animation targetting an element in a document without a'
+    + ' browsing context to play does not cause style to update');
+
+// Following is an additional Gecko-specific test to confirm the behavior
+// when we have an element with an animation restyle and then move it to
+// a document without a pres shell.
+
+promise_test(t => {
+  let anim;
+  return getXHRDoc(t).then(xhrdoc => {
+    const div = addDiv(t);
+    anim = div.animate({ opacity: [ 0, 1 ] }, 1000);
+    assert_equals(getComputedStyle(div).opacity, '0',
+                  'Style should be updated');
+    // Trigger an animation restyle to be queued
+    anim.currentTime = 0.1;
+    // Adopt node into XHR doc
+    xhrdoc.body.appendChild(div);
+    // We should skip applying animation styles to elements in documents
+    // without a pres shell.
+    //
+    // The Gecko style backend, however, does not do this. Since we expect the
+    // Gecko style backend to be obsolete in the near future, we only perform
+    // this check when the Servo backend is in use.
+    let isServo = false;
+    try {
+      isServo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
+    } catch(e) {
+      // getBoolPref throws if the pref does not exist, in which case isServo
+      // should remain false.
+    }
+    if (isServo) {
+      assert_equals(getComputedStyle(div).opacity, '1',
+                    'Style should NOT be updated');
+    }
+  });
+}, 'Moving an element with a pending animation restyle to a document without'
+   + ' a browsing context resets animation style');
+
+done();
+
+</script>

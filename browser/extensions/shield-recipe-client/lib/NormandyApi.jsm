@@ -138,13 +138,13 @@ this.NormandyApi = {
   async fetchActions() {
     const actionApiUrl = await this.getApiUrl("action-list");
     const res = await this.get(actionApiUrl);
-    return await res.json();
+    return res.json();
   },
 
   async fetchImplementation(action) {
     const response = await fetch(action.implementation_url);
     if (response.ok) {
-      return await response.text();
+      return response.text();
     }
 
     throw new Error(`Failed to fetch action implementation for ${action.name}: ${response.status}`);

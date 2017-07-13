@@ -36,16 +36,31 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/util.js");
 
-const ENGINE_MODULES = {
-  Addons: {module: "addons.js", symbol: "AddonsEngine"},
-  Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
-  Form: {module: "forms.js", symbol: "FormEngine"},
-  History: {module: "history.js", symbol: "HistoryEngine"},
-  Password: {module: "passwords.js", symbol: "PasswordEngine"},
-  Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
-  Tab: {module: "tabs.js", symbol: "TabEngine"},
-  ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
-};
+function getEngineModules() {
+  let result = {
+    Addons: {module: "addons.js", symbol: "AddonsEngine"},
+    Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
+    Form: {module: "forms.js", symbol: "FormEngine"},
+    History: {module: "history.js", symbol: "HistoryEngine"},
+    Password: {module: "passwords.js", symbol: "PasswordEngine"},
+    Prefs: {module: "prefs.js", symbol: "PrefsEngine"},
+    Tab: {module: "tabs.js", symbol: "TabEngine"},
+    ExtensionStorage: {module: "extension-storage.js", symbol: "ExtensionStorageEngine"},
+  }
+  if (Svc.Prefs.get("engine.addresses.available", false)) {
+    result["Addresses"] = {
+      module: "resource://formautofill/FormAutofillSync.jsm",
+      symbol: "AddressesEngine",
+    };
+  }
+  if (Svc.Prefs.get("engine.creditcards.available", false)) {
+    result["CreditCards"] = {
+      module: "resource://formautofill/FormAutofillSync.jsm",
+      symbol: "CreditCardsEngine",
+    };
+  }
+  return result;
+}
 
 const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_USAGE,
@@ -110,7 +125,7 @@ Sync11Service.prototype = {
   // A specialized variant of Utils.catch.
   // This provides a more informative error message when we're already syncing:
   // see Bug 616568.
-  _catch: function _catch(func) {
+  _catch(func) {
     function lockExceptions(ex) {
       if (Utils.isLockException(ex)) {
         // This only happens if we're syncing already.
@@ -191,7 +206,7 @@ Sync11Service.prototype = {
   /*
    * Returns whether to try again.
    */
-  handleHMACEvent: function handleHMACEvent() {
+  async handleHMACEvent() {
     let now = Date.now();
 
     // Leave a sizable delay between HMAC recovery attempts. This gives us
@@ -208,7 +223,7 @@ Sync11Service.prototype = {
     // Fetch keys.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
     try {
-      let cryptoResp = Async.promiseSpinningly(cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+      let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
 
       // Save out the ciphertext for when we reupload. If there's a bug in
       // CollectionKeyManager, this will prevent us from uploading junk.
@@ -219,8 +234,8 @@ Sync11Service.prototype = {
         return false;
       }
 
-      let keysChanged = this.handleFetchedKeys(this.identity.syncKeyBundle,
-                                               cryptoKeys, true);
+      let keysChanged = await this.handleFetchedKeys(this.identity.syncKeyBundle,
+                                                     cryptoKeys, true);
       if (keysChanged) {
         // Did they change? If so, carry on.
         this._log.info("Suggesting retry.");
@@ -231,7 +246,7 @@ Sync11Service.prototype = {
       cryptoKeys.ciphertext = cipherText;
       cryptoKeys.cleartext  = null;
 
-      let uploadResp = this._uploadCryptoKeys(cryptoKeys, cryptoResp.obj.modified);
+      let uploadResp = await this._uploadCryptoKeys(cryptoKeys, cryptoResp.obj.modified);
       if (uploadResp.success) {
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
       } else {
@@ -248,7 +263,7 @@ Sync11Service.prototype = {
     }
   },
 
-  handleFetchedKeys: function handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
+  async handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
     // Don't want to wipe if we're just starting up!
     let wasBlank = this.collectionKeys.isClear;
     let keysChanged = this.collectionKeys.updateContents(syncKey, cryptoKeys);
@@ -261,10 +276,10 @@ Sync11Service.prototype = {
 
         if (keysChanged.length) {
           // Collection keys only. Reset individual engines.
-          this.resetClient(keysChanged);
+          await this.resetClient(keysChanged);
         } else {
           // Default key changed: wipe it all.
-          this.resetClient();
+          await this.resetClient();
         }
 
         this._log.info("Downloaded new keys, client reset. Proceeding.");
@@ -277,7 +292,7 @@ Sync11Service.prototype = {
   /**
    * Prepare to initialize the rest of Weave after waiting a little bit
    */
-  onStartup: function onStartup() {
+  async onStartup() {
     this.status = Status;
     this.identity = Status._authManager;
     this.collectionKeys = new CollectionKeyManager();
@@ -295,7 +310,7 @@ Sync11Service.prototype = {
 
     this.enabled = true;
 
-    this._registerEngines();
+    await this._registerEngines();
 
     let ua = Cc["@mozilla.org/network/protocol;1?name=http"].
       getService(Ci.nsIHttpProtocolHandler).userAgent;
@@ -352,8 +367,10 @@ Sync11Service.prototype = {
   /**
    * Register the built-in engines for certain applications
    */
-  _registerEngines: function _registerEngines() {
+  async _registerEngines() {
     this.engineManager = new EngineManager(this);
+
+    let engineModules = getEngineModules();
 
     let engines = [];
     // We allow a pref, which has no default value, to limit the engines
@@ -363,7 +380,7 @@ Sync11Service.prototype = {
       this._log.info("Registering custom set of engines", engines);
     } else {
       // default is all engines.
-      engines = Object.keys(ENGINE_MODULES);
+      engines = Object.keys(engineModules);
     }
 
     let declined = [];
@@ -372,14 +389,18 @@ Sync11Service.prototype = {
       declined = pref.split(",");
     }
 
-    this.clientsEngine = new ClientEngine(this);
+    let clientsEngine = new ClientEngine(this);
+    // Ideally clientsEngine should not exist
+    // (or be a promise that calls initialize() before returning the engine)
+    await clientsEngine.initialize();
+    this.clientsEngine = clientsEngine;
 
     for (let name of engines) {
-      if (!(name in ENGINE_MODULES)) {
+      if (!(name in engineModules)) {
         this._log.info("Do not know about engine: " + name);
         continue;
       }
-      let {module, symbol} = ENGINE_MODULES[name];
+      let {module, symbol} = engineModules[name];
       if (!module.includes(":")) {
         module = "resource://services-sync/engines/" + module;
       }
@@ -391,7 +412,7 @@ Sync11Service.prototype = {
           continue;
         }
 
-        this.engineManager.register(ns[symbol]);
+        await this.engineManager.register(ns[symbol]);
       } catch (ex) {
         this._log.warn("Could not register engine " + name, ex);
       }
@@ -414,13 +435,18 @@ Sync11Service.prototype = {
         // couldn't get to get the sync lock, due to us currently syncing the
         // clients engine.
         if (data.includes("clients") && !Svc.Prefs.get("testing.tps", false)) {
-          this.sync([]); // [] = clients collection only
+          // Sync in the background (it's fine not to wait on the returned promise
+          // because sync() has a lock).
+          // [] = clients collection only
+          this.sync([]).catch(e => {
+            this._log.error(e);
+          });
         }
         break;
       case "fxaccounts:device_disconnected":
         data = JSON.parse(data);
         if (!data.isLocalDevice) {
-          this.clientsEngine.updateKnownStaleClients();
+          Async.promiseSpinningly(this.clientsEngine.updateKnownStaleClients());
         }
         break;
       case "weave:service:setup-complete":
@@ -472,13 +498,13 @@ Sync11Service.prototype = {
    * Perform the info fetch as part of a login or key fetch, or
    * inside engine sync.
    */
-  _fetchInfo(url) {
+  async _fetchInfo(url) {
     let infoURL = url || this.infoURL;
 
     this._log.trace("In _fetchInfo: " + infoURL);
     let info;
     try {
-      info = Async.promiseSpinningly(this.resource(infoURL).get());
+      info = await this.resource(infoURL).get();
     } catch (ex) {
       this.errorHandler.checkServerError(ex);
       throw ex;
@@ -493,7 +519,7 @@ Sync11Service.prototype = {
     return info;
   },
 
-  verifyAndFetchSymmetricKeys: function verifyAndFetchSymmetricKeys(infoResponse) {
+  async verifyAndFetchSymmetricKeys(infoResponse) {
 
     this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
 
@@ -506,7 +532,7 @@ Sync11Service.prototype = {
 
     try {
       if (!infoResponse)
-        infoResponse = this._fetchInfo();    // Will throw an exception on failure.
+        infoResponse = await this._fetchInfo(); // Will throw an exception on failure.
 
       // This only applies when the server is already at version 4.
       if (infoResponse.status != 200) {
@@ -531,10 +557,10 @@ Sync11Service.prototype = {
         if (infoCollections && (CRYPTO_COLLECTION in infoCollections)) {
           try {
             cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-            let cryptoResp = Async.promiseSpinningly(cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+            let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
 
             if (cryptoResp.success) {
-              this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
+              await this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
               return true;
             } else if (cryptoResp.status == 404) {
               // On failure, ask to generate new keys and upload them.
@@ -574,7 +600,7 @@ Sync11Service.prototype = {
           // consistency. This is all achieved via _freshStart.
           // If _freshStart fails to clear the server or upload keys, it will
           // throw.
-          this._freshStart();
+          await this._freshStart();
           return true;
         }
 
@@ -591,7 +617,7 @@ Sync11Service.prototype = {
     }
   },
 
-  verifyLogin: function verifyLogin(allow40XRecovery = true) {
+  async verifyLogin(allow40XRecovery = true) {
     if (!this.identity.username) {
       this._log.warn("No username in verifyLogin.");
       this.status.login = LOGIN_FAILED_NO_USERNAME;
@@ -604,12 +630,7 @@ Sync11Service.prototype = {
     // So we ask the identity to verify the login state after unlocking the
     // master password (ie, this call is expected to prompt for MP unlock
     // if necessary) while we still have control.
-    let cb = Async.makeSpinningCallback();
-    this.identity.unlockAndVerifyAuthState().then(
-      result => cb(null, result),
-      cb
-    );
-    let unlockedState = cb.wait();
+    let unlockedState = await this.identity.unlockAndVerifyAuthState();
     this._log.debug("Fetching unlocked auth state returned " + unlockedState);
     if (unlockedState != STATUS_OK) {
       this.status.login = unlockedState;
@@ -626,7 +647,7 @@ Sync11Service.prototype = {
       }
 
       // Fetch collection info on every startup.
-      let test = Async.promiseSpinningly(this.resource(this.infoURL).get());
+      let test = await this.resource(this.infoURL).get();
 
       switch (test.status) {
         case 200:
@@ -643,7 +664,7 @@ Sync11Service.prototype = {
 
           // Go ahead and do remote setup, so that we can determine
           // conclusively that our passphrase is correct.
-          if (this._remoteSetup(test)) {
+          if ((await this._remoteSetup(test))) {
             // Username/password verified.
             this.status.login = LOGIN_SUCCEEDED;
             return true;
@@ -660,7 +681,7 @@ Sync11Service.prototype = {
         case 404:
           // Check that we're verifying with the correct cluster
           if (allow40XRecovery && this._clusterManager.setCluster()) {
-            return this.verifyLogin(false);
+            return await this.verifyLogin(false);
           }
 
           // We must have the right cluster, but the server doesn't expect us.
@@ -686,13 +707,13 @@ Sync11Service.prototype = {
     }
   },
 
-  generateNewSymmetricKeys: function generateNewSymmetricKeys() {
+  async generateNewSymmetricKeys() {
     this._log.info("Generating new keys WBO...");
     let wbo = this.collectionKeys.generateNewKeysWBO();
     this._log.info("Encrypting new key bundle.");
     wbo.encrypt(this.identity.syncKeyBundle);
 
-    let uploadRes = this._uploadCryptoKeys(wbo, 0);
+    let uploadRes = await this._uploadCryptoKeys(wbo, 0);
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
       this.errorHandler.checkServerError(uploadRes);
@@ -704,7 +725,7 @@ Sync11Service.prototype = {
 
     // Now verify that info/collections shows them!
     this._log.debug("Verifying server collection records.");
-    let info = this._fetchInfo();
+    let info = await this._fetchInfo();
     this._log.debug("info/collections is: " + info);
 
     if (info.status != 200) {
@@ -730,19 +751,19 @@ Sync11Service.prototype = {
 
     // Download and install them.
     let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
-    let cryptoResp = Async.promiseSpinningly(cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
+    let cryptoResp = (await cryptoKeys.fetch(this.resource(this.cryptoKeysURL))).response;
     if (cryptoResp.status != 200) {
       this._log.warn("Failed to download keys.");
       throw new Error("Symmetric key download failed.");
     }
-    let keysChanged = this.handleFetchedKeys(this.identity.syncKeyBundle,
-                                             cryptoKeys, true);
+    let keysChanged = await this.handleFetchedKeys(this.identity.syncKeyBundle,
+                                                   cryptoKeys, true);
     if (keysChanged) {
       this._log.info("Downloaded keys differed, as expected.");
     }
   },
 
-  startOver: function startOver() {
+  async startOver() {
     this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
     this.status.resetSync();
@@ -752,11 +773,7 @@ Sync11Service.prototype = {
       // Clear client-specific data from the server, including disabled engines.
       for (let engine of [this.clientsEngine].concat(this.engineManager.getAll())) {
         try {
-          // Note the additional Promise.resolve here is to handle the fact that
-          // some 3rd party engines probably don't return a promise. We can
-          // probably nuke this once webextensions become mandatory as then
-          // no 3rd party engines will be allowed to exist.
-          Async.promiseSpinningly(Promise.resolve().then(() => engine.removeClientData()));
+          await engine.removeClientData();
         } catch (ex) {
           this._log.warn(`Deleting client data for ${engine.name} failed`, ex);
         }
@@ -776,7 +793,7 @@ Sync11Service.prototype = {
     Svc.Obs.notify("weave:service:start-over");
 
     // Reset all engines and clear keys.
-    this.resetClient();
+    await this.resetClient();
     this.collectionKeys.clear();
     this.status.resetBackoff();
 
@@ -804,8 +821,8 @@ Sync11Service.prototype = {
     }
   },
 
-  login: function login() {
-    function onNotify() {
+  async login() {
+    async function onNotify() {
       this._loggedIn = false;
       if (Services.io.offline) {
         this.status.login = LOGIN_FAILED_NETWORK_ERROR;
@@ -815,7 +832,7 @@ Sync11Service.prototype = {
       this._log.info("Logging in the user.");
       // Just let any errors bubble up - they've more context than we do!
       try {
-        Async.promiseSpinningly(this.identity.ensureLoggedIn());
+        await this.identity.ensureLoggedIn();
       } finally {
         this._checkSetup(); // _checkSetup has a side effect of setting the right state.
       }
@@ -823,7 +840,7 @@ Sync11Service.prototype = {
       this._updateCachedURLs();
 
       this._log.info("User logged in successfully - verifying login.");
-      if (!this.verifyLogin()) {
+      if (!(await this.verifyLogin())) {
         // verifyLogin sets the failure states here.
         throw "Login failed: " + this.status.login;
       }
@@ -850,14 +867,14 @@ Sync11Service.prototype = {
 
   // Note: returns false if we failed for a reason other than the server not yet
   // supporting the api.
-  _fetchServerConfiguration() {
+  async _fetchServerConfiguration() {
     // This is similar to _fetchInfo, but with different error handling.
 
     let infoURL = this.userBaseURL + "info/configuration";
     this._log.debug("Fetching server configuration", infoURL);
     let configResponse;
     try {
-      configResponse = Async.promiseSpinningly(this.resource(infoURL).get());
+      configResponse = await this.resource(infoURL).get();
     } catch (ex) {
       // This is probably a network or similar error.
       this._log.warn("Failed to fetch info/configuration", ex);
@@ -881,13 +898,13 @@ Sync11Service.prototype = {
 
   // Stuff we need to do after login, before we can really do
   // anything (e.g. key setup).
-  _remoteSetup: function _remoteSetup(infoResponse) {
-    if (!this._fetchServerConfiguration()) {
+  async _remoteSetup(infoResponse) {
+    if (!(await this._fetchServerConfiguration())) {
       return false;
     }
 
     this._log.debug("Fetching global metadata record");
-    let meta = Async.promiseSpinningly(this.recordManager.get(this.metaURL));
+    let meta = await this.recordManager.get(this.metaURL);
 
     // Checking modified time of the meta record.
     if (infoResponse &&
@@ -902,7 +919,7 @@ Sync11Service.prototype = {
       this.recordManager.del(this.metaURL);
 
       // ... fetch the current record from the server, and COPY THE FLAGS.
-      let newMeta = Async.promiseSpinningly(this.recordManager.get(this.metaURL));
+      let newMeta = await this.recordManager.get(this.metaURL);
 
       // If we got a 401, we do not want to create a new meta/global - we
       // should be able to get the existing meta after we get a new node.
@@ -915,7 +932,7 @@ Sync11Service.prototype = {
       if (this.recordManager.response.status == 404) {
         this._log.debug("No meta/global record on the server. Creating one.");
         try {
-          this._uploadNewMetaGlobal();
+          await this._uploadNewMetaGlobal();
         } catch (uploadRes) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
           this.errorHandler.checkServerError(uploadRes);
@@ -965,7 +982,7 @@ Sync11Service.prototype = {
         this._log.warn("No sync id, server wipe needed");
 
       this._log.info("Wiping server data");
-      this._freshStart();
+      await this._freshStart();
 
       if (status == 404)
         this._log.info("Metadata record not found, server was wiped to ensure " +
@@ -981,18 +998,18 @@ Sync11Service.prototype = {
     } else if (meta.payload.syncID != this.syncID) {
 
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
-      this.resetClient();
+      await this.resetClient();
       this.collectionKeys.clear();
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
-      if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
+      if (!(await this.verifyAndFetchSymmetricKeys(infoResponse))) {
         this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
         return false;
       }
 
       // bug 545725 - re-verify creds and fail sanely
-      if (!this.verifyLogin()) {
+      if (!(await this.verifyLogin())) {
         this.status.sync = CREDENTIALS_CHANGED;
         this._log.info("Credentials have changed, aborting sync and forcing re-login.");
         return false;
@@ -1000,7 +1017,7 @@ Sync11Service.prototype = {
 
       return true;
     }
-    if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
+    if (!(await this.verifyAndFetchSymmetricKeys(infoResponse))) {
       this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
       return false;
     }
@@ -1049,43 +1066,37 @@ Sync11Service.prototype = {
     return reason;
   },
 
-  sync: function sync(engineNamesToSync) {
+  async sync(engineNamesToSync) {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     this._log.info(`Starting sync at ${dateStr} in browser session ${browserSessionID}`);
-    this._catch(function() {
+    return this._catch(async function() {
       // Make sure we're logged in.
       if (this._shouldLogin()) {
         this._log.debug("In sync: should login.");
-        if (!this.login()) {
+        if (!(await this.login())) {
           this._log.debug("Not syncing: login returned false.");
           return;
         }
       } else {
         this._log.trace("In sync: no need to login.");
       }
-      this._lockedSync(engineNamesToSync);
+      await this._lockedSync(engineNamesToSync);
     })();
   },
 
   /**
    * Sync up engines with the server.
    */
-  _lockedSync: function _lockedSync(engineNamesToSync) {
+  async _lockedSync(engineNamesToSync) {
     return this._lock("service.js: sync",
-                      this._notify("sync", "", function onNotify() {
+                      this._notify("sync", "", async function onNotify() {
 
       let histogram = Services.telemetry.getHistogramById("WEAVE_START_COUNT");
       histogram.add(1);
 
       let synchronizer = new EngineSynchronizer(this);
-      let cb = Async.makeSpinningCallback();
-      synchronizer.onComplete = cb;
-
-      synchronizer.sync(engineNamesToSync);
-      // wait() throws if the first argument is truthy, which is exactly what
-      // we want.
-      cb.wait();
+      await synchronizer.sync(engineNamesToSync); // Might throw!
 
       histogram = Services.telemetry.getHistogramById("WEAVE_COMPLETE_SUCCESS_COUNT");
       histogram.add(1);
@@ -1102,7 +1113,7 @@ Sync11Service.prototype = {
       // Now let's update our declined engines (but only if we have a metaURL;
       // if Sync failed due to no node we will not have one)
       if (this.metaURL) {
-        let meta = Async.promiseSpinningly(this.recordManager.get(this.metaURL));
+        let meta = await this.recordManager.get(this.metaURL);
         if (!meta) {
           this._log.warn("No meta/global; can't update declined state.");
           return;
@@ -1115,7 +1126,7 @@ Sync11Service.prototype = {
           return;
         }
 
-        this.uploadMetaGlobal(meta);
+        await this.uploadMetaGlobal(meta);
       }
     }))();
   },
@@ -1124,7 +1135,7 @@ Sync11Service.prototype = {
    * Upload a fresh meta/global record
    * @throws the response object if the upload request was not a success
    */
-  _uploadNewMetaGlobal() {
+  async _uploadNewMetaGlobal() {
     let meta = new WBORecord("meta", "global");
     meta.payload.syncID = this.syncID;
     meta.payload.storageVersion = STORAGE_VERSION;
@@ -1132,7 +1143,7 @@ Sync11Service.prototype = {
     meta.modified = 0;
     meta.isNew = true;
 
-    this.uploadMetaGlobal(meta);
+    await this.uploadMetaGlobal(meta);
   },
 
   /**
@@ -1140,11 +1151,11 @@ Sync11Service.prototype = {
    * @param {WBORecord} meta meta/global record
    * @throws the response object if the request was not a success
    */
-  uploadMetaGlobal(meta) {
+  async uploadMetaGlobal(meta) {
     this._log.debug("Uploading meta/global", meta);
     let res = this.resource(this.metaURL);
     res.setHeader("X-If-Unmodified-Since", meta.modified);
-    let response = Async.promiseSpinningly(res.put(meta));
+    let response = await res.put(meta);
     if (!response.success) {
       throw response;
     }
@@ -1160,34 +1171,34 @@ Sync11Service.prototype = {
    * @param {Number} lastModified known last modified timestamp (in decimal seconds),
    *                 will be used to set the X-If-Unmodified-Since header
    */
-  _uploadCryptoKeys(cryptoKeys, lastModified) {
+  async _uploadCryptoKeys(cryptoKeys, lastModified) {
     this._log.debug(`Uploading crypto/keys (lastModified: ${lastModified})`);
     let res = this.resource(this.cryptoKeysURL);
     res.setHeader("X-If-Unmodified-Since", lastModified);
-    return Async.promiseSpinningly(res.put(cryptoKeys));
+    return res.put(cryptoKeys);
   },
 
-  _freshStart: function _freshStart() {
+  async _freshStart() {
     this._log.info("Fresh start. Resetting client.");
-    this.resetClient();
+    await this.resetClient();
     this.collectionKeys.clear();
 
     // Wipe the server.
-    this.wipeServer();
+    await this.wipeServer();
 
     // Upload a new meta/global record.
     // _uploadNewMetaGlobal throws on failure -- including race conditions.
     // If we got into a race condition, we'll abort the sync this way, too.
     // That's fine. We'll just wait till the next sync. The client that we're
     // racing is probably busy uploading stuff right now anyway.
-    this._uploadNewMetaGlobal();
+    await this._uploadNewMetaGlobal();
 
     // Wipe everything we know about except meta because we just uploaded it
     // TODO: there's a bug here. We should be calling resetClient, no?
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
     // them...
-    this.generateNewSymmetricKeys();
+    await this.generateNewSymmetricKeys();
   },
 
   /**
@@ -1199,7 +1210,7 @@ Sync11Service.prototype = {
    *
    * @return the server's timestamp of the (last) DELETE.
    */
-  wipeServer: function wipeServer(collections) {
+  async wipeServer(collections) {
     let response;
     let histogram = Services.telemetry.getHistogramById("WEAVE_WIPE_SERVER_SUCCEEDED");
     if (!collections) {
@@ -1207,7 +1218,7 @@ Sync11Service.prototype = {
       let res = this.resource(this.storageURL.slice(0, -1));
       res.setHeader("X-Confirm-Delete", "1");
       try {
-        response = Async.promiseSpinningly(res.delete());
+        response = await res.delete();
       } catch (ex) {
         this._log.debug("Failed to wipe server", ex);
         histogram.add(false);
@@ -1227,7 +1238,7 @@ Sync11Service.prototype = {
     for (let name of collections) {
       let url = this.storageURL + name;
       try {
-        response = Async.promiseSpinningly(this.resource(url).delete());
+        response = await this.resource(url).delete();
       } catch (ex) {
         this._log.debug("Failed to wipe '" + name + "' collection", ex);
         histogram.add(false);
@@ -1255,11 +1266,11 @@ Sync11Service.prototype = {
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeClient: function wipeClient(engines) {
+  async wipeClient(engines) {
     // If we don't have any engines, reset the service and wipe all engines
     if (!engines) {
       // Clear out any service data
-      this.resetService();
+      await this.resetService();
 
       engines = [this.clientsEngine].concat(this.engineManager.getAll());
     } else {
@@ -1269,8 +1280,8 @@ Sync11Service.prototype = {
 
     // Fully wipe each engine if it's able to decrypt data
     for (let engine of engines) {
-      if (engine.canDecrypt()) {
-        engine.wipeClient();
+      if ((await engine.canDecrypt())) {
+        await engine.wipeClient();
       }
     }
   },
@@ -1282,27 +1293,27 @@ Sync11Service.prototype = {
    * @param engines [optional]
    *        Array of engine names to wipe. If not given, all engines are used.
    */
-  wipeRemote: function wipeRemote(engines) {
+  async wipeRemote(engines) {
     try {
       // Make sure stuff gets uploaded.
-      this.resetClient(engines);
+      await this.resetClient(engines);
 
       // Clear out any server data.
-      this.wipeServer(engines);
+      await this.wipeServer(engines);
 
       // Only wipe the engines provided.
       let extra = { reason: "wipe-remote" };
       if (engines) {
-        engines.forEach(function(e) {
-            this.clientsEngine.sendCommand("wipeEngine", [e], null, extra);
-          }, this);
+        for (const e of engines) {
+          await this.clientsEngine.sendCommand("wipeEngine", [e], null, extra);
+        }
       } else {
         // Tell the remote machines to wipe themselves.
-        this.clientsEngine.sendCommand("wipeAll", [], null, extra);
+        await this.clientsEngine.sendCommand("wipeAll", [], null, extra);
       }
 
       // Make sure the changed clients get updated.
-      this.clientsEngine.sync();
+      await this.clientsEngine.sync();
     } catch (ex) {
       this.errorHandler.checkServerError(ex);
       throw ex;
@@ -1312,8 +1323,8 @@ Sync11Service.prototype = {
   /**
    * Reset local service information like logs, sync times, caches.
    */
-  resetService: function resetService() {
-    this._catch(function reset() {
+  async resetService() {
+    return this._catch(async function reset() {
       this._log.info("Service reset.");
 
       // Pretend we've never synced to the server and drop cached data
@@ -1328,12 +1339,12 @@ Sync11Service.prototype = {
    * @param engines [optional]
    *        Array of engine names to reset. If not given, all engines are used.
    */
-  resetClient: function resetClient(engines) {
-    this._catch(function doResetClient() {
+  async resetClient(engines) {
+    return this._catch(async function doResetClient() {
       // If we don't have any engines, reset everything including the service
       if (!engines) {
         // Clear out any service data
-        this.resetService();
+        await this.resetService();
 
         engines = [this.clientsEngine].concat(this.engineManager.getAll());
       } else {
@@ -1343,7 +1354,7 @@ Sync11Service.prototype = {
 
       // Have each engine drop any temporary meta data
       for (let engine of engines) {
-        engine.resetClient();
+        await engine.resetClient();
       }
     })();
   },
@@ -1401,4 +1412,6 @@ Sync11Service.prototype = {
 };
 
 this.Service = new Sync11Service();
-this.Service.onStartup();
+this.Service.promiseInitialized = new Promise(resolve => {
+  this.Service.onStartup().then(resolve);
+});

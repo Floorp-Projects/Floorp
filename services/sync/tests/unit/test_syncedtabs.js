@@ -31,6 +31,8 @@ MockTabsEngine.prototype = {
   },
 }
 
+let tabsEngine;
+
 // A clients engine that doesn't need to be a constructor.
 let MockClientsEngine = {
   clientSettings: null, // Set in `configureClients`.
@@ -48,35 +50,36 @@ let MockClientsEngine = {
     if (this.clientSettings[id]) {
       return this.clientSettings[id];
     }
-    let engine = Weave.Service.engineManager.get("tabs");
-    return engine.clients[id].clientName;
+    return tabsEngine.clients[id].clientName;
   },
 }
 
-// Configure Sync with our mock tabs engine and force it to become initialized.
-Weave.Service.engineManager.unregister("tabs");
-Weave.Service.engineManager.register(MockTabsEngine);
-Weave.Service.clientsEngine = MockClientsEngine;
-
-// Tell the Sync XPCOM service it is initialized.
-let weaveXPCService = Cc["@mozilla.org/weave/service;1"]
-                        .getService(Ci.nsISupports)
-                        .wrappedJSObject;
-weaveXPCService.ready = true;
-
 function configureClients(clients, clientSettings = {}) {
-  // Configure the instance Sync created.
-  let engine = Weave.Service.engineManager.get("tabs");
   // each client record is expected to have an id.
   for (let [guid, client] of Object.entries(clients)) {
     client.id = guid;
   }
-  engine.clients = clients;
+  tabsEngine.clients = clients;
   // Apply clients collection overrides.
   MockClientsEngine.clientSettings = clientSettings;
   // Send an observer that pretends the engine just finished a sync.
   Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 }
+
+add_task(async function setup() {
+  await Weave.Service.promiseInitialized;
+  // Configure Sync with our mock tabs engine and force it to become initialized.
+  Weave.Service.engineManager.unregister("tabs");
+  await Weave.Service.engineManager.register(MockTabsEngine);
+  Weave.Service.clientsEngine = MockClientsEngine;
+  tabsEngine = Weave.Service.engineManager.get("tabs");
+
+  // Tell the Sync XPCOM service it is initialized.
+  let weaveXPCService = Cc["@mozilla.org/weave/service;1"]
+                          .getService(Ci.nsISupports)
+                          .wrappedJSObject;
+  weaveXPCService.ready = true;
+});
 
 // The tests.
 add_task(async function test_noClients() {

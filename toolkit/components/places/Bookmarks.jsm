@@ -425,16 +425,16 @@ var Bookmarks = Object.freeze({
     let lastAddedForParent = appendInsertionInfoForInfoArray(tree.children, null, tree.guid);
 
     return (async function() {
-      let parent = await fetchBookmark({ guid: tree.guid });
-      if (!parent) {
+      let treeParent = await fetchBookmark({ guid: tree.guid });
+      if (!treeParent) {
         throw new Error("The parent you specified doesn't exist.");
       }
 
-      if (parent._parentId == PlacesUtils.tagsFolderId) {
+      if (treeParent._parentId == PlacesUtils.tagsFolderId) {
         throw new Error("Can't use insertTree to insert tags.");
       }
 
-      await insertBookmarkTree(insertInfos, source, parent,
+      await insertBookmarkTree(insertInfos, source, treeParent,
                                urlsThatMightNeedPlaces, lastAddedForParent);
 
       await insertLivemarkData(insertLivemarkInfos);
@@ -444,7 +444,7 @@ var Bookmarks = Object.freeze({
       // when we fetched the parent and inserted our items, but the actual
       // inserts will have been correct, and we don't want to query the DB
       // again if we don't have to. bug 1347230 covers improving this.
-      let rootIndex = parent._childCount;
+      let rootIndex = treeParent._childCount;
       for (let insertInfo of insertInfos) {
         if (insertInfo.parentGuid == tree.guid) {
           insertInfo.index += rootIndex++;
@@ -461,11 +461,10 @@ var Bookmarks = Object.freeze({
         let uri = item.hasOwnProperty("url") ? PlacesUtils.toURI(item.url) : null;
         // For sub-folders, we need to make sure their children have the correct parent ids.
         let parentId;
-        if (item.guid === parent.guid ||
-            Bookmarks.userContentRoots.includes(item.parentGuid)) {
-          // We're the item being inserted at the top-level, or we're a top-level
-          // folder, so the parent id won't have changed.
-          parentId = parent._id;
+        if (item.parentGuid === treeParent.guid) {
+          // This is a direct child of the tree parent, so we can use the
+          // existing parent's id.
+          parentId = treeParent._id;
         } else {
           // This is a parent folder that's been updated, so we need to
           // use the new item id.
@@ -834,9 +833,7 @@ var Bookmarks = Object.freeze({
       throw new Error("numberOfItems argument must be greater than zero");
     }
 
-    return (async function() {
-      return await fetchRecentBookmarks(numberOfItems);
-    })();
+    return fetchRecentBookmarks(numberOfItems);
   },
 
   /**

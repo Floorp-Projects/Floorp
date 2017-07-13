@@ -10,13 +10,8 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Svc.Prefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
-var scheduler = Service.scheduler;
-var clientsEngine = Service.clientsEngine;
-
-// Don't remove stale clients when syncing. This is a test-only workaround
-// that lets us add clients directly to the store, without losing them on
-// the next sync.
-clientsEngine._removeRemoteClient = id => {};
+let scheduler;
+let clientsEngine;
 
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
@@ -48,14 +43,20 @@ async function setUp(server) {
   serverKeys.upload(Service.resource(Service.cryptoKeysURL));
 }
 
-function run_test() {
+add_task(async function setup() {
   initTestLogging("Trace");
 
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
 
-  run_next_test();
-}
+  scheduler = Service.scheduler;
+  clientsEngine = Service.clientsEngine;
+
+  // Don't remove stale clients when syncing. This is a test-only workaround
+  // that lets us add clients directly to the store, without losing them on
+  // the next sync.
+  clientsEngine._removeRemoteClient = async (id) => {};
+});
 
 add_task(async function test_successful_sync_adjustSyncInterval() {
   enableValidationPrefs();
@@ -80,7 +81,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER.");
   // idle == true && numClients <= 1 && hasIncomingItems == false
   scheduler.idle = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 1);
   do_check_true(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -89,7 +90,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 
   // idle == false && numClients <= 1 && hasIncomingItems == false
   scheduler.idle = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 2);
   do_check_false(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -98,7 +99,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 
   // idle == false && numClients <= 1 && hasIncomingItems == true
   scheduler.hasIncomingItems = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 3);
   do_check_false(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -107,7 +108,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 
   // idle == true && numClients <= 1 && hasIncomingItems == true
   scheduler.idle = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 4);
   do_check_true(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -116,8 +117,8 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 
   _("Test as long as idle && numClients > 1 our sync interval is idleInterval.");
   // idle == true && numClients > 1 && hasIncomingItems == true
-  Service.clientsEngine._store.create({ id: "foo", cleartext: { name: "bar", type: "mobile" } });
-  Service.sync();
+  await Service.clientsEngine._store.create({ id: "foo", cleartext: { name: "bar", type: "mobile" } });
+  await Service.sync();
   do_check_eq(syncSuccesses, 5);
   do_check_true(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -126,7 +127,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
 
   // idle == true && numClients > 1 && hasIncomingItems == false
   scheduler.hasIncomingItems = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 6);
   do_check_true(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -136,7 +137,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
   _("Test non-idle, numClients > 1, no incoming items => activeInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == false
   scheduler.idle = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 7);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -146,7 +147,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
   _("Test non-idle, numClients > 1, incoming items => immediateInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == true
   scheduler.hasIncomingItems = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 8);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -154,7 +155,7 @@ add_task(async function test_successful_sync_adjustSyncInterval() {
   do_check_eq(scheduler.syncInterval, scheduler.immediateInterval);
 
   Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 });
 
@@ -186,7 +187,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
   _("Test as long as numClients <= 1 our sync interval is SINGLE_USER.");
   // idle == true && numClients <= 1 && hasIncomingItems == false
   scheduler.idle = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 1);
   do_check_true(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -195,7 +196,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 
   // idle == false && numClients <= 1 && hasIncomingItems == false
   scheduler.idle = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 2);
   do_check_false(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -204,7 +205,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 
   // idle == false && numClients <= 1 && hasIncomingItems == true
   scheduler.hasIncomingItems = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 3);
   do_check_false(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -213,7 +214,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 
   // idle == true && numClients <= 1 && hasIncomingItems == true
   scheduler.idle = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 4);
   do_check_true(scheduler.idle);
   do_check_false(scheduler.numClients > 1);
@@ -225,7 +226,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
   Svc.Prefs.set("clients.devices.mobile", 2);
   scheduler.updateClientMode();
 
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 5);
   do_check_true(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -234,7 +235,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
 
   // idle == true && numClients > 1 && hasIncomingItems == false
   scheduler.hasIncomingItems = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 6);
   do_check_true(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -244,7 +245,7 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
   _("Test non-idle, numClients > 1, no incoming items => activeInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == false
   scheduler.idle = false;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 7);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
@@ -254,14 +255,14 @@ add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
   _("Test non-idle, numClients > 1, incoming items => immediateInterval.");
   // idle == false && numClients > 1 && hasIncomingItems == true
   scheduler.hasIncomingItems = true;
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncFailures, 8);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
   do_check_false(scheduler.hasIncomingItems); // gets reset to false
   do_check_eq(scheduler.syncInterval, scheduler.immediateInterval);
 
-  Service.startOver();
+  await Service.startOver();
   Svc.Obs.remove("weave:service:sync:error", onSyncError);
   await promiseStopServer(server);
 });
@@ -291,9 +292,9 @@ add_task(async function test_back_triggers_sync() {
   Service.recordManager.clearCache();
   Svc.Prefs.resetBranch("");
   scheduler.setDefaults();
-  clientsEngine.resetClient();
+  await clientsEngine.resetClient();
 
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 });
 
@@ -319,14 +320,14 @@ add_task(async function test_adjust_interval_on_sync_error() {
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
   Svc.Prefs.set("clients.devices.mobile", 2);
-  Service.sync();
+  await Service.sync();
 
   do_check_eq(syncFailures, 1);
   do_check_true(scheduler.numClients > 1);
   do_check_eq(scheduler.syncInterval, scheduler.activeInterval);
 
   Svc.Obs.remove("weave:service:sync:error", onSyncError);
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 });
 
@@ -349,7 +350,7 @@ add_task(async function test_bug671378_scenario() {
   Svc.Obs.add("weave:service:sync:finish", onSyncFinish);
 
   // After first sync call, syncInterval & syncTimer are singleDeviceInterval.
-  Service.sync();
+  await Service.sync();
   do_check_eq(syncSuccesses, 1);
   do_check_false(scheduler.numClients > 1);
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
@@ -370,8 +371,9 @@ add_task(async function test_bug671378_scenario() {
 
         scheduler.scheduleNextSync = scheduler._scheduleNextSync;
         Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
-        Service.startOver();
-        server.stop(resolve);
+        Service.startOver().then(() => {
+          server.stop(resolve);
+        });
       }
     };
   });
@@ -393,12 +395,12 @@ add_task(async function test_bug671378_scenario() {
     });
   });
 
-  Service.clientsEngine._store.create({ id: "foo", cleartext: { name: "bar", type: "mobile" } });
-  Service.sync();
+  await Service.clientsEngine._store.create({ id: "foo", cleartext: { name: "bar", type: "mobile" } });
+  await Service.sync();
   await promiseDone;
 });
 
-add_test(function test_adjust_timer_larger_syncInterval() {
+add_task(async function test_adjust_timer_larger_syncInterval() {
   _("Test syncInterval > current timout period && nextSync != 0, syncInterval is NOT used.");
   Svc.Prefs.set("clients.devices.mobile", 2);
   scheduler.updateClientMode();
@@ -411,7 +413,7 @@ add_test(function test_adjust_timer_larger_syncInterval() {
   do_check_eq(scheduler.syncTimer.delay, scheduler.activeInterval);
 
   // Make interval large again
-  clientsEngine._wipeClient();
+  await clientsEngine._wipeClient();
   Svc.Prefs.reset("clients.devices.mobile");
   scheduler.updateClientMode();
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
@@ -423,11 +425,10 @@ add_test(function test_adjust_timer_larger_syncInterval() {
   do_check_true(scheduler.syncTimer.delay <= scheduler.activeInterval);
 
   // SyncSchedule.
-  Service.startOver();
-  run_next_test();
+  await Service.startOver();
 });
 
-add_test(function test_adjust_timer_smaller_syncInterval() {
+add_task(async function test_adjust_timer_smaller_syncInterval() {
   _("Test current timout > syncInterval period && nextSync != 0, syncInterval is used.");
   scheduler.scheduleNextSync();
 
@@ -447,6 +448,5 @@ add_test(function test_adjust_timer_smaller_syncInterval() {
   do_check_true(scheduler.syncTimer.delay <= scheduler.activeInterval);
 
   // SyncSchedule.
-  Service.startOver();
-  run_next_test();
+  await Service.startOver();
 });
