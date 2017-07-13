@@ -462,7 +462,7 @@ static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
   };
 }
 
-static inline WrExternalImage NativeTextureToWrExternalImage(uint8_t aHandle,
+static inline WrExternalImage NativeTextureToWrExternalImage(uint32_t aHandle,
                                                              float u0, float v0,
                                                              float u1, float v1)
 {
