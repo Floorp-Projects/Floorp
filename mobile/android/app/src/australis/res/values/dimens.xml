@@ -152,17 +152,26 @@
     <dimen name="validation_message_margin_top">6dp</dimen>
 
     <dimen name="tab_thumbnail_width">121dp</dimen>
-    <dimen name="tab_thumbnail_height">90dp</dimen>
-    <dimen name="tab_panel_item_width">129dp</dimen>
-    <dimen name="tab_panel_grid_hpadding">20dp</dimen>
-    <!-- Top and bottom tab panel grid padding is split between tab_panel_grid_vpadding (the
-         RecyclerView padding) and tab_panel_grid_item_vpadding (individual item padding). -->
-    <dimen name="tab_panel_grid_vpadding">9dp</dimen>
-    <dimen name="tab_panel_grid_ideal_item_hspacing">20dp</dimen>
-    <dimen name="tab_panel_grid_min_item_hspacing">2dp</dimen>
-    <dimen name="tab_panel_grid_item_vpadding">10dp</dimen>
 
-    <dimen name="tab_highlight_stroke_width">4dp</dimen>
+    <!-- AutoFitTabsGridLayout -->
+    <dimen name="tab_panel_item_width_autofit">129dp</dimen>
+    <dimen name="tab_panel_grid_hpadding_autofit">30dp</dimen>
+    <dimen name="tab_panel_grid_vpadding_autofit">30dp</dimen>
+    <dimen name="tab_panel_grid_item_hpadding_autofit">10dp</dimen>
+    <dimen name="tab_panel_grid_item_vpadding_autofit">8dp</dimen>
+    <dimen name="tab_panel_grid_min_item_hspacing_autofit">2dp</dimen>
+
+    <!-- CompactTabsGridLayout -->
+    <dimen name="tab_panel_grid_hpadding_compact">13dp</dimen>
+    <dimen name="tab_panel_grid_vpadding_compact">13dp</dimen>
+    <dimen name="tab_panel_grid_item_hpadding_compact">6dp</dimen>
+    <dimen name="tab_panel_grid_item_vpadding_compact">5dp</dimen>
+
+    <!-- TabsListLayout -->
+    <dimen name="tab_panel_list_item_top_padding">6dp</dimen>
+
+
+    <dimen name="tab_highlight_stroke_width">5dp</dimen>
 
     <!-- PageActionButtons dimensions -->
     <dimen name="page_action_button_width">32dp</dimen>
