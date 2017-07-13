@@ -504,6 +504,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'activitystream/homepanel/ActivityStreamHomeFragment.java',
     'activitystream/homepanel/ActivityStreamHomeScreen.java',
     'activitystream/homepanel/ActivityStreamPanel.java',
+    'activitystream/homepanel/HighlightsDividerItemDecoration.java',
     'activitystream/homepanel/HighlightsLoader.java',
     'activitystream/homepanel/menu/ActivityStreamContextMenu.java',
     'activitystream/homepanel/menu/BottomSheetContextMenu.java',
