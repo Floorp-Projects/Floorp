@@ -255,7 +255,7 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
     return this.generateZipFile(files);
   }
 
-  static generateZipFile(files, baseName = `generated-extension-${Math.random()}.xpi`) {
+  static generateZipFile(files, baseName = "generated-extension.xpi") {
     let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
     let zipW = new ZipWriter();
 
