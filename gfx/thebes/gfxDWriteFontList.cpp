@@ -1405,23 +1405,11 @@ IFACEMETHODIMP DWriteFontFallbackRenderer::DrawGlyphRun(
 }
 
 gfxFontEntry*
-gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
-                                      Script aRunScript,
-                                      const gfxFontStyle* aMatchStyle,
-                                      uint32_t& aCmapCount,
-                                      gfxFontFamily** aMatchedFamily)
+gfxDWriteFontList::PlatformGlobalFontFallback(const uint32_t aCh,
+                                              Script aRunScript,
+                                              const gfxFontStyle* aMatchStyle,
+                                              gfxFontFamily** aMatchedFamily)
 {
-    bool useCmaps = IsFontFamilyWhitelistActive() ||
-                    gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
-
-    if (useCmaps) {
-        return gfxPlatformFontList::GlobalFontFallback(aCh,
-                                                       aRunScript,
-                                                       aMatchStyle,
-                                                       aCmapCount,
-                                                       aMatchedFamily);
-    }
-
     HRESULT hr;
 
     RefPtr<IDWriteFactory> dwFactory =
