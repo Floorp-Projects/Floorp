@@ -728,8 +728,8 @@ var TelLog = {
   /**
    * Renders the telemetry log
    */
-  render(aPing) {
-    let entries = aPing.payload.log;
+  render(payload) {
+    let entries = payload.log;
     const hasData = entries && entries.length > 0;
     setHasData("telemetry-log-section", hasData);
     if (!hasData) {
@@ -1074,8 +1074,8 @@ var ChromeHangs = {
   /**
    * Renders raw chrome hang data
    */
-  render: function ChromeHangs_render(aPing) {
-    let hangs = aPing.payload.chromeHangs;
+  render: function ChromeHangs_render(payload) {
+    let hangs = payload.chromeHangs;
     setHasData("chrome-hangs-section", !!hangs);
     if (!hangs) {
       return;
@@ -2323,39 +2323,13 @@ function displayRichPingData(ping, updatePayloadList) {
     return;
   }
 
-  // Show telemetry log.
-  TelLog.render(ping);
-
   // Show slow SQL stats
   SlowSQL.render(ping);
-
-  // Show chrome hang stacks
-  ChromeHangs.render(ping);
 
   // Render Addon details.
   AddonDetails.render(ping);
 
-  // Select payload to render
-  let payloadSelect = document.getElementById("choose-payload");
-  let payloadOption = payloadSelect.selectedOptions.item(0);
-  let payloadIndex = payloadOption.getAttribute("value");
-
   let payload = ping.payload;
-  if (payloadIndex > 0) {
-    payload = ping.payload.childPayloads[payloadIndex - 1];
-  }
-
-  // Show thread hang stats
-  ThreadHangStats.render(payload);
-
-  // Show captured stacks.
-  CapturedStacks.render(payload);
-
-  // Show simple measurements
-  SimpleMeasurements.render(payload);
-
-  LateWritesSingleton.renderLateWrites(payload.lateWrites);
-
   // Show basic session info gathered
   SessionInformation.render(payload);
 
@@ -2371,6 +2345,35 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show event data.
   Events.render(payload);
+
+  // Show captured stacks.
+  CapturedStacks.render(payload);
+
+  LateWritesSingleton.renderLateWrites(payload.lateWrites);
+
+  // Select payload to render
+  let payloadSelect = document.getElementById("choose-payload");
+  let payloadOption = payloadSelect.selectedOptions.item(0);
+  let payloadIndex = payloadOption.getAttribute("value");
+
+  if (payloadIndex > 0) {
+    payload = ping.payload.childPayloads[payloadIndex - 1];
+  }
+
+  console.log(payload);
+
+  // Show chrome hang stacks
+  ChromeHangs.render(payload);
+
+  // Show telemetry log.
+  TelLog.render(payload);
+
+  // Show thread hang stats
+  ThreadHangStats.render(payload);
+
+  // Show simple measurements
+  SimpleMeasurements.render(payload);
+
 }
 
 window.addEventListener("load", onLoad);
