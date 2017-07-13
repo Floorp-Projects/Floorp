@@ -17,7 +17,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.mozilla.gecko.R;
@@ -33,8 +32,9 @@ import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.widget.FaviconView;
+import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
-public class TwoLinePageRow extends LinearLayout
+public class TwoLinePageRow extends ThemedLinearLayout
                             implements Tabs.OnTabsChangedListener {
 
     protected static final int NO_ICON = 0;
