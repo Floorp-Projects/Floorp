@@ -28,7 +28,7 @@ def is_json(data):
     return True
 
 
-def register_task_action(name, title, description, order, context, schema):
+def register_task_action(name, title, description, order, context, schema=None):
     """
     Register an action task that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -268,7 +268,7 @@ def render_actions_json(parameters):
         task = action.task_template_builder(parameters)
         if task:
             assert is_json(task), 'task must be a JSON compatible object'
-            result.append({
+            res = {
                 'kind': 'task',
                 'name': action.name,
                 'title': action.title,
@@ -276,7 +276,10 @@ def render_actions_json(parameters):
                 'context': action.context,
                 'schema': action.schema,
                 'task': task,
-            })
+            }
+            if res['schema'] is None:
+                res.pop('schema')
+            result.append(res)
     return {
         'version': 1,
         'variables': {
