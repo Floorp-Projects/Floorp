@@ -27,7 +27,9 @@ class PDFViaEMFPrintHelper;
 
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec
 {
+#ifdef MOZ_ENABLE_SKIA_PDF
   typedef mozilla::widget::PDFViaEMFPrintHelper PDFViaEMFPrintHelper;
+#endif
 
 public:
   nsDeviceContextSpecWin();
