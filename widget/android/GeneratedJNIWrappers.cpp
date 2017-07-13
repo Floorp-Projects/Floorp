@@ -2050,6 +2050,22 @@ auto GeckoHLSResourceWrapper::GetPlayerId() const -> int32_t
     return mozilla::jni::Method<GetPlayerId_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
 }
 
+constexpr char GeckoHLSResourceWrapper::Resume_t::name[];
+constexpr char GeckoHLSResourceWrapper::Resume_t::signature[];
+
+auto GeckoHLSResourceWrapper::Resume() const -> void
+{
+    return mozilla::jni::Method<Resume_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
+}
+
+constexpr char GeckoHLSResourceWrapper::Suspend_t::name[];
+constexpr char GeckoHLSResourceWrapper::Suspend_t::signature[];
+
+auto GeckoHLSResourceWrapper::Suspend() const -> void
+{
+    return mozilla::jni::Method<Suspend_t>::Call(GeckoHLSResourceWrapper::mCtx, nullptr);
+}
+
 const char GeckoHLSResourceWrapper::Callbacks::name[] =
         "org/mozilla/gecko/media/GeckoHLSResourceWrapper$Callbacks";
 
