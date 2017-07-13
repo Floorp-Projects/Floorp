@@ -23,6 +23,7 @@ MediaDecoderStateMachine*
 WaveDecoder::CreateStateMachine()
 {
   MediaDecoderReaderInit init(this);
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   mReader = new MediaFormatReader(init, new WAVDemuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }

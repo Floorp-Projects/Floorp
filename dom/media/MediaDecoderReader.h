@@ -24,6 +24,7 @@
 namespace mozilla {
 
 class CDMProxy;
+class GMPCrashHelper;
 class MediaDecoderReader;
 class TaskQueue;
 class VideoFrameContainer;
@@ -68,6 +69,7 @@ struct MOZ_STACK_CLASS MediaDecoderReaderInit
   MediaResource* mResource = nullptr;
   VideoFrameContainer* mVideoFrameContainer = nullptr;
   already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
+  already_AddRefed<GMPCrashHelper> mCrashHelper;
 
   explicit MediaDecoderReaderInit(AbstractMediaDecoder* aDecoder)
     : mDecoder(aDecoder)
