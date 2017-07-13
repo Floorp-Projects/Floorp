@@ -53,6 +53,8 @@ private:
         , fDWriteFont(SkSafeRefComPtr(font))
         , fDWriteFontFace(SkRefComPtr(fontFace))
         , fForceGDI(false)
+        , fGamma(2.2f)
+        , fContrast(1.0f)
     {
         if (!SUCCEEDED(fDWriteFontFace->QueryInterface(&fDWriteFontFace1))) {
             // IUnknown::QueryInterface states that if it fails, punk will be set to nullptr.
@@ -81,12 +83,16 @@ public:
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
                                       SkFontStyle aStyle,
-                                      bool aForceGDI) {
+                                      bool aForceGDI,
+                                      float aGamma,
+                                      float aContrast) {
         DWriteFontTypeface* typeface =
                 new DWriteFontTypeface(aStyle, factory, fontFace,
                                        nullptr, nullptr,
                                        nullptr, nullptr);
         typeface->fForceGDI = aForceGDI;
+        typeface->fGamma = aGamma;
+        typeface->fContrast = aContrast;
         return typeface;
     }
 
@@ -139,6 +145,8 @@ protected:
 private:
     typedef SkTypeface INHERITED;
     bool fForceGDI;
+    float fGamma;
+    float fContrast;
 };
 
 #endif

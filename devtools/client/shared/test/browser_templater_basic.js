@@ -13,7 +13,7 @@
 
 const {template} = require("devtools/shared/gcli/templater");
 
-const TEST_URI = TEST_URI_ROOT + "browser_templater_basic.html";
+const TEST_URI = TEST_URI_ROOT + "doc_templater_basic.html";
 
 var test = Task.async(function* () {
   yield addTab("about:blank");

@@ -590,19 +590,19 @@ TestGrayUnmarking()
     RootedObject blackRoot(cx, chain);
     JS_GC(cx);
     size_t count;
-    CHECK(IterateObjectChain(chain, ColorCheckFunctor(BLACK, &count)));
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(MarkColor::Black, &count)));
     CHECK(count == length);
 
     blackRoot = nullptr;
     grayRoots.grayRoot1 = chain;
     JS_GC(cx);
     CHECK(cx->runtime()->gc.areGrayBitsValid());
-    CHECK(IterateObjectChain(chain, ColorCheckFunctor(GRAY, &count)));
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(MarkColor::Gray, &count)));
     CHECK(count == length);
 
     JS::ExposeObjectToActiveJS(chain);
     CHECK(cx->runtime()->gc.areGrayBitsValid());
-    CHECK(IterateObjectChain(chain, ColorCheckFunctor(BLACK, &count)));
+    CHECK(IterateObjectChain(chain, ColorCheckFunctor(MarkColor::Black, &count)));
     CHECK(count == length);
 
     grayRoots.grayRoot1 = nullptr;
@@ -612,10 +612,10 @@ TestGrayUnmarking()
 
 struct ColorCheckFunctor
 {
-    uint32_t color;
+    MarkColor color;
     size_t& count;
 
-    ColorCheckFunctor(uint32_t colorArg, size_t* countArg)
+    ColorCheckFunctor(MarkColor colorArg, size_t* countArg)
       : color(colorArg), count(*countArg)
     {
         count = 0;
@@ -635,7 +635,7 @@ struct ColorCheckFunctor
 
         // Shapes and symbols are never marked gray.
         jsid id = shape->propid();
-        if (JSID_IS_GCTHING(id) && !CheckCellColor(JSID_TO_GCTHING(id).asCell(), BLACK))
+        if (JSID_IS_GCTHING(id) && !CheckCellColor(JSID_TO_GCTHING(id).asCell(), MarkColor::Black))
             return false;
 
         count++;
@@ -817,26 +817,26 @@ static bool
 IsMarkedBlack(Cell* cell)
 {
     TenuredCell* tc = &cell->asTenured();
-    return tc->isMarked(BLACK) && !tc->isMarked(GRAY);
+    return tc->isMarkedBlack();
 }
 
 static bool
 IsMarkedGray(Cell* cell)
 {
     TenuredCell* tc = &cell->asTenured();
-    bool isGray = tc->isMarked(GRAY);
-    MOZ_ASSERT_IF(isGray, tc->isMarked(BLACK));
+    bool isGray = tc->isMarkedGray();
+    MOZ_ASSERT_IF(isGray, tc->isMarkedAny());
     return isGray;
 }
 
 static bool
-CheckCellColor(Cell* cell, uint32_t color)
+CheckCellColor(Cell* cell, MarkColor color)
 {
-    MOZ_ASSERT(color == BLACK || color == GRAY);
-    if (color == BLACK && !IsMarkedBlack(cell)) {
+    MOZ_ASSERT(color == MarkColor::Black || color == MarkColor::Gray);
+    if (color == MarkColor::Black && !IsMarkedBlack(cell)) {
         printf("Found non-black cell: %p\n", cell);
         return false;
-    } else if (color == GRAY && !IsMarkedGray(cell)) {
+    } else if (color == MarkColor::Gray && !IsMarkedGray(cell)) {
         printf("Found non-gray cell: %p\n", cell);
         return false;
     }

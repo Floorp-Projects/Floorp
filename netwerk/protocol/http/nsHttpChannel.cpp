@@ -129,6 +129,7 @@ static bool sRCWNEnabled = false;
 static uint32_t sRCWNQueueSizeNormal = 50;
 static uint32_t sRCWNQueueSizePriority = 10;
 static uint32_t sRCWNSmallResourceSizeKB = 256;
+static uint32_t sRCWNMaxWaitMs = 500;
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -193,6 +194,50 @@ Hash(const char *buf, nsACString &hash)
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
+}
+
+bool
+IsInSubpathOfAppCacheManifest(nsIApplicationCache *cache, nsACString const& uriSpec)
+{
+    MOZ_ASSERT(cache);
+
+    nsresult rv;
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsAutoCString directory;
+    rv = url->GetDirectory(directory);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURI> manifestURI;
+    rv = cache->GetManifestURI(getter_AddRefs(manifestURI));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIURL> manifestURL(do_QueryInterface(manifestURI, &rv));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    nsAutoCString manifestDirectory;
+    rv = manifestURL->GetDirectory(manifestDirectory);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    return StringBeginsWith(directory, manifestDirectory);
 }
 
 } // unnamed namespace
@@ -3502,6 +3547,12 @@ nsHttpChannel::ProcessFallback(bool *waitingForRedirectCallback)
         return NS_OK;
     }
 
+    if (!IsInSubpathOfAppCacheManifest(mApplicationCache, mFallbackKey)) {
+        // Refuse to fallback if the fallback key is not contained in the same
+        // path as the cache manifest.
+        return NS_OK;
+    }
+
     MOZ_ASSERT(fallbackEntryType & nsIApplicationCache::ITEM_FALLBACK,
                "Fallback entry not marked correctly!");
 
@@ -4601,6 +4652,17 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntry *aEntry,
 
         if (namespaceType &
             nsIApplicationCacheNamespace::NAMESPACE_FALLBACK) {
+
+            nsAutoCString namespaceSpec;
+            rv = namespaceEntry->GetNamespaceSpec(namespaceSpec);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            // This prevents fallback attacks injected by an insecure subdirectory
+            // for the whole origin (or a parent directory).
+            if (!IsInSubpathOfAppCacheManifest(mApplicationCache, namespaceSpec)) {
+                return NS_OK;
+            }
+
             rv = namespaceEntry->GetData(mFallbackKey);
             NS_ENSURE_SUCCESS(rv, rv);
         }
@@ -6101,6 +6163,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         Preferences::AddUintVarCache(&sRCWNQueueSizeNormal, "network.http.rcwn.cache_queue_normal_threshold");
         Preferences::AddUintVarCache(&sRCWNQueueSizePriority, "network.http.rcwn.cache_queue_priority_threshold");
         Preferences::AddUintVarCache(&sRCWNSmallResourceSizeKB, "network.http.rcwn.small_resource_size_kb");
+        Preferences::AddUintVarCache(&sRCWNMaxWaitMs, "network.http.rcwn.max_wait_before_racing_ms");
     }
 
     rv = NS_CheckPortSafety(mURI);
@@ -9253,6 +9316,9 @@ nsHttpChannel::MaybeRaceCacheWithNetwork()
         // We use microseconds in CachePerfStats but we need milliseconds
         // for TriggerNetwork.
         mRaceDelay /= 1000;
+        if (mRaceDelay > sRCWNMaxWaitMs) {
+            mRaceDelay = sRCWNMaxWaitMs;
+        }
     }
 
     MOZ_ASSERT(sRCWNEnabled, "The pref must be truned on.");

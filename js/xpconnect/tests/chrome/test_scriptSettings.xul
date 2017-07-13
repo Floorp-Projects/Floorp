@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=937317
   </body>
 
   <!-- test code goes here -->
-  <iframe src="data:text/html,"></iframe>
+  <iframe src="./file_empty.html"></iframe>
   <script type="application/javascript">
   <![CDATA[
 

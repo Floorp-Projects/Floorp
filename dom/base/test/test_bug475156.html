@@ -275,22 +275,24 @@ var tests = [
 
 
 function drive(test)
-{  
-  var xhr = new XMLHttpRequest();
-  test.init(xhr);
-  xhr.onreadystatechange = function() {
-    if (this.readyState == 3) {
-      test.loading(this);
+{
+  SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]}, _=>{
+    var xhr = new XMLHttpRequest();
+    test.init(xhr);
+    xhr.onreadystatechange = function() {
+      if (this.readyState == 3) {
+        test.loading(this);
+      }
+      if (this.readyState == 4) {
+        test.done(this);
+        if (tests.length == 0)
+          SimpleTest.finish();
+        else
+          drive(tests.shift());
+      }
     }
-    if (this.readyState == 4) {
-      test.done(this);
-      if (tests.length == 0)
-        SimpleTest.finish();
-      else
-        drive(tests.shift());
-    }
-  }
-  xhr.send();
+    xhr.send();
+  });
 }
 
 </script>

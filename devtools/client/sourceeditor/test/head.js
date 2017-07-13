@@ -30,14 +30,9 @@ function setup(cb, additionalOpts = {}) {
   cb = cb || function () {};
   return new Promise(resolve => {
     const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
-    const url = "data:application/vnd.mozilla.xul+xml;charset=UTF-8," +
-      "<?xml version='1.0'?>" +
-      "<?xml-stylesheet href='chrome://global/skin/global.css'?>" +
-      "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper" +
-      "/there.is.only.xul' title='Editor' width='600' height='500'>" +
-      "<box flex='1'/></window>";
 
-    let win = Services.ww.openWindow(null, url, "_blank", opt, null);
+    let win = Services.ww.openWindow(null, CHROME_URL_ROOT + "head.xul", "_blank", opt,
+                                     null);
     let opts = {
       value: "Hello.",
       lineNumbers: true,

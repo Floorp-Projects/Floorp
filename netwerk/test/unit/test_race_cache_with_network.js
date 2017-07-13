@@ -6,6 +6,7 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -67,6 +68,10 @@ function checkContent(request, buffer, context, isFromCache)
 
 function run_test() {
   do_get_profile();
+  // In this test, we manually use |TriggerNetwork| to prove we could send
+  // net and cache reqeust simultaneously. Therefore we should disable
+  // racing in the HttpChannel first.
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
   httpserver.registerPathHandler("/rcwn", test_handler);
   httpserver.registerPathHandler("/rcwn_cached", cached_handler);
   testGenerator.next();

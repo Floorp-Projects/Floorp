@@ -5189,9 +5189,13 @@ QuotaManager::EnsureOriginIsInitializedInternal(
       return rv;
     }
 
-    rv = InitializeOrigin(aPersistenceType, aGroup, aOrigin, timestamp,
-                          /* aPersisted */ false, directory);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Don't need to traverse the directory, since it's empty.
+    InitQuotaForOrigin(aPersistenceType,
+                       aGroup,
+                       aOrigin,
+                       /* aUsageBytes */ 0,
+                       timestamp,
+                       /* aPersisted */ false);
   }
 
   directory.forget(aDirectory);
@@ -7649,7 +7653,8 @@ PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 
   AUTO_PROFILER_LABEL("PersistOp::DoDirectoryWork", OTHER);
 
-  // Update directory metadata on disk first.
+  // Update directory metadata on disk first. Then, create/update the originInfo
+  // if needed.
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager->GetDirectoryForOrigin(mPersistenceType.Value(),
                                                      mOriginScope.GetOrigin(),
@@ -7665,14 +7670,26 @@ PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   }
 
   if (created) {
+    int64_t timestamp;
     rv = CreateDirectoryMetadataFiles(directory,
                                       /* aPersisted */ true,
                                       mSuffix,
                                       mGroup,
                                       mOriginScope.GetOrigin(),
-                                      /* aTimestamp */ nullptr);
+                                      &timestamp);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
+    }
+
+    // Directory metadata has been successfully created.
+    // Create OriginInfo too if temporary storage was already initialized.
+    if (aQuotaManager->IsTemporaryStorageInitialized()) {
+      aQuotaManager->InitQuotaForOrigin(mPersistenceType.Value(),
+                                        mGroup,
+                                        mOriginScope.GetOrigin(),
+                                        /* aUsageBytes */ 0,
+                                        timestamp,
+                                        /* aPersisted */ true);
     }
   } else {
     // Get the persisted flag (restore the metadata file if necessary).
@@ -7718,11 +7735,13 @@ PersistOp::DoDirectoryWork(QuotaManager* aQuotaManager)
         return rv;
       }
     }
-  }
 
-  // Directory metadata has been successfully created/updated, try to update
-  // OriginInfo too (it's ok if OriginInfo doesn't exist yet).
-  aQuotaManager->PersistOrigin(mGroup, mOriginScope.GetOrigin());
+    // Directory metadata has been successfully updated.
+    // Update OriginInfo too if temporary storage was already initialized.
+    if (aQuotaManager->IsTemporaryStorageInitialized()) {
+      aQuotaManager->PersistOrigin(mGroup, mOriginScope.GetOrigin());
+    }
+  }
 
   return NS_OK;
 }

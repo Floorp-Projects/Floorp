@@ -107,7 +107,7 @@ IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 {
     for (auto kind : ObjectAllocKinds()) {
         for (GrayObjectIter obj(zone, kind); !obj.done(); obj.next()) {
-            if (obj->asTenured().isMarked(GRAY))
+            if (obj->asTenured().isMarkedGray())
                 cellCallback(data, JS::GCCellPtr(obj.get()));
         }
     }

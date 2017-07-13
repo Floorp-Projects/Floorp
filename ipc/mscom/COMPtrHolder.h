@@ -132,7 +132,7 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     }
 
     typename paramType::COMPtrType ptr;
-    if (!proxyStream.GetInterface(_IID, mozilla::mscom::getter_AddRefs(ptr))) {
+    if (!proxyStream.GetInterface(mozilla::mscom::getter_AddRefs(ptr))) {
       return false;
     }
 

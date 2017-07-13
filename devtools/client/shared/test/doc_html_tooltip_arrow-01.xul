@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
+<window class="theme-light"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Tooltip test">
+
+<vbox flex="1" style="position: relative">
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+           top: 0; left: 0;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; left: 25px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; left: 50px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; left: 75px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; left: 0;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; left: 25px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; left: 50px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; left: 75px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 0;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 25px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 50px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    bottom: 0; right: 75px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; right: 0;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; right: 25px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; right: 50px;">
+  </html:div>
+
+  <html:div class="anchor"
+    style="width:10px; height: 10px; position: absolute; background: red;
+    top: 0; right: 75px;">
+  </html:div>
+  </vbox>
+</window>

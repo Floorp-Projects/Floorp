@@ -105,7 +105,7 @@ function oneTimeObserve(name, callback) {
 }
 
 let createHost =
-Task.async(function* (type = "bottom", src = "data:text/html;charset=utf-8,") {
+Task.async(function* (type = "bottom", src = CHROME_URL_ROOT + "dummy.html") {
   let host = new Hosts[type](gBrowser.selectedTab);
   let iframe = yield host.create();
 

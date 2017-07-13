@@ -99,8 +99,10 @@ struct ServoGroupRuleRules
   }
 
   void Clear() {
-    mRuleList->DropReference();
-    mRuleList = nullptr;
+    if (mRuleList) {
+      mRuleList->DropReference();
+      mRuleList = nullptr;
+    }
   }
   void Traverse(nsCycleCollectionTraversalCallback& cb) {
     ImplCycleCollectionTraverse(cb, mRuleList, "mRuleList");

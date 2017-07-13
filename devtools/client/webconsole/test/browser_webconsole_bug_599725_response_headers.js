@@ -49,6 +49,9 @@ let waitForRequest = Task.async(function*(hud) {
 });
 
 add_task(function* () {
+  // Disable rcwn to make sure we will send a conditional request.
+  yield pushPref("network.http.rcwn.enabled", false);
+
   let { browser } = yield loadTab(INIT_URI);
 
   let hud = yield openConsole();

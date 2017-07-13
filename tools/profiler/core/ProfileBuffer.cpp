@@ -25,7 +25,8 @@ ProfileBuffer::~ProfileBuffer()
 }
 
 // Called from signal, call only reentrant functions
-void ProfileBuffer::addEntry(const ProfileBufferEntry& aEntry)
+void
+ProfileBuffer::AddEntry(const ProfileBufferEntry& aEntry)
 {
   mEntries[mWritePos++] = aEntry;
   if (mWritePos == mEntrySize) {
@@ -35,6 +36,7 @@ void ProfileBuffer::addEntry(const ProfileBufferEntry& aEntry)
     mGeneration++;
     mWritePos = 0;
   }
+
   if (mWritePos == mReadPos) {
     // Keep one slot open.
     mEntries[mReadPos] = ProfileBufferEntry();
@@ -42,22 +44,45 @@ void ProfileBuffer::addEntry(const ProfileBufferEntry& aEntry)
   }
 }
 
-void ProfileBuffer::addThreadIdEntry(int aThreadId, LastSample* aLS)
+void
+ProfileBuffer::AddThreadIdEntry(int aThreadId, LastSample* aLS)
 {
   if (aLS) {
     // This is the start of a sample, so make a note of its location in |aLS|.
     aLS->mGeneration = mGeneration;
     aLS->mPos = mWritePos;
   }
-  addEntry(ProfileBufferEntry::ThreadId(aThreadId));
+  AddEntry(ProfileBufferEntry::ThreadId(aThreadId));
 }
 
-void ProfileBuffer::addStoredMarker(ProfilerMarker *aStoredMarker) {
+void
+ProfileBuffer::AddDynamicStringEntry(const char* aStr)
+{
+  size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
+  for (size_t j = 0; j < strLen; ) {
+    // Store up to kNumChars characters in the entry.
+    char chars[ProfileBufferEntry::kNumChars];
+    size_t len = ProfileBufferEntry::kNumChars;
+    if (j + len >= strLen) {
+      len = strLen - j;
+    }
+    memcpy(chars, &aStr[j], len);
+    j += ProfileBufferEntry::kNumChars;
+
+    AddEntry(ProfileBufferEntry::DynamicStringFragment(chars));
+  }
+}
+
+void
+ProfileBuffer::AddStoredMarker(ProfilerMarker *aStoredMarker)
+{
   aStoredMarker->SetGeneration(mGeneration);
   mStoredMarkers.insert(aStoredMarker);
 }
 
-void ProfileBuffer::deleteExpiredStoredMarkers() {
+void
+ProfileBuffer::DeleteExpiredStoredMarkers()
+{
   // Delete markers of samples that have been overwritten due to circular
   // buffer wraparound.
   uint32_t generation = mGeneration;
@@ -67,7 +92,9 @@ void ProfileBuffer::deleteExpiredStoredMarkers() {
   }
 }
 
-void ProfileBuffer::reset() {
+void
+ProfileBuffer::Reset()
+{
   mGeneration += 2;
   mReadPos = mWritePos = 0;
 }
