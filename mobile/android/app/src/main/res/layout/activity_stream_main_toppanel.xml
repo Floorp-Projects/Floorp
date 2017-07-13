@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<com.booking.rtlviewpager.RtlViewPager
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginTop="10dp"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_height="match_parent"
+    android:id="@+id/topsites_pager"
+    android:contentDescription="@string/activity_stream_topsites" />
 
-    <com.booking.rtlviewpager.RtlViewPager
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/topsites_pager"
-        android:contentDescription="@string/activity_stream_topsites" />
-
-    <org.mozilla.gecko.activitystream.homepanel.topsites.CirclePageIndicator
-        android:id="@+id/topsites_indicator"
-        android:padding="10dip"
-        app:fillColor="#ff9d9d9d"
-        app:pageColor="#FFFFFF"
-        app:strokeWidth="1dp"
-        app:radius="2dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-</LinearLayout>
