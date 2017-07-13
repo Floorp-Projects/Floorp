@@ -1996,9 +1996,6 @@ nsBlockFrame::PrepareResizeReflow(BlockReflowInput& aState)
     nscoord newAvailISize =
       aState.mReflowInput.ComputedLogicalBorderPadding().IStart(wm) +
       aState.mReflowInput.ComputedISize();
-    NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowInput.ComputedLogicalBorderPadding().IStart(wm) &&
-                 NS_UNCONSTRAINEDSIZE != aState.mReflowInput.ComputedISize(),
-                 "math on NS_UNCONSTRAINEDSIZE");
 
 #ifdef DEBUG
     if (gNoisyReflow) {
