@@ -5297,7 +5297,6 @@ nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
   // is not a suitable block.
   nsContainerFrame* blockFrame =
     NS_NewMathMLmathBlockFrame(mPresShell, blockContext);
-  blockFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
 
   InitAndRestoreFrame(aState, aContent, aParentFrame, blockFrame);
   ReparentFrames(this, blockFrame, aBlockItems, false);
