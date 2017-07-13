@@ -662,7 +662,7 @@ public:
 
   bool ContainsRestrictedContent();
 
-  void CannotDecryptWaitingForKey();
+  void NotifyWaitingForKey() override;
 
   bool MozAutoplayEnabled() const
   {
