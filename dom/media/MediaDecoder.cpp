@@ -35,10 +35,6 @@
 #include <algorithm>
 #include <limits>
 
-#ifdef MOZ_ANDROID_OMX
-#include "AndroidBridge.h"
-#endif
-
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::media;
@@ -1487,15 +1483,6 @@ MediaDecoder::IsWebMEnabled()
 {
   return Preferences::GetBool("media.webm.enabled");
 }
-
-#ifdef MOZ_ANDROID_OMX
-bool
-MediaDecoder::IsAndroidMediaPluginEnabled()
-{
-  return jni::GetAPIVersion() < 16
-         && Preferences::GetBool("media.plugins.enabled");
-}
-#endif
 
 NS_IMETHODIMP
 MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
