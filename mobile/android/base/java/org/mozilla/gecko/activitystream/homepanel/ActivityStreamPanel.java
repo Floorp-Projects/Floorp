@@ -67,6 +67,7 @@ public class ActivityStreamPanel extends FrameLayout {
         rv.setHasFixedSize(true);
         // Override item animations to avoid horrible topsites refreshing
         rv.setItemAnimator(new StreamItemAnimator());
+        rv.addItemDecoration(new HighlightsDividerItemDecoration(context));
 
         RecyclerViewClickSupport.addTo(rv)
                 .setOnItemClickListener(adapter);
