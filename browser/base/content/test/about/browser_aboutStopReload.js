@@ -11,6 +11,13 @@ function stopReloadMutationCallback() {
   Assert.ok(false, "stop-reload's animate attribute should not have been mutated");
 }
 
+// run these tests with notification animations enabled
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [["toolkit.cosmeticAnimations.enabled", true]]
+  });
+});
+
 add_task(async function checkDontShowStopOnNewTab() {
   let stopReloadContainer = document.getElementById("stop-reload-button");
   let stopReloadContainerObserver = new MutationObserver(stopReloadMutationCallback);
