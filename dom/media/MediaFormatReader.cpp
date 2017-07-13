@@ -1113,7 +1113,6 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
   , mCrashHelper(aInit.mCrashHelper)
   , mDecoderFactory(new DecoderFactory(this))
   , mShutdownPromisePool(new ShutdownPromisePool())
-  , mDecoder(aInit.mDecoder)
   , mBuffered(mTaskQueue,
               TimeIntervals(),
               "MediaFormatReader::mBuffered (Canonical)")
@@ -1213,7 +1212,6 @@ MediaFormatReader::TearDownDecoders()
 
   ReleaseResources();
   mBuffered.DisconnectAll();
-  mDecoder = nullptr;
   return mTaskQueue->BeginShutdown();
 }
 
