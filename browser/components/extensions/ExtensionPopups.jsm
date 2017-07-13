@@ -228,6 +228,7 @@ class BasePopup {
     browser.setAttribute("tooltip", "aHTMLTooltip");
     browser.setAttribute("contextmenu", "contentAreaContextMenu");
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
+    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
     browser.sameProcessAsFrameLoader = this.extension.groupFrameLoader;
 
     if (this.extension.remote) {
