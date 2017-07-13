@@ -475,6 +475,10 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   padding-inline-start: 0;
 }
 
+.customization-uidensity-menu-button {
+  color: inherit;
+}
+
 .customization-lwtheme-menu-theme[defaulttheme] {
   list-style-image: url(chrome://browser/content/default-theme-icon.svg);
 }
