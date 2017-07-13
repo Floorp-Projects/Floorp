@@ -658,76 +658,38 @@ public:
 };
 
 static void
-AddDynamicCodeLocationEntry(ProfileBuffer* aBuffer, const char* aStr)
-{
-  aBuffer->addEntry(ProfileBufferEntry::CodeLocation(""));
-
-  size_t strLen = strlen(aStr) + 1;   // +1 for the null terminator
-  for (size_t j = 0; j < strLen; ) {
-    // Store up to kNumChars characters in the entry.
-    char chars[ProfileBufferEntry::kNumChars];
-    size_t len = ProfileBufferEntry::kNumChars;
-    if (j + len >= strLen) {
-      len = strLen - j;
-    }
-    memcpy(chars, &aStr[j], len);
-    j += ProfileBufferEntry::kNumChars;
-
-    aBuffer->addEntry(ProfileBufferEntry::EmbeddedString(chars));
-  }
-}
-
-static void
 AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
                js::ProfileEntry& entry, NotNull<RacyThreadInfo*> aRacyInfo)
 {
+  // WARNING: this function runs within the profiler's "critical section".
+
   MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
              entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
 
+  aBuffer->addEntry(ProfileBufferEntry::Label(entry.label()));
+
+  const char* dynamicString = entry.dynamicString();
   int lineno = -1;
 
-  // First entry has kind CodeLocation.
-  const char* label = entry.label();
-  bool includeDynamicString = !ActivePS::FeaturePrivacy(aLock);
-  const char* dynamicString =
-    includeDynamicString ? entry.dynamicString() : nullptr;
+  // XXX: it's unclear why the computation of lineno should depend on
+  // |dynamicString|. Perhaps it shouldn't?
 
   if (dynamicString) {
-    // Create a string that is label + ' ' + annotationString (unless
-    // label is an empty string, in which case the ' ' is omitted).
-    // Avoid sprintf because it can take a lock on Windows, and this
-    // code runs during the profiler's "critical section" as defined
-    // in SamplerThread::SuspendAndSampleAndResumeThread.
-    char combinedStringBuffer[512];
-    const char* locationString;
-    size_t labelLength = strlen(label);
-    size_t spaceLength = label[0] == '\0' ? 0 : 1;
-    size_t dynamicLength = strlen(dynamicString);
-    size_t combinedLength = labelLength + spaceLength + dynamicLength;
-
-    if (combinedLength < ArrayLength(combinedStringBuffer)) {
-      PodCopy(combinedStringBuffer, label, labelLength);
-      if (spaceLength != 0) {
-        combinedStringBuffer[labelLength] = ' ';
-      }
-      PodCopy(&combinedStringBuffer[labelLength + spaceLength], dynamicString,
-              dynamicLength);
-      combinedStringBuffer[combinedLength] = '\0';
-      locationString = combinedStringBuffer;
-    } else {
-      locationString = label;
+    // Adjust the dynamic string as necessary.
+    if (ActivePS::FeaturePrivacy(aLock)) {
+      dynamicString = "(private)";
+    } else if (strlen(dynamicString) >= ProfileBuffer::kMaxFrameKeyLength) {
+      dynamicString = "(too long)";
     }
 
-    // Store the string using one or more EmbeddedString entries. That will
-    // happen to the preceding entry.
-    AddDynamicCodeLocationEntry(aBuffer, locationString);
+    // Store the string using one or more DynamicStringFragment entries.
+    aBuffer->addDynamicStringEntry(dynamicString);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
         if (!entry.pc()) {
           // The JIT only allows the top-most entry to have a nullptr pc.
-          MOZ_ASSERT(&entry ==
-                     &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
+          MOZ_ASSERT(&entry == &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
         } else {
           lineno = JS_PCToLineNumber(script, entry.pc());
         }
@@ -736,8 +698,6 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
       lineno = entry.line();
     }
   } else {
-    aBuffer->addEntry(ProfileBufferEntry::CodeLocation(label));
-
     // XXX: Bug 1010578. Don't assume a CPP entry and try to get the line for
     // js entries as well.
     if (entry.isCpp()) {
@@ -948,7 +908,8 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
       // with stale JIT code return addresses.
       if (aIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        AddDynamicCodeLocationEntry(aBuffer, jsFrame.label);
+        aBuffer->addEntry(ProfileBufferEntry::Label(""));
+        aBuffer->addDynamicStringEntry(jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
