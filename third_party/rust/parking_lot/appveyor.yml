@@ -5,10 +5,10 @@ environment:
   - TARGET: nightly-i686-pc-windows-msvc
   - TARGET: nightly-x86_64-pc-windows-gnu
   - TARGET: nightly-i686-pc-windows-gnu
-  - TARGET: 1.13.0-x86_64-pc-windows-msvc
-  - TARGET: 1.13.0-i686-pc-windows-msvc
-  - TARGET: 1.13.0-x86_64-pc-windows-gnu
-  - TARGET: 1.13.0-i686-pc-windows-gnu
+  - TARGET: 1.9.0-x86_64-pc-windows-msvc
+  - TARGET: 1.9.0-i686-pc-windows-msvc
+  - TARGET: 1.9.0-x86_64-pc-windows-gnu
+  - TARGET: 1.9.0-i686-pc-windows-gnu
 
 install:
   - SET PATH=C:\Python27;C:\Python27\Scripts;%PATH%;%APPDATA%\Python\Scripts
