@@ -53,9 +53,6 @@ DIRS += [
     'webvtt',
 ]
 
-if CONFIG['MOZ_ANDROID_OMX']:
-    DIRS += ['android']
-
 if CONFIG['MOZ_ANDROID_HLS_SUPPORT']:
     DIRS += ['hls']
 

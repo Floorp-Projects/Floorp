@@ -93,10 +93,6 @@
 #include "nsSynthVoiceRegistry.h"
 #endif
 
-#ifdef MOZ_ANDROID_OMX
-#include "AndroidMediaPluginHost.h"
-#endif
-
 #include "CubebUtils.h"
 #include "Latency.h"
 #include "WebAudioUtils.h"
@@ -391,11 +387,6 @@ nsLayoutStatics::Shutdown()
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
   FrameLayerBuilder::Shutdown();
-
-
-#ifdef MOZ_ANDROID_OMX
-  AndroidMediaPluginHost::Shutdown();
-#endif
 
   CubebUtils::ShutdownLibrary();
   AsyncLatencyLogger::ShutdownLogger();
