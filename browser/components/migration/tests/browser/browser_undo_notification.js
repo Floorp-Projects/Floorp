@@ -4,12 +4,20 @@ let scope = {};
 Cu.import("resource:///modules/AutoMigrate.jsm", scope);
 let oldCanUndo = scope.AutoMigrate.canUndo;
 let oldUndo = scope.AutoMigrate.undo;
+
 registerCleanupFunction(function() {
   scope.AutoMigrate.canUndo = oldCanUndo;
   scope.AutoMigrate.undo = oldUndo;
 });
 
 const kExpectedNotificationId = "automigration-undo";
+
+// run these tests with notification animations enabled
+add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    "set": [["toolkit.cosmeticAnimations.enabled", true]]
+  });
+});
 
 add_task(async function autoMigrationUndoNotificationShows() {
   let getNotification = browser =>
