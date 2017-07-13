@@ -14,9 +14,8 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.activitystream.homepanel.topsites.CirclePageIndicator;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
+import org.mozilla.gecko.home.HomePager;
 
 public class TopPanel extends StreamItem {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
@@ -52,9 +51,6 @@ public class TopPanel extends StreamItem {
         topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);
         topSitesPager.setAdapter(new TopSitesPagerAdapter(itemView.getContext(), onUrlOpenListener, onUrlOpenInBackgroundListener));
         topSitesPager.addOnPageChangeListener(swipeListener);
-
-        CirclePageIndicator indicator = (CirclePageIndicator) itemView.findViewById(R.id.topsites_indicator);
-        indicator.setViewPager(topSitesPager);
     }
 
     public void bind(Cursor cursor, int tiles, int tilesWidth, int tilesHeight) {
