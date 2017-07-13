@@ -703,7 +703,9 @@ already_AddRefed<SourceSurface>
 DrawTargetCairo::Snapshot()
 {
   if (!IsValid()) {
-    gfxCriticalNote << "DrawTargetCairo::Snapshot with bad surface " << cairo_surface_status(mSurface);
+    gfxCriticalNote << "DrawTargetCairo::Snapshot with bad surface " << hexa(mSurface)
+                    << ", context " << hexa(mContext)
+                    << ", status " << (mSurface ? cairo_surface_status(mSurface) : -1);
     return nullptr;
   }
   if (mSnapshot) {
