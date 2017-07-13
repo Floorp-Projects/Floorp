@@ -275,6 +275,11 @@ public:
     return mOnTrackWaitingForKey;
   }
 
+  MediaEventSource<nsTArray<uint8_t>, nsString>& OnEncrypted()
+  {
+    return mOnEncrypted;
+  }
+
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
@@ -336,6 +341,8 @@ protected:
 
   // Notify if we are waiting for a decryption key.
   MediaEventProducer<TrackInfo::TrackType> mOnTrackWaitingForKey;
+
+  MediaEventProducer<nsTArray<uint8_t>, nsString> mOnEncrypted;
 
   RefPtr<MediaResource> mResource;
 
