@@ -117,12 +117,6 @@ PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise, ErrorResult& aRv)
   mRequest->SetUpdating(true);
 }
 
-bool
-PaymentRequestUpdateEvent::IsTrusted() const
-{
-  return true;
-}
-
 PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent()
 {
 }
