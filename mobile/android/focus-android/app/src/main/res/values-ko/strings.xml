@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">추적기가 차단됨</string>
   <string name="share_dialog_title">다음으로 공유</string>
   <string name="notification_erase_text">방문 기록 지우기</string>
+  <string name="notification_action_open">열기</string>
   <string name="shortcut_erase_short_label">지우기</string>
   <string name="shortcut_erase_long_label">방문 기록 지우기</string>
   <string name="text_selection_search_action">사생활 보호 검색</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">링크를 열 수 있는 앱 찾기</string>
   <string name="external_app_prompt_no_app">이 링크를 열 수 있는 앱이 설치돼있지 않습니다. %1$s를 종료하고 %2$s를 열어 이 링크를 열 수 있는 앱을 찾을 수 있습니다.</string>
   <string name="external_multiple_apps_matched_exit">사생활 보호 브라우징을 종료할까요?</string>
+  <string name="download_snackbar_finished">%1$s 다운로드됨</string>
+  <string name="download_snackbar_open">열기</string>
+  <string name="download_dialog_warning"><![CDATA["다운로드된 파일은 "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"%1$s &#48169;&#47928;&#44592;&#47197;&#51012; &#49325;&#51228;&#54624; &#46412; "</b>지워집니다.]]></string>
+  <string name="download_dialog_title">파일 다운로드</string>
+  <string name="download_dialog_action_cancel">취소</string>
+  <string name="download_dialog_action_download">다운로드</string>
   <string name="errorpage_title">페이지를 불러오는 데에 문제가 발생했습니다</string>
   <string name="errorpage_refresh">다시 시도하기</string>
   <string name="error_connectionfailure_title">연결할 수 없음</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">알겠습니다!</string>
   <string name="firstrun_skip_button">건너뛰기</string>
   <string name="firstrun_next_button">다음</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

@@ -3,7 +3,7 @@
   <string name="action_cancel">Diddymu</string>
   <string name="action_ok">Iawn</string>
   <string name="urlbar_hint">Chwilio neu gyfeiriad</string>
-  <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Ailadrodd.</string>
+  <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Eto.</string>
   <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
   <string name="search_hint">Chwilio am %1$s</string>
   <string name="menu_share">Rhannu…</string>
@@ -16,10 +16,11 @@
   <string name="menu_trackers_blocked_title">Rhwystro tracwyr</string>
   <string name="share_dialog_title">Rhannu drwy</string>
   <string name="notification_erase_text">Dileu\'r hanes pori</string>
+  <string name="notification_action_open">Agor</string>
   <string name="shortcut_erase_short_label">Dileu</string>
   <string name="shortcut_erase_long_label">Dileu\'r hanes pori</string>
   <string name="text_selection_search_action">Chwilio\'n Breifat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu diweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Gyda %1$s chi sy\'n rheoli.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Ei ddefnyddio fel porwr preifat:\n  "<ul>"\n    "<li>Chwilio a phori o fewn yr ap</li>"\n    "<li>Rhwystro tracwyr (neu ddiweddaru\'r gosodiadau i ganiat&#225;u tracwyr)</li>"\n    "<li>Dileu cwcis, yn ogystal &#226; hanes chwilio a phori</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Mae %1$s wedi ei gynhyrchu gan Mozilla. Ein amcan yw i hybu Rhyngrwyd iach ac agored.<br/>\n<a href="%2$s">Dysgu rhagor</a></p>]]></string>
   <string name="preference_category_search">Chwilio</string>
   <string name="preference_search_engine_default">Rhagosodiad</string>
   <string name="preference_language">Iaith</string>
@@ -35,7 +36,7 @@
   <string name="preference_privacy_secure_mode_summary">Diffoddwch y modd dirgel er mwyn cymryd lluniau sgrin a gweld gwefannau rydych yn ymweld â nhw gan ddefnyddio %1$s yn eich rhestr Apiau Diweddar</string>
   <string name="preference_category_performance">Perfformiad</string>
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
-  <string name="preference_performance_block_webfonts_summary">Gall olygu eiconau neu ddelweddau coll</string>
+  <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
   <string name="preference_performance_block_images">Rhwystro delweddau</string>
   <string name="preference_default_browser">Gwneud yn borwr rhagosodedig</string>
   <string name="preference_category_mozilla">Mozilla</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Canfod ap sy\'n gallu agor dolen</string>
   <string name="external_app_prompt_no_app">0oes dim o\'r apiau ar eich dyfais yn gallu i agor y ddolen. Mae modd gofyn i %1$s chwilio %2$s am ap sy\' n gallu gwneud.</string>
   <string name="external_multiple_apps_matched_exit">Gadael Pori Preifat?</string>
+  <string name="download_snackbar_finished">%1$s wedi gorffen</string>
+  <string name="download_snackbar_open">Agor</string>
+  <string name="download_dialog_warning"><![CDATA["Ni fydd ffeiliau sydd wedi eu llwytho i lawr "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
+  <string name="download_dialog_title">Llwytho\'r ffeil i lawr</string>
+  <string name="download_dialog_action_cancel">Diddymu</string>
+  <string name="download_dialog_action_download">Llwytho i Lawr</string>
   <string name="errorpage_title">Anhawster llwytho tudalen</string>
   <string name="errorpage_refresh">Ceisiwch eto</string>
   <string name="error_connectionfailure_title">Methu cysylltu</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Iawn!</string>
   <string name="firstrun_skip_button">Hepgor</string>
   <string name="firstrun_next_button">Nesaf</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

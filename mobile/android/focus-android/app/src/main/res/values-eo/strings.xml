@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Blokitaj spuriloj</string>
   <string name="share_dialog_title">Dividi per</string>
   <string name="notification_erase_text">Forviŝi retuman historion</string>
+  <string name="notification_action_open">Malfermi</string>
   <string name="shortcut_erase_short_label">Forviŝi</string>
   <string name="shortcut_erase_long_label">Forviŝi retuman historion</string>
   <string name="text_selection_search_action">Serĉi private</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Serĉi programon, kiu povas malfermi ligilon</string>
   <string name="external_app_prompt_no_app">Neniu programo en via aparato povas malfermi tiun ĉi ligilon. Vi povas forlasi %1$s por serĉi en %2$s programon kiu povas fari tion.</string>
   <string name="external_multiple_apps_matched_exit">Ĉu eliri el privata retumo?</string>
+  <string name="download_snackbar_finished">%1$s finiĝis</string>
+  <string name="download_snackbar_open">Malfermi</string>
+  <string name="download_dialog_warning"><![CDATA["Elŝutitaj dosieroj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
+  <string name="download_dialog_title">Elŝuti dosieron</string>
+  <string name="download_dialog_action_cancel">Nuligi</string>
+  <string name="download_dialog_action_download">Elŝuti</string>
   <string name="errorpage_title">Problemo dum ŝargado de paĝo</string>
   <string name="errorpage_refresh">Provi denove</string>
   <string name="error_connectionfailure_title">Ne eblas konekti</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">Bone, mi komprenas!</string>
   <string name="firstrun_skip_button">Ignori</string>
   <string name="firstrun_next_button">Sekva</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>
