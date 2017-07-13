@@ -1,0 +1,58 @@
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Tests that the list of grids does refresh when an iframe containing a grid is removed
+// and re-created.
+// See bug 1378306 where this happened with jsfiddle.
+
+const TEST_URI = URL_ROOT + "doc_iframe_reloaded.html";
+
+add_task(function* () {
+  yield addTab(TEST_URI);
+
+  const { inspector, gridInspector, testActor } = yield openLayoutView();
+  const { document: doc } = gridInspector;
+  const { store, highlighters } = inspector;
+  const gridList = doc.querySelector("#grid-list");
+
+  info("Clicking on the first checkbox to highlight the grid");
+  yield enableTheFirstGrid(doc, inspector);
+
+  is(gridList.childNodes.length, 1, "There's one grid in the list");
+  let checkbox = gridList.querySelector("input");
+  ok(checkbox.checked, "The checkbox is checked");
+  ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
+
+  info("Reload the iframe in content and expect the grid list to update");
+  const oldGrid = store.getState().grids[0];
+  const onNewListUnchecked = waitUntilState(store, state =>
+    state.grids.length == 1 &&
+    state.grids[0].actorID !== oldGrid.actorID &&
+    !state.grids[0].highlighted);
+  testActor.eval("window.wrappedJSObject.reloadIFrame();");
+  yield onNewListUnchecked;
+
+  is(gridList.childNodes.length, 1, "There's still one grid in the list");
+  ok(!highlighters.gridHighlighterShown, "There's no highlighter shown");
+
+  info("Highlight the first grid again to make sure this still works");
+  yield enableTheFirstGrid(doc, inspector);
+
+  is(gridList.childNodes.length, 1, "There's again one grid in the list");
+  ok(highlighters.gridHighlighterShown, "There's a highlighter shown");
+});
+
+function* enableTheFirstGrid(doc, { highlighters, store }) {
+  const checkbox = doc.querySelector("#grid-list input");
+
+  const onHighlighterShown = highlighters.once("grid-highlighter-shown");
+  const onCheckboxChange = waitUntilState(store, state =>
+    state.grids.length == 1 && state.grids[0].highlighted);
+
+  checkbox.click();
+
+  yield onHighlighterShown;
+  yield onCheckboxChange;
+}
