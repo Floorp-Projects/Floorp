@@ -666,7 +666,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   MOZ_ASSERT(entry.kind() == js::ProfileEntry::Kind::CPP_NORMAL ||
              entry.kind() == js::ProfileEntry::Kind::JS_NORMAL);
 
-  aBuffer->addEntry(ProfileBufferEntry::Label(entry.label()));
+  aBuffer->AddEntry(ProfileBufferEntry::Label(entry.label()));
 
   const char* dynamicString = entry.dynamicString();
   int lineno = -1;
@@ -683,7 +683,7 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
     }
 
     // Store the string using one or more DynamicStringFragment entries.
-    aBuffer->addDynamicStringEntry(dynamicString);
+    aBuffer->AddDynamicStringEntry(dynamicString);
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -706,10 +706,10 @@ AddPseudoEntry(PSLockRef aLock, ProfileBuffer* aBuffer,
   }
 
   if (lineno != -1) {
-    aBuffer->addEntry(ProfileBufferEntry::LineNumber(lineno));
+    aBuffer->AddEntry(ProfileBufferEntry::LineNumber(lineno));
   }
 
-  aBuffer->addEntry(ProfileBufferEntry::Category(int(entry.category())));
+  aBuffer->AddEntry(ProfileBufferEntry::Category(int(entry.category())));
 }
 
 // Setting MAX_NATIVE_FRAMES too high risks the unwinder wasting a lot of time
@@ -908,12 +908,12 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
       // with stale JIT code return addresses.
       if (aIsSynchronous ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Wasm) {
-        aBuffer->addEntry(ProfileBufferEntry::Label(""));
-        aBuffer->addDynamicStringEntry(jsFrame.label);
+        aBuffer->AddEntry(ProfileBufferEntry::Label(""));
+        aBuffer->AddDynamicStringEntry(jsFrame.label);
       } else {
         MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
                    jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
-        aBuffer->addEntry(
+        aBuffer->AddEntry(
           ProfileBufferEntry::JitReturnAddr(jsFrames[jsIndex].returnAddress));
       }
 
@@ -926,7 +926,7 @@ MergeStacksIntoProfile(PSLockRef aLock, bool aIsSynchronous,
     if (nativeStackAddr) {
       MOZ_ASSERT(nativeIndex >= 0);
       void* addr = (void*)aNativeStack.mPCs[nativeIndex];
-      aBuffer->addEntry(ProfileBufferEntry::NativeLeafAddr(addr));
+      aBuffer->AddEntry(ProfileBufferEntry::NativeLeafAddr(addr));
     }
     if (nativeIndex >= 0) {
       nativeIndex--;
@@ -1212,10 +1212,10 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
 
   MOZ_RELEASE_ASSERT(ActivePS::Exists(aLock));
 
-  aBuffer->addThreadIdEntry(aThreadInfo.ThreadId(), aLS);
+  aBuffer->AddThreadIdEntry(aThreadInfo.ThreadId(), aLS);
 
   TimeDuration delta = aNow - CorePS::ProcessStartTime();
-  aBuffer->addEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
+  aBuffer->AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
 
   NativeStack nativeStack;
 #if defined(HAVE_NATIVE_UNWIND)
@@ -1231,7 +1231,7 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
                            nativeStack, aBuffer);
 
     if (ActivePS::FeatureLeaf(aLock)) {
-      aBuffer->addEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
+      aBuffer->AddEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
     }
   }
 }
@@ -1264,25 +1264,25 @@ DoPeriodicSample(PSLockRef aLock, ThreadInfo& aThreadInfo,
     aThreadInfo.RacyInfo()->GetPendingMarkers();
   while (pendingMarkersList && pendingMarkersList->peek()) {
     ProfilerMarker* marker = pendingMarkersList->popHead();
-    buffer->addStoredMarker(marker);
-    buffer->addEntry(ProfileBufferEntry::Marker(marker));
+    buffer->AddStoredMarker(marker);
+    buffer->AddEntry(ProfileBufferEntry::Marker(marker));
   }
 
   ThreadResponsiveness* resp = aThreadInfo.GetThreadResponsiveness();
   if (resp && resp->HasData()) {
     TimeDuration delta = resp->GetUnresponsiveDuration(aNow);
-    buffer->addEntry(
+    buffer->AddEntry(
       ProfileBufferEntry::Responsiveness(delta.ToMilliseconds()));
   }
 
   if (aRSSMemory != 0) {
     double rssMemory = static_cast<double>(aRSSMemory);
-    buffer->addEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
+    buffer->AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
   }
 
   if (aUSSMemory != 0) {
     double ussMemory = static_cast<double>(aUSSMemory);
-    buffer->addEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
+    buffer->AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
   }
 }
 
@@ -1800,7 +1800,7 @@ SamplerThread::Run()
         return;
       }
 
-      ActivePS::Buffer(lock)->deleteExpiredStoredMarkers();
+      ActivePS::Buffer(lock)->DeleteExpiredStoredMarkers();
 
       if (!ActivePS::IsPaused(lock)) {
         const CorePS::ThreadVector& liveThreads = CorePS::LiveThreads(lock);

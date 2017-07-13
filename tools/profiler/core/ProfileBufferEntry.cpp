@@ -957,7 +957,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
   MOZ_ASSERT(mEntries[lastSampleStartPos].IsThreadId() &&
              mEntries[lastSampleStartPos].u.mInt == aThreadId);
 
-  addThreadIdEntry(aThreadId, &aLS);
+  AddThreadIdEntry(aThreadId, &aLS);
 
   // Go through the whole entry and duplicate it, until we find the next one.
   for (int readPos = (lastSampleStartPos + 1) % mEntrySize;
@@ -969,7 +969,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
         return true;
       case ProfileBufferEntry::Kind::Time:
         // Copy with new time
-        addEntry(ProfileBufferEntry::Time(
+        AddEntry(ProfileBufferEntry::Time(
           (TimeStamp::Now() - aProcessStartTime).ToMilliseconds()));
         break;
       case ProfileBufferEntry::Kind::Marker:
@@ -977,7 +977,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
         break;
       default:
         // Copy anything else we don't know about.
-        addEntry(mEntries[readPos]);
+        AddEntry(mEntries[readPos]);
         break;
     }
   }
