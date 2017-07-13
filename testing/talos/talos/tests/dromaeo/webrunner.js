@@ -78,26 +78,30 @@
 		testNum[curID]++;
 
 		// Don't execute the test immediately
-		queues[testID].push(function(){
+		queues[testID].push(function() {
 			title = name;
 			var times = [], start, pos = 0, cur;
-			
-			setTimeout(function(){
+
+			setTimeout(function() {
 				// run tests
 				try {
-					if ( doShark(name) ) {
+					if (doShark(name)) {
 						connectShark();
 						startShark();
 					}
-					
-					Profiler.resume();
+				} catch( e ) {
+					alert("FAIL " + name + " " + num + e);
+					return;
+				}
+
+				TalosContentProfiler.resume(name, true).then(() => {
 					start = performance.now();
-					
-					if ( runStyle === "runs/s" ) {
+
+					if (runStyle === "runs/s") {
 						var runs = 0;
-						
+
 						cur = performance.now();
-						
+
 						while ( (cur - start) < 1000 ) {
 							fn();
 							cur = performance.now();
@@ -108,44 +112,46 @@
 						cur = performance.now();
 					}
 
-					if ( doShark(name) ) {
-						stopShark();
-						disconnectShark();
-					}
-					Profiler.pause();
-					
-					// For making Median and Variance
-					if ( runStyle === "runs/s" ) {
-						times.push( (runs * 1000) / (cur - start) );
-					} else {
-						times.push( cur - start );
-					}
-				} catch( e ) {
-					alert("FAIL " + name + " " + num + e);
-					return;
-				}
+					try {
+					  if (doShark(name)) {
+							stopShark();
+							disconnectShark();
+						}
+				  } catch(e) {
+						alert("FAIL " + name + " " + num + e);
+						return;
+				  }
 
-				if ( pos < numTests ) {
-					updateTime();
-					updateTestPos({curID: curID, collection: testNames[curID], version: testVersions[curID]});
-				}
+					TalosContentProfiler.pause(name, true).then(() => {
+						// For making Median and Variance
+						if (runStyle === "runs/s") {
+							times.push((runs * 1000) / (cur - start));
+						} else {
+							times.push(cur - start);
+						}
 
-				if ( ++pos < numTests ) {
-					setTimeout( arguments.callee, 1 );
-				
-				} else {
-					var data = compute( times, numTests );
+				    if (pos < numTests) {
+							updateTime();
+							updateTestPos({curID: curID, collection: testNames[curID], version: testVersions[curID]});
+						}
 
-					data.curID = curID;
-					data.collection = testNames[curID];
-					data.version = testVersions[curID];
-					data.name = title;
-					data.scale = num;
-								
-					logTest(data);
-			
-					dequeue();
-				}
+				    if (++pos < numTests) {
+							setTimeout(arguments.callee, 1);
+						} else {
+							var data = compute(times, numTests);
+
+							data.curID = curID;
+							data.collection = testNames[curID];
+							data.version = testVersions[curID];
+							data.name = title;
+							data.scale = num;
+
+							logTest(data);
+
+							dequeue();
+						}
+					});
+				});
 			}, 1);
 		});
 
