@@ -33,12 +33,6 @@ BufferDecoder::BeginDecoding(TaskQueue* aTaskQueueIdentity)
   mTaskQueueIdentity = aTaskQueueIdentity;
 }
 
-void
-BufferDecoder::NotifyDecodedFrames(const FrameStatisticsData& aStats)
-{
-  // ignore
-}
-
 VideoFrameContainer*
 BufferDecoder::GetVideoFrameContainer()
 {

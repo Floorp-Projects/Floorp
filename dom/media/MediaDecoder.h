@@ -422,13 +422,6 @@ private:
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
 
-  // Increments the parsed and decoded frame counters by the passed in counts.
-  // Can be called on any thread.
-  virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) override
-  {
-    GetFrameStatistics().NotifyDecodedFrames(aStats);
-  }
-
   void UpdateReadyState()
   {
     MOZ_ASSERT(NS_IsMainThread());
