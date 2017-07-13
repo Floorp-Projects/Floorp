@@ -215,7 +215,9 @@ class FilteringMessageManager {
    *     The handler object to unregister.
    */
   removeHandler(messageName, handler) {
-    this.handlers.get(messageName).delete(handler);
+    if (this.handlers.has(messageName)) {
+      this.handlers.get(messageName).delete(handler);
+    }
   }
 }
 
