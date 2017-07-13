@@ -2,34 +2,6 @@
  * Async utility function for ensuring that no unexpected uninterruptible
  * reflows occur during some period of time in a window.
  *
- * The helper works by running a JS function before each event is
- * dispatched that attempts to dirty the layout tree - the idea being
- * that this puts us in the "worst case scenario" so that any JS
- * that attempts to query for layout or style information will cause
- * a reflow to fire. We also dirty the layout tree after each reflow
- * occurs, for good measure.
- *
- * This sounds good in theory, but it's trickier in practice due to
- * various optimizations in our Layout engine. The default function
- * for dirtying the layout tree adds a margin to the first element
- * child it finds in the window to a maximum of 3px, and then goes
- * back to 0px again and loops.
- *
- * This is not sufficient for reflows that we expect to happen within
- * scrollable frames, as Gecko is able to side-step reflowing the
- * contents of a scrollable frame if outer frames are dirtied. Because
- * of this, it's currently possible to override the default node to
- * dirty with one more appropriate for the test.
- *
- * It is also theoretically possible for enough events to fire between
- * reflows such that the before and after state of the layout tree is
- * exactly the same, meaning that no reflow is required, which opens
- * us up to missing expected reflows. This seems to be possible in
- * theory, but hasn't yet shown up in practice - it's just something
- * to be aware of.
- *
- * Bug 1363361 has been filed for a more reliable way of dirtying layout.
- *
  * @param testFn (async function)
  *        The async function that will exercise the browser activity that is
  *        being tested for reflows.
