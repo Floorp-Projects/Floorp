@@ -206,13 +206,6 @@ ReflowInput::ReflowInput(
 
   mParentReflowInput = &aParentReflowInput;
 
-  // If the parent is dirty, then the child is as well.
-  // XXX Are the other cases where the parent reflows a child a second
-  // time, as a resize?
-  if (!mFlags.mSpecialBSizeReflow)
-    mFrame->AddStateBits(mParentReflowInput->mFrame->GetStateBits() &
-                        NS_FRAME_IS_DIRTY);
-
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
@@ -366,6 +359,25 @@ ReflowInput::Init(nsPresContext*     aPresContext,
                         const nsMargin*    aBorder,
                         const nsMargin*    aPadding)
 {
+  if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
+      !mFrame->IsXULBoxFrame()) {
+    // Mark all child frames as dirty.
+    //
+    // We don't do this for XUL boxes because they handle their child
+    // reflow separately.
+    //
+    // FIXME (bug 1376530): It would be better for memory locality if we
+    // did this as we went.  However, we need to be careful not to do
+    // this twice for any particular child if we reflow it twice.  The
+    // easiest way to accomplish that is to do it at the start.
+    for (nsIFrame::ChildListIterator childLists(mFrame);
+         !childLists.IsDone(); childLists.Next()) {
+      for (nsIFrame* childFrame : childLists.CurrentList()) {
+        childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+      }
+    }
+  }
+
   if (AvailableISize() == NS_UNCONSTRAINEDSIZE) {
     // Look up the parent chain for an orthogonal inline limit,
     // and reset AvailableISize() if found.

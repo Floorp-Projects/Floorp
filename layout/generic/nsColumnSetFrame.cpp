@@ -485,6 +485,14 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
   return config;
 }
 
+static void
+MarkPrincipalChildrenDirty(nsIFrame* aFrame)
+{
+  for (nsIFrame* childFrame : aFrame->PrincipalChildList()) {
+    childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+  }
+}
+
 bool
 nsColumnSetFrame::ReflowColumns(ReflowOutput& aDesiredSize,
                                 const ReflowInput& aReflowInput,
@@ -1131,7 +1139,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
     aConfig.mColMaxBSize = nextGuess;
 
     aUnboundedLastColumn = false;
-    AddStateBits(NS_FRAME_IS_DIRTY);
+    MarkPrincipalChildrenDirty(this);
     feasible = ReflowColumns(aDesiredSize, aReflowInput, aStatus, aConfig, false,
                              &aOutMargin, aColData);
 
@@ -1160,7 +1168,7 @@ nsColumnSetFrame::FindBestBalanceBSize(const ReflowInput& aReflowInput,
       // allowed to have arbitrary height here, even though we were balancing.
       // Otherwise we'd have to split, and it's not clear what we'd do with
       // that.
-      AddStateBits(NS_FRAME_IS_DIRTY);
+      MarkPrincipalChildrenDirty(this);
       feasible = ReflowColumns(aDesiredSize, aReflowInput, aStatus, aConfig,
                                availableContentBSize == NS_UNCONSTRAINEDSIZE,
                                &aOutMargin, aColData);
