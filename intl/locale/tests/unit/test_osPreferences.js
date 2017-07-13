@@ -17,6 +17,9 @@ function run_test()
   do_check_true(systemLocale == systemLocales[0],
     "systemLocale matches first entry in systemLocales");
 
+  const rgLocales = osprefs.getRegionalPrefsLocales();
+  do_check_true(Array.isArray(rgLocales), "regionalPrefsLocales returns an array");
+
   const getDateTimePatternTests = [
     [osprefs.dateTimeFormatStyleNone, osprefs.dateTimeFormatStyleNone, ""],
     [osprefs.dateTimeFormatStyleShort, osprefs.dateTimeFormatStyleNone, ""],

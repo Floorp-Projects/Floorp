@@ -23,7 +23,8 @@ interface mozIOSPreferences : nsISupports
   const long dateTimeFormatStyleFull     = 4;
 
   /**
-   * Returns a list of locales used by the host environment.
+   * Returns a list of locales used by the host environment for UI
+   * localization.
    *
    * The result is a sorted list and we expect that the OS attempts to
    * use the top locale from the list for which it has data.
@@ -35,13 +36,27 @@ interface mozIOSPreferences : nsISupports
    *
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    *
-   * The API may return an empty list in case no locale could
-   * be retrieved from the system.
-   *
    * (See OSPreferences.h for a more C++-friendly version of this.)
    */
   void getSystemLocales([optional] out unsigned long aCount,
                         [retval, array, size_is(aCount)] out string aOutArray);
+
+  /**
+   * Returns a list of locales used by host environment for regional
+   * preferences internationalization.
+   *
+   * The result is a sorted list and we expect that the OS attempts to
+   * use the top locale from the list for which it has data.
+   *
+   * Each element of the list is a valid locale ID that can be passed to ICU
+   * and ECMA402 Intl APIs,
+   *
+   * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
+   *
+   * (See OSPreferences.h for a more C++-friendly version of this.)
+   */
+  void getRegionalPrefsLocales([optional] out unsigned long aCount,
+                               [retval, array, size_is(aCount)] out string aOutArray);
 
   /**
    * Returns the best locale that the host environment is localized to.

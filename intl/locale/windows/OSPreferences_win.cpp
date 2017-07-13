@@ -32,6 +32,26 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   return false;
 }
 
+bool
+OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
+{
+  MOZ_ASSERT(aLocaleList.IsEmpty());
+
+  WCHAR locale[LOCALE_NAME_MAX_LENGTH];
+  if (NS_WARN_IF(!LCIDToLocaleName(LOCALE_USER_DEFAULT, locale,
+                                   LOCALE_NAME_MAX_LENGTH, 0))) {
+    return false;
+  }
+
+  NS_LossyConvertUTF16toASCII loc(locale);
+
+  if (CanonicalizeLanguageTag(loc)) {
+    aLocaleList.AppendElement(loc);
+    return true;
+  }
+  return false;
+}
+
 /**
  * Windows distinguishes between System Locale (the locale OS is in), and
  * User Locale (the locale used for regional settings etc.).

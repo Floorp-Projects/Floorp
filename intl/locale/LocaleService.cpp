@@ -224,7 +224,7 @@ LocaleService::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal)
 {
   bool useOSLocales = Preferences::GetBool("intl.regional_prefs.use_os_locales", false);
 
-  if (useOSLocales && OSPreferences::GetInstance()->GetSystemLocales(aRetVal)) {
+  if (useOSLocales && OSPreferences::GetInstance()->GetRegionalPrefsLocales(aRetVal)) {
     return;
   }
 
