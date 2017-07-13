@@ -5,5 +5,5 @@
 
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
        android:insetTop="@dimen/tabs_panel_indicator_selected_padding_top"
-       android:drawable="@color/fennec_ui_orange"
+       android:drawable="@color/tab_item_normal_highlight_bg"
        />

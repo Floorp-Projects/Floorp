@@ -193,6 +193,15 @@
     <color name="url_bar_text_highlight_private">@color/photon_text_selected_highlight_private</color>
     <color name="tab_row_pressed">#4D000000</color>
 
+    <!-- Tab Tray -->
+    <color name="tab_item_normal_bg">#F9F9FA</color>
+    <color name="tab_item_private_bg">#38383D</color>
+    <color name="tab_item_normal_highlight_bg">#0a84ff</color>
+    <color name="tab_item_normal_highlight_bg_80">#CC0a84ff</color>
+    <color name="tab_item_private_highlight_bg">#AC39FF</color>
+    <color name="tab_item_private_highlight_bg_80">#CCAC39FF</color>
+    <color name="tab_item_thumbnail_default_bg">#E4E4E4</color>
+
     <color name="url_bar_urltext">@color/photon_text_placeholder</color>
     <color name="url_bar_urltext_private">@color/photon_text_placeholder_private</color>
     <color name="url_bar_domaintext">@color/photon_url_bar_domain</color>

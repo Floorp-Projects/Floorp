@@ -7,7 +7,7 @@
                                            xmlns:gecko="http://schemas.android.com/apk/res-auto"
                                            style="@style/TabsItem"
                                            android:id="@+id/info"
-                                           android:layout_width="match_parent"
+                                           android:layout_width="wrap_content"
                                            android:layout_height="wrap_content"
                                            android:gravity="center"
                                            android:orientation="vertical">
@@ -55,7 +55,7 @@
     <!-- We set state_private on this View dynamically in TabsGridLayout. -->
     <org.mozilla.gecko.widget.TabThumbnailWrapper
             android:id="@+id/wrapper"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/tab_highlight_stroke_width"
             android:background="@drawable/tab_thumbnail"
