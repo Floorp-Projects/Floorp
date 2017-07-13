@@ -130,9 +130,13 @@ class CodeCoverageMixin(object):
             self.download_file(self.url_to_gcno, file_name=None, parent_dir=self.grcov_dir)
 
             # Run grcov on the zipped .gcno and .gcda files.
-            grcov_command = [os.path.join(self.grcov_dir, 'grcov'), '-t', 'lcov', '-p', \
-                             '/home/worker/workspace/build/src/', \
-                             os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda]
+            grcov_command = [
+                os.path.join(self.grcov_dir, 'grcov'),
+                '-t', 'lcov',
+                '-p', '/home/worker/workspace/build/src/',
+                '--ignore-dir', 'gcc',
+                os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda
+            ]
 
             # 'grcov_output' will be a tuple, the first variable is the path to the lcov output,
             # the other is the path to the standard error output.
