@@ -184,6 +184,7 @@ DevToolsStartup.prototype = {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
 
+    // Only top level Firefox Windows fire a browser-delayed-startup-finished event
     let onWindowReady = window => {
       this.hookWindow(window);
 
@@ -510,6 +511,15 @@ DevToolsStartup.prototype = {
     if (cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_AUTO) {
       cmdLine.preventDefault = true;
     }
+  },
+
+  // Used by tests and the toolbox to register the same key shortcuts in toolboxes loaded
+  // in a window window.
+  get KeyShortcuts() {
+    return KeyShortcuts;
+  },
+  get wrappedJSObject() {
+    return this;
   },
 
   /* eslint-disable max-len */
