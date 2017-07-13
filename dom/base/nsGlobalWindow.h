@@ -474,9 +474,6 @@ public:
 
   static bool IsPrivilegedChromeWindow(JSContext* /* unused */, JSObject* aObj);
 
-  static bool IsShowModalDialogEnabled(JSContext* /* unused */ = nullptr,
-                                       JSObject* /* unused */ = nullptr);
-
   static bool IsRequestIdleCallbackEnabled(JSContext* aCx, JSObject* /* unused */);
 
   bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
@@ -600,9 +597,6 @@ public:
   {
     return mIsChrome;
   }
-
-  using nsPIDOMWindow::IsModalContentWindow;
-  static bool IsModalContentWindow(JSContext* aCx, JSObject* aGlobal);
 
   // GetScrollFrame does not flush.  Callers should do it themselves as needed,
   // depending on which info they actually want off the scrollable frame.
@@ -1011,12 +1005,6 @@ public:
                                                 mozilla::ErrorResult& aRv);
   void PrintOuter(mozilla::ErrorResult& aError);
   void Print(mozilla::ErrorResult& aError);
-  void ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
-                       JS::Handle<JS::Value> aArgument,
-                       const nsAString& aOptions,
-                       JS::MutableHandle<JS::Value> aRetval,
-                       nsIPrincipal& aSubjectPrincipal,
-                       mozilla::ErrorResult& aError);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const mozilla::dom::Sequence<JSObject*>& aTransfer,
@@ -1777,18 +1765,6 @@ protected:
                       nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError);
 
-  already_AddRefed<nsIVariant>
-    ShowModalDialogOuter(const nsAString& aUrl, nsIVariant* aArgument,
-                         const nsAString& aOptions,
-                         nsIPrincipal& aSubjectPrincipal,
-                         mozilla::ErrorResult& aError);
-
-  already_AddRefed<nsIVariant>
-    ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
-                    const nsAString& aOptions,
-                    nsIPrincipal& aSubjectPrincipal,
-                    mozilla::ErrorResult& aError);
-
   // Ask the user if further dialogs should be blocked, if dialogs are currently
   // being abused. This is used in the cases where we have no modifiable UI to
   // show, in that case we show a separate dialog to ask this question.
@@ -1937,9 +1913,6 @@ protected:
 
   // For |window.arguments|, via |openDialog|.
   nsCOMPtr<nsIArray>            mArguments;
-
-  // For |window.dialogArguments|, via |showModalDialog|.
-  RefPtr<DialogValueHolder> mDialogArguments;
 
   // Only used in the outer.
   RefPtr<DialogValueHolder> mReturnValue;
@@ -2179,40 +2152,14 @@ public:
   nsCOMPtr<mozIDOMWindowProxy> mOpenerForInitialContentBrowser;
 };
 
-/*
- * nsGlobalModalWindow inherits from nsGlobalWindow. It is the global
- * object created for a modal content windows only (i.e. not modal
- * chrome dialogs).
- */
-class nsGlobalModalWindow : public nsGlobalWindow,
-                            public nsIDOMModalContentWindow
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMMODALCONTENTWINDOW
-
-  static already_AddRefed<nsGlobalModalWindow> Create(nsGlobalWindow *aOuterWindow);
-
-protected:
-  explicit nsGlobalModalWindow(nsGlobalWindow *aOuterWindow)
-    : nsGlobalWindow(aOuterWindow)
-  {
-    mIsModalContentWindow = true;
-  }
-
-  ~nsGlobalModalWindow() {}
-};
-
 /* factory function */
 inline already_AddRefed<nsGlobalWindow>
-NS_NewScriptGlobalObject(bool aIsChrome, bool aIsModalContentWindow)
+NS_NewScriptGlobalObject(bool aIsChrome)
 {
   RefPtr<nsGlobalWindow> global;
 
   if (aIsChrome) {
     global = nsGlobalChromeWindow::Create(nullptr);
-  } else if (aIsModalContentWindow) {
-    global = nsGlobalModalWindow::Create(nullptr);
   } else {
     global = nsGlobalWindow::Create(nullptr);
   }
