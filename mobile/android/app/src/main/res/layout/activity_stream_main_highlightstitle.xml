@@ -1,29 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content">
-
-    <View
-        android:id="@+id/divider1"
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:padding="4dp"
-        android:background="#ffe0e0e0" />
-
-    <TextView
-        android:id="@+id/title_highlights"
-        android:layout_marginLeft="@dimen/activity_stream_base_margin"
-        android:layout_marginStart="@dimen/activity_stream_base_margin"
-        android:layout_marginTop="@dimen/activity_stream_base_margin"
-        android:layout_marginBottom="@dimen/activity_stream_base_margin"
-        android:layout_marginRight="@dimen/activity_stream_base_margin"
-        android:layout_marginEnd="@dimen/activity_stream_base_margin"
-        android:text="@string/activity_stream_highlights"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:textColor="#FF858585" />
-
-</LinearLayout>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/title_highlights"
+    android:layout_marginLeft="@dimen/activity_stream_base_margin"
+    android:layout_marginStart="@dimen/activity_stream_base_margin"
+    android:layout_marginTop="@dimen/activity_stream_base_margin"
+    android:layout_marginBottom="@dimen/activity_stream_base_margin"
+    android:layout_marginRight="@dimen/activity_stream_base_margin"
+    android:layout_marginEnd="@dimen/activity_stream_base_margin"
+    android:text="@string/activity_stream_highlights"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:textStyle="bold"
+    android:textSize="16sp"
+    android:textColor="#FF858585" />
