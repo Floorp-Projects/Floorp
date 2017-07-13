@@ -950,6 +950,8 @@ class XPCShellTests(object):
         self.env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
         if self.mozInfo.get("topsrcdir") is not None:
             self.env["MOZ_DEVELOPER_REPO_DIR"] = self.mozInfo["topsrcdir"].encode()
+        if self.mozInfo.get("topobjdir") is not None:
+            self.env["MOZ_DEVELOPER_OBJ_DIR"] = self.mozInfo["topobjdir"].encode()
 
         # Disable the content process sandbox for the xpcshell tests. They
         # currently attempt to do things like bind() sockets, which is not
