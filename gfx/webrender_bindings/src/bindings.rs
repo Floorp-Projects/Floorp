@@ -1482,7 +1482,6 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                     font_key,
                     colorf,
                     Au::from_f32_px(glyph_size),
-                    0.0,
                     glyph_options);
 }
 
