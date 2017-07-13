@@ -193,6 +193,7 @@ DevToolsStartup.prototype = {
         // that command only once
         devtoolsFlag = false;
       }
+      JsonView.initialize();
     };
     Services.obs.addObserver(onWindowReady, "browser-delayed-startup-finished");
   },
@@ -525,6 +526,68 @@ DevToolsStartup.prototype = {
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
+};
+
+/**
+ * Singleton object that represents the JSON View in-content tool.
+ * It has the same lifetime as the browser.
+ */
+const JsonView = {
+  initialized: false,
+
+  initialize: function () {
+    // Prevent loading the frame script multiple times if we call this more than once.
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    // Load JSON converter module. This converter is responsible
+    // for handling 'application/json' documents and converting
+    // them into a simple web-app that allows easy inspection
+    // of the JSON data.
+    Services.ppmm.loadProcessScript(
+      "resource://devtools/client/jsonview/converter-observer.js",
+      true);
+
+    // Register for messages coming from the child process.
+    // This is never removed as there is no particular need to unregister
+    // it during shutdown.
+    Services.ppmm.addMessageListener(
+      "devtools:jsonview:save", this.onSave);
+  },
+
+  // Message handlers for events from child processes
+
+  /**
+   * Save JSON to a file needs to be implemented here
+   * in the parent process.
+   */
+  onSave: function (message) {
+    let chrome = Services.wm.getMostRecentWindow("navigator:browser");
+    let browser = chrome.gBrowser.selectedBrowser;
+    if (message.data.url === null) {
+      // Save original contents
+      chrome.saveBrowser(browser, false, message.data.windowID);
+    } else {
+      // The following code emulates saveBrowser, but:
+      // - Uses the given blob URL containing the custom contents to save.
+      // - Obtains the file name from the URL of the document, not the blob.
+      let persistable = browser.QueryInterface(Ci.nsIFrameLoaderOwner)
+        .frameLoader.QueryInterface(Ci.nsIWebBrowserPersistable);
+      persistable.startPersistence(message.data.windowID, {
+        onDocumentReady(doc) {
+          let uri = chrome.makeURI(doc.documentURI, doc.characterSet);
+          let filename = chrome.getDefaultFileName(undefined, uri, doc, null);
+          chrome.internalSave(message.data.url, doc, filename, null, doc.contentType,
+            false, null, null, null, doc, false, null, undefined);
+        },
+        onError(status) {
+          throw new Error("JSON Viewer's onSave failed in startPersistence");
+        }
+      });
+    }
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
