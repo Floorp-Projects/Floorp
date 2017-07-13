@@ -549,7 +549,7 @@ VRSystemManagerOpenVR::Shutdown()
   mVRSystem = nullptr;
 }
 
-void
+bool
 VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 {
   if (!::vr::VR_IsHmdPresent() ||
@@ -563,23 +563,23 @@ VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 
     ::vr::VR_Init(&err, ::vr::EVRApplicationType::VRApplication_Scene);
     if (err) {
-      return;
+      return false;
     }
 
     ::vr::IVRSystem *system = (::vr::IVRSystem *)::vr::VR_GetGenericInterface(::vr::IVRSystem_Version, &err);
     if (err || !system) {
       ::vr::VR_Shutdown();
-      return;
+      return false;
     }
     ::vr::IVRChaperone *chaperone = (::vr::IVRChaperone *)::vr::VR_GetGenericInterface(::vr::IVRChaperone_Version, &err);
     if (err || !chaperone) {
       ::vr::VR_Shutdown();
-      return;
+      return false;
     }
     ::vr::IVRCompositor *compositor = (::vr::IVRCompositor*)::vr::VR_GetGenericInterface(::vr::IVRCompositor_Version, &err);
     if (err || !compositor) {
       ::vr::VR_Shutdown();
-      return;
+      return false;
     }
 
     mVRSystem = system;
@@ -588,7 +588,9 @@ VRSystemManagerOpenVR::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 
   if (mOpenVRHMD) {
     aHMDResult.AppendElement(mOpenVRHMD);
+    return true;
   }
+  return false;
 }
 
 bool

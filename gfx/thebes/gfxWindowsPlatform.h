@@ -174,7 +174,7 @@ public:
     /**
      * Check whether format is supported on a platform or not (if unclear, returns true)
      */
-    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
+    virtual bool IsFontFormatSupported(uint32_t aFormatFlags) override;
 
     virtual void CompositorUpdated() override;
 

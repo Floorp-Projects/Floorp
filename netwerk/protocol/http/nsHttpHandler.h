@@ -135,6 +135,7 @@ public:
     uint32_t       RequestTokenBucketBurst() {return mRequestTokenBucketBurst; }
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
+    bool           IsUrgentStartEnabled() { return mUrgentStartEnabled; }
 
     // TCP Keepalive configuration values.
 
@@ -454,6 +455,8 @@ private:
     uint32_t mThrottleSuspendFor;
     uint32_t mThrottleResumeFor;
     uint32_t mThrottleResumeIn;
+
+    bool mUrgentStartEnabled;
 
     uint8_t  mRedirectionLimit;
 

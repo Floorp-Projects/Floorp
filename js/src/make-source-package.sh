@@ -74,8 +74,9 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/js/moz.configure ${tgtpath}/js
     cp -pPR ${TOPSRCDIR}/js/ffi.configure ${tgtpath}/js
 
-    mkdir -p ${tgtpath}/taskcluster
+    mkdir -p ${tgtpath}/taskcluster/taskgraph
     cp -pPR ${TOPSRCDIR}/taskcluster/moz.build ${tgtpath}/taskcluster/
+    cp -pPR ${TOPSRCDIR}/taskcluster/taskgraph/test ${tgtpath}/taskcluster/taskgraph/
 
     # copy the embedded icu
     ${MKDIR} -p ${tgtpath}/intl

@@ -19,6 +19,9 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.FaviconView;
 import org.mozilla.gecko.widget.FlowLayout;
+import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
+import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
+import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -34,8 +37,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -44,13 +45,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-class SearchEngineRow extends RelativeLayout {
+class SearchEngineRow extends ThemedRelativeLayout {
 
     // Inner views
     private final FlowLayout mSuggestionView;
     private final FaviconView mIconView;
-    private final LinearLayout mUserEnteredView;
-    private final TextView mUserEnteredTextView;
+    private final ThemedLinearLayout mUserEnteredView;
+    private final ThemedTextView mUserEnteredTextView;
 
     // Inflater used when updating from suggestions
     private final LayoutInflater mInflater;
@@ -139,10 +140,10 @@ class SearchEngineRow extends RelativeLayout {
         mIconView = (FaviconView) findViewById(R.id.suggestion_icon);
 
         // User-entered search term is first suggestion
-        mUserEnteredView = (LinearLayout) findViewById(R.id.suggestion_user_entered);
+        mUserEnteredView = (ThemedLinearLayout) findViewById(R.id.suggestion_user_entered);
         mUserEnteredView.setOnClickListener(mClickListener);
 
-        mUserEnteredTextView = (TextView) findViewById(R.id.suggestion_text);
+        mUserEnteredTextView = (ThemedTextView) findViewById(R.id.suggestion_text);
         mSearchHistorySuggestionIcon = DrawableUtil.tintDrawableWithColorRes(getContext(), R.drawable.icon_most_recent_empty, R.color.tabs_tray_icon_grey);
 
         // Suggestion limits
@@ -479,5 +480,21 @@ class SearchEngineRow extends RelativeLayout {
         final View suggestion = mSuggestionView.getChildAt(mSelectedView);
         suggestion.setDuplicateParentStateEnabled(false);
         suggestion.refreshDrawableState();
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+
+        mUserEnteredView.setPrivateMode(isPrivate);
+        mUserEnteredTextView.setPrivateMode(isPrivate);
+
+        final int childCount = mSuggestionView.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            final View child = mSuggestionView.getChildAt(i);
+            if (child instanceof SuggestionItem) {
+                ((SuggestionItem) child).setPrivateMode(isPrivate);
+            }
+        }
     }
 }

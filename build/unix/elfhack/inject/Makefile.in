@@ -10,4 +10,4 @@ $(CSRCS): %.c: ../inject.c
 
 GARBAGE += $(CSRCS)
 
-CFLAGS := -O2 -fno-stack-protector $(filter -m% -I%,$(CFLAGS))
+CFLAGS := -O2 -fno-stack-protector $(filter -m% -I% -idirafter%,$(subst -idirafter ,-idirafter,$(CFLAGS)))

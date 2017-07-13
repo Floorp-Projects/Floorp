@@ -63,6 +63,7 @@ tasks:
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
+        - "index.gecko.v2.{{project}}.pushlog-id.{{pushlog_id}}.decision"
         - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
         - "tc-treeherder-stage.v2.{{project}}.{{revision}}.{{pushlog_id}}"
         - "notify.email.{{owner}}.on-failed"

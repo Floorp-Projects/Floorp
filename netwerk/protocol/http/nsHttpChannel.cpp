@@ -6536,7 +6536,8 @@ nsHttpChannel::BeginConnectContinue()
         if (mClassOfService & nsIClassOfService::Unblocked) {
             mCaps |= NS_HTTP_LOAD_UNBLOCKED;
         }
-        if (mClassOfService & nsIClassOfService::UrgentStart) {
+        if (mClassOfService & nsIClassOfService::UrgentStart &&
+            gHttpHandler->IsUrgentStartEnabled()) {
             mCaps |= NS_HTTP_URGENT_START;
             SetPriority(nsISupportsPriority::PRIORITY_HIGHEST);
         }
