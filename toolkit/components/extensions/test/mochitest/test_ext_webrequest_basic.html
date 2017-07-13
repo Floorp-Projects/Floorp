@@ -31,6 +31,10 @@ add_task(async function setup() {
   let cache = imgTools.getImgCacheForDocument(document);
   cache.clearCache(false);
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["network.http.rcwn.enabled", false]],
+  });
+
   extension = makeExtension();
   await extension.startup();
 });

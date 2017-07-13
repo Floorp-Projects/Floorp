@@ -37,7 +37,7 @@ public:
     return !(mStream && mUnmarshaledProxy);
   }
 
-  bool GetInterface(REFIID aIID, void** aOutInterface) const;
+  bool GetInterface(void** aOutInterface);
   const BYTE* GetBuffer(int& aReturnedBufSize) const;
 
   bool operator==(const ProxyStream& aOther) const

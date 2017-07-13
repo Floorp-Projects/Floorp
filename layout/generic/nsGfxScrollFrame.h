@@ -552,10 +552,10 @@ public:
   // If true, don't try to layout the scrollbars in Reflow().  This can be
   // useful if multiple passes are involved, because we don't want to place the
   // scrollbars at the wrong size.
-  bool mSupppressScrollbarUpdate:1;
-  // If true, we skipped a scrollbar layout due to mSupppressScrollbarUpdate
+  bool mSuppressScrollbarUpdate:1;
+  // If true, we skipped a scrollbar layout due to mSuppressScrollbarUpdate
   // being set at some point.  That means we should lay out scrollbars even if
-  // it might not strictly be needed next time mSupppressScrollbarUpdate is
+  // it might not strictly be needed next time mSuppressScrollbarUpdate is
   // false.
   bool mSkippedScrollbarLayout:1;
 
@@ -1072,13 +1072,13 @@ protected:
                     nsIFrame::ClassID aID,
                     bool aIsRoot);
   void SetSuppressScrollbarUpdate(bool aSuppress) {
-    mHelper.mSupppressScrollbarUpdate = aSuppress;
+    mHelper.mSuppressScrollbarUpdate = aSuppress;
   }
   bool GuessHScrollbarNeeded(const ScrollReflowInput& aState);
   bool GuessVScrollbarNeeded(const ScrollReflowInput& aState);
 
   bool IsScrollbarUpdateSuppressed() const {
-    return mHelper.mSupppressScrollbarUpdate;
+    return mHelper.mSuppressScrollbarUpdate;
   }
 
   // Return whether we're in an "initial" reflow.  Some reflows with

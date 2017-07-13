@@ -517,14 +517,14 @@ Arena::finalize(FreeOp* fop, AllocKind thingKind, size_t thingSize)
     if (MOZ_UNLIKELY(MemProfiler::enabled())) {
         for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
             T* t = i.get<T>();
-            if (t->asTenured().isMarked())
+            if (t->asTenured().isMarkedAny())
                 MemProfiler::MarkTenured(reinterpret_cast<void*>(t));
         }
     }
 
     for (ArenaCellIterUnderFinalize i(this); !i.done(); i.next()) {
         T* t = i.get<T>();
-        if (t->asTenured().isMarked()) {
+        if (t->asTenured().isMarkedAny()) {
             uint_fast16_t thing = uintptr_t(t) & ArenaMask;
             if (thing != firstThingOrSuccessorOfLastMarkedThing) {
                 // We just finished passing over one or more free things,
@@ -2047,8 +2047,8 @@ RelocateArena(Arena* arena, SliceBudget& sliceBudget)
         TenuredCell* src = i.getCell();
         MOZ_ASSERT(RelocationOverlay::isCellForwarded(src));
         TenuredCell* dest = Forwarded(src);
-        MOZ_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
-        MOZ_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
+        MOZ_ASSERT(src->isMarkedBlack() == dest->isMarkedBlack());
+        MOZ_ASSERT(src->isMarkedGray() == dest->isMarkedGray());
     }
 #endif
 }
@@ -3627,7 +3627,7 @@ ArenaLists::checkEmptyArenaList(AllocKind kind)
         for (Arena* current = arenaLists(kind).head(); current; current = current->next) {
             for (ArenaCellIterUnderGC i(current); !i.done(); i.next()) {
                 TenuredCell* t = i.getCell();
-                MOZ_ASSERT(t->isMarked(), "unmarked cells should have been finalized");
+                MOZ_ASSERT(t->isMarkedAny(), "unmarked cells should have been finalized");
                 if (++num_live <= max_cells) {
                     fprintf(stderr, "ERROR: GC found live Cell %p of kind %s at shutdown\n",
                             t, AllocKindToAscii(kind));
@@ -4471,22 +4471,22 @@ js::gc::MarkingValidator::validate()
             uintptr_t thing = arena->thingsStart();
             uintptr_t end = arena->thingsEnd();
             while (thing < end) {
-                Cell* cell = (Cell*)thing;
+                auto cell = reinterpret_cast<TenuredCell*>(thing);
 
                 /*
                  * If a non-incremental GC wouldn't have collected a cell, then
                  * an incremental GC won't collect it.
                  */
-                if (bitmap->isMarked(cell, BLACK))
-                    MOZ_RELEASE_ASSERT(incBitmap->isMarked(cell, BLACK));
+                if (bitmap->isMarkedAny(cell))
+                    MOZ_RELEASE_ASSERT(incBitmap->isMarkedAny(cell));
 
                 /*
                  * If the cycle collector isn't allowed to collect an object
                  * after a non-incremental GC has run, then it isn't allowed to
                  * collected it after an incremental GC.
                  */
-                if (!bitmap->isMarked(cell, GRAY))
-                    MOZ_RELEASE_ASSERT(!incBitmap->isMarked(cell, GRAY));
+                if (!bitmap->isMarkedGray(cell))
+                    MOZ_RELEASE_ASSERT(!incBitmap->isMarkedGray(cell));
 
                 thing += Arena::thingSize(kind);
             }
@@ -4592,7 +4592,7 @@ JSCompartment::findOutgoingEdges(ZoneComponentFinder& finder)
         bool needsEdge = true;
         if (key.is<JSObject*>()) {
             TenuredCell& other = key.as<JSObject*>()->asTenured();
-            needsEdge = !other.isMarked(BLACK) || other.isMarked(GRAY);
+            needsEdge = !other.isMarkedBlack();
         }
         key.applyToWrapped(AddOutgoingEdgeFunctor(needsEdge, finder));
     }
@@ -4841,21 +4841,21 @@ js::DelayCrossCompartmentGrayMarking(JSObject* src)
 }
 
 static void
-MarkIncomingCrossCompartmentPointers(JSRuntime* rt, const uint32_t color)
+MarkIncomingCrossCompartmentPointers(JSRuntime* rt, MarkColor color)
 {
-    MOZ_ASSERT(color == BLACK || color == GRAY);
+    MOZ_ASSERT(color == MarkColor::Black || color == MarkColor::Gray);
 
     static const gcstats::PhaseKind statsPhases[] = {
         gcstats::PhaseKind::SWEEP_MARK_INCOMING_BLACK,
         gcstats::PhaseKind::SWEEP_MARK_INCOMING_GRAY
     };
-    gcstats::AutoPhase ap1(rt->gc.stats(), statsPhases[color]);
+    gcstats::AutoPhase ap1(rt->gc.stats(), statsPhases[unsigned(color)]);
 
-    bool unlinkList = color == GRAY;
+    bool unlinkList = color == MarkColor::Gray;
 
     for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-        MOZ_ASSERT_IF(color == GRAY, c->zone()->isGCMarkingGray());
-        MOZ_ASSERT_IF(color == BLACK, c->zone()->isGCMarkingBlack());
+        MOZ_ASSERT_IF(color == MarkColor::Gray, c->zone()->isGCMarkingGray());
+        MOZ_ASSERT_IF(color == MarkColor::Black, c->zone()->isGCMarkingBlack());
         MOZ_ASSERT_IF(c->gcIncomingGrayPointers, IsGrayListObject(c->gcIncomingGrayPointers));
 
         for (JSObject* src = c->gcIncomingGrayPointers;
@@ -4865,12 +4865,12 @@ MarkIncomingCrossCompartmentPointers(JSRuntime* rt, const uint32_t color)
             JSObject* dst = CrossCompartmentPointerReferent(src);
             MOZ_ASSERT(dst->compartment() == c);
 
-            if (color == GRAY) {
-                if (IsMarkedUnbarriered(rt, &src) && src->asTenured().isMarked(GRAY))
+            if (color == MarkColor::Gray) {
+                if (IsMarkedUnbarriered(rt, &src) && src->asTenured().isMarkedGray())
                     TraceManuallyBarrieredEdge(&rt->gc.marker, &dst,
                                                "cross-compartment gray pointer");
             } else {
-                if (IsMarkedUnbarriered(rt, &src) && !src->asTenured().isMarked(GRAY))
+                if (IsMarkedUnbarriered(rt, &src) && !src->asTenured().isMarkedGray())
                     TraceManuallyBarrieredEdge(&rt->gc.marker, &dst,
                                                "cross-compartment black pointer");
             }
@@ -4976,7 +4976,7 @@ GCRuntime::endMarkingSweepGroup()
      * whose referents are not marked. This can occur when gray cells become
      * black by the action of UnmarkGray.
      */
-    MarkIncomingCrossCompartmentPointers(rt, BLACK);
+    MarkIncomingCrossCompartmentPointers(rt, MarkColor::Black);
     markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
 
     /*
@@ -4992,7 +4992,7 @@ GCRuntime::endMarkingSweepGroup()
     marker.setMarkColorGray();
 
     /* Mark incoming gray pointers from previously swept compartments. */
-    MarkIncomingCrossCompartmentPointers(rt, GRAY);
+    MarkIncomingCrossCompartmentPointers(rt, MarkColor::Gray);
 
     /* Mark gray roots and mark transitively inside the current compartment group. */
     markGrayReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY);
@@ -5516,7 +5516,7 @@ GCRuntime::drainMarkStack(SliceBudget& sliceBudget, gcstats::PhaseKind phase)
 static void
 SweepThing(Shape* shape)
 {
-    if (!shape->isMarked())
+    if (!shape->isMarkedAny())
         shape->sweep();
 }
 
@@ -6905,7 +6905,7 @@ GCRuntime::maybeDoCycleCollection()
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         ++compartmentsTotal;
         GlobalObject* global = c->unsafeUnbarrieredMaybeGlobal();
-        if (global && global->asTenured().isMarked(GRAY))
+        if (global && global->isMarkedGray())
             ++compartmentsGray;
     }
     double grayFraction = double(compartmentsGray) / double(compartmentsTotal);

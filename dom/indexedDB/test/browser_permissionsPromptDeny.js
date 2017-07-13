@@ -90,7 +90,7 @@ add_task(async function test2() {
      "Correct permission set");
   unregisterAllPopupEventHandlers();
   win.gBrowser.removeCurrentTab();
-  win.close();
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test3() {

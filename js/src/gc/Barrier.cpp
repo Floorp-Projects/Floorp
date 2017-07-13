@@ -38,7 +38,7 @@ IsMarkedBlack(JSObject* obj)
         return true;
 
     gc::TenuredCell& tenured = obj->asTenured();
-    if (tenured.isMarked(gc::BLACK) || tenured.arena()->allocatedDuringIncremental)
+    if (tenured.isMarkedAny() || tenured.arena()->allocatedDuringIncremental)
         return true;
 
     return false;

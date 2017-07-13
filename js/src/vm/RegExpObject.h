@@ -48,9 +48,8 @@ namespace frontend { class TokenStream; }
 extern RegExpObject*
 RegExpAlloc(JSContext* cx, NewObjectKind newKind, HandleObject proto = nullptr);
 
-// |regexp| is under-typed because this function's used in the JIT.
 extern JSObject*
-CloneRegExpObject(JSContext* cx, JSObject* regexp);
+CloneRegExpObject(JSContext* cx, Handle<RegExpObject*> regex);
 
 class RegExpObject : public NativeObject
 {
@@ -162,12 +161,12 @@ class RegExpObject : public NativeObject
     static void trace(JSTracer* trc, JSObject* obj);
     void trace(JSTracer* trc);
 
-    void initIgnoringLastIndex(HandleAtom source, RegExpFlag flags);
+    void initIgnoringLastIndex(JSAtom* source, RegExpFlag flags);
 
     // NOTE: This method is *only* safe to call on RegExps that haven't been
     //       exposed to script, because it requires that the "lastIndex"
     //       property be writable.
-    void initAndZeroLastIndex(HandleAtom source, RegExpFlag flags, JSContext* cx);
+    void initAndZeroLastIndex(JSAtom* source, RegExpFlag flags, JSContext* cx);
 
 #ifdef DEBUG
     static MOZ_MUST_USE bool dumpBytecode(JSContext* cx, Handle<RegExpObject*> regexp,

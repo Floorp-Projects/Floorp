@@ -10,41 +10,7 @@
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const getAnchor = function (position) {
-  return `<html:div class="anchor" style="width:10px;
-                                          height: 10px;
-                                          position: absolute;
-                                          background: red;
-                                          ${position}"></html:div>`;
-};
-
-const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
-  <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
-
-  <window class="theme-light"
-          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:html="http://www.w3.org/1999/xhtml"
-          title="Tooltip test">
-    <vbox flex="1" style="position: relative">
-      ${getAnchor("top: 0; left: 0;")}
-      ${getAnchor("top: 0; left: 25px;")}
-      ${getAnchor("top: 0; left: 50px;")}
-      ${getAnchor("top: 0; left: 75px;")}
-      ${getAnchor("bottom: 0; left: 0;")}
-      ${getAnchor("bottom: 0; left: 25px;")}
-      ${getAnchor("bottom: 0; left: 50px;")}
-      ${getAnchor("bottom: 0; left: 75px;")}
-      ${getAnchor("bottom: 0; right: 0;")}
-      ${getAnchor("bottom: 0; right: 25px;")}
-      ${getAnchor("bottom: 0; right: 50px;")}
-      ${getAnchor("bottom: 0; right: 75px;")}
-      ${getAnchor("top: 0; right: 0;")}
-      ${getAnchor("top: 0; right: 25px;")}
-      ${getAnchor("top: 0; right: 50px;")}
-      ${getAnchor("top: 0; right: 75px;")}
-    </vbox>
-  </window>`;
+const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip_arrow-01.xul";
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");

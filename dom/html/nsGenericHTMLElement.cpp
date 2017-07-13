@@ -1684,14 +1684,6 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsIAtom* aBaseAttr, nsIURI** aU
   return true;
 }
 
-/* static */ bool
-nsGenericHTMLElement::IsScrollGrabAllowed(JSContext*, JSObject*)
-{
-  // Only allow scroll grabbing in chrome
-  nsIPrincipal* prin = nsContentUtils::SubjectPrincipal();
-  return nsContentUtils::IsSystemPrincipal(prin);
-}
-
 HTMLMenuElement*
 nsGenericHTMLElement::GetContextMenu() const
 {

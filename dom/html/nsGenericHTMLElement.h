@@ -180,18 +180,6 @@ public:
                             : NS_LITERAL_STRING("false"),
                 aError);
   }
-  bool Scrollgrab() const
-  {
-    return HasFlag(ELEMENT_HAS_SCROLLGRAB);
-  }
-  void SetScrollgrab(bool aValue)
-  {
-    if (aValue) {
-      SetFlags(ELEMENT_HAS_SCROLLGRAB);
-    } else {
-      UnsetFlags(ELEMENT_HAS_SCROLLGRAB);
-    }
-  }
 
   void GetInnerText(mozilla::dom::DOMString& aValue, mozilla::ErrorResult& aError);
   void SetInnerText(const nsAString& aValue);
@@ -886,9 +874,6 @@ public:
     // HasName() is true precisely when name is nonempty.
     return aElement->IsHTMLElement(nsGkAtoms::img) && aElement->HasName();
   }
-
-  static bool
-  IsScrollGrabAllowed(JSContext*, JSObject*);
 
 protected:
   /**

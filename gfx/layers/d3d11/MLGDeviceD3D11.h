@@ -304,7 +304,6 @@ private:
   RefPtr<IDXGIResource> mSyncTexture;
   HANDLE mSyncHandle;
 
-  RefPtr<MLGRenderTarget> mCurrentRT;
   RefPtr<MLGBuffer> mUnitQuadVB;
   RefPtr<MLGBuffer> mUnitTriangleVB;
   RefPtr<ID3D11VertexShader> mCurrentVertexShader;

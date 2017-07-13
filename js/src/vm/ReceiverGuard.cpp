@@ -12,37 +12,6 @@
 
 using namespace js;
 
-ReceiverGuard::ReceiverGuard(JSObject* obj)
-  : group(nullptr), shape(nullptr)
-{
-    if (obj) {
-        if (obj->is<UnboxedPlainObject>()) {
-            group = obj->group();
-            if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
-                shape = expando->lastProperty();
-        } else if (obj->is<UnboxedArrayObject>() || obj->is<TypedObject>()) {
-            group = obj->group();
-        } else {
-            shape = obj->maybeShape();
-        }
-    }
-}
-
-ReceiverGuard::ReceiverGuard(ObjectGroup* group, Shape* shape)
-  : group(group), shape(shape)
-{
-    if (group) {
-        const Class* clasp = group->clasp();
-        if (clasp == &UnboxedPlainObject::class_) {
-            // Keep both group and shape.
-        } else if (clasp == &UnboxedArrayObject::class_ || IsTypedObjectClass(clasp)) {
-            this->shape = nullptr;
-        } else {
-            this->group = nullptr;
-        }
-    }
-}
-
 void
 HeapReceiverGuard::trace(JSTracer* trc)
 {

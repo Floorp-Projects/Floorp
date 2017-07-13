@@ -14,6 +14,9 @@ const GET_CONTENT = "<script>\"GET\";</script>" + FORM;
 const POST_CONTENT = "<script>\"POST\";</script>" + FORM;
 
 add_task(function* () {
+  // Disable rcwn to make cache behavior deterministic.
+  yield pushPref("network.http.rcwn.enabled", false);
+
   let options = {
     source: TAB_URL,
     line: 1

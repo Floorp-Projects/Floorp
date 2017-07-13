@@ -542,7 +542,7 @@ js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp)
     int32_t flags = int32_t(args[1].toNumber());
 
     // Step 7.
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, GenericObject));
+    RegExpObject* regexp = RegExpAlloc(cx, GenericObject);
     if (!regexp)
         return false;
 

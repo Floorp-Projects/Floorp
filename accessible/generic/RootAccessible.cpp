@@ -530,9 +530,7 @@ RootAccessible::HandlePopupShownEvent(Accessible* aAccessible)
     if (!combobox)
       return;
 
-    roles::Role comboboxRole = combobox->Role();
-    if (comboboxRole == roles::COMBOBOX ||
-	comboboxRole == roles::AUTOCOMPLETE) {
+    if (combobox->IsCombobox() || combobox->IsAutoComplete()) {
       RefPtr<AccEvent> event =
         new AccStateChangeEvent(combobox, states::EXPANDED, true);
       if (event)

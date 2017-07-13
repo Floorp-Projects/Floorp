@@ -279,6 +279,11 @@ GetDebuggerMallocSizeOf(JSContext* cx);
 // empty. Instead, we rely on embedders to call back into SpiderMonkey after a
 // GC and notify Debuggers to call their onGarbageCollection hook.
 
+// Determine whether it's necessary to call FireOnGarbageCollectionHook() after
+// a GC. This is only required if there are debuggers with an
+// onGarbageCollection hook observing a global in the set of collected zones.
+JS_PUBLIC_API(bool)
+FireOnGarbageCollectionHookRequired(JSContext* cx);
 
 // For each Debugger that observed a debuggee involved in the given GC event,
 // call its `onGarbageCollection` hook.

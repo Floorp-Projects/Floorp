@@ -512,14 +512,6 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
 }
 
 nsresult
-nsNPAPIPluginInstance::NewStreamFromPlugin(const char* type, const char* target,
-                                           nsIOutputStream* *result)
-{
-  nsPluginStreamToFile* stream = new nsPluginStreamToFile(target, mOwner);
-  return stream->QueryInterface(kIOutputStreamIID, (void**)result);
-}
-
-nsresult
 nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
                                          nsNPAPIPluginStreamListener** listener)
 {

@@ -162,7 +162,7 @@ Zone::sweepBreakpoints(FreeOp* fop)
                 // live.
                 MOZ_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),
                               dbgobj->zone()->isGCSweeping() ||
-                              (!scriptGone && dbgobj->asTenured().isMarked()));
+                              (!scriptGone && dbgobj->asTenured().isMarkedAny()));
 
                 bool dying = scriptGone || IsAboutToBeFinalized(&dbgobj);
                 MOZ_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
