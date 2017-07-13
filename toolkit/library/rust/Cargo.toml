@@ -31,7 +31,6 @@ harness = false
 # Explicitly specify what our profiles use.
 [profile.dev]
 opt-level = 1
-debug = true
 rpath = false
 lto = false
 debug-assertions = true
@@ -40,7 +39,6 @@ panic = "abort"
 
 [profile.release]
 opt-level = 2
-debug = true
 rpath = false
 lto = true
 debug-assertions = false

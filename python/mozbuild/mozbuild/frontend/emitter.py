@@ -470,7 +470,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 if profile_name == 'dev':
                     expected_profile = {
                         'opt-level': 1,
-                        'debug': True,
                         'rpath': False,
                         'lto': False,
                         'debug-assertions': True,
@@ -480,7 +479,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 else:
                     expected_profile = {
                         'opt-level': 2,
-                        'debug': True,
                         'rpath': False,
                         'lto': True,
                         'debug-assertions': False,

@@ -906,10 +906,18 @@ ifdef MOZ_USING_SCCACHE
 sccache_wrap := RUSTC_WRAPPER='$(CCACHE)'
 endif
 
+# XXX hack to work around dsymutil failing on cross-OSX builds (bug 1380381)
+ifeq ($(HOST_OS_ARCH)-$(OS_ARCH),Linux-Darwin)
+rust_debug_info=1
+else
+rust_debug_info=2
+endif
+
 define RUN_CARGO
 env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
+	RUSTFLAGS='-C debuginfo=$(rust_debug_info)' \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
