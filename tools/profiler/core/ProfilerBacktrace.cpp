@@ -33,7 +33,7 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   // JSContext when streaming JitReturnAddress entries, and such entries
   // never appear in synchronous samples.
   StreamSamplesAndMarkers(mName.get(), mThreadId,
-                          mBuffer.get(), aWriter, aProcessStartTime,
+                          *mBuffer.get(), aWriter, aProcessStartTime,
                           /* aSinceTime */ 0, /* aContext */ nullptr,
                           /* aSavedStreamedSamples */ nullptr,
                           /* aSavedStreamedMarkers */ nullptr,
