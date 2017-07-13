@@ -6,7 +6,7 @@
   -->
 <window title="Bug 457632" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <notificationbox id="nb"/>
 
@@ -28,8 +28,14 @@ function completeAnimation(nextTest) {
   setTimeout(completeAnimation, 50, nextTest);
 }
 
-function test() {
+async function test() {
   SimpleTest.waitForExplicitFinish();
+
+  // run these tests with notification animations enabled
+  await SpecialPowers.pushPrefEnv({
+    "set": [["toolkit.cosmeticAnimations.enabled", true]]
+  });
+
   gNotificationBox = document.getElementById("nb");
 
   is(gNotificationBox.allNotifications.length, 0, "There should be no initial notifications");

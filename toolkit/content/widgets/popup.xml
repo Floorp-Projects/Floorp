@@ -402,6 +402,7 @@
     </content>
     <implementation>
       <field name="_fadeTimer">null</field>
+      <field name="_previousAnimateAttrValue">null</field>
       <method name="sizeTo">
         <parameter name="aWidth"/>
         <parameter name="aHeight"/>
@@ -487,6 +488,16 @@
     <handlers>
       <handler event="popupshowing" phase="target">
       <![CDATA[
+        let prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+        let animationsEnabled = prefsService.getBoolPref("toolkit.cosmeticAnimations.enabled");
+        if (!animationsEnabled) {
+          this._previousAnimateAttrValue = this.getAttribute("animate");
+          this.setAttribute("animate", "false");
+        } else {
+          this._previousAnimateAttrValue = null;
+        }
+
         var arrow = document.getAnonymousElementByAttribute(this, "anonid", "arrow");
         arrow.hidden = this.anchorNode == null;
         document.getAnonymousElementByAttribute(this, "anonid", "arrowbox")
@@ -529,7 +540,10 @@
       </handler>
       <handler event="popuphidden" phase="target">
         this.removeAttribute("panelopen");
-        if (this.getAttribute("animate") != "false") {
+
+        if (this._previousAnimateAttrValue == "false") {
+          this.setAttribute("animate", this._previousAnimateAttrValue);
+        } else {
           this.removeAttribute("animate");
         }
       </handler>
