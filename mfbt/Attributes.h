@@ -526,14 +526,6 @@
  * MOZ_NEEDS_MEMMOVABLE_MEMBERS: Applies to class declarations where each member
  *   must be safe to move in memory using memmove().  MOZ_NON_MEMMOVABLE types
  *   used in members of these classes are compile time errors.
- * MOZ_NO_DANGLING_ON_TEMPORARIES: Applies to method declarations which return
- *   a pointer that is freed when the destructor of the class is called. This
- *   prevents these methods from being called on temporaries of the class,
- *   reducing risks of use-after-free.
- *   This attribute cannot be applied to && methods.
- *   In some cases, adding a deleted &&-qualified overload is too restrictive as
- *   this method should still be callable as a non-escaping argument to another
- *   function. This annotation can be used in those cases.
  * MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS: Applies to template class
  *   declarations where an instance of the template should be considered, for
  *   static analysis purposes, to inherit any type annotations (such as
@@ -595,7 +587,6 @@
 #  define MOZ_NON_MEMMOVABLE __attribute__((annotate("moz_non_memmovable")))
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE __attribute__((annotate("moz_needs_memmovable_type")))
 #  define MOZ_NEEDS_MEMMOVABLE_MEMBERS __attribute__((annotate("moz_needs_memmovable_members")))
-#  define MOZ_NO_DANGLING_ON_TEMPORARIES __attribute__((annotate("moz_no_dangling_on_temporaries")))
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS \
     __attribute__((annotate("moz_inherit_type_annotations_from_template_args")))
 #  define MOZ_NON_AUTOABLE __attribute__((annotate("moz_non_autoable")))
@@ -641,7 +632,6 @@
 #  define MOZ_NON_MEMMOVABLE /* nothing */
 #  define MOZ_NEEDS_MEMMOVABLE_TYPE /* nothing */
 #  define MOZ_NEEDS_MEMMOVABLE_MEMBERS /* nothing */
-#  define MOZ_NO_DANGLING_ON_TEMPORARIES /* nothing */
 #  define MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS /* nothing */
 #  define MOZ_INIT_OUTSIDE_CTOR /* nothing */
 #  define MOZ_IS_CLASS_INIT /* nothing */
