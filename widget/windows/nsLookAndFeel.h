@@ -6,6 +6,8 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 
+#include <windows.h>
+
 #include "nsXPLookAndFeel.h"
 #include "gfxFont.h"
 #include "mozilla/RangedArray.h"
