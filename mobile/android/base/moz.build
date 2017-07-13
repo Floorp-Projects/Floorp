@@ -1003,6 +1003,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/themed/ThemedImageButton.java',
     'widget/themed/ThemedImageView.java',
     'widget/themed/ThemedLinearLayout.java',
+    'widget/themed/ThemedListView.java',
     'widget/themed/ThemedRelativeLayout.java',
     'widget/themed/ThemedTextSwitcher.java',
     'widget/themed/ThemedTextView.java',

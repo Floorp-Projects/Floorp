@@ -7,9 +7,8 @@ config = {
     # unit tests don't produce a package. So don't collect package metrics.
     'disable_package_metrics': True,
     'postflight_build_mach_commands': [
-        ['gradle',
-         'app:testOfficialAustralisDebugUnitTest',
-         'app:testOfficialPhotonDebugUnitTest',
+        ['android',
+         'test',
         ],
     ],
     'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.

@@ -3644,7 +3644,7 @@ var gCSSProperties = {
     subproperties: [ "padding-top", "padding-right", "padding-bottom", "padding-left" ],
     initial_values: [ "0", "0px 0 0em", "0% 0px 0em 0pt", "calc(0px) calc(0em) calc(-2px) calc(-1%)" ],
     other_values: [ "3px 0", "2em 4px 2pt", "1em 2em 3px 4px" ],
-    invalid_values: [ "1px calc(nonsense)", "1px red" ],
+    invalid_values: [ "1px calc(nonsense)", "1px red", "-1px" ],
     unbalanced_values: [ "1px calc(" ],
     quirks_values: { "5": "5px", "3px 6px 2 5px": "3px 6px 2px 5px" },
   },

@@ -481,6 +481,9 @@
   <string name="home_remote_tabs_unhide_selected_devices">&home_remote_tabs_unhide_selected_devices;</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
+  <string name="home_pinned_site">&home_pinned_site;</string>
+  <string name="home_unpinned_site">&home_unpinned_site;</string>
+
   <string name="remote_tabs_never_synced">&remote_tabs_never_synced;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>

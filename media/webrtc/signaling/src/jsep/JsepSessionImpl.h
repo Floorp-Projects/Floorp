@@ -129,9 +129,11 @@ public:
   virtual nsresult CreateAnswer(const JsepAnswerOptions& options,
                                 std::string* answer) override;
 
-  virtual std::string GetLocalDescription() const override;
+  virtual std::string GetLocalDescription(JsepDescriptionPendingOrCurrent type)
+                                          const override;
 
-  virtual std::string GetRemoteDescription() const override;
+  virtual std::string GetRemoteDescription(JsepDescriptionPendingOrCurrent type)
+                                           const override;
 
   virtual nsresult SetLocalDescription(JsepSdpType type,
                                        const std::string& sdp) override;
@@ -299,8 +301,10 @@ private:
 
   nsresult EnableOfferMsection(SdpMediaSection* msection);
 
-  mozilla::Sdp* GetParsedLocalDescription() const;
-  mozilla::Sdp* GetParsedRemoteDescription() const;
+  mozilla::Sdp* GetParsedLocalDescription(JsepDescriptionPendingOrCurrent type)
+                                          const;
+  mozilla::Sdp* GetParsedRemoteDescription(JsepDescriptionPendingOrCurrent type)
+                                           const;
   const Sdp* GetAnswer() const;
 
   std::vector<JsepSendingTrack> mLocalTracks;

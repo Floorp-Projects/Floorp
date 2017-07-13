@@ -15,6 +15,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/ChildIterator.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/RestyleManagerInlines.h"
@@ -40,6 +41,7 @@ ServoStyleSet::ServoStyleSet()
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
   , mUserFontSetUpdateGeneration(0)
+  , mUserFontCacheUpdateGeneration(0)
   , mNeedsRestyleAfterEnsureUniqueInner(false)
 {
 }
@@ -298,12 +300,29 @@ ServoStyleSet::PreTraverseSync()
   // it so force computation early.
   mPresContext->Document()->GetDocumentState();
 
-  // Ensure that the @font-face data is not stale
   if (gfxUserFontSet* userFontSet = mPresContext->Document()->GetUserFontSet()) {
+    // Ensure that the @font-face data is not stale
     uint64_t generation = userFontSet->GetGeneration();
     if (generation != mUserFontSetUpdateGeneration) {
       mPresContext->DeviceContext()->UpdateFontCacheUserFonts(userFontSet);
       mUserFontSetUpdateGeneration = generation;
+    }
+
+    // Ensure that the FontFaceSet's cached document principal is up to date.
+    FontFaceSet* fontFaceSet =
+      static_cast<FontFaceSet::UserFontSet*>(userFontSet)->GetFontFaceSet();
+    fontFaceSet->UpdateStandardFontLoadPrincipal();
+    bool principalChanged = fontFaceSet->HasStandardFontLoadPrincipalChanged();
+
+    // Ensure that the user font cache holds up-to-date data on whether
+    // our font set is allowed to re-use fonts from the cache.
+    uint32_t cacheGeneration = gfxUserFontSet::UserFontCache::Generation();
+    if (principalChanged) {
+      gfxUserFontSet::UserFontCache::ClearAllowedFontSets(userFontSet);
+    }
+    if (cacheGeneration != mUserFontCacheUpdateGeneration || principalChanged) {
+      gfxUserFontSet::UserFontCache::UpdateAllowedFontSets(userFontSet);
+      mUserFontCacheUpdateGeneration = cacheGeneration;
     }
   }
 

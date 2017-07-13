@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from ..parameters import Parameters, load_parameters_file, PARAMETER_NAMES
+from taskgraph.parameters import Parameters, load_parameters_file, PARAMETER_NAMES
 from mozunit import main, MockedOpen
 
 

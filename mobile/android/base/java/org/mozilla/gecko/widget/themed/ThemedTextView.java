@@ -62,7 +62,7 @@ public class ThemedTextView extends android.widget.TextView
     }
 
     @Override
-    public void onAttachedToWindow() {
+    protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
         if (autoUpdateTheme)
@@ -70,7 +70,7 @@ public class ThemedTextView extends android.widget.TextView
     }
 
     @Override
-    public void onDetachedFromWindow() {
+    protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
         if (autoUpdateTheme)
