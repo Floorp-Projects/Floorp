@@ -70,17 +70,6 @@ class MachCommands(MachCommandBase):
         and that build may further depend on various toolchains, libraries, etc.
         """
 
-    @SubCommand('taskgraph', 'python-tests',
-                description='Run the taskgraph unit tests')
-    def taskgraph_python_tests(self, **options):
-        import unittest
-        import mozunit
-        suite = unittest.defaultTestLoader.discover('taskgraph.test')
-        runner = mozunit.MozTestRunner(verbosity=2)
-        result = runner.run(suite)
-        if not result.wasSuccessful():
-            sys.exit(1)
-
     @ShowTaskGraphSubCommand('taskgraph', 'tasks',
                              description="Show all tasks in the taskgraph")
     def taskgraph_tasks(self, **options):

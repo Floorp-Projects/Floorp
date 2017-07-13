@@ -24,9 +24,11 @@ public:
    * only be called while IsInRefresh().
    *
    * If too many id's are allocated without being returned then
-   * the refresh driver will suspend until they catch up.
+   * the refresh driver will suspend until they catch up. This
+   * "throttling" behaviour can be skipped by passing aThrottle=false.
+   * Otherwise call sites should generally be passing aThrottle=true.
    */
-  virtual uint64_t GetTransactionId() = 0;
+  virtual uint64_t GetTransactionId(bool aThrottle) = 0;
 
   /**
    * Return the transaction id that for the last non-revoked transaction.

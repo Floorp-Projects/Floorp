@@ -208,7 +208,7 @@ namespace PlacesFolderConversion {
   {
     nsNavBookmarks *bs = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_STATE(bs);
-    int64_t folderID;
+    int64_t folderID = -1;
 
     if (NS_SUCCEEDED(bs->GetPlacesRoot(&folderID)) &&
         aFolderID == folderID) {
@@ -1601,7 +1601,7 @@ void // static
 SetOptionsKeyBool(const nsCString& aValue, nsINavHistoryQueryOptions* aOptions,
                  BoolOptionsSetter setter)
 {
-  bool value;
+  bool value = false;
   nsresult rv = ParseQueryBooleanString(aValue, &value);
   if (NS_SUCCEEDED(rv)) {
     rv = (aOptions->*setter)(value);

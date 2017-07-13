@@ -39,6 +39,7 @@ pref("devtools.netmonitor.har.forceExport", false);
 pref("devtools.netmonitor.har.pageLoadedTimeout", 1500);
 pref("devtools.netmonitor.har.enableAutoExportToFile", false);
 pref("devtools.webconsole.persistlog", false);
+pref("devtools.styleeditor.enabled", true);
 
 const App = require("./src/components/app");
 const store = configureStore();
