@@ -55,8 +55,9 @@ void DanglingOnTemporaryChecker::registerMatchers(MatchFinder *AstMatcher) {
               unless(hasNonTrivialParent(callExpr())),
               // Unless the argument somehow escapes the function scope through
               // globals/statics/black magic.
-              escapesParentFunctionCall(stmt().bind("escapeStatement"),
-                                        decl().bind("escapeDeclaration"))),
+              escapesParentFunctionCall(
+                  stmt().bind("escapeStatement"),
+                  decl().bind("escapeDeclaration"))),
 
           expr().bind("memberCallExpr")),
       this);
@@ -75,15 +76,15 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
                                     "MOZ_NO_DANGLING_ON_TEMPORARIES must "
                                     "return a pointer";
 
-  if (auto InvalidRefQualified =
-          Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodRefQualified")) {
+  if (auto InvalidRefQualified
+        = Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodRefQualified")) {
     diag(InvalidRefQualified->getLocation(), ErrorInvalidRefQualified,
          DiagnosticIDs::Error);
     return;
   }
 
-  if (auto InvalidPointer =
-          Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodPointer")) {
+  if (auto InvalidPointer
+        = Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodPointer")) {
     diag(InvalidPointer->getLocation(), ErrorInvalidPointer,
          DiagnosticIDs::Error);
     return;
@@ -96,16 +97,18 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
   const char *Error = "calling `%0` on a temporary, potentially allowing use "
                       "after free of the raw pointer";
 
-  const char *EscapeStmtNote =
-      "the raw pointer escapes the function scope here";
+  const char *EscapeStmtNote
+      = "the raw pointer escapes the function scope here";
 
   const CXXMemberCallExpr *MemberCall =
       Result.Nodes.getNodeAs<CXXMemberCallExpr>("memberCallExpr");
 
   // If we escaped the a parent function call, we get the statement and the
   // associated declaration.
-  const Stmt *EscapeStmt = Result.Nodes.getNodeAs<Stmt>("escapeStatement");
-  const Decl *EscapeDecl = Result.Nodes.getNodeAs<Decl>("escapeDeclaration");
+  const Stmt *EscapeStmt =
+      Result.Nodes.getNodeAs<Stmt>("escapeStatement");
+  const Decl *EscapeDecl =
+      Result.Nodes.getNodeAs<Decl>("escapeDeclaration");
 
   // Just in case.
   if (!MemberCall) {
@@ -115,7 +118,8 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
   // We emit the error diagnostic indicating that we are calling the method
   // temporary.
   diag(MemberCall->getExprLoc(), Error, DiagnosticIDs::Error)
-      << MemberCall->getMethodDecl()->getName() << MemberCall->getSourceRange();
+      << MemberCall->getMethodDecl()->getName()
+      << MemberCall->getSourceRange();
 
   // If we didn't escape a parent function, we're done.
   if (!EscapeStmt || !EscapeDecl) {
