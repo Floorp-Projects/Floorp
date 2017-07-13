@@ -10510,6 +10510,43 @@ bool
 CSSParserImpl::ParseWebkitGradientPointComponent(nsCSSValue& aComponent,
                                                  bool aIsHorizontal)
 {
+  // Attempts to use ParseVariant to process the token as a number (representing
+  // pixels), or a percent, or a calc expression of purely one or the other of
+  // those (we enforce this pureness via ComputeCalc below). If ParseVariant
+  // fails, the token may instead be a keyword or unknown token, in which case
+  // case we execute the rest of the function.
+  CSSParseResult status = ParseVariant(aComponent, VARIANT_PN | VARIANT_CALC,
+                                       nullptr);
+  if (status == CSSParseResult::Error) {
+    return false;
+  }
+  if (status == CSSParseResult::Ok) {
+    switch (aComponent.GetUnit()) {
+      case eCSSUnit_Number:
+        aComponent.SetFloatValue(aComponent.GetFloatValue(), eCSSUnit_Pixel);
+        return true;
+      case eCSSUnit_Calc: {
+        float result;
+        ReduceCalcOps<float, eCSSUnit_Number> opsNumber;
+        if (ComputeCalc(result, aComponent, opsNumber)) {
+          aComponent.SetFloatValue(result, eCSSUnit_Pixel);
+          return true;
+        }
+        ReduceCalcOps<float, eCSSUnit_Percent> opsPercent;
+        if (ComputeCalc(result, aComponent, opsPercent)) {
+          aComponent.SetPercentValue(result);
+          return true;
+        }
+        return false;
+      }
+      case eCSSUnit_Percent:
+        return true;
+      default:
+        MOZ_ASSERT(false, "ParseVariant returned value with unexpected unit");
+        return false;
+    }
+  }
+
   if (!GetToken(true)) {
     return false;
   }
@@ -10599,17 +10636,27 @@ CSSParserImpl::ParseWebkitGradientPoint(nsCSSValuePair& aPoint)
 bool
 CSSParserImpl::ParseWebkitGradientRadius(float& aRadius)
 {
-  if (!GetToken(true)) {
+  nsCSSValue parseResult;
+  CSSParseResult status = ParseVariant(parseResult,
+                                       VARIANT_NUMBER | VARIANT_CALC, nullptr);
+  if (status != CSSParseResult::Ok) {
     return false;
   }
-
-  if (mToken.mType != eCSSToken_Number) {
-    UngetToken();
-    return false;
+  switch (parseResult.GetUnit()) {
+    case eCSSUnit_Number:
+      aRadius = parseResult.GetFloatValue();
+      return true;
+    case eCSSUnit_Calc: {
+      ReduceCalcOps<float, eCSSUnit_Number> ops;
+      if (!ComputeCalc(aRadius, parseResult, ops)) {
+        MOZ_ASSERT_UNREACHABLE("unexpected unit");
+      }
+      return true;
+    }
+    default:
+      MOZ_ASSERT(false, "ParseVariant returned value with unexpected unit");
+      return false;
   }
-
-  aRadius = mToken.mNumber;
-  return true;
 }
 
 // Parse one of:

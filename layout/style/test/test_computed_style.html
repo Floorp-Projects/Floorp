@@ -339,6 +339,88 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
+(function test_bug_1363349_linear() {
+  const specPrefix = "-webkit-gradient(linear, ";
+  const specSuffix = ", from(blue), to(lime))";
+
+  const expPrefix = "linear-gradient(";
+  const expSuffix = "rgb(0, 0, 255) 0%, rgb(0, 255, 0) 100%)";
+
+  let testcases = [
+    [ "calc(5 + 5) top, calc(10 + 10) top",
+      "to right",
+      "calc(num+num) in position"
+    ],
+    [ "left calc(25% - 10%), right calc(75% + 10%)",
+      "to right bottom",
+      "calc(pct+pct) in position "
+    ]
+  ];
+
+  let p = document.createElement("p");
+  let cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (let test of testcases) {
+    let specifiedStyle = specPrefix + test[0] + specSuffix;
+    let expectedStyle = expPrefix;
+    if (test[1] != "") {
+      expectedStyle += test[1] + ", ";
+    }
+    expectedStyle += expSuffix;
+
+    p.style.backgroundImage = specifiedStyle;
+    is(cs.backgroundImage, expectedStyle,
+       "computed value of -webkit-gradient expression (" + test[2] + ")");
+    p.style.backgroundImage = "";
+  }
+
+  p.remove();
+})();
+
+(function test_bug_1363349_radial() {
+  const specPrefix = "-webkit-gradient(radial, ";
+  const specSuffix = ", from(blue), to(lime))";
+
+  const expPrefix = "radial-gradient(";
+  const expSuffix = "rgb(0, 0, 255) 0%, rgb(0, 255, 0) 100%)";
+
+  let testcases = [
+    [ "1 2, 0, 3 4, calc(1 + 5)",
+      "6px at 3px 4px",
+      "calc(num+num) in radius"
+    ],
+    [ "1 2, calc(1 + 2), 3 4, calc(1 + 5)",
+      "6px at 3px 4px",
+      "calc(num+num) in radius"
+    ],
+    [ "calc(0 + 1) calc(1 + 1), calc(1 + 2), calc(1 + 2) 4, calc(1 + 5)",
+      "6px at 3px 4px",
+      "calc(num+num) in position and radius"
+    ]
+  ];
+
+  let p = document.createElement("p");
+  let cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (let test of testcases) {
+    let specifiedStyle = specPrefix + test[0] + specSuffix;
+    let expectedStyle = expPrefix;
+    if (test[1] != "") {
+      expectedStyle += test[1] + ", ";
+    }
+    expectedStyle += expSuffix;
+
+    p.style.backgroundImage = specifiedStyle;
+    is(cs.backgroundImage, expectedStyle,
+       "computed value of -webkit-gradient expression (" + test[2] + ")");
+    p.style.backgroundImage = "";
+  }
+
+  p.remove();
+})();
+
 (function test_bug_1241623() {
   // Test that -webkit-gradient() styles are approximated the way we expect:
 
