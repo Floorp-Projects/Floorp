@@ -156,12 +156,13 @@ private:
                                                const void *object,
                                                CFDictionaryRef userInfo);
 
-    // search fonts system-wide for a given character, null otherwise
-    gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
-                                     Script aRunScript,
-                                     const gfxFontStyle* aMatchStyle,
-                                     uint32_t& aCmapCount,
-                                     gfxFontFamily** aMatchedFamily) override;
+    // attempt to use platform-specific fallback for the given character
+    // return null if no usable result found
+    gfxFontEntry*
+    PlatformGlobalFontFallback(const uint32_t aCh,
+                               Script aRunScript,
+                               const gfxFontStyle* aMatchStyle,
+                               gfxFontFamily** aMatchedFamily) override;
 
     bool UsesSystemFallback() override { return true; }
 
