@@ -206,7 +206,6 @@ function switchToTab(tab) {
       // once the content is presented to the user.
       yield loadTPSContentScript(browser);
       let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
-      TalosParentProfiler.resume("start (" + start + "): " + browser.currentURI.spec);
 
       // We need to wait for the TabSwitchDone event to make sure
       // that the async tab switcher has shut itself down.
@@ -219,7 +218,6 @@ function switchToTab(tab) {
 
       yield switchDone;
       let finish = yield finishPromise;
-      TalosParentProfiler.mark("end (" + finish + ")");
       return finish - start;
     });
   }
@@ -230,7 +228,6 @@ function switchToTab(tab) {
                       .getInterface(Ci.nsIDOMWindowUtils);
 
     let start = Math.floor(window.performance.timing.navigationStart + window.performance.now());
-    TalosParentProfiler.resume("start (" + start + "): " + browser.currentURI.spec);
 
     // There is no async tab switcher for the single-process case,
     // but tabbrowser.xml will still fire this once the updateCurrentBrowser
@@ -250,7 +247,6 @@ function switchToTab(tab) {
     // id that we got so that we don't get any intermediate MozAfterPaint's
     // that might fire before web content is shown.
     let finish = yield waitForContentPresented(browser, lastTransactionId);
-    TalosParentProfiler.mark("end (" + finish + ")");
     return finish - start;
   });
 }
@@ -420,7 +416,9 @@ function test(window) {
     for (let tab of tabs) {
       gBrowser.moveTabTo(tab, 1);
       yield forceGC(win, tab.linkedBrowser);
+      TalosParentProfiler.resume("start: " + tab.linkedBrowser.currentURI.spec);
       let time = yield switchToTab(tab);
+      TalosParentProfiler.pause("finish: " + tab.linkedBrowser.currentURI.spec);
       dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
       times.push(time);
       yield switchToTab(initialTab);
@@ -443,19 +441,17 @@ function test(window) {
       "data:text/html;charset=utf-8," + encodeURIComponent(output), {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-    let pref = Services.prefs.getBoolPref("browser.tabs.warnOnCloseOtherTabs");
-    if (pref)
-      Services.prefs.setBoolPref("browser.tabs.warnOnCloseOtherTabs", false);
-    win.gBrowser.removeAllTabsBut(resultsTab);
-    if (pref)
-      Services.prefs.setBoolPref("browser.tabs.warnOnCloseOtherTabs", pref);
+
+    win.gBrowser.selectedTab = resultsTab;
 
     remotePage.sendAsyncMessage("tabswitch-test-results", {
       times,
       urls: testURLs,
     });
 
-    win.close();
+    TalosParentProfiler.afterProfileGathered().then(() => {
+      win.close();
+    });
   });
 }
 
