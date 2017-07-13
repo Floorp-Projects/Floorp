@@ -40,6 +40,14 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
   return false;
 }
 
+bool
+OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
+{
+  // For now we're just taking System Locales since we don't know of any better
+  // API for regional prefs.
+  return ReadSystemLocales(aLocaleList);
+}
+
 static CFDateFormatterStyle
 ToCFDateFormatterStyle(OSPreferences::DateTimeFormatStyle aFormatStyle)
 {

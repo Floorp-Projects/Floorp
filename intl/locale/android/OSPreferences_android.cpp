@@ -28,6 +28,14 @@ OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList)
 }
 
 bool
+OSPreferences::ReadRegionalPrefsLocales(nsTArray<nsCString>& aLocaleList)
+{
+  // For now we're just taking System Locales since we don't know of any better
+  // API for regional prefs.
+  return ReadSystemLocales(aLocaleList);
+}
+
+bool
 OSPreferences::ReadDateTimePattern(DateTimeFormatStyle aDateStyle,
                                    DateTimeFormatStyle aTimeStyle,
                                    const nsACString& aLocale, nsAString& aRetVal)
