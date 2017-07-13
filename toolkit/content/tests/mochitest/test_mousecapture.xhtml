@@ -25,6 +25,13 @@ var cachedMouseDown = null;
 var previousWidth = 0, originalWidth = 0;
 var loadInWindow = false;
 
+  // run these tests with animations enabled
+const origAnimationsPrefValue = SpecialPowers.getBoolPref("toolkit.cosmeticAnimations.enabled");
+SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", true);
+SimpleTest.registerCleanupFunction(() => {
+  SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", origAnimationsPrefValue);
+})
+
 function splitterCallback(adjustment) {
   var newWidth = Number($("leftbox").width); // getBoundingClientRect().width;
   var expectedWidth = previousWidth + adjustment;

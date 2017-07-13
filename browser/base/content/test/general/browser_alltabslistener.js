@@ -84,8 +84,16 @@ var gTestPage = "/browser/browser/base/content/test/general/alltabslistener.html
 const kBasePage = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 var gNextTest;
 
+
 function test() {
   waitForExplicitFinish();
+
+  // run these tests with notification animations enabled
+  const origAnimationsPrefValue = Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled");
+  Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("toolkit.cosmeticAnimations.enabled", origAnimationsPrefValue);
+  });
 
   gBackgroundTab = BrowserTestUtils.addTab(gBrowser);
   gForegroundTab = BrowserTestUtils.addTab(gBrowser);

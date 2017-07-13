@@ -172,6 +172,11 @@ function waitForIgnoredReports(reportIDs) {
 let gNotificationBox;
 
 add_task(async function setup() {
+  // run these tests with notification animations enabled
+  await SpecialPowers.pushPrefEnv({
+    "set": [["toolkit.cosmeticAnimations.enabled", true]]
+  });
+
   // Pending crash reports are stored in the UAppData folder,
   // which exists outside of the profile folder. In order to
   // not overwrite / clear pending crash reports for the poor
