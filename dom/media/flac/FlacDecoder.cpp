@@ -26,7 +26,7 @@ FlacDecoder::Clone(MediaDecoderInit& aInit)
 MediaDecoderStateMachine*
 FlacDecoder::CreateStateMachine()
 {
-  MediaFormatReaderInit init(this);
+  MediaFormatReaderInit init;
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   init.mFrameStats = mFrameStats;
   mReader = new MediaFormatReader(init, new FlacDemuxer(mResource));
