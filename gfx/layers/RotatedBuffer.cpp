@@ -401,10 +401,10 @@ ComputeBufferRect(const IntRect& aRequestedRect)
   IntRect rect(aRequestedRect);
   // Set a minimum width to guarantee a minimum size of buffers we
   // allocate (and work around problems on some platforms with smaller
-  // dimensions).  64 is the magic number needed to work around the
-  // rendering glitch, and guarantees image rows can be SIMD'd for
-  // even r5g6b5 surfaces pretty much everywhere.
-  rect.width = std::max(aRequestedRect.width, 64);
+  // dimensions). 64 used to be the magic number needed to work around
+  // a rendering glitch on b2g (see bug 788411). Now that we don't support
+  // this device anymore we should be fine with 8 pixels as the minimum.
+  rect.width = std::max(aRequestedRect.width, 8);
   return rect;
 }
 
