@@ -51,8 +51,9 @@ AST_MATCHER(CXXMethodDecl, noDanglingOnTemporaries) {
 /// The first inner matcher matches the statement where the escape happens, and
 /// the second inner matcher corresponds to the declaration through which it
 /// happens.
-AST_MATCHER_P2(Expr, escapesParentFunctionCall, internal::Matcher<Stmt>,
-               EscapeStmtMatcher, internal::Matcher<Decl>, EscapeDeclMatcher) {
+AST_MATCHER_P2(Expr, escapesParentFunctionCall, \
+               internal::Matcher<Stmt>, EscapeStmtMatcher, \
+               internal::Matcher<Decl>, EscapeDeclMatcher) {
   auto Call =
       IgnoreParentTrivials(Node, &Finder->getASTContext()).get<CallExpr>();
   if (!Call) {
@@ -63,13 +64,13 @@ AST_MATCHER_P2(Expr, escapesParentFunctionCall, internal::Matcher<Stmt>,
   assert(FunctionEscapeData && "escapesFunction() returned NoneType: there is a"
                                " logic bug in the matcher");
 
-  const Stmt *EscapeStmt;
-  const Decl *EscapeDecl;
+  const Stmt* EscapeStmt;
+  const Decl* EscapeDecl;
   std::tie(EscapeStmt, EscapeDecl) = *FunctionEscapeData;
 
-  return EscapeStmt && EscapeDecl &&
-         EscapeStmtMatcher.matches(*EscapeStmt, Finder, Builder) &&
-         EscapeDeclMatcher.matches(*EscapeDecl, Finder, Builder);
+  return EscapeStmt && EscapeDecl
+      && EscapeStmtMatcher.matches(*EscapeStmt, Finder, Builder)
+      && EscapeDeclMatcher.matches(*EscapeDecl, Finder, Builder);
 }
 
 /// This is the custom matcher class corresponding to hasNonTrivialParent.
@@ -104,7 +105,8 @@ const internal::ArgumentAdaptingMatcherFunc<
 /// This matcher will match any function declaration that is marked to prohibit
 /// calling AddRef or Release on its return value.
 AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
-  return hasCustomAnnotation(&Node, "moz_no_addref_release_on_return");
+  return hasCustomAnnotation(&Node,
+                                         "moz_no_addref_release_on_return");
 }
 
 /// This matcher will match all arithmetic binary operators.
@@ -153,7 +155,11 @@ AST_MATCHER(BinaryOperator, isInSystemHeader) {
 /// This matcher will match a list of files.  These files contain
 /// known NaN-testing expressions which we would like to whitelist.
 AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
-  const char *whitelist[] = {"SkScalar.h", "json_writer.cpp", "State.cpp"};
+  const char* whitelist[] = {
+    "SkScalar.h",
+    "json_writer.cpp",
+    "State.cpp"
+  };
 
   SourceLocation Loc = Node.getOperatorLoc();
   auto &SourceManager = Finder->getASTContext().getSourceManager();
@@ -251,8 +257,9 @@ AST_MATCHER(CallExpr, isAssertAssignmentTestFunc) {
   static const std::string AssertName = "MOZ_AssertAssignmentTest";
   const FunctionDecl *Method = Node.getDirectCallee();
 
-  return Method && Method->getDeclName().isIdentifier() &&
-         Method->getName() == AssertName;
+  return Method
+      && Method->getDeclName().isIdentifier()
+      && Method->getName() == AssertName;
 }
 
 AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
@@ -269,13 +276,16 @@ AST_MATCHER(CallExpr, isSnprintfLikeFunc) {
     return false;
   }
 
-  return !isIgnoredPathForSprintfLiteral(
-      &Node, Finder->getASTContext().getSourceManager());
+  return !isIgnoredPathForSprintfLiteral(&Node, Finder->getASTContext().getSourceManager());
 }
 
-AST_MATCHER(CXXRecordDecl, isLambdaDecl) { return Node.isLambda(); }
+AST_MATCHER(CXXRecordDecl, isLambdaDecl) {
+  return Node.isLambda();
+}
 
-AST_MATCHER(QualType, isRefPtr) { return typeIsRefPtr(Node); }
+AST_MATCHER(QualType, isRefPtr) {
+  return typeIsRefPtr(Node);
+}
 
 AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
   const CXXRecordDecl *Decl = Node.getCanonicalDecl();
@@ -286,7 +296,8 @@ AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
 
 AST_MATCHER(CXXMethodDecl, isRequiredBaseMethod) {
   const CXXMethodDecl *Decl = Node.getCanonicalDecl();
-  return Decl && hasCustomAnnotation(Decl, "moz_required_base_method");
+  return Decl
+      && hasCustomAnnotation(Decl, "moz_required_base_method");
 }
 
 AST_MATCHER(CXXMethodDecl, isNonVirtual) {
