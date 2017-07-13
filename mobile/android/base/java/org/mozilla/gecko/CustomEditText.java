@@ -82,7 +82,8 @@ public class CustomEditText extends ThemedEditText {
         super.setPrivateMode(isPrivate);
 
         mHighlightColor = ContextCompat.getColor(getContext(), isPrivate
-                ? R.color.url_bar_text_highlight_pb : R.color.fennec_ui_orange);
+                ? R.color.url_bar_text_highlight_private : R.color.url_bar_text_highlight);
+
         // android:textColorHighlight cannot support a ColorStateList.
         setHighlightColor(mHighlightColor);
     }

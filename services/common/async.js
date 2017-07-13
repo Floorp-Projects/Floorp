@@ -117,7 +117,7 @@ this.Async = {
     // Watch for app-quit notification to stop any sync calls
     Services.obs.addObserver(function onQuitApplication() {
       Services.obs.removeObserver(onQuitApplication, "quit-application");
-      Async.checkAppReady = function() {
+      Async.checkAppReady = Async.promiseYield = function() {
         let exception = Components.Exception("App. Quitting", Cr.NS_ERROR_ABORT);
         exception.appIsShuttingDown = true;
         throw exception;
@@ -231,4 +231,32 @@ this.Async = {
     });
     return cb.wait();
   },
+
+  /**
+   * A "tight loop" of promises can still lock up the browser for some time.
+   * Periodically waiting for a promise returned by this function will solve
+   * that.
+   * You should probably not use this method directly and instead use jankYielder
+   * below.
+   * Some reference here:
+   * - https://gist.github.com/jesstelford/bbb30b983bddaa6e5fef2eb867d37678
+   * - https://bugzilla.mozilla.org/show_bug.cgi?id=1094248
+   */
+  promiseYield() {
+    return new Promise(resolve => {
+      Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    });
+  },
+
+  // Returns a method that yields every X calls.
+  // Common case is calling the returned method every iteration in a loop.
+  jankYielder(yieldEvery = 50) {
+    let iterations = 0;
+    return async () => {
+      Async.checkAppReady(); // Let it throw!
+      if (++iterations % yieldEvery === 0) {
+        await Async.promiseYield();
+      }
+    }
+  }
 };

@@ -1,7 +1,7 @@
 _("Make sure notify sends out the right notifications");
 Cu.import("resource://services-sync/util.js");
 
-function run_test() {
+add_task(async function run_test() {
   let ret, rightThis, didCall;
   let obj = {
     notify: Utils.notify("foo:"),
@@ -10,7 +10,7 @@ function run_test() {
     },
 
     func() {
-      return this.notify("bar", "baz", function() {
+      return this.notify("bar", "baz", async function() {
         rightThis = this == obj;
         didCall = true;
         return 5;
@@ -18,7 +18,7 @@ function run_test() {
     },
 
     throwy() {
-      return this.notify("bad", "one", function() {
+      return this.notify("bad", "one", async function() {
         rightThis = this == obj;
         didCall = true;
         throw 10;
@@ -46,7 +46,7 @@ function run_test() {
   let fs = makeObs("foo:bar:start");
   let ff = makeObs("foo:bar:finish");
   let fe = makeObs("foo:bar:error");
-  ret = obj.func();
+  ret = await obj.func();
   do_check_eq(ret, 5);
   do_check_true(rightThis);
   do_check_true(didCall);
@@ -73,7 +73,7 @@ function run_test() {
   let tf = makeObs("foo:bad:finish");
   let te = makeObs("foo:bad:error");
   try {
-    ret = obj.throwy();
+    ret = await obj.throwy();
     do_throw("throwy should have thrown!");
   } catch (ex) {
     do_check_eq(ex, 10);
@@ -96,4 +96,4 @@ function run_test() {
   do_check_eq(te.subject, 10);
   do_check_eq(te.topic, "foo:bad:error");
   do_check_eq(te.data, "one");
-}
+});

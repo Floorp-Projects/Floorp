@@ -39,23 +39,23 @@ this.RotaryStore = function RotaryStore(name, engine) {
 RotaryStore.prototype = {
   __proto__: Store.prototype,
 
-  create: function create(record) {
+  async create(record) {
     this.items[record.id] = record.denomination;
   },
 
-  remove: function remove(record) {
+  async remove(record) {
     delete this.items[record.id];
   },
 
-  update: function update(record) {
+  async update(record) {
     this.items[record.id] = record.denomination;
   },
 
-  itemExists: function itemExists(id) {
+  async itemExists(id) {
     return (id in this.items);
   },
 
-  createRecord: function createRecord(id, collection) {
+  async createRecord(id, collection) {
     let record = new RotaryRecord(collection, id);
 
     if (!(id in this.items)) {
@@ -67,7 +67,7 @@ RotaryStore.prototype = {
     return record;
   },
 
-  changeItemID: function changeItemID(oldID, newID) {
+  async changeItemID(oldID, newID) {
     if (oldID in this.items) {
       this.items[newID] = this.items[oldID];
     }
@@ -75,7 +75,7 @@ RotaryStore.prototype = {
     delete this.items[oldID];
   },
 
-  getAllIDs: function getAllIDs() {
+  async getAllIDs() {
     let ids = {};
     for (let id in this.items) {
       ids[id] = true;
@@ -83,7 +83,7 @@ RotaryStore.prototype = {
     return ids;
   },
 
-  wipe: function wipe() {
+  async wipe() {
     this.items = {};
   }
 };
@@ -109,8 +109,8 @@ RotaryEngine.prototype = {
   _trackerObj: RotaryTracker,
   _recordObj: RotaryRecord,
 
-  _findDupe: function _findDupe(item) {
-    // This is a semaphore used for testing proper reconciling on dupe
+  async _findDupe(item) {
+    // This is a Special Value® used for testing proper reconciling on dupe
     // detection.
     if (item.id == "DUPE_INCOMING") {
       return "DUPE_LOCAL";

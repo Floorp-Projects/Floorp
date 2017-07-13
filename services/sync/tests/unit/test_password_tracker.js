@@ -7,20 +7,22 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-Service.engineManager.register(PasswordEngine);
-var engine = Service.engineManager.get("passwords");
-var store  = engine._store;
-var tracker = engine._tracker;
+let engine;
+let store;
+let tracker;
 
-// Don't do asynchronous writes.
-tracker.persistChangedIDs = false;
-
-function run_test() {
+add_task(async function setup() {
   initTestLogging("Trace");
-  run_next_test();
-}
+  await Service.engineManager.register(PasswordEngine);
+  engine = Service.engineManager.get("passwords");
+  store  = engine._store;
+  tracker = engine._tracker;
 
-add_test(function test_tracking() {
+  // Don't do asynchronous writes.
+  tracker.persistChangedIDs = false;
+});
+
+add_task(async function test_tracking() {
   let recordNum = 0;
 
   _("Verify we've got an empty tracker to work with.");
@@ -74,15 +76,14 @@ add_test(function test_tracking() {
 
   } finally {
     _("Clean up.");
-    store.wipe();
+    await store.wipe();
     tracker.clearChangedIDs();
     tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
-    run_next_test();
   }
 });
 
-add_test(function test_onWipe() {
+add_task(async function test_onWipe() {
   _("Verify we've got an empty tracker to work with.");
   do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
@@ -90,12 +91,11 @@ add_test(function test_onWipe() {
   try {
     _("A store wipe should increment the score");
     Svc.Obs.notify("weave:engine:start-tracking");
-    store.wipe();
+    await store.wipe();
 
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     tracker.resetScore();
     Svc.Obs.notify("weave:engine:stop-tracking");
-    run_next_test();
   }
 });

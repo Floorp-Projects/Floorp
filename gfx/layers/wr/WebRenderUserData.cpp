@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderUserData.h"
+#include "nsDisplayListInvalidation.h"
 
 namespace mozilla {
 namespace layers {
@@ -35,7 +36,7 @@ WebRenderImageData::~WebRenderImageData()
 }
 
 Maybe<wr::ImageKey>
-WebRenderImageData::UpdateImageKey(ImageContainer* aContainer)
+WebRenderImageData::UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate)
 {
   CreateImageClientIfNeeded();
   CreateExternalImageIfNeeded();
@@ -61,7 +62,7 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer)
   }
 
   // Reuse old key if generation is not updated.
-  if (oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
+  if (!aForceUpdate && oldCounter == imageClient->GetLastUpdateGenerationCounter() && mKey) {
     return mKey;
   }
 
@@ -75,6 +76,13 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer)
   mKey = Some(key);
 
   return mKey;
+}
+
+already_AddRefed<ImageClient>
+WebRenderImageData::GetImageClient()
+{
+  RefPtr<ImageClient> imageClient = mImageClient;
+  return imageClient.forget();
 }
 
 void
@@ -138,6 +146,27 @@ WebRenderImageData::CreateExternalImageIfNeeded()
   if (!mExternalImageId)  {
     mExternalImageId = Some(WrBridge()->AllocExternalImageIdForCompositable(mImageClient));
   }
+}
+
+WebRenderFallbackData::~WebRenderFallbackData()
+{
+}
+
+WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager)
+  : WebRenderImageData(aWRManager)
+{
+}
+
+nsAutoPtr<nsDisplayItemGeometry>
+WebRenderFallbackData::GetGeometry()
+{
+  return mGeometry;
+}
+
+void
+WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
+{
+  mGeometry = aGeometry;
 }
 
 } // namespace layers

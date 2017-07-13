@@ -437,14 +437,14 @@ function makeTestServer(port = -1) {
   return httpServer;
 }
 
-async function addTestEngine(basename, httpServer = undefined) {
+function addTestEngine(basename, httpServer = undefined) {
   httpServer = httpServer || makeTestServer();
   httpServer.registerDirectory("/", do_get_cwd());
   let dataUrl =
     "http://localhost:" + httpServer.identity.primaryPort + "/data/";
 
   do_print("Adding engine: " + basename);
-  return await new Promise(resolve => {
+  return new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
       let engine = subject.QueryInterface(Ci.nsISearchEngine);
       do_print("Observed " + data + " for " + engine.name);

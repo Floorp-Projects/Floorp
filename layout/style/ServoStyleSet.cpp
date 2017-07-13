@@ -1074,11 +1074,14 @@ ServoStyleSet::GetAnimationValues(
 }
 
 already_AddRefed<ServoComputedValues>
-ServoStyleSet::GetBaseComputedValuesForElement(Element* aElement,
-                                               CSSPseudoElementType aPseudoType)
+ServoStyleSet::GetBaseComputedValuesForElement(
+  Element* aElement,
+  CSSPseudoElementType aPseudoType,
+  ServoComputedValuesBorrowed aStyle)
 {
   return Servo_StyleSet_GetBaseComputedValuesForElement(mRawSet.get(),
                                                         aElement,
+                                                        aStyle,
                                                         &Snapshots(),
                                                         aPseudoType).Consume();
 }
