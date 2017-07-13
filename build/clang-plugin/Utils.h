@@ -307,13 +307,6 @@ inline bool typeIsRefPtr(QualType Q) {
   return false;
 }
 
-// This method returns true if the statement is trivial.
-inline bool IsTrivial(const Stmt *s) {
-  return s && (isa<ExprWithCleanups>(s) || isa<MaterializeTemporaryExpr>(s) ||
-               isa<CXXBindTemporaryExpr>(s) || isa<ImplicitCastExpr>(s) ||
-               isa<ParenExpr>(s));
-}
-
 // The method defined in clang for ignoring implicit nodes doesn't work with
 // some AST trees. To get around this, we define our own implementation of
 // IgnoreTrivials.
@@ -336,35 +329,11 @@ inline const Stmt *IgnoreTrivials(const Stmt *s) {
     }
   }
 
-  assert(!IsTrivial(s));
   return s;
 }
 
 inline const Expr *IgnoreTrivials(const Expr *e) {
   return cast<Expr>(IgnoreTrivials(static_cast<const Stmt *>(e)));
-}
-
-// This method is like IgnoreTrivials but ignores the nodes upwards instead of
-// downwards.
-template <typename T>
-inline ast_type_traits::DynTypedNode IgnoreParentTrivials(const T &Node,
-                                                          ASTContext *Context) {
-  // We traverse the AST upward until we encounter a non-trivial node.
-  auto CurrentNode = ast_type_traits::DynTypedNode::create(Node);
-  do {
-    // We get the parents of the current node from the AST context.
-    auto Parents = Context->getParents(CurrentNode);
-
-    // Not implemented yet, but probably not very useful for the cases where
-    // we use this matcher.
-    if (Parents.size() != 1) {
-      break;
-    }
-
-    CurrentNode = Parents[0];
-  } while (IsTrivial(CurrentNode.template get<Stmt>()));
-
-  return CurrentNode;
 }
 
 const FieldDecl *getBaseRefCntMember(QualType T);
