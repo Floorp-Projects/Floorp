@@ -32,32 +32,29 @@ const PROLONGED_ERROR_DURATION =
 const NON_PROLONGED_ERROR_DURATION =
   (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") / 2) * 1000;
 
-Service.engineManager.clear();
-
 function setLastSync(lastSyncValue) {
   Svc.Prefs.set("lastSync", (new Date(Date.now() - lastSyncValue)).toString());
 }
 
-var engineManager = Service.engineManager;
-engineManager.register(EHTestsCommon.CatapultEngine);
-
 // This relies on Service/ErrorHandler being a singleton. Fixing this will take
 // a lot of work.
 var errorHandler = Service.errorHandler;
+let engine;
 
-function run_test() {
+add_task(async function setup() {
   initTestLogging("Trace");
 
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
-  run_next_test();
-}
+  Service.engineManager.clear();
+  await Service.engineManager.register(EHTestsCommon.CatapultEngine);
+  engine = Service.engineManager.get("catapult");
+});
 
-
-function clean() {
-  Service.startOver();
+async function clean() {
+  await Service.startOver();
   Status.resetSync();
   Status.resetBackoff();
   errorHandler.didReportProlongedError = false;
@@ -68,7 +65,7 @@ add_task(async function test_crypto_keys_login_server_maintenance_error() {
 
   Status.resetSync();
   // Test crypto/keys server maintenance errors are not reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.keys"}, server);
@@ -93,7 +90,7 @@ add_task(async function test_crypto_keys_login_server_maintenance_error() {
   let promiseObserved = promiseOneObserver("weave:ui:clear-error");
 
   setLastSync(NON_PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_true(Status.enforceBackoff);
@@ -103,7 +100,7 @@ add_task(async function test_crypto_keys_login_server_maintenance_error() {
   do_check_false(errorHandler.didReportProlongedError);
 
   Svc.Obs.remove("weave:ui:login:error", onUIUpdate);
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -111,11 +108,10 @@ add_task(async function test_sync_prolonged_server_maintenance_error() {
   enableValidationPrefs();
 
   // Test prolonged server maintenance errors are reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   const BACKOFF = 42;
-  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -136,14 +132,14 @@ add_task(async function test_sync_prolonged_server_maintenance_error() {
   do_check_true(errorHandler.didReportProlongedError);
 
   await promiseStopServer(server);
-  clean();
+  await clean();
 });
 
 add_task(async function test_info_collections_login_prolonged_server_maintenance_error() {
   enableValidationPrefs();
 
   // Test info/collections prolonged server maintenance errors are reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.info"}, server);
@@ -160,7 +156,7 @@ add_task(async function test_info_collections_login_prolonged_server_maintenance
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_true(Status.enforceBackoff);
@@ -169,7 +165,7 @@ add_task(async function test_info_collections_login_prolonged_server_maintenance
   do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
   do_check_true(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -177,7 +173,7 @@ add_task(async function test_meta_global_login_prolonged_server_maintenance_erro
   enableValidationPrefs();
 
   // Test meta/global prolonged server maintenance errors are reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.meta"}, server);
@@ -194,7 +190,7 @@ add_task(async function test_meta_global_login_prolonged_server_maintenance_erro
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_true(Status.enforceBackoff);
@@ -203,7 +199,7 @@ add_task(async function test_meta_global_login_prolonged_server_maintenance_erro
   do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
   do_check_true(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -211,7 +207,7 @@ add_task(async function test_download_crypto_keys_login_prolonged_server_mainten
   enableValidationPrefs();
 
   // Test crypto/keys prolonged server maintenance errors are reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.keys"}, server);
@@ -230,7 +226,7 @@ add_task(async function test_download_crypto_keys_login_prolonged_server_mainten
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
   do_check_true(Status.enforceBackoff);
   do_check_eq(backoffInterval, 42);
@@ -238,7 +234,7 @@ add_task(async function test_download_crypto_keys_login_prolonged_server_mainten
   do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
   do_check_true(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -246,7 +242,7 @@ add_task(async function test_upload_crypto_keys_login_prolonged_server_maintenan
   enableValidationPrefs();
 
   // Test crypto/keys prolonged server maintenance errors are reported.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.keys"}, server);
@@ -263,7 +259,7 @@ add_task(async function test_upload_crypto_keys_login_prolonged_server_maintenan
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_true(Status.enforceBackoff);
@@ -272,7 +268,7 @@ add_task(async function test_upload_crypto_keys_login_prolonged_server_maintenan
   do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
   do_check_true(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -281,7 +277,7 @@ add_task(async function test_wipeServer_login_prolonged_server_maintenance_error
 
   // Test that we report prolonged server maintenance errors that occur whilst
   // wiping the server.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.wipe"}, server);
@@ -298,7 +294,7 @@ add_task(async function test_wipeServer_login_prolonged_server_maintenance_error
   do_check_eq(Status.service, STATUS_OK);
 
   setLastSync(PROLONGED_ERROR_DURATION);
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_true(Status.enforceBackoff);
@@ -307,7 +303,7 @@ add_task(async function test_wipeServer_login_prolonged_server_maintenance_error
   do_check_eq(Status.sync, PROLONGED_SYNC_FAILURE);
   do_check_true(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -316,13 +312,12 @@ add_task(async function test_wipeRemote_prolonged_server_maintenance_error() {
 
   // Test that we report prolonged server maintenance errors that occur whilst
   // wiping all remote devices.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   server.registerPathHandler("/1.1/broken.wipe/storage/catapult", EHTestsCommon.service_unavailable);
   await configureIdentity({username: "broken.wipe"}, server);
   EHTestsCommon.generateAndUploadKeys();
 
-  let engine = engineManager.get("catapult");
   engine.exception = null;
   engine.enabled = true;
 
@@ -350,7 +345,7 @@ add_task(async function test_wipeRemote_prolonged_server_maintenance_error() {
   do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
   do_check_true(errorHandler.didReportProlongedError);
   await promiseStopServer(server);
-  clean();
+  await clean();
 });
 
 add_task(async function test_sync_syncAndReportErrors_server_maintenance_error() {
@@ -358,11 +353,10 @@ add_task(async function test_sync_syncAndReportErrors_server_maintenance_error()
 
   // Test server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   const BACKOFF = 42;
-  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -379,7 +373,7 @@ add_task(async function test_sync_syncAndReportErrors_server_maintenance_error()
   do_check_eq(Status.sync, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -388,7 +382,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_server_m
 
   // Test info/collections server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.info"}, server);
@@ -414,7 +408,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_server_m
   do_check_eq(Status.login, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -423,7 +417,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_server_mainte
 
   // Test meta/global server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.meta"}, server);
@@ -449,7 +443,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_server_mainte
   do_check_eq(Status.login, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -458,7 +452,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_serv
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.keys"}, server);
@@ -486,7 +480,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_serv
   do_check_eq(Status.login, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -495,7 +489,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_server
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.keys"}, server);
@@ -521,7 +515,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_server
   do_check_eq(Status.login, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -530,7 +524,7 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_server_mainten
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.wipe"}, server);
@@ -556,7 +550,7 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_server_mainten
   do_check_eq(Status.login, SERVER_MAINTENANCE);
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -565,12 +559,11 @@ add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_e
 
   // Test that we report prolonged server maintenance errors that occur whilst
   // wiping all remote devices.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   await configureIdentity({username: "broken.wipe"}, server);
   EHTestsCommon.generateAndUploadKeys();
 
-  let engine = engineManager.get("catapult");
   engine.exception = null;
   engine.enabled = true;
 
@@ -597,7 +590,7 @@ add_task(async function test_wipeRemote_syncAndReportErrors_server_maintenance_e
   do_check_eq(Svc.Prefs.get("firstSync"), "wipeRemote");
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -606,11 +599,10 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_server_maintenan
 
   // Test prolonged server maintenance errors are
   // reported when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   const BACKOFF = 42;
-  let engine = engineManager.get("catapult");
   engine.enabled = true;
   engine.exception = {status: 503,
                       headers: {"retry-after": BACKOFF}};
@@ -629,7 +621,7 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_server_maintenan
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -638,7 +630,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_prolonge
 
   // Test info/collections server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.info"}, server);
@@ -666,7 +658,7 @@ add_task(async function test_info_collections_login_syncAndReportErrors_prolonge
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -675,7 +667,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_prolonged_ser
 
   // Test meta/global server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.meta"}, server);
@@ -703,7 +695,7 @@ add_task(async function test_meta_global_login_syncAndReportErrors_prolonged_ser
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -712,7 +704,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_prol
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
   await configureIdentity({username: "broken.keys"}, server);
@@ -742,7 +734,7 @@ add_task(async function test_download_crypto_keys_login_syncAndReportErrors_prol
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -751,7 +743,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_prolon
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.keys"}, server);
@@ -779,7 +771,7 @@ add_task(async function test_upload_crypto_keys_login_syncAndReportErrors_prolon
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
@@ -788,7 +780,7 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_prolonged_serv
 
   // Test crypto/keys server maintenance errors are reported
   // when calling syncAndReportErrors.
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
   // Start off with an empty account, do not upload a key.
   await configureIdentity({username: "broken.wipe"}, server);
@@ -816,18 +808,16 @@ add_task(async function test_wipeServer_login_syncAndReportErrors_prolonged_serv
   // didReportProlongedError not touched.
   do_check_false(errorHandler.didReportProlongedError);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });
 
 add_task(async function test_sync_engine_generic_fail() {
   enableValidationPrefs();
 
-  let server = EHTestsCommon.sync_httpd_setup();
-
-let engine = engineManager.get("catapult");
+  let server = await EHTestsCommon.sync_httpd_setup();
   engine.enabled = true;
-  engine.sync = function sync() {
+  engine.sync = async function sync() {
     Svc.Obs.notify("weave:engine:sync:error", ENGINE_UNKNOWN_FAIL, "catapult");
   };
 
@@ -836,36 +826,14 @@ let engine = engineManager.get("catapult");
 
   do_check_eq(Status.engines["catapult"], undefined);
 
-  let deferred = PromiseUtils.defer();
-  // Don't wait for reset-file-log until the sync is underway.
-  // This avoids us catching a delayed notification from an earlier test.
-  Svc.Obs.add("weave:engine:sync:finish", function onEngineFinish() {
-    Svc.Obs.remove("weave:engine:sync:finish", onEngineFinish);
+  let promiseObserved = new Promise(res => {
+    Svc.Obs.add("weave:engine:sync:finish", function onEngineFinish() {
+      Svc.Obs.remove("weave:engine:sync:finish", onEngineFinish);
 
-    log.info("Adding reset-file-log observer.");
-    Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
-      Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
-
-      // Put these checks here, not after sync(), so that we aren't racing the
-      // log handler... which resets everything just a few lines below!
-      _("Status.engines: " + JSON.stringify(Status.engines));
-      do_check_eq(Status.engines["catapult"], ENGINE_UNKNOWN_FAIL);
-      do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
-
-      // Test Error log was written on SYNC_FAILED_PARTIAL.
-      let entries = logsdir.directoryEntries;
-      do_check_true(entries.hasMoreElements());
-      let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-      do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
-
-      clean();
-
-      let syncErrors = sumHistogram("WEAVE_ENGINE_SYNC_ERRORS", { key: "catapult" });
-      do_check_true(syncErrors, 1);
-
-      server.stop(() => {
-        clean();
-        deferred.resolve();
+      log.info("Adding reset-file-log observer.");
+      Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
+        Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
+        res();
       });
     });
   });
@@ -875,10 +843,28 @@ let engine = engineManager.get("catapult");
   deepEqual(ping.status.service, SYNC_FAILED_PARTIAL);
   deepEqual(ping.engines.find(e => e.status).status, ENGINE_UNKNOWN_FAIL);
 
-  await deferred.promise;
+  await promiseObserved;
+
+  _("Status.engines: " + JSON.stringify(Status.engines));
+  do_check_eq(Status.engines["catapult"], ENGINE_UNKNOWN_FAIL);
+  do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
+
+  // Test Error log was written on SYNC_FAILED_PARTIAL.
+  let entries = logsdir.directoryEntries;
+  do_check_true(entries.hasMoreElements());
+  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+
+  await clean();
+
+  let syncErrors = sumHistogram("WEAVE_ENGINE_SYNC_ERRORS", { key: "catapult" });
+  do_check_true(syncErrors, 1);
+
+  await clean();
+  await promiseStopServer(server);
 });
 
-add_test(function test_logs_on_sync_error_despite_shouldReportError() {
+add_task(async function test_logs_on_sync_error_despite_shouldReportError() {
   enableValidationPrefs();
 
   _("Ensure that an error is still logged when weave:service:sync:error " +
@@ -892,22 +878,20 @@ add_test(function test_logs_on_sync_error_despite_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
   do_check_false(errorHandler.shouldReportError());
 
-  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
-    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
-
-    // Test that error log was written.
-    let entries = logsdir.directoryEntries;
-    do_check_true(entries.hasMoreElements());
-    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
-
-    clean();
-    run_next_test();
-  });
+  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
   Svc.Obs.notify("weave:service:sync:error", {});
+  await promiseObserved;
+
+  // Test that error log was written.
+  let entries = logsdir.directoryEntries;
+  do_check_true(entries.hasMoreElements());
+  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+
+  await clean();
 });
 
-add_test(function test_logs_on_login_error_despite_shouldReportError() {
+add_task(async function test_logs_on_login_error_despite_shouldReportError() {
   enableValidationPrefs();
 
   _("Ensure that an error is still logged when weave:service:login:error " +
@@ -921,19 +905,17 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
   do_check_false(errorHandler.shouldReportError());
 
-  Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {
-    Svc.Obs.remove("weave:service:reset-file-log", onResetFileLog);
-
-    // Test that error log was written.
-    let entries = logsdir.directoryEntries;
-    do_check_true(entries.hasMoreElements());
-    let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
-
-    clean();
-    run_next_test();
-  });
+  let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
   Svc.Obs.notify("weave:service:login:error", {});
+  await promiseObserved;
+
+  // Test that error log was written.
+  let entries = logsdir.directoryEntries;
+  do_check_true(entries.hasMoreElements());
+  let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
+  do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
+
+  await clean();
 });
 
 // This test should be the last one since it monkeypatches the engine object
@@ -941,12 +923,11 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
 add_task(async function test_engine_applyFailed() {
   enableValidationPrefs();
 
-  let server = EHTestsCommon.sync_httpd_setup();
+  let server = await EHTestsCommon.sync_httpd_setup();
 
-  let engine = engineManager.get("catapult");
   engine.enabled = true;
   delete engine.exception;
-  engine.sync = function sync() {
+  engine.sync = async function sync() {
     Svc.Obs.notify("weave:engine:sync:applied", {newFailed: 1}, "catapult");
   };
 
@@ -956,7 +937,7 @@ add_task(async function test_engine_applyFailed() {
 
   do_check_eq(Status.engines["catapult"], undefined);
   do_check_true(await EHTestsCommon.setUp(server));
-  Service.sync();
+  await Service.sync();
   await promiseObserved;
 
   do_check_eq(Status.engines["catapult"], ENGINE_APPLY_FAIL);
@@ -968,6 +949,6 @@ add_task(async function test_engine_applyFailed() {
   let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
   do_check_true(logfile.leafName.startsWith("error-sync-"), logfile.leafName);
 
-  clean();
+  await clean();
   await promiseStopServer(server);
 });

@@ -152,10 +152,10 @@ async function getAllTheFiles(extension) {
   let appDirGreD = Services.dirsvc.get("GreD", Ci.nsIFile);
   let appDirXCurProcD = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   if (appDirGreD.contains(appDirXCurProcD)) {
-    return await generateURIsFromDirTree(appDirGreD, [extension]);
+    return generateURIsFromDirTree(appDirGreD, [extension]);
   }
   if (appDirXCurProcD.contains(appDirGreD)) {
-    return await generateURIsFromDirTree(appDirXCurProcD, [extension]);
+    return generateURIsFromDirTree(appDirXCurProcD, [extension]);
   }
   let urisGreD = await generateURIsFromDirTree(appDirGreD, [extension]);
   let urisXCurProcD = await generateURIsFromDirTree(appDirXCurProcD, [extension]);

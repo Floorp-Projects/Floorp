@@ -19,11 +19,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 const minDelayMs = 5 * 60 * 1000;
 const maxDelayMs = 24 * 60 * 60 * 1000;
 const defaultUpdateIntervalMs = 30 * 60 * 1000;
+const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
+
+let loggingEnabled = false;
 
 // Log only if browser.safebrowsing.debug is true
 this.log = function log(...stuff) {
-  var debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
-  if (!debug) {
+  if (!loggingEnabled) {
     return;
   }
 
@@ -41,6 +43,8 @@ this.log = function log(...stuff) {
  * @constructor
  */
 this.PROT_ListManager = function PROT_ListManager() {
+  loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
+
   log("Initializing list manager");
   this.updateInterval = defaultUpdateIntervalMs;
 
@@ -62,6 +66,7 @@ this.PROT_ListManager = function PROT_ListManager() {
                    .getService(Ci.nsIUrlClassifierDBService);
 
   Services.obs.addObserver(this, "quit-application");
+  Services.prefs.addObserver(PREF_DEBUG_ENABLED, this);
 }
 
 /**
@@ -100,17 +105,31 @@ PROT_ListManager.prototype.registerTable = function(tableName,
 }
 
 /**
- * quit-application callback
  * Delete all of our data tables which seem to leak otherwise.
+ * Remove observers
  */
+PROT_ListManager.prototype.shutdown_ = function() {
+  this.stopUpdateCheckers();
+  for (var name in this.tablesData) {
+    delete this.tablesData[name];
+  }
+  Services.obs.removeObserver(this, "quit-application");
+  Services.prefs.removeObserver(PREF_DEBUG_ENABLED, this);
+}
 
+/**
+ * xpcom-shutdown callback
+ */
 PROT_ListManager.prototype.observe = function(aSubject, aTopic, aData) {
-  if (aTopic == "quit-application") {
-    this.stopUpdateCheckers();
-    for (var name in this.tablesData) {
-      delete this.tablesData[name];
+  switch (aTopic) {
+  case "quit-application":
+    this.shutdown_();
+    break;
+  case "nsPref:changed":
+    if (aData == PREF_DEBUG_ENABLED) {
+      loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
     }
-    Services.obs.removeObserver(this, "quit-application");
+    break;
   }
 }
 

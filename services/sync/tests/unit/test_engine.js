@@ -14,7 +14,7 @@ function SteamStore(engine) {
 SteamStore.prototype = {
   __proto__: Store.prototype,
 
-  wipe() {
+  async wipe() {
     this.wasWiped = true;
   }
 };
@@ -37,11 +37,11 @@ SteamEngine.prototype = {
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
 
-  _resetClient() {
+  async _resetClient() {
     this.wasReset = true;
   },
 
-  _sync() {
+  async _sync() {
     this.wasSynced = true;
   }
 };
@@ -105,7 +105,7 @@ add_task(async function test_resetClient() {
   let engine = new SteamEngine("Steam", Service);
   do_check_false(engine.wasReset);
 
-  engine.resetClient();
+  await engine.resetClient();
   do_check_true(engine.wasReset);
   do_check_eq(engineObserver.topics[0], "weave:engine:reset-client:start");
   do_check_eq(engineObserver.topics[1], "weave:engine:reset-client:finish");
@@ -140,7 +140,7 @@ add_task(async function test_wipeClient() {
   do_check_true(engine._tracker.addChangedID("a-changed-id"));
   do_check_true("a-changed-id" in engine._tracker.changedIDs);
 
-  engine.wipeClient();
+  await engine.wipeClient();
   do_check_true(engine.wasReset);
   do_check_true(engine._store.wasWiped);
   do_check_eq(JSON.stringify(engine._tracker.changedIDs), "{}");
@@ -173,14 +173,14 @@ add_task(async function test_sync() {
     _("Engine.sync doesn't call _sync if it's not enabled");
     do_check_false(engine.enabled);
     do_check_false(engine.wasSynced);
-    engine.sync();
+    await engine.sync();
 
     do_check_false(engine.wasSynced);
 
     _("Engine.sync calls _sync if it's enabled");
     engine.enabled = true;
 
-    engine.sync();
+    await engine.sync();
     do_check_true(engine.wasSynced);
     do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");
     do_check_eq(engineObserver.topics[1], "weave:engine:sync:finish");

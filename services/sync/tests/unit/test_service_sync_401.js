@@ -47,7 +47,7 @@ add_task(async function run_test() {
     });
 
     _("Initial state: We're successfully logged in.");
-    Service.login();
+    await Service.login();
     do_check_true(Service.isLoggedIn);
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
 
@@ -56,7 +56,7 @@ add_task(async function run_test() {
     Service.identity.unlockAndVerifyAuthState = () => Promise.resolve(LOGIN_FAILED_LOGIN_REJECTED);
 
     _("Let's try to sync.");
-    Service.sync();
+    await Service.sync();
 
     _("Verify that sync() threw an exception.");
     do_check_true(threw);
@@ -71,7 +71,7 @@ add_task(async function run_test() {
 
     _("Our next sync will fail appropriately.");
     try {
-      Service.sync();
+      await Service.sync();
     } catch (ex) {
     }
     do_check_eq(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);

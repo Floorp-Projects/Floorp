@@ -243,6 +243,24 @@ nsSimpleURI::GetSpecIgnoringRef(nsACString &result)
 }
 
 NS_IMETHODIMP
+nsSimpleURI::GetDisplaySpec(nsACString &aUnicodeSpec)
+{
+    return GetSpec(aUnicodeSpec);
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetDisplayHostPort(nsACString &aUnicodeHostPort)
+{
+    return GetHostPort(aUnicodeHostPort);
+}
+
+NS_IMETHODIMP
+nsSimpleURI::GetDisplayHost(nsACString &aUnicodeHost)
+{
+    return GetHost(aUnicodeHost);
+}
+
+NS_IMETHODIMP
 nsSimpleURI::GetHasRef(bool *result)
 {
     *result = mIsRefValid;

@@ -7,10 +7,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-common/observers.js");
 
-function run_test() {
-  run_next_test();
-}
-
 function PetrolEngine() {}
 PetrolEngine.prototype.name = "petrol";
 
@@ -46,7 +42,7 @@ function getEngineManager() {
  * declined, and a notification is sent for our locally disabled-but-not-
  * declined engines.
  */
-add_test(function testOldMeta() {
+add_task(async function testOldMeta() {
   let meta = {
     payload: {
       engines: {
@@ -63,7 +59,7 @@ add_test(function testOldMeta() {
 
   // Update enabled from meta/global.
   let engineSync = new EngineSynchronizer(Service);
-  engineSync._updateEnabledFromMeta(meta, 3, manager);
+  await engineSync._updateEnabledFromMeta(meta, 3, manager);
 
   Assert.ok(manager._engines["petrol"].enabled, "'petrol' locally enabled.");
   Assert.ok(manager._engines["diesel"].enabled, "'diesel' locally enabled.");
@@ -96,7 +92,7 @@ add_test(function testOldMeta() {
  * record is marked as changed and includes all declined
  * engines.
  */
-add_test(function testDeclinedMeta() {
+add_task(async function testDeclinedMeta() {
   let meta = {
     payload: {
       engines: {
@@ -142,8 +138,6 @@ add_test(function testDeclinedMeta() {
     Assert.ok(0 <= meta.payload.declined.indexOf("nonexistent"), "meta/global's declined contains 'nonexistent'.");
     Assert.ok(0 <= meta.payload.declined.indexOf("localdecline"), "meta/global's declined contains 'localdecline'.");
     Assert.strictEqual(true, meta.changed, "meta/global was changed.");
-
-    run_next_test();
   }
 
   Observers.add("weave:engines:notdeclined", onNotDeclined);

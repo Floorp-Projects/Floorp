@@ -282,7 +282,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == anim-change-display-none-for-ancestor-elem.html lime.html
 == anim-change-display-none-for-target-elem.html lime.html
 == anim-change-display-none-for-dynamically-appended-elem.html lime.html
-fails-if(styloVsGecko||stylo) == anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
+== anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
 
 pref(layout.css.clip-path-shapes.enabled,true) fuzzy(63,146) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
 

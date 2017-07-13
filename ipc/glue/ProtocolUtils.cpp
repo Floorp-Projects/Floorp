@@ -76,6 +76,7 @@ public:
                 NestedLevel aNestedLevel = NOT_NESTED)
     : IPC::Message(MSG_ROUTING_CONTROL, // these only go to top-level actors
                    CHANNEL_OPENED_MESSAGE_TYPE,
+                   0,
                    aNestedLevel)
   {
     IPC::WriteParam(this, aDescriptor);

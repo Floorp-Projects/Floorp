@@ -11,6 +11,7 @@ transforms:
 
 jobs-from:
     - python-tests.yml
+    - mocha.yml
     - mozlint.yml
     - doc.yml
     - webidl.yml

@@ -153,43 +153,42 @@ AddonUtilsInternal.prototype = {
   },
 
   /**
-   * Uninstalls the Addon instance and invoke a callback when it is done.
+   * Uninstalls the addon instance.
    *
    * @param addon
    *        Addon instance to uninstall.
-   * @param cb
-   *        Function to be invoked when uninstall has finished. It receives a
-   *        truthy value signifying error and the add-on which was uninstalled.
    */
-  uninstallAddon: function uninstallAddon(addon, cb) {
-    let listener = {
-      onUninstalling(uninstalling, needsRestart) {
-        if (addon.id != uninstalling.id) {
-          return;
-        }
+  async uninstallAddon(addon) {
+    return new Promise(res => {
+      let listener = {
+        onUninstalling(uninstalling, needsRestart) {
+          if (addon.id != uninstalling.id) {
+            return;
+          }
 
-        // We assume restartless add-ons will send the onUninstalled event
-        // soon.
-        if (!needsRestart) {
-          return;
-        }
+          // We assume restartless add-ons will send the onUninstalled event
+          // soon.
+          if (!needsRestart) {
+            return;
+          }
 
-        // For non-restartless add-ons, we issue the callback on uninstalling
-        // because we will likely never see the uninstalled event.
-        AddonManager.removeAddonListener(listener);
-        cb(null, addon);
-      },
-      onUninstalled(uninstalled) {
-        if (addon.id != uninstalled.id) {
-          return;
-        }
+          // For non-restartless add-ons, we issue the callback on uninstalling
+          // because we will likely never see the uninstalled event.
+          AddonManager.removeAddonListener(listener);
+          res(addon);
+        },
+        onUninstalled(uninstalled) {
+          if (addon.id != uninstalled.id) {
+            return;
+          }
 
-        AddonManager.removeAddonListener(listener);
-        cb(null, addon);
-      }
-    };
-    AddonManager.addAddonListener(listener);
-    addon.uninstall();
+          AddonManager.removeAddonListener(listener);
+          res(addon);
+        }
+      };
+      AddonManager.addAddonListener(listener);
+      addon.uninstall();
+    });
   },
 
   /**

@@ -13,36 +13,54 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-var prefs = new Preferences();
+const prefs = new Preferences();
 prefs.set("extensions.getAddons.get.url",
           "http://localhost:8888/search/guid:%IDS%");
 prefs.set("extensions.install.requireSecureOrigin", false);
 
-loadAddonTestFunctions();
-startupManager();
+let engine;
+let reconciler;
+let tracker;
 
-var engineManager = Service.engineManager;
-
-engineManager.register(AddonsEngine);
-var engine = engineManager.get("addons");
-var reconciler = engine._reconciler;
-var tracker = engine._tracker;
-
-function advance_test() {
+async function resetReconciler() {
   reconciler._addons = {};
   reconciler._changes = [];
 
-  let cb = Async.makeSpinningCallback();
-  reconciler.saveState(null, cb);
-  cb.wait();
+  await reconciler.saveState();
 
   tracker.clearChangedIDs();
-  run_next_test();
 }
+
+add_task(async function setup() {
+  initTestLogging("Trace");
+  Log.repository.getLogger("Sync.Engine.Addons").level =
+    Log.Level.Trace;
+  Log.repository.getLogger("Sync.Store.Addons").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Tracker.Addons").level =
+    Log.Level.Trace;
+  Log.repository.getLogger("Sync.AddonsRepository").level =
+    Log.Level.Trace;
+
+  loadAddonTestFunctions();
+  startupManager();
+
+  await Service.engineManager.register(AddonsEngine);
+  engine = Service.engineManager.get("addons");
+  reconciler = engine._reconciler;
+  tracker = engine._tracker;
+
+  reconciler.startListening();
+
+  // Don't flush to disk in the middle of an event listener!
+  // This causes test hangs on WinXP.
+  reconciler._shouldPersist = false;
+
+  await resetReconciler();
+});
 
 // This is a basic sanity test for the unit test itself. If this breaks, the
 // add-ons API likely changed upstream.
-add_test(function test_addon_install() {
+add_task(async function test_addon_install() {
   _("Ensure basic add-on APIs work as expected.");
 
   let install = getAddonInstall("test_bootstrap1_1");
@@ -50,15 +68,15 @@ add_test(function test_addon_install() {
   do_check_eq(install.type, "extension");
   do_check_eq(install.name, "Test Bootstrap 1");
 
-  advance_test();
+  await resetReconciler();
 });
 
-add_test(function test_find_dupe() {
+add_task(async function test_find_dupe() {
   _("Ensure the _findDupe() implementation is sane.");
 
   // This gets invoked at the top of sync, which is bypassed by this
   // test, so we do it manually.
-  engine._refreshReconcilerState();
+  await engine._refreshReconcilerState();
 
   let addon = installAddon("test_bootstrap1_1");
 
@@ -70,22 +88,22 @@ add_test(function test_find_dupe() {
     source:        "amo"
   };
 
-  let dupe = engine._findDupe(record);
+  let dupe = await engine._findDupe(record);
   do_check_eq(addon.syncGUID, dupe);
 
   record.id = addon.syncGUID;
-  dupe = engine._findDupe(record);
+  dupe = await engine._findDupe(record);
   do_check_eq(null, dupe);
 
   uninstallAddon(addon);
-  advance_test();
+  await resetReconciler();
 });
 
-add_test(function test_get_changed_ids() {
+add_task(async function test_get_changed_ids() {
   _("Ensure getChangedIDs() has the appropriate behavior.");
 
   _("Ensure getChangedIDs() returns an empty object by default.");
-  let changes = engine.getChangedIDs();
+  let changes = await engine.getChangedIDs();
   do_check_eq("object", typeof(changes));
   do_check_eq(0, Object.keys(changes).length);
 
@@ -95,7 +113,7 @@ add_test(function test_get_changed_ids() {
   let guid1 = Utils.makeGUID();
   tracker.addChangedID(guid1, changeTime);
 
-  changes = engine.getChangedIDs();
+  changes = await engine.getChangedIDs();
   do_check_eq("object", typeof(changes));
   do_check_eq(1, Object.keys(changes).length);
   do_check_true(guid1 in changes);
@@ -106,7 +124,7 @@ add_test(function test_get_changed_ids() {
   _("Ensure reconciler changes are populated.");
   let addon = installAddon("test_bootstrap1_1");
   tracker.clearChangedIDs(); // Just in case.
-  changes = engine.getChangedIDs();
+  changes = await engine.getChangedIDs();
   do_check_eq("object", typeof(changes));
   do_check_eq(1, Object.keys(changes).length);
   do_check_true(addon.syncGUID in changes);
@@ -116,7 +134,7 @@ add_test(function test_get_changed_ids() {
   let oldTime = changes[addon.syncGUID];
   let guid2 = addon.syncGUID;
   uninstallAddon(addon);
-  changes = engine.getChangedIDs();
+  changes = await engine.getChangedIDs();
   do_check_eq(1, Object.keys(changes).length);
   do_check_true(guid2 in changes);
   do_check_true(changes[guid2] > oldTime);
@@ -137,11 +155,11 @@ add_test(function test_get_changed_ids() {
   reconciler.addons["DUMMY"] = record;
   reconciler._addChange(record.modified, CHANGE_INSTALLED, record);
 
-  changes = engine.getChangedIDs();
+  changes = await engine.getChangedIDs();
   _(JSON.stringify(changes));
   do_check_eq(0, Object.keys(changes).length);
 
-  advance_test();
+  await resetReconciler();
 });
 
 add_task(async function test_disabled_install_semantics() {
@@ -194,7 +212,7 @@ add_task(async function test_disabled_install_semantics() {
   server.insertWBO(USER, "addons", wbo);
 
   _("Performing sync of add-ons engine.");
-  engine._sync();
+  await engine._sync();
 
   // At this point the non-restartless extension should be staged for install.
 
@@ -210,7 +228,7 @@ add_task(async function test_disabled_install_semantics() {
   // are sane.
   restartManager();
 
-  engine._sync();
+  await engine._sync();
 
   // The client should not upload a new record. The old record should be
   // retained and unmodified.
@@ -222,7 +240,7 @@ add_task(async function test_disabled_install_semantics() {
   do_check_eq(ADDON_ID, payload.addonID);
   do_check_false(payload.enabled);
 
-  promiseStopServer(server);
+  await promiseStopServer(server);
 });
 
 add_test(function cleanup() {
@@ -230,22 +248,3 @@ add_test(function cleanup() {
   reconciler.stopListening();
   run_next_test();
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Addons").level =
-    Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Addons").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Tracker.Addons").level =
-    Log.Level.Trace;
-  Log.repository.getLogger("Sync.AddonsRepository").level =
-    Log.Level.Trace;
-
-  reconciler.startListening();
-
-  // Don't flush to disk in the middle of an event listener!
-  // This causes test hangs on WinXP.
-  reconciler._shouldPersist = false;
-
-  advance_test();
-}

@@ -72,7 +72,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
       return nullptr;                                               \
     }                                                               \
     /* Have the rulenode deal */                                    \
-    AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                    \
+    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);             \
     const nsStyle##name_ * newData =                                \
       gecko->RuleNode()->                                           \
         GetStyle##name_<aComputeData>(this->AsGecko(), mBits);      \
@@ -142,7 +142,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
         return cachedData;                                                    \
     }                                                                         \
     /* Have the rulenode deal */                                              \
-    AUTO_CHECK_DEPENDENCY(eStyleStruct_##name_);                              \
+    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                              \
     return gecko->RuleNode()->GetStyle##name_<aComputeData>(this->AsGecko()); \
   }                                                                           \
   auto servo = AsServo();                                                     \

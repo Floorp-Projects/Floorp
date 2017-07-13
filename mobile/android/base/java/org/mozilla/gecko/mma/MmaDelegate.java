@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -20,10 +21,14 @@ import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.switchboard.SwitchBoard;
+import org.mozilla.gecko.util.ContextUtils;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MmaDelegate {
@@ -38,6 +43,12 @@ public class MmaDelegate {
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
     public static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     public static final String NEW_TAB = "E_Opened_New_Tab";
+
+
+    public static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";
+    public static final String USER_ATT_KLAR_INSTALLED = "Klar Installed";
+    public static final String USER_ATT_DEFAULT_BROWSER = "Default Browser";
+    public static final String USER_ATT_SIGNED_IN = "Signed In Sync";
 
 
     private static final String TAG = "MmaDelegate";
@@ -65,7 +76,14 @@ public class MmaDelegate {
                 if (pref.equals(KEY_PREF_BOOLEAN_MMA_ENABLED)) {
                     Log.d(TAG, "prefValue() called with: pref = [" + pref + "], value = [" + value + "]");
                     if (value) {
-                        mmaHelper.init(activity);
+
+                        // Since user attributes are gathered in Fennec, not in MMA implementation,
+                        // we gather the information here then pass to mmaHelper.init()
+                        // Note that generateUserAttribute always return a non null HashMap.
+                        Map<String, Object> attributes = gatherUserAttributes(activity);
+
+                        mmaHelper.init(activity, attributes);
+
                         if (!isDefaultBrowser(activity)) {
                             mmaHelper.event(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
                         }
@@ -77,6 +95,20 @@ public class MmaDelegate {
             }
         };
         PrefsHelper.addObserver(PREFS, handler);
+    }
+
+    /* This method must be called at background thread to avoid performance issues in some API level */
+    @NonNull
+    private static Map<String, Object> gatherUserAttributes(final Context context) {
+
+        final Map<String, Object> attributes = new HashMap<>();
+
+        attributes.put(USER_ATT_FOCUS_INSTALLED, ContextUtils.isPackageInstalled(context, "org.mozilla.focus"));
+        attributes.put(USER_ATT_KLAR_INSTALLED, ContextUtils.isPackageInstalled(context, "org.mozilla.klar"));
+        attributes.put(USER_ATT_DEFAULT_BROWSER, isDefaultBrowser(context));
+        attributes.put(USER_ATT_SIGNED_IN, FirefoxAccounts.firefoxAccountsExist(context));
+
+        return attributes;
     }
 
 
@@ -111,7 +143,7 @@ public class MmaDelegate {
     }
 
 
-    private static boolean isDefaultBrowser(Context context) {
+    public static boolean isDefaultBrowser(Context context) {
         final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
         final ResolveInfo info = context.getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
         if (info == null) {
@@ -122,6 +154,5 @@ public class MmaDelegate {
         final String packageName = info.activityInfo.packageName;
         return (TextUtils.equals(packageName, context.getPackageName()));
     }
-
 
 }

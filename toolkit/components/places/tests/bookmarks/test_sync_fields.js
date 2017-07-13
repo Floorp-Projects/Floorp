@@ -127,11 +127,11 @@ class TestCases {
   }
 
   async testSeparators() {
-    let insertSyncedBookmark = async uri => {
-      return await this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
-                                           NetUtil.newURI(uri),
-                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                           "A bookmark name");
+    let insertSyncedBookmark = uri => {
+      return this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
+                                 NetUtil.newURI(uri),
+                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                 "A bookmark name");
     };
 
     await insertSyncedBookmark("http://foo.bar");
@@ -253,19 +253,19 @@ class SyncTestCases extends TestCases {
   async createFolder(parentGuid, title, index) {
     let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.createFolder(parentId, title, index);
-    return await PlacesUtils.promiseItemGuid(id);
+    return PlacesUtils.promiseItemGuid(id);
   }
 
   async insertBookmark(parentGuid, uri, index, title) {
     let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.insertBookmark(parentId, uri, index, title);
-    return await PlacesUtils.promiseItemGuid(id);
+    return PlacesUtils.promiseItemGuid(id);
   }
 
   async insertSeparator(parentGuid, index) {
     let parentId = await PlacesUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.insertSeparator(parentId, index);
-    return await PlacesUtils.promiseItemGuid(id);
+    return PlacesUtils.promiseItemGuid(id);
   }
 
   async moveItem(guid, newParentGuid, index) {

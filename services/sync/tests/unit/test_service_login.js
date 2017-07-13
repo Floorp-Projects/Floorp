@@ -8,6 +8,8 @@ Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
+Log.repository.rootLogger.addAppender(new Log.DumpAppender());
+
 function login_handling(handler) {
   return function(request, response) {
     if (has_hawk_header(request)) {
@@ -21,22 +23,15 @@ function login_handling(handler) {
   };
 }
 
-function run_test() {
-  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
-
-  run_next_test();
-}
-
-add_test(function test_offline() {
+add_task(async function test_offline() {
   try {
     _("The right bits are set when we're offline.");
     Services.io.offline = true;
-    do_check_false(!!Service.login());
+    do_check_false(!!(await Service.login()));
     do_check_eq(Service.status.login, LOGIN_FAILED_NETWORK_ERROR);
     Services.io.offline = false;
   } finally {
     Svc.Prefs.resetBranch("");
-    run_next_test();
   }
 });
 
@@ -73,25 +68,25 @@ add_task(async function test_login_logout() {
     do_check_eq(Service.status.service, STATUS_OK);
 
     _("Try logging in. It won't work because we're not configured yet.");
-    Service.login();
+    await Service.login();
     do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_USERNAME);
     do_check_false(Service.isLoggedIn);
 
     _("Try again with a configured account");
     await configureIdentity({ username: "johndoe" }, server);
-    Service.login();
+    await Service.login();
     do_check_eq(Service.status.service, STATUS_OK);
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
 
     _("Profile refresh edge case: FxA configured but prefs reset");
-    Service.startOver();
+    await Service.startOver();
     let config = makeIdentityConfig({ username: "johndoe" }, server);
     config.fxaccount.token.endpoint = server.baseURI + "/1.1/" + config.username + "/";
     configureFxAccountIdentity(Service.identity, config);
 
-    Service.login();
+    await Service.login();
     do_check_eq(Service.status.service, STATUS_OK);
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
@@ -120,14 +115,14 @@ add_task(async function test_login_on_sync() {
     _("Sync calls login.");
     let oldLogin = Service.login;
     let loginCalled = false;
-    Service.login = function() {
+    Service.login = async function() {
       loginCalled = true;
       Service.status.login = LOGIN_SUCCEEDED;
       this._loggedIn = false;           // So that sync aborts.
       return true;
     };
 
-    Service.sync();
+    await Service.sync();
 
     do_check_true(loginCalled);
     Service.login = oldLogin;
@@ -182,10 +177,10 @@ add_task(async function test_login_on_sync() {
     let lockedSyncCalled = false;
 
     Service.scheduler.clearSyncTriggers = function() { cSTCalled = true; };
-    Service._lockedSync = function() { lockedSyncCalled = true; };
+    Service._lockedSync = async function() { lockedSyncCalled = true; };
 
     _("If master password is canceled, login fails and we report lockage.");
-    do_check_false(!!Service.login());
+    do_check_false(!!(await Service.login()));
     do_check_eq(Service.status.login, MASTER_PASSWORD_LOCKED);
     do_check_eq(Service.status.service, LOGIN_FAILED);
     _("Locked? " + Utils.mpLocked());
@@ -193,7 +188,7 @@ add_task(async function test_login_on_sync() {
     do_check_eq(Service._checkSync(), kSyncMasterPasswordLocked);
 
     _("Sync doesn't proceed and clears triggers if MP is still locked.");
-    Service.sync();
+    await Service.sync();
 
     do_check_true(cSTCalled);
     do_check_false(lockedSyncCalled);

@@ -4,11 +4,17 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-Service.engineManager.register(BookmarksEngine);
+let engine;
+let store;
+let tracker;
 
-var engine = Service.engineManager.get("bookmarks");
-var store = engine._store;
-var tracker = engine._tracker;
+add_task(async function setup() {
+  initTestLogging("Trace");
+  await Service.engineManager.register(BookmarksEngine);
+  engine = Service.engineManager.get("bookmarks");
+  store = engine._store;
+  tracker = engine._tracker;
+});
 
 add_task(async function test_ignore_invalid_uri() {
   _("Ensure that we don't die with invalid bookmarks.");
@@ -30,7 +36,7 @@ add_task(async function test_ignore_invalid_uri() {
 
   // Ensure that this doesn't throw even though the DB is now in a bad state (a
   // bookmark has an illegal url).
-  engine._buildGUIDMap();
+  await engine._buildGUIDMap();
 });
 
 add_task(async function test_ignore_missing_uri() {
@@ -52,10 +58,5 @@ add_task(async function test_ignore_missing_uri() {
 
   // Ensure that this doesn't throw even though the DB is now in a bad state (a
   // bookmark has an illegal url).
-  engine._buildGUIDMap();
+  await engine._buildGUIDMap();
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}

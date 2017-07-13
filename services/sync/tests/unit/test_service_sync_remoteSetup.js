@@ -77,16 +77,16 @@ add_task(async function run_test() {
 
   try {
     _("Checking Status.sync with no credentials.");
-    Service.verifyAndFetchSymmetricKeys();
+    await Service.verifyAndFetchSymmetricKeys();
     do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
     await configureIdentity({ username: "johndoe" }, server);
 
-    Service.login();
+    await Service.login();
     _("Checking that remoteSetup returns true when credentials have changed.");
     (await Service.recordManager.get(Service.metaURL)).payload.syncID = "foobar";
-    do_check_true(Service._remoteSetup());
+    do_check_true((await Service._remoteSetup()));
 
     let returnStatusCode = (method, code) => (oldMethod) => (req, res) => {
       if (req.method === method) {
@@ -99,27 +99,27 @@ add_task(async function run_test() {
     let mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 401));
     Service.recordManager.del(Service.metaURL);
     _("Checking that remoteSetup returns false on 401 on first get /meta/global.");
-    do_check_false(Service._remoteSetup());
+    do_check_false((await Service._remoteSetup()));
     mock.restore();
 
-    Service.login();
+    await Service.login();
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 503));
     Service.recordManager.del(Service.metaURL);
     _("Checking that remoteSetup returns false on 503 on first get /meta/global.");
-    do_check_false(Service._remoteSetup());
+    do_check_false((await Service._remoteSetup()));
     do_check_eq(Service.status.sync, METARECORD_DOWNLOAD_FAIL);
     mock.restore();
 
-    Service.login();
+    await Service.login();
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));
     Service.recordManager.del(Service.metaURL);
     _("Checking that remoteSetup recovers on 404 on first get /meta/global.");
-    do_check_true(Service._remoteSetup());
+    do_check_true((await Service._remoteSetup()));
     mock.restore();
 
-    let makeOutdatedMeta = () => {
+    let makeOutdatedMeta = async () => {
       Service.metaModified = 0;
-      let infoResponse = Service._fetchInfo();
+      let infoResponse = await Service._fetchInfo();
       return {
         status: infoResponse.status,
         obj: {
@@ -133,24 +133,24 @@ add_task(async function run_test() {
     _("Checking that remoteSetup recovers on 404 on get /meta/global after clear cached one.");
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));
     Service.recordManager.set(Service.metaURL, { isNew: false });
-    do_check_true(Service._remoteSetup(makeOutdatedMeta()));
+    do_check_true((await Service._remoteSetup((await makeOutdatedMeta()))));
     mock.restore();
 
     _("Checking that remoteSetup returns false on 503 on get /meta/global after clear cached one.");
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 503));
     Service.status.sync = "";
     Service.recordManager.set(Service.metaURL, { isNew: false });
-    do_check_false(Service._remoteSetup(makeOutdatedMeta()));
+    do_check_false((await Service._remoteSetup((await makeOutdatedMeta()))));
     do_check_eq(Service.status.sync, "");
     mock.restore();
 
     metaColl.delete({});
 
     _("Do an initial sync.");
-    Service.sync();
+    await Service.sync();
 
     _("Checking that remoteSetup returns true.");
-    do_check_true(Service._remoteSetup());
+    do_check_true((await Service._remoteSetup()));
 
     _("Verify that the meta record was uploaded.");
     do_check_eq(meta_global.data.syncID, Service.syncID);
@@ -161,11 +161,11 @@ add_task(async function run_test() {
     _("Set the collection info hash so that sync() will remember the modified times for future runs.");
     collections.meta = Service.clientsEngine.lastSync;
     collections.clients = Service.clientsEngine.lastSync;
-    Service.sync();
+    await Service.sync();
 
     _("Sync again and verify that meta/global wasn't downloaded again");
     meta_global.wasCalled = false;
-    Service.sync();
+    await Service.sync();
     do_check_false(meta_global.wasCalled);
 
     _("Fake modified records. This will cause a redownload, but not reupload since it hasn't changed.");
@@ -174,7 +174,7 @@ add_task(async function run_test() {
 
     let metaModified = meta_global.modified;
 
-    Service.sync();
+    await Service.sync();
     do_check_true(meta_global.wasCalled);
     do_check_eq(metaModified, meta_global.modified);
 
@@ -189,7 +189,7 @@ add_task(async function run_test() {
     keys.encrypt(b);
     keys.upload(Service.resource(Service.cryptoKeysURL));
 
-    do_check_false(Service.verifyAndFetchSymmetricKeys());
+    do_check_false((await Service.verifyAndFetchSymmetricKeys()));
     do_check_eq(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
   } finally {
     Svc.Prefs.resetBranch("");

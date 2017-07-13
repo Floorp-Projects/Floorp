@@ -18,11 +18,7 @@ Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
-// Disables all built-in engines. Important for avoiding errors thrown by the
-// add-ons engine.
-Service.engineManager.clear();
-
-function run_test() {
+add_task(async function setup() {
   Log.repository.getLogger("Sync.AsyncResource").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level  = Log.Level.Trace;
   Log.repository.getLogger("Sync.Resource").level      = Log.Level.Trace;
@@ -30,6 +26,10 @@ function run_test() {
   Log.repository.getLogger("Sync.Service").level       = Log.Level.Trace;
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   initTestLogging();
+
+  // Disables all built-in engines. Important for avoiding errors thrown by the
+  // add-ons engine.
+  Service.engineManager.clear();
 
   // Setup the FxA identity manager and cluster manager.
   Status.__authManager = Service.identity = new BrowserIDManager();
@@ -41,9 +41,7 @@ function run_test() {
   }
   Svc.Obs.add("weave:ui:login:error", onUIError);
   Svc.Obs.add("weave:ui:sync:error", onUIError);
-
-  run_next_test();
-}
+});
 
 
 // API-compatible with SyncServer handler. Bind `handler` to something to use
@@ -122,7 +120,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
                                              secondNotification, url) {
   _("Starting syncAndExpectNodeReassignment\n");
   let deferred = PromiseUtils.defer();
-  function onwards() {
+  async function onwards() {
     let numTokenRequestsBefore;
     function onFirstSync() {
       _("First sync completed.");
@@ -147,13 +145,14 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
       waitForZeroTimer(function() {
         _("Second sync nextTick.");
         do_check_eq(numTokenRequests, numTokenRequestsBefore + 1, "fetched a new token");
-        Service.startOver();
-        server.stop(deferred.resolve);
+        Service.startOver().then(() => {
+          server.stop(deferred.resolve);
+        });
       });
     }
 
     Svc.Obs.add(firstNotification, onFirstSync);
-    Service.sync();
+    await Service.sync();
   }
 
   // Make sure that we really do get a 401 (but we can only do that if we are
@@ -196,14 +195,14 @@ add_task(async function test_single_token_fetch() {
   let server = await prepareServer(afterTokenFetch);
 
   do_check_false(Service.isLoggedIn, "not already logged in");
-  Service.sync();
+  await Service.sync();
   do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
   do_check_eq(numTokenFetches, 0, "didn't fetch a new token");
   // A bit hacky, but given we know how prepareServer works we can deduce
   // that clusterURL we expect.
   let expectedClusterURL = server.baseURI + "1.1/johndoe/";
   do_check_eq(Service.clusterURL, expectedClusterURL);
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 });
 
@@ -215,7 +214,7 @@ add_task(async function test_momentary_401_engine() {
   let john   = server.user("johndoe");
 
   _("Enabling the Rotary engine.");
-  let { engine, tracker } = registerRotaryEngine();
+  let { engine, tracker } = await registerRotaryEngine();
 
   // We need the server to be correctly set up prior to experimenting. Do this
   // through a sync.
@@ -226,7 +225,7 @@ add_task(async function test_momentary_401_engine() {
   john.createCollection("meta").insert("global", global);
 
   _("First sync to prepare server contents.");
-  Service.sync();
+  await Service.sync();
 
   _("Setting up Rotary collection to 401.");
   let rotary = john.createCollection("rotary");
@@ -270,7 +269,7 @@ add_task(async function test_momentary_401_info_collections_loggedin() {
   let server = await prepareServer();
 
   _("First sync to prepare server contents.");
-  Service.sync();
+  await Service.sync();
 
   _("Arrange for info/collections to return a 401.");
   let oldHandler = server.toplevelHandlers.info;
@@ -317,12 +316,12 @@ add_task(async function test_momentary_401_info_collections_loggedout() {
 
   do_check_false(Service.isLoggedIn, "not already logged in");
 
-  Service.sync();
+  await Service.sync();
   do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
   // sync was successful - check we grabbed a new token.
   do_check_true(sawTokenFetch, "a new token was fetched by this test.")
   // and we are done.
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 });
 
@@ -335,7 +334,7 @@ add_task(async function test_momentary_401_storage_loggedin() {
   let server = await prepareServer();
 
   _("First sync to prepare server contents.");
-  Service.sync();
+  await Service.sync();
 
   _("Arrange for meta/global to return a 401.");
   let oldHandler = server.toplevelHandlers.storage;

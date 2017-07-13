@@ -45,16 +45,15 @@ add_task(async function setup() {
                " FxSync/" + WEAVE_VERSION + "." +
                Services.appinfo.appBuildID;
 
-})
+});
 
-add_test(function test_fetchInfo() {
+add_task(async function test_fetchInfo() {
   _("Testing _fetchInfo.");
-  Service.login();
-  Service._fetchInfo();
+  await Service.login();
+  await Service._fetchInfo();
   _("User-Agent: " + ua);
   do_check_eq(ua, expectedUA + ".desktop");
   ua = "";
-  run_next_test();
 });
 
 add_task(async function test_desktop_post() {

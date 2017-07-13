@@ -490,7 +490,7 @@ BulletRenderer::CreateWebRenderCommandsForPath(nsDisplayItem* aItem,
 {
   MOZ_ASSERT(IsPathType());
 
-  if (!aManager->PushItemAsBlobImage(aItem, aBuilder, aSc, aDisplayListBuilder)) {
+  if (!aManager->PushItemAsImage(aItem, aBuilder, aSc, aDisplayListBuilder)) {
     NS_WARNING("Fail to create WebRender commands for Bullet path.");
   }
 }

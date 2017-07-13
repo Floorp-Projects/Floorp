@@ -10,10 +10,12 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+const PREF_DEBUG_ENABLED = "browser.safebrowsing.debug";
+let loggingEnabled = false;
+
 // Log only if browser.safebrowsing.debug is true
 function log(...stuff) {
-  let logging = Services.prefs.getBoolPref("browser.safebrowsing.debug", false);
-  if (!logging) {
+  if (!loggingEnabled) {
     return;
   }
 
@@ -190,13 +192,19 @@ this.SafeBrowsing = {
     if (aData.indexOf("lastupdatetime") >= 0 || aData.indexOf("nextupdatetime") >= 0) {
       return;
     }
+
+    if (aData == PREF_DEBUG_ENABLED) {
+      loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
+      return;
+    }
+
     this.readPrefs();
   },
 
   readPrefs: function() {
+    loggingEnabled = Services.prefs.getBoolPref(PREF_DEBUG_ENABLED);
     log("reading prefs");
 
-    this.debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
@@ -263,7 +271,7 @@ this.SafeBrowsing = {
       this.providers[providerName] = {};
     }
 
-    if (this.debug) {
+    if (loggingEnabled) {
       let providerStr = "";
       Object.keys(this.providers).forEach(function(provider) {
         if (providerStr === "") {

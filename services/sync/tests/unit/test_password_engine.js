@@ -16,7 +16,7 @@ function run_test() {
 
 async function cleanup(engine, server) {
   Svc.Obs.notify("weave:engine:stop-tracking");
-  engine.wipeClient();
+  await engine.wipeClient();
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
   await promiseStopServer(server);

@@ -72,7 +72,7 @@ add_task(async function test_200_hard() {
 
   let promiseObserved = promiseOneObserver("weave:eol");
 
-  Service._fetchInfo();
+  await Service._fetchInfo();
   Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
 
   let { subject } = await promiseObserved;
@@ -92,7 +92,7 @@ add_task(async function test_513_hard() {
   let promiseObserved = promiseOneObserver("weave:eol");
 
   try {
-    Service._fetchInfo();
+    await Service._fetchInfo();
     Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
   } catch (ex) {
     // Because fetchInfo will fail on a 513.
@@ -114,7 +114,7 @@ add_task(async function test_200_soft() {
 
   let promiseObserved = promiseOneObserver("weave:eol");
 
-  Service._fetchInfo();
+  await Service._fetchInfo();
   Service.scheduler.adjustSyncInterval();   // As if we failed or succeeded in syncing.
   let { subject } = await promiseObserved;
   do_check_eq("soft-eol", subject.code);

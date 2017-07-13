@@ -283,7 +283,9 @@ var gSync = {
   },
 
   sendTabToDevice(url, clientId, title) {
-    Weave.Service.clientsEngine.sendURIToClientForDisplay(url, clientId, title);
+    Weave.Service.clientsEngine.sendURIToClientForDisplay(url, clientId, title).catch(e => {
+      console.error("Could not send tab to device", e);
+    });
   },
 
   populateSendTabToDevicesMenu(devicesPopup, url, title, createDeviceNodeFn) {
@@ -441,7 +443,6 @@ var gSync = {
     if (state.status == UIState.STATUS_SIGNED_IN) {
       setTimeout(() => Weave.Service.errorHandler.syncAndReportErrors(), 0);
     }
-    Services.obs.notifyObservers(null, "cloudsync:user-sync");
   },
 
   openPrefs(entryPoint = "syncbutton", origin = undefined) {

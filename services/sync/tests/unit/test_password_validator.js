@@ -80,20 +80,18 @@ function getDummyServerAndClient() {
 }
 
 
-add_test(function test_valid() {
+add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new PasswordValidator();
   let { problemData, clientRecords, records, deletedRecords } =
-      validator.compareClientWithServer(client, server);
+      await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 3);
   equal(records.length, 3)
   equal(deletedRecords.length, 0);
   deepEqual(problemData, validator.emptyProblemData());
-
-  run_next_test();
 });
 
-add_test(function test_missing() {
+add_task(async function test_missing() {
   let validator = new PasswordValidator();
   {
     let { server, client } = getDummyServerAndClient();
@@ -101,7 +99,7 @@ add_test(function test_missing() {
     client.pop();
 
     let { problemData, clientRecords, records, deletedRecords } =
-        validator.compareClientWithServer(client, server);
+        await validator.compareClientWithServer(client, server);
 
     equal(clientRecords.length, 2);
     equal(records.length, 3)
@@ -117,7 +115,7 @@ add_test(function test_missing() {
     server.pop();
 
     let { problemData, clientRecords, records, deletedRecords } =
-        validator.compareClientWithServer(client, server);
+        await validator.compareClientWithServer(client, server);
 
     equal(clientRecords.length, 3);
     equal(records.length, 2)
@@ -127,12 +125,10 @@ add_test(function test_missing() {
     expected.serverMissing.push("33333");
     deepEqual(problemData, expected);
   }
-
-  run_next_test();
 });
 
 
-add_test(function test_deleted() {
+add_task(async function test_deleted() {
   let { server, client } = getDummyServerAndClient();
   let deletionRecord = { id: "444444", guid: "444444", deleted: true };
 
@@ -140,7 +136,7 @@ add_test(function test_deleted() {
   let validator = new PasswordValidator();
 
   let { problemData, clientRecords, records, deletedRecords } =
-      validator.compareClientWithServer(client, server);
+      await validator.compareClientWithServer(client, server);
 
   equal(clientRecords.length, 3);
   equal(records.length, 4);
@@ -148,8 +144,6 @@ add_test(function test_deleted() {
 
   let expected = validator.emptyProblemData();
   deepEqual(problemData, expected);
-
-  run_next_test();
 });
 
 

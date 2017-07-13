@@ -1,6 +1,5 @@
 Cu.import("resource://gre/modules/FormHistory.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines/history.js");
@@ -30,7 +29,7 @@ async function assertChildGuids(folderGuid, expectedChildGuids, message) {
 
 async function cleanup(engine, server) {
   Svc.Obs.notify("weave:engine:stop-tracking");
-  engine._store.wipe();
+  await engine._store.wipe();
   Svc.Prefs.resetBranch("");
   Service.recordManager.clearCache();
   await promiseStopServer(server);
@@ -49,14 +48,14 @@ add_task(async function test_history_change_during_sync() {
   // Override `applyIncomingBatch` to insert a record while we're applying
   // changes. The tracker should ignore this change.
   let { applyIncomingBatch } = engine._store;
-  engine._store.applyIncomingBatch = function(records) {
+  engine._store.applyIncomingBatch = async function(records) {
     _("Inserting local history visit");
     engine._store.applyIncomingBatch = applyIncomingBatch;
     let failed;
     try {
-      Async.promiseSpinningly(addVisit("during_sync"));
+      await addVisit("during_sync");
     } finally {
-      failed = applyIncomingBatch.call(this, records);
+      failed = await applyIncomingBatch.call(this, records);
     }
     return failed;
   };
@@ -105,7 +104,7 @@ add_task(async function test_passwords_change_during_sync() {
   let collection = server.user("foo").collection("passwords");
 
   let { applyIncomingBatch } = engine._store;
-  engine._store.applyIncomingBatch = function(records) {
+  engine._store.applyIncomingBatch = async function(records) {
     _("Inserting local password");
     engine._store.applyIncomingBatch = applyIncomingBatch;
     let failed;
@@ -114,7 +113,7 @@ add_task(async function test_passwords_change_during_sync() {
         "password", "", "");
       Services.logins.addLogin(login);
     } finally {
-      failed = applyIncomingBatch.call(this, records);
+      failed = await applyIncomingBatch.call(this, records);
     }
     return failed;
   };
@@ -166,7 +165,7 @@ add_task(async function test_prefs_change_during_sync() {
   let collection = server.user("foo").collection("prefs");
 
   let { applyIncomingBatch } = engine._store;
-  engine._store.applyIncomingBatch = function(records) {
+  engine._store.applyIncomingBatch = async function(records) {
     _("Updating local pref value");
     engine._store.applyIncomingBatch = applyIncomingBatch;
     let failed;
@@ -174,7 +173,7 @@ add_task(async function test_prefs_change_during_sync() {
       // Change the value of a synced pref.
       Services.prefs.setCharPref(TEST_PREF, "hello");
     } finally {
-      failed = applyIncomingBatch.call(this, records);
+      failed = await applyIncomingBatch.call(this, records);
     }
     return failed;
   };
@@ -227,12 +226,12 @@ add_task(async function test_forms_change_during_sync() {
   let collection = server.user("foo").collection("forms");
 
   let { applyIncomingBatch } = engine._store;
-  engine._store.applyIncomingBatch = function(records) {
+  engine._store.applyIncomingBatch = async function(records) {
     _("Inserting local form history entry");
     engine._store.applyIncomingBatch = applyIncomingBatch;
     let failed;
     try {
-      Async.promiseSpinningly(new Promise(resolve => {
+      await new Promise(resolve => {
         FormHistory.update([{
           op: "add",
           fieldname: "favoriteDrink",
@@ -240,9 +239,9 @@ add_task(async function test_forms_change_during_sync() {
         }], {
           handleCompletion: resolve,
         });
-      }));
+      });
     } finally {
-      failed = applyIncomingBatch.call(this, records);
+      failed = await applyIncomingBatch.call(this, records);
     }
     return failed;
   };
@@ -305,18 +304,18 @@ add_task(async function test_bookmark_change_during_sync() {
   let bmk3; // New child of Folder 1, created locally during sync.
 
   let { applyIncomingBatch } = engine._store;
-  engine._store.applyIncomingBatch = function(records) {
+  engine._store.applyIncomingBatch = async function(records) {
     _("Inserting bookmark into local store");
     engine._store.applyIncomingBatch = applyIncomingBatch;
     let failed;
     try {
-      bmk3 = Async.promiseSpinningly(PlacesUtils.bookmarks.insert({
+      bmk3 = await PlacesUtils.bookmarks.insert({
         parentGuid: folder1.guid,
         url: "https://mozilla.org/",
         title: "Mozilla",
-      }));
+      });
     } finally {
-      failed = applyIncomingBatch.call(this, records);
+      failed = await applyIncomingBatch.call(this, records);
     }
     return failed;
   };
@@ -399,7 +398,7 @@ add_task(async function test_bookmark_change_during_sync() {
 
     let pingsPromise = wait_for_pings(2);
 
-    let changes = engine.pullNewChanges();
+    let changes = await engine.pullNewChanges();
     deepEqual(Object.keys(changes).sort(), [
       folder1.guid,
       tbBmk.guid,
@@ -441,7 +440,7 @@ add_task(async function test_bookmark_change_during_sync() {
     equal(taggedURIs[0].spec, "https://example.org/",
       "Synced tagged bookmark should appear in tagged URI list");
 
-    changes = engine.pullNewChanges();
+    changes = await engine.pullNewChanges();
     deepEqual(changes, {},
       "Should have already uploaded changes in follow-up sync");
 

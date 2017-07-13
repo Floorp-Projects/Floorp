@@ -130,6 +130,13 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
     return; // Nothing to do.
   }
 
+  // Assuming the restyle hints will invalidate cached style for
+  // getComputedStyle, since we don't know if any of the restyling that we do
+  // would affect undisplayed elements.
+  if (aRestyleHint) {
+    IncrementUndisplayedRestyleGeneration();
+  }
+
   // Processing change hints sometimes causes new change hints to be generated,
   // and very occasionally, additional restyle hints. We collect the change
   // hints manually to avoid re-traversing the DOM to find them.
@@ -941,6 +948,10 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   if (restyleHint || changeHint) {
     Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
   }
+
+  // Assuming we need to invalidate cached style in getComputedStyle for
+  // undisplayed elements, since we don't know if it is needed.
+  IncrementUndisplayedRestyleGeneration();
 }
 
 static inline bool
@@ -1035,6 +1046,12 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
     return;
   }
 
+  // We cannot tell if the attribute change will affect the styles of
+  // undisplayed elements, because we don't actually restyle those elements
+  // during the restyle traversal. So just assume that the attribute change can
+  // cause the style to change.
+  IncrementUndisplayedRestyleGeneration();
+
   ServoElementSnapshot& snapshot = SnapshotFor(aElement);
   snapshot.AddAttrs(aElement, aNameSpaceID, aAttribute);
 
@@ -1088,6 +1105,12 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 
   if (restyleHint || changeHint) {
     Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
+  }
+
+  if (restyleHint) {
+    // Assuming we need to invalidate cached style in getComputedStyle for
+    // undisplayed elements, since we don't know if it is needed.
+    IncrementUndisplayedRestyleGeneration();
   }
 }
 
