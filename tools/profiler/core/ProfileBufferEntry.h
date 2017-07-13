@@ -28,18 +28,18 @@
 class ProfilerMarker;
 
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
-  macro(Category,        int) \
-  macro(CodeLocation,    const char*) \
-  macro(EmbeddedString,  char*) /* char[kNumChars], really */ \
-  macro(JitReturnAddr,   void*) \
-  macro(LineNumber,      int) \
-  macro(NativeLeafAddr,  void*) \
-  macro(Marker,          ProfilerMarker*) \
-  macro(ResidentMemory,  double) \
-  macro(Responsiveness,  double) \
-  macro(ThreadId,        int) \
-  macro(Time,            double) \
-  macro(UnsharedMemory,  double)
+  macro(Category,              int) \
+  macro(Label,                 const char*) \
+  macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
+  macro(JitReturnAddr,         void*) \
+  macro(LineNumber,            int) \
+  macro(NativeLeafAddr,        void*) \
+  macro(Marker,                ProfilerMarker*) \
+  macro(ResidentMemory,        double) \
+  macro(Responsiveness,        double) \
+  macro(ThreadId,              int) \
+  macro(Time,                  double) \
+  macro(UnsharedMemory,        double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
