@@ -24,6 +24,7 @@
 #include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/UniquePtr.h"
@@ -85,6 +86,9 @@ class PresShell final : public nsIPresShell,
                         public nsIObserver,
                         public nsSupportsWeakReference
 {
+protected:
+  typedef mozilla::layers::FocusTarget FocusTarget;
+
 public:
   PresShell();
 
