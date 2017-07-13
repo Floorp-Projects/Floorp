@@ -572,11 +572,11 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 class EntryGetter
 {
 public:
-  explicit EntryGetter(ProfileBuffer* aBuffer)
-    : mEntries(aBuffer->mEntries.get())
-    , mReadPos(aBuffer->mReadPos)
-    , mWritePos(aBuffer->mWritePos)
-    , mEntrySize(aBuffer->mEntrySize)
+  explicit EntryGetter(const ProfileBuffer& aBuffer)
+    : mEntries(aBuffer.mEntries.get())
+    , mReadPos(aBuffer.mReadPos)
+    , mWritePos(aBuffer.mWritePos)
+    , mEntrySize(aBuffer.mEntrySize)
   {}
 
   bool Has() const { return mReadPos != mWritePos; }
@@ -696,7 +696,7 @@ private:
 void
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                                    double aSinceTime, JSContext* aContext,
-                                   UniqueStacks& aUniqueStacks)
+                                   UniqueStacks& aUniqueStacks) const
 {
   UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
 
@@ -710,7 +710,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
       goto skip_to_next_sample; \
     } while (0)
 
-  EntryGetter e(this);
+  EntryGetter e(*this);
 
   // This block skips entries until we find the start of the next sample. This
   // is useful in two situations.
@@ -892,9 +892,9 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
                                    int aThreadId,
                                    const TimeStamp& aProcessStartTime,
                                    double aSinceTime,
-                                   UniqueStacks& aUniqueStacks)
+                                   UniqueStacks& aUniqueStacks) const
 {
-  EntryGetter e(this);
+  EntryGetter e(*this);
 
   int currentThreadID = -1;
 
@@ -915,6 +915,7 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
 
 int
 ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
+  const
 {
   // |aLS| has a valid generation number if either it matches the buffer's
   // generation, or is one behind the buffer's generation, since the buffer's
