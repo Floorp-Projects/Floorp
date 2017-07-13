@@ -267,6 +267,8 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       if (NS_SUCCEEDED(res)) {
         return res;
       }
+      NS_WARNING("Using fallback for accent color - UI code failed to use the "
+                 "-moz-windows-accent-color-applies media query properly");
       // Seems to be the default color (hardcoded because of bug 1065998)
       aColor = NS_RGB(158, 158, 158);
       return NS_OK;
@@ -438,18 +440,10 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_DWMCompositor:
         aResult = nsUXThemeData::CheckForCompositor();
         break;
-    case eIntID_WindowsAccentColorInTitlebar:
+    case eIntID_WindowsAccentColorApplies:
         {
           nscolor unused;
-          uint32_t colorPrevalence;
-          // The ColorPrevalence value is set to 1 when the "Show color on title bar"
-          // setting in the Color section of Window's Personalization settings is
-          // turned on.
-          aResult =
-            (NS_SUCCEEDED(GetAccentColor(unused)) &&
-             NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("ColorPrevalence"),
-                                                &colorPrevalence)) &&
-             colorPrevalence == 1) ? 1 : 0;
+          aResult = NS_SUCCEEDED(GetAccentColor(unused)) ? 1 : 0;
         }
         break;
     case eIntID_WindowsGlass:
@@ -795,8 +789,13 @@ nsLookAndFeel::GetAccentColor(nscolor& aColor)
     return rv;
   }
 
-  uint32_t accentColor;
-  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("AccentColor"), &accentColor))) {
+  // The ColorPrevalence value is set to 1 when the "Show color on title bar"
+  // setting in the Color section of Window's Personalization settings is
+  // turned on.
+  uint32_t accentColor, colorPrevalence;
+  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("AccentColor"), &accentColor)) &&
+      NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("ColorPrevalence"), &colorPrevalence)) &&
+      colorPrevalence == 1) {
     // The order of the color components in the DWORD stored in the registry
     // happens to be the same order as we store the components in nscolor
     // so we can just assign directly here.
