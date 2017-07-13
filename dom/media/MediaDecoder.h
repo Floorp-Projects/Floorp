@@ -703,6 +703,7 @@ protected:
   MediaEventListener mOnPlaybackErrorEvent;
   MediaEventListener mOnDecoderDoctorEvent;
   MediaEventListener mOnMediaNotSeekable;
+  MediaEventListener mOnEncrypted;
 
 protected:
   // PlaybackRate and pitch preservation status we should start at.
