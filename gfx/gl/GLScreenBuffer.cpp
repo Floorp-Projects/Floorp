@@ -91,7 +91,7 @@ GLScreenBuffer::CreateFactory(GLContext* gl,
 #elif defined(MOZ_WIDGET_UIKIT)
                 factory = MakeUnique<SurfaceFactory_GLTexture>(mGLContext, caps, ipcChannel, mFlags);
 #elif defined(MOZ_WIDGET_ANDROID)
-                if (XRE_IsParentProcess()) {
+                if (XRE_IsParentProcess() && !gfxPrefs::WebGLSurfaceTextureEnabled()) {
                     factory = SurfaceFactory_EGLImage::Create(gl, caps, ipcChannel, flags);
                 } else {
                     factory = SurfaceFactory_SurfaceTexture::Create(gl, caps, ipcChannel, flags);
