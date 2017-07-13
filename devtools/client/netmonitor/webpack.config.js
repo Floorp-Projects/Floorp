@@ -82,6 +82,7 @@ let webpackConfig = {
       "devtools/shared/task": path.join(__dirname, "../../shared/task"),
       "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
       "Services": "devtools-modules/src/Services",
+      "./utils/menu": path.join(__dirname, "devtools-contextmenu"),
     },
   },
 };

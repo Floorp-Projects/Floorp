@@ -330,7 +330,7 @@ add_task(async function bookmarks_menu_new_bookmark_remove_bookmark() {
     },
     shouldAutoClose: true,
     popupHideFn() {
-      document.getElementById("editBookmarkPanelRemoveButton").doCommand();
+      document.getElementById("editBookmarkPanelRemoveButton").click();
     },
     isBookmarkRemoved: true,
   });

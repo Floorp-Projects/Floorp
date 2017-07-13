@@ -128,7 +128,6 @@ private:
 HLSDemuxer::HLSDemuxer(int aPlayerId)
   : mTaskQueue(new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                                  /* aSupportsTailDispatch = */ false))
-  , mMutex("HLSDemuxer")
 {
   MOZ_ASSERT(NS_IsMainThread());
   HLSDemuxerCallbacksSupport::Init();
@@ -149,10 +148,14 @@ HLSDemuxer::OnInitialized(bool aHasAudio, bool aHasVideo)
   MOZ_ASSERT(OnTaskQueue());
 
   if (aHasAudio) {
-    UpdateAudioInfo(0);
+    mAudioDemuxer = new HLSTrackDemuxer(this,
+                                        TrackInfo::TrackType::kAudioTrack,
+                                        MakeUnique<AudioInfo>());
   }
   if (aHasVideo) {
-    UpdateVideoInfo(0);
+    mVideoDemuxer = new HLSTrackDemuxer(this,
+                                        TrackInfo::TrackType::kVideoTrack,
+                                        MakeUnique<VideoInfo>());
   }
 
   mInitPromise.ResolveIfExists(NS_OK, __func__);
@@ -184,16 +187,14 @@ void HLSDemuxer::NotifyDataArrived()
 bool
 HLSDemuxer::HasTrackType(TrackType aType) const
 {
-  MutexAutoLock lock(mMutex);
   HLS_DEBUG("HLSDemuxer", "HasTrackType(%d)", aType);
-  switch (aType) {
-    case TrackType::kAudioTrack:
-      return mInfo.HasAudio();
-    case TrackType::kVideoTrack:
-      return mInfo.HasVideo();
-    default:
-      return false;
+  if (mAudioDemuxer && aType == TrackType::kAudioTrack) {
+    return mAudioDemuxer->IsTrackValid();
   }
+  if (mVideoDemuxer && aType == TrackType::kVideoTrack) {
+    return mVideoDemuxer->IsTrackValid();
+  }
+  return false;
 }
 
 uint32_t
@@ -212,8 +213,12 @@ HLSDemuxer::GetNumberTracks(TrackType aType) const
 already_AddRefed<MediaTrackDemuxer>
 HLSDemuxer::GetTrackDemuxer(TrackType aType, uint32_t aTrackNumber)
 {
-  RefPtr<HLSTrackDemuxer> e = new HLSTrackDemuxer(this, aType);
-  mDemuxers.AppendElement(e);
+  RefPtr<HLSTrackDemuxer> e = nullptr;
+  if (aType == TrackInfo::TrackType::kAudioTrack) {
+    e = mAudioDemuxer;
+  } else {
+    e = mVideoDemuxer;
+  }
   return e.forget();
 }
 
@@ -231,73 +236,11 @@ HLSDemuxer::GetCrypto()
   return nullptr;
 }
 
-TrackInfo*
-HLSDemuxer::GetTrackInfo(TrackType aTrack)
-{
-  MutexAutoLock lock(mMutex);
-  switch (aTrack) {
-    case TrackType::kAudioTrack: {
-      return &mInfo.mAudio;
-    }
-    case TrackType::kVideoTrack: {
-      return &mInfo.mVideo;
-    }
-    default:
-      return nullptr;
-  }
-}
-
 TimeUnit
 HLSDemuxer::GetNextKeyFrameTime()
 {
   MOZ_ASSERT(mHLSDemuxerWrapper);
   return TimeUnit::FromMicroseconds(mHLSDemuxerWrapper->GetNextKeyFrameTime());
-}
-
-void
-HLSDemuxer::UpdateAudioInfo(int index)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHLSDemuxerWrapper);
-  HLS_DEBUG("HLSDemuxer", "UpdateAudioInfo (%d)", index);
-  MutexAutoLock lock(mMutex);
-  jni::Object::LocalRef infoObj = mHLSDemuxerWrapper->GetAudioInfo(index);
-  if (infoObj) {
-    java::GeckoAudioInfo::LocalRef audioInfo(Move(infoObj));
-    mInfo.mAudio.mRate = audioInfo->Rate();
-    mInfo.mAudio.mChannels = audioInfo->Channels();
-    mInfo.mAudio.mProfile = audioInfo->Profile();
-    mInfo.mAudio.mBitDepth = audioInfo->BitDepth();
-    mInfo.mAudio.mMimeType = NS_ConvertUTF16toUTF8(audioInfo->MimeType()->ToString());
-    mInfo.mAudio.mDuration = TimeUnit::FromMicroseconds(audioInfo->Duration());
-    auto&& csd = audioInfo->CodecSpecificData()->GetElements();
-    mInfo.mAudio.mCodecSpecificConfig->Clear();
-    mInfo.mAudio.mCodecSpecificConfig->AppendElements(reinterpret_cast<uint8_t*>(&csd[0]),
-                                                      csd.Length());
-  }
-}
-
-void
-HLSDemuxer::UpdateVideoInfo(int index)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mHLSDemuxerWrapper);
-  MutexAutoLock lock(mMutex);
-  jni::Object::LocalRef infoObj = mHLSDemuxerWrapper->GetVideoInfo(index);
-  if (infoObj) {
-    java::GeckoVideoInfo::LocalRef videoInfo(Move(infoObj));
-    mInfo.mVideo.mStereoMode = getStereoMode(videoInfo->StereoMode());
-    mInfo.mVideo.mRotation = getVideoInfoRotation(videoInfo->Rotation());
-    mInfo.mVideo.mImage.width = videoInfo->DisplayWidth();
-    mInfo.mVideo.mImage.height = videoInfo->DisplayHeight();
-    mInfo.mVideo.mDisplay.width = videoInfo->PictureWidth();
-    mInfo.mVideo.mDisplay.height = videoInfo->PictureHeight();
-    mInfo.mVideo.mMimeType = NS_ConvertUTF16toUTF8(videoInfo->MimeType()->ToString());
-    mInfo.mVideo.mDuration = TimeUnit::FromMicroseconds(videoInfo->Duration());
-    HLS_DEBUG("HLSDemuxer", "UpdateVideoInfo (%d) / I(%dx%d) / D(%dx%d)",
-     index, mInfo.mVideo.mImage.width, mInfo.mVideo.mImage.height,
-     mInfo.mVideo.mDisplay.width, mInfo.mVideo.mDisplay.height);
-  }
 }
 
 bool
@@ -321,16 +264,24 @@ HLSDemuxer::~HLSDemuxer()
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }
 
-HLSTrackDemuxer::HLSTrackDemuxer(HLSDemuxer* aParent, TrackInfo::TrackType aType)
+HLSTrackDemuxer::HLSTrackDemuxer(HLSDemuxer* aParent,
+                                 TrackInfo::TrackType aType,
+                                 UniquePtr<TrackInfo> aTrackInfo)
   : mParent(aParent)
   , mType(aType)
+  , mMutex("HLSTrackDemuxer")
+  , mTrackInfo(Move(aTrackInfo))
 {
+  // Only support audio and video track currently.
+  MOZ_ASSERT(mType == TrackInfo::kVideoTrack || mType == TrackInfo::kAudioTrack);
+  UpdateMediaInfo(0);
 }
 
 UniquePtr<TrackInfo>
 HLSTrackDemuxer::GetInfo() const
 {
-  return mParent->GetTrackInfo(mType)->Clone();
+  MutexAutoLock lock(mMutex);
+  return mTrackInfo->Clone();
 }
 
 RefPtr<HLSTrackDemuxer::SeekPromise>
@@ -431,6 +382,49 @@ HLSTrackDemuxer::DoGetSamples(int32_t aNumSamples)
   return SamplesPromise::CreateAndResolve(samples, __func__);
 }
 
+void
+HLSTrackDemuxer::UpdateMediaInfo(int index)
+{
+  MOZ_ASSERT(mParent->OnTaskQueue());
+  MOZ_ASSERT(mParent->mHLSDemuxerWrapper);
+  MutexAutoLock lock(mMutex);
+  jni::Object::LocalRef infoObj = nullptr;
+  if (mType == TrackType::kAudioTrack) {
+    infoObj = mParent->mHLSDemuxerWrapper->GetAudioInfo(index);
+    auto* audioInfo = mTrackInfo->GetAsAudioInfo();
+    if (infoObj && audioInfo) {
+      HLS_DEBUG("HLSTrackDemuxer", "Update audio info (%d)", index);
+      java::GeckoAudioInfo::LocalRef audioInfoObj(Move(infoObj));
+      audioInfo->mRate = audioInfoObj->Rate();
+      audioInfo->mChannels = audioInfoObj->Channels();
+      audioInfo->mProfile = audioInfoObj->Profile();
+      audioInfo->mBitDepth = audioInfoObj->BitDepth();
+      audioInfo->mMimeType = NS_ConvertUTF16toUTF8(audioInfoObj->MimeType()->ToString());
+      audioInfo->mDuration = TimeUnit::FromMicroseconds(audioInfoObj->Duration());
+      auto&& csd = audioInfoObj->CodecSpecificData()->GetElements();
+      audioInfo->mCodecSpecificConfig->Clear();
+      audioInfo->mCodecSpecificConfig->AppendElements(reinterpret_cast<uint8_t*>(&csd[0]),
+                                                      csd.Length());
+    }
+  } else {
+    infoObj = mParent->mHLSDemuxerWrapper->GetVideoInfo(index);
+    auto* videoInfo = mTrackInfo->GetAsVideoInfo();
+    if (infoObj && videoInfo) {
+      java::GeckoVideoInfo::LocalRef videoInfoObj(Move(infoObj));
+      videoInfo->mStereoMode = getStereoMode(videoInfoObj->StereoMode());
+      videoInfo->mRotation = getVideoInfoRotation(videoInfoObj->Rotation());
+      videoInfo->mImage.width = videoInfoObj->DisplayWidth();
+      videoInfo->mImage.height = videoInfoObj->DisplayHeight();
+      videoInfo->mDisplay.width = videoInfoObj->PictureWidth();
+      videoInfo->mDisplay.height = videoInfoObj->PictureHeight();
+      videoInfo->mMimeType = NS_ConvertUTF16toUTF8(videoInfoObj->MimeType()->ToString());
+      videoInfo->mDuration = TimeUnit::FromMicroseconds(videoInfoObj->Duration());
+      HLS_DEBUG("HLSTrackDemuxer", "Update video info (%d) / I(%dx%d) / D(%dx%d)",
+        index, videoInfo->mImage.width, videoInfo->mImage.height,
+        videoInfo->mDisplay.width, videoInfo->mDisplay.height);
+    }
+  }
+}
 
 CryptoSample
 HLSTrackDemuxer::ExtractCryptoSample(size_t aSampleSize,
@@ -529,15 +523,13 @@ HLSTrackDemuxer::ConvertToMediaRawData(java::GeckoHLSSample::LocalRef aSample)
     return nullptr;
   }
 
-  // Update streamSouceID & videoInfo for MFR.
-  if (mType == TrackInfo::kVideoTrack) {
-    auto sampleFormatIndex = aSample->FormatIndex();
-    if (mLastFormatIndex != sampleFormatIndex) {
-      mLastFormatIndex = sampleFormatIndex;
-      mParent->UpdateVideoInfo(mLastFormatIndex);
-      MutexAutoLock lock(mParent->mMutex);
-      mrd->mTrackInfo = new TrackInfoSharedPtr(mParent->mInfo.mVideo, ++sStreamSourceID);
-    }
+  // Update A/V stream souce ID & Audio/VideoInfo for MFR.
+  auto sampleFormatIndex = aSample->FormatIndex();
+  if (mLastFormatIndex != sampleFormatIndex) {
+    mLastFormatIndex = sampleFormatIndex;
+    UpdateMediaInfo(mLastFormatIndex);
+    MutexAutoLock lock(mMutex);
+    mrd->mTrackInfo = new TrackInfoSharedPtr(*mTrackInfo, ++sStreamSourceID);
   }
 
   // Write payload into MediaRawData
