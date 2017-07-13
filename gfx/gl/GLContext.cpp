@@ -290,6 +290,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mTextureAllocCrashesOnMapFailure(false),
     mNeedsCheckAfterAttachTextureToFb(false),
     mWorkAroundDriverBugs(true),
+    mSyncGLCallCount(0),
     mHeavyGLCallsSinceLastFlush(false)
 {
     mMaxViewportDims[0] = 0;
@@ -3046,6 +3047,16 @@ bool GLContext::MakeCurrent(bool aForce)
     return true;
 }
 
+void
+GLContext::ResetSyncCallCount(const char* resetReason) const
+{
+    if (ShouldSpew()) {
+        printf_stderr("On %s, mSyncGLCallCount = %" PRIu64 "\n",
+                       resetReason, mSyncGLCallCount);
+    }
+
+    mSyncGLCallCount = 0;
+}
 
 } /* namespace gl */
 } /* namespace mozilla */
