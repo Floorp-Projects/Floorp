@@ -6,11 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from ..optimize import optimize_task_graph, resolve_task_references, optimization
-from ..optimize import annotate_task_graph, get_subgraph
-from ..taskgraph import TaskGraph
-from .. import graph
-from ..task import Task
+from taskgraph.optimize import optimize_task_graph, resolve_task_references, optimization
+from taskgraph.optimize import annotate_task_graph, get_subgraph
+from taskgraph.taskgraph import TaskGraph
+from taskgraph import graph
+from taskgraph.task import Task
+from mozunit import main
 
 
 class TestResolveTaskReferences(unittest.TestCase):
@@ -242,3 +243,7 @@ class TestOptimize(unittest.TestCase):
         self.assertEqual(opt.graph, graph.Graph(
             {label_to_taskid['task2'], label_to_taskid['task3']},
             {(label_to_taskid['task2'], label_to_taskid['task3'], 'image')}))
+
+
+if __name__ == '__main__':
+    main()

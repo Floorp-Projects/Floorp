@@ -206,6 +206,9 @@ jobs:
                 MOZHARNESS_SCRIPT: "mozharness/scripts/fx_desktop_build.py"
                 TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
             artifacts:
+              - name: public/android/checkstyle/checkstyle.html
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+                type: file
               - name: public/android/checkstyle/checkstyle.xml
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
                 type: file
@@ -260,8 +263,14 @@ jobs:
               - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
                 type: file
+              - name: public/android/findbugs/findbugs-officialAustralisDebug-output.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.xml
+                type: file
               - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
                 path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
+                type: file
+              - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
+                path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.xml
                 type: file
               - name: public/build
                 path: /home/worker/artifacts/

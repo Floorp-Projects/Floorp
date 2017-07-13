@@ -772,10 +772,10 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
 }
 
 std::string
-JsepSessionImpl::GetLocalDescription() const
+JsepSessionImpl::GetLocalDescription(JsepDescriptionPendingOrCurrent type) const
 {
   std::ostringstream os;
-  mozilla::Sdp* sdp = GetParsedLocalDescription();
+  mozilla::Sdp* sdp = GetParsedLocalDescription(type);
   if (sdp) {
     sdp->Serialize(os);
   }
@@ -783,10 +783,10 @@ JsepSessionImpl::GetLocalDescription() const
 }
 
 std::string
-JsepSessionImpl::GetRemoteDescription() const
+JsepSessionImpl::GetRemoteDescription(JsepDescriptionPendingOrCurrent type) const
 {
   std::ostringstream os;
-  mozilla::Sdp* sdp =  GetParsedRemoteDescription();
+  mozilla::Sdp* sdp =  GetParsedRemoteDescription(type);
   if (sdp) {
     sdp->Serialize(os);
   }
@@ -2410,7 +2410,7 @@ JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
 {
   mLastError.clear();
 
-  mozilla::Sdp* sdp = GetParsedRemoteDescription();
+  mozilla::Sdp* sdp = GetParsedRemoteDescription(kJsepDescriptionPendingOrCurrent);
 
   if (!sdp) {
     JSEP_SET_ERROR("Cannot add ICE candidate in state " << GetStateStr(mState));
@@ -2428,7 +2428,7 @@ JsepSessionImpl::AddLocalIceCandidate(const std::string& candidate,
 {
   mLastError.clear();
 
-  mozilla::Sdp* sdp = GetParsedLocalDescription();
+  mozilla::Sdp* sdp = GetParsedLocalDescription(kJsepDescriptionPendingOrCurrent);
 
   if (!sdp) {
     JSEP_SET_ERROR("Cannot add ICE candidate in state " << GetStateStr(mState));
@@ -2471,7 +2471,7 @@ JsepSessionImpl::UpdateDefaultCandidate(
 {
   mLastError.clear();
 
-  mozilla::Sdp* sdp = GetParsedLocalDescription();
+  mozilla::Sdp* sdp = GetParsedLocalDescription(kJsepDescriptionPendingOrCurrent);
 
   if (!sdp) {
     JSEP_SET_ERROR("Cannot add ICE candidate in state " << GetStateStr(mState));
@@ -2518,7 +2518,7 @@ JsepSessionImpl::EndOfLocalCandidates(uint16_t level)
 {
   mLastError.clear();
 
-  mozilla::Sdp* sdp = GetParsedLocalDescription();
+  mozilla::Sdp* sdp = GetParsedLocalDescription(kJsepDescriptionPendingOrCurrent);
 
   if (!sdp) {
     JSEP_SET_ERROR("Cannot mark end of local ICE candidates in state "
@@ -2594,18 +2594,24 @@ JsepSessionImpl::EnableOfferMsection(SdpMediaSection* msection)
 }
 
 mozilla::Sdp*
-JsepSessionImpl::GetParsedLocalDescription() const
+JsepSessionImpl::GetParsedLocalDescription(JsepDescriptionPendingOrCurrent type) const
 {
-  if (mPendingLocalDescription) {
+  if (type == kJsepDescriptionPending) {
+    return mPendingLocalDescription.get();
+  } else if (mPendingLocalDescription &&
+             type == kJsepDescriptionPendingOrCurrent) {
     return mPendingLocalDescription.get();
   }
   return mCurrentLocalDescription.get();
 }
 
 mozilla::Sdp*
-JsepSessionImpl::GetParsedRemoteDescription() const
+JsepSessionImpl::GetParsedRemoteDescription(JsepDescriptionPendingOrCurrent type) const
 {
-  if (mPendingRemoteDescription) {
+  if (type == kJsepDescriptionPending) {
+    return mPendingRemoteDescription.get();
+  } else if (mPendingRemoteDescription &&
+             type == kJsepDescriptionPendingOrCurrent) {
     return mPendingRemoteDescription.get();
   }
   return mCurrentRemoteDescription.get();

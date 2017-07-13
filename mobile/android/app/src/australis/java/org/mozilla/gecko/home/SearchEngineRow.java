@@ -19,6 +19,7 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.FaviconView;
 import org.mozilla.gecko.widget.FlowLayout;
+import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -35,7 +36,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -44,7 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-class SearchEngineRow extends RelativeLayout {
+class SearchEngineRow extends ThemedRelativeLayout {
 
     // Inner views
     private final FlowLayout mSuggestionView;

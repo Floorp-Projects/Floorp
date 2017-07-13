@@ -318,8 +318,14 @@ private:
 
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
 
+  int64_t TagsRootId() {
+    nsresult rv = EnsureRoots();
+    NS_ENSURE_SUCCESS(rv, -1);
+    return mTagsRoot;
+  }
+
   // These are lazy loaded, so never access them directly, always use the
-  // XPIDL getters.
+  // XPIDL getters or TagsRootId().
   int64_t mRoot;
   int64_t mMenuRoot;
   int64_t mTagsRoot;

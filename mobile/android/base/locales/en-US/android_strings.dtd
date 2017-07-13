@@ -625,6 +625,11 @@
      the text of a button; we expect more than one device. -->
 <!ENTITY home_remote_tabs_unhide_selected_devices "Unhide selected devices">
 
+<!-- Localization note (home_pinned_site) : This is a snackbar label displayed after
+    a site is pinned or unpinned. -->
+<!ENTITY home_pinned_site "Pinned site">
+<!ENTITY home_unpinned_site "Unpinned site">
+
 <!ENTITY remote_tabs_panel_moved_title "Where did my tabs go?">
 <!ENTITY remote_tabs_panel_moved_desc "We\'ve moved your tabs from other devices into a panel on your home page that can be easily accessed every time you open a new tab.">
 <!ENTITY remote_tabs_panel_moved_link "Take me to my new panel.">

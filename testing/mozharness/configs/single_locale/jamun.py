@@ -7,7 +7,7 @@ config = {
     "update_channel": "nightly-jamun",
 
     # l10n
-    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
+    "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-beta",
 
     # mar
     "mar_tools_url": os.environ.get(
