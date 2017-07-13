@@ -1397,14 +1397,8 @@ MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult)
     }
   }
 
-  if (aResult != NS_OK && mDecoder) {
-    RefPtr<AbstractMediaDecoder> decoder = mDecoder;
-    mDecoder->AbstractMainThread()->Dispatch(NS_NewRunnableFunction(
-      "MediaFormatReader::OnDemuxerInitDone", [decoder, aResult]() {
-        if (decoder->GetOwner()) {
-          decoder->GetOwner()->DecodeWarning(aResult);
-        }
-      }));
+  if (aResult != NS_OK) {
+    mOnDecodeWarning.Notify(aResult);
   }
 
   MaybeResolveMetadataPromise();
