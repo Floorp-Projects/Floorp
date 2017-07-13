@@ -12,6 +12,10 @@ endif
 preflight_all:
 	# Terminate any sccache server that might still be around
 	-$(TOPSRCDIR)/sccache2/sccache --stop-server > /dev/null 2>&1
+	# Start a new server, ensuring it gets the jobserver file descriptors
+	# from make (but don't use the + prefix when make -n is used, so that
+	# the command doesn't run in that case)
+	$(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)$(TOPSRCDIR)/sccache2/sccache --start-server
 
 postflight_all:
 	# Terminate sccache server. This prints sccache stats.
