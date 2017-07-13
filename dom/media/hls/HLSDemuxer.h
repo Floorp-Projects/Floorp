@@ -54,22 +54,17 @@ public:
 
 private:
   media::TimeUnit GetNextKeyFrameTime();
-  void UpdateVideoInfo(int index);
-  void UpdateAudioInfo(int index);
+
   bool OnTaskQueue() const;
-  TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   ~HLSDemuxer();
   friend class HLSTrackDemuxer;
 
   const RefPtr<AutoTaskQueue> mTaskQueue;
-  nsTArray<RefPtr<HLSTrackDemuxer>> mDemuxers;
+  RefPtr<HLSTrackDemuxer> mAudioDemuxer;
+  RefPtr<HLSTrackDemuxer> mVideoDemuxer;
 
   MozPromiseHolder<InitPromise> mInitPromise;
   RefPtr<HLSDemuxerCallbacksSupport> mCallbackSupport;
-
-  // Mutex to protect members below across multiple threads.
-  mutable Mutex mMutex;
-  MediaInfo mInfo;
 
   java::GeckoHLSDemuxerWrapper::Callbacks::GlobalRef mJavaCallbacks;
   java::GeckoHLSDemuxerWrapper::GlobalRef mHLSDemuxerWrapper;
@@ -79,13 +74,16 @@ class HLSTrackDemuxer : public MediaTrackDemuxer
 {
 public:
   HLSTrackDemuxer(HLSDemuxer* aParent,
-                  TrackInfo::TrackType aType);
+                  TrackInfo::TrackType aType,
+                  UniquePtr<TrackInfo> aTrackInfo);
   ~HLSTrackDemuxer();
   UniquePtr<TrackInfo> GetInfo() const override;
 
   RefPtr<SeekPromise> Seek(const media::TimeUnit& aTime) override;
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+
+  void UpdateMediaInfo(int index);
 
   void Reset() override;
 
@@ -103,6 +101,11 @@ public:
     return false;
   }
 
+  bool IsTrackValid() const
+  {
+    MutexAutoLock lock(mMutex);
+    return mTrackInfo->IsValid();
+  }
 private:
   // Update the timestamp of the next keyframe if there's one.
   void UpdateNextKeyFrameTime();
@@ -123,6 +126,10 @@ private:
   int32_t mLastFormatIndex = -1;
   // Queued samples extracted by the demuxer, but not yet returned.
   RefPtr<MediaRawData> mQueuedSample;
+
+  // Mutex to protect members below across multiple threads.
+  mutable Mutex mMutex;
+  UniquePtr<TrackInfo> mTrackInfo;
 };
 
 } // namespace mozilla
