@@ -23,6 +23,7 @@
 
 #include "nsITimer.h"
 
+#include "FrameStatistics.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
 #include "mozilla/Preferences.h"
