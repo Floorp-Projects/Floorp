@@ -4849,7 +4849,7 @@ HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder)
   // Not every decoder will produce waitingForKey events, only add ones that can
   if (waitingForKeyProducer) {
     mWaitingForKeyListener = waitingForKeyProducer->Connect(
-      mAbstractMainThread, this, &HTMLMediaElement::CannotDecryptWaitingForKey);
+      mAbstractMainThread, this, &HTMLMediaElement::NotifyWaitingForKey);
   }
 
   if (mChannelLoader) {
@@ -7049,9 +7049,9 @@ HTMLMediaElement::GetTopLevelPrincipal()
 }
 
 void
-HTMLMediaElement::CannotDecryptWaitingForKey()
+HTMLMediaElement::NotifyWaitingForKey()
 {
-  LOG(LogLevel::Debug, ("%p, CannotDecryptWaitingForKey()", this));
+  LOG(LogLevel::Debug, ("%p, NotifyWaitingForKey()", this));
 
   // http://w3c.github.io/encrypted-media/#wait-for-key
   // 7.3.4 Queue a "waitingforkey" Event
