@@ -328,26 +328,19 @@ window.inlineSelectionCss = `
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 18px 18px;
-  border: 1px solid #dedede;
   margin: 5px;
   width: 40px; }
 
 .highlight-button-save {
-  background-image: url("MOZ_EXTENSION/icons/cloud.svg");
-  background-position: 8px center;
-  background-repeat: no-repeat;
-  background-size: 20px 18px;
   font-size: 18px;
   margin: 5px;
-  min-width: 80px;
-  padding-left: 34px; }
+  min-width: 80px; }
 
 .highlight-button-download {
   background-image: url("MOZ_EXTENSION/icons/download.svg");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 18px 18px;
-  border: 1px solid #dedede;
   display: block;
   margin: 5px;
   width: 40px; }
