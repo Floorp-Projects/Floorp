@@ -129,6 +129,29 @@ public:
     ++mFrameStatisticsData.mPresentedFrames;
   }
 
+  // Stack based class to assist in notifying the frame statistics of
+  // parsed and decoded frames. Use inside video demux & decode functions
+  // to ensure all parsed and decoded frames are reported on all return paths.
+  class AutoNotifyDecoded
+  {
+  public:
+    explicit AutoNotifyDecoded(FrameStatistics* aFrameStats)
+      : mFrameStats(aFrameStats)
+    {
+    }
+    ~AutoNotifyDecoded()
+    {
+      if (mFrameStats) {
+        mFrameStats->NotifyDecodedFrames(mStats);
+      }
+    }
+
+    FrameStatisticsData mStats;
+
+  private:
+    FrameStatistics* mFrameStats;
+  };
+
 private:
   ~FrameStatistics() {}
 
