@@ -8,6 +8,7 @@
   "dependencies": {
     "codemirror": "^5.24.2",
     "devtools-config": "=0.0.12",
+    "devtools-contextmenu": "=0.0.3",
     "devtools-launchpad": "=0.0.75",
     "devtools-modules": "=0.0.27",
     "devtools-source-editor": "=0.0.3",

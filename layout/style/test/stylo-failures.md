@@ -60,8 +60,8 @@ to mochitest command.
     * test_align_shorthand_serialization.html [6]
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
-  * different serialization for gradient functions in computed value bug 1367274
-    * test_computed_style.html `gradient` [13]
+  * radial gradients are not serialized using modern unprefixed style bug 1380259
+    * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
@@ -80,7 +80,7 @@ to mochitest command.
 * Servo is correct but Gecko is wrong
   * Gecko rejects calc() in -webkit-gradient bug 1363349
     * test_property_syntax_errors.html `-webkit-gradient` [20]
-* test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1367299 [1]
+* test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1380259 [1]
 
 ## Unknown / Unsure
 

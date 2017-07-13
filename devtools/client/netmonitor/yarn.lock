@@ -1478,6 +1478,12 @@ devtools-connection@^0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/devtools-connection/-/devtools-connection-0.0.4.tgz#96174ad89dcfd34604829eee4cb4cb2673242ebf"
 
+devtools-contextmenu@=0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/devtools-contextmenu/-/devtools-contextmenu-0.0.3.tgz#be5183abcaeb728b6c5e2fe60fa9f0525fc959e0"
+  dependencies:
+    devtools-modules "^0.0.28"
+
 devtools-launchpad@=0.0.75:
   version "0.0.75"
   resolved "https://registry.yarnpkg.com/devtools-launchpad/-/devtools-launchpad-0.0.75.tgz#1ce79b4ad65ceee14cfb8e7b0e8b98710c4016bc"
@@ -1552,6 +1558,10 @@ devtools-launchpad@=0.0.75:
 devtools-modules@=0.0.27, devtools-modules@^0.0.27:
   version "0.0.27"
   resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-0.0.27.tgz#55ba9cc4fab4eb37335b343a94f26ded9b360e81"
+
+devtools-modules@^0.0.28:
+  version "0.0.28"
+  resolved "https://registry.yarnpkg.com/devtools-modules/-/devtools-modules-0.0.28.tgz#5b3498a4844675daedc3c7128a95ba011431eb46"
 
 devtools-source-editor@=0.0.3:
   version "0.0.3"
