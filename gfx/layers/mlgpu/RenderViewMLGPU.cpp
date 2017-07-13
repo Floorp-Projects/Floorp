@@ -27,9 +27,23 @@ RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder,
   mTarget = aTarget;
   mInvalidBounds = aInvalidRegion.GetBounds();
 
-  AL_LOG("RenderView %p root with invalid area %s\n",
+  // The clear region on the layer manager is the area that must be clear after
+  // we finish drawing.
+  mPostClearRegion = aBuilder->GetManager()->GetRegionToClear();
+
+  // Clamp the post-clear region to the invalid bounds, since clears don't go
+  // through the scissor rect if using ClearView.
+  mPostClearRegion.AndWith(mInvalidBounds);
+
+  // Since the post-clear will occlude everything, we include it in the final
+  // opaque area.
+  mOccludedRegion.OrWith(
+    ViewAs<LayerPixel>(mPostClearRegion, PixelCastJustification::RenderTargetIsParentLayerForRoot));
+
+  AL_LOG("RenderView %p root with invalid area %s, clear area %s\n",
     this,
-    Stringify(mInvalidBounds).c_str());
+    Stringify(mInvalidBounds).c_str(),
+    Stringify(mPostClearRegion).c_str());
 }
 
 RenderViewMLGPU::RenderViewMLGPU(FrameBuilder* aBuilder,
@@ -327,7 +341,7 @@ RenderViewMLGPU::Prepare()
   // Prepare the Clear buffer, which will fill the render target with transparent
   // pixels. This must happen before we set up world constants, since it can
   // create new z-indices.
-  PrepareClear();
+  PrepareClears();
 
   // Prepare the world constant buffer. This must be called after we've
   // finished allocating all z-indices.
@@ -400,11 +414,16 @@ RenderViewMLGPU::ExecuteRendering()
 
   // Clear any pixels that are not occluded, and therefore might require
   // blending.
-  DrawClear();
+  mDevice->DrawClearRegion(mPreClear);
 
   // Render back-to-front passes.
   for (auto iter = mBackToFront.begin(); iter != mBackToFront.end(); iter++) {
     ExecutePass(*iter);
+  }
+
+  // Make sure the post-clear area has no pixels.
+  if (!mPostClearRegion.IsEmpty()) {
+    mDevice->DrawClearRegion(mPostClear);
   }
 
   // We repaint the entire invalid region, even if it is partially occluded.
@@ -487,7 +506,7 @@ RenderViewMLGPU::PrepareDepthBuffer()
 }
 
 void
-RenderViewMLGPU::PrepareClear()
+RenderViewMLGPU::PrepareClears()
 {
   // Get the list of rects to clear. If using the depth buffer, we don't
   // care if it's accurate since the GPU will do occlusion testing for us.
@@ -498,50 +517,25 @@ RenderViewMLGPU::PrepareClear()
     region.SubOut(mOccludedRegion);
     region.SimplifyOutward(kMaxClearViewRects);
   }
-  for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
-    mClearRects.AppendElement(iter.Get().ToUnknownRect());
+
+  Maybe<int32_t> sortIndex;
+  if (mUseDepthBuffer) {
+    // Note that we use the lowest available sorting index, to ensure that when
+    // using the z-buffer, we don't draw over already-drawn content.
+    sortIndex = Some(mNextSortIndex++);
   }
 
-  // If ClearView is supported and we're not using a depth buffer, we
-  // can stop here. We'll use the rects as inputs to ClearView.
-  if (mClearRects.IsEmpty() || (mDevice->CanUseClearView() && !mUseDepthBuffer)) {
-    return;
-  }
+  nsTArray<IntRect> rects = ToRectArray(region);
+  mDevice->PrepareClearRegion(&mPreClear, Move(rects), sortIndex);
 
-  // Set up vertices for a shader-based clear.
-  mDevice->GetSharedVertexBuffer()->Allocate(
-    &mClearInput,
-    mClearRects.Length(),
-    sizeof(IntRect),
-    mClearRects.Elements());
-  mClearRects.Clear();
-
-  // Note that we use the lowest available sorting index, to ensure that when
-  // using the z-buffer, we don't draw over already-drawn content.
-  ClearConstants consts(mNextSortIndex++);
-  mDevice->GetSharedVSBuffer()->Allocate(&mClearConstants, consts);
-}
-
-void
-RenderViewMLGPU::DrawClear()
-{
-  // If we've set up vertices for a shader-based clear, execute that now.
-  if (mClearInput.IsValid()) {
-    mDevice->SetTopology(MLGPrimitiveTopology::UnitQuad);
-    mDevice->SetVertexShader(VertexShaderID::Clear);
-    mDevice->SetVertexBuffer(1, &mClearInput);
-    mDevice->SetVSConstantBuffer(kClearConstantBufferSlot, &mClearConstants);
-    mDevice->SetBlendState(MLGBlendState::Copy);
-    mDevice->SetPixelShader(PixelShaderID::Clear);
-    mDevice->DrawInstanced(4, mClearInput.NumVertices(), 0, 0);
-    return;
-  }
-
-  // Otherwise, if we have a normal rect list, we wanted to use the faster
-  // ClearView.
-  if (!mClearRects.IsEmpty()) {
-    Color color(0.0, 0.0, 0.0, 0.0);
-    mDevice->ClearView(mTarget, color, mClearRects.Elements(), mClearRects.Length());
+  if (!mPostClearRegion.IsEmpty()) {
+    // Prepare the final clear as well. Note that we always do this clear at the
+    // very end, even when the depth buffer is enabled, so we don't bother
+    // setting a useful sorting index. If and when we try to ship the depth
+    // buffer, we would execute this clear earlier in the pipeline and give it
+    // the closest possible z-ordering to the screen.
+    nsTArray<IntRect> rects = ToRectArray(mPostClearRegion);
+    mDevice->PrepareClearRegion(&mPostClear, Move(rects), Nothing());
   }
 }
 

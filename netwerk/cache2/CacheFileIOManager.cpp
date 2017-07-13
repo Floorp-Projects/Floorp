@@ -1298,6 +1298,11 @@ CacheFileIOManager::ShutdownInternal()
   // No new handles can be created after this flag is set
   mShuttingDown = true;
 
+  if (mTrashTimer) {
+    mTrashTimer->Cancel();
+    mTrashTimer = nullptr;
+  }
+
   // close all handles and delete all associated files
   nsTArray<RefPtr<CacheFileHandle> > handles;
   mHandles.GetAllHandles(&handles);

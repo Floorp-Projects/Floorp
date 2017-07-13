@@ -398,6 +398,7 @@ CacheIndex::PreShutdownInternal()
   MOZ_ASSERT(mShuttingDown);
 
   if (mUpdateTimer) {
+    mUpdateTimer->Cancel();
     mUpdateTimer = nullptr;
   }
 

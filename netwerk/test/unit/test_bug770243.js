@@ -201,6 +201,7 @@ function run_test()
   prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
   prefs.setCharPref("network.proxy.no_proxies_on", "");
   prefs.setIntPref("network.proxy.type", 1);
+  prefs.setBoolPref("network.http.rcwn.enabled", false);
 
   tests.shift()();
   do_test_pending();

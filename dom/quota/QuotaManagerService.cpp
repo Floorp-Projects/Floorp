@@ -505,8 +505,10 @@ QuotaManagerService::RemoveIdleObserver()
       do_GetService(kIdleServiceContractId);
     MOZ_ASSERT(idleService);
 
-    MOZ_ALWAYS_SUCCEEDS(
-      idleService->RemoveIdleObserver(this, kIdleObserverTimeSec));
+    // Ignore the return value of RemoveIdleObserver, it may fail if the
+    // observer has already been unregistered during shutdown.
+    Unused <<
+      idleService->RemoveIdleObserver(this, kIdleObserverTimeSec);
 
     mIdleObserverRegistered = false;
   }

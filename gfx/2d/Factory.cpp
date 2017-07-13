@@ -45,6 +45,7 @@
 #include <d3d10_1.h>
 #include "HelpersD2D.h"
 #include "HelpersWinFonts.h"
+#include "mozilla/Mutex.h"
 #endif
 
 #include "DrawTargetDual.h"
@@ -203,6 +204,8 @@ static uint32_t mDeviceSeq = 0;
 ID3D11Device *Factory::mD3D11Device = nullptr;
 ID2D1Device *Factory::mD2D1Device = nullptr;
 IDWriteFactory *Factory::mDWriteFactory = nullptr;
+bool Factory::mDWriteFactoryInitialized = false;
+Mutex* Factory::mDWriteFactoryLock = nullptr;
 #endif
 
 DrawEventRecorder *Factory::mRecorder;
@@ -217,6 +220,10 @@ Factory::Init(const Config& aConfig)
 
 #ifdef MOZ_ENABLE_FREETYPE
   mFTLock = new Mutex("Factory::mFTLock");
+#endif
+
+#ifdef WIN32
+  mDWriteFactoryLock = new Mutex("Factory::mDWriteFactoryLock");
 #endif
 }
 
@@ -234,6 +241,13 @@ Factory::ShutDown()
   if (mFTLock) {
     delete mFTLock;
     mFTLock = nullptr;
+  }
+#endif
+
+#ifdef WIN32
+  if (mDWriteFactoryLock) {
+    delete mDWriteFactoryLock;
+    mDWriteFactoryLock = nullptr;
   }
 #endif
 }
@@ -542,38 +556,26 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont,
 }
 
 already_AddRefed<NativeFontResource>
-Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType, void* aFontContext)
+Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize, BackendType aBackendType, FontType aFontType, void* aFontContext)
 {
-  switch (aType) {
+  switch (aFontType) {
 #ifdef WIN32
   case FontType::DWRITE:
     {
-      return NativeFontResourceDWrite::Create(aData, aSize,
-                                              /* aNeedsCairo = */ false);
+      bool needsCairo = aBackendType == BackendType::CAIRO ||
+                        aBackendType == BackendType::SKIA;
+      return NativeFontResourceDWrite::Create(aData, aSize, needsCairo);
     }
-#endif
-  case FontType::CAIRO:
-#ifdef USE_SKIA
-  case FontType::SKIA:
-#endif
-    {
-#ifdef WIN32
-      if (GetDWriteFactory()) {
-        return NativeFontResourceDWrite::Create(aData, aSize,
-                                                /* aNeedsCairo = */ true);
-      } else {
-        return NativeFontResourceGDI::Create(aData, aSize);
-      }
+  case FontType::GDI:
+    return NativeFontResourceGDI::Create(aData, aSize);
 #elif defined(XP_DARWIN)
-      return NativeFontResourceMac::Create(aData, aSize);
+  case FontType::MAC:
+    return NativeFontResourceMac::Create(aData, aSize);
 #elif defined(MOZ_WIDGET_GTK)
-      return NativeFontResourceFontconfig::Create(aData, aSize,
-                                                  static_cast<FT_Library>(aFontContext));
-#else
-      gfxWarning() << "Unable to create cairo scaled font from truetype data";
-      return nullptr;
+  case FontType::FONTCONFIG:
+    return NativeFontResourceFontconfig::Create(aData, aSize,
+                                                static_cast<FT_Library>(aFontContext));
 #endif
-    }
   default:
     gfxWarning() << "Unable to create requested font resource from truetype data";
     return nullptr;
@@ -746,13 +748,6 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
 }
 
 bool
-Factory::SetDWriteFactory(IDWriteFactory *aFactory)
-{
-  mDWriteFactory = aFactory;
-  return true;
-}
-
-bool
 Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 {
   mD3D11Device = aDevice;
@@ -807,16 +802,41 @@ Factory::GetDWriteFactory()
   return mDWriteFactory;
 }
 
+IDWriteFactory*
+Factory::EnsureDWriteFactory()
+{
+  MOZ_ASSERT(mDWriteFactoryLock);
+  MutexAutoLock lock(*mDWriteFactoryLock);
+
+  if (mDWriteFactoryInitialized) {
+    return mDWriteFactory;
+  }
+
+  mDWriteFactoryInitialized = true;
+
+  HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
+  decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
+    GetProcAddress(dwriteModule, "DWriteCreateFactory");
+
+  if (!createDWriteFactory) {
+    gfxWarning() << "Failed to locate DWriteCreateFactory function.";
+    return nullptr;
+  }
+
+  HRESULT hr = createDWriteFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                                   reinterpret_cast<IUnknown**>(&mDWriteFactory));
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to create DWrite Factory.";
+  }
+
+  return mDWriteFactory;
+}
+
 bool
 Factory::SupportsD2D1()
 {
   return !!D2DFactory1();
-}
-
-already_AddRefed<GlyphRenderingOptions>
-Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
-{
-  return MakeAndAddRef<GlyphRenderingOptionsDWrite>(aParams);
 }
 
 BYTE sSystemTextQuality = CLEARTYPE_QUALITY;
@@ -856,10 +876,14 @@ Factory::CreateScaledFontForDWriteFont(IDWriteFontFace* aFontFace,
                                        const RefPtr<UnscaledFont>& aUnscaledFont,
                                        float aSize,
                                        bool aUseEmbeddedBitmap,
-                                       bool aForceGDIMode)
+                                       bool aForceGDIMode,
+                                       IDWriteRenderingParams* aParams,
+                                       Float aGamma,
+                                       Float aContrast)
 {
   return MakeAndAddRef<ScaledFontDWrite>(aFontFace, aUnscaledFont, aSize,
                                          aUseEmbeddedBitmap, aForceGDIMode,
+                                         aParams, aGamma, aContrast,
                                          aStyle);
 }
 

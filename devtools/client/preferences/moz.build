@@ -5,6 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JS_PREFERENCE_PP_FILES += [
-    'debugger.js',
     'devtools.js'
+]
+
+JS_PREFERENCE_FILES += [
+    'debugger.js',
 ]

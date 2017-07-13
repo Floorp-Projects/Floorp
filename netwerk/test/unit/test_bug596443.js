@@ -1,5 +1,6 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 
@@ -52,6 +53,8 @@ Listener.prototype = {
 function run_test() {
     httpserver.registerPathHandler("/bug596443", handler);
     httpserver.start(-1);
+
+    Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
 
     // make sure we have a profile so we can use the disk-cache
     do_get_profile();

@@ -70,6 +70,9 @@ function run_test() {
   cePref = prefs.getCharPref("network.http.accept-encoding");
   prefs.setCharPref("network.http.accept-encoding", "gzip, deflate, br");
 
+  // Disable rcwn to make cache behavior deterministic.
+  prefs.setBoolPref("network.http.rcwn.enabled", false);
+
   httpserver.registerPathHandler(testUrl, handler);
   httpserver.start(-1);
 

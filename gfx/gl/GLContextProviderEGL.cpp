@@ -210,7 +210,7 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
 GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
                            bool isOffscreen, EGLConfig config, EGLSurface surface,
                            EGLContext context)
-    : GLContext(flags, caps, nullptr, isOffscreen)
+    : GLContext(flags, caps, nullptr, isOffscreen, sEGLLibrary.IsANGLE())
     , mConfig(config)
     , mSurface(surface)
     , mContext(context)

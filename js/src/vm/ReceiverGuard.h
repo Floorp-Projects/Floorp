@@ -48,8 +48,8 @@ class ReceiverGuard
 
     inline MOZ_IMPLICIT ReceiverGuard(const HeapReceiverGuard& guard);
 
-    explicit ReceiverGuard(JSObject* obj);
-    ReceiverGuard(ObjectGroup* group, Shape* shape);
+    explicit MOZ_ALWAYS_INLINE ReceiverGuard(JSObject* obj);
+    MOZ_ALWAYS_INLINE ReceiverGuard(ObjectGroup* group, Shape* shape);
 
     bool operator ==(const ReceiverGuard& other) const {
         return group == other.group && shape == other.shape;

@@ -7,6 +7,7 @@
 XPIDL_SOURCES += [
     'nsIEnvironment.idl',
     'nsIEventTarget.idl',
+    'nsIHangDetails.idl',
     'nsIIdlePeriod.idl',
     'nsINamed.idl',
     'nsIProcess.idl',

@@ -367,9 +367,9 @@ BEGIN_TEST(testIncrementalRoots)
     MOZ_ASSERT(JS::IsIncrementalGCInProgress(cx));
 
     // And assert that the mark bits are as we expect them to be.
-    MOZ_ASSERT(vec[0]->asTenured().isMarked());
-    MOZ_ASSERT(!leafHandle->asTenured().isMarked());
-    MOZ_ASSERT(!leafOwnerHandle->asTenured().isMarked());
+    MOZ_ASSERT(vec[0]->asTenured().isMarkedBlack());
+    MOZ_ASSERT(!leafHandle->asTenured().isMarkedBlack());
+    MOZ_ASSERT(!leafOwnerHandle->asTenured().isMarkedBlack());
 
 #ifdef DEBUG
     // Remember the current GC number so we can assert that no GC occurs
@@ -387,7 +387,7 @@ BEGIN_TEST(testIncrementalRoots)
     if (!JS_SetProperty(cx, vec[0], "newobj", leafValueHandle))
         return false;
     MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
-    MOZ_ASSERT(leafHandle->asTenured().isMarked());
+    MOZ_ASSERT(leafHandle->asTenured().isMarkedBlack());
 
     // Also take an unmarked object 'leaf2' from the graph and add an
     // additional edge from the root to it. This will not be marked by any
@@ -403,11 +403,11 @@ BEGIN_TEST(testIncrementalRoots)
         if (!JS_GetProperty(cx, leafOwnerHandle, "leaf2", &leaf2))
             return false;
         MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
-        MOZ_ASSERT(!leaf2.toObject().asTenured().isMarked());
+        MOZ_ASSERT(!leaf2.toObject().asTenured().isMarkedBlack());
         if (!JS_SetProperty(cx, vec[0], "leafcopy", leaf2))
             return false;
         MOZ_ASSERT(rt->gc.gcNumber() == currentGCNumber);
-        MOZ_ASSERT(!leaf2.toObject().asTenured().isMarked());
+        MOZ_ASSERT(!leaf2.toObject().asTenured().isMarkedBlack());
     }
 
     // Finish the GC using an unlimited budget.

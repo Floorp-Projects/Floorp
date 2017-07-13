@@ -11,7 +11,7 @@ const {CubicBezierPresetWidget} =
 const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} =
   require("devtools/client/shared/widgets/CubicBezierPresets");
 
-const TEST_URI = `data:text/html,<div id="cubic-bezier-container" />`;
+const TEST_URI = CHROME_URL_ROOT + "doc_cubic-bezier-01.html";
 
 add_task(function* () {
   let [host,, doc] = yield createHost("bottom", TEST_URI);

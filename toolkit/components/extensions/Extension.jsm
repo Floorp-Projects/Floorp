@@ -985,7 +985,7 @@ this.Extension = class extends ExtensionData {
           resolve();
         }
       };
-      ppmm.addMessageListener(msg + "Complete", listener);
+      ppmm.addMessageListener(msg + "Complete", listener, true);
       Services.obs.addObserver(observer, "message-manager-close");
       Services.obs.addObserver(observer, "message-manager-disconnect");
 
@@ -1200,6 +1200,14 @@ this.Extension = class extends ExtensionData {
     AsyncShutdown.profileChangeTeardown.addBlocker(
       `Extension Shutdown: ${this.id} (${this.manifest && this.name})`,
       promise.catch(() => {}));
+
+    // If we already have a shutdown promise for this extension, wait
+    // for it to complete before replacing it with a new one. This can
+    // sometimes happen during tests with rapid startup/shutdown cycles
+    // of multiple versions.
+    if (shutdownPromises.has(this.id)) {
+      await shutdownPromises.get(this.id);
+    }
 
     let cleanup = () => {
       shutdownPromises.delete(this.id);
