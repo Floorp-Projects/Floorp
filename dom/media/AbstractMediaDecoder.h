@@ -39,11 +39,6 @@ class GMPCrashHelper;
 class AbstractMediaDecoder : public nsIObserver
 {
 public:
-  // Increments the parsed, decoded and dropped frame counters by the passed in
-  // counts.
-  // Can be called on any thread.
-  virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) = 0;
-
   // Return an abstract thread on which to run main thread runnables.
   virtual AbstractThread* AbstractMainThread() const = 0;
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
