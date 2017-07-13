@@ -1,0 +1,54 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(feb979a8-f8cc-4522-9dff-6c055ca50762)]
+interface nsIAudioDeviceInfo : nsISupports
+{
+  readonly attribute DOMString name;
+
+  readonly attribute DOMString groupId;
+
+  readonly attribute DOMString vendor;
+
+  // type: Unknown/Input/Output
+  const unsigned short TYPE_UNKNOWN = 0;
+  const unsigned short TYPE_INPUT   = 1;
+  const unsigned short TYPE_OUTPUT  = 2;
+  readonly attribute unsigned short type;
+
+  // state: Disabled/Unplugged/Enabled
+  const unsigned short STATE_DISABLED   = 0;
+  const unsigned short STATE_UNPLUGGED  = 1;
+  const unsigned short STATE_ENABLED    = 2;
+  readonly attribute unsigned short state;
+
+  // preferred: None/Multimedia/Voice/Notification/All
+  const unsigned short PREF_NONE          = 0x00;
+  const unsigned short PREF_MULTIMEDIA    = 0x01;
+  const unsigned short PREF_VOICE         = 0x02;
+  const unsigned short PREF_NOTIFICATION  = 0x04;
+  const unsigned short PREF_ALL           = 0x0F;
+  readonly attribute unsigned short preferred;
+
+  // supported format, default format: S16LE/S16BE/F32LE/F32BE
+  const unsigned short FMT_S16LE = 0x0010;
+  const unsigned short FMT_S16BE = 0x0020;
+  const unsigned short FMT_F32LE = 0x1000;
+  const unsigned short FMT_F32BE = 0x2000;
+  readonly attribute unsigned short supportedFormat;
+  readonly attribute unsigned short defaultFormat;
+
+  // Max number of channels: [1, 255]
+  readonly attribute unsigned long maxChannels;
+
+  readonly attribute unsigned long defaultRate;
+  readonly attribute unsigned long maxRate;
+  readonly attribute unsigned long minRate;
+
+  readonly attribute unsigned long maxLatency;
+  readonly attribute unsigned long minLatency;
+};
