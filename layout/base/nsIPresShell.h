@@ -435,6 +435,12 @@ public:
   already_AddRefed<nsIContent> GetContentForScrolling() const;
 
   /**
+   * Get the DOM selection that should be the target for scrolling, if there
+   * is no focused content.
+   */
+  already_AddRefed<nsIContent> GetSelectedContentForScrolling() const;
+
+  /**
    * Gets nearest scrollable frame from the specified content node. The frame
    * is scrollable with overflow:scroll or overflow:auto in some direction when
    * aDirection is eEither.  Otherwise, this returns a nearest frame that is
@@ -1441,6 +1447,11 @@ public:
    * I.e., when we are deactive, this returns the *last* focused DOM window.
    */
   virtual already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() = 0;
+
+  /**
+   * Get the focused content under this window.
+   */
+  already_AddRefed<nsIContent> GetFocusedContentInOurWindow() const;
 
   /**
    * Get the layer manager for the widget of the root view, if it has
