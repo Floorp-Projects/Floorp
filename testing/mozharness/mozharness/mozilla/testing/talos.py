@@ -174,6 +174,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
         self.talos_json_url = self.config.get("talos_json_url")
         self.talos_json = self.config.get("talos_json")
         self.talos_json_config = self.config.get("talos_json_config")
+        self.repo_path = self.config.get("repo_path")
+        self.obj_path = self.config.get("obj_path")
         self.tests = None
         self.gecko_profile = self.config.get('gecko_profile')
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
@@ -549,6 +551,11 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
 
         # mitmproxy needs path to mozharness when installing the cert
         env['SCRIPTSPATH'] = scripts_path
+
+        if self.repo_path is not None:
+            env['MOZ_DEVELOPER_REPO_DIR'] = self.repo_path
+        if self.obj_path is not None:
+            env['MOZ_DEVELOPER_OBJ_DIR'] = self.obj_path
 
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)
