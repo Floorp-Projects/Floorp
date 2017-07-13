@@ -75,7 +75,7 @@ for platform in all_platforms:
         'mk_add_options MOZ_MAKE_FLAGS="-j4"',
         'export BUILDING_RELEASE=1',
         'if [ -n "$ENABLE_RELEASE_PROMOTION" ]; then',
-        'MOZ_AUTOMATION_UPLOAD_SYMBOLS=1',
+        'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
         'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
         'fi',
     ]
@@ -87,14 +87,12 @@ whitelist['release']['linux32'] += [
     'export MOZ_TELEMETRY_REPORTING=1',
     'mk_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-    'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
 ]
 whitelist['release']['linux64'] += [
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
     'mk_add_options MOZ_PGO=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
-    'MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-1}',
 ]
 
 if __name__ == '__main__':
