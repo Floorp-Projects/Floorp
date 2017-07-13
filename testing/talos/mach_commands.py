@@ -52,6 +52,8 @@ class TalosRunner(MozbuildObject):
             'run_local': True,
             'talos_json': self.talos_json,
             'binary_path': self.binary_path,
+            'repo_path': self.topsrcdir,
+            'obj_path': self.topobjdir,
             'log_name': 'talos',
             'virtualenv_path': self.virtualenv_path,
             'pypi_url': 'http://pypi.python.org/simple',
