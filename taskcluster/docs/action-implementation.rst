@@ -210,6 +210,7 @@ the example below illustrates how to create such an action::
           'enum': ['low', 'normal', 'high'],
           'default': 'low',
       },
+  )
   def task_template_builder(parameters):
       # The task template builder may return None to signal that the action
       # isn't available.
@@ -233,7 +234,6 @@ the example below illustrates how to create such an action::
           # additional metadata for treeherder in task.extra.treeherder.
           ...
       },
-  )
 
 This kind of action is useful for creating simple derivative tasks, but is
 limited by the expressiveness of the template language. On the other hand, it
