@@ -1070,7 +1070,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
       didHaveVScrollbar != state.mShowVScrollbar ||
       !oldScrollAreaBounds.IsEqualEdges(newScrollAreaBounds) ||
       !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
-    if (!mHelper.mSupppressScrollbarUpdate) {
+    if (!mHelper.mSuppressScrollbarUpdate) {
       mHelper.mSkippedScrollbarLayout = false;
       mHelper.SetScrollbarVisibility(mHelper.mHScrollbarBox, state.mShowHScrollbar);
       mHelper.SetScrollbarVisibility(mHelper.mVScrollbarBox, state.mShowVScrollbar);
@@ -2028,7 +2028,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mDidHistoryRestore(false)
   , mIsRoot(aIsRoot)
   , mClipAllDescendants(aIsRoot)
-  , mSupppressScrollbarUpdate(false)
+  , mSuppressScrollbarUpdate(false)
   , mSkippedScrollbarLayout(false)
   , mHadNonInitialReflow(false)
   , mHorizontalOverflow(false)
@@ -5248,7 +5248,7 @@ nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState)
     LayoutScrollArea(resizeState, oldScrollPosition);
   }
 
-  if (!mHelper.mSupppressScrollbarUpdate) {
+  if (!mHelper.mSuppressScrollbarUpdate) {
     mHelper.LayoutScrollbars(aState, clientRect, oldScrollAreaBounds);
   }
   if (!mHelper.mPostedReflowCallback) {
@@ -5553,7 +5553,7 @@ ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
                                         const nsRect& aContentArea,
                                         const nsRect& aOldScrollArea)
 {
-  NS_ASSERTION(!mSupppressScrollbarUpdate,
+  NS_ASSERTION(!mSuppressScrollbarUpdate,
                "This should have been suppressed");
 
   nsIPresShell* presShell = mOuter->PresContext()->PresShell();
