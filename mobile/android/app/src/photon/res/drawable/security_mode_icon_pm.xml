@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- level value is matter. It should match SecurityModeUtil.getImageLevel -->
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:drawable="@drawable/ic_globe_pm"
+        android:maxLevel="0" />
+    <item
+        android:drawable="@drawable/ic_lock"
+        android:maxLevel="1" />
+    <item
+        android:drawable="@drawable/ic_warning_minor"
+        android:maxLevel="2" />
+    <item
+        android:drawable="@drawable/ic_lock_disabled"
+        android:maxLevel="3" />
+    <item
+        android:drawable="@drawable/ic_shield_enabled"
+        android:maxLevel="4" />
+    <item
+        android:drawable="@drawable/ic_shield_disabled"
+        android:maxLevel="5" />
+    <item
+        android:drawable="@drawable/ic_search_icon"
+        android:maxLevel="6" />
+
+</level-list>

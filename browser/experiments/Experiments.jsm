@@ -1761,11 +1761,11 @@ Experiments.ExperimentEntry.prototype = {
    *
    * @return Promise<> Resolved when the operation is complete.
    */
-  async start() {
+  start() {
     this._log.trace("start() for " + this.id);
 
     this._enabled = true;
-    return await this.reconcileAddonState();
+    return this.reconcileAddonState();
   },
 
   // Async install of the addon for this experiment, part of the start task above.
@@ -1775,7 +1775,7 @@ Experiments.ExperimentEntry.prototype = {
     let install = await addonInstallForURL(this._manifestData.xpiURL, hash);
     gActiveInstallURLs.add(install.sourceURI.spec);
 
-    return await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       let failureHandler = (failureInstall, handler) => {
         let message = "AddonInstall " + handler + " for " + this.id + ", state=" +
                      (failureInstall.state || "?") + ", error=" + failureInstall.error;

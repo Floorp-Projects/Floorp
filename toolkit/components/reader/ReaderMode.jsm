@@ -224,13 +224,13 @@ this.ReaderMode = {
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
    */
-  async parseDocument(doc) {
+  parseDocument(doc) {
     if (!this._shouldCheckUri(doc.documentURIObject) || !this._shouldCheckUri(doc.baseURIObject, true)) {
       this.log("Reader mode disabled for URI");
       return null;
     }
 
-    return await this._readerParse(doc);
+    return this._readerParse(doc);
   },
 
   /**
@@ -247,7 +247,7 @@ this.ReaderMode = {
       return null;
     }
 
-    return await this._readerParse(doc);
+    return this._readerParse(doc);
   },
 
   _downloadDocument(url) {

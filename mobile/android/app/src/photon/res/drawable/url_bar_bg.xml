@@ -7,9 +7,9 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <!-- private browsing mode -->
-    <item android:drawable="@color/tabs_tray_grey_pressed" gecko:state_private="true" />
+    <item android:drawable="@color/photon_browser_toolbar_bg_private" gecko:state_private="true" />
 
     <!-- normal mode -->
-    <item android:drawable="@color/toolbar_grey" />
+    <item android:drawable="@color/photon_browser_toolbar_bg" />
 
 </selector>

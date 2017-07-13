@@ -83,11 +83,14 @@
           <separator class="thin"/>
         </row>
         <row>
-          <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
-                    label="&languages.customize.selectLanguage.label;"
-                    label2="&languages.customize.selectLanguage.label;">
-            <menupopup id="availableLanguagesPopup"/>
-          </menulist>
+          <!-- This <vbox> is needed to position search tooltips correctly. -->
+          <vbox>
+            <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
+                      label="&languages.customize.selectLanguage.label;"
+                      label2="&languages.customize.selectLanguage.label;">
+              <menupopup id="availableLanguagesPopup"/>
+            </menulist>
+          </vbox>
           <button id="addButton" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
                   label="&languages.customize.addButton.label;"
                   accesskey="&languages.customize.addButton.accesskey;"/>

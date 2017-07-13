@@ -191,6 +191,40 @@ private:
   GeckoStyleContext* mNextSibling;
   RefPtr<nsRuleNode> mRuleNode;
 
+#ifdef DEBUG
+public:
+  struct AutoCheckDependency {
+
+    GeckoStyleContext* mStyleContext;
+    nsStyleStructID mOuterSID;
+
+    AutoCheckDependency(GeckoStyleContext* aContext, nsStyleStructID aInnerSID)
+      : mStyleContext(aContext)
+    {
+      mOuterSID = aContext->mComputingStruct;
+      MOZ_ASSERT(mOuterSID == nsStyleStructID_None ||
+                 DependencyAllowed(mOuterSID, aInnerSID),
+                 "Undeclared dependency, see generate-stylestructlist.py");
+      aContext->mComputingStruct = aInnerSID;
+    }
+
+    ~AutoCheckDependency()
+    {
+      mStyleContext->mComputingStruct = mOuterSID;
+    }
+
+  };
+
+private:
+  // Used to check for undeclared dependencies.
+  // See AUTO_CHECK_DEPENDENCY in nsStyleContextInlines.h.
+  nsStyleStructID         mComputingStruct;
+
+#define AUTO_CHECK_DEPENDENCY(gecko_, sid_) \
+  mozilla::GeckoStyleContext::AutoCheckDependency checkNesting_(gecko_, sid_)
+#else
+#define AUTO_CHECK_DEPENDENCY(gecko_, sid_)
+#endif
 };
 }
 
