@@ -95,6 +95,17 @@ struct BlendVertexShaderConstants {
   float backdropTransform[4][4];
 };
 
+template <typename T>
+static inline nsTArray<gfx::IntRect>
+ToRectArray(const T& aRegion)
+{
+  nsTArray<gfx::IntRect> rects;
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    rects.AppendElement(iter.Get().ToUnknownRect());
+  }
+  return rects;
+}
+
 struct SimpleTraits
 {
   explicit SimpleTraits(const ItemInfo& aItem, const gfx::Rect& aRect)

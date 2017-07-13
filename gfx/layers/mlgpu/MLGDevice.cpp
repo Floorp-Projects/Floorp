@@ -6,6 +6,7 @@
 #include "MLGDevice.h"
 #include "mozilla/layers/TextureHost.h"
 #include "BufferCache.h"
+#include "ClearRegionHelper.h"
 #include "gfxConfig.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
@@ -170,7 +171,7 @@ MLGDevice::SetTopology(MLGPrimitiveTopology aTopology)
 }
 
 void
-MLGDevice::SetVertexBuffer(uint32_t aSlot, VertexBufferSection* aSection)
+MLGDevice::SetVertexBuffer(uint32_t aSlot, const VertexBufferSection* aSection)
 {
   if (!aSection->IsValid()) {
     return;
@@ -179,7 +180,7 @@ MLGDevice::SetVertexBuffer(uint32_t aSlot, VertexBufferSection* aSection)
 }
 
 void
-MLGDevice::SetPSConstantBuffer(uint32_t aSlot, ConstantBufferSection* aSection)
+MLGDevice::SetPSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection)
 {
   if (!aSection->IsValid()) {
     return;
@@ -197,7 +198,7 @@ MLGDevice::SetPSConstantBuffer(uint32_t aSlot, ConstantBufferSection* aSection)
 }
 
 void
-MLGDevice::SetVSConstantBuffer(uint32_t aSlot, ConstantBufferSection* aSection)
+MLGDevice::SetVSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection)
 {
   if (!aSection->IsValid()) {
     return;
@@ -308,6 +309,49 @@ bool
 MLGDevice::Synchronize()
 {
   return true;
+}
+
+void
+MLGDevice::PrepareClearRegion(ClearRegionHelper* aOut,
+                              nsTArray<gfx::IntRect>&& aRects,
+                              const Maybe<int32_t>& aSortIndex)
+{
+  if (CanUseClearView() && !aSortIndex) {
+    aOut->mRects = Move(aRects);
+    return;
+  }
+
+  mSharedVertexBuffer->Allocate(
+    &aOut->mInput,
+    aRects.Length(),
+    sizeof(IntRect),
+    aRects.Elements());
+
+  ClearConstants consts(aSortIndex ? aSortIndex.value() : 1);
+  mSharedVSBuffer->Allocate(&aOut->mVSBuffer, consts);
+}
+
+void
+MLGDevice::DrawClearRegion(const ClearRegionHelper& aHelper)
+{
+  // If we've set up vertices for a shader-based clear, execute that now.
+  if (aHelper.mInput.IsValid()) {
+    SetTopology(MLGPrimitiveTopology::UnitQuad);
+    SetVertexShader(VertexShaderID::Clear);
+    SetVertexBuffer(1, &aHelper.mInput);
+    SetVSConstantBuffer(kClearConstantBufferSlot, &aHelper.mVSBuffer);
+    SetBlendState(MLGBlendState::Copy);
+    SetPixelShader(PixelShaderID::Clear);
+    DrawInstanced(4, aHelper.mInput.NumVertices(), 0, 0);
+    return;
+  }
+
+  // Otherwise, if we have a normal rect list, we wanted to use the faster
+  // ClearView.
+  if (!aHelper.mRects.IsEmpty()) {
+    Color color(0.0, 0.0, 0.0, 0.0);
+    ClearView(mCurrentRT, color, aHelper.mRects.Elements(), aHelper.mRects.Length());
+  }
 }
 
 } // namespace layers

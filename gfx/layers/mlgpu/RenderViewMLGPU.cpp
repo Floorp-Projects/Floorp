@@ -400,7 +400,7 @@ RenderViewMLGPU::ExecuteRendering()
 
   // Clear any pixels that are not occluded, and therefore might require
   // blending.
-  DrawClear();
+  mDevice->DrawClearRegion(mClear);
 
   // Render back-to-front passes.
   for (auto iter = mBackToFront.begin(); iter != mBackToFront.end(); iter++) {
@@ -498,51 +498,16 @@ RenderViewMLGPU::PrepareClear()
     region.SubOut(mOccludedRegion);
     region.SimplifyOutward(kMaxClearViewRects);
   }
-  for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
-    mClearRects.AppendElement(iter.Get().ToUnknownRect());
+
+  Maybe<int32_t> sortIndex;
+  if (mUseDepthBuffer) {
+    // Note that we use the lowest available sorting index, to ensure that when
+    // using the z-buffer, we don't draw over already-drawn content.
+    sortIndex = Some(mNextSortIndex++);
   }
 
-  // If ClearView is supported and we're not using a depth buffer, we
-  // can stop here. We'll use the rects as inputs to ClearView.
-  if (mClearRects.IsEmpty() || (mDevice->CanUseClearView() && !mUseDepthBuffer)) {
-    return;
-  }
-
-  // Set up vertices for a shader-based clear.
-  mDevice->GetSharedVertexBuffer()->Allocate(
-    &mClearInput,
-    mClearRects.Length(),
-    sizeof(IntRect),
-    mClearRects.Elements());
-  mClearRects.Clear();
-
-  // Note that we use the lowest available sorting index, to ensure that when
-  // using the z-buffer, we don't draw over already-drawn content.
-  ClearConstants consts(mNextSortIndex++);
-  mDevice->GetSharedVSBuffer()->Allocate(&mClearConstants, consts);
-}
-
-void
-RenderViewMLGPU::DrawClear()
-{
-  // If we've set up vertices for a shader-based clear, execute that now.
-  if (mClearInput.IsValid()) {
-    mDevice->SetTopology(MLGPrimitiveTopology::UnitQuad);
-    mDevice->SetVertexShader(VertexShaderID::Clear);
-    mDevice->SetVertexBuffer(1, &mClearInput);
-    mDevice->SetVSConstantBuffer(kClearConstantBufferSlot, &mClearConstants);
-    mDevice->SetBlendState(MLGBlendState::Copy);
-    mDevice->SetPixelShader(PixelShaderID::Clear);
-    mDevice->DrawInstanced(4, mClearInput.NumVertices(), 0, 0);
-    return;
-  }
-
-  // Otherwise, if we have a normal rect list, we wanted to use the faster
-  // ClearView.
-  if (!mClearRects.IsEmpty()) {
-    Color color(0.0, 0.0, 0.0, 0.0);
-    mDevice->ClearView(mTarget, color, mClearRects.Elements(), mClearRects.Length());
-  }
+  nsTArray<IntRect> rects = ToRectArray(region);
+  mDevice->PrepareClearRegion(&mClear, Move(rects), sortIndex);
 }
 
 } // namespace layers

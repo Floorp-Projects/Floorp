@@ -45,6 +45,7 @@ class SharedVertexBuffer;
 class SharedConstantBuffer;
 class TextureSource;
 class VertexBufferSection;
+struct ClearRegionHelper;
 
 class MLGRenderTarget
 {
@@ -349,9 +350,9 @@ public:
   virtual MLGDeviceD3D11* AsD3D11() { return nullptr; }
 
   // Helpers.
-  void SetVertexBuffer(uint32_t aSlot, VertexBufferSection* aSection);
-  void SetPSConstantBuffer(uint32_t aSlot, ConstantBufferSection* aSection);
-  void SetVSConstantBuffer(uint32_t aSlot, ConstantBufferSection* aSection);
+  void SetVertexBuffer(uint32_t aSlot, const VertexBufferSection* aSection);
+  void SetPSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection);
+  void SetVSConstantBuffer(uint32_t aSlot, const ConstantBufferSection* aSection);
   void SetPSTexture(uint32_t aSlot, TextureSource* aSource);
   void SetSamplerMode(uint32_t aIndex, gfx::SamplingFilter aFilter);
 
@@ -391,6 +392,14 @@ public:
   const nsCString& GetFailureMessage() const {
     return mFailureMessage;
   }
+
+  // Prepare a clear-region operation to be run at a later time.
+  void PrepareClearRegion(ClearRegionHelper* aOut,
+                          nsTArray<gfx::IntRect>&& aRects,
+                          const Maybe<int32_t>& aSortIndex);
+
+  // Execute a clear-region operation. This may change shader state.
+  void DrawClearRegion(const ClearRegionHelper& aHelper);
 
   // If supported, synchronize with the SyncObject given to clients.
   virtual bool Synchronize();
@@ -475,6 +484,8 @@ protected:
   bool mCanUseClearView;
   bool mCanUseConstantBufferOffsetBinding;
   size_t mMaxConstantBufferBindSize;
+
+  RefPtr<MLGRenderTarget> mCurrentRT;
 };
 
 } // namespace layers
