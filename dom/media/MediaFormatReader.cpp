@@ -1739,9 +1739,7 @@ MediaFormatReader::NotifyWaitingForKey(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& decoder = GetDecoderData(aTrack);
-  if (mDecoder) {
-    mDecoder->NotifyWaitingForKey();
-  }
+  mOnWaitingForKey.Notify();
   if (!decoder.mDecodeRequest.Exists()) {
     LOGV("WaitingForKey received while no pending decode. Ignoring");
     return;
