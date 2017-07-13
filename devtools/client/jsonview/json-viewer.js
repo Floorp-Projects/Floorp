@@ -19,7 +19,7 @@ define(function (require, exports, module) {
   try {
     jsonData = JSON.parse(json.textContent);
   } catch (err) {
-    jsonData = err + "";
+    jsonData = err;
   }
 
   // Application state object.
@@ -59,6 +59,10 @@ define(function (require, exports, module) {
     },
 
     onPrettify: function (data) {
+      if (jsonData instanceof Error) {
+        // Cannot prettify invalid JSON
+        return;
+      }
       if (input.prettified) {
         theApp.setState({jsonText: input.jsonText});
       } else {
