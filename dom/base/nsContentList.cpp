@@ -1178,7 +1178,9 @@ nsLabelsNodeList::MaybeResetRoot(nsINode* aRootNode)
     return;
   }
 
-  mRootNode->RemoveMutationObserver(this);
+  if (mRootNode) {
+    mRootNode->RemoveMutationObserver(this);
+  }
   mRootNode = aRootNode;
   mRootNode->AddMutationObserver(this);
   SetDirty();

@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1375050
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1375050</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+      try { o1 = document.createElement('input');  } catch(e) { console.log(e); };
+      try { o2 = document.createElement('col');  } catch(e) { console.log(e); };
+      try { o4 = document.createRange(); } catch(e) { console.log(e); };
+      try { document.documentElement.appendChild(o1); } catch(e) { console.log(e); };
+      try { for (let p in o1) { let x = o1[p] }; } catch(e) { console.log(e); };
+      try { o4.selectNode(o1); } catch(e) { console.log(e); };
+      try { o6 = document.createComment(" x"); } catch(e) { console.log(e); }
+      try { o4.surroundContents(o6); } catch(e) { console.log(e); }
+      try { o7 = document.implementation.createDocument('', '', null).adoptNode(o1); } catch(e) {  console.log(e);};
+      try { o2.appendChild(o1); } catch(e) { console.log(e); };
+      ok(true, "Didn't crash.");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1375050">Mozilla Bug 1375050</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
