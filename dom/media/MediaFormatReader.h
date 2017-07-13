@@ -22,7 +22,6 @@
 
 namespace mozilla {
 
-class AbstractMediaDecoder;
 class CDMProxy;
 class FrameStatistics;
 class GMPCrashHelper;
@@ -75,17 +74,11 @@ struct MetadataHolder
 
 struct MOZ_STACK_CLASS MediaFormatReaderInit
 {
-  AbstractMediaDecoder* const mDecoder;
   MediaResource* mResource = nullptr;
   VideoFrameContainer* mVideoFrameContainer = nullptr;
   FrameStatistics* mFrameStats = nullptr;
   already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
   already_AddRefed<GMPCrashHelper> mCrashHelper;
-
-  explicit MediaFormatReaderInit(AbstractMediaDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {
-  }
 };
 
 class MediaFormatReader final
@@ -746,9 +739,6 @@ private:
 
   void ShutdownDecoder(TrackType aTrack);
   RefPtr<ShutdownPromise> TearDownDecoders();
-
-  // Reference to the owning decoder object.
-  AbstractMediaDecoder* mDecoder;
 
   bool mShutdown = false;
 
