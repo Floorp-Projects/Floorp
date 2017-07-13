@@ -5163,15 +5163,37 @@ nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState)
       if (!mHelper.mHasHorizontalScrollbar) {
         // no scrollbar?
         if (AddHorizontalScrollbar(aState, scrollbarBottom)) {
-          needsLayout = true;
-        }
 
-        // if we added a horizontal scrollbar and we did not have a vertical
-        // there is a chance that by adding the horizontal scrollbar we will
-        // suddenly need a vertical scrollbar. Is a special case but its
-        // important.
-        //if (!mHasVerticalScrollbar && scrolledRect.height > scrollAreaRect.height - sbSize.height)
-        //  printf("****Gfx Scrollbar Special case hit!!*****\n");
+          // if we added a horizontal scrollbar and we did not have a vertical
+          // there is a chance that by adding the horizontal scrollbar we will
+          // suddenly need a vertical scrollbar. Is a special case but it's
+          // important.
+          //
+          // But before we do that we need to relayout, since it's
+          // possible that the contents will flex as a result of adding a
+          // horizontal scrollbar and avoid the need for a vertical
+          // scrollbar.
+          //
+          // So instead of setting needsLayout to true here, do the
+          // layout immediately, and then consider whether to add the
+          // vertical scrollbar (and then maybe layout again).
+          {
+            nsBoxLayoutState resizeState(aState);
+            LayoutScrollArea(resizeState, oldScrollPosition);
+            needsLayout = false;
+          }
+
+          // Refresh scrolledRect because we called LayoutScrollArea.
+          scrolledRect = mHelper.GetScrolledRect();
+
+          if (styles.mVertical == NS_STYLE_OVERFLOW_AUTO &&
+              !mHelper.mHasVerticalScrollbar &&
+              scrolledRect.height > mHelper.mScrollPort.height) {
+            if (AddVerticalScrollbar(aState, scrollbarRight)) {
+              needsLayout = true;
+            }
+          }
+        }
 
       }
     } else {
