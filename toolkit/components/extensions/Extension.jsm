@@ -90,6 +90,9 @@ XPCOMUtils.defineLazyGetter(
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "aomStartup",
+                                   "@mozilla.org/addons/addon-manager-startup;1",
+                                   "amIAddonManagerStartup");
 XPCOMUtils.defineLazyServiceGetter(this, "uuidGen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
@@ -390,46 +393,35 @@ this.ExtensionData = class {
       return results;
     }
 
-    // FIXME: We need a way to do this without main thread IO.
-
     let uri = this.rootURI.QueryInterface(Ci.nsIJARURI);
-
     let file = uri.JARFile.QueryInterface(Ci.nsIFileURL).file;
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-    zipReader.open(file);
-    try {
-      let results = [];
 
-      // Normalize the directory path.
-      path = `${uri.JAREntry}/${path}`;
-      path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
+    // Normalize the directory path.
+    path = `${uri.JAREntry}/${path}`;
+    path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
 
-      // Escape pattern metacharacters.
-      let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&");
+    // Escape pattern metacharacters.
+    let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&") + "*";
 
-      let enumerator = zipReader.findEntries(pattern + "*");
-      while (enumerator.hasMore()) {
-        let name = enumerator.getNext();
-        if (!name.startsWith(path)) {
-          throw new Error("Unexpected ZipReader entry");
-        }
-
-        // The enumerator returns the full path of all entries.
-        // Trim off the leading path, and filter out entries from
-        // subdirectories.
-        name = name.slice(path.length);
-        if (name && !/\/./.test(name)) {
-          results.push({
-            name: name.replace("/", ""),
-            isDir: name.endsWith("/"),
-          });
-        }
+    let results = [];
+    for (let name of aomStartup.enumerateZipFile(file, pattern)) {
+      if (!name.startsWith(path)) {
+        throw new Error("Unexpected ZipReader entry");
       }
 
-      return results;
-    } finally {
-      zipReader.close();
+      // The enumerator returns the full path of all entries.
+      // Trim off the leading path, and filter out entries from
+      // subdirectories.
+      name = name.slice(path.length);
+      if (name && !/\/./.test(name)) {
+        results.push({
+          name: name.replace("/", ""),
+          isDir: name.endsWith("/"),
+        });
+      }
     }
+
+    return results;
   }
 
   readJSON(path) {
