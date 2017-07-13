@@ -36,15 +36,15 @@ public:
   };
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
-  void addEntry(const ProfileBufferEntry& aEntry);
+  void AddEntry(const ProfileBufferEntry& aEntry);
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId. Also,
   // record the resulting generation and index in |aLS| if it's non-null.
-  void addThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
+  void AddThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
 
   // Add to the buffer a dynamic string. It'll be spread across one or more
   // DynamicStringFragment entries.
-  void addDynamicStringEntry(const char* aStr);
+  void AddDynamicStringEntry(const char* aStr);
 
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
@@ -63,11 +63,11 @@ public:
                            const mozilla::TimeStamp& aProcessStartTime,
                            LastSample& aLS);
 
-  void addStoredMarker(ProfilerMarker* aStoredMarker);
+  void AddStoredMarker(ProfilerMarker* aStoredMarker);
 
   // The following two methods are not signal safe! They delete markers.
-  void deleteExpiredStoredMarkers();
-  void reset();
+  void DeleteExpiredStoredMarkers();
+  void Reset();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
