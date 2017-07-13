@@ -4832,12 +4832,14 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
 
      mHelper.SetScrollbarVisibility(mHelper.mHScrollbarBox, aAdd);
 
+     // We can't directly pass mHasHorizontalScrollbar as the bool outparam for
+     // AddRemoveScrollbar() because it's a bool:1 bitfield. Hence this var:
      bool hasHorizontalScrollbar;
      bool fit = AddRemoveScrollbar(hasHorizontalScrollbar,
                                    mHelper.mScrollPort.y,
                                    mHelper.mScrollPort.height,
                                    hSize.height, aOnRightOrBottom, aAdd);
-     mHelper.mHasHorizontalScrollbar = hasHorizontalScrollbar;    // because mHasHorizontalScrollbar is a bool
+     mHelper.mHasHorizontalScrollbar = hasHorizontalScrollbar;
      if (!fit) {
        mHelper.SetScrollbarVisibility(mHelper.mHScrollbarBox, !aAdd);
      }
@@ -4851,12 +4853,14 @@ nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
 
      mHelper.SetScrollbarVisibility(mHelper.mVScrollbarBox, aAdd);
 
+     // We can't directly pass mHasVerticalScrollbar as the bool outparam for
+     // AddRemoveScrollbar() because it's a bool:1 bitfield. Hence this var:
      bool hasVerticalScrollbar;
      bool fit = AddRemoveScrollbar(hasVerticalScrollbar,
                                    mHelper.mScrollPort.x,
                                    mHelper.mScrollPort.width,
                                    vSize.width, aOnRightOrBottom, aAdd);
-     mHelper.mHasVerticalScrollbar = hasVerticalScrollbar;    // because mHasVerticalScrollbar is a bool
+     mHelper.mHasVerticalScrollbar = hasVerticalScrollbar;
      if (!fit) {
        mHelper.SetScrollbarVisibility(mHelper.mVScrollbarBox, !aAdd);
      }
