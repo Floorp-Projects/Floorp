@@ -509,21 +509,14 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     GetChannelResultPrincipal(aOldChannel, getter_AddRefs(oldPrincipal));
 
   nsCOMPtr<nsIURI> newURI;
-  aNewChannel->GetURI(getter_AddRefs(newURI));
-  nsCOMPtr<nsIURI> newOriginalURI;
-  aNewChannel->GetOriginalURI(getter_AddRefs(newOriginalURI));
-
-  NS_ENSURE_STATE(oldPrincipal && newURI && newOriginalURI);
+  Unused << NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
+  NS_ENSURE_STATE(oldPrincipal && newURI);
 
   const uint32_t flags =
       nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT |
       nsIScriptSecurityManager::DISALLOW_SCRIPT;
   nsresult rv = nsContentUtils::GetSecurityManager()->
     CheckLoadURIWithPrincipal(oldPrincipal, newURI, flags);
-  if (NS_SUCCEEDED(rv) && newOriginalURI != newURI) {
-      rv = nsContentUtils::GetSecurityManager()->
-        CheckLoadURIWithPrincipal(oldPrincipal, newOriginalURI, flags);
-  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   aCb->OnRedirectVerifyCallback(NS_OK);
