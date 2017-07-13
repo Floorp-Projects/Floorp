@@ -27,12 +27,12 @@ class AutoFitTabsGridLayout extends TabsGridLayout {
         super(context, attrs, 1);
 
         final Resources resources = context.getResources();
-        desiredItemWidth = resources.getDimensionPixelSize(R.dimen.tab_panel_item_width);
-        desiredHorizontalItemSpacing = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_ideal_item_hspacing);
-        minHorizontalItemSpacing = resources.getDimensionPixelOffset(R.dimen.tab_panel_grid_min_item_hspacing);
-        verticalItemPadding = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_vpadding);
-        final int viewPaddingVertical = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_vpadding);
-        final int viewPaddingHorizontal = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_hpadding);
+        desiredItemWidth = resources.getDimensionPixelSize(R.dimen.tab_panel_item_width_autofit);
+        desiredHorizontalItemSpacing = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_hpadding_autofit);
+        minHorizontalItemSpacing = resources.getDimensionPixelOffset(R.dimen.tab_panel_grid_min_item_hspacing_autofit);
+        verticalItemPadding = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_item_vpadding_autofit);
+        final int viewPaddingVertical = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_vpadding_autofit);
+        final int viewPaddingHorizontal = resources.getDimensionPixelSize(R.dimen.tab_panel_grid_hpadding_autofit);
 
         setPadding(viewPaddingHorizontal, viewPaddingVertical, viewPaddingHorizontal, viewPaddingVertical);
     }
