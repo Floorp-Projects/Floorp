@@ -122,15 +122,15 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
                                     "MOZ_NO_DANGLING_ON_TEMPORARIES must "
                                     "return a pointer";
 
-  if (auto InvalidRefQualified
-        = Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodRefQualified")) {
+  if (auto InvalidRefQualified =
+          Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodRefQualified")) {
     diag(InvalidRefQualified->getLocation(), ErrorInvalidRefQualified,
          DiagnosticIDs::Error);
     return;
   }
 
-  if (auto InvalidPointer
-        = Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodPointer")) {
+  if (auto InvalidPointer =
+          Result.Nodes.getNodeAs<CXXMethodDecl>("invalidMethodPointer")) {
     diag(InvalidPointer->getLocation(), ErrorInvalidPointer,
          DiagnosticIDs::Error);
     return;
@@ -143,8 +143,8 @@ void DanglingOnTemporaryChecker::check(const MatchFinder::MatchResult &Result) {
   const char *Error = "calling `%0` on a temporary, potentially allowing use "
                       "after free of the raw pointer";
 
-  const char *EscapeStmtNote
-      = "the raw pointer escapes the function scope here";
+  const char *EscapeStmtNote =
+      "the raw pointer escapes the function scope here";
 
   const ObjCMessageExpr *ParentObjCMessageExpr =
       Result.Nodes.getNodeAs<ObjCMessageExpr>("parentObjCMessageExpr");
