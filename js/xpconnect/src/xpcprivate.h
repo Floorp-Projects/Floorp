@@ -619,7 +619,6 @@ public:
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
-    inline void AddObjectHolderRoot(XPCJSObjectHolder* holder);
 
     void DebugDump(int16_t depth);
 
@@ -664,7 +663,6 @@ private:
     bool mDoingFinalization;
     XPCRootSetElem* mVariantRoots;
     XPCRootSetElem* mWrappedJSRoots;
-    XPCRootSetElem* mObjectHolderRoots;
     nsTArray<xpcGCCallback> extraGCCallbacks;
     JS::GCSliceCallback mPrevGCSliceCallback;
     JS::DoCycleCollectionCallback mPrevDoCycleCollectionCallback;
@@ -2049,8 +2047,7 @@ private:
 
 /***************************************************************************/
 
-class XPCJSObjectHolder final : public nsIXPConnectJSObjectHolder,
-                                public XPCRootSetElem
+class XPCJSObjectHolder final : public nsIXPConnectJSObjectHolder
 {
 public:
     // all the interface method declarations...
@@ -2060,16 +2057,13 @@ public:
     // non-interface implementation
 
 public:
-    void TraceJS(JSTracer* trc);
-
-    explicit XPCJSObjectHolder(JSObject* obj);
+    XPCJSObjectHolder(JSContext* cx, JSObject* obj);
 
 private:
-    virtual ~XPCJSObjectHolder();
-
+    virtual ~XPCJSObjectHolder() {}
     XPCJSObjectHolder() = delete;
 
-    JS::Heap<JSObject*> mJSObj;
+    JS::PersistentRooted<JSObject*> mJSObj;
 };
 
 /***************************************************************************
