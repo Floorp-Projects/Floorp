@@ -6,6 +6,7 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/TelemetryHealthPing.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
@@ -68,10 +69,6 @@ var checkPingsSaved = async function(pingIds) {
 
   return allFound;
 };
-
-function histogramValueCount(h) {
-  return h.counts.reduce((a, b) => a + b);
-}
 
 add_task(async function test_setup() {
   // Trigger a proper telemetry init.
@@ -326,6 +323,7 @@ add_task(async function test_discardBigPings() {
   // Submit a ping of a normal size and check that we don't count it in the histogram.
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
   await TelemetrySend.testWaitOnOutgoingPings();
+  await PingServer.promiseNextPing();
 
   Assert.equal(histSizeExceeded.snapshot().sum, 0, "Telemetry must report no oversized ping submitted.");
   Assert.equal(histDiscardedSize.snapshot().sum, 0, "Telemetry must report no oversized pings.");
@@ -335,15 +333,21 @@ add_task(async function test_discardBigPings() {
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 
   // Submit an oversized ping and check that it gets discarded.
+  TelemetryHealthPing.testReset();
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, OVERSIZED_PAYLOAD);
-  await TelemetrySend.testWaitOnOutgoingPings();
+  let ping = await PingServer.promiseNextPing();
 
   Assert.equal(histSizeExceeded.snapshot().sum, 1, "Telemetry must report 1 oversized ping submitted.");
   Assert.equal(histDiscardedSize.snapshot().counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
-  Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have recorded sending success.");
-  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1, "Should have recorded send success time.");
+  Assert.deepEqual(histSuccess.snapshot().counts, [0, 2, 0], "Should have recorded sending success.");
+  Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 2, "Should have recorded send success time.");
   Assert.greater(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
+
+  Assert.equal(ping.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have received a health ping.");
+  Assert.deepEqual(ping.payload[TelemetryHealthPing.FailureType.DISCARDED_FOR_SIZE],
+    { [TEST_PING_TYPE]: 1 }, "Should have recorded correct type of oversized ping.");
+  Assert.deepEqual(ping.payload["os"], TelemetryHealthPing.OsInfo, "Should have correct os info.")
 });
 
 add_task(async function test_evictedOnServerErrors() {
@@ -509,7 +513,6 @@ add_task(async function test_measurePingsSize() {
   Assert.equal(histogramValueCount(histFailedPingSize.snapshot()), 1,
     "Should have recorded 1 failed ping into histogram.");
 });
-
 
 add_task(async function cleanup() {
   await PingServer.stop();
