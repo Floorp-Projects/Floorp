@@ -1923,7 +1923,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
 
 void
 MediaFormatReader::HandleDemuxedSamples(
-  TrackType aTrack, AbstractMediaDecoder::AutoNotifyDecoded& aA)
+  TrackType aTrack, FrameStatistics::AutoNotifyDecoded& aA)
 {
   MOZ_ASSERT(OnTaskQueue());
 
@@ -2149,7 +2149,7 @@ MediaFormatReader::Update(TrackType aTrack)
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
-  AbstractMediaDecoder::AutoNotifyDecoded a(mFrameStats);
+  FrameStatistics::AutoNotifyDecoded a(mFrameStats);
 
   // Drop any frames found prior our internal seek target.
   while (decoder.mTimeThreshold && decoder.mOutput.Length()) {
