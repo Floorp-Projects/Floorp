@@ -7,6 +7,7 @@
 #define mozilla_gfx_layers_mlgpu_RenderViewMLGPU_h
 
 #include "LayerManagerMLGPU.h"
+#include "ClearRegionHelper.h"
 #include "RenderPassMLGPU.h"
 #include "Units.h"
 #include <deque>
@@ -90,12 +91,8 @@ private:
   // Shader data.
   ConstantBufferSection mWorldConstants;
 
-  // If using ClearView-based clears.
-  nsTArray<gfx::IntRect> mClearRects;
-
-  // If using shader-based clears.
-  VertexBufferSection mClearInput;
-  ConstantBufferSection mClearConstants;
+  // Information for the initial target surface clear.
+  ClearRegionHelper mClear;
 
   // Either an MLGSwapChain-derived render target, or an intermediate surface.
   RefPtr<MLGRenderTarget> mTarget;
