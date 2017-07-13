@@ -300,6 +300,7 @@ GridInspector.prototype = {
 
       grids.push({
         id: i,
+        actorID: grid.actorID,
         color,
         gridFragments: grid.gridFragments,
         highlighted: nodeFront == this.highlighters.gridHighlighterShown,
@@ -410,8 +411,18 @@ GridInspector.prototype = {
       return;
     }
 
-    // Compare the list of DOM nodes which define these grids.
+    // Get the node front(s) from the current grid(s) so we can compare them to them to
+    // node(s) of the new grids.
     const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
+
+    // In some cases, the nodes for current grids may have been removed from the DOM in
+    // which case we need to update.
+    if (grids.length && grids.some(grid => !grid.nodeFront.actorID)) {
+      this.updateGridPanel(newGridFronts);
+      return;
+    }
+
+    // Otherwise, continue comparing with the new grids.
     const newNodeFronts = newGridFronts.filter(grid => grid.containerNodeFront)
                                        .map(grid => grid.containerNodeFront.actorID);
     if (grids.length === newGridFronts.length &&
