@@ -56,6 +56,8 @@ namespace jit {
     _(LoadObjectResult)                   \
     _(LoadTypeOfObjectResult)             \
     _(CompareStringResult)                \
+    _(CompareObjectResult)                \
+    _(CompareSymbolResult)                \
     _(CallPrintString)                    \
     _(Breakpoint)                         \
     _(MegamorphicLoadSlotByValueResult)   \
@@ -615,6 +617,8 @@ class MOZ_RAII CacheIRCompiler
         MOZ_ASSERT(index != InvalidReg);
         emitPostBarrierShared(obj, val, scratch, index);
     }
+
+    bool emitComparePointerResultShared(bool symbol);
 
 #define DEFINE_SHARED_OP(op) MOZ_MUST_USE bool emit##op();
     CACHE_IR_SHARED_OPS(DEFINE_SHARED_OP)

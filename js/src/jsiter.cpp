@@ -37,6 +37,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/ReceiverGuard-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -864,40 +865,123 @@ CanCompareIterableObjectToCache(JSObject* obj)
     return false;
 }
 
-static inline bool
-CanCacheIterableObject(JSContext* cx, JSObject* obj)
+static MOZ_ALWAYS_INLINE void
+UpdateLastCachedNativeIterator(JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj)
 {
-    if (!CanCompareIterableObjectToCache(obj))
-        return false;
-    if (obj->isNative()) {
-        if (obj->is<TypedArrayObject>() ||
-            obj->hasUncacheableProto() ||
-            obj->getClass()->getNewEnumerate() ||
-            obj->getClass()->getEnumerate() ||
-            obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
-        {
-            return false;
+    // lastCachedNativeIterator is only used when there's a single object on
+    // the prototype chain, to simplify JIT code.
+    if (iterobj->getNativeIterator()->guard_length != 2)
+        return;
+
+    // Both GetIterator and JIT code assume the receiver has a non-null proto,
+    // so we have to make sure a Shape change is triggered when the proto
+    // changes. Note that this does not apply to the object on the proto chain
+    // because we always check it has a null proto.
+    if (obj->hasUncacheableProto())
+        return;
+
+    cx->compartment()->lastCachedNativeIterator = iterobj;
+}
+
+using ReceiverGuardVector = Vector<ReceiverGuard, 8>;
+
+static MOZ_ALWAYS_INLINE PropertyIteratorObject*
+LookupInIteratorCache(JSContext* cx, JSObject* obj, ReceiverGuardVector& guards, uint32_t* keyArg)
+{
+    MOZ_ASSERT(guards.empty());
+
+    // The iterator object for JSITER_ENUMERATE never escapes, so we don't
+    // care that the "proper" prototype is set.  This also lets us reuse an
+    // old, inactive iterator object.
+
+    uint32_t key = 0;
+    JSObject* pobj = obj;
+    do {
+        if (!CanCompareIterableObjectToCache(pobj)) {
+            guards.clear();
+            return nullptr;
         }
+
+        ReceiverGuard guard(pobj);
+        key = (key + (key << 16)) ^ guard.hash();
+
+        if (MOZ_UNLIKELY(!guards.append(guard))) {
+            cx->recoverFromOutOfMemory();
+            guards.clear();
+            return nullptr;
+        }
+
+        pobj = pobj->staticPrototype();
+    } while (pobj);
+
+    MOZ_ASSERT(!guards.empty());
+    *keyArg = key;
+
+    PropertyIteratorObject* iterobj = cx->caches().nativeIterCache.get(key);
+    if (!iterobj)
+        return nullptr;
+
+    NativeIterator* ni = iterobj->getNativeIterator();
+    if ((ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) ||
+        ni->guard_key != key ||
+        ni->guard_length != guards.length() ||
+        !Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
+                 guards.begin(), ni->guard_length) ||
+        iterobj->compartment() != cx->compartment())
+    {
+        return nullptr;
     }
+
+    UpdateNativeIterator(ni, obj);
+    RegisterEnumerator(cx, iterobj, ni);
+
+    UpdateLastCachedNativeIterator(cx, obj, iterobj);
+
+    return iterobj;
+}
+
+static bool
+CanStoreInIteratorCache(JSContext* cx, JSObject* obj)
+{
+    do {
+        if (obj->isNative()) {
+            MOZ_ASSERT(obj->as<NativeObject>().hasEmptyElements());
+
+            // Typed arrays have indexed properties not captured by the Shape guard.
+            // Enumerate hooks may add extra properties.
+            const Class* clasp = obj->getClass();
+            if (MOZ_UNLIKELY(IsTypedArrayClass(clasp)))
+                return false;
+            if (MOZ_UNLIKELY(clasp->getNewEnumerate() || clasp->getEnumerate()))
+                return false;
+
+            if (MOZ_UNLIKELY(obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic)))
+                return false;
+        } else {
+            MOZ_ASSERT(obj->is<UnboxedPlainObject>());
+        }
+
+        obj = obj->staticPrototype();
+    } while (obj);
+
     return true;
+}
+
+static void
+StoreInIteratorCache(JSContext* cx, JSObject* obj, uint32_t key, PropertyIteratorObject* iterobj)
+{
+    MOZ_ASSERT(CanStoreInIteratorCache(cx, obj));
+    MOZ_ASSERT(iterobj->getNativeIterator()->guard_length > 0);
+
+    cx->caches().nativeIterCache.set(key, iterobj);
+
+    UpdateLastCachedNativeIterator(cx, obj, iterobj);
 }
 
 JSObject*
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
 {
-    if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()))
-        return obj;
-
-    // We should only call the enumerate trap for "for-in".
-    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
-    // JSITER_ENUMERATE is just an optimization and the same
-    // as flags == 0 otherwise.
-    if (flags == 0 || flags == JSITER_ENUMERATE) {
-        if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
-            return Proxy::enumerate(cx, obj);
-    }
-
-    Vector<ReceiverGuard, 8> guards(cx);
+    ReceiverGuardVector guards(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
         // Check to see if this is the same as the most recent object which was
@@ -921,45 +1005,25 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
             }
         }
 
-        // The iterator object for JSITER_ENUMERATE never escapes, so we don't
-        // care that the "proper" prototype is set.  This also lets us reuse an
-        // old, inactive iterator object.
-        {
-            JSObject* pobj = obj;
-            do {
-                if (!CanCacheIterableObject(cx, pobj)) {
-                    guards.clear();
-                    goto miss;
-                }
+        if (PropertyIteratorObject* iterObj = LookupInIteratorCache(cx, obj, guards, &key))
+            return iterObj;
 
-                ReceiverGuard guard(pobj);
-                key = (key + (key << 16)) ^ guard.hash();
-                if (!guards.append(guard))
-                    return nullptr;
-
-                pobj = pobj->staticPrototype();
-            } while (pobj);
-        }
-
-        if (PropertyIteratorObject* iterobj = cx->caches().nativeIterCache.get(key)) {
-            NativeIterator* ni = iterobj->getNativeIterator();
-            if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                ni->guard_key == key &&
-                ni->guard_length == guards.length() &&
-                Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
-                        guards.begin(), ni->guard_length) &&
-                iterobj->compartment() == cx->compartment())
-            {
-                UpdateNativeIterator(ni, obj);
-                RegisterEnumerator(cx, iterobj, ni);
-                if (guards.length() == 2)
-                    cx->compartment()->lastCachedNativeIterator = iterobj;
-                return iterobj;
-            }
-        }
+        if (!guards.empty() && !CanStoreInIteratorCache(cx, obj))
+            guards.clear();
     }
 
-  miss:
+    if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()))
+        return obj;
+
+    // We should only call the enumerate trap for "for-in".
+    // Or when we call GetIterator from the Proxy [[Enumerate]] hook.
+    // JSITER_ENUMERATE is just an optimization and the same
+    // as flags == 0 otherwise.
+    if (flags == 0 || flags == JSITER_ENUMERATE) {
+        if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
+            return Proxy::enumerate(cx, obj);
+    }
+
     RootedObject res(cx);
     if (!GetCustomIterator(cx, obj, flags, &res))
         return nullptr;
@@ -986,12 +1050,9 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
     PropertyIteratorObject* iterobj = &res->as<PropertyIteratorObject>();
     assertSameCompartment(cx, iterobj);
 
-    /* Cache the iterator object if possible. */
-    if (guards.length() > 0) {
-        cx->caches().nativeIterCache.set(key, iterobj);
-        if (guards.length() == 2)
-            cx->compartment()->lastCachedNativeIterator = iterobj;
-    }
+    // Cache the iterator object.
+    if (!guards.empty())
+        StoreInIteratorCache(cx, obj, key, iterobj);
 
     return iterobj;
 }

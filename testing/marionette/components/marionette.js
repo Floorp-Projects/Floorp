@@ -262,7 +262,10 @@ MarionetteComponent.prototype.init = function() {
   // Delay initialization until we are done with delayed startup...
   Services.tm.idleDispatchToMainThread(() => {
     // ... and with startup tests.
-    Services.tm.idleDispatchToMainThread(() => {
+    let promise = Promise.resolve();
+    if ("@mozilla.org/test/startuprecorder;1" in Cc)
+      promise = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.done;
+    promise.then(() => {
       let s;
       try {
         Cu.import("chrome://marionette/content/server.js");

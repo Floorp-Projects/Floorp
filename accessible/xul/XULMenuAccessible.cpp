@@ -99,7 +99,7 @@ XULMenuitemAccessible::NativeState()
         Accessible* grandParent = parent->Parent();
         if (!grandParent)
           return state;
-        NS_ASSERTION(grandParent->Role() == roles::COMBOBOX,
+        NS_ASSERTION(grandParent->IsCombobox(),
                      "grandparent of combobox listitem is not combobox");
         uint64_t grandParentState = grandParent->State();
         state &= ~(states::OFFSCREEN | states::INVISIBLE);
@@ -459,14 +459,13 @@ XULMenupopupAccessible::NativeRole()
   // If accessible is not bound to the tree (this happens while children are
   // cached) return general role.
   if (mParent) {
-    roles::Role role = mParent->Role();
-    if (role == roles::COMBOBOX || role == roles::AUTOCOMPLETE)
+    if (mParent->IsCombobox() || mParent->IsAutoComplete())
       return roles::COMBOBOX_LIST;
 
-    if (role == roles::PUSHBUTTON) {
+    if (mParent->Role() == roles::PUSHBUTTON) {
       // Some widgets like the search bar have several popups, owned by buttons.
       Accessible* grandParent = mParent->Parent();
-      if (grandParent && grandParent->Role() == roles::AUTOCOMPLETE)
+      if (grandParent && grandParent->IsAutoComplete())
         return roles::COMBOBOX_LIST;
     }
   }

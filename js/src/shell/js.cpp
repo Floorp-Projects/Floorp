@@ -5822,9 +5822,9 @@ GetMarks(JSContext* cx, unsigned argc, Value* vp)
             color = "dead";
         } else {
             gc::TenuredCell* cell = &obj->asTenured();
-            if (cell->isMarked(gc::GRAY))
+            if (cell->isMarkedGray())
                 color = "gray";
-            else if (cell->isMarked(gc::BLACK))
+            else if (cell->isMarkedBlack())
                 color = "black";
             else
                 color = "unmarked";

@@ -7,13 +7,6 @@ function test() {
   const Cu = Components.utils;
   let {ToolSidebar} = require("devtools/client/framework/sidebar");
 
-  const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                  "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
-                  "<hbox flex='1'><description flex='1'>foo</description><splitter class='devtools-side-splitter'/>" +
-                  "<tabbox flex='1' id='sidebar' class='devtools-sidebar-tabs'><tabs/><tabpanels flex='1'/></tabbox>" +
-                  "</hbox>" +
-                  "</window>";
-
   const tab1URL = "data:text/html;charset=utf8,<title>1</title><p>1</p>";
   const tab2URL = "data:text/html;charset=utf8,<title>2</title><p>2</p>";
   const tab3URL = "data:text/html;charset=utf8,<title>3</title><p>3</p>";
@@ -26,7 +19,7 @@ function test() {
   let toolDefinition = {
     id: "fakeTool4242",
     visibilityswitch: "devtools.fakeTool4242.enabled",
-    url: toolURL,
+    url: CHROME_URL_ROOT + "browser_toolbox_sidebar_toolURL.xul",
     label: "FAKE TOOL!!!",
     isTargetSupported: () => true,
     build: function (iframeWindow, toolbox) {

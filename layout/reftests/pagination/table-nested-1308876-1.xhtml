@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+<!--
+Reduced from layout/base/crashtests/470851-1.xhtml and turned into a reftest.
+-->
+<table style="background: black">
+<tbody>
+<tr>
+<td style="background: yellow">
+  <table>
+  <tbody style="top: 10%; position: relative; overflow: scroll">
+  <tr>
+  <td style="background: orange">
+    <table>
+      <tbody style="background: brown">
+        <tr><td>A</td></tr>
+      </tbody>
+      <tbody style="background: fuchsia">
+        <tr><td><div style="background: aqua; line-height: 4in">A</div></td></tr>
+      </tbody>
+    </table>
+  </td>
+  </tr>
+  </tbody>
+  </table>
+</td>
+</tr>
+</tbody>
+</table>
+</html>

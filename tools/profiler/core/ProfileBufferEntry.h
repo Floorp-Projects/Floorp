@@ -28,19 +28,18 @@
 class ProfilerMarker;
 
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
-  macro(Category,        int) \
-  macro(CodeLocation,    const char*) \
-  macro(EmbeddedString,  char*) /* char[kNumChars], really */ \
-  macro(JitReturnAddr,   void*) \
-  macro(LineNumber,      int) \
-  macro(NativeLeafAddr,  void*) \
-  macro(Marker,          ProfilerMarker*) \
-  macro(ResidentMemory,  double) \
-  macro(Responsiveness,  double) \
-  macro(Sample,          const char*) \
-  macro(ThreadId,        int) \
-  macro(Time,            double) \
-  macro(UnsharedMemory,  double)
+  macro(Category,              int) \
+  macro(Label,                 const char*) \
+  macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
+  macro(JitReturnAddr,         void*) \
+  macro(LineNumber,            int) \
+  macro(NativeLeafAddr,        void*) \
+  macro(Marker,                ProfilerMarker*) \
+  macro(ResidentMemory,        double) \
+  macro(Responsiveness,        double) \
+  macro(ThreadId,              int) \
+  macro(Time,                  double) \
+  macro(UnsharedMemory,        double)
 
 // NB: Packing this structure has been shown to cause SIGBUS issues on ARM.
 #if !defined(GP_ARCH_arm)
@@ -81,10 +80,9 @@ public:
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(CTOR)
   #undef CTOR
 
-  Kind kind() const { return mKind; }
-  bool hasKind(Kind k) const { return kind() == k; }
+  Kind GetKind() const { return mKind; }
 
-  #define IS_KIND(k, t) bool is##k() const { return hasKind(Kind::k); }
+  #define IS_KIND(k, t) bool Is##k() const { return mKind == Kind::k; }
   FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(IS_KIND)
   #undef IS_KIND
 

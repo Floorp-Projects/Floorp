@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484459
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
     <iframe type="content"
-      src="data:text/html,&lt;script&gt;var x=3&lt;/script&gt;"
+      src="./file_bug484459.html"
       onload="go()"
       id="ifr">
     </iframe>
@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=484459
       var sandbox = new Components.utils.Sandbox(w);
       sandbox.__proto__ = w;
       is(location.href, url, "location.href is set properly");
-      is(w.location.href, "data:text/html,<script>var%20x=3</script>",
+      ok(w.location.href.endsWith("file_bug484459.html"),
          "contents of w.location are correct");
       is(Components.utils.evalInSandbox("x * 4", sandbox), 12,
          "Unexpected return from the sandbox");

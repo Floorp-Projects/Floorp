@@ -261,7 +261,7 @@ oom:
 static bool
 IsMarkedOrAllocated(TenuredCell* cell)
 {
-    return cell->isMarked() || cell->arena()->allocatedDuringIncremental;
+    return cell->isMarkedAny() || cell->arena()->allocatedDuringIncremental;
 }
 
 struct CheckEdgeTracer : public JS::CallbackTracer {
@@ -653,8 +653,7 @@ CheckGrayMarkingTracer::checkCell(Cell* cell)
 
     TenuredCell* tenuredCell = &cell->asTenured();
     TenuredCell* tenuredParent = &parent->asTenured();
-    if (tenuredParent->isMarked(BLACK) && !tenuredParent->isMarked(GRAY) &&
-        tenuredCell->isMarked(GRAY))
+    if (tenuredParent->isMarkedBlack() && tenuredCell->isMarkedGray())
     {
         failures++;
         fprintf(stderr, "Found black to gray edge to %s %p\n",

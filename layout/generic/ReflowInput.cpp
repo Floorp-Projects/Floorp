@@ -61,6 +61,7 @@ ReflowInput::ReflowInput(nsPresContext*       aPresContext,
   : SizeComputationInput(aFrame, aRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mContainingBlockSize(mWritingMode)
   , mReflowDepth(0)
 {
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -192,6 +193,7 @@ ReflowInput::ReflowInput(
   : SizeComputationInput(aFrame, aParentReflowInput.mRenderingContext)
   , mBlockDelta(0)
   , mOrthogonalLimit(NS_UNCONSTRAINEDSIZE)
+  , mContainingBlockSize(mWritingMode)
   , mFlags(aParentReflowInput.mFlags)
   , mReflowDepth(aParentReflowInput.mReflowDepth + 1)
 {
@@ -203,13 +205,6 @@ ReflowInput::ReflowInput(
                   "frame should be clean when getting special bsize reflow");
 
   mParentReflowInput = &aParentReflowInput;
-
-  // If the parent is dirty, then the child is as well.
-  // XXX Are the other cases where the parent reflows a child a second
-  // time, as a resize?
-  if (!mFlags.mSpecialBSizeReflow)
-    mFrame->AddStateBits(mParentReflowInput->mFrame->GetStateBits() &
-                        NS_FRAME_IS_DIRTY);
 
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
@@ -364,6 +359,27 @@ ReflowInput::Init(nsPresContext*     aPresContext,
                         const nsMargin*    aBorder,
                         const nsMargin*    aPadding)
 {
+  if ((mFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
+      !mFrame->IsXULBoxFrame()) {
+    // Mark all child frames as dirty.
+    //
+    // We don't do this for XUL boxes because they handle their child
+    // reflow separately.
+    //
+    // FIXME (bug 1376530): It would be better for memory locality if we
+    // did this as we went.  However, we need to be careful not to do
+    // this twice for any particular child if we reflow it twice.  The
+    // easiest way to accomplish that is to do it at the start.
+    for (nsIFrame::ChildListIterator childLists(mFrame);
+         !childLists.IsDone(); childLists.Next()) {
+      for (nsIFrame* childFrame : childLists.CurrentList()) {
+        if (!childFrame->IsTableColGroupFrame()) {
+          childFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+        }
+      }
+    }
+  }
+
   if (AvailableISize() == NS_UNCONSTRAINEDSIZE) {
     // Look up the parent chain for an orthogonal inline limit,
     // and reset AvailableISize() if found.
@@ -2130,7 +2146,10 @@ ReflowInput::ComputeContainingBlockRectangle(
     if (!wm.IsVertical() &&
         NS_AUTOHEIGHT == cbSize.BSize(wm)) {
       if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode() &&
-          mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
+          (mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent ||
+           (mFrame->IsTableWrapperFrame() &&
+            mFrame->PrincipalChildList().FirstChild()->StylePosition()->
+              mHeight.GetUnit() == eStyleUnit_Percent))) {
         cbSize.BSize(wm) = CalcQuirkContainingBlockHeight(aContainingBlockRI);
       }
     }
@@ -2511,6 +2530,9 @@ ReflowInput::InitConstraints(nsPresContext* aPresContext,
       }
     }
   }
+
+  // Save our containing block dimensions
+  mContainingBlockSize = aContainingBlockSize;
 }
 
 static void

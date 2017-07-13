@@ -24,7 +24,7 @@ const uint32_t kMagicInt = 0xc001feed;
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 9;
+const uint16_t kMajorRevision = 10;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 0;
@@ -111,7 +111,6 @@ public:
                                                         const IntSize &aSize,
                                                         SurfaceFormat aFormat);
   virtual DrawTarget *GetReferenceDrawTarget() = 0;
-  virtual FontType GetDesiredFontType() = 0;
   virtual void* GetFontContext() { return nullptr; }
 };
 

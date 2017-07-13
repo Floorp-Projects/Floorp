@@ -31,18 +31,6 @@ const whitelist = [
     photon: true,
   },
   {
-    file: "chrome://browser/skin/sidebars.svg",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["macosx"],
-    photon: true,
-  },
-  {
-    file: "chrome://pocket-shared/skin/pocket.svg",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["macosx"],
-    photon: true,
-  },
-  {
     file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
     platforms: ["win"],
     photon: true,
@@ -54,13 +42,6 @@ const whitelist = [
   },
 
   // Non-Photon-only entries
-  {
-    file: "chrome://pocket-shared/skin/pocket.svg",
-    platforms: ["linux", "win", "macosx"],
-    intermittentNotLoaded: ["macosx"],
-    intermittentShown: ["win"],
-    photon: false,
-  },
   {
     file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
     platforms: ["linux", "win", "macosx"],
@@ -138,26 +119,32 @@ const whitelist = [
   {
     file: "chrome://browser/skin/yosemite/tab-selected-start-inactive.svg",
     platforms: ["macosx"],
+    intermittentShown: ["macosx"],
   },
   {
     file: "chrome://browser/skin/yosemite/tab-active-middle-inactive.png",
+    hidpi: "<not loaded>",
     platforms: ["macosx"],
   },
   {
     file: "chrome://browser/skin/yosemite/tab-selected-end-inactive.svg",
     platforms: ["macosx"],
+    intermittentShown: ["macosx"],
   },
   {
     file: "chrome://browser/skin/yosemite/tab-stroke-start-inactive.png",
+    hidpi: "<not loaded>",
     platforms: ["macosx"],
   },
   {
     file: "chrome://browser/skin/yosemite/tab-stroke-end-inactive.png",
+    hidpi: "<not loaded>",
     platforms: ["macosx"],
   },
 
   {
     file: "chrome://browser/skin/tabbrowser/newtab.png",
+    hidpi: "chrome://browser/skin/tabbrowser/newtab@2x.png",
     platforms: ["macosx"],
   },
 
@@ -174,9 +161,45 @@ const whitelist = [
   },
 
   {
+    file: "chrome://pocket/content/panels/img/pocketmenuitem16.png",
+    hidpi: "chrome://pocket/content/panels/img/pocketmenuitem16@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://browser/skin/places/bookmarksToolbar.png",
+    hidpi: "chrome://browser/skin/places/bookmarksToolbar@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://global/skin/tree/folder.png",
+    hidpi: "chrome://global/skin/tree/folder@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png",
+    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-left-inverted@2x.png",
+    platforms: ["linux", "macosx"],
+  },
+  {
+    file: "chrome://browser/skin/tabbrowser/tab-arrow-right-inverted.png",
+    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-right-inverted@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted.png",
+    hidpi: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png",
+    platforms: ["macosx"],
+  },
+
+  {
     file: "chrome://global/skin/toolbar/chevron.gif",
     platforms: ["win", "linux"],
   },
+
   {
     file: "chrome://browser/skin/reload-stop-go.png",
     platforms: ["win", "linux"],
@@ -187,14 +210,13 @@ const whitelist = [
     file: "chrome://browser/skin/tabbrowser/alltabs.png",
     platforms: ["linux"],
   },
-
   {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-left.svg",
-    platforms: ["win"],
+    file: "chrome://browser/skin/tabbrowser/alltabs-inverted.png",
+    platforms: ["linux"],
   },
 
   {
-    file: "chrome://global/skin/icons/resizer.png",
+    file: "chrome://browser/skin/tabbrowser/tab-arrow-left.svg",
     platforms: ["win"],
   },
 
@@ -215,8 +237,11 @@ const whitelist = [
   },
 ];
 
-function test() {
-  let data = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject.data.images;
+add_task(async function() {
+  let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
+  await startupRecorder.done;
+
+  let data = startupRecorder.data.images;
   let filteredWhitelist = whitelist.filter(el => {
     return el.platforms.includes(AppConstants.platform) &&
            (el.photon === undefined || el.photon == AppConstants.MOZ_PHOTON_THEME);
@@ -255,4 +280,4 @@ function test() {
       }
     }
   }
-}
+});

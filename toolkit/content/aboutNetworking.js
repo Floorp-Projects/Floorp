@@ -175,7 +175,12 @@ function requestNetworkingDataForTab(id) {
   gRequestNetworkingData[id](gDashboardCallbacks[id]);
 }
 
+let gInited = false;
 function init() {
+  if (gInited) {
+    return;
+  }
+  gInited = true;
   gDashboard.enableLogging = true;
   if (Services.prefs.getBoolPref("network.warnOnAboutNetworking")) {
     let div = document.getElementById("warning_message");
@@ -432,9 +437,13 @@ function setAutoRefreshInterval(checkBox) {
   }, REFRESH_INTERVAL_MS);
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+// We use the pageshow event instead of onload. This is needed because sometimes
+// the page is loaded via session-restore/bfcache. In such cases we need to call
+// init() to keep the page behaviour consistent with the ticked checkboxes.
+// Mostly the issue is with the autorefresh checkbox.
+window.addEventListener("pageshow", function() {
   init();
-}, {once: true});
+});
 
 function doLookup() {
   let host = document.getElementById("host").value;

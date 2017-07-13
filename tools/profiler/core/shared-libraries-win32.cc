@@ -209,3 +209,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
   return sharedLibraryInfo;
 }
 
+void
+SharedLibraryInfo::Initialize()
+{
+  /* do nothing */
+}
