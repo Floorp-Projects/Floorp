@@ -751,8 +751,9 @@ create_pa_stream(cubeb_stream * stm,
 {
   assert(stm && stream_params);
   assert(&stm->input_stream == pa_stm || (&stm->output_stream == pa_stm &&
+         (stream_params->layout == CUBEB_LAYOUT_UNDEFINED ||
          stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
-         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels));
+         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels)));
   *pa_stm = NULL;
   pa_sample_spec ss;
   ss.format = to_pulse_format(stream_params->format);
@@ -1498,6 +1499,7 @@ static struct cubeb_ops const pulse_ops = {
   .stream_destroy = pulse_stream_destroy,
   .stream_start = pulse_stream_start,
   .stream_stop = pulse_stream_stop,
+  .stream_reset_default_device = NULL,
   .stream_get_position = pulse_stream_get_position,
   .stream_get_latency = pulse_stream_get_latency,
   .stream_set_volume = pulse_stream_set_volume,
