@@ -26,7 +26,6 @@ function testRegister(aToolbox)
     inMenu: true,
     isTargetSupported: () => true,
     build: function () {},
-    key: "t"
   });
 }
 
@@ -45,8 +44,6 @@ function toolRegistered(event, toolId)
   ok(panel, "new tool's panel exists in toolbox UI");
 
   for (let win of getAllBrowserWindows()) {
-    let key = win.document.getElementById("key_" + toolId);
-    ok(key, "key for new tool added to every browser window");
     let menuitem = win.document.getElementById("menuitem_" + toolId);
     ok(menuitem, "menu item of new tool added to every browser window");
   }
@@ -86,8 +83,6 @@ function toolUnregistered(event, toolId)
   ok(!panel, "tool's panel was removed from toolbox UI");
 
   for (let win of getAllBrowserWindows()) {
-    let key = win.document.getElementById("key_" + toolId);
-    ok(!key, "key removed from every browser window");
     let menuitem = win.document.getElementById("menuitem_" + toolId);
     ok(!menuitem, "menu item removed from every browser window");
   }
