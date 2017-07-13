@@ -428,6 +428,7 @@ task_description_schema = Schema({
 })
 
 GROUP_NAMES = {
+    'mocha': 'Mocha unit tests',
     'py': 'Python unit tests',
     'tc': 'Executed by TaskCluster',
     'tc-e10s': 'Executed by TaskCluster with e10s',

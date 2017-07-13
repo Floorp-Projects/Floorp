@@ -1066,6 +1066,70 @@ stubPreparedMessages.set("console.groupEnd(%cfoo%cbaz)", new ConsoleMessage({
   "indent": 0
 }));
 
+stubPreparedMessages.set("console.dir({C, M, Y, K})", new ConsoleMessage({
+  "id": "1",
+  "allowRepeating": true,
+  "source": "console-api",
+  "timeStamp": 1499698054958,
+  "type": "dir",
+  "level": "log",
+  "messageText": null,
+  "parameters": [
+    {
+      "type": "object",
+      "actor": "server1.conn0.child1/obj39",
+      "class": "Object",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 4,
+      "preview": {
+        "kind": "Object",
+        "ownProperties": {
+          "cyan": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "C"
+          },
+          "magenta": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "M"
+          },
+          "yellow": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "Y"
+          },
+          "black": {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": "K"
+          }
+        },
+        "ownPropertiesLength": 4,
+        "safeGetterValues": {}
+      }
+    }
+  ],
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html\",\"line\":1,\"column\":27},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":null,\"parameters\":[{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj39\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":4,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"cyan\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"C\"},\"magenta\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"M\"},\"yellow\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"Y\"},\"black\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":\"K\"}},\"ownPropertiesLength\":4,\"safeGetterValues\":{}}}],\"source\":\"console-api\",\"type\":\"dir\",\"userProvidedStyles\":[]}",
+  "stacktrace": null,
+  "frame": {
+    "source": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "line": 1,
+    "column": 27
+  },
+  "groupId": null,
+  "exceptionDocURL": null,
+  "userProvidedStyles": [],
+  "notes": null,
+  "indent": 0
+}));
+
 stubPackets.set("console.log('foobar', 'test')", {
   "from": "server1.conn0.child1/consoleActor2",
   "type": "consoleAPICall",
@@ -2099,6 +2163,69 @@ stubPackets.set("console.groupEnd(%cfoo%cbaz)", {
     "lineNumber": 6,
     "private": false,
     "timeStamp": 1492540772669,
+    "timer": null,
+    "workerType": "none",
+    "styles": [],
+    "category": "webdev"
+  }
+});
+
+stubPackets.set("console.dir({C, M, Y, K})", {
+  "from": "server1.conn0.child1/consoleActor2",
+  "type": "consoleAPICall",
+  "message": {
+    "addonId": "",
+    "arguments": [
+      {
+        "type": "object",
+        "actor": "server1.conn0.child1/obj39",
+        "class": "Object",
+        "extensible": true,
+        "frozen": false,
+        "sealed": false,
+        "ownPropertyLength": 4,
+        "preview": {
+          "kind": "Object",
+          "ownProperties": {
+            "cyan": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "C"
+            },
+            "magenta": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "M"
+            },
+            "yellow": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "Y"
+            },
+            "black": {
+              "configurable": true,
+              "enumerable": true,
+              "writable": true,
+              "value": "K"
+            }
+          },
+          "ownPropertiesLength": 4,
+          "safeGetterValues": {}
+        }
+      }
+    ],
+    "columnNumber": 27,
+    "counter": null,
+    "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-console-api.html",
+    "functionName": "triggerPacket",
+    "groupName": "",
+    "level": "dir",
+    "lineNumber": 1,
+    "private": false,
+    "timeStamp": 1499698054958,
     "timer": null,
     "workerType": "none",
     "styles": [],

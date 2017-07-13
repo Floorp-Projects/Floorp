@@ -30,7 +30,7 @@ add_task(async function test_processIncoming_abort() {
   meta_global.payload.engines = {rotary: {version: engine.version,
                                           syncID: engine.syncID}};
   _("Fake applyIncoming to abort.");
-  engine._store.applyIncoming = function(record) {
+  engine._store.applyIncoming = async function(record) {
     let ex = {code: Engine.prototype.eEngineAbortApplyIncoming,
               cause: "Nooo"};
     _("Throwing: " + JSON.stringify(ex));
@@ -40,8 +40,8 @@ add_task(async function test_processIncoming_abort() {
   _("Trying _processIncoming. It will throw after aborting.");
   let err;
   try {
-    engine._syncStartup();
-    engine._processIncoming();
+    await engine._syncStartup();
+    await engine._processIncoming();
   } catch (ex) {
     err = ex;
   }
@@ -52,7 +52,7 @@ add_task(async function test_processIncoming_abort() {
   _("Trying engine.sync(). It will abort without error.");
   try {
     // This will quietly fail.
-    engine.sync();
+    await engine.sync();
   } catch (ex) {
     err = ex;
   }

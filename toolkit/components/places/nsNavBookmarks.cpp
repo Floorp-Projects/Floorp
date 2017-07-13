@@ -1131,7 +1131,7 @@ nsNavBookmarks::GetDescendantChildren(int64_t aFolderId,
     // kGetInfoIndex_* order, and additionally contains columns for position,
     // item_child, and folder_child from moz_bookmarks.
     nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-      "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
+      "SELECT h.id, h.url, b.title, h.rev_host, h.visit_count, "
              "h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, "
              "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
              "b.guid, b.position, b.type, b.fk, b.syncStatus "
@@ -2187,7 +2187,7 @@ nsNavBookmarks::QueryFolderChildren(
   // by mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
+    "SELECT h.id, h.url, b.title, h.rev_host, h.visit_count, "
            "h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
            "b.guid, b.position, b.type, b.fk "
@@ -2266,8 +2266,13 @@ nsNavBookmarks::ProcessFolderNodeRow(
     }
 
     nsAutoCString title;
-    rv = aRow->GetUTF8String(nsNavHistory::kGetInfoIndex_Title, title);
+    bool isNull;
+    rv = aRow->GetIsNull(nsNavHistory::kGetInfoIndex_Title, &isNull);
     NS_ENSURE_SUCCESS(rv, rv);
+    if (!isNull) {
+      rv = aRow->GetUTF8String(nsNavHistory::kGetInfoIndex_Title, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     node = new nsNavHistoryFolderResultNode(title, aOptions, id);
 
@@ -2324,7 +2329,7 @@ nsNavBookmarks::QueryFolderChildrenAsync(
   // by mDBGetURLPageInfo, and additionally contains columns for position,
   // item_child, and folder_child from moz_bookmarks.
   nsCOMPtr<mozIStorageAsyncStatement> stmt = mDB->GetAsyncStatement(
-    "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
+    "SELECT h.id, h.url, b.title, h.rev_host, h.visit_count, "
            "h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, "
            "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
            "b.guid, b.position, b.type, b.fk "

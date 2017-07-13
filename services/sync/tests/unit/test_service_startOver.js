@@ -7,6 +7,8 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
+initTestLogging("Trace");
+
 function BlaEngine() {
   SyncEngine.call(this, "Bla", Service);
 }
@@ -20,13 +22,9 @@ BlaEngine.prototype = {
 
 };
 
-Service.engineManager.register(BlaEngine);
-
-
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}
+add_task(async function setup() {
+  await Service.engineManager.register(BlaEngine);
+});
 
 add_task(async function test_resetLocalData() {
   await configureIdentity();
@@ -46,7 +44,7 @@ add_task(async function test_resetLocalData() {
     do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
   });
 
-  Service.startOver();
+  await Service.startOver();
   do_check_true(observerCalled);
 
   // Verify the site was nuked from orbit.
@@ -58,24 +56,22 @@ add_task(async function test_resetLocalData() {
   do_check_eq(Service.status.minimumNextSync, 0);
 });
 
-add_test(function test_removeClientData() {
+add_task(async function test_removeClientData() {
   let engine = Service.engineManager.get("bla");
 
   // No cluster URL = no removal.
   do_check_false(engine.removed);
-  Service.startOver();
+  await Service.startOver();
   do_check_false(engine.removed);
 
   Service.clusterURL = "https://localhost/";
 
   do_check_false(engine.removed);
-  Service.startOver();
+  await Service.startOver();
   do_check_true(engine.removed);
-
-  run_next_test();
 });
 
-add_test(function test_reset_SyncScheduler() {
+add_task(async function test_reset_SyncScheduler() {
   // Some non-default values for SyncScheduler's attributes.
   Service.scheduler.idle = true;
   Service.scheduler.hasIncomingItems = true;
@@ -84,7 +80,7 @@ add_test(function test_reset_SyncScheduler() {
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   Service.scheduler.syncInterval = Service.scheduler.activeInterval;
 
-  Service.startOver();
+  await Service.startOver();
 
   do_check_false(Service.scheduler.idle);
   do_check_false(Service.scheduler.hasIncomingItems);
@@ -92,6 +88,4 @@ add_test(function test_reset_SyncScheduler() {
   do_check_eq(Service.scheduler.nextSync, 0);
   do_check_eq(Service.scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(Service.scheduler.syncInterval, Service.scheduler.singleDeviceInterval);
-
-  run_next_test();
 });

@@ -7,22 +7,23 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
-function run_test() {
+add_task(async function run_test() {
   let engine = new FormEngine(Service);
+  await engine.initialize();
   let store = engine._store;
 
-  function applyEnsureNoFailures(records) {
-    do_check_eq(store.applyIncomingBatch(records).length, 0);
+  async function applyEnsureNoFailures(records) {
+    do_check_eq((await store.applyIncomingBatch(records)).length, 0);
   }
 
   _("Remove any existing entries");
-  store.wipe();
-  if (store.getAllIDs().length) {
+  await store.wipe();
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
   _("Add a form entry");
-  applyEnsureNoFailures([{
+  await applyEnsureNoFailures([{
     id: Utils.makeGUID(),
     name: "name!!",
     value: "value??"
@@ -30,42 +31,42 @@ function run_test() {
 
   _("Should have 1 entry now");
   let id = "";
-  for (let _id in store.getAllIDs()) {
+  for (let _id in (await store.getAllIDs())) {
     if (id == "")
       id = _id;
     else
       do_throw("Should have only gotten one!");
   }
-  do_check_true(store.itemExists(id));
+  do_check_true((store.itemExists(id)));
 
   _("Should be able to find this entry as a dupe");
-  do_check_eq(engine._findDupe({name: "name!!", value: "value??"}), id);
+  do_check_eq((await engine._findDupe({name: "name!!", value: "value??"})), id);
 
-  let rec = store.createRecord(id);
+  let rec = await store.createRecord(id);
   _("Got record for id", id, rec);
   do_check_eq(rec.name, "name!!");
   do_check_eq(rec.value, "value??");
 
   _("Create a non-existent id for delete");
-  do_check_true(store.createRecord("deleted!!").deleted);
+  do_check_true((await store.createRecord("deleted!!")).deleted);
 
   _("Try updating.. doesn't do anything yet");
-  store.update({});
+  await store.update({});
 
   _("Remove all entries");
-  store.wipe();
-  if (store.getAllIDs().length) {
+  await store.wipe();
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
   _("Add another entry");
-  applyEnsureNoFailures([{
+  await applyEnsureNoFailures([{
     id: Utils.makeGUID(),
     name: "another",
     value: "entry"
   }]);
   id = "";
-  for (let _id in store.getAllIDs()) {
+  for (let _id in (await store.getAllIDs())) {
     if (id == "")
       id = _id;
     else
@@ -73,24 +74,24 @@ function run_test() {
   }
 
   _("Change the id of the new entry to something else");
-  store.changeItemID(id, "newid");
+  await store.changeItemID(id, "newid");
 
   _("Make sure it's there");
-  do_check_true(store.itemExists("newid"));
+  do_check_true((store.itemExists("newid")));
 
   _("Remove the entry");
-  store.remove({
+  await store.remove({
     id: "newid"
   });
-  if (store.getAllIDs().length) {
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
   _("Removing the entry again shouldn't matter");
-  store.remove({
+  await store.remove({
     id: "newid"
   });
-  if (store.getAllIDs().length) {
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -100,33 +101,33 @@ function run_test() {
     name: "todelete",
     value: "entry"
   };
-  applyEnsureNoFailures([toDelete]);
+  await applyEnsureNoFailures([toDelete]);
   id = "";
-  for (let _id in store.getAllIDs()) {
+  for (let _id in (await store.getAllIDs())) {
     if (id == "")
       id = _id;
     else
       do_throw("Should have only gotten one!");
   }
-  do_check_true(store.itemExists(id));
+  do_check_true((store.itemExists(id)));
   // mark entry as deleted
   toDelete.id = id;
   toDelete.deleted = true;
-  applyEnsureNoFailures([toDelete]);
-  if (store.getAllIDs().length) {
+  await applyEnsureNoFailures([toDelete]);
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
   _("Add an entry to wipe");
-  applyEnsureNoFailures([{
+  await applyEnsureNoFailures([{
     id: Utils.makeGUID(),
     name: "towipe",
     value: "entry"
   }]);
 
-  store.wipe();
+  await store.wipe();
 
-  if (store.getAllIDs().length) {
+  if ((await store.getAllIDs()).length) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -134,17 +135,17 @@ function run_test() {
   Services.prefs.setBoolPref("browser.formfill.enable", false);
   try {
     // a search
-    if (store.getAllIDs().length) {
+    if ((await store.getAllIDs()).length) {
       do_throw("Shouldn't get any ids!");
     }
     // an update.
-    applyEnsureNoFailures([{
+    await applyEnsureNoFailures([{
       id: Utils.makeGUID(),
       name: "some",
       value: "entry"
     }]);
   } finally {
     Services.prefs.clearUserPref("browser.formfill.enable");
-    store.wipe();
+    await store.wipe();
   }
-}
+});

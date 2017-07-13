@@ -38,7 +38,7 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
-  let engineInfo = registerRotaryEngine();
+  let engineInfo = await registerRotaryEngine();
   await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
   return engineInfo;
 }
@@ -51,9 +51,9 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_tracker_score_updated() {
+add_task(async function test_tracker_score_updated() {
   enableValidationPrefs();
-  let { engine, tracker } = registerRotaryEngine();
+  let { engine, tracker } = await registerRotaryEngine();
 
   let scoreUpdated = 0;
 
@@ -75,7 +75,6 @@ add_test(function test_tracker_score_updated() {
     tracker.resetScore();
     tracker.clearChangedIDs();
     Service.engineManager.unregister(engine);
-    run_next_test();
   }
 });
 
@@ -83,7 +82,7 @@ add_task(async function test_sync_triggered() {
   let server = sync_httpd_setup();
   let { engine, tracker } = await setUp(server);
 
-  Service.login();
+  await Service.login();
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
 
@@ -93,7 +92,7 @@ add_task(async function test_sync_triggered() {
 
   await promiseOneObserver("weave:service:sync:finish");
 
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
@@ -111,7 +110,7 @@ add_task(async function test_clients_engine_sync_triggered() {
 
   let server = sync_httpd_setup();
   let { engine, tracker } = await setUp(server);
-  Service.login();
+  await Service.login();
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
@@ -120,7 +119,7 @@ add_task(async function test_clients_engine_sync_triggered() {
   await promiseOneObserver("weave:service:sync:finish");
   _("Sync due to clients engine change completed.");
 
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();
@@ -148,13 +147,13 @@ add_task(async function test_incorrect_credentials_sync_not_triggered() {
   // we can account for the timer in delayedAutoconnect) and then one event
   // loop tick (to account for a possible call to weave:service:sync:start).
   await promiseNamedTimer(150, {}, "timer");
-  await promiseNextTick();
+  await Async.promiseYield();
 
   Svc.Obs.remove("weave:service:sync:start", onSyncStart);
 
   do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
 
-  Service.startOver();
+  await Service.startOver();
   await promiseStopServer(server);
 
   tracker.clearChangedIDs();

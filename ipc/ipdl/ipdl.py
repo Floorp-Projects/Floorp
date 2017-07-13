@@ -23,6 +23,8 @@ op.add_option('-I', '--include', dest='includedirs', default=[ ],
               help='Additional directory to search for included protocol specifications')
 op.add_option('-s', '--sync-msg-list', dest='syncMsgList', default='sync-messages.ini',
               help="Config file listing allowed sync messages")
+op.add_option('-m', '--msg-metadata', dest='msgMetadata', default='message-metadata.ini',
+              help="Predicted message sizes for reducing serialization malloc overhead.")
 op.add_option('-v', '--verbose', dest='verbosity', default=1, action='count',
               help='Verbose logging (specify -vv or -vvv for very verbose logging)')
 op.add_option('-q', '--quiet', dest='verbosity', action='store_const', const=0,
@@ -41,6 +43,7 @@ to be generated""")
 options, files = op.parse_args()
 _verbosity = options.verbosity
 syncMsgList = options.syncMsgList
+msgMetadata = options.msgMetadata
 headersdir = options.headersdir
 cppdir = options.cppdir
 includedirs = [ os.path.abspath(incdir) for incdir in options.includedirs ]
@@ -109,6 +112,7 @@ log(2, 'Generated C++ headers will be generated relative to "%s"', headersdir)
 log(2, 'Generated C++ sources will be generated in "%s"', cppdir)
 
 allmessages = {}
+allmessageprognames = []
 allprotocols = []
 
 def normalizedFilename(f):
@@ -120,6 +124,18 @@ log(2, 'Reading sync message list')
 parser = RawConfigParser()
 parser.readfp(open(options.syncMsgList))
 syncMsgList = parser.sections()
+
+# Read message metadata. Right now we only have 'segment_capacity'
+# for the standard segment size used for serialization.
+log(2, 'Reading message metadata...')
+msgMetadataConfig = RawConfigParser()
+msgMetadataConfig.readfp(open(options.msgMetadata))
+
+segmentCapacityDict = {}
+for msgName in msgMetadataConfig.sections():
+    if msgMetadataConfig.has_option(msgName, 'segment_capacity'):
+        capacity = msgMetadataConfig.get(msgName, 'segment_capacity')
+        segmentCapacityDict[msgName] = capacity
 
 # First pass: parse and type-check all protocols
 for f in files:
@@ -160,13 +176,24 @@ for f in files:
     # Read from parser cache
     filename = normalizedFilename(f)
     ast = ipdl.parse(None, filename, includedirs=includedirs)
-    ipdl.gencxx(filename, ast, headersdir, cppdir)
+    ipdl.gencxx(filename, ast, headersdir, cppdir, segmentCapacityDict)
 
     if ast.protocol:
         allmessages[ast.protocol.name] = ipdl.genmsgenum(ast)
         allprotocols.append('%sMsgStart' % ast.protocol.name)
+        # e.g. PContent::RequestMemoryReport (not prefixed or suffixed.)
+        for md in ast.protocol.messageDecls:
+            allmessageprognames.append('%s::%s' % (md.namespace, md.decl.progname))
 
 allprotocols.sort()
+
+# Check if we have undefined message names in segmentCapacityDict.
+# This is a fool-proof of the 'message-metadata.ini' file.
+undefinedMessages = set(segmentCapacityDict.keys()) - set(allmessageprognames)
+if len(undefinedMessages) > 0:
+    print >>sys.stderr, 'Error: Undefined message names in message-metadata.ini:'
+    print >>sys.stderr, undefinedMessages
+    sys.exit(1)
 
 ipcmsgstart = StringIO()
 

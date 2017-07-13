@@ -15,7 +15,7 @@ from ipdl.type import ActorType, TypeVisitor, builtinHeaderIncludes
 ## "Public" interface to lowering
 ##
 class LowerToCxx:
-    def lower(self, tu):
+    def lower(self, tu, segmentcapacitydict):
         '''returns |[ header: File ], [ cpp : File ]| representing the
 lowered form of |tu|'''
         # annotate the AST with IPDL/C++ IR-type stuff used later
@@ -26,7 +26,7 @@ lowered form of |tu|'''
         name = tu.name
         pheader, pcpp = File(name +'.h'), File(name +'.cpp')
 
-        _GenerateProtocolCode().lower(tu, pheader, pcpp)
+        _GenerateProtocolCode().lower(tu, pheader, pcpp, segmentcapacitydict)
         headers = [ pheader ]
         cpps = [ pcpp ]
 
@@ -1417,10 +1417,11 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         self.structUnionDefns = []
         self.funcDefns = []
 
-    def lower(self, tu, cxxHeaderFile, cxxFile):
+    def lower(self, tu, cxxHeaderFile, cxxFile, segmentcapacitydict):
         self.protocol = tu.protocol
         self.hdrfile = cxxHeaderFile
         self.cppfile = cxxFile
+        self.segmentcapacitydict = segmentcapacitydict
         tu.accept(self)
 
     def visitTranslationUnit(self, tu):
@@ -1577,8 +1578,15 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         for md in p.messageDecls:
             decls = []
 
+            # Look up the segment capacity used for serializing this
+            # message. If the capacity is not specified, use '0' for
+            # the default capacity (defined in ipc_message.cc)
+            name = '%s::%s' % (md.namespace, md.decl.progname)
+            segmentcapacity = self.segmentcapacitydict.get(name, 0)
+
             mfDecl, mfDefn = _splitFuncDeclDefn(
                 _generateMessageConstructor(md.msgCtorFunc(), md.msgId(),
+                                            segmentcapacity,
                                             md.decl.type.nested,
                                             md.decl.type.prio,
                                             md.prettyMsgName(p.name+'::'),
@@ -1590,6 +1598,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 rfDecl, rfDefn = _splitFuncDeclDefn(
                     _generateMessageConstructor(
                         md.replyCtorFunc(), md.replyId(),
+                        0,
                         md.decl.type.nested,
                         md.decl.type.prio,
                         md.prettyReplyName(p.name+'::'),
@@ -1692,7 +1701,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageConstructor(clsname, msgid, nested, prio, prettyName, compress):
+def _generateMessageConstructor(clsname, msgid, segmentSize, nested, prio, prettyName, compress):
     routingId = ExprVar('routingId')
 
     func = FunctionDefn(FunctionDecl(
@@ -1726,6 +1735,7 @@ def _generateMessageConstructor(clsname, msgid, nested, prio, prettyName, compre
         StmtReturn(ExprNew(Type('IPC::Message'),
                            args=[ routingId,
                                   ExprVar(msgid),
+                                  ExprLiteral.Int(int(segmentSize)),
                                   ExprVar(nestedEnum),
                                   ExprVar(prioEnum),
                                   compression,

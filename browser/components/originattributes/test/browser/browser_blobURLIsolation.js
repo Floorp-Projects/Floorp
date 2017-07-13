@@ -50,12 +50,12 @@ function page_deblobify(browser, blobURL) {
       return "xhr error";
     }
 
-    return await blobToString(blob);
+    return blobToString(blob);
   });
 }
 
 function workerIO(browser, scriptFile, message) {
-  return ContentTask.spawn(browser, {scriptFile, message}, async function(args) {
+  return ContentTask.spawn(browser, {scriptFile, message}, function(args) {
     let worker = new content.Worker(args.scriptFile);
     let promise = new content.Promise(function(resolve) {
       let listenFunction = function(event) {
@@ -66,7 +66,7 @@ function workerIO(browser, scriptFile, message) {
       worker.addEventListener("message", listenFunction);
     });
     worker.postMessage(args.message);
-    return await promise;
+    return promise;
   });
 }
 

@@ -12,7 +12,8 @@ topsrcdir = os.path.join(here, os.pardir, os.pardir)
 
 
 def run_mozlint(hooktype, args):
-    cmd = [os.path.join(topsrcdir, 'mach'), 'lint']
+    # --quiet prevents warnings on eslint, it will be ignored by other linters
+    cmd = [os.path.join(topsrcdir, 'mach'), 'lint', '--quiet']
 
     if 'commit' in hooktype:
         # don't prevent commits, just display the lint results

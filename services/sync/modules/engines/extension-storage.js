@@ -12,7 +12,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-common/async.js");
 XPCOMUtils.defineLazyModuleGetter(this, "extensionStorageSync",
                                   "resource://gre/modules/ExtensionStorageSync.jsm");
 
@@ -37,8 +36,8 @@ ExtensionStorageEngine.prototype = {
   syncPriority: 10,
   allowSkippedRecord: false,
 
-  _sync() {
-    return Async.promiseSpinningly(extensionStorageSync.syncAll());
+  async _sync() {
+    return extensionStorageSync.syncAll();
   },
 
   get enabled() {

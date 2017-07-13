@@ -72,7 +72,7 @@ this.Doctor = {
       try {
         for (let [collection, requestor] of Object.entries(this._getAllRepairRequestors())) {
           try {
-            let advanced = requestor.continueRepairs();
+            let advanced = await requestor.continueRepairs();
             log.info(`${collection} reparier ${advanced ? "advanced" : "did not advance"}.`);
           } catch (ex) {
             if (Async.isShutdownException(ex)) {
@@ -137,7 +137,7 @@ this.Doctor = {
     if (Object.values(engineInfos).filter(i => i.maxRecords != -1).length != 0) {
       // at least some of the engines have maxRecord restrictions which require
       // us to ask the server for the counts.
-      let countInfo = this._fetchCollectionCounts();
+      let countInfo = await this._fetchCollectionCounts();
       for (let [engineName, recordCount] of Object.entries(countInfo)) {
         if (engineName in engineInfos) {
           engineInfos[engineName].recordCount = recordCount;
@@ -193,7 +193,7 @@ this.Doctor = {
     }
   },
 
-  _maybeCure(engine, validationResults, flowID) {
+  async _maybeCure(engine, validationResults, flowID) {
     if (!this._shouldRepair(engine)) {
       log.info(`Skipping repair of ${engine.name} - disabled via preferences`);
       return;
@@ -206,7 +206,7 @@ this.Doctor = {
         return; // TODO: It would be nice if we could request a validation to be
                 // done on next sync.
       }
-      didStart = requestor.startRepairs(validationResults, flowID);
+      didStart = await requestor.startRepairs(validationResults, flowID);
     }
     log.info(`${didStart ? "did" : "didn't"} start a repair of ${engine.name} with flowID ${flowID}`);
   },
@@ -216,10 +216,10 @@ this.Doctor = {
   },
 
   // mainly for mocking.
-  _fetchCollectionCounts() {
+  async _fetchCollectionCounts() {
     let collectionCountsURL = Service.userBaseURL + "info/collection_counts";
     try {
-      let infoResp = Service._fetchInfo(collectionCountsURL);
+      let infoResp = await Service._fetchInfo(collectionCountsURL);
       if (!infoResp.success) {
         log.error("Can't fetch collection counts: request to info/collection_counts responded with "
                         + infoResp.status);

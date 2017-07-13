@@ -149,9 +149,9 @@ add_task(async function testParameterValidation() {
 
 add_task(async function testAsyncResults() {
   await Schemas.load("data:," + JSON.stringify(schemaJson));
-  async function runWithCallback(func) {
+  function runWithCallback(func) {
     do_print(`Calling testnamespace.${func.name}, expecting callback with result`);
-    return await new Promise(resolve => {
+    return new Promise(resolve => {
       let result = "uninitialized value";
       let returnValue = func(reply => {
         result = reply;
@@ -164,9 +164,9 @@ add_task(async function testAsyncResults() {
     });
   }
 
-  async function runFailCallback(func) {
+  function runFailCallback(func) {
     do_print(`Calling testnamespace.${func.name}, expecting callback with error`);
-    return await new Promise(resolve => {
+    return new Promise(resolve => {
       func(reply => {
         do_check_eq(reply, undefined);
         resolve(context.lastError.message); // eslint-disable-line no-undef

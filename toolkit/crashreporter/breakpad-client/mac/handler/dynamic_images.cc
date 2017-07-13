@@ -364,45 +364,15 @@ static uint64_t LookupSymbol(const char* symbol_name,
   return list.n_value;
 }
 
-#if TARGET_OS_IPHONE || MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_6
-static bool HasTaskDyldInfo() {
-  return true;
-}
-#else
-static SInt32 GetOSVersionInternal() {
-  SInt32 os_version = 0;
-  Gestalt(gestaltSystemVersion, &os_version);
-  return os_version;
-}
-
-static SInt32 GetOSVersion() {
-  static SInt32 os_version = GetOSVersionInternal();
-  return os_version;
-}
-
-static bool HasTaskDyldInfo() {
-  return GetOSVersion() >= 0x1060;
-}
-#endif  // TARGET_OS_IPHONE || MAC_OS_X_VERSION_MIN_REQUIRED >= 10_6
-
 uint64_t DynamicImages::GetDyldAllImageInfosPointer() {
-  if (HasTaskDyldInfo()) {
-    task_dyld_info_data_t task_dyld_info;
-    mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
-    if (task_info(task_, TASK_DYLD_INFO, (task_info_t)&task_dyld_info,
-                  &count) != KERN_SUCCESS) {
-      return 0;
-    }
-
-    return (uint64_t)task_dyld_info.all_image_info_addr;
-  } else {
-    const char *imageSymbolName = "_dyld_all_image_infos";
-    const char *dyldPath = "/usr/lib/dyld";
-
-    if (Is64Bit())
-      return LookupSymbol<MachO64>(imageSymbolName, dyldPath, cpu_type_);
-    return LookupSymbol<MachO32>(imageSymbolName, dyldPath, cpu_type_);
+  task_dyld_info_data_t task_dyld_info;
+  mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+  if (task_info(task_, TASK_DYLD_INFO, (task_info_t)&task_dyld_info,
+                &count) != KERN_SUCCESS) {
+    return 0;
   }
+
+  return (uint64_t)task_dyld_info.all_image_info_addr;
 }
 
 //==============================================================================
