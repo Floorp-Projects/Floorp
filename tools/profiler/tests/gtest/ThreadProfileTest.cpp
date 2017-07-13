@@ -21,7 +21,7 @@ TEST(ThreadProfile, InsertOneEntry) {
   Thread::tid_t tid = 1000;
   ThreadInfo info("testThread", tid, true, nullptr);
   auto pb = MakeUnique<ProfileBuffer>(10);
-  pb->addEntry(ProfileBufferEntry::Time(123.1));
+  pb->AddEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->mEntries != nullptr);
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].IsTime());
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].u.mDouble == 123.1);
@@ -34,7 +34,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
   auto pb = MakeUnique<ProfileBuffer>(100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
-    pb->addEntry(ProfileBufferEntry::Time(i));
+    pb->AddEntry(ProfileBufferEntry::Time(i));
   }
   ASSERT_TRUE(pb->mEntries != nullptr);
   int readPos = pb->mReadPos;
@@ -55,7 +55,7 @@ TEST(ThreadProfile, InsertEntriesWrap) {
   auto pb = MakeUnique<ProfileBuffer>(buffer_size);
   int test_size = 43;
   for (int i = 0; i < test_size; i++) {
-    pb->addEntry(ProfileBufferEntry::Time(i));
+    pb->AddEntry(ProfileBufferEntry::Time(i));
   }
   ASSERT_TRUE(pb->mEntries != nullptr);
   int readPos = pb->mReadPos;

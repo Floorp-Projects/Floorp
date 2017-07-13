@@ -243,7 +243,7 @@ ThreadInfo::FlushSamplesAndMarkers(ProfileBuffer* aBuffer,
 
   // Reset the buffer. Attempting to symbolicate JS samples after mContext has
   // gone away will crash.
-  aBuffer->reset();
+  aBuffer->Reset();
 }
 
 size_t
