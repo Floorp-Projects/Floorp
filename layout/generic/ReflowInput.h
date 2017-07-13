@@ -592,6 +592,10 @@ private:
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
 public:
+  // Our saved containing block dimensions.
+  MOZ_INIT_OUTSIDE_CTOR
+  LogicalSize      mContainingBlockSize;
+
   // Cached pointers to the various style structs used during intialization
   MOZ_INIT_OUTSIDE_CTOR
   const nsStyleDisplay*    mStyleDisplay;

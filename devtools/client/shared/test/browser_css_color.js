@@ -3,14 +3,13 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,browser_css_color.js";
 var {colorUtils} = require("devtools/shared/css/color");
 /* global getFixtureColorData */
 loadHelperScript("helper_color_data.js");
 
 add_task(function* () {
   yield addTab("about:blank");
-  let [host,, doc] = yield createHost("bottom", TEST_URI);
+  let [host,, doc] = yield createHost("bottom");
 
   info("Creating a test canvas element to test colors");
   let canvas = createTestCanvas(doc);

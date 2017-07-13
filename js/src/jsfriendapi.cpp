@@ -622,7 +622,7 @@ struct VisitGrayCallbackFunctor {
 
     template <class T>
     void operator()(T tp) const {
-        if ((*tp)->isTenured() && (*tp)->asTenured().isMarked(gc::GRAY))
+        if ((*tp)->isMarkedGray())
             callback_(closure_, JS::GCCellPtr(*tp));
     }
 };
@@ -1104,10 +1104,13 @@ static char
 MarkDescriptor(void* thing)
 {
     gc::TenuredCell* cell = gc::TenuredCell::fromPointer(thing);
-    if (cell->isMarked(gc::BLACK))
-        return cell->isMarked(gc::GRAY) ? 'G' : 'B';
-    else
-        return cell->isMarked(gc::GRAY) ? 'X' : 'W';
+    if (cell->isMarkedBlack())
+        return 'B';
+    if (cell->isMarkedGray())
+        return 'G';
+    if (cell->isMarkedAny())
+        return 'X';
+    return 'W';
 }
 
 static void

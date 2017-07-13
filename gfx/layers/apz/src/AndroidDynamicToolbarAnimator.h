@@ -104,8 +104,11 @@ public:
   // The AndroidDynamicToolbarAnimator is responsible for deallocating the Shmem when
   // it is done being used.
   void AdoptToolbarPixels(mozilla::ipc::Shmem&& aMem, const ScreenIntSize& aSize);
+  // Updates the toolbar snapshot texture and notifies the UI thread that the static toolbar is
+  // now ready to be displayed.
+  void UpdateToolbarSnapshotTexture(CompositorOGL* gl);
   // Returns the Effect object used by the compositor to render the toolbar snapshot.
-  Effect* GetToolbarEffect(CompositorOGL* gl);
+  Effect* GetToolbarEffect();
   void Shutdown();
 
 protected:

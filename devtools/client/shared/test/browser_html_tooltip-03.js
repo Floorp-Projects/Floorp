@@ -9,24 +9,7 @@
  */
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
-  <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
-  <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   title="Tooltip test">
-    <vbox flex="1">
-      <hbox id="box1" flex="1">
-        <textbox></textbox>
-      </hbox>
-      <hbox id="box2" flex="1">test2</hbox>
-      <hbox id="box3" flex="1">
-        <textbox id="box3-input"></textbox>
-      </hbox>
-      <hbox id="box4" flex="1">
-        <textbox id="box4-input"></textbox>
-      </hbox>
-    </vbox>
-  </window>`;
+const TEST_URI = CHROME_URL_ROOT + "doc_html_tooltip-03.xul";
 
 const {HTMLTooltip} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 loadHelperScript("helper_html_tooltip.js");

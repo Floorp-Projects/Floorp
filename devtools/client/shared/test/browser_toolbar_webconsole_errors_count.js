@@ -16,7 +16,7 @@ registerCleanupFunction(function* () {
 });
 
 function test() {
-  const TEST_URI = TEST_URI_ROOT + "browser_toolbar_webconsole_errors_count.html";
+  const TEST_URI = TEST_URI_ROOT + "doc_toolbar_webconsole_errors_count.html";
 
   let tab1, tab2, webconsole;
 

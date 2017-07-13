@@ -36,23 +36,26 @@ public:
   };
 
   // Add |aEntry| to the buffer, ignoring what kind of entry it is.
-  void addEntry(const ProfileBufferEntry& aEntry);
+  void AddEntry(const ProfileBufferEntry& aEntry);
 
   // Add to the buffer a sample start (ThreadId) entry for aThreadId. Also,
   // record the resulting generation and index in |aLS| if it's non-null.
-  void addThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
+  void AddThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
 
-  // Maximum size of a dynamic string (including the terminating '\0' char)
-  // that we'll write to the ProfileBuffer.
-  static const size_t kMaxDynamicStringLength = 8192;
+  // Add to the buffer a dynamic string. It'll be spread across one or more
+  // DynamicStringFragment entries.
+  void AddDynamicStringEntry(const char* aStr);
+
+  // Maximum size of a frameKey string that we'll handle.
+  static const size_t kMaxFrameKeyLength = 512;
 
   void StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            double aSinceTime, JSContext* cx,
-                           UniqueStacks& aUniqueStacks);
+                           UniqueStacks& aUniqueStacks) const;
   void StreamMarkersToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
-                           UniqueStacks& aUniqueStacks);
+                           UniqueStacks& aUniqueStacks) const;
 
   // Find (via |aLS|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in |aProcessStartTime| as appropriate.
@@ -60,16 +63,16 @@ public:
                            const mozilla::TimeStamp& aProcessStartTime,
                            LastSample& aLS);
 
-  void addStoredMarker(ProfilerMarker* aStoredMarker);
+  void AddStoredMarker(ProfilerMarker* aStoredMarker);
 
   // The following two methods are not signal safe! They delete markers.
-  void deleteExpiredStoredMarkers();
-  void reset();
+  void DeleteExpiredStoredMarkers();
+  void Reset();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-  int FindLastSampleOfThread(int aThreadId, const LastSample& aLS);
+  int FindLastSampleOfThread(int aThreadId, const LastSample& aLS) const;
 
 public:
   // Circular buffer 'Keep One Slot Open' implementation for simplicity

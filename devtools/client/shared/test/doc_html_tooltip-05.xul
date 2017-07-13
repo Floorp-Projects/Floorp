@@ -1,0 +1,12 @@
+<?xml version='1.0'?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ title="Tooltip test">
+  <vbox flex="1">
+    <hbox id="box1" style="height: 50px">test1</hbox>
+    <hbox id="box2" style="height: 50px">test2</hbox>
+    <hbox id="box3" style="height: 50px">test3</hbox>
+    <hbox id="box4" style="height: 50px">test4</hbox>
+  </vbox>
+</window>

@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<title>XUL scrollbar testcase</title>
+<style>
+
+html { overflow: hidden }
+
+div.outer {
+  display: -moz-box;
+  overflow: auto;
+  width: 200px;
+  height: 100px;
+  background: yellow;
+}
+
+div.inner {
+  width: 300px;
+  height: 100px;
+  min-width: 300px;
+  min-height: 100px;
+  background: aqua;
+}
+</style>
+
+<div class="outer">
+  <div class="inner">
+  </div>
+</div>

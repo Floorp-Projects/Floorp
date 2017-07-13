@@ -17,7 +17,7 @@ const DEFAULT_VALUE_MULTIPLIER = 1;
 const GRAYSCALE_MAX = 100,
   GRAYSCALE_MIN = 0;
 
-const TEST_URI = `data:text/html,<div id="filter-container" />`;
+const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(function* () {
   let [,, doc] = yield createHost("bottom", TEST_URI);

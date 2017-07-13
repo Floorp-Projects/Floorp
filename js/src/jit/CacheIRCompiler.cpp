@@ -2247,6 +2247,44 @@ CacheIRCompiler::emitCompareStringResult()
 }
 
 bool
+CacheIRCompiler::emitComparePointerResultShared(bool symbol)
+{
+    AutoOutputRegister output(*this);
+
+    Register left = symbol ? allocator.useRegister(masm, reader.symbolOperandId())
+                           : allocator.useRegister(masm, reader.objOperandId());
+    Register right = symbol ? allocator.useRegister(masm, reader.symbolOperandId())
+                            : allocator.useRegister(masm, reader.objOperandId());
+    JSOp op = reader.jsop();
+
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    Label ifTrue, done;
+    masm.branchPtr(JSOpToCondition(op, /* signed = */true), left, right, &ifTrue);
+
+    masm.moveValue(BooleanValue(false), output.valueReg());
+    masm.jump(&done);
+
+    masm.bind(&ifTrue);
+    masm.moveValue(BooleanValue(true), output.valueReg());
+    masm.bind(&done);
+    return true;
+}
+
+
+bool
+CacheIRCompiler::emitCompareObjectResult()
+{
+    return emitComparePointerResultShared(false);
+}
+
+bool
+CacheIRCompiler::emitCompareSymbolResult()
+{
+    return emitComparePointerResultShared(true);
+}
+
+bool
 CacheIRCompiler::emitCallPrintString()
 {
     const char* str = reinterpret_cast<char*>(reader.pointer());

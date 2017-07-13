@@ -110,12 +110,14 @@
   min-width: 80px;
 }
 
-#screenshot-icon {
-  vertical-align: middle;
-  min-width: 0;
-  padding: 5px;
-}
-
-#screenshot-icon::before {
-  background-image: url(chrome://devtools/skin/images/command-screenshot.svg);
+#screenshot-options legend::after {
+  content: "";
+  display: inline-block;
+  background-image: url("chrome://devtools/skin/images/command-screenshot.svg");
+  width: 16px;
+  height: 16px;
+  vertical-align: sub;
+  margin-inline-start: 5px;
+  filter: var(--icon-filter);
+  opacity: 0.6;
 }

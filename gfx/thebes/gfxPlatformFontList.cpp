@@ -650,6 +650,18 @@ gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
                                         uint32_t& aCmapCount,
                                         gfxFontFamily** aMatchedFamily)
 {
+    bool useCmaps = IsFontFamilyWhitelistActive() ||
+                    gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
+    if (!useCmaps) {
+        // Allow platform-specific fallback code to try and find a usable font
+        gfxFontEntry* fe =
+            PlatformGlobalFontFallback(aCh, aRunScript, aMatchStyle,
+                                       aMatchedFamily);
+        if (fe) {
+            return fe;
+        }
+    }
+
     // otherwise, try to find it among local fonts
     GlobalFontMatch data(aCh, aRunScript, aMatchStyle);
 

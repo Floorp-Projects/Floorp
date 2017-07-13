@@ -341,9 +341,9 @@ Wrapper::wrappedObject(JSObject* wrapper)
     // of black wrappers black but while it is in progress we can observe gray
     // targets. Expose rather than returning a gray object in this case.
     if (target) {
-        if (wrapper->isMarked(gc::BLACK) && !wrapper->isMarked(gc::GRAY))
+        if (wrapper->isMarkedBlack())
             MOZ_ASSERT(JS::ObjectIsNotGray(target));
-        if (!wrapper->isMarked(gc::GRAY))
+        if (!wrapper->isMarkedGray())
             JS::ExposeObjectToActiveJS(target);
     }
 
