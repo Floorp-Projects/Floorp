@@ -344,12 +344,24 @@ protected:
                                      const gfxFontStyle* aMatchStyle,
                                      gfxFontFamily** aMatchedFamily);
 
-    // search fonts system-wide for a given character, null otherwise
-    virtual gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
-                                             Script aRunScript,
-                                             const gfxFontStyle* aMatchStyle,
-                                             uint32_t& aCmapCount,
-                                             gfxFontFamily** aMatchedFamily);
+    // Search fonts system-wide for a given character, null if not found.
+    gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
+                                     Script aRunScript,
+                                     const gfxFontStyle* aMatchStyle,
+                                     uint32_t& aCmapCount,
+                                     gfxFontFamily** aMatchedFamily);
+
+    // Platform-specific implementation of global font fallback, if any;
+    // this may return nullptr in which case the default cmap-based fallback
+    // will be performed.
+    virtual gfxFontEntry*
+    PlatformGlobalFontFallback(const uint32_t aCh,
+                               Script aRunScript,
+                               const gfxFontStyle* aMatchStyle,
+                               gfxFontFamily** aMatchedFamily)
+    {
+        return nullptr;
+    }
 
     // whether system-based font fallback is used or not
     // if system fallback is used, no need to load all cmaps

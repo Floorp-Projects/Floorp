@@ -8,7 +8,7 @@
 
 const {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
-const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
+const TEST_URI = TEST_URI_ROOT + "doc_layoutHelpers-getBoxQuads.html";
 
 add_task(function* () {
   let tab = yield addTab(TEST_URI);

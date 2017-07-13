@@ -4,12 +4,11 @@
 /* import-globals-from head.js */
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,browser_css_angle.js";
 var {angleUtils} = require("devtools/client/shared/css-angle");
 
 add_task(function* () {
   yield addTab("about:blank");
-  let [host] = yield createHost("bottom", TEST_URI);
+  let [host] = yield createHost("bottom");
 
   info("Starting the test");
   testAngleUtils();

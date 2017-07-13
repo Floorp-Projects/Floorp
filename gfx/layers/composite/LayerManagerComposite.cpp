@@ -1189,13 +1189,16 @@ LayerManagerComposite::RenderToolbar()
     AndroidDynamicToolbarAnimator* animator = bridge->GetAPZCTreeManager()->GetAndroidDynamicToolbarAnimator();
     MOZ_RELEASE_ASSERT(animator);
 
+    animator->UpdateToolbarSnapshotTexture(mCompositor->AsCompositorOGL());
+
     int32_t toolbarHeight = animator->GetCurrentToolbarHeight();
     if (toolbarHeight == 0) {
       return;
     }
 
     EffectChain effects;
-    effects.mPrimaryEffect = animator->GetToolbarEffect(mCompositor->AsCompositorOGL());
+    effects.mPrimaryEffect = animator->GetToolbarEffect();
+
     // If GetToolbarEffect returns null, nothing is rendered for the static snapshot of the toolbar.
     // If the real toolbar chrome is not covering this portion of the surface, the clear color
     // of the surface will be visible. On Android the clear color is the background color of the page.

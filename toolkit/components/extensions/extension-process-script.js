@@ -343,12 +343,14 @@ ExtensionManager = {
       case "Extension:Shutdown": {
         let policy = WebExtensionPolicy.getByID(data.id);
 
-        if (extensions.has(policy)) {
-          extensions.get(policy).shutdown();
-        }
+        if (policy) {
+          if (extensions.has(policy)) {
+            extensions.get(policy).shutdown();
+          }
 
-        if (isContentProcess) {
-          policy.active = false;
+          if (isContentProcess) {
+            policy.active = false;
+          }
         }
         Services.cpmm.sendAsyncMessage("Extension:ShutdownComplete");
         break;

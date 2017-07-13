@@ -64,6 +64,8 @@ using namespace mozilla::layers;
 unsigned GLContext::sCurrentGLContextTLS = -1;
 #endif
 
+MOZ_THREAD_LOCAL(GLContext*) GLContext::sCurrentContext;
+
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 #define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
 #define CORE_EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x, #x #y, #x #z, nullptr } }
@@ -197,6 +199,15 @@ static const char* const sExtensionNames[] = {
 };
 
 static bool
+ShouldUseTLSIsCurrent(bool useTLSIsCurrent)
+{
+    if (gfxPrefs::UseTLSIsCurrent() == 0)
+        return useTLSIsCurrent;
+
+    return gfxPrefs::UseTLSIsCurrent() > 0;
+}
+
+static bool
 ParseVersion(const std::string& versionStr, uint32_t* const out_major,
              uint32_t* const out_minor)
 {
@@ -254,9 +265,10 @@ ChooseDebugFlags(CreateContextFlags createFlags)
 }
 
 GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
-                     GLContext* sharedContext, bool isOffscreen)
+                     GLContext* sharedContext, bool isOffscreen, bool useTLSIsCurrent)
   : mIsOffscreen(isOffscreen),
     mContextLost(false),
+    mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
     mVersion(0),
     mProfile(ContextProfile::Unknown),
     mShadingLanguageVersion(0),
@@ -283,6 +295,8 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mMaxViewportDims[0] = 0;
     mMaxViewportDims[1] = 0;
     mOwningThreadId = PlatformThread::CurrentId();
+    MOZ_ALWAYS_TRUE( sCurrentContext.init() );
+    sCurrentContext.set(nullptr);
 }
 
 GLContext::~GLContext() {
@@ -2997,6 +3011,41 @@ GetBytesPerTexel(GLenum format, GLenum type)
     gfxCriticalError() << "Unknown texture type " << type << " or format " << format;
     return 0;
 }
+
+bool GLContext::MakeCurrent(bool aForce)
+{
+    if (IsDestroyed())
+        return false;
+
+#ifdef MOZ_GL_DEBUG
+    PR_SetThreadPrivate(sCurrentGLContextTLS, this);
+
+    // XXX this assertion is disabled because it's triggering on Mac;
+    // we need to figure out why and reenable it.
+#if 0
+    // IsOwningThreadCurrent is a bit of a misnomer;
+    // the "owning thread" is the creation thread,
+    // and the only thread that can own this.  We don't
+    // support contexts used on multiple threads.
+    NS_ASSERTION(IsOwningThreadCurrent(),
+                 "MakeCurrent() called on different thread than this context was created on!");
+#endif
+#endif
+    if (mUseTLSIsCurrent && !aForce && sCurrentContext.get() == this) {
+        MOZ_ASSERT(IsCurrent());
+        return true;
+    }
+
+    if (!MakeCurrentImpl(aForce))
+        return false;
+
+    if (mUseTLSIsCurrent) {
+        sCurrentContext.set(this);
+    }
+
+    return true;
+}
+
 
 } /* namespace gl */
 } /* namespace mozilla */

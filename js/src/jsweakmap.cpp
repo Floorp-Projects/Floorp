@@ -139,7 +139,7 @@ ObjectValueMap::findZoneEdges()
     JS::AutoSuppressGCAnalysis nogc;
     for (Range r = all(); !r.empty(); r.popFront()) {
         JSObject* key = r.front().key();
-        if (key->asTenured().isMarked(BLACK) && !key->asTenured().isMarked(GRAY))
+        if (key->asTenured().isMarkedBlack())
             continue;
         JSObject* delegate = getDelegate(key);
         if (!delegate)

@@ -93,6 +93,9 @@ public:
   TimeStamp GetLastCompositionEndTime() const {
     return mLastCompositionEndTime;
   }
+  const nsIntRegion& GetRegionToClear() const {
+    return mRegionToClear;
+  }
 
 private:
   void Composite();

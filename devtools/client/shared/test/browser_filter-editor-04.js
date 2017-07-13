@@ -9,7 +9,7 @@ const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWi
 const {getClientCssProperties} = require("devtools/shared/fronts/css-properties");
 const LIST_ITEM_HEIGHT = 32;
 
-const TEST_URI = `data:text/html,<div id="filter-container" />`;
+const TEST_URI = CHROME_URL_ROOT + "doc_filter-editor-01.html";
 
 add_task(function* () {
   let [,, doc] = yield createHost("bottom", TEST_URI);

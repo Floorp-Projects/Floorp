@@ -47,10 +47,10 @@ const ERROR_MESSAGE = "Could not load docs page.";
  * different ways that the docs pages might be constructed, including errors
  * like pages that don't include docs where we expect.
  */
-const SYNTAX_OLD_STYLE = "html-mdn-css-syntax-old-style.html";
-const NO_SUMMARY = "html-mdn-css-no-summary.html";
-const NO_SYNTAX = "html-mdn-css-no-syntax.html";
-const NO_SUMMARY_OR_SYNTAX = "html-mdn-css-no-summary-or-syntax.html";
+const SYNTAX_OLD_STYLE = "doc_mdn-css-syntax-old-style.html";
+const NO_SUMMARY = "doc_mdn-css-no-summary.html";
+const NO_SYNTAX = "doc_mdn-css-no-syntax.html";
+const NO_SUMMARY_OR_SYNTAX = "doc_mdn-css-no-summary-or-syntax.html";
 
 const TEST_DATA = [{
   desc: "Test a property for which we don't have a page",

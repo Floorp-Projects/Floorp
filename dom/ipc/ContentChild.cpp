@@ -1003,6 +1003,11 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     return NS_ERROR_ABORT;
   }
 
+  // If the TabChild has been torn down, we don't need to do this anymore.
+  if (NS_WARN_IF(!newChild->IPCOpen())) {
+    return NS_ERROR_ABORT;
+  }
+
   if (layersId == 0) { // if renderFrame is invalid.
     PRenderFrameChild::Send__delete__(renderFrame);
     renderFrame = nullptr;
