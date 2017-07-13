@@ -726,13 +726,6 @@ MediaDecoder::OwnerHasError() const
   return GetOwner()->HasError();
 }
 
-already_AddRefed<GMPCrashHelper>
-MediaDecoder::GetCrashHelper()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return GetOwner()->CreateGMPCrashHelper();
-}
-
 bool
 MediaDecoder::IsEnded() const
 {

@@ -215,8 +215,6 @@ public:
   // Must be called before Shutdown().
   bool OwnerHasError() const;
 
-  already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
-
 public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
