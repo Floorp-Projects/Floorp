@@ -7,7 +7,6 @@
 
 #include "MemMoveAnnotation.h"
 #include "Utils.h"
-#include "VariableUsageHelpers.h"
 
 namespace clang {
 namespace ast_matchers {
@@ -29,78 +28,6 @@ AST_MATCHER(Decl, noArithmeticExprInArgs) {
 AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return hasCustomAnnotation(&Node, "moz_trivial_ctor_dtor");
 }
-
-/// This matcher will match lvalue-ref-qualified methods.
-AST_MATCHER(CXXMethodDecl, isLValueRefQualified) {
-  return Node.getRefQualifier() == RQ_LValue;
-}
-
-/// This matcher will match rvalue-ref-qualified methods.
-AST_MATCHER(CXXMethodDecl, isRValueRefQualified) {
-  return Node.getRefQualifier() == RQ_RValue;
-}
-
-/// This matcher will match any method declaration that is marked as returning
-/// a pointer deleted by the destructor of the class.
-AST_MATCHER(CXXMethodDecl, noDanglingOnTemporaries) {
-  return hasCustomAnnotation(&Node, "moz_no_dangling_on_temporaries");
-}
-
-/// This matcher will match an expression if it escapes the scope of the callee
-/// of a parent call expression (skipping trivial parents).
-/// The first inner matcher matches the statement where the escape happens, and
-/// the second inner matcher corresponds to the declaration through which it
-/// happens.
-AST_MATCHER_P2(Expr, escapesParentFunctionCall, \
-               internal::Matcher<Stmt>, EscapeStmtMatcher, \
-               internal::Matcher<Decl>, EscapeDeclMatcher) {
-  auto Call =
-      IgnoreParentTrivials(Node, &Finder->getASTContext()).get<CallExpr>();
-  if (!Call) {
-    return false;
-  }
-
-  auto FunctionEscapeData = escapesFunction(&Node, Call);
-  assert(FunctionEscapeData && "escapesFunction() returned NoneType: there is a"
-                               " logic bug in the matcher");
-
-  const Stmt* EscapeStmt;
-  const Decl* EscapeDecl;
-  std::tie(EscapeStmt, EscapeDecl) = *FunctionEscapeData;
-
-  return EscapeStmt && EscapeDecl
-      && EscapeStmtMatcher.matches(*EscapeStmt, Finder, Builder)
-      && EscapeDeclMatcher.matches(*EscapeDecl, Finder, Builder);
-}
-
-/// This is the custom matcher class corresponding to hasNonTrivialParent.
-template <typename T, typename ParentT>
-class HasNonTrivialParentMatcher : public internal::WrapperMatcherInterface<T> {
-  static_assert(internal::IsBaseType<ParentT>::value,
-                "has parent only accepts base type matcher");
-
-public:
-  explicit HasNonTrivialParentMatcher(
-      const internal::Matcher<ParentT> &NonTrivialParentMatcher)
-      : HasNonTrivialParentMatcher::WrapperMatcherInterface(
-            NonTrivialParentMatcher) {}
-
-  bool matches(const T &Node, internal::ASTMatchFinder *Finder,
-               internal::BoundNodesTreeBuilder *Builder) const override {
-    auto NewNode = IgnoreParentTrivials(Node, &Finder->getASTContext());
-
-    // We return the result of the inner matcher applied to the new node.
-    return this->InnerMatcher.matches(NewNode, Finder, Builder);
-  }
-};
-
-/// This matcher acts like hasParent, except it skips trivial constructs by
-/// traversing the AST tree upwards.
-const internal::ArgumentAdaptingMatcherFunc<
-    HasNonTrivialParentMatcher,
-    internal::TypeList<Decl, NestedNameSpecifierLoc, Stmt, TypeLoc>,
-    internal::TypeList<Decl, NestedNameSpecifierLoc, Stmt, TypeLoc>>
-    LLVM_ATTRIBUTE_UNUSED hasNonTrivialParent = {};
 
 /// This matcher will match any function declaration that is marked to prohibit
 /// calling AddRef or Release on its return value.
