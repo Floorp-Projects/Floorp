@@ -149,11 +149,6 @@ impl SubpixelPoint {
     pub fn to_f64(&self) -> (f64, f64) {
         (self.x.into(), self.y.into())
     }
-
-    pub fn set_offset(&mut self, point: LayoutPoint, render_mode: FontRenderMode) {
-        self.x = render_mode.subpixel_quantize_offset(point.x);
-        self.y = render_mode.subpixel_quantize_offset(point.y);
-    }
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]

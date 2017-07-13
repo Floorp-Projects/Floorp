@@ -50,5 +50,9 @@ fn main() {
         }
     }
 
+    // Sort the file list so that the shaders.rs file is filled
+    // deterministically.
+    glsl_files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+
     write_shaders(glsl_files, &shaders_file);
 }
