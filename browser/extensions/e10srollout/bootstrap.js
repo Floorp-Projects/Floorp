@@ -22,7 +22,7 @@ const TEST_THRESHOLD = {
 // If a user qualifies for the e10s-multi experiement, this is how many
 // content processes to use and whether to allow addons for the experiment.
 const MULTI_EXPERIMENT = {
-  "beta": { buckets: { 4: 1, }, // 4 processes: 100%
+  "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
 
             // See below for an explanation, this only allows webextensions.
             get addonsDisableExperiment() { return getAddonsDisqualifyForMulti(); } },
@@ -207,7 +207,9 @@ function defineCohort() {
   for (let sampleName of Object.getOwnPropertyNames(buckets)) {
     if (multiUserSample < buckets[sampleName]) {
       setCohort(`${cohortPrefix}multiBucket${sampleName}`);
-      Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", sampleName);
+
+      // NB: Coerce sampleName to an integer because this is an integer pref.
+      Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", +sampleName);
       break;
     }
   }
