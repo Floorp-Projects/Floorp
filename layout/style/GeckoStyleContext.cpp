@@ -27,6 +27,9 @@ GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
   , mChild(nullptr)
   , mEmptyChild(nullptr)
   , mRuleNode(Move(aRuleNode))
+#ifdef DEBUG
+  , mComputingStruct(nsStyleStructID_None)
+#endif
 {
   mBits |= NS_STYLE_CONTEXT_IS_GECKO;
 

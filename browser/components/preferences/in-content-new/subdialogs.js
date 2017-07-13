@@ -328,6 +328,7 @@ SubDialog.prototype = {
     this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
 
     if (this._box.getAttribute("resizable") == "true") {
+      this._onResize = this._onResize.bind(this);
       this._resizeObserver = new MutationObserver(this._onResize);
       this._resizeObserver.observe(this._box, {attributes: true});
     }

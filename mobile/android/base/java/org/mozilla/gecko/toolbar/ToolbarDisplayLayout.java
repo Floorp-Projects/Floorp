@@ -19,6 +19,7 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -105,7 +106,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private OnTitleChangeListener mTitleChangeListener;
 
     private final ThemedImageButton mSiteSecurity;
-
     private final ImageButton mStop;
     private OnStopListener mStopListener;
 
@@ -170,6 +170,13 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
         mSiteSecurity.setPrivateMode(isPrivate);
+
+        // Bug 1375351 should change class type to ThemedImageButton to avoid casting
+        if (SkinConfig.isPhoton()) {
+            ((ThemedImageButton)mStop).setPrivateMode(isPrivate);
+        }
+
+        mPageActionLayout.setPrivateMode(isPrivate);
     }
 
 
@@ -426,7 +433,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mTitle.setPadding(0, 0, (!isShowingProgress ? mTitlePadding : 0), 0);
     }
 
-    List<View> getFocusOrder() {
+    List<? extends View> getFocusOrder() {
         return Arrays.asList(mSiteSecurity, mPageActionLayout, mStop);
     }
 

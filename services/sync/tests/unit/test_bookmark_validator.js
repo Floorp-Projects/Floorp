@@ -4,6 +4,11 @@
 Components.utils.import("resource://services-sync/bookmark_validator.js");
 Components.utils.import("resource://services-sync/util.js");
 
+function run_test() {
+  do_get_profile();
+  run_next_test();
+}
+
 async function inspectServerRecords(data) {
   let validator = new BookmarkValidator();
   return validator.inspectServerRecords(data);
@@ -326,6 +331,68 @@ add_task(async function test_cswc_serverUnexpected() {
   equal(c.serverMissing.length, 0);
   equal(c.serverUnexpected.length, 2);
   deepEqual(c.serverUnexpected, ["dddddddddddd", "eeeeeeeeeeee"]);
+});
+
+add_task(async function test_cswc_clientCycles() {
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      // A query for the menu, referenced by its local ID instead of
+      // `BOOKMARKS_MENU`. This should be reported as a cycle.
+      guid: "dddddddddddd",
+      url: `place:folder=${PlacesUtils.bookmarksMenuFolderId}`,
+      title: "Bookmarks Menu",
+    }],
+  });
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.toolbarGuid,
+    children: [{
+      guid: "eeeeeeeeeeee",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      children: [{
+        // A query for the toolbar in a subfolder. This should still be reported
+        // as a cycle.
+        guid: "ffffffffffff",
+        url: "place:folder=TOOLBAR&sort=3",
+        title: "Bookmarks Toolbar",
+      }],
+    }],
+  });
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.unfiledGuid,
+    children: [{
+      // A query for the menu. This shouldn't be reported as a cycle, since it
+      // references a different root.
+      guid: "gggggggggggg",
+      url: "place:folder=BOOKMARKS_MENU&sort=5",
+      title: "Bookmarks Menu",
+    }],
+  });
+
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    children: [{
+      // A query referencing multiple roots, one of which forms a cycle by
+      // referencing mobile. This is extremely unlikely, but it's cheap to
+      // detect, so we still report it.
+      guid: "hhhhhhhhhhhh",
+      url: "place:folder=TOOLBAR&folder=MOBILE_BOOKMARKS&folder=UNFILED_BOOKMARKS&sort=1",
+      title: "Toolbar, Mobile, Unfiled",
+    }],
+  });
+
+  let clientTree = await PlacesUtils.promiseBookmarksTree("", {
+    includeItemIds: true
+  });
+
+  let c = (await compareServerWithClient([], clientTree)).problemData;
+  deepEqual(c.clientCycles, [
+    ["menu", "dddddddddddd"],
+    ["toolbar", "eeeeeeeeeeee", "ffffffffffff"],
+    ["mobile", "hhhhhhhhhhhh"],
+  ]);
 });
 
 async function validationPing(server, client, duration) {

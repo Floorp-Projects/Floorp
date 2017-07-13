@@ -20,6 +20,7 @@ ipdl: $(ALL_IPDLSRCS)
 	  $(PLY_INCLUDE) \
 	  $(srcdir)/ipdl.py \
 	  --sync-msg-list=$(srcdir)/sync-messages.ini \
+	  --msg-metadata=$(srcdir)/message-metadata.ini \
 	  --outheaders-dir=_ipdlheaders \
 	  --outcpp-dir=. \
 	  $(IPDLDIRS:%=-I%) \

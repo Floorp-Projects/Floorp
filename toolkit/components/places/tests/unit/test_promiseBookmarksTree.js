@@ -156,10 +156,10 @@ async function new_bookmark(aInfo) {
   await PlacesTransactions.NewBookmark(aInfo).transact();
 }
 
-async function new_folder(aInfo) {
+function new_folder(aInfo) {
   if (!("title" in aInfo))
     aInfo.title = "Test Item (folder) " + itemsCount;
-  return await PlacesTransactions.NewFolder(aInfo).transact();
+  return PlacesTransactions.NewFolder(aInfo).transact();
 }
 
 // Walks a result nodes tree and test promiseBookmarksTree for each node.
@@ -190,7 +190,7 @@ async function test_promiseBookmarksTreeAgainstResult(aItemGuid = "",
   let itemId = aItemGuid ?
     await PlacesUtils.promiseItemId(aItemGuid) : PlacesUtils.placesRootId;
   let node = PlacesUtils.getFolderContents(itemId).root;
-  return await test_promiseBookmarksTreeForEachNode(node, aOptions, aExcludedGuids);
+  return test_promiseBookmarksTreeForEachNode(node, aOptions, aExcludedGuids);
 }
 
 add_task(async function() {

@@ -70,10 +70,10 @@ this.FormAutofillUtils = {
     let array = typeof address == "string" ? address.split(delimiter) : address;
 
     if (!Array.isArray(array)) {
-      return null;
+      return "";
     }
     return array
-      .map(s => s.trim())
+      .map(s => s ? s.trim() : "")
       .filter(s => s)
       .join(this.getAddressSeparator());
   },

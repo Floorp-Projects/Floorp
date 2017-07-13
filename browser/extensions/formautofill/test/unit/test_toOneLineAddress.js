@@ -18,6 +18,10 @@ add_task(async function test_getCategoriesFromFieldNames() {
       expectedValue: "B D",
     },
     {
+      strings: [null, "B", " ", "D"],
+      expectedValue: "B D",
+    },
+    {
       strings: "A B C",
       expectedValue: "A B C",
     },
@@ -38,6 +42,10 @@ add_task(async function test_getCategoriesFromFieldNames() {
       strings: "A B\n \nC",
       expectedValue: "A B C",
     },
+    {
+      strings: null,
+      expectedValue: "",
+    },
   ];
 
   for (let tc of TEST_CASES) {
@@ -47,6 +55,6 @@ add_task(async function test_getCategoriesFromFieldNames() {
     } else {
       result = FormAutofillUtils.toOneLineAddress(tc.strings);
     }
-    Assert.deepEqual(result, tc.expectedValue);
+    Assert.equal(result, tc.expectedValue);
   }
 });

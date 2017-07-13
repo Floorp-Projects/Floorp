@@ -10,7 +10,7 @@ loadScripts({ name: 'role.js', dir: MOCHITESTS_DIR });
 async function setDisplayAndWaitForReorder(browser, value) {
   let onReorder = waitForEvent(EVENT_REORDER, 'ul');
   await invokeSetStyle(browser, 'li', 'display', value);
-  return await onReorder;
+  return onReorder;
 }
 
 addAccessibleTask(`

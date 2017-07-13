@@ -146,13 +146,13 @@ add_task(async function test_removeByFilter() {
       // Case A 1: Dates
       await removeByFilterTester(sameHostVisits,
                                  { beginDate: new Date(2004, 1, 1), endDate: new Date(2006, 1, 1) },
-                                 async () => await assertInDB(remoteUriList[0]),
-                                 async () => await checkClosure(remoteUriList[0]),
+                                 () => assertInDB(remoteUriList[0]),
+                                 () => checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 2: Single Sub-host
       await removeByFilterTester(sameHostVisits, { host: "mozilla.org" },
-                                 async () => await assertInDB(remoteUriList[0]),
-                                 async () => await checkClosure(remoteUriList[0]),
+                                 () => assertInDB(remoteUriList[0]),
+                                 () => checkClosure(remoteUriList[0]),
                                  callbackUse, bookmarkedUri(remoteUriList));
       // Case A 3: Multiple subhost
       await removeByFilterTester(randomHostVisits, { host: "*.mozilla.org" },
@@ -176,13 +176,13 @@ add_task(async function test_removeByFilter() {
     // Case B 1: Date
     await removeByFilterTester(sameHostVisits,
                                { beginDate: new Date(2001, 1, 1), endDate: new Date(2002, 1, 1) },
-                               async () => await assertInDB(remoteUriList[0]),
-                               async () => await assertInDB(remoteUriList[0]),
+                               () => assertInDB(remoteUriList[0]),
+                               () => assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 2 : Single subhost
     await removeByFilterTester(sameHostVisits, { host: "notthere.org" },
-                               async () => await assertInDB(remoteUriList[0]),
-                               async () => await assertInDB(remoteUriList[0]),
+                               () => assertInDB(remoteUriList[0]),
+                               () => assertInDB(remoteUriList[0]),
                                callbackUse);
     // Case B 3 : Multiple subhosts
     await removeByFilterTester(randomHostVisits, { host: "*.notthere.org" },
@@ -196,8 +196,8 @@ add_task(async function test_removeByFilter() {
                                { host: "mozilla.org",
                                  beginDate: new Date(2004, 1, 1),
                                  endDate: new Date(2006, 1, 1) },
-                               async () => await assertInDB(remoteUriList[0]),
-                               async () => await assertNotInDB(remoteUriList[0]),
+                               () => assertInDB(remoteUriList[0]),
+                               () => assertNotInDB(remoteUriList[0]),
                                callbackUse);
     // Case C 2: multiple subhost
     await removeByFilterTester(randomHostVisits,

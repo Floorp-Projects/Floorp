@@ -33,6 +33,11 @@ var OnboardingTourType = {
       // show the update user tour when tour set version is larger than the seen tourset version
       Services.prefs.setStringPref(PREF_TOUR_TYPE, "update");
       Services.prefs.setBoolPref("browser.onboarding.hidden", false);
+      // Reset all the notification-related prefs because tours update.
+      Services.prefs.setBoolPref("browser.onboarding.notification.finished", false);
+      Services.prefs.clearUserPref("browser.onboarding.notification.prompt-count");
+      Services.prefs.clearUserPref("browser.onboarding.notification.last-time-of-changing-tour-sec");
+      Services.prefs.clearUserPref("browser.onboarding.notification.tour-ids-queue");
     }
     Services.prefs.setIntPref(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   },

@@ -25,7 +25,7 @@ const EHTestsCommon = {
     response.bodyOutputStream.write(body, body.length);
   },
 
-  sync_httpd_setup() {
+  async sync_httpd_setup() {
     let global = new ServerWBO("global", {
       syncID: Service.syncID,
       storageVersion: STORAGE_VERSION,
@@ -83,7 +83,7 @@ const EHTestsCommon = {
     CatapultEngine.prototype = {
       __proto__: SyncEngine.prototype,
       exception: null, // tests fill this in
-      _sync: function _sync() {
+      async _sync() {
         if (this.exception) {
           throw this.exception;
         }

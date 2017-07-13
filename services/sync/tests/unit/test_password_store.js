@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
 
-function checkRecord(name, record, expectedCount, timeCreated,
+async function checkRecord(name, record, expectedCount, timeCreated,
                      expectedTimeCreated, timePasswordChanged,
                      expectedTimePasswordChanged, recordIsUpdated) {
   let engine = Service.engineManager.get("passwords");
@@ -22,7 +22,7 @@ function checkRecord(name, record, expectedCount, timeCreated,
   do_check_eq(count.value, expectedCount);
 
   if (expectedCount > 0) {
-    do_check_true(!!store.getAllIDs()[record.id]);
+    do_check_true(!!(await store.getAllIDs())[record.id]);
     let stored_record = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 
     if (timeCreated !== undefined) {
@@ -38,15 +38,15 @@ function checkRecord(name, record, expectedCount, timeCreated,
       return stored_record.timePasswordChanged;
     }
   } else {
-    do_check_true(!store.getAllIDs()[record.id]);
+    do_check_true(!(await store.getAllIDs())[record.id]);
   }
   return undefined;
 }
 
 
-function changePassword(name, hostname, password, expectedCount, timeCreated,
-                        expectedTimeCreated, timePasswordChanged,
-                        expectedTimePasswordChanged, insert, recordIsUpdated) {
+async function changePassword(name, hostname, password, expectedCount, timeCreated,
+                              expectedTimeCreated, timePasswordChanged,
+                              expectedTimePasswordChanged, insert, recordIsUpdated) {
 
   const BOGUS_GUID = "zzzzzz" + hostname;
 
@@ -71,7 +71,7 @@ function changePassword(name, hostname, password, expectedCount, timeCreated,
   let store = engine._store;
 
   if (insert) {
-    do_check_eq(store.applyIncomingBatch([record]).length, 0);
+    do_check_eq((await store.applyIncomingBatch([record])).length, 0);
   }
 
   return checkRecord(name, record, expectedCount, timeCreated,
@@ -81,42 +81,42 @@ function changePassword(name, hostname, password, expectedCount, timeCreated,
 }
 
 
-function test_apply_records_with_times(hostname, timeCreated, timePasswordChanged) {
+async function test_apply_records_with_times(hostname, timeCreated, timePasswordChanged) {
   // The following record is going to be inserted in the store and it needs
   // to be found there. Then its timestamps are going to be compared to
   // the expected values.
-  changePassword(" ", hostname, "password", 1, timeCreated, timeCreated,
+  await changePassword(" ", hostname, "password", 1, timeCreated, timeCreated,
                  timePasswordChanged, timePasswordChanged, true);
 }
 
 
-function test_apply_multiple_records_with_times() {
+async function test_apply_multiple_records_with_times() {
   // The following records are going to be inserted in the store and they need
   // to be found there. Then their timestamps are going to be compared to
   // the expected values.
-  changePassword("A", "http://foo.a.com", "password", 1, undefined, undefined,
+  await changePassword("A", "http://foo.a.com", "password", 1, undefined, undefined,
                  undefined, undefined, true);
-  changePassword("B", "http://foo.b.com", "password", 1, 1000, 1000, undefined,
+  await changePassword("B", "http://foo.b.com", "password", 1, 1000, 1000, undefined,
                  undefined, true);
-  changePassword("C", "http://foo.c.com", "password", 1, undefined, undefined,
+  await changePassword("C", "http://foo.c.com", "password", 1, undefined, undefined,
                  1000, 1000, true);
-  changePassword("D", "http://foo.d.com", "password", 1, 1000, 1000, 1000,
+  await changePassword("D", "http://foo.d.com", "password", 1, 1000, 1000, 1000,
                  1000, true);
 
   // The following records are not going to be inserted in the store and they
   // are not going to be found there.
-  changePassword("NotInStoreA", "http://foo.aaaa.com", "password", 0,
+  await changePassword("NotInStoreA", "http://foo.aaaa.com", "password", 0,
                  undefined, undefined, undefined, undefined, false);
-  changePassword("NotInStoreB", "http://foo.bbbb.com", "password", 0, 1000,
+  await changePassword("NotInStoreB", "http://foo.bbbb.com", "password", 0, 1000,
                  1000, undefined, undefined, false);
-  changePassword("NotInStoreC", "http://foo.cccc.com", "password", 0,
+  await changePassword("NotInStoreC", "http://foo.cccc.com", "password", 0,
                  undefined, undefined, 1000, 1000, false);
-  changePassword("NotInStoreD", "http://foo.dddd.com", "password", 0, 1000,
+  await changePassword("NotInStoreD", "http://foo.dddd.com", "password", 0, 1000,
                  1000, 1000, 1000, false);
 }
 
 
-function test_apply_same_record_with_different_times() {
+async function test_apply_same_record_with_different_times() {
   // The following record is going to be inserted multiple times in the store
   // and it needs to be found there. Then its timestamps are going to be
   // compared to the expected values.
@@ -125,24 +125,24 @@ function test_apply_same_record_with_different_times() {
   /* The eslint linter thinks that timePasswordChanged is unused, even though
      it is passed as an argument to changePassword. */
   var timePasswordChanged = 100;
-  timePasswordChanged = changePassword("A", "http://a.tn", "password", 1, 100,
+  timePasswordChanged = await changePassword("A", "http://a.tn", "password", 1, 100,
                                        100, 100, timePasswordChanged, true);
-  timePasswordChanged = changePassword("A", "http://a.tn", "password", 1, 100,
+  timePasswordChanged = await changePassword("A", "http://a.tn", "password", 1, 100,
                                        100, 800, timePasswordChanged, true,
                                        true);
-  timePasswordChanged = changePassword("A", "http://a.tn", "password", 1, 500,
+  timePasswordChanged = await changePassword("A", "http://a.tn", "password", 1, 500,
                                        100, 800, timePasswordChanged, true,
                                        true);
-  timePasswordChanged = changePassword("A", "http://a.tn", "password2", 1, 500,
+  timePasswordChanged = await changePassword("A", "http://a.tn", "password2", 1, 500,
                                        100, 1536213005222, timePasswordChanged,
                                        true, true);
-  timePasswordChanged = changePassword("A", "http://a.tn", "password2", 1, 500,
+  timePasswordChanged = await changePassword("A", "http://a.tn", "password2", 1, 500,
                                        100, 800, timePasswordChanged, true, true);
   /* eslint-enable no-unsed-vars */
 }
 
 
-function run_test() {
+add_task(async function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Engine.Passwords").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.Store.Passwords").level = Log.Level.Trace;
@@ -169,7 +169,7 @@ function run_test() {
   let store = engine._store;
 
   try {
-    do_check_eq(store.applyIncomingBatch([recordA, recordB]).length, 0);
+    do_check_eq((await store.applyIncomingBatch([recordA, recordB])).length, 0);
 
     // Only the good record makes it to Services.logins.
     let badCount = {};
@@ -187,19 +187,19 @@ function run_test() {
     do_check_eq(goodCount.value, 1);
     do_check_eq(badCount.value, 0);
 
-    do_check_true(!!store.getAllIDs()[BOGUS_GUID_B]);
-    do_check_true(!store.getAllIDs()[BOGUS_GUID_A]);
+    do_check_true(!!(await store.getAllIDs())[BOGUS_GUID_B]);
+    do_check_true(!(await store.getAllIDs())[BOGUS_GUID_A]);
 
-    test_apply_records_with_times("http://afoo.baz.com", undefined, undefined);
-    test_apply_records_with_times("http://bfoo.baz.com", 1000, undefined);
-    test_apply_records_with_times("http://cfoo.baz.com", undefined, 2000);
-    test_apply_records_with_times("http://dfoo.baz.com", 1000, 2000);
+    await test_apply_records_with_times("http://afoo.baz.com", undefined, undefined);
+    await test_apply_records_with_times("http://bfoo.baz.com", 1000, undefined);
+    await test_apply_records_with_times("http://cfoo.baz.com", undefined, 2000);
+    await test_apply_records_with_times("http://dfoo.baz.com", 1000, 2000);
 
-    test_apply_multiple_records_with_times();
+    await test_apply_multiple_records_with_times();
 
-    test_apply_same_record_with_different_times();
+    await test_apply_same_record_with_different_times();
 
   } finally {
-    store.wipe();
+    await store.wipe();
   }
-}
+});

@@ -21,6 +21,9 @@ add_task(async function() {
   await setLinks("0,1,2,3,4,5,6,7,8");
   setPinnedLinks("");
 
+  if (onbardingEnabled) {
+    await promiseNoMuteNotificationOnFirstSession();
+  }
   let tab = await addNewTabPageTab();
   if (onbardingEnabled) {
     FOCUS_COUNT += 2;
@@ -54,6 +57,10 @@ function countFocus(aExpectedCount) {
   } while (document.activeElement != gURLBar.inputField);
   ok(focusCount == aExpectedCount || focusCount == (aExpectedCount + 1),
      "Validate focus count in the new tab page.");
+}
+
+function promiseNoMuteNotificationOnFirstSession() {
+  return SpecialPowers.pushPrefEnv({set: [["browser.onboarding.notification.mute-duration-on-first-session-ms", 0]]});
 }
 
 /**

@@ -183,8 +183,12 @@ CryptoWrapper.prototype = {
     return this.cleartext;
   },
 
+  cleartextToString() {
+    return JSON.stringify(this.cleartext);
+  },
+
   toString: function toString() {
-    let payload = this.deleted ? "DELETED" : JSON.stringify(this.cleartext);
+    let payload = this.deleted ? "DELETED" : this.cleartextToString();
 
     return "{ " +
       "id: " + this.id + "  " +
@@ -874,7 +878,7 @@ function PostQueue(poster, timestamp, config, log, postCallback) {
 }
 
 PostQueue.prototype = {
-  enqueue(record) {
+  async enqueue(record) {
     // We want to ensure the record has a .toJSON() method defined - even
     // though JSON.stringify() would implicitly call it, the stringify might
     // still work even if it isn't defined, which isn't what we want.
@@ -911,7 +915,7 @@ PostQueue.prototype = {
       // Note that if a single record is too big for the batch or post, then
       // the batch may be empty, and so we don't flush in that case.
       if (this.numQueued) {
-        this.flush(batchSizeExceeded || singleRecordTooBig);
+        await this.flush(batchSizeExceeded || singleRecordTooBig);
       }
     }
     // Either a ',' or a '[' depending on whether this is the first record.
@@ -921,7 +925,7 @@ PostQueue.prototype = {
     return { enqueued: true };
   },
 
-  flush(finalBatchPost) {
+  async flush(finalBatchPost) {
     if (!this.queued) {
       // nothing queued - we can't be in a batch, and something has gone very
       // bad if we think we are.
@@ -957,14 +961,13 @@ PostQueue.prototype = {
     }
     this.queued = "";
     this.numQueued = 0;
-    let response = Async.promiseSpinningly(
-                    this.poster(queued, headers, batch, !!(finalBatchPost && this.batchID !== null)));
+    let response = await this.poster(queued, headers, batch, !!(finalBatchPost && this.batchID !== null));
 
     if (!response.success) {
       this.log.trace("Server error response during a batch", response);
       // not clear what we should do here - we expect the consumer of this to
       // abort by throwing in the postCallback below.
-      this.postCallback(response, !finalBatchPost);
+      await this.postCallback(response, !finalBatchPost);
       return;
     }
 
@@ -972,7 +975,7 @@ PostQueue.prototype = {
       this.log.trace("Committed batch", this.batchID);
       this.batchID = undefined; // we are now in "first post for the batch" state.
       this.lastModified = response.headers["x-last-modified"];
-      this.postCallback(response, false);
+      await this.postCallback(response, false);
       return;
     }
 
@@ -982,7 +985,7 @@ PostQueue.prototype = {
       }
       this.batchID = null; // no batch semantics are in place.
       this.lastModified = response.headers["x-last-modified"];
-      this.postCallback(response, false);
+      await this.postCallback(response, false);
       return;
     }
 
@@ -1009,6 +1012,6 @@ PostQueue.prototype = {
       throw new Error(`Invalid client/server batch state - client has ${this.batchID}, server has ${responseBatchID}`);
     }
 
-    this.postCallback(response, true);
+    await this.postCallback(response, true);
   },
 }

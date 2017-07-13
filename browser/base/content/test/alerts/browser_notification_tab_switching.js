@@ -25,7 +25,7 @@ add_task(async function test_notificationPreventDefaultAndSwitchTabs() {
     // First, show a notification that will be have the tab-switching prevented.
     function promiseNotificationEvent(evt) {
       return ContentTask.spawn(aBrowser, evt, async function(contentEvt) {
-        return await new Promise(resolve => {
+        return new Promise(resolve => {
           let contentNotification = content.wrappedJSObject._notification;
           contentNotification.addEventListener(contentEvt, function(event) {
             resolve({ defaultPrevented: event.defaultPrevented });

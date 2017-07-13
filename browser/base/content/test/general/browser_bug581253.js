@@ -4,81 +4,56 @@
 
 var testURL = "data:text/plain,nothing but plain text";
 var testTag = "581253_tag";
-var timerID = -1;
 
-function test() {
-  registerCleanupFunction(function() {
-    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
-    if (timerID > 0) {
-      clearTimeout(timerID);
-    }
-  });
+add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
   waitForExplicitFinish();
 
-  let tab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  tab.linkedBrowser.addEventListener("load", (function(event) {
-    let uri = makeURI(testURL);
-    let bmTxn =
-      new PlacesCreateBookmarkTransaction(uri,
-                                          PlacesUtils.unfiledBookmarksFolderId,
-                                          -1, "", null, []);
-    PlacesUtils.transactionManager.doTransaction(bmTxn);
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
-    ok(PlacesUtils.bookmarks.isBookmarked(uri), "the test url is bookmarked");
-    waitForStarChange(true, onStarred);
-  }), {capture: true, once: true});
+  registerCleanupFunction(async function() {
+    await PlacesUtils.bookmarks.eraseEverything();
+    await BrowserTestUtils.removeTab(tab);
+    await PlacesTestUtils.clearHistory();
+  });
+
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "",
+    url: testURL,
+  });
+
+  Assert.ok(await PlacesUtils.bookmarks.fetch({url: testURL}), "the test url is bookmarked");
 
   content.location = testURL;
-}
 
-function waitForStarChange(aValue, aCallback) {
-  let expectedStatus = aValue ? BookmarkingUI.STATUS_STARRED
-                              : BookmarkingUI.STATUS_UNSTARRED;
-  if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING ||
-      BookmarkingUI.status != expectedStatus) {
-    info("Waiting for star button change.");
-    setTimeout(waitForStarChange, 50, aValue, aCallback);
-    return;
-  }
-  aCallback();
-}
+  await BrowserTestUtils.waitForCondition(
+    () => BookmarkingUI.status == BookmarkingUI.STATUS_STARRED,
+    "star button indicates that the page is bookmarked");
 
-function onStarred() {
-  is(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED,
-     "star button indicates that the page is bookmarked");
+  PlacesUtils.tagging.tagURI(makeURI(testURL), [testTag]);
 
-  let uri = makeURI(testURL);
-  let tagTxn = new PlacesTagURITransaction(uri, [testTag]);
-  PlacesUtils.transactionManager.doTransaction(tagTxn);
+  let popupShownPromise = BrowserTestUtils.waitForEvent(StarUI.panel, "popupshown");
 
-  StarUI.panel.addEventListener("popupshown", onPanelShown);
   BookmarkingUI.star.click();
-}
 
-function onPanelShown(aEvent) {
-  if (aEvent.target == StarUI.panel) {
-    StarUI.panel.removeEventListener("popupshown", arguments.callee);
-    let tagsField = document.getElementById("editBMPanel_tagsField");
-    ok(tagsField.value == testTag, "tags field value was set");
-    tagsField.focus();
+  await popupShownPromise;
 
-    StarUI.panel.addEventListener("popuphidden", onPanelHidden);
-    let removeButton = document.getElementById("editBookmarkPanelRemoveButton");
-    removeButton.click();
-  }
-}
+  let tagsField = document.getElementById("editBMPanel_tagsField");
+  Assert.ok(tagsField.value == testTag, "tags field value was set");
+  tagsField.focus();
 
-function onPanelHidden(aEvent) {
-  if (aEvent.target == StarUI.panel) {
-    StarUI.panel.removeEventListener("popuphidden", arguments.callee);
+  let popupHiddenPromise = BrowserTestUtils.waitForEvent(StarUI.panel, "popuphidden");
 
-    executeSoon(function() {
-      ok(!PlacesUtils.bookmarks.isBookmarked(makeURI(testURL)),
-         "the bookmark for the test url has been removed");
-      is(BookmarkingUI.status, BookmarkingUI.STATUS_UNSTARRED,
-         "star button indicates that the bookmark has been removed");
-      gBrowser.removeCurrentTab();
-      PlacesTestUtils.clearHistory().then(finish);
-    });
-  }
-}
+  let removeNotification = PlacesTestUtils.waitForNotification("onItemRemoved",
+     (id, parentId, index, type, itemUrl) => testURL == unescape(itemUrl.spec));
+
+  let removeButton = document.getElementById("editBookmarkPanelRemoveButton");
+  removeButton.click();
+
+  await popupHiddenPromise;
+
+  await removeNotification;
+
+  is(BookmarkingUI.status, BookmarkingUI.STATUS_UNSTARRED,
+     "star button indicates that the bookmark has been removed");
+});

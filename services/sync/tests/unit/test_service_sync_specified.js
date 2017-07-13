@@ -9,9 +9,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-initTestLogging();
-Service.engineManager.clear();
-
 let syncedEngines = []
 
 function SteamEngine() {
@@ -19,22 +16,20 @@ function SteamEngine() {
 }
 SteamEngine.prototype = {
   __proto__: SyncEngine.prototype,
-  _sync: function _sync() {
+  async _sync() {
     syncedEngines.push(this.name);
   }
 };
-Service.engineManager.register(SteamEngine);
 
 function StirlingEngine() {
   SyncEngine.call(this, "Stirling", Service);
 }
 StirlingEngine.prototype = {
   __proto__: SteamEngine.prototype,
-  _sync: function _sync() {
+  async _sync() {
     syncedEngines.push(this.name);
   }
 };
-Service.engineManager.register(StirlingEngine);
 
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();
@@ -74,14 +69,18 @@ async function setUp() {
   return server;
 }
 
-function run_test() {
+add_task(async function setup() {
+  initTestLogging();
+  Service.engineManager.clear();
+
   initTestLogging("Trace");
   validate_all_future_pings();
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
-  run_next_test();
-}
+  await Service.engineManager.register(SteamEngine);
+  await Service.engineManager.register(StirlingEngine);
+});
 
 add_task(async function test_noEngines() {
   enableValidationPrefs();
@@ -91,11 +90,11 @@ add_task(async function test_noEngines() {
 
   try {
     _("Sync with no engines specified.");
-    Service.sync([]);
+    await Service.sync([]);
     deepEqual(syncedEngines, [], "no engines were synced");
 
   } finally {
-    Service.startOver();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -109,11 +108,11 @@ add_task(async function test_oneEngine() {
   try {
 
     _("Sync with 1 engine specified.");
-    Service.sync(["steam"]);
+    await Service.sync(["steam"]);
     deepEqual(syncedEngines, ["steam"])
 
   } finally {
-    Service.startOver();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -126,11 +125,11 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    Service.sync(["steam", "stirling"]);
+    await Service.sync(["steam", "stirling"]);
     deepEqual(syncedEngines, ["steam", "stirling"])
 
   } finally {
-    Service.startOver();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -143,11 +142,11 @@ add_task(async function test_bothEnginesSpecified() {
 
   try {
     _("Sync with both engines specified.");
-    Service.sync(["stirling", "steam"]);
+    await Service.sync(["stirling", "steam"]);
     deepEqual(syncedEngines, ["stirling", "steam"])
 
   } finally {
-    Service.startOver();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });
@@ -159,11 +158,11 @@ add_task(async function test_bothEnginesDefault() {
   let server = await setUp();
 
   try {
-    Service.sync();
+    await Service.sync();
     deepEqual(syncedEngines, ["steam", "stirling"])
 
   } finally {
-    Service.startOver();
+    await Service.startOver();
     await promiseStopServer(server);
   }
 });

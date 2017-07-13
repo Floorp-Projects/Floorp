@@ -266,8 +266,8 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  async removeSetting(extension, type, key) {
-    return await alterSetting(extension, type, key, "remove");
+  removeSetting(extension, type, key) {
+    return alterSetting(extension, type, key, "remove");
   },
 
   /**
@@ -286,8 +286,8 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  async enable(extension, type, key) {
-    return await alterSetting(extension, type, key, "enable");
+  enable(extension, type, key) {
+    return alterSetting(extension, type, key, "enable");
   },
 
   /**
@@ -306,8 +306,8 @@ this.ExtensionSettingsStore = {
    *          corresponds to the current top precedent setting, or null if
    *          the current top precedent setting has not changed.
    */
-  async disable(extension, type, key) {
-    return await alterSetting(extension, type, key, "disable");
+  disable(extension, type, key) {
+    return alterSetting(extension, type, key, "disable");
   },
 
   /**
@@ -340,8 +340,8 @@ this.ExtensionSettingsStore = {
    *
    * @returns {object} An object with properties for key and value.
    */
-  async getSetting(type, key) {
-    return await getTopItem(type, key);
+  getSetting(type, key) {
+    return getTopItem(type, key);
   },
 
   /**

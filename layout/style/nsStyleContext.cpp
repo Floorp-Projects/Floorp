@@ -90,7 +90,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mRefCnt(0)
 #ifdef DEBUG
   , mFrameRefCnt(0)
-  , mComputingStruct(nsStyleStructID_None)
 #endif
 {}
 

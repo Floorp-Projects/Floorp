@@ -19,6 +19,7 @@ const TOUR_AGENT_JS_URI = "resource://onboarding/onboarding-tour-agent.js";
 const BRAND_SHORT_NAME = Services.strings
                      .createBundle("chrome://branding/locale/brand.properties")
                      .GetStringFromName("brandShortName");
+const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 
 /**
  * Add any number of tours, following the format
@@ -245,22 +246,47 @@ class Onboarding {
     await this._loadCSS();
     this._bundle = Services.strings.createBundle(BUNDLE_URI);
 
-    this._overlayIcon = this._renderOverlayIcon();
-    this._overlay = this._renderOverlay();
-    this._window.document.body.appendChild(this._overlayIcon);
-    this._window.document.body.appendChild(this._overlay);
-
     this._loadJS(UITOUR_JS_URI);
-    this._loadJS(TOUR_AGENT_JS_URI);
 
-    this._overlayIcon.addEventListener("click", this);
-    this._overlay.addEventListener("click", this);
+    this._window.addEventListener("resize", this);
+
     // Destroy on unload. This is to ensure we remove all the stuff we left.
     // No any leak out there.
     this._window.addEventListener("unload", () => this.destroy());
 
+    this.uiInitialized = false;
+    this._resizeTimerId =
+      this._window.requestIdleCallback(() => this._resizeUI());
+  }
+
+  _resizeUI() {
+    // Don't show the overlay UI before we get to a better, responsive design.
+    if (this._window.document.body.getBoundingClientRect().width < 960) {
+      this.destroy();
+    } else {
+      this._initUI();
+    }
+  }
+
+  _initUI() {
+    if (this.uiInitialized) {
+      return;
+    }
+    this.uiInitialized = true;
+
+    this._overlayIcon = this._renderOverlayIcon();
+    this._overlayIcon.addEventListener("click", this);
+    this._window.document.body.appendChild(this._overlayIcon);
+
+    this._overlay = this._renderOverlay();
+    this._overlay.addEventListener("click", this);
+    this._window.document.body.appendChild(this._overlay);
+
+    this._loadJS(TOUR_AGENT_JS_URI);
+
     this._initPrefObserver();
-    this._initNotification();
+    // Doing tour notification takes some effort. Let's do it on idle.
+    this._window.requestIdleCallback(() => this._initNotification());
   }
 
   _getTourIDList(tourType) {
@@ -328,6 +354,14 @@ class Onboarding {
   }
 
   handleEvent(evt) {
+    if (evt.type === "resize") {
+      this._window.cancelIdleCallback(this._resizeTimerId);
+      this._resizeTimerId =
+        this._window.requestIdleCallback(() => this._resizeUI());
+
+      return;
+    }
+
     switch (evt.target.id) {
       case "onboarding-overlay-icon":
       case "onboarding-overlay-close-btn":
@@ -339,11 +373,13 @@ class Onboarding {
         break;
       case "onboarding-notification-close-btn":
         this.hideNotification();
+        this._removeTourFromNotificationQueue(this._notificationBar.dataset.targetTourId);
         break;
       case "onboarding-notification-action-btn":
         let tourId = this._notificationBar.dataset.targetTourId;
         this.toggleOverlay();
         this.gotoPage(tourId);
+        this._removeTourFromNotificationQueue(tourId);
         break;
     }
     let classList = evt.target.classList;
@@ -356,12 +392,19 @@ class Onboarding {
   }
 
   destroy() {
+    if (!this.uiInitialized) {
+      return;
+    }
+    this.uiInitialized = false;
+
     this._clearPrefObserver();
     this._overlayIcon.remove();
     this._overlay.remove();
     if (this._notificationBar) {
       this._notificationBar.remove();
     }
+
+    this._overlayIcon = this._overlay = this._notificationBar = null;
   }
 
   toggleOverlay() {
@@ -420,44 +463,122 @@ class Onboarding {
     }
   }
 
+  _muteNotificationOnFirstSession() {
+    if (Preferences.isSet("browser.onboarding.notification.tour-ids-queue")) {
+      // There is a queue. We had prompted before, this must not be the 1st session.
+      return false;
+    }
+
+    let muteDuration = Preferences.get("browser.onboarding.notification.mute-duration-on-first-session-ms");
+    if (muteDuration == 0) {
+      // Don't mute when this is set to 0 on purpose.
+      return false;
+    }
+
+    // Reuse the `last-time-of-changing-tour-sec` to save the time that
+    // we try to prompt on the 1st session.
+    let lastTime = 1000 * Preferences.get("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
+    if (lastTime <= 0) {
+      this.sendMessageToChrome("set-prefs", [{
+        name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
+        value: Math.floor(Date.now() / 1000)
+      }]);
+      return true;
+    }
+    return Date.now() - lastTime <= muteDuration;
+  }
+
+  _isTimeForNextTourNotification() {
+    let promptCount = Preferences.get("browser.onboarding.notification.prompt-count", 0);
+    let maxCount = Preferences.get("browser.onboarding.notification.max-prompt-count-per-tour");
+    if (promptCount >= maxCount) {
+      return true;
+    }
+
+    let lastTime = 1000 * Preferences.get("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
+    let maxTime = Preferences.get("browser.onboarding.notification.max-life-time-per-tour-ms");
+    if (lastTime && Date.now() - lastTime >= maxTime) {
+      return true;
+    }
+
+    return false;
+  }
+
+  _removeTourFromNotificationQueue(tourId) {
+    let params = [];
+    let queue = this._getNotificationQueue();
+    params.push({
+      name: "browser.onboarding.notification.tour-ids-queue",
+      value: queue.filter(id => id != tourId).join(",")
+    });
+    params.push({
+      name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
+      value: 0
+    });
+    params.push({
+      name: "browser.onboarding.notification.prompt-count",
+      value: 0
+    });
+    this.sendMessageToChrome("set-prefs", params);
+  }
+
+  _getNotificationQueue() {
+    let queue = "";
+    if (Preferences.isSet("browser.onboarding.notification.tour-ids-queue")) {
+      queue = Preferences.get("browser.onboarding.notification.tour-ids-queue");
+    } else {
+      // For each tour, it only gets 2 chances to prompt with notification
+      // (each chance includes 8 impressions or 5-days max life time)
+      // if user never interact with it.
+      // Assume there are tour #0 ~ #5. Here would form the queue as
+      // "#0,#1,#2,#3,#4,#5,#0,#1,#2,#3,#4,#5".
+      // Then we would loop through this queue and remove prompted tour from the queue
+      // until the queue is empty.
+      let ids = this._tours.map(tour => tour.id).join(",");
+      queue = `${ids},${ids}`;
+      this.sendMessageToChrome("set-prefs", [{
+        name: "browser.onboarding.notification.tour-ids-queue",
+        value: queue
+      }]);
+    }
+    return queue ? queue.split(",") : [];
+  }
+
   showNotification() {
     if (Preferences.get("browser.onboarding.notification.finished", false)) {
       return;
     }
 
-    // Pick out the next target tour to show
-    let targetTour = null;
-
-    // Take the last tour as the default last prompted
-    // so below would start from the 1st one if found no the last prompted from the pref.
-    let lastPromptedId = this._tours[this._tours.length - 1].id;
-    lastPromptedId = Preferences.get("browser.onboarding.notification.lastPrompted", lastPromptedId);
-
-    let lastTourIndex = this._tours.findIndex(tour => tour.id == lastPromptedId);
-    if (lastTourIndex < 0) {
-      // Couldn't find the tour.
-      // This could be because the pref was manually modified into unknown value
-      // or the tour version has been updated so have an new tours set.
-      // Take the last tour as the last prompted so would start from the 1st one below.
-      lastTourIndex = this._tours.length - 1;
-    }
-
-    // Form tours to notify into the order we want.
-    // For example, There are tour #0 ~ #5 and the #3 is the last prompted.
-    // This would form [#4, #5, #0, #1, #2, #3].
-    // So the 1st met incomplete tour in #4 ~ #2 would be the one to show.
-    // Or #3 would be the one to show if #4 ~ #2 are all completed.
-    let toursToNotify = [ ...this._tours.slice(lastTourIndex + 1), ...this._tours.slice(0, lastTourIndex + 1) ];
-    targetTour = toursToNotify.find(tour => !this.isTourCompleted(tour.id));
-
-
-    if (!targetTour) {
-      this.sendMessageToChrome("set-prefs", [{
-        name: "browser.onboarding.notification.finished",
-        value: true
-      }]);
+    if (this._muteNotificationOnFirstSession()) {
       return;
     }
+
+    let queue = this._getNotificationQueue();
+    let startQueueLength = queue.length;
+    // See if need to move on to the next tour
+    if (queue.length > 0 && this._isTimeForNextTourNotification()) {
+      queue.shift();
+    }
+    // We don't want to prompt completed tour.
+    while (queue.length > 0 && this.isTourCompleted(queue[0])) {
+      queue.shift();
+    }
+
+    if (queue.length == 0) {
+      this.sendMessageToChrome("set-prefs", [
+        {
+          name: "browser.onboarding.notification.finished",
+          value: true
+        },
+        {
+          name: "browser.onboarding.notification.tour-ids-queue",
+          value: ""
+        }
+      ]);
+      return;
+    }
+    let targetTourId = queue[0];
+    let targetTour = this._tours.find(tour => tour.id == targetTourId);
 
     // Show the target tour notification
     this._notificationBar = this._renderNotificationBar();
@@ -474,10 +595,29 @@ class Onboarding {
     tourMessage.textContent = notificationStrings.message;
     this._notificationBar.classList.add("onboarding-opened");
 
-    this.sendMessageToChrome("set-prefs", [{
-      name: "browser.onboarding.notification.lastPrompted",
-      value: targetTour.id
-    }]);
+    let params = [];
+    if (startQueueLength != queue.length) {
+      // We just change tour so update the time, the count and the queue
+      params.push({
+        name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
+        value: Math.floor(Date.now() / 1000)
+      });
+      params.push({
+        name: PROMPT_COUNT_PREF,
+        value: 1
+      });
+      params.push({
+        name: "browser.onboarding.notification.tour-ids-queue",
+        value: queue.join(",")
+      });
+    } else {
+      let promptCount = Preferences.get(PROMPT_COUNT_PREF, 0);
+      params.push({
+        name: PROMPT_COUNT_PREF,
+        value: promptCount + 1
+      });
+    }
+    this.sendMessageToChrome("set-prefs", params);
   }
 
   hideNotification() {

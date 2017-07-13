@@ -126,8 +126,10 @@ void Pickle::UpdateIter(PickleIterator* iter, uint32_t bytes) const {
 
 // Payload is sizeof(Pickle::memberAlignmentType) aligned.
 
-Pickle::Pickle(uint32_t header_size)
-    : buffers_(AlignInt(header_size), kHeaderSegmentCapacity, kDefaultSegmentCapacity),
+Pickle::Pickle(uint32_t header_size, size_t segment_capacity)
+    : buffers_(AlignInt(header_size),
+               segment_capacity ? segment_capacity : kHeaderSegmentCapacity,
+               segment_capacity ? segment_capacity : kDefaultSegmentCapacity),
       header_(nullptr),
       header_size_(AlignInt(header_size)) {
   DCHECK(static_cast<memberAlignmentType>(header_size) >= sizeof(Header));

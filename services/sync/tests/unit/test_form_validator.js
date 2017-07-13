@@ -54,21 +54,19 @@ function getDummyServerAndClient() {
   };
 }
 
-add_test(function test_valid() {
+add_task(async function test_valid() {
   let { server, client } = getDummyServerAndClient();
   let validator = new FormValidator();
   let { problemData, clientRecords, records, deletedRecords } =
-      validator.compareClientWithServer(client, server);
+      await validator.compareClientWithServer(client, server);
   equal(clientRecords.length, 3);
   equal(records.length, 3)
   equal(deletedRecords.length, 0);
   deepEqual(problemData, validator.emptyProblemData());
-
-  run_next_test();
 });
 
 
-add_test(function test_formValidatorIgnoresMissingClients() {
+add_task(async function test_formValidatorIgnoresMissingClients() {
   // Since history form records are not deleted from the server, the
   // |FormValidator| shouldn't set the |missingClient| flag in |problemData|.
   let { server, client } = getDummyServerAndClient();
@@ -76,7 +74,7 @@ add_test(function test_formValidatorIgnoresMissingClients() {
 
   let validator = new FormValidator();
   let { problemData, clientRecords, records, deletedRecords } =
-      validator.compareClientWithServer(client, server);
+      await validator.compareClientWithServer(client, server);
 
   equal(clientRecords.length, 2);
   equal(records.length, 3);
@@ -84,8 +82,6 @@ add_test(function test_formValidatorIgnoresMissingClients() {
 
   let expected = validator.emptyProblemData();
   deepEqual(problemData, expected);
-
-  run_next_test();
 });
 
 function run_test() {
