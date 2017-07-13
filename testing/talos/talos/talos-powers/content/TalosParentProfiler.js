@@ -197,5 +197,18 @@ var TalosParentProfiler;
         TalosPowers.profilerMarker(marker);
       }
     },
+
+    afterProfileGathered() {
+      if (!initted) {
+        return Promise.resolve();
+      }
+
+      return new Promise(resolve => {
+        Services.obs.addObserver(function onGathered() {
+          Services.obs.removeObserver(onGathered, "talos-profile-gathered");
+          resolve();
+        }, "talos-profile-gathered");
+      });
+    }
   };
 })();
