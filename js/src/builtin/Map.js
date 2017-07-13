@@ -25,21 +25,26 @@ function MapConstructorInit(iterable) {
     }
 }
 
-// ES2018 draft rev f83aa38282c2a60c6916ebc410bfdf105a0f6a54
-// 23.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] )
+/* ES6 20121122 draft 15.14.4.4. */
 function MapForEach(callbackfn, thisArg = undefined) {
-    // Step 1.
+    /* Step 1-2. */
     var M = this;
+    if (!IsObject(M))
+        ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Map", "forEach", typeof M);
 
-    // Steps 2-3.
-    if (!IsObject(M) || !IsMapObject(M))
-        return callFunction(CallMapMethodIfWrapped, M, callbackfn, thisArg, "MapForEach");
+    /* Step 3-4. */
+    try {
+        callFunction(std_Map_has, M);
+    } catch (e) {
+        // has will throw on non-Map objects, throw our own error in that case.
+        ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Map", "forEach", typeof M);
+    }
 
-    // Step 4.
+    /* Step 5. */
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    // Steps 5-8.
+    /* Step 6-8. */
     var entries = callFunction(std_Map_iterator, M);
     while (true) {
         var result = callFunction(MapIteratorNext, entries);
