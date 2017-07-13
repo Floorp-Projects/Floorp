@@ -135,15 +135,15 @@ fuzzy(106,354) == css-multicol-1/multicol-rule-double-000.xht css-multicol-1/mul
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-fraction-001.xht css-multicol-1/multicol-rule-fraction-001-ref.xht
 fails-if(OSX||winWidget) == css-multicol-1/multicol-rule-fraction-002.xht css-multicol-1/multicol-rule-fraction-002-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-fraction-003.xht css-multicol-1/multicol-rule-fraction-3-ref.xht
-fuzzy(127,500) fails-if(webrender) == css-multicol-1/multicol-rule-groove-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
+fuzzy(127,500) == css-multicol-1/multicol-rule-groove-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 fuzzy(94,256) == css-multicol-1/multicol-rule-hidden-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
-fuzzy(127,500) fails-if(webrender) == css-multicol-1/multicol-rule-inset-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
+fuzzy(127,500) == css-multicol-1/multicol-rule-inset-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
 fuzzy(255,2808) == css-multicol-1/multicol-rule-large-001.xht css-multicol-1/multicol-rule-large-001-ref.xht
 fuzzy(94,256) == css-multicol-1/multicol-rule-none-000.xht css-multicol-1/multicol-rule-hidden-000-ref.xht
-fuzzy(127,500) fails-if(webrender) == css-multicol-1/multicol-rule-outset-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
+fuzzy(127,500) == css-multicol-1/multicol-rule-outset-000.xht css-multicol-1/multicol-rule-groove-000-ref.xht
 == css-multicol-1/multicol-rule-percent-001.xht css-multicol-1/multicol-containing-002-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-rule-px-001.xht css-multicol-1/multicol-rule-ref.xht
-fuzzy(127,500) fails-if(webrender) == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
+fuzzy(127,500) == css-multicol-1/multicol-rule-ridge-000.xht css-multicol-1/multicol-rule-ridge-000-ref.xht
 == css-multicol-1/multicol-rule-samelength-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 == css-multicol-1/multicol-rule-shorthand-001.xht css-multicol-1/multicol-rule-samelength-001-ref.xht
 fuzzy(106,354) == css-multicol-1/multicol-rule-solid-000.xht css-multicol-1/multicol-rule-solid-000-ref.xht
