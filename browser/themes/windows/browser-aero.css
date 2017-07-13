@@ -55,14 +55,14 @@
         }
 
 %ifdef MOZ_PHOTON_THEME
-        @media (-moz-windows-accent-color-in-titlebar: 0) {
+        @media (-moz-windows-accent-color-applies: 0) {
           :root[tabsintitlebar]:not(:-moz-lwtheme) {
             background-color: hsl(235,33%,19%);
             --titlebar-text-color: hsl(240,9%,98%);
           }
         }
 
-        @media (-moz-windows-accent-color-in-titlebar) {
+        @media (-moz-windows-accent-color-applies) {
           :root[tabsintitlebar]:not(:-moz-window-inactive):not(:-moz-lwtheme) {
             background-color: -moz-win-accentcolor;
             --titlebar-text-color: -moz-win-accentcolortext;
