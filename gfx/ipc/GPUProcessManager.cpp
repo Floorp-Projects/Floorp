@@ -38,6 +38,7 @@
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "MediaPrefs.h"
+#include "nsPrintfCString.h"
 
 #ifdef MOZ_CRASHREPORTER
 # include "nsExceptionHandler.h"
@@ -366,6 +367,10 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
   CrashReporter::AnnotateCrashReport(
     NS_LITERAL_CSTRING("GPUProcessStatus"),
     NS_LITERAL_CSTRING("Running"));
+
+  CrashReporter::AnnotateCrashReport(
+    NS_LITERAL_CSTRING("GPUProcessLaunchCount"),
+    nsPrintfCString("%d", mNumProcessAttempts));
 #endif
 }
 
