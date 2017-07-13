@@ -23,8 +23,7 @@ TEST(ThreadProfile, InsertOneEntry) {
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->addEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->mEntries != nullptr);
-  ASSERT_TRUE(pb->mEntries[pb->mReadPos].kind() ==
-              ProfileBufferEntry::Kind::Time);
+  ASSERT_TRUE(pb->mEntries[pb->mReadPos].IsTime());
   ASSERT_TRUE(pb->mEntries[pb->mReadPos].u.mDouble == 123.1);
 }
 
@@ -40,8 +39,7 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
   ASSERT_TRUE(pb->mEntries != nullptr);
   int readPos = pb->mReadPos;
   while (readPos != pb->mWritePos) {
-    ASSERT_TRUE(pb->mEntries[readPos].kind() ==
-                ProfileBufferEntry::Kind::Time);
+    ASSERT_TRUE(pb->mEntries[readPos].IsTime());
     ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == readPos);
     readPos = (readPos + 1) % pb->mEntrySize;
   }
@@ -63,8 +61,7 @@ TEST(ThreadProfile, InsertEntriesWrap) {
   int readPos = pb->mReadPos;
   int ctr = 0;
   while (readPos != pb->mWritePos) {
-    ASSERT_TRUE(pb->mEntries[readPos].kind() ==
-                ProfileBufferEntry::Kind::Time);
+    ASSERT_TRUE(pb->mEntries[readPos].IsTime());
     // the first few entries were discarded when we wrapped
     ASSERT_TRUE(pb->mEntries[readPos].u.mDouble == ctr + (test_size - entries));
     ctr++;

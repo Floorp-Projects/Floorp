@@ -723,7 +723,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
   //
 skip_to_next_sample:
   while (e.Has()) {
-    if (e.Get().isThreadId()) {
+    if (e.Get().IsThreadId()) {
       break;
     } else {
       e.Next();
@@ -731,7 +731,7 @@ skip_to_next_sample:
   }
 
   while (e.Has()) {
-    if (e.Get().isThreadId()) {
+    if (e.Get().IsThreadId()) {
       int threadId = e.Get().u.mInt;
       e.Next();
 
@@ -747,7 +747,7 @@ skip_to_next_sample:
 
     ProfileSample sample;
 
-    if (e.Has() && e.Get().isTime()) {
+    if (e.Has() && e.Get().IsTime()) {
       sample.mTime = e.Get().u.mDouble;
       e.Next();
 
@@ -764,7 +764,7 @@ skip_to_next_sample:
 
     int numFrames = 0;
     while (e.Has()) {
-      if (e.Get().isNativeLeafAddr()) {
+      if (e.Get().IsNativeLeafAddr()) {
         numFrames++;
 
         // Bug 753041: We need a double cast here to tell GCC that we don't
@@ -775,7 +775,7 @@ skip_to_next_sample:
         stack.AppendFrame(UniqueStacks::OnStackFrameKey(buf));
         e.Next();
 
-      } else if (e.Get().isLabel()) {
+      } else if (e.Get().IsLabel()) {
         numFrames++;
 
         // Copy the label into strbuf.
@@ -786,7 +786,7 @@ skip_to_next_sample:
 
         bool seenFirstDynamicStringFragment = false;
         while (e.Has()) {
-          if (e.Get().isDynamicStringFragment()) {
+          if (e.Get().IsDynamicStringFragment()) {
             // If this is the first dynamic string fragment and we have a
             // non-empty label, insert a ' ' after the label and before the
             // dynamic string.
@@ -814,19 +814,19 @@ skip_to_next_sample:
 
         UniqueStacks::OnStackFrameKey frameKey(strbuf.get());
 
-        if (e.Has() && e.Get().isLineNumber()) {
+        if (e.Has() && e.Get().IsLineNumber()) {
           frameKey.mLine = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
-        if (e.Has() && e.Get().isCategory()) {
+        if (e.Has() && e.Get().IsCategory()) {
           frameKey.mCategory = Some(unsigned(e.Get().u.mInt));
           e.Next();
         }
 
         stack.AppendFrame(frameKey);
 
-      } else if (e.Get().isJitReturnAddr()) {
+      } else if (e.Get().IsJitReturnAddr()) {
         numFrames++;
 
         // A JIT frame may expand to multiple frames due to inlining.
@@ -859,24 +859,24 @@ skip_to_next_sample:
 
     // Skip over the markers. We process them in StreamMarkersToJSON().
     while (e.Has()) {
-      if (e.Get().isMarker()) {
+      if (e.Get().IsMarker()) {
         e.Next();
       } else {
         break;
       }
     }
 
-    if (e.Has() && e.Get().isResponsiveness()) {
+    if (e.Has() && e.Get().IsResponsiveness()) {
       sample.mResponsiveness = Some(e.Get().u.mDouble);
       e.Next();
     }
 
-    if (e.Has() && e.Get().isResidentMemory()) {
+    if (e.Has() && e.Get().IsResidentMemory()) {
       sample.mRSS = Some(e.Get().u.mDouble);
       e.Next();
     }
 
-    if (e.Has() && e.Get().isUnsharedMemory()) {
+    if (e.Has() && e.Get().IsUnsharedMemory()) {
       sample.mUSS = Some(e.Get().u.mDouble);
       e.Next();
     }
@@ -901,9 +901,9 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
   // Stream all markers whose threadId matches aThreadId. All other entries are
   // skipped, because we process them in StreamSamplesToJSON().
   while (e.Has()) {
-    if (e.Get().isThreadId()) {
+    if (e.Get().IsThreadId()) {
       currentThreadID = e.Get().u.mInt;
-    } else if (currentThreadID == aThreadId && e.Get().isMarker()) {
+    } else if (currentThreadID == aThreadId && e.Get().IsMarker()) {
       const ProfilerMarker* marker = e.Get().u.mMarker;
       if (marker->GetTime() >= aSinceTime) {
         marker->StreamJSON(aWriter, aProcessStartTime, aUniqueStacks);
@@ -934,7 +934,7 @@ ProfileBuffer::FindLastSampleOfThread(int aThreadId, const LastSample& aLS)
     // is still valid.
     MOZ_RELEASE_ASSERT(0 <= ix && ix < mEntrySize);
     ProfileBufferEntry& entry = mEntries[ix];
-    bool isStillValid = entry.isThreadId() && entry.u.mInt == aThreadId;
+    bool isStillValid = entry.IsThreadId() && entry.u.mInt == aThreadId;
     return isStillValid ? ix : -1;
   }
 
@@ -954,7 +954,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
     return false;
   }
 
-  MOZ_ASSERT(mEntries[lastSampleStartPos].isThreadId() &&
+  MOZ_ASSERT(mEntries[lastSampleStartPos].IsThreadId() &&
              mEntries[lastSampleStartPos].u.mInt == aThreadId);
 
   addThreadIdEntry(aThreadId, &aLS);
@@ -963,7 +963,7 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
   for (int readPos = (lastSampleStartPos + 1) % mEntrySize;
        readPos != mWritePos;
        readPos = (readPos + 1) % mEntrySize) {
-    switch (mEntries[readPos].kind()) {
+    switch (mEntries[readPos].GetKind()) {
       case ProfileBufferEntry::Kind::ThreadId:
         // We're done.
         return true;
