@@ -122,6 +122,7 @@ TalosPowersService.prototype = {
         }).then(() => {
           Services.profiler.StopProfiler();
           resolve();
+          Services.obs.notifyObservers(null, "talos-profile-gathered");
         });
       }, (error) => {
         Cu.reportError("Failed to gather profile: " + error);
