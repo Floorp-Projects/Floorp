@@ -80,9 +80,6 @@ interface XULControllers;
   [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
   [Throws, UnsafeInPrerendering, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Throws, UnsafeInPrerendering] void print();
-  //[Throws] any showModalDialog(DOMString url, optional any argument);
-  [Throws, Func="nsGlobalWindow::IsShowModalDialogEnabled", UnsafeInPrerendering, NeedsSubjectPrincipal]
-  any showModalDialog(DOMString url, optional any argument, optional DOMString options = "");
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]
   void postMessage(any message, DOMString targetOrigin, optional sequence<object> transfer = []);
@@ -230,17 +227,6 @@ interface SpeechSynthesisGetter {
 
 Window implements SpeechSynthesisGetter;
 #endif
-
-// http://www.whatwg.org/specs/web-apps/current-work/
-[NoInterfaceObject]
-interface WindowModal {
-  [Throws, Func="nsGlobalWindow::IsModalContentWindow", NeedsSubjectPrincipal]
-  readonly attribute any dialogArguments;
-
-  [Throws, Func="nsGlobalWindow::IsModalContentWindow", NeedsSubjectPrincipal]
-  attribute any returnValue;
-};
-Window implements WindowModal;
 
 // Mozilla-specific stuff
 partial interface Window {
