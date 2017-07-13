@@ -2,6 +2,7 @@
     "routes": [
         "{index}.gecko.v2.{project}.revision.{head_rev}.{build_product}.{build_name}-{build_type}",
         "{index}.gecko.v2.{project}.pushdate.{year}.{month}.{day}.{pushdate}.{build_product}.{build_name}-{build_type}",
+        "{index}.gecko.v2.{project}.pushlog-id.{pushid}.{build_product}.{build_name}-{build_type}",
         "{index}.gecko.v2.{project}.latest.{build_product}.{build_name}-{build_type}"
     ],
     "nightly": [
