@@ -88,16 +88,16 @@ public class UrlUtils {
         }
     }
 
-    public static boolean isPermittedResourceProtocol(final String url) {
-        return url.startsWith("http") ||
-                url.startsWith("https") ||
-                url.startsWith("file") ||
-                url.startsWith("data");
+    public static boolean isPermittedResourceProtocol(@Nullable final String scheme) {
+        return scheme != null && (
+                scheme.startsWith("http") ||
+                scheme.startsWith("https") ||
+                scheme.startsWith("file") ||
+                scheme.startsWith("data"));
     }
 
-    public static boolean isSupportedProtocol(final String url) {
-        return isPermittedResourceProtocol(url) ||
-                url.startsWith("error");
+    public static boolean isSupportedProtocol(@Nullable final String scheme) {
+        return scheme != null && (isPermittedResourceProtocol(scheme) || scheme.startsWith("error"));
     }
 
     public static boolean isInternalErrorURL(final String url) {

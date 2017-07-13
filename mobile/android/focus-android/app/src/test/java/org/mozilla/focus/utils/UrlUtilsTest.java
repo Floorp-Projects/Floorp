@@ -35,6 +35,9 @@ public class UrlUtilsTest {
 
     @Test
     public void isPermittedResourceProtocol() {
+        assertFalse(UrlUtils.isPermittedResourceProtocol(""));
+        assertFalse(UrlUtils.isPermittedResourceProtocol(null));
+
         assertTrue(UrlUtils.isPermittedResourceProtocol("http"));
         assertTrue(UrlUtils.isPermittedResourceProtocol("https"));
 
@@ -46,6 +49,9 @@ public class UrlUtilsTest {
 
     @Test
     public void isPermittedProtocol() {
+        assertFalse(UrlUtils.isSupportedProtocol(""));
+        assertFalse(UrlUtils.isSupportedProtocol(null));
+
         assertTrue(UrlUtils.isSupportedProtocol("http"));
         assertTrue(UrlUtils.isSupportedProtocol("https"));
         assertTrue(UrlUtils.isSupportedProtocol("error"));
