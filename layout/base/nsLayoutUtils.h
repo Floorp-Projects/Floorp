@@ -785,6 +785,9 @@ public:
                           nsView* aView, nsPoint aPt,
                           nsIWidget* aWidget);
 
+  static mozilla::LayoutDeviceIntPoint
+    WidgetToWidgetOffset(nsIWidget* aFromWidget, nsIWidget* aToWidget);
+
   enum FrameForPointFlags {
     /**
      * When set, paint suppression is ignored, so we'll return non-root page
