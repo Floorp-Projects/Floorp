@@ -1,6 +1,6 @@
 [package]
 name = "owning_ref"
-version = "0.3.3"
+version = "0.2.4"
 authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
 license = "MIT"
 
@@ -10,6 +10,3 @@ documentation = "http://kimundi.github.io/owning-ref-rs/owning_ref/index.html"
 
 repository = "https://github.com/Kimundi/owning-ref-rs"
 keywords = ["reference", "sibling", "field", "owning"]
-
-[dependencies]
-stable_deref_trait = "1.0.0"
