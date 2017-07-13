@@ -606,6 +606,7 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
   WritingMode wm = GetWritingMode();
   bool isRTL = !wm.IsBidiLTR();
   bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
+  bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
 
 #ifdef DEBUG_roc
   printf("*** Doing column reflow pass: mLastBalanceBSize=%d, mColMaxBSize=%d, RTL=%d\n"
@@ -686,6 +687,12 @@ nsColumnSetFrame::ReflowChildren(ReflowOutput&     aDesiredSize,
       && child->GetNextSibling()
       && !(aUnboundedLastColumn && columnCount == aConfig.mBalanceColCount - 1)
       && !NS_SUBTREE_DIRTY(child->GetNextSibling());
+    // If column-fill is auto (not the default), then we might need to
+    // move content between columns for any change in column block-size.
+    if (skipIncremental && changingBSize &&
+        StyleColumn()->mColumnFill == NS_STYLE_COLUMN_FILL_AUTO) {
+      skipIncremental = false;
+    }
     // If we need to pull up content from the prev-in-flow then this is not just
     // a height shrink. The prev in flow will have set the dirty bit.
     // Check the overflow rect YMost instead of just the child's content height. The child
