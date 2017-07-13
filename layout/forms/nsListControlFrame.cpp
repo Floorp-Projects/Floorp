@@ -469,9 +469,6 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   // nsSelectsAreaFrame will have suppressed the scrollbar update.
   if (!IsScrollbarUpdateSuppressed()) {
     // All done.  No need to do more reflow.
-    NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
-                 "Shouldn't be suppressing if the block size of a row has not "
-                 "changed!");
     return;
   }
 
