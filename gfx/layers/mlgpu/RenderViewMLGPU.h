@@ -71,8 +71,7 @@ private:
   void AddItemFrontToBack(LayerMLGPU* aLayer, ItemInfo& aItem);
   void AddItemBackToFront(LayerMLGPU* aLayer, ItemInfo& aItem);
 
-  void PrepareClear();
-  void DrawClear();
+  void PrepareClears();
 
   void ExecutePass(RenderPassMLGPU* aPass);
 
@@ -91,8 +90,13 @@ private:
   // Shader data.
   ConstantBufferSection mWorldConstants;
 
-  // Information for the initial target surface clear.
-  ClearRegionHelper mClear;
+  // Information for the initial target surface clear. This covers the area that
+  // won't be occluded by opaque content.
+  ClearRegionHelper mPreClear;
+
+  // The post-clear region, that must be cleared after all drawing is done.
+  nsIntRegion mPostClearRegion;
+  ClearRegionHelper mPostClear;
 
   // Either an MLGSwapChain-derived render target, or an intermediate surface.
   RefPtr<MLGRenderTarget> mTarget;
