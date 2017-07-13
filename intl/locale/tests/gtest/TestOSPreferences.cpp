@@ -25,6 +25,21 @@ TEST(Intl_Locale_OSPreferences, GetSystemLocales) {
 }
 
 /**
+ * We test that on all platforms we test against (irrelevant of the tier),
+ * we will be able to retrieve at least a single locale out of the system.
+ *
+ * In theory, that may not be true, but if we encounter such platform we should
+ * decide how to handle this and special case and this test should make
+ * it not happen without us noticing.
+ */
+TEST(Intl_Locale_OSPreferences, GetRegionalPrefsLocales) {
+  nsTArray<nsCString> rgLocales;
+  ASSERT_TRUE(OSPreferences::GetInstance()->GetRegionalPrefsLocales(rgLocales));
+
+  ASSERT_FALSE(rgLocales.IsEmpty());
+}
+
+/**
  * We test that on all platforms we test against,
  * we will be able to retrieve a date and time pattern.
  *

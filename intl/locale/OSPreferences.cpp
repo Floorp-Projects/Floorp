@@ -55,6 +55,22 @@ OSPreferences::GetSystemLocales(nsTArray<nsCString>& aRetVal)
   return false;
 }
 
+bool
+OSPreferences::GetRegionalPrefsLocales(nsTArray<nsCString>& aRetVal)
+{
+  if (!mRegionalPrefsLocales.IsEmpty()) {
+    aRetVal = mRegionalPrefsLocales;
+    return true;
+  }
+
+  if (ReadRegionalPrefsLocales(aRetVal)) {
+    mRegionalPrefsLocales = aRetVal;
+    return true;
+  }
+
+  return false;
+}
+
 void
 OSPreferences::Refresh()
 {
@@ -335,6 +351,30 @@ OSPreferences::GetSystemLocale(nsACString& aRetVal)
       aRetVal = locales[0];
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+OSPreferences::GetRegionalPrefsLocales(uint32_t* aCount, char*** aOutArray)
+{
+  AutoTArray<nsCString,10> tempLocales;
+  nsTArray<nsCString>* regionalPrefsLocalesPtr;
+
+  if (!mRegionalPrefsLocales.IsEmpty()) {
+    // use cached value
+    regionalPrefsLocalesPtr = &mRegionalPrefsLocales;
+  } else {
+    // get a (perhaps temporary/fallback/hack) value
+    GetRegionalPrefsLocales(tempLocales);
+    regionalPrefsLocalesPtr = &tempLocales;
+  }
+  *aCount = regionalPrefsLocalesPtr->Length();
+  *aOutArray = static_cast<char**>(moz_xmalloc(*aCount * sizeof(char*)));
+
+  for (uint32_t i = 0; i < *aCount; i++) {
+    (*aOutArray)[i] = moz_xstrdup((*regionalPrefsLocalesPtr)[i].get());
+  }
+
   return NS_OK;
 }
 
