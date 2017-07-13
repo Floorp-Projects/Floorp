@@ -345,24 +345,20 @@ function waitForNewEngine(basename, numImages) {
   return Promise.all([addDeferred.promise].concat(eventPromises));
 }
 
-function addTab() {
-  return new Promise(resolve => {
-    let tab = BrowserTestUtils.addTab(gBrowser);
-    gBrowser.selectedTab = tab;
-    tab.linkedBrowser.addEventListener("load", function() {
-      let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
-      gMsgMan = tab.linkedBrowser.messageManager;
-      gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
-        type: "AddToWhitelist",
-        data: ["about:blank"],
-      });
-      waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck").then(() => {
-        gMsgMan.loadFrameScript(url, false);
-        resolve();
-      });
-    }, {capture: true, once: true});
-    registerCleanupFunction(() => gBrowser.removeTab(tab));
+async function addTab() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  registerCleanupFunction(() => gBrowser.removeTab(tab));
+
+  let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
+  gMsgMan = tab.linkedBrowser.messageManager;
+  gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
+    type: "AddToWhitelist",
+    data: ["about:blank"],
   });
+
+  await waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck");
+
+  gMsgMan.loadFrameScript(url, false);
 }
 
 var currentStateObj = async function() {

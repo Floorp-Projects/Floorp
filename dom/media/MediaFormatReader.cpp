@@ -1556,7 +1556,7 @@ MediaFormatReader::ShouldSkip(TimeUnit aTimeThreshold)
     // We don't support skip-to-next-frame for this case.
     return false;
   }
-  return (nextKeyframe < aTimeThreshold
+  return (nextKeyframe <= aTimeThreshold
           || (mVideo.mTimeThreshold
               && mVideo.mTimeThreshold.ref().EndTime() < aTimeThreshold))
          && nextKeyframe.ToMicroseconds() >= 0

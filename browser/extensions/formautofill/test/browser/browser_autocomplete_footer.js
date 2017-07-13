@@ -69,14 +69,14 @@ add_task(async function test_phishing_warning() {
     await openPopupOn(browser, "#street-address");
     const warningBox = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._warningTextBox;
     ok(warningBox, "Got phishing warning box");
-    await expectWarningText(browser, "Also fill company, address, phone, email");
+    await expectWarningText(browser, "Also fill company, phone, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await expectWarningText(browser, "Also fill company, phone, email");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await expectWarningText(browser, "Fill address");
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-    await expectWarningText(browser, "Also fill company, address, phone, email");
+    await expectWarningText(browser, "Also fill company, phone, email");
 
     // Ensure the popup is closed before entering the next test.
     await ContentTask.spawn(browser, {}, async function() {

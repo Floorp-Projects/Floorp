@@ -1509,7 +1509,8 @@ PeerConnectionImpl::CreateOffer(const JsepOfferOptions& aOptions)
   CSFLogDebug(logTag, "CreateOffer()");
 
   nsresult nrv;
-  if (restartIce && !mJsepSession->GetLocalDescription().empty()) {
+  if (restartIce &&
+      !mJsepSession->GetLocalDescription(kJsepDescriptionCurrent).empty()) {
     // If restart is requested and a restart is already in progress, we
     // need to make room for the restart request so we either rollback
     // or finalize to "clear" the previous restart.
@@ -2792,32 +2793,70 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetLocalDescription(char** aSDP)
+PeerConnectionImpl::GetLocalDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aSDP);
-  std::string localSdp = mJsepSession->GetLocalDescription();
 
-  char* tmp = new char[localSdp.size() + 1];
-  std::copy(localSdp.begin(), localSdp.end(), tmp);
-  tmp[localSdp.size()] = '\0';
+  std::string localSdp = mJsepSession->GetLocalDescription(
+      kJsepDescriptionPendingOrCurrent);
+  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
 
-  *aSDP = tmp;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetRemoteDescription(char** aSDP)
+PeerConnectionImpl::GetCurrentLocalDescription(nsAString& aSDP)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aSDP);
-  std::string remoteSdp = mJsepSession->GetRemoteDescription();
 
-  char* tmp = new char[remoteSdp.size() + 1];
-  std::copy(remoteSdp.begin(), remoteSdp.end(), tmp);
-  tmp[remoteSdp.size()] = '\0';
+  std::string localSdp = mJsepSession->GetLocalDescription(kJsepDescriptionCurrent);
+  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
 
-  *aSDP = tmp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetPendingLocalDescription(nsAString& aSDP)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+  std::string localSdp = mJsepSession->GetLocalDescription(kJsepDescriptionPending);
+  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetRemoteDescription(nsAString& aSDP)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+  std::string remoteSdp = mJsepSession->GetRemoteDescription(
+      kJsepDescriptionPendingOrCurrent);
+  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetCurrentRemoteDescription(nsAString& aSDP)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+  std::string remoteSdp = mJsepSession->GetRemoteDescription(kJsepDescriptionCurrent);
+  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetPendingRemoteDescription(nsAString& aSDP)
+{
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+
+  std::string remoteSdp = mJsepSession->GetRemoteDescription(kJsepDescriptionPending);
+  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
+
   return NS_OK;
 }
 
@@ -3507,8 +3546,13 @@ PeerConnectionImpl::BuildStatsQuery_m(
   // Populate SDP on main
   if (query->internalStats) {
     if (mJsepSession) {
-      std::string localDescription = mJsepSession->GetLocalDescription();
-      std::string remoteDescription = mJsepSession->GetRemoteDescription();
+      // TODO we probably should report Current and Pending SDPs here
+      // separately. Plus the raw SDP we got from JS (mLocalRequestedSDP).
+      // And if it's the offer or answer would also be nice.
+      std::string localDescription = mJsepSession->GetLocalDescription(
+          kJsepDescriptionPendingOrCurrent);
+      std::string remoteDescription = mJsepSession->GetRemoteDescription(
+          kJsepDescriptionPendingOrCurrent);
       query->report->mLocalSdp.Construct(
           NS_ConvertASCIItoUTF16(localDescription.c_str()));
       query->report->mRemoteSdp.Construct(

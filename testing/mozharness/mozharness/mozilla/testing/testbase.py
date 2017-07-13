@@ -331,7 +331,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 elif f['name'].endswith('test_packages.json'):
                     self.test_packages_url = str(f['name'])
                     self.info("Found a test packages url %s." % self.test_packages_url)
-                elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip',)):
+                elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip', 'stylo-bindings.zip')):
                     if not self.installer_url:
                         self.installer_url = str(f['name'])
                         self.info("Found installer url %s." % self.installer_url)
