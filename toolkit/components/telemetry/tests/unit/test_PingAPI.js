@@ -17,6 +17,9 @@ XPCOMUtils.defineLazyGetter(this, "gPingsArchivePath", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "datareporting", "archived");
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
+
 /**
  * Fakes the archive storage quota.
  * @param {Integer} aArchiveQuota The new quota, in bytes.
@@ -69,6 +72,7 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Preferences.set("toolkit.telemetry.healthping.enabled", false);
 });
 
 add_task(async function test_archivedPings() {
