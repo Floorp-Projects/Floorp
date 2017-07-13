@@ -952,52 +952,19 @@ nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip)
     AllocFailed(mLength);
   }
 
-  // What follows is an unrolled loop.  The unroll factor is small here (2),
-  // so we could structure the unrolling here in a more ad-hoc fashion, but
-  // keeping the unrolling more systematic seems to be a better choice both
-  // to keep the unrolled version a bit more readable, and also more easier
-  // to extend in the future if a change to the main body of the loop leads
-  // to an increase in the stall factor.
-  static const size_t UNROLL_FACTOR = 2;
-  size_t iterations = mLength / UNROLL_FACTOR;
-  const size_t left = mLength % UNROLL_FACTOR;
-
   char_type* to   = mData;
   char_type* from = mData;
+  char_type* end  = mData + mLength;
 
-  // First, run the unrolled loop for the number of iterations that the main
-  // loop can be run without caring about the remainder runs.
-  while (iterations--) {
-    uint32_t firstChar = (uint32_t)*from++;
-    uint32_t secondChar = (uint32_t)*from++;
+  while (from < end) {
+    uint32_t theChar = (uint32_t)*from++;
     // Replacing this with a call to ASCIIMask::IsMasked
     // regresses performance somewhat, so leaving it inlined.
-    if (!mozilla::ASCIIMask::IsMasked(aToStrip, firstChar)) {
+    if (!mozilla::ASCIIMask::IsMasked(aToStrip, theChar)) {
       // Not stripped, copy this char.
-      *to++ = (char_type)firstChar;
-    }
-    if (!mozilla::ASCIIMask::IsMasked(aToStrip, secondChar)) {
-      *to++ = (char_type)secondChar;
+      *to++ = (char_type)theChar;
     }
   }
-
-
-  // Now, deal with left-overs of what the main iterations didn't get to process.
-  switch (left) {
-  case 1:
-    {
-      uint32_t firstChar = (uint32_t)*from++;
-      if (!mozilla::ASCIIMask::IsMasked(aToStrip, firstChar)) {
-        *to++ = (char_type)firstChar;
-      }
-    }
-    MOZ_FALLTHROUGH;
-  case 0:
-  default:
-    // Nothing left!
-    break;
-  }
-
   *to = char_type(0); // add the null
   mLength = to - mData;
 }
