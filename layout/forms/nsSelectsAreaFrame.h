@@ -35,7 +35,9 @@ public:
 protected:
   explicit nsSelectsAreaFrame(nsStyleContext* aContext) :
     nsBlockFrame(aContext, kClassID),
-    mBSizeOfARow(0)
+    // initialize to wacky value so first call of
+    // nsSelectsAreaFrame::Reflow will always invalidate
+    mBSizeOfARow(nscoord_MIN)
   {}
 
   // We cache the block size of a single row so that changes to the
