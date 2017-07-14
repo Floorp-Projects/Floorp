@@ -3542,6 +3542,30 @@ ContentChild::RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle)
 #endif
 }
 
+mozilla::ipc::IPCResult
+ContentChild::RecvDumpCodeCoverageCounters()
+{
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::DumpCounters(0);
+  return IPC_OK();
+#else
+  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
+  return IPC_FAIL_NO_REASON(this);
+#endif
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvResetCodeCoverageCounters()
+{
+#ifdef MOZ_CODE_COVERAGE
+  CodeCoverageHandler::ResetCounters(0);
+  return IPC_OK();
+#else
+  NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
+  return IPC_FAIL_NO_REASON(this);
+#endif
+}
+
 already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
