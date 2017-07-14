@@ -377,6 +377,12 @@
                 "optional": true,
                 "type": "string"
               },
+              "incognito": {
+                "description": "Whether to associate the download with a private browsing session.",
+                "optional": true,
+                "default": false,
+                "type": "boolean"
+              },
               "conflictAction": {
                 "$ref": "FilenameConflictAction",
                 "optional": true
