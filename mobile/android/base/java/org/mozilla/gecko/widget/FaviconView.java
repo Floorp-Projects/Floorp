@@ -31,9 +31,6 @@ import java.lang.ref.WeakReference;
  * selected is the dominant colour of the provided Favicon.
  */
 public class FaviconView extends ImageView {
-    private static final String LOGTAG = "GeckoFaviconView";
-
-    private static String DEFAULT_FAVICON_KEY = FaviconView.class.getSimpleName() + "DefaultFavicon";
 
     // Default x/y-radius of the oval used to round the corners of the background (dp)
     private static final int DEFAULT_CORNER_RADIUS_DP = 2;
