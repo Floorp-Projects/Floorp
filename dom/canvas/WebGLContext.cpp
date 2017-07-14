@@ -931,8 +931,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         mResetLayer = true;
         mBackbufferNeedsClear = true;
 
-        gl->ResetSyncCallCount("Existing WebGLContext resized.");
-
         return NS_OK;
     }
 
@@ -1147,8 +1145,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     reporter.SetSuccessful();
 
     failureId = NS_LITERAL_CSTRING("SUCCESS");
-
-    gl->ResetSyncCallCount("WebGLContext Initialization");
     return NS_OK;
 }
 
@@ -1601,7 +1597,6 @@ WebGLContext::OnEndOfFrame() const
                            mDataAllocGLCallCount);
    }
    mDataAllocGLCallCount = 0;
-   gl->ResetSyncCallCount("WebGLContext PresentScreenBuffer");
 }
 
 // For an overview of how WebGL compositing works, see:
