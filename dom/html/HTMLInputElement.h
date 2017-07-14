@@ -886,6 +886,8 @@ public:
    */
   double GetStepAsDouble() { return GetStep().toDouble(); }
   double GetStepBaseAsDouble() { return GetStepBase().toDouble(); }
+  double GetMinimumAsDouble() { return GetMinimum().toDouble(); }
+  double GetMaximumAsDouble() { return GetMaximum().toDouble(); }
 
   HTMLInputElement* GetOwnerNumberControl();
 
