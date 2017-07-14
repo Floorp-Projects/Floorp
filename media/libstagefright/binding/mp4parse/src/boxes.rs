@@ -137,9 +137,4 @@ box_database!(
     OriginalFormatBox                 0x66726d61, // "frma"
     MP3AudioSampleEntry               0x2e6d7033, // ".mp3" - from F4V.
     CompositionOffsetBox              0x63747473, // "ctts"
-    JPEGAtom                          0x6a706567, // "jpeg" - QT JPEG
-    AC3SampleEntry                    0x61632d33, // "ac-3"
-    EC3SampleEntry                    0x65632d33, // "ec-3"
-    AC3SpecificBox                    0x64616333, // "dac3"
-    EC3SpecificBox                    0x64656333, // "dec3"
 );

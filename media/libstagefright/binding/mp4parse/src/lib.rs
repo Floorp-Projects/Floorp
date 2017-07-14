@@ -67,6 +67,8 @@ pub enum Error {
     Io(std::io::Error),
     /// read_mp4 terminated without detecting a moov box.
     NoMoov,
+    /// Parse error caused by table size is over limitation.
+    TableTooLarge,
 }
 
 impl From<bitreader::BitReaderError> for Error {
@@ -267,8 +269,6 @@ pub enum AudioCodecSpecific {
     ES_Descriptor(ES_Descriptor),
     FLACSpecificBox(FLACSpecificBox),
     OpusSpecificBox(OpusSpecificBox),
-    AC3SpecificBox,
-    EC3SpecificBox,
     MP3,
 }
 
@@ -287,7 +287,6 @@ pub enum VideoCodecSpecific {
     AVCConfig(Vec<u8>),
     VPxConfig(VPxConfigBox),
     ESDSConfig(Vec<u8>),
-    JPEG,
 }
 
 #[derive(Debug, Clone)]
@@ -416,9 +415,6 @@ pub enum CodecType {
     VP8,
     EncryptedVideo,
     EncryptedAudio,
-    JPEG,   // QT JPEG atom
-    AC3,    // Digital Audio Compression (AC-3, Enhanced AC-3) Standard, ETSI TS 102 366.
-    EC3,    // Digital Audio Compression (AC-3, Enhanced AC-3) Standard, ETSI TS 102 366.
 }
 
 impl Default for CodecType {
@@ -1162,7 +1158,7 @@ fn read_stsc<T: Read>(src: &mut BMFFBox<T>) -> Result<SampleToChunkBox> {
     let mut samples = Vec::new();
     for _ in 0..sample_count {
         let first_chunk = be_u32(src)?;
-        let samples_per_chunk = be_u32(src)?;
+        let samples_per_chunk = be_u32_with_limit(src)?;
         let sample_description_index = be_u32(src)?;
         samples.push(SampleToChunk {
             first_chunk: first_chunk,
@@ -1195,7 +1191,7 @@ fn read_ctts<T: Read>(src: &mut BMFFBox<T>) -> Result<CompositionOffsetBox> {
             // however, some buggy contents have negative value when version == 0.
             // So we always use Version1 here.
             0...1 => {
-                let count = be_u32(src)?;
+                let count = be_u32_with_limit(src)?;
                 let offset = TimeOffsetVersion::Version1(be_i32(src)?);
                 (count, offset)
             },
@@ -1243,7 +1239,7 @@ fn read_stts<T: Read>(src: &mut BMFFBox<T>) -> Result<TimeToSampleBox> {
     let sample_count = be_u32_with_limit(src)?;
     let mut samples = Vec::new();
     for _ in 0..sample_count {
-        let sample_count = be_u32(src)?;
+        let sample_count = be_u32_with_limit(src)?;
         let sample_delta = be_u32(src)?;
         samples.push(Sample {
             sample_count: sample_count,
@@ -1674,7 +1670,6 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
         BoxType::VP8SampleEntry => CodecType::VP8,
         BoxType::VP9SampleEntry => CodecType::VP9,
         BoxType::ProtectedVisualSampleEntry => CodecType::EncryptedVideo,
-        BoxType::JPEGAtom => CodecType::JPEG,
         _ => {
             log!("Unsupported video codec, box {:?} found", name);
             CodecType::Unknown
@@ -1696,11 +1691,7 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
     skip(src, 50)?;
 
     // Skip clap/pasp/etc. for now.
-    let mut codec_specific = if name == BoxType::JPEGAtom {
-        Some(VideoCodecSpecific::JPEG)
-    } else {
-        None
-    };
+    let mut codec_specific = None;
     let mut protection_info = Vec::new();
     let mut iter = src.box_iter();
     while let Some(mut b) = iter.next_box()? {
@@ -1736,11 +1727,6 @@ fn read_video_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 let esds_size = b.head.size - b.head.offset - 4;
                 let esds = read_buf(&mut b.content, esds_size as usize)?;
                 codec_specific = Some(VideoCodecSpecific::ESDSConfig(esds));
-            }
-            BoxType::JPEGAtom => {
-                if name != BoxType::JPEGAtom || codec_specific.is_some() {
-                    return Err(Error::InvalidData("malformed video sample entry"));
-                }
             }
             BoxType::ProtectionSchemeInformationBox => {
                 if name != BoxType::ProtectedVisualSampleEntry {
@@ -1874,26 +1860,6 @@ fn read_audio_sample_entry<T: Read>(src: &mut BMFFBox<T>) -> Result<(CodecType, 
                 log!("{:?} (sinf)", sinf);
                 codec_type = CodecType::EncryptedAudio;
                 protection_info.push(sinf);
-            }
-            BoxType::AC3SpecificBox => {
-                if name != BoxType::AC3SampleEntry {
-                    return Err(Error::InvalidData("malformed AC3 sample entry"));
-                }
-                // TODO: AC3SpecificBox needs to be parsed for detail information.
-                skip_box_remain(&mut b)?;
-                log!("(ac3)");
-                codec_type = CodecType::AC3;
-                codec_specific = Some(AudioCodecSpecific::AC3SpecificBox);
-            }
-            BoxType::EC3SpecificBox => {
-                if name != BoxType::EC3SpecificBox {
-                    return Err(Error::InvalidData("malformed EC3 sample entry"));
-                }
-                // TODO: EC3SpecificBox needs to be parsed for detail information.
-                skip_box_remain(&mut b)?;
-                log!("(ec3)");
-                codec_type = CodecType::EC3;
-                codec_specific = Some(AudioCodecSpecific::EC3SpecificBox);
             }
             _ => {
                 log!("Unsupported audio codec, box {:?} found", b.head.name);
@@ -2084,7 +2050,7 @@ fn be_u32<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
 fn be_u32_with_limit<T: ReadBytesExt>(src: &mut T) -> Result<u32> {
     be_u32(src).and_then(|v| {
         if v > TABLE_SIZE_LIMIT {
-            return Err(Error::Unsupported("Over limited value"));
+            return Err(Error::TableTooLarge);
         }
         Ok(v)
     })
