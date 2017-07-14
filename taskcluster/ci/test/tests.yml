@@ -977,6 +977,7 @@ mochitest-webgl:
             default: 3
     e10s:
       by-test-platform:
+        windows7.*: true
         macosx.*: true
         default: both
     loopback-video: true
