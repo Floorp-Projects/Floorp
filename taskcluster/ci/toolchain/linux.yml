@@ -140,3 +140,23 @@ linux64-libdmg:
         using: toolchain-script
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
+
+linux64-sccache:
+    description: "sccache toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TL(sccache)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/clang.manifest"
+    run:
+        using: toolchain-script
+        script: build-sccache.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/sccache2.tar.xz
