@@ -546,6 +546,20 @@ SpecialPowersObserverAPI.prototype = {
         return undefined;
       }
 
+      case "SPRequestDumpCoverageCounters": {
+        let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
+                           getService(Ci.nsICodeCoverage);
+        codeCoverage.dumpCounters();
+        return undefined; // See comment at the beginning of this function.
+      }
+
+      case "SPRequestResetCoverageCounters": {
+        let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
+                           getService(Ci.nsICodeCoverage);
+        codeCoverage.resetCounters();
+        return undefined; // See comment at the beginning of this function.
+      }
+
       case "SPLoadExtension": {
         let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
