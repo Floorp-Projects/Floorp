@@ -639,12 +639,6 @@ BrowserGlue.prototype = {
       });
     }
 
-    TabCrashHandler.init();
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      PluginCrashReporter.init();
-      UnsubmittedCrashHandler.init();
-    }
-
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
   },
 
@@ -901,6 +895,11 @@ BrowserGlue.prototype = {
         Cu.import("resource:///modules/WindowsJumpLists.jsm", temp);
         temp.WinTaskbarJumpList.startup();
       }
+    }
+
+    TabCrashHandler.init();
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      PluginCrashReporter.init();
     }
 
     ProcessHangMonitor.init();
@@ -1168,6 +1167,13 @@ BrowserGlue.prototype = {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
         });
       }
+    }
+
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      UnsubmittedCrashHandler.init();
+      Services.tm.idleDispatchToMainThread(function() {
+        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      });
     }
 
     // Let's load the contextual identities.
