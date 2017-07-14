@@ -162,9 +162,9 @@ public class GeckoView extends LayerView {
                     listener.onPageStop(GeckoView.this,
                                         message.getBoolean("success"));
                 } else if ("GeckoView:SecurityChanged".equals(event)) {
-                    int state = message.getInt("status") &
-                                GeckoView.ProgressListener.STATE_ALL;
-                    listener.onSecurityChange(GeckoView.this, state);
+                    final int state = message.getInt("status") & ProgressListener.STATE_ALL;
+                    final GeckoBundle identity = message.getBundle("identity");
+                    listener.onSecurityChange(GeckoView.this, state, identity);
                 }
             }
         };
@@ -1145,8 +1145,26 @@ public class GeckoView extends LayerView {
         * The security status has been updated.
         * @param view The GeckoView that initiated the callback.
         * @param status The new security status.
+        * @param identity A bundle containing the most up-to-date security information, with keys:
+        *          "origin": A string containing the origin of the cert, should always be present
+        *          "secure": A boolean indicating whether or not the site is secure
+        *          "host": A string containing the host associated with the certificate
+        *          "security_exception": A boolean indicating if the site is a security exception
+        *          "organization": A string containing the human readable name of the subject
+        *          "subjectName": A string containing the full subject name (including location data)
+        *          "issuerCommonName": A string containing the common name of the issuing authority
+        *          "issuerOrganization": A string containing the proper name of the issuing authority
+        *          "mode": A GeckoBundle containing information about the security mode, with keys:
+        *            "identity": A string indicating the security level of the site, should always be
+        *                        present. Possible values are "unknown", "identified", and "verified"
+        *            "mixed_display": A string indicating if passive mixed content is present, possible
+        *                             values are: "unknown", "blocked", "loaded"
+        *            "mixed_active": A string indicating if active mixed content is present, possible
+        *                            values are: "unknown", "blocked", "loaded"
+        *            "tracking": A string indicating the status of tracking protection, possible values
+        *                        are: "unknown", "blocked", "loaded"
         */
-        void onSecurityChange(GeckoView view, int status);
+        void onSecurityChange(GeckoView view, int status, GeckoBundle identity);
     }
 
     public interface ContentListener {

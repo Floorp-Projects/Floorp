@@ -16,6 +16,7 @@ import android.view.WindowManager;
 
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
+import org.mozilla.gecko.util.GeckoBundle;
 
 public class GeckoViewActivity extends Activity {
     private static final String LOGTAG = "GeckoViewActivity";
@@ -128,7 +129,7 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onSecurityChange(GeckoView view, int status) {
+        public void onSecurityChange(GeckoView view, int status, GeckoBundle identity) {
             String statusString;
             if ((status & STATE_IS_BROKEN) != 0) {
                 statusString = "broken";
