@@ -338,9 +338,10 @@ VRDisplayOpenVR::NotifyVSync()
   VRDisplayHost::NotifyVSync();
 }
 
-VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButtons,
-                                       uint32_t aNumAxes, ::vr::ETrackedDeviceClass aDeviceType)
-  : VRControllerHost(VRDeviceType::OpenVR)
+VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aDisplayID,
+                                       uint32_t aNumButtons, uint32_t aNumAxes,
+                                       ::vr::ETrackedDeviceClass aDeviceType)
+  : VRControllerHost(VRDeviceType::OpenVR, aHand, aDisplayID)
   , mTrigger(0)
   , mAxisMove(aNumAxes)
   , mVibrateThread(nullptr)
@@ -361,8 +362,6 @@ VRControllerOpenVR::VRControllerOpenVR(dom::GamepadHand aHand, uint32_t aNumButt
   }
 
   mAxisMove.SetLengthAndRetainStorage(aNumAxes);
-  mControllerInfo.mMappingType = GamepadMappingType::_empty;
-  mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = aNumButtons;
   mControllerInfo.mNumAxes = aNumAxes;
   mControllerInfo.mNumHaptics = kNumOpenVRHaptcs;
@@ -1012,7 +1011,8 @@ VRSystemManagerOpenVR::ScanForControllers()
       }
 
       RefPtr<VRControllerOpenVR> openVRController =
-        new VRControllerOpenVR(hand, numButtons, numAxes, deviceType);
+        new VRControllerOpenVR(hand, mOpenVRHMD->GetDisplayInfo().GetDisplayID(),
+                               numButtons, numAxes, deviceType);
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 
