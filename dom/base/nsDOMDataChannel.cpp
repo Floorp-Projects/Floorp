@@ -577,8 +577,7 @@ nsDOMDataChannel::UpdateMustKeepAlive()
   }
 
   if (mSelfRef && !shouldKeepAlive) {
-    // release our self-reference (safely) by putting it in an event (always)
-    NS_ReleaseOnMainThread("nsDOMDataChannel::mSelfRef", mSelfRef.forget(), true);
+    ReleaseSelf();
   } else if (!mSelfRef && shouldKeepAlive) {
     mSelfRef = this;
   }
@@ -590,11 +589,20 @@ nsDOMDataChannel::DontKeepAliveAnyMore()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mSelfRef) {
-    // Since we're on MainThread, force an eventloop trip to avoid deleting ourselves.
-    NS_ReleaseOnMainThread("nsDOMDataChannel::mSelfRef", mSelfRef.forget(), true);
+    // Since we're on MainThread, force an eventloop trip to avoid deleting
+    // ourselves.
+    ReleaseSelf();
   }
 
   mCheckMustKeepAlive = false;
+}
+
+void
+nsDOMDataChannel::ReleaseSelf()
+{
+  // release our self-reference (safely) by putting it in an event (always)
+  NS_ReleaseOnMainThreadSystemGroup("nsDOMDataChannel::mSelfRef",
+                                    mSelfRef.forget(), true);
 }
 
 void

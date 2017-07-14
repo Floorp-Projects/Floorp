@@ -371,7 +371,7 @@ function ignoreContents(entry)
         /mozalloc_handle_oom/,
         /^NS_Log/, /log_print/, /LazyLogModule::operator/,
         /SprintfLiteral/, "PR_smprintf", "PR_smprintf_free",
-        /NS_DispatchToMainThread/, /NS_ReleaseOnMainThread/,
+        /NS_DispatchToMainThread/, /NS_ReleaseOnMainThreadSystemGroup/,
         /NS_NewRunnableFunction/, /NS_Atomize/,
         /nsCSSValue::BufferFromString/,
         /NS_strdup/,

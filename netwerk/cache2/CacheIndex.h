@@ -1212,7 +1212,7 @@ private:
     }
     virtual ~DiskConsumptionObserver() {
       if (mObserver && !NS_IsMainThread()) {
-        NS_ReleaseOnMainThread(
+        NS_ReleaseOnMainThreadSystemGroup(
           "DiskConsumptionObserver::mObserver", mObserver.forget());
       }
     }

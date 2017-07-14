@@ -65,7 +65,7 @@ ManagerId::~ManagerId()
 
   // The PBackground worker thread shouldn't be running after the main thread
   // is stopped.  So main thread is guaranteed to exist here.
-  NS_ReleaseOnMainThread(
+  NS_ReleaseOnMainThreadSystemGroup(
     "ManagerId::mPrincipal", mPrincipal.forget());
 }
 
