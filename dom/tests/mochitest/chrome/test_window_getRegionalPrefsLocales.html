@@ -14,9 +14,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1337234
 <div id="content" style="display: none">
 <script>
 
-let appLocales = window.getAppLocalesAsBCP47();
-ok(appLocales.length > 0, "getAppLocales returns at least one locale.");
-is(appLocales[0], "en-US", "The first app locale should be en-US.");
+let rpLocales = window.getRegionalPrefsLocales();
+ok(rpLocales.length > 0, "getRegionalPrefsLocales returns at least one locale.");
+is(rpLocales[0], "en-US", "The first regional prefs locale should be en-US.");
 
 </script>
 </body>
