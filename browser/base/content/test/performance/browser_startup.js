@@ -65,6 +65,8 @@ const startupPhases = {
     ]),
     modules: new Set([
       "resource:///modules/AboutNewTab.jsm",
+      "resource:///modules/BrowserUITelemetry.jsm",
+      "resource:///modules/BrowserUsageTelemetry.jsm",
       "resource:///modules/DirectoryLinksProvider.jsm",
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",

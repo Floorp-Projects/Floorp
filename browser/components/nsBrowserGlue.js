@@ -613,8 +613,6 @@ BrowserGlue.prototype = {
     listeners.init();
 
     SessionStore.init();
-    BrowserUsageTelemetry.init();
-    BrowserUITelemetry.init();
 
     if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
@@ -1056,6 +1054,9 @@ BrowserGlue.prototype = {
 
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
+    BrowserUsageTelemetry.init();
+    BrowserUITelemetry.init();
+
     if (AppConstants.MOZ_DEV_EDITION) {
       this._createExtraDefaultProfile();
     }
