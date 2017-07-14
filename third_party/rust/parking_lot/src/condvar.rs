@@ -143,19 +143,19 @@ impl Condvar {
     #[inline]
     pub fn notify_all(&self) {
         // Nothing to do if there are no waiting threads
-        if self.state.load(Ordering::Relaxed).is_null() {
+        let state = self.state.load(Ordering::Relaxed);
+        if state.is_null() {
             return;
         }
 
-        self.notify_all_slow();
+        self.notify_all_slow(state);
     }
 
     #[cold]
     #[inline(never)]
-    fn notify_all_slow(&self) {
+    fn notify_all_slow(&self, mutex: *mut RawMutex) {
         unsafe {
             // Unpark one thread and requeue the rest onto the mutex
-            let mutex = self.state.load(Ordering::Relaxed);
             let from = self as *const _ as usize;
             let to = mutex as usize;
             let validate = || {

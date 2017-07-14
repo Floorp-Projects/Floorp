@@ -290,7 +290,6 @@ fn body(api: &RenderApi,
                           font_key,
                           ColorF::new(1.0, 1.0, 0.0, 1.0),
                           Au::from_px(32),
-                          0.0,
                           None);
     }
 

@@ -27,6 +27,7 @@ def describe_install_manifest(manifest, dest_dir):
 
     mapping = {}
     manifest.populate_registry(reg)
+    dest_dir = mozpath.join(buildconfig.topobjdir, dest_dir)
     for dest_file, src in reg:
         if hasattr(src, 'path'):
             dest_path = mozpath.join(dest_dir, dest_file)

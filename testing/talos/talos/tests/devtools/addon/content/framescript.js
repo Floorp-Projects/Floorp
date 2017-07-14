@@ -7,6 +7,7 @@
       throw new Error("Cannot be used outside of DAMP's launch page");
     }
 
+    // eslint-disable-next-line mozilla/avoid-Date-timing
     var uniqueMessageId = PREFIX + content.document.documentURI + Date.now() + Math.random();
 
     addMessageListener(PREFIX + "chrome-exec-reply", function done(reply) {

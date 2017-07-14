@@ -595,7 +595,7 @@ asserts(0-20) load 1153478.html # bug 1144852
 load 1153695.html
 load 1156222.html
 pref(layout.css.grid.enabled,true) load 1156257.html
-skip-if(stylo) load 1157011.html # bug 1323697
+load 1157011.html
 load 1169420-1.html
 load 1169420-2.html
 load 1183431.html

@@ -21,7 +21,7 @@ void main(void) {
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = res.uv_rect.zw - res.uv_rect.xy;
     vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
-    vec2 origin = prim.task.screen_space_origin + uDevicePixelRatio * (local_pos - prim.local_rect.p0);
+    vec2 origin = prim.task.render_target_origin + uDevicePixelRatio * (local_pos - prim.local_rect.p0);
     vec4 local_rect = vec4(origin, size);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));

@@ -1746,6 +1746,7 @@ static struct cubeb_ops const opensl_ops = {
   .stream_destroy = opensl_stream_destroy,
   .stream_start = opensl_stream_start,
   .stream_stop = opensl_stream_stop,
+  .stream_reset_default_device = NULL,
   .stream_get_position = opensl_stream_get_position,
   .stream_get_latency = opensl_stream_get_latency,
   .stream_set_volume = opensl_stream_set_volume,

@@ -66,6 +66,10 @@ impl NestedDisplayListInfo {
     }
 
     fn convert_scroll_id_to_nested(&self, id: &ClipId) -> ClipId {
+        if id.pipeline_id() != self.scroll_node_id.pipeline_id() {
+            return *id;
+        }
+
         if id.is_root_scroll_node() {
             self.scroll_node_id
         } else {
@@ -74,6 +78,10 @@ impl NestedDisplayListInfo {
     }
 
     fn convert_clip_id_to_nested(&self, id: &ClipId) -> ClipId {
+        if id.pipeline_id() != self.clip_node_id.pipeline_id() {
+            return *id;
+        }
+
         if id.is_root_scroll_node() {
             self.clip_node_id
         } else {
@@ -119,7 +127,7 @@ impl<'a> FlattenContext<'a> {
         self.nested_display_list_info.pop();
     }
 
-    fn convert_new_id_to_neested(&self, id: &ClipId) -> ClipId {
+    fn convert_new_id_to_nested(&self, id: &ClipId) -> ClipId {
         if let Some(nested_info) = self.nested_display_list_info.last() {
             nested_info.convert_id_to_nested(id)
         } else {
@@ -358,7 +366,7 @@ impl Frame {
                         parent_id: &ClipId,
                         new_clip_id: &ClipId,
                         clip_region: ClipRegion) {
-        let new_clip_id = context.convert_new_id_to_neested(new_clip_id);
+        let new_clip_id = context.convert_new_id_to_nested(new_clip_id);
         context.builder.add_clip_node(new_clip_id,
                                       *parent_id,
                                       pipeline_id,
@@ -381,7 +389,7 @@ impl Frame {
                                       clip_region,
                                       &mut self.clip_scroll_tree);
 
-        let new_scroll_frame_id = context.convert_new_id_to_neested(new_scroll_frame_id);
+        let new_scroll_frame_id = context.convert_new_id_to_nested(new_scroll_frame_id);
         context.builder.add_scroll_frame(new_scroll_frame_id,
                                          clip_id,
                                          pipeline_id,
@@ -483,6 +491,7 @@ impl Frame {
                           pipeline_id: PipelineId,
                           parent_id: ClipId,
                           bounds: &LayerRect,
+                          local_clip: &LocalClip,
                           context: &mut FlattenContext,
                           reference_frame_relative_offset: LayerVector2D) {
         let pipeline = match context.scene.pipeline_map.get(&pipeline_id) {
@@ -495,6 +504,16 @@ impl Frame {
             None => return,
         };
 
+        let mut clip_region = ClipRegion::create_for_clip_node_with_local_clip(local_clip);
+        clip_region.origin += reference_frame_relative_offset;
+        let parent_pipeline_id = parent_id.pipeline_id();
+        let clip_id = self.clip_scroll_tree.generate_new_clip_id(parent_pipeline_id);
+        context.builder.add_clip_node(clip_id,
+                                      parent_id,
+                                      parent_pipeline_id,
+                                      clip_region,
+                                      &mut self.clip_scroll_tree);
+
         self.pipeline_epoch_map.insert(pipeline_id, pipeline.epoch);
 
         let iframe_rect = LayerRect::new(LayerPoint::zero(), bounds.size);
@@ -504,7 +523,7 @@ impl Frame {
             0.0);
 
         let iframe_reference_frame_id =
-            context.builder.push_reference_frame(Some(parent_id),
+            context.builder.push_reference_frame(Some(clip_id),
                                                  pipeline_id,
                                                  &iframe_rect,
                                                  &transform,
@@ -583,7 +602,6 @@ impl Frame {
                                          item.local_clip(),
                                          text_info.font_key,
                                          text_info.size,
-                                         text_info.blur_radius,
                                          &text_info.color,
                                          item.glyphs(),
                                          item.display_list().get(item.glyphs()).count(),
@@ -666,6 +684,7 @@ impl Frame {
                 self.flatten_iframe(info.pipeline_id,
                                     clip_and_scroll.scroll_node_id,
                                     &item.rect(),
+                                    &item.local_clip(),
                                     context,
                                     reference_frame_relative_offset);
             }
@@ -718,6 +737,14 @@ impl Frame {
 
             SpecificDisplayItem::PopStackingContext =>
                 unreachable!("Should have returned in parent method."),
+            SpecificDisplayItem::PushTextShadow(shadow) => {
+                context.builder.push_text_shadow(shadow,
+                                                 clip_and_scroll,
+                                                 item.local_clip());
+            }
+            SpecificDisplayItem::PopTextShadow => {
+                context.builder.pop_text_shadow();
+            }
         }
         None
     }

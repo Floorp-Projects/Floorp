@@ -117,7 +117,7 @@ function mutateTable() {
 
   ensureAccessibleTree("start");
 
-  var start = new Date();
+  var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
 
   // Cause all kinds of crazy events
   Range.deleteContents();
@@ -130,6 +130,6 @@ function mutateTable() {
 
 function postProcessingRecord(s) {
   // alert(new Date() - s);
-  tpRecordTime(new Date() - s, s);
+  tpRecordTime(new Date() - s, s);  // eslint-disable-line mozilla/avoid-Date-timing
 }
 </script>

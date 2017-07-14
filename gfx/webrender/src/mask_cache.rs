@@ -44,6 +44,14 @@ impl ClipRegion {
         }
     }
 
+    pub fn create_for_clip_node_with_local_clip(local_clip: &LocalClip) -> ClipRegion {
+        let complex_clips = match local_clip {
+            &LocalClip::Rect(_) => Vec::new(),
+            &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
+        };
+        ClipRegion::for_clip_node(*local_clip.clip_rect(), complex_clips, None)
+    }
+
     pub fn for_local_clip(local_clip: &LocalClip) -> ClipRegion {
         let complex_clips = match local_clip {
             &LocalClip::Rect(_) => Vec::new(),

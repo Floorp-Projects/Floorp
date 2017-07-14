@@ -27,6 +27,7 @@ MediaDecoderStateMachine*
 FlacDecoder::CreateStateMachine()
 {
   MediaDecoderReaderInit init(this);
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   mReader = new MediaFormatReader(init, new FlacDemuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }

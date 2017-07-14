@@ -3,12 +3,13 @@ buildDir "${topobjdir}/gradle/build/mobile/android/thirdparty"
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
+    compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
-        targetSdkVersion 23
-        minSdkVersion 15
+        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion project.ext.minSdkVersion
+        manifestPlaceholders = project.ext.manifestPlaceholders
     }
 
     compileOptions {

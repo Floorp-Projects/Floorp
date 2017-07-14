@@ -97,7 +97,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int INPUT = 13;
 
-    final static int ISINDEX = 14;
+    final static int RT_OR_RP = 14;
 
     final static int LI = 15;
 
@@ -202,8 +202,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     final static int TEMPLATE = 67;
 
     final static int IMG = 68;
-
-    final static int RT_OR_RP = 69;
 
     // start insertion modes
 
@@ -2352,74 +2350,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 selfClosing = false;
                                 attributes = null; // CPP
                                 break starttagloop;
-                            // CPPONLY:case ISINDEX:
-                            // CPPONLY:    errIsindex();
-                            // CPPONLY:    if (formPointer != null && !isTemplateContents()) {
-                            // CPPONLY:        break starttagloop;
-                            // CPPONLY:    }
-                            // CPPONLY:    implicitlyCloseP();
-                            // CPPONLY:    HtmlAttributes formAttrs = new HtmlAttributes(0);
-                            // CPPONLY:    int actionIndex = attributes.getIndex(AttributeName.ACTION);
-                            // CPPONLY:    if (actionIndex > -1) {
-                            // CPPONLY:        formAttrs.addAttribute(
-                            // CPPONLY:                AttributeName.ACTION,
-                            // CPPONLY:                attributes.getValueNoBoundsCheck(actionIndex),
-                            // CPPONLY:                attributes.getLineNoBoundsCheck(actionIndex)
-                            // CPPONLY:        );
-                            // CPPONLY:    }
-                            // CPPONLY:    appendToCurrentNodeAndPushFormElementMayFoster(formAttrs);
-                            // CPPONLY:    appendVoidElementToCurrentMayFoster(
-                            // CPPONLY:            ElementName.HR,
-                            // CPPONLY:            HtmlAttributes.EMPTY_ATTRIBUTES);
-                            // CPPONLY:    appendToCurrentNodeAndPushElementMayFoster(
-                            // CPPONLY:            ElementName.LABEL,
-                            // CPPONLY:            HtmlAttributes.EMPTY_ATTRIBUTES);
-                            // CPPONLY:    int promptIndex = attributes.getIndex(AttributeName.PROMPT);
-                            // CPPONLY:    if (promptIndex > -1) {
-                            // CPPONLY:        @Auto char[] prompt = Portability.newCharArrayFromString(attributes.getValueNoBoundsCheck(promptIndex));
-                            // CPPONLY:        appendCharacters(stack[currentPtr].node,
-                            // CPPONLY:                prompt, 0, prompt.length);
-                            // CPPONLY:    } else {
-                            // CPPONLY:        appendIsindexPrompt(stack[currentPtr].node);
-                            // CPPONLY:    }
-                            // CPPONLY:    HtmlAttributes inputAttributes = new HtmlAttributes(
-                            // CPPONLY:            0);
-                            // CPPONLY:    inputAttributes.addAttribute(
-                            // CPPONLY:            AttributeName.NAME,
-                            // CPPONLY:            Portability.newStringFromLiteral("isindex"),
-                            // CPPONLY:            tokenizer.getLineNumber()
-                            // CPPONLY:    );
-                            // CPPONLY:    for (int i = 0; i < attributes.getLength(); i++) {
-                            // CPPONLY:        @Local String attributeQName = attributes.getLocalNameNoBoundsCheck(i);
-                            // CPPONLY:        if ("name" == attributeQName
-                            // CPPONLY:                || "prompt" == attributeQName) {
-                            // CPPONLY:            attributes.releaseValue(i);
-                            // CPPONLY:        } else if ("action" != attributeQName) {
-                            // CPPONLY:            inputAttributes.AddAttributeWithLocal(
-                            // CPPONLY:                    attributeQName,
-                            // CPPONLY:                    attributes.getValueNoBoundsCheck(i),
-                            // CPPONLY:                    attributes.getLineNoBoundsCheck(i)
-                            // CPPONLY:            );
-                            // CPPONLY:        }
-                            // CPPONLY:    }
-                            // CPPONLY:    attributes.clearWithoutReleasingContents();
-                            // CPPONLY:    appendVoidElementToCurrentMayFoster(
-                            // CPPONLY:            "input",
-                            // CPPONLY:            inputAttributes, formPointer);
-                            // CPPONLY:    pop(); // label
-                            // CPPONLY:    appendVoidElementToCurrentMayFoster(
-                            // CPPONLY:            ElementName.HR,
-                            // CPPONLY:            HtmlAttributes.EMPTY_ATTRIBUTES);
-                            // CPPONLY:    pop(); // form
-                            // CPPONLY:
-                            // CPPONLY:    if (!isTemplateContents()) {
-                            // CPPONLY:        formPointer = null;
-                            // CPPONLY:    }
-                            // CPPONLY:
-                            // CPPONLY:    selfClosing = false;
-                            // CPPONLY:    // Don't delete attributes, they are deleted
-                            // CPPONLY:    // later
-                            // CPPONLY:    break starttagloop;
                             case TEXTAREA:
                                 appendToCurrentNodeAndPushElementMayFoster(
                                         elementName,
@@ -3852,7 +3782,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case INPUT:
                         case KEYGEN: // XXX??
                         case HR:
-                        // CPPONLY: case ISINDEX:
                         case IFRAME:
                         case NOEMBED: // XXX???
                         case NOFRAMES: // XXX??
@@ -5817,8 +5746,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     protected abstract void appendCharacters(T parent, @NoLength char[] buf,
             int start, int length) throws SAXException;
 
-    // CPPONLY: protected abstract void appendIsindexPrompt(T parent) throws SAXException;
-
     protected abstract void appendComment(T parent, @NoLength char[] buf,
             int start, int length) throws SAXException;
 
@@ -6514,10 +6441,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private void errImage() throws SAXException {
         err("Saw a start tag \u201Cimage\u201D.");
     }
-
-    // CPPONLY: private void errIsindex() throws SAXException {
-    // CPPONLY:     err("\u201Cisindex\u201D seen.");
-    // CPPONLY: }
 
     private void errFooSeenWhenFooOpen(@Local String name) throws SAXException {
         if (errorHandler == null) {
