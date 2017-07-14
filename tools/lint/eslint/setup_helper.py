@@ -16,9 +16,19 @@ sys.path.append(os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
 import which
 
+NODE_MIN_VERSION = "6.9.1"
+NPM_MIN_VERSION = "3.10.8"
+
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
-nodejs is out of date. You currently have node %s but v6.9.1 is required.
+nodejs is out of date. You currently have node v%s but v%s is required.
 Please update nodejs from https://nodejs.org and try again.
+""".strip()
+
+NPM_MACHING_VERSION_NOT_FOUND_MESSAGE = """
+npm is out of date. You currently have npm v%s but v%s is required.
+You can usually update npm with:
+
+npm i -g npm
 """.strip()
 
 NODE_NOT_FOUND_MESSAGE = """
@@ -299,14 +309,17 @@ def get_node_or_npm_path(filename, minversion=None):
     if not minversion:
         return node_or_npm_path
 
-    version_str = get_version(node_or_npm_path)
+    version_str = get_version(node_or_npm_path).lstrip('v')
 
-    version = LooseVersion(version_str.lstrip('v'))
+    version = LooseVersion(version_str)
 
     if version > minversion:
         return node_or_npm_path
 
-    print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % version_str.strip())
+    if filename == "npm":
+        print(NPM_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
+    else:
+        print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
 
     return None
 
@@ -365,11 +378,11 @@ def get_eslint_module_path():
 
 def check_node_executables_valid():
     # eslint requires at least node 6.9.1
-    node_path = get_node_or_npm_path("node", LooseVersion("6.9.1"))
+    node_path = get_node_or_npm_path("node", LooseVersion(NODE_MIN_VERSION))
     if not node_path:
         return False
 
-    npm_path = get_node_or_npm_path("npm")
+    npm_path = get_node_or_npm_path("npm", LooseVersion(NPM_MIN_VERSION))
     if not npm_path:
         return False
 
