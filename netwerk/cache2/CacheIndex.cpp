@@ -2739,19 +2739,18 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
   }
   aEntry->SetHasAltData(hasAltData);
 
-  static auto getUint16MetaData = [&aMetaData](const char *key) -> uint16_t {
-    const char* s64 = aMetaData->GetElement(key);
-    if (s64) {
-      nsresult rv;
-      uint64_t n64 = nsCString(s64).ToInteger64(&rv);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound;
+  static auto toUint16 = [](const char *aUint16String) -> uint16_t {
+    if (!aUint16String) {
+      return kIndexTimeNotAvailable;
     }
-    return kIndexTimeNotAvailable;
+    nsresult rv;
+    uint64_t n64 = nsCString(aUint16String).ToInteger64(&rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return n64 <= kIndexTimeOutOfBound ? n64 : kIndexTimeOutOfBound;
   };
 
-  aEntry->SetOnStartTime(getUint16MetaData("net-response-time-onstart"));
-  aEntry->SetOnStopTime(getUint16MetaData("net-response-time-onstop"));
+  aEntry->SetOnStartTime(toUint16(aMetaData->GetElement("net-response-time-onstart")));
+  aEntry->SetOnStopTime(toUint16(aMetaData->GetElement("net-response-time-onstop")));
 
   aEntry->SetFileSize(static_cast<uint32_t>(
                         std::min(static_cast<int64_t>(PR_UINT32_MAX),
