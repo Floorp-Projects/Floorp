@@ -23,7 +23,7 @@ async function cleanUpSuggestions() {
   }
 }
 
-add_task(async function setUp() {
+add_task(async function setup() {
   // Set up a server that provides some suggestions by appending strings onto
   // the search query.
   let server = makeTestServer(SERVER_PORT);
@@ -46,6 +46,13 @@ add_task(async function setUp() {
   do_register_cleanup(() => Services.search.currentEngine = oldCurrentEngine);
   let engine = await addTestEngine(ENGINE_NAME, server);
   Services.search.currentEngine = engine;
+
+  // We must make sure the FormHistoryStartup component is initialized.
+  Cc["@mozilla.org/satchel/form-history-startup;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "profile-after-change", null);
+  await updateSearchHistory("bump", "hello Fred!");
+  await updateSearchHistory("bump", "hello Barney!");
 });
 
 add_task(async function disabled_urlbarSuggestions() {
@@ -436,6 +443,66 @@ add_task(async function mixup_frecency() {
     ],
   });
 
+  // Change the results mixup.
+  Services.prefs.setCharPref("browser.urlbar.matchBuckets",
+                             "suggestion:1,general:5,suggestion:1");
+
+  // Do an unrestricted search to make sure everything appears in it, including
+  // the visit and bookmark.
+  await check_autocomplete({
+    checkSorting: true,
+    search: "frecency",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("frecency", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency foo",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      { uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4" },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency bar",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      { uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3" },
+      { uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2" },
+      { uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1" },
+      { uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0" },
+    ],
+  });
+
+  Services.prefs.clearUserPref("browser.urlbar.matchBuckets");
   await cleanUpSuggestions();
 });
 
@@ -890,3 +957,65 @@ add_task(async function avoid_http_url_suggestions() {
 
   await cleanUpSuggestions();
 });
+
+add_task(async function historicalSuggestion() {
+  Services.prefs.setBoolPref(SUGGEST_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_ENABLED_PREF, true);
+  Services.prefs.setIntPref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
+
+  await check_autocomplete({
+    search: "hello",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("hello", { engineName: ENGINE_NAME, heuristic: true }),
+    {
+      uri: makeActionURI(("searchengine"), {
+        engineName: ENGINE_NAME,
+        input: "hello Barney!",
+        searchQuery: "hello",
+        searchSuggestion: "hello Barney!",
+      }),
+      title: ENGINE_NAME,
+      style: ["action", "searchengine"],
+      icon: "",
+    }, {
+      uri: makeActionURI(("searchengine"), {
+        engineName: ENGINE_NAME,
+        input: "hello foo",
+        searchQuery: "hello",
+        searchSuggestion: "hello foo",
+      }),
+      title: ENGINE_NAME,
+      style: ["action", "searchengine"],
+      icon: "",
+    }, {
+      uri: makeActionURI(("searchengine"), {
+        engineName: ENGINE_NAME,
+        input: "hello bar",
+        searchQuery: "hello",
+        searchSuggestion: "hello bar",
+      }),
+      title: ENGINE_NAME,
+      style: ["action", "searchengine"],
+      icon: "",
+    }],
+  });
+
+  await cleanUpSuggestions();
+  Services.prefs.clearUserPref("browser.urlbar.maxHistoricalSearchSuggestions");
+});
+
+function updateSearchHistory(op, value) {
+  return new Promise((resolve, reject) => {
+    FormHistory.update({ op, fieldname: "searchbar-history", value },
+                       {
+                         handleError(error) {
+                           do_throw("Error occurred updating form history: " + error);
+                           reject(error);
+                         },
+                         handleCompletion(reason) {
+                           reason ? reject(reason) : resolve();
+                         }
+                       });
+  });
+}

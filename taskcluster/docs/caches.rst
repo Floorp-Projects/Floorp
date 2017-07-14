@@ -21,9 +21,16 @@ Version Control Caches
    A ``version`` parameter appears in the cache name to allow
    backwards-incompatible changes to the cache's behavior.
 
+   The ``hg-store`` contains a `shared store <https://www.mercurial-scm.org/wiki/ShareExtension>`
+   that is is used by ``hg robustcheckout``. If you are using ``run-task`` you
+   should set the ``HG_STORE_PATH`` environment variable to point to this
+   directory. If you are using ``hg robustcheckout``, pass this directory to the
+   ``--sharebase`` option.
+
 ``level-{{level}}-{{project}}-tc-vcs`` (deprecated)
     This cache is used internally by ``tc-vcs``.  This tool is deprecated and
     should be replaced with ``hg robustcheckout``.
+
 
 Workspace Caches
 ================

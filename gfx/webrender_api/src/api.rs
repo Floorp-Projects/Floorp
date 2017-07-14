@@ -117,7 +117,7 @@ pub struct GLLimits([u8; 0]);
 #[cfg(not(feature = "webgl"))]
 #[derive(Clone, Deserialize, Serialize)]
 pub enum WebGLCommand {
-    FenceAndWaitSync,
+    Flush,
 }
 
 #[repr(C)]

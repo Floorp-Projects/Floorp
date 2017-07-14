@@ -2302,7 +2302,7 @@ dnl ========================================================
 if test -z "$gonkdir" ; then
     case "$MOZ_BUILD_APP" in
     mobile/android)
-        MOZ_ANDROID_SDK(23, 23.0.3 23.0.1, 25.3.1)
+        MOZ_ANDROID_SDK(23, 23, 23.0.3 23.0.1, 25.3.2)
         ;;
     esac
 fi

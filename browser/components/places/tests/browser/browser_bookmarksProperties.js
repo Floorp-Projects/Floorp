@@ -317,14 +317,6 @@ gTests.push({
         let bookmark = await PlacesUtils.bookmarks.fetch({url: TEST_URL});
         self._bookmarkGuid = bookmark.guid;
 
-        // TODO: Bug 1378711. We shouldn't need to wait for onItemChanged here,
-        // however we are working around an async bug in the PlacesTransactions
-        // manager and ensuring that async functions have completed before moving
-        // on.
-        let promiseItemChanged = PlacesTestUtils.waitForNotification("onItemChanged",
-          (itemId, property, isAnnotationProperty, newValue, lastModified, itemType) =>
-            itemType === PlacesUtils.bookmarks.TYPE_FOLDER && isAnnotationProperty);
-
         // Create a new folder.
         var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
         newFolderButton.doCommand();
@@ -337,7 +329,7 @@ gTests.push({
         EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
         Assert.ok(!folderTree.hasAttribute("editing"),
            "We have finished editing folder name in folder tree");
-        await promiseItemChanged;
+
         self._cleanShutdown = true;
         self._removeObserver = PlacesTestUtils.waitForNotification("onItemRemoved",
           (itemId, parentId, index, type, uri, guid) => guid == self._bookmarkGuid);

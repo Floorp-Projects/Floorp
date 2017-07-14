@@ -1387,6 +1387,7 @@ or run without that action (ie: --no-{action})"
             'project': self.buildbot_config['properties']['branch'],
             'head_rev': revision,
             'pushdate': pushdate,
+            'pushid': pushinfo.pushid,
             'year': pushdate[0:4],
             'month': pushdate[4:6],
             'day': pushdate[6:8],

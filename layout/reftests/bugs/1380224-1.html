@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<style>
+p { color: var(--color); }
+</style>
+<body style="--color: red" onload="run()">
+<p>This text should be green.</p>
+<script>
+function run() {
+  document.body.style.setProperty("--color", "green");
+}
+</script>

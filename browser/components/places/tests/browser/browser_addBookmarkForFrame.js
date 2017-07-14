@@ -31,7 +31,7 @@ async function withAddBookmarkForFrame(taskFn) {
 
 add_task(async function test_open_add_bookmark_for_frame() {
   info("Test basic opening of the add bookmark for frame dialog.");
-  await withAddBookmarkForFrame(function test(dialogWin) {
+  await withAddBookmarkForFrame(async dialogWin => {
     let namepicker = dialogWin.document.getElementById("editBMPanel_namePicker");
     Assert.ok(!namepicker.readOnly, "Name field is writable");
     Assert.equal(namepicker.value, "Left frame", "Name field is correct.");
@@ -40,9 +40,9 @@ add_task(async function test_open_add_bookmark_for_frame() {
       PlacesUtils.getString("BookmarksMenuFolderTitle");
 
     let folderPicker = dialogWin.document.getElementById("editBMPanel_folderMenuList");
-
-    Assert.equal(folderPicker.selectedItem.label,
-                 expectedFolderName, "The folder is the expected one.");
+    await BrowserTestUtils.waitForCondition(
+      () => folderPicker.selectedItem.label == expectedFolderName,
+      "The folder is the expected one.");
 
     let tagsField = dialogWin.document.getElementById("editBMPanel_tagsField");
     Assert.equal(tagsField.value, "", "The tags field should be empty");
@@ -51,7 +51,7 @@ add_task(async function test_open_add_bookmark_for_frame() {
 
 add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
   info("Test moving a bookmark whilst the add bookmark for frame dialog is open.");
-  await withAddBookmarkForFrame(async function test(dialogWin) {
+  await withAddBookmarkForFrame(async dialogWin => {
     let bookmarksMenuFolderName = PlacesUtils.getString("BookmarksMenuFolderTitle");
     let toolbarFolderName = PlacesUtils.getString("BookmarksToolbarFolderTitle");
 
@@ -59,8 +59,9 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
     let folderPicker = dialogWin.document.getElementById("editBMPanel_folderMenuList");
 
     // Check the initial state of the folder picker.
-    Assert.equal(folderPicker.selectedItem.label,
-                 bookmarksMenuFolderName, "The folder is the expected one.");
+    await BrowserTestUtils.waitForCondition(
+      () => folderPicker.selectedItem.label == bookmarksMenuFolderName,
+      "The folder is the expected one.");
 
     // Check the bookmark has been created as expected.
     let bookmark = await PlacesUtils.bookmarks.fetch({url});
@@ -75,7 +76,8 @@ add_task(async function test_move_bookmark_whilst_add_bookmark_open() {
 
     await PlacesUtils.bookmarks.update(bookmark);
 
-    Assert.equal(folderPicker.selectedItem.label,
-                 toolbarFolderName, "The folder picker has changed to the new folder");
+    await BrowserTestUtils.waitForCondition(
+      () => folderPicker.selectedItem.label == toolbarFolderName,
+      "The folder picker has changed to the new folder");
   });
 });

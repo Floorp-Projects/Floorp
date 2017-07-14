@@ -110,29 +110,29 @@ public:
       }
     }
     return -1;
-  }
-
-  inline static nsHtml5ElementName* elementNameByBuffer(
-    char16_t* buf,
-    int32_t offset,
-    int32_t length,
-    nsHtml5AtomTable* interner)
-  {
-    uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
-    jArray<int32_t, int32_t> hashes;
-    hashes = nsHtml5ElementName::ELEMENT_HASHES;
-    int32_t index = levelOrderBinarySearch(hashes, hash);
-    if (index < 0) {
-      return nullptr;
-    } else {
-      nsHtml5ElementName* elementName =
-        nsHtml5ElementName::ELEMENT_NAMES[index];
-      nsIAtom* name = elementName->name;
-      if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
-        return nullptr;
-      }
-      return elementName;
     }
+
+    inline static nsHtml5ElementName* elementNameByBuffer(
+      char16_t* buf,
+      int32_t offset,
+      int32_t length,
+      nsHtml5AtomTable* interner)
+    {
+      uint32_t hash = nsHtml5ElementName::bufToHash(buf, length);
+      jArray<int32_t, int32_t> hashes;
+      hashes = nsHtml5ElementName::ELEMENT_HASHES;
+      int32_t index = levelOrderBinarySearch(hashes, hash);
+      if (index < 0) {
+        return nullptr;
+      } else {
+        nsHtml5ElementName* elementName =
+          nsHtml5ElementName::ELEMENT_NAMES[index];
+        nsIAtom* name = elementName->name;
+        if (!nsHtml5Portability::localEqualsBuffer(name, buf, offset, length)) {
+          return nullptr;
+        }
+        return elementName;
+      }
     }
 
   private:
@@ -178,7 +178,6 @@ public:
     }
 
     static nsHtml5ElementName* ELT_ANNOTATION_XML;
-    static nsHtml5ElementName* ELT_ISINDEX;
     static nsHtml5ElementName* ELT_BIG;
     static nsHtml5ElementName* ELT_BDO;
     static nsHtml5ElementName* ELT_COL;

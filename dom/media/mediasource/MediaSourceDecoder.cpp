@@ -41,6 +41,8 @@ MediaSourceDecoder::CreateStateMachine()
   mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
   MediaDecoderReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
+  init.mKnowsCompositor = GetCompositor();
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   mReader = new MediaFormatReader(init, mDemuxer);
   return new MediaDecoderStateMachine(this, mReader);
 }

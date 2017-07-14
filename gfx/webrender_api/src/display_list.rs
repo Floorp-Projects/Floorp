@@ -14,7 +14,7 @@ use {GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, Ima
 use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, LocalClip};
 use {MixBlendMode, PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
 use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem};
-use {StackingContext, TextDisplayItem, TransformStyle, WebGLContextId, WebGLDisplayItem};
+use {StackingContext, TextDisplayItem, TextShadow, TransformStyle, WebGLContextId, WebGLDisplayItem};
 use {YuvColorSpace, YuvData, YuvImageDisplayItem};
 use std::marker::PhantomData;
 
@@ -543,7 +543,6 @@ impl DisplayListBuilder {
                      font_key: FontKey,
                      color: ColorF,
                      size: Au,
-                     blur_radius: f32,
                      glyph_options: Option<GlyphOptions>) {
         // Sanity check - anything with glyphs bigger than this
         // is probably going to consume too much memory to render
@@ -556,7 +555,6 @@ impl DisplayListBuilder {
                 color,
                 font_key,
                 size,
-                blur_radius,
                 glyph_options,
             });
 
@@ -897,9 +895,12 @@ impl DisplayListBuilder {
         assert!(self.clip_stack.len() > 0);
     }
 
-    pub fn push_iframe(&mut self, rect: LayoutRect, pipeline_id: PipelineId) {
+    pub fn push_iframe(&mut self,
+                       rect: LayoutRect,
+                       local_clip: Option<LocalClip>,
+                       pipeline_id: PipelineId) {
         let item = SpecificDisplayItem::Iframe(IframeDisplayItem { pipeline_id: pipeline_id });
-        self.push_item(item, rect, None);
+        self.push_item(item, rect, local_clip);
     }
 
     // Don't use this function. It will go away.
@@ -912,6 +913,19 @@ impl DisplayListBuilder {
         self.push_new_empty_item(SpecificDisplayItem::PushNestedDisplayList);
         self.data.extend_from_slice(&built_display_list.data);
         self.push_new_empty_item(SpecificDisplayItem::PopNestedDisplayList);
+    }
+
+    pub fn push_text_shadow(&mut self,
+                            rect: LayoutRect,
+                            local_clip: Option<LocalClip>,
+                            shadow: TextShadow) {
+        self.push_item(SpecificDisplayItem::PushTextShadow(shadow),
+                       rect,
+                       local_clip);
+    }
+
+    pub fn pop_text_shadow(&mut self) {
+        self.push_new_empty_item(SpecificDisplayItem::PopTextShadow);
     }
 
     pub fn finalize(self) -> (PipelineId, LayoutSize, BuiltDisplayList) {

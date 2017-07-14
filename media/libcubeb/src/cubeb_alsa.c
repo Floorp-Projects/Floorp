@@ -1361,6 +1361,7 @@ static struct cubeb_ops const alsa_ops = {
   .stream_destroy = alsa_stream_destroy,
   .stream_start = alsa_stream_start,
   .stream_stop = alsa_stream_stop,
+  .stream_reset_default_device = NULL,
   .stream_get_position = alsa_stream_get_position,
   .stream_get_latency = alsa_stream_get_latency,
   .stream_set_volume = alsa_stream_set_volume,

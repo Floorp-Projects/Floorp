@@ -22,6 +22,7 @@ ServoStyleContext::ServoStyleContext(nsStyleContext* aParent,
   mSource(Move(aComputedValues))
 {
   mPresContext = aPresContext;
+  AddStyleBit(Servo_ComputedValues_GetStyleBits(mSource));
 
   FinishConstruction();
 

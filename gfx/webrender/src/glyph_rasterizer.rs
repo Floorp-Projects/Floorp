@@ -261,6 +261,7 @@ impl GlyphRasterizer {
         for job in rasterized_glyphs {
             let image_id = job.result.and_then(
                 |glyph| if glyph.width > 0 && glyph.height > 0 {
+                    assert_eq!((glyph.left.fract(), glyph.top.fract()), (0.0, 0.0));
                     let image_id = texture_cache.insert(
                         ImageDescriptor {
                             width: glyph.width,
@@ -334,7 +335,7 @@ impl GlyphRequest {
         point: LayoutPoint,
         render_mode: FontRenderMode,
         glyph_options: Option<GlyphOptions>,
-    ) -> GlyphRequest {
+    ) -> Self {
         GlyphRequest {
             key: GlyphKey::new(font_key, size, color, index, point, render_mode),
             render_mode,

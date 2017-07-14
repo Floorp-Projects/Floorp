@@ -464,24 +464,6 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
 }
 
 nsresult
-nsHtml5TreeOperation::AppendIsindexPrompt(nsIContent* parent, nsHtml5DocumentBuilder* aBuilder)
-{
-  nsXPIDLString prompt;
-  nsresult rv =
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "IsIndexPromptWithSpace", prompt);
-  uint32_t len = prompt.Length();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!len) {
-    // Don't bother appending a zero-length text node.
-    return NS_OK;
-  }
-  return AppendText(prompt.BeginReading(), len, parent, aBuilder);
-}
-
-nsresult
 nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
                                        char16_t* aBuffer,
                                        uint32_t aLength,
@@ -711,10 +693,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       char16_t* buffer = mTwo.unicharPtr;
       uint32_t length = mFour.integer;
       return AppendText(buffer, length, parent, aBuilder);
-    }
-    case eTreeOpAppendIsindexPrompt: {
-      nsIContent* parent = *mOne.node;
-      return AppendIsindexPrompt(parent, aBuilder);
     }
     case eTreeOpFosterParentText: {
       nsIContent* stackParent = *mOne.node;

@@ -202,11 +202,11 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
                         'GECKO_HEAD_REV': parameters['head_rev'],
                         'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
                         'ACTION_TASK_GROUP_ID': {'$eval': 'taskGroupId'},
-                        'ACTION_TASK_ID': {'$dumps': {'$eval': 'taskId'}},
-                        'ACTION_TASK': {'$dumps': {'$eval': 'task'}},
-                        'ACTION_INPUT': {'$dumps': {'$eval': 'input'}},
+                        'ACTION_TASK_ID': {'$json': {'$eval': 'taskId'}},
+                        'ACTION_TASK': {'$json': {'$eval': 'task'}},
+                        'ACTION_INPUT': {'$json': {'$eval': 'input'}},
                         'ACTION_CALLBACK': cb.__name__,
-                        'ACTION_PARAMETERS': {'$dumps': {'$eval': 'parameters'}},
+                        'ACTION_PARAMETERS': {'$json': {'$eval': 'parameters'}},
                     },
                     'cache': {
                         'level-{}-checkouts'.format(parameters['level']):

@@ -7,12 +7,15 @@
 DEFINES['ANDROID_VERSION_CODE'] = '1'
 
 for var in ('ANDROID_PACKAGE_NAME',
+            'ANDROID_TARGET_SDK',
             'MOZ_ANDROID_BROWSER_INTENT_CLASS',
             'MOZ_APP_DISPLAYNAME',
             'MOZ_APP_VERSION'):
     DEFINES[var] = CONFIG[var]
 
 for var in ('MOZ_ANDROID_GCM',
+            'MOZ_ANDROID_MIN_SDK_VERSION',
+            'MOZ_ANDROID_MAX_SDK_VERSION',
             'MOZ_ANDROID_DOWNLOADS_INTEGRATION',
             'MOZ_ANDROID_BEAM',
             'MOZ_ANDROID_SEARCH_ACTIVITY',

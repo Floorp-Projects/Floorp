@@ -408,6 +408,23 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     // but accepted here for better webkit emulation):
     "-webkit-linear-gradient(0, red, blue)",
 
+    // Linear-gradient with calc expression (bug 1363349)
+    "-webkit-gradient(linear, calc(5 + 5) top, calc(10 + 10) top, from(blue), to(lime))",
+    "-webkit-gradient(linear, calc(5 - 5) top, calc(10 + 10) top, from(blue), to(lime))",
+    "-webkit-gradient(linear, calc(5 * 5) top, calc(10 + 10) top, from(blue), to(lime))",
+    "-webkit-gradient(linear, calc(5 / 5) top, calc(10 + 10) top, from(blue), to(lime))",
+    "-webkit-gradient(linear, left calc(25% - 10%), right calc(75% + 10%), from(blue), to(lime))",
+    "-webkit-gradient(linear, calc(1) 2, 3 4)",
+
+    // Radial-gradient with calc expression (bug 1363349)
+    "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(1 - 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(1 * 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(1 / 2), 3 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1 + 2), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(8), 3 4, 9)",
+
     // Basic radial-gradient syntax (valid when prefixed or unprefixed):
     "-webkit-radial-gradient(circle, white, black)",
     "-webkit-radial-gradient(circle, white, black)",
@@ -483,7 +500,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-gradient(linear, 1px 2, 3 4)",
     "-webkit-gradient(linear, 1 2, 3 4px)",
     "-webkit-gradient(linear, 1px 2px, 3px 4px)",
-    "-webkit-gradient(linear, calc(1) 2, 3 4)",
     "-webkit-gradient(linear, 1 2em, 3 4)",
 
     // linear w/ <radius> (only valid for radial)
@@ -533,7 +549,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     // radial w/ incorrect units on radius (invalid; expecting <number>)
     "-webkit-gradient(radial, 1 2, 8%,      3 4, 9)",
     "-webkit-gradient(radial, 1 2, 8px,     3 4, 9)",
-    "-webkit-gradient(radial, 1 2, calc(8), 3 4, 9)",
     "-webkit-gradient(radial, 1 2, 8em,     3 4, 9)",
     "-webkit-gradient(radial, 1 2, top,     3 4, 9)",
 
@@ -557,6 +572,19 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     "-webkit-linear-gradient(30deg red, blue)",
     "-webkit-linear-gradient(top right red, blue)",
     "-webkit-linear-gradient(bottom red, blue)",
+
+    // Linear-gradient with calc expression containing mixed units or division
+    // by zero (bug 1363349)
+    "-webkit-gradient(linear, calc(5 + 5%) top, calc(10 + 10) top, from(blue), to(lime))",
+    "-webkit-gradient(linear, left calc(25 - 10%), right calc(75% + 10%), from(blue), to(lime))",
+    "-webkit-gradient(linear, calc(1 / 0) 2, 3 4)",
+
+    // Radial-gradient with calc expression containing mixed units, division
+    // by zero, or a percentage in the radius (bug 1363349)
+    "-webkit-gradient(radial, 1 2, 0, 3 4, calc(1% + 5%), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(1 + 2), 3 4, calc(1 + 5%), from(blue), to(lime))",
+    "-webkit-gradient(radial, calc(0 + 1) calc(1 + 1), calc(1% + 2%), calc(1 + 2) 4, calc(1 + 5), from(blue), to(lime))",
+    "-webkit-gradient(radial, 1 2, calc(8 / 0), 3 4, 9)",
 
     // Linear syntax that's invalid for both -webkit & unprefixed, but valid
     // for -moz:

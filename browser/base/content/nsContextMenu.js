@@ -1808,7 +1808,9 @@ nsContextMenu.prototype = {
   },
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
-    window.top.PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksMenuFolderId, true);
+    window.top.PlacesCommandHook
+              .bookmarkPage(this.browser, PlacesUtils.bookmarksMenuFolderId, true)
+              .catch(Components.utils.reportError);
   },
 
   bookmarkLink: function CM_bookmarkLink() {

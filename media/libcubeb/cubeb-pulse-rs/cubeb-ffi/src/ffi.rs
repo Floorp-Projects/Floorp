@@ -227,6 +227,7 @@ pub struct Ops {
     pub stream_destroy: Option<unsafe extern "C" fn(stream: *mut Stream)>,
     pub stream_start: Option<unsafe extern "C" fn(stream: *mut Stream) -> i32>,
     pub stream_stop: Option<unsafe extern "C" fn(stream: *mut Stream) -> i32>,
+    pub stream_reset_default_device: Option<unsafe extern "C" fn(stream: *mut Stream) -> i32>,
     pub stream_get_position: Option<unsafe extern "C" fn(stream: *mut Stream, position: *mut u64) -> i32>,
     pub stream_get_latency: Option<unsafe extern "C" fn(stream: *mut Stream, latency: *mut u32) -> i32>,
     pub stream_set_volume: Option<unsafe extern "C" fn(stream: *mut Stream, volumes: f32) -> i32>,
