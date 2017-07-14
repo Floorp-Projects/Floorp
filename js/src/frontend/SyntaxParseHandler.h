@@ -303,6 +303,7 @@ class SyntaxParseHandler
 
     Node newStatementList(const TokenPos& pos) { return NodeGeneric; }
     void addStatementToList(Node list, Node stmt) {}
+    void setListEndPosition(Node list, const TokenPos& pos) {}
     void addCaseStatementToList(Node list, Node stmt) {}
     MOZ_MUST_USE bool prependInitialYield(Node stmtList, Node gen) { return true; }
     Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }

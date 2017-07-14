@@ -4194,8 +4194,14 @@ Parser<ParseHandler, CharT>::statementList(YieldHandling yieldHandling)
                 isUnexpectedEOF_ = true;
             return null();
         }
-        if (tt == TOK_EOF || tt == TOK_RC)
+        if (tt == TOK_EOF || tt == TOK_RC) {
+            TokenPos pos;
+            if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand)) {
+                return null();
+            }
+            handler.setListEndPosition(pn, pos);
             break;
+        }
         if (afterReturn) {
             if (!tokenStream.peekOffset(&statementBegin, TokenStream::Operand))
                 return null();
