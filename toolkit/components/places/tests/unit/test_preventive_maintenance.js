@@ -1240,9 +1240,10 @@ tests.push({
 
   _uri1: uri("http://www1.mozilla.org"),
   _uri2: uri("http://www2.mozilla.org"),
-  _folderId: null,
+  _folder: null,
+  _bookmark: null,
   _bookmarkId: null,
-  _separatorId: null,
+  _separator: null,
 
   async setup() {
     // use valid api calls to create a bunch of items
@@ -1251,15 +1252,27 @@ tests.push({
       { uri: this._uri2 },
     ]);
 
-    this._folderId = bs.createFolder(bs.toolbarFolder, "testfolder",
-                                     bs.DEFAULT_INDEX);
-    do_check_true(this._folderId > 0);
-    this._bookmarkId = bs.insertBookmark(this._folderId, this._uri1,
-                                         bs.DEFAULT_INDEX, "testbookmark");
-    do_check_true(this._bookmarkId > 0);
-    this._separatorId = bs.insertSeparator(bs.unfiledBookmarksFolder,
-                                           bs.DEFAULT_INDEX);
-    do_check_true(this._separatorId > 0);
+    let bookmarks = await bs.insertTree({
+      guid: bs.toolbarGuid,
+      children: [{
+        title: "testfolder",
+        type: bs.TYPE_FOLDER,
+        children: [{
+          title: "testbookmark",
+          url: this._uri1,
+        }]
+      }]
+    });
+
+    this._folder = bookmarks[0];
+    this._bookmark = bookmarks[1];
+    this._bookmarkId = await PlacesUtils.promiseItemId(bookmarks[1].guid);
+
+    this._separator = await bs.insert({
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    });
+
     ts.tagURI(this._uri1, ["testtag"]);
     fs.setAndFetchFaviconForPage(this._uri2, SMALLPNG_DATA_URI, false,
                                  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
@@ -1277,10 +1290,11 @@ tests.push({
     isVisited = await promiseIsURIVisited(this._uri2);
     do_check_true(isVisited);
 
-    do_check_eq(bs.getBookmarkURI(this._bookmarkId).spec, this._uri1.spec);
-    do_check_eq(bs.getItemIndex(this._folderId), 0);
-    do_check_eq(bs.getItemType(this._folderId), bs.TYPE_FOLDER);
-    do_check_eq(bs.getItemType(this._separatorId), bs.TYPE_SEPARATOR);
+    do_check_eq((await bs.fetch(this._bookmark.guid)).url, this._uri1.spec);
+    let folder = await bs.fetch(this._folder.guid);
+    do_check_eq(folder.index, 0);
+    do_check_eq(folder.type, bs.TYPE_FOLDER);
+    do_check_eq((await bs.fetch(this._separator.guid)).type, bs.TYPE_SEPARATOR);
 
     do_check_eq(ts.getTagsForURI(this._uri1).length, 1);
     do_check_eq((await PlacesUtils.keywords.fetch({ url: this._uri1.spec })).keyword, "testkeyword");
