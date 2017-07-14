@@ -2204,9 +2204,15 @@ nsCSSRendering::GetImageLayerClip(const nsStyleImageLayers::Layer& aLayer,
   nsRect clipBorderArea =
     ::BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
 
-  bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
-                                     clipBorderArea, aClipState->mRadii);
-
+  bool haveRoundedCorners = false;
+  LayoutFrameType fType = aForFrame->Type();
+  if (fType != LayoutFrameType::TableColGroup &&
+      fType != LayoutFrameType::TableCol &&
+      fType != LayoutFrameType::TableRow &&
+      fType != LayoutFrameType::TableRowGroup) {
+    haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
+                                  clipBorderArea, aClipState->mRadii);
+  }
   bool isSolidBorder =
       aWillPaintBorder && IsOpaqueBorder(aBorder);
   if (isSolidBorder && layerClip == StyleGeometryBox::BorderBox) {
