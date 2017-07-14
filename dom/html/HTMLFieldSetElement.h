@@ -24,10 +24,8 @@ class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
 {
 public:
   using nsGenericHTMLFormElement::GetForm;
-  using nsIConstraintValidation::Validity;
-  using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::GetValidationMessage;
+  using nsIConstraintValidation::SetCustomValidity;
 
   explicit HTMLFieldSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 

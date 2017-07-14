@@ -154,9 +154,8 @@ public:
   nsPIDOMWindowOuter*
   GetContentWindow(nsIPrincipal& aSubjectPrincipal);
 
-  using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
   using nsIConstraintValidation::GetValidationMessage;
+  using nsIConstraintValidation::SetCustomValidity;
   void GetAlign(DOMString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::align, aValue);
