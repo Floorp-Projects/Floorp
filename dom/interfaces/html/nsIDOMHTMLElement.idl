@@ -22,7 +22,6 @@ interface nsIDOMHTMLMenuElement;
 [uuid(b0c42392-d0e7-4f6a-beb5-a698ce648945)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
-           attribute long             tabIndex;
   void focus();
            attribute DOMString        accessKey;
   readonly attribute boolean          draggable;
