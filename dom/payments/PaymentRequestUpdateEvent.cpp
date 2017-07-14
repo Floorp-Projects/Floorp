@@ -99,10 +99,14 @@ PaymentRequestUpdateEvent::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value
 void
 PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise, ErrorResult& aRv)
 {
+  if (!IsTrusted()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   MOZ_ASSERT(mRequest);
 
-  if (mWaitForUpdate || !mRequest->ReadyForUpdate() ||
-      !mEvent->mFlags.mIsBeingDispatched) {
+  if (mWaitForUpdate || !mRequest->ReadyForUpdate()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
