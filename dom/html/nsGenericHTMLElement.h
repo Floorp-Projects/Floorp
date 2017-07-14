@@ -75,21 +75,19 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::title, aTitle);
   }
-  NS_IMETHOD SetTitle(const nsAString& aTitle) override
+  void SetTitle(const nsAString& aTitle)
   {
     SetHTMLAttr(nsGkAtoms::title, aTitle);
-    return NS_OK;
   }
   void GetLang(mozilla::dom::DOMString& aLang)
   {
     GetHTMLAttr(nsGkAtoms::lang, aLang);
   }
-  NS_IMETHOD SetLang(const nsAString& aLang) override
+  void SetLang(const nsAString& aLang)
   {
     SetHTMLAttr(nsGkAtoms::lang, aLang);
-    return NS_OK;
   }
-  void GetDir(mozilla::dom::DOMString& aDir)
+  void GetDir(nsAString& aDir)
   {
     GetHTMLEnumAttr(nsGkAtoms::dir, aDir);
   }
@@ -277,52 +275,6 @@ public:
 
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  NS_IMETHOD GetTitle(nsAString& aTitle) final override {
-    mozilla::dom::DOMString title;
-    GetTitle(title);
-    title.ToString(aTitle);
-    return NS_OK;
-  }
-  NS_IMETHOD GetLang(nsAString& aLang) final override {
-    mozilla::dom::DOMString lang;
-    GetLang(lang);
-    lang.ToString(aLang);
-    return NS_OK;
-  }
-  NS_IMETHOD GetDir(nsAString& aDir) final override {
-    mozilla::dom::DOMString dir;
-    GetDir(dir);
-    dir.ToString(aDir);
-    return NS_OK;
-  }
-  NS_IMETHOD SetDir(const nsAString& aDir) final override {
-    mozilla::ErrorResult rv;
-    SetDir(aDir, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD GetDOMClassName(nsAString& aClassName) final {
-    GetHTMLAttr(nsGkAtoms::_class, aClassName);
-    return NS_OK;
-  }
-  NS_IMETHOD SetDOMClassName(const nsAString& aClassName) final {
-    SetClassName(aClassName);
-    return NS_OK;
-  }
-  NS_IMETHOD GetDataset(nsISupports** aDataset) final override;
-  NS_IMETHOD GetHidden(bool* aHidden) final override {
-    *aHidden = Hidden();
-    return NS_OK;
-  }
-  NS_IMETHOD SetHidden(bool aHidden) final override {
-    mozilla::ErrorResult rv;
-    SetHidden(aHidden, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD DOMBlur() final override {
-    mozilla::ErrorResult rv;
-    Blur(rv);
-    return rv.StealNSResult();
-  }
   NS_IMETHOD GetAccessKey(nsAString& aAccessKey) final override {
     nsString accessKey;
     GetAccessKey(accessKey);
@@ -334,73 +286,9 @@ public:
     SetAccessKey(aAccessKey, rv);
     return rv.StealNSResult();
   }
-  NS_IMETHOD GetAccessKeyLabel(nsAString& aAccessKeyLabel)
-    final override {
-    nsString accessKeyLabel;
-    GetAccessKeyLabel(accessKeyLabel);
-    aAccessKeyLabel.Assign(accessKeyLabel);
-    return NS_OK;
-  }
-  NS_IMETHOD SetDraggable(bool aDraggable) final override {
-    mozilla::ErrorResult rv;
-    SetDraggable(aDraggable, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD GetContentEditable(nsAString& aContentEditable)
-    final override {
-    nsString contentEditable;
-    GetContentEditable(contentEditable);
-    aContentEditable.Assign(contentEditable);
-    return NS_OK;
-  }
-  NS_IMETHOD SetContentEditable(const nsAString& aContentEditable)
-    final override {
-    mozilla::ErrorResult rv;
-    SetContentEditable(aContentEditable, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD GetIsContentEditable(bool* aIsContentEditable)
-    final override {
-    *aIsContentEditable = IsContentEditable();
-    return NS_OK;
-  }
-  NS_IMETHOD GetContextMenu(nsIDOMHTMLMenuElement** aContextMenu)
-    final override;
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck) final override {
     *aSpellcheck = Spellcheck();
     return NS_OK;
-  }
-  NS_IMETHOD SetSpellcheck(bool aSpellcheck) final override {
-    mozilla::ErrorResult rv;
-    SetSpellcheck(aSpellcheck, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD GetOuterHTML(nsAString& aOuterHTML) final override {
-    mozilla::dom::Element::GetOuterHTML(aOuterHTML);
-    return NS_OK;
-  }
-  NS_IMETHOD SetOuterHTML(const nsAString& aOuterHTML) final override {
-    mozilla::ErrorResult rv;
-    mozilla::dom::Element::SetOuterHTML(aOuterHTML, rv);
-    return rv.StealNSResult();
-  }
-  NS_IMETHOD InsertAdjacentHTML(const nsAString& position,
-                                const nsAString& text) final override;
-  NS_IMETHOD ScrollIntoView(bool top, uint8_t _argc) final override {
-    if (!_argc) {
-      top = true;
-    }
-    mozilla::dom::Element::ScrollIntoView(top);
-    return NS_OK;
-  }
-  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent)
-    final override {
-    mozilla::dom::Element* offsetParent = GetOffsetParent();
-    if (!offsetParent) {
-      *aOffsetParent = nullptr;
-      return NS_OK;
-    }
-    return CallQueryInterface(offsetParent, aOffsetParent);
   }
   NS_IMETHOD GetOffsetTop(int32_t* aOffsetTop) final override {
     *aOffsetTop = OffsetTop();
@@ -435,15 +323,6 @@ public:
   NS_IMETHOD GetDraggable(bool* aDraggable) final override {
     *aDraggable = Draggable();
     return NS_OK;
-  }
-  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override {
-    return mozilla::dom::Element::GetInnerHTML(aInnerHTML);
-  }
-  using mozilla::dom::Element::SetInnerHTML;
-  NS_IMETHOD SetInnerHTML(const nsAString& aInnerHTML) final override {
-    mozilla::ErrorResult rv;
-    SetInnerHTML(aInnerHTML, rv);
-    return rv.StealNSResult();
   }
 
   using nsGenericHTMLElementBase::GetOwnerDocument;

@@ -22,42 +22,14 @@ interface nsIDOMHTMLMenuElement;
 [uuid(b0c42392-d0e7-4f6a-beb5-a698ce648945)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
-  // metadata attributes
-           attribute DOMString        title;
-           attribute DOMString        lang;
-           attribute DOMString        dir;
-  readonly attribute nsISupports      dataset;
-
-  // user interaction
-  /**
-   * Indicates that the element is not yet, or is no longer, relevant.
-   *
-   * See <http://www.whatwg.org/html5/#the-hidden-attribute>.
-   */
-           attribute boolean          hidden;
            attribute long             tabIndex;
   void focus();
-  [binaryname(DOMBlur)]
-  void blur();
            attribute DOMString        accessKey;
-  readonly attribute DOMString        accessKeyLabel;
-           attribute boolean          draggable;
-           attribute DOMString        contentEditable;
-  readonly attribute boolean          isContentEditable;
-  readonly attribute nsIDOMHTMLMenuElement contextMenu;
-           attribute boolean          spellcheck;
-
-
-  // DOM Parsing and Serialization
-           attribute DOMString        innerHTML;
-           attribute DOMString        outerHTML;
-  void insertAdjacentHTML(in DOMString position,
-                          in DOMString text);
+  readonly attribute boolean          draggable;
+  readonly attribute boolean          spellcheck;
 
 
   // CSSOM View
-  [optional_argc] void scrollIntoView([optional] in boolean top);
-  readonly attribute nsIDOMElement    offsetParent;
   readonly attribute long             offsetTop;
   readonly attribute long             offsetLeft;
   readonly attribute long             offsetWidth;
