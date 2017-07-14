@@ -37,6 +37,7 @@ public:
   void NotifyVsync(const TimeStamp& aVsyncTimestamp);
   void NotifyVRVsync(const uint32_t& aDisplayID);
   void RefreshVRDisplays(bool aMustDispatch = false);
+  void RefreshVRControllers();
   void ScanForControllers();
   void RemoveControllers();
   template<class T> void NotifyGamepadChange(const T& aInfo);
@@ -67,7 +68,6 @@ private:
   void Shutdown();
 
   void DispatchVRDisplayInfoUpdate();
-  void RefreshVRControllers();
 
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
