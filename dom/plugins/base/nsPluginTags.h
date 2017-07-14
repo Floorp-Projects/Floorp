@@ -135,7 +135,8 @@ public:
               bool aSupportsAsyncRender,
               int64_t aLastModifiedTime,
               bool aFromExtension,
-              int32_t aSandboxLevel);
+              int32_t aSandboxLevel,
+              uint16_t aBlocklistState);
 
   void TryUnloadPlugin(bool inShutdown);
 
@@ -149,6 +150,7 @@ public:
 
   PluginState GetPluginState();
   void SetPluginState(PluginState state);
+  void SetBlocklistState(uint16_t aBlocklistState);
 
   bool HasSameNameAndMimes(const nsPluginTag *aPluginTag) const;
   const nsCString& GetNiceFileName() override;
