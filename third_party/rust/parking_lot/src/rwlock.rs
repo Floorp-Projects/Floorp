@@ -178,7 +178,7 @@ impl<T: ?Sized> RwLock<T> {
     /// once it is dropped.
     #[inline]
     pub fn read(&self) -> RwLockReadGuard<T> {
-        self.raw.lock_shared();
+        self.raw.lock_shared(false);
         RwLockReadGuard {
             rwlock: self,
             marker: PhantomData,
@@ -194,7 +194,7 @@ impl<T: ?Sized> RwLock<T> {
     /// This function does not block.
     #[inline]
     pub fn try_read(&self) -> Option<RwLockReadGuard<T>> {
-        if self.raw.try_lock_shared() {
+        if self.raw.try_lock_shared(false) {
             Some(RwLockReadGuard {
                 rwlock: self,
                 marker: PhantomData,
@@ -212,7 +212,7 @@ impl<T: ?Sized> RwLock<T> {
     /// release the shared access when it is dropped.
     #[inline]
     pub fn try_read_for(&self, timeout: Duration) -> Option<RwLockReadGuard<T>> {
-        if self.raw.try_lock_shared_for(timeout) {
+        if self.raw.try_lock_shared_for(false, timeout) {
             Some(RwLockReadGuard {
                 rwlock: self,
                 marker: PhantomData,
@@ -230,7 +230,93 @@ impl<T: ?Sized> RwLock<T> {
     /// release the shared access when it is dropped.
     #[inline]
     pub fn try_read_until(&self, timeout: Instant) -> Option<RwLockReadGuard<T>> {
-        if self.raw.try_lock_shared_until(timeout) {
+        if self.raw.try_lock_shared_until(false, timeout) {
+            Some(RwLockReadGuard {
+                rwlock: self,
+                marker: PhantomData,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Locks this rwlock with shared read access, blocking the current thread
+    /// until it can be acquired.
+    ///
+    /// The calling thread will be blocked until there are no more writers which
+    /// hold the lock. There may be other readers currently inside the lock when
+    /// this method returns.
+    ///
+    /// Unlike `read`, this method is guaranteed to succeed without blocking if
+    /// another read lock is held at the time of the call. This allows a thread
+    /// to recursively lock a `RwLock`. However using this method can cause
+    /// writers to starve since readers no longer block if a writer is waiting
+    /// for the lock.
+    ///
+    /// Returns an RAII guard which will release this thread's shared access
+    /// once it is dropped.
+    #[inline]
+    pub fn read_recursive(&self) -> RwLockReadGuard<T> {
+        self.raw.lock_shared(true);
+        RwLockReadGuard {
+            rwlock: self,
+            marker: PhantomData,
+        }
+    }
+
+    /// Attempts to acquire this rwlock with shared read access.
+    ///
+    /// If the access could not be granted at this time, then `None` is returned.
+    /// Otherwise, an RAII guard is returned which will release the shared access
+    /// when it is dropped.
+    ///
+    /// This method is guaranteed to succeed if another read lock is held at the
+    /// time of the call. See the documentation for `read_recursive` for details.
+    ///
+    /// This function does not block.
+    #[inline]
+    pub fn try_read_recursive(&self) -> Option<RwLockReadGuard<T>> {
+        if self.raw.try_lock_shared(true) {
+            Some(RwLockReadGuard {
+                rwlock: self,
+                marker: PhantomData,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Attempts to acquire this rwlock with shared read access until a timeout
+    /// is reached.
+    ///
+    /// If the access could not be granted before the timeout expires, then
+    /// `None` is returned. Otherwise, an RAII guard is returned which will
+    /// release the shared access when it is dropped.
+    ///
+    /// This method is guaranteed to succeed without blocking if another read
+    /// lock is held at the time of the call. See the documentation for
+    /// `read_recursive` for details.
+    #[inline]
+    pub fn try_read_recursive_for(&self, timeout: Duration) -> Option<RwLockReadGuard<T>> {
+        if self.raw.try_lock_shared_for(true, timeout) {
+            Some(RwLockReadGuard {
+                rwlock: self,
+                marker: PhantomData,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Attempts to acquire this rwlock with shared read access until a timeout
+    /// is reached.
+    ///
+    /// If the access could not be granted before the timeout expires, then
+    /// `None` is returned. Otherwise, an RAII guard is returned which will
+    /// release the shared access when it is dropped.
+    #[inline]
+    pub fn try_read_recursive_until(&self, timeout: Instant) -> Option<RwLockReadGuard<T>> {
+        if self.raw.try_lock_shared_until(true, timeout) {
             Some(RwLockReadGuard {
                 rwlock: self,
                 marker: PhantomData,
@@ -405,23 +491,44 @@ impl RwLock<()> {
     /// rwlock.
     #[inline]
     pub fn raw_read(&self) {
-        self.raw.lock_shared();
+        self.raw.lock_shared(false);
     }
 
     /// Attempts to acquire this rwlock with shared read access.
     ///
-    /// This is similar to `read`, except that a `RwLockReadGuard` is not
+    /// This is similar to `try_read`, except that a `RwLockReadGuard` is not
     /// returned. Instead you will need to call `raw_unlock` to release the
     /// rwlock.
     #[inline]
     pub fn raw_try_read(&self) -> bool {
-        self.raw.try_lock_shared()
+        self.raw.try_lock_shared(false)
+    }
+
+    /// Locks this rwlock with shared read access, blocking the current thread
+    /// until it can be acquired.
+    ///
+    /// This is similar to `read_recursive`, except that a `RwLockReadGuard` is
+    /// not returned. Instead you will need to call `raw_unlock` to release the
+    /// rwlock.
+    #[inline]
+    pub fn raw_read_recursive(&self) {
+        self.raw.lock_shared(true);
+    }
+
+    /// Attempts to acquire this rwlock with shared read access.
+    ///
+    /// This is similar to `try_read_recursive`, except that a `RwLockReadGuard` is not
+    /// returned. Instead you will need to call `raw_unlock` to release the
+    /// rwlock.
+    #[inline]
+    pub fn raw_try_read_recursive(&self) -> bool {
+        self.raw.try_lock_shared(true)
     }
 
     /// Locks this rwlock with exclusive write access, blocking the current
     /// thread until it can be acquired.
     ///
-    /// This is similar to `read`, except that a `RwLockReadGuard` is not
+    /// This is similar to `write`, except that a `RwLockReadGuard` is not
     /// returned. Instead you will need to call `raw_unlock` to release the
     /// rwlock.
     #[inline]
@@ -431,7 +538,7 @@ impl RwLock<()> {
 
     /// Attempts to lock this rwlock with exclusive write access.
     ///
-    /// This is similar to `read`, except that a `RwLockReadGuard` is not
+    /// This is similar to `try_write`, except that a `RwLockReadGuard` is not
     /// returned. Instead you will need to call `raw_unlock` to release the
     /// rwlock.
     #[inline]
@@ -472,6 +579,7 @@ impl<'a, T: ?Sized + 'a> RwLockReadGuard<'a, T> {
     #[inline]
     pub fn unlock_fair(self) {
         self.rwlock.raw.unlock_shared(true);
+        mem::forget(self);
     }
 }
 
@@ -525,6 +633,7 @@ impl<'a, T: ?Sized + 'a> RwLockWriteGuard<'a, T> {
     #[inline]
     pub fn unlock_fair(self) {
         self.rwlock.raw.unlock_exclusive(true);
+        mem::forget(self);
     }
 }
 
@@ -561,6 +670,7 @@ mod tests {
     use std::thread;
     use std::sync::Arc;
     use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::time::Duration;
     use RwLock;
 
     #[derive(Eq, PartialEq, Debug)]
@@ -788,19 +898,29 @@ mod tests {
         let mut handles = Vec::new();
         for _ in 0..8 {
             let x = x.clone();
-            handles.push(thread::spawn(move || {
-                for _ in 0..100 {
-                    let mut writer = x.write();
-                    *writer += 1;
-                    let cur_val = *writer;
-                    let reader = writer.downgrade();
-                    assert_eq!(cur_val, *reader);
-                }
+            handles.push(thread::spawn(move || for _ in 0..100 {
+                let mut writer = x.write();
+                *writer += 1;
+                let cur_val = *writer;
+                let reader = writer.downgrade();
+                assert_eq!(cur_val, *reader);
             }));
         }
         for handle in handles {
             handle.join().unwrap()
         }
         assert_eq!(*x.read(), 800);
+    }
+
+    #[test]
+    fn test_rwlock_recursive() {
+        let arc = Arc::new(RwLock::new(1));
+        let arc2 = arc.clone();
+        let _lock1 = arc.read();
+        thread::spawn(move || { let _lock = arc2.write(); });
+        thread::sleep(Duration::from_millis(100));
+
+        // A normal read would block here since there is a pending writer
+        let _lock2 = arc.read_recursive();
     }
 }
