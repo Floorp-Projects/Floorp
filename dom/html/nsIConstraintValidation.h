@@ -13,6 +13,7 @@
 class nsIDOMValidityState;
 
 namespace mozilla {
+class ErrorResult;
 namespace dom {
 class ValidityState;
 } // namespace dom
@@ -47,7 +48,8 @@ public:
            return !mBarredFromConstraintValidation;
          }
 
-  NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage);
+  void GetValidationMessage(nsAString& aValidationMessage,
+                            mozilla::ErrorResult& aError);
 
   enum ValidityStateType
   {
@@ -119,57 +121,6 @@ private:
    */
   nsString                      mCustomValidity;
 };
-
-/**
- * Use these macro for class inheriting from nsIConstraintValidation to forward
- * functions to nsIConstraintValidation.
- */
-#define NS_FORWARD_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY           \
-  NS_IMETHOD GetValidity(nsIDOMValidityState** aValidity) {                   \
-    return nsIConstraintValidation::GetValidity(aValidity);                   \
-  }                                                                           \
-  NS_IMETHOD GetWillValidate(bool* aWillValidate) {                           \
-    *aWillValidate = WillValidate();                                          \
-    return NS_OK;                                                             \
-  }                                                                           \
-  NS_IMETHOD GetValidationMessage(nsAString& aValidationMessage) {            \
-    return nsIConstraintValidation::GetValidationMessage(aValidationMessage); \
-  }                                                                           \
-  using nsIConstraintValidation::CheckValidity;                               \
-  NS_IMETHOD CheckValidity(bool* aValidity) {                                 \
-    return nsIConstraintValidation::CheckValidity(aValidity);                 \
-  }
-
-#define NS_FORWARD_NSICONSTRAINTVALIDATION                                    \
-  NS_FORWARD_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY                 \
-  NS_IMETHOD SetCustomValidity(const nsAString& aError) {                     \
-    nsIConstraintValidation::SetCustomValidity(aError);                       \
-    return NS_OK;                                                             \
-  }
-
-
-/* Use these macro when class declares functions from nsIConstraintValidation */
-#define NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(_from)       \
-  NS_IMETHODIMP _from::GetValidity(nsIDOMValidityState** aValidity) {         \
-    return nsIConstraintValidation::GetValidity(aValidity);                   \
-  }                                                                           \
-  NS_IMETHODIMP _from::GetWillValidate(bool* aWillValidate) {                 \
-    *aWillValidate = WillValidate();                                          \
-    return NS_OK;                                                             \
-  }                                                                           \
-  NS_IMETHODIMP _from::GetValidationMessage(nsAString& aValidationMessage) {  \
-    return nsIConstraintValidation::GetValidationMessage(aValidationMessage); \
-  }                                                                           \
-  NS_IMETHODIMP _from::CheckValidity(bool* aValidity) {                     \
-    return nsIConstraintValidation::CheckValidity(aValidity);                 \
-  }
-
-#define NS_IMPL_NSICONSTRAINTVALIDATION(_from)                                \
-  NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(_from)             \
-  NS_IMETHODIMP _from::SetCustomValidity(const nsAString& aError) {           \
-    nsIConstraintValidation::SetCustomValidity(aError);                       \
-    return NS_OK;                                                             \
-  }
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIConstraintValidation,
                               NS_ICONSTRAINTVALIDATION_IID)

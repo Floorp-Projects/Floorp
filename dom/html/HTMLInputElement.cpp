@@ -1277,9 +1277,6 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
                                nsIConstraintValidation)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
 
-// nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION_EXCEPT_SETCUSTOMVALIDITY(HTMLInputElement)
-
 // nsIDOMNode
 
 nsresult
@@ -7123,14 +7120,12 @@ HTMLInputElement::GetStep() const
 
 // nsIConstraintValidation
 
-NS_IMETHODIMP
+void
 HTMLInputElement::SetCustomValidity(const nsAString& aError)
 {
   nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
-
-  return NS_OK;
 }
 
 bool
@@ -7334,13 +7329,6 @@ HTMLInputElement::UpdateBarredFromConstraintValidation()
                                     mType == NS_FORM_INPUT_RESET ||
                                     HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) ||
                                     IsDisabled());
-}
-
-void
-HTMLInputElement::GetValidationMessage(nsAString& aValidationMessage,
-                                       ErrorResult& aRv)
-{
-  aRv = GetValidationMessage(aValidationMessage);
 }
 
 nsresult

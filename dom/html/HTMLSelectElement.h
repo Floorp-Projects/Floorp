@@ -275,13 +275,9 @@ public:
   void GetValue(DOMString& aValue);
   // Uses XPCOM SetValue.
 
-  // nsIConstraintValidation::WillValidate is fine.
-  // nsIConstraintValidation::Validity() is fine.
-  // nsIConstraintValidation::GetValidationMessage() is fine.
-  // nsIConstraintValidation::CheckValidity() is fine.
-  using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
-  // nsIConstraintValidation::SetCustomValidity() is fine.
+  // Override SetCustomValidity so we update our state properly when it's called
+  // via bindings.
+  void SetCustomValidity(const nsAString& aError);
 
   using nsINode::Remove;
 

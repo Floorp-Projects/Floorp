@@ -136,10 +136,6 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 
 public:
   using nsIConstraintValidation::GetValidationMessage;
-  using nsIConstraintValidation::CheckValidity;
-  using nsIConstraintValidation::ReportValidity;
-  using nsIConstraintValidation::WillValidate;
-  using nsIConstraintValidation::Validity;
   using nsGenericHTMLFormElementWithState::GetForm;
 
   enum class FromClone { no, yes };
@@ -365,6 +361,11 @@ public:
   void     UpdateBarredFromConstraintValidation();
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType) override;
+
+  // Override SetCustomValidity so we update our state properly when it's called
+  // via bindings.
+  void SetCustomValidity(const nsAString& aError);
+
   /**
    * Update the value missing validity state for radio elements when they have
    * a group.
@@ -762,10 +763,6 @@ public:
    * @return the current step value.
    */
   Decimal GetStep() const;
-
-  void GetValidationMessage(nsAString& aValidationMessage, ErrorResult& aRv);
-
-  // XPCOM GetCustomVisibility() is OK
 
   already_AddRefed<nsINodeList> GetLabels();
 
