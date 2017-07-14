@@ -19,7 +19,7 @@ SpeechStreamListener::SpeechStreamListener(SpeechRecognition* aRecognition)
 
 SpeechStreamListener::~SpeechStreamListener()
 {
-  NS_ReleaseOnMainThread(
+  NS_ReleaseOnMainThreadSystemGroup(
     "SpeechStreamListener::mRecognition", mRecognition.forget());
 }
 

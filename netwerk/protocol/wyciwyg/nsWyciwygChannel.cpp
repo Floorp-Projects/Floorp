@@ -47,7 +47,7 @@ nsWyciwygChannel::nsWyciwygChannel()
 nsWyciwygChannel::~nsWyciwygChannel()
 {
   if (mLoadInfo) {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsWyciwygChannel::mLoadInfo", mLoadInfo.forget(), false);
   }
 }

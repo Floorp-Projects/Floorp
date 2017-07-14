@@ -409,9 +409,9 @@ public:
   }
 
   ~AsyncCloseConnection() override {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "AsyncCloseConnection::mConnection", mConnection.forget());
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "AsyncCloseConnection::mCallbackEvent", mCallbackEvent.forget());
   }
 private:

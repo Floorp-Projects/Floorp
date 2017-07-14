@@ -1557,10 +1557,10 @@ ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest)
 NotifyOffThreadScriptLoadCompletedRunnable::~NotifyOffThreadScriptLoadCompletedRunnable()
 {
   if (MOZ_UNLIKELY(mRequest || mLoader) && !NS_IsMainThread()) {
-    NS_ReleaseOnMainThread(
-      "NotifyOffThreadScriptLoadCompletedRunnable::mRequest", mRequest.forget());
-    NS_ReleaseOnMainThread(
-      "NotifyOffThreadScriptLoadCompletedRunnable::mLoader", mLoader.forget());
+    NS_ReleaseOnMainThreadSystemGroup("NotifyOffThreadScriptLoadCompletedRunnable::mRequest",
+                                      mRequest.forget());
+    NS_ReleaseOnMainThreadSystemGroup("NotifyOffThreadScriptLoadCompletedRunnable::mLoader",
+                                      mLoader.forget());
   }
 }
 

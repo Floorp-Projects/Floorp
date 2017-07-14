@@ -1052,7 +1052,7 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierLookupCallback,
 nsUrlClassifierLookupCallback::~nsUrlClassifierLookupCallback()
 {
   if (mCallback) {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsUrlClassifierLookupCallback::mCallback", mCallback.forget());
   }
 }

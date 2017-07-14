@@ -70,7 +70,7 @@ nsBaseChannel::nsBaseChannel()
 
 nsBaseChannel::~nsBaseChannel()
 {
-  NS_ReleaseOnMainThread(
+  NS_ReleaseOnMainThreadSystemGroup(
     "nsBaseChannel::mLoadInfo", mLoadInfo.forget());
 }
 
