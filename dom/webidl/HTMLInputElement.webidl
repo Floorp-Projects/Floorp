@@ -247,6 +247,14 @@ partial interface HTMLInputElement {
   [Pref="dom.forms.datetime", ChromeOnly]
   void setDateTimePickerState(boolean open);
 
+  [Pref="dom.forms.datetime", ChromeOnly,
+   BinaryName="getMinimumAsDouble"]
+  double getMinimum();
+
+  [Pref="dom.forms.datetime", ChromeOnly,
+   BinaryName="getMaximumAsDouble"]
+  double getMaximum();
+
   [Pref="dom.forms.datetime", Func="IsChromeOrXBL"]
   void openDateTimePicker(optional DateTimeValue initialValue);
 
