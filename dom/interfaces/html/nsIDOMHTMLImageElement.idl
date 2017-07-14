@@ -19,6 +19,4 @@
 [uuid(ec18e71c-4f5c-4cc3-aa36-5273168644dc)]
 interface nsIDOMHTMLImageElement : nsISupports
 {
-           attribute unsigned long    width;
-           attribute unsigned long    height;
 };

@@ -366,10 +366,17 @@ ImageDocument::ShrinkToFit()
   }
 
   // Keep image content alive while changing the attributes.
-  nsCOMPtr<Element> imageContent = mImageContent;
-  nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imageContent);
-  image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)));
-  image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)));
+  RefPtr<HTMLImageElement> image = HTMLImageElement::FromContent(mImageContent);
+  {
+    IgnoredErrorResult ignored;
+    image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)),
+                    ignored);
+  }
+  {
+    IgnoredErrorResult ignored;
+    image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)),
+                     ignored);
+  }
 
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.
