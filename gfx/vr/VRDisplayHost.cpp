@@ -235,12 +235,16 @@ VRDisplayHost::CheckClearDisplayInfoDirty()
   return true;
 }
 
-VRControllerHost::VRControllerHost(VRDeviceType aType)
+VRControllerHost::VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
+                                   uint32_t aDisplayID)
  : mVibrateIndex(0)
 {
   MOZ_COUNT_CTOR(VRControllerHost);
   mControllerInfo.mType = aType;
-  mControllerInfo.mControllerID = VRSystemManager::AllocateDisplayID();
+  mControllerInfo.mHand = aHand;
+  mControllerInfo.mMappingType = dom::GamepadMappingType::_empty;
+  mControllerInfo.mDisplayID = aDisplayID;
+  mControllerInfo.mControllerID = VRSystemManager::AllocateControllerID();
 }
 
 VRControllerHost::~VRControllerHost()
