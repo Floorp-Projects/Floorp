@@ -401,9 +401,8 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   }
 
   // Propogate our tabindex:
-  int32_t tabIndex;
-  content->GetTabIndex(&tabIndex);
-  textField->SetTabIndex(tabIndex);
+  IgnoredErrorResult ignored;
+  textField->SetTabIndex(content->TabIndex(), ignored);
 
   // Initialize the text field's placeholder, if ours is set:
   nsAutoString placeholder;

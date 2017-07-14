@@ -224,7 +224,7 @@ HTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
     // Has plugin content: let the plugin decide what to do in terms of
     // internal focus from mouse clicks
     if (aTabIndex) {
-      GetTabIndex(aTabIndex);
+      *aTabIndex = TabIndex();
     }
 
     *aIsFocusable = true;
