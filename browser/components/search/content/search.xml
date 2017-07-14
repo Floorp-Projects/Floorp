@@ -1473,7 +1473,11 @@
         <body><![CDATA[
           BrowserUITelemetry.countSearchSettingsEvent(this.telemetryOrigin);
 
-          openPreferences("paneSearch", {origin: "contentSearch"});
+          if (Preferences.get("browser.preferences.useOldOrganization")) {
+            openPreferences("paneSearch", {origin: "contentSearch"});
+          } else {
+            openPreferences("general-search", {origin: "contentSearch"});
+          }
 
           // If the preference tab was already selected, the panel doesn't
           // close itself automatically.
