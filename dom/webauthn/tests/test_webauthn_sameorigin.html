@@ -38,13 +38,15 @@
       return Promise.resolve();
     }
 
-    function keepThisPublicKeyCredential(aPublicKeyCredential) {
-      gTrackedCredential = {
-        type: "public-key",
-        id: Uint8Array.from(aPublicKeyCredential.rawId),
-        transports: [ "usb" ],
+    function keepThisPublicKeyCredential(aIdentifier) {
+      return function(aPublicKeyCredential) {
+        gTrackedCredential[aIdentifier] = {
+          type: "public-key",
+          id: Uint8Array.from(aPublicKeyCredential.rawId),
+          transports: [ "usb" ],
+        }
+        return Promise.resolve(aPublicKeyCredential);
       }
-      return Promise.resolve(aPublicKeyCredential);
     }
 
     function runTests() {
@@ -69,11 +71,10 @@
             rp: rp, user: user, challenge: chall, parameters: [param]
           };
           return credm.create({publicKey: makeCredentialOptions})
-                      .then(keepThisPublicKeyCredential)
+                      .then(keepThisPublicKeyCredential("basic"))
                       .then(arrivingHereIsGood)
                       .catch(arrivingHereIsBad);
         },
-
         function() {
           // Test rp.id being unset
           let makeCredentialOptions = {
@@ -148,7 +149,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: document.domain,
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsGood)
@@ -158,7 +159,7 @@
           // Test rpId being unset
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsGood)
@@ -169,7 +170,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "user:pass@" + document.origin + ":8888",
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -180,7 +181,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "",
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -191,7 +192,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "subdomain." + document.domain,
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -202,7 +203,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "example.com",
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsGood)
@@ -213,7 +214,7 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "com",
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
@@ -224,15 +225,36 @@
           let publicKeyCredentialRequestOptions = {
             challenge: chall,
             rpId: "alt.test",
-            allowList: [gTrackedCredential]
+            allowList: [gTrackedCredential["basic"]]
           };
           return credm.get({publicKey: publicKeyCredentialRequestOptions})
                       .then(arrivingHereIsBad)
                       .catch(expectSecurityError);
         },
+        // These next two tests should be removed in Bug 1381126.
         function () {
-          SimpleTest.finish();
+          // Test basic good Create call but using an origin (Bug 1380421)
+          let rp = {id: window.origin};
+          let makeCredentialOptions = {
+            rp: rp, user: user, challenge: chall, parameters: [param]
+          };
+          return credm.create({publicKey: makeCredentialOptions})
+                      .then(keepThisPublicKeyCredential("origin"))
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
+        },
+        function () {
+          // Test basic good Get call but using an origin (Bug 1380421)
+          let publicKeyCredentialRequestOptions = {
+            challenge: chall,
+            rpId: window.origin,
+            allowList: [gTrackedCredential["origin"]]
+          };
+          return credm.get({publicKey: publicKeyCredentialRequestOptions})
+                      .then(arrivingHereIsGood)
+                      .catch(arrivingHereIsBad);
         }
+        // End remove in Bug 1381126.
       ];
       var i = 0;
       var runNextTest = () => {
@@ -240,7 +262,7 @@
           SimpleTest.finish();
           return;
         }
-        console.log(i);
+        console.log(i, testFuncs[i], testFuncs.length);
         testFuncs[i]().then(() => { runNextTest(); });
         i = i + 1;
       };
