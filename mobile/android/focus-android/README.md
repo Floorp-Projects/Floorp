@@ -1,7 +1,8 @@
 # Firefox Focus for Android
 
 [![BuddyBuild](https://dashboard.buddybuild.com/api/statusImage?appID=584f67f6f3d6eb01000842d6&branch=master&build=latest)](https://dashboard.buddybuild.com/apps/584f67f6f3d6eb01000842d6/build/latest?branch=master)
- [![codecov](https://codecov.io/gh/mozilla-mobile/focus-android/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/focus-android/branch/master)
+[![Build Status](https://travis-ci.org/mozilla-mobile/focus-android.svg?branch=master)](https://travis-ci.org/mozilla-mobile/focus-android)
+[![codecov](https://codecov.io/gh/mozilla-mobile/focus-android/branch/master/graph/badge.svg)](https://codecov.io/gh/mozilla-mobile/focus-android/branch/master)
 
 _Browse like no one’s watching. The new Firefox Focus automatically blocks a wide range of online trackers — from the moment you launch it to the second you leave it. Easily erase your history, passwords and cookies, so you won’t get followed by things like unwanted ads._
 
