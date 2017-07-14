@@ -19,7 +19,10 @@ before_install:
   - touch local.properties
 
 script:
-- ./gradlew --info clean assembleFocusWebkitDebug
+  - ./gradlew --info clean assembleFocusWebkitDebug
+
+after_success:
+  - python <(curl -s https://raw.githubusercontent.com/TouK/sputnik-ci/master/sputnik-ci.py)
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
