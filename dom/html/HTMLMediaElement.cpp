@@ -534,9 +534,13 @@ HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
   nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(aRequest);
   bool succeeded;
   if (hc && NS_SUCCEEDED(hc->GetRequestSucceeded(&succeeded)) && !succeeded) {
-    element->NotifyLoadError();
     uint32_t responseStatus = 0;
     Unused << hc->GetResponseStatus(&responseStatus);
+    nsAutoCString statusText;
+    Unused << hc->GetResponseStatusText(statusText);
+    element->NotifyLoadError(
+      nsPrintfCString("%u: %s", responseStatus, statusText.get()));
+
     nsAutoString code;
     code.AppendInt(responseStatus);
     nsAutoString src;
@@ -2046,11 +2050,12 @@ void HTMLMediaElement::SelectResource()
   }
 }
 
-void HTMLMediaElement::NotifyLoadError()
+void
+HTMLMediaElement::NotifyLoadError(const nsACString& aErrorDetails)
 {
   if (!mIsLoadingFromSourceChildren) {
     LOG(LogLevel::Debug, ("NotifyLoadError(), no supported media error"));
-    NoSupportedMediaSourceError();
+    NoSupportedMediaSourceError(aErrorDetails);
   } else if (mSourceLoadCandidate) {
     DispatchAsyncSourceError(mSourceLoadCandidate);
     QueueLoadFromSourceTask();

@@ -331,7 +331,7 @@ public:
    * Called when there's been an error fetching the resource. This decides
    * whether it's appropriate to fire an error event.
    */
-  void NotifyLoadError();
+  void NotifyLoadError(const nsACString& aErrorDetails = nsCString());
 
   /**
    * Called by one of our associated MediaTrackLists (audio/video) when an
