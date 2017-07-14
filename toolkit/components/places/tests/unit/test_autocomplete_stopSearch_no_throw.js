@@ -9,26 +9,13 @@
  * AutoComplete implementation does not throw.
  */
 
-// Globals and Constants
-
 var ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
          getService(Ci.nsIAutoCompleteSearch);
 
-// Test Functions
-
-function test_stopSearch() {
+add_task(async function test_stopSearch() {
   try {
     ac.stopSearch();
   } catch (e) {
     do_throw("we should not have caught anything!");
   }
-}
-
-// Test Runner
-
-var tests = [
-  test_stopSearch,
-];
-function run_test() {
-  tests.forEach(test => test());
-}
+});
