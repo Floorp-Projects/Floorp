@@ -72,6 +72,14 @@ var snapshotFormatters = {
     $("multiprocess-box").textContent = strings.formatStringFromName("multiProcessWindows",
       [data.numRemoteWindows, data.numTotalWindows, statusText], 3);
 
+    if (data.remoteAutoStart) {
+      $("contentprocesses-box").textContent = data.currentContentProcesses +
+                                              "/" +
+                                              data.maxContentProcesses;
+    } else {
+      $("contentprocesses-row").hidden = true;
+    }
+
     let styloReason;
     if (!data.styloBuild) {
       styloReason = strings.GetStringFromName("disabledByBuild");
