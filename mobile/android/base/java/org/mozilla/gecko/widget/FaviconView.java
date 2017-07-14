@@ -41,9 +41,6 @@ public class FaviconView extends ImageView {
     // to the view from causing repeated rescalings (Some of the callers do this)
     private Bitmap mUnscaledBitmap;
 
-    private int mActualWidth;
-    private int mActualHeight;
-
     // Flag indicating if the most recently assigned image is considered likely to need scaling.
     private boolean mScalingExpected;
 
@@ -105,12 +102,9 @@ public class FaviconView extends ImageView {
         super.onSizeChanged(w, h, oldw, oldh);
 
         // No point rechecking the image if there hasn't really been any change.
-        if (w == mActualWidth && h == mActualHeight) {
+        if (w == oldw && h == oldh) {
             return;
         }
-
-        mActualWidth = w;
-        mActualHeight = h;
 
         mBackgroundRect.right = w;
         mBackgroundRect.bottom = h;
@@ -140,12 +134,12 @@ public class FaviconView extends ImageView {
      */
     private void formatImage() {
         // We're waiting for both onSizeChanged and updateImage to be called before scaling.
-        if (mIconBitmap == null || mActualWidth == 0 || mActualHeight == 0) {
+        if (mIconBitmap == null || getWidth() == 0 || getHeight() == 0) {
             showNoImage();
             return;
         }
 
-        if (mScalingExpected && mActualWidth != mIconBitmap.getWidth()) {
+        if (mScalingExpected && getWidth() != mIconBitmap.getWidth()) {
             scaleBitmap();
             // Don't scale the image every time something changes.
             mScalingExpected = false;
@@ -154,8 +148,8 @@ public class FaviconView extends ImageView {
         // In original, there is no round corners if FaviconView has bitmap icon. But the new design
         // needs round corners all the time, so we use RoundedBitmapDrawableFactory to create round corners.
         if (areRoundCornersEnabled) {
-            // mIconBitmap's size must bew small or equal to mActualWidth, or we cannot see the round corners.
-            if (mActualWidth < mIconBitmap.getWidth()) {
+            // mIconBitmap's size must bew small or equal to getWidth(), or we cannot see the round corners.
+            if (getWidth() < mIconBitmap.getWidth()) {
                 scaleBitmap();
             }
             RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(mResources, mIconBitmap);
@@ -170,7 +164,7 @@ public class FaviconView extends ImageView {
         // fill with the coloured background. If applicable, show it.
         // We assume Favicons are still squares and only bother with the background if more than 3px
         // of it would be displayed.
-        if (Math.abs(mIconBitmap.getWidth() - mActualWidth) < 3) {
+        if (Math.abs(mIconBitmap.getWidth() - getWidth()) < 3) {
             mDominantColor = 0;
         }
     }
@@ -179,13 +173,13 @@ public class FaviconView extends ImageView {
         // If the Favicon can be resized to fill the view exactly without an enlargment of more than
         // a factor of two, do so.
         int doubledSize = mIconBitmap.getWidth() * 2;
-        if (mActualWidth > doubledSize) {
+        if (getWidth() > doubledSize) {
             // If the view is more than twice the size of the image, just double the image size
             // and do the rest with padding.
             mIconBitmap = Bitmap.createScaledBitmap(mIconBitmap, doubledSize, doubledSize, true);
         } else {
             // Otherwise, scale the image to fill the view.
-            mIconBitmap = Bitmap.createScaledBitmap(mIconBitmap, mActualWidth, mActualWidth, true);
+            mIconBitmap = Bitmap.createScaledBitmap(mIconBitmap, getWidth(), getWidth(), true);
         }
     }
 
