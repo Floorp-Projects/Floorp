@@ -833,6 +833,7 @@ function RecordResult()
     clearTimeout(gFailureTimeout);
     gFailureReason = null;
     gFailureTimeout = null;
+    gCurrentURL = null;
 
     if (gCurrentTestType == TYPE_SCRIPT) {
         var error = '';
