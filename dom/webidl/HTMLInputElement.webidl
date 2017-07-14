@@ -107,7 +107,7 @@ interface HTMLInputElement : HTMLElement {
   readonly attribute boolean willValidate;
   [Pure]
   readonly attribute ValidityState validity;
-  [GetterThrows]
+  [Throws]
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
   boolean reportValidity();

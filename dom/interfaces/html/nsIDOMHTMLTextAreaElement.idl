@@ -45,14 +45,6 @@ interface nsIDOMHTMLTextAreaElement : nsISupports
            attribute DOMString             value;
   readonly attribute long                  textLength;
 
-  // The following lines are part of the constraint validation API, see:
-  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
-  readonly attribute boolean               willValidate;
-  readonly attribute nsIDOMValidityState   validity;
-  readonly attribute DOMString             validationMessage;
-  boolean checkValidity();
-  void setCustomValidity(in DOMString error);
-
   void select();
 
   // Mozilla extensions

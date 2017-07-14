@@ -115,9 +115,6 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 
-// nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(HTMLObjectElement)
-
 #ifdef XP_MACOSX
 
 static nsIWidget* GetWidget(Element* aElement)

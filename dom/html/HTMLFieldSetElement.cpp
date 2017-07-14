@@ -59,9 +59,6 @@ NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)
 NS_IMPL_BOOL_ATTR(HTMLFieldSetElement, Disabled, disabled)
 NS_IMPL_STRING_ATTR(HTMLFieldSetElement, Name, name)
 
-// nsIConstraintValidation
-NS_IMPL_NSICONSTRAINTVALIDATION(HTMLFieldSetElement)
-
 bool
 HTMLFieldSetElement::IsDisabledForEvents(EventMessage aMessage)
 {

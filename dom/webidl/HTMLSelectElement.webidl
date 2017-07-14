@@ -50,6 +50,7 @@ interface HTMLSelectElement : HTMLElement {
 
   readonly attribute boolean willValidate;
   readonly attribute ValidityState validity;
+  [Throws]
   readonly attribute DOMString validationMessage;
   boolean checkValidity();
   boolean reportValidity();
