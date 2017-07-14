@@ -159,6 +159,7 @@ var gPluginHandler = {
         expireTime = Date.now() + Services.prefs.getIntPref(this.PREF_SESSION_PERSIST_MINUTES) * 60 * 1000;
         histogram.add(0);
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
+        aNotification.options.extraAttr = "active";
         break;
 
       case "allowalways":
@@ -168,6 +169,7 @@ var gPluginHandler = {
           Services.prefs.getIntPref(this.PREF_PERSISTENT_DAYS) * 24 * 60 * 60 * 1000;
         histogram.add(1);
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
+        aNotification.options.extraAttr = "active";
         break;
 
       case "block":
@@ -185,12 +187,14 @@ var gPluginHandler = {
           default:
             aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY;
         }
+        aNotification.options.extraAttr = "inactive";
         break;
 
       // In case a plugin has already been allowed in another tab, the "continue allowing" button
       // shouldn't change any permissions but should run the plugin-enablement code below.
       case "continue":
         aPluginInfo.fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE;
+        aNotification.options.extraAttr = "active";
         break;
       default:
         Cu.reportError(Error("Unexpected plugin state: " + aNewState));
@@ -241,9 +245,14 @@ var gPluginHandler = {
       pluginData = new Map();
     }
 
+    let hasInactivePlugins = true;
     for (var pluginInfo of plugins) {
       if (pluginData.has(pluginInfo.permissionString)) {
         continue;
+      }
+
+      if (pluginInfo.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
+        hasInactivePlugins = false;
       }
 
       // If a block contains an infoURL, we should always prefer that to the default
@@ -285,7 +294,19 @@ var gPluginHandler = {
       primaryPlugin: primaryPluginPermission,
       pluginData,
       principal,
+      extraAttr: hasInactivePlugins ? "inactive" : "active",
     };
+
+    let badge = document.getElementById("plugin-icon-badge");
+    badge.setAttribute("animate", "true");
+    badge.addEventListener("animationend", function animListener(event) {
+      if (event.animationName == "blink-badge" &&
+          badge.hasAttribute("animate")) {
+        badge.removeAttribute("animate");
+        badge.removeEventListener("animationend", animListener);
+      }
+    });
+
     PopupNotifications.show(browser, "click-to-play-plugins",
                             "", "plugins-notification-icon",
                             null, null, options);
