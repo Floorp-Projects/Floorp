@@ -50,14 +50,9 @@ impl AlphaBatchHelpers for PrimitiveStore {
         match metadata.prim_kind {
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
-                if text_run_cpu.blur_radius == 0.0 {
-                    match text_run_cpu.render_mode {
-                        FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.color),
-                        FontRenderMode::Alpha | FontRenderMode::Mono => BlendMode::Alpha,
-                    }
-                } else {
-                    // Text runs drawn to blur never get drawn with subpixel AA.
-                    BlendMode::Alpha
+                match text_run_cpu.render_mode {
+                    FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.color),
+                    FontRenderMode::Alpha | FontRenderMode::Mono => BlendMode::Alpha,
                 }
             }
             PrimitiveKind::Image |
@@ -483,25 +478,7 @@ impl AlphaRenderItem {
                     }
                     PrimitiveKind::TextRun => {
                         let text_cpu = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-                        let batch_kind = if text_cpu.blur_radius == 0.0 {
-                            AlphaBatchKind::TextRun
-                        } else {
-                            // Select a generic primitive shader that can blit the
-                            // results of the cached text blur to the framebuffer,
-                            // applying tile clipping etc.
-                            AlphaBatchKind::CacheImage
-                        };
-
                         let font_size_dp = text_cpu.logical_font_size.scale_by(ctx.device_pixel_ratio);
-
-                        let cache_task_index = match prim_metadata.render_task {
-                            Some(ref task) => {
-                                let cache_task_id = task.id;
-                                render_tasks.get_task_index(&cache_task_id,
-                                                            child_pass_index).0 as i32
-                            }
-                            None => 0,
-                        };
 
                         // TODO(gw): avoid / recycle this allocation in the future.
                         let mut instances = Vec::new();
@@ -513,7 +490,7 @@ impl AlphaRenderItem {
                                                                        text_cpu.render_mode,
                                                                        text_cpu.glyph_options, |index, handle| {
                             let uv_address = handle.as_int(gpu_cache);
-                            instances.push(base_instance.build(index as i32, cache_task_index, uv_address));
+                            instances.push(base_instance.build(index as i32, 0, uv_address));
                         });
 
                         if texture_id != SourceTexture::Invalid {
@@ -521,11 +498,19 @@ impl AlphaRenderItem {
                                 colors: [texture_id, SourceTexture::Invalid, SourceTexture::Invalid],
                             };
 
-                            let key = AlphaBatchKey::new(batch_kind, flags, blend_mode, textures);
+                            let key = AlphaBatchKey::new(AlphaBatchKind::TextRun, flags, blend_mode, textures);
                             let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
 
                             batch.add_instances(&instances);
                         }
+                    }
+                    PrimitiveKind::TextShadow => {
+                        let cache_task_id = prim_metadata.render_task.as_ref().expect("no render task!").id;
+                        let cache_task_index = render_tasks.get_task_index(&cache_task_id,
+                                                                           child_pass_index);
+                        let key = AlphaBatchKey::new(AlphaBatchKind::CacheImage, flags, blend_mode, no_textures);
+                        let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
+                        batch.add_instance(base_instance.build(0, cache_task_index.0 as i32, 0));
                     }
                     PrimitiveKind::AlignedGradient => {
                         let gradient_cpu = &ctx.prim_store.cpu_gradients[prim_metadata.cpu_prim_index.0];
@@ -1043,43 +1028,48 @@ impl RenderTarget for ColorRenderTarget {
                                                                     0);     // z is disabled for rendering cache primitives
                         self.box_shadow_cache_prims.push(instance.build(0, 0, 0));
                     }
-                    PrimitiveKind::TextRun => {
-                        let text = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-                        // We only cache text runs with a text-shadow (for now).
-                        debug_assert!(text.blur_radius != 0.0);
+                    PrimitiveKind::TextShadow => {
+                        let prim = &ctx.prim_store.cpu_text_shadows[prim_metadata.cpu_prim_index.0];
 
                         // todo(gw): avoid / recycle this allocation...
                         let mut instances = Vec::new();
+                        let mut base_index = 0;
 
-                        let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
+                        let task_index = render_tasks.get_task_index(&task.id, pass_index);
 
                         let instance = SimplePrimitiveInstance::new(prim_address,
-                                                                    render_tasks.get_task_index(&task.id, pass_index),
+                                                                    task_index,
                                                                     RenderTaskIndex(0),
                                                                     PackedLayerIndex(0),
                                                                     0);     // z is disabled for rendering cache primitives
 
-                        let texture_id = ctx.resource_cache.get_glyphs(text.font_key,
-                                                                       font_size_dp,
-                                                                       text.color,
-                                                                       &text.glyph_instances,
-                                                                       text.render_mode,
-                                                                       text.glyph_options, |index, handle| {
-                            let uv_address = handle.as_int(gpu_cache);
-                            instances.push(instance.build(index as i32, 0, uv_address));
-                        });
+                        for text in &prim.text_primitives {
+                            let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
-                        if texture_id != SourceTexture::Invalid {
-                            let textures = BatchTextures {
-                                colors: [texture_id, SourceTexture::Invalid, SourceTexture::Invalid],
-                            };
+                            let texture_id = ctx.resource_cache.get_glyphs(text.font_key,
+                                                                           font_size_dp,
+                                                                           text.color,
+                                                                           &text.glyph_instances,
+                                                                           text.render_mode,
+                                                                           text.glyph_options, |index, handle| {
+                                let uv_address = handle.as_int(gpu_cache);
+                                instances.push(instance.build(base_index + index as i32, 0, uv_address));
+                            });
 
-                            self.text_run_cache_prims.extend_from_slice(&instances);
+                            if texture_id != SourceTexture::Invalid {
+                                let textures = BatchTextures {
+                                    colors: [texture_id, SourceTexture::Invalid, SourceTexture::Invalid],
+                                };
 
-                            debug_assert!(textures.colors[0] != SourceTexture::Invalid);
-                            debug_assert!(self.text_run_textures.colors[0] == SourceTexture::Invalid ||
-                                          self.text_run_textures.colors[0] == textures.colors[0]);
-                            self.text_run_textures = textures;
+                                self.text_run_cache_prims.extend_from_slice(&instances);
+                                base_index += text.glyph_instances.len() as i32;
+                                instances.clear();
+
+                                debug_assert!(textures.colors[0] != SourceTexture::Invalid);
+                                debug_assert!(self.text_run_textures.colors[0] == SourceTexture::Invalid ||
+                                              self.text_run_textures.colors[0] == textures.colors[0]);
+                                self.text_run_textures = textures;
+                            }
                         }
                     }
                     _ => {

@@ -6,7 +6,7 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="${MOZ_ANDROID_MIN_SDK_VERSION}"
-              android:targetSdkVersion="23"/>
+              android:targetSdkVersion="${ANDROID_TARGET_SDK}"/>
     <!-- TODO: re-instate maxSdkVersion. -->
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>

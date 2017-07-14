@@ -5,7 +5,7 @@ authors = ["The Mozilla Project Developers"]
 license = "MPL-2.0"
 
 [dependencies]
-webrender_api = {path = "../webrender_api", version = "0.47.0"}
+webrender_api = {path = "../webrender_api", version = "0.48.0"}
 rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.15"
@@ -14,5 +14,5 @@ gleam = "0.4"
 
 [dependencies.webrender]
 path = "../webrender"
-version = "0.47.0"
+version = "0.48.0"
 default-features = false

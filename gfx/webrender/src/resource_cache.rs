@@ -20,7 +20,7 @@ use texture_cache::{TextureCache, TextureCacheItemId};
 use api::{Epoch, FontKey, FontTemplate, GlyphKey, ImageKey, ImageRendering};
 use api::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
 use api::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor, ColorF};
-use api::{GlyphOptions, GlyphInstance, TileOffset, TileSize};
+use api::{GlyphOptions, GlyphInstance, SubpixelPoint, TileOffset, TileSize};
 use api::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest, BlobImageData};
 use api::BlobImageResources;
 use api::{ExternalImageData, ExternalImageType, LayoutPoint};
@@ -43,6 +43,7 @@ pub struct CacheItem {
     pub uv_rect_handle: GpuCacheHandle,
 }
 
+#[derive(Debug)]
 pub struct ImageProperties {
     pub descriptor: ImageDescriptor,
     pub external_image: Option<ExternalImageData>,
@@ -56,6 +57,7 @@ enum State {
     QueryResources,
 }
 
+#[derive(Debug)]
 struct ImageResource {
     data: ImageData,
     descriptor: ImageDescriptor,
@@ -480,21 +482,21 @@ impl ResourceCache {
                          glyph_options: Option<GlyphOptions>,
                          mut f: F) -> SourceTexture where F: FnMut(usize, &GpuCacheHandle) {
         debug_assert_eq!(self.state, State::QueryResources);
-        let mut glyph_key = GlyphRequest::new(
+        let mut glyph_request = GlyphRequest::new(
             font_key,
             size,
             color,
             0,
-            LayoutPoint::new(0.0, 0.0),
+            LayoutPoint::zero(),
             render_mode,
             glyph_options
         );
         let mut texture_id = None;
         for (loop_index, glyph_instance) in glyph_instances.iter().enumerate() {
-            glyph_key.key.index = glyph_instance.index;
-            glyph_key.key.subpixel_point.set_offset(glyph_instance.point, render_mode);
+            glyph_request.key.index = glyph_instance.index;
+            glyph_request.key.subpixel_point = SubpixelPoint::new(glyph_instance.point, render_mode);
 
-            let image_id = self.cached_glyphs.get(&glyph_key, self.current_frame_id);
+            let image_id = self.cached_glyphs.get(&glyph_request, self.current_frame_id);
             let cache_item = image_id.map(|image_id| self.texture_cache.get(image_id));
             if let Some(cache_item) = cache_item {
                 f(loop_index, &cache_item.uv_rect_handle);

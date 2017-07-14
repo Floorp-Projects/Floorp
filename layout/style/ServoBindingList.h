@@ -461,7 +461,7 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
-                   nsIAtom* pseudo_tag, bool skip_display_fixup,
+                   nsIAtom* pseudo_tag,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
                    RawServoStyleSetBorrowed set,
@@ -470,6 +470,11 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetVisitedStyle,
                    ServoComputedValuesStrong,
                    ServoComputedValuesBorrowed values)
+SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleBits, uint64_t,
+                   ServoComputedValuesBorrowed values)
+SERVO_BINDING_FUNC(Servo_ComputedValues_EqualCustomProperties, bool,
+                   ServoComputedValuesBorrowed first,
+                   ServoComputedValuesBorrowed second)
 // Gets the source style rules for the computed values. This returns
 // the result via rules, which would include a list of unowned pointers
 // to RawServoStyleRule.

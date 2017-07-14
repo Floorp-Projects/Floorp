@@ -12,6 +12,7 @@ DIRS += [
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini'
 ]
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: about:debugging')

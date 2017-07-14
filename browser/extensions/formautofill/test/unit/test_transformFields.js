@@ -65,7 +65,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     expectedResult: {
       "street-address": "line1\n\nline3",
       "address-line1": "line1",
-      "address-line2": undefined,
+      "address-line2": "",
       "address-line3": "line3",
     },
   },
@@ -89,7 +89,7 @@ const ADDRESS_COMPUTE_TESTCASES = [
     expectedResult: {
       "street-address": "line1\n \nline3\n \nline5",
       "address-line1": "line1",
-      "address-line2": null,
+      "address-line2": "",
       "address-line3": "line3 line5",
     },
   },
@@ -229,7 +229,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": "US",
-      "country-name": undefined,
+      "country-name": "United States",
     },
   },
   {
@@ -239,7 +239,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": undefined,
+      "country-name": "",
     },
   },
   {
@@ -250,7 +250,7 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": "US",
-      "country-name": undefined,
+      "country-name": "United States",
     },
   },
   {
@@ -261,7 +261,17 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
     expectedResult: {
       "country": undefined,
-      "country-name": undefined,
+      "country-name": "",
+    },
+  },
+  {
+    description: "Has unsupported \"country\"",
+    address: {
+      "country": "CA",
+    },
+    expectedResult: {
+      "country": undefined,
+      "country-name": "",
     },
   },
 ];
