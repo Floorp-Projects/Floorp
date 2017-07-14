@@ -596,10 +596,10 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
   }
 }
 
-nsresult
+void
 nsNumberControlFrame::HandleSelectCall()
 {
-  return HTMLInputElement::FromContent(mTextField)->Select();
+  HTMLInputElement::FromContent(mTextField)->Select();
 }
 
 #define STYLES_DISABLING_NATIVE_THEMING \

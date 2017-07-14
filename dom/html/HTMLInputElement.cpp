@@ -1551,40 +1551,9 @@ HTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElementWithState::GetForm(aForm);
 }
 
-NS_IMPL_STRING_ATTR(HTMLInputElement, DefaultValue, value)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, DefaultChecked, checked)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Accept, accept)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Alt, alt)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, Autofocus, autofocus)
-//NS_IMPL_BOOL_ATTR(HTMLInputElement, Checked, checked)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Max, max)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Min, min)
 NS_IMPL_ACTION_ATTR(HTMLInputElement, FormAction, formaction)
-NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES(HTMLInputElement, FormEnctype, formenctype,
-                                                 "", kFormDefaultEnctype->tag)
-NS_IMPL_ENUM_ATTR_DEFAULT_MISSING_INVALID_VALUES(HTMLInputElement, FormMethod, formmethod,
-                                                 "", kFormDefaultMethod->tag)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, FormNoValidate, formnovalidate)
-NS_IMPL_STRING_ATTR(HTMLInputElement, FormTarget, formtarget)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLInputElement, InputMode, inputmode,
-                                kInputDefaultInputmode->tag)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, Multiple, multiple)
-NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLInputElement, MaxLength, maxlength)
-NS_IMPL_NON_NEGATIVE_INT_ATTR(HTMLInputElement, MinLength, minlength)
 NS_IMPL_STRING_ATTR(HTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(HTMLInputElement, ReadOnly, readonly)
-NS_IMPL_BOOL_ATTR(HTMLInputElement, Required, required)
-NS_IMPL_URI_ATTR(HTMLInputElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Step, step)
-NS_IMPL_STRING_ATTR(HTMLInputElement, UseMap, usemap)
-//NS_IMPL_STRING_ATTR(HTMLInputElement, Value, value)
-NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(HTMLInputElement, Size, size, DEFAULT_COLS)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Pattern, pattern)
-NS_IMPL_STRING_ATTR(HTMLInputElement, Placeholder, placeholder)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLInputElement, Type, type,
-                                kInputDefaultType->tag)
 
 NS_IMETHODIMP
 HTMLInputElement::GetAutocomplete(nsAString& aValue)
@@ -1602,12 +1571,6 @@ HTMLInputElement::GetAutocomplete(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLInputElement::SetAutocomplete(const nsAString& aValue)
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, nullptr, aValue, true);
-}
-
 void
 HTMLInputElement::GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo)
 {
@@ -1623,6 +1586,30 @@ HTMLInputElement::GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo)
                                                    true);
 }
 
+void
+HTMLInputElement::GetFormEnctype(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::formenctype, "", kFormDefaultEnctype->tag, aValue);
+}
+
+void
+HTMLInputElement::GetFormMethod(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::formmethod, "", kFormDefaultMethod->tag, aValue);
+}
+
+void
+HTMLInputElement::GetInputMode(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::inputmode, kInputDefaultInputmode->tag, aValue);
+}
+
+void
+HTMLInputElement::GetType(nsAString& aValue)
+{
+  GetEnumAttr(nsGkAtoms::type, kInputDefaultType->tag, aValue);
+}
+
 int32_t
 HTMLInputElement::TabIndexDefault()
 {
@@ -1636,21 +1623,6 @@ HTMLInputElement::Height()
     return 0;
   }
   return GetWidthHeightForImage(mCurrentRequest).height;
-}
-
-NS_IMETHODIMP
-HTMLInputElement::GetHeight(uint32_t* aHeight)
-{
-  *aHeight = Height();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetHeight(uint32_t aHeight)
-{
-  ErrorResult rv;
-  SetHeight(aHeight, rv);
-  return rv.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -1690,21 +1662,6 @@ HTMLInputElement::Width()
     return 0;
   }
   return GetWidthHeightForImage(mCurrentRequest).width;
-}
-
-NS_IMETHODIMP
-HTMLInputElement::GetWidth(uint32_t* aWidth)
-{
-  *aWidth = Width();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLInputElement::SetWidth(uint32_t aWidth)
-{
-  ErrorResult rv;
-  SetWidth(aWidth, rv);
-  return rv.StealNSResult();
 }
 
 void
@@ -2285,18 +2242,6 @@ HTMLInputElement::IsDateTimeInputType(uint8_t aType)
          aType == NS_FORM_INPUT_DATETIME_LOCAL;
 }
 
-NS_IMETHODIMP
-HTMLInputElement::StepDown(int32_t n, uint8_t optional_argc)
-{
-  return ApplyStep(optional_argc ? -n : -1);
-}
-
-NS_IMETHODIMP
-HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
-{
-  return ApplyStep(optional_argc ? n : 1);
-}
-
 void
 HTMLInputElement::FlushFrames()
 {
@@ -2559,13 +2504,6 @@ HTMLInputElement::GetOwnerNumberControl()
     }
   }
   return nullptr;
-}
-
-NS_IMETHODIMP
-HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
-{
-  *aResult = MozIsTextField(aExcludePassword);
-  return NS_OK;
 }
 
 void
@@ -3503,20 +3441,20 @@ HTMLInputElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
-NS_IMETHODIMP
+void
 HTMLInputElement::Select()
 {
   if (mType == NS_FORM_INPUT_NUMBER) {
     nsNumberControlFrame* numberControlFrame =
       do_QueryFrame(GetPrimaryFrame());
     if (numberControlFrame) {
-      return numberControlFrame->HandleSelectCall();
+      numberControlFrame->HandleSelectCall();
     }
-    return NS_OK;
+    return;
   }
 
   if (!IsSingleLineTextControl(false)) {
-    return NS_OK;
+    return;
   }
 
   // XXX Bug?  We have to give the input focus before contents can be
@@ -3524,7 +3462,7 @@ HTMLInputElement::Select()
 
   FocusTristate state = FocusState();
   if (state == eUnfocusable) {
-    return NS_OK;
+    return;
   }
 
   nsTextEditorState* tes = GetEditorState();
@@ -3547,7 +3485,7 @@ HTMLInputElement::Select()
     if (fm)
       fm->SetFocus(this, nsIFocusManager::FLAG_NOSCROLL);
     SelectAll(presContext);
-    return NS_OK;
+    return;
   }
 
   if (DispatchSelectEvent(presContext) && fm) {
@@ -3561,8 +3499,6 @@ HTMLInputElement::Select()
       SelectAll(presContext);
     }
   }
-
-  return NS_OK;
 }
 
 bool
@@ -6238,14 +6174,6 @@ HTMLInputElement::SetSelectionEnd(const Nullable<uint32_t>& aSelectionEnd,
   state->SetSelectionEnd(aSelectionEnd, aRv);
 }
 
-NS_IMETHODIMP
-HTMLInputElement::GetFiles(nsIDOMFileList** aFileList)
-{
-  RefPtr<FileList> list = GetFiles();
-  list.forget(aFileList);
-  return NS_OK;
-}
-
 void
 HTMLInputElement::GetSelectionRange(uint32_t* aSelectionStart,
                                     uint32_t* aSelectionEnd,
@@ -6740,7 +6668,8 @@ HTMLInputElement::RestoreState(nsPresState* aState)
   }
 
   if (aState->IsDisabledSet() && !aState->GetDisabled()) {
-    SetDisabled(false);
+    IgnoredErrorResult ignored;
+    SetDisabled(false, ignored);
   }
 
   return restoredCheckedState;
