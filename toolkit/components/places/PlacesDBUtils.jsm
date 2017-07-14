@@ -75,11 +75,16 @@ this.PlacesDBUtils = {
    * Executes integrity check, common and advanced maintenance tasks (like
    * expiration and vacuum).  Will also collect statistics on the database.
    *
-   * @return a Map[taskName(String) -> Object]. The Object has the following properties:
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
+   * @return {Promise}
+   *        A promise that resolves with a Map[taskName(String) -> Object].
+   *        The Object has the following properties:
    *         - succeeded: boolean
    *         - logs: an array of strings containing the messages logged by the task.
    */
-  async checkAndFixDatabase() {
+  async checkAndFixDatabase() { // eslint-disable-line require-await
     let tasks = [
       this.checkIntegrity,
       this.checkCoherence,
@@ -94,10 +99,12 @@ this.PlacesDBUtils = {
   /**
    * Forces a full refresh of Places views.
    *
-   * @return {Promise} resolved when refresh is complete.
-   * @resolves to an array of logs for this task.
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
+   * @returns {Array} An empty array.
    */
-  async _refreshUI() {
+  async _refreshUI() { // eslint-disable-line require-await
     // Send batch update notifications to update the UI.
     let observers = PlacesUtils.history.getObservers();
     for (let observer of observers) {
@@ -133,11 +140,14 @@ this.PlacesDBUtils = {
   /**
    * Checks integrity but does not try to fix the database through a reindex.
    *
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
    * @return {Promise} resolves if database is sane.
    * @resolves to an array of logs for this task.
    * @rejects if we're unable to fix corruption or unable to check status.
    */
-  async _checkIntegritySkipReindex() {
+  async _checkIntegritySkipReindex() { // eslint-disable-line require-await
     return this.checkIntegrity(true);
   },
 
@@ -203,22 +213,22 @@ this.PlacesDBUtils = {
     let logs = [];
 
     let stmts = await PlacesDBUtils._getBoundCoherenceStatements();
-    let allStatementsPromises = [];
     let coherenceCheck = true;
     await PlacesUtils.withConnectionWrapper(
       "PlacesDBUtils: coherence check:",
       db => db.executeTransaction(async () => {
         for (let {query, params} of stmts) {
           params = params ? params : null;
-          allStatementsPromises.push(db.execute(query, params).catch(ex => {
+          try {
+            await db.execute(query, params);
+          } catch (ex) {
             Cu.reportError(ex);
             coherenceCheck = false;
-          }));
+          }
         }
       })
     );
 
-    await Promise.all(allStatementsPromises);
     if (coherenceCheck) {
       logs.push("The database is coherent");
     } else {
@@ -757,11 +767,14 @@ this.PlacesDBUtils = {
   /**
    * Tries to vacuum the database.
    *
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
    * @return {Promise} resolves when database is vacuumed.
    * @resolves to an array of logs for this task.
    * @rejects if we are unable to vacuum database.
    */
-  async vacuum() {
+  async vacuum() { // eslint-disable-line require-await
     let logs = [];
     let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
     DBFile.append("places.sqlite");
@@ -787,10 +800,13 @@ this.PlacesDBUtils = {
   /**
    * Forces a full expiration on the database.
    *
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
    * @return {Promise} resolves when the database in cleaned up.
    * @resolves to an array of logs for this task.
    */
-  async expire() {
+  async expire() { // eslint-disable-line require-await
     let logs = [];
 
     let expiration = Cc["@mozilla.org/places/expiration;1"]
@@ -883,8 +899,11 @@ this.PlacesDBUtils = {
   /**
    * Collects telemetry data and reports it to Telemetry.
    *
+   * Note: although this function isn't actually async, we keep it async to
+   * allow us to maintain a simple, consistent API for the tasks within this object.
+   *
    */
-  async telemetry() {
+  async telemetry() { // eslint-disable-line require-await
     // This will be populated with one integer property for each probe result,
     // using the histogram name as key.
     let probeValues = {};
@@ -1034,7 +1053,9 @@ this.PlacesDBUtils = {
    * @param tasks
    *        Array of tasks to be executed, in form of pointers to methods in
    *        this module.
-   * @return a Map[taskName(String) -> Object]. The Object has the following properties:
+   * @return {Promise}
+   *        A promise that resolves with a Map[taskName(String) -> Object].
+   *        The Object has the following properties:
    *         - succeeded: boolean
    *         - logs: an array of strings containing the messages logged by the task
    */

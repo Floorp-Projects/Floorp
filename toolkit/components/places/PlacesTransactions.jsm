@@ -567,7 +567,7 @@ var TransactionsManager = {
       } finally {
         // We must enqueue clearing batching mode to ensure that any existing
         // transactions have completed before we clear the batching mode.
-        this._mainEnqueuer.enqueue(async () => {
+        this._mainEnqueuer.enqueue(() => {
           this._batching = false;
           this._createdBatchEntry = false;
         });
@@ -925,8 +925,8 @@ DefineTransaction.defineArrayInputProp("excludingAnnotations",
  * @resolves to the guid of the new item.
  */
 // TODO: Replace most of this with insertTree.
-async function createItemsFromBookmarksTree(tree, restoring = false,
-                                            excludingAnnotations = []) {
+function createItemsFromBookmarksTree(tree, restoring = false,
+                                      excludingAnnotations = []) {
   function extractLivemarkDetails(annos) {
     let feedURI = null, siteURI = null;
     annos = annos.filter(anno => {
@@ -1551,7 +1551,7 @@ PT.Tag.prototype = {
  */
 PT.Untag = DefineTransaction(["urls"], ["tags"]);
 PT.Untag.prototype = {
-  async execute({ urls, tags }) {
+  execute({ urls, tags }) {
     let onUndo = [], onRedo = [];
     for (let url of urls) {
       let uri = Services.io.newURI(url.href);

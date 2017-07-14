@@ -1191,7 +1191,7 @@ var remove = async function(db, {guids, urls}, onResult = null) {
   let onResultData = onResult ? [] : null;
   let pages = [];
   let hasPagesToRemove = false;
-  await db.execute(query, null, async function(row) {
+  await db.execute(query, null, function(row) {
     let hasForeign = row.getResultByName("foreign_count") != 0;
     if (!hasForeign) {
       hasPagesToRemove = true;
@@ -1275,7 +1275,7 @@ function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo = {}) {
 }
 
 // Inner implementation of History.insert.
-var insert = async function(db, pageInfo) {
+var insert = function(db, pageInfo) {
   let info = convertForUpdatePlaces(pageInfo);
 
   return new Promise((resolve, reject) => {
@@ -1294,7 +1294,7 @@ var insert = async function(db, pageInfo) {
 };
 
 // Inner implementation of History.insertMany.
-var insertMany = async function(db, pageInfos, onResult, onError) {
+var insertMany = function(db, pageInfos, onResult, onError) {
   let infos = [];
   let onResultData = [];
   let onErrorData = [];
