@@ -51,9 +51,9 @@ this.main = (function() {
   }
 
   function setIconActive(active, tabId) {
-    let path = active ? "icons/icon-highlight-32.svg" : "icons/icon-32.svg";
+    let path = active ? "icons/icon-highlight-32-v2.svg" : "icons/icon-32-v2.svg";
     if ((!hasSeenOnboarding) && !active) {
-      path = "icons/icon-starred-32.svg";
+      path = "icons/icon-starred-32-v2.svg";
     }
     browser.browserAction.setIcon({path, tabId}).catch((error) => {
       // FIXME: use errorCode
@@ -99,6 +99,12 @@ this.main = (function() {
 
   // This is called by startBackground.js, directly in response to browser.browserAction.onClicked
   exports.onClicked = catcher.watchFunction((tab) => {
+    if (tab.incognito) {
+      senderror.showError({
+        popupMessage: "PRIVATE_WINDOW"
+      });
+      return;
+    }
     if (shouldOpenMyShots(tab.url)) {
       if (!hasSeenOnboarding) {
         catcher.watchPromise(analytics.refreshTelemetryPref().then(() => {
@@ -136,6 +142,12 @@ this.main = (function() {
   exports.onClickedContextMenu = catcher.watchFunction((info, tab) => {
     if (!tab) {
       // Not in a page/tab context, ignore
+      return;
+    }
+    if (tab.incognito) {
+      senderror.showError({
+        popupMessage: "PRIVATE_WINDOW"
+      });
       return;
     }
     if (!urlEnabled(tab.url)) {

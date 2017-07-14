@@ -42,6 +42,10 @@ this.senderror = (function() {
     EMPTY_SELECTION: {
       title: browser.i18n.getMessage("emptySelectionErrorTitle")
     },
+    PRIVATE_WINDOW: {
+      title: browser.i18n.getMessage("privateWindowErrorTitle"),
+      info: browser.i18n.getMessage("privateWindowErrorDetails")
+    },
     generic: {
       title: browser.i18n.getMessage("genericErrorTitle"),
       info: browser.i18n.getMessage("genericErrorDetails"),
