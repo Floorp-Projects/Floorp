@@ -311,7 +311,8 @@ public:
   NS_IMETHOD Run() override
   {
     if (mNumber->AsElement()->State().HasState(NS_EVENT_STATE_FOCUS)) {
-      HTMLInputElement::FromContent(mTextField)->Focus();
+      IgnoredErrorResult ignored;
+      HTMLInputElement::FromContent(mTextField)->Focus(ignored);
     }
 
     return NS_OK;
@@ -590,7 +591,8 @@ nsNumberControlFrame::HandleFocusEvent(WidgetEvent* aEvent)
 {
   if (aEvent->mOriginalTarget != mTextField) {
     // Move focus to our text field
-    HTMLInputElement::FromContent(mTextField)->Focus();
+    IgnoredErrorResult ignored;
+    HTMLInputElement::FromContent(mTextField)->Focus(ignored);
   }
 }
 

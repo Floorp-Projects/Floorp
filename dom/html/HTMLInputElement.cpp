@@ -4487,7 +4487,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                 container->GetNextRadioButton(name, isMovingBack, this,
                                               getter_AddRefs(selectedRadioButton));
                 if (selectedRadioButton) {
-                  rv = selectedRadioButton->Focus();
+                  ErrorResult error;
+                  selectedRadioButton->Focus(error);
+                  rv = error.StealNSResult();
                   if (NS_SUCCEEDED(rv)) {
                     rv = DispatchSimulatedClick(selectedRadioButton,
                                                 aVisitor.mEvent->IsTrusted(),
