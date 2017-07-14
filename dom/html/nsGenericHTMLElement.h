@@ -306,11 +306,6 @@ public:
     *aOffsetHeight = OffsetHeight();
     return NS_OK;
   }
-  NS_IMETHOD Focus() final override {
-    mozilla::ErrorResult rv;
-    Focus(rv);
-    return rv.StealNSResult();
-  }
   NS_IMETHOD GetDraggable(bool* aDraggable) final override {
     *aDraggable = Draggable();
     return NS_OK;
