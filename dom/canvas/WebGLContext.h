@@ -1029,6 +1029,19 @@ private:
     bool ValidateCapabilityEnum(GLenum cap, const char* info);
     realGLboolean* GetStateTrackingSlot(GLenum cap);
 
+    // Allocation debugging variables
+    mutable uint64_t mDataAllocGLCallCount;
+
+    void OnDataAllocCall() const {
+       mDataAllocGLCallCount++;
+    }
+
+    uint64_t GetNumGLDataAllocCalls() const {
+       return mDataAllocGLCallCount;
+    }
+
+    void OnEndOfFrame() const;
+
 // -----------------------------------------------------------------------------
 // Texture funcions (WebGLContextTextures.cpp)
 public:
@@ -1591,8 +1604,6 @@ protected:
     bool InitAndValidateGL(FailureReason* const out_failReason);
 
     bool ValidateBlendEquationEnum(GLenum cap, const char* info);
-    bool ValidateBlendFuncDstEnum(GLenum mode, const char* info);
-    bool ValidateBlendFuncSrcEnum(GLenum mode, const char* info);
     bool ValidateBlendFuncEnumsCompatibility(GLenum sfactor, GLenum dfactor,
                                              const char* info);
     bool ValidateComparisonEnum(GLenum target, const char* info);

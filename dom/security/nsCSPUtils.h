@@ -24,7 +24,7 @@ namespace dom {
 
 /* =============== Logging =================== */
 
-void CSP_LogLocalizedStr(const char16_t* aName,
+void CSP_LogLocalizedStr(const char* aName,
                          const char16_t** aParams,
                          uint32_t aLength,
                          const nsAString& aSourceName,
@@ -35,7 +35,7 @@ void CSP_LogLocalizedStr(const char16_t* aName,
                          const char* aCategory,
                          uint64_t aInnerWindowID);
 
-void CSP_GetLocalizedStr(const char16_t* aName,
+void CSP_GetLocalizedStr(const char* aName,
                          const char16_t** aParams,
                          uint32_t aLength,
                          char16_t** outResult);

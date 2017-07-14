@@ -9,8 +9,8 @@ ac_add_options --disable-elf-hack
 ac_add_options --enable-debug
 ac_add_options --disable-sandbox
 ac_add_options --disable-profiling
+ac_add_options --enable-coverage
 
-MOZ_CODE_COVERAGE=1
 export CFLAGS="--coverage"
 export CXXFLAGS="--coverage"
 export LDFLAGS="--coverage -L$TOOLTOOL_DIR/gtk3/usr/local/lib"

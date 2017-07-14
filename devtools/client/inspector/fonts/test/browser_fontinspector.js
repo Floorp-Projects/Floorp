@@ -36,7 +36,7 @@ add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
   ok(!!view, "Font inspector document is alive.");
 
-  let viewDoc = view.chromeDoc;
+  let viewDoc = view.document;
 
   yield testBodyFonts(inspector, viewDoc);
   yield testDivFonts(inspector, viewDoc);

@@ -118,6 +118,7 @@ WebGLContext::WebGLContext()
     , mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings())
     , mNumPerfWarnings(0)
     , mMaxAcceptableFBStatusInvals(gfxPrefs::WebGLMaxAcceptableFBStatusInvals())
+    , mDataAllocGLCallCount(0)
     , mBufferFetchingIsVerified(false)
     , mBufferFetchingHasPerVertex(false)
     , mMaxFetchedVertices(0)
@@ -1588,6 +1589,16 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
     }
 }
 
+void
+WebGLContext::OnEndOfFrame() const
+{
+   if (gfxPrefs::WebGLSpewFrameAllocs()) {
+      GeneratePerfWarning("[webgl.perf.spew-frame-allocs] %" PRIu64 " data allocations this frame.",
+                           mDataAllocGLCallCount);
+   }
+   mDataAllocGLCallCount = 0;
+}
+
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
 bool
@@ -1617,6 +1628,7 @@ WebGLContext::PresentScreenBuffer()
     }
 
     mShouldPresent = false;
+    OnEndOfFrame();
 
     return true;
 }

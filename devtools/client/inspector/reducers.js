@@ -8,5 +8,7 @@
 // settings.
 
 exports.boxModel = require("devtools/client/inspector/boxmodel/reducers/box-model");
+exports.fontOptions = require("devtools/client/inspector/fonts/reducers/font-options");
+exports.fonts = require("devtools/client/inspector/fonts/reducers/fonts");
 exports.grids = require("devtools/client/inspector/grids/reducers/grids");
 exports.highlighterSettings = require("devtools/client/inspector/grids/reducers/highlighter-settings");

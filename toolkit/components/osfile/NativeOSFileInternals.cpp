@@ -530,7 +530,8 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      NS_ReleaseOnMainThread("AbstractDoEvent::ErrorEvent", event.forget());
+      NS_ReleaseOnMainThreadSystemGroup("AbstractDoEvent::ErrorEvent",
+                                        event.forget());
     }
   }
 
@@ -547,7 +548,8 @@ public:
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      NS_ReleaseOnMainThread("AbstractDoEvent::SuccessEvent", event.forget());
+      NS_ReleaseOnMainThreadSystemGroup("AbstractDoEvent::SuccessEvent",
+                                        event.forget());
     }
 
   }
@@ -748,7 +750,8 @@ public:
     if (!mResult) {
       return;
     }
-    NS_ReleaseOnMainThread("DoReadToTypedArrayEvent::mResult", mResult.forget());
+    NS_ReleaseOnMainThreadSystemGroup("DoReadToTypedArrayEvent::mResult",
+                                      mResult.forget());
   }
 
 protected:
@@ -785,7 +788,8 @@ public:
     if (!mResult) {
       return;
     }
-    NS_ReleaseOnMainThread("DoReadToStringEvent::mResult", mResult.forget());
+    NS_ReleaseOnMainThreadSystemGroup("DoReadToStringEvent::mResult",
+                                      mResult.forget());
   }
 
 protected:

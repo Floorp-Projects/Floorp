@@ -48,10 +48,12 @@ public:
 
   Box Next() const;
   Box FirstChild() const;
-  nsTArray<uint8_t> Read();
-  bool Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange);
+  nsTArray<uint8_t> Read() const;
+  bool Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange) const;
 
   static const uint64_t kMAX_BOX_READ;
+
+  const nsTArray<uint8_t>& Header() const { return mHeader; }
 
 private:
   bool Contains(MediaByteRange aRange) const;
@@ -60,6 +62,7 @@ private:
   uint64_t mBodyOffset;
   uint64_t mChildOffset;
   AtomType mType;
+  nsTArray<uint8_t> mHeader;
   const Box* mParent;
 };
 

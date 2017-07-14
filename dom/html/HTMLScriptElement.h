@@ -30,7 +30,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
-  using nsGenericHTMLElement::SetInnerHTML;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError) override;
 

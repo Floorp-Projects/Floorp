@@ -1088,12 +1088,12 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
             if (bundle) {
                 const char16_t* error[] = { errorText.get() };
                 if (mStylesheet) {
-                    bundle->FormatStringFromName(u"TransformError",
+                    bundle->FormatStringFromName("TransformError",
                                                  error, 1,
                                                  getter_Copies(errorMessage));
                 }
                 else {
-                    bundle->FormatStringFromName(u"LoadingError",
+                    bundle->FormatStringFromName("LoadingError",
                                                  error, 1,
                                                  getter_Copies(errorMessage));
                 }

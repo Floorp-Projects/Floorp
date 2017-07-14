@@ -160,7 +160,8 @@ BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPri
     nsCOMPtr<nsIURI> prinURI;
     rv = GetURI(getter_AddRefs(prinURI));
     if (NS_SUCCEEDED(rv) && prinURI) {
-      nsScriptSecurityManager::ReportError(nullptr, NS_LITERAL_STRING("CheckSameOriginError"), prinURI, aURI);
+      nsScriptSecurityManager::ReportError(nullptr, "CheckSameOriginError",
+                                           prinURI, aURI);
     }
   }
 

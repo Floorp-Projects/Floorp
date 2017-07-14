@@ -320,7 +320,7 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 
   nsAutoString msg;
   nsresult rv = mPIPStringBundle->GetStringFromName(
-    u"getPKCS12FilePasswordMessage", getter_Copies(msg));
+    "getPKCS12FilePasswordMessage", getter_Copies(msg));
   if (NS_FAILED(rv)) {
     return rv;
   }
