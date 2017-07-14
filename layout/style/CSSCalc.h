@@ -8,6 +8,7 @@
 #include "nsCSSValue.h"
 #include "nsStyleCoord.h"
 #include <math.h>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -48,8 +49,8 @@ namespace css {
  *   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
  *                        result_type aValue1, coeff_type aValue2);
  *
- *   result_type
- *   ComputeLeafValue(const input_type& aValue);
+ *   bool
+ *   ComputeLeafValue(result_type& aResult, const input_type& aValue);
  *
  *   coeff_type
  *   ComputeCoefficient(const coeff_type& aValue);
@@ -69,6 +70,10 @@ namespace css {
  * normalized to a single numeric value and derive from, if their coefficient
  * types are floats, FloatCoeffsAlreadyNormalizedCalcOps.)
  *
+ * ComputeCalc will fail and return false if ComputeLeafValue returns false at
+ * any point during the computation. ComputeLeafValue shall return false if and
+ * only if an unexpected (i.e., inconsistent) unit is encountered.
+ *
  * coeff_type will be float most of the time, but it's templatized so that
  * ParseCalc can be used with <integer>s too.
  *
@@ -78,40 +83,53 @@ namespace css {
  *   MergeMultiplicativeR for Times_R (value * coeff) and Divided
  */
 template <class CalcOps>
-static typename CalcOps::result_type
-ComputeCalc(const typename CalcOps::input_type& aValue, CalcOps &aOps)
+static bool
+ComputeCalc(typename CalcOps::result_type& aResult,
+            const typename CalcOps::input_type& aValue, CalcOps &aOps)
 {
   switch (CalcOps::GetUnit(aValue)) {
     case eCSSUnit_Calc: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 1, "unexpected length");
-      return ComputeCalc(arr->Item(0), aOps);
+      return ComputeCalc(aResult, arr->Item(0), aOps);
     }
     case eCSSUnit_Calc_Plus:
     case eCSSUnit_Calc_Minus: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 2, "unexpected length");
-      typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps),
-                                    rhs = ComputeCalc(arr->Item(1), aOps);
-      return aOps.MergeAdditive(CalcOps::GetUnit(aValue), lhs, rhs);
+      typename CalcOps::result_type lhs, rhs;
+      if (!ComputeCalc(lhs, arr->Item(0), aOps) ||
+          !ComputeCalc(rhs, arr->Item(1), aOps)) {
+        return false;
+      }
+      aResult = aOps.MergeAdditive(CalcOps::GetUnit(aValue), lhs, rhs);
+      return true;
     }
     case eCSSUnit_Calc_Times_L: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 2, "unexpected length");
       typename CalcOps::coeff_type lhs = aOps.ComputeCoefficient(arr->Item(0));
-      typename CalcOps::result_type rhs = ComputeCalc(arr->Item(1), aOps);
-      return aOps.MergeMultiplicativeL(CalcOps::GetUnit(aValue), lhs, rhs);
+      typename CalcOps::result_type rhs;
+      if (!ComputeCalc(rhs, arr->Item(1), aOps)) {
+        return false;
+      }
+      aResult = aOps.MergeMultiplicativeL(CalcOps::GetUnit(aValue), lhs, rhs);
+      return true;
     }
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided: {
       typename CalcOps::input_array_type *arr = aValue.GetArrayValue();
       MOZ_ASSERT(arr->Count() == 2, "unexpected length");
-      typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps);
+      typename CalcOps::result_type lhs;
+      if (!ComputeCalc(lhs, arr->Item(0), aOps)) {
+        return false;
+      }
       typename CalcOps::coeff_type rhs = aOps.ComputeCoefficient(arr->Item(1));
-      return aOps.MergeMultiplicativeR(CalcOps::GetUnit(aValue), lhs, rhs);
+      aResult = aOps.MergeMultiplicativeR(CalcOps::GetUnit(aValue), lhs, rhs);
+      return true;
     }
     default: {
-      return aOps.ComputeLeafValue(aValue);
+      return aOps.ComputeLeafValue(aResult, aValue);
     }
   }
 }
@@ -174,84 +192,6 @@ struct BasicCoordCalcOps
       aValue2 = 1.0f / aValue2;
     }
     return NSCoordSaturatingMultiply(aValue1, aValue2);
-  }
-};
-
-struct BasicFloatCalcOps
-{
-  typedef float result_type;
-  typedef float coeff_type;
-
-  result_type
-  MergeAdditive(nsCSSUnit aCalcFunction,
-                result_type aValue1, result_type aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Plus) {
-      return aValue1 + aValue2;
-    }
-    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
-               "unexpected unit");
-    return aValue1 - aValue2;
-  }
-
-  result_type
-  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       coeff_type aValue1, result_type aValue2)
-  {
-    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
-               "unexpected unit");
-    return aValue1 * aValue2;
-  }
-
-  result_type
-  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, coeff_type aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
-      return aValue1 * aValue2;
-    }
-    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Divided,
-               "unexpected unit");
-    return aValue1 / aValue2;
-  }
-};
-
-struct BasicIntegerCalcOps
-{
-  typedef int result_type;
-  typedef int coeff_type;
-
-  result_type
-  MergeAdditive(nsCSSUnit aCalcFunction,
-                result_type aValue1, result_type aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Plus) {
-      return aValue1 + aValue2;
-    }
-    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus,
-               "unexpected unit");
-    return aValue1 - aValue2;
-  }
-
-  result_type
-  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
-                       coeff_type aValue1, result_type aValue2)
-  {
-    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L,
-               "unexpected unit");
-    return aValue1 * aValue2;
-  }
-
-  result_type
-  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
-                       result_type aValue1, coeff_type aValue2)
-  {
-    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
-      return aValue1 * aValue2;
-    }
-    MOZ_ASSERT_UNREACHABLE("We should catch and prevent divisions in integer "
-                           "calc()s in the parser.");
-    return 1;
   }
 };
 
@@ -408,44 +348,83 @@ SerializeCalcInternal(const typename CalcOps::input_type& aValue, CalcOps &aOps)
 }
 
 /**
- * ReduceNumberCalcOps is a CalcOps implementation for pure-number calc()
- * (sub-)expressions, input as nsCSSValues.
+ * ReduceCalcOps is a CalcOps implementation for pure-number, pure-percent, and
+ * pure-integer calc() (sub-)expressions, input as nsCSSValues.
+ *
+ * Instantiate with the appropriate coeff/result type and unit, for example:
+ *   ReduceCalcOps<float, eCSSUnit_Percent>
+ *   ReduceCalcOps<int, eCSSUnit_Integer>
+ *   ReduceCalcOps<float, eCSSUnit_Number>
+ *
  * For example, nsCSSParser::ParseCalcMultiplicativeExpression uses it to
  * simplify numeric sub-expressions in order to check for division-by-zero.
  */
-struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps,
-                             public mozilla::css::CSSValueInputCalcOps
+template<typename type, nsCSSUnit unit>
+struct ReduceCalcOps : public mozilla::css::CSSValueInputCalcOps
 {
-  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  static_assert((std::is_same<type, int>::value && unit == eCSSUnit_Integer) ||
+                (std::is_same<type, float>::value &&
+                 (unit == eCSSUnit_Number || unit == eCSSUnit_Percent)),
+                "ReduceCalcOps: Invalid template arguments: must use "
+                "int coefficient with eCSSUnit_Integer, or "
+                "float coefficient with (eCSSUnit_Number or eCSSUnit_Percent)");
+
+  typedef type result_type;
+  typedef type coeff_type;
+
+  result_type
+  MergeAdditive(nsCSSUnit aCalcFunction,
+                result_type aValue1, result_type aValue2)
   {
-    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
-    return aValue.GetFloatValue();
+    if (aCalcFunction == eCSSUnit_Calc_Plus) {
+      return aValue1 + aValue2;
+    }
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Minus, "unexpected unit");
+    return aValue1 - aValue2;
+  }
+
+  result_type
+  MergeMultiplicativeL(nsCSSUnit aCalcFunction,
+                       coeff_type aValue1, result_type aValue2)
+  {
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Times_L, "unexpected unit");
+    return aValue1 * aValue2;
+  }
+
+  result_type
+  MergeMultiplicativeR(nsCSSUnit aCalcFunction,
+                       result_type aValue1, coeff_type aValue2)
+  {
+    if (aCalcFunction == eCSSUnit_Calc_Times_R) {
+      return aValue1 * aValue2;
+    }
+    MOZ_ASSERT(aCalcFunction == eCSSUnit_Calc_Divided, "unexpected unit");
+    MOZ_ASSERT(unit != eCSSUnit_Integer,
+               "We should catch and prevent divisions in integer "
+               "calc()s in the parser");
+    return aValue1 / aValue2;
+  }
+
+  bool ComputeLeafValue(result_type& aResult, const nsCSSValue& aValue)
+  {
+    if (aValue.GetUnit() != unit) {
+      return false;
+    }
+    aResult = unit == eCSSUnit_Percent ? aValue.GetPercentValue() :
+              unit == eCSSUnit_Integer ? aValue.GetIntValue() :
+                                         aValue.GetFloatValue();
+    return true;
   }
 
   coeff_type ComputeCoefficient(const nsCSSValue& aValue)
   {
-    return mozilla::css::ComputeCalc(aValue, *this);
-  }
-};
-
-/**
- * ReduceIntegerCalcOps is a CalcOps implementation for pure-integer calc()
- * (sub-)expressions, input as nsCSSValues.
- */
-struct ReduceIntegerCalcOps : public mozilla::css::BasicIntegerCalcOps,
-                              public mozilla::css::CSSValueInputCalcOps
-{
-  result_type
-  ComputeLeafValue(const nsCSSValue& aValue)
-  {
-    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Integer, "unexpected unit");
-    return aValue.GetIntValue();
-  }
-
-  coeff_type
-  ComputeCoefficient(const nsCSSValue& aValue)
-  {
-    return mozilla::css::ComputeCalc(aValue, *this);
+    coeff_type coeff;
+    if (!mozilla::css::ComputeCalc(coeff, aValue, *this)) {
+      // Something's wrong; parser should enforce that calc() coefficients are
+      // unitless, but failure in ComputeCalc means there was a unit mismatch.
+      MOZ_ASSERT_UNREACHABLE("unexpected unit");
+    }
+    return coeff;
   }
 };
 

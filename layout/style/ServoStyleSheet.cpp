@@ -414,7 +414,7 @@ ServoStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
 {
   // Ensure mRuleList is constructed.
   GetCssRulesInternal();
-  if (aIndex > mRuleList->Length()) {
+  if (aIndex >= mRuleList->Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }

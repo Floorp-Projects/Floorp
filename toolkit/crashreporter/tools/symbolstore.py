@@ -820,6 +820,7 @@ class Dumper_Mac(Dumper):
             subprocess.check_call(cmd, stdout=open(os.devnull, 'w'))
         except subprocess.CalledProcessError as e:
             print('Error running dsymutil: %s' % str(e), file=sys.stderr)
+            raise
 
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols

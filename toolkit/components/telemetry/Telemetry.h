@@ -113,6 +113,23 @@ void AccumulateCategorical(E enumValue) {
 };
 
 /**
+ * Adds sample to a keyed categorical histogram defined in TelemetryHistogramEnums.h
+ * This is the typesafe - and preferred - way to use the keyed categorical histograms
+ * by passing values from the corresponding Telemetry::LABELS_* enum.
+ *
+ * @param key - the string key
+ * @param enumValue - Label value from one of the Telemetry::LABELS_* enums.
+ */
+template<class E>
+void AccumulateCategoricalKeyed(const nsCString& key, E enumValue) {
+  static_assert(IsCategoricalLabelEnum<E>::value,
+                "Only categorical label enum types are supported.");
+  Accumulate(static_cast<HistogramID>(CategoricalLabelId<E>::value),
+             key,
+             static_cast<uint32_t>(enumValue));
+};
+
+/**
  * Adds sample to a categorical histogram defined in TelemetryHistogramEnums.h
  * This string will be matched against the labels defined in Histograms.json.
  * If the string does not match a label defined for the histogram, nothing will

@@ -36,6 +36,13 @@ this.permissions = class extends ExtensionAPI {
           }
 
           if (promptsEnabled) {
+            permissions = permissions.filter(perm => !context.extension.hasPermission(perm));
+            origins = origins.filter(origin => !context.extension.whiteListedHosts.subsumes(new MatchPattern(origin)));
+
+            if (permissions.length == 0 && origins.length == 0) {
+              return true;
+            }
+
             let browser = context.pendingEventBrowser || context.xulBrowser;
             let allow = await new Promise(resolve => {
               let subject = {

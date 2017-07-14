@@ -30,6 +30,7 @@ module.exports = {
     ".xml": require("../lib/processors/xbl-bindings")
   },
   rules: {
+    "avoid-Date-timing": require("../lib/rules/avoid-Date-timing"),
     "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
     "avoid-nsISupportsString-preferences":
       require("../lib/rules/avoid-nsISupportsString-preferences"),
@@ -59,6 +60,7 @@ module.exports = {
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
+    "avoid-Date-timing": "off",
     "avoid-removeChild": "off",
     "avoid-nsISupportsString-preferences": "off",
     "balanced-listeners": "off",

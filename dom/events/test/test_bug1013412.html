@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
 <head>
   <title>Test for Bug 1013412</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
@@ -81,10 +82,10 @@ function runTest() {
   var content = document.getElementById('content');
   if (iteration < 300) { // enough iterations that we would scroll to the bottom of 'content'
     iteration++;
-    synthesizeWheel(content, 100, 10,
-                    { deltaMode: WheelEvent.DOM_DELTA_LINE,
-                      deltaY: 1.0, lineOrPageDeltaY: 1 });
-    setTimeout(runTest, 0);
+    sendWheelAndPaint(content, 100, 10,
+                     { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                       deltaY: 1.0, lineOrPageDeltaY: 1 },
+                     runTest);
     return;
   }
   var scrollbox = document.getElementById('scrollbox');

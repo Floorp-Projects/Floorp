@@ -65,6 +65,8 @@ pub enum SpecificDisplayItem {
     SetGradientStops,
     PushNestedDisplayList,
     PopNestedDisplayList,
+    PushTextShadow(TextShadow),
+    PopTextShadow,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
@@ -84,7 +86,6 @@ pub struct TextDisplayItem {
     pub font_key: FontKey,
     pub size: Au,
     pub color: ColorF,
-    pub blur_radius: f32,
     pub glyph_options: Option<GlyphOptions>,
 } // IMPLICIT: glyphs: Vec<GlyphInstance>
 
@@ -222,6 +223,13 @@ pub struct BoxShadowDisplayItem {
     pub spread_radius: f32,
     pub border_radius: f32,
     pub clip_mode: BoxShadowClipMode,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct TextShadow {
+    pub offset: LayoutVector2D,
+    pub color: ColorF,
+    pub blur_radius: f32,
 }
 
 #[repr(u32)]

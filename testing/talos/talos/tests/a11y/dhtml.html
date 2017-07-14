@@ -17,7 +17,7 @@
 
     var container = document.getElementById("container");
     var lastchild = document.getElementById("lastchild");
-    var start = new Date();
+    var start = new Date();  // eslint-disable-line mozilla/avoid-Date-timing
     var i, div;
     for (i = 0; i < 2000; i++) {
       div = document.createElement("div");
@@ -43,7 +43,7 @@
 
   function postProcessingRecord(s) {
     // alert(new Date() - s);
-    tpRecordTime(new Date() - s, s);
+    tpRecordTime(new Date() - s, s);  // eslint-disable-line mozilla/avoid-Date-timing
   }
 </script>
 </head>

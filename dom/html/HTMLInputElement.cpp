@@ -6389,11 +6389,6 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
     value = defaultValue;
   }
 
-  if (IsSingleLineTextControl(true) &&
-      name.EqualsLiteral("isindex") &&
-      aFormSubmission->SupportsIsindexSubmission()) {
-    return aFormSubmission->AddIsindex(value);
-  }
   return aFormSubmission->AddNameValuePair(name, value);
 }
 

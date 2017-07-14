@@ -321,6 +321,7 @@ MediaDecoder::Shutdown()
     mOnPlaybackErrorEvent.Disconnect();
     mOnDecoderDoctorEvent.Disconnect();
     mOnMediaNotSeekable.Disconnect();
+    mOnEncrypted.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()
       ->Then(mAbstractMainThread, __func__, this,
@@ -484,6 +485,9 @@ MediaDecoder::SetStateMachineParameters()
     mAbstractMainThread, this, &MediaDecoder::OnDecoderDoctorEvent);
   mOnMediaNotSeekable = mDecoderStateMachine->OnMediaNotSeekable().Connect(
     mAbstractMainThread, this, &MediaDecoder::OnMediaNotSeekable);
+
+  mOnEncrypted = mReader->OnEncrypted().Connect(
+    mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DispatchEncrypted);
 }
 
 nsresult
@@ -724,13 +728,6 @@ MediaDecoder::OwnerHasError() const
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   return GetOwner()->HasError();
-}
-
-already_AddRefed<GMPCrashHelper>
-MediaDecoder::GetCrashHelper()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return GetOwner()->CreateGMPCrashHelper();
 }
 
 bool
@@ -1058,20 +1055,31 @@ MediaDecoder::DurationChanged()
   }
 }
 
+already_AddRefed<KnowsCompositor>
+MediaDecoder::GetCompositor()
+{
+  MediaDecoderOwner* owner = GetOwner();
+  nsIDocument* ownerDoc = owner ? owner->GetDocument() : nullptr;
+  RefPtr<LayerManager> layerManager =
+    ownerDoc ? nsContentUtils::LayerManagerForDocument(ownerDoc) : nullptr;
+  RefPtr<KnowsCompositor> knows =
+    layerManager ? layerManager->AsShadowForwarder() : nullptr;
+  return knows.forget();
+}
+
 void
 MediaDecoder::NotifyCompositor()
 {
-  MediaDecoderOwner* owner = GetOwner();
-  NS_ENSURE_TRUE_VOID(owner);
-
-  nsIDocument* ownerDoc = owner->GetDocument();
-  NS_ENSURE_TRUE_VOID(ownerDoc);
-
-  RefPtr<LayerManager> layerManager =
-    nsContentUtils::LayerManagerForDocument(ownerDoc);
-  if (layerManager) {
-    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
-    mCompositorUpdatedEvent.Notify(knowsCompositor);
+  RefPtr<KnowsCompositor> knowsCompositor = GetCompositor();
+  if (knowsCompositor) {
+    nsCOMPtr<nsIRunnable> r =
+      NewRunnableMethod<already_AddRefed<KnowsCompositor>&&>(
+        "MediaDecoderReader::UpdateCompositor",
+        mReader,
+        &MediaDecoderReader::UpdateCompositor,
+        knowsCompositor.forget());
+    mReader->OwnerThread()->Dispatch(r.forget(),
+                                     AbstractThread::DontAssertDispatchSuccess);
   }
 }
 

@@ -26,6 +26,7 @@ MediaDecoderStateMachine*
 ADTSDecoder::CreateStateMachine()
 {
   MediaDecoderReaderInit init(this);
+  init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   mReader = new MediaFormatReader(init, new ADTSDemuxer(mResource));
   return new MediaDecoderStateMachine(this, mReader);
 }

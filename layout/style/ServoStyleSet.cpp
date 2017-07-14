@@ -571,14 +571,11 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
 
   UpdateStylistIfNeeded();
 
-  bool skipFixup =
-    nsCSSAnonBoxes::AnonBoxSkipsParentDisplayBasedStyleFixup(aPseudoTag);
-
   const ServoComputedValues* parentStyle =
     aParentContext ? aParentContext->ComputedValues()
                    : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_GetForAnonymousBox(parentStyle, aPseudoTag, skipFixup,
+    Servo_ComputedValues_GetForAnonymousBox(parentStyle, aPseudoTag,
                                             mRawSet.get()).Consume();
 #ifdef DEBUG
   if (!computedValues) {
@@ -622,7 +619,7 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
   MOZ_ASSERT(!nsCSSAnonBoxes::IsNonInheritingAnonBox(nsCSSAnonBoxes::viewport),
              "viewport needs fixup to handle blockifying it");
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_GetForAnonymousBox(nullptr, aPseudoTag, true,
+    Servo_ComputedValues_GetForAnonymousBox(nullptr, aPseudoTag,
                                             mRawSet.get()).Consume();
 #ifdef DEBUG
   if (!computedValues) {

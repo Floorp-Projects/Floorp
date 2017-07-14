@@ -40,9 +40,12 @@ const PREF_SUGGEST_HISTORY_ONLYTYPED = [ "suggest.history.onlyTyped", false ];
 const PREF_SUGGEST_SEARCHES =       [ "suggest.searches",       false ];
 
 const PREF_MAX_CHARS_FOR_SUGGEST =  [ "maxCharsForSearchSuggestions", 20];
+const PREF_MAX_HISTORICAL_SUGGESTIONS =  [ "maxHistoricalSearchSuggestions", 0];
 
 const PREF_PRELOADED_SITES_ENABLED =  [ "usepreloadedtopurls.enabled",   true ];
 const PREF_PRELOADED_SITES_EXPIRE_DAYS = [ "usepreloadedtopurls.expire_days",  14 ];
+
+const PREF_MATCH_BUCKETS = [ "matchBuckets", "general:5,suggestion:Infinity" ];
 
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
@@ -61,15 +64,14 @@ const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
 // The default frecency value used when inserting matches with unknown frecency.
 const FRECENCY_DEFAULT = 1000;
 
-// Remote matches are appended when local matches are below a given frecency
-// threshold (FRECENCY_DEFAULT) as soon as they arrive.  However we'll
-// always try to have at least MINIMUM_LOCAL_MATCHES local matches.
-const MINIMUM_LOCAL_MATCHES = 6;
-
 // Extensions are allowed to add suggestions if they have registered a keyword
 // with the omnibox API. This is the maximum number of suggestions an extension
 // is allowed to add for a given search string.
+// This value includes the heuristic result.
 const MAXIMUM_ALLOWED_EXTENSION_MATCHES = 6;
+
+// After this time, we'll give up waiting for the extension to return matches.
+const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 5000;
 
 // A regex that matches "single word" hostnames for whitelisting purposes.
 // The hostname will already have been checked for general validity, so we
@@ -108,6 +110,33 @@ const TOKEN_TO_BEHAVIOR_MAP = new Map([
   ["#", "title"],
   ["@", "url"],
 ]);
+
+const MATCHTYPE = {
+  HEURISTIC: "heuristic",
+  GENERAL: "general",
+  SUGGESTION: "suggestion",
+  EXTENSION: "extension"
+};
+
+// Buckets for match insertion.
+// Every time a new match is returned, we go through each bucket in array order,
+// and look for the first one having available space for the given match type.
+// Each bucket is an array containing the following indices:
+//   0: The match type of the acceptable entries.
+//   1: available number of slots in this bucket.
+//
+// First buckets. Anything with an Infinity frecency ends up here.
+const DEFAULT_BUCKETS_BEFORE = [
+  [MATCHTYPE.HEURISTIC, 1],
+  [MATCHTYPE.EXTENSION, MAXIMUM_ALLOWED_EXTENSION_MATCHES - 1],
+];
+// => USER DEFINED BUCKETS WILL BE INSERTED HERE <=
+//
+// Catch-all buckets. Anything remaining ends up here.
+const DEFAULT_BUCKETS_AFTER = [
+  [MATCHTYPE.SUGGESTION, Infinity],
+  [MATCHTYPE.GENERAL, Infinity],
+];
 
 // If a URL starts with one of these prefixes, then we don't provide search
 // suggestions for it.
@@ -292,6 +321,20 @@ XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
                                    "nsITextToSubURI");
 
+function setTimeout(callback, ms) {
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
+}
+
+function convertBucketsCharPrefToArray(str) {
+  return str.toLowerCase()
+            .split(",")
+            .map(v => {
+              let bucket = v.split(":");
+              return [ bucket[0].trim(), Number(bucket[1]) ];
+            });
+}
+
 /**
  * Storage object for switch-to-tab entries.
  * This takes care of caching and registering open pages, that will be reused
@@ -461,15 +504,27 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.suggestTyped = prefs.get(...PREF_SUGGEST_HISTORY_ONLYTYPED);
     store.suggestSearches = prefs.get(...PREF_SUGGEST_SEARCHES);
     store.maxCharsForSearchSuggestions = prefs.get(...PREF_MAX_CHARS_FOR_SUGGEST);
+    store.maxHistoricalSearchSuggestions = prefs.get(...PREF_MAX_HISTORICAL_SUGGESTIONS);
     store.preloadedSitesEnabled = prefs.get(...PREF_PRELOADED_SITES_ENABLED);
     store.preloadedSitesExpireDays = prefs.get(...PREF_PRELOADED_SITES_EXPIRE_DAYS);
+    store.matchBuckets = prefs.get(...PREF_MATCH_BUCKETS);
+    // Convert from the string format to an array.
+    try {
+      store.matchBuckets = convertBucketsCharPrefToArray(store.matchBuckets)
+    } catch (ex) {
+      store.matchBuckets = convertBucketsCharPrefToArray(PREF_MATCH_BUCKETS[1]);
+    }
+    // Add the default buckets.
+    store.matchBuckets = [ ...DEFAULT_BUCKETS_BEFORE,
+                           ...store.matchBuckets,
+                           ...DEFAULT_BUCKETS_AFTER ];
     store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled", true);
 
     // If history is not set, onlyTyped value should be ignored.
     if (!store.suggestHistory) {
       store.suggestTyped = false;
     }
-    store.defaultBehavior = types.concat("Typed").reduce((memo, type) => {
+    store.defaultBehavior = [...types, "Typed"].reduce((memo, type) => {
       let prefValue = store["suggest" + type];
       return memo | (prefValue &&
                      Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()]);
@@ -757,21 +812,20 @@ function Search(searchString, searchParam, autocompleteListener,
   this._usedURLs = new Set();
   this._usedPlaceIds = new Set();
 
-  // Resolved when all the remote matches have been fetched.
-  this._remoteMatchesPromises = [];
+  // Resolved when all the matches providers have been fetched.
+  this._allMatchesPromises = [];
 
-  // The index to insert remote matches at.
-  this._remoteMatchesStartIndex = 0;
-  // The index to insert local matches at.
+  // Convert the buckets to readable objects with a count property.
+  this._buckets = Prefs.matchBuckets
+                       .map(([type, available]) => ({
+                         type,
+                         available,
+                         count: 0
+                       }));
 
-  this._localMatchesStartIndex = 0;
-
-  // Counts the number of inserted local matches.
-  this._localMatchesCount = 0;
-  // Counts the number of inserted remote matches.
-  this._remoteMatchesCount = 0;
-  // Counts the number of inserted extension matches.
-  this._extensionMatchesCount = 0;
+  // Counters for the number of matches per MATCHTYPE.
+  this._counts = Object.values(MATCHTYPE)
+                       .reduce((o, p) => { o[p] = 0; return o; }, {});
 
   this._searchStringHasWWW = this._strippedPrefix.endsWith("www.");
   this._searchStringWWW = this._searchStringHasWWW ? "www." : "";
@@ -973,6 +1027,17 @@ Search.prototype = {
         return;
     }
 
+    // Only add extension suggestions if the first token is a registered keyword
+    // and the search string has characters after the first token.
+    if (ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
+        this._originalSearchString.length > this._searchTokens[0].length) {
+      await this._matchExtensionSuggestions();
+      if (!this.pending)
+        return;
+    } else if (ExtensionSearchHandler.hasActiveInputSession()) {
+      ExtensionSearchHandler.handleInputCancelled();
+    }
+
     if (this._enableActions && this._searchTokens.length > 0) {
       await this._matchSearchSuggestions();
       if (!this.pending)
@@ -995,7 +1060,7 @@ Search.prototype = {
     // MATCH_BOUNDARY_ANYWHERE, search again with MATCH_ANYWHERE to get more
     // results.
     if (this._matchBehavior == MATCH_BOUNDARY_ANYWHERE &&
-        this._localMatchesCount < Prefs.maxRichResults) {
+        this._counts[MATCHTYPE.GENERAL] < Prefs.maxRichResults) {
       this._matchBehavior = MATCH_ANYWHERE;
       for (let [query, params] of [ this._adaptiveQuery,
                                     this._searchQuery ]) {
@@ -1005,22 +1070,11 @@ Search.prototype = {
       }
     }
 
-    // Only add extension suggestions if the first token is a registered keyword
-    // and the search string has characters after the first token.
-    if (ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
-        this._originalSearchString.length > this._searchTokens[0].length) {
-      await this._matchExtensionSuggestions();
-      if (!this.pending)
-        return;
-    } else if (ExtensionSearchHandler.hasActiveInputSession()) {
-      ExtensionSearchHandler.handleInputCancelled();
-    }
-
     this._matchPreloadedSites();
 
     // Ensure to fill any remaining space. Suggestions which come from extensions are
     // inserted at the beginning, so any suggestions
-    await Promise.all(this._remoteMatchesPromises);
+    await Promise.all(this._allMatchesPromises);
   },
 
 
@@ -1067,7 +1121,9 @@ Search.prototype = {
         looseMatches.push(match);
       }
     }
-    [...strictMatches, ...looseMatches].forEach(this._addMatch, this);
+    for (let match of [...strictMatches, ...looseMatches]) {
+      this._addMatch(match);
+    }
   },
 
   _matchPreloadedSiteForAutofill() {
@@ -1102,7 +1158,7 @@ Search.prototype = {
         value: searchStringSchemePrefix + site.uri.host + "/",
         style: "autofill preloaded-top-site",
         finalCompleteValue: site.uri.spec,
-        frecency: FRECENCY_DEFAULT,
+        frecency: Infinity
       };
       this._result.setDefaultIndex(0);
       this._addMatch(match);
@@ -1125,7 +1181,7 @@ Search.prototype = {
         // On loose match, result should always have "www."
         finalCompleteValue: site.uri.scheme + "://www." +
                             site._hostWithoutWWW + "/",
-        frecency: FRECENCY_DEFAULT,
+        frecency: Infinity
       };
       this._result.setDefaultIndex(0);
       this._addMatch(match);
@@ -1242,7 +1298,8 @@ Search.prototype = {
       PlacesSearchAutocompleteProvider.getSuggestionController(
         searchString,
         this._inPrivateWindow,
-        Prefs.maxRichResults,
+        Prefs.maxHistoricalSearchSuggestions,
+        Prefs.maxRichResults - Prefs.maxHistoricalSearchSuggestions,
         this._userContextId
       );
     let promise = this._searchSuggestionController.fetchCompletePromise
@@ -1255,14 +1312,15 @@ Search.prototype = {
           // The original string is used to properly compare with the next search.
           this._lastLowResultsSearchSuggestion = this._originalSearchString;
         }
-        while (this.pending && this._remoteMatchesCount < Prefs.maxRichResults) {
-          let [match, suggestion] = this._searchSuggestionController.consume();
-          if (!suggestion)
+        while (this.pending) {
+          let result = this._searchSuggestionController.consume();
+          if (!result)
             break;
+          let { match, suggestion, historical } = result;
           if (!looksLikeUrl(suggestion)) {
             // Don't include the restrict token, if present.
             let searchString = this._searchTokens.join(" ");
-            this._addSearchEngineMatch(match, searchString, suggestion);
+            this._addSearchEngineMatch(match, searchString, suggestion, historical);
           }
         }
       });
@@ -1272,7 +1330,7 @@ Search.prototype = {
       await promise;
       this.stop();
     } else {
-      this._remoteMatchesPromises.push(promise);
+      this._allMatchesPromises.push(promise);
     }
   },
 
@@ -1385,7 +1443,8 @@ Search.prototype = {
       // but the string does, it may cause pointless icon flicker on typing.
       icon: "page-icon:" + entry.url.href,
       style,
-      frecency: FRECENCY_DEFAULT });
+      frecency: Infinity
+    });
     return true;
   },
 
@@ -1436,7 +1495,7 @@ Search.prototype = {
       icon: match.iconUrl,
       style: "priority-search",
       finalCompleteValue: match.url,
-      frecency: FRECENCY_DEFAULT
+      frecency: Infinity
     });
     return true;
   },
@@ -1468,7 +1527,8 @@ Search.prototype = {
   },
 
   _addExtensionMatch(content, comment) {
-    if (this._extensionMatchesCount >= MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
+    let count = this._counts[MATCHTYPE.EXTENSION] + this._counts[MATCHTYPE.HEURISTIC];
+    if (count >= MAXIMUM_ALLOWED_EXTENSION_MATCHES) {
       return;
     }
 
@@ -1480,44 +1540,52 @@ Search.prototype = {
       comment,
       icon: "chrome://browser/content/extension.svg",
       style: "action extension",
-      frecency: FRECENCY_DEFAULT,
-      extension: true,
+      frecency: Infinity,
+      type: MATCHTYPE.EXTENSION
     });
   },
 
-  _addSearchEngineMatch(match, query, suggestion) {
+  _addSearchEngineMatch(searchMatch, query, suggestion = "", historical = false) {
     let actionURLParams = {
-      engineName: match.engineName,
+      engineName: searchMatch.engineName,
       input: suggestion || this._originalSearchString,
       searchQuery: query,
     };
     if (suggestion)
       actionURLParams.searchSuggestion = suggestion;
-    if (match.engineAlias) {
-      actionURLParams.alias = match.engineAlias;
+    if (searchMatch.engineAlias) {
+      actionURLParams.alias = searchMatch.engineAlias;
     }
     let value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
-
-    this._addMatch({
+    let match = {
       value,
-      comment: match.engineName,
-      icon: match.iconUrl,
+      comment: searchMatch.engineName,
+      icon: searchMatch.iconUrl,
       style: "action searchengine",
-      frecency: FRECENCY_DEFAULT,
-      remote: !!suggestion
-    });
+      frecency: FRECENCY_DEFAULT
+    };
+    if (suggestion)
+      match.type = MATCHTYPE.SUGGESTION;
+
+    this._addMatch(match);
   },
 
   _matchExtensionSuggestions() {
     let promise = ExtensionSearchHandler.handleSearch(this._searchTokens[0], this._originalSearchString,
       suggestions => {
-        suggestions.forEach(suggestion => {
+        for (let suggestion of suggestions) {
           let content = `${this._searchTokens[0]} ${suggestion.content}`;
           this._addExtensionMatch(content, suggestion.description);
-        });
+        }
       }
     );
-    this._remoteMatchesPromises.push(promise);
+    // Since the extension has no way to signale when it's done pushing
+    // results, we add a timeout racing with the addition.
+    let timeoutPromise = new Promise((resolve, reject) => {
+      setTimeout(() => reject(new Error("timeout waiting for the extension to add its results to the location bar")),
+                 MAXIMUM_ALLOWED_EXTENSION_TIME_MS);
+    });
+    this._allMatchesPromises.push(Promise.race([timeoutPromise, promise]).catch(Cu.reportError));
   },
 
   async _matchRemoteTabs() {
@@ -1566,7 +1634,7 @@ Search.prototype = {
           value,
           comment: this._originalSearchString,
           style: "action visiturl",
-          frecency: 0,
+          frecency: Infinity
         });
 
         return true;
@@ -1608,7 +1676,7 @@ Search.prototype = {
       value,
       comment: displayURL,
       style: "action visiturl",
-      frecency: 0,
+      frecency: Infinity
     };
 
     // We don't know if this url is in Places or not, and checking that would
@@ -1627,7 +1695,7 @@ Search.prototype = {
   },
 
   _onResultRow(row) {
-    if (this._localMatchesCount == 0) {
+    if (this._counts[MATCHTYPE.GENERAL] == 0) {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     }
     let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
@@ -1648,7 +1716,7 @@ Search.prototype = {
     this._addMatch(match);
     // If the search has been canceled by the user or by _addMatch, or we
     // fetched enough results, we can stop the underlying Sqlite query.
-    if (!this.pending || this._localMatchesCount == Prefs.maxRichResults)
+    if (!this.pending || this._counts[MATCHTYPE.GENERAL] == Prefs.maxRichResults)
       throw StopIteration;
   },
 
@@ -1682,6 +1750,14 @@ Search.prototype = {
   },
 
   _addMatch(match) {
+    if (typeof match.frecency != "number")
+      throw new Error("Frecency not provided");
+
+    if (this._addingHeuristicFirstMatch)
+      match.type = MATCHTYPE.HEURISTIC;
+    else if (typeof match.type != "string")
+      match.type = MATCHTYPE.GENERAL;
+
     // A search could be canceled between a query start and its completion,
     // in such a case ensure we won't notify any result for it.
     if (!this.pending)
@@ -1738,6 +1814,7 @@ Search.prototype = {
                                match.icon,
                                match.style,
                                match.finalCompleteValue);
+    this._counts[match.type]++;
 
     if (this._result.matchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, this);
@@ -1747,27 +1824,18 @@ Search.prototype = {
 
   _getInsertIndexForMatch(match) {
     let index = 0;
-    if (match.remote) {
-      // Append after local matches.
-      index = this._remoteMatchesStartIndex + this._remoteMatchesCount;
-      this._remoteMatchesCount++;
-    } else if (match.extension) {
-      index = this._localMatchesStartIndex;
-      this._localMatchesStartIndex++;
-      this._remoteMatchesStartIndex++;
-      this._extensionMatchesCount++;
-    } else {
-      // This is a local match.
-      if (match.frecency > FRECENCY_DEFAULT ||
-          this._localMatchesCount < MINIMUM_LOCAL_MATCHES) {
-        // Append before remote matches.
-        index = this._remoteMatchesStartIndex;
-        this._remoteMatchesStartIndex++
-      } else {
-        // Append after remote matches.
-        index = this._localMatchesCount + this._remoteMatchesCount;
+    for (let bucket of this._buckets) {
+      // Move to the next bucket if the match type is incompatible, or if there
+      // is no available space or if the frecency is below the threshold.
+      if (match.type != bucket.type || !bucket.available) {
+        index += bucket.count;
+        continue;
       }
-      this._localMatchesCount++;
+
+      index += bucket.count;
+      bucket.available--;
+      bucket.count++;
+      break;
     }
     return index;
   },
@@ -1853,6 +1921,8 @@ Search.prototype = {
     if (this._enableActions && openPageCount > 0 && this.hasBehavior("openpage")) {
       url = PlacesUtils.mozActionURI("switchtab", {url: escapedURL});
       action = "switchtab";
+      if (frecency == null)
+        frecency = FRECENCY_DEFAULT;
     }
 
     // Always prefer the bookmark title unless it is empty

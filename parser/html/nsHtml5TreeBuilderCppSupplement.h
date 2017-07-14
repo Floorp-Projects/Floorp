@@ -588,26 +588,6 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
 }
 
 void
-nsHtml5TreeBuilder::appendIsindexPrompt(nsIContentHandle* aParent)
-{
-  NS_PRECONDITION(aParent, "Null parent");
-
-  if (mBuilder) {
-    nsresult rv = nsHtml5TreeOperation::AppendIsindexPrompt(
-      static_cast<nsIContent*>(aParent),
-      mBuilder);
-    if (NS_FAILED(rv)) {
-      MarkAsBrokenAndRequestSuspension(rv);
-    }
-    return;
-  }
-
-  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppendIsindexPrompt, aParent);
-}
-
-void
 nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");

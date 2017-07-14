@@ -1362,7 +1362,7 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
-    state.frame_builder.dl_builder.push_iframe(rect.into(), pipeline_id);
+    state.frame_builder.dl_builder.push_iframe(rect.into(), None, pipeline_id);
 }
 
 #[no_mangle]
@@ -1482,7 +1482,6 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                     font_key,
                     colorf,
                     Au::from_f32_px(glyph_size),
-                    0.0,
                     glyph_options);
 }
 
