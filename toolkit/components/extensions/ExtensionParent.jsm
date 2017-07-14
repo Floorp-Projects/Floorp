@@ -245,7 +245,8 @@ ProxyMessenger = {
           result = res;
         }
       } catch (e) {
-        if (e.result != MessageChannel.RESULT_NO_HANDLER) {
+        if (e.result !== MessageChannel.RESULT_NO_HANDLER &&
+            e.result !== MessageChannel.RESULT_NO_RESPONSE) {
           throw e;
         }
         failures++;
