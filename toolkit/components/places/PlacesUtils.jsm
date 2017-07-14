@@ -2446,13 +2446,13 @@ XPCOMUtils.defineLazyGetter(this, "gKeywordsCachePromise", () =>
           }
 
           if (prop == "keyword") {
-            this._onKeywordChanged(guid, val, oldVal).catch(Cu.reportError);
+            this._onKeywordChanged(guid, val, oldVal);
           } else if (prop == "uri") {
             this._onUrlChanged(guid, val, oldVal).catch(Cu.reportError);
           }
         },
 
-        async _onKeywordChanged(guid, keyword, href) {
+        _onKeywordChanged(guid, keyword, href) {
           if (keyword.length == 0) {
             // We are removing a keyword.
             let keywords = keywordsForHref(href)

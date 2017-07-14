@@ -247,7 +247,7 @@ var StarUI = {
     );
   },
 
-  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
+  _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
     if (this.panel.state != "closed")
       return;
 
