@@ -123,9 +123,10 @@ GamepadServiceTest::AddGamepad(const nsAString& aID,
     return nullptr;
   }
 
+  // Only VR controllers has displayID, we give 0 to the general gamepads.
   GamepadAdded a(nsString(aID), 0,
                  aMapping, aHand,
-                 GamepadServiceType::Standard,
+                 GamepadServiceType::Standard, 0,
                  aNumButtons, aNumAxes, aNumHaptics);
   GamepadChangeEvent e(a);
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
