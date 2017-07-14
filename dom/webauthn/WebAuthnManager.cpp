@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
@@ -24,6 +25,13 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
+
+/***********************************************************************
+ * Protocol Constants
+ **********************************************************************/
+
+const uint8_t FLAG_TUP = 0x01; // Test of User Presence required
+const uint8_t FLAG_AT = 0x40; // Authenticator Data is provided
 
 /***********************************************************************
  * Statics
@@ -654,8 +662,19 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
 
   CryptoBuffer regData;
   if (NS_WARN_IF(!regData.Assign(aRegBuffer.Elements(), aRegBuffer.Length()))) {
-    mTransactionPromise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+    Cancel(NS_ERROR_OUT_OF_MEMORY);
     return;
+  }
+
+  mozilla::dom::CryptoBuffer aaguidBuf;
+  if (NS_WARN_IF(!aaguidBuf.SetCapacity(16, mozilla::fallible))) {
+    Cancel(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  // TODO: Adjust the AAGUID from all zeroes in Bug 1381575 (if needed)
+  // See https://github.com/w3c/webauthn/issues/506
+  for (int i=0; i<16; i++) {
+    aaguidBuf.AppendElement(0x00, mozilla::fallible);
   }
 
   // Decompose the U2F registration packet
@@ -664,12 +683,14 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
   CryptoBuffer attestationCertBuf;
   CryptoBuffer signatureBuf;
 
+  // Only handles attestation cert chains of length=1.
   nsresult rv = U2FDecomposeRegistrationResponse(regData, pubKeyBuf, keyHandleBuf,
                                                  attestationCertBuf, signatureBuf);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(rv);
     return;
   }
+  MOZ_ASSERT(keyHandleBuf.Length() <= 0xFFFF);
 
   CryptoBuffer clientDataBuf;
   if (!clientDataBuf.Assign(mClientData.ref())) {
@@ -691,13 +712,64 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
     return;
   }
 
+  // Construct the public key object
+  CryptoBuffer pubKeyObj;
+  rv = CBOREncodePublicKeyObj(pubKeyBuf, pubKeyObj);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
+
+  // Format:
+  // 32 bytes: SHA256 of the RP ID
+  // 1 byte: flags (TUP & AT)
+  // 4 bytes: sign counter
+  // variable: attestation data struct
+  // - 16 bytes: AAGUID
+  // - 2 bytes: Length of Credential ID
+  // - L bytes: Credential ID
+  // - variable: CBOR-format public key
+  // variable: CBOR-format extension auth data (optional, not flagged)
+
+  mozilla::dom::CryptoBuffer authDataBuf;
+  if (NS_WARN_IF(!authDataBuf.SetCapacity(32 + 1 + 4 + aaguidBuf.Length() + 2 +
+                                          keyHandleBuf.Length() +
+                                          pubKeyObj.Length(),
+                                          mozilla::fallible))) {
+    Cancel(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  authDataBuf.AppendElements(rpIdHashBuf, mozilla::fallible);
+  authDataBuf.AppendElement(FLAG_TUP | FLAG_AT, mozilla::fallible);
+  // During create credential, counter is always 0 for U2F
+  // See https://github.com/w3c/webauthn/issues/507
+  authDataBuf.AppendElement(0x00, mozilla::fallible);
+  authDataBuf.AppendElement(0x00, mozilla::fallible);
+  authDataBuf.AppendElement(0x00, mozilla::fallible);
+  authDataBuf.AppendElement(0x00, mozilla::fallible);
+
+  authDataBuf.AppendElements(aaguidBuf, mozilla::fallible);
+  authDataBuf.AppendElement((keyHandleBuf.Length() >> 8) & 0xFF, mozilla::fallible);
+  authDataBuf.AppendElement((keyHandleBuf.Length() >> 0) & 0xFF, mozilla::fallible);
+  authDataBuf.AppendElements(keyHandleBuf, mozilla::fallible);
+  authDataBuf.AppendElements(pubKeyObj, mozilla::fallible);
+
+  CryptoBuffer attObj;
+  rv = CBOREncodeAttestationObj(authDataBuf, attestationCertBuf, signatureBuf,
+                                attObj);
+  if (NS_FAILED(rv)) {
+    Cancel(rv);
+    return;
+  }
+
   // Create a new PublicKeyCredential object and populate its fields with the
   // values returned from the authenticator as well as the clientDataJSON
   // computed earlier.
   RefPtr<AuthenticatorAttestationResponse> attestation =
       new AuthenticatorAttestationResponse(mCurrentParent);
   attestation->SetClientDataJSON(clientDataBuf);
-  attestation->SetAttestationObject(regData);
+  attestation->SetAttestationObject(attObj);
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mCurrentParent);
   credential->SetRawId(keyHandleBuf);
