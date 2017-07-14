@@ -18,7 +18,9 @@ ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 
-  aDest.ClearAndRetainStorage();
+  if (!aDest.SetCapacity(aLen, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   for (uint32_t offset = 0; offset < aLen; ++offset) {
     uint8_t b;
@@ -104,7 +106,7 @@ U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
   // We have to parse the ASN.1 SEQUENCE on the outside to determine the cert's
   // length.
   pkix::Input cert;
-  if (pkix::der::ExpectTagAndGetValue(input, pkix::der::SEQUENCE, cert)
+  if (pkix::der::ExpectTagAndGetTLV(input, pkix::der::SEQUENCE, cert)
       != pkix::Success) {
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
@@ -124,6 +126,38 @@ U2FDecomposeRegistrationResponse(const CryptoBuffer& aResponse,
     return rv;
   }
 
+  MOZ_ASSERT(input.AtEnd());
+  return NS_OK;
+}
+
+nsresult
+U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
+                  /* out */ CryptoBuffer& aXcoord,
+                  /* out */ CryptoBuffer& aYcoord)
+{
+  pkix::Input pubKey;
+  pubKey.Init(aPubKeyBuf.Elements(), aPubKeyBuf.Length());
+
+  pkix::Reader input(pubKey);
+  uint8_t b;
+  if (input.Read(b) != pkix::Success) {
+    return NS_ERROR_DOM_UNKNOWN_ERR;
+  }
+  if (b != 0x04) {
+    return NS_ERROR_DOM_UNKNOWN_ERR;
+  }
+
+  nsresult rv = ReadToCryptoBuffer(input, aXcoord, 32);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = ReadToCryptoBuffer(input, aYcoord, 32);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  MOZ_ASSERT(input.AtEnd());
   return NS_OK;
 }
 

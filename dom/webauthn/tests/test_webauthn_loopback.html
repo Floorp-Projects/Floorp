@@ -8,6 +8,7 @@
   <script type="text/javascript" src="pkijs/asn1.js"></script>
   <script type="text/javascript" src="pkijs/x509_schema.js"></script>
   <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <script type="text/javascript" src="cbor/cbor.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -39,26 +40,27 @@ function() {
 
   testMakeCredential();
 
-  function checkCredentialValid(aCredInfo) {
+  function decodeCreatedCredential(aCredInfo) {
     /* PublicKeyCredential : Credential
        - rawId: Key Handle buffer pulled from U2F Register() Response
        - response : AuthenticatorAttestationResponse : AuthenticatorResponse
-         - attestationObject: RP ID Hash || U2F Sign() Response
+         - attestationObject: CBOR object
          - clientDataJSON: serialized JSON
        - clientExtensionResults: (not yet supported)
     */
 
     ok(aCredInfo.rawId.length > 0, "Key ID exists");
 
-    is(aCredInfo.response.attestationObject[0], 0x05, "Reserved byte is correct");
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
     is(clientData.origin, window.location.origin, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
-    return decodeU2FRegistration(aCredInfo.response.attestationObject)
-    .then(function(u2fObj) {
-      aCredInfo.u2fReg = u2fObj;
+    return webAuthnDecodeAttestation(aCredInfo.response.attestationObject.buffer)
+    .then(function(decodedResult) {
+      aCredInfo.clientDataObj = clientData;
+      aCredInfo.publicKeyHandle = decodedResult.publicKeyHandle;
+      aCredInfo.attestationObject = decodedResult.attestationObject;
       return aCredInfo;
     });
   }
@@ -114,7 +116,7 @@ function() {
       parameters: [param]
     };
     credm.create({publicKey: makeCredentialOptions})
-    .then(checkCredentialValid)
+    .then(decodeCreatedCredential)
     .then(testMakeDuplicate)
     .catch(function(aReason) {
       ok(false, aReason);
@@ -162,7 +164,7 @@ function() {
     credm.get({publicKey: publicKeyCredentialRequestOptions})
     .then(function(aAssertion) {
       /* Pass along the pubKey. */
-      return checkAssertionAndSigValid(aCredInfo.u2fReg.publicKey, aAssertion);
+      return checkAssertionAndSigValid(aCredInfo.publicKeyHandle, aAssertion);
     })
     .then(function(aSigVerifyResult) {
       ok(aSigVerifyResult, "Signing signature verified");

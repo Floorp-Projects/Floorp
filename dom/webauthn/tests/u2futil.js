@@ -127,24 +127,53 @@ function hexDecode(str) {
   return new Uint8Array(str.match(/../g).map(x => parseInt(x, 16)));
 }
 
-function decodeU2FRegistration(aRegData) {
-  if (aRegData[0] != 0x05) {
-    return Promise.reject("Sentinal byte != 0x05");
+function webAuthnDecodeAttestation(aAttestationBuf) {
+  let attObj = CBOR.decode(aAttestationBuf);
+  console.log("Attestation CBOR Object:", attObj);
+  if (!("authData" in attObj && "fmt" in attObj && "attStmt" in attObj)) {
+    throw "Invalid CBOR Attestation Object";
+  }
+  if (!("sig" in attObj.attStmt && "x5c" in attObj.attStmt)) {
+    throw "Invalid CBOR Attestation Statement";
   }
 
-  let keyHandleLength = aRegData[66];
-  let u2fRegObj = {
-    publicKeyBytes: aRegData.slice(1, 66),
-    keyHandleBytes: aRegData.slice(67, 67 + keyHandleLength),
-    attestationBytes: aRegData.slice(67 + keyHandleLength)
+  let rpIdHash = attObj.authData.slice(0, 32);
+  let flags = attObj.authData.slice(32, 33);
+  let counter = attObj.authData.slice(33, 37);
+  let attData = {};
+  attData.aaguid = attObj.authData.slice(37, 53);
+  attData.credIdLen = (attObj.authData[53] << 8) + attObj.authData[54];
+  attData.credId = attObj.authData.slice(55, 55 + attData.credIdLen);
+
+  console.log(":: CBOR Attestation Object Data ::");
+  console.log("RP ID Hash: " + hexEncode(rpIdHash));
+  console.log("Counter: " + hexEncode(counter) + " Flags: " + flags);
+  console.log("AAGUID: " + hexEncode(attData.aaguid));
+
+  cborPubKey = attObj.authData.slice(55 + attData.credIdLen);
+  var pubkeyObj = CBOR.decode(cborPubKey.buffer);
+  if (!("alg" in pubkeyObj && "x" in pubkeyObj && "y" in pubkeyObj)) {
+    throw "Invalid CBOR Public Key Object";
+  }
+  if (pubkeyObj.alg != "ES256") {
+    throw "Unexpected public key algorithm";
   }
 
-  u2fRegObj.keyHandle = bytesToBase64UrlSafe(u2fRegObj.keyHandleBytes);
+  let pubKeyBytes = assemblePublicKeyBytesData(pubkeyObj.x, pubkeyObj.y);
+  console.log(":: CBOR Public Key Object Data ::");
+  console.log("Algorithm: " + pubkeyObj.alg);
+  console.log("X: " + pubkeyObj.x);
+  console.log("Y: " + pubkeyObj.y);
+  console.log("Uncompressed (hex): " + hexEncode(pubKeyBytes));
 
-  return importPublicKey(u2fRegObj.publicKeyBytes)
-  .then(function(keyObj) {
-    u2fRegObj.publicKey = keyObj;
-    return u2fRegObj;
+  return importPublicKey(pubKeyBytes)
+  .then(function(aKeyHandle) {
+    return {
+      attestationObject: attObj,
+      attestationAuthData: attData,
+      publicKeyBytes: pubKeyBytes,
+      publicKeyHandle: aKeyHandle,
+    };
   });
 }
 
@@ -173,6 +202,19 @@ function deriveAppAndChallengeParam(appId, clientData) {
       challengeParam: new Uint8Array(digests[1]),
     };
   });
+}
+
+function assemblePublicKeyBytesData(xCoord, yCoord) {
+  // Produce an uncompressed EC key point. These start with 0x04, and then
+  // two 32-byte numbers denoting X and Y.
+  if (xCoord.length != 32 || yCoord.length != 32) {
+    throw ("Coordinates must be 32 bytes long");
+  }
+  let keyBytes = new Uint8Array(65);
+  keyBytes[0] = 0x04;
+  xCoord.map((x, i) => keyBytes[1 + i] = x);
+  yCoord.map((x, i) => keyBytes[33 + i] = x);
+  return keyBytes;
 }
 
 function assembleSignedData(appParam, presenceAndCounter, challengeParam) {
