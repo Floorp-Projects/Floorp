@@ -373,22 +373,30 @@ FileReader::ReadFileContent(Blob& aBlob,
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 
-  nsresult rv;
-  nsCOMPtr<nsIStreamTransportService> sts =
-    do_GetService(kStreamTransportServiceCID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-
   nsCOMPtr<nsIInputStream> stream;
   mBlob->GetInternalStream(getter_AddRefs(stream), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
+  bool nonBlocking = false;
+  aRv = stream->IsNonBlocking(&nonBlocking);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
   mAsyncStream = do_QueryInterface(stream);
-  if (!mAsyncStream) {
+
+  // We want to have a non-blocking nsIAsyncInputStream.
+  if (!mAsyncStream || !nonBlocking) {
+    nsresult rv;
+    nsCOMPtr<nsIStreamTransportService> sts =
+      do_GetService(kStreamTransportServiceCID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return;
+    }
+
     nsCOMPtr<nsITransport> transport;
     aRv = sts->CreateInputTransport(stream,
                                     /* aStartOffset */ 0,
