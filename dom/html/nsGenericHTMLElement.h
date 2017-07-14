@@ -275,17 +275,6 @@ public:
 
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
-  NS_IMETHOD GetAccessKey(nsAString& aAccessKey) final override {
-    nsString accessKey;
-    GetAccessKey(accessKey);
-    aAccessKey.Assign(accessKey);
-    return NS_OK;
-  }
-  NS_IMETHOD SetAccessKey(const nsAString& aAccessKey) final override {
-    mozilla::ErrorResult rv;
-    SetAccessKey(aAccessKey, rv);
-    return rv.StealNSResult();
-  }
   NS_IMETHOD GetSpellcheck(bool* aSpellcheck) final override {
     *aSpellcheck = Spellcheck();
     return NS_OK;
