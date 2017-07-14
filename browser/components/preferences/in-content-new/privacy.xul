@@ -80,6 +80,11 @@
   <preference id="privacy.donottrackheader.enabled"
               name="privacy.donottrackheader.enabled"
               type="bool"/>
+  <!-- DRM content -->
+  <preference id="media.eme.enabled"
+              name="media.eme.enabled"
+              type="bool"/>
+
   <!-- Popups -->
   <preference id="dom.disable_open_during_load"
               name="dom.disable_open_during_load"
@@ -171,48 +176,46 @@
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
 <stringbundle id="signonBundle" src="chrome://passwordmgr/locale/passwordmgr.properties"/>
 
-<hbox id="browserPrivacyCategory"
-      class="subcategory"
+<hbox id="header-privacy"
+      class="header"
       hidden="true"
       data-category="panePrivacy">
-  <label class="header-name" flex="1">&browserPrivacy.label;</label>
+  <label class="header-name" flex="1">&panePrivacySecurity.title;</label>
 </hbox>
 
-<!-- Passwords -->
-<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
-  <caption><label>&formsAndPasswords.label;</label></caption>
-
-  <vbox id="passwordSettings">
-    <hbox id="savePasswordsBox">
-      <checkbox id="savePasswords"
-                label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
-                preference="signon.rememberSignons"
-                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
-                flex="1" />
-      <button id="passwordExceptions"
-              class="accessory-button"
-              label="&passwordExceptions.label;"
-              accesskey="&passwordExceptions.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords_exceptions"
-              searchkeywords="&address.label;"/>
-    </hbox>
-    <hbox id="showPasswordBox" pack="end">
-      <button id="showPasswords"
-              class="accessory-button"
-              label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords"
-              searchkeywords="&savedLogins.title;"/>
-    </hbox>
-  </vbox>
-  <hbox id="masterPasswordRow">
-    <checkbox id="useMasterPassword"
-              label="&useMasterPassword.label;"
-              accesskey="&useMasterPassword.accesskey;"
-              flex="1"/>
-    <button id="changeMasterPassword"
+<!-- Permissions -->
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&permissions.label;</label></caption>
+  <separator class="thin"/>
+  <hbox align="start">
+    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
+              label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
+              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
+                                         'dom.disable_open_during_load');"
+              flex="1" />
+    <button id="popupPolicyButton"
             class="accessory-button"
-            label="&changeMasterPassword.label;"
-            accesskey="&changeMasterPassword.accesskey;"/>
+            label="&popupExceptions.label;"
+            accesskey="&popupExceptions.accesskey;"
+            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+  </hbox>
+  <hbox id="addonInstallBox">
+    <checkbox id="warnAddonInstall"
+              label="&warnOnAddonInstall.label;"
+              accesskey="&warnOnAddonInstall.accesskey;"
+              preference="xpinstall.whitelist.required"
+              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
+              flex="1" />
+    <button id="addonExceptions"
+            class="accessory-button"
+            label="&addonExceptions.label;"
+            accesskey="&addonExceptions.accesskey;"
+            searchkeywords="&address.label;
+                            &allow.label;
+                            &removepermission.label;
+                            &removeallpermissions.label;
+                            &button.cancel.label;
+                            &button.ok.label;"/>
   </hbox>
 </groupbox>
 
@@ -360,76 +363,42 @@
   </deck>
 </groupbox>
 
-<!-- Address Bar -->
-<groupbox id="locationBarGroup"
-          data-category="panePrivacy"
-          hidden="true">
-  <caption><label>&addressBar.label;</label></caption>
-  <label id="locationBarSuggestionLabel">&addressBar.suggest.label;</label>
-  <checkbox id="historySuggestion" label="&locbar.history.label;"
-            accesskey="&locbar.history.accesskey;"
-            preference="browser.urlbar.suggest.history"/>
-  <checkbox id="bookmarkSuggestion" label="&locbar.bookmarks.label;"
-            accesskey="&locbar.bookmarks.accesskey;"
-            preference="browser.urlbar.suggest.bookmark"/>
-  <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
-            accesskey="&locbar.openpage.accesskey;"
-            preference="browser.urlbar.suggest.openpage"/>
-  <label class="text-link" onclick="gotoPref('general')">
-    &suggestionSettings2.label;
-  </label>
-</groupbox>
+<!-- Passwords -->
+<groupbox id="passwordsGroup" orient="vertical" data-category="panePrivacy" hidden="true">
+  <caption><label>&formsAndPasswords.label;</label></caption>
 
-<!-- Cache -->
-<groupbox id="cacheGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&httpCache.label;</label></caption>
-
-  <hbox align="center">
-    <label id="actualDiskCacheSize" flex="1"/>
-    <button id="clearCacheButton"
-            class="accessory-button"
-            icon="clear"
-            label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
-  </hbox>
-  <checkbox preference="browser.cache.disk.smart_size.enabled"
-            id="allowSmartSize"
-            onsyncfrompreference="return gPrivacyPane.readSmartSizeEnabled();"
-            label="&overrideSmartCacheSize.label;"
-            accesskey="&overrideSmartCacheSize.accesskey;"/>
-  <hbox align="center" class="indent">
-    <label id="useCacheBefore" control="cacheSize"
-            accesskey="&limitCacheSizeBefore.accesskey;">
-      &limitCacheSizeBefore.label;
-    </label>
-    <textbox id="cacheSize" type="number" size="4" max="1024"
-              aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
-    <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
-  </hbox>
-</groupbox>
-
-<!-- Site Data -->
-<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
-  <caption><label>&siteData.label;</label></caption>
-
-  <hbox align="baseline">
-    <label id="totalSiteDataSize"></label>
-    <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
-    <spacer flex="1" />
-    <button id="clearSiteDataButton"
-            class="accessory-button"
-            icon="clear"
-            label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
-  </hbox>
-  <vbox align="end">
-    <button id="siteDataSettings"
-            class="accessory-button"
-            label="&siteDataSettings.label;"
-            accesskey="&siteDataSettings.accesskey;"
-            searchkeywords="&window.title;
-                            &hostCol.label;
-                            &statusCol.label;
-                            &usageCol.label;"/>
+  <vbox id="passwordSettings">
+    <hbox id="savePasswordsBox">
+      <checkbox id="savePasswords"
+                label="&rememberLogins1.label;" accesskey="&rememberLogins1.accesskey;"
+                preference="signon.rememberSignons"
+                onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
+                flex="1" />
+      <button id="passwordExceptions"
+              class="accessory-button"
+              label="&passwordExceptions.label;"
+              accesskey="&passwordExceptions.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords_exceptions"
+              searchkeywords="&address.label;"/>
+    </hbox>
+    <hbox id="showPasswordBox" pack="end">
+      <button id="showPasswords"
+              class="accessory-button"
+              label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
+              preference="pref.privacy.disable_button.view_passwords"
+              searchkeywords="&savedLogins.title;"/>
+    </hbox>
   </vbox>
+  <hbox id="masterPasswordRow">
+    <checkbox id="useMasterPassword"
+              label="&useMasterPassword.label;"
+              accesskey="&useMasterPassword.accesskey;"
+              flex="1"/>
+    <button id="changeMasterPassword"
+            class="accessory-button"
+            label="&changeMasterPassword.label;"
+            accesskey="&changeMasterPassword.accesskey;"/>
+  </hbox>
 </groupbox>
 
 <!-- Tracking -->
@@ -504,15 +473,9 @@
   </vbox>
 </groupbox>
 
-<hbox id="permissionsCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="panePrivacy">
-  <label class="header-name" flex="1">&permissions.label;</label>
-</hbox>
-
-<!-- Permissions -->
-<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true">
+<!-- Notifications -->
+<groupbox id="notificationsGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&notificationsPolicy.label;</label></caption>
   <grid>
     <columns>
       <column flex="1"/>
@@ -544,88 +507,31 @@
     <label id="notificationsDoNotDisturbDetails"
            class="indent">&notificationsDoNotDisturbDetails.value;</label>
   </vbox>
-
-  <hbox align="start">
-    <checkbox id="popupPolicy" preference="dom.disable_open_during_load"
-              label="&blockPopups.label;" accesskey="&blockPopups.accesskey;"
-              onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
-                                         'dom.disable_open_during_load');"
-              flex="1" />
-    <button id="popupPolicyButton"
-            class="accessory-button"
-            label="&popupExceptions.label;"
-            accesskey="&popupExceptions.accesskey;"
-            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
-  </hbox>
-
-  <hbox id="addonInstallBox">
-    <checkbox id="warnAddonInstall"
-              label="&warnOnAddonInstall.label;"
-              accesskey="&warnOnAddonInstall.accesskey;"
-              preference="xpinstall.whitelist.required"
-              onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
-              flex="1" />
-    <button id="addonExceptions"
-            class="accessory-button"
-            label="&addonExceptions.label;"
-            accesskey="&addonExceptions.accesskey;"
-            searchkeywords="&address.label;
-                            &allow.label;
-                            &removepermission.label;
-                            &removeallpermissions.label;
-                            &button.cancel.label;
-                            &button.ok.label;"/>
-  </hbox>
 </groupbox>
 
-<hbox id="dataCollectionCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="panePrivacy">
-  <label class="header-name" flex="1">&dataCollection.label;</label>
-</hbox>
-
-<!-- Firefox Data Collection and Use -->
-#ifdef MOZ_DATA_REPORTING
-<groupbox id="dataCollectionGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
-  <description>
-    &dataCollectionDesc.label;<label id="dataCollectionPrivacyNotice" class="learnMore text-link">&dataCollectionPrivacyNotice.label;</label>
-  </description>
-
-  <vbox>
-    <hbox align="center">
-      <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
-                accesskey="&enableHealthReport1.accesskey;"/>
-      <label id="FHRLearnMore"
-             class="learnMore text-link">&healthReportLearnMore.label;</label>
-    </hbox>
-#ifndef MOZ_TELEMETRY_REPORTING
-    <description id="TelemetryDisabledDesc" class="indent" control="telemetryGroup">&healthReportingDisabled.label;</description>
-#endif
-  </vbox>
-#ifdef MOZ_CRASHREPORTER
-  <hbox align="center">
-    <checkbox id="automaticallySubmitCrashesBox"
-              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
-              label="&alwaysSubmitCrashReports1.label;"
-              accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
-    <label id="crashReporterLearnMore"
-           class="learnMore text-link">&crashReporterLearnMore.label;</label>
-  </hbox>
-#endif
+<!-- Location Bar -->
+<groupbox id="locationBarGroup"
+          data-category="panePrivacy"
+          hidden="true">
+  <caption><label>&locationBar.label;</label></caption>
+  <label id="locationBarSuggestionLabel">&locbar.suggest2.label;</label>
+  <checkbox id="historySuggestion" label="&locbar.history.label;"
+            accesskey="&locbar.history.accesskey;"
+            preference="browser.urlbar.suggest.history"/>
+  <checkbox id="bookmarkSuggestion" label="&locbar.bookmarks.label;"
+            accesskey="&locbar.bookmarks.accesskey;"
+            preference="browser.urlbar.suggest.bookmark"/>
+  <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
+            accesskey="&locbar.openpage.accesskey;"
+            preference="browser.urlbar.suggest.openpage"/>
+  <label class="text-link" onclick="gotoPref('general')">
+    &suggestionSettings2.label;
+  </label>
 </groupbox>
-#endif
 
-<hbox id="securityCategory"
-      class="subcategory"
-      hidden="true"
-      data-category="panePrivacy">
-  <label class="header-name" flex="1">&security.label;</label>
-</hbox>
-
-<!-- addons, forgery (phishing) UI Security -->
-<groupbox id="addonsPhishingGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&phishingProtection.label;</label></caption>
+<!-- Forgery (phishing) UI Security -->
+<groupbox id="phishingGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&security.label;</label></caption>
   <checkbox id="enableSafeBrowsing"
             label="&enableSafeBrowsing.label;"
             accesskey="&enableSafeBrowsing.accesskey;" />
@@ -707,6 +613,113 @@
   </hbox>
 </groupbox>
 
+<!-- DRM Content -->
+<groupbox id="drmGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&drmContent.label;</label></caption>
+  <grid id="contentGrid2">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-2">
+      <row id="playDRMContentRow">
+        <hbox align="center">
+          <checkbox id="playDRMContent" preference="media.eme.enabled"
+                    label="&playDRMContent.label;" accesskey="&playDRMContent.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link">
+            &playDRMContent.learnMore.label;
+          </label>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+<!-- Containers -->
+<groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
+  <vbox id="browserContainersbox" hidden="true">
+    <caption><label>&browserContainersHeader.label;</label></caption>
+    <hbox align="center">
+      <checkbox id="browserContainersCheckbox"
+                label="&browserContainersEnabled.label;"
+                accesskey="&browserContainersEnabled.accesskey;"
+                preference="privacy.userContext.enabled"
+                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
+      <label id="browserContainersLearnMore" class="learnMore text-link">
+        &browserContainersLearnMore.label;
+      </label>
+      <spacer flex="1"/>
+      <button id="browserContainersSettings"
+              class="accessory-button"
+              label="&browserContainersSettings.label;"
+              accesskey="&browserContainersSettings.accesskey;"
+              searchkeywords="&addButton.label;
+                              &preferencesButton.label;
+                              &removeButton.label;"/>
+    </hbox>
+  </vbox>
+</groupbox>
+
+<!-- Network -->
+<!-- Connection -->
+<groupbox id="connectionGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&connection.label;</label></caption>
+
+  <hbox align="center">
+    <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+    <button id="connectionSettings"
+            class="accessory-button"
+            icon="network"
+            label="&connectionSettings.label;"
+            accesskey="&connectionSettings.accesskey;"
+            searchkeywords="&connectionsDialog.title;
+                            &noProxyTypeRadio.label;
+                            &WPADTypeRadio.label;
+                            &systemTypeRadio.label;
+                            &manualTypeRadio.label;
+                            &http.label;
+                            &ssl.label;
+                            &ftp.label;
+                            &socks.label;
+                            &socks4.label;
+                            &socks5.label;
+                            &noproxy.label;
+                            &noproxyExplain.label;
+                            &shareproxy.label;
+                            &autoTypeRadio.label;
+                            &reload.label;
+                            &autologinproxy.label;
+                            &socksRemoteDNS.label2;"/>
+  </hbox>
+</groupbox>
+
+<!-- Cache -->
+<groupbox id="cacheGroup" data-category="panePrivacy" hidden="true">
+  <caption><label>&httpCache.label;</label></caption>
+
+  <hbox align="center">
+    <label id="actualDiskCacheSize" flex="1"/>
+    <button id="clearCacheButton"
+            class="accessory-button"
+            icon="clear"
+            label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"/>
+  </hbox>
+  <checkbox preference="browser.cache.disk.smart_size.enabled"
+            id="allowSmartSize"
+            onsyncfrompreference="return gPrivacyPane.readSmartSizeEnabled();"
+            label="&overrideSmartCacheSize.label;"
+            accesskey="&overrideSmartCacheSize.accesskey;"/>
+  <hbox align="center" class="indent">
+    <label id="useCacheBefore" control="cacheSize"
+            accesskey="&limitCacheSizeBefore.accesskey;">
+      &limitCacheSizeBefore.label;
+    </label>
+    <textbox id="cacheSize" type="number" size="4" max="1024"
+              aria-labelledby="useCacheBefore cacheSize useCacheAfter"/>
+    <label id="useCacheAfter" flex="1">&limitCacheSizeAfter.label;</label>
+  </hbox>
+</groupbox>
+
 <!-- Offline apps -->
 <groupbox id="offlineGroup" data-category="panePrivacy" hidden="true" data-hidden-from-search="true">
   <caption><label>&offlineStorage2.label;</label></caption>
@@ -746,3 +759,73 @@
     </vbox>
   </hbox>
 </groupbox>
+
+<!-- Site Data -->
+<groupbox id="siteDataGroup" hidden="true" data-category="panePrivacy" data-hidden-from-search="true">
+  <caption><label>&siteData.label;</label></caption>
+
+  <hbox align="baseline">
+    <label id="totalSiteDataSize"></label>
+    <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+    <spacer flex="1" />
+    <button id="clearSiteDataButton"
+            class="accessory-button"
+            icon="clear"
+            label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
+  </hbox>
+  <vbox align="end">
+    <button id="siteDataSettings"
+            class="accessory-button"
+            label="&siteDataSettings.label;"
+            accesskey="&siteDataSettings.accesskey;"
+            searchkeywords="&window.title;
+                            &hostCol.label;
+                            &statusCol.label;
+                            &usageCol.label;"/>
+  </vbox>
+</groupbox>
+
+<!-- Data Choices -->
+#ifdef MOZ_DATA_REPORTING
+
+<groupbox id="telemetryGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+<caption><label>&reports.label;</label></caption>
+#ifndef MOZ_TELEMETRY_REPORTING
+  <description id="TelemetryDisabledDesc" control="telemetryGroup">&healthReportingDisabled.label;</description>
+#endif
+
+  <hbox align="center">
+    <checkbox id="submitHealthReportBox" label="&enableHealthReport.label;"
+              accesskey="&enableHealthReport.accesskey;"/>
+    <label id="FHRLearnMore"
+           class="learnMore text-link">&healthReportLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&healthReportDesc.label;</description>
+  <vbox class="indent">
+    <hbox align="center">
+      <checkbox id="submitTelemetryBox" preference="toolkit.telemetry.enabled"
+                label="&enableTelemetryData.label;"
+                accesskey="&enableTelemetryData.accesskey;"/>
+      <label id="telemetryLearnMore"
+             class="learnMore text-link">&telemetryLearnMore.label;</label>
+    </hbox>
+    <description id="telemetryDataDesc"
+                 class="indent">&telemetryDesc.label;</description>
+  </vbox>
+</groupbox>
+
+#ifdef MOZ_CRASHREPORTER
+<groupbox id="crashReporterGroup" data-category="panePrivacy" data-subcategory="reports" hidden="true">
+  <hbox align="center">
+    <checkbox id="automaticallySubmitCrashesBox"
+              preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+              label="&alwaysSubmitCrashReports.label;"
+              accesskey="&alwaysSubmitCrashReports.accesskey;"/>
+    <label id="crashReporterLearnMore"
+           class="learnMore text-link">&crashReporterLearnMore.label;</label>
+  </hbox>
+  <description class="indent">&crashReporterDesc2.label;</description>
+</groupbox>
+
+#endif
+#endif

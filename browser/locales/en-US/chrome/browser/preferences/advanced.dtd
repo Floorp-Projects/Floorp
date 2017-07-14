@@ -6,10 +6,14 @@
 
 <!ENTITY generalTab.label                "General">
 
+<!ENTITY accessibility.label             "Accessibility">
+
 <!ENTITY useCursorNavigation.label       "Always use the cursor keys to navigate within pages">
 <!ENTITY useCursorNavigation.accesskey   "c">
 <!ENTITY searchOnStartTyping.label       "Search for text when you start typing">
 <!ENTITY searchOnStartTyping.accesskey   "x">
+<!ENTITY blockAutoReload.label           "Warn you when websites try to redirect or reload the page">
+<!ENTITY blockAutoReload.accesskey       "b">
 <!ENTITY useOnScreenKeyboard.label       "Show a touch keyboard when necessary">
 <!ENTITY useOnScreenKeyboard.accesskey   "k">
 
@@ -29,21 +33,24 @@ disabled data sharing options in developer builds or builds with no Telemetry su
 available. -->
 <!ENTITY healthReportingDisabled.label   "Data reporting is disabled for this build configuration">
 
-<!ENTITY enableHealthReport1.label       "Allow &brandShortName; to automatically send technical and interaction data to Mozilla">
-<!ENTITY enableHealthReport1.accesskey   "R">
+<!ENTITY healthReportDesc.label          "Helps you understand your browser performance and shares data with &vendorShortName; about your browser health">
+<!ENTITY enableHealthReport.label        "Enable &brandShortName; Health Report">
+<!ENTITY enableHealthReport.accesskey    "R">
 <!ENTITY healthReportLearnMore.label     "Learn more">
 
-<!ENTITY dataCollection.label            "&brandShortName; Data Collection and Use">
-<!ENTITY dataCollectionDesc.label        "We strive to provide you with choices and collect only what we need to provide and improve &brandShortName; for everyone. We always ask permission before receiving personal information.">
-<!ENTITY dataCollectionPrivacyNotice.label    "PrivacyNotice">
+<!ENTITY telemetryDesc.label             "Shares performance, usage, hardware and customization data about your browser with &vendorShortName; to help us make &brandShortName; better">
+<!ENTITY enableTelemetryData.label       "Share Additional Data (i.e., Telemetry)">
+<!ENTITY enableTelemetryData.accesskey   "T">
+<!ENTITY telemetryLearnMore.label        "Learn more">
 
-<!ENTITY alwaysSubmitCrashReports1.label  "Allow &brandShortName; to send crash reports to Mozilla">
-<!ENTITY alwaysSubmitCrashReports1.accesskey "c">
-<!ENTITY crashReporterLearnMore.label    "Learn more">
+<!ENTITY crashReporterDesc2.label         "Crash reports help &vendorShortName; fix problems and make your browser more stable and secure">
+<!ENTITY alwaysSubmitCrashReports.label   "Allow &brandShortName; to send backlogged crash reports on your behalf">
+<!ENTITY alwaysSubmitCrashReports.accesskey "c">
+<!ENTITY crashReporterLearnMore.label     "Learn more">
 
 <!ENTITY networkTab.label                "Network">
 
-<!ENTITY networkProxy.label              "Network Proxy">
+<!ENTITY connection.label                "Connection">
 
 <!ENTITY connectionDesc.label            "Configure how &brandShortName; connects to the Internet">
 <!ENTITY connectionSettings.label        "Settings…">
@@ -108,6 +115,8 @@ available. -->
 
 <!ENTITY enableSearchUpdate2.label       "Automatically update search engines">
 <!ENTITY enableSearchUpdate2.accesskey   "e">
+
+<!ENTITY reports.label                   "Reports">
 
 <!ENTITY offlineStorageNotify.label               "Tell you when a website asks to store data for offline use">
 <!ENTITY offlineStorageNotify.accesskey           "T">
