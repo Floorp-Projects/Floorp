@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.widget;
 
+import android.graphics.Color;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
@@ -160,7 +161,7 @@ public class FaviconView extends ImageView {
         // We assume Favicons are still squares and only bother with the background if more than 3px
         // of it would be displayed.
         if (Math.abs(mIconBitmap.getWidth() - getWidth()) < 3) {
-            mDominantColor = 0;
+            mDominantColor = Color.TRANSPARENT;
         }
     }
 
@@ -205,7 +206,7 @@ public class FaviconView extends ImageView {
 
     private void showNoImage() {
         setImageDrawable(null);
-        mDominantColor = 0;
+        mDominantColor = Color.TRANSPARENT;
     }
 
     /**
@@ -215,7 +216,7 @@ public class FaviconView extends ImageView {
         showNoImage();
         mUnscaledBitmap = null;
         mIconBitmap = null;
-        mDominantColor = 0;
+        mDominantColor = Color.TRANSPARENT;
         mScalingExpected = false;
     }
 
