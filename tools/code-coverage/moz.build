@@ -29,5 +29,6 @@ if CONFIG['MOZ_CODE_COVERAGE']:
     include('/ipc/chromium/chromium-config.mozbuild')
 
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+    MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
     FINAL_LIBRARY = 'xul'
