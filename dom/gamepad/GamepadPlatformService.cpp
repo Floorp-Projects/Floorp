@@ -96,9 +96,10 @@ GamepadPlatformService::AddGamepad(const char* aID,
   MOZ_ASSERT(!NS_IsMainThread());
 
   uint32_t index = ++mGamepadIndex;
+  // Only VR controllers has displayID, we give 0 to the general gamepads.
   GamepadAdded a(NS_ConvertUTF8toUTF16(nsDependentCString(aID)), index,
                  aMapping, aHand, GamepadServiceType::Standard,
-                 aNumButtons, aNumAxes, aHaptics);
+                 0, aNumButtons, aNumAxes, aHaptics);
 
   NotifyGamepadChange<GamepadAdded>(a);
   return index;
