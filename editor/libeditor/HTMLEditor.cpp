@@ -657,6 +657,10 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
       nsresult rv = NS_OK;
       if (HTMLEditUtils::IsTableElement(blockParent)) {
         rv = TabInTable(aKeyboardEvent->IsShift(), &handled);
+        // TabInTable might cause reframe
+        if (Destroyed()) {
+          return NS_OK;
+        }
         if (handled) {
           ScrollSelectionIntoView(false);
         }
@@ -1020,7 +1024,7 @@ HTMLEditor::TypedText(const nsAString& aString,
   return TextEditor::TypedText(aString, aAction);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditor::TabInTable(bool inIsShift,
                        bool* outHandled)
 {
