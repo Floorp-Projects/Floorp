@@ -886,10 +886,8 @@ Console::Shutdown()
     }
   }
 
-  NS_ReleaseOnMainThread(
-    "Console::mStorage", mStorage.forget());
-  NS_ReleaseOnMainThread(
-    "Console::mSandbox", mSandbox.forget());
+  NS_ReleaseOnMainThreadSystemGroup("Console::mStorage", mStorage.forget());
+  NS_ReleaseOnMainThreadSystemGroup("Console::mSandbox", mSandbox.forget());
 
   mTimerRegistry.Clear();
   mCounterRegistry.Clear();

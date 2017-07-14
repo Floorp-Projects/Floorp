@@ -232,7 +232,7 @@ ServiceWorkerJob::Finish(ErrorResult& aRv)
 
   // Async release this object to ensure that our caller methods complete
   // as well.
-  NS_ReleaseOnMainThread("ServiceWorkerJob",
+  NS_ReleaseOnMainThreadSystemGroup("ServiceWorkerJob",
     kungFuDeathGrip.forget(), true /* always proxy */);
 }
 

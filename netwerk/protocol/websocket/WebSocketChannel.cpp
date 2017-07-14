@@ -1233,14 +1233,18 @@ WebSocketChannel::~WebSocketChannel()
   while ((mCurrentOut = (OutboundMessage *) mOutgoingMessages.PopFront()))
     delete mCurrentOut;
 
-  NS_ReleaseOnMainThread("WebSocketChannel::mURI", mURI.forget());
-  NS_ReleaseOnMainThread("WebSocketChannel::mOriginalURI", mOriginalURI.forget());
+  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mURI", mURI.forget());
+  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mOriginalURI",
+                                    mOriginalURI.forget());
 
   mListenerMT = nullptr;
 
-  NS_ReleaseOnMainThread("WebSocketChannel::mLoadGroup", mLoadGroup.forget());
-  NS_ReleaseOnMainThread("WebSocketChannel::mLoadInfo", mLoadInfo.forget());
-  NS_ReleaseOnMainThread("WebSocketChannel::mService", mService.forget());
+  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mLoadGroup",
+                                    mLoadGroup.forget());
+  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mLoadInfo",
+                                    mLoadInfo.forget());
+  NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mService",
+                                    mService.forget());
 }
 
 NS_IMETHODIMP
@@ -2375,10 +2379,14 @@ WebSocketChannel::StopSession(nsresult reason)
 
   if (!mOpenedHttpChannel) {
     // The HTTP channel information will never be used in this case
-    NS_ReleaseOnMainThread("WebSocketChannel::mChannel", mChannel.forget());
-    NS_ReleaseOnMainThread("WebSocketChannel::mHttpChannel", mHttpChannel.forget());
-    NS_ReleaseOnMainThread("WebSocketChannel::mLoadGroup", mLoadGroup.forget());
-    NS_ReleaseOnMainThread("WebSocketChannel::mCallbacks", mCallbacks.forget());
+    NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mChannel",
+                                      mChannel.forget());
+    NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mHttpChannel",
+                                      mHttpChannel.forget());
+    NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mLoadGroup",
+                                      mLoadGroup.forget());
+    NS_ReleaseOnMainThreadSystemGroup("WebSocketChannel::mCallbacks",
+                                      mCallbacks.forget());
   }
 
   if (mCloseTimer) {

@@ -616,7 +616,7 @@ nsGIOInputStream::Close()
   }
 
   if (mChannel) {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsGIOInputStream::mChannel", dont_AddRef(mChannel));
 
     mChannel = nullptr;

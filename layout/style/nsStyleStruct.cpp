@@ -3455,8 +3455,8 @@ nsStyleDisplay::~nsStyleDisplay()
   // the deallocation of style structs during styling, we need to handle it
   // here.
   if (mSpecifiedTransform && ServoStyleSet::IsInServoTraversal()) {
-    // The default behavior of NS_ReleaseOnMainThread is to only proxy the
-    // release if we're not already on the main thread. This is a nice
+    // The default behavior of NS_ReleaseOnMainThreadSystemGroup is to only
+    // proxy the release if we're not already on the main thread. This is a nice
     // optimization for the cases we happen to be doing a sequential traversal
     // (i.e. a single-core machine), but it trips our assertions which check
     // whether we're in a Servo traversal, parallel or not. So we
@@ -3467,7 +3467,7 @@ nsStyleDisplay::~nsStyleDisplay()
 #else
       false;
 #endif
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsStyleDisplay::mSpecifiedTransform",
       mSpecifiedTransform.forget(), alwaysProxy);
   }
@@ -3773,7 +3773,7 @@ nsStyleContentData::~nsStyleContentData()
   MOZ_COUNT_DTOR(nsStyleContentData);
 
   if (mType == eStyleContentType_Image) {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsStyleContentData::mContent.mImage", dont_AddRef(mContent.mImage));
     mContent.mImage = nullptr;
   } else if (mType == eStyleContentType_Counter ||
@@ -4365,7 +4365,7 @@ nsStyleUIReset::~nsStyleUIReset()
 #else
       false;
 #endif
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsStyleUIReset::mSpecifiedWindowTransform",
       mSpecifiedWindowTransform.forget(), alwaysProxy);
   }

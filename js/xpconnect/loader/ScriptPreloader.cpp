@@ -683,7 +683,8 @@ ScriptPreloader::Run()
     Unused << NS_WARN_IF(result.isErr());
 
     mSaveComplete = true;
-    NS_ReleaseOnMainThread("ScriptPreloader::mSaveThread", mSaveThread.forget());
+    NS_ReleaseOnMainThreadSystemGroup("ScriptPreloader::mSaveThread",
+                                      mSaveThread.forget());
 
     mal.NotifyAll();
     return NS_OK;

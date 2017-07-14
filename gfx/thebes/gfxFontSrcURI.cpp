@@ -35,8 +35,8 @@ gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI)
   if (scheme.EqualsLiteral("data")) {
     // We know that nsSimpleURI::From returns us a pointer to the same object,
     // and we hold a strong reference to the object in mURI, so no need to
-    // hold it strongly here as well.  (And we'd have to NS_ReleaseOnMainThread
-    // it in our destructor anyway.)
+    // hold it strongly here as well.  (And we'd have to
+    // NS_ReleaseOnMainThreadSystemGroup it in our destructor anyway.)
     RefPtr<mozilla::net::nsSimpleURI> simpleURI =
       mozilla::net::nsSimpleURI::From(aURI);
     mSimpleURI = simpleURI;
@@ -60,7 +60,7 @@ gfxFontSrcURI::gfxFontSrcURI(nsIURI* aURI)
 
 gfxFontSrcURI::~gfxFontSrcURI()
 {
-  NS_ReleaseOnMainThread("gfxFontSrcURI::mURI", mURI.forget());
+  NS_ReleaseOnMainThreadSystemGroup("gfxFontSrcURI::mURI", mURI.forget());
 }
 
 bool
