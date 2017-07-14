@@ -230,38 +230,6 @@ HTMLImageElement::Y()
   return GetXY().y;
 }
 
-NS_IMETHODIMP
-HTMLImageElement::GetHeight(uint32_t* aHeight)
-{
-  *aHeight = Height();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLImageElement::SetHeight(uint32_t aHeight)
-{
-  ErrorResult rv;
-  SetHeight(aHeight, rv);
-  return rv.StealNSResult();
-}
-
-NS_IMETHODIMP
-HTMLImageElement::GetWidth(uint32_t* aWidth)
-{
-  *aWidth = Width();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLImageElement::SetWidth(uint32_t aWidth)
-{
-  ErrorResult rv;
-  SetWidth(aWidth, rv);
-  return rv.StealNSResult();
-}
-
 bool
 HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
                                  nsIAtom* aAttribute,
