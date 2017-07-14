@@ -492,14 +492,12 @@ VRDisplayPuppet::NotifyVSync()
   VRDisplayHost::NotifyVSync();
 }
 
-VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand)
-  : VRControllerHost(VRDeviceType::Puppet)
+VRControllerPuppet::VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID)
+  : VRControllerHost(VRDeviceType::Puppet, aHand, aDisplayID)
   , mButtonPressState(0)
 {
   MOZ_COUNT_CTOR_INHERITED(VRControllerPuppet, VRControllerHost);
   mControllerInfo.mControllerName.AssignLiteral("Puppet Gamepad");
-  mControllerInfo.mMappingType = GamepadMappingType::_empty;
-  mControllerInfo.mHand = aHand;
   mControllerInfo.mNumButtons = kNumPuppetButtonMask;
   mControllerInfo.mNumAxes = kNumPuppetAxis;
   mControllerInfo.mNumHaptics = kNumPuppetHaptcs;
@@ -740,6 +738,11 @@ VRSystemManagerPuppet::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aContr
 void
 VRSystemManagerPuppet::ScanForControllers()
 {
+  // mPuppetHMD is available after VRDisplay is created
+  // at GetHMDs().
+  if (!mPuppetHMD) {
+    return;
+  }
   // We make VRSystemManagerPuppet has two controllers always.
   const uint32_t newControllerCount = 2;
 
@@ -750,7 +753,8 @@ VRSystemManagerPuppet::ScanForControllers()
     for (uint32_t i = 0; i < newControllerCount; ++i) {
       dom::GamepadHand hand = (i % 2) ? dom::GamepadHand::Right :
                                         dom::GamepadHand::Left;
-      RefPtr<VRControllerPuppet> puppetController = new VRControllerPuppet(hand);
+      RefPtr<VRControllerPuppet> puppetController = new VRControllerPuppet(hand,
+                                                      mPuppetHMD->GetDisplayInfo().GetDisplayID());
       mPuppetController.AppendElement(puppetController);
 
       // Not already present, add it.
