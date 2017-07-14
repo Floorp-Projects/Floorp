@@ -63,6 +63,8 @@ parse_proc_cpuinfo(const char* search_string)
 LOCAL(void)
 init_simd (void)
 {
+  char *env = NULL;
+
   if (simd_support != ~0U)
     return;
 

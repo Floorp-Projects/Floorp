@@ -1,7 +1,7 @@
 ;
 ; jchuff-sse2.asm - Huffman entropy encoding (SSE2)
 ;
-; Copyright (C) 2009-2011, 2014-2016, D. R. Commander.
+; Copyright (C) 2009-2011, 2014-2017, D. R. Commander.
 ; Copyright (C) 2015, Matthieu Darbois.
 ;
 ; Based on the x86 SIMD extension for IJG JPEG library
@@ -288,13 +288,13 @@ EXTN(jsimd_huff_encode_one_block_sse2):
 
 .BLOOP:
         bsf ecx, edx  ; r = __builtin_ctzl(index);
-        jz .ELOOP
+        jz near .ELOOP
         lea esi, [esi+ecx*2]  ; k += r;
         shr edx, cl  ; index >>= r;
         mov DWORD [esp+temp3], edx
 .BRLOOP:
         cmp ecx, 16  ; while (r > 15) {
-        jl .ERLOOP
+        jl near .ERLOOP
         sub ecx, 16 ; r -= 16;
         mov DWORD [esp+temp], ecx
         mov   eax, INT [ebp + 240 * 4]  ; code_0xf0 = actbl->ehufco[0xf0];
@@ -348,7 +348,7 @@ EXTN(jsimd_huff_encode_one_block_sse2):
         sub eax, esi
         shr eax, 1
         bsf ecx, edx  ; r = __builtin_ctzl(index);
-        jz .ELOOP2
+        jz near .ELOOP2
         shr edx, cl  ; index >>= r;
         add ecx, eax
         lea esi, [esi+ecx*2]  ; k += r;
@@ -356,13 +356,13 @@ EXTN(jsimd_huff_encode_one_block_sse2):
         jmp .BRLOOP2
 .BLOOP2:
         bsf ecx, edx  ; r = __builtin_ctzl(index);
-        jz .ELOOP2
+        jz near .ELOOP2
         lea esi, [esi+ecx*2]  ; k += r;
         shr edx, cl  ; index >>= r;
         mov DWORD [esp+temp3], edx
 .BRLOOP2:
         cmp ecx, 16  ; while (r > 15) {
-        jl .ERLOOP2
+        jl near .ERLOOP2
         sub ecx, 16  ; r -= 16;
         mov DWORD [esp+temp], ecx
         mov   eax, INT [ebp + 240 * 4]  ; code_0xf0 = actbl->ehufco[0xf0];
