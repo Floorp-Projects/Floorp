@@ -46,11 +46,9 @@ PaymentRequestUpdateEvent::Constructor(const GlobalObject& aGlobal,
 PaymentRequestUpdateEvent::PaymentRequestUpdateEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
   , mWaitForUpdate(false)
+  , mRequest(nullptr)
 {
   MOZ_ASSERT(aOwner);
-
-  // event's target should be a PaymentRequest object
-  mRequest = static_cast<PaymentRequest *>(aOwner);
 }
 
 void
@@ -115,6 +113,16 @@ PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise, ErrorResult& aRv)
   StopImmediatePropagation();
   mWaitForUpdate = true;
   mRequest->SetUpdating(true);
+}
+
+void
+PaymentRequestUpdateEvent::SetRequest(PaymentRequest* aRequest)
+{
+  MOZ_ASSERT(IsTrusted());
+  MOZ_ASSERT(!mRequest);
+  MOZ_ASSERT(aRequest);
+
+  mRequest = aRequest;
 }
 
 PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent()
