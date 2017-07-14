@@ -19,31 +19,6 @@
 [uuid(ec18e71c-4f5c-4cc3-aa36-5273168644dc)]
 interface nsIDOMHTMLImageElement : nsISupports
 {
-           attribute DOMString        alt;
-           attribute DOMString        src;
-           attribute DOMString        srcset;
-           attribute DOMString        sizes;
-           attribute DOMString        useMap;
-           attribute boolean          isMap;
            attribute unsigned long    width;
            attribute unsigned long    height;
-  readonly attribute unsigned long    naturalWidth;
-  readonly attribute unsigned long    naturalHeight;
-  readonly attribute boolean          complete;
-
-
-           attribute DOMString        name;
-           attribute DOMString        align;
-           attribute DOMString        border;
-           attribute long             hspace;
-           attribute DOMString        longDesc;
-           attribute long             vspace;
-           attribute DOMString        lowsrc;
-
-  readonly attribute DOMString        currentSrc;
-
-  // These attributes are offsets from the closest view (to mimic
-  // NS4's "offset-from-layer" behavior).
-  readonly attribute long             x;
-  readonly attribute long             y;
 };
