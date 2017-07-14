@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Your selection is too small"
   },
+  "privateWindowErrorTitle": {
+    "message": "Screenshots is disabled in Private Browsing Mode"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Sorry for the inconvenience. We are working on this feature for future releases."
+  },
   "genericErrorTitle": {
     "message": "Whoa! Firefox Screenshots went haywire."
   },
