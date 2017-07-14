@@ -31,7 +31,6 @@ enum eHtml5TreeOperation {
   eTreeOpCreateElementNotNetwork,
   eTreeOpSetFormElement,
   eTreeOpAppendText,
-  eTreeOpAppendIsindexPrompt,
   eTreeOpFosterParentText,
   eTreeOpAppendComment,
   eTreeOpAppendCommentToDocument,

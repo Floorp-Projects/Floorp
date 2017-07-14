@@ -116,13 +116,6 @@ public:
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
-  virtual bool SupportsIsindexSubmission() override
-  {
-    return true;
-  }
-
-  virtual nsresult AddIsindex(const nsAString& aValue) override;
-
 protected:
 
   /**
@@ -173,25 +166,6 @@ FSURLEncoded::AddNameValuePair(const nsAString& aName,
   } else {
     mQueryString += NS_LITERAL_CSTRING("&") + convName
                   + NS_LITERAL_CSTRING("=") + convValue;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-FSURLEncoded::AddIsindex(const nsAString& aValue)
-{
-  // Encode value
-  nsCString convValue;
-  nsresult rv = URLEncode(aValue, convValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Append data to string
-  if (mQueryString.IsEmpty()) {
-    Telemetry::Accumulate(Telemetry::FORM_ISINDEX_USED, true);
-    mQueryString.Assign(convValue);
-  } else {
-    mQueryString += NS_LITERAL_CSTRING("&isindex=") + convValue;
   }
 
   return NS_OK;

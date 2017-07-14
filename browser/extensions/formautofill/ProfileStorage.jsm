@@ -112,7 +112,7 @@ const STORAGE_SCHEMA_VERSION = 1;
 const ADDRESS_SCHEMA_VERSION = 1;
 const CREDIT_CARD_SCHEMA_VERSION = 1;
 
-const VALID_PROFILE_FIELDS = [
+const VALID_ADDRESS_FIELDS = [
   "given-name",
   "additional-name",
   "family-name",
@@ -126,12 +126,29 @@ const VALID_PROFILE_FIELDS = [
   "email",
 ];
 
+const STREET_ADDRESS_COMPONENTS = [
+  "address-line1",
+  "address-line2",
+  "address-line3",
+];
+
+const VALID_ADDRESS_COMPUTED_FIELDS = [
+  "name",
+  "country-name",
+].concat(STREET_ADDRESS_COMPONENTS);
+
 const VALID_CREDIT_CARD_FIELDS = [
   "cc-name",
   "cc-number-encrypted",
   "cc-number-masked",
   "cc-exp-month",
   "cc-exp-year",
+];
+
+const VALID_CREDIT_CARD_COMPUTED_FIELDS = [
+  "cc-given-name",
+  "cc-additional-name",
+  "cc-family-name",
 ];
 
 const INTERNAL_FIELDS = [
@@ -160,17 +177,25 @@ class AutofillRecords {
    *        A key of "store.data".
    * @param {Array.<string>} validFields
    *        A list containing non-metadata field names.
+   * @param {Array.<string>} validComputedFields
+   *        A list containing computed field names.
    * @param {number} schemaVersion
    *        The schema version for the new record.
    */
-  constructor(store, collectionName, validFields, schemaVersion) {
+  constructor(store, collectionName, validFields, validComputedFields, schemaVersion) {
     FormAutofillUtils.defineLazyLogGetter(this, "AutofillRecords:" + collectionName);
 
     this.VALID_FIELDS = validFields;
+    this.VALID_COMPUTED_FIELDS = validComputedFields;
 
     this._store = store;
     this._collectionName = collectionName;
     this._schemaVersion = schemaVersion;
+
+    let hasChanges = (result, record) => this._migrateRecord(record) || result;
+    if (this._store.data[this._collectionName].reduce(hasChanges, false)) {
+      this._store.saveSoon();
+    }
   }
 
   /**
@@ -226,6 +251,8 @@ class AutofillRecords {
       recordToSave.timesUsed = 0;
     }
 
+    this._computeFields(recordToSave);
+
     this._store.data[this._collectionName].push(recordToSave);
     this._store.saveSoon();
 
@@ -261,8 +288,10 @@ class AutofillRecords {
 
     recordFound.timeLastModified = Date.now();
 
-    this._store.saveSoon();
+    this._stripComputedFields(recordFound);
+    this._computeFields(recordFound);
 
+    this._store.saveSoon();
     Services.obs.notifyObservers(null, "formautofill-storage-changed", "update");
   }
 
@@ -318,11 +347,13 @@ class AutofillRecords {
    *
    * @param   {string} guid
    *          Indicates which record to retrieve.
+   * @param   {boolean} [options.rawData = false]
+   *          Returns a raw record without modifications and the computed fields.
    * @returns {Object}
    *          A clone of the record.
    */
-  get(guid) {
-    this.log.debug("get:", guid);
+  get(guid, {rawData = false} = {}) {
+    this.log.debug("get:", guid, rawData);
 
     let recordFound = this._findByGUID(guid);
     if (!recordFound) {
@@ -331,27 +362,37 @@ class AutofillRecords {
 
     // The record is cloned to avoid accidental modifications from outside.
     let clonedRecord = this._clone(recordFound);
-    this._recordReadProcessor(clonedRecord);
+    if (rawData) {
+      this._stripComputedFields(clonedRecord);
+    } else {
+      this._recordReadProcessor(clonedRecord);
+    }
     return clonedRecord;
   }
 
   /**
    * Returns all records.
    *
-   * @param   {boolean} [options.noComputedFields = false]
-   *          Returns raw record without those computed fields.
+   * @param   {boolean} [options.rawData = false]
+   *          Returns raw records without modifications and the computed fields.
    * @param   {boolean} [options.includeDeleted = false]
    *          Also return any tombstone records.
    * @returns {Array.<Object>}
    *          An array containing clones of all records.
    */
-  getAll({noComputedFields = false, includeDeleted = false} = {}) {
-    this.log.debug("getAll", noComputedFields, includeDeleted);
+  getAll({rawData = false, includeDeleted = false} = {}) {
+    this.log.debug("getAll", rawData, includeDeleted);
 
     let records = this._store.data[this._collectionName].filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
     let clonedRecords = records.map(this._clone);
-    clonedRecords.forEach(record => this._recordReadProcessor(record, {noComputedFields}));
+    clonedRecords.forEach(record => {
+      if (rawData) {
+        this._stripComputedFields(record);
+      } else {
+        this._recordReadProcessor(record);
+      }
+    });
     return clonedRecords;
   }
 
@@ -397,8 +438,30 @@ class AutofillRecords {
     });
   }
 
+  _migrateRecord(record) {
+    let hasChanges = false;
+
+    if (!record.version || isNaN(record.version) || record.version < 1) {
+      this.log.warn("Invalid record version:", record.version);
+
+      // Force to run the migration.
+      record.version = 0;
+    }
+
+    if (record.version < this.version) {
+      hasChanges = true;
+      record.version = this.version;
+
+      // Force to recompute fields if we upgrade the schema.
+      this._stripComputedFields(record);
+    }
+
+    hasChanges |= this._computeFields(record);
+    return hasChanges;
+  }
+
   _normalizeRecord(record) {
-    this._recordWriteProcessor(record);
+    this._normalizeFields(record);
 
     for (let key in record) {
       if (!this.VALID_FIELDS.includes(key)) {
@@ -411,11 +474,18 @@ class AutofillRecords {
     }
   }
 
-  // An interface to be inherited.
-  _recordReadProcessor(record, {noComputedFields = false} = {}) {}
+  _stripComputedFields(record) {
+    this.VALID_COMPUTED_FIELDS.forEach(field => delete record[field]);
+  }
 
   // An interface to be inherited.
-  _recordWriteProcessor(record) {}
+  _recordReadProcessor(record) {}
+
+  // An interface to be inherited.
+  _computeFields(record) {}
+
+  // An interface to be inherited.
+  _normalizeFields(record) {}
 
   // An interface to be inherited.
   mergeIfPossible(guid, record) {}
@@ -426,112 +496,118 @@ class AutofillRecords {
 
 class Addresses extends AutofillRecords {
   constructor(store) {
-    super(store, "addresses", VALID_PROFILE_FIELDS, ADDRESS_SCHEMA_VERSION);
+    super(store, "addresses", VALID_ADDRESS_FIELDS, VALID_ADDRESS_COMPUTED_FIELDS, ADDRESS_SCHEMA_VERSION);
   }
 
-  _recordReadProcessor(profile, {noComputedFields} = {}) {
-    if (noComputedFields) {
-      return;
+  _recordReadProcessor(address) {
+    // TODO: We only support US in MVP so hide the field if it's not. We
+    //       are going to support more countries in bug 1370193.
+    if (address.country && address.country != "US") {
+      address["country-name"] = "";
+      delete address.country;
     }
+  }
+
+  _computeFields(address) {
+    // NOTE: Remember to bump the schema version number if any of the existing
+    //       computing algorithm changes. (No need to bump when just adding new
+    //       computed fields)
+
+    let hasNewComputedFields = false;
 
     // Compute name
-    let name = FormAutofillNameUtils.joinNameParts({
-      given: profile["given-name"],
-      middle: profile["additional-name"],
-      family: profile["family-name"],
-    });
-    if (name) {
-      profile.name = name;
+    if (!("name" in address)) {
+      let name = FormAutofillNameUtils.joinNameParts({
+        given: address["given-name"],
+        middle: address["additional-name"],
+        family: address["family-name"],
+      });
+      address.name = name;
+      hasNewComputedFields = true;
     }
 
-    // Compute address
-    if (profile["street-address"]) {
-      let streetAddress = profile["street-address"].split("\n").map(s => s.trim());
-      for (let i = 0; i < 2; i++) {
-        if (streetAddress[i]) {
-          profile["address-line" + (i + 1)] = streetAddress[i];
-        }
+    // Compute address lines
+    if (!("address-line1" in address)) {
+      let streetAddress = [];
+      if (address["street-address"]) {
+        streetAddress = address["street-address"].split("\n").map(s => s.trim());
       }
-      if (streetAddress.length > 2) {
-        profile["address-line3"] = FormAutofillUtils.toOneLineAddress(
+      for (let i = 0; i < 3; i++) {
+        address["address-line" + (i + 1)] = streetAddress[i] || "";
+      }
+      if (streetAddress.length > 3) {
+        address["address-line3"] = FormAutofillUtils.toOneLineAddress(
           streetAddress.splice(2)
         );
       }
+      hasNewComputedFields = true;
     }
 
     // Compute country name
-    if (profile.country) {
-      if (profile.country == "US") {
-        let countryName = REGION_NAMES[profile.country];
-        if (countryName) {
-          profile["country-name"] = countryName;
-        }
+    if (!("country-name" in address)) {
+      if (address.country && REGION_NAMES[address.country]) {
+        address["country-name"] = REGION_NAMES[address.country];
       } else {
-        // TODO: We only support US in MVP so hide the field if it's not. We
-        //       are going to support more countries in bug 1370193.
-        delete profile.country;
+        address["country-name"] = "";
       }
+      hasNewComputedFields = true;
     }
+
+    return hasNewComputedFields;
   }
 
-  _recordWriteProcessor(profile) {
+  _normalizeFields(address) {
     // Normalize name
-    if (profile.name) {
-      let nameParts = FormAutofillNameUtils.splitName(profile.name);
-      if (!profile["given-name"] && nameParts.given) {
-        profile["given-name"] = nameParts.given;
+    if (address.name) {
+      let nameParts = FormAutofillNameUtils.splitName(address.name);
+      if (!address["given-name"] && nameParts.given) {
+        address["given-name"] = nameParts.given;
       }
-      if (!profile["additional-name"] && nameParts.middle) {
-        profile["additional-name"] = nameParts.middle;
+      if (!address["additional-name"] && nameParts.middle) {
+        address["additional-name"] = nameParts.middle;
       }
-      if (!profile["family-name"] && nameParts.family) {
-        profile["family-name"] = nameParts.family;
+      if (!address["family-name"] && nameParts.family) {
+        address["family-name"] = nameParts.family;
       }
-      delete profile.name;
+      delete address.name;
     }
 
-    // Normalize address
-    if (profile["address-line1"] || profile["address-line2"] ||
-        profile["address-line3"]) {
+    // Normalize address lines
+    if (STREET_ADDRESS_COMPONENTS.some(c => address[c])) {
       // Treat "street-address" as "address-line1" if it contains only one line
       // and "address-line1" is omitted.
-      if (!profile["address-line1"] && profile["street-address"] &&
-          !profile["street-address"].includes("\n")) {
-        profile["address-line1"] = profile["street-address"];
-        delete profile["street-address"];
+      if (!address["address-line1"] && address["street-address"] &&
+          !address["street-address"].includes("\n")) {
+        address["address-line1"] = address["street-address"];
+        delete address["street-address"];
       }
-
-      // Remove "address-line*" but keep the values.
-      let addressLines = [1, 2, 3].map(i => {
-        let value = profile["address-line" + i];
-        delete profile["address-line" + i];
-        return value;
-      });
 
       // Concatenate "address-line*" if "street-address" is omitted.
-      if (!profile["street-address"]) {
-        profile["street-address"] = addressLines.join("\n");
+      if (!address["street-address"]) {
+        address["street-address"] = STREET_ADDRESS_COMPONENTS.map(c => address[c]).join("\n");
       }
+
+      STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
     }
 
     // Normalize country
-    if (profile.country) {
-      let country = profile.country.toUpperCase();
+    if (address.country) {
+      let country = address.country.toUpperCase();
       // Only values included in the region list will be saved.
       if (REGION_NAMES[country]) {
-        profile.country = country;
+        address.country = country;
       } else {
-        delete profile.country;
+        delete address.country;
       }
-    } else if (profile["country-name"]) {
+    } else if (address["country-name"]) {
       for (let region in REGION_NAMES) {
-        if (REGION_NAMES[region].toLowerCase() == profile["country-name"].toLowerCase()) {
-          profile.country = region;
+        if (REGION_NAMES[region].toLowerCase() == address["country-name"].toLowerCase()) {
+          address.country = region;
           break;
         }
       }
     }
-    delete profile["country-name"];
+    delete address["country-name"];
   }
 
   /**
@@ -587,6 +663,10 @@ class Addresses extends AutofillRecords {
     }
 
     addressFound.timeLastModified = Date.now();
+
+    this._stripComputedFields(addressFound);
+    this._computeFields(addressFound);
+
     this._store.saveSoon();
     let str = Cc["@mozilla.org/supports-string;1"]
                  .createInstance(Ci.nsISupportsString);
@@ -616,30 +696,29 @@ class Addresses extends AutofillRecords {
 
 class CreditCards extends AutofillRecords {
   constructor(store) {
-    super(store, "creditCards", VALID_CREDIT_CARD_FIELDS, CREDIT_CARD_SCHEMA_VERSION);
+    super(store, "creditCards", VALID_CREDIT_CARD_FIELDS, VALID_CREDIT_CARD_COMPUTED_FIELDS, CREDIT_CARD_SCHEMA_VERSION);
   }
 
-  _recordReadProcessor(creditCard, {noComputedFields} = {}) {
-    if (noComputedFields) {
-      return;
-    }
+  _computeFields(creditCard) {
+    // NOTE: Remember to bump the schema version number if any of the existing
+    //       computing algorithm changes. (No need to bump when just adding new
+    //       computed fields)
+
+    let hasNewComputedFields = false;
 
     // Compute split names
-    if (creditCard["cc-name"]) {
+    if (!("cc-given-name" in creditCard)) {
       let nameParts = FormAutofillNameUtils.splitName(creditCard["cc-name"]);
-      if (nameParts.given) {
-        creditCard["cc-given-name"] = nameParts.given;
-      }
-      if (nameParts.middle) {
-        creditCard["cc-additional-name"] = nameParts.middle;
-      }
-      if (nameParts.family) {
-        creditCard["cc-family-name"] = nameParts.family;
-      }
+      creditCard["cc-given-name"] = nameParts.given;
+      creditCard["cc-additional-name"] = nameParts.middle;
+      creditCard["cc-family-name"] = nameParts.family;
+      hasNewComputedFields = true;
     }
+
+    return hasNewComputedFields;
   }
 
-  _recordWriteProcessor(creditCard) {
+  _normalizeFields(creditCard) {
     // Fields that should not be set by content.
     delete creditCard["cc-number-encrypted"];
     delete creditCard["cc-number-masked"];

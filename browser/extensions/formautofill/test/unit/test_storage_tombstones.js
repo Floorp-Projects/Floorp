@@ -79,7 +79,7 @@ add_storage_task(async function test_add_tombstone(storage, record) {
   Assert.equal(storage.getAll().length, 0);
 
   // but getAll allows us to access deleted items.
-  let all = storage.getAll({includeDeleted: true});
+  let all = storage.getAll({rawData: true, includeDeleted: true});
   Assert.equal(all.length, 1);
 
   do_check_tombstone_record(all[0]);
@@ -112,7 +112,7 @@ add_storage_task(async function test_remove_existing_tombstone(storage, record) 
   let guid = storage.add({guid: "test-guid-1", deleted: true, timeLastModified: 1234});
 
   storage.remove(guid);
-  let all = storage.getAll({includeDeleted: true});
+  let all = storage.getAll({rawData: true, includeDeleted: true});
   Assert.equal(all.length, 1);
 
   do_check_tombstone_record(all[0]);

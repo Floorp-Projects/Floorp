@@ -70,7 +70,7 @@ bool nsNameSpaceManager::Init()
 
   // Need to be ordered according to ID.
   MOZ_ASSERT(mURIArray.IsEmpty());
-  REGISTER_NAMESPACE(nsGkAtoms::empty, kNameSpaceID_None);
+  REGISTER_NAMESPACE(nsGkAtoms::_empty, kNameSpaceID_None);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xmlns, kNameSpaceID_XMLNS);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xml, kNameSpaceID_XML);
   REGISTER_NAMESPACE(nsGkAtoms::nsuri_xhtml, kNameSpaceID_XHTML);

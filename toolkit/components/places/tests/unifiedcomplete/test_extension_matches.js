@@ -266,7 +266,9 @@ add_task(async function test_extension_results_should_come_first() {
           {content: "baz", description: "third suggestion"},
         ]);
       }
-      controller.stopSearch();
+      // Do not stop the search here, of we'd not fetch results after the
+      // extension ones. The timeout in unifiedComplete will let us proceed
+      // after a few seconds.
     }
   };
 

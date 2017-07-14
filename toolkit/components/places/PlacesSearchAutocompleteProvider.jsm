@@ -111,13 +111,15 @@ const SearchAutocompleteProviderInternal = {
     }
   },
 
-  getSuggestionController(searchToken, inPrivateContext, maxResults, userContextId) {
+  getSuggestionController(searchToken, inPrivateContext, maxLocalResults,
+                          maxRemoteResults, userContextId) {
     let engine = Services.search.currentEngine;
     if (!engine) {
       return null;
     }
     return new SearchSuggestionControllerWrapper(engine, searchToken,
-                                                 inPrivateContext, maxResults,
+                                                 inPrivateContext,
+                                                 maxLocalResults, maxRemoteResults,
                                                  userContextId);
   },
 
@@ -126,17 +128,26 @@ const SearchAutocompleteProviderInternal = {
 }
 
 function SearchSuggestionControllerWrapper(engine, searchToken,
-                                           inPrivateContext, maxResults,
+                                           inPrivateContext,
+                                           maxLocalResults, maxRemoteResults,
                                            userContextId) {
   this._controller = new SearchSuggestionController();
-  this._controller.maxLocalResults = 0;
-  this._controller.maxRemoteResults = maxResults;
+  this._controller.maxLocalResults = maxLocalResults;
+  this._controller.maxRemoteResults = maxRemoteResults;
   let promise = this._controller.fetch(searchToken, inPrivateContext, engine, userContextId);
   this._suggestions = [];
   this._success = false;
   this._promise = promise.then(results => {
     this._success = true;
-    this._suggestions = (results ? results.remote : null) || [];
+    this._suggestions = [];
+    if (results) {
+      this._suggestions = this._suggestions.concat(
+        results.local.map(r => ({ suggestion: r, historical: true }))
+      );
+      this._suggestions = this._suggestions.concat(
+        results.remote.map(r => ({ suggestion: r, historical: false }))
+      );
+    }
   }).catch(err => {
     // fetch() rejects its promise if there's a pending request.
   });
@@ -152,18 +163,22 @@ SearchSuggestionControllerWrapper.prototype = {
   },
 
   /**
-   * Returns one suggestion, if any are available.  The returned value is an
-   * array [match, suggestion].  If none are available, returns [null, null].
-   * Note that there are two reasons that suggestions might not be available:
-   * all suggestions may have been fetched and consumed, or the fetch may not
-   * have completed yet.
+   * Returns one suggestion, if any are available, otherwise returns null.
+   * Note that may be multiple reasons why suggestions are not available:
+   *  - all suggestions have already been consumed
+   *  - the fetch failed
+   *  - the fetch didn't complete yet (should have awaited the promise)
    *
-   * @return An array [match, suggestion].
+   * @return An object {match, suggestion, historical}.
    */
   consume() {
-    return !this._suggestions.length ? [null, null] :
-           [SearchAutocompleteProviderInternal.defaultMatch,
-            this._suggestions.shift()];
+    if (!this._suggestions.length)
+      return null;
+    let { suggestion, historical } = this._suggestions.shift();
+    return { match: SearchAutocompleteProviderInternal.defaultMatch,
+             suggestion,
+             historical
+           };
   },
 
   /**
@@ -283,11 +298,13 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
     };
   },
 
-  getSuggestionController(searchToken, inPrivateContext, maxResults, userContextId) {
+  getSuggestionController(searchToken, inPrivateContext, maxLocalResults,
+                          maxRemoteResults, userContextId) {
     if (!SearchAutocompleteProviderInternal.initialized) {
       throw new Error("The component has not been initialized.");
     }
     return SearchAutocompleteProviderInternal.getSuggestionController(
-             searchToken, inPrivateContext, maxResults, userContextId);
+      searchToken, inPrivateContext, maxLocalResults, maxRemoteResults,
+      userContextId);
   },
 });

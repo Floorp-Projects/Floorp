@@ -92,7 +92,7 @@ impl ImageDescriptor {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ImageData {
     Raw(Arc<Vec<u8>>),
     Blob(BlobImageData),

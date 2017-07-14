@@ -50,6 +50,7 @@ function testCompleted() {
     } else {
       retVal.push("__start_report" + average + "__end_report\n");
     }
+    // eslint-disable-next-line mozilla/avoid-Date-timing
     retVal.push("__startTimestamp" + Date.now() + "__endTimestamp\n");
     finish(retVal);
   } catch (ex) { finish([ex + "\n"]); }

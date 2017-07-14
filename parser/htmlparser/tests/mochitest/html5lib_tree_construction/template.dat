@@ -1390,13 +1390,7 @@
 |     <form>
 |       <template>
 |         content
-|           <form>
-|             <hr>
-|             <label>
-|               "This is a searchable index. Enter search keywords: "
-|               <input>
-|                 name="isindex"
-|             <hr>
+|           <isindex>
 
 #data
 <body><form><template><isindex><form>
@@ -1408,11 +1402,5 @@
 |     <form>
 |       <template>
 |         content
-|           <form>
-|             <hr>
-|             <label>
-|               "This is a searchable index. Enter search keywords: "
-|               <input>
-|                 name="isindex"
-|             <hr>
-|           <form>
+|           <isindex>
+|             <form>

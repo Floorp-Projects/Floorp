@@ -6,17 +6,19 @@ apply plugin: 'com.android.library'
 def VERSION_NAME = '0.0.1'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion mozconfig.substs.ANDROID_BUILD_TOOLS_VERSION
+    compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
+        targetSdkVersion project.ext.targetSdkVersion
+        minSdkVersion project.ext.minSdkVersion
+        manifestPlaceholders = project.ext.manifestPlaceholders
+
         // TODO: version GeckoView explicitly.  We'd like to avoid
         // mozconfig.substs.ANDROID_VERSION_CODE, which won't be intuitive to
         // consumer (and advances very quickly on pre-release channels).
         versionCode 1
         versionName VERSION_NAME
-        targetSdkVersion 23
-        minSdkVersion 15
         consumerProguardFiles 'proguard-rules.txt'
 
         // TODO: ensure these fields always agree with mobile/android/geckoview/BuildConfig.java.in,

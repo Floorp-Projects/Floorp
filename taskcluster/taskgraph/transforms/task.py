@@ -472,6 +472,7 @@ UNKNOWN_GROUP_NAME = "Treeherder group {} has no name; add it to " + __file__
 V2_ROUTE_TEMPLATES = [
     "index.gecko.v2.{project}.latest.{product}.{job-name}",
     "index.gecko.v2.{project}.pushdate.{build_date_long}.{product}.{job-name}",
+    "index.gecko.v2.{project}.pushlog-id.{pushlog_id}.{product}.{job-name}",
     "index.gecko.v2.{project}.revision.{head_rev}.{product}.{job-name}",
 ]
 
@@ -1066,6 +1067,7 @@ def check_v2_routes():
                 ('{build_product}', '{product}'),
                 ('{build_name}-{build_type}', '{job-name}'),
                 ('{year}.{month}.{day}.{pushdate}', '{build_date_long}'),
+                ('{pushid}', '{pushlog_id}'),
                 ('{year}.{month}.{day}', '{build_date}')]:
             routes = [r.replace(mh, tg) for r in routes]
 

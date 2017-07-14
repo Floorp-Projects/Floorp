@@ -232,6 +232,7 @@ pub const PULSE_OPS: cubeb::Ops = cubeb::Ops {
     stream_destroy: Some(capi_stream_destroy),
     stream_start: Some(capi_stream_start),
     stream_stop: Some(capi_stream_stop),
+    stream_reset_default_device: None,
     stream_get_position: Some(capi_stream_get_position),
     stream_get_latency: Some(capi_stream_get_latency),
     stream_set_volume: Some(capi_stream_set_volume),

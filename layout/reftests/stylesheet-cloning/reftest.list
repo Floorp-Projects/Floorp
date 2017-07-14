@@ -1,4 +1,4 @@
-fuzzy-if(webrender,212,342) == counter-style-rule-clone.html glyphs-ref.html # passes trivially
+fuzzy-if(webrender,255-255,434-434) == counter-style-rule-clone.html glyphs-ref.html # passes trivially
 # because "Dynamic change on @counter-style not yet supported"
 == document-rule-clone.html shouldbegreen-ref.html
 == media-rule-clone.html shouldbegreen-ref.html

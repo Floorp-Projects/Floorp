@@ -260,18 +260,26 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
 
   DebugOnly<uint32_t> structsFound = 0;
 
-  // FIXME(heycam): We should just do the comparison in
-  // nsStyleVariables::CalcDifference, returning NeutralChange if there are
-  // any Variables differences.
-  const nsStyleVariables* thisVariables = PeekStyleVariables();
-  if (thisVariables) {
-    structsFound |= NS_STYLE_INHERIT_BIT(Variables);
-    const nsStyleVariables* otherVariables = aNewContext->StyleVariables();
-    if (thisVariables->mVariables == otherVariables->mVariables) {
+  if (IsGecko()) {
+    // FIXME(heycam): We should just do the comparison in
+    // nsStyleVariables::CalcDifference, returning NeutralChange if there are
+    // any Variables differences.
+    const nsStyleVariables* thisVariables = PeekStyleVariables();
+    if (thisVariables) {
+      structsFound |= NS_STYLE_INHERIT_BIT(Variables);
+      const nsStyleVariables* otherVariables = aNewContext->StyleVariables();
+      if (thisVariables->mVariables == otherVariables->mVariables) {
+        *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
+      }
+    } else {
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     }
   } else {
-    *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
+    if (Servo_ComputedValues_EqualCustomProperties(
+          ComputedValues(),
+          aNewContext->ComputedValues())) {
+      *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
+    }
   }
 
   DebugOnly<int> styleStructCount = 1;  // count Variables already
@@ -508,6 +516,8 @@ public:
   }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
+
+  const ServoComputedValues* ComputedValues() { return mComputedValues; }
 
 private:
   const ServoComputedValues* MOZ_NON_OWNING_REF mComputedValues;

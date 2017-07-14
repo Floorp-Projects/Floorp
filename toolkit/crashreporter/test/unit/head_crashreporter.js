@@ -145,6 +145,13 @@ function handleMinidump(callback) {
   }
 }
 
+/**
+ * Helper for testing a content process crash.
+ *
+ * This variant accepts a setup function which runs in the content process
+ * to set data as needed _before_ the crash.  The tail file triggers a generic
+ * crash after setup.
+ */
 function do_content_crash(setup, callback) {
   do_load_child_test_harness();
   do_test_pending();
@@ -187,6 +194,55 @@ function do_content_crash(setup, callback) {
         sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");", () =>
           do_execute_soon(handleCrash)
         )
+      )
+    );
+  });
+}
+
+/**
+ * Helper for testing a content process crash.
+ *
+ * This variant accepts a trigger function which runs in the content process
+ * and does something to _trigger_ the crash.
+ */
+function do_triggered_content_crash(trigger, callback) {
+  do_load_child_test_harness();
+  do_test_pending();
+
+  // Setting the minidump path won't work in the child, so we need to do
+  // that here.
+  let crashReporter =
+      Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
+                .getService(Components.interfaces.nsICrashReporter);
+  crashReporter.minidumpPath = do_get_tempdir();
+
+  /* import-globals-from ../unit/crasher_subprocess_head.js */
+
+  let headfile = do_get_file("../unit/crasher_subprocess_head.js");
+  if (trigger) {
+    if (typeof(trigger) == "function") {
+      // funky, but convenient
+      trigger = "(" + trigger.toSource() + ")();";
+    }
+  }
+
+  let handleCrash = function() {
+    let id = getMinidump().leafName.slice(0, -4);
+    Services.crashmanager.ensureCrashIsPresent(id).then(() => {
+      try {
+        handleMinidump(callback);
+      } catch (x) {
+        do_report_unexpected_exception(x);
+      }
+      do_test_finished();
+    });
+  };
+
+  do_get_profile();
+  makeFakeAppDir().then(() => {
+    sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
+      sendCommand(trigger, () =>
+        do_execute_soon(handleCrash)
       )
     );
   });

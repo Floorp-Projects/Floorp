@@ -38,8 +38,6 @@ to mochitest command.
 * Animation support:
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-* @namespace support:
-  * test_namespace_rule.html: bug 1355715 [6]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
 * Grid support bug 1341802
   * test_grid_computed_values.html [4]
@@ -55,13 +53,14 @@ to mochitest command.
   * different parsing bug 1364260
     * test_supports_rules.html [6]
     * test_condition_text.html [1]
+  * test_value_storage.html `calc(25% - 10%)`: calc percent in -webkit-gradient bug 1380918 [5]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
   * radial gradients are not serialized using modern unprefixed style bug 1380259
-    * test_computed_style.html `gradient` [1]
+    * test_computed_style.html `gradient` [2]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
@@ -77,9 +76,6 @@ to mochitest command.
 
 ## Need Gecko change
 
-* Servo is correct but Gecko is wrong
-  * Gecko rejects calc() in -webkit-gradient bug 1363349
-    * test_property_syntax_errors.html `-webkit-gradient` [20]
 * test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1380259 [1]
 
 ## Unknown / Unsure

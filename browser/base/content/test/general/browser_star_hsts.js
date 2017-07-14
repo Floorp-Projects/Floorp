@@ -24,11 +24,10 @@ add_task(async function test_star_redirect() {
 
   await promiseStarState(BookmarkingUI.STATUS_UNSTARRED);
 
-  let promiseBookmark = promiseOnBookmarkItemAdded(gBrowser.currentURI);
+  let bookmarkPanel = document.getElementById("editBookmarkPanel");
+  let shownPromise = promisePopupShown(bookmarkPanel);
   BookmarkingUI.star.click();
-  // This resolves on the next tick, so the star should have already been
-  // updated at that point.
-  await promiseBookmark;
+  await shownPromise;
 
   is(BookmarkingUI.status, BookmarkingUI.STATUS_STARRED, "The star is starred");
 });

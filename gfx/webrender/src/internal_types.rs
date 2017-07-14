@@ -203,6 +203,7 @@ pub enum RenderTargetMode {
     LayerRenderTarget(i32),      // Number of texture layers
 }
 
+#[derive(Debug)]
 pub enum TextureUpdateOp {
     Create {
       width: u32,
@@ -238,6 +239,7 @@ pub enum TextureUpdateOp {
     Free,
 }
 
+#[derive(Debug)]
 pub struct TextureUpdate {
     pub id: CacheTextureId,
     pub op: TextureUpdateOp,

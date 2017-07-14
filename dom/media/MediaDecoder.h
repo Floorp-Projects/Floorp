@@ -215,8 +215,6 @@ public:
   // Must be called before Shutdown().
   bool OwnerHasError() const;
 
-  already_AddRefed<GMPCrashHelper> GetCrashHelper() override;
-
 public:
   // Returns true if this media supports random seeking. False for example with
   // chained ogg files.
@@ -512,6 +510,8 @@ protected:
     return mCurrentPosition.Ref();
   }
 
+  already_AddRefed<layers::KnowsCompositor> GetCompositor();
+
   // Official duration of the media resource as observed by script.
   double mDuration;
 
@@ -542,9 +542,6 @@ private:
   // Called when the owner's activity changed.
   void NotifyCompositor();
 
-  MediaEventSource<RefPtr<layers::KnowsCompositor>>*
-  CompositorUpdatedEvent() override { return &mCompositorUpdatedEvent; }
-
   void OnPlaybackEvent(MediaEventType aEvent);
   void OnPlaybackErrorEvent(const MediaResult& aError);
 
@@ -559,8 +556,6 @@ private:
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
   void DisconnectMirrors();
-
-  MediaEventProducer<RefPtr<layers::KnowsCompositor>> mCompositorUpdatedEvent;
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
@@ -708,6 +703,7 @@ protected:
   MediaEventListener mOnPlaybackErrorEvent;
   MediaEventListener mOnDecoderDoctorEvent;
   MediaEventListener mOnMediaNotSeekable;
+  MediaEventListener mOnEncrypted;
 
 protected:
   // PlaybackRate and pitch preservation status we should start at.

@@ -618,7 +618,12 @@ var BookmarkPropertiesPanel = {
       uri: this._uri ? this._uri.spec : "",
       type: this._itemType == BOOKMARK_ITEM ?
               Ci.nsINavHistoryResultNode.RESULT_TYPE_URI :
-              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+      parent: {
+        itemId: container,
+        bookmarkGuid: await PlacesUtils.promiseItemGuid(container),
+        type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+      }
     });
   },
 
@@ -677,7 +682,12 @@ var BookmarkPropertiesPanel = {
       uri: this._uri ? this._uri.spec : "",
       type: this._itemType == BOOKMARK_ITEM ?
               Ci.nsINavHistoryResultNode.RESULT_TYPE_URI :
-              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+      parent: {
+        itemId: containerId,
+        bookmarkGuid: parentGuid,
+        type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER
+      }
     });
   }
 };
