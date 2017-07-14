@@ -342,6 +342,14 @@ add_task(async function test_cswc_clientCycles() {
       guid: "dddddddddddd",
       url: `place:folder=${PlacesUtils.bookmarksMenuFolderId}`,
       title: "Bookmarks Menu",
+    }, {
+      // A query that references the menu, but excludes itself, so it can't
+      // form a cycle.
+      guid: "iiiiiiiiiiii",
+      url: `place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&` +
+           `folder=TOOLBAR&queryType=1&sort=12&maxResults=10&` +
+           `excludeQueries=1`,
+      title: "Recently Bookmarked",
     }],
   });
 
