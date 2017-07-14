@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">ٹریکر بلاک کردہ</string>
   <string name="share_dialog_title">کے زریعے شیئر کریں</string>
   <string name="notification_erase_text">برائوزنگ سابقات مٹائیں</string>
+  <string name="notification_action_open">کھولیں</string>
   <string name="shortcut_erase_short_label">مٹائيں</string>
   <string name="shortcut_erase_long_label">برائوزنگ سابقات مٹائیں</string>
   <string name="text_selection_search_action">نجی طور پر طلاش کرے</string>
@@ -62,6 +63,9 @@
   <string name="external_app_prompt_no_app_title">ایک ایپیلیکیشن تلاش کریں جو ربط کو کھول سکے</string>
   <string name="external_app_prompt_no_app">آپ کے آلہ پر کوئی بھی ایپلیکیثن اس ربط کو کھولنے کی اھل نہِں۔ آپ %1$s کو چھوڑ کر %2$s کو تلاش کریں ایک ایسی اپلی کیشن جو یہ کر سکتی ہو۔</string>
   <string name="external_multiple_apps_matched_exit">نجی براؤزنگ سے خروج کریں؟</string>
+  <string name="download_snackbar_open">کھولیں</string>
+  <string name="download_dialog_title">مسل ڈائونلوڈ کریں</string>
+  <string name="download_dialog_action_cancel">منسوخ کریں</string>
   <string name="errorpage_title">صفحہ لوڈ کرنے میں مسلہ ہے</string>
   <string name="errorpage_refresh">دوبارہ کوشش کریں</string>
   <string name="error_connectionfailure_title">جڑنے میں ناکام رہا</string>
@@ -94,4 +98,5 @@
   <string name="firstrun_close_button">ٹھیک ہے، مجھے سمجھ آگئی ہے!</string>
   <string name="firstrun_skip_button">چھوڈیں</string>
   <string name="firstrun_next_button">آگے</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>
