@@ -411,15 +411,15 @@ static PRUint32 TimeThis(
     PRUint32 overhead, usecs;
     PRIntervalTime predicted, timein, timeout, ticks;
 
- if (debug_mode)
-    printf("Testing %s ...", msg);
+    if (debug_mode)
+      printf("Testing %s ...", msg);
 
     timein = PR_IntervalNow();
     predicted = func(loops);
     timeout = PR_IntervalNow();
 
-  if (debug_mode)
-    printf(" done\n");
+    if (debug_mode)
+      printf(" done\n");
 
     ticks = timeout - timein;
     usecs = PR_IntervalToMicroseconds(ticks);
@@ -491,17 +491,17 @@ int prmain(int argc, char** argv)
 
     for (cpu = 1; cpu <= cpus; ++cpu)
     {
-    if (debug_mode)
+      if (debug_mode)
         printf("\nAlarm: Using %d CPU(s)\n", cpu);
 
-	PR_SetConcurrency(cpu);
-        
-        /* some basic time test */
-        (void)TimeThis("ConditionNotify", ConditionNotify, loops);
-        (void)TimeThis("ConditionTimeout", ConditionTimeout, loops);
-        (void)TimeThis("Alarms1", Alarms1, loops);
-        (void)TimeThis("Alarms2", Alarms2, loops);
-        (void)TimeThis("Alarms3", Alarms3, loops);
+      PR_SetConcurrency(cpu);
+
+      /* some basic time test */
+      (void)TimeThis("ConditionNotify", ConditionNotify, loops);
+      (void)TimeThis("ConditionTimeout", ConditionTimeout, loops);
+      (void)TimeThis("Alarms1", Alarms1, loops);
+      (void)TimeThis("Alarms2", Alarms2, loops);
+      (void)TimeThis("Alarms3", Alarms3, loops);
     }
     return 0;
 }
