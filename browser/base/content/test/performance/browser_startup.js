@@ -38,7 +38,6 @@ const startupPhases = {
       "resource://gre/modules/Services.jsm",
 
       // Bugs to fix: Probably loaded too early, needs investigation.
-      "resource://gre/modules/AsyncPrefs.jsm", // bug 1369460
       "resource://gre/modules/RemotePageManager.jsm", // bug 1369466
     ])
   }},
@@ -109,6 +108,7 @@ const startupPhases = {
   // be blacklisted here.
   "before becoming idle": {blacklist: {
     modules: new Set([
+      "resource://gre/modules/AsyncPrefs.jsm",
       "resource://gre/modules/LoginManagerContextMenu.jsm",
       "resource://gre/modules/Task.jsm",
     ]),

@@ -101,12 +101,10 @@ if (kInChildProcess) {
         }
       }
     },
-
-    init() {
-      Services.cpmm.addMessageListener("AsyncPrefs:PrefSetFinished", this);
-      Services.cpmm.addMessageListener("AsyncPrefs:PrefResetFinished", this);
-    },
   };
+
+  Services.cpmm.addMessageListener("AsyncPrefs:PrefSetFinished", AsyncPrefs);
+  Services.cpmm.addMessageListener("AsyncPrefs:PrefResetFinished", AsyncPrefs);
 } else {
   AsyncPrefs = {
     methodForType: {
@@ -172,11 +170,10 @@ if (kInChildProcess) {
     },
 
     init() {
+      // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
       Services.ppmm.addMessageListener("AsyncPrefs:SetPref", this);
       Services.ppmm.addMessageListener("AsyncPrefs:ResetPref", this);
+      // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN nsBrowserGlue
     }
   };
 }
-
-AsyncPrefs.init();
-
