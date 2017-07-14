@@ -95,7 +95,7 @@ interface HTMLInputElement : HTMLElement {
            attribute Date? valueAsDate;
   [Pure, SetterThrows]
            attribute unrestricted double valueAsNumber;
-  [CEReactions]
+  [CEReactions, SetterThrows]
            attribute unsigned long width;
 
   [Throws]
