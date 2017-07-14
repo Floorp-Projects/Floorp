@@ -132,6 +132,39 @@ public:
   NS_DECL_NSIATOM
 };
 
+#if defined(NS_BUILD_REFCNT_LOGGING)
+// nsFakeStringBuffers don't really use the refcounting system, but we
+// have to give a coherent series of addrefs and releases to the
+// refcount logging system, or we'll hit assertions when running with
+// XPCOM_MEM_LOG_CLASSES=nsStringBuffer.
+class FakeBufferRefcountHelper
+{
+public:
+  FakeBufferRefcountHelper(nsStringBuffer* aBuffer)
+    : mBuffer(aBuffer)
+  {
+    // Account for the initial static refcount of 1, so that we don't
+    // hit a refcount logging assertion when this object first appears
+    // with a refcount of 2.
+    NS_LOG_ADDREF(aBuffer, 1, "nsStringBuffer", sizeof(nsStringBuffer));
+  }
+
+  ~FakeBufferRefcountHelper()
+  {
+    // We told the refcount logging system in the ctor that this
+    // object was created, so now we have to tell it that it was
+    // destroyed, to avoid leak reports. This may cause odd the
+    // refcount isn't actually 0.
+    NS_LOG_RELEASE(mBuffer, 0, "nsStringBuffer");
+  }
+
+private:
+  nsStringBuffer* mBuffer;
+};
+
+UniquePtr<nsTArray<FakeBufferRefcountHelper>> gFakeBuffers;
+#endif
+
 class StaticAtom final : public nsIAtom
 {
 public:
@@ -140,6 +173,15 @@ public:
     mLength = aLength;
     mIsStatic = true;
     mString = static_cast<char16_t*>(aStringBuffer->Data());
+
+#if defined(NS_BUILD_REFCNT_LOGGING)
+    MOZ_ASSERT(NS_IsMainThread());
+    if (!gFakeBuffers) {
+      gFakeBuffers = MakeUnique<nsTArray<FakeBufferRefcountHelper>>();
+    }
+    gFakeBuffers->AppendElement(aStringBuffer);
+#endif
+
     // Technically we could currently avoid doing this addref by instead making
     // the static atom buffers have an initial refcount of 2.
     aStringBuffer->AddRef();
@@ -564,6 +606,10 @@ NS_InitAtomTable()
 void
 NS_ShutdownAtomTable()
 {
+#if defined(NS_BUILD_REFCNT_LOGGING)
+  gFakeBuffers = nullptr;
+#endif
+
   delete gStaticAtomTable;
   gStaticAtomTable = nullptr;
 
