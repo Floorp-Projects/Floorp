@@ -1476,7 +1476,7 @@
         <body><![CDATA[
           if (aTitle) {
             if (!aTab.getAttribute("label")) {
-              aTab._suppressTransientPlaceholderLabel = true;
+              aTab._labelIsInitialTitle = true;
             }
 
             this._setTabLabel(aTab, aTitle, aOptions);
@@ -1493,11 +1493,11 @@
 
             // Don't replace an initially set label with the URL while the tab
             // is loading.
-            if (aTab._suppressTransientPlaceholderLabel) {
+            if (aTab._labelIsInitialTitle) {
               if (!title) {
                 return false;
               }
-              delete aTab._suppressTransientPlaceholderLabel;
+              delete aTab._labelIsInitialTitle;
             }
 
             let isContentTitle = false;
