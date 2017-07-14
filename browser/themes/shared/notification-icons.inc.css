@@ -241,11 +241,43 @@ html|*#webRTC-previewVideo {
 
 .plugin-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin);
+  transition: fill 1.5s;
 }
 
-.plugin-icon.plugin-blocked {
+#plugin-icon-badge {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-badge);
+  opacity: 0;
+  transition: opacity 1.5s;
+}
+
+#plugins-notification-icon[extraAttr="inactive"] > .plugin-icon {
+  fill: #bfbfbf;
+}
+
+#plugins-notification-icon[extraAttr="inactive"] > #plugin-icon-badge {
+  opacity: 1;
+}
+
+#plugins-notification-icon[extraAttr="inactive"] > #plugin-icon-badge[animate] {
+  animation: blink-badge 1000ms ease 0s 5 alternate both;
+}
+
+@keyframes blink-badge {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.plugin-blocked > .plugin-icon {
   list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
   fill: #d92215 !important;
+}
+
+.plugin-blocked > #plugin-icon-badge {
+  visibility: collapse;
 }
 
 #notification-popup-box[hidden] {
