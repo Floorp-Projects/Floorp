@@ -525,8 +525,10 @@ audiounit_output_callback(void * user_ptr,
   }
 
   /* Mixing */
-  unsigned long output_buffer_length = outBufferList->mBuffers[0].mDataByteSize;
-  audiounit_mix_output_buffer(stm, output_frames, output_buffer, output_buffer_length);
+  if (stm->output_stream_params.layout != CUBEB_LAYOUT_UNDEFINED) {
+    unsigned long output_buffer_length = outBufferList->mBuffers[0].mDataByteSize;
+    audiounit_mix_output_buffer(stm, output_frames, output_buffer, output_buffer_length);
+  }
 
   return noErr;
 }
@@ -2254,9 +2256,10 @@ audiounit_configure_output(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
-  audiounit_layout_init(stm, OUTPUT);
-  audiounit_init_mixer(stm);
-
+  if (stm->output_stream_params.layout != CUBEB_LAYOUT_UNDEFINED) {
+    audiounit_layout_init(stm, OUTPUT);
+    audiounit_init_mixer(stm);
+  }
   LOG("(%p) Output audiounit init successfully.", stm);
   return CUBEB_OK;
 }
@@ -3337,6 +3340,7 @@ cubeb_ops const audiounit_ops = {
   /*.stream_destroy =*/ audiounit_stream_destroy,
   /*.stream_start =*/ audiounit_stream_start,
   /*.stream_stop =*/ audiounit_stream_stop,
+  /*.stream_reset_default_device =*/ nullptr,
   /*.stream_get_position =*/ audiounit_stream_get_position,
   /*.stream_get_latency =*/ audiounit_stream_get_latency,
   /*.stream_set_volume =*/ audiounit_stream_set_volume,

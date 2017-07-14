@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsChannelClassifier.h"
+#include "nsContentPolicyUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"
@@ -1112,6 +1113,29 @@ HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
   if (!mCanceled && NS_SUCCEEDED(mStatus)) {
     mStatus = aStatus;
   }
+
+  CollectOMTTelemetry();
+}
+
+void
+HttpChannelChild::CollectOMTTelemetry()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Only collect telemetry for HTTP channel that is loaded successfully and
+  // completely.
+  if (mCanceled || NS_FAILED(mStatus)) {
+    return;
+  }
+
+  // Use content policy type to accumulate data by usage.
+  nsContentPolicyType type = mLoadInfo ?
+                             mLoadInfo->InternalContentPolicyType() :
+                             nsIContentPolicy::TYPE_OTHER;
+
+  nsAutoCString key(NS_CP_ContentTypeName(type));
+
+  Telemetry::AccumulateCategoricalKeyed(key, mOMTResult);
 }
 
 void
@@ -3281,6 +3305,7 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
   NS_ENSURE_ARG(aNewTarget);
   if (aNewTarget->IsOnCurrentThread()) {
     NS_WARNING("Retargeting delivery to same thread");
+    mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::successMainThread;
     return NS_OK;
   }
 
@@ -3291,12 +3316,14 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
       do_QueryInterface(mListener, &rv);
   if (!retargetableListener || NS_FAILED(rv)) {
     NS_WARNING("Listener is not retargetable");
+    mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::failListener;
     return NS_ERROR_NO_INTERFACE;
   }
 
   rv = retargetableListener->CheckListenerChain();
   if (NS_FAILED(rv)) {
     NS_WARNING("Subsequent listeners are not retargetable");
+    mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::failListenerChain;
     return rv;
   }
 
@@ -3304,6 +3331,8 @@ HttpChannelChild::RetargetDeliveryTo(nsIEventTarget* aNewTarget)
     MutexAutoLock lock(mEventTargetMutex);
     mODATarget = aNewTarget;
   }
+
+  mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::success;
   return NS_OK;
 }
 

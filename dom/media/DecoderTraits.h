@@ -52,7 +52,7 @@ public:
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
   static MediaDecoderReader* CreateReader(const MediaContainerType& aType,
-                                          const MediaDecoderReaderInit& aInit);
+                                          MediaDecoderReaderInit& aInit);
 
   // Returns true if MIME type aType is supported in video documents,
   // or false otherwise. Not all platforms support all MIME types, and

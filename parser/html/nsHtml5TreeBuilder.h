@@ -101,7 +101,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 
     static const int32_t INPUT = 13;
 
-    static const int32_t ISINDEX = 14;
+    static const int32_t RT_OR_RP = 14;
 
     static const int32_t LI = 15;
 
@@ -210,8 +210,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     static const int32_t TEMPLATE = 67;
 
     static const int32_t IMG = 68;
-
-    static const int32_t RT_OR_RP = 69;
 
   private:
     static const int32_t IN_ROW = 0;
@@ -470,7 +468,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIContentHandle* createAndInsertFosterParentedElement(int32_t ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContentHandle* form, nsIContentHandle* table, nsIContentHandle* stackParent);
     ;void insertFosterParentedCharacters(char16_t* buf, int32_t start, int32_t length, nsIContentHandle* table, nsIContentHandle* stackParent);
     void appendCharacters(nsIContentHandle* parent, char16_t* buf, int32_t start, int32_t length);
-    void appendIsindexPrompt(nsIContentHandle* parent);
     void appendComment(nsIContentHandle* parent, char16_t* buf, int32_t start, int32_t length);
     void appendCommentToDocument(char16_t* buf, int32_t start, int32_t length);
     void addAttributesToElement(nsIContentHandle* element, nsHtml5HtmlAttributes* attributes);

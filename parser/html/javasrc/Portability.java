@@ -1,22 +1,22 @@
 /*
  * Copyright (c) 2008-2015 Mozilla Foundation
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
- * to deal in the Software without restriction, including without limitation 
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in 
+ * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -32,7 +32,7 @@ public final class Portability {
     // Allocating methods
 
     /**
-     * Allocates a new local name object. In C++, the refcount must be set up in such a way that 
+     * Allocates a new local name object. In C++, the refcount must be set up in such a way that
      * calling <code>releaseLocal</code> on the return value balances the refcount set by this method.
      */
     public static @Local String newLocalNameFromBuffer(@NoLength char[] buf, int offset, int length, Interner interner) {
@@ -52,11 +52,11 @@ public final class Portability {
     public static String newStringFromLiteral(@Literal String literal) {
         return literal;
     }
-    
+
     public static String newStringFromString(String string) {
         return string;
     }
-    
+
     // XXX get rid of this
     public static char[] newCharArrayFromLocal(@Local String local) {
         return local.toCharArray();
@@ -65,19 +65,19 @@ public final class Portability {
     public static char[] newCharArrayFromString(String string) {
         return string.toCharArray();
     }
-    
+
     public static @Local String newLocalFromLocal(@Local String local, Interner interner) {
         return local;
     }
-    
+
     // Deallocation methods
-    
+
     public static void releaseString(String str) {
         // No-op in Java
     }
-    
+
     // Comparison methods
-    
+
     public static boolean localEqualsBuffer(@Local String local, @NoLength char[] buf, int offset, int length) {
         if (local.length() != length) {
             return false;
@@ -110,7 +110,7 @@ public final class Portability {
         }
         return true;
     }
-    
+
     public static boolean lowerCaseLiteralEqualsIgnoreAsciiCaseString(@Literal String lowerCaseLiteral,
             String string) {
         if (string == null) {
@@ -131,7 +131,7 @@ public final class Portability {
         }
         return true;
     }
-    
+
     public static boolean literalEqualsString(@Literal String literal, String string) {
         return literal.equals(string);
     }
@@ -139,12 +139,12 @@ public final class Portability {
     public static boolean stringEqualsString(String one, String other) {
         return one.equals(other);
     }
-    
+
     public static void delete(Object o) {
-        
+
     }
 
     public static void deleteArray(Object o) {
-        
+
     }
 }

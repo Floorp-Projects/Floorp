@@ -13,7 +13,7 @@
 #ifdef MOZ_ANDROID_MAX_SDK_VERSION
               android:maxSdkVersion="@MOZ_ANDROID_MAX_SDK_VERSION@"
 #endif
-              android:targetSdkVersion="23"/>
+              android:targetSdkVersion="@ANDROID_TARGET_SDK@"/>
 
 <!-- The bouncer APK and the main APK should define the same set of
      <permission>, <uses-permission>, and <uses-feature> elements.  This reduces

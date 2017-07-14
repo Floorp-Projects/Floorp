@@ -9,6 +9,7 @@
 #define mozilla_net_HttpChannelChild_h
 
 #include "mozilla/Mutex.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/NeckoTargetHolder.h"
@@ -33,6 +34,8 @@
 #include "nsIDivertableChannel.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "mozilla/net/DNS.h"
+
+using mozilla::Telemetry::LABELS_HTTP_CHILD_OMT_STATS;
 
 class nsIEventTarget;
 class nsInputStreamPump;
@@ -418,6 +421,13 @@ private:
 
   // Override the default security info pointer during a non-IPC redirection.
   void OverrideSecurityInfoForNonIPCRedirect(nsISupports* securityInfo);
+
+  // Collect telemetry for the successful rate of OMT.
+  void CollectOMTTelemetry();
+
+  // The result of RetargetDeliveryTo for this channel.
+  // |notRequested| represents OMT is not requested by the channel owner.
+  LABELS_HTTP_CHILD_OMT_STATS mOMTResult = LABELS_HTTP_CHILD_OMT_STATS::notRequested;
 
   friend class AssociateApplicationCacheEvent;
   friend class StartRequestEvent;

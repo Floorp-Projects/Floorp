@@ -719,12 +719,8 @@ TransformVertexInfo write_transform_vertex(RectWithSize instance_rect,
 
     vec4 layer_pos = get_layer_pos(device_pos / uDevicePixelRatio, layer);
 
-    /// Compute the snapping offset.
-    vec2 snap_offset = compute_snap_offset(layer_pos.xy / layer_pos.w,
-                                           local_clip_rect, layer, snap_rect);
-
     // Apply offsets for the render task to get correct screen location.
-    vec2 final_pos = device_pos + snap_offset -
+    vec2 final_pos = device_pos - //Note: `snap_rect` is not used
                      task.screen_space_origin +
                      task.render_target_origin;
 

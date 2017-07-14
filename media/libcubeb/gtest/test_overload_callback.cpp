@@ -69,7 +69,7 @@ TEST(cubeb, overload_callback)
   output_params.channels = 2;
   output_params.layout = CUBEB_LAYOUT_STEREO;
 
-  r = cubeb_get_min_latency(ctx, output_params, &latency_frames);
+  r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
   ASSERT_EQ(r, CUBEB_OK);
 
   r = cubeb_stream_init(ctx, &stream, "Cubeb",

@@ -16,6 +16,15 @@ float gauss(float x, float sigma) {
 
 void main(void) {
     vec4 cache_sample = texture(sCacheRGBA8, vUv);
+
+    // TODO(gw): The gauss function gets NaNs when blur radius
+    //           is zero. In the future, detect this earlier
+    //           and skip the blur passes completely.
+    if (vBlurRadius == 0) {
+        oFragColor = cache_sample;
+        return;
+    }
+
     vec4 color = vec4(cache_sample.rgb, 1.0) * (cache_sample.a * gauss(0.0, vSigma));
 
     for (int i=1 ; i < vBlurRadius ; ++i) {

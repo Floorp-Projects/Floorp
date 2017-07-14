@@ -390,8 +390,6 @@ DeviceManagerDx::CreateCompositorDevice(FeatureState& d3d11)
   mCompositorDevice->SetExceptionMode(0);
 }
 
-//#define BREAK_ON_D3D_ERROR
-
 bool
 DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                  D3D_DRIVER_TYPE aDriverType,
@@ -399,9 +397,9 @@ DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
                                  HRESULT& aResOut,
                                  RefPtr<ID3D11Device>& aOutDevice)
 {
-#ifdef BREAK_ON_D3D_ERROR
-  aFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+  if (gfxPrefs::Direct3D11EnableDebugLayer() || gfxPrefs::Direct3D11BreakOnError()) {
+    aFlags |= D3D11_CREATE_DEVICE_DEBUG;
+  }
 
   MOZ_SEH_TRY {
     aResOut = sD3D11CreateDeviceFn(
@@ -413,24 +411,24 @@ DeviceManagerDx::CreateDevice(IDXGIAdapter* aAdapter,
     return false;
   }
 
-#ifdef BREAK_ON_D3D_ERROR
-  do {
-    if (!aOutDevice)
-      break;
+  if (gfxPrefs::Direct3D11BreakOnError()) {
+    do {
+      if (!aOutDevice)
+        break;
 
-    RefPtr<ID3D11Debug> debug;
-    if(!SUCCEEDED( aOutDevice->QueryInterface(__uuidof(ID3D11Debug), getter_AddRefs(debug)) ))
-      break;
+      RefPtr<ID3D11Debug> debug;
+      if (!SUCCEEDED(aOutDevice->QueryInterface(__uuidof(ID3D11Debug), getter_AddRefs(debug))))
+        break;
 
-    RefPtr<ID3D11InfoQueue> infoQueue;
-    if(!SUCCEEDED( debug->QueryInterface(__uuidof(ID3D11InfoQueue), getter_AddRefs(infoQueue)) ))
-      break;
+      RefPtr<ID3D11InfoQueue> infoQueue;
+      if (!SUCCEEDED(debug->QueryInterface(__uuidof(ID3D11InfoQueue), getter_AddRefs(infoQueue))))
+        break;
 
-    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
-    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
-    infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
-  } while (false);
-#endif
+      infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_CORRUPTION, true);
+      infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_ERROR, true);
+      infoQueue->SetBreakOnSeverity(D3D11_MESSAGE_SEVERITY_WARNING, true);
+    } while (false);
+  }
 
   return true;
 }
