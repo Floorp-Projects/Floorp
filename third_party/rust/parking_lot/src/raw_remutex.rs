@@ -23,7 +23,7 @@ fn get_thread_id() -> usize {
     // reserved value to indicate an empty slot. We instead fall
     // back to using the address of a thread-local variable, which
     // is slightly slower but guaranteed to produce a non-zero value.
-    thread_local!(static KEY: u8 = unsafe { std::mem::uninitialized() });
+    thread_local!(static KEY: u8 = unsafe { ::std::mem::uninitialized() });
     KEY.with(|x| x as *const _ as usize)
 }
 
