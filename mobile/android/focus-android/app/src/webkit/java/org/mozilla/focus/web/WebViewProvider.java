@@ -58,6 +58,9 @@ public class WebViewProvider {
     private static void configureDefaultSettings(Context context, WebSettings settings) {
         settings.setJavaScriptEnabled(true);
 
+        // Needs to be enabled to display some HTML5 sites that use local storage
+        settings.setDomStorageEnabled(true);
+
         // Enabling built in zooming shows the controls by default
         settings.setBuiltInZoomControls(true);
 
@@ -86,7 +89,6 @@ public class WebViewProvider {
         // The default for those settings should be "false" - But we want to be explicit.
         settings.setAppCacheEnabled(false);
         settings.setDatabaseEnabled(false);
-        settings.setDomStorageEnabled(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
 
         // We do not implement the callbacks - So let's disable it.
