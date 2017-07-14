@@ -186,9 +186,14 @@ appUpdater.prototype =
         button.label = this.bundle.formatStringFromName("update.downloadAndInstallButton.label", [updateVersion], 1);
         button.accessKey = this.bundle.GetStringFromName("update.downloadAndInstallButton.accesskey");
       }
-    }
+      this.updateDeck.selectedPanel = panel;
+      if (!document.commandDispatcher.focusedElement || // don't steal the focus
+          document.commandDispatcher.focusedElement.localName == "button") // except from the other buttons
+        button.focus();
 
-    this.updateDeck.selectedPanel = panel;
+    } else {
+      this.updateDeck.selectedPanel = panel;
+    }
   },
 
   /**
