@@ -461,6 +461,26 @@ private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/**
+ * A class to disable interrupt callback temporary.
+ */
+class MOZ_RAII AutoDisableJSInterruptCallback
+{
+public:
+  explicit AutoDisableJSInterruptCallback(JSContext* aCx)
+    : mCx(aCx)
+    , mOld(JS_DisableInterruptCallback(aCx))
+  { }
+
+  ~AutoDisableJSInterruptCallback() {
+    JS_ResetInterruptCallback(mCx, mOld);
+  }
+
+private:
+  JSContext* mCx;
+  bool mOld;
+};
+
 } // namespace mozilla
 
 #endif // mozilla_dom_ScriptSettings_h
