@@ -21,14 +21,14 @@ function test(f, manualCount) {
 test(function () {
     g.eval("first = Error().lineNumber;\n" +
            "debugger;\n" +
-           "last = Error().lineNumber;\n");
+           "last = Error().lineNumber;");
 });
 
 test(function () {
     g.evaluate("first = Error().lineNumber;\n" +
                "debugger;\n" +
                Array(17000).join("\n") +
-               "last = Error().lineNumber;\n");
+               "last = Error().lineNumber;");
 });
 
 test(function () {
