@@ -24,7 +24,7 @@ function testOne(decl, loopKind) {
   let body = "var array = [2, 4, 6];\ndebugger;\nfor (" + decl + " iter " +
       loopKind + " array) {\n  print(iter);\n}\n";
   g.eval(body);
-  assertEq(log, "12121212");
+  assertEq(log, "12121214");
 }
 
 for (let decl of ["", "var", "let"]) {

@@ -455,6 +455,11 @@ class FullParseHandler
         }
     }
 
+    void setListEndPosition(ParseNode* list, const TokenPos& pos) {
+        MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
+        list->pn_pos.end = pos.end;
+    }
+
     void addCaseStatementToList(ParseNode* list, ParseNode* casepn) {
         MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
         MOZ_ASSERT(casepn->isKind(PNK_CASE));
