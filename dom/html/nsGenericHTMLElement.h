@@ -306,15 +306,6 @@ public:
     *aOffsetHeight = OffsetHeight();
     return NS_OK;
   }
-  NS_IMETHOD GetTabIndex(int32_t* aTabIndex) final override {
-    *aTabIndex = TabIndex();
-    return NS_OK;
-  }
-  NS_IMETHOD SetTabIndex(int32_t aTabIndex) final override {
-    mozilla::ErrorResult rv;
-    SetTabIndex(aTabIndex, rv);
-    return rv.StealNSResult();
-  }
   NS_IMETHOD Focus() final override {
     mozilla::ErrorResult rv;
     Focus(rv);
