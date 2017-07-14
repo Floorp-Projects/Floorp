@@ -68,7 +68,7 @@ partial interface HTMLImageElement {
 
 // Mozilla extensions.
 partial interface HTMLImageElement {
-           [CEReactions]
+           [CEReactions, SetterThrows]
            attribute DOMString lowsrc;
 
   // These attributes are offsets from the closest view (to mimic

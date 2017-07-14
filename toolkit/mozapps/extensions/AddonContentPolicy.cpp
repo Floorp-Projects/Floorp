@@ -368,9 +368,7 @@ class CSPValidator final : public nsCSPSrcVisitor {
       nsCOMPtr<nsIStringBundle> stringBundle = GetStringBundle();
 
       if (stringBundle) {
-        NS_ConvertASCIItoUTF16 name(aName);
-
-        rv = stringBundle->FormatStringFromName(name.get(), aParams, aLength,
+        rv = stringBundle->FormatStringFromName(aName, aParams, aLength,
                                                 getter_Copies(mError));
       }
 

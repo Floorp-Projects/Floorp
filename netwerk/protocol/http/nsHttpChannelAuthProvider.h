@@ -85,7 +85,7 @@ private:
                                             uint32_t authFlags,
                                             nsHttpAuthIdentity &);
 
-    bool     ConfirmAuth(const nsString &bundleKey, bool doYesNoPrompt);
+    bool     ConfirmAuth(const char* bundleKey, bool doYesNoPrompt);
     void     SetAuthorizationHeader(nsHttpAuthCache *, nsHttpAtom header,
                                     const char *scheme, const char *host,
                                     int32_t port, const char *path,

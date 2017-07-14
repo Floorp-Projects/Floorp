@@ -616,7 +616,7 @@ nsGIOInputStream::Close()
   }
 
   if (mChannel) {
-    NS_ReleaseOnMainThread(
+    NS_ReleaseOnMainThreadSystemGroup(
       "nsGIOInputStream::mChannel", dont_AddRef(mChannel));
 
     mChannel = nullptr;
@@ -827,17 +827,17 @@ mount_operation_ask_password (GMountOperation   *mount_op,
     if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
       if (!realm.IsEmpty()) {
         const char16_t *strings[] = { realm.get(), dispHost.get() };
-        bundle->FormatStringFromName(u"EnterLoginForRealm3",
+        bundle->FormatStringFromName("EnterLoginForRealm3",
                                      strings, 2, getter_Copies(nsmessage));
       } else {
         const char16_t *strings[] = { dispHost.get() };
-        bundle->FormatStringFromName(u"EnterUserPasswordFor2",
+        bundle->FormatStringFromName("EnterUserPasswordFor2",
                                      strings, 1, getter_Copies(nsmessage));
       }
     } else {
       NS_ConvertUTF8toUTF16 userName(default_user);
       const char16_t *strings[] = { userName.get(), dispHost.get() };
-      bundle->FormatStringFromName(u"EnterPasswordFor",
+      bundle->FormatStringFromName("EnterPasswordFor",
                                    strings, 2, getter_Copies(nsmessage));
     }
   } else {

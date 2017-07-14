@@ -256,7 +256,7 @@ nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
       nsAutoString appName;
 
       if (bundle) {
-        bundle->GetStringFromName(u"brandShortName",
+        bundle->GetStringFromName("brandShortName",
                                   getter_Copies(appName));
         appShortName = NS_ConvertUTF16toUTF8(appName);
       } else {

@@ -813,7 +813,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     NS_ConvertUTF8toUTF16 reportSpec(spec);
 
     const char16_t* params[] = { reportSpec.get()};
-    CSP_LogLocalizedStr(u"blockAllMixedContent",
+    CSP_LogLocalizedStr("blockAllMixedContent",
                         params, ArrayLength(params),
                         EmptyString(), // aSourceFile
                         EmptyString(), // aScriptSample

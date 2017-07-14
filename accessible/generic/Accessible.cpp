@@ -318,7 +318,9 @@ Accessible::TranslateString(const nsString& aKey, nsAString& aStringOut)
     return;
 
   nsXPIDLString xsValue;
-  nsresult rv = stringBundle->GetStringFromName(aKey.get(), getter_Copies(xsValue));
+  nsresult rv =
+    stringBundle->GetStringFromName(NS_ConvertUTF16toUTF8(aKey).get(),
+                                    getter_Copies(xsValue));
   if (NS_SUCCEEDED(rv))
     aStringOut.Assign(xsValue);
 }
@@ -2833,12 +2835,12 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
     return;
 
   nsAutoString separator;
-  keyStringBundle->GetStringFromName(u"MODIFIER_SEPARATOR",
+  keyStringBundle->GetStringFromName("MODIFIER_SEPARATOR",
                                      getter_Copies(separator));
 
   nsAutoString modifierName;
   if (mModifierMask & kControl) {
-    keyStringBundle->GetStringFromName(u"VK_CONTROL",
+    keyStringBundle->GetStringFromName("VK_CONTROL",
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -2846,7 +2848,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kAlt) {
-    keyStringBundle->GetStringFromName(u"VK_ALT",
+    keyStringBundle->GetStringFromName("VK_ALT",
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -2854,7 +2856,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kShift) {
-    keyStringBundle->GetStringFromName(u"VK_SHIFT",
+    keyStringBundle->GetStringFromName("VK_SHIFT",
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -2862,7 +2864,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kMeta) {
-    keyStringBundle->GetStringFromName(u"VK_META",
+    keyStringBundle->GetStringFromName("VK_META",
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);

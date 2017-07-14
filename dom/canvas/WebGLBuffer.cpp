@@ -153,6 +153,8 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
         gl->fBufferData(target, size, uploadData, usage);
     }
 
+    mContext->OnDataAllocCall();
+
     mUsage = usage;
     mByteLength = size;
     mIndexCache = Move(newIndexCache);

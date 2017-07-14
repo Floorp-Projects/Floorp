@@ -137,20 +137,19 @@ nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 }
 
 nsresult
-nsStringBundle::GetStringFromName(const nsAString& aName,
-                                  nsAString& aResult)
+nsStringBundle::GetStringFromName(const char* aName, nsAString& aResult)
 {
   nsresult rv;
 
   // try override first
   if (mOverrideStrings) {
     rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
-                                             NS_ConvertUTF16toUTF8(aName),
+                                             nsDependentCString(aName),
                                              aResult);
     if (NS_SUCCEEDED(rv)) return rv;
   }
 
-  rv = mProps->GetStringProperty(NS_ConvertUTF16toUTF8(aName), aResult);
+  rv = mProps->GetStringProperty(nsDependentCString(aName), aResult);
   return rv;
 }
 
@@ -160,7 +159,7 @@ nsStringBundle::FormatStringFromID(int32_t aID,
                                    uint32_t aLength,
                                    char16_t ** aResult)
 {
-  nsAutoString idStr;
+  nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
 
   return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
@@ -168,10 +167,21 @@ nsStringBundle::FormatStringFromID(int32_t aID,
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromName(const char16_t *aName,
-                                     const char16_t **aParams,
+nsStringBundle::FormatStringFromAUTF8Name(const nsACString& aName,
+                                          const char16_t **aParams,
+                                          uint32_t aLength,
+                                          char16_t **aResult)
+{
+  return FormatStringFromName(PromiseFlatCString(aName).get(), aParams,
+                              aLength, aResult);
+}
+
+// this function supports at most 10 parameters.. see below for why
+NS_IMETHODIMP
+nsStringBundle::FormatStringFromName(const char* aName,
+                                     const char16_t** aParams,
                                      uint32_t aLength,
-                                     char16_t **aResult)
+                                     char16_t** aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
@@ -182,12 +192,11 @@ nsStringBundle::FormatStringFromName(const char16_t *aName,
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString formatStr;
-  rv = GetStringFromName(nsDependentString(aName), formatStr);
+  rv = GetStringFromName(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.get(), aParams, aLength, aResult);
 }
-
 
 NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
 
@@ -211,7 +220,14 @@ nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
 }
 
 NS_IMETHODIMP
-nsStringBundle::GetStringFromName(const char16_t *aName, char16_t **aResult)
+nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
+                                       char16_t **aResult)
+{
+  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -223,17 +239,8 @@ nsStringBundle::GetStringFromName(const char16_t *aName, char16_t **aResult)
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   *aResult = nullptr;
   nsAutoString tmpstr;
-  rv = GetStringFromName(nsDependentString(aName), tmpstr);
-  if (NS_FAILED(rv))
-  {
-#if 0
-    // it is not uncommon for apps to request a string name which may not exist
-    // so be quiet about it.
-    NS_WARNING("String missing from string bundle");
-    printf("  '%s' missing from bundle %s\n", NS_ConvertUTF16toUTF8(aName).get(), mPropertiesURL.get());
-#endif
-    return rv;
-  }
+  rv = GetStringFromName(aName, tmpstr);
+  if (NS_FAILED(rv)) return rv;
 
   *aResult = ToNewUnicode(tmpstr);
   NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
@@ -433,8 +440,14 @@ nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, char16_t ** aRes
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsExtensibleStringBundle::GetStringFromName(const char16_t *aName,
-                                                     char16_t ** aResult)
+nsresult nsExtensibleStringBundle::GetStringFromAUTF8Name(
+  const nsACString& aName, char16_t ** aResult)
+{
+  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
+}
+
+nsresult nsExtensibleStringBundle::GetStringFromName(const char* aName,
+                                                     char16_t** aResult)
 {
   nsresult rv;
   const uint32_t size = mBundles.Count();
@@ -456,16 +469,26 @@ nsExtensibleStringBundle::FormatStringFromID(int32_t aID,
                                              uint32_t aLength,
                                              char16_t ** aResult)
 {
-  nsAutoString idStr;
+  nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
   return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
 }
 
 NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromName(const char16_t *aName,
-                                               const char16_t ** aParams,
+nsExtensibleStringBundle::FormatStringFromAUTF8Name(const nsACString& aName,
+                                                    const char16_t ** aParams,
+                                                    uint32_t aLength,
+                                                    char16_t ** aResult)
+{
+  return FormatStringFromName(PromiseFlatCString(aName).get(),
+                              aParams, aLength, aResult);
+}
+
+NS_IMETHODIMP
+nsExtensibleStringBundle::FormatStringFromName(const char* aName,
+                                               const char16_t** aParams,
                                                uint32_t aLength,
-                                               char16_t ** aResult)
+                                               char16_t** aResult)
 {
   nsXPIDLString formatStr;
   nsresult rv;

@@ -1772,7 +1772,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // It's not safe to Shutdown() a thread from StableState, and
         // releasing this may shutdown a SystemClockDriver thread.
         // Proxy the release to outside of StableState.
-        NS_ReleaseOnMainThread(
+        NS_ReleaseOnMainThreadSystemGroup(
           "MediaStreamGraphImpl::CurrentDriver", driver.forget(),
           true); // always proxy
       }

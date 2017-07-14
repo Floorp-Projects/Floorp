@@ -183,7 +183,7 @@ ShouldIgnoreFrameOptions(nsIChannel* aChannel, nsIPrincipal* aPrincipal)
   uint64_t innerWindowID = loadInfo ? loadInfo->GetInnerWindowID() : 0;
   const char16_t* params[] = { u"x-frame-options",
                                u"frame-ancestors" };
-  CSP_LogLocalizedStr(u"IgnoringSrcBecauseOfDirective",
+  CSP_LogLocalizedStr("IgnoringSrcBecauseOfDirective",
                       params, ArrayLength(params),
                       EmptyString(), // no sourcefile
                       EmptyString(), // no scriptsample

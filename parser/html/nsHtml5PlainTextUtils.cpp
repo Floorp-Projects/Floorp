@@ -34,7 +34,7 @@ nsHtml5PlainTextUtils::NewLinkAttributes()
   NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/browser.properties could not be loaded");
   nsXPIDLString title;
   if (bundle) {
-    bundle->GetStringFromName(u"plainText.wordWrap", getter_Copies(title));
+    bundle->GetStringFromName("plainText.wordWrap", getter_Copies(title));
   }
 
   linkAttrs->addAttribute(

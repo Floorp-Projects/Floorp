@@ -92,6 +92,38 @@ add_task(async function test_snapshot() {
   webNavigation.close();
 });
 
+add_task(function* test_snapshot_widget_layers() {
+  let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);
+  let webNavigation = windowlessBrowser.QueryInterface(Ci.nsIWebNavigation);
+  let contentWindow = yield loadContentWindow(webNavigation, HEADLESS_URL);
+  const contentWidth = 1;
+  const contentHeight = 2;
+  // Verify dimensions.
+  contentWindow.resizeTo(contentWidth, contentHeight);
+  equal(contentWindow.innerWidth, contentWidth);
+  equal(contentWindow.innerHeight, contentHeight);
+
+  // Snapshot the test page.
+  let canvas = contentWindow.document.createElementNS('http://www.w3.org/1999/xhtml', 'html:canvas');
+  let context = canvas.getContext('2d');
+  let width = contentWindow.innerWidth;
+  let height = contentWindow.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+  context.drawWindow(
+    contentWindow,
+    0,
+    0,
+    width,
+    height,
+    'rgb(255, 255, 255)',
+    context.DRAWWINDOW_DRAW_CARET | context.DRAWWINDOW_DRAW_VIEW | context.DRAWWINDOW_USE_WIDGET_LAYERS
+  );
+  ok(true, "Snapshot with widget layers didn't crash.");
+
+  webNavigation.close();
+});
+
 // Ensure keydown events are triggered on the windowless browser.
 add_task(async function test_keydown() {
   let windowlessBrowser = Services.appShell.createWindowlessBrowser(false);

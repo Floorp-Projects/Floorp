@@ -218,6 +218,8 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
         return;
     }
 
+    mContext->OnDataAllocCall();
+
     mSamples = samples;
     mFormat = usage;
     mWidth = width;

@@ -49,8 +49,6 @@ public:
 
   void UpdateWith(Promise& aPromise, ErrorResult& aRv);
 
-  bool IsTrusted() const;
-
 protected:
   ~PaymentRequestUpdateEvent();
 

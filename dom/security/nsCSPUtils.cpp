@@ -88,7 +88,7 @@ CSP_PercentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr)
 }
 
 void
-CSP_GetLocalizedStr(const char16_t* aName,
+CSP_GetLocalizedStr(const char* aName,
                     const char16_t** aParams,
                     uint32_t aLength,
                     char16_t** outResult)
@@ -106,7 +106,8 @@ CSP_GetLocalizedStr(const char16_t* aName,
   if (!keyStringBundle) {
     return;
   }
-  keyStringBundle->FormatStringFromName(aName, aParams, aLength, outResult);
+  keyStringBundle->FormatStringFromName(aName, aParams, aLength,
+                                        outResult);
 }
 
 void
@@ -181,7 +182,7 @@ CSP_LogMessage(const nsAString& aMessage,
  * Combines CSP_LogMessage and CSP_GetLocalizedStr into one call.
  */
 void
-CSP_LogLocalizedStr(const char16_t* aName,
+CSP_LogLocalizedStr(const char* aName,
                     const char16_t** aParams,
                     uint32_t aLength,
                     const nsAString& aSourceName,

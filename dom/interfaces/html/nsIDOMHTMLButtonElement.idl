@@ -33,13 +33,5 @@ interface nsIDOMHTMLButtonElement : nsISupports
            attribute DOMString             name;
            attribute DOMString             type;
            attribute DOMString             value;
-
-  // The following lines are part of the constraint validation API, see:
-  // http://www.whatwg.org/specs/web-apps/current-work/#the-constraint-validation-api
-  readonly attribute boolean             willValidate;
-  readonly attribute nsIDOMValidityState validity;
-  readonly attribute DOMString           validationMessage;
-  boolean checkValidity();
-  void setCustomValidity(in DOMString error);
 };
 
