@@ -108,7 +108,7 @@ function() {
   function testMakeCredential() {
     let rp = {id: document.domain, name: "none", icon: "none"};
     let user = {id: "none", name: "none", icon: "none", displayName: "none"};
-    let param = {type: "public-key", algorithm: "P-256"};
+    let param = {type: "public-key", algorithm: "ES256"};
     let makeCredentialOptions = {
       rp: rp,
       user: user,
@@ -127,7 +127,7 @@ function() {
   function testMakeDuplicate(aCredInfo) {
     let rp = {id: document.domain, name: "none", icon: "none"};
     let user = {id: "none", name: "none", icon: "none", displayName: "none"};
-    let param = {type: "public-key", algorithm: "P-256"};
+    let param = {type: "public-key", algorithm: "ES256"};
     let makeCredentialOptions = {
       rp: rp,
       user: user,
