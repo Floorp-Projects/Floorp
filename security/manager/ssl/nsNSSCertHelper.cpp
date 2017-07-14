@@ -106,8 +106,8 @@ GetPIPNSSBundleString(const char* stringName, nsAString& result)
     return rv;
   }
   result.Truncate();
-  return pipnssBundle->GetStringFromName(
-    NS_ConvertASCIItoUTF16(stringName).get(), getter_Copies(result));
+  return pipnssBundle->GetStringFromName(stringName,
+                                         getter_Copies(result));
 }
 
 static nsresult
@@ -126,8 +126,7 @@ PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
   }
   result.Truncate();
   return pipnssBundle->FormatStringFromName(
-    NS_ConvertASCIItoUTF16(stringName).get(), params, numParams,
-    getter_Copies(result));
+    stringName, params, numParams, getter_Copies(result));
 }
 
 static nsresult

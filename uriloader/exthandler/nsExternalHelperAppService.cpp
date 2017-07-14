@@ -1804,22 +1804,22 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 // notification to the dialog progress listener or nsITransfer implementation.
 void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequest *aRequest, const nsString& path)
 {
-    nsAutoString msgId;
+    const char* msgId;
     switch (rv) {
     case NS_ERROR_OUT_OF_MEMORY:
         // No memory
-        msgId.AssignLiteral("noMemory");
+        msgId = "noMemory";
         break;
 
     case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
         // Out of space on target volume.
-        msgId.AssignLiteral("diskFull");
+        msgId = "diskFull";
         break;
 
     case NS_ERROR_FILE_READ_ONLY:
         // Attempt to write to read/only file.
-        msgId.AssignLiteral("readOnly");
+        msgId = "readOnly";
         break;
 
     case NS_ERROR_FILE_ACCESS_DENIED:
@@ -1828,12 +1828,12 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
 #if defined(ANDROID)
           // On Android (and Gonk), this means the SD card is present but
           // unavailable (read-only).
-          msgId.AssignLiteral("SDAccessErrorCardReadOnly");
+          msgId = "SDAccessErrorCardReadOnly";
 #else
-          msgId.AssignLiteral("accessError");
+          msgId = "accessError";
 #endif
         } else {
-          msgId.AssignLiteral("launchError");
+          msgId = "launchError";
         }
         break;
 
@@ -1842,14 +1842,14 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
     case NS_ERROR_FILE_UNRECOGNIZED_PATH:
         // Helper app not found, let's verify this happened on launch
         if (type == kLaunchError) {
-          msgId.AssignLiteral("helperAppNotFound");
+          msgId = "helperAppNotFound";
           break;
         }
 #if defined(ANDROID)
         else if (type == kWriteError) {
           // On Android (and Gonk), this means the SD card is missing (not in
           // SD slot).
-          msgId.AssignLiteral("SDAccessErrorCardMissing");
+          msgId = "SDAccessErrorCardMissing";
           break;
         }
 #endif
@@ -1859,13 +1859,13 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         // Generic read/write/launch error message.
         switch (type) {
         case kReadError:
-          msgId.AssignLiteral("readError");
+          msgId = "readError";
           break;
         case kWriteError:
-          msgId.AssignLiteral("writeError");
+          msgId = "writeError";
           break;
         case kLaunchError:
-          msgId.AssignLiteral("launchError");
+          msgId = "launchError";
           break;
         }
         break;
@@ -1873,7 +1873,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
 
     MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Error,
         ("Error: %s, type=%i, listener=0x%p, transfer=0x%p, rv=0x%08" PRIX32 "\n",
-         NS_LossyConvertUTF16toASCII(msgId).get(), type, mDialogProgressListener.get(), mTransfer.get(),
+         msgId, type, mDialogProgressListener.get(), mTransfer.get(),
          static_cast<uint32_t>(rv)));
 
     MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Error,
@@ -1888,7 +1888,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                          getter_AddRefs(bundle)))) {
             nsXPIDLString msgText;
             const char16_t *strings[] = { path.get() };
-            if (NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1,
+            if (NS_SUCCEEDED(bundle->FormatStringFromName(msgId, strings, 1,
                                                           getter_Copies(msgText)))) {
               if (mDialogProgressListener) {
                 // We have a listener, let it handle the error.
@@ -1900,7 +1900,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                 nsresult qiRv;
                 nsCOMPtr<nsIPrompt> prompter(do_GetInterface(GetDialogParent(), &qiRv));
                 nsXPIDLString title;
-                bundle->FormatStringFromName(u"title",
+                bundle->FormatStringFromName("title",
                                              strings,
                                              1,
                                              getter_Copies(title));

@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
 
 add_task(function* () {
   let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
-  let { chromeDoc: doc } = view;
+  let { document: doc } = view;
 
   yield selectNode(".normal-text", inspector);
 

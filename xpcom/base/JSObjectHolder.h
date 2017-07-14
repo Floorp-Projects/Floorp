@@ -21,7 +21,8 @@ namespace mozilla {
 // Note that this keeps alive the JS object until it goes away, so be sure not to
 // create cycles that keep alive the holder.
 //
-// JSObjectHolder is ISupports to make it usable with NS_ReleaseOnMainThread.
+// JSObjectHolder is ISupports to make it usable with
+// NS_ReleaseOnMainThreadSystemGroup.
 class JSObjectHolder final : public nsISupports
 {
 public:

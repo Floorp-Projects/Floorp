@@ -352,7 +352,9 @@ ImageDocument::ShrinkToFit()
     // changed and we don't plan to adjust the image size to compensate.  Since
     // mImageIsResized it has a "height" attribute set, and we can just get the
     // displayed image height by getting .height on the HTMLImageElement.
-    HTMLImageElement* img = HTMLImageElement::FromContent(mImageContent);
+    //
+    // Hold strong ref, because Height() can run script.
+    RefPtr<HTMLImageElement> img = HTMLImageElement::FromContent(mImageContent);
     uint32_t imageHeight = img->Height();
     nsDOMTokenList* classList = img->ClassList();
     ErrorResult ignored;
@@ -366,10 +368,17 @@ ImageDocument::ShrinkToFit()
   }
 
   // Keep image content alive while changing the attributes.
-  nsCOMPtr<Element> imageContent = mImageContent;
-  nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(imageContent);
-  image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)));
-  image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)));
+  RefPtr<HTMLImageElement> image = HTMLImageElement::FromContent(mImageContent);
+  {
+    IgnoredErrorResult ignored;
+    image->SetWidth(std::max(1, NSToCoordFloor(GetRatio() * mImageWidth)),
+                    ignored);
+  }
+  {
+    IgnoredErrorResult ignored;
+    image->SetHeight(std::max(1, NSToCoordFloor(GetRatio() * mImageHeight)),
+                     ignored);
+  }
 
   // The view might have been scrolled when zooming in, scroll back to the
   // origin now that we're showing a shrunk-to-window version.
@@ -592,7 +601,7 @@ ImageDocument::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
     NS_ConvertUTF8toUTF16 srcString(src);
     const char16_t* formatString[] = { srcString.get() };
     nsXPIDLString errorMsg;
-    mStringBundle->FormatStringFromName(u"InvalidImage", formatString, 1,
+    mStringBundle->FormatStringFromName("InvalidImage", formatString, 1,
                                         getter_Copies(errorMsg));
 
     mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::alt, errorMsg, false);
@@ -618,13 +627,10 @@ ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
       if (event) {
         event->GetClientX(&x);
         event->GetClientY(&y);
-        int32_t left = 0, top = 0;
-        nsCOMPtr<nsIDOMHTMLElement> htmlElement =
-          do_QueryInterface(mImageContent);
-        htmlElement->GetOffsetLeft(&left);
-        htmlElement->GetOffsetTop(&top);
-        x -= left;
-        y -= top;
+        RefPtr<HTMLImageElement> img =
+          HTMLImageElement::FromContent(mImageContent);
+        x -= img->OffsetLeft();
+        y -= img->OffsetTop();
       }
       mShouldResize = false;
       RestoreImageTo(x, y);
@@ -648,7 +654,9 @@ ImageDocument::UpdateSizeFromLayout()
     return;
   }
 
-  nsIFrame* contentFrame = mImageContent->GetPrimaryFrame(FlushType::Frames);
+  // Need strong ref, because GetPrimaryFrame can run script.
+  nsCOMPtr<Element> imageContent = mImageContent;
+  nsIFrame* contentFrame = imageContent->GetPrimaryFrame(FlushType::Frames);
   if (!contentFrame) {
     return;
   }
@@ -804,7 +812,7 @@ ImageDocument::UpdateTitleAndCharset()
     ratioStr.AppendInt(NSToCoordFloor(GetRatio() * 100));
 
     const char16_t* formatString[1] = { ratioStr.get() };
-    mStringBundle->FormatStringFromName(u"ScaledImage",
+    mStringBundle->FormatStringFromName("ScaledImage",
                                         formatString, 1,
                                         getter_Copies(status));
   }

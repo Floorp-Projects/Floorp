@@ -126,6 +126,8 @@ struct ProxyReleaseChooser<true>
 /**
  * Ensures that the delete of a smart pointer occurs on the target thread.
  *
+ * @param aName
+ *        the labelling name of the runnable involved in the releasing
  * @param aTarget
  *        the target thread where the doomed object should be released.
  * @param aDoomed
@@ -148,44 +150,20 @@ NS_ProxyRelease(const char* aName, nsIEventTarget* aTarget,
 /**
  * Ensures that the delete of a smart pointer occurs on the main thread.
  *
+ * @param aName
+ *        the labelling name of the runnable involved in the releasing
  * @param aDoomed
  *        the doomed object; the object to be released on the main thread.
  * @param aAlwaysProxy
- *        normally, if NS_ReleaseOnMainThread is called on the main thread,
- *        then the doomed object will be released directly. However, if this
- *        parameter is true, then an event will always be posted to the main
- *        thread for asynchronous release.
+ *        normally, if NS_ReleaseOnMainThreadSystemGroup is called on the main
+ *        thread, then the doomed object will be released directly. However, if
+ *        this parameter is true, then an event will always be posted to the
+ *        main thread for asynchronous release.
  */
 template<class T>
 inline NS_HIDDEN_(void)
-NS_ReleaseOnMainThread(const char* aName,
-                       already_AddRefed<T> aDoomed,
-                       bool aAlwaysProxy = false)
-{
-  // NS_ProxyRelease treats a null event target as "the current thread".  So a
-  // handle on the main thread is only necessary when we're not already on the
-  // main thread or the release must happen asynchronously.
-  nsCOMPtr<nsIThread> mainThread;
-  if (!NS_IsMainThread() || aAlwaysProxy) {
-    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT_UNREACHABLE("Could not get main thread; leaking an object!");
-      mozilla::Unused << aDoomed.take();
-      return;
-    }
-  }
-
-  NS_ProxyRelease(aName, mainThread, mozilla::Move(aDoomed), aAlwaysProxy);
-}
-
-/**
- * This is the same as NS_ReleaseOnMainThread, except that the
- * runnable for the deletion will be dispatched to the system group.
- */
-template<class T>
-inline NS_HIDDEN_(void)
-NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
+NS_ReleaseOnMainThreadSystemGroup(const char* aName,
+                                  already_AddRefed<T> aDoomed,
                                   bool aAlwaysProxy = false)
 {
   // NS_ProxyRelease treats a null event target as "the current thread".  So a
@@ -202,8 +180,17 @@ NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
     }
   }
 
-  NS_ProxyRelease("NS_ReleaseOnMainThreadSystemGroup", systemGroupEventTarget,
-                  mozilla::Move(aDoomed), aAlwaysProxy);
+  NS_ProxyRelease(aName, systemGroupEventTarget, mozilla::Move(aDoomed),
+                  aAlwaysProxy);
+}
+
+template<class T>
+inline NS_HIDDEN_(void)
+NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
+                                  bool aAlwaysProxy = false)
+{
+  NS_ReleaseOnMainThreadSystemGroup("NS_ReleaseOnMainThreadSystemGroup",
+                                    mozilla::Move(aDoomed), aAlwaysProxy);
 }
 
 /**

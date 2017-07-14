@@ -36,11 +36,10 @@ nsParserMsgUtils::GetLocalizedStringByName(const char * aPropFileName, const cha
   nsresult rv = GetBundle(aPropFileName,getter_AddRefs(bundle));
   if (NS_SUCCEEDED(rv) && bundle) {
     nsXPIDLString valUni;
-    nsAutoString key; key.AssignWithConversion(aKey);
-    rv = bundle->GetStringFromName(key.get(), getter_Copies(valUni));
+    rv = bundle->GetStringFromName(aKey, getter_Copies(valUni));
     if (NS_SUCCEEDED(rv) && valUni) {
       oVal.Assign(valUni);
-    }  
+    }
   }
 
   return rv;

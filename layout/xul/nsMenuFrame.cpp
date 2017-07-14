@@ -1105,7 +1105,8 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
 
         if (NS_SUCCEEDED(rv) && bundle) {
           nsXPIDLString keyName;
-          rv = bundle->GetStringFromName(keyCode.get(), getter_Copies(keyName));
+          rv = bundle->GetStringFromName(NS_ConvertUTF16toUTF8(keyCode).get(),
+                                         getter_Copies(keyName));
           if (keyName)
             accelString = keyName;
         }

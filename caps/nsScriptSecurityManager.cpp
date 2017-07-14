@@ -511,8 +511,8 @@ nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
     if (!SecurityCompareURIs(aSourceURI, aTargetURI))
     {
          if (reportError) {
-            ReportError(nullptr, NS_LITERAL_STRING("CheckSameOriginError"),
-                     aSourceURI, aTargetURI);
+            ReportError(nullptr, "CheckSameOriginError",
+                        aSourceURI, aTargetURI);
          }
          return NS_ERROR_DOM_BAD_URI;
     }
@@ -849,7 +849,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     // Note that the order of policy checks here is very important!
     // We start from most restrictive and work our way down.
     bool reportErrors = !(aFlags & nsIScriptSecurityManager::DONT_REPORT_ERRORS);
-    NS_NAMED_LITERAL_STRING(errorTag, "CheckLoadURIError");
+    const char* errorTag = "CheckLoadURIError";
 
     nsAutoCString targetScheme;
     nsresult rv = aTargetBaseURI->GetScheme(targetScheme);
@@ -981,7 +981,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
         NS_ConvertASCIItoUTF16 ucsTargetScheme(targetScheme);
         const char16_t* formatStrings[] = { ucsTargetScheme.get() };
         rv = sStrBundle->
-            FormatStringFromName(u"ProtocolFlagError",
+            FormatStringFromName("ProtocolFlagError",
                                  formatStrings,
                                  ArrayLength(formatStrings),
                                  getter_Copies(message));
@@ -998,7 +998,7 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
 }
 
 nsresult
-nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
+nsScriptSecurityManager::ReportError(JSContext* cx, const char* aMessageTag,
                                      nsIURI* aSource, nsIURI* aTarget)
 {
     nsresult rv;
@@ -1019,7 +1019,7 @@ nsScriptSecurityManager::ReportError(JSContext* cx, const nsAString& messageTag,
     NS_ConvertASCIItoUTF16 ucsSourceSpec(sourceSpec);
     NS_ConvertASCIItoUTF16 ucsTargetSpec(targetSpec);
     const char16_t *formatStrings[] = { ucsSourceSpec.get(), ucsTargetSpec.get() };
-    rv = sStrBundle->FormatStringFromName(PromiseFlatString(messageTag).get(),
+    rv = sStrBundle->FormatStringFromName(aMessageTag,
                                           formatStrings,
                                           ArrayLength(formatStrings),
                                           getter_Copies(message));
@@ -1236,27 +1236,27 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
     }
 
     //-- Access denied, report an error
-    NS_ConvertUTF8toUTF16 strName("CreateWrapperDenied");
     nsAutoCString origin;
     nsIPrincipal* subjectPrincipal = nsContentUtils::SubjectPrincipal();
     GetPrincipalDomainOrigin(subjectPrincipal, origin);
     NS_ConvertUTF8toUTF16 originUnicode(origin);
     NS_ConvertUTF8toUTF16 classInfoName(objClassInfo.GetName());
-    const char16_t* formatStrings[] = {
-        classInfoName.get(),
-        originUnicode.get()
-    };
-    uint32_t length = ArrayLength(formatStrings);
-    if (originUnicode.IsEmpty()) {
-        --length;
-    } else {
-        strName.AppendLiteral("ForOrigin");
-    }
+    nsresult rv;
     nsXPIDLString errorMsg;
-    nsresult rv = sStrBundle->FormatStringFromName(strName.get(),
-                                                   formatStrings,
-                                                   length,
-                                                   getter_Copies(errorMsg));
+    if (originUnicode.IsEmpty()) {
+        const char16_t* formatStrings[] = { classInfoName.get() };
+        rv = sStrBundle->FormatStringFromName("CreateWrapperDenied",
+                                              formatStrings,
+                                              1,
+                                              getter_Copies(errorMsg));
+    } else {
+        const char16_t* formatStrings[] = { classInfoName.get(),
+                                            originUnicode.get() };
+        rv = sStrBundle->FormatStringFromName("CreateWrapperDeniedForOrigin",
+                                              formatStrings,
+                                              2,
+                                              getter_Copies(errorMsg));
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     SetPendingException(cx, errorMsg.get());
