@@ -138,6 +138,12 @@ const SNAPSHOT_SCHEMA = {
         numRemoteWindows: {
           type: "number",
         },
+        currentContentProcesses: {
+          type: "number",
+        },
+        maxContentProcesses: {
+          type: "number",
+        },
         keyGoogleFound: {
           type: "boolean",
         },
