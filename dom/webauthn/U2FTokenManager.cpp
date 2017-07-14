@@ -254,7 +254,8 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
 
   mRegisterPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
                                                  aTransactionInfo.RpIdHash(),
-                                                 aTransactionInfo.ClientDataHash());
+                                                 aTransactionInfo.ClientDataHash(),
+                                                 aTransactionInfo.TimeoutMS());
 
   mRegisterPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
                          [tid](U2FRegisterResult&& aResult) {
@@ -307,7 +308,8 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
 
   mSignPromise = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
                                          aTransactionInfo.RpIdHash(),
-                                         aTransactionInfo.ClientDataHash());
+                                         aTransactionInfo.ClientDataHash(),
+                                         aTransactionInfo.TimeoutMS());
 
   mSignPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
                      [tid](U2FSignResult&& aResult) {
