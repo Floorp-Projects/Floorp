@@ -8,7 +8,6 @@
 #ifndef nsWinUtils_h_
 #define nsWinUtils_h_
 
-#include <functional>
 #include <windows.h>
 
 #include "nsIDOMCSSStyleDeclaration.h"
@@ -58,30 +57,12 @@ public:
    */
   static void RegisterNativeWindow(LPCWSTR aWindowClass);
 
-  typedef std::function<void(HWND)> NativeWindowCreateProc;
-
   /**
    * Helper to create a window.
-   *
-   * NB: If additional setup needs to be done once the window has been created,
-   *     you should do so via aOnCreateProc. Hooks will fire during the
-   *     CreateNativeWindow call, thus triggering events in the AT.
-   *     Using aOnCreateProc guarantees that your additional initialization will
-   *     have completed prior to the AT receiving window creation events.
-   *
-   *     For example:
-   *
-   *     nsWinUtils::NativeWindowCreateProc onCreate([](HWND aHwnd) -> void {
-   *       DoSomeAwesomeInitializationStuff(aHwnd);
-   *       DoMoreAwesomeInitializationStuff(aHwnd);
-   *     });
-   *     HWND hwnd = nsWinUtils::CreateNativeWindow(..., &onCreate);
-   *     // Doing further initialization work to hwnd on this line is too late!
    */
   static HWND CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd,
                                  int aX, int aY, int aWidth, int aHeight,
-                                 bool aIsActive,
-                                 NativeWindowCreateProc* aOnCreateProc = nullptr);
+                                 bool aIsActive);
 
   /**
    * Helper to show window.
