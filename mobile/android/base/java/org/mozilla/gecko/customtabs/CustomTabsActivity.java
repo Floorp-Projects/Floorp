@@ -547,7 +547,7 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSecurityChange(GeckoView view, int status) {
+    public void onSecurityChange(GeckoView view, int status, GeckoBundle identity) {
         if ((status & STATE_IS_INSECURE) != 0) {
             mSecurityStatus = STATE_IS_INSECURE;
         } else if ((status & STATE_IS_BROKEN) != 0) {
