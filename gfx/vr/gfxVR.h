@@ -278,6 +278,7 @@ struct VRControllerInfo
   uint32_t GetControllerID() const { return mControllerID; }
   const nsCString& GetControllerName() const { return mControllerName; }
   dom::GamepadMappingType GetMappingType() const { return mMappingType; }
+  uint32_t GetDisplayID() const { return mDisplayID; }
   dom::GamepadHand GetHand() const { return mHand; }
   uint32_t GetNumButtons() const { return mNumButtons; }
   uint32_t GetNumAxes() const { return mNumAxes; }
@@ -287,6 +288,7 @@ struct VRControllerInfo
   VRDeviceType mType;
   nsCString mControllerName;
   dom::GamepadMappingType mMappingType;
+  uint32_t mDisplayID;
   dom::GamepadHand mHand;
   uint32_t mNumButtons;
   uint32_t mNumAxes;
@@ -297,6 +299,7 @@ struct VRControllerInfo
            mControllerID == other.mControllerID &&
            mControllerName == other.mControllerName &&
            mMappingType == other.mMappingType &&
+           mDisplayID == other.mDisplayID &&
            mHand == other.mHand &&
            mNumButtons == other.mNumButtons &&
            mNumAxes == other.mNumAxes &&
@@ -311,9 +314,11 @@ struct VRControllerInfo
 class VRSystemManager {
 public:
   static uint32_t AllocateDisplayID();
+  static uint32_t AllocateControllerID();
 
 protected:
   static Atomic<uint32_t> sDisplayBase;
+  static Atomic<uint32_t> sControllerBase;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRSystemManager)
