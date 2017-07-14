@@ -2,3 +2,20 @@ codecov:
   max_report_age: off
 
 comment: false
+
+coverage:
+  precision: 0
+  round: down
+  status:
+    project:
+      default:
+       if_not_found: success
+    patch:
+      default:
+        enabled: yes
+        threshold: 1
+        if_not_found: success
+    changes:
+      default:
+        enabled: no
+        if_not_found: success
