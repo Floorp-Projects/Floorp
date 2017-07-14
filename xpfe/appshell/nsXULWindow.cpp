@@ -1797,7 +1797,8 @@ nsXULWindow::GetPrimaryTabParentSize(int32_t* aWidth,
                                      int32_t* aHeight)
 {
   TabParent* tabParent = TabParent::GetFrom(mPrimaryTabParent);
-  Element* element = tabParent->GetOwnerElement();
+  // Need strong ref, since Client* can run script.
+  nsCOMPtr<Element> element = tabParent->GetOwnerElement();
   NS_ENSURE_STATE(element);
 
   *aWidth = element->ClientWidth();
