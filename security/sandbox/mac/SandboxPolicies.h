@@ -68,6 +68,7 @@ static const char contentSandboxRules[] = R"(
   (define testingReadPath1 (param "TESTING_READ_PATH1"))
   (define testingReadPath2 (param "TESTING_READ_PATH2"))
   (define testingReadPath3 (param "TESTING_READ_PATH3"))
+  (define testingReadPath4 (param "TESTING_READ_PATH4"))
 
   (if (string=? should-log "TRUE")
     (deny default)
@@ -266,6 +267,8 @@ static const char contentSandboxRules[] = R"(
     (allow file-read* (subpath testingReadPath2)))
   (when testingReadPath3
     (allow file-read* (subpath testingReadPath3)))
+  (when testingReadPath4
+    (allow file-read* (subpath testingReadPath4)))
 
   (allow file-read-metadata (home-subpath "/Library"))
 
