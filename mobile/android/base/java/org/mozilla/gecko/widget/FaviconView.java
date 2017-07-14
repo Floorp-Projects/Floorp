@@ -36,6 +36,23 @@ public class FaviconView extends ImageView {
     // Default x/y-radius of the oval used to round the corners of the background (dp)
     private static final int DEFAULT_CORNER_RADIUS_DP = 2;
 
+    /**
+     * True if we're capable of, and want to, display an image, false otherwise. This acts as a switch: if we
+     * don't want to show an image, most other state will be ignored because we don't need it to draw.
+     *
+     * We use this flag, rather than zeroing all relevant state, because if update*Image is called before
+     * onSizeChanged (during init), we would not be able to show an image and thus zero all state. When
+     * onSizeChanged is called, the state has been zeroed and we would not be able to show the image properly
+     * (bug 1341275).
+     *
+     * One notable exception is for ImageView's internal state via setImageBitmap/Drawable, which must be set to
+     * null if we don't want to draw anything.
+     *
+     * By default, we can't show an image because we don't have a size yet (onSizeChanged) or an image (update*Image),
+     * hence false.
+     */
+    private boolean mShouldShowImage = false;
+
     private Bitmap mIconBitmap;
 
     // Reference to the unscaled bitmap, if any, to prevent repeated assignments of the same bitmap
@@ -110,7 +127,7 @@ public class FaviconView extends ImageView {
 
     @Override
     public void onDraw(Canvas canvas) {
-        if (isDominantBorderEnabled) {
+        if (mShouldShowImage && isDominantBorderEnabled) {
             sBackgroundPaint.setColor(mDominantColor);
 
             if (areRoundCornersEnabled) {
@@ -120,6 +137,7 @@ public class FaviconView extends ImageView {
             }
         }
 
+        // If mShouldShowImage == false, setImageDrawable should be null & we are safe to call super.
         super.onDraw(canvas);
     }
 
@@ -129,11 +147,14 @@ public class FaviconView extends ImageView {
      * in this view with the coloured background.
      */
     private void formatImage() {
-        // We're waiting for both onSizeChanged and updateImage to be called before scaling.
-        if (mIconBitmap == null || getWidth() == 0 || getHeight() == 0) {
+        // Both onSizeChanged and updateImage have to be called before an image can be shown.
+        final boolean canImageBeShown = (mIconBitmap != null && getWidth() != 0 && getHeight() != 0);
+        if (!canImageBeShown) {
             showNoImage();
             return;
         }
+
+        mShouldShowImage = true;
 
         if (mScalingExpected && getWidth() != mIconBitmap.getWidth()) {
             scaleBitmap();
@@ -205,8 +226,8 @@ public class FaviconView extends ImageView {
     }
 
     private void showNoImage() {
+        mShouldShowImage = false;
         setImageDrawable(null);
-        mDominantColor = Color.TRANSPARENT;
     }
 
     /**
