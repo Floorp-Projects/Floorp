@@ -527,6 +527,7 @@ this.downloads = class extends ExtensionAPI {
             .then(target => {
               const source = {
                 url: options.url,
+                isPrivate: options.incognito,
               };
 
               if (options.method || options.headers || options.body) {

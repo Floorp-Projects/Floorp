@@ -266,6 +266,17 @@ add_task(async function test_downloads() {
     url: BASE + "dir/",
   }, "download", 8, "normal url with empty filename");
 
+  // Check that the "incognito" property is supported.
+  await testDownload({
+    url: FILE_URL,
+    incognito: false,
+  }, FILE_NAME, FILE_LEN, "incognito=false");
+
+  await testDownload({
+    url: FILE_URL,
+    incognito: true,
+  }, FILE_NAME, FILE_LEN, "incognito=true");
+
   await extension.unload();
 });
 
