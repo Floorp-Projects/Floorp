@@ -1630,6 +1630,24 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gCanRecordExtended = false;
   gNameToHistogramIDMap.Clear();
   gInitDone = false;
+
+  // FactoryGet `new`s Histograms for us, but requires us to manually delete.
+  for (size_t i = 0; i < HistogramCount; ++i) {
+    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+      delete gKeyedHistogramStorage[i][process];
+      gKeyedHistogramStorage[i][process] = nullptr;
+      for (uint32_t session = 0; session <
+        static_cast<uint32_t>(SessionType::Count); ++session) {
+        if (gHistogramStorage[i][process][session] == gExpiredHistogram) {
+          continue;
+        }
+        delete gHistogramStorage[i][process][session];
+        gHistogramStorage[i][process][session] = nullptr;
+      }
+    }
+  }
+  delete gExpiredHistogram;
+  gExpiredHistogram = nullptr;
 }
 
 #ifdef DEBUG
