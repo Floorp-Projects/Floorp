@@ -79,6 +79,7 @@ protected:
 private:
   VRDisplayInfo mLastUpdateDisplayInfo;
   TimeStamp mLastFrameStart;
+  bool mFrameStarted;
 };
 
 class VRControllerHost {
