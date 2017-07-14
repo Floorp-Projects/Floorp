@@ -1549,6 +1549,8 @@
               return false;
             }
 
+            aTab._fullLabel = aLabel;
+
             aOptions = aOptions || {};
             if (!aOptions.isContentTitle) {
               // Remove protocol and "www."
@@ -5123,7 +5125,7 @@
               label = this.mStringBundle.getString(stringID);
             }
           } else {
-            label = tab.getAttribute("label");
+            label = tab._fullLabel || tab.getAttribute("label");
             if (AppConstants.E10S_TESTING_ONLY &&
                 tab.linkedBrowser &&
                 tab.linkedBrowser.isRemoteBrowser) {
