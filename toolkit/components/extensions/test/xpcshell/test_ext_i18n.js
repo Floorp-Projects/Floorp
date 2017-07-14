@@ -193,6 +193,7 @@ add_task(async function test_get_accept_languages() {
         browser.test.sendMessage("content-done");
       });
     });
+    browser.test.sendMessage("content-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -214,6 +215,7 @@ add_task(async function test_get_accept_languages() {
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   await extension.startup();
+  await extension.awaitMessage("content-loaded");
 
   let expectedLangs = ["en-US", "en"];
   extension.sendMessage(["expect-results", expectedLangs]);
@@ -267,6 +269,7 @@ add_task(async function test_get_ui_language() {
 
       browser.test.sendMessage("content-done");
     });
+    browser.test.sendMessage("content-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -288,6 +291,7 @@ add_task(async function test_get_ui_language() {
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   await extension.startup();
+  await extension.awaitMessage("content-loaded");
 
   extension.sendMessage(["expect-results", "en_US"]);
 
@@ -357,6 +361,7 @@ add_task(async function test_detect_language() {
         browser.test.sendMessage("content-done");
       });
     });
+    browser.test.sendMessage("content-loaded");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -378,6 +383,7 @@ add_task(async function test_detect_language() {
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
 
   await extension.startup();
+  await extension.awaitMessage("content-loaded");
 
   let expected = {
     isReliable: true,
