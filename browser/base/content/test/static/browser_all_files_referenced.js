@@ -43,6 +43,10 @@ var whitelist = [
   // Used by setting this url as a pref in about:config
   {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
 
+  // Temporary whitelisted while WebPayments in construction
+  // See Bug 1381141
+  {file: "chrome://payments/content/paymentRequest.xhtml"},
+
   // Add-on compat
   {file: "chrome://browser/skin/devtools/common.css"},
   {file: "chrome://global/content/XPCNativeWrapper.js"},
