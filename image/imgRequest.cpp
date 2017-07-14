@@ -558,6 +558,10 @@ imgRequest::AdjustPriorityInternal(int32_t aDelta)
 void
 imgRequest::BoostPriority(uint32_t aCategory)
 {
+  if (!gfxPrefs::ImageLayoutNetworkPriority()) {
+    return;
+  }
+
   uint32_t newRequestedCategory =
     (mBoostCategoriesRequested & aCategory) ^ aCategory;
   if (!newRequestedCategory) {
