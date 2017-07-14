@@ -837,7 +837,7 @@ WorkerTarget.prototype = {
   },
 
   get activeConsole() {
-    return this.client._clients.get(this.form.consoleActor)
+    return this.client._clients.get(this.form.consoleActor);
   },
 
   get client() {
