@@ -40,7 +40,7 @@ add_task(async function() {
     await checkPageScrolling(container, "radio");
   });
 
-  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences#search" }, async function(browser) {
+  await BrowserTestUtils.withNewTab({ gBrowser, url: "about:preferences" }, async function(browser) {
     let doc = browser.contentDocument;
     let container = doc.getElementsByClassName("main-content")[0];
 
