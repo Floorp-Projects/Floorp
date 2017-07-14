@@ -298,7 +298,8 @@ nsPluginTag::nsPluginTag(uint32_t aId,
                          bool aSupportsAsyncRender,
                          int64_t aLastModifiedTime,
                          bool aFromExtension,
-                         int32_t aSandboxLevel)
+                         int32_t aSandboxLevel,
+                         uint16_t aBlocklistState)
   : nsIInternalPluginTag(aName, aDescription, aFileName, aVersion, aMimeTypes,
                          aMimeDescriptions, aExtensions),
     mId(aId),
@@ -310,8 +311,8 @@ nsPluginTag::nsPluginTag(uint32_t aId,
     mLastModifiedTime(aLastModifiedTime),
     mSandboxLevel(aSandboxLevel),
     mNiceFileName(),
-    mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
-    mCachedBlocklistStateValid(false),
+    mCachedBlocklistState(aBlocklistState),
+    mCachedBlocklistStateValid(true),
     mIsFromExtension(aFromExtension)
 {
 }
@@ -710,33 +711,26 @@ nsPluginTag::GetBlocklistState(uint32_t *aResult)
   *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
   return NS_OK;
 #else
-  if (mCachedBlocklistStateValid) {
+
+  // If we're in the content process, assume our cache state to always be valid,
+  // as the only way it can be updated is via a plugin list push from the
+  // parent process.
+  if (!XRE_IsParentProcess()) {
     *aResult = mCachedBlocklistState;
     return NS_OK;
   }
 
-  if (!XRE_IsParentProcess()) {
-    *aResult = nsIBlocklistService::STATE_BLOCKED;
-    dom::ContentChild* cp = dom::ContentChild::GetSingleton();
-    if (!cp->SendGetBlocklistState(mId, aResult)) {
-      return NS_OK;
-    }
-  } else {
-    nsCOMPtr<nsIBlocklistService> blocklist =
-      do_GetService("@mozilla.org/extensions/blocklist;1");
+  nsCOMPtr<nsIBlocklistService> blocklist =
+    do_GetService("@mozilla.org/extensions/blocklist;1");
 
-    if (!blocklist) {
-      *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
-      return NS_OK;
-    }
-
-    // The EmptyString()s are so we use the currently running application
-    // and toolkit versions
-    if (NS_FAILED(blocklist->GetPluginBlocklistState(this, EmptyString(),
-                                                     EmptyString(), aResult))) {
-      *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
-      return NS_OK;
-    }
+  if (!blocklist) {
+    *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
+  }
+  // The EmptyString()s are so we use the currently running application
+  // and toolkit versions
+  else if (NS_FAILED(blocklist->GetPluginBlocklistState(this, EmptyString(),
+                                                   EmptyString(), aResult))) {
+    *aResult = nsIBlocklistService::STATE_NOT_BLOCKED;
   }
 
   MOZ_ASSERT(*aResult <= UINT16_MAX);
@@ -744,6 +738,17 @@ nsPluginTag::GetBlocklistState(uint32_t *aResult)
   mCachedBlocklistStateValid = true;
   return NS_OK;
 #endif // defined(MOZ_WIDGET_ANDROID)
+}
+
+void
+nsPluginTag::SetBlocklistState(uint16_t aBlocklistState)
+{
+  // We should only ever call this on content processes. Any calls in the parent
+  // process should route through GetBlocklistState since we'll have the
+  // blocklist service there.
+  MOZ_ASSERT(!XRE_IsParentProcess());
+  mCachedBlocklistState = aBlocklistState;
+  mCachedBlocklistStateValid = true;
 }
 
 void
