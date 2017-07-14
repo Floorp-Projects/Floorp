@@ -1933,6 +1933,14 @@ SpecialPowersAPI.prototype = {
     return this._sendSyncMessage("SPCleanUpSTSData", {origin, flags: flags || 0});
   },
 
+  requestDumpCoverageCounters() {
+    this._sendSyncMessage("SPRequestDumpCoverageCounters", {});
+  },
+
+  requestResetCoverageCounters() {
+    this._sendSyncMessage("SPRequestResetCoverageCounters", {});
+  },
+
   _nextExtensionID: 0,
   _extensionListeners: null,
 
