@@ -279,14 +279,6 @@ public:
     *aSpellcheck = Spellcheck();
     return NS_OK;
   }
-  NS_IMETHOD GetOffsetTop(int32_t* aOffsetTop) final override {
-    *aOffsetTop = OffsetTop();
-    return NS_OK;
-  }
-  NS_IMETHOD GetOffsetLeft(int32_t* aOffsetLeft) final override {
-    *aOffsetLeft = OffsetLeft();
-    return NS_OK;
-  }
   NS_IMETHOD GetOffsetWidth(int32_t* aOffsetWidth) final override {
     *aOffsetWidth = OffsetWidth();
     return NS_OK;

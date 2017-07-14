@@ -618,13 +618,10 @@ ImageDocument::HandleEvent(nsIDOMEvent* aEvent)
       if (event) {
         event->GetClientX(&x);
         event->GetClientY(&y);
-        int32_t left = 0, top = 0;
-        nsCOMPtr<nsIDOMHTMLElement> htmlElement =
-          do_QueryInterface(mImageContent);
-        htmlElement->GetOffsetLeft(&left);
-        htmlElement->GetOffsetTop(&top);
-        x -= left;
-        y -= top;
+        RefPtr<HTMLImageElement> img =
+          HTMLImageElement::FromContent(mImageContent);
+        x -= img->OffsetLeft();
+        y -= img->OffsetTop();
       }
       mShouldResize = false;
       RestoreImageTo(x, y);
