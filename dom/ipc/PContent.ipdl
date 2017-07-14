@@ -608,6 +608,8 @@ child:
     async SetPluginList(uint32_t pluginEpoch, PluginTag[] plugins, FakePluginTag[] fakePlugins);
 
     async ShareCodeCoverageMutex(CrossProcessMutexHandle handle);
+    async DumpCodeCoverageCounters();
+    async ResetCodeCoverageCounters();
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
