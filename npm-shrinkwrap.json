@@ -180,7 +180,7 @@
       "resolved": "https://registry.npmjs.org/d/-/d-1.0.0.tgz",
       "integrity": "sha1-dUu1v+VUUdpppYuU1F9MWwRi1Y8=",
       "requires": {
-        "es5-ext": "0.10.23"
+        "es5-ext": "0.10.24"
       }
     },
     "debug": {
@@ -263,9 +263,9 @@
       "integrity": "sha1-blwtClYhtdra7O+AuQ7ftc13cvA="
     },
     "es5-ext": {
-      "version": "0.10.23",
-      "resolved": "https://registry.npmjs.org/es5-ext/-/es5-ext-0.10.23.tgz",
-      "integrity": "sha1-dXi1G+l0IHpUh4IbVlOMIk5Oezg=",
+      "version": "0.10.24",
+      "resolved": "https://registry.npmjs.org/es5-ext/-/es5-ext-0.10.24.tgz",
+      "integrity": "sha1-pVh3yZJLwMjZvTwsvhdJWsFwmxQ=",
       "requires": {
         "es6-iterator": "2.0.1",
         "es6-symbol": "3.1.1"
@@ -277,7 +277,7 @@
       "integrity": "sha1-jjGcnwRTv1ddN0lAplWSDlnKVRI=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23",
+        "es5-ext": "0.10.24",
         "es6-symbol": "3.1.1"
       }
     },
@@ -287,7 +287,7 @@
       "integrity": "sha1-kTbgUD3MBqMBaQ8LsU/042TpSfA=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23",
+        "es5-ext": "0.10.24",
         "es6-iterator": "2.0.1",
         "es6-set": "0.1.5",
         "es6-symbol": "3.1.1",
@@ -300,7 +300,7 @@
       "integrity": "sha1-0rPsXU2ADO2BjbU40ol02wpzzLE=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23",
+        "es5-ext": "0.10.24",
         "es6-iterator": "2.0.1",
         "es6-symbol": "3.1.1",
         "event-emitter": "0.3.5"
@@ -312,7 +312,7 @@
       "integrity": "sha1-vwDvT9q2uhtG7Le2KbTH7VcVzHc=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23"
+        "es5-ext": "0.10.24"
       }
     },
     "es6-weak-map": {
@@ -321,7 +321,7 @@
       "integrity": "sha1-XjqzIlH/0VOKH45f+hNXdy+S2W8=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23",
+        "es5-ext": "0.10.24",
         "es6-iterator": "2.0.1",
         "es6-symbol": "3.1.1"
       }
@@ -365,7 +365,7 @@
         "inquirer": "0.12.0",
         "is-my-json-valid": "2.16.0",
         "is-resolvable": "1.0.0",
-        "js-yaml": "3.8.4",
+        "js-yaml": "3.9.0",
         "json-stable-stringify": "1.0.1",
         "levn": "0.3.0",
         "lodash": "4.17.4",
@@ -434,9 +434,9 @@
       }
     },
     "esprima": {
-      "version": "3.1.3",
-      "resolved": "https://registry.npmjs.org/esprima/-/esprima-3.1.3.tgz",
-      "integrity": "sha1-/cpRzuYTOJXjyI1TXOSdv/YqRjM="
+      "version": "4.0.0",
+      "resolved": "https://registry.npmjs.org/esprima/-/esprima-4.0.0.tgz",
+      "integrity": "sha512-oftTcaMu/EGrEIu904mWteKIv8vMuOgGYo7EhVJJN00R/EED9DCua/xxHRdYnKtcECzVg7xOWhflvJMnqcFZjw=="
     },
     "esquery": {
       "version": "1.0.0",
@@ -471,7 +471,7 @@
       "integrity": "sha1-34xp7vFkeSPHFXuc6DhAYQsCzDk=",
       "requires": {
         "d": "1.0.0",
-        "es5-ext": "0.10.23"
+        "es5-ext": "0.10.24"
       }
     },
     "exit-hook": {
@@ -719,12 +719,12 @@
       "integrity": "sha1-mGbfOVECEw449/mWvOtlRDIJwls="
     },
     "js-yaml": {
-      "version": "3.8.4",
-      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.8.4.tgz",
-      "integrity": "sha1-UgtFZPhlc7qWZir4Woyvp7S1pvY=",
+      "version": "3.9.0",
+      "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-3.9.0.tgz",
+      "integrity": "sha512-0LoUNELX4S+iofCT8f4uEHIiRBR+c2AINyC8qRWfC6QNruLtxVZRJaPcu/xwMgFIgDxF25tGHaDjvxzJCNE9yw==",
       "requires": {
         "argparse": "1.0.9",
-        "esprima": "3.1.3"
+        "esprima": "4.0.0"
       }
     },
     "json-stable-stringify": {
