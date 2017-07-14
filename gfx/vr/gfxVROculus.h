@@ -131,7 +131,7 @@ protected:
 class VRControllerOculus : public VRControllerHost
 {
 public:
-  explicit VRControllerOculus(dom::GamepadHand aHand);
+  explicit VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplayID);
   float GetAxisMove(uint32_t aAxis);
   void SetAxisMove(uint32_t aAxis, float aValue);
   float GetIndexTrigger();
