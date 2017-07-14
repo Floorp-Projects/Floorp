@@ -110,17 +110,21 @@ nsWinUtils::RegisterNativeWindow(LPCWSTR aWindowClass)
 HWND
 nsWinUtils::CreateNativeWindow(LPCWSTR aWindowClass, HWND aParentWnd,
                                int aX, int aY, int aWidth, int aHeight,
-                               bool aIsActive,
-                               NativeWindowCreateProc* aOnCreateProc)
+                               bool aIsActive)
 {
-  return ::CreateWindowExW(WS_EX_TRANSPARENT, aWindowClass,
-                           L"NetscapeDispatchWnd",
-                           WS_CHILD | (aIsActive ? WS_VISIBLE : 0),
-                           aX, aY, aWidth, aHeight,
-                           aParentWnd,
-                           nullptr,
-                           GetModuleHandle(nullptr),
-                           aOnCreateProc);
+  HWND hwnd = ::CreateWindowExW(WS_EX_TRANSPARENT, aWindowClass,
+                                L"NetscapeDispatchWnd",
+                                WS_CHILD | (aIsActive ? WS_VISIBLE : 0),
+                                aX, aY, aWidth, aHeight,
+                                aParentWnd,
+                                nullptr,
+                                GetModuleHandle(nullptr),
+                                nullptr);
+  if (hwnd) {
+    // Mark this window so that ipc related code can identify it.
+    ::SetPropW(hwnd, kPropNameTabContent, (HANDLE)1);
+  }
+  return hwnd;
 }
 
 void
@@ -145,21 +149,6 @@ WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   // message semantics.
 
   switch (msg) {
-    case WM_CREATE:
-    {
-      // Mark this window so that ipc related code can identify it.
-      ::SetPropW(hWnd, kPropNameTabContent, reinterpret_cast<HANDLE>(1));
-
-      auto createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-      auto createProc = reinterpret_cast<nsWinUtils::NativeWindowCreateProc*>(
-        createStruct->lpCreateParams);
-
-      if (createProc && *createProc) {
-        (*createProc)(hWnd);
-      }
-
-      return 0;
-    }
     case WM_GETOBJECT:
     {
       // Do explicit casting to make it working on 64bit systems (see bug 649236
