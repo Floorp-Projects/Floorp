@@ -41,6 +41,15 @@ var UpdateVRDisplay = function() {
   vrMockDisplay.update();
 }
 
+var AttachVRController = function() {
+  var promise = VRServiceTest.attachVRController("VRControllerTest");
+   promise.then(function (controller) {
+    assert_true(controller != null, "AttachVRController should success.");
+  });
+
+  return promise;
+}
+
 var API = {
   AttachWebVRDisplay: AttachWebVRDisplay,
   SetVRDisplayPose: SetVRDisplayPose,
@@ -48,6 +57,7 @@ var API = {
   SetEyeParameter: SetEyeParameter,
   SetMountState: SetMountState,
   UpdateVRDisplay: UpdateVRDisplay,
+  AttachVRController: AttachVRController,
 
   none: false
 };
