@@ -62,7 +62,10 @@ GetAlgorithmName(const OOS& aAlgorithm,
     // TODO: Coerce to string and extract name. See WebCryptoTask.cpp
   }
 
-  if (!NormalizeToken(aName, aName)) {
+  // Only ES256 is currently supported
+  if (NORMALIZED_EQUALS(aName, JWK_ALG_ECDSA_P_256)) {
+    aName.AssignLiteral(JWK_ALG_ECDSA_P_256);
+  } else {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
@@ -401,7 +404,7 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     if (normalizedParams[a].mType == PublicKeyCredentialType::Public_key &&
         normalizedParams[a].mAlgorithm.IsString() &&
         normalizedParams[a].mAlgorithm.GetAsString().EqualsLiteral(
-          WEBCRYPTO_NAMED_CURVE_P256)) {
+          JWK_ALG_ECDSA_P_256)) {
       isValidCombination = true;
       break;
     }
