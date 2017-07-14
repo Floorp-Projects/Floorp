@@ -4604,6 +4604,10 @@ pref("image.http.accept", "*/*");
 // disable.
 pref("image.infer-src-animation.threshold-ms", 2000);
 
+// Whether the network request priority should be adjusted according
+// the layout and view frame position of each particular image.
+pref("image.layout_network_priority", true);
+
 //
 // Image memory management prefs
 //
