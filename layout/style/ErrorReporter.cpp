@@ -148,7 +148,7 @@ ErrorReporter::ErrorReporter(const nsCSSScanner& aScanner,
 {
 }
 
-ErrorReporter::ErrorReporter(const StyleSheet* aSheet,
+ErrorReporter::ErrorReporter(const ServoStyleSheet* aSheet,
                              const Loader* aLoader,
                              nsIURI* aURI)
   : mScanner(nullptr), mSheet(aSheet), mLoader(aLoader), mURI(aURI),
@@ -255,13 +255,23 @@ ErrorReporter::OutputError(uint32_t aLineNumber,
                            uint32_t aColNumber,
                            const nsACString& aSourceLine)
 {
-  mErrorLine.Truncate();
-  // This could be a really long string for minified CSS; just leave it empty if we OOM.
-  if (!AppendUTF8toUTF16(aSourceLine, mErrorLine, fallible)) {
+  mErrorLineNumber = aLineNumber;
+  mErrorColNumber = aColNumber;
+
+  // Retrieve the error line once per line, and reuse the same nsString
+  // for all errors on that line.  That causes the text of the line to
+  // be shared among all the nsIScriptError objects.
+  if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
     mErrorLine.Truncate();
+    // This could be a really long string for minified CSS; just leave it empty if we OOM.
+    if (!AppendUTF8toUTF16(aSourceLine, mErrorLine, fallible)) {
+      mErrorLine.Truncate();
+    }
+
+    mPrevErrorLineNumber = aLineNumber;
   }
-  mPrevErrorLineNumber = aLineNumber;
-  OutputError(aLineNumber, aColNumber);
+
+  OutputError();
 }
 
 void
@@ -277,18 +287,22 @@ ErrorReporter::AddToError(const nsString &aErrorText)
 
   if (mError.IsEmpty()) {
     mError = aErrorText;
-    mErrorLineNumber = mScanner ? mScanner->GetLineNumber() : 0;
-    mErrorColNumber = mScanner ? mScanner->GetColumnNumber() : 0;
-    // Retrieve the error line once per line, and reuse the same nsString
-    // for all errors on that line.  That causes the text of the line to
-    // be shared among all the nsIScriptError objects.
-    if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
-      // Be careful here: the error line might be really long and OOM
-      // when we try to make a copy here.  If so, just leave it empty.
-      if (!mScanner || !mErrorLine.Assign(mScanner->GetCurrentLine(), fallible)) {
-        mErrorLine.Truncate();
+    // If this error reporter is being used from Stylo, the equivalent operation occurs
+    // in the OutputError variant that provides source information.
+    if (!IsServo()) {
+      mErrorLineNumber = mScanner->GetLineNumber();
+      mErrorColNumber = mScanner->GetColumnNumber();
+      // Retrieve the error line once per line, and reuse the same nsString
+      // for all errors on that line.  That causes the text of the line to
+      // be shared among all the nsIScriptError objects.
+      if (mErrorLine.IsEmpty() || mErrorLineNumber != mPrevErrorLineNumber) {
+        // Be careful here: the error line might be really long and OOM
+        // when we try to make a copy here.  If so, just leave it empty.
+        if (!mErrorLine.Assign(mScanner->GetCurrentLine(), fallible)) {
+          mErrorLine.Truncate();
+        }
+        mPrevErrorLineNumber = mErrorLineNumber;
       }
-      mPrevErrorLineNumber = mErrorLineNumber;
     }
   } else {
     mError.AppendLiteral("  ");
@@ -417,6 +431,12 @@ ErrorReporter::ReportUnexpectedEOF(char16_t aExpected)
                                       params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);
+}
+
+bool
+ErrorReporter::IsServo() const
+{
+  return !mScanner;
 }
 
 } // namespace css
