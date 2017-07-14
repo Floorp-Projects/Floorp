@@ -153,20 +153,6 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)
 
 
-NS_IMPL_STRING_ATTR(HTMLImageElement, Name, name)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Alt, alt)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Border, border)
-NS_IMPL_INT_ATTR(HTMLImageElement, Hspace, hspace)
-NS_IMPL_BOOL_ATTR(HTMLImageElement, IsMap, ismap)
-NS_IMPL_URI_ATTR(HTMLImageElement, LongDesc, longdesc)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Sizes, sizes)
-NS_IMPL_URI_ATTR(HTMLImageElement, Lowsrc, lowsrc)
-NS_IMPL_URI_ATTR(HTMLImageElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLImageElement, Srcset, srcset)
-NS_IMPL_STRING_ATTR(HTMLImageElement, UseMap, usemap)
-NS_IMPL_INT_ATTR(HTMLImageElement, Vspace, vspace)
-
 bool
 HTMLImageElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
@@ -180,7 +166,7 @@ HTMLImageElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
-nsresult
+void
 HTMLImageElement::GetCurrentSrc(nsAString& aValue)
 {
   nsCOMPtr<nsIURI> currentURI;
@@ -192,8 +178,6 @@ HTMLImageElement::GetCurrentSrc(nsAString& aValue)
   } else {
     SetDOMStringToNull(aValue);
   }
-
-  return NS_OK;
 }
 
 bool
@@ -222,16 +206,6 @@ HTMLImageElement::Complete()
      (imgIRequest::STATUS_LOAD_COMPLETE | imgIRequest::STATUS_ERROR)) != 0;
 }
 
-NS_IMETHODIMP
-HTMLImageElement::GetComplete(bool* aComplete)
-{
-  NS_PRECONDITION(aComplete, "Null out param!");
-
-  *aComplete = Complete();
-
-  return NS_OK;
-}
-
 CSSIntPoint
 HTMLImageElement::GetXY()
 {
@@ -254,20 +228,6 @@ int32_t
 HTMLImageElement::Y()
 {
   return GetXY().y;
-}
-
-NS_IMETHODIMP
-HTMLImageElement::GetX(int32_t* aX)
-{
-  *aX = X();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLImageElement::GetY(int32_t* aY)
-{
-  *aY = Y();
-  return NS_OK;
 }
 
 NS_IMETHODIMP
