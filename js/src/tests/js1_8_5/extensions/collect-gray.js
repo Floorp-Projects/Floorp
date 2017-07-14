@@ -68,6 +68,9 @@ assertEq(marks[3], 'gray', 'black map, gray key => gray value');
 // must be gray (unless otherwise reachable from black.) If neither a nor b is
 // marked at all, then they will not keep x alive.
 
+if (typeof gczeal !== 'undefined')
+    gczeal(0);
+
 clearMarkObservers();
 
 // Black map, gray delegate => gray key
