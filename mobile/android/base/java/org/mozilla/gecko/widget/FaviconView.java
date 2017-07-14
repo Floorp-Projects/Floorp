@@ -101,11 +101,6 @@ public class FaviconView extends ImageView {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
-        // No point rechecking the image if there hasn't really been any change.
-        if (w == oldw && h == oldh) {
-            return;
-        }
-
         mBackgroundRect.right = w;
         mBackgroundRect.bottom = h;
 
