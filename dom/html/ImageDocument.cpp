@@ -352,7 +352,9 @@ ImageDocument::ShrinkToFit()
     // changed and we don't plan to adjust the image size to compensate.  Since
     // mImageIsResized it has a "height" attribute set, and we can just get the
     // displayed image height by getting .height on the HTMLImageElement.
-    HTMLImageElement* img = HTMLImageElement::FromContent(mImageContent);
+    //
+    // Hold strong ref, because Height() can run script.
+    RefPtr<HTMLImageElement> img = HTMLImageElement::FromContent(mImageContent);
     uint32_t imageHeight = img->Height();
     nsDOMTokenList* classList = img->ClassList();
     ErrorResult ignored;
@@ -652,7 +654,9 @@ ImageDocument::UpdateSizeFromLayout()
     return;
   }
 
-  nsIFrame* contentFrame = mImageContent->GetPrimaryFrame(FlushType::Frames);
+  // Need strong ref, because GetPrimaryFrame can run script.
+  nsCOMPtr<Element> imageContent = mImageContent;
+  nsIFrame* contentFrame = imageContent->GetPrimaryFrame(FlushType::Frames);
   if (!contentFrame) {
     return;
   }
