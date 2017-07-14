@@ -6779,7 +6779,7 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
 
     AutoExposeLiveCrossZoneEdges aelcze(&foundBlackGrayEdges.ref());
 
-    minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
+    EvictAllNurseries(rt, reason);
 
     AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
