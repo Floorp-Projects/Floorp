@@ -27,6 +27,7 @@ We would apply some rules:
 
 * All styles and ids should be formatted as `onboarding-*` to avoid conflict with the origin page.
 * All strings in `locales` should be formatted as `onboarding.*` for consistency.
+* For accessibility, images that are for presentation only should have `role="presentation"` attribute.
 
 ## How to change the order of tours
 

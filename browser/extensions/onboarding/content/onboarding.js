@@ -60,7 +60,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-private-browsing.description2"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_private.svg" />
+          <img src="resource://onboarding/img/figure_private.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-private-browsing-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-private-browsing.button"></button>
@@ -87,7 +87,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-addons.description2"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_addons.svg" />
+          <img src="resource://onboarding/img/figure_addons.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-addons-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-addons.button"></button>
@@ -114,7 +114,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-customize.description2"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_customize.svg" />
+          <img src="resource://onboarding/img/figure_customize.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-customize-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-customize.button"></button>
@@ -141,7 +141,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-search.description2"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_search.svg" />
+          <img src="resource://onboarding/img/figure_search.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-search-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-search.button"></button>
@@ -173,7 +173,7 @@ var onboardingTourset = {
           <p data-l10n-id="onboarding.tour-default-browser.description2"></p>
         </section>
         <section class="onboarding-tour-content">
-          <img src="resource://onboarding/img/figure_default.svg" />
+          <img src="resource://onboarding/img/figure_default.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-default-browser-button" class="onboarding-tour-action-button" data-l10n-id="${defaultBrowserButtonId}"></button>
@@ -213,7 +213,7 @@ var onboardingTourset = {
             <input id="onboarding-tour-sync-email-input" type="email" required="true"></input><br />
             <button id="onboarding-tour-sync-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-sync.button"></button>
           </form>
-          <img src="resource://onboarding/img/figure_sync.svg" />
+          <img src="resource://onboarding/img/figure_sync.svg" role="presentation"/>
         </section>
       `;
       let emailInput = div.querySelector("#onboarding-tour-sync-email-input");
