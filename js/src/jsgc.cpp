@@ -6988,7 +6988,8 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
          * Sometimes when we finish a GC we need to immediately start a new one.
          * This happens in the following cases:
          *  - when we reset the current GC
-         *  - when finalizers drop roots during shutdown
+         *  - when finalizers drop roots during shutdown (the cleanUpEverything
+         *    case)
          *  - when zones that we thought were dead at the start of GC are
          *    not collected (see the large comment in beginMarkPhase)
          */
@@ -6996,7 +6997,7 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
         if (!isIncrementalGCInProgress()) {
             if (wasReset) {
                 repeat = true;
-            } else if (rootsRemoved && IsShutdownGC(reason)) {
+            } else if (rootsRemoved && cleanUpEverything) {
                 /* Need to re-schedule all zones for GC. */
                 JS::PrepareForFullGC(rt->activeContextFromOwnThread());
                 repeat = true;
