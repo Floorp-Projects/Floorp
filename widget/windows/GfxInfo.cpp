@@ -1318,16 +1318,6 @@ GfxInfo::GetGfxDriverInfo()
       (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_DX_INTEROP2, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "DX_INTEROP2_AMD_CRASH");
-
-    ////////////////////////////////////
-    // FEATURE_ADVANCED_LAYERS
-
-    // bug 1377866
-    APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows,
-      (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel),
-      (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToSandyBridge),
-      nsIGfxInfo::FEATURE_ADVANCED_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
-      DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions, "FEATURE_FAILURE_BUG_1377866");
   }
   return *mDriverInfo;
 }

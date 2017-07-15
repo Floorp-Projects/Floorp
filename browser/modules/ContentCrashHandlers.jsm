@@ -577,7 +577,6 @@ this.UnsubmittedCrashHandler = {
         this.prefs.clearUserPref("suppressUntilDate");
       }
 
-      Services.obs.addObserver(this, "browser-delayed-startup-finished");
       Services.obs.addObserver(this, "profile-before-change");
     }
   },
@@ -604,26 +603,11 @@ this.UnsubmittedCrashHandler = {
       this.showingNotification = false;
     }
 
-    try {
-      Services.obs.removeObserver(this, "browser-delayed-startup-finished");
-    } catch (e) {
-      // The browser-delayed-startup-finished observer might have already
-      // fired and removed itself, so if this fails, it's okay.
-      if (e.result != Cr.NS_ERROR_FAILURE) {
-        throw e;
-      }
-    }
-
     Services.obs.removeObserver(this, "profile-before-change");
   },
 
   observe(subject, topic, data) {
     switch (topic) {
-      case "browser-delayed-startup-finished": {
-        Services.obs.removeObserver(this, topic);
-        this.checkForUnsubmittedCrashReports();
-        break;
-      }
       case "profile-before-change": {
         this.uninit();
         break;
