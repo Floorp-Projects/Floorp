@@ -87,8 +87,6 @@ using namespace mozilla;
 nsrefcnt                  nsXULTemplateBuilder::gRefCnt = 0;
 nsIRDFService*            nsXULTemplateBuilder::gRDFService;
 nsIRDFContainerUtils*     nsXULTemplateBuilder::gRDFContainerUtils;
-nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
-nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
 nsIObserverService*       nsXULTemplateBuilder::gObserverService;
 
 LazyLogModule gXULTemplateLog("nsXULTemplateBuilder");
@@ -132,8 +130,6 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(gRDFService);
         NS_IF_RELEASE(gRDFContainerUtils);
-        NS_IF_RELEASE(gSystemPrincipal);
-        NS_IF_RELEASE(gScriptSecurityManager);
         NS_IF_RELEASE(gObserverService);
     }
 }
@@ -154,15 +150,6 @@ nsXULTemplateBuilder::InitGlobals()
 
         NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                            &gScriptSecurityManager);
-        if (NS_FAILED(rv))
-            return rv;
-
-        rv = gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1372,9 +1359,7 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
     NS_ASSERTION(docPrincipal == mRoot->NodePrincipal(),
                  "Principal mismatch?  Which one to use?");
 
-    bool isTrusted = false;
-    nsresult rv = IsSystemPrincipal(docPrincipal, &isTrusted);
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool isTrusted = docPrincipal->GetIsSystemPrincipal();
 
     // Parse datasources: they are assumed to be a whitespace
     // separated list of URIs; e.g.,
@@ -1387,6 +1372,7 @@ nsXULTemplateBuilder::LoadDataSourceUrls(nsIDocument* aDocument,
     if (!uriList)
         return NS_ERROR_FAILURE;
 
+    nsresult rv;
     nsAutoString datasources(aDataSources);
     uint32_t first = 0;
     while (1) {
@@ -2544,17 +2530,6 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
         // In the simple syntax, the binding is always from the
         // member variable, through the property, to the target.
         rule->AddBinding(rule->GetMemberVariable(), property, var);
-}
-
-
-nsresult
-nsXULTemplateBuilder::IsSystemPrincipal(nsIPrincipal *principal, bool *result)
-{
-  if (!gSystemPrincipal)
-    return NS_ERROR_UNEXPECTED;
-
-  *result = (principal == gSystemPrincipal);
-  return NS_OK;
 }
 
 bool

@@ -1294,7 +1294,7 @@ protected:
     mMaster->RequestAudioData();
   }
 
-  void RequestVideoData()
+  virtual void RequestVideoData()
   {
     MOZ_ASSERT(!mDoneVideoSeeking);
     mMaster->RequestVideoData(media::TimeUnit());
@@ -1396,7 +1396,7 @@ protected:
     MOZ_ASSERT(aVideo);
     SLOG("DropVideoUpToSeekTarget() frame [%" PRId64 ", %" PRId64 "]",
          aVideo->mTime.ToMicroseconds(), aVideo->GetEndTime().ToMicroseconds());
-    const auto target = mSeekJob.mTarget->GetTime();
+    const auto target = GetSeekTarget();
 
     // If the frame end time is less than the seek target, we won't want
     // to display this frame after the seek, so discard it.
@@ -1456,6 +1456,12 @@ protected:
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
   RefPtr<VideoData> mFirstVideoFrameAfterSeek;
+
+private:
+  virtual media::TimeUnit GetSeekTarget() const
+  {
+    return mSeekJob.mTarget->GetTime();
+  }
 };
 
 /*
@@ -1803,7 +1809,60 @@ public:
 
     DemuxerSeek();
   }
+
+protected:
+  // Allow skip-to-next-key-frame to kick in if we fall behind the current
+  // playback position so decoding has a better chance to catch up.
+  void RequestVideoData() override
+  {
+    MOZ_ASSERT(!mDoneVideoSeeking);
+
+    const auto& clock = mMaster->mMediaSink->IsStarted()
+                        ? mMaster->GetClock()
+                        : mMaster->GetMediaTime();
+    const auto& nextKeyFrameTime = GetNextKeyFrameTime();
+
+    auto threshold = clock;
+
+    if (nextKeyFrameTime.IsValid() &&
+        clock >= (nextKeyFrameTime - sSkipToNextKeyFrameThreshold)) {
+      threshold = nextKeyFrameTime;
+    }
+
+    mMaster->RequestVideoData(threshold);
+  }
+
+private:
+  // Trigger skip to next key frame if the current playback position is very
+  // close the next key frame's time.
+  static constexpr TimeUnit sSkipToNextKeyFrameThreshold = TimeUnit::FromMicroseconds(5000);
+
+  // If the media is playing, drop video until catch up playback position.
+  media::TimeUnit GetSeekTarget() const override
+  {
+    return mMaster->mMediaSink->IsStarted()
+           ? mMaster->GetClock()
+           : mSeekJob.mTarget->GetTime();
+  }
+
+  media::TimeUnit GetNextKeyFrameTime() const
+  {
+    // We only call this method in RequestVideoData() and we only request video
+    // data if we haven't done video seeking.
+    MOZ_DIAGNOSTIC_ASSERT(!mDoneVideoSeeking);
+    MOZ_DIAGNOSTIC_ASSERT(mMaster->VideoQueue().GetSize() == 0);
+
+    if (mFirstVideoFrameAfterSeek) {
+      return mFirstVideoFrameAfterSeek->NextKeyFrameTime();
+    }
+
+    return TimeUnit::Invalid();
+  }
+
 };
+
+constexpr TimeUnit
+MediaDecoderStateMachine::VideoOnlySeekingState::sSkipToNextKeyFrameThreshold;
 
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::DormantState::HandleSeek(SeekTarget aTarget)

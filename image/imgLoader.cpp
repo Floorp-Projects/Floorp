@@ -583,8 +583,7 @@ ShouldLoadCachedImage(imgRequest* aImgRequest,
                                  EmptyCString(), //mime guess
                                  nullptr, //aExtra
                                  &decision,
-                                 nsContentUtils::GetContentPolicy(),
-                                 nsContentUtils::GetSecurityManager());
+                                 nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
     return false;
   }

@@ -689,7 +689,7 @@ fails-if(Android) != 376532-3.html 376532-3-ref.html
 fuzzy-if(skiaContent,1,500) == 379316-1.html 379316-1-ref.html
 fails-if(Android) random-if(cocoaWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(winWidget,1,180) fuzzy-if(gtkWidget,1,191) fuzzy-if(skiaContent,8,500) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
-fuzzy-if(webrender,1,5) == 379349-1a.xhtml 379349-1-ref.xhtml
+== 379349-1a.xhtml 379349-1-ref.xhtml
 # fuzzy because of different border rendering approach in bug 1185636
 fuzzy(37,20) == 379349-1b.xhtml 379349-1-ref.xhtml
 fuzzy(37,20) == 379349-1c.xhtml 379349-1-ref.xhtml
@@ -973,8 +973,8 @@ fails-if(!styloVsGecko) == 413027-3.html 413027-3-ref.html
 == 413292-1.html 413292-1-ref.html
 fuzzy-if(Android,11,17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361-1-ref.html # bug 1128229
 == 413840-background-unchanged.html 413840-background-unchanged-ref.html
-fuzzy-if(webrender,1,8) == 413840-ltr-offsets.html 413840-ltr-offsets-ref.html
-fuzzy-if(webrender,1,8) == 413840-rtl-offsets.html 413840-rtl-offsets-ref.html
+== 413840-ltr-offsets.html 413840-ltr-offsets-ref.html
+== 413840-rtl-offsets.html 413840-rtl-offsets-ref.html
 == 413840-pushed-line-bullet.html 413840-pushed-line-bullet-ref.html
 == 413840-bullet-first-line.html 413840-bullet-first-line-ref.html
 == 413982.html 413982-ref.html
@@ -1173,7 +1173,7 @@ fails-if(usesRepeatResampling) == 446100-1e.html about:blank
 fails-if(usesRepeatResampling) fails-if(Android) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
-fuzzy(127,2) fails-if(webrender) == 448193.html 448193-ref.html # reference hardcodes gecko's 3d border colors, which webrender doesn't match
+fuzzy(127,2) == 448193.html 448193-ref.html
 fails-if(styloVsGecko) != 449149-1a.html about:blank
 fails-if(styloVsGecko) != 449149-1b.html about:blank
 # Retry the above with XBL scopes
@@ -1196,10 +1196,10 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if(styloVsGecko) != 4491
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
 fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1a.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1b.html 456219-1-ref.html # bug 1128229
-fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,53-53,799-799) == 456219-1c.html 456219-1-ref.html # bug 1128229
-fuzzy-if(skiaContent,1,45) fuzzy-if(webrender,43-43,8-8) == 456219-2.html 456219-2-ref.html
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,24-24,155-155) == 456219-1b.html 456219-1-ref.html # bug 1128229
+fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,24-24,155-155) == 456219-1c.html 456219-1-ref.html # bug 1128229
+fuzzy-if(skiaContent,1,45) == 456219-2.html 456219-2-ref.html
 == 456330-1.gif 456330-1-ref.png
 == 456484-1.html 456484-1-ref.html
 == 457398-1.html 457398-1-ref.html
@@ -1227,13 +1227,13 @@ fuzzy-if(skiaContent,1,5) == 459443-1.html 459443-1-ref.html
 == 459613-1.html 459613-1-ref.html
 == 460012-1.html 460012-1-ref.html
 == 461266-1.html 461266-1-ref.html
-fuzzy-if(skiaContent,1,12000) fails-if(webrender) == 461512-1.html 461512-1-ref.html # reference hardcodes gecko's 3d border colors, which webrender doesn't match
+fuzzy-if(skiaContent,1,12000) == 461512-1.html 461512-1-ref.html
 == 462844-1.html 462844-ref.html
 == 462844-2.html 462844-ref.html
 == 462844-3.html 462844-ref.html
 == 462844-4.html 462844-ref.html
 == 463204-1.html 463204-1-ref.html
-fuzzy-if(webrender,16,3425) == 463217-1.xul 463217-1-ref.xul
+== 463217-1.xul 463217-1-ref.xul
 == 463952-1.html 463952-1-ref.html
 == 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436
@@ -1611,7 +1611,7 @@ fails-if(!haveTestPlugin) HTTP == 599476.html 599476-ref.html
 == 600974-3.html 600974-1-ref.html
 == 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
-fuzzy-if(Android,8,20) fails-if(webrender) == 602200-3.html 602200-3-ref.html # mishandled transform
+fuzzy-if(Android,8,20) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
 == 603423-1.html 603423-1-ref.html
 == 604737.html 604737-ref.html
@@ -1664,7 +1664,7 @@ HTTP(..) == 635639-2.html 635639-2-ref.html
 random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
 fuzzy-if(Android,8,500) == 637852-1.html 637852-1-ref.html
 fuzzy-if(Android,8,500) fuzzy-if(skiaContent,2,1) fuzzy-if(webrender,3,19) == 637852-2.html 637852-2-ref.html
-fuzzy-if(Android,8,500) fails-if(webrender) == 637852-3.html 637852-3-ref.html
+fuzzy-if(Android,8,500) == 637852-3.html 637852-3-ref.html
 fails-if(webrender&&asyncPan) == 641770-1.html 641770-1-ref.html # bug 1374326 for webrender+APZ
 == 641856-1.html 641856-1-ref.html
 == 645491-1.html 645491-1-ref.html
@@ -1937,7 +1937,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.
 == 1151306-1.html 1151306-1-ref.html
 == 1153845-1.html 1153845-1-ref.html
 == 1155828-1.html 1155828-1-ref.html
-fuzzy-if(skiaContent,7,84) fails-if(webrender) == 1156129-1.html 1156129-1-ref.html
+fuzzy-if(skiaContent,7,84) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,6,6) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fails-if(gtkWidget&&!styloVsGecko) == 1174332-1.html 1174332-1-ref.html # bug 1312658
@@ -1984,7 +1984,7 @@ fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,27,700) == 1316719-1a.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1a.html 1316719-1-ref.html
 fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1b.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
 pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1a.html 1316719-1-ref.html

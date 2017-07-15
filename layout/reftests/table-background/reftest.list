@@ -47,13 +47,13 @@ fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-t
 fuzzy-if(d2d,1,11000) fuzzy-if(skiaContent,1,11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html
 fuzzy-if(d2d,1,2478) fuzzy-if(skiaContent,1,2500) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html
-fuzzy-if(d2d,1,38000) fuzzy-if(webrender,1,38000) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
-fuzzy-if(d2d,1,13000) fuzzy-if(webrender,1,13000)  == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
+fuzzy-if(d2d,1,38000) == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
+fuzzy-if(d2d,1,13000) == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
 fuzzy-if(d2d,1,37170) fuzzy-if(skiaContent,1,38000) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
 fuzzy-if(d2d,1,12390) fuzzy-if(skiaContent,1,13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,1,95000) == border-separate-opacity-table.html border-separate-opacity-table-ref.html
-!= scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html
-!= scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html
+!= scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html 
+!= scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html     
 != scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-notref.html
 == scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # scrolling rowgroups were removed in bug 28800
 == empty-cells-default-1.html empty-cells-default-1-ref.html

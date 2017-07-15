@@ -192,6 +192,10 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
         params.push_back("TESTING_READ_PATH3");
         params.push_back(aInfo.testingReadPath3.c_str());
       }
+      if (!aInfo.testingReadPath4.empty()) {
+        params.push_back("TESTING_READ_PATH4");
+        params.push_back(aInfo.testingReadPath4.c_str());
+      }
 #ifdef DEBUG
       if (!aInfo.debugWriteDir.empty()) {
         params.push_back("DEBUG_WRITE_DIR");

@@ -233,11 +233,6 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     NS_UnescapeURL(script);
 
 
-    nsCOMPtr<nsIScriptSecurityManager> securityManager;
-    securityManager = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
     // New script entry point required, due to the "Create a script" step of
     // http://www.whatwg.org/specs/web-apps/current-work/#javascript-protocol
     nsAutoMicroTask mt;

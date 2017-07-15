@@ -118,7 +118,7 @@ var gExpectingProcessCrash = false;
 var gExpectedCrashDumpFiles = [];
 var gUnexpectedCrashDumpFiles = { };
 var gCrashDumpDir;
-var gPendinCrashDumpDir;
+var gPendingCrashDumpDir;
 var gFailedNoPaint = false;
 var gFailedOpaqueLayer = false;
 var gFailedOpaqueLayerMessages = [];

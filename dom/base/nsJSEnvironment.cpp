@@ -203,9 +203,6 @@ static PRTime sFirstCollectionTime;
 static bool sIsInitialized;
 static bool sDidShutdown;
 static bool sShuttingDown;
-static int32_t sContextCount;
-
-static nsIScriptSecurityManager *sSecurityManager;
 
 // nsJSEnvironmentObserver observes the memory-pressure notifications
 // and forces a garbage collection and cycle collection when it happens, if
@@ -770,8 +767,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 {
   EnsureStatics();
 
-  ++sContextCount;
-
   mIsInitialized = false;
   mProcessingScriptTag = false;
   HoldJSObjects(this);
@@ -782,15 +777,6 @@ nsJSContext::~nsJSContext()
   mGlobalObjectRef = nullptr;
 
   Destroy();
-
-  --sContextCount;
-
-  if (!sContextCount && sDidShutdown) {
-    // The last context is being deleted, and we're already in the
-    // process of shutting down, release the security manager.
-
-    NS_IF_RELEASE(sSecurityManager);
-  }
 }
 
 void
@@ -2579,8 +2565,6 @@ mozilla::dom::StartupJSEnvironment()
   sIsInitialized = false;
   sDidShutdown = false;
   sShuttingDown = false;
-  sContextCount = 0;
-  sSecurityManager = nullptr;
   gCCStats.Init();
   sExpensiveCollectorPokes = 0;
 }
@@ -2775,12 +2759,6 @@ nsJSContext::EnsureStatics()
     return;
   }
 
-  nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
-                               &sSecurityManager);
-  if (NS_FAILED(rv)) {
-    MOZ_CRASH();
-  }
-
   // Let's make sure that our main thread is the same as the xpcom main thread.
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2928,12 +2906,6 @@ mozilla::dom::ShutdownJSEnvironment()
   KillTimers();
 
   NS_IF_RELEASE(gNameSpaceManager);
-
-  if (!sContextCount) {
-    // We're being shutdown, and there are no more contexts
-    // alive, release the security manager.
-    NS_IF_RELEASE(sSecurityManager);
-  }
 
   sShuttingDown = true;
   sDidShutdown = true;

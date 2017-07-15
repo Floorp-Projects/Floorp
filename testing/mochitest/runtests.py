@@ -1594,6 +1594,8 @@ toolbar#nav-bar {
 
         if hasattr(options, "topsrcdir"):
             browserEnv["MOZ_DEVELOPER_REPO_DIR"] = options.topsrcdir
+        if hasattr(options, "topobjdir"):
+            browserEnv["MOZ_DEVELOPER_OBJ_DIR"] = options.topobjdir
 
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
