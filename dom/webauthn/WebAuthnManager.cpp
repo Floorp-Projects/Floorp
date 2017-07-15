@@ -7,6 +7,7 @@
 #include "hasht.h"
 #include "nsICryptoHash.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h" // Used by WD-05 compat support (Remove in Bug 1381126)
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
@@ -174,7 +175,25 @@ RelaxSameOrigin(nsPIDOMWindowInner* aParent,
     return NS_ERROR_FAILURE;
   }
 
-  if (!html->IsRegistrableDomainSuffixOfOrEqualTo(aInputRpId, originHost)) {
+  // WD-05 origin compatibility support - aInputRpId might be a URI/origin,
+  // so catch that (Bug 1380421). Remove in Bug 1381126.
+  nsAutoString inputRpId(aInputRpId);
+  nsCOMPtr<nsIURI> inputUri;
+  if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(inputUri), aInputRpId))) {
+    // If we parsed the input as a URI, then pull out the host and use it as the
+    // input
+    nsAutoCString uriHost;
+    if (NS_FAILED(inputUri->GetHost(uriHost))) {
+      return NS_ERROR_FAILURE;
+    }
+    CopyUTF8toUTF16(uriHost, inputRpId);
+    MOZ_LOG(gWebAuthnManagerLog, LogLevel::Debug,
+            ("WD-05 Fallback: Parsed input %s URI into host %s",
+             NS_ConvertUTF16toUTF8(aInputRpId).get(), uriHost.get()));
+  }
+  // End WD-05 origin compatibility support (Bug 1380421)
+
+  if (!html->IsRegistrableDomainSuffixOfOrEqualTo(inputRpId, originHost)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

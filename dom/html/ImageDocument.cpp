@@ -110,8 +110,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
                                              mimeType,
                                              nullptr,
                                              &decision,
-                                             nsContentUtils::GetContentPolicy(),
-                                             secMan);
+                                             nsContentUtils::GetContentPolicy());
 
   if (NS_FAILED(rv) || NS_CP_REJECTED(decision)) {
     request->Cancel(NS_ERROR_CONTENT_BLOCKED);

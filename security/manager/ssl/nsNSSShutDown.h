@@ -57,6 +57,12 @@ class nsNSSShutDownPreventionLock
 public:
   nsNSSShutDownPreventionLock();
   ~nsNSSShutDownPreventionLock();
+private:
+  // Keeps track of whether or not we actually managed to enter the NSS activity
+  // state. This is important because if we're attempting to shut down and we
+  // can't enter the NSS activity state, we need to not attempt to leave it when
+  // our destructor runs.
+  bool mEnteredActivityState;
 };
 
 // Singleton, used by nsNSSComponent to track the list of PSM objects,
@@ -82,7 +88,9 @@ public:
   static nsresult doPK11Logout();
 
   // Signal entering/leaving a scope where shutting down NSS is prohibited.
-  static void enterActivityState();
+  // enteredActivityState will be set to true if we actually managed to enter
+  // the NSS activity state.
+  static void enterActivityState(/*out*/ bool& enteredActivityState);
   static void leaveActivityState();
 
 private:

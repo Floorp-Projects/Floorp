@@ -900,7 +900,7 @@ extern "C" {
 }
 extern "C" {
     pub fn Gecko_SetImageOrientation(aVisibility: *mut nsStyleVisibility,
-                                     aRadians: f64, aFlip: bool);
+                                     aOrientation: u8, aFlip: bool);
 }
 extern "C" {
     pub fn Gecko_SetImageOrientationAsFromImage(aVisibility:
@@ -2709,8 +2709,9 @@ extern "C" {
                                    change_hint: nsChangeHint);
 }
 extern "C" {
-    pub fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed)
-     -> nsChangeHint;
+    pub fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
+                                restyle_behavior: TraversalRestyleBehavior,
+                                was_restyled: *mut bool) -> nsChangeHint;
 }
 extern "C" {
     pub fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,

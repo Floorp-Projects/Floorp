@@ -29,7 +29,7 @@ DebuggerPanel.prototype = {
     } = await this.panelWin.Debugger.bootstrap({
       threadClient: this.toolbox.threadClient,
       tabTarget: this.toolbox.target,
-      debuggerClient: this.toolbox.target._client,
+      debuggerClient: this.toolbox.target.client,
       sourceMaps: this.toolbox.sourceMapService
     });
 
