@@ -43,6 +43,22 @@ function filePathForTarget(target) {
   ];
 }
 
+function addonIDforTarget(target) {
+  return [
+    dom.dt(
+      { className: "addon-target-info-label" },
+      Strings.GetStringFromName("extensionID"),
+    ),
+    dom.dd(
+      { className: "addon-target-info-content extension-id" },
+      dom.span(
+        { title: target.addonID },
+        target.addonID
+      )
+    ),
+  ];
+}
+
 function internalIDForTarget(target) {
   if (!target.manifestURL) {
     return [];
@@ -163,6 +179,7 @@ module.exports = createClass({
       dom.dl(
         { className: "addon-target-info" },
         ...filePathForTarget(target),
+        ...addonIDforTarget(target),
         ...internalIDForTarget(target),
       ),
       dom.div({className: "addon-target-actions"},
