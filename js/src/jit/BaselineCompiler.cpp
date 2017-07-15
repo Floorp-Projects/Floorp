@@ -4047,11 +4047,9 @@ BaselineCompiler::emit_JSOP_TOID()
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
-    // No-op if the index is trivally convertable to an id.
+    // No-op if index is int32.
     Label done;
     masm.branchTestInt32(Assembler::Equal, R0, &done);
-    masm.branchTestString(Assembler::Equal, R0, &done);
-    masm.branchTestSymbol(Assembler::Equal, R0, &done);
 
     prepareVMCall();
 
