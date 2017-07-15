@@ -29,7 +29,7 @@ fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android,36,264) 
 # Corners
 fuzzy-if(skiaContent,17,47) fuzzy-if(webrender,166-166,58-58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
 fuzzy-if(gtkWidget,23,5) fuzzy-if(winWidget&&!d2d,23,5) fuzzy-if(d2d,32,8) fuzzy-if(Android,10,8) fuzzy-if(skiaContent,18,49) fuzzy-if(webrender,164-164,57-57) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
-fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android,3,15) fuzzy-if(skiaContent,18,90) fails-if(webrender) == corner-3.html corner-3-ref.svg
+fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android,3,15) fuzzy-if(skiaContent,18,90) fuzzy-if(webrender,18-18,91-91) == corner-3.html corner-3-ref.svg
 fuzzy-if(skiaContent,12,83) fuzzy-if(webrender,79-79,110-110) == corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
