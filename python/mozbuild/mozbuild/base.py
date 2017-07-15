@@ -751,24 +751,12 @@ class MachCommandConditions(object):
     @staticmethod
     def is_hg(cls):
         """Must have a mercurial source checkout."""
-        if hasattr(cls, 'substs'):
-            top_srcdir = cls.substs.get('top_srcdir')
-        elif hasattr(cls, 'topsrcdir'):
-            top_srcdir = cls.topsrcdir
-        else:
-            return False
-        return top_srcdir and os.path.isdir(os.path.join(top_srcdir, '.hg'))
+        return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'hg'
 
     @staticmethod
     def is_git(cls):
         """Must have a git source checkout."""
-        if hasattr(cls, 'substs'):
-            top_srcdir = cls.substs.get('top_srcdir')
-        elif hasattr(cls, 'topsrcdir'):
-            top_srcdir = cls.topsrcdir
-        else:
-            return False
-        return top_srcdir and os.path.exists(os.path.join(top_srcdir, '.git'))
+        return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'git'
 
 
 class PathArgument(object):
