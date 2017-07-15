@@ -64,6 +64,11 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
                       gint count, gpointer user_data)
 {
   g_signal_stop_emission_by_name(w, "delete_from_cursor");
+  if (count == 0) {
+    // Nothing to do.
+    return;
+  }
+
   bool forward = count > 0;
 
 #if (MOZ_WIDGET_GTK == 3)
@@ -173,6 +178,11 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
                gboolean extend_selection, gpointer user_data)
 {
   g_signal_stop_emission_by_name(w, "move_cursor");
+  if (count == 0) {
+    // Nothing to do.
+    return;
+  }
+
   gHandled = true;
   bool forward = count > 0;
   if (uint32_t(step) >= ArrayLength(sMoveCommands)) {

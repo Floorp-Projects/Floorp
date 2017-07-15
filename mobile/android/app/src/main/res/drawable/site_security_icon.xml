@@ -11,22 +11,22 @@
         android:drawable="@drawable/site_security_unknown"
         android:maxLevel="0" />
     <item
-        android:drawable="@drawable/lock_secure"
+        android:drawable="@drawable/ic_lock"
         android:maxLevel="1" />
     <item
-        android:drawable="@drawable/warning_minor"
+        android:drawable="@drawable/ic_warning_minor"
         android:maxLevel="2" />
     <item
-        android:drawable="@drawable/lock_disabled"
+        android:drawable="@drawable/ic_lock_disabled"
         android:maxLevel="3" />
     <item
-        android:drawable="@drawable/shield_enabled"
+        android:drawable="@drawable/ic_shield_enabled"
         android:maxLevel="4" />
     <item
-        android:drawable="@drawable/shield_disabled"
+        android:drawable="@drawable/ic_shield_disabled"
         android:maxLevel="5" />
     <item
-        android:drawable="@drawable/search_icon_inactive"
+        android:drawable="@drawable/ic_search_icon"
         android:maxLevel="6" />
 
 </level-list>

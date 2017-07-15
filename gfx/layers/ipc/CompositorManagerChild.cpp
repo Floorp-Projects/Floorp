@@ -258,7 +258,9 @@ CompositorManagerChild::SetReplyTimeout()
 #ifndef DEBUG
   // Add a timeout for release builds to kill GPU process when it hangs.
   // Don't apply timeout when using web render as it tend to timeout frequently.
-  if (XRE_IsParentProcess() && !gfxVars::UseWebRender()) {
+  if (XRE_IsParentProcess() &&
+      GPUProcessManager::Get()->GetGPUChild() &&
+      !gfxVars::UseWebRender()) {
     int32_t timeout = gfxPrefs::GPUProcessIPCReplyTimeoutMs();
     SetReplyTimeoutMs(timeout);
   }
@@ -270,6 +272,7 @@ CompositorManagerChild::ShouldContinueFromReplyTimeout()
 {
   if (XRE_IsParentProcess()) {
     gfxCriticalNote << "Killing GPU process due to IPC reply timeout";
+    MOZ_DIAGNOSTIC_ASSERT(GPUProcessManager::Get()->GetGPUChild());
     GPUProcessManager::Get()->KillProcess();
   }
   return false;

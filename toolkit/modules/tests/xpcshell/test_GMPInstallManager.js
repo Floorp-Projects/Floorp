@@ -7,6 +7,7 @@ const URL_HOST = "http://localhost";
 var GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm", {});
 var GMPInstallManager = GMPScope.GMPInstallManager;
 
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -146,7 +147,16 @@ add_test(function test_checkForAddons_abort() {
   let overriddenXhr = overrideXHR(200, "", { dropRequest: true} );
   let installManager = new GMPInstallManager();
   let promise = installManager.checkForAddons();
-  overriddenXhr.abort();
+
+  // Since the XHR is created in checkForAddons asynchronously,
+  // we need to delay aborting till the XHR is running.
+  // Since checkForAddons returns a Promise already only after
+  // the abort is triggered, we can't use that, and instead
+  // we'll use a fake timer.
+  setTimeout(() => {
+    overriddenXhr.abort();
+  }, 100);
+
   promise.then(res => {
     do_check_true(res.usedFallback);
     installManager.uninit();

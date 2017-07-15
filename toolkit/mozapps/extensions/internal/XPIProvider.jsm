@@ -2497,7 +2497,7 @@ this.XPIProvider = {
       return;
     }
 
-    url = UpdateUtils.formatUpdateURL(url);
+    url = await UpdateUtils.formatUpdateURL(url);
 
     logger.info(`Starting system add-on update check from ${url}.`);
     let res = await ProductAddonChecker.getProductAddonList(url);

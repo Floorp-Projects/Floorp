@@ -7,6 +7,7 @@ package org.mozilla.gecko.activitystream.ranking;
 
 import android.database.Cursor;
 import android.support.annotation.VisibleForTesting;
+import android.util.Log;
 
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
@@ -27,7 +28,7 @@ import static org.mozilla.gecko.activitystream.ranking.RankingUtils.apply;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.apply2D;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.applyInPairs;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.filter;
-import static org.mozilla.gecko.activitystream.ranking.RankingUtils.mapCursor;
+import static org.mozilla.gecko.activitystream.ranking.RankingUtils.looselyMapCursor;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.mapWithLimit;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.reduce;
 
@@ -41,6 +42,8 @@ import static org.mozilla.gecko.activitystream.ranking.RankingUtils.reduce;
  * - Finally we adjust the score with some custom rules.
  */
 public class HighlightsRanking {
+    private static final String LOG_TAG = "HighlightsRanking";
+
     private static final Map<String, Double> HIGHLIGHT_WEIGHTS = new HashMap<>();
     static {
         // TODO: Needs confirmation from the desktop team that this is the correct weight mapping (Bug 1336037)
@@ -94,10 +97,15 @@ public class HighlightsRanking {
      * HighlightCandidate.fromCursor().
      */
     @VisibleForTesting static List<HighlightCandidate> extractFeatures(Cursor cursor) {
-        return mapCursor(cursor, new Func1<Cursor, HighlightCandidate>() {
+        return looselyMapCursor(cursor, new Func1<Cursor, HighlightCandidate>() {
             @Override
             public HighlightCandidate call(Cursor cursor) {
-                return HighlightCandidate.fromCursor(cursor);
+                try {
+                    return HighlightCandidate.fromCursor(cursor);
+                } catch (HighlightCandidate.InvalidHighlightCandidateException e) {
+                    Log.w(LOG_TAG, "Skipping invalid highlight item", e);
+                    return null;
+                }
             }
         });
     }

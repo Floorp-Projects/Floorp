@@ -7,11 +7,11 @@
           xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <item gecko:state_dark="true"
-          android:drawable="@drawable/close_edit_mode_dark"/>
+          android:drawable="@drawable/ic_cancel_pm"/>
 
     <item gecko:state_private="true"
-          android:drawable="@drawable/close_edit_mode_light"/>
+          android:drawable="@drawable/ic_cancel_pm"/>
 
-    <item android:drawable="@drawable/close_edit_mode_light"/>
+    <item android:drawable="@drawable/ic_cancel_nm"/>
 
 </selector>

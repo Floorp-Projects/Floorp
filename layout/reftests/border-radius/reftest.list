@@ -23,14 +23,14 @@ fuzzy-if(skiaContent,1,342) == percent-2.html percent-2-ref.html
 fuzzy-if(skiaContent,1,343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
-fuzzy-if(skiaContent,17,58) fuzzy-if(webrender,16,59) == border-circle-2.html border-circle-2-ref.xhtml
+fuzzy-if(skiaContent,17,58) fuzzy-if(webrender,168,74) == border-circle-2.html border-circle-2-ref.xhtml
 fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) fuzzy-if(skiaContent,63,398) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
-fuzzy-if(skiaContent,17,47) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
-fuzzy-if(gtkWidget,23,5) fuzzy-if(winWidget&&!d2d,23,5) fuzzy-if(d2d,32,8) fuzzy-if(Android,10,8) fuzzy-if(skiaContent,18,49) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
-fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android,3,15) fuzzy-if(skiaContent,18,90) fuzzy-if(webrender,18-18,91-91) == corner-3.html corner-3-ref.svg
-fuzzy-if(skiaContent,12,83) == corner-4.html corner-4-ref.svg
+fuzzy-if(skiaContent,17,47) fuzzy-if(webrender,166-166,58-58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
+fuzzy-if(gtkWidget,23,5) fuzzy-if(winWidget&&!d2d,23,5) fuzzy-if(d2d,32,8) fuzzy-if(Android,10,8) fuzzy-if(skiaContent,18,49) fuzzy-if(webrender,164-164,57-57) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
+fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android,3,15) fuzzy-if(skiaContent,18,90) fails-if(webrender) == corner-3.html corner-3-ref.svg
+fuzzy-if(skiaContent,12,83) fuzzy-if(webrender,79-79,110-110) == corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
 == border-reduce-height.html border-reduce-height-ref.html
@@ -40,7 +40,7 @@ skip-if(!webrender) pref(layers.advanced.border-layers,1) == border-reduce-heigh
 fails-if(!styloVsGecko) == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-fuzzy-if(skiaContent,17,62) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(skiaContent,17,62) fuzzy-if(webrender,168,74) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
@@ -48,11 +48,11 @@ fuzzy-if(true,1,20) fuzzy-if(d2d,64,196) fuzzy-if(cocoaWidget,1,180) fuzzy-if(An
 fuzzy-if(Android,5,54) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,172) == clipping-4-image.html clipping-4-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,10) fuzzy-if(skiaContent,1,77) == clipping-4-overflow-hidden.html clipping-4-ref.html
 == clipping-5-canvas.html clipping-5-refc.html
-fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html clipping-5-refi.html
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(webrender,1,97) == clipping-5-image.html clipping-5-refi.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(skiaContent,1,77) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) fuzzy-if(skiaContent,1,97) == clipping-5-refi.html clipping-5-ref.html
 fuzzy-if(true,1,7) fuzzy-if(d2d,48,94) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android,99,115) fuzzy-if(skiaContent,1,77) == clipping-5-refc.html clipping-5-ref.html # bug 732535
-fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) fuzzy-if(skiaContent,7,58) fuzzy-if(d3d11&&advancedLayers,120,319) fuzzy-if(webrender,7-7,62-62) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
+fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,469) fuzzy-if(skiaContent,7,58) fuzzy-if(d3d11&&advancedLayers,120,319) == clipping-6.html clipping-6-ref.html # PaintedLayer and MaskLayer with transforms that aren't identical
 fuzzy-if(true,2,29) fuzzy-if(d2d,46,50) fuzzy-if(Android,255,586) fuzzy-if(skiaContent,28,96) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) fuzzy-if(d3d11&&advancedLayers,30,3) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
@@ -76,7 +76,7 @@ fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(brows
 fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html
 
 # Test for bad corner joins.
-fuzzy-if(true,1,1) fuzzy-if(webrender,13-13,913-913) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
+fuzzy-if(true,1,1) == corner-joins-1.xhtml corner-joins-1-ref.xhtml
 fuzzy(255,20) random-if(winWidget) fuzzy-if(skiaContent,255,610) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(d2d,64,157) fuzzy-if(Android,166,400) fuzzy-if(skiaContent,58,145) == scroll-1.html scroll-1-ref.html # see bug 732535 #Bug 959166
@@ -88,8 +88,8 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.te
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||skiaContent,1,9) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||skiaContent,1,9) fuzzy-if(webrender,5,55) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
 
-== corner-split.html corner-split-ref.svg # bug 1185636
+fuzzy-if(webrender,1,98) == corner-split.html corner-split-ref.svg # bug 1185636

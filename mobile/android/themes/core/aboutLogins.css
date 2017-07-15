@@ -79,7 +79,7 @@ body {
 }
 
 #filter-clear {
-  background-image: url("resource://android/res/drawable-mdpi-v4/close_edit_mode_light.png");
+  background-image: url("resource://android/res/drawable-mdpi-v4/ic_cancel_nm.png");
   background-position: center;
   background-size: 12px 12px;
   background-repeat: no-repeat;
@@ -175,7 +175,7 @@ body {
   }
 
   #filter-clear {
-    background-image: url("resource://android/res/drawable-hdpi-v4/close_edit_mode_light.png");
+    background-image: url("resource://android/res/drawable-hdpi-v4/ic_cancel_nm.png");
   }
 
   .icon {
@@ -189,7 +189,7 @@ body {
   }
 
   #filter-clear {
-    background-image: url("resource://android/res/drawable-hdpi-v4/close_edit_mode_light.png");
+    background-image: url("resource://android/res/drawable-hdpi-v4/ic_cancel_nm.png");
   }
 
   .icon {

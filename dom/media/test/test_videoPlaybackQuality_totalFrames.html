@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Count the tatol frames of a video</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var startTest = function(test, token) {
+  manager.started(token);
+  var v = document.createElement('video');
+  v.token = token;
+  document.body.appendChild(v);
+  v.src = test.name;
+
+  function ended(event) {
+    var v = event.target;
+    is(v.getVideoPlaybackQuality().totalVideoFrames, test.totalFrameCount,test.name+ " totalFrames should match!");
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+  v.addEventListener("ended", ended);
+  v.play();
+};
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [
+      ["media.decoder.skip-to-next-key-frame.enabled", false]
+    ]
+  },
+  function() {
+    manager.runTests(getPlayableVideos(gFrameCountTests), startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>

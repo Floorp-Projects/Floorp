@@ -35,7 +35,28 @@ async function loadExtension(options) {
         browser.runtime.onMessage.addListener((msg, sender, respond) => {
           if (msg == "ping") {
             respond("pong");
+          } else if (msg == "connect") {
+            let port = browser.runtime.connect();
+            port.postMessage("ping-from-options-html");
+            port.onMessage.addListener(msg => {
+              if (msg == "ping-from-bg") {
+                browser.test.log("Got outbound options.html pong");
+                browser.test.sendMessage("options-html-outbound-pong");
+              }
+            });
           }
+        });
+
+        browser.runtime.onConnect.addListener(port => {
+          browser.test.log("Got inbound options.html port");
+
+          port.postMessage("ping-from-options-html");
+          port.onMessage.addListener(msg => {
+            if (msg == "ping-from-bg") {
+              browser.test.log("Got inbound options.html pong");
+              browser.test.sendMessage("options-html-inbound-pong");
+            }
+          });
         });
       },
     },
@@ -120,6 +141,39 @@ add_tasks(async function test_inline_options(extraOptions) {
         let pong = await browser.runtime.sendMessage("ping");
         browser.test.assertEq("pong", pong, "Got pong.");
 
+        let done = new Promise(resolve => {
+          browser.test.onMessage.addListener(msg => {
+            if (msg == "ports-done") {
+              resolve();
+            }
+          });
+        });
+
+        browser.runtime.onConnect.addListener(port => {
+          browser.test.log("Got inbound background port");
+
+          port.postMessage("ping-from-bg");
+          port.onMessage.addListener(msg => {
+            if (msg == "ping-from-options-html") {
+              browser.test.log("Got inbound background pong");
+              browser.test.sendMessage("bg-inbound-pong");
+            }
+          });
+        });
+
+        browser.runtime.sendMessage("connect");
+
+        let port = browser.runtime.connect();
+        port.postMessage("ping-from-bg");
+        port.onMessage.addListener(msg => {
+          if (msg == "ping-from-options-html") {
+            browser.test.log("Got outbound background pong");
+            browser.test.sendMessage("bg-outbound-pong");
+          }
+        });
+
+        await done;
+
         browser.test.log("Remove options tab.");
         await browser.tabs.remove(optionsTab.id);
 
@@ -142,7 +196,17 @@ add_tasks(async function test_inline_options(extraOptions) {
     },
   }));
 
+  await Promise.all([
+    extension.awaitMessage("options-html-inbound-pong"),
+    extension.awaitMessage("options-html-outbound-pong"),
+    extension.awaitMessage("bg-inbound-pong"),
+    extension.awaitMessage("bg-outbound-pong"),
+  ]);
+
+  extension.sendMessage("ports-done");
+
   await extension.awaitFinish("options-ui");
+
   await extension.unload();
 
   await BrowserTestUtils.removeTab(tab);

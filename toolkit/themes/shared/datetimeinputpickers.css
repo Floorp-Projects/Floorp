@@ -250,16 +250,19 @@ button.month-year.active::after {
   color: var(--weekend-outside-font-color);
 }
 
-.days-view > .out-of-range {
+.days-view > .out-of-range,
+.days-view > .off-step {
   color: var(--weekday-disabled-font-color);
   background: var(--disabled-fill-color);
 }
 
-.days-view > .out-of-range.weekend {
+.days-view > .out-of-range.weekend,
+.days-view > .off-step.weekend {
   color: var(--weekend-disabled-font-color);
 }
 
-.days-view > .out-of-range::before {
+.days-view > .out-of-range::before,
+.days-view > .off-step::before {
   display: none;
 }
 
@@ -351,7 +354,7 @@ button.month-year.active::after {
 }
 
 .spinner-container > .spinner:not(.scrolling) > div.selection,
-.calendar-container .days-view > div.selection:not(.out-of-range) {
+.calendar-container .days-view > div.selection {
   color: var(--selected-font-color);
 }
 

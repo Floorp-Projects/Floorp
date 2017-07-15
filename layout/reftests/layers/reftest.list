@@ -29,9 +29,9 @@ random-if(webrender) skip-if(!asyncPan) != pull-background-displayport-6.html ab
 fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) fails-if(webrender) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,1,17) fuzzy-if(Android,3,4) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
-!= layerize-over-fixed-bg-1.html about:blank
-skip-if(!asyncPan) != fixed-pos-scrolled-clip-layerize.html about:blank
-skip-if(!asyncPan) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
+random-if(webrender) != layerize-over-fixed-bg-1.html about:blank
+skip-if(!asyncPan) random-if(webrender) != fixed-pos-scrolled-clip-layerize.html about:blank
+skip-if(!asyncPan) random-if(webrender) == fixed-pos-scrolled-clip-opacity-layerize.html fixed-pos-scrolled-clip-opacity-inside-layerize.html
 
 # These tests check whether the GPU process is working. We expect it to work if:
 #   E10S is enabled, and

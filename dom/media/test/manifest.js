@@ -48,6 +48,14 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+var gFrameCountTests = [
+  { name:"bipbop.mp4", type:"video/mp4", totalFrameCount:297},
+  { name:"gizmo.mp4", type:"video/mp4", totalFrameCount:166},
+  { name:"seek-short.webm", type:"video/webm", totalFrameCount:8},
+  { name:"seek.webm", type:"video/webm", totalFrameCount:120},
+  { name:"320x240.ogv", type:"video/ogg", totalFrameCount:8},
+];
+
 if (SpecialPowers.Services.appinfo.name != "B2G") {
   // We only run mochitests on b2g desktop and b2g emulator. The 3gp codecs
   // aren't present on desktop, and the emulator codecs (which are different

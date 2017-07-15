@@ -164,7 +164,7 @@ public class SearchBar extends FrameLayout {
         editText.setFocusable(active);
         editText.setFocusableInTouchMode(active);
 
-        final int startDrawable = active ? R.drawable.search_icon_active : R.drawable.search_icon_inactive;
+        final int startDrawable = active ? R.drawable.search_icon_active : R.drawable.ic_search_icon;
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(editText, startDrawable, 0, 0, 0);
 
         // We can't use a selector drawable because we apply a color filter to the focused

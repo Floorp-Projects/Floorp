@@ -176,6 +176,8 @@
                   dir,
                   min: detail.min,
                   max: detail.max,
+                  step: detail.step,
+                  stepBase: detail.stepBase,
                 }
               });
               break;
