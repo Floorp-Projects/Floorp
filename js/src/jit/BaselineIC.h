@@ -1359,12 +1359,12 @@ class ICTableSwitch : public ICStub
 };
 
 // IC for constructing an iterator from an input value.
-class ICIteratorNew_Fallback : public ICFallbackStub
+class ICGetIterator_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    explicit ICIteratorNew_Fallback(JitCode* stubCode)
-      : ICFallbackStub(ICStub::IteratorNew_Fallback, stubCode)
+    explicit ICGetIterator_Fallback(JitCode* stubCode)
+      : ICFallbackStub(ICStub::GetIterator_Fallback, stubCode)
     { }
 
   public:
@@ -1374,11 +1374,11 @@ class ICIteratorNew_Fallback : public ICFallbackStub
 
       public:
         explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::IteratorNew_Fallback, Engine::Baseline)
+          : ICStubCompiler(cx, ICStub::GetIterator_Fallback, Engine::Baseline)
         { }
 
         ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICIteratorNew_Fallback>(space, getStubCode());
+            return newStub<ICGetIterator_Fallback>(space, getStubCode());
         }
     };
 };

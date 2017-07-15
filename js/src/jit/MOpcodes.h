@@ -252,7 +252,7 @@ namespace jit {
     _(DeleteProperty)                                                       \
     _(DeleteElement)                                                        \
     _(SetPropertyCache)                                                     \
-    _(IteratorStart)                                                        \
+    _(GetIteratorCache)                                                     \
     _(IteratorMore)                                                         \
     _(IsNoIter)                                                             \
     _(IteratorEnd)                                                          \
