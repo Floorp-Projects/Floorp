@@ -46,15 +46,15 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 # All the tests marked with random-if(webrender) are specific to "layers" and therefore not really valid with WebRender enabled.
 # We are marking them random-if so that we ensure they don't crash, but allow any non-crash result.
 
-random-if(webrender) != scroll-inactive-layers.html about:blank
-random-if(webrender) != scroll-inactive-layers-2.html about:blank
-random-if(webrender) != inactive-layertree-visible-region-1.html about:blank
-random-if(webrender) != inactive-layertree-visible-region-2.html about:blank
-random-if(webrender) != transform-floating-point-invalidation.html about:blank
-random-if(webrender) != transform-floating-point-invalidation.html?reverse about:blank
-random-if(webrender) != nudge-to-integer-invalidation.html about:blank
-random-if(webrender) != nudge-to-integer-invalidation.html?reverse about:blank
-random-if(webrender) skip-if(styloVsGecko) != clipped-animated-transform-1.html about:blank # Bug 1352628 (styloVsGecko)
+fails-if(webrender) != scroll-inactive-layers.html about:blank
+fails-if(webrender) != scroll-inactive-layers-2.html about:blank
+fails-if(webrender) != inactive-layertree-visible-region-1.html about:blank
+fails-if(webrender) != inactive-layertree-visible-region-2.html about:blank
+fails-if(webrender) != transform-floating-point-invalidation.html about:blank
+fails-if(webrender) != transform-floating-point-invalidation.html?reverse about:blank
+fails-if(webrender) != nudge-to-integer-invalidation.html about:blank
+fails-if(webrender) != nudge-to-integer-invalidation.html?reverse about:blank
+fails-if(webrender) skip-if(styloVsGecko) != clipped-animated-transform-1.html about:blank # Bug 1352628 (styloVsGecko)
 random-if(webrender) != paintedlayer-recycling-1.html about:blank
 random-if(webrender) != paintedlayer-recycling-2.html about:blank
 pref(layers.single-tile.enabled,false) random-if(webrender) != paintedlayer-recycling-3.html about:blank
@@ -73,8 +73,8 @@ random-if(webrender) != layer-splitting-6.html about:blank
 random-if(webrender) != layer-splitting-7.html about:blank
 fuzzy-if(gtkWidget,2,4) fuzzy-if(asyncPan,2,3955) fuzzy-if(OSX,179,30) fuzzy-if(skiaContent,16,3230) == image-scrolling-zoom-1.html image-scrolling-zoom-1-ref.html
 != image-scrolling-zoom-1-ref.html image-scrolling-zoom-1-notref.html
-pref(layers.single-tile.enabled,false) random-if(webrender) != fast-scrolling.html about:blank
-random-if(webrender) == background-position-1.html background-position-1-ref.html
+pref(layers.single-tile.enabled,false) fails-if(webrender) != fast-scrolling.html about:blank
+fails-if(webrender) == background-position-1.html background-position-1-ref.html
 == background-position-2a.html background-position-2-ref.html
 == background-position-2b.html background-position-2-ref.html
 == background-position-2c.html background-position-2-ref.html

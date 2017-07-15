@@ -7953,12 +7953,6 @@ StorageDirectoryHelper::RunOnMainThread()
 
   nsresult rv;
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   for (uint32_t count = mOriginProps.Length(), index = 0;
        index < count;
        index++) {

@@ -43,19 +43,19 @@ const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 var results = [
   [ { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
       lineNumber: 1, columnNumber: isStylo ? 4 : 14,
-      sourceLine: "#s1{nosuchprop:auto; color:black}" },
+      sourceLine: isStylo ? "" : "#s1{nosuchprop:auto; color:black}" },
     { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
       lineNumber: 2, columnNumber: isStylo ? 4 : 14, sourceLine:
-      "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" },
+      isStylo ? "" : "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" },
     { errorMessage: /Ruleset ignored due to bad selector/,
       lineNumber: 2, columnNumber: isStylo ? 33 : 40, sourceLine:
-      "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" } ],
+      isStylo ? "" : "#s2{nosuchprop:auto; color:black}invalid?sel{}#s3{color:black}" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
       lineNumber: 0, columnNumber: isStylo ? 0 : 6,
-      sourceLine: "width:200;color:black" } ],
+      sourceLine: isStylo ? "" : "width:200;color:black" } ],
   [ { errorMessage: /parsing value for \u2018width\u2019/,
       lineNumber: 0, columnNumber: 0,
-      sourceLine: "200" } ],
+      sourceLine: isStylo ? "" : "200" } ],
 ];
 var curTest = -1;
 

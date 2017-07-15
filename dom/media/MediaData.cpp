@@ -180,6 +180,7 @@ VideoData::VideoData(int64_t aOffset,
   , mDisplay(aDisplay)
   , mFrameID(aFrameID)
   , mSentToCompositor(false)
+  , mNextKeyFrameTime(TimeUnit::Invalid())
 {
   MOZ_ASSERT(!mDuration.IsNegative(), "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
