@@ -12477,9 +12477,8 @@ IonBuilder::jsop_toasynciter()
 AbortReasonOr<Ok>
 IonBuilder::jsop_toid()
 {
-    // No-op if the index is trivally convertable to an id.
-    MIRType type = current->peek(-1)->type();
-    if (type == MIRType::Int32 || type == MIRType::String || type == MIRType::Symbol)
+    // No-op if the index is an integer.
+    if (current->peek(-1)->type() == MIRType::Int32)
         return Ok();
 
     MDefinition* index = current->pop();
