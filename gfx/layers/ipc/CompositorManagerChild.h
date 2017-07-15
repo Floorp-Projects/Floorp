@@ -29,6 +29,7 @@ public:
   static bool Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
                    uint32_t aNamespace);
   static void Shutdown();
+  static void OnGPUProcessLost();
 
   static bool
   CreateContentCompositorBridge(uint32_t aNamespace);
