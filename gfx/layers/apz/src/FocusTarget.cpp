@@ -117,8 +117,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
 
     // The globally focused element for scrolling is in a remote layer tree
     if (rfp) {
-      FT_LOG("Creating reflayer target with seq=%" PRIu64 ", lt=%" PRIu64 "\n",
+      FT_LOG("Creating reflayer target with seq=%" PRIu64 ", kl=%d, lt=%" PRIu64 "\n",
              aFocusSequenceNumber,
+             mFocusHasKeyEventListeners,
              rfp->GetLayersId());
 
       mType = FocusTarget::eRefLayer;
@@ -126,8 +127,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
       return;
     }
 
-    FT_LOG("Creating nil target with seq=%" PRIu64 " (remote browser missing layers id)\n",
-           aFocusSequenceNumber);
+    FT_LOG("Creating nil target with seq=%" PRIu64 ", kl=%d (remote browser missing layers id)\n",
+           aFocusSequenceNumber,
+           mFocusHasKeyEventListeners);
 
     mType = FocusTarget::eNone;
     return;
@@ -136,8 +138,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   // If the focus isn't on a remote browser then check for scrollable targets
   if (IsEditableNode(scrollTarget) ||
       IsEditableNode(presShell->GetDocument())) {
-    FT_LOG("Creating nil target with seq=%" PRIu64 " (disabling for editable node)\n",
-           aFocusSequenceNumber);
+    FT_LOG("Creating nil target with seq=%" PRIu64 ", kl=%d (disabling for editable node)\n",
+           aFocusSequenceNumber,
+           mFocusHasKeyEventListeners);
 
     mType = FocusTarget::eNone;
     return;
@@ -160,8 +163,9 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   mData.mScrollTargets.mVertical =
     nsLayoutUtils::FindIDForScrollableFrame(vertical);
 
-  FT_LOG("Creating scroll target with seq=%" PRIu64 ", h=%" PRIu64 ", v=%" PRIu64 "\n",
+  FT_LOG("Creating scroll target with seq=%" PRIu64 ", kl=%d, h=%" PRIu64 ", v=%" PRIu64 "\n",
          aFocusSequenceNumber,
+         mFocusHasKeyEventListeners,
          mData.mScrollTargets.mHorizontal,
          mData.mScrollTargets.mVertical);
 }

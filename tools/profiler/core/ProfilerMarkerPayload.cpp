@@ -164,8 +164,8 @@ GCMinorMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   MOZ_ASSERT(mTimingData);
   StreamCommonProps("GCMinor", aWriter, aProcessStartTime, aUniqueStacks);
   if (mTimingData) {
-    aWriter.SplicedJSONProperty("nurseryTimings", mTimingData.get());
+    aWriter.SplicedJSONProperty("nursery", mTimingData.get());
   } else {
-    aWriter.NullProperty("nurseryTimings");
+    aWriter.NullProperty("nursery");
   }
 }

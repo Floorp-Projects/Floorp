@@ -7170,6 +7170,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   // Update the latest focus sequence number with this new sequence number
   if (mAPZFocusSequenceNumber < aEvent->mFocusSequenceNumber) {
     mAPZFocusSequenceNumber = aEvent->mFocusSequenceNumber;
+
+    // Schedule an empty transaction to transmit this focus update
+    aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY);
   }
 
   if (sPointerEventEnabled) {
