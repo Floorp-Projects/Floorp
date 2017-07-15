@@ -362,7 +362,6 @@ js::jit::RegionLock::acquire(void* addr)
     uint32_t one = 1;
     while (!__atomic_compare_exchange(&spinlock, &zero, &one, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE)) {
         zero = 0;
-        continue;
     }
 # endif
 }

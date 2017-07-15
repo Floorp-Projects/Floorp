@@ -527,7 +527,6 @@ public:
   void clear()
   {
     while (popFirst()) {
-      continue;
     }
   }
 

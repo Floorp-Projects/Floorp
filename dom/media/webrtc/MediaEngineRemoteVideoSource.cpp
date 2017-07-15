@@ -61,8 +61,6 @@ MediaEngineRemoteVideoSource::Init()
   SetUUID(uniqueId);
 
   mInitDone = true;
-
-  return;
 }
 
 void
@@ -99,7 +97,6 @@ MediaEngineRemoteVideoSource::Shutdown()
 
   MOZ_ASSERT(mState == kReleased);
   mInitDone = false;
-  return;
 }
 
 nsresult

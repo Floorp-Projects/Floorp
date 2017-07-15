@@ -791,8 +791,6 @@ nsJSChannel::EvaluateScript()
     } else if (mIsAsync) {
         NotifyListener();
     }
-
-    return;
 }
 
 void

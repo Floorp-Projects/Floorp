@@ -982,7 +982,6 @@ SpdyConnectTransaction::ForcePlainText()
   MOZ_ASSERT(!mTunnelTransport, "call before mapstreamtohttpconnection");
 
   mForcePlainText = true;
-  return;
 }
 
 void

@@ -54,7 +54,6 @@ CreateDummyChannel(nsIURI* aHostURI, OriginAttributes& aAttrs, nsIChannel** aCha
 
   pbChannel->SetPrivate(aAttrs.mPrivateBrowsingId > 0);
   dummyChannel.forget(aChannel);
-  return;
 }
 
 }

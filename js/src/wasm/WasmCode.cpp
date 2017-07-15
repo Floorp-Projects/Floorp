@@ -188,8 +188,6 @@ SendCodeRangesToProfiler(const CodeSegment& cs, const Bytes& bytecode, const Met
             vtune::MarkWasm(vtune::GenerateUniqueMethodID(), name.begin(), (void*)start, size);
 #endif
     }
-
-    return;
 }
 
 /* static */ UniqueConstCodeSegment
