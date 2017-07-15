@@ -360,11 +360,11 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   TraversalRootBehavior aRootBehavior,
   TraversalRestyleBehavior aRestyleBehavior)
 {
-  bool forAnimationOnly =
-    aRestyleBehavior == TraversalRestyleBehavior::ForAnimationOnly;
+  bool forThrottledAnimationFlush =
+    aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
 
   AutoRestyleTimelineMarker marker(
-    mPresContext->GetDocShell(), forAnimationOnly);
+    mPresContext->GetDocShell(), forThrottledAnimationFlush);
 
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
@@ -388,9 +388,12 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   MOZ_ASSERT(!(isInitial || forReconstruct || forNewlyBoundElement) ||
              !postTraversalRequired);
 
-  // Don't need to trigger a second traversal if this restyle only needs
-  // animation-only restyle.
-  if (forAnimationOnly) {
+  // We don't need to trigger a second traversal if this restyle only for
+  // flushing throttled animations. That's because the first traversal only
+  // performs the animation-only restyle, skipping the normal restyle, and so
+  // will not generate any SequentialTask that could update animation state
+  // requiring a subsequent traversal.
+  if (forThrottledAnimationFlush) {
     return postTraversalRequired;
   }
 
@@ -921,16 +924,17 @@ ServoStyleSet::StyleDocument(TraversalRestyleBehavior aRestyleBehavior)
 }
 
 bool
-ServoStyleSet::StyleDocumentForAnimationOnly()
+ServoStyleSet::StyleDocumentForThrottledAnimationFlush()
 {
   PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
 
   bool postTraversalRequired = false;
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
-    if (PrepareAndTraverseSubtree(root,
-                                  TraversalRootBehavior::Normal,
-                                  TraversalRestyleBehavior::ForAnimationOnly)) {
+    if (PrepareAndTraverseSubtree(
+          root,
+          TraversalRootBehavior::Normal,
+          TraversalRestyleBehavior::ForThrottledAnimationFlush)) {
       postTraversalRequired = true;
     }
   }

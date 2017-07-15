@@ -280,7 +280,7 @@ public:
    * This will traverse all of the document's style roots (that is, its document
    * element, and the roots of the document-level native anonymous content).
    */
-  bool StyleDocumentForAnimationOnly();
+  bool StyleDocumentForThrottledAnimationFlush();
 
   /**
    * Eagerly styles a subtree of unstyled nodes that was just appended to the

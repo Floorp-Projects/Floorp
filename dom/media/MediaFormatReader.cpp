@@ -2399,6 +2399,13 @@ MediaFormatReader::ReturnOutput(MediaData* aData, TrackType aTrack)
           videoData->mDisplay.width, videoData->mDisplay.height);
       mInfo.mVideo.mDisplay = videoData->mDisplay;
     }
+
+    TimeUnit nextKeyframe;
+    if (!mVideo.HasInternalSeekPending() &&
+        NS_SUCCEEDED(mVideo.mTrackDemuxer->GetNextRandomAccessPoint(&nextKeyframe))) {
+      videoData->SetNextKeyFrameTime(nextKeyframe);
+    }
+
     mVideo.ResolvePromise(videoData, __func__);
   }
 }

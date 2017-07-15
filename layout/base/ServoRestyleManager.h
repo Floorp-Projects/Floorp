@@ -190,7 +190,8 @@ private:
    */
   bool ProcessPostTraversal(Element* aElement,
                             nsStyleContext* aParentContext,
-                            ServoRestyleState& aRestyleState);
+                            ServoRestyleState& aRestyleState,
+                            TraversalRestyleBehavior aRestyleBehavior);
 
   struct TextPostTraversalState;
   bool ProcessPostTraversalForText(nsIContent* aTextNode,

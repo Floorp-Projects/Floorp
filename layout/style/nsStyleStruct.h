@@ -2030,6 +2030,9 @@ struct nsStyleImageOrientation
 
     // Compute the final angle value, rounding to the closest quarter turn.
     double roundedAngle = fmod(aRadians, 2 * M_PI);
+    if (roundedAngle < 0) {
+      roundedAngle = roundedAngle + 2 * M_PI;
+    }
     if      (roundedAngle < 0.25 * M_PI) { orientation = ANGLE_0;  }
     else if (roundedAngle < 0.75 * M_PI) { orientation = ANGLE_90; }
     else if (roundedAngle < 1.25 * M_PI) { orientation = ANGLE_180;}
@@ -2042,6 +2045,15 @@ struct nsStyleImageOrientation
     }
 
     return nsStyleImageOrientation(orientation);
+  }
+
+  static nsStyleImageOrientation CreateAsOrientationAndFlip(uint8_t aOrientation,
+                                                            bool aFlip) {
+    MOZ_ASSERT(aOrientation <= ANGLE_270);
+    if (aFlip) {
+      aOrientation |= FLIP_MASK;
+    }
+    return nsStyleImageOrientation(aOrientation);
   }
 
   static nsStyleImageOrientation CreateAsFlip() {

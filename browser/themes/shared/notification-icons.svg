@@ -6,6 +6,7 @@
   <style>
     :root > use:not(:target),
     :root > g:not(:target),
+    :root > circle:not(:target),
     #strikeout {
       display: none;
     }
@@ -14,6 +15,10 @@
     }
     .blocked {
       clip-path: url(#blocked-clipPath);
+    }
+
+    #badge {
+      fill: #3088d4;
     }
 
     #update-icon {
@@ -86,6 +91,7 @@
   <use id="persistent-storage-blocked" class="blocked" href="#persistent-storage-icon" />
   <use id="plugin" href="#plugin-icon" />
   <use id="plugin-blocked" class="blocked" href="#plugin-icon" />
+  <use id="plugin-badge" href="#badge" />
   <use id="popup" href="#popup-icon" />
   <use id="screen" href="#screen-icon" />
   <use id="screen-sharing" href="#screen-icon"/>
@@ -94,4 +100,5 @@
   <use id="update" href="#update-icon" />
 
   <path id="strikeout" d="m 2,28 2,2 26,-26 -2,-2 z"/>
+  <circle id="badge" cx="27" cy="5" r="5"/>
 </svg>

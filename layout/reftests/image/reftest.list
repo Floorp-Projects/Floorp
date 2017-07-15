@@ -33,6 +33,7 @@ fuzzy(1,1) == image-orientation-from-image.html?180&flip image-orientation-ref.h
 fuzzy(1,1) == image-orientation-from-image.html?270&flip image-orientation-ref.html?270&flip
 
 # Tests for image-orientation used with an explicit orientation:
+fuzzy(1,1) == image-orientation-explicit.html?-900     image-orientation-ref.html?180
 fuzzy(1,1) == image-orientation-explicit.html?0        image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?90       image-orientation-ref.html?90
 fuzzy(1,1) == image-orientation-explicit.html?180      image-orientation-ref.html?180
@@ -43,7 +44,8 @@ fuzzy(1,1) == image-orientation-explicit.html?180&flip image-orientation-ref.htm
 fuzzy(1,1) == image-orientation-explicit.html?270&flip image-orientation-ref.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
-fuzzy(1,1) fails-if(styloVsGecko||stylo) == image-orientation-explicit.html?-45      image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?-46      image-orientation-ref.html?270
+fuzzy(1,1) == image-orientation-explicit.html?-45      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?-15      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?15       image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?45       image-orientation-ref.html?90
@@ -55,7 +57,7 @@ fuzzy(1,1) == image-orientation-explicit.html?195      image-orientation-ref.htm
 fuzzy(1,1) == image-orientation-explicit.html?225      image-orientation-ref.html?270
 fuzzy(1,1) == image-orientation-explicit.html?255      image-orientation-ref.html?270
 fuzzy(1,1) == image-orientation-explicit.html?285      image-orientation-ref.html?270
-fuzzy(1,1) fails-if(styloVsGecko||stylo) == image-orientation-explicit.html?315      image-orientation-ref.html?0
+fuzzy(1,1) == image-orientation-explicit.html?315      image-orientation-ref.html?0
 fuzzy(1,1) == image-orientation-explicit.html?345      image-orientation-ref.html?0
 
 # Tests for image-orientation used on generated content:

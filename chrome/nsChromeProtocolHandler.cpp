@@ -13,6 +13,7 @@
 #include "nsChromeProtocolHandler.h"
 #include "nsChromeRegistry.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsIChannel.h"
 #include "nsIChromeRegistry.h"
@@ -186,18 +187,8 @@ nsChromeProtocolHandler::NewChannel2(nsIURI* aURI,
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
     nsAutoCString path;
     rv = url->GetPath(path);
-    if (StringBeginsWith(path, NS_LITERAL_CSTRING("/content/")))
-    {
-        nsCOMPtr<nsIScriptSecurityManager> securityManager =
-                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIPrincipal> principal;
-        rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-        result->SetOwner(owner);
+    if (StringBeginsWith(path, NS_LITERAL_CSTRING("/content/"))) {
+        result->SetOwner(nsContentUtils::GetSystemPrincipal());
     }
 
     // XXX Removed dependency-tracking code from here, because we're not
