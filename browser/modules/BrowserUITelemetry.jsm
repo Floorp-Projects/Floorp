@@ -207,17 +207,21 @@ this.BrowserUITelemetry = {
     UITelemetry.addSimpleMeasureFunction("syncstate",
                                          this.getSyncState.bind(this));
 
-    Services.obs.addObserver(this, "sessionstore-windows-restored");
-    Services.obs.addObserver(this, "browser-delayed-startup-finished");
     Services.obs.addObserver(this, "autocomplete-did-enter-text");
     CustomizableUI.addListener(this);
+
+    // Register existing windows
+    let browserEnum = Services.wm.getEnumerator("navigator:browser");
+    while (browserEnum.hasMoreElements()) {
+      this._registerWindow(browserEnum.getNext());
+    }
+    Services.obs.addObserver(this, "browser-delayed-startup-finished");
+
+    this._gatherFirstWindowMeasurements();
   },
 
   observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "sessionstore-windows-restored":
-        this._gatherFirstWindowMeasurements();
-        break;
       case "browser-delayed-startup-finished":
         this._registerWindow(aSubject);
         break;

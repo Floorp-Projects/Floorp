@@ -836,6 +836,10 @@ WorkerTarget.prototype = {
     return this._workerClient;
   },
 
+  get activeConsole() {
+    return this.client._clients.get(this.form.consoleActor);
+  },
+
   get client() {
     return this._workerClient.client;
   },
