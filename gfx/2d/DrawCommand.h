@@ -28,6 +28,7 @@ enum class CommandType : int8_t {
   STROKE,
   FILL,
   FILLGLYPHS,
+  STROKEGLYPHS,
   MASK,
   MASKSURFACE,
   PUSHCLIP,
@@ -465,6 +466,51 @@ private:
   StoredPattern mPattern;
   DrawOptions mOptions;
   RefPtr<GlyphRenderingOptions> mRenderingOptions;
+};
+
+class StrokeGlyphsCommand : public DrawingCommand
+{
+  friend class DrawTargetCaptureImpl;
+public:
+  StrokeGlyphsCommand(ScaledFont* aFont,
+                      const GlyphBuffer& aBuffer,
+                      const Pattern& aPattern,
+                      const StrokeOptions& aStrokeOptions,
+                      const DrawOptions& aOptions,
+                      const GlyphRenderingOptions* aRenderingOptions)
+    : DrawingCommand(CommandType::STROKEGLYPHS)
+    , mFont(aFont)
+    , mPattern(aPattern)
+    , mStrokeOptions(aStrokeOptions)
+    , mOptions(aOptions)
+    , mRenderingOptions(const_cast<GlyphRenderingOptions*>(aRenderingOptions))
+  {
+    mGlyphs.resize(aBuffer.mNumGlyphs);
+    memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
+
+    if (aStrokeOptions.mDashLength) {
+      mDashes.resize(aStrokeOptions.mDashLength);
+      mStrokeOptions.mDashPattern = &mDashes.front();
+      PodCopy(&mDashes.front(), aStrokeOptions.mDashPattern, mStrokeOptions.mDashLength);
+    }
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    GlyphBuffer buf;
+    buf.mNumGlyphs = mGlyphs.size();
+    buf.mGlyphs = &mGlyphs.front();
+    aDT->StrokeGlyphs(mFont, buf, mPattern, mStrokeOptions, mOptions, mRenderingOptions);
+  }
+
+private:
+  RefPtr<ScaledFont> mFont;
+  std::vector<Glyph> mGlyphs;
+  StoredPattern mPattern;
+  StrokeOptions mStrokeOptions;
+  DrawOptions mOptions;
+  RefPtr<GlyphRenderingOptions> mRenderingOptions;
+  std::vector<Float> mDashes;
 };
 
 class MaskCommand : public DrawingCommand
