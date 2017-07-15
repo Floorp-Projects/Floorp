@@ -52,6 +52,8 @@ IonIC::scratchRegisterForEntryJump()
         return asInIC()->temp();
       case CacheKind::HasOwn:
         return asHasOwnIC()->output();
+      case CacheKind::GetIterator:
+        return asGetIteratorIC()->temp1();
       case CacheKind::Call:
       case CacheKind::Compare:
       case CacheKind::TypeOf:
@@ -344,6 +346,31 @@ IonBindNameIC::update(JSContext* cx, HandleScript outerScript, IonBindNameIC* ic
         return nullptr;
 
     return holder;
+}
+
+/* static */ JSObject*
+IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript, IonGetIteratorIC* ic,
+                         HandleValue value)
+{
+    IonScript* ionScript = outerScript->ionScript();
+    jsbytecode* pc = ic->pc();
+
+    if (ic->state().maybeTransition())
+        ic->discardStubs(cx->zone());
+
+    if (ic->state().canAttachStub()) {
+        bool attached = false;
+        RootedScript script(cx, ic->script());
+        GetIteratorIRGenerator gen(cx, script, pc, ic->state().mode(), value);
+        if (gen.tryAttachStub())
+            ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
+
+        if (!attached)
+            ic->state().trackNotAttached();
+    }
+
+    uint8_t flags = GET_UINT8(pc);
+    return ValueToIterator(cx, flags, value);
 }
 
 /* static */ bool

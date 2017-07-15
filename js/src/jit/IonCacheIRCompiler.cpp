@@ -440,6 +440,21 @@ IonCacheIRCompiler::init()
         allocator.initInputLocation(0, ic->environment(), JSVAL_TYPE_OBJECT);
         break;
       }
+      case CacheKind::GetIterator: {
+        IonGetIteratorIC* ic = ic_->asGetIteratorIC();
+        Register output = ic->output();
+
+        available.add(output);
+        available.add(ic->temp1());
+        available.add(ic->temp2());
+
+        liveRegs_.emplace(ic->liveRegs());
+        outputUnchecked_.emplace(TypedOrValueRegister(MIRType::Object, AnyRegister(output)));
+
+        MOZ_ASSERT(numInputs == 1);
+        allocator.initInputLocation(0, ic->value());
+        break;
+      }
       case CacheKind::In: {
         IonInIC* ic = ic_->asInIC();
         Register output = ic->output();
@@ -2004,6 +2019,52 @@ IonCacheIRCompiler::emitLoadStackValue()
 {
     MOZ_ASSERT_UNREACHABLE("emitLoadStackValue not supported for IonCaches.");
     return false;
+}
+
+bool
+IonCacheIRCompiler::emitGuardAndGetIterator()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+    AutoScratchRegister niScratch(allocator, masm);
+
+    PropertyIteratorObject* iterobj =
+        &objectStubField(reader.stubOffset())->as<PropertyIteratorObject>();
+    NativeIterator** enumerators = rawWordStubField<NativeIterator**>(reader.stubOffset());
+
+    Register output = allocator.defineRegister(masm, reader.objOperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load our PropertyIteratorObject* and its NativeIterator.
+    masm.movePtr(ImmGCPtr(iterobj), output);
+    masm.loadObjPrivate(output, JSObject::ITER_CLASS_NFIXED_SLOTS, niScratch);
+
+    // Ensure the |active| and |unreusable| bits are not set.
+    masm.branchTest32(Assembler::NonZero, Address(niScratch, offsetof(NativeIterator, flags)),
+                      Imm32(JSITER_ACTIVE|JSITER_UNREUSABLE), failure->label());
+
+    // Pre-write barrier for store to 'obj'.
+    Address iterObjAddr(niScratch, offsetof(NativeIterator, obj));
+    EmitPreBarrier(masm, iterObjAddr, MIRType::Object);
+
+    // Mark iterator as active.
+    Address iterFlagsAddr(niScratch, offsetof(NativeIterator, flags));
+    masm.storePtr(obj, iterObjAddr);
+    masm.or32(Imm32(JSITER_ACTIVE), iterFlagsAddr);
+
+    // Post-write barrier for stores to 'obj'.
+    emitPostBarrierSlot(output, TypedOrValueRegister(MIRType::Object, AnyRegister(obj)), scratch1);
+
+    // Chain onto the active iterator stack.
+    masm.loadPtr(AbsoluteAddress(enumerators), scratch1);
+    emitRegisterEnumerator(scratch1, niScratch, scratch2);
+
+    return true;
 }
 
 bool

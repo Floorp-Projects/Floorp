@@ -865,24 +865,6 @@ CanCompareIterableObjectToCache(JSObject* obj)
     return false;
 }
 
-static MOZ_ALWAYS_INLINE void
-UpdateLastCachedNativeIterator(JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj)
-{
-    // lastCachedNativeIterator is only used when there's a single object on
-    // the prototype chain, to simplify JIT code.
-    if (iterobj->getNativeIterator()->guard_length != 2)
-        return;
-
-    // Both GetIterator and JIT code assume the receiver has a non-null proto,
-    // so we have to make sure a Shape change is triggered when the proto
-    // changes. Note that this does not apply to the object on the proto chain
-    // because we always check it has a null proto.
-    if (obj->hasUncacheableProto())
-        return;
-
-    cx->compartment()->lastCachedNativeIterator = iterobj;
-}
-
 using ReceiverGuardVector = Vector<ReceiverGuard, 8>;
 
 static MOZ_ALWAYS_INLINE PropertyIteratorObject*
@@ -932,11 +914,6 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, ReceiverGuardVector& guards,
         return nullptr;
     }
 
-    UpdateNativeIterator(ni, obj);
-    RegisterEnumerator(cx, iterobj, ni);
-
-    UpdateLastCachedNativeIterator(cx, obj, iterobj);
-
     return iterobj;
 }
 
@@ -974,8 +951,6 @@ StoreInIteratorCache(JSContext* cx, JSObject* obj, uint32_t key, PropertyIterato
     MOZ_ASSERT(iterobj->getNativeIterator()->guard_length > 0);
 
     cx->caches().nativeIterCache.set(key, iterobj);
-
-    UpdateLastCachedNativeIterator(cx, obj, iterobj);
 }
 
 JSObject*
@@ -984,29 +959,12 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
     ReceiverGuardVector guards(cx);
     uint32_t key = 0;
     if (flags == JSITER_ENUMERATE) {
-        // Check to see if this is the same as the most recent object which was
-        // iterated over.
-        if (PropertyIteratorObject* last = cx->compartment()->lastCachedNativeIterator) {
-            NativeIterator* lastni = last->getNativeIterator();
-            if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                CanCompareIterableObjectToCache(obj) &&
-                ReceiverGuard(obj) == lastni->guard_array[0])
-            {
-                JSObject* proto = obj->staticPrototype();
-                if (CanCompareIterableObjectToCache(proto) &&
-                    ReceiverGuard(proto) == lastni->guard_array[1] &&
-                    !proto->staticPrototype())
-                {
-                    assertSameCompartment(cx, last);
-                    UpdateNativeIterator(lastni, obj);
-                    RegisterEnumerator(cx, last, lastni);
-                    return last;
-                }
-            }
+        if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, guards, &key)) {
+            NativeIterator* ni = iterobj->getNativeIterator();
+            UpdateNativeIterator(ni, obj);
+            RegisterEnumerator(cx, iterobj, ni);
+            return iterobj;
         }
-
-        if (PropertyIteratorObject* iterObj = LookupInIteratorCache(cx, obj, guards, &key))
-            return iterObj;
 
         if (!guards.empty() && !CanStoreInIteratorCache(cx, obj))
             guards.clear();
@@ -1055,6 +1013,14 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
         StoreInIteratorCache(cx, obj, key, iterobj);
 
     return iterobj;
+}
+
+PropertyIteratorObject*
+js::LookupInIteratorCache(JSContext* cx, HandleObject obj)
+{
+    ReceiverGuardVector guards(cx);
+    uint32_t key;
+    return LookupInIteratorCache(cx, obj, guards, &key);
 }
 
 // ES 2017 draft 7.4.7.

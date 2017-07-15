@@ -4057,27 +4057,14 @@ LIRGenerator::visitCallInitElementArray(MCallInitElementArray* ins)
 }
 
 void
-LIRGenerator::visitIteratorStart(MIteratorStart* ins)
+LIRGenerator::visitGetIteratorCache(MGetIteratorCache* ins)
 {
-    if (ins->object()->type() == MIRType::Value) {
-        LCallIteratorStartV* lir = new(alloc()) LCallIteratorStartV(useBoxAtStart(ins->object()));
-        defineReturn(lir, ins);
-        assignSafepoint(lir, ins);
-        return;
-    }
+    MDefinition* value = ins->value();
+    MOZ_ASSERT(value->type() == MIRType::Object || value->type() == MIRType::Value);
 
-    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-    // Call a stub if this is not a simple for-in loop.
-    if (ins->flags() != JSITER_ENUMERATE) {
-        LCallIteratorStartO* lir = new(alloc()) LCallIteratorStartO(useRegisterAtStart(ins->object()));
-        defineReturn(lir, ins);
-        assignSafepoint(lir, ins);
-    } else {
-        LIteratorStartO* lir = new(alloc()) LIteratorStartO(useRegister(ins->object()), temp(), temp(), temp());
-        define(lir, ins);
-        assignSafepoint(lir, ins);
-    }
+    LGetIteratorCache* lir = new(alloc()) LGetIteratorCache(useBoxOrTyped(value), temp(), temp());
+    define(lir, ins);
+    assignSafepoint(lir, ins);
 }
 
 void
