@@ -275,7 +275,24 @@ ProxyMessenger = {
       // `tabId` being set implies that the tabs API is supported, so we don't
       // need to check whether `tabTracker` exists.
       let tab = apiManager.global.tabTracker.getTab(tabId, null);
-      return tab && (tab.linkedBrowser || tab.browser).messageManager;
+      if (!tab) {
+        return null;
+      }
+      let browser = tab.linkedBrowser || tab.browser;
+
+      // Options panels in the add-on manager currently require
+      // special-casing, since their message managers aren't currently
+      // connected to the tab's top-level message manager. To deal with
+      // this, we find the options <browser> for the tab, and use that
+      // directly, insteead.
+      if (browser.currentURI.cloneIgnoringRef().spec === "about:addons") {
+        let optionsBrowser = browser.contentDocument.querySelector(".inline-options-browser");
+        if (optionsBrowser) {
+          browser = optionsBrowser;
+        }
+      }
+
+      return browser.messageManager;
     }
 
     // runtime.sendMessage / runtime.connect

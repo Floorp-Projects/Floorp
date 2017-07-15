@@ -79,6 +79,20 @@ HLSResource::onError(int aErrorCode)
   mCallback->NotifyNetworkError();
 }
 
+void HLSResource::Suspend(bool aCloseImmediately)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Don't call on non-main thread");
+  HLS_DEBUG("HLSResource", "Should suspend the resource fetching.");
+  mHLSResourceWrapper->Suspend();
+}
+
+void HLSResource::Resume()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Don't call on non-main thread");
+  HLS_DEBUG("HLSResource", "Should resume the resource fetching.");
+  mHLSResourceWrapper->Resume();
+}
+
 HLSResource::~HLSResource()
 {
   HLS_DEBUG("HLSResource", "~HLSResource()");

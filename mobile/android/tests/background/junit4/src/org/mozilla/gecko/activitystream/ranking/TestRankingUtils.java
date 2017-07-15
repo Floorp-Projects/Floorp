@@ -191,7 +191,7 @@ public class TestRankingUtils {
     }
 
     @Test
-    public void testMapCursor() {
+    public void testLooselyMapCursor() {
         final MatrixCursor cursor = new MatrixCursor(new String[] {
                 "column1", "column2"
         });
@@ -203,18 +203,34 @@ public class TestRankingUtils {
         final Func1<Cursor, Integer> func = new Func1<Cursor, Integer>() {
             @Override
             public Integer call(Cursor cursor) {
-                return cursor.getInt(cursor.getColumnIndexOrThrow("column1"))
-                        + cursor.getInt(cursor.getColumnIndexOrThrow("column2"));
+                // -1 is our "fail this cursor entry" sentinel.
+                final int col1 = cursor.getInt(cursor.getColumnIndexOrThrow("column1"));
+                if (col1 == -1) {
+                    return null;
+                }
+                return col1 + cursor.getInt(cursor.getColumnIndexOrThrow("column2"));
             }
         };
 
-        final List<Integer> result = RankingUtils.mapCursor(cursor, func);
+        List<Integer> result = RankingUtils.looselyMapCursor(cursor, func);
 
         Assert.assertEquals(3, result.size());
 
         Assert.assertEquals(4, result.get(0).intValue());
         Assert.assertEquals(12, result.get(1).intValue());
         Assert.assertEquals(11, result.get(2).intValue());
+
+        // Test that cursor entries for which func returns null are ignored.
+        cursor.addRow(new Object[] {-1, 6});
+        cursor.addRow(new Object[] {3, 3});
+
+        result = RankingUtils.looselyMapCursor(cursor, func);
+        Assert.assertEquals(4, result.size());
+
+        Assert.assertEquals(4, result.get(0).intValue());
+        Assert.assertEquals(12, result.get(1).intValue());
+        Assert.assertEquals(11, result.get(2).intValue());
+        Assert.assertEquals(6, result.get(3).intValue());
     }
 
     @Test

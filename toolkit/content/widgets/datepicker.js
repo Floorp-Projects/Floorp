@@ -26,6 +26,8 @@ function DatePicker(context) {
      *           {Number} date [optional]
      *           {String} min
      *           {String} max
+     *           {Number} step
+     *           {Number} stepBase
      *           {Number} firstDayOfWeek
      *           {Array<Number>} weekends
      *           {Array<String>} monthStrings
@@ -44,10 +46,10 @@ function DatePicker(context) {
      * Set initial date picker states.
      */
     _setDefaultState() {
-      const { year, month, day, min, max, firstDayOfWeek, weekends,
+      const { year, month, day, min, max, step, stepBase, firstDayOfWeek, weekends,
               monthStrings, weekdayStrings, locale, dir } = this.props;
       const dateKeeper = new DateKeeper({
-        year, month, day, min, max, firstDayOfWeek, weekends,
+        year, month, day, min, max, step, stepBase, firstDayOfWeek, weekends,
         calViewSize: CAL_VIEW_SIZE
       });
 

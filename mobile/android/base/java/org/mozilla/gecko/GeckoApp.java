@@ -47,6 +47,7 @@ import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.gecko.widget.AnchoredPopup;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
@@ -1052,8 +1053,33 @@ public abstract class GeckoApp extends GeckoActivity
         });
     }
 
-    // This method starts downloading an image synchronously and displays the Chooser activity to set the image as wallpaper.
+    // Checks the necessary permissions before attempting to download and set the image as wallpaper.
     private void setImageAs(final String aSrc) {
+        Permissions
+                .from(this)
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .andFallback(new Runnable() {
+                    @Override
+                    public void run() {
+                        showSetImageResult(/* success */ false, R.string.set_image_path_fail, null);
+                    }
+                })
+                .run(new Runnable() {
+                    @Override
+                    public void run() {
+                        downloadImageForSetImage(aSrc);
+                    }
+                });
+    }
+
+
+    /**
+     * Downloads the image given by <code>aSrc</code> synchronously and then displays the Chooser
+     * activity to set the image as wallpaper.
+     *
+     * @param aSrc The URI to download the image from.
+     */
+    private void downloadImageForSetImage(final String aSrc) {
         boolean isDataURI = aSrc.startsWith("data:");
         Bitmap image = null;
         InputStream is = null;

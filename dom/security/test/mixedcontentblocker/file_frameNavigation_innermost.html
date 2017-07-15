@@ -6,11 +6,20 @@
   // get the case from the query string
   var type = location.search.substring(1);
 
+  function clickLink() {
+    // If we don't reflow before clicking the link, the test will fail intermittently. The reason is still unknown. We'll track this issue in bug 1259715.
+    requestAnimationFrame(function() {
+      setTimeout(function() {
+        document.getElementById("link").click();
+      }, 0);
+    });
+  }
+
   switch (type) {
     case "insecurePage_navigate_child":
       document.getElementById("content").innerHTML =
         '<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?insecurePage_navigate_child_response" id="link">Testing\<\/a>';
-      document.getElementById("link").click();
+      clickLink();
       break;
 
     case "insecurePage_navigate_child_response":
@@ -21,12 +30,7 @@
     case "insecurePage_navigate_grandchild":
       document.getElementById("content").innerHTML =
         '<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?insecurePage_navigate_grandchild_response" id="link">Testing\<\/a>';
-      // If we don't reflow before clicking the link, the test will fail intermittently. The reason is still unknown. We'll track this issue in bug 1259715.
-      requestAnimationFrame(function() {
-        setTimeout(function() {
-          document.getElementById("link").click();
-        }, 0);
-      });
+      clickLink();
       break;
 
     case "insecurePage_navigate_grandchild_response":
@@ -37,7 +41,7 @@
     case "securePage_navigate_child":
       document.getElementById("content").innerHTML =
         '<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_child_response" id="link">Testing\<\/a>';
-      document.getElementById("link").click();
+      clickLink();
       break;
 
     case "securePage_navigate_child_response":
@@ -48,13 +52,11 @@
     case "securePage_navigate_grandchild":
       document.getElementById("content").innerHTML=
         '<a href="http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?securePage_navigate_grandchild_response" id="link">Testing\<\/a>';
-      document.getElementById("link").click();
+      clickLink();
       break;
 
     case "securePage_navigate_grandchild_response":
-      dump("\nNavigated to grandchild iframe from secure location to insecure location.  About to post message to the top page.\n");
       parent.parent.parent.postMessage({"test": "securePage_navigate_grandchild", "msg": "navigated to insecure grandchild iframe on secure page"}, "http://mochi.test:8888");
-      dump("\npostMessage to parent attempted.\n");
       document.getElementById("content").innerHTML = "<p>Navigated from secure to insecure grandchild frame on a secure page</p>";
       break;
 

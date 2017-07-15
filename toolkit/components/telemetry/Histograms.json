@@ -9949,58 +9949,12 @@
     "keyed": true,
     "description": "What runtime version did WebIDE connect to?"
   },
-  "DEVTOOLS_OS_ENUMERATED_PER_USER": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 13,
-    "description": "OS of DevTools user (0:Windows XP, 1:Windows Vista, 2:Windows 7, 3:Windows 8, 4:Windows 8.1, 5:OSX, 6:Linux 7:Windows 10, 8:reserved, 9:reserved, 10:reserved, 11:reserved, 12:other)"
-  },
-  "DEVTOOLS_OS_IS_64_BITS_PER_USER": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 3,
-    "description": "OS bit size of DevTools user (0:32bit, 1:64bit, 2:128bit)"
-    },
   "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 13,
     "description": "Screen resolution of DevTools user (0:lower, 1:800x600, 2:1024x768, 3:1280x800, 4:1280x1024, 5:1366x768, 6:1440x900, 7:1920x1080, 8:2560×1440, 9:2560×1600, 10:2880x1800, 11:other, 12:higher)"
-  },
-  "DEVTOOLS_TABS_OPEN_PEAK_LINEAR": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 101,
-    "n_buckets": 100,
-    "description": "The peak number of open tabs in all windows for a session for devtools users."
-  },
-  "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 101,
-    "n_buckets": 100,
-    "description": "The mean number of open tabs in all windows for a session for devtools users."
-  },
-  "DEVTOOLS_TABS_PINNED_PEAK_LINEAR": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 101,
-    "n_buckets": 100,
-    "description": "The peak number of pinned tabs (app tabs) in all windows for a session for devtools users."
-  },
-  "DEVTOOLS_TABS_PINNED_AVERAGE_LINEAR": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 101,
-    "n_buckets": 100,
-    "description": "The mean number of pinned tabs (app tabs) in all windows for a session for devtools users."
   },
   "DEVTOOLS_SAVE_HEAP_SNAPSHOT_MS": {
     "record_in_processes": ["main", "content"],

@@ -254,6 +254,13 @@ class BookmarkValidator {
         continue;
       }
       let params = new URLSearchParams(entry.bmkUri.slice(QUERY_PROTOCOL.length));
+      // Queries with `excludeQueries` won't form cycles because they'll
+      // exclude all queries, including themselves, from the result set.
+      let excludeQueries = params.get("excludeQueries");
+      if (excludeQueries === "1" || excludeQueries === "true") {
+        // `nsNavHistoryQuery::ParseQueryBooleanString` allows `1` and `true`.
+        continue;
+      }
       entry.concreteItems = [];
       let queryIds = params.getAll("folder");
       for (let queryId of queryIds) {

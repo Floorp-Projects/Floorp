@@ -39,7 +39,7 @@ var tests = [
     s.color = "black";
   },
 ];
-const isStylo = SpecialPowers.getBoolPref('layout.css.servo.enabled', false);
+const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 var results = [
   [ { errorMessage: /Unknown property \u2018nosuchprop\u2019/,
       lineNumber: 1, columnNumber: isStylo ? 4 : 14,

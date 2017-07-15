@@ -31,7 +31,7 @@
         android:paddingStart="@dimen/browser_toolbar_site_security_padding_horizontal"
         android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
         android:scaleType="fitCenter"
-        android:src="@drawable/search_icon_inactive"
+        android:src="@drawable/ic_search_icon"
         android:visibility="gone"
         tools:visibility="visible" />
 

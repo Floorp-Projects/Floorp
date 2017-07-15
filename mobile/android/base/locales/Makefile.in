@@ -95,11 +95,13 @@ l10n-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBASEDIR)),$(
 
 $(eval $(call generated_file_template,suggestedsites,suggestedsites.json))
 
+skin := $(if $(MOZ_ANDROID_PHOTON),photon,australis)
+
 $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 	$(call py_action,generate_suggestedsites, \
 		--verbose \
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
-		--resources=$(topsrcdir)/mobile/android/app/src/main/res \
+		--resources=$(topsrcdir)/mobile/android/app/src/$(skin)/res \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
 		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)

@@ -1250,7 +1250,8 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                              Move(options), static_cast<uint8_t>(mProtocolType),
                              false);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+      nsContentUtils::ResistFingerprinting(aCallerType)) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     NS_DispatchToMainThread(ev);
     return NS_OK;
@@ -1336,7 +1337,8 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
                              Move(aOptions),
                              static_cast<uint8_t>(mProtocolType), true, *aRv);
 
-  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests() ||
+      nsContentUtils::ResistFingerprinting(aCallerType)) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     NS_DispatchToMainThread(ev);
     return NS_OK;

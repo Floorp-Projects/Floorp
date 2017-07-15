@@ -459,11 +459,11 @@ VideoSink::UpdateRenderedVideoFrames()
   mVideoFrameEndTime = std::max(mVideoFrameEndTime,
     currentFrame ? currentFrame->GetEndTime() : lastFrameEndTime);
 
-  MaybeResolveEndPromise();
-
   RenderVideoFrames(
     mVideoQueueSendToCompositorSize,
     clockTime.ToMicroseconds(), nowTime);
+
+  MaybeResolveEndPromise();
 
   // Get the timestamp of the next frame. Schedule the next update at
   // the start time of the next frame. If we don't have a next frame,
@@ -496,6 +496,11 @@ VideoSink::MaybeResolveEndPromise()
   if (VideoQueue().IsFinished() &&
       VideoQueue().GetSize() <= 1 &&
       !mVideoSinkEndRequest.Exists()) {
+    if (VideoQueue().GetSize() == 1) {
+      // Remove the last frame since we have sent it to compositor.
+      RefPtr<VideoData> frame = VideoQueue().PopFront();
+      mFrameStats.NotifyPresentedFrame();
+    }
     mEndPromiseHolder.ResolveIfExists(true, __func__);
   }
 }

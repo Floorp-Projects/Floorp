@@ -134,6 +134,103 @@
         }
       },
       {
+        "id": "PageSettings",
+        "type": "object",
+        "description": "The page settings including: orientation, scale, background, margins, headers, footers.",
+        "properties": {
+          "orientation": {
+            "type": "integer",
+            "optional": true,
+            "description": "The page content orientation: 0 = portrait, 1 = landscape. Default: 0."
+          },
+          "scaling": {
+            "type": "number",
+            "optional": true,
+            "description": "The page content scaling factor: 1.0 = 100% = normal size. Default: 1.0."
+          },
+          "shrinkToFit": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the page content should shrink to fit the page width (overrides scaling). Default: true."
+          },
+          "showBackgroundColors": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the page background colors should be shown. Default: false."
+          },
+          "showBackgroundImages": {
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether the page background images should be shown. Default: false."
+          },
+          "paperSizeUnit": {
+            "type": "integer",
+            "optional": true,
+            "description": "The page size unit: 0 = inches, 1 = millimeters. Default: 0."
+          },
+          "paperWidth": {
+            "type": "number",
+            "optional": true,
+            "description": "The paper width in paper size units. Default: 8.5."
+          },
+          "paperHeight": {
+            "type": "number",
+            "optional": true,
+            "description": "The paper height in paper size units. Default: 11.0."
+          },
+          "headerLeft": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's left header. Default: '&T'."
+          },
+          "headerCenter": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's center header. Default: ''."
+          },
+          "headerRight": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's right header. Default: '&U'."
+          },
+          "footerLeft": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's left footer. Default: '&PT'."
+          },
+          "footerCenter": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's center footer. Default: ''."
+          },
+          "footerRight": {
+            "type": "string",
+            "optional": true,
+            "description": "The text for the page's right footer. Default: '&D'."
+          },
+          "marginLeft": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the left edge of the paper (inches). Default: 0.5."
+          },
+          "marginRight": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the right edge of the paper (inches). Default: 0.5."
+          },
+          "marginTop": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the top edge of the paper (inches). Default: 0.5."
+          },
+          "marginBottom": {
+            "type": "number",
+            "optional": true,
+            "description": "The margin between the page content and the bottom edge of the paper (inches). Default: 0.5."
+          }
+        }
+      },
+      {
         "id": "TabStatus",
         "type": "string",
         "enum": ["loading", "complete"],
@@ -1010,6 +1107,53 @@
                 "$ref": "ZoomSettings",
                 "name": "zoomSettings",
                 "description": "The tab's current zoom settings."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "print",
+        "type": "function",
+        "description": "Prints page in active tab.",
+        "parameters": []
+      },
+      {
+        "name": "printPreview",
+        "type": "function",
+        "description": "Shows print preview for page in active tab.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "description": "Called after print preview entered.",
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "saveAsPDF",
+        "type": "function",
+        "description": "Saves page in active tab as a PDF file.",
+        "async": "callback",
+        "parameters": [
+          {
+            "$ref": "PageSettings",
+            "name": "pageSettings",
+            "description": "The page settings used to save the PDF file."
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "description": "Called after save as dialog closed.",
+            "parameters": [
+              {
+                "type": "string",
+                "name": "status",
+                "description": "Save status: Saved, Replaced, Cancelled, Not Saved, Not Replaced."
               }
             ]
           }
