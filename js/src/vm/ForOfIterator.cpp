@@ -197,9 +197,6 @@ ForOfIterator::closeThrow()
 
     // Step 6.
     cx_->setPendingException(completionException);
-
-    // Steps 7-9 (skipped).
-    return;
 }
 
 bool

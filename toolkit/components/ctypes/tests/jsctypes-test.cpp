@@ -37,7 +37,6 @@ void
 test_void_t_cdecl()
 {
   // do nothing
-  return;
 }
 
 // The "AndUnderscore" bit here is an unfortunate hack: the first argument to

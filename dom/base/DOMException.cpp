@@ -114,8 +114,6 @@ NSResultToNameAndMessage(nsresult aNSResult,
   }
 
   NS_WARNING("Huh, someone is throwing non-DOM errors using the DOM module!");
-
-  return;
 }
 
 nsresult

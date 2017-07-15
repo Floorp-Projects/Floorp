@@ -295,8 +295,6 @@ SVGStyleElement::GetStyleSheetInfo(nsAString& aTitle,
 
   *aIsScoped = HasAttr(kNameSpaceID_None, nsGkAtoms::scoped) &&
                OwnerDoc()->IsScopedStyleEnabled();
-
-  return;
 }
 
 CORSMode

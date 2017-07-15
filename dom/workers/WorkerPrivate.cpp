@@ -897,7 +897,6 @@ private:
           override
   {
     aWorkerPrivate->ModifyBusyCountFromWorker(false);
-    return;
   }
 
   virtual bool

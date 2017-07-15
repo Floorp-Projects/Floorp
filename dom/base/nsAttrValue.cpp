@@ -1330,7 +1330,6 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   }
 
   SetMiscAtomOrString(&aValue);
-  return;
 }
 
 void

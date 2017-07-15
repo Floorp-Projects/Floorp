@@ -3225,5 +3225,4 @@ js::unicode::AppendUpperCaseSpecialCasing(char16_t ch, char16_t* elements, size_
     }
 
     MOZ_ASSERT_UNREACHABLE("Bad character input.");
-    return;
 }

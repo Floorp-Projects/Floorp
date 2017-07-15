@@ -236,5 +236,4 @@ void nsUniversalDetector::DataEnd()
   default:
     ;
   }
-  return;
 }

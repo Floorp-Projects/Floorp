@@ -565,8 +565,6 @@ GetImmediateChild(nsIContent* aContent, nsIAtom *aTag, nsIContent** aResult)
       return;
     }
   }
-
-  return;
 }
 
 nsresult

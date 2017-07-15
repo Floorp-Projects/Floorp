@@ -162,7 +162,6 @@ BrowserStreamParent::StreamAsFile(const char* fname)
   }
 
   Unused << SendNPP_StreamAsFile(nsCString(fname));
-  return;
 }
 
 } // namespace plugins

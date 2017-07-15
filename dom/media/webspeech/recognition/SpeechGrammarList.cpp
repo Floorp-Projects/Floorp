@@ -71,7 +71,6 @@ SpeechGrammarList::AddFromURI(const nsAString& aSrc,
                               ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return;
 }
 
 void
@@ -82,7 +81,6 @@ SpeechGrammarList::AddFromString(const nsAString& aString,
   SpeechGrammar* speechGrammar = new SpeechGrammar(mParent);
   speechGrammar->SetSrc(aString, aRv);
   mItems.AppendElement(speechGrammar);
-  return;
 }
 
 already_AddRefed<SpeechGrammar>
