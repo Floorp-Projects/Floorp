@@ -89,7 +89,7 @@ function lastTest(frame)
 
 function testDecoding(frame)
 {
-    var iframeDoc = $(frame).contentDocument;
+    var iframeDoc = SpecialPowers.wrap($(frame)).contentDocument;
     var outString = iframeDoc.getElementById("testPara").innerHTML;
     is(outString, inString, "content decoded as " + frame);
 }

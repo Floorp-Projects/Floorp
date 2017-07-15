@@ -28,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.EventDispatcher;
@@ -61,6 +62,7 @@ public class CustomTabsActivity extends AppCompatActivity
     private GeckoPopupMenu popupMenu;
     private View doorhangerOverlay;
     private ActionBarPresenter actionBarPresenter;
+    private ProgressBar mProgressView;
     // A state to indicate whether this activity is finishing with customize animation
     private boolean usingCustomAnimation = false;
 
@@ -86,6 +88,8 @@ public class CustomTabsActivity extends AppCompatActivity
 
         doorhangerOverlay = findViewById(R.id.custom_tabs_doorhanger_overlay);
 
+        mProgressView = (ProgressBar) findViewById(R.id.page_progress);
+        updateProgress(10);
         final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
         setSupportActionBar(toolbar);
         final ActionBar actionBar = getSupportActionBar();
@@ -389,6 +393,19 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     /**
+     * Update the state of the progress bar.
+     * @param progress The current loading progress; must be between 0 and 100
+     */
+    private void updateProgress(final int progress) {
+        if (mCanStop) {
+            mProgressView.setVisibility(View.VISIBLE);
+            mProgressView.setProgress(progress);
+        } else {
+            mProgressView.setVisibility(View.GONE);
+        }
+    }
+
+    /**
      * Update loading status of current page
      */
     private void updateCanStop() {
@@ -498,6 +515,7 @@ public class CustomTabsActivity extends AppCompatActivity
     public void onLocationChange(GeckoView view, String url) {
         mCurrentUrl = url;
         updateActionBar();
+        updateProgress(60);
     }
 
     @Override
@@ -518,16 +536,18 @@ public class CustomTabsActivity extends AppCompatActivity
         mCanStop = true;
         updateActionBar();
         updateCanStop();
+        updateProgress(20);
     }
 
     @Override
     public void onPageStop(GeckoView view, boolean success) {
         mCanStop = false;
         updateCanStop();
+        updateProgress(100);
     }
 
     @Override
-    public void onSecurityChange(GeckoView view, int status) {
+    public void onSecurityChange(GeckoView view, int status, GeckoBundle identity) {
         if ((status & STATE_IS_INSECURE) != 0) {
             mSecurityStatus = STATE_IS_INSECURE;
         } else if ((status & STATE_IS_BROKEN) != 0) {

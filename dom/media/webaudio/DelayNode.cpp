@@ -181,7 +181,7 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   AudioParamTimeline mDelay;
   DelayBuffer mBuffer;
   double mMaxDelay;

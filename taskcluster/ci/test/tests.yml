@@ -565,10 +565,9 @@ mochitest-browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            windows10/opt: ['mozilla-central', 'try']
-            windows7/opt: ['mozilla-central', 'try']
+            windows.*/opt: ['mozilla-central', 'try']
             linux64/opt: ['mozilla-central', 'try']
-            macosx/opt: ['mozilla-central', 'try']
+            macosx.*/opt: ['mozilla-central', 'try']
             default: []
     e10s: both
     max-run-time: 3600
@@ -978,6 +977,7 @@ mochitest-webgl:
             default: 3
     e10s:
       by-test-platform:
+        windows7.*: true
         macosx.*: true
         default: both
     loopback-video: true

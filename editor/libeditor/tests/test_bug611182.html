@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=611182
 <p id="display"></p>
 <div id="content">
   <iframe></iframe>
-  <iframe id="ref" src="data:text/html,foo bar"></iframe>
+  <iframe id="ref" src="./file_bug611182.html"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -75,160 +75,27 @@ SimpleTest.waitForFocus(function() {
     }, {once: true});
     iframe.src = src;
   }
-
-  const TEST_URIS = [
-    "data:text/html,<html contenteditable>fooz bar</html>",
-    "data:text/html,<html contenteditable><body>fooz bar</body></html>",
-    "data:text/html,<body contenteditable>fooz bar</body>",
-    "data:text/html,<body contenteditable><p>fooz bar</p></body>",
-    "data:text/html,<body contenteditable><div>fooz bar</div></body>",
-    "data:text/html,<body contenteditable><span>fooz bar</span></body>",
-    "data:text/html,<p contenteditable style='outline:none'>fooz bar</p>",
-    "data:text/html,<!DOCTYPE html><html><body contenteditable>fooz bar</body></html>",
-    "data:text/html,<!DOCTYPE html><html contenteditable><body>fooz bar</body></html>",
-    'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml"><body contenteditable="true">fooz bar</body></html>',
-    'data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml" contenteditable="true"><body>fooz bar</body></html>',
-    "data:text/html,<body onload=\"document.designMode='on'\">fooz bar</body>",
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'r.appendChild(b);' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                       'b.contentEditable = "true";' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                       'b.contentEditable = "true";' +
-                       'r.appendChild(b);' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'r.appendChild(b);' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                       'b.setAttribute("contenteditable", "true");' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                       'b.setAttribute("contenteditable", "true");' +
-                       'r.appendChild(b);' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'r.appendChild(b);' +
-                       'b.contentEditable = "true";' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'b.contentEditable = "true";' +
-                       'r.appendChild(b);' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'r.appendChild(b);' +
-                       'b.setAttribute("contenteditable", "true");' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'var old = document.body;' +
-                       'old.parentNode.removeChild(old);' +
-                       'var r = document.documentElement;' +
-                       'var b = document.createElement("body");' +
-                       'b.setAttribute("contenteditable", "true");' +
-                       'r.appendChild(b);' +
-                       'b.appendChild(document.createTextNode("fooz bar"));' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<body contenteditable>fooz bar</body>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<body contenteditable><div>fooz bar</div></body>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<body contenteditable><span>fooz bar</span></body>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<p contenteditable style=\\"outline: none\\">fooz bar</p>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<html contenteditable>fooz bar</html>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-    'data:text/html,<html><script>' +
-                     'onload = function() {' +
-                       'document.open();' +
-                       'document.write("<html contenteditable><body>fooz bar</body></html>");' +
-                       'document.close();' +
-                     '};' +
-                   '<\/script><body></body></html>',
-  ];
+  
+  var totalTests = 0;
   var currentTest = 0;
   function runAllTests() {
-    if (currentTest == TEST_URIS.length) {
+    if (currentTest == totalTests) {
       SimpleTest.finish();
       return;
     }
-    testBackspace(TEST_URIS[currentTest++], runAllTests);
+    testBackspace("file_bug611182.sjs?" + currentTest, runAllTests)
+    currentTest++;
   }
-  runAllTests();
+
+  // query total number of tests to be run from the server and
+  // start running all tests.
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_bug611182.sjs?queryTotalTests");
+  myXHR.onload = function(e) {
+    totalTests = myXHR.responseText;
+    runAllTests();
+  }
+  myXHR.send();
 });
 
 </script>

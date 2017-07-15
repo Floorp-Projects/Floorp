@@ -177,8 +177,8 @@ public:
       return amount;
     }
 
-    // Weak reference.
-    AudioNode* mInputNode;
+    // The InputNode is destroyed when mInputNode is disconnected.
+    AudioNode* MOZ_NON_OWNING_REF mInputNode;
     RefPtr<MediaInputPort> mStreamPort;
     // The index of the input port this node feeds into.
     // This is not used for connections to AudioParams.

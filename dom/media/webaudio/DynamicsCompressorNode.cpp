@@ -174,7 +174,7 @@ private:
   }
 
 private:
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   AudioParamTimeline mThreshold;
   AudioParamTimeline mKnee;
   AudioParamTimeline mRatio;

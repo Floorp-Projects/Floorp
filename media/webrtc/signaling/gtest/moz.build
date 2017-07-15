@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # TODO: bug 1172551 - get these tests working on iOS
-if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit' and CONFIG['OS_TARGET'] != 'Android':
     if CONFIG['OS_TARGET'] == 'Linux':
         DEFINES['WEBRTC_LINUX'] = True
         DEFINES['WEBRTC_POSIX'] = True
@@ -25,6 +25,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
       '/media/mtransport/test',
       '/media/mtransport/third_party/nrappkit/src/registry',
       '/media/webrtc/',
+      '/media/webrtc/signaling/src/common',
       '/media/webrtc/signaling/src/common/time_profiling',
       '/media/webrtc/signaling/src/media-conduit',
       '/media/webrtc/signaling/src/mediapipeline',
@@ -35,11 +36,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'uikit':
     SOURCES += [
         'jsep_session_unittest.cpp',
         'jsep_track_unittest.cpp',
+        'mediaconduit_unittests.cpp',
         'sdp_unittests.cpp',
     ]
 
     # See Bug 1372950, mediapipeline tests seem to cause crashes on Windows
-    if CONFIG['OS_TARGET'] not in ('Android', 'WINNT'):
+    if CONFIG['OS_TARGET'] != 'WINNT':
         SOURCES += [
             'mediapipeline_unittest.cpp',
         ]
