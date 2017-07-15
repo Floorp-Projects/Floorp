@@ -4931,8 +4931,6 @@ pref("extensions.webextensions.remote", false);
 // Whether or not the moz-extension resource loads are remoted
 pref("extensions.webextensions.protocol.remote", true);
 
-pref("layers.popups.compositing.enabled", false);
-
 // Report Site Issue button
 pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
 #if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
