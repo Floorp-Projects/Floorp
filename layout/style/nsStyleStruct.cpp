@@ -3493,7 +3493,20 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
       || mScrollSnapDestination != aNewData.mScrollSnapDestination
       || mTopLayer != aNewData.mTopLayer
       || mResize != aNewData.mResize) {
-    hint |= nsChangeHint_ReconstructFrame;
+    return nsChangeHint_ReconstructFrame;
+  }
+
+  if ((mAppearance == NS_THEME_TEXTFIELD &&
+       aNewData.mAppearance != NS_THEME_TEXTFIELD) ||
+      (mAppearance != NS_THEME_TEXTFIELD &&
+       aNewData.mAppearance == NS_THEME_TEXTFIELD)) {
+    // This is for <input type=number> where we allow authors to specify a
+    // |-moz-appearance:textfield| to get a control without a spinner. (The
+    // spinner is present for |-moz-appearance:number-input| but also other
+    // values such as 'none'.) We need to reframe since we want to use
+    // nsTextControlFrame instead of nsNumberControlFrame if the author
+    // specifies 'textfield'.
+    return nsChangeHint_ReconstructFrame;
   }
 
   if (mOverflowX != aNewData.mOverflowX
@@ -3512,19 +3525,6 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
    * CSSOM-View DOM methods are likely to be used in those cases); however,
    * if this does become common perhaps a faster-path might be worth while.
    */
-
-  if ((mAppearance == NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance != NS_THEME_TEXTFIELD) ||
-      (mAppearance != NS_THEME_TEXTFIELD &&
-       aNewData.mAppearance == NS_THEME_TEXTFIELD)) {
-    // This is for <input type=number> where we allow authors to specify a
-    // |-moz-appearance:textfield| to get a control without a spinner. (The
-    // spinner is present for |-moz-appearance:number-input| but also other
-    // values such as 'none'.) We need to reframe since we want to use
-    // nsTextControlFrame instead of nsNumberControlFrame if the author
-    // specifies 'textfield'.
-    return nsChangeHint_ReconstructFrame;
-  }
 
   if (mFloat != aNewData.mFloat) {
     // Changing which side we float on doesn't affect descendants directly
