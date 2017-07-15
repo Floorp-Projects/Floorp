@@ -7188,6 +7188,16 @@ nsWindow::IsPopup()
   return mWindowType == eWindowType_popup;
 }
 
+bool
+nsWindow::ShouldUseOffMainThreadCompositing()
+{
+  if (IsSmallPopup()) {
+    return false;
+  }
+
+  return nsBaseWidget::ShouldUseOffMainThreadCompositing();
+}
+
 void
 nsWindow::WindowUsesOMTC()
 {

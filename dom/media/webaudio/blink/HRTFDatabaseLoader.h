@@ -126,7 +126,8 @@ private:
             return mLoader ? mLoader->sizeOfIncludingThis(aMallocSizeOf) : 0;
         }
 
-        HRTFDatabaseLoader* mLoader;
+        // The HRTFDatabaseLoader removes itself from s_loaderMap on destruction.
+        HRTFDatabaseLoader* MOZ_NON_OWNING_REF mLoader;
     };
 
     // Keeps track of loaders on a per-sample-rate basis.

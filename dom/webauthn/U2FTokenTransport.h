@@ -65,12 +65,14 @@ public:
   virtual RefPtr<U2FRegisterPromise>
   Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
            const nsTArray<uint8_t>& aApplication,
-           const nsTArray<uint8_t>& aChallenge) = 0;
+           const nsTArray<uint8_t>& aChallenge,
+           uint32_t aTimeoutMS) = 0;
 
   virtual RefPtr<U2FSignPromise>
   Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
        const nsTArray<uint8_t>& aApplication,
-       const nsTArray<uint8_t>& aChallenge) = 0;
+       const nsTArray<uint8_t>& aChallenge,
+       uint32_t aTimeoutMS) = 0;
 
   virtual void Cancel() = 0;
 

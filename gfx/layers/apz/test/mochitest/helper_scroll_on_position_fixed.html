@@ -53,7 +53,7 @@ waitUntilApzStable()
 <body style="height:5000px; margin:0">
   <div style="position:sticky; width: 100px; height: 300px; top: 0; background-color:red">sticky</div>
   <div style="position:fixed; width: 100px; height: 300px; top: 0; left: 200px; background-color: green">fixed</div>
-  <iframe id='iframe' width="300" height="400" src="data:text/html,<body style='height:5000px; margin:0'><div style='position:sticky; width:100px; height:300px; top: 0; background-color:red'>sticky</div><div style='position:fixed; right:0; top: 0; width:100px; height:300px; background-color:green'>fixed</div>"></iframe>
+  <iframe id='iframe' width="300" height="400" srcdoc="<body style='height:5000px; margin:0'><div style='position:sticky; width:100px; height:300px; top: 0; background-color:red'>sticky</div><div style='position:fixed; right:0; top: 0; width:100px; height:300px; background-color:green'>fixed</div>"></iframe>
 
   <div id="fpos_scrollable" style="position:fixed; width: 100px; height: 300px; top: 0; left: 400px; background-color: red; overflow:scroll">
    <div style="background-color: blue; height: 1000px; margin: 3px">scrollable content inside a fixed-pos item</div>

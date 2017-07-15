@@ -598,12 +598,14 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
       dst_height = (int)(scale * dst_height);
     }
 
+    int dst_stride_y = dst_width;
+    int dst_stride_uv = (dst_width + 1) / 2;
     if (dst_width == target_width && dst_height == target_height) {
       DeliverCapturedFrame(captureFrame, captureTime);
     } else {
       rtc::scoped_refptr<webrtc::I420Buffer> buffer;
-      buffer = I420Buffer::Create(dst_width, dst_height, stride_y,
-                                  stride_uv, stride_uv);
+      buffer = I420Buffer::Create(dst_width, dst_height, dst_stride_y,
+                                  dst_stride_uv, dst_stride_uv);
 
       buffer->ScaleFrom(*captureFrame.video_frame_buffer().get());
       webrtc::VideoFrame scaledFrame(buffer, 0, 0, kVideoRotation_0);

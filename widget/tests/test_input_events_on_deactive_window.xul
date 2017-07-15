@@ -42,7 +42,7 @@ function runTests()
   }
 
   otherWindow =
-    window.open("data:text/plain,this is an active window.", "_blank",
+    window.open("./file_input_events_on_deactive_window.html", "_blank",
                 "chrome,width=100,height=100");
   ok(otherWindow, "failed to open other window");
   if (!otherWindow) {

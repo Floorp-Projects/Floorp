@@ -32,7 +32,7 @@ public:
                 const StyleSheet *aSheet,
                 const Loader *aLoader,
                 nsIURI *aURI);
-  ErrorReporter(const StyleSheet *aSheet,
+  ErrorReporter(const ServoStyleSheet *aSheet,
                 const Loader *aLoader,
                 nsIURI *aURI);
   ~ErrorReporter();
@@ -72,6 +72,8 @@ public:
 
 private:
   void AddToError(const nsString &aErrorText);
+
+  bool IsServo() const;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsAutoString mError;
