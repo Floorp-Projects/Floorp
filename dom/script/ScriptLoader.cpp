@@ -300,8 +300,7 @@ ScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                           NS_LossyConvertUTF16toASCII(aType),
                                           nullptr,    //extra
                                           &shouldLoad,
-                                          nsContentUtils::GetContentPolicy(),
-                                          nsContentUtils::GetSecurityManager());
+                                          nsContentUtils::GetContentPolicy());
   if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
     if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
       return NS_ERROR_CONTENT_BLOCKED;

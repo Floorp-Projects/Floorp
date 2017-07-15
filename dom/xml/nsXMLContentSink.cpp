@@ -708,8 +708,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
                                    type,
                                    nullptr,
                                    &decision,
-                                   nsContentUtils::GetContentPolicy(),
-                                   nsContentUtils::GetSecurityManager());
+                                   nsContentUtils::GetContentPolicy());
 
     NS_ENSURE_SUCCESS(rv, rv);
 

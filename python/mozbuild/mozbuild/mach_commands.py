@@ -1325,6 +1325,7 @@ class RunProgram(MachCommandBase):
 
         extra_env = {
             'MOZ_DEVELOPER_REPO_DIR': self.topsrcdir,
+            'MOZ_DEVELOPER_OBJ_DIR': self.topobjdir,
         }
 
         if not enable_crash_reporter:
