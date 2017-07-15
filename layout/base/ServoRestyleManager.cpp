@@ -433,10 +433,27 @@ UpdateFramePseudoElementStyles(nsIFrame* aFrame,
     aFrame, aRestyleState.StyleSet(), aRestyleState.ChangeList());
 }
 
+static inline bool
+NeedsToTraverseElementChildren(const Element& aParent,
+                               TraversalRestyleBehavior aRestyleBehavior)
+{
+  if (aParent.HasAnimationOnlyDirtyDescendantsForServo()) {
+    return true;
+  }
+
+  if (aRestyleBehavior != TraversalRestyleBehavior::ForThrottledAnimationFlush) {
+    return aParent.HasDirtyDescendantsForServo() ||
+           aParent.HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
+  }
+  return false;
+}
+
 bool
-ServoRestyleManager::ProcessPostTraversal(Element* aElement,
-                                          nsStyleContext* aParentContext,
-                                          ServoRestyleState& aRestyleState)
+ServoRestyleManager::ProcessPostTraversal(
+  Element* aElement,
+  nsStyleContext* aParentContext,
+  ServoRestyleState& aRestyleState,
+  TraversalRestyleBehavior aRestyleBehavior)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
 
@@ -595,13 +612,14 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
       styleFrame, aElement, aRestyleState.ChangeList());
   }
 
+  const bool traverseElementChildren =
+    NeedsToTraverseElementChildren(*aElement, aRestyleBehavior);
   const bool descendantsNeedFrames =
     aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
-  const bool traverseElementChildren =
-    aElement->HasDirtyDescendantsForServo() ||
-    aElement->HasAnimationOnlyDirtyDescendantsForServo() ||
-    descendantsNeedFrames;
-  const bool traverseTextChildren = recreateContext || descendantsNeedFrames;
+  const bool forThrottledAnimationFlush =
+    aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
+  const bool traverseTextChildren =
+    recreateContext || (!forThrottledAnimationFlush && descendantsNeedFrames);
   bool recreatedAnyContext = recreateContext;
   if (traverseElementChildren || traverseTextChildren) {
     nsStyleContext* upToDateContext =
@@ -613,8 +631,10 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
                                      childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
-        recreatedAnyContext |= ProcessPostTraversal(
-          n->AsElement(), upToDateContext, childrenRestyleState);
+        recreatedAnyContext |= ProcessPostTraversal(n->AsElement(),
+                                                    upToDateContext,
+                                                    childrenRestyleState,
+                                                    aRestyleBehavior);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState);
       }
@@ -629,9 +649,11 @@ ServoRestyleManager::ProcessPostTraversal(Element* aElement,
     UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
   }
 
-  aElement->UnsetHasDirtyDescendantsForServo();
+  if (!forThrottledAnimationFlush) {
+    aElement->UnsetHasDirtyDescendantsForServo();
+    aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+  }
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
-  aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
   return recreatedAnyContext;
 }
 
@@ -803,7 +825,11 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
       DocumentStyleRootIterator iter(doc);
       while (Element* root = iter.GetNextStyleRoot()) {
         ServoRestyleState state(*styleSet, currentChanges);
-        anyStyleChanged |= ProcessPostTraversal(root, nullptr, state);
+        if (!forThrottledAnimationFlush ||
+            root->HasAnimationOnlyDirtyDescendantsForServo()) {
+          anyStyleChanged |=
+            ProcessPostTraversal(root, nullptr, state, aRestyleBehavior);
+        }
       }
     }
 
