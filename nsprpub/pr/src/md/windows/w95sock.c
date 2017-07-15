@@ -333,7 +333,10 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
 #if defined(_WIN64)
 
 static PRCallOnceType _pr_has_connectex_once;
-typedef BOOL (WINAPI *_pr_win_connectex_ptr)(SOCKET, const struct sockaddr *, int, PVOID, DWORD, LPDWORD, LPOVERLAPPED);
+typedef BOOL (PASCAL FAR * _pr_win_connectex_ptr)(_In_ SOCKET s, _In_reads_bytes_(namelen) const struct sockaddr FAR *name, _In_ int namelen, _In_reads_bytes_opt_(dwSendDataLength) PVOID lpSendBuffer, _In_ DWORD dwSendDataLength, _Out_ LPDWORD lpdwBytesSent, _Inout_ LPOVERLAPPED lpOverlapped);
+
+
+
 #ifndef WSAID_CONNECTEX
 #define WSAID_CONNECTEX \
   {0x25a207b9,0xddf3,0x4660,{0x8e,0xe9,0x76,0xe5,0x8c,0x74,0x06,0x3e}}
@@ -349,7 +352,7 @@ typedef BOOL (WINAPI *_pr_win_connectex_ptr)(SOCKET, const struct sockaddr *, in
 #define SO_UPDATE_CONNECT_CONTEXT 0x7010
 #endif
 
-static _pr_win_connectex_ptr _pr_win_connectex;
+static _pr_win_connectex_ptr _pr_win_connectex = NULL;
 
 static PRStatus PR_CALLBACK _pr_set_connectex(void)
 {
@@ -458,14 +461,19 @@ _PR_MD_TCPSENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             _PR_MD_MAP_CONNECT_ERROR(err);
             return -1;
         } else if (fd->secret->nonblocking) {
-            /* Remember that overlapped structure is set. We will neede to get
+            /* Remember that overlapped structure is set. We will need to get
              * the final result of ConnectEx call. */
             fd->secret->overlappedActive = PR_TRUE;
-            _PR_MD_MAP_CONNECT_ERROR(WSAEWOULDBLOCK);
+
             /* ConnectEx will copy supplied data to a internal buffer and send
              * them during Fast Open or after connect. Therefore we can assumed
              * this data already send. */
-            return amount;
+            if (amount > 0) {
+              return amount;
+            }
+
+            _PR_MD_MAP_CONNECT_ERROR(WSAEWOULDBLOCK);
+            return -1;
         }
         // err is ERROR_IO_PENDING and socket is blocking, so query
         // GetOverlappedResult.

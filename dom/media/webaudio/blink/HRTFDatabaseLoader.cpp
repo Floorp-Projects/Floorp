@@ -122,7 +122,8 @@ public:
     return NS_OK;
     }
 private:
-    HRTFDatabaseLoader* mLoader;
+    // Ownership transferred by ProxyRelease
+    HRTFDatabaseLoader* MOZ_OWNING_REF mLoader;
 };
 
 void HRTFDatabaseLoader::ProxyRelease()

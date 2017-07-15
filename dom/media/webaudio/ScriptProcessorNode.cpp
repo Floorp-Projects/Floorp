@@ -476,7 +476,7 @@ private:
 
   friend class ScriptProcessorNode;
 
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   nsAutoPtr<SharedBuffers> mSharedBuffers;
   RefPtr<ThreadSharedFloatArrayBufferList> mInputBuffer;
   const uint32_t mBufferSize;

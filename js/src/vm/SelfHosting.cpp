@@ -2428,6 +2428,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("CallStarGeneratorMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<StarGeneratorObject>>, 2, 0),
 
+    JS_INLINABLE_FN("IsMapObject", intrinsic_IsInstanceOfBuiltin<MapObject>, 1, 0,
+                    IntrinsicIsMapObject),
+    JS_FN("CallMapMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<MapObject>>, 2, 0),
+
+    JS_INLINABLE_FN("IsSetObject", intrinsic_IsInstanceOfBuiltin<SetObject>, 1, 0,
+                    IntrinsicIsSetObject),
+    JS_FN("CallSetMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
+
     JS_FN("IsWeakSet", intrinsic_IsInstanceOfBuiltin<WeakSetObject>, 1,0),
     JS_FN("CallWeakSetMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<WeakSetObject>>, 2, 0),
