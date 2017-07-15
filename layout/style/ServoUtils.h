@@ -53,19 +53,19 @@ void AssertIsMainThreadOrServoFontMetricsLocked();
  */
 #define MOZ_DEFINE_STYLO_METHODS(type_, geckotype_, servotype_) \
   geckotype_* type_::AsGecko() {                                \
-    MOZ_DIAGNOSTIC_ASSERT(IsGecko());                        \
+    MOZ_DIAGNOSTIC_ASSERT(IsGecko());                           \
     return static_cast<geckotype_*>(this);                      \
   }                                                             \
   servotype_* type_::AsServo() {                                \
-    MOZ_DIAGNOSTIC_ASSERT(IsServo());                        \
+    MOZ_DIAGNOSTIC_ASSERT(IsServo());                           \
     return static_cast<servotype_*>(this);                      \
   }                                                             \
   const geckotype_* type_::AsGecko() const {                    \
-    MOZ_DIAGNOSTIC_ASSERT(IsGecko());                        \
+    MOZ_DIAGNOSTIC_ASSERT(IsGecko());                           \
     return static_cast<const geckotype_*>(this);                \
   }                                                             \
   const servotype_* type_::AsServo() const {                    \
-    MOZ_DIAGNOSTIC_ASSERT(IsServo());                        \
+    MOZ_DIAGNOSTIC_ASSERT(IsServo());                           \
     return static_cast<const servotype_*>(this);                \
   }                                                             \
   geckotype_* type_::GetAsGecko() {                             \
