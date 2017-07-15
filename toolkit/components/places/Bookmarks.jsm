@@ -2186,9 +2186,7 @@ async function(db, folderGuids, options) {
               p.parent AS _grandParentId, NULL AS _childCount,
               b.syncStatus AS _syncStatus
        FROM descendants
-       /* The usage of CROSS JOIN is not random, it tells the optimizer
-          to retain the original rows order, so the hierarchy is respected */
-       CROSS JOIN moz_bookmarks b ON did = b.id
+       JOIN moz_bookmarks b ON did = b.id
        JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_places h ON b.fk = h.id`, { folderGuid });
 
