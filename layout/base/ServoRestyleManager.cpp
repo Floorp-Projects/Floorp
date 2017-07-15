@@ -250,7 +250,7 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
     }
   }
 
-  Unused << Servo_TakeChangeHint(aElement);
+  Unused << Servo_TakeChangeHint(aElement, TraversalRestyleBehavior::Normal);
   aElement->UnsetHasDirtyDescendantsForServo();
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
@@ -464,7 +464,10 @@ ServoRestyleManager::ProcessPostTraversal(
     aElement->GetPrimaryFrame()->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW);
 
   // Grab the change hint from Servo.
-  nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
+  // In case of flushing throttled animations, any restyle hints other than
+  // animations are preserved since they are the hints which will be processed
+  // in normal restyle later.
+  nsChangeHint changeHint = Servo_TakeChangeHint(aElement, aRestyleBehavior);
 
   // We should really fix the weird primary frame mapping for image maps
   // (bug 135040)...
