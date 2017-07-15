@@ -12,7 +12,6 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils", "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyGetter(this, "WeaveService", () =>
@@ -24,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
 // lazy module getters
 
 /* global AboutHome:false, AboutNewTab:false, AddonManager:false, AppMenuNotifications:false,
-          AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
+          AsyncPrefs: false, AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
           BookmarkJSONUtils:false, BrowserUITelemetry:false, BrowserUsageTelemetry:false,
           ContentClick:false, ContentPrefServiceParent:false, ContentSearch:false,
           DateTimePickerHelper:false, DirectoryLinksProvider:false,
@@ -54,6 +53,7 @@ let initializedModules = {};
   ["AboutNewTab", "resource:///modules/AboutNewTab.jsm"],
   ["AddonManager", "resource://gre/modules/AddonManager.jsm"],
   ["AppMenuNotifications", "resource://gre/modules/AppMenuNotifications.jsm"],
+  ["AsyncPrefs", "resource://gre/modules/AsyncPrefs.jsm"],
   ["AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm"],
   ["AutoCompletePopup", "resource://gre/modules/AutoCompletePopup.jsm"],
   ["BookmarkHTMLUtils", "resource://gre/modules/BookmarkHTMLUtils.jsm"],
@@ -143,6 +143,12 @@ const listeners = {
     "ContentPrefs:AddObserverForName": ["ContentPrefServiceParent"],
     "ContentPrefs:RemoveObserverForName": ["ContentPrefServiceParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN ContentPrefServiceParent.init
+
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
+    "AsyncPrefs:SetPref": ["AsyncPrefs"],
+    "AsyncPrefs:ResetPref": ["AsyncPrefs"],
+    // PLEASE KEEP THIS LIST IN SYNC WITH THE LISTENERS ADDED IN AsyncPrefs.init
+
     "FeedConverter:addLiveBookmark": ["Feeds"],
     "WCCR:setAutoHandler": ["Feeds"],
     "webrtc:UpdateGlobalIndicators": ["webrtcUI"],
@@ -318,7 +324,7 @@ BrowserGlue.prototype = {
         this._onAppDefaults();
         break;
       case "final-ui-startup":
-        this._finalUIStartup();
+        this._beforeUIStartup();
         break;
       case "browser-delayed-startup-finished":
         this._onFirstWindowLoaded(subject);
@@ -584,13 +590,13 @@ BrowserGlue.prototype = {
 
   _onAppDefaults: function BG__onAppDefaults() {
     // apply distribution customizations (prefs)
-    // other customizations are applied in _finalUIStartup()
+    // other customizations are applied in _beforeUIStartup()
     this._distributionCustomizer.applyPrefDefaults();
   },
 
   // runs on startup, before the first command line handler is invoked
   // (i.e. before the first window is opened)
-  _finalUIStartup: function BG__finalUIStartup() {
+  _beforeUIStartup: function BG__beforeUIStartup() {
     // check if we're in safe mode
     if (Services.appinfo.inSafeMode) {
       Services.ww.openWindow(null, "chrome://browser/content/safeMode.xul",
@@ -607,8 +613,6 @@ BrowserGlue.prototype = {
     listeners.init();
 
     SessionStore.init();
-    BrowserUsageTelemetry.init();
-    BrowserUITelemetry.init();
 
     if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
@@ -633,12 +637,6 @@ BrowserGlue.prototype = {
         accentcolor: "black",
         author: vendorShortName,
       });
-    }
-
-    TabCrashHandler.init();
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      PluginCrashReporter.init();
-      UnsubmittedCrashHandler.init();
     }
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");
@@ -899,6 +897,11 @@ BrowserGlue.prototype = {
       }
     }
 
+    TabCrashHandler.init();
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      PluginCrashReporter.init();
+    }
+
     ProcessHangMonitor.init();
 
     // A channel for "remote troubleshooting" code...
@@ -1050,6 +1053,9 @@ BrowserGlue.prototype = {
 
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
+    BrowserUsageTelemetry.init();
+    BrowserUITelemetry.init();
+
     if (AppConstants.MOZ_DEV_EDITION) {
       this._createExtraDefaultProfile();
     }
@@ -1161,6 +1167,13 @@ BrowserGlue.prototype = {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
         });
       }
+    }
+
+    if (AppConstants.MOZ_CRASHREPORTER) {
+      UnsubmittedCrashHandler.init();
+      Services.tm.idleDispatchToMainThread(function() {
+        UnsubmittedCrashHandler.checkForUnsubmittedCrashReports();
+      });
     }
 
     // Let's load the contextual identities.

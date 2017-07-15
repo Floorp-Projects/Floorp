@@ -38,7 +38,6 @@ const startupPhases = {
       "resource://gre/modules/Services.jsm",
 
       // Bugs to fix: Probably loaded too early, needs investigation.
-      "resource://gre/modules/AsyncPrefs.jsm", // bug 1369460
       "resource://gre/modules/RemotePageManager.jsm", // bug 1369466
     ])
   }},
@@ -66,6 +65,9 @@ const startupPhases = {
     ]),
     modules: new Set([
       "resource:///modules/AboutNewTab.jsm",
+      "resource:///modules/BrowserUITelemetry.jsm",
+      "resource:///modules/BrowserUsageTelemetry.jsm",
+      "resource:///modules/ContentCrashHandlers.jsm",
       "resource:///modules/DirectoryLinksProvider.jsm",
       "resource://gre/modules/NewTabUtils.jsm",
       "resource://gre/modules/PageThumbs.jsm",
@@ -92,6 +94,7 @@ const startupPhases = {
       "resource://gre/modules/BookmarkHTMLUtils.jsm",
       "resource://gre/modules/Bookmarks.jsm",
       "resource://gre/modules/ContextualIdentityService.jsm",
+      "resource://gre/modules/CrashSubmit.jsm",
       "resource://gre/modules/FxAccounts.jsm",
       "resource://gre/modules/FxAccountsStorage.jsm",
       "resource://gre/modules/PlacesSyncUtils.jsm",
@@ -109,6 +112,7 @@ const startupPhases = {
   // be blacklisted here.
   "before becoming idle": {blacklist: {
     modules: new Set([
+      "resource://gre/modules/AsyncPrefs.jsm",
       "resource://gre/modules/LoginManagerContextMenu.jsm",
       "resource://gre/modules/Task.jsm",
     ]),

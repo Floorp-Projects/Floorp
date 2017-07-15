@@ -865,7 +865,8 @@ namespace {
 
 class KeyedHistogram {
 public:
-  KeyedHistogram(const nsACString &name, const nsACString &expiration,
+  KeyedHistogram(ProcessID processType, const nsACString &name,
+                 const nsACString &expiration,
                  uint32_t histogramType, uint32_t min, uint32_t max,
                  uint32_t bucketCount, uint32_t dataset);
   nsresult GetHistogram(const nsCString& name, Histogram** histogram, bool subsession);
@@ -895,6 +896,7 @@ private:
                                     JSContext* cx,
                                     JS::Handle<JSObject*> obj);
 
+  const ProcessID mProcessType;
   const nsCString mName;
   const nsCString mExpiration;
   const uint32_t mHistogramType;
@@ -905,7 +907,8 @@ private:
   mozilla::Atomic<bool, mozilla::Relaxed> mRecordingEnabled;
 };
 
-KeyedHistogram::KeyedHistogram(const nsACString &name,
+KeyedHistogram::KeyedHistogram(ProcessID processType,
+                               const nsACString &name,
                                const nsACString &expiration,
                                uint32_t histogramType,
                                uint32_t min, uint32_t max,
@@ -914,6 +917,7 @@ KeyedHistogram::KeyedHistogram(const nsACString &name,
 #if !defined(MOZ_WIDGET_ANDROID)
   , mSubsessionMap()
 #endif
+  , mProcessType(processType)
   , mName(name)
   , mExpiration(expiration)
   , mHistogramType(histogramType)
@@ -947,6 +951,7 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
   }
 #endif
   histogramName.Append(mName);
+  histogramName.Append(SuffixForProcessType(mProcessType));
   histogramName.AppendLiteral(KEYED_HISTOGRAM_NAME_SEPARATOR);
   histogramName.Append(key);
 
@@ -1857,7 +1862,7 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
 
     const nsDependentCString id(h.id());
     const nsDependentCString expiration(h.expiration());
-    gKeyedHistograms.Put(id, new KeyedHistogram(id, expiration, h.histogramType,
+    gKeyedHistograms.Put(id, new KeyedHistogram(ProcessID::Parent, id, expiration, h.histogramType,
                                                 h.min, h.max, h.bucketCount, h.dataset));
     if (XRE_IsParentProcess()) {
       // We must create registered child keyed histograms as well or else the
@@ -1866,19 +1871,19 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
       nsCString contentId(id);
       contentId.AppendLiteral(CONTENT_HISTOGRAM_SUFFIX);
       gKeyedHistograms.Put(contentId,
-                           new KeyedHistogram(id, expiration, h.histogramType,
+                           new KeyedHistogram(ProcessID::Content, id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
 
       nsCString gpuId(id);
       gpuId.AppendLiteral(GPU_HISTOGRAM_SUFFIX);
       gKeyedHistograms.Put(gpuId,
-                           new KeyedHistogram(id, expiration, h.histogramType,
+                           new KeyedHistogram(ProcessID::Gpu, id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
 
       nsCString extensionId(id);
       extensionId.AppendLiteral(EXTENSION_HISTOGRAM_SUFFIX);
       gKeyedHistograms.Put(extensionId,
-                           new KeyedHistogram(id, expiration, h.histogramType,
+                           new KeyedHistogram(ProcessID::Extension, id, expiration, h.histogramType,
                                               h.min, h.max, h.bucketCount, h.dataset));
     }
   }
