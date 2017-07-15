@@ -617,8 +617,6 @@ nsFrameSelection::SetCaretBidiLevel(nsBidiLevel aLevel)
   if (mShell && (caret = mShell->GetCaret())) {
     caret->SchedulePaint();
   }
-
-  return;
 }
 
 nsBidiLevel

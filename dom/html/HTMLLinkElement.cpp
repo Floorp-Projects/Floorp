@@ -494,8 +494,6 @@ HTMLLinkElement::GetStyleSheetInfo(nsAString& aTitle,
   // If we get here we assume that we're loading a css file, so set the
   // type to 'text/css'
   aType.AssignLiteral("text/css");
-
-  return;
 }
 
 CORSMode

@@ -434,7 +434,6 @@ RangeUpdater::SelAdjInsertText(Text& aTextNode,
       item->mEndOffset += len;
     }
   }
-  return;
 }
 
 nsresult

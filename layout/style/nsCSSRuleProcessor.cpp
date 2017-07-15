@@ -3949,7 +3949,6 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
       mRuleCascades = newCascade.forget();
     }
   }
-  return;
 }
 
 /* static */ bool

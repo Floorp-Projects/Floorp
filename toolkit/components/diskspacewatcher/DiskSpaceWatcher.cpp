@@ -126,7 +126,6 @@ void DiskSpaceWatcher::UpdateState(bool aIsDiskFull, uint64_t aFreeSpace)
   observerService->NotifyObservers(subject,
                                    DISKSPACEWATCHER_OBSERVER_TOPIC,
                                    sIsDiskFull ? stateFull : stateFree);
-  return;
 }
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(DiskSpaceWatcher,

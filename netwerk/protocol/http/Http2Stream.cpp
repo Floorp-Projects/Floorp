@@ -1157,7 +1157,6 @@ Http2Stream::SetAllHeadersReceived()
     MapStreamToHttpConnection();
     ClearTransactionsBlockedOnTunnel();
   }
-  return;
 }
 
 bool

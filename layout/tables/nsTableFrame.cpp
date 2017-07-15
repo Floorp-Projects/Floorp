@@ -2735,7 +2735,6 @@ nsTableFrame::HomogenousInsertFrames(ChildListID     aListID,
   printf("=== TableFrame::InsertFrames\n");
   Dump(true, true, true);
 #endif
-  return;
 }
 
 void

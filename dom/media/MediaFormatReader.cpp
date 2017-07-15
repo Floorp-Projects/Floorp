@@ -2533,7 +2533,6 @@ MediaFormatReader::SkipVideoDemuxToNextKeyFrame(TimeUnit aTimeThreshold)
            &MediaFormatReader::OnVideoSkipCompleted,
            &MediaFormatReader::OnVideoSkipFailed)
     ->Track(mSkipRequest);
-  return;
 }
 
 void

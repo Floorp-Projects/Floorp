@@ -1226,8 +1226,6 @@ nsPerformanceStatsService::CommitGroup(uint64_t iteration,
       return;
     }
   }
-
-  return;
 }
 
 nsresult

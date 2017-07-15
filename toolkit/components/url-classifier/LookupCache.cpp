@@ -281,8 +281,6 @@ LookupCache::GetCacheInfo(nsIUrlClassifierCacheInfo** aCache)
   }
 
   NS_ADDREF(*aCache = info);
-
-  return;
 }
 
 /* static */ bool

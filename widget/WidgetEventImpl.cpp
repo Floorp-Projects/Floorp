@@ -867,7 +867,6 @@ WidgetKeyboardEvent::GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) con
       mCodeNameIndex == CODE_NAME_INDEX_Space && mCharCode != ' ') {
     aCandidates.AppendElement(' ');
   }
-  return;
 }
 
 /* static */ void

@@ -1506,7 +1506,6 @@ nsHtml5StreamParser::ParseAvailableData()
         return;
       }
     }
-    continue;
   }
 }
 

@@ -701,7 +701,6 @@ bool nsUnknownDecoder::LastDitchSniff(nsIRequest* aRequest)
   //
   uint32_t i;
   for (i = 0; i < testDataLen && IS_TEXT_CHAR(testData[i]); i++) {
-    continue;
   }
 
   if (i == testDataLen) {

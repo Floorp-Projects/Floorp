@@ -442,8 +442,6 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
       *aCount = 2;
     }
   }
-
-  return;
 }
 
 void

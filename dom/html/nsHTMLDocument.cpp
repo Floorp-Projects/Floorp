@@ -296,10 +296,8 @@ nsHTMLDocument::TryHintCharset(nsIContentViewer* aCv,
         aCharsetSource = requestCharsetSource;
         aEncoding = WrapNotNull(requestCharset);
       }
-      return;
     }
   }
-  return;
 }
 
 
@@ -836,7 +834,6 @@ nsHTMLDocument::StopDocumentLoad()
 
   nsDocument::StopDocumentLoad();
   UnblockOnload(false);
-  return;
 }
 
 void

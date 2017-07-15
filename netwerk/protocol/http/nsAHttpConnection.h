@@ -68,7 +68,6 @@ public:
     virtual void TransactionHasDataToWrite(nsAHttpTransaction *)
     {
         // by default do nothing - only multiplexed protocols need to overload
-        return;
     }
 
     // This is the companion to *HasDataToWrite() for the case
@@ -76,7 +75,6 @@ public:
     virtual void TransactionHasDataToRecv(nsAHttpTransaction *)
     {
         // by default do nothing - only multiplexed protocols need to overload
-        return;
     }
 
     // called by the connection manager to close a transaction being processed
