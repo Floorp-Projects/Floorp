@@ -1540,7 +1540,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
                            tagsSqlFragment);
 
         mQueryString = NS_LITERAL_CSTRING(
-          "SELECT b2.fk, h.url, COALESCE(b2.title, h.title) AS page_title, "
+          "SELECT b2.fk, h.url, b2.title AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, null, b2.id, "
             "b2.dateAdded, b2.lastModified, b2.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
@@ -1564,7 +1564,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
                            mHasSearchTerms,
                            tagsSqlFragment);
         mQueryString = NS_LITERAL_CSTRING(
-          "SELECT b.fk, h.url, COALESCE(b.title, h.title) AS page_title, "
+          "SELECT b.fk, h.url, b.title AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
             "b.dateAdded, b.lastModified, b.parent, ") +
             tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid,"
@@ -4101,7 +4101,7 @@ nsNavHistory::BookmarkIdToResultNode(int64_t aBookmarkId, nsNavHistoryQueryOptio
                      true, tagsFragment);
   // Should match kGetInfoIndex_*
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-      "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
+      "SELECT b.fk, h.url, b.title, "
              "h.rev_host, h.visit_count, h.last_visit_date, null, b.id, "
              "b.dateAdded, b.lastModified, b.parent, "
              ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "

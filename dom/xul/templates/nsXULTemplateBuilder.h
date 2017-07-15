@@ -378,9 +378,6 @@ public:
     static void
     SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAString& aVariable, void* aClosure);
 
-    nsresult
-    IsSystemPrincipal(nsIPrincipal *principal, bool *result);
-
     /**
      * Convenience method which gets a resource for a result. If a result
      * doesn't have a resource set, it will create one from the result's id.

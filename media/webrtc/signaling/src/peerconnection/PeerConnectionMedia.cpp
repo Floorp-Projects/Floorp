@@ -28,6 +28,7 @@
 
 #include "MediaStreamGraphImpl.h"
 
+#include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -341,26 +342,10 @@ PeerConnectionMedia::InitProxy()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) {
-    CSFLogError(logTag, "%s: Failed to get IOService: %d",
-        __FUNCTION__, (int)rv);
-    CSFLogError(logTag, "%s: Failed to get securityManager: %d", __FUNCTION__, (int)rv);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPrincipal> systemPrincipal;
-  rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-  if (NS_FAILED(rv)) {
-    CSFLogError(logTag, "%s: Failed to get systemPrincipal: %d", __FUNCTION__, (int)rv);
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      fakeHttpsLocation,
-                     systemPrincipal,
+                     nsContentUtils::GetSystemPrincipal(),
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER);
 

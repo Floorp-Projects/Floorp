@@ -71,8 +71,12 @@ enum class TraversalRestyleBehavior {
   // required when handling frame reconstruction.  The change hints in this case
   // are unneeded, since the old frames have already been destroyed.
   ForReconstruct,
-  // Processes animation-only restyle.
-  ForAnimationOnly,
+  // Processes just the traversal for animation-only restyles and skips the
+  // normal traversal for other restyles unrelated to animations.
+  // This is used to bring throttled animations up-to-date such as when we need
+  // to get correct position for transform animations that are throttled because
+  // they are running on the compositor.
+  ForThrottledAnimationFlush,
   // Traverses as normal mode but tries to update all CSS animations.
   ForCSSRuleChanges,
 };

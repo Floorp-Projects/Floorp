@@ -38,7 +38,7 @@ add_task(async function test_resolveNullBookmarkTitles() {
   do_check_eq(root.childCount, 2);
   // actually RESULTS_AS_TAG_CONTENTS return results ordered by place_id DESC
   // so they are reversed
-  do_check_eq(root.getChild(0).title, "bar title");
-  do_check_eq(root.getChild(1).title, "foo title");
+  do_check_eq(root.getChild(0).title, "");
+  do_check_eq(root.getChild(1).title, "");
   root.containerOpen = false;
 });

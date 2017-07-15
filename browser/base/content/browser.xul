@@ -871,8 +871,11 @@
                          tooltiptext="&urlbar.indexedDBNotificationAnchor.tooltip;"/>
                   <image id="password-notification-icon" class="notification-anchor-icon login-icon" role="button"
                          tooltiptext="&urlbar.passwordNotificationAnchor.tooltip;"/>
-                  <image id="plugins-notification-icon" class="notification-anchor-icon plugin-icon" role="button"
-                         tooltiptext="&urlbar.pluginsNotificationAnchor.tooltip;"/>
+                  <stack id="plugins-notification-icon" class="notification-anchor-icon" role="button" align="center"
+                         tooltiptext="&urlbar.pluginsNotificationAnchor.tooltip;">
+                    <image class="plugin-icon" />
+                    <image id="plugin-icon-badge" />
+                  </stack>
                   <image id="web-notifications-notification-icon" class="notification-anchor-icon desktop-notification-icon" role="button"
                          tooltiptext="&urlbar.webNotificationAnchor.tooltip;"/>
                   <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon camera-icon" role="button"

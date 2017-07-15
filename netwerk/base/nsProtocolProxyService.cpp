@@ -21,6 +21,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "nsQueryObject.h"
 #include "nsSOCKSIOLayer.h"
@@ -1415,19 +1416,12 @@ nsProtocolProxyService::AsyncResolve(nsISupports *channelOrURI, uint32_t flags,
             return NS_ERROR_NO_INTERFACE;
         }
 
-        nsCOMPtr<nsIScriptSecurityManager> secMan(
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIPrincipal> systemPrincipal;
-        rv = secMan->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
-        NS_ENSURE_SUCCESS(rv, rv);
-
         // creating a temporary channel from the URI which is not
         // used to perform any network loads, hence its safe to
         // use systemPrincipal as the loadingPrincipal.
         rv = NS_NewChannel(getter_AddRefs(channel),
                            uri,
-                           systemPrincipal,
+                           nsContentUtils::GetSystemPrincipal(),
                            nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                            nsIContentPolicy::TYPE_OTHER);
         NS_ENSURE_SUCCESS(rv, rv);
