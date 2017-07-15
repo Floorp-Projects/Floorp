@@ -3,8 +3,8 @@
  */
 
 
-const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/general/";
-const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/general/";
+const CHROME_BASE = "chrome://mochitests/content/browser/browser/base/content/test/about/";
+const HTTPS_BASE = "https://example.com/browser/browser/base/content/test/about/";
 
 const TELEMETRY_LOG_PREF = "toolkit.telemetry.log.level";
 const telemetryOriginalLogPref = Preferences.get(TELEMETRY_LOG_PREF, null);

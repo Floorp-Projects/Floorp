@@ -190,11 +190,11 @@ public:
       mFocusState.ReceiveFocusChangingEvent();
 
       APZ_KEY_LOG("Marking input with type=%d as focus changing with seq=%" PRIu64 "\n",
-                  (int)mEvent.mInputType,
+                  static_cast<int>(mEvent.mInputType),
                   mFocusState.LastAPZProcessedEvent());
     } else {
       APZ_KEY_LOG("Marking input with type=%d as non focus changing with seq=%" PRIu64 "\n",
-                  (int)mEvent.mInputType,
+                  static_cast<int>(mEvent.mInputType),
                   mFocusState.LastAPZProcessedEvent());
     }
 
