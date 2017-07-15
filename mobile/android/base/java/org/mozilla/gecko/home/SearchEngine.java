@@ -49,7 +49,7 @@ public class SearchEngine {
     }
 
     private Bitmap getDefaultFavicon(final Context context) {
-        return BitmapFactory.decodeResource(context.getResources(), R.drawable.search_icon_inactive);
+        return BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_search_icon);
     }
 
     /**

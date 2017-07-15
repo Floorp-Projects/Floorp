@@ -229,7 +229,7 @@ public class CustomTabsActivity extends AppCompatActivity
         popupMenu = createCustomPopupMenu();
 
         @SuppressWarnings("deprecation")
-        Drawable icon = getResources().getDrawable(R.drawable.ab_menu);
+        Drawable icon = getResources().getDrawable(R.drawable.ic_overflow);
         actionBarPresenter.addActionButton(menu, icon, true)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override

@@ -22,7 +22,7 @@ window.onload = function () {
     require("devtools/shared/dom-node-filter-constants");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-  const isStylo = SpecialPowers.getBoolPref("layout.css.servo.enabled", false);
+  const isStylo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.webcomponents.enabled", true]

@@ -77,7 +77,7 @@ function getStore(type) {
 
 // Return an object with properties for key and value|initialValue, or null
 // if no setting has been stored for that key.
-async function getTopItem(type, key) {
+function getTopItem(type, key) {
   let store = getStore(type);
 
   let keyInfo = store.data[type][key];
@@ -126,7 +126,7 @@ function precedenceComparator(a, b) {
  *          corresponds to the current top precedent setting, or null if
  *          the current top precedent setting has not changed.
  */
-async function alterSetting(extension, type, key, action) {
+function alterSetting(extension, type, key, action) {
   let returnItem;
   let store = getStore(type);
 
@@ -171,7 +171,7 @@ async function alterSetting(extension, type, key, action) {
   }
 
   if (foundIndex === 0) {
-    returnItem = await getTopItem(type, key);
+    returnItem = getTopItem(type, key);
   }
 
   if (action === "remove" && keyInfo.precedenceList.length === 0) {
@@ -318,7 +318,7 @@ this.ExtensionSettingsStore = {
    *
    * @returns {array} A list of settings which have been stored for the extension.
    */
-  async getAllForExtension(extension, type) {
+  getAllForExtension(extension, type) {
     let store = getStore(type);
 
     let keysObj = store.data[type];
@@ -342,6 +342,20 @@ this.ExtensionSettingsStore = {
    */
   getSetting(type, key) {
     return getTopItem(type, key);
+  },
+
+  /**
+   * Returns whether an extension currently has a stored setting for a given
+   * key.
+   *
+   * @param {Extension} extension The extension which is being checked.
+   * @param {string} type The type of setting to be checked.
+   * @param {string} key A string that uniquely identifies the setting.
+   *
+   * @returns {boolean} Whether the extension currently has a stored setting.
+   */
+  hasSetting(extension, type, key) {
+    return this.getAllForExtension(extension, type).includes(key);
   },
 
   /**

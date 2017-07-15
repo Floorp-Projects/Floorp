@@ -21,7 +21,7 @@
         android:paddingEnd="@dimen/browser_toolbar_site_security_padding_horizontal"
         android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
         android:scaleType="fitCenter"
-        android:src="@drawable/search_icon_inactive"
+        android:src="@drawable/ic_search_icon"
         android:visibility="gone"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditText
@@ -41,13 +41,13 @@
     <org.mozilla.gecko.widget.themed.ThemedImageButton android:id="@+id/qrcode"
                  android:layout_width="@dimen/page_action_button_width"
                  android:layout_height="match_parent"
-                 android:src="@drawable/ab_qrcode"
+                 android:src="@drawable/ic_qrcode"
                  android:background="@android:color/transparent"/>
 
     <org.mozilla.gecko.widget.themed.ThemedImageButton android:id="@+id/mic"
                  android:layout_width="@dimen/page_action_button_width"
                  android:layout_height="match_parent"
-                 android:src="@drawable/ab_mic"
+                 android:src="@drawable/ic_mic"
                  android:background="@android:color/transparent"/>
 
 </merge>

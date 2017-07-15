@@ -4,50 +4,67 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "@mozilla.org/browser/aboutnewtab-service;1",
                                    "nsIAboutNewTabService");
 
-// Bug 1320736 tracks creating a generic precedence manager for handling
-// multiple addons modifying the same properties, and bug 1330494 has been filed
-// to track utilizing this manager for chrome_url_overrides. Until those land,
-// the edge cases surrounding multiple addons using chrome_url_overrides will
-// be ignored and precedence will be first come, first serve.
-let overrides = {
-  // A queue of extensions in line to override the newtab page (sorted oldest to newest).
-  newtab: [],
-};
+const STORE_TYPE = "url_overrides";
+const NEW_TAB_SETTING_NAME = "newTabURL";
 
 this.urlOverrides = class extends ExtensionAPI {
-  onManifestEntry(entryName) {
+  processNewTabSetting(action) {
     let {extension} = this;
-    let {manifest} = extension;
-
-    if (manifest.chrome_url_overrides.newtab) {
-      let newtab = manifest.chrome_url_overrides.newtab;
-      let url = extension.baseURI.resolve(newtab);
-
-      // Only set the newtab URL if no other extension is overriding it.
-      if (!overrides.newtab.length) {
-        aboutNewTabService.newTabURL = url;
-      }
-
-      overrides.newtab.push({id: extension.id, url});
+    let item = ExtensionSettingsStore[action](extension, STORE_TYPE, NEW_TAB_SETTING_NAME);
+    if (item) {
+      aboutNewTabService.newTabURL = item.value || item.initialValue;
     }
   }
 
-  onShutdown(reason) {
+  async onStartup() {
     let {extension} = this;
+    let {manifest} = extension;
 
-    let i = overrides.newtab.findIndex(o => o.id === extension.id);
-    if (i !== -1) {
-      overrides.newtab.splice(i, 1);
+    // Record the setting if it exists in the manifest.
+    if (manifest.chrome_url_overrides && manifest.chrome_url_overrides.newtab) {
+      let url = extension.baseURI.resolve(manifest.chrome_url_overrides.newtab);
 
-      if (overrides.newtab.length) {
-        aboutNewTabService.newTabURL = overrides.newtab[0].url;
-      } else {
-        aboutNewTabService.resetNewTabURL();
+      let item = await ExtensionSettingsStore.addSetting(
+        extension, STORE_TYPE, NEW_TAB_SETTING_NAME, url,
+        () => aboutNewTabService.newTabURL);
+
+      // If the extension was just re-enabled, change the setting to enabled.
+      // This is required because addSetting above is used for both add and update.
+      if (["ADDON_ENABLE", "ADDON_UPGRADE", "ADDON_DOWNGRADE"]
+          .includes(extension.startupReason)) {
+        item = ExtensionSettingsStore.enable(extension, STORE_TYPE, NEW_TAB_SETTING_NAME);
       }
+
+      // Set the newTabURL to the current value of the setting.
+      if (item) {
+        aboutNewTabService.newTabURL = item.value || item.initialValue;
+      }
+    // If the setting exists for the extension, but is missing from the manifest,
+    // remove it.
+    } else if (ExtensionSettingsStore.hasSetting(
+               extension, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
+      this.processNewTabSetting("removeSetting");
+    }
+  }
+
+  onShutdown(shutdownReason) {
+    switch (shutdownReason) {
+      case "ADDON_DISABLE":
+      case "ADDON_DOWNGRADE":
+      case "ADDON_UPGRADE":
+        this.processNewTabSetting("disable");
+        break;
+
+      case "ADDON_UNINSTALL":
+        this.processNewTabSetting("removeSetting");
+        break;
     }
   }
 };
