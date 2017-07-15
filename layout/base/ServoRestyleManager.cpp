@@ -250,7 +250,10 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
     }
   }
 
-  Unused << Servo_TakeChangeHint(aElement, TraversalRestyleBehavior::Normal);
+  bool wasRestyled;
+  Unused << Servo_TakeChangeHint(aElement,
+                                 TraversalRestyleBehavior::Normal,
+                                 &wasRestyled);
   aElement->UnsetHasDirtyDescendantsForServo();
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
   aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
@@ -467,7 +470,10 @@ ServoRestyleManager::ProcessPostTraversal(
   // In case of flushing throttled animations, any restyle hints other than
   // animations are preserved since they are the hints which will be processed
   // in normal restyle later.
-  nsChangeHint changeHint = Servo_TakeChangeHint(aElement, aRestyleBehavior);
+  bool wasRestyled;
+  nsChangeHint changeHint = Servo_TakeChangeHint(aElement,
+                                                 aRestyleBehavior,
+                                                 &wasRestyled);
 
   // We should really fix the weird primary frame mapping for image maps
   // (bug 135040)...
@@ -526,22 +532,6 @@ ServoRestyleManager::ProcessPostTraversal(
     }
   }
 
-  RefPtr<ServoComputedValues> computedValues =
-    aRestyleState.StyleSet().ResolveServoStyle(aElement);
-
-  // Note that we rely in the fact that we don't cascade pseudo-element styles
-  // separately right now (that is, if a pseudo style changes, the normal style
-  // changes too).
-  //
-  // Otherwise we should probably encode that information somehow to avoid
-  // expensive checks in the common case.
-  //
-  // Also, we're going to need to check for pseudos of display: contents
-  // elements, though that is buggy right now even in non-stylo mode, see
-  // bug 1251799.
-  const bool recreateContext = oldStyleContext &&
-    oldStyleContext->ComputedValues() != computedValues;
-
   Maybe<ServoRestyleState> thisFrameRestyleState;
   if (styleFrame) {
     auto type = isOutOfFlow
@@ -557,8 +547,11 @@ ServoRestyleManager::ProcessPostTraversal(
     thisFrameRestyleState ? *thisFrameRestyleState : aRestyleState;
 
   RefPtr<ServoStyleContext> newContext = nullptr;
-  if (recreateContext) {
+  if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
+    RefPtr<ServoComputedValues> computedValues =
+      aRestyleState.StyleSet().ResolveServoStyle(aElement);
+    MOZ_ASSERT(oldStyleContext->ComputedValues() != computedValues);
 
     auto pseudo = aElement->GetPseudoElementType();
     nsIAtom* pseudoTag = pseudo == CSSPseudoElementType::NotPseudo
@@ -622,15 +615,15 @@ ServoRestyleManager::ProcessPostTraversal(
   const bool forThrottledAnimationFlush =
     aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
   const bool traverseTextChildren =
-    recreateContext || (!forThrottledAnimationFlush && descendantsNeedFrames);
-  bool recreatedAnyContext = recreateContext;
+    wasRestyled || (!forThrottledAnimationFlush && descendantsNeedFrames);
+  bool recreatedAnyContext = wasRestyled;
   if (traverseElementChildren || traverseTextChildren) {
     nsStyleContext* upToDateContext =
-      recreateContext ? newContext : oldStyleContext;
+      wasRestyled ? newContext : oldStyleContext;
 
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*upToDateContext,
-                                     displayContentsNode && recreateContext,
+                                     displayContentsNode && wasRestyled,
                                      childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
       if (traverseElementChildren && n->IsElement()) {
@@ -648,7 +641,7 @@ ServoRestyleManager::ProcessPostTraversal(
   // kids, because some of those updates (::first-line/::first-letter) need to
   // modify the styles of the kids, and the child traversal above would just
   // clobber those modifications.
-  if (recreateContext && styleFrame) {
+  if (wasRestyled && styleFrame) {
     UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
   }
 
