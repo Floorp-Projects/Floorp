@@ -204,7 +204,7 @@ fails fails-if(styloVsGecko) random-if(webrender) == reftest-opaque-layer-wait-f
 fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-opaque-layer-wait-fail.html about:blank
 
 # reftest-assigned-layer
-random-if(webrender) != reftest-assigned-layer-pass.html about:blank
+!= reftest-assigned-layer-pass.html about:blank
 fails-if(!styloVsGecko) fails-if(styloVsGecko) != reftest-assigned-layer-fail-1.html about:blank
 fails-if(!styloVsGecko) fails-if(styloVsGecko) != reftest-assigned-layer-fail-2.html about:blank
 fails-if(!styloVsGecko) fails-if(styloVsGecko) != reftest-assigned-layer-fail-3.html about:blank
