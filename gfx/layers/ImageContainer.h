@@ -604,6 +604,13 @@ public:
   }
 
   /**
+   * Get the ImageClient associated with this container. Returns only after
+   * validating, and it will recreate the image client if that fails.
+   * Returns nullptr if not applicable.
+   */
+  already_AddRefed<ImageClient> GetImageClient();
+
+  /**
    * Main thread only.
    */
   static ProducerID AllocateProducerID();

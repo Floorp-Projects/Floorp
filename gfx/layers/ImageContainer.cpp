@@ -126,6 +126,15 @@ ImageContainerListener::ClearImageContainer()
   mImageContainer = nullptr;
 }
 
+already_AddRefed<ImageClient>
+ImageContainer::GetImageClient()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  EnsureImageClient();
+  RefPtr<ImageClient> imageClient = mImageClient;
+  return imageClient.forget();
+}
+
 void
 ImageContainer::EnsureImageClient()
 {
@@ -298,9 +307,9 @@ ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
 {
   MOZ_ASSERT(!aImages.IsEmpty());
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  if (mImageClient) {
+  if (mIsAsync) {
     if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
-      imageBridge->UpdateImageClient(mImageClient, this);
+      imageBridge->UpdateImageClient(this);
     }
   }
   SetCurrentImageInternal(aImages);
