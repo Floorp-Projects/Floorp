@@ -11,11 +11,11 @@ fails-if(azureSkia) fails-if(cocoaWidget) skip-if(styloVsGecko) == canvas-outsid
 == element-paint-repeated.html element-paint-repeated-ref.html
 == element-paint-recursion.html element-paint-recursion-ref.html
 HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
-fails-if(webrender) == element-paint-transform-01.html element-paint-transform-01-ref.html
+== element-paint-transform-01.html element-paint-transform-01-ref.html
 random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-background-size-01.html element-paint-background-size-01-ref.html
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
-fuzzy-if(skiaContent,255,4) fails-if(webrender) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
+fuzzy-if(skiaContent,255,4) == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
 fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,3,106) == element-paint-native-widget.html element-paint-native-widget-ref.html   # in -ref the scrollframe is active and layerized differently with APZ
 fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html about:blank
