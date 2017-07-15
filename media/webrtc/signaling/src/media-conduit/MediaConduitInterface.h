@@ -424,12 +424,13 @@ public:
       const std::vector<VideoCodecConfig* >& recvCodecConfigList) = 0;
 
   /**
-   * These methods allow unit tests to double-check that the
+   * This method allows unit tests to double-check that the
    * max-fs and max-fr related settings are as expected.
    */
-  virtual unsigned short SendingWidth() = 0;
-
-  virtual unsigned short SendingHeight() = 0;
+  virtual void SetSendingWidthAndHeight(unsigned short frame_width,
+                                        unsigned short frame_height,
+                                        unsigned short &result_width,
+                                        unsigned short &result_height) = 0;
 
   virtual unsigned int SendingMaxFs() = 0;
 

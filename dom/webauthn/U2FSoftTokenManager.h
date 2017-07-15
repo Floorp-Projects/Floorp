@@ -28,12 +28,14 @@ public:
   virtual RefPtr<U2FRegisterPromise>
   Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
            const nsTArray<uint8_t>& aApplication,
-           const nsTArray<uint8_t>& aChallenge) override;
+           const nsTArray<uint8_t>& aChallenge,
+           uint32_t aTimeoutMS) override;
 
   virtual RefPtr<U2FSignPromise>
   Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
        const nsTArray<uint8_t>& aApplication,
-       const nsTArray<uint8_t>& aChallenge) override;
+       const nsTArray<uint8_t>& aChallenge,
+       uint32_t aTimeoutMS) override;
 
   virtual void Cancel() override;
 
