@@ -5,7 +5,7 @@
 == min-width-1a.html pref-width-1-ref.html
 == min-width-1b.html min-width-1-ref.html
 == min-width-1c.html min-width-1-ref.html
-fuzzy-if(webrender,1-1,15-15) == min-width-2.html min-width-2-ref.html
+fuzzy-if(webrender,1-1,35-35) == min-width-2.html min-width-2-ref.html
 == column-balancing-overflow-000.html column-balancing-overflow-000.ref.html
 == column-balancing-overflow-001.html column-balancing-overflow-000.ref.html
 == column-balancing-overflow-002.html column-balancing-overflow-002.ref.html
