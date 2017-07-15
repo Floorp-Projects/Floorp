@@ -491,7 +491,10 @@ SERVO_BINDING_FUNC(Servo_Shutdown, void)
 // Restyle and change hints.
 SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed element,
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)
-SERVO_BINDING_FUNC(Servo_TakeChangeHint, nsChangeHint, RawGeckoElementBorrowed element)
+SERVO_BINDING_FUNC(Servo_TakeChangeHint,
+                   nsChangeHint,
+                   RawGeckoElementBorrowed element,
+                   mozilla::TraversalRestyleBehavior restyle_behavior)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element,
                    RawServoStyleSetBorrowed set)
