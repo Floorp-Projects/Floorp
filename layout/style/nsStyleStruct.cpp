@@ -3527,10 +3527,8 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aNewData) const
    */
 
   if (mFloat != aNewData.mFloat) {
-    // Changing which side we float on doesn't affect descendants directly
-    hint |= nsChangeHint_AllReflowHints &
-            ~(nsChangeHint_ClearDescendantIntrinsics |
-              nsChangeHint_NeedDirtyReflow);
+    // Changing which side we're floating on (float:none was handled above).
+    hint |= nsChangeHint_ReflowHintsForFloatAreaChange;
   }
 
   if (mVerticalAlign != aNewData.mVerticalAlign) {
