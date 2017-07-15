@@ -32,6 +32,7 @@ DrawTargetCaptureImpl::Init(const IntSize& aSize, DrawTarget* aRefDT)
   mRefDT = aRefDT;
 
   mSize = aSize;
+  mFormat = aRefDT->GetFormat();
   return true;
 }
 

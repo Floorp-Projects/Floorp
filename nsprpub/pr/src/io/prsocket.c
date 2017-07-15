@@ -322,7 +322,7 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
         PR_ASSERT(fd->secret->nonblocking);
         PRInt32 rvSent;
         if (GetOverlappedResult(osfd, &fd->secret->ol, &rvSent, FALSE) == TRUE) {
-            fd->secret->overlappedActive = FALSE;
+            fd->secret->overlappedActive = PR_FALSE;
             PR_LOG(_pr_io_lm, PR_LOG_MIN,
                ("SocketConnectContinue GetOverlappedResult succeeded\n"));
             /* When ConnectEx is used, all previously set socket options and
@@ -342,7 +342,7 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
                ("SocketConnectContinue GetOverlappedResult failed %d\n", err));
             if (err != ERROR_IO_INCOMPLETE) {
                 _PR_MD_MAP_CONNECT_ERROR(err);
-                fd->secret->overlappedActive = FALSE;
+                fd->secret->overlappedActive = PR_FALSE;
                 return PR_FAILURE;
             } else {
                 PR_SetError(PR_IN_PROGRESS_ERROR, 0);

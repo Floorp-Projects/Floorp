@@ -19,32 +19,36 @@ function SetConstructorInit(iterable) {
         callContentFunction(adder, set, nextValue);
 }
 
-/* ES6 20121122 draft 15.16.4.6. */
+// ES2018 draft rev f83aa38282c2a60c6916ebc410bfdf105a0f6a54
+// 23.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] )
 function SetForEach(callbackfn, thisArg = undefined) {
-    /* Step 1-2. */
+    // Step 1.
     var S = this;
-    if (!IsObject(S))
-        ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Set", "forEach", typeof S);
 
-    /* Step 3-4. */
-    try {
-        callFunction(std_Set_has, S);
-    } catch (e) {
-        // has will throw on non-Set objects, throw our own error in that case.
-        ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "Set", "forEach", typeof S);
-    }
+    // Steps 2-3.
+    if (!IsObject(S) || !IsSetObject(S))
+        return callFunction(CallSetMethodIfWrapped, S, callbackfn, thisArg, "SetForEach");
 
-    /* Step 5-6. */
+    // Step 4.
     if (!IsCallable(callbackfn))
         ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, callbackfn));
 
-    /* Step 7-8. */
+    // Steps 5-8.
     var values = callFunction(std_Set_iterator, S);
+
+    // Inlined: SetIteratorNext
+    var setIterationResult = setIteratorTemp.setIterationResult;
+    if (!setIterationResult)
+        setIterationResult = setIteratorTemp.setIterationResult = _CreateSetIterationResult();
+
     while (true) {
-        var result = callFunction(SetIteratorNext, values);
-        if (result.done)
+        var done = _GetNextSetEntryForIterator(values, setIterationResult);
+        if (done)
             break;
-        var value = result.value;
+
+        var value = setIterationResult[0];
+        setIterationResult[0] = null;
+
         callContentFunction(callbackfn, thisArg, value, value, S);
     }
 }
@@ -76,9 +80,8 @@ function SetIteratorNext() {
     // Steps 8-9 (omitted).
 
     var setIterationResult = setIteratorTemp.setIterationResult;
-    if (!setIterationResult) {
+    if (!setIterationResult)
         setIterationResult = setIteratorTemp.setIterationResult = _CreateSetIterationResult();
-    }
 
     var retVal = {value: undefined, done: true};
 

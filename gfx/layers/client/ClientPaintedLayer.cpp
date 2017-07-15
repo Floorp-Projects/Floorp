@@ -113,50 +113,6 @@ ClientPaintedLayer::UpdatePaintRegion(PaintState& aState)
   return true;
 }
 
-void
-ClientPaintedLayer::PaintOffMainThread(DrawTargetCapture* aCapture)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  LayerIntRegion visibleRegion = GetVisibleRegion();
-  mContentClient->BeginPaint();
-
-  uint32_t flags = GetPaintFlags();
-
-  PaintState state =
-    mContentClient->BeginPaintBuffer(this, flags);
-  if (!UpdatePaintRegion(state)) {
-    return;
-  }
-
-  bool didUpdate = false;
-  RotatedContentBuffer::DrawIterator iter;
-  while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
-    if (!target || !target->IsValid()) {
-      if (target) {
-        mContentClient->ReturnDrawTargetToBuffer(target);
-      }
-      continue;
-    }
-
-    SetAntialiasingFlags(this, target);
-
-    // Basic version, wait for the paint thread to finish painting.
-    PaintThread::Get()->PaintContents(aCapture, target);
-
-    mContentClient->ReturnDrawTargetToBuffer(target);
-    didUpdate = true;
-  }
-
-  // ending paint w/o any readback updates
-  // TODO: Fix me
-  mContentClient->EndPaint(nullptr);
-
-  if (didUpdate) {
-    UpdateContentClient(state);
-   }
- }
-
-
 uint32_t
 ClientPaintedLayer::GetPaintFlags()
 {
@@ -226,60 +182,66 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
   }
 }
 
-already_AddRefed<DrawTargetCapture>
-ClientPaintedLayer::CapturePaintedContent()
+bool
+ClientPaintedLayer::PaintOffMainThread()
 {
-  LayerIntRegion visibleRegion = GetVisibleRegion();
-  LayerIntRect bounds = visibleRegion.GetBounds();
-  LayerIntSize size = bounds.Size();
+  mContentClient->BeginPaint();
 
-  if (visibleRegion.IsEmpty()) {
-    if (gfxPrefs::LayersDump()) {
-      printf_stderr("PaintedLayer %p skipping\n", this);
+  uint32_t flags = GetPaintFlags();
+
+  PaintState state = mContentClient->BeginPaintBuffer(this, flags);
+  if (!UpdatePaintRegion(state)) {
+    return false;
+  }
+
+  bool didUpdate = false;
+  RotatedContentBuffer::DrawIterator iter;
+  while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
+    if (!target || !target->IsValid()) {
+      if (target) {
+        mContentClient->ReturnDrawTargetToBuffer(target);
+      }
+      continue;
     }
-    return nullptr;
+
+    RefPtr<DrawTarget> refDT =
+      Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetDefaultContentBackend(),
+                                target->GetSize(), target->GetFormat());
+
+    // We don't clear the rect here like WRPaintedBlobLayers do
+    // because ContentClient already clears the surface for us during BeginPaint.
+    RefPtr<DrawTargetCapture> captureDT = refDT->CreateCaptureDT(target->GetSize());
+    captureDT->SetTransform(target->GetTransform());
+
+    SetAntialiasingFlags(this, refDT);
+    SetAntialiasingFlags(this, captureDT);
+    SetAntialiasingFlags(this, target);
+
+    RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(captureDT);
+    MOZ_ASSERT(ctx); // already checked the target above
+
+    ClientManager()->GetPaintedLayerCallback()(this,
+                                              ctx,
+                                              iter.mDrawRegion,
+                                              iter.mDrawRegion,
+                                              state.mClip,
+                                              state.mRegionToInvalidate,
+                                              ClientManager()->GetPaintedLayerCallbackData());
+
+    ctx = nullptr;
+
+    PaintThread::Get()->PaintContents(captureDT, target);
+
+    mContentClient->ReturnDrawTargetToBuffer(target);
+    didUpdate = true;
   }
 
-  nsIntRegion regionToPaint;
-  regionToPaint.Sub(mVisibleRegion.ToUnknownRegion(), GetValidRegion());
+  mContentClient->EndPaint(nullptr);
 
-  if (regionToPaint.IsEmpty()) {
-    // Do we ever have to do anything if the region to paint is empty
-    // but we have a painted layer callback?
-    return nullptr;
+  if (didUpdate) {
+    UpdateContentClient(state);
   }
-
-  if (!ClientManager()->GetPaintedLayerCallback()) {
-    ClientManager()->SetTransactionIncomplete();
-    return nullptr;
-  }
-
-  IntSize imageSize(size.ToUnknownSize());
-
-  // DrawTargetCapture requires a reference DT
-  // That is used when some API requires a snapshot.
-  // TODO: Fixup so DrawTargetCapture lazily creates a reference DT
-  RefPtr<DrawTarget> refDT =
-    Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetDefaultContentBackend(),
-                              imageSize, gfx::SurfaceFormat::B8G8R8A8);
-
-  // We don't clear the rect here like WRPaintedBlobLayers do
-  // because ContentClient already clears the surface for us during BeginPaint.
-  RefPtr<DrawTargetCapture> captureDT = refDT->CreateCaptureDT(imageSize);
-  captureDT->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
-
-  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(captureDT);
-  MOZ_ASSERT(ctx); // already checked the target above
-
-  ClientManager()->GetPaintedLayerCallback()(this,
-                                             ctx,
-                                             visibleRegion.ToUnknownRegion(),
-                                             visibleRegion.ToUnknownRegion(),
-                                             DrawRegionClip::DRAW,
-                                             nsIntRegion(),
-                                             ClientManager()->GetPaintedLayerCallbackData());
-
-  return captureDT.forget();
+  return true;
 }
 
 void
@@ -287,20 +249,14 @@ ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 {
   RenderMaskLayers(this);
 
-  if (CanRecordLayer(aReadback)) {
-    RefPtr<DrawTargetCapture> capture = CapturePaintedContent();
-    if (capture) {
-      if (!EnsureContentClient()) {
-        return;
-      }
-
-      PaintOffMainThread(capture);
-      return;
-    }
-  }
-
   if (!EnsureContentClient()) {
     return;
+  }
+
+  if (CanRecordLayer(aReadback)) {
+    if (PaintOffMainThread()) {
+      return;
+    }
   }
 
   nsTArray<ReadbackProcessor::Update> readbackUpdates;

@@ -34,7 +34,7 @@
 using namespace mozilla;
 MOZ_MTLOG_MODULE("mediapipeline")
 
-MtransportTestUtils *test_utils;
+static MtransportTestUtils *test_utils;
 
 namespace {
 

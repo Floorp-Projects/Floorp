@@ -680,7 +680,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   MediaConduitErrorCode condError = kMediaConduitNoError;
 
   // validate basic params
-  if ((condError = ValidateCodecConfig(codecConfig, true)) != kMediaConduitNoError) {
+  if ((condError = ValidateCodecConfig(codecConfig)) != kMediaConduitNoError) {
     return condError;
   }
 
@@ -1280,15 +1280,15 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   // Try Applying the codecs in the list
   // we treat as success if at least one codec was applied and reception was
   // started successfully.
+  std::set<unsigned int> codec_types_seen;
   for (const auto& codec_config : codecConfigList) {
-    // if the codec param is invalid or duplicate, return error
-    if ((condError = ValidateCodecConfig(codec_config, false))
+    if ((condError = ValidateCodecConfig(codec_config))
         != kMediaConduitNoError) {
       CSFLogError(logTag, "%s Invalid config for %s decoder: %i", __FUNCTION__,
-                  codec_config->mName.c_str(), condError);
+                  codec_config ? codec_config->mName.c_str() : "<null>",
+                  condError);
       continue;
     }
-
     if (codec_config->mName == "H264") {
       // TODO(bug 1200768): We can only handle configuring one recv H264 codec
       if (configuredH264) {
@@ -1328,6 +1328,11 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     use_fec |= codec_config->RtcpFbFECIsSet();
 
     recv_codecs.AppendElement(new VideoCodecConfig(*codec_config));
+  }
+
+  if (!recv_codecs.Length()) {
+    CSFLogError(logTag, "%s Found no valid receive codecs", __FUNCTION__);
+    return kMediaConduitMalformedArgument;
   }
 
   // Now decide if we need to recreate the receive stream, or can keep it
@@ -1833,7 +1838,6 @@ WebrtcVideoConduit::SendVideoFrame(unsigned char* video_buffer,
                                    VideoType video_type,
                                    uint64_t capture_time)
 {
-
   // check for parameter sanity
   if (!video_buffer || video_length == 0 || width == 0 || height == 0) {
     CSFLogError(logTag, "%s Invalid Parameters ", __FUNCTION__);
@@ -2341,8 +2345,7 @@ WebrtcVideoConduit::CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>&
  * Verifies if the codec is already applied.
  */
 MediaConduitErrorCode
-WebrtcVideoConduit::ValidateCodecConfig(const VideoCodecConfig* codecInfo,
-                                        bool send)
+WebrtcVideoConduit::ValidateCodecConfig(const VideoCodecConfig* codecInfo)
 {
   if(!codecInfo) {
     CSFLogError(logTag, "%s Null CodecConfig ", __FUNCTION__);
@@ -2392,6 +2395,20 @@ WebrtcVideoConduit::CodecPluginID()
   }
 
   return 0;
+}
+
+void
+WebrtcVideoConduit::SetSendingWidthAndHeight(unsigned short frame_width,
+                                             unsigned short frame_height,
+                                             unsigned short &result_width,
+                                             unsigned short &result_height)
+{
+  MutexAutoLock lock(mCodecMutex);
+  result_width = 0;
+  result_height = 0;
+  (void)SelectSendResolution(frame_width, frame_height, nullptr);
+  result_width = mSendingWidth;
+  result_height = mSendingHeight;
 }
 
 bool

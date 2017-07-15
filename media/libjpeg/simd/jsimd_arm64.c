@@ -2,6 +2,7 @@
  * jsimd_arm64.c
  *
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
+ * Copyright (C) 2011, Nokia Corporation and/or its subsidiary(-ies).
  * Copyright (C) 2009-2011, 2013-2014, 2016, D. R. Commander.
  * Copyright (C) 2015-2016, Matthieu Darbois.
  *

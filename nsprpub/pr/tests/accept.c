@@ -143,12 +143,13 @@ ClientThread(void *_action)
             if (action != CLIENT_TIMEOUT_SEND) {
                 if ((rv = PR_Send(sock, buf, CLIENT_DATA,
                     0, timeoutTime))< 0) {
-                    if (!debug_mode)
+                    if (!debug_mode) {
                         failed_already=1;
-                    else    
-                        PR_fprintf(output, 
+                    } else {
+                        PR_fprintf(output,
                             "client: unable to send to server (%d, %ld, %ld)\n",
                             CLIENT_DATA, rv, PR_GetError());
+                    }
                 	goto ErrorExit;
                 }
             } else {
@@ -200,8 +201,9 @@ int i;
                 continue;
         }
         failed_already=1;
-        if (debug_mode)
+        if (debug_mode) {
         	PR_fprintf(output,"accept: ERROR - PR_Bind failed\n");
+        }
 		return;
     }
 
