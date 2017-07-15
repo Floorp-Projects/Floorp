@@ -12497,7 +12497,7 @@ IonBuilder::jsop_iter(uint8_t flags)
         nonStringIteration_ = true;
 
     MDefinition* obj = current->pop();
-    MInstruction* ins = MIteratorStart::New(alloc(), obj, flags);
+    MInstruction* ins = MGetIteratorCache::New(alloc(), obj);
 
     if (!outermostBuilder()->iterators_.append(ins))
         return abort(AbortReason::Alloc);

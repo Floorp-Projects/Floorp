@@ -224,18 +224,6 @@ CompileCompartment::runtime()
 }
 
 const void*
-CompileCompartment::addressOfEnumerators()
-{
-    return &compartment()->enumerators;
-}
-
-const void*
-CompileCompartment::addressOfLastCachedNativeIterator()
-{
-    return &compartment()->lastCachedNativeIterator;
-}
-
-const void*
 CompileCompartment::addressOfRandomNumberGenerator()
 {
     return compartment()->randomNumberGenerator.ptr();

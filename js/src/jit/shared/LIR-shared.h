@@ -7340,63 +7340,28 @@ class LSetPropertyCache : public LInstructionHelper<0, 1 + 2 * BOX_PIECES, 3>
     }
 };
 
-class LCallIteratorStartV : public LCallInstructionHelper<1, BOX_PIECES, 0>
+class LGetIteratorCache : public LInstructionHelper<1, BOX_PIECES, 2>
 {
   public:
-    LIR_HEADER(CallIteratorStartV)
+    LIR_HEADER(GetIteratorCache)
 
     static const size_t Value = 0;
 
-    explicit LCallIteratorStartV(const LBoxAllocation& value) {
+    LGetIteratorCache(const LBoxAllocation& value, const LDefinition& temp1,
+                      const LDefinition& temp2)
+    {
         setBoxOperand(Value, value);
-    }
-    MIteratorStart* mir() const {
-        return mir_->toIteratorStart();
-    }
-};
-
-class LCallIteratorStartO : public LCallInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(CallIteratorStartO)
-
-    explicit LCallIteratorStartO(const LAllocation& object) {
-        setOperand(0, object);
-    }
-    const LAllocation* object() {
-        return getOperand(0);
-    }
-    MIteratorStart* mir() const {
-        return mir_->toIteratorStart();
-    }
-};
-
-class LIteratorStartO : public LInstructionHelper<1, 1, 3>
-{
-  public:
-    LIR_HEADER(IteratorStartO)
-
-    LIteratorStartO(const LAllocation& object, const LDefinition& temp1,
-                    const LDefinition& temp2, const LDefinition& temp3) {
-        setOperand(0, object);
         setTemp(0, temp1);
         setTemp(1, temp2);
-        setTemp(2, temp3);
     }
-    const LAllocation* object() {
-        return getOperand(0);
+    const MGetIteratorCache* mir() const {
+        return mir_->toGetIteratorCache();
     }
     const LDefinition* temp1() {
         return getTemp(0);
     }
     const LDefinition* temp2() {
         return getTemp(1);
-    }
-    const LDefinition* temp3() {
-        return getTemp(2);
-    }
-    MIteratorStart* mir() const {
-        return mir_->toIteratorStart();
     }
 };
 
