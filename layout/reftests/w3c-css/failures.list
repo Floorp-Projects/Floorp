@@ -262,12 +262,12 @@ fuzzy(106,354) css-multicol-1/multicol-rule-double-000.xht
 fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-001.xht
 fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-rule-fraction-003.xht
-fuzzy(127,500) css-multicol-1/multicol-rule-groove-000.xht
+fuzzy(127,500) fails-if(webrender) css-multicol-1/multicol-rule-groove-000.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-hidden-000.xht
-fuzzy(127,500) css-multicol-1/multicol-rule-inset-000.xht
-fuzzy(127,500) css-multicol-1/multicol-rule-outset-000.xht
+fuzzy(127,500) fails-if(webrender) css-multicol-1/multicol-rule-inset-000.xht
+fuzzy(127,500) fails-if(webrender) css-multicol-1/multicol-rule-outset-000.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-rule-px-001.xht
-fuzzy(127,500) css-multicol-1/multicol-rule-ridge-000.xht
+fuzzy(127,500) fails-if(webrender) css-multicol-1/multicol-rule-ridge-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-solid-000.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-rule-stacking-001.xht
 fails-if(webrender) css-multicol-1/multicol-rule-style-groove-001.xht
