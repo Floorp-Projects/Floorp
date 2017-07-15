@@ -255,13 +255,14 @@ public:
     mPCHandle = aPCHandle;
   }
 
-  unsigned short SendingWidth() override {
-    return mSendingWidth;
-  }
-
-  unsigned short SendingHeight() override {
-    return mSendingHeight;
-  }
+  /**
+   * This method allows unit tests to double-check that the
+   * max-fs and max-fr related settings are as expected.
+   */
+  virtual void SetSendingWidthAndHeight(unsigned short frame_width,
+                                        unsigned short frame_height,
+                                        unsigned short &result_width,
+                                        unsigned short &result_height) override;
 
   unsigned int SendingMaxFs() override {
     if(mCurSendCodecConfig) {
@@ -450,7 +451,7 @@ private:
                                 webrtc::VideoCodec& cinst);
 
   //Checks the codec to be applied
-  MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo, bool send);
+  MediaConduitErrorCode ValidateCodecConfig(const VideoCodecConfig* codecInfo);
 
   //Utility function to dump recv codec database
   void DumpCodecDB() const;

@@ -1,5 +1,5 @@
-#define VERSION "1.5.1"
-#define BUILD "2016-09-20"
+#define VERSION "1.5.2"
+#define BUILD "2017-07-07"
 #define PACKAGE_NAME "libjpeg-turbo"
 
 /* Need to use Mozilla-specific function inlining. */

@@ -636,7 +636,8 @@ U2FSoftTokenManager::IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
 RefPtr<U2FRegisterPromise>
 U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                               const nsTArray<uint8_t>& aApplication,
-                              const nsTArray<uint8_t>& aChallenge)
+                              const nsTArray<uint8_t>& aChallenge,
+                              uint32_t aTimeoutMS)
 {
   nsNSSShutDownPreventionLock locker;
   if (NS_WARN_IF(isAlreadyShutDown())) {
@@ -759,7 +760,8 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>
 RefPtr<U2FSignPromise>
 U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
                           const nsTArray<uint8_t>& aApplication,
-                          const nsTArray<uint8_t>& aChallenge)
+                          const nsTArray<uint8_t>& aChallenge,
+                          uint32_t aTimeoutMS)
 {
   nsNSSShutDownPreventionLock locker;
   if (NS_WARN_IF(isAlreadyShutDown())) {

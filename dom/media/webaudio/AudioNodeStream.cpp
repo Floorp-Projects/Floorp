@@ -144,7 +144,9 @@ AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
           SetStreamTimeParameterImpl(mIndex, mRelativeToStream, mStreamTime);
     }
     double mStreamTime;
-    MediaStream* mRelativeToStream;
+    MediaStream* MOZ_UNSAFE_REF("ControlMessages are processed in order.  This \
+destination stream is not yet destroyed.  Its (future) destroy message will be \
+processed after this message.") mRelativeToStream;
     uint32_t mIndex;
   };
 

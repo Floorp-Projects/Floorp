@@ -10,11 +10,11 @@
 </head>
 <body>
 <div id="display">
-  <iframe id="editor1" src="data:text/html,<html><body contenteditable id='eventTarget'></body></html>"></iframe>
-  <iframe id="editor2" src="data:text/html,<html contenteditable id='eventTarget'><body></body></html>"></iframe>
-  <iframe id="editor3" src="data:text/html,<html><body><div contenteditable id='eventTarget'></div></body></html>"></iframe>
-  <iframe id="editor4" src="data:text/html,<html contenteditable id='eventTarget'><body><div contenteditable id='editTarget'></div></body></html>"></iframe>
-  <iframe id="editor5" src="data:text/html,<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
+  <iframe id="editor1" srcdoc="<html><body contenteditable id='eventTarget'></body></html>"></iframe>
+  <iframe id="editor2" srcdoc="<html contenteditable id='eventTarget'><body></body></html>"></iframe>
+  <iframe id="editor3" srcdoc="<html><body><div contenteditable id='eventTarget'></div></body></html>"></iframe>
+  <iframe id="editor4" srcdoc="<html contenteditable id='eventTarget'><body><div contenteditable id='editTarget'></div></body></html>"></iframe>
+  <iframe id="editor5" srcdoc="<html><body id='eventTarget'></body><script>document.designMode='on';</script></html>"></iframe>
 </div>
 <div id="content" style="display: none">
   

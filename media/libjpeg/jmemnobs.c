@@ -3,8 +3,8 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1992-1996, Thomas G. Lane.
- * It was modified by The libjpeg-turbo Project to include only code and
- * information relevant to libjpeg-turbo.
+ * libjpeg-turbo Modifications:
+ * Copyright (C) 2017, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -15,7 +15,6 @@
  * This is very portable in the sense that it'll compile on almost anything,
  * but you'd better have lots of main memory (or virtual memory) if you want
  * to process big images.
- * Note that the max_memory_to_use option is ignored by this implementation.
  */
 
 #define JPEG_INTERNALS
@@ -66,14 +65,21 @@ jpeg_free_large (j_common_ptr cinfo, void *object, size_t sizeofobject)
 
 /*
  * This routine computes the total memory space available for allocation.
- * Here we always say, "we got all you want bud!"
  */
 
 GLOBAL(size_t)
 jpeg_mem_available (j_common_ptr cinfo, size_t min_bytes_needed,
                     size_t max_bytes_needed, size_t already_allocated)
 {
-  return max_bytes_needed;
+  if (cinfo->mem->max_memory_to_use) {
+    if (cinfo->mem->max_memory_to_use > already_allocated)
+      return cinfo->mem->max_memory_to_use - already_allocated;
+    else
+      return 0;
+  } else {
+    /* Here we always say, "we got all you want bud!" */
+    return max_bytes_needed;
+  }
 }
 
 

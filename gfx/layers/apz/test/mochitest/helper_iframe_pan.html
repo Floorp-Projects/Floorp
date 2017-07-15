@@ -33,7 +33,7 @@ waitUntilApzStable().then(scrollOuter);
   </script>
 </head>
 <body>
- <iframe id="outer" style="height: 250px; border: solid 1px black" src="data:text/html,<body style='height:5000px'>"></iframe>
+ <iframe id="outer" style="height: 250px; border: solid 1px black" srcdoc="<body style='height:5000px'>"></iframe>
  <div style="height: 5000px; background-color: lightgreen;">
   This div makes the top-level page scrollable.
  </div>

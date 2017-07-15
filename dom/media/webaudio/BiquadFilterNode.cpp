@@ -234,7 +234,7 @@ public:
   }
 
 private:
-  AudioNodeStream* mDestination;
+  RefPtr<AudioNodeStream> mDestination;
   BiquadFilterType mType;
   AudioParamTimeline mFrequency;
   AudioParamTimeline mDetune;

@@ -245,10 +245,13 @@ ProxyMessenger = {
           result = res;
         }
       } catch (e) {
-        if (e.result != MessageChannel.RESULT_NO_HANDLER) {
+        if (e.result === MessageChannel.RESULT_NO_RESPONSE) {
+          // Ignore.
+        } else if (e.result === MessageChannel.RESULT_NO_HANDLER) {
+          failures++;
+        } else {
           throw e;
         }
-        failures++;
       }
     };
 
