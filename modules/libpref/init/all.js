@@ -717,6 +717,7 @@ pref("apz.overscroll.stretch_factor", "0.35");
 pref("apz.paint_skipping.enabled", true);
 // Fetch displayport updates early from the message queue
 pref("apz.peek_messages.enabled", true);
+pref("apz.popups.enabled", false);
 
 // Whether to print the APZC tree for debugging
 pref("apz.printtree", false);
