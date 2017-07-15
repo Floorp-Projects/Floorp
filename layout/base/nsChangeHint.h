@@ -427,6 +427,17 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
                ~(nsChangeHint_ClearDescendantIntrinsics | \
                  nsChangeHint_NeedDirtyReflow))
 
+// * For changes to the float area of an already-floated element, we need all
+// reflow hints, but not the ones that apply to descendants.
+// Our descendants aren't impacted when our float area only changes
+// placement but not size/shape. (e.g. if we change which side we float to).
+// But our ancestors/siblings are potentially impacted, so we need to send
+// the non-descendant reflow hints.
+#define nsChangeHint_ReflowHintsForFloatAreaChange            \
+  nsChangeHint(nsChangeHint_AllReflowHints &              \
+               ~(nsChangeHint_ClearDescendantIntrinsics | \
+                 nsChangeHint_NeedDirtyReflow))
+
 #define NS_STYLE_HINT_REFLOW \
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_AllReflowHints)
 
