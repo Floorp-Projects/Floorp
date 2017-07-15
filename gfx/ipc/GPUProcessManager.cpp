@@ -463,6 +463,7 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
 {
   MOZ_ASSERT(mProcess && mProcess == aHost);
 
+  CompositorManagerChild::OnGPUProcessLost();
   DestroyProcess();
 
   if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestarts())) {
