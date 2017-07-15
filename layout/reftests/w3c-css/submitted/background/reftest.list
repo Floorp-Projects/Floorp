@@ -1,13 +1,13 @@
 # background-repeat round/space test cases
-fuzzy-if(webrender,1,83) == background-repeat-space-1a.html background-repeat-space-1-ref.html
-fuzzy-if(webrender,1,83) == background-repeat-space-1b.html background-repeat-space-1-ref.html
-fuzzy-if(webrender,1,83) == background-repeat-space-1c.html background-repeat-space-1-ref.html
+== background-repeat-space-1a.html background-repeat-space-1-ref.html
+== background-repeat-space-1b.html background-repeat-space-1-ref.html
+== background-repeat-space-1c.html background-repeat-space-1-ref.html
 == background-repeat-space-2.html background-repeat-space-2-ref.html
-fuzzy-if(webrender,1,96) == background-repeat-space-3.html background-repeat-space-3-ref.html
-fuzzy-if(webrender,1,91) == background-repeat-space-4.html background-repeat-space-4-ref.html
-fuzzy-if(webrender,1,27) == background-repeat-space-5.html background-repeat-space-5-ref.html
-fuzzy-if(webrender,1,2544) == background-repeat-space-6.html background-repeat-space-6-ref.html
-fuzzy-if(webrender,1,43) == background-repeat-space-7.html background-repeat-space-7-ref.html
+== background-repeat-space-3.html background-repeat-space-3-ref.html
+== background-repeat-space-4.html background-repeat-space-4-ref.html
+== background-repeat-space-5.html background-repeat-space-5-ref.html
+== background-repeat-space-6.html background-repeat-space-6-ref.html
+== background-repeat-space-7.html background-repeat-space-7-ref.html
 == background-repeat-space-8.html background-repeat-space-8-ref.html
 == background-repeat-space-9.html background-repeat-space-9-ref.html
 == background-repeat-space-10.html background-repeat-space-10-ref.html
