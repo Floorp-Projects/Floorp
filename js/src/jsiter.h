@@ -160,6 +160,9 @@ NewStringIteratorObject(JSContext* cx, NewObjectKind newKind = GenericObject);
 JSObject*
 GetIterator(JSContext* cx, HandleObject obj, unsigned flags);
 
+PropertyIteratorObject*
+LookupInIteratorCache(JSContext* cx, HandleObject obj);
+
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.

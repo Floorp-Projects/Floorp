@@ -60,6 +60,7 @@ class IonGetPropertyIC;
 class IonSetPropertyIC;
 class IonGetNameIC;
 class IonBindNameIC;
+class IonGetIteratorIC;
 class IonHasOwnIC;
 class IonInIC;
 
@@ -148,6 +149,10 @@ class IonIC
     IonBindNameIC* asBindNameIC() {
         MOZ_ASSERT(kind_ == CacheKind::BindName);
         return (IonBindNameIC*)this;
+    }
+    IonGetIteratorIC* asGetIteratorIC() {
+        MOZ_ASSERT(kind_ == CacheKind::GetIterator);
+        return (IonGetIteratorIC*)this;
     }
     IonHasOwnIC* asHasOwnIC() {
         MOZ_ASSERT(kind_ == CacheKind::HasOwn);
@@ -312,6 +317,35 @@ class IonBindNameIC : public IonIC
 
     static JSObject* update(JSContext* cx, HandleScript outerScript, IonBindNameIC* ic,
                             HandleObject envChain);
+};
+
+class IonGetIteratorIC : public IonIC
+{
+    LiveRegisterSet liveRegs_;
+    TypedOrValueRegister value_;
+    Register output_;
+    Register temp1_;
+    Register temp2_;
+
+  public:
+    IonGetIteratorIC(LiveRegisterSet liveRegs, TypedOrValueRegister value, Register output,
+                     Register temp1, Register temp2)
+      : IonIC(CacheKind::GetIterator),
+        liveRegs_(liveRegs),
+        value_(value),
+        output_(output),
+        temp1_(temp1),
+        temp2_(temp2)
+    { }
+
+    TypedOrValueRegister value() const { return value_; }
+    Register output() const { return output_; }
+    Register temp1() const { return temp1_; }
+    Register temp2() const { return temp2_; }
+    LiveRegisterSet liveRegs() const { return liveRegs_; }
+
+    static JSObject* update(JSContext* cx, HandleScript outerScript, IonGetIteratorIC* ic,
+                            HandleValue value);
 };
 
 class IonHasOwnIC : public IonIC

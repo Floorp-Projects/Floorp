@@ -383,9 +383,9 @@ ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
 }
 
 void
-ImageBridgeChild::UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageContainer> aContainer)
+ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer)
 {
-  if (!aClient || !aContainer) {
+  if (!aContainer) {
     return;
   }
 
@@ -393,7 +393,6 @@ ImageBridgeChild::UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageCon
     RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this),
       &ImageBridgeChild::UpdateImageClient,
-      aClient,
       aContainer);
     GetMessageLoop()->PostTask(runnable.forget());
     return;
@@ -403,14 +402,19 @@ ImageBridgeChild::UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageCon
     return;
   }
 
+  RefPtr<ImageClient> client = aContainer->GetImageClient();
+  if (NS_WARN_IF(!client)) {
+    return;
+  }
+
   // If the client has become disconnected before this event was dispatched,
   // early return now.
-  if (!aClient->IsConnected()) {
+  if (!client->IsConnected()) {
     return;
   }
 
   BeginTransaction();
-  aClient->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
+  client->UpdateImage(aContainer, Layer::CONTENT_OPAQUE);
   EndTransaction();
 }
 

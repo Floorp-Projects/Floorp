@@ -3571,6 +3571,69 @@ TypeOfIRGenerator::tryAttachObject(ValOperandId valId)
     return true;
 }
 
+GetIteratorIRGenerator::GetIteratorIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                                               ICState::Mode mode, HandleValue value)
+  : IRGenerator(cx, script, pc, CacheKind::GetIterator, mode),
+    val_(value)
+{ }
+
+bool
+GetIteratorIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::GetIterator);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    if (mode_ == ICState::Mode::Megamorphic)
+        return false;
+
+    ValOperandId valId(writer.setInputOperandId(0));
+    if (!val_.isObject())
+        return false;
+
+    RootedObject obj(cx_, &val_.toObject());
+
+    ObjOperandId objId = writer.guardIsObject(valId);
+    if (tryAttachNativeIterator(objId, obj))
+        return true;
+
+    return false;
+}
+
+bool
+GetIteratorIRGenerator::tryAttachNativeIterator(ObjOperandId objId, HandleObject obj)
+{
+    MOZ_ASSERT(JSOp(*pc_) == JSOP_ITER);
+
+    if (GET_UINT8(pc_) != JSITER_ENUMERATE)
+        return false;
+
+    PropertyIteratorObject* iterobj = LookupInIteratorCache(cx_, obj);
+    if (!iterobj)
+        return false;
+
+    MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
+
+    // Guard on the receiver's shape/group.
+    Maybe<ObjOperandId> expandoId;
+    TestMatchingReceiver(writer, obj, objId, &expandoId);
+
+    // Ensure the receiver or its expando object has no dense elements.
+    if (obj->isNative())
+        writer.guardNoDenseElements(objId);
+    else if (expandoId)
+        writer.guardNoDenseElements(*expandoId);
+
+    // Do the same for the objects on the proto chain.
+    GeneratePrototypeHoleGuards(writer, obj, objId);
+
+    ObjOperandId iterId =
+        writer.guardAndGetIterator(objId, iterobj, &cx_->compartment()->enumerators);
+    writer.loadObjectResult(iterId);
+    writer.returnFromIC();
+
+    return true;
+}
 
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
                                  ICState::Mode mode, uint32_t argc,

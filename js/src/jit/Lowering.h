@@ -275,7 +275,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitCallInitElementArray(MCallInitElementArray* ins);
     void visitSetPropertyCache(MSetPropertyCache* ins);
     void visitCallSetProperty(MCallSetProperty* ins);
-    void visitIteratorStart(MIteratorStart* ins);
+    void visitGetIteratorCache(MGetIteratorCache* ins);
     void visitIteratorMore(MIteratorMore* ins);
     void visitIsNoIter(MIsNoIter* ins);
     void visitIteratorEnd(MIteratorEnd* ins);

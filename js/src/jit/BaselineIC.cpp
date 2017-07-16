@@ -4148,33 +4148,53 @@ ICTableSwitch::fixupJumpTable(JSScript* script, BaselineScript* baseline)
 }
 
 //
-// IteratorNew_Fallback
+// GetIterator_Fallback
 //
 
 static bool
-DoIteratorNewFallback(JSContext* cx, BaselineFrame* frame, ICIteratorNew_Fallback* stub,
+DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallback* stub,
                       HandleValue value, MutableHandleValue res)
 {
     jsbytecode* pc = stub->icEntry()->pc(frame->script());
-    FallbackICSpew(cx, stub, "IteratorNew");
+    FallbackICSpew(cx, stub, "GetIterator");
+
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
+
+    if (stub->state().canAttachStub()) {
+        RootedScript script(cx, frame->script());
+        jsbytecode* pc = stub->icEntry()->pc(script);
+
+        ICStubEngine engine = ICStubEngine::Baseline;
+        GetIteratorIRGenerator gen(cx, script, pc, stub->state().mode(), value);
+        bool attached = false;
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        engine, script, stub, &attached);
+            if (newStub)
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+        }
+        if (!attached)
+            stub->state().trackNotAttached();
+    }
 
     uint8_t flags = GET_UINT8(pc);
-    res.set(value);
-    RootedObject iterobj(cx, ValueToIterator(cx, flags, res));
+    JSObject* iterobj = ValueToIterator(cx, flags, value);
     if (!iterobj)
         return false;
+
     res.setObject(*iterobj);
     return true;
 }
 
-typedef bool (*DoIteratorNewFallbackFn)(JSContext*, BaselineFrame*, ICIteratorNew_Fallback*,
+typedef bool (*DoGetIteratorFallbackFn)(JSContext*, BaselineFrame*, ICGetIterator_Fallback*,
                                         HandleValue, MutableHandleValue);
-static const VMFunction DoIteratorNewFallbackInfo =
-    FunctionInfo<DoIteratorNewFallbackFn>(DoIteratorNewFallback, "DoIteratorNewFallback",
+static const VMFunction DoGetIteratorFallbackInfo =
+    FunctionInfo<DoGetIteratorFallbackFn>(DoGetIteratorFallback, "DoGetIteratorFallback",
                                           TailCall, PopValues(1));
 
 bool
-ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
+ICGetIterator_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
     MOZ_ASSERT(engine_ == Engine::Baseline);
 
@@ -4187,7 +4207,7 @@ ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     masm.push(ICStubReg);
     pushStubPayload(masm, R0.scratchReg());
 
-    return tailCallVM(DoIteratorNewFallbackInfo, masm);
+    return tailCallVM(DoGetIteratorFallbackInfo, masm);
 }
 
 //

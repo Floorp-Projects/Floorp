@@ -339,9 +339,7 @@
     _(SetPropertyCache)             \
     _(SetPropertyPolymorphicV)      \
     _(SetPropertyPolymorphicT)      \
-    _(CallIteratorStartV)           \
-    _(CallIteratorStartO)           \
-    _(IteratorStartO)               \
+    _(GetIteratorCache)             \
     _(IteratorMore)                 \
     _(IsNoIterAndBranch)            \
     _(IteratorEnd)                  \
