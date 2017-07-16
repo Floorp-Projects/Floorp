@@ -1674,7 +1674,7 @@ pref("network.http.altsvc.oe", true);
 pref("security.tls.enable_0rtt_data", true);
 
 // the origin extension impacts h2 coalescing
-pref("network.http.originextension", true);
+pref("network.http.originextension", false);
 
 pref("network.http.diagnostics", false);
 
