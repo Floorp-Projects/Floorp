@@ -725,7 +725,7 @@ DownloadsDataCtor.prototype = {
                                DownloadsCommon.stateOfDownload(download));
 
     for (let view of this._views) {
-      view.onDownloadAdded(download, true);
+      view.onDownloadAdded(download);
     }
   },
 
@@ -840,11 +840,10 @@ DownloadsDataCtor.prototype = {
     // Indicate to the view that a batch loading operation is in progress.
     aView.onDataLoadStarting();
 
-    // Sort backwards by start time, ensuring that the most recent
-    // downloads are added first regardless of their state.
-    let downloadsArray = [...this.downloads];
-    downloadsArray.sort((a, b) => b.startTime - a.startTime);
-    downloadsArray.forEach(download => aView.onDownloadAdded(download, false));
+    // This iterates downloads in the same order as they were originally added.
+    for (let download of this.downloads) {
+      aView.onDownloadAdded(download);
+    }
 
     // Notify the view that all data is available.
     aView.onDataLoadCompleted();
@@ -1014,16 +1013,10 @@ const DownloadsViewPrototype = {
    *
    * @param download
    *        Download object that was just added.
-   * @param newest
-   *        When true, indicates that this item is the most recent and should be
-   *        added in the topmost position.  This happens when a new download is
-   *        started.  When false, indicates that the item is the least recent
-   *        with regard to the items that have been already added. The latter
-   *        generally happens during the asynchronous data load.
    *
    * @note Subclasses should override this.
    */
-  onDownloadAdded(download, newest) {
+  onDownloadAdded(download) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -1126,7 +1119,7 @@ DownloadsIndicatorDataCtor.prototype = {
     this._updateViews();
   },
 
-  onDownloadAdded(download, newest) {
+  onDownloadAdded(download) {
     this._itemCount++;
     this._updateViews();
   },
@@ -1361,13 +1354,8 @@ DownloadsSummaryData.prototype = {
     this._updateViews();
   },
 
-  onDownloadAdded(download, newest) {
-    if (newest) {
-      this._downloads.unshift(download);
-    } else {
-      this._downloads.push(download);
-    }
-
+  onDownloadAdded(download) {
+    this._downloads.unshift(download);
     this._updateViews();
   },
 
