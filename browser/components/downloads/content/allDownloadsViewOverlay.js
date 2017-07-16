@@ -610,7 +610,7 @@ DownloadsPlacesView.prototype = {
    * @param [optional] aPlacesNode
    *        The Places node for a history download, or null for session downloads.
    * @param [optional] aNewest
-   *        @see onDownloadAdded. Ignored for history downloads.
+   *        Whether the download should be added at the top of the list.
    * @param [optional] aDocumentFragment
    *        To speed up the appending of multiple elements to the end of the
    *        list which are coming in a single batch (i.e. invalidateContainer),
@@ -1101,8 +1101,8 @@ DownloadsPlacesView.prototype = {
     this._ensureInitialSelection();
   },
 
-  onDownloadAdded(download, newest) {
-    this._addDownloadData(download, null, newest);
+  onDownloadAdded(download) {
+    this._addDownloadData(download, null, true);
   },
 
   onDownloadStateChanged(download) {
