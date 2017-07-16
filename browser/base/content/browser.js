@@ -4992,7 +4992,7 @@ var CombinedStopReload = {
   },
 
   switchToStop(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest))
+    if (!this._initialized)
       return;
 
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
@@ -5010,8 +5010,7 @@ var CombinedStopReload = {
   },
 
   switchToReload(aRequest, aWebProgress) {
-    if (!this._initialized || !this._shouldSwitch(aRequest) ||
-        !this.reload.hasAttribute("displaystop"))
+    if (!this._initialized)
       return;
 
     let shouldAnimate = AppConstants.MOZ_PHOTON_ANIMATIONS &&
@@ -5046,19 +5045,6 @@ var CombinedStopReload = {
       self.reload.disabled = XULBrowserWindow.reloadCommand
                                              .getAttribute("disabled") == "true";
     }, 650, this);
-  },
-
-  _shouldSwitch(aRequest) {
-    if (!aRequest ||
-        !aRequest.originalURI ||
-        aRequest.originalURI.spec.startsWith("about:reader"))
-      return true;
-
-    if (aRequest.originalURI.schemeIs("chrome") ||
-        aRequest.originalURI.schemeIs("about"))
-      return false;
-
-    return true;
   },
 
   _cancelTransition() {
