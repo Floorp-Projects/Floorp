@@ -17,7 +17,9 @@ add_task(async function() {
      "Button (" + button.id + ") starts out with correct anchor");
 
   let navbar = document.getElementById("nav-bar").customizationTarget;
+  let onMouseUp = BrowserTestUtils.waitForEvent(navbar, "mouseup");
   simulateItemDrag(button, navbar);
+  await onMouseUp;
   is(CustomizableUI.getPlacementOfWidget(button.id).area, "nav-bar",
      "Button (" + button.id + ") ends up in nav-bar");
 
