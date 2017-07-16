@@ -45,6 +45,7 @@ class PluginInstanceParent : public PPluginInstanceParent
 {
     friend class PluginModuleParent;
     friend class BrowserStreamParent;
+    friend class PluginStreamParent;
     friend class StreamNotifyParent;
 
 #if defined(XP_WIN)
@@ -88,6 +89,13 @@ public:
                               const nsCString& headers) override;
     virtual bool
     DeallocPBrowserStreamParent(PBrowserStreamParent* stream) override;
+
+    virtual PPluginStreamParent*
+    AllocPPluginStreamParent(const nsCString& mimeType,
+                             const nsCString& target,
+                             NPError* result) override;
+    virtual bool
+    DeallocPPluginStreamParent(PPluginStreamParent* stream) override;
 
     virtual mozilla::ipc::IPCResult
     AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
