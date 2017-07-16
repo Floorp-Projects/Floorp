@@ -336,9 +336,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitClampIToUint8(LClampIToUint8* lir);
     void visitClampDToUint8(LClampDToUint8* lir);
     void visitClampVToUint8(LClampVToUint8* lir);
-    void visitCallIteratorStartV(LCallIteratorStartV* lir);
-    void visitCallIteratorStartO(LCallIteratorStartO* lir);
-    void visitIteratorStartO(LIteratorStartO* lir);
+    void visitGetIteratorCache(LGetIteratorCache* lir);
     void visitIteratorMore(LIteratorMore* lir);
     void visitIsNoIterAndBranch(LIsNoIterAndBranch* lir);
     void visitIteratorEnd(LIteratorEnd* lir);
@@ -536,10 +534,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
                                      Label* ifEmulatesUndefined,
                                      Label* ifDoesntEmulateUndefined,
                                      Register scratch, OutOfLineTestObject* ool);
-
-    // Branch to target unless obj has an emptyObjectElements or emptyObjectElementsShared
-    // elements pointer.
-    void branchIfNotEmptyObjectElements(Register obj, Label* target);
 
     void emitStoreElementTyped(const LAllocation* value, MIRType valueType, MIRType elementType,
                                Register elements, const LAllocation* index,
