@@ -34,6 +34,8 @@ EXPORTS.mozilla.plugins += [
     'PluginScriptableObjectParent.h',
     'PluginScriptableObjectUtils-inl.h',
     'PluginScriptableObjectUtils.h',
+    'PluginStreamChild.h',
+    'PluginStreamParent.h',
     'PluginUtilsOSX.h',
     'StreamNotifyChild.h',
     'StreamNotifyParent.h',
@@ -75,6 +77,8 @@ UNIFIED_SOURCES += [
     'PluginQuirks.cpp',
     'PluginScriptableObjectChild.cpp',
     'PluginScriptableObjectParent.cpp',
+    'PluginStreamChild.cpp',
+    'PluginStreamParent.cpp',
 ]
 
 SOURCES += [
@@ -109,6 +113,7 @@ IPDL_SOURCES += [
     'PPluginInstance.ipdl',
     'PPluginModule.ipdl',
     'PPluginScriptableObject.ipdl',
+    'PPluginStream.ipdl',
     'PPluginSurface.ipdl',
     'PStreamNotify.ipdl',
 ]
