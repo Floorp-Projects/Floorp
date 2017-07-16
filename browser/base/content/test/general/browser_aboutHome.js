@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 
 const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/browser/base/" +
-  "content/test/about/aboutHome_content_script.js";
+  "content/test/general/aboutHome_content_script.js";
 var gRightsVersion = Services.prefs.getIntPref("browser.rights.version");
 
 registerCleanupFunction(function() {
@@ -269,7 +269,7 @@ add_task(async function() {
         resolve();
       };
       Services.obs.addObserver(searchObserver, "browser-search-engine-modified");
-      Services.search.addEngine("http://test:80/browser/browser/base/content/test/about/POSTSearchEngine.xml",
+      Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
                                 null, null, false);
     });
   });
@@ -280,7 +280,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     let promise = BrowserTestUtils.browserLoaded(browser);
-    browser.loadURI("https://example.com/browser/browser/base/content/test/about/test_bug959531.html");
+    browser.loadURI("https://example.com/browser/browser/base/content/test/general/test_bug959531.html");
     await promise;
 
     await ContentTask.spawn(browser, null, async function() {
