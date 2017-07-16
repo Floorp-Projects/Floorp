@@ -478,33 +478,68 @@ static void sendBufferToFrame(NPP instance)
     outbuf.append("Error: no data in buffer");
   }
 
-  // Convert CRLF to LF, and escape most other non-alphanumeric chars.
-  for (size_t i = 0; i < outbuf.length(); i++) {
-    if (outbuf[i] == '\n') {
-      outbuf.replace(i, 1, "%0a");
-      i += 2;
+  if (instanceData->npnNewStream &&
+      instanceData->err.str().length() == 0) {
+    char typeHTML[] = "text/html";
+    NPStream* stream;
+    printf("calling NPN_NewStream...");
+    NPError err = NPN_NewStream(instance, typeHTML,
+        instanceData->frame.c_str(), &stream);
+    printf("return value %d\n", err);
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_NewStream returned " << err;
+      return;
     }
-    else if (outbuf[i] == '\r') {
-      outbuf.replace(i, 1, "");
-      i -= 1;
-    }
-    else {
-      int ascii = outbuf[i];
-      if (!((ascii >= ',' && ascii <= ';') ||
-            (ascii >= 'A' && ascii <= 'Z') ||
-            (ascii >= 'a' && ascii <= 'z'))) {
-        char hex[10];
-        sprintf(hex, "%%%x", ascii);
-        outbuf.replace(i, 1, hex);
-        i += 2;
+
+    int32_t bytesToWrite = outbuf.length();
+    int32_t bytesWritten = 0;
+    while ((bytesToWrite - bytesWritten) > 0) {
+      int32_t numBytes = (bytesToWrite - bytesWritten) <
+          instanceData->streamChunkSize ?
+          bytesToWrite - bytesWritten : instanceData->streamChunkSize;
+      int32_t written = NPN_Write(instance, stream,
+          numBytes, (void*)(outbuf.c_str() + bytesWritten));
+      if (written <= 0) {
+        instanceData->err << "NPN_Write returned " << written;
+        break;
       }
+      bytesWritten += numBytes;
+      printf("%d bytes written, total %d\n", written, bytesWritten);
+    }
+    err = NPN_DestroyStream(instance, stream, NPRES_DONE);
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_DestroyStream returned " << err;
     }
   }
+  else {
+    // Convert CRLF to LF, and escape most other non-alphanumeric chars.
+    for (size_t i = 0; i < outbuf.length(); i++) {
+      if (outbuf[i] == '\n') {
+        outbuf.replace(i, 1, "%0a");
+        i += 2;
+      }
+      else if (outbuf[i] == '\r') {
+        outbuf.replace(i, 1, "");
+        i -= 1;
+      }
+      else {
+        int ascii = outbuf[i];
+        if (!((ascii >= ',' && ascii <= ';') ||
+              (ascii >= 'A' && ascii <= 'Z') ||
+              (ascii >= 'a' && ascii <= 'z'))) {
+          char hex[10];
+          sprintf(hex, "%%%x", ascii);
+          outbuf.replace(i, 1, hex);
+          i += 2;
+        }
+      }
+    }
 
-  NPError err = NPN_GetURL(instance, outbuf.c_str(),
-                           instanceData->frame.c_str());
-  if (err != NPERR_NO_ERROR) {
-    instanceData->err << "NPN_GetURL returned " << err;
+    NPError err = NPN_GetURL(instance, outbuf.c_str(),
+                             instanceData->frame.c_str());
+    if (err != NPERR_NO_ERROR) {
+      instanceData->err << "NPN_GetURL returned " << err;
+    }
   }
 }
 
@@ -817,6 +852,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->focusState = ACTIVATION_STATE_UNKNOWN;
   instanceData->focusEventCount = 0;
   instanceData->eventModel = 0;
+  instanceData->closeStream = false;
   instanceData->wantsAllStreams = false;
   instanceData->mouseUpEventCount = 0;
   instanceData->bugMode = -1;
@@ -947,6 +983,9 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "cleanupwidget") == 0 &&
         strcmp(argv[i], "false") == 0) {
       instanceData->cleanupWidget = false;
+    }
+    if (!strcmp(argn[i], "closestream")) {
+      instanceData->closeStream = true;
     }
     if (strcmp(argn[i], "bugmode") == 0) {
       instanceData->bugMode = atoi(argv[i]);
@@ -1379,7 +1418,15 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
     nd->size = newsize;
     return len;
   }
-  if (instanceData->streamMode == NP_SEEK &&
+
+  if (instanceData->closeStream) {
+    instanceData->closeStream = false;
+    if (instanceData->testrange != nullptr) {
+      NPN_RequestRead(stream, instanceData->testrange);
+    }
+    NPN_DestroyStream(instance, stream, NPRES_USER_BREAK);
+  }
+  else if (instanceData->streamMode == NP_SEEK &&
       stream->end != 0 &&
       stream->end == ((uint32_t)instanceData->streamBufSize + len)) {
     // If the complete stream has been written, and we're doing a seek test,
@@ -1406,12 +1453,20 @@ NPP_Write(NPP instance, NPStream* stream, int32_t offset, int32_t len, void* buf
       printf("data matches!\n");
     }
     TestRange* range = instanceData->testrange;
+    bool stillwaiting = false;
     while(range != nullptr) {
       if (offset == range->offset &&
         (uint32_t)len == range->length) {
         range->waiting = false;
       }
+      if (range->waiting) stillwaiting = true;
       range = reinterpret_cast<TestRange*>(range->next);
+    }
+    if (!stillwaiting) {
+      NPError err = NPN_DestroyStream(instance, stream, NPRES_DONE);
+      if (err != NPERR_NO_ERROR) {
+        instanceData->err << "Error: NPN_DestroyStream returned " << err;
+      }
     }
   }
   else {
@@ -1854,7 +1909,29 @@ NPN_PostURL(NPP instance, const char *url,
   return sBrowserFuncs->posturl(instance, url, target, len, buf, file);
 }
 
+NPError
+NPN_DestroyStream(NPP instance, NPStream* stream, NPError reason)
+{
+  return sBrowserFuncs->destroystream(instance, stream, reason);
+}
 
+NPError
+NPN_NewStream(NPP instance,
+              NPMIMEType  type,
+              const char* target,
+              NPStream**  stream)
+{
+  return sBrowserFuncs->newstream(instance, type, target, stream);
+}
+
+int32_t
+NPN_Write(NPP instance,
+          NPStream* stream,
+          int32_t len,
+          void* buf)
+{
+  return sBrowserFuncs->write(instance, stream, len, buf);
+}
 
 bool
 NPN_Enumerate(NPP instance,
