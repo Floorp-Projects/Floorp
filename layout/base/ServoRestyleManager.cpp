@@ -48,7 +48,7 @@ FirstContinuationOrPartOfIBSplit(const nsIFrame* aFrame)
 static const nsIFrame*
 ExpectedOwnerForChild(const nsIFrame& aFrame)
 {
-  if (IsAnonBox(aFrame)) {
+  if (IsAnonBox(aFrame) && !aFrame.IsTextFrame()) {
     return aFrame.GetParent()->IsViewportFrame() ? nullptr : aFrame.GetParent();
   }
 
