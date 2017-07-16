@@ -12472,26 +12472,20 @@ class MNearbyInt
     ALLOW_CLONE(MNearbyInt)
 };
 
-class MIteratorStart
+class MGetIteratorCache
   : public MUnaryInstruction,
     public BoxExceptPolicy<0, MIRType::Object>::Data
 {
-    uint8_t flags_;
-
-    MIteratorStart(MDefinition* obj, uint8_t flags)
-      : MUnaryInstruction(obj), flags_(flags)
+    explicit MGetIteratorCache(MDefinition* val)
+      : MUnaryInstruction(val)
     {
         setResultType(MIRType::Object);
     }
 
   public:
-    INSTRUCTION_HEADER(IteratorStart)
+    INSTRUCTION_HEADER(GetIteratorCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
-
-    uint8_t flags() const {
-        return flags_;
-    }
+    NAMED_OPERANDS((0, value))
 };
 
 class MIteratorMore

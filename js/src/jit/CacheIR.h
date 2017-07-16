@@ -145,6 +145,7 @@ class TypedOperandId : public OperandId
     _(In)                   \
     _(HasOwn)               \
     _(TypeOf)               \
+    _(GetIterator)          \
     _(Compare)              \
     _(Call)
 
@@ -184,6 +185,7 @@ extern const char* CacheKindNames[];
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardAndGetIndexFromString)         \
+    _(GuardAndGetIterator)                \
     _(GuardHasGetterSetter)               \
     _(GuardGroupHasUnanalyzedNewScript)   \
     _(LoadStackValue)                     \
@@ -580,6 +582,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
         Int32OperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::GuardAndGetIndexFromString, str);
+        writeOperandId(res);
+        return res;
+    }
+    ObjOperandId guardAndGetIterator(ObjOperandId obj, PropertyIteratorObject* iter,
+                                     NativeIterator** enumeratorsAddr)
+    {
+        ObjOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardAndGetIterator, obj);
+        addStubField(uintptr_t(iter), StubField::Type::JSObject);
+        addStubField(uintptr_t(enumeratorsAddr), StubField::Type::RawWord);
         writeOperandId(res);
         return res;
     }
@@ -1404,6 +1416,19 @@ class MOZ_RAII TypeOfIRGenerator : public IRGenerator
 
   public:
     TypeOfIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode, HandleValue value);
+
+    bool tryAttachStub();
+};
+
+class MOZ_RAII GetIteratorIRGenerator : public IRGenerator
+{
+    HandleValue val_;
+
+    bool tryAttachNativeIterator(ObjOperandId objId, HandleObject obj);
+
+  public:
+    GetIteratorIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+                           HandleValue value);
 
     bool tryAttachStub();
 };

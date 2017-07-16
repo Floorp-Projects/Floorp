@@ -22,9 +22,6 @@ StaticRefPtr<CompositorManagerChild> CompositorManagerChild::sInstance;
 CompositorManagerChild::IsInitialized(base::ProcessId aGPUPid)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
-  // cannot know if the CompositorManagerChild is about to be released but has
-  // yet to be. As such, we need to verify the GPU PID matches as well.
   return sInstance && sInstance->CanSend() && sInstance->OtherPid() == aGPUPid;
 }
 
@@ -49,12 +46,8 @@ CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (sInstance) {
-    // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
-    // cannot know if the CompositorManagerChild has yet to be released or not.
-    // To avoid an unnecessary reinitialization, we verify the GPU PID actually
-    // changed.
     MOZ_ASSERT(sInstance->mNamespace != aNamespace);
-    MOZ_RELEASE_ASSERT(sInstance->OtherPid() != aEndpoint.OtherPid());
+    MOZ_RELEASE_ASSERT(!sInstance->CanSend());
   }
 
   sInstance = new CompositorManagerChild(Move(aEndpoint), aNamespace);
@@ -75,11 +68,24 @@ CompositorManagerChild::Shutdown()
   sInstance = nullptr;
 }
 
+/* static */ void
+CompositorManagerChild::OnGPUProcessLost()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Since GPUChild and CompositorManagerChild will race on ActorDestroy, we
+  // cannot know if the CompositorManagerChild is about to be released but has
+  // yet to be. As such, we want to pre-emptively set mCanSend to false.
+  if (sInstance) {
+    sInstance->mCanSend = false;
+  }
+}
+
 /* static */ bool
 CompositorManagerChild::CreateContentCompositorBridge(uint32_t aNamespace)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(!sInstance)) {
+  if (NS_WARN_IF(!sInstance || !sInstance->CanSend())) {
     return false;
   }
 
@@ -106,7 +112,7 @@ CompositorManagerChild::CreateWidgetCompositorBridge(uint64_t aProcessToken,
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(!sInstance)) {
+  if (NS_WARN_IF(!sInstance || !sInstance->CanSend())) {
     return nullptr;
   }
 
@@ -134,7 +140,7 @@ CompositorManagerChild::CreateSameProcessWidgetCompositorBridge(LayerManager* aL
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
-  if (NS_WARN_IF(!sInstance)) {
+  if (NS_WARN_IF(!sInstance || !sInstance->CanSend())) {
     return nullptr;
   }
 

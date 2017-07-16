@@ -94,9 +94,7 @@ class CompileCompartment
     CompileZone* zone();
     CompileRuntime* runtime();
 
-    const void* addressOfEnumerators();
     const void* addressOfRandomNumberGenerator();
-    const void* addressOfLastCachedNativeIterator();
 
     const JitCompartment* jitCompartment();
 

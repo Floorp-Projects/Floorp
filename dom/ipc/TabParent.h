@@ -538,14 +538,28 @@ public:
    */
   bool IsDestroyed() const { return mIsDestroyed; }
 
+  // Returns the closest widget for our frameloader's content.
   already_AddRefed<nsIWidget> GetWidget() const;
+
+  // Returns the top-level widget for our frameloader's document.
+  already_AddRefed<nsIWidget> GetDocWidget() const;
 
   const TabId GetTabId() const
   {
     return mTabId;
   }
 
+  // Returns the offset from the origin of our frameloader's nearest widget to
+  // the origin of its layout frame. This offset is used to translate event
+  // coordinates relative to the PuppetWidget origin in the child process.
   LayoutDeviceIntPoint GetChildProcessOffset();
+
+  // Returns the offset from the on-screen origin of our top-level window's
+  // widget (including window decorations) to the origin of our frameloader's
+  // nearest widget. This offset is used to translate coordinates from the
+  // PuppetWidget's origin to absolute screen coordinates in the child.
+  LayoutDeviceIntPoint GetClientOffset();
+
   LayoutDevicePoint AdjustTapToChildWidget(const LayoutDevicePoint& aPoint);
 
   /**
