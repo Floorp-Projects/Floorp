@@ -78,6 +78,8 @@ browser/extensions/activity-stream/vendor/**
 browser/locales/**
 # imported from chromium
 browser/extensions/mortar/**
+# Generated data files
+browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 
 # devtools/ exclusions
 devtools/client/canvasdebugger/**
