@@ -98,7 +98,7 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
                           self.prefs_provider_update_time.keys(), True)
 
         try:
-            Wait(self.marionette, timeout=60).until(
+            Wait(self.marionette, timeout=90).until(
                 check_downloaded, message='Not all safebrowsing files have been downloaded')
         finally:
             files_on_disk_toplevel = os.listdir(self.safebrowsing_path)
