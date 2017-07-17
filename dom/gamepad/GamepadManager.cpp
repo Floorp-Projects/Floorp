@@ -505,20 +505,23 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
     return;
   }
 
-  if (aEvent.type() == GamepadChangeEvent::TGamepadAdded) {
-    const GamepadAdded& a = aEvent.get_GamepadAdded();
-    AddGamepad(a.index(), a.id(),
+  const uint32_t index = aEvent.index();
+  GamepadServiceType serviceType = aEvent.service_type();
+  GamepadChangeEventBody body = aEvent.body();
+
+  if (body.type() == GamepadChangeEventBody::TGamepadAdded) {
+    const GamepadAdded& a = body.get_GamepadAdded();
+    AddGamepad(index, a.id(),
                static_cast<GamepadMappingType>(a.mapping()),
                static_cast<GamepadHand>(a.hand()),
-               a.service_type(),
+               serviceType,
                a.display_id(),
                a.num_buttons(), a.num_axes(),
                a.num_haptics());
     return;
   }
-  if (aEvent.type() == GamepadChangeEvent::TGamepadRemoved) {
-    const GamepadRemoved& a = aEvent.get_GamepadRemoved();
-    RemoveGamepad(a.index(), a.service_type());
+  if (body.type() == GamepadChangeEventBody::TGamepadRemoved) {
+    RemoveGamepad(index, serviceType);
     return;
   }
 
@@ -555,96 +558,75 @@ GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& 
     return;
   }
 
-  RefPtr<Gamepad> gamepad;
+  RefPtr<Gamepad> gamepad = aWindow->GetGamepad(aEvent.index());
+  const GamepadChangeEventBody& body = aEvent.body();
 
-  switch (aEvent.type()) {
-    case GamepadChangeEvent::TGamepadButtonInformation:
+  if (gamepad) {
+    switch (body.type()) {
+      case GamepadChangeEventBody::TGamepadButtonInformation:
       {
-        const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-        gamepad = aWindow->GetGamepad(a.index());
-        if (gamepad) {
-          FireButtonEvent(aWindow, gamepad, a.button(), a.value());
-        }
+        const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
+        FireButtonEvent(aWindow, gamepad, a.button(), a.value());
+        break;
       }
-      break;
-    case GamepadChangeEvent::TGamepadAxisInformation:
+      case GamepadChangeEventBody::TGamepadAxisInformation:
       {
-        const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
-        gamepad = aWindow->GetGamepad(a.index());
-        if (gamepad) {
-          FireAxisMoveEvent(aWindow, gamepad, a.axis(), a.value());
-        }
+        const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
+        FireAxisMoveEvent(aWindow, gamepad, a.axis(), a.value());
+        break;
       }
-      break;
-    default:
-      break;
+      default:
+        break;
+    }
   }
 }
 
 bool
 GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWindow *aWindow)
 {
-  uint32_t index;
-  RefPtr<Gamepad> gamepad;
   bool ret = false;
   bool firstTime = false;
 
-  switch (aEvent.type()) {
-    case GamepadChangeEvent::TGamepadButtonInformation:
-    {
-      const GamepadButtonInformation& a = aEvent.get_GamepadButtonInformation();
-      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
-      if (aWindow) {
-        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
-      }
-      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
-      if (gamepad) {
+  const uint32_t index = GetGamepadIndexWithServiceType(aEvent.index(),
+                                                        aEvent.service_type());
+  if (aWindow) {
+    firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
+  }
+
+  RefPtr<Gamepad> gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
+  const GamepadChangeEventBody& body = aEvent.body();
+
+  if (gamepad) {
+    switch (body.type()) {
+      case GamepadChangeEventBody::TGamepadButtonInformation:
+      {
+        const GamepadButtonInformation& a = body.get_GamepadButtonInformation();
         gamepad->SetButton(a.button(), a.pressed(), a.touched(), a.value());
-        ret = true;
+        break;
       }
-    } break;
-    case GamepadChangeEvent::TGamepadAxisInformation:
-    {
-      const GamepadAxisInformation& a = aEvent.get_GamepadAxisInformation();
-      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
-      if (aWindow) {
-        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
-      }
-      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
-      if (gamepad) {
+      case GamepadChangeEventBody::TGamepadAxisInformation:
+      {
+        const GamepadAxisInformation& a = body.get_GamepadAxisInformation();
         gamepad->SetAxis(a.axis(), a.value());
-        ret = true;
+        break;
       }
-    } break;
-    case GamepadChangeEvent::TGamepadPoseInformation:
-    {
-      const GamepadPoseInformation& a = aEvent.get_GamepadPoseInformation();
-      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
-      if (aWindow) {
-        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
-      }
-      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
-      if (gamepad) {
+      case GamepadChangeEventBody::TGamepadPoseInformation:
+      {
+        const GamepadPoseInformation& a = body.get_GamepadPoseInformation();
         gamepad->SetPose(a.pose_state());
-         ret = true;
+        break;
       }
-    } break;
-    case GamepadChangeEvent::TGamepadHandInformation:
-    {
-      const GamepadHandInformation& a = aEvent.get_GamepadHandInformation();
-      index = GetGamepadIndexWithServiceType(a.index(), a.service_type());
-      if (aWindow) {
-        firstTime = MaybeWindowHasSeenGamepad(aWindow, index);
-      }
-      gamepad = aWindow ? aWindow->GetGamepad(index) : GetGamepad(index);
-      if (gamepad) {
+      case GamepadChangeEventBody::TGamepadHandInformation:
+      {
+        const GamepadHandInformation& a = body.get_GamepadHandInformation();
         gamepad->SetHand(a.hand());
-        ret = true;
+        break;
       }
-    } break;
-    default:
-      MOZ_ASSERT(false);
-      break;
+      default:
+        MOZ_ASSERT(false);
+        break;
+    }
+    ret = true;
   }
 
   if (aWindow && firstTime) {
