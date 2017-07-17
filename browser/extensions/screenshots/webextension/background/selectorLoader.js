@@ -14,6 +14,7 @@ this.selectorLoader = (function() {
     "log.js",
     "catcher.js",
     "assertIsTrusted.js",
+    "assertIsBlankDocument.js",
     "background/selectorLoader.js",
     "selector/callBackground.js",
     "selector/util.js"
