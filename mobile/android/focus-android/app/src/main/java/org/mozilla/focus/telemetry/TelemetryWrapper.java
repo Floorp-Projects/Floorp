@@ -161,6 +161,7 @@ public final class TelemetryWrapper {
                             resources.getString(R.string.pref_key_privacy_block_other),
                             resources.getString(R.string.pref_key_performance_block_webfonts),
                             resources.getString(R.string.pref_key_locale),
+                            resources.getString(R.string.pref_key_secure),
                             resources.getString(R.string.pref_key_default_browser))
                     .setSettingsProvider(makeSettingsProvider(resources))
                     .setCollectionEnabled(telemetryEnabled)
