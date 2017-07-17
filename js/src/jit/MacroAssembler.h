@@ -736,14 +736,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void move8SignExtend(Register src, Register dest) PER_SHARED_ARCH;
     inline void move16SignExtend(Register src, Register dest) PER_SHARED_ARCH;
 
-    // Copy a constant, typed-register, or a ValueOperand into a ValueOperand
-    // destination.
-    inline void moveValue(const ConstantOrRegister& src, const ValueOperand& dest);
-    void moveValue(const TypedOrValueRegister& src, const ValueOperand& dest) PER_ARCH;
-    void moveValue(const ValueOperand& src, const ValueOperand& dest) PER_ARCH;
-    void moveValue(const Value& src, const ValueOperand& dest) PER_ARCH;
-
-  public:
     // ===============================================================
     // Logical instructions
 

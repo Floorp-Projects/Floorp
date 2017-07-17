@@ -516,7 +516,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     }
 
     // Push undefined.
-    masm.moveValue(UndefinedValue(), ValueOperand(r5, r4));
+    masm.moveValue(UndefinedValue(), r5, r4);
     {
         Label undefLoopTop;
         masm.bind(&undefLoopTop);

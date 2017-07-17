@@ -440,7 +440,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     // Copy the number of actual arguments.
     masm.loadPtr(Address(esp, RectifierFrameLayout::offsetOfNumActualArgs()), edx);
 
-    masm.moveValue(UndefinedValue(), ValueOperand(ebx, edi));
+    masm.moveValue(UndefinedValue(), ebx, edi);
 
     // NOTE: The fact that x86 ArgumentsRectifier saves the FramePointer is relied upon
     // by the baseline bailout code.  If this changes, fix that code!  See
