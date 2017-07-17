@@ -52,14 +52,13 @@ to mochitest command.
   * different parsing bug 1364260
     * test_supports_rules.html [6]
     * test_condition_text.html [1]
-  * test_value_storage.html `calc(25% - 10%)`: calc percent in -webkit-gradient bug 1380918 [5]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
   * system font serialization with subprop specified bug 1364286
     * test_system_font_serialization.html [3]
   * radial gradients are not serialized using modern unprefixed style bug 1380259
-    * test_computed_style.html `gradient` [2]
+    * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
 * getComputedStyle style doesn't contain custom properties bug 1336891
