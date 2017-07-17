@@ -1585,6 +1585,27 @@ HTMLFormElement::FlushPendingSubmission()
   }
 }
 
+void
+HTMLFormElement::GetAction(nsString& aValue)
+{
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::action, aValue) ||
+      aValue.IsEmpty()) {
+    nsIDocument* document = OwnerDoc();
+    nsIURI* docURI = document->GetDocumentURI();
+    if (docURI) {
+      nsAutoCString spec;
+      nsresult rv = docURI->GetSpec(spec);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      CopyUTF8toUTF16(spec, aValue);
+    }
+  } else {
+    GetURIAttr(nsGkAtoms::action, nullptr, aValue);
+  }
+}
+
 nsresult
 HTMLFormElement::GetActionURL(nsIURI** aActionURL,
                               nsIContent* aOriginatingElement)
