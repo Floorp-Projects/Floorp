@@ -119,7 +119,7 @@ CodeGeneratorX86::visitBoxFloatingPoint(LBoxFloatingPoint* box)
         masm.convertFloat32ToDouble(reg, ScratchFloat32Reg);
         reg = ScratchFloat32Reg;
     }
-    masm.boxDouble(reg, out);
+    masm.boxDouble(reg, out, reg);
 }
 
 void

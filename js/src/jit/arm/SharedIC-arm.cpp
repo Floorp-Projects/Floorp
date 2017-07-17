@@ -144,7 +144,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
             masm.bind(&toUint);
             ScratchDoubleScope scratchDouble(masm);
             masm.convertUInt32ToDouble(scratchReg, scratchDouble);
-            masm.boxDouble(scratchDouble, R0);
+            masm.boxDouble(scratchDouble, R0, scratchDouble);
         } else {
             masm.j(Assembler::LessThan, &failure);
             // Move result for return.

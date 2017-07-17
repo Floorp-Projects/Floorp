@@ -160,7 +160,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 
             masm.bind(&toUint);
             masm.convertUInt32ToDouble(R0.payloadReg(), ScratchDoubleReg);
-            masm.boxDouble(ScratchDoubleReg, R0);
+            masm.boxDouble(ScratchDoubleReg, R0, ScratchDoubleReg);
         } else {
             masm.j(Assembler::Signed, &revertRegister);
             masm.tagValue(JSVAL_TYPE_INT32, R0.payloadReg(), R0);

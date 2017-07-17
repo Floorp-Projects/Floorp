@@ -662,15 +662,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(reg, Operand(esp, arg * sizeof(intptr_t)));
     }
 
-    // Note: this function clobbers the source register.
-    void boxDouble(FloatRegister src, const ValueOperand& dest) {
+    void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister temp) {
         if (Assembler::HasSSE41()) {
             vmovd(src, dest.payloadReg());
             vpextrd(1, src, dest.typeReg());
         } else {
             vmovd(src, dest.payloadReg());
-            vpsrldq(Imm32(4), src, src);
-            vmovd(src, dest.typeReg());
+            if (src != temp)
+                moveDouble(src, temp);
+            vpsrldq(Imm32(4), temp, temp);
+            vmovd(temp, dest.typeReg());
         }
     }
     void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {
