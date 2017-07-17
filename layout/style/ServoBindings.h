@@ -67,6 +67,12 @@ class nsStyleCoord;
 struct nsStyleDisplay;
 class nsXBLBinding;
 
+namespace mozilla {
+  #define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_ {nsStyle##name_ gecko;};
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+}
+
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr);
