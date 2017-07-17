@@ -457,9 +457,9 @@
 
   <vbox>
     <hbox id="fontSettings">
-      <hbox align="center">
+      <hbox align="center" flex="1">
         <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
-        <menulist id="defaultFont" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
         <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
         <menulist id="defaultFontSize" delayprefsave="true">
           <menupopup>
@@ -827,7 +827,9 @@
                 disabled="true"/>
       </hbox>
       <hbox id="unsupportedSystem" align="center">
-        <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        <description flex="1">
+          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        </description>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"

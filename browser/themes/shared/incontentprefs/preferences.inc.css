@@ -279,6 +279,10 @@ description > html|a {
   cursor: pointer;
 }
 
+description > checkbox {
+  vertical-align: middle;
+}
+
 #weavePrefsDeck > vbox > label,
 #weavePrefsDeck > vbox > groupbox,
 #weavePrefsDeck > vbox > description,
