@@ -317,8 +317,9 @@ class Onboarding {
   async init(contentWindow) {
     this._window = contentWindow;
     this._tours = [];
+    this._tourType = Services.prefs.getStringPref("browser.onboarding.tour-type", "update");
 
-    let tourIds = this._getTourIDList(Services.prefs.getStringPref("browser.onboarding.tour-type", "update"));
+    let tourIds = this._getTourIDList();
     tourIds.forEach(tourId => {
       if (onboardingTourset[tourId]) {
         this._tours.push(onboardingTourset[tourId]);
@@ -379,8 +380,8 @@ class Onboarding {
     this._window.requestIdleCallback(() => this._initNotification());
   }
 
-  _getTourIDList(tourType) {
-    let tours = Services.prefs.getStringPref(`browser.onboarding.${tourType}tour`, "");
+  _getTourIDList() {
+    let tours = Services.prefs.getStringPref(`browser.onboarding.${this._tourType}tour`, "");
     return tours.split(",").filter(tourId => tourId !== "").map(tourId => tourId.trim());
   }
 
@@ -740,7 +741,10 @@ class Onboarding {
       </section>
       <button id="onboarding-notification-close-btn"></button>
     `;
-    let toolTip = this._bundle.formatStringFromName("onboarding.notification-icon-tool-tip", [BRAND_SHORT_NAME], 1);
+    let toolTip = this._bundle.formatStringFromName(
+      this._tourType === "new" ? "onboarding.notification-icon-tool-tip" :
+                                 "onboarding.notification-icon-tooltip-updated",
+      [BRAND_SHORT_NAME], 1);
     div.querySelector("#onboarding-notification-icon").setAttribute("data-tooltip", toolTip);
     return div;
   }
@@ -786,7 +790,11 @@ class Onboarding {
 
   _renderOverlayIcon() {
     let img = this._window.document.createElement("div");
-    let tooltip = this._bundle.formatStringFromName("onboarding.overlay-icon-tooltip", [BRAND_SHORT_NAME], 1);
+    let tooltip = this._bundle.formatStringFromName(
+      this._tourType === "new" ? "onboarding.overlay-icon-tooltip" :
+                                 "onboarding.overlay-icon-tooltip-updated",
+      [BRAND_SHORT_NAME], 1);
+
     img.setAttribute("aria-label", tooltip);
     img.id = "onboarding-overlay-icon";
     return img;
