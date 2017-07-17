@@ -1871,10 +1871,10 @@ CodeGeneratorX86Shared::emitTableSwitchDispatch(MTableSwitch* mir, Register inde
 
     // Compute the position where a pointer to the right case stands.
     masm.mov(ool->jumpLabel()->patchAt(), base);
-    Operand pointer = Operand(base, index, ScalePointer);
+    BaseIndex pointer(base, index, ScalePointer);
 
     // Jump to the right case
-    masm.jmp(pointer);
+    masm.branchToComputedAddress(pointer);
 }
 
 void
