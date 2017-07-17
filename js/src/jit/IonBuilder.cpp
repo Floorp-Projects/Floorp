@@ -7243,7 +7243,6 @@ IonBuilder::ensureDefiniteType(MDefinition* def, MIRType definiteType)
                 replace = MToDouble::New(alloc(), def);
                 break;
             }
-            MOZ_ASSERT(def->type() == definiteType);
             return def;
         }
         replace = MUnbox::New(alloc(), def, definiteType, MUnbox::Infallible);
