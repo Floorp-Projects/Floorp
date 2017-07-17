@@ -558,7 +558,8 @@ IsFullStoreBufferReason(JS::gcreason::Reason reason)
            reason == JS::gcreason::FULL_GENERIC_BUFFER ||
            reason == JS::gcreason::FULL_VALUE_BUFFER ||
            reason == JS::gcreason::FULL_CELL_PTR_BUFFER ||
-           reason == JS::gcreason::FULL_SLOT_BUFFER;
+           reason == JS::gcreason::FULL_SLOT_BUFFER ||
+           reason == JS::gcreason::FULL_SHAPE_BUFFER;
 }
 
 void
