@@ -162,6 +162,7 @@ win32-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
         using: mozharness
+        actions: [clone-tools, build, check-test, update]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
@@ -188,6 +189,7 @@ win64-nightly/opt:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
+        actions: [clone-tools, build, check-test, update]
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
