@@ -2731,14 +2731,20 @@ nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder, const ActiveScr
 }
 
 bool
-nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc)
+nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const
+{
+  return CanUseAdvancedLayer(aManager) ? aFunc() : false;
+}
+
+bool
+nsDisplayItem::CanUseAdvancedLayer(LayerManager* aManager) const
 {
   if (!gfxPrefs::LayersAdvancedBasicLayerEnabled() &&
       aManager && aManager->GetBackendType() == layers::LayersBackend::LAYERS_BASIC) {
     return false;
   }
 
-  return aFunc();
+  return true;
 }
 
 static const DisplayItemClipChain*
