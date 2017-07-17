@@ -146,6 +146,10 @@ struct ServoCustomPropertiesMap {
   uintptr_t mPtr;
 };
 
+struct ServoRuleNode {
+  uintptr_t mPtr;
+};
+
 struct ServoVisitedStyle {
   uintptr_t mPtr;
 };
@@ -154,6 +158,17 @@ template <typename T>
 struct ServoRawOffsetArc {
   T* mPtr;
 };
+
+struct ServoComputedValueFlags {
+  uint8_t mFlags;
+};
+
+#define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_;
+#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+
 
 /**
  * We want C++ to be abe to read the style struct fields of ComputedValues
@@ -166,13 +181,23 @@ struct ServoRawOffsetArc {
  * <div rustbindgen nocopy></div>
  */
 struct ServoComputedValues2 {
-#define STYLE_STRUCT(name_, checkdata_cb_) ServoRawOffsetArc<nsStyle##name_> name_;
+#define STYLE_STRUCT(name_, checkdata_cb_) ServoRawOffsetArc<Gecko##name_> name_;
+  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
+  #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
   ServoCustomPropertiesMap custom_properties;
   ServoWritingMode writing_mode;
   ServoFontComputationData font_computation_data;
+  /// The rule node representing the ordered list of rules matched for this
+  /// node.  Can be None for default values and text nodes.  This is
+  /// essentially an optimization to avoid referencing the root rule node.
+  ServoRuleNode rules;
+  /// The element's computed values if visited, only computed if there's a
+  /// relevant link for this element. A element's "relevant link" is the
+  /// element being matched if it is a link or the nearest ancestor link.
   ServoVisitedStyle visited_style;
+  ServoComputedValueFlags flags;
   ~ServoComputedValues2() {} // do nothing, but prevent Copy from being impl'd by bindgen
 };
 
