@@ -729,11 +729,11 @@ var gCookiesWindow = {
   },
 
   onCookieKeyPress(aEvent) {
-    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
+    if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE ||
+        (AppConstants.platform == "macosx" &&
+        aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE)) {
       this.deleteCookie();
-    } else if (AppConstants.platform == "macosx" &&
-               aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
-      this.deleteCookie();
+      aEvent.preventDefault();
     }
   },
 
