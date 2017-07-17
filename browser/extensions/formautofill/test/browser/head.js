@@ -155,7 +155,10 @@ function saveAddress(address) {
 }
 
 function saveCreditCard(creditcard) {
-  Services.cpmm.sendAsyncMessage("FormAutofill:SaveCreditCard", {creditcard});
+  let creditcardClone = Object.assign({}, creditcard);
+  Services.cpmm.sendAsyncMessage("FormAutofill:SaveCreditCard", {
+    creditcard: creditcardClone,
+  });
   return TestUtils.topicObserved("formautofill-storage-changed");
 }
 function removeAddresses(guids) {
