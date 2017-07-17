@@ -119,6 +119,9 @@ add_task(async function test_preference_manager() {
       "controlled_by_this_extension",
       "getLevelOfControl returns correct levelOfControl when a pref has been set.");
 
+    let checkSetting = await ExtensionPreferencesManager.getSetting(setting);
+    equal(checkSetting.value, newValue1, "getSetting returns the expected value.");
+
     let newValue2 = "newValue2";
     prefsChanged = await ExtensionPreferencesManager.setSetting(extensions[0], setting, newValue2);
     ok(!prefsChanged, "setSetting returns false when the pref(s) have not been set.");
@@ -166,6 +169,9 @@ add_task(async function test_preference_manager() {
       equal(Preferences.get(settingObj.prefNames[i]), settingObj.initalValues[i],
         "removeSetting sets the pref(s) to the initial value(s) when removing the last extension.");
     }
+
+    checkSetting = await ExtensionPreferencesManager.getSetting(setting);
+    equal(checkSetting, null, "getSetting returns null when nothing has been set.");
   }
 
   // Tests for unsetAll.
