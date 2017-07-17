@@ -31,16 +31,17 @@ function reflectURL(aElement, aAttr)
   var attr = aAttr.toLowerCase();
   var elmtName = aElement.tagName.toLowerCase();
 
+  var previousDir = location.href.replace(/test\/[^\/]*$/, "");
+  var dir = location.href.replace(/test_bug607145.html[^\/]*$/, "");
+  var doc = location.href.replace(/\.html.*/, ".html");
+
   ok(idl in aElement, idl + " should be available in " + elmtName);
 
   // Default values.
-  is(aElement[idl], "", "." + idl + " default value should be the empty string");
+  is(aElement[idl], doc, "." + idl + " default value should be the document's URL");
   is(aElement.getAttribute(attr), null,
      "@" + attr + " default value should be null");
 
-  var previousDir = location.href.replace(/test\/[^\/]*$/, "");
-  var dir = location.href.replace(/test_bug607145.html[^\/]*$/, "");
-  var doc = location.href.replace(/\.html.*/, ".html")
   var values = [
     /* value to set, resolved value */
     [ "foo.html", dir + "foo.html" ],
@@ -49,7 +50,7 @@ function reflectURL(aElement, aAttr)
     [ "//example.org/", "http://example.org/" ],
     [ "?foo=bar", doc + "?foo=bar" ],
     [ "#foo", location.href + "#foo" ],
-    [ "", "" ], // TODO: doesn't follow the specs, should be location.href.
+    [ "", doc ],
     [ " ", location.href ],
     [ "../", previousDir ],
     [ "...", dir + "..." ],
