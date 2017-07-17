@@ -148,7 +148,6 @@ public:
 #if defined(MOZ_GECKO_PROFILER)
   static void DoStackCapture(const nsACString& aKey);
 #endif
-  static void RecordThreadHangStats(Telemetry::ThreadHangStats&& aStats);
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
   struct Stat {
     uint32_t hitCount;
@@ -202,10 +201,6 @@ private:
   // Stores data about stacks captured on demand.
   KeyedStackCapturer mStackCapturer;
 #endif
-
-  // mThreadHangStats stores recorded, inactive thread hang stats
-  Vector<Telemetry::ThreadHangStats> mThreadHangStats;
-  Mutex mThreadHangStatsMutex;
 
   CombinedStacks mLateWritesStacks; // This is collected out of the main thread.
   bool mCachedTelemetryData;
@@ -485,7 +480,6 @@ TelemetryImpl::TelemetryImpl()
   , mHangReportsMutex("Telemetry::mHangReportsMutex")
   , mCanRecordBase(false)
   , mCanRecordExtended(false)
-  , mThreadHangStatsMutex("Telemetry::mThreadHangStatsMutex")
   , mCachedTelemetryData(false)
   , mLastShutdownTime(0)
   , mFailedLockCount(0)
@@ -502,7 +496,6 @@ TelemetryImpl::~TelemetryImpl() {
   // We will fix this in bug 1367344.
   MutexAutoLock hashLock(mHashMutex);
   MutexAutoLock hangReportsLock(mHangReportsMutex);
-  MutexAutoLock threadHangsLock(mThreadHangStatsMutex);
 }
 
 void
@@ -1065,43 +1058,6 @@ ReadStack(const char *aFileName, Telemetry::ProcessedStack &aStack)
   aStack = stack;
 }
 
-NS_IMETHODIMP
-TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> ret)
-{
-  JS::RootedObject retObj(cx, JS_NewArrayObject(cx, 0));
-  if (!retObj) {
-    return NS_ERROR_FAILURE;
-  }
-  size_t threadIndex = 0;
-
-  if (!BackgroundHangMonitor::IsDisabled()) {
-    /* First add active threads; we need to hold |iter| (and its lock)
-       throughout this method to avoid a race condition where a thread can
-       be recorded twice if the thread is destroyed while this method is
-       running */
-    BackgroundHangMonitor::ThreadHangStatsIterator iter;
-    for (Telemetry::ThreadHangStats* histogram = iter.GetNext();
-         histogram; histogram = iter.GetNext()) {
-      JS::RootedObject obj(cx, CreateJSThreadHangStats(cx, *histogram));
-      if (!JS_DefineElement(cx, retObj, threadIndex++, obj, JSPROP_ENUMERATE)) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-  }
-
-  // Add saved threads next
-  MutexAutoLock autoLock(mThreadHangStatsMutex);
-  for (auto & stat : mThreadHangStats) {
-    JS::RootedObject obj(cx,
-      CreateJSThreadHangStats(cx, stat));
-    if (!JS_DefineElement(cx, retObj, threadIndex++, obj, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  ret.setObject(*retObj);
-  return NS_OK;
-}
-
 void
 TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir)
 {
@@ -1630,18 +1586,6 @@ TelemetryImpl::CaptureStack(const nsACString& aKey) {
   return NS_OK;
 }
 
-void
-TelemetryImpl::RecordThreadHangStats(Telemetry::ThreadHangStats&& aStats)
-{
-  if (!sTelemetry || !TelemetryHistogram::CanRecordExtended())
-    return;
-
-  MutexAutoLock autoLock(sTelemetry->mThreadHangStatsMutex);
-
-  // Ignore OOM.
-  mozilla::Unused << sTelemetry->mThreadHangStats.append(Move(aStats));
-}
-
 bool
 TelemetryImpl::CanRecordBase()
 {
@@ -1858,10 +1802,6 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   { // Scope for mHangReportsMutex lock
     MutexAutoLock lock(mHangReportsMutex);
     n += mHangReports.SizeOfExcludingThis(aMallocSizeOf);
-  }
-  { // Scope for mThreadHangStatsMutex lock
-    MutexAutoLock lock(mThreadHangStatsMutex);
-    n += mThreadHangStats.sizeOfExcludingThis(aMallocSizeOf);
   }
 
   // It's a bit gross that we measure this other stuff that lives outside of
@@ -2088,12 +2028,6 @@ void CaptureStack(const nsACString& aKey)
 #endif
 }
 #endif
-
-void RecordThreadHangStats(ThreadHangStats&& aStats)
-{
-  TelemetryImpl::RecordThreadHangStats(Move(aStats));
-}
-
 
 void
 WriteFailedProfileLock(nsIFile* aProfileDir)
