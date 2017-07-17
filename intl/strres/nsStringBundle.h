@@ -30,7 +30,6 @@ public:
 protected:
     virtual ~nsStringBundle();
 
-    nsresult GetStringFromIDHelper(int32_t aID, nsAString& aResult);
     nsresult GetStringFromNameHelper(const char* aName, nsAString& aResult);
 
     nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
