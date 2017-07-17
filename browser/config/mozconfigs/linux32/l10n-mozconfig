@@ -6,6 +6,11 @@ ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.no-compile"
 
+if test `uname -m` = "x86_64"; then
+  ac_add_options --target=i686-pc-linux
+  ac_add_options --host=i686-pc-linux
+fi
+
 export MOZILLA_OFFICIAL=1
 
 # Enable Telemetry
