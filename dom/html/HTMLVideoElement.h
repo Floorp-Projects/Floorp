@@ -153,6 +153,7 @@ private:
                                     GenericSpecifiedValues* aGenericData);
 
   static bool IsVideoStatsEnabled();
+  double TotalPlayTime() const;
 };
 
 } // namespace dom
