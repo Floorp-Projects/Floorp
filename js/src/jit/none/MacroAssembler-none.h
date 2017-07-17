@@ -360,7 +360,7 @@ class MacroAssemblerNone : public Assembler
 
     Register splitTagForTest(ValueOperand) { MOZ_CRASH(); }
 
-    void boxDouble(FloatRegister, ValueOperand) { MOZ_CRASH(); }
+    void boxDouble(FloatRegister, ValueOperand, FloatRegister) { MOZ_CRASH(); }
     void boxNonDouble(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
     template <typename T> void unboxInt32(T, Register) { MOZ_CRASH(); }
     template <typename T> void unboxBoolean(T, Register) { MOZ_CRASH(); }
