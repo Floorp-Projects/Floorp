@@ -23,6 +23,7 @@ only-for-build-platforms:
     - android-x86-nightly/opt
     - android-x86-old-id-nightly/opt
     - macosx64-nightly/opt
+    - win32-nightly/opt
     - win64-nightly/opt
 
 job-template:
