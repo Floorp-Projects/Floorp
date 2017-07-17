@@ -11,7 +11,7 @@
 let bookmarkPanel = document.getElementById("editBookmarkPanel");
 let bookmarkStar = AppConstants.MOZ_PHOTON_THEME ? BookmarkingUI.star : BookmarkingUI.button;
 let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
-let editBookmarkPanelRect;
+let editBookmarkPanelRemoveButtonRect;
 
 StarUI._closePanelQuickForTesting = true;
 
@@ -40,8 +40,8 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       await shownPromise;
       Assert.equal(bookmarkPanel.state, "open", "Panel should be 'open' after shownPromise is resolved");
 
-    editBookmarkPanelRect =
-      document.getElementById("editBookmarkPanel").getBoundingClientRect();
+    editBookmarkPanelRemoveButtonRect =
+      document.getElementById("editBookmarkPanelRemoveButton").getBoundingClientRect();
 
       if (popupEditFn) {
         await popupEditFn();
@@ -386,9 +386,8 @@ add_task(async function mouse_hovering_panel_should_prevent_autoclose() {
       await new Promise(resolve => {
         EventUtils.synthesizeNativeMouseMove(
           document.documentElement,
-          // Locate the mouse in the middle of the panel.
-          (editBookmarkPanelRect.left + editBookmarkPanelRect.right) / 2,
-          (editBookmarkPanelRect.top + editBookmarkPanelRect.bottom) / 2,
+          editBookmarkPanelRemoveButtonRect.left,
+          editBookmarkPanelRemoveButtonRect.top,
           resolve);
       });
       EventUtils.synthesizeKey("D", {accelKey: true}, window);
