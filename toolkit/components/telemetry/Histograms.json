@@ -3952,17 +3952,6 @@
     "n_buckets": 50,
     "description": "How many speculative connections are made needlessly"
   },
-  "TAB_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": [],
-    "bug_numbers": [1361855],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 100,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of tabs opened across all windows, collected at most every 5 minutes whenever the user interacts with the browser in the following ways: open tab/window, page load."
-  },
   "TAP_TO_LOAD_IMAGE_SIZE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",
