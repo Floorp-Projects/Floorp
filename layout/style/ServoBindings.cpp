@@ -211,7 +211,7 @@ Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
 void
 Gecko_ServoStyleContext_Init(ServoStyleContext* aContext,
                              const ServoStyleContext* aParentContext,
-                             RawGeckoPresContextBorrowed aPresContext, ServoComputedValuesStrong aValues,
+                             RawGeckoPresContextBorrowed aPresContext, const ServoComputedValues* aValues,
                              mozilla::CSSPseudoElementType aPseudoType, nsIAtom* aPseudoTag)
 {
   // because it is within an Arc it is unsafe for the Rust side to ever
@@ -219,7 +219,12 @@ Gecko_ServoStyleContext_Init(ServoStyleContext* aContext,
   // cast it here.
   ServoStyleContext* parent = const_cast<ServoStyleContext*>(aParentContext);
   nsPresContext* pres = const_cast<nsPresContext*>(aPresContext);
-  new (KnownNotNull, aContext) ServoStyleContext(parent, pres, aPseudoTag, aPseudoType, aValues.Consume());
+  new (KnownNotNull, aContext) ServoStyleContext(parent, pres, aPseudoTag,
+                                                 aPseudoType, ServoComputedValuesForgotten(aValues));
+}
+
+ServoComputedValues::ServoComputedValues(const ServoComputedValuesForgotten aValue) {
+  PodAssign(this, aValue.mPtr);
 }
 
 void

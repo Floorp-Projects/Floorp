@@ -222,13 +222,12 @@ ServoStyleSet::GetContext(already_AddRefed<ServoStyleContext> aComputedValues,
   }
 
   RefPtr<ServoStyleContext> result = Move(aComputedValues);
-  RefPtr<ServoComputedValues> computedValues = result->ComputedValues();
 
   MOZ_ASSERT(result->GetPseudoType() == aPseudoType);
   MOZ_ASSERT(result->GetPseudo() == aPseudoTag);
 
   RefPtr<ServoStyleContext> resultIfVisited =
-    Servo_ComputedValues_GetVisitedStyle(computedValues).Consume();
+    Servo_ComputedValues_GetVisitedStyle(result->ComputedValues()).Consume();
 
   // If `resultIfVisited` is non-null, then there was a relevant link and
   // visited styles were computed.  This corresponds to the cases where Gecko's
