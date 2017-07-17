@@ -402,15 +402,6 @@ a {
 }
 
 /* JSTerm Styles */
-
-html #jsterm-wrapper,
-html .jsterm-stack-node,
-html .jsterm-input-node-html,
-html #webconsole-notificationbox {
-  flex: 0;
-  width: 100vw;
-}
-
 .jsterm-input-container {
   background-color: var(--theme-tab-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
@@ -869,44 +860,3 @@ a.learn-more-link.webconsole-learn-more-link {
   height: 1.25em;
   line-height: 1.25em;
 }
-
-/* Layout */
-
-.webconsole-output {
-  flex: 1;
-  direction: ltr;
-  overflow: auto;
-  -moz-user-select: text;
-  position: relative;
-}
-
-html,
-body,
-#app-wrapper {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  overflow: hidden;
-}
-
-#app-wrapper {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-body #output-container {
-  flex: 1;
-  overflow: hidden;
-}
-
-.webconsole-output-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-/* Object Inspector */
