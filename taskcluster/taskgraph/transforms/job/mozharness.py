@@ -22,6 +22,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_public_artifacts,
+    generic_worker_add_public_artifacts,
     support_vcs_checkout,
 )
 
@@ -212,10 +213,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     worker = taskdesc['worker']
 
-    worker['artifacts'] = [{
-        'path': r'public/build',
-        'type': 'directory',
-    }]
+    generic_worker_add_public_artifacts(config, job, taskdesc)
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
