@@ -24,4 +24,5 @@ At a very high level, the process looks like this:
 .. toctree::
 
     action-spec
+    action-uis
     action-implementation

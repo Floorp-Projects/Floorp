@@ -213,22 +213,10 @@ User interfaces for triggering actions, like Treeherder, are expected to provide
 JSON input that satisfies this schema. These interfaces are also expected to
 validate the input against the schema before attempting to trigger the action.
 
-It is expected that such user interfaces will attempt to auto-generate HTML
-forms from JSON schema specified. However, a user-interface implementor may also
-decide to hand write an HTML form for a particularly common or complex JSON
-schema. As long as the input generated from the form conforms to the schema
-specified for the given action. To ensure that, implementers should do a deep
-comparison between a schema for which a hand-written HTML form exists, and the
-schema required by the action.
-
 It is perfectly legal to reference external schemas using
 constructs like ``{"$ref": "https://example.com/my-schema.json"}``, in this case
 it however strongly recommended that the external resource is available over
 HTTPS and allows CORS requests from any source.
-
-In fact, user interface implementors should feel encouraged to publish schemas
-for which they have hand written input forms, so that action developers can
-use these when applicable.
 
 When writing schemas it is strongly encouraged that the JSON schema
 ``description`` properties are used to provide detailed descriptions. It is
