@@ -659,24 +659,30 @@ function DownloadsDataCtor(aPrivate) {
   // Contains all the available Download objects and their integer state.
   this.oldDownloadStates = new Map();
 
-  // Array of view objects that should be notified when the available download
-  // data changes.
-  this._views = [];
+  // This defines "initializeDataLink" and "_promiseList" synchronously, then
+  // continues execution only when "initializeDataLink" is called, allowing the
+  // underlying data to be loaded only when actually needed.
+  this._promiseList = (async () => {
+    await new Promise(resolve => this.initializeDataLink = resolve);
+
+    let list = await Downloads.getList(this._isPrivate ? Downloads.PRIVATE
+                                                       : Downloads.PUBLIC);
+    await list.addView(this);
+    return list;
+  })();
 }
 
 DownloadsDataCtor.prototype = {
   /**
    * Starts receiving events for current downloads.
    */
-  initializeDataLink() {
-    if (!this._dataLinkInitialized) {
-      let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
-                                                          : Downloads.PUBLIC);
-      promiseList.then(list => list.addView(this)).catch(Cu.reportError);
-      this._dataLinkInitialized = true;
-    }
-  },
-  _dataLinkInitialized: false,
+  initializeDataLink() {},
+
+  /**
+   * Promise resolved with the underlying DownloadList object once we started
+   * receiving events for current downloads.
+   */
+  _promiseList: null,
 
   /**
    * Iterator for all the available Download objects. This is empty until the
@@ -700,13 +706,11 @@ DownloadsDataCtor.prototype = {
   },
 
   /**
-   * Asks the back-end to remove finished downloads from the list.
+   * Asks the back-end to remove finished downloads from the list. This method
+   * is only called after the data link has been initialized.
    */
   removeFinished() {
-    let promiseList = Downloads.getList(this._isPrivate ? Downloads.PRIVATE
-                                                        : Downloads.PUBLIC);
-    promiseList.then(list => list.removeFinished())
-               .catch(Cu.reportError);
+    this._promiseList.then(list => list.removeFinished()).catch(Cu.reportError);
     let indicatorData = this._isPrivate ? PrivateDownloadsIndicatorData
                                         : DownloadsIndicatorData;
     indicatorData.attention = DownloadsCommon.ATTENTION_NONE;
@@ -723,10 +727,6 @@ DownloadsDataCtor.prototype = {
 
     this.oldDownloadStates.set(download,
                                DownloadsCommon.stateOfDownload(download));
-
-    for (let view of this._views) {
-      view.onDownloadAdded(download);
-    }
   },
 
   onDownloadChanged(download) {
@@ -780,18 +780,10 @@ DownloadsDataCtor.prototype = {
       download.newDownloadNotified = true;
       this._notifyDownloadEvent("start");
     }
-
-    for (let view of this._views) {
-      view.onDownloadChanged(download);
-    }
   },
 
   onDownloadRemoved(download) {
     this.oldDownloadStates.delete(download);
-
-    for (let view of this._views) {
-      view.onDownloadRemoved(download);
-    }
   },
 
   // Registration of views
@@ -805,8 +797,8 @@ DownloadsDataCtor.prototype = {
    *        removeView before termination.
    */
   addView(aView) {
-    this._views.push(aView);
-    this._updateView(aView);
+    this._promiseList.then(list => list.addView(aView))
+                     .catch(Cu.reportError);
   },
 
   /**
@@ -816,29 +808,8 @@ DownloadsDataCtor.prototype = {
    *        DownloadsView object to be removed.
    */
   removeView(aView) {
-    let index = this._views.indexOf(aView);
-    if (index != -1) {
-      this._views.splice(index, 1);
-    }
-  },
-
-  /**
-   * Ensures that the currently loaded data is added to the specified view.
-   *
-   * @param aView
-   *        DownloadsView object to be initialized.
-   */
-  _updateView(aView) {
-    // Indicate to the view that a batch loading operation is in progress.
-    aView.onDataLoadStarting();
-
-    // This iterates downloads in the same order as they were originally added.
-    for (let download of this.downloads) {
-      aView.onDownloadAdded(download);
-    }
-
-    // Notify the view that all data is available.
-    aView.onDataLoadCompleted();
+    this._promiseList.then(list => list.removeView(aView))
+                     .catch(Cu.reportError);
   },
 
   // Notifications sent to the most recent browser window only
@@ -985,7 +956,7 @@ const DownloadsViewPrototype = {
     }
   },
 
-  // Callback functions from DownloadsData
+  // Callback functions from DownloadList
 
   /**
    * Indicates whether we are still loading downloads data asynchronously.
@@ -995,14 +966,14 @@ const DownloadsViewPrototype = {
   /**
    * Called before multiple downloads are about to be loaded.
    */
-  onDataLoadStarting() {
+  onDownloadBatchStarting() {
     this._loading = true;
   },
 
   /**
    * Called after data loading finished.
    */
-  onDataLoadCompleted() {
+  onDownloadBatchEnded() {
     this._loading = false;
   },
 

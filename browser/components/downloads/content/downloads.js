@@ -739,16 +739,16 @@ const DownloadsView = {
   /**
    * Called before multiple downloads are about to be loaded.
    */
-  onDataLoadStarting() {
-    DownloadsCommon.log("onDataLoadStarting called for DownloadsView.");
+  onDownloadBatchStarting() {
+    DownloadsCommon.log("onDownloadBatchStarting called for DownloadsView.");
     this.loading = true;
   },
 
   /**
    * Called after data loading finished.
    */
-  onDataLoadCompleted() {
-    DownloadsCommon.log("onDataLoadCompleted called for DownloadsView.");
+  onDownloadBatchEnded() {
+    DownloadsCommon.log("onDownloadBatchEnded called for DownloadsView.");
 
     this.loading = false;
 
