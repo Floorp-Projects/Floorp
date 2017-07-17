@@ -466,7 +466,7 @@ fuzzy-if(skiaContent,4,2) == 346774-1c.html 346774-1-ref.html
 == 347348-1.xhtml 347348-1-ref.xhtml
 == 347496-1.xhtml 347496-1-ref.xhtml
 == 347912-1.html 347912-1-ref.html
-fails-if(styloVsGecko||stylo) == 348049-1.xhtml 348049-1-ref.xhtml
+== 348049-1.xhtml 348049-1-ref.xhtml
 == 348516-1.html 348516-1-ref.html
 == 348516-2.html 348516-2-ref.html
 != 348516-2.html 348516-2-notref.html
@@ -1245,7 +1245,7 @@ fuzzy-if(skiaContent,1,12000) == 461512-1.html 461512-1-ref.html
 == 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
 == 468473-1.xul 468473-1-ref.xul
-fails-if(styloVsGecko||stylo) == 468546-1.xhtml 468546-1-ref.xhtml
+fails-if(styloVsGecko) == 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
 fuzzy(255,15) == 472020-1a.xul 472020-1-ref.xul
@@ -1321,8 +1321,8 @@ fails-if(Android) == 481024-1c.html 481024-1-ref.html
 != 481948-2.html 481948-2-ref.html
 fails-if(Android) random-if(winWidget) fails-if(gtkWidget&&!styloVsGecko) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
-random-if(d2d) fails-if(styloVsGecko||stylo) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
-random-if(d2d) fails-if(styloVsGecko||stylo) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
+random-if(d2d) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
+random-if(d2d) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
 random-if(winWidget) fuzzy-if(skiaContent,1,5) == 482659-1a.html 482659-1-ref.html
 fuzzy-if(skiaContent,1,5) == 482659-1b.html 482659-1-ref.html
 fuzzy-if(skiaContent,1,5) == 482659-1c.html 482659-1-ref.html
@@ -1364,8 +1364,8 @@ pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
-fails-if(styloVsGecko||stylo) == 495354-1a.xhtml 495354-1-ref.xhtml
-fails-if(styloVsGecko||stylo) == 495354-1b.xhtml 495354-1-ref.xhtml
+== 495354-1a.xhtml 495354-1-ref.xhtml
+== 495354-1b.xhtml 495354-1-ref.xhtml
 == 495385-1a.html 495385-1-ref.html
 == 495385-1b.html 495385-1-ref.html
 == 495385-1c.html 495385-1-ref.html
