@@ -3105,7 +3105,7 @@ MacroAssemblerARMCompat::unboxPrivate(const ValueOperand& src, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::boxDouble(FloatRegister src, const ValueOperand& dest)
+MacroAssemblerARMCompat::boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister)
 {
     as_vxfer(dest.payloadReg(), dest.typeReg(), VFPRegister(src), FloatToCore);
 }
