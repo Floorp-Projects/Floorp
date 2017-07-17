@@ -9318,6 +9318,25 @@ class LFinishBoundFunctionInit : public LInstructionHelper<0, 3, 2>
     }
 };
 
+class LIsPackedArray : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(IsPackedArray)
+
+    LIsPackedArray(const LAllocation& array, const LDefinition& temp)
+    {
+        setOperand(0, array);
+        setTemp(0, temp);
+    }
+
+    const LAllocation* array() {
+        return getOperand(0);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 } // namespace jit
 } // namespace js
 

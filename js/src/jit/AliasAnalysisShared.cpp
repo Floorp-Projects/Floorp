@@ -124,6 +124,7 @@ GetObject(const MDefinition* ins)
       case MDefinition::Op_TypedArrayElements:
       case MDefinition::Op_TypedObjectElements:
       case MDefinition::Op_CopyLexicalEnvironmentObject:
+      case MDefinition::Op_IsPackedArray:
         object = ins->getOperand(0);
         break;
       case MDefinition::Op_GetPropertyCache:
