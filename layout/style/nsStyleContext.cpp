@@ -167,7 +167,8 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   MOZ_ASSERT(!IsStyleIfVisited());
   MOZ_ASSERT(!mParent->IsStyleIfVisited());
   MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
-  MOZ_ASSERT(!mStyleIfVisited || mStyleIfVisited->mParent == mParent);
+  auto styleIfVisited = GetStyleIfVisited();
+  MOZ_ASSERT(!styleIfVisited || styleIfVisited->mParent == mParent);
 
   if (mParent->HasChildThatUsesResetStyle()) {
     aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
@@ -177,10 +178,10 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   mParent = aNewParent;
   mParent->AddChild(this);
 
-  if (mStyleIfVisited) {
-    mStyleIfVisited->mParent->RemoveChild(mStyleIfVisited);
-    mStyleIfVisited->mParent = aNewParent;
-    mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
+  if (styleIfVisited) {
+    styleIfVisited->mParent->RemoveChild(styleIfVisited);
+    styleIfVisited->mParent = aNewParent;
+    styleIfVisited->mParent->AddChild(styleIfVisited);
   }
 }
 
@@ -441,44 +442,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                      aEqualStructs,
                                      aSamePointerStructs);
 }
-
-void
-nsStyleContext::SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
-{
-  MOZ_ASSERT(!IsStyleIfVisited(), "this context is not visited data");
-  // XXXManishearth
-  // Servo currently mints fresh visited contexts on calls to GetContext()
-  // in line with the previous behavior.
-  // This is suboptimal and should be phased out when we phase out GetContext()
-  NS_ASSERTION(IsServo() || !mStyleIfVisited, "should only be set once");
-
-  mStyleIfVisited = aStyleIfVisited;
-
-  MOZ_ASSERT(mStyleIfVisited->IsStyleIfVisited(),
-             "other context is visited data");
-  MOZ_ASSERT(!mStyleIfVisited->GetStyleIfVisited(),
-             "other context does not have visited data");
-  NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
-               "pseudo tag mismatch");
-  // XXXManishearth In Servo mode this can be called during ResolveTransientServoStyle
-  // in which case we may already have a visited style context but the
-  // expected parent is gone. Will be fixed when the aforementioned suboptimal
-  // behavior is removed
-  if (IsGecko()) {
-    if (GetParent() && GetParent()->GetStyleIfVisited()) {
-      MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
-                     GetParent()->GetStyleIfVisited() ||
-                   GetStyleIfVisited()->GetParent() ==
-                     GetParent(),
-                   "parent mismatch");
-    } else {
-      MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
-                     GetParent(),
-                   "parent mismatch");
-    }
-  }
-}
-
 
 class MOZ_STACK_CLASS FakeStyleContext
 {

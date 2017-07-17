@@ -478,12 +478,6 @@ private:
     ServoStyleSet* mSet;
   };
 
-  already_AddRefed<ServoStyleContext> GetContext(already_AddRefed<ServoStyleContext>,
-                                                 ServoStyleContext* aParentContext,
-                                                 nsIAtom* aPseudoTag,
-                                                 CSSPseudoElementType aPseudoType,
-                                                 dom::Element* aElementForAnimation);
-
   already_AddRefed<ServoStyleContext> GetContext(nsIContent* aContent,
                                                  ServoStyleContext* aParentContext,
                                                  nsIAtom* aPseudoTag,

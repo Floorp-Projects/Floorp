@@ -1064,3 +1064,32 @@ GeckoStyleContext::SwapStyleData(GeckoStyleContext* aNewContext, uint32_t aStruc
     }
   }
 }
+
+
+void
+GeckoStyleContext::SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
+{
+  MOZ_ASSERT(!IsStyleIfVisited(), "this context is not visited data");
+  NS_ASSERTION(!mStyleIfVisited, "should only be set once");
+
+  mStyleIfVisited = aStyleIfVisited;
+
+  MOZ_ASSERT(mStyleIfVisited->IsStyleIfVisited(),
+             "other context is visited data");
+  MOZ_ASSERT(!mStyleIfVisited->GetStyleIfVisited(),
+             "other context does not have visited data");
+  NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
+               "pseudo tag mismatch");
+  if (GetParent() && GetParent()->GetStyleIfVisited()) {
+    MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
+                   GetParent()->GetStyleIfVisited() ||
+                 GetStyleIfVisited()->GetParent() ==
+                   GetParent(),
+                 "parent mismatch");
+  } else {
+    MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
+                   GetParent(),
+                 "parent mismatch");
+  }
+}
+
