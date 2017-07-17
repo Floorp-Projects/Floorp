@@ -18,6 +18,17 @@ class nsPresArena;
 
 namespace mozilla {
 
+// Most consumers of ArenaRefPtr will unconditionally use the arena
+// However, nsStyleContext only uses the arena if it is a GeckoStyleContext
+// so we need a mechanism to override this
+template<class U>
+struct ArenaRefPtrTraits
+{
+  static bool UsesArena(U* aPtr) {
+    return true;
+  }
+};
+
 /**
  * A class for holding strong references to nsPresArena-allocated
  * objects.
@@ -143,12 +154,12 @@ private:
       return;
     }
     bool sameArena = mPtr && aPtr && mPtr->Arena() == aPtr->Arena();
-    if (mPtr && !sameArena) {
+    if (mPtr && !sameArena && ArenaRefPtrTraits<T>::UsesArena(mPtr)) {
       MOZ_ASSERT(mPtr->Arena());
       mPtr->Arena()->DeregisterArenaRefPtr(this);
     }
     mPtr = Move(aPtr);
-    if (mPtr && !sameArena) {
+    if (mPtr && !sameArena && ArenaRefPtrTraits<T>::UsesArena(aPtr)) {
       MOZ_ASSERT(mPtr->Arena());
       mPtr->Arena()->RegisterArenaRefPtr(this);
     }
