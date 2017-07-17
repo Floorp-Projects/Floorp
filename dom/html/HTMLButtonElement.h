@@ -23,6 +23,7 @@ class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;
+  using nsGenericHTMLFormElementWithState::GetFormAction;
 
   explicit HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                              FromParser aFromParser = NOT_FROM_PARSER);
