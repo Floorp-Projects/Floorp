@@ -30,9 +30,8 @@ public:
 protected:
     virtual ~nsStringBundle();
 
-    // Functional decomposition of the functions repeatedly called.
-    nsresult GetStringFromID(int32_t aID, nsAString& aResult);
-    nsresult GetStringFromName(const char* aName, nsAString& aResult);
+    nsresult GetStringFromIDHelper(int32_t aID, nsAString& aResult);
+    nsresult GetStringFromNameHelper(const char* aName, nsAString& aResult);
 
     nsresult GetCombinedEnumeration(nsIStringBundleOverride* aOverrideString,
                                     nsISimpleEnumerator** aResult);
