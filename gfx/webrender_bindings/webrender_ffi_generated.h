@@ -142,11 +142,15 @@ enum class WrYuvColorSpace : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+struct ArcVecU8;
+
 struct LayerPixel;
 
 struct RenderApi;
 
 struct Renderer;
+
+struct VecU8;
 
 struct WrRenderedEpochs;
 
@@ -595,6 +599,10 @@ struct WrExternalImageHandler {
  */
 
 WR_INLINE
+const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_add_blob_image(RenderApi *aApi,
                            WrImageKey aImageKey,
                            const WrImageDescriptor *aDescriptor,
@@ -709,6 +717,10 @@ void wr_api_update_image(RenderApi *aApi,
                          WrImageKey aKey,
                          const WrImageDescriptor *aDescriptor,
                          ByteSlice aBytes)
+WR_FUNC;
+
+WR_INLINE
+void wr_dec_ref_arc(const VecU8 *aArc)
 WR_FUNC;
 
 WR_INLINE
