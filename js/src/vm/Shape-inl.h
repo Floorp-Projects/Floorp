@@ -158,7 +158,7 @@ GetterSetterWriteBarrierPost(AccessorShape* shape)
     auto& storeBuffer = shape->runtimeFromActiveCooperatingThread()->gc.storeBuffer();
     if (nurseryShapes.length() == 1) {
         storeBuffer.putGeneric(NurseryShapesRef(shape->zone()));
-    } if (nurseryShapes.length() == MaxShapeVectorLength) {
+    } else if (nurseryShapes.length() == MaxShapeVectorLength) {
         storeBuffer.setAboutToOverflow(JS::gcreason::FULL_SHAPE_BUFFER);
     }
 }
