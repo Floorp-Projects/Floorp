@@ -874,8 +874,8 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   bool isBeforeOrAfter = aType == CSSPseudoElementType::before ||
                          aType == CSSPseudoElementType::after;
   if (isBeforeOrAfter) {
-    const nsStyleDisplay* display = Servo_GetStyleDisplay(computedValues->ComputedValues());
-    const nsStyleContent* content = Servo_GetStyleContent(computedValues->ComputedValues());
+    const nsStyleDisplay* display = computedValues->ComputedValues()->GetStyleDisplay();
+    const nsStyleContent* content = computedValues->ComputedValues()->GetStyleContent();
     // XXXldb What is contentCount for |content: ""|?
     if (display->mDisplay == StyleDisplay::None ||
         content->ContentCount() == 0) {

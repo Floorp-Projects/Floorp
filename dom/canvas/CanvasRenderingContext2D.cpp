@@ -3048,7 +3048,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
      return false;
   }
 
-  const nsStyleEffects* effects = Servo_GetStyleEffects(computedValues->ComputedValues());
+  const nsStyleEffects* effects = computedValues->ComputedValues()->GetStyleEffects();
   // XXX: This mFilters is a one shot object, we probably could avoid copying.
   aFilterChain = effects->mFilters;
   return true;
@@ -3968,7 +3968,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     if (!computedValues) {
       return false;
     }
-    fontStyle = Servo_GetStyleFont(computedValues->ComputedValues());
+    fontStyle = computedValues->ComputedValues()->GetStyleFont();
   } else {
     sc = GetFontStyleContext(mCanvasElement,
                              aFont,

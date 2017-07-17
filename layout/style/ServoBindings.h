@@ -74,6 +74,13 @@ namespace mozilla {
   #undef STYLE_STRUCT
 }
 
+#define STYLE_STRUCT(name_, checkdata_cb_) \
+  const nsStyle##name_* ServoComputedValues::GetStyle##name_() const { return &name_.mPtr->gecko; }
+#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr);

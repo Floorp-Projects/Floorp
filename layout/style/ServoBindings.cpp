@@ -227,6 +227,11 @@ ServoComputedValues::ServoComputedValues(const ServoComputedValuesForgotten aVal
   PodAssign(this, aValue.mPtr);
 }
 
+const nsStyleVariables* ServoComputedValues::GetStyleVariables() const
+{
+  return Servo_GetEmptyVariables();
+}
+
 void
 Gecko_ServoStyleContext_Destroy(ServoStyleContext* aContext)
 {

@@ -251,7 +251,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       structsFound |= NS_STYLE_INHERIT_BIT(struct_);                          \
     } else if (checkUnrequestedServoStructs) {                                \
       this##struct_ =                                                         \
-        Servo_GetStyle##struct_(AsServo()->ComputedValues());                 \
+        AsServo()->ComputedValues()->GetStyle##struct_();                     \
       unrequestedStruct = true;                                               \
     } else {                                                                  \
       unrequestedStruct = false;                                              \
@@ -497,10 +497,10 @@ public:
 
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
   const nsStyle##name_ * Style##name_() {                                     \
-    return Servo_GetStyle##name_(mComputedValues);                            \
+    return mComputedValues->GetStyle##name_();                                \
   }                                                                           \
   const nsStyle##name_ * ThreadsafeStyle##name_() {                           \
-    return Servo_GetStyle##name_(mComputedValues);                            \
+    return mComputedValues->GetStyle##name_();                                \
   }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
