@@ -16,7 +16,6 @@ var Services = require("Services");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
-loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
@@ -211,13 +210,13 @@ HUD_SERVICE.prototype =
 
       let deferred = promise.defer();
 
-      // Using the old frontend for now in the browser console.  This can be switched to
-      // Tools.webConsole.url to use whatever is preffed on.
-      let url = Tools.webConsole.oldWebConsoleURL;
-      let win = Services.ww.openWindow(null, url, "_blank",
+      let win = Services.ww.openWindow(null, Tools.webConsole.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
       win.addEventListener("DOMContentLoaded", function () {
-          win.document.title = l10n.getStr("browserConsole.title");
+        // Set the correct Browser Console title.
+        let root = win.document.documentElement;
+        root.setAttribute("title", root.getAttribute("browserConsoleTitle"));
+
         deferred.resolve(win);
       }, {once: true});
 
@@ -295,11 +294,7 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
     this.browserWindow = HUDService.currentContext();
   }
 
-  if (aIframeWindow.location.href === Tools.webConsole.newWebConsoleURL) {
-    this.ui = new NewWebConsoleFrame(this);
-  } else {
-    this.ui = new WebConsoleFrame(this);
-  }
+  this.ui = new WebConsoleFrame(this);
 }
 
 WebConsole.prototype = {
