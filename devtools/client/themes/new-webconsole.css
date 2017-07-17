@@ -1,0 +1,600 @@
+
+@import "chrome://devtools/skin/widgets.css";
+@import "resource://devtools/client/themes/light-theme.css";
+
+/* Webconsole specific theme variables */
+.theme-light,
+.theme-firebug {
+  --error-color: #FF0000;
+  --error-background-color: #FFEBEB;
+  --warning-background-color: #FFFFC8;
+}
+
+/* General output styles */
+
+a {
+  -moz-user-focus: normal;
+  -moz-user-input: enabled;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Workaround for Bug 575675 - FindChildWithRules aRelevantLinkVisited
+ * assertion when loading HTML page with links in XUL iframe */
+*:visited { }
+
+.webconsole-filterbar-wrapper {
+  flex-grow: 0;
+}
+
+.webconsole-filterbar-primary {
+  display: flex;
+}
+
+.devtools-toolbar.webconsole-filterbar-secondary {
+  height: initial;
+}
+
+.webconsole-filterbar-primary .devtools-plaininput {
+  flex: 1 1 100%;
+}
+
+.webconsole-output.hideTimestamps > .message > .timestamp {
+  display: none;
+}
+
+.message.startGroup .message-body > .objectBox-string,
+.message.startGroupCollapsed .message-body > .objectBox-string {
+  color: var(--theme-body-color);
+  font-weight: bold;
+}
+
+.webconsole-output-wrapper .message > .icon {
+  margin: 3px 0 0 0;
+  padding: 0 0 0 6px;
+}
+
+.message.error > .icon::before {
+  background-position: -12px -36px;
+}
+
+.message.warn > .icon::before {
+  background-position: -24px -36px;
+}
+
+.message.info > .icon::before {
+  background-position: -36px -36px;
+}
+
+.message.network .method {
+  margin-inline-end: 5px;
+}
+
+.network .message-flex-body > .message-body {
+  display: flex;
+}
+
+.webconsole-output-wrapper .message .indent {
+  display: inline-block;
+  border-inline-end: solid 1px var(--theme-splitter-color);
+}
+
+.message.startGroup .indent,
+.message.startGroupCollapsed .indent {
+  border-inline-end-color: transparent;
+  margin-inline-end: 5px;
+}
+
+.message.startGroup .icon,
+.message.startGroupCollapsed .icon {
+  display: none;
+}
+
+/* console.table() */
+.new-consoletable {
+  width: 100%;
+  border-collapse: collapse;
+  --consoletable-border: 1px solid var(--table-splitter-color);
+}
+
+.new-consoletable thead,
+.new-consoletable tbody {
+  background-color: var(--theme-body-background);
+}
+
+.new-consoletable th {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+  margin: 0;
+  padding: 5px 0 0;
+  font-weight: inherit;
+  border-inline-end: var(--consoletable-border);
+  border-bottom: var(--consoletable-border);
+}
+
+.new-consoletable tr:nth-of-type(even) {
+  background-color: var(--table-zebra-background);
+}
+
+.new-consoletable td {
+  padding: 3px 4px;
+  min-width: 100px;
+  -moz-user-focus: normal;
+  color: var(--theme-body-color);
+  border-inline-end: var(--consoletable-border);
+  height: 1.25em;
+  line-height: 1.25em;
+}
+
+
+/* Layout */
+.webconsole-output {
+  flex: 1;
+  direction: ltr;
+  overflow: auto;
+  -moz-user-select: text;
+  position: relative;
+}
+
+:root,
+body,
+#app-wrapper {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+}
+
+#app-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+:root, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#app-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+#left-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+#output-container {
+  flex: 1;
+  overflow: hidden;
+}
+.webconsole-output-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.message {
+  display: flex;
+  padding: 0 7px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.message > .prefix,
+.message > .timestamp {
+  flex: none;
+  color: var(--theme-comment);
+  margin: 3px 6px 0 0;
+}
+
+.message > .indent {
+  flex: none;
+}
+
+.message > .icon {
+  flex: none;
+  margin: 3px 6px 0 0;
+  padding: 0 4px;
+  height: 1em;
+  align-self: flex-start;
+}
+
+.theme-firebug .message > .icon {
+  margin: 0;
+  margin-inline-end: 6px;
+}
+
+.theme-firebug .message[severity="error"],
+.theme-light .message.error,
+.theme-firebug .message.error {
+  color: var(--error-color);
+  background-color: var(--error-background-color);
+}
+
+.theme-firebug .message[severity="warn"],
+.theme-light .message.warn,
+.theme-firebug .message.warn {
+  background-color: var(--warning-background-color);
+}
+
+.message > .icon::before {
+  content: "";
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
+  background-position: 12px 12px;
+  background-repeat: no-repeat;
+  background-size: 72px 60px;
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+}
+
+.theme-light .message > .icon::before {
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
+}
+
+.message > .message-body-wrapper {
+  flex: auto;
+  min-width: 0px;
+  margin: 3px;
+}
+
+/* The red bubble that shows the number of times a message is repeated */
+.message-repeats {
+  -moz-user-select: none;
+  flex: none;
+  margin: 2px 6px;
+  padding: 0 6px;
+  height: 1.25em;
+  color: white;
+  background-color: red;
+  border-radius: 40px;
+  font: message-box;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.message-repeats[value="1"] {
+  display: none;
+}
+
+.message-location {
+  max-width: 40%;
+}
+
+.stack-trace {
+  /* The markup contains extra whitespace to improve formatting of clipboard text.
+     Make sure this whitespace doesn't affect the HTML rendering */
+  white-space: normal;
+}
+
+.stack-trace .frame-link-source,
+.message-location .frame-link-source {
+  /* Makes the file name truncated (and ellipsis shown) on the left side */
+  direction: rtl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-trace .frame-link-source-inner,
+.message-location .frame-link-source-inner {
+  /* Enforce LTR direction for the file name - fixes bug 1290056 */
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+.stack-trace .frame-link-function-display-name {
+  max-width: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.message-flex-body {
+  display: flex;
+}
+
+.message-body > * {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-flex-body > .message-body {
+  display: block;
+  flex: auto;
+}
+#output-container.hideTimestamps > .message {
+  padding-inline-start: 0;
+  margin-inline-start: 7px;
+  width: calc(100% - 7px);
+}
+
+#output-container.hideTimestamps > .message > .timestamp {
+  display: none;
+}
+
+#output-container.hideTimestamps > .message > .indent {
+  background-color: var(--theme-body-background);
+}
+.message:hover {
+  background-color: var(--theme-selection-background-semitransparent) !important;
+}
+.theme-light .message.error {
+  background-color: rgba(255, 150, 150, 0.3);
+}
+
+.theme-dark .message.error {
+  background-color: rgba(235, 83, 104, 0.17);
+}
+
+.console-string {
+  color: var(--theme-highlight-lightorange);
+}
+.theme-selected .console-string,
+.theme-selected .cm-number,
+.theme-selected .cm-variable,
+.theme-selected .kind-ArrayLike {
+  color: #f5f7fa !important; /* Selection Text Color */
+}
+
+
+.message.network.error > .icon::before {
+  background-position: -12px 0;
+}
+.message.network > .message-body {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+
+.message.network .method {
+  flex: none;
+}
+.message.network:not(.navigation-marker) .url {
+  flex: 1 1 auto;
+  /* Make sure the URL is very small initially, let flex change width as needed. */
+  width: 100px;
+  min-width: 5em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.message.network .status {
+  flex: none;
+  margin-inline-start: 6px;
+}
+.message.network.mixed-content .url {
+  color: var(--theme-highlight-red);
+}
+
+.message .learn-more-link {
+  color: var(--theme-highlight-blue);
+  margin: 0 6px;
+}
+
+.message.network .xhr {
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 2px;
+  line-height: 10px;
+  margin-inline-start: 3px;
+  margin-inline-end: 1ex;
+}
+.message.cssparser > .indent  {
+  border-inline-end: solid #00b6f0 6px;
+}
+.message.cssparser.error > .icon::before {
+  background-position: -12px -12px;
+}
+
+.message.cssparser.warn > .icon::before {
+  background-position: -24px -12px;
+}
+.message.exception > .indent {
+  border-inline-end: solid #fb9500 6px;
+}
+
+.message.exception.error > .icon::before {
+  background-position: -12px -24px;
+}
+.message.exception.warn > .icon::before {
+  background-position: -24px -24px;
+}
+.message.console-api > .indent {
+  border-inline-end: solid #cbcbcb 6px;
+}
+
+.message.server > .indent {
+  border-inline-end: solid #90B090 6px;
+}
+
+/* Input and output styles */
+.message.command > .indent,
+.message.result > .indent {
+  border-inline-end: solid #808080 6px;
+}
+
+.message.command > .icon::before {
+  background-position: -48px -36px;
+}
+
+.message.result > .icon::before {
+  background-position: -60px -36px;
+}
+
+
+
+
+/* JSTerm Styles */
+#jsterm-wrapper {
+  flex: 0;
+}
+.jsterm-input-container {
+  background-color: var(--theme-tab-toolbar-background);
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
+.theme-light .jsterm-input-container {
+  /* For light theme use a white background for the input - it looks better
+     than off-white */
+  background-color: #fff;
+  border-top-color: #e0e0e0;
+}
+
+.theme-firebug .jsterm-input-container {
+  border-top: 1px solid #ccc;
+}
+
+.jsterm-input-node,
+.jsterm-complete-node {
+  border: none;
+  padding: 0;
+  padding-inline-start: 20px;
+  margin: 0;
+  -moz-appearance: none;
+  background-color: transparent;
+}
+
+.jsterm-input-node[focused="true"] {
+  background-image: var(--theme-command-line-image-focus);
+  box-shadow: none;
+}
+
+.jsterm-complete-node {
+  color: var(--theme-comment);
+}
+
+.jsterm-input-node-html {
+  width: 100%;
+}
+
+.jsterm-input-node {
+  /* Always allow scrolling on input - it auto expands in js by setting height,
+     but don't want it to get bigger than the window. 24px = toolbar height. */
+  max-height: calc(90vh - 24px);
+  background-image: var(--theme-command-line-image);
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: 4px 50%;
+  color: var(--theme-content-color1);
+}
+
+:-moz-any(.jsterm-input-node,
+          .jsterm-complete-node) > .textbox-input-box > .textbox-textarea {
+  overflow-x: hidden;
+  /* Set padding for console input on textbox to make sure it is inlcuded in
+     scrollHeight that is used when resizing JSTerminal's input. Note: textbox
+     default style has important already */
+  padding: 4px 0 !important;
+}
+#webconsole-notificationbox,
+.jsterm-stack-node {
+  width: 100%;
+}
+
+.message.security > .indent {
+  border-inline-end: solid red 6px;
+}
+
+.message.security.error > .icon::before {
+  background-position: -12px -48px;
+}
+
+.message.security.warn > .icon::before {
+  background-position: -24px -48px;
+}
+
+.navigation-marker {
+  color: #aaa;
+  background: linear-gradient(#aaa, #aaa) no-repeat left 50%;
+  background-size: 100% 2px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  font-size: 0.9em;
+}
+
+.navigation-marker .url {
+  padding-inline-end: 9px;
+  text-decoration: none;
+  background: var(--theme-body-background);
+}
+
+.theme-light .navigation-marker .url {
+  background: #fff;
+}
+
+.stacktrace {
+  display: none;
+  padding: 5px 10px;
+  margin: 5px 0 0 0;
+  overflow-y: auto;
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 3px;
+}
+
+.theme-light .message.error .stacktrace {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-dark .message.error .stacktrace {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.message.open .stacktrace {
+  display: block;
+}
+
+.message .theme-twisty {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 3px 0 0 0;
+  flex-shrink: 0;
+}
+
+/*Do not mirror the twisty because container force to ltr */
+.message .theme-twisty:dir(rtl),
+.message .theme-twisty:-moz-locale-dir(rtl) {
+  transform: none;
+}
+
+.cm-s-mozilla a[class] {
+  font-style: italic;
+  text-decoration: none;
+}
+
+.cm-s-mozilla a[class]:hover,
+.cm-s-mozilla a[class]:focus {
+  text-decoration: underline;
+}
+
+a.learn-more-link.webconsole-learn-more-link {
+    font-style: normal;
+}
+
+/* Open DOMNode in inspector button */
+.open-inspector {
+  background: url(chrome://devtools/skin/images/vview-open-inspector.png) no-repeat 0 0;
+  padding-left: 16px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.elementNode:hover .open-inspector,
+.open-inspector:hover {
+  filter: url(images/filters.svg#checked-icon-state);
+}
+
+.elementNode:hover .open-inspector:active,
+.open-inspector:active {
+  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
+}
+
