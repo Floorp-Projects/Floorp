@@ -993,7 +993,7 @@ var RawPayload = {
   render(aPing) {
     setHasData("raw-ping-data-section", true);
     let pre = document.getElementById("raw-ping-data");
-    pre.textContent = JSON.stringify(aPing.payload, null, 2);
+    pre.textContent = JSON.stringify(aPing, null, 2);
   }
 };
 
