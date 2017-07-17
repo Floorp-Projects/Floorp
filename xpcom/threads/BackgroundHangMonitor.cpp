@@ -49,8 +49,6 @@ bool StackScriptEntriesCollapser(const char* aStackEntry, const char *aAnotherSt
 
 namespace mozilla {
 
-class ProcessHangRunnable;
-
 /**
  * BackgroundHangManager is the global object that
  * manages all instances of BackgroundHangThread.
@@ -191,17 +189,16 @@ public:
   Telemetry::HangStack mHangStack;
   // Native stack of current hang
   Telemetry::NativeHangStack mNativeHangStack;
-  // Statistics for telemetry
-  Telemetry::ThreadHangStats mStats;
   // Annotations for the current hang
   UniquePtr<HangMonitor::HangAnnotations> mAnnotations;
   // Annotators registered for this thread
   HangMonitor::Observer::Annotators mAnnotators;
-  // List of runnables which can hold a reference to us which need to be
-  // canceled before we can go away.
-  LinkedList<RefPtr<ProcessHangRunnable>> mProcessHangRunnables;
   // The name of the runnable which is hanging the current process
   nsCString mRunnableName;
+  // The name of the thread which is being monitored
+  nsCString mThreadName;
+  // The number of native stacks which have been collected so far.
+  uint32_t mNativeStackCnt;
 
   BackgroundHangThread(const char* aName,
                        uint32_t aTimeoutMs,
@@ -373,10 +370,10 @@ BackgroundHangManager::RunMonitorThread()
         if (MOZ_UNLIKELY(hangTime >= currentThread->mTimeout)) {
           // A hang started
 #ifdef NIGHTLY_BUILD
-          if (currentThread->mStats.mNativeStackCnt < Telemetry::kMaximumNativeHangStacks) {
+          if (currentThread->mNativeStackCnt < Telemetry::kMaximumNativeHangStacks) {
             // NOTE: In nightly builds of firefox we want to collect native stacks
             // for all hangs, not just permahangs.
-            currentThread->mStats.mNativeStackCnt += 1;
+            currentThread->mNativeStackCnt += 1;
             currentThread->mStackHelper.GetPseudoAndNativeStack(
               currentThread->mHangStack,
               currentThread->mNativeHangStack,
@@ -446,7 +443,8 @@ BackgroundHangThread::BackgroundHangThread(const char* aName,
   , mHanging(false)
   , mWaiting(true)
   , mThreadType(aThreadType)
-  , mStats(aName)
+  , mThreadName(aName)
+  , mNativeStackCnt(0)
 {
   if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(this);
@@ -458,94 +456,6 @@ BackgroundHangThread::BackgroundHangThread(const char* aName,
   // Wake up monitor thread to process new thread
   autoLock.Notify();
 }
-
-// This runnable is used to pre-process a hang, performing any expensive
-// operations on it, before submitting it into the BackgroundHangThread object
-// for Telemetry.
-//
-// If this object is canceled, it will submit its payload to the
-// BackgroundHangThread without performing the processing.
-class ProcessHangRunnable final
-  : public CancelableRunnable
-  , public LinkedListElement<RefPtr<ProcessHangRunnable>>
-{
-public:
-  ProcessHangRunnable(BackgroundHangManager* aManager,
-                      BackgroundHangThread* aThread,
-                      Telemetry::HangHistogram&& aHistogram,
-                      Telemetry::NativeHangStack&& aNativeStack)
-    : CancelableRunnable("ProcessHangRunnable")
-    , mManager(aManager)
-    , mNativeStack(mozilla::Move(aNativeStack))
-    , mThread(aThread)
-    , mHistogram(mozilla::Move(aHistogram))
-  {
-    MOZ_ASSERT(mThread);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    // Start processing this histogram's native hang stack before we try to lock
-    // anything, as we can do this without any locks held. This is the expensive
-    // part of the operation.
-    Telemetry::ProcessedStack processed;
-    if (!mNativeStack.empty()) {
-       processed = Telemetry::GetStackAndModules(mNativeStack);
-    }
-
-    // Lock the manager's lock, so that we can take a look at our mThread
-    {
-      MonitorAutoLock autoLock(mManager->mLock);
-      if (NS_WARN_IF(!mThread)) {
-        return NS_OK;
-      }
-
-      // If we have a stack, check if we can add it to combined stacks. This is
-      // a relatively cheap operation, and must occur with the lock held.
-      if (!mNativeStack.empty() &&
-          mThread->mStats.mCombinedStacks.GetStackCount() < Telemetry::kMaximumNativeHangStacks) {
-        mHistogram.SetNativeStackIndex(mThread->mStats.mCombinedStacks.AddStack(processed));
-      }
-
-      // Submit, remove ourselves from the list, and clear out mThread so we
-      // don't run again.
-      MOZ_ALWAYS_TRUE(mThread->mStats.mHangs.append(Move(mHistogram)));
-      remove();
-      mThread = nullptr;
-    }
-
-    return NS_OK;
-  }
-
-  // Submits hang, and removes from list.
-  nsresult
-  Cancel() override
-  {
-    mManager->mLock.AssertCurrentThreadOwns();
-    if (NS_WARN_IF(!mThread)) {
-      return NS_OK;
-    }
-
-    // Submit, remove ourselves from the list, and clear out mThread so we
-    // don't run again.
-    MOZ_ALWAYS_TRUE(mThread->mStats.mHangs.append(Move(mHistogram)));
-    if (isInList()) {
-      remove();
-    }
-    mThread = nullptr;
-    return NS_OK;
-  }
-
-private:
-  // These variables are constant after initialization, and do not need
-  // synchronization.
-  RefPtr<BackgroundHangManager> mManager;
-  const Telemetry::NativeHangStack mNativeStack;
-  // These variables are guarded by mManager->mLock.
-  BackgroundHangThread* MOZ_NON_OWNING_REF mThread; // Will Cancel us before it dies
-  Telemetry::HangHistogram mHistogram;
-};
 
 BackgroundHangThread::~BackgroundHangThread()
 {
@@ -560,16 +470,6 @@ BackgroundHangThread::~BackgroundHangThread()
   if (sTlsKeyInitialized && IsShared()) {
     sTlsKey.set(nullptr);
   }
-
-  // Cancel any remaining process hang runnables, as they hold a weak reference
-  // into our mStats variable, which we're about to move.
-  while (RefPtr<ProcessHangRunnable> runnable = mProcessHangRunnables.popFirst()) {
-    runnable->Cancel();
-  }
-
-  // Record the ThreadHangStats for this thread before we go away. All stats
-  // should be in this method now, as we canceled any pending runnables.
-  Telemetry::RecordThreadHangStats(Move(mStats));
 }
 
 void
@@ -602,20 +502,12 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     mHangStack.erase(mHangStack.begin() + 1, mHangStack.begin() + elementsToRemove);
   }
 
-  Telemetry::HangHistogram newHistogram(Move(mHangStack), mRunnableName);
-  for (Telemetry::HangHistogram* oldHistogram = mStats.mHangs.begin();
-       oldHistogram != mStats.mHangs.end(); oldHistogram++) {
-    if (newHistogram == *oldHistogram) {
-      // New histogram matches old one
-      oldHistogram->Add(aHangTime, Move(mAnnotations));
-      return;
-    }
-  }
-  newHistogram.Add(aHangTime, Move(mAnnotations));
+  // XXX: HangDetails will be expanded to contain all of the relevant
+  // information and handle reporting a custom ping to telemetry.
 
   // Notify any observers of the "bhr-thread-hang" topic that a thread has hung.
   nsCString name;
-  name.AssignASCII(mStats.GetName());
+  name.Assign(mThreadName);
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction("NotifyBHRHangObservers", [=] {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
@@ -624,39 +516,6 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
       os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
     }
   });
-  if (SystemGroup::Initialized()) {
-    // XXX(HACK): This is really sketchy. We need to keep a reference to the
-    // runnable in case the dispatch fails. If it fails, the already_AddRefed
-    // runnable which we passed in has been leaked, and we need to free it
-    // ourselves. The only time when this should fail is if we're shutting down.
-    //
-    // Most components just avoid dispatching runnables during shutdown, but BHR
-    // is not shut down until way too late, so we cannot do that. Instead, we
-    // just detect that the dispatch failed and manually unleak the leaked
-    // nsIRunnable in that situation.
-    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
-                                        do_AddRef(runnable.get()));
-    if (NS_FAILED(rv)) {
-      // NOTE: We go through `get()` here in order to avoid the
-      // MOZ_NO_ADDREF_RELEASE_ON_RETURN static analysis.
-      nsrefcnt refcnt = runnable.get()->Release();
-      MOZ_RELEASE_ASSERT(refcnt == 1, "runnable should have had 1 reference leaked");
-    }
-  }
-
-  // Process the hang off-main thread. We record a reference to the runnable in
-  // mProcessHangRunnables so we can abort this preprocessing and just submit
-  // the message if the processing takes too long and our thread is going away.
-  RefPtr<ProcessHangRunnable> processHang =
-    new ProcessHangRunnable(mManager, this, Move(newHistogram), Move(mNativeHangStack));
-  mProcessHangRunnables.insertFront(processHang);
-
-  // Try to dispatch the runnable to the StreamTransportService threadpool. If
-  // we fail, cancel our runnable.
-  if (!mManager->mSTS || NS_FAILED(mManager->mSTS->Dispatch(processHang.forget()))) {
-    RefPtr<ProcessHangRunnable> runnable = mProcessHangRunnables.popFirst();
-    runnable->Cancel();
-  }
 }
 
 void
@@ -686,7 +545,6 @@ BackgroundHangThread::Update()
     mManager->Wakeup();
   } else {
     PRIntervalTime duration = intervalNow - mInterval;
-    mStats.mActivity.Add(duration);
     if (MOZ_UNLIKELY(duration >= mTimeout)) {
       /* Wake up the manager thread to tell it that a hang ended */
       mManager->Wakeup();
@@ -895,33 +753,6 @@ BackgroundHangMonitor::UnregisterAnnotator(HangMonitor::Annotator& aAnnotator)
 #else
   return false;
 #endif
-}
-
-/* Because we are iterating through the BackgroundHangThread linked list,
-   we need to take a lock. Using MonitorAutoLock as a base class makes
-   sure all of that is taken care of for us. */
-BackgroundHangMonitor::ThreadHangStatsIterator::ThreadHangStatsIterator()
-  : MonitorAutoLock(BackgroundHangManager::sInstance->mLock)
-  , mThread(BackgroundHangManager::sInstance ?
-            BackgroundHangManager::sInstance->mHangThreads.getFirst() :
-            nullptr)
-{
-#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
-  MOZ_ASSERT(BackgroundHangManager::sInstance ||
-             BackgroundHangManager::sDisabled,
-             "Inconsistent state");
-#endif
-}
-
-Telemetry::ThreadHangStats*
-BackgroundHangMonitor::ThreadHangStatsIterator::GetNext()
-{
-  if (!mThread) {
-    return nullptr;
-  }
-  Telemetry::ThreadHangStats* stats = &mThread->mStats;
-  mThread = mThread->getNext();
-  return stats;
 }
 
 NS_IMETHODIMP
