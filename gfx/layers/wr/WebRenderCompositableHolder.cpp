@@ -6,6 +6,7 @@
 #include "WebRenderCompositableHolder.h"
 
 #include "CompositableHost.h"
+#include "gfxEnv.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/WebRenderImageHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
@@ -161,7 +162,7 @@ WebRenderCompositableHolder::GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, T
 
   WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
 
-  if (wrTexture) {
+  if (!gfxEnv::EnableWebRenderRecording() && wrTexture) {
     wrTexture->GetWRImageKeys(aKeys, std::bind(&WebRenderCompositableHolder::GetImageKey, this));
     MOZ_ASSERT(!aKeys.IsEmpty());
     Range<const wr::ImageKey> keys(&aKeys[0], aKeys.Length());
