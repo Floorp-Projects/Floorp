@@ -7,7 +7,3 @@
   padding: calc(var(--toolbarbutton-inner-padding) - 1px);
 %endif
 }
-
-#PanelUI-pocketView[mainview=true] > .panel-subview-body > #pocket-panel-iframe {
-  border-radius: var(--arrowpanel-border-radius);
-}
