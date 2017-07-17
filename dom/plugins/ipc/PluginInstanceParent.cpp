@@ -14,6 +14,7 @@
 #include "BrowserStreamParent.h"
 #include "PluginBackgroundDestroyer.h"
 #include "PluginModuleParent.h"
+#include "PluginStreamParent.h"
 #include "StreamNotifyParent.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
@@ -240,6 +241,20 @@ PluginInstanceParent::DeallocPBrowserStreamParent(PBrowserStreamParent* stream)
     return true;
 }
 
+PPluginStreamParent*
+PluginInstanceParent::AllocPPluginStreamParent(const nsCString& mimeType,
+                                               const nsCString& target,
+                                               NPError* result)
+{
+    return new PluginStreamParent(this, mimeType, target, result);
+}
+
+bool
+PluginInstanceParent::DeallocPPluginStreamParent(PPluginStreamParent* stream)
+{
+    delete stream;
+    return true;
+}
 
 mozilla::ipc::IPCResult
 PluginInstanceParent::AnswerNPN_GetValue_NPNVnetscapeWindow(NativeWindowHandle* value,
@@ -1775,13 +1790,24 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         // returns an error code.
         return NPERR_NO_ERROR;
     }
-    MOZ_ASSERT(s->IsBrowserStream());
-    BrowserStreamParent* sp =
-        static_cast<BrowserStreamParent*>(s);
-    if (sp->mNPP != this)
-        MOZ_CRASH("Mismatched plugin data");
-    sp->NPP_DestroyStream(reason);
-    return NPERR_NO_ERROR;
+    if (s->IsBrowserStream()) {
+        BrowserStreamParent* sp =
+            static_cast<BrowserStreamParent*>(s);
+        if (sp->mNPP != this)
+            MOZ_CRASH("Mismatched plugin data");
+
+        sp->NPP_DestroyStream(reason);
+        return NPERR_NO_ERROR;
+    }
+    else {
+        PluginStreamParent* sp =
+            static_cast<PluginStreamParent*>(s);
+        if (sp->mInstance != this)
+            MOZ_CRASH("Mismatched plugin data");
+
+        return PPluginStreamParent::Call__delete__(sp, reason, false) ?
+            NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
+    }
 }
 
 void

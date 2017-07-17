@@ -46,22 +46,8 @@ public:
   // Can be called on any thread.
   virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) = 0;
 
-  // Notify the media decoder that a decryption key is required before emitting
-  // further output. This only needs to be overridden for decoders that expect
-  // encryption, such as the MediaSource decoder.
-  virtual void NotifyWaitingForKey() { }
-
-  // Return an event that will be notified when a decoder is waiting for a
-  // decryption key before it can return more output.
-  virtual MediaEventSource<void>* WaitingForKeyEvent()
-  {
-    return nullptr;
-  }
-
   // Return an abstract thread on which to run main thread runnables.
   virtual AbstractThread* AbstractMainThread() const = 0;
-
-public:
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 

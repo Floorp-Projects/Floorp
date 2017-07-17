@@ -69,10 +69,6 @@ public:
   MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus() override;
   bool CanPlayThrough() override;
 
-  void NotifyWaitingForKey() override;
-
-  MediaEventSource<void>* WaitingForKeyEvent() override;
-
   bool IsMSE() const override { return true; }
 
   void NotifyInitDataArrived();
@@ -86,7 +82,6 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   RefPtr<MediaSourceDemuxer> mDemuxer;
-  MediaEventProducer<void> mWaitingForKeyEvent;
 
   bool mEnded;
 };

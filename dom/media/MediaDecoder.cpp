@@ -322,6 +322,8 @@ MediaDecoder::Shutdown()
     mOnDecoderDoctorEvent.Disconnect();
     mOnMediaNotSeekable.Disconnect();
     mOnEncrypted.Disconnect();
+    mOnWaitingForKey.Disconnect();
+    mOnDecodeWarning.Disconnect();
 
     mDecoderStateMachine->BeginShutdown()
       ->Then(mAbstractMainThread, __func__, this,
@@ -488,6 +490,10 @@ MediaDecoder::SetStateMachineParameters()
 
   mOnEncrypted = mReader->OnEncrypted().Connect(
     mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DispatchEncrypted);
+  mOnWaitingForKey = mReader->OnWaitingForKey().Connect(
+    mAbstractMainThread, GetOwner(), &MediaDecoderOwner::NotifyWaitingForKey);
+  mOnDecodeWarning = mReader->OnDecodeWarning().Connect(
+    mAbstractMainThread, GetOwner(), &MediaDecoderOwner::DecodeWarning);
 }
 
 nsresult

@@ -949,6 +949,11 @@ PluginModuleChromeParent::GetManagingInstance(mozilla::ipc::IProtocol* aProtocol
                 static_cast<PBrowserStreamParent*>(aProtocol);
             return static_cast<PluginInstanceParent*>(actor->Manager());
         }
+        case PPluginStreamMsgStart: {
+            PPluginStreamParent* actor =
+                static_cast<PPluginStreamParent*>(aProtocol);
+            return static_cast<PluginInstanceParent*>(actor->Manager());
+        }
         case PStreamNotifyMsgStart: {
             PStreamNotifyParent* actor =
                 static_cast<PStreamNotifyParent*>(aProtocol);
