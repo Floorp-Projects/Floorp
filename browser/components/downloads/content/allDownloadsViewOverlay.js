@@ -1105,8 +1105,7 @@ DownloadsPlacesView.prototype = {
     }
   },
 
-  onDataLoadStarting() {},
-  onDataLoadCompleted() {
+  onDownloadBatchEnded() {
     this._ensureInitialSelection();
   },
 
