@@ -147,7 +147,11 @@ public:
   }
 
   // HTMLQuoteElement
-  // The XPCOM GetCite works fine for us
+  void GetCite(nsString& aCite)
+  {
+    GetHTMLURIAttr(nsGkAtoms::cite, aCite);
+  }
+
   void SetCite(const nsAString& aValue, ErrorResult& aResult)
   {
     MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::q) ||
