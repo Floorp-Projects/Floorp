@@ -11,10 +11,5 @@ python tools/metrics/apk_size.py
 # it's easiest just to revert to a clean source state here:
 git reset --hard
 
-# buddybuild doesn't seem to offer any direct way of running findbugs.
-# findbugs is run as part of |gradle build| and |gradle| check, but those
-# aren't run directly in buddybuild.
-./gradlew findbugs
-
 ./gradlew jacocoTestReport
 bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
