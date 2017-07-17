@@ -232,7 +232,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLoadElementHole(MLoadElementHole* ins);
     void visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull* ins);
     void visitLoadUnboxedString(MLoadUnboxedString* ins);
-    void visitLoadElementFromState(MLoadElementFromState* ins);
     void visitStoreElement(MStoreElement* ins);
     void visitStoreElementHole(MStoreElementHole* ins);
     void visitFallibleStoreElement(MFallibleStoreElement* ins);
@@ -326,7 +325,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitBeta(MBeta* ins);
     void visitObjectState(MObjectState* ins);
     void visitArrayState(MArrayState* ins);
-    void visitArgumentState(MArgumentState* ins);
     void visitUnknownValue(MUnknownValue* ins);
     void visitLexicalCheck(MLexicalCheck* ins);
     void visitThrowRuntimeLexicalError(MThrowRuntimeLexicalError* ins);
