@@ -83,6 +83,9 @@ mozharness_run_schema = Schema({
     Optional('job-script'): basestring,
 
     Required('requires-signed-builds', default=False): bool,
+
+    # If false, don't set MOZ_SIMPLE_PACKAGE_NAME
+    Required('use-simple-package', default=True): bool,
 })
 
 
@@ -92,6 +95,10 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     worker = taskdesc['worker']
     worker['implementation'] = job['worker']['implementation']
+
+    if not run['use-simple-package']:
+        raise NotImplementedError("Simple packaging cannot be disabled via"
+                                  "'use-simple-package' on docker-workers")
 
     # running via mozharness assumes desktop-build (which contains build.sh)
     taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
@@ -208,9 +215,10 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_SIMPLE_PACKAGE_NAME': 'target',
         'MOZ_AUTOMATION': '1',
     })
+    if run['use-simple-package']:
+        env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
 
     if not job['attributes']['build_platform'].startswith('win'):
         raise Exception(
