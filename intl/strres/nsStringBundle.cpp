@@ -116,7 +116,12 @@ nsStringBundle::LoadProperties()
 nsresult
 nsStringBundle::GetStringFromNameHelper(const char* aName, nsAString& aResult)
 {
-  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aName);
+
+  nsresult rv = LoadProperties();
+  if (NS_FAILED(rv)) return rv;
+
+  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
 
   // try override first
   if (mOverrideStrings) {
@@ -159,16 +164,13 @@ nsStringBundle::FormatStringFromName(const char* aName,
                                      uint32_t aLength,
                                      char16_t** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-  NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
   NS_ENSURE_ARG_POINTER(aResult);
+  NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
 
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
+  *aResult = nullptr;
 
   nsAutoString formatStr;
-  rv = GetStringFromNameHelper(aName, formatStr);
+  nsresult rv = GetStringFromNameHelper(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.get(), aParams, aLength, aResult);
@@ -194,17 +196,12 @@ nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
 NS_IMETHODIMP
 nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aName);
   NS_ENSURE_ARG_POINTER(aResult);
 
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
-  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   *aResult = nullptr;
+
   nsAutoString tmpstr;
-  rv = GetStringFromNameHelper(aName, tmpstr);
+  nsresult rv = GetStringFromNameHelper(aName, tmpstr);
   if (NS_FAILED(rv)) return rv;
 
   *aResult = ToNewUnicode(tmpstr);
