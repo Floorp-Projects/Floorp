@@ -150,12 +150,21 @@ struct ServoRuleNode {
   uintptr_t mPtr;
 };
 
+
+class ServoStyleContext;
+
 struct ServoVisitedStyle {
-  uintptr_t mPtr;
+  // This is actually a strong reference
+  // but ServoComputedValues' destructor is
+  // managed by the Rust code so we just use a
+  // regular pointer
+  ServoStyleContext* mPtr;
 };
 
 template <typename T>
 struct ServoRawOffsetArc {
+  // Again, a strong reference, but
+  // managed by the Rust code
   T* mPtr;
 };
 
