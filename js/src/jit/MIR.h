@@ -13857,6 +13857,27 @@ class MFinishBoundFunctionInit
     NAMED_OPERANDS((0, bound), (1, target), (2, argCount))
 };
 
+class MIsPackedArray
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MIsPackedArray(MDefinition* array)
+      : MUnaryInstruction(array)
+    {
+        setResultType(MIRType::Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsPackedArray)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, array))
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Load(AliasSet::ObjectFields);
+    }
+};
+
 // Flips the input's sign bit, independently of the rest of the number's
 // payload. Note this is different from multiplying by minus-one, which has
 // side-effects for e.g. NaNs.

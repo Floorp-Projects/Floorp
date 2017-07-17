@@ -312,6 +312,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineObjectHasPrototype(callInfo);
       case InlinableNative::IntrinsicFinishBoundFunctionInit:
         return inlineFinishBoundFunctionInit(callInfo);
+      case InlinableNative::IntrinsicIsPackedArray:
+        return inlineIsPackedArray(callInfo);
 
       // Map intrinsics.
       case InlinableNative::IntrinsicIsMapObject:
@@ -1742,6 +1744,47 @@ IonBuilder::inlineFinishBoundFunctionInit(CallInfo& callInfo)
     pushConstant(UndefinedValue());
 
     MOZ_TRY(resumeAfter(ins));
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineIsPackedArray(CallInfo& callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+
+    if (getInlineReturnType() != MIRType::Boolean)
+        return InliningStatus_NotInlined;
+
+    MDefinition* array = callInfo.getArg(0);
+
+    if (array->type() != MIRType::Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* arrayTypes = array->resultTypeSet();
+    if (!arrayTypes)
+        return InliningStatus_NotInlined;
+
+    const Class* clasp = arrayTypes->getKnownClass(constraints());
+    if (clasp != &ArrayObject::class_)
+        return InliningStatus_NotInlined;
+
+    // Only inline if the array uses dense storage.
+    ObjectGroupFlags unhandledFlags = OBJECT_FLAG_SPARSE_INDEXES |
+                                      OBJECT_FLAG_LENGTH_OVERFLOW |
+                                      OBJECT_FLAG_NON_PACKED;
+
+    if (arrayTypes->hasObjectFlags(constraints(), unhandledFlags)) {
+        trackOptimizationOutcome(TrackedOutcome::ArrayBadFlags);
+        return InliningStatus_NotInlined;
+    }
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    auto* ins = MIsPackedArray::New(alloc(), array);
+    current->add(ins);
+    current->push(ins);
+
     return InliningStatus_Inlined;
 }
 
