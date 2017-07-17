@@ -1129,57 +1129,6 @@ var CapturedStacks = {
   }
 };
 
-var ThreadHangStats = {
-
-  /**
-   * Renders raw thread hang stats data
-   */
-  render(aPayload) {
-    let div = document.getElementById("thread-hang-stats");
-    removeAllChildNodes(div);
-
-    let stats = aPayload.threadHangStats;
-    setHasData("thread-hang-stats-section", stats && (stats.length > 0));
-    if (!stats) {
-      return;
-    }
-
-    stats.forEach((thread) => {
-      div.appendChild(this.renderThread(thread));
-    });
-  },
-
-  /**
-   * Creates and fills data corresponding to a thread
-   */
-  renderThread(aThread) {
-    let div = document.createElement("div");
-
-    let title = document.createElement("h2");
-    title.textContent = aThread.name;
-    div.appendChild(title);
-
-    // Don't localize the histogram name, because the
-    // name is also used as the div element's ID
-    Histogram.render(div, aThread.name + "-Activity",
-                     aThread.activity, {exponential: true}, true);
-    aThread.hangs.forEach((hang, index) => {
-      let hangName = aThread.name + "-Hang-" + (index + 1);
-      let hangDiv = Histogram.render(
-        div, hangName, hang.histogram, {exponential: true}, true);
-      let stackDiv = document.createElement("div");
-      hang.stack.forEach((frame) => {
-        stackDiv.appendChild(document.createTextNode(frame));
-        // Leave an extra <br> at the end of the stack listing
-        stackDiv.appendChild(document.createElement("br"));
-      });
-      // Insert stack after the histogram title
-      hangDiv.insertBefore(stackDiv, hangDiv.childNodes[1]);
-    });
-    return div;
-  },
-};
-
 var Histogram = {
 
   hgramSamplesCaption: bundle.GetStringFromName("histogramSamples"),
@@ -1198,11 +1147,10 @@ var Histogram = {
    * @param aHgram Histogram information
    * @param aOptions Object with render options
    *                 * exponential: bars follow logarithmic scale
-   * @param aIsBHR whether or not requires fixing the labels for TimeHistogram
    */
-  render: function Histogram_render(aParent, aName, aHgram, aOptions, aIsBHR) {
+  render: function Histogram_render(aParent, aName, aHgram, aOptions) {
     let options = aOptions || {};
-    let hgram = this.processHistogram(aHgram, aName, aIsBHR);
+    let hgram = this.processHistogram(aHgram, aName);
 
     let outerDiv = document.createElement("div");
     outerDiv.className = "histogram";
@@ -1243,7 +1191,7 @@ var Histogram = {
     return outerDiv;
   },
 
-  processHistogram(aHgram, aName, aIsBHR) {
+  processHistogram(aHgram, aName) {
     const values = Object.keys(aHgram.values).map(k => aHgram.values[k]);
     if (!values.length) {
       // If we have no values collected for this histogram, just return
@@ -1261,30 +1209,8 @@ var Histogram = {
     const average = Math.round(aHgram.sum * 10 / sample_count) / 10;
     const max_value = Math.max(...values);
 
-    function labelFunc(k) {
-      // - BHR histograms are TimeHistograms: Exactly power-of-two buckets (from 0)
-      //   (buckets: [0..1], [2..3], [4..7], [8..15], ... note the 0..1 anomaly - same bucket)
-      // - TimeHistogram's JS representation adds a dummy (empty) "0" bucket, and
-      //   the rest of the buckets have the label as the upper value of the
-      //   bucket (non TimeHistograms have the lower value of the bucket as label).
-      //   So JS TimeHistograms bucket labels are: 0 (dummy), 1, 3, 7, 15, ...
-      // - see toolkit/components/telemetry/Telemetry.cpp
-      //   (CreateJSTimeHistogram, CreateJSThreadHangStats, CreateJSHangHistogram)
-      // - see toolkit/components/telemetry/ThreadHangStats.h
-      // Fix BHR labels to the "standard" format for about:telemetry as follows:
-      //   - The dummy 0 label+bucket will be filtered before arriving here
-      //   - If it's 1 -> manually correct it to 0 (the 0..1 anomaly)
-      //   - For the rest, set the label as the bottom value instead of the upper.
-      //   --> so we'll end with the following (non dummy) labels: 0, 2, 4, 8, 16, ...
-      if (!aIsBHR) {
-        return k;
-      }
-      return k == 1 ? 0 : (k + 1) / 2;
-    }
-
     const labelledValues = Object.keys(aHgram.values)
-                           .filter(label => !aIsBHR || Number(label) != 0) // remove dummy 0 label for BHR
-                           .map(k => [labelFunc(Number(k)), aHgram.values[k]]);
+                           .map(k => [Number(k), aHgram.values[k]]);
 
     let result = {
       values: labelledValues,
@@ -2382,9 +2308,6 @@ function displayRichPingData(ping, updatePayloadList) {
 
   // Show telemetry log.
   TelLog.render(payload);
-
-  // Show thread hang stats
-  ThreadHangStats.render(payload);
 
   // Show simple measurements
   SimpleMeasurements.render(payload);
