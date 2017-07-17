@@ -63,7 +63,7 @@ Structure:
       histograms: {...},
       keyedHistograms: {...},
       chromeHangs: {...},
-      threadHangStats: [...],
+      threadHangStats: [...], // obsolete in firefox 57, use the 'bhr' ping
       capturedStacks: {...},
       log: [...],
       webrtc: {...},
@@ -250,6 +250,8 @@ As of Firefox 48, this section does not contain empty keyed histograms anymore.
 
 threadHangStats
 ---------------
+As of Firefox 57 this section is no longer present, and has been replaced with the 'bhr' ping.
+
 Contains the statistics about the hangs in main and background threads. Note that hangs in this section capture the `C++ pseudostack <https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler#Native_stack_vs._Pseudo_stack>`_ and an incomplete JS stack, which is not 100% precise. For particularly egregious hangs, and on nightly, an unsymbolicated native stack is also captured. The amount of time that is considered "egregious" is different from thread to thread, and is set when the BackgroundHangMonitor is constructed for that thread. In general though, hangs from 5 - 10 seconds are generally considered egregious. Shorter hangs (1 - 2s) are considered egregious for other threads (the compositor thread, and the hang monitor that is only enabled during tab switch).
 
 To avoid submitting overly large payloads, some limits are applied:
