@@ -23,7 +23,7 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit WebRenderPaintedLayer(WebRenderLayerManager* aLayerManager)
-    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), PaintedLayerCreationHint::NONE)
+    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE)
   {
     MOZ_COUNT_CTOR(WebRenderPaintedLayer);
   }
