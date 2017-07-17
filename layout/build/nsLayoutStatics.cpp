@@ -296,7 +296,7 @@ nsLayoutStatics::Initialize()
   ServiceWorkerRegistrar::Initialize();
 
 #ifdef DEBUG
-  nsStyleContext::Initialize();
+  GeckoStyleContext::Initialize();
   mozilla::LayerAnimationInfo::Initialize();
 #endif
 

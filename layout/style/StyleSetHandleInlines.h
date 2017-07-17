@@ -18,6 +18,15 @@
     return AsServo()->method_ servoargs_; \
   }
 
+#define FORWARD_WITH_PARENT(method_, parent_, args_) \
+  if (IsGecko()) { \
+    nsStyleContext* parent = parent_; \
+    return AsGecko()->method_ args_; \
+  } else { \
+    ServoStyleContext* parent = parent_ ? parent_->AsServo() : nullptr; \
+    return AsServo()->method_ args_; \
+  }
+
 #define FORWARD(method_, args_) FORWARD_CONCRETE(method_, args_, args_)
 
 namespace mozilla {
@@ -83,7 +92,7 @@ StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
                                      nsStyleContext* aParentContext,
                                      LazyComputeBehavior aMayCompute)
 {
-  FORWARD(ResolveStyleFor, (aElement, aParentContext, aMayCompute));
+  FORWARD_WITH_PARENT(ResolveStyleFor, aParentContext, (aElement, parent, aMayCompute));
 }
 
 already_AddRefed<nsStyleContext>
@@ -96,7 +105,8 @@ StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
     MOZ_ASSERT(aTreeMatchContext);
     return AsGecko()->ResolveStyleFor(aElement, aParentContext, aMayCompute, *aTreeMatchContext);
   } else {
-    return AsServo()->ResolveStyleFor(aElement, aParentContext, aMayCompute);
+    ServoStyleContext* parent = aParentContext ? aParentContext->AsServo() : nullptr;
+    return AsServo()->ResolveStyleFor(aElement, parent, aMayCompute);
   }
 }
 
@@ -104,7 +114,7 @@ already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleForText(nsIContent* aTextNode,
                                          nsStyleContext* aParentContext)
 {
-  FORWARD(ResolveStyleForText, (aTextNode, aParentContext));
+  FORWARD_WITH_PARENT(ResolveStyleForText, aParentContext, (aTextNode, parent));
 }
 
 already_AddRefed<nsStyleContext>
@@ -116,7 +126,7 @@ StyleSetHandle::Ptr::ResolveStyleForPlaceholder()
 already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
 {
-  FORWARD(ResolveStyleForFirstLetterContinuation, (aParentContext));
+  FORWARD_WITH_PARENT(ResolveStyleForFirstLetterContinuation, aParentContext, (parent));
 }
 
 already_AddRefed<nsStyleContext>
@@ -125,15 +135,14 @@ StyleSetHandle::Ptr::ResolvePseudoElementStyle(dom::Element* aParentElement,
                                                nsStyleContext* aParentContext,
                                                dom::Element* aPseudoElement)
 {
-  FORWARD(ResolvePseudoElementStyle, (aParentElement, aType, aParentContext,
-                                      aPseudoElement));
+  FORWARD_WITH_PARENT(ResolvePseudoElementStyle, aParentContext, (aParentElement, aType, parent, aPseudoElement));
 }
 
 already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                                                         nsStyleContext* aParentContext)
 {
-  FORWARD(ResolveInheritingAnonymousBoxStyle, (aPseudoTag, aParentContext));
+  FORWARD_WITH_PARENT(ResolveInheritingAnonymousBoxStyle, aParentContext, (aPseudoTag, parent));
 }
 
 already_AddRefed<nsStyleContext>
@@ -263,7 +272,7 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
                                              CSSPseudoElementType aType,
                                              nsStyleContext* aParentContext)
 {
-  FORWARD(ProbePseudoElementStyle, (aParentElement, aType, aParentContext));
+  FORWARD_WITH_PARENT(ProbePseudoElementStyle, aParentContext, (aParentElement, aType, parent));
 }
 
 already_AddRefed<nsStyleContext>
@@ -277,7 +286,8 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
     return AsGecko()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
                                               *aTreeMatchContext);
   }
-  return AsServo()->ProbePseudoElementStyle(aParentElement, aType, aParentContext);
+  ServoStyleContext* parent = aParentContext ? aParentContext->AsServo() : nullptr;
+  return AsServo()->ProbePseudoElementStyle(aParentElement, aType, parent);
 }
 
 nsRestyleHint

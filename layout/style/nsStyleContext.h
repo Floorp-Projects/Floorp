@@ -77,12 +77,8 @@ public:
   }
   nsIPresShell* Arena();
 
-#ifdef DEBUG
-  /**
-   * Initializes a cached pref, which is only used in DEBUG code.
-   */
-  static void Initialize();
-#endif
+  void AddChild(nsStyleContext* aChild);
+  void RemoveChild(nsStyleContext* aChild);
 
   inline void AddRef();
   inline void Release();
@@ -344,11 +340,7 @@ public:
 protected:
   // protected destructor to discourage deletion outside of Release()
   ~nsStyleContext() {}
-  // Where the actual destructor lives
-  // We use this instead of a real destructor because we need
-  // this to be called *before* the subclass fields are destroyed
-  // by the subclass destructor
-  void Destructor();
+
   // Delegated Helper constructor.
   nsStyleContext(nsStyleContext* aParent,
                  nsIAtom* aPseudoTag,
@@ -356,10 +348,6 @@ protected:
 
   // Helper post-contruct hook.
   void FinishConstruction();
-
-  // Only does stuff in Gecko mode
-  void AddChild(nsStyleContext* aChild);
-  void RemoveChild(nsStyleContext* aChild);
 
   void SetStyleBits();
 
