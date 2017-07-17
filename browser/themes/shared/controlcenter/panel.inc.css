@@ -67,6 +67,10 @@
 
 #identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
+  /* Set default fill for icons in the identity popup.
+     Individual icons can override this. */
+  fill: currentColor;
+  fill-opacity: .6;
 }
 
 .panel-mainview[panelid=identity-popup] {
@@ -249,8 +253,7 @@
 #identity-popup[connection=secure-cert-user-overridden] #identity-popup-securityView,
 #identity-popup[connection=secure-cert-user-overridden] #identity-popup-security-content {
   background-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
-  -moz-context-properties: fill;
-  fill: GrayText;
+  -moz-context-properties: fill, fill-opacity;
 }
 
 #identity-popup[loginforms=insecure] #identity-popup-securityView,
