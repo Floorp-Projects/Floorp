@@ -107,11 +107,6 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         return true;
     }
     PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
-    /*
-     *  We can't accumulate BLOCKED_ON_PLUGIN_MODULE_INIT_MS until here because
-     *  its histogram key is not available until *after* NP_Initialize.
-     */
-    chromeParent->AccumulateModuleInitBlockedTime();
     *rv = chromeParent->GetRunID(runID);
     if (NS_FAILED(*rv)) {
         return true;
@@ -429,17 +424,14 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
     nsresult rv;
     uint32_t runID;
     Endpoint<PPluginModuleParent> endpoint;
-    TimeStamp sendLoadPluginStart = TimeStamp::Now();
     if (!cp->SendLoadPlugin(aPluginId, &rv, &runID, &endpoint) ||
         NS_FAILED(rv)) {
         return nullptr;
     }
     Initialize(Move(endpoint));
-    TimeStamp sendLoadPluginEnd = TimeStamp::Now();
 
     PluginModuleContentParent* parent = mapping->GetModule();
     MOZ_ASSERT(parent);
-    parent->mTimeBlocked += (sendLoadPluginEnd - sendLoadPluginStart);
 
     if (!mapping->IsChannelOpened()) {
         // mapping is linked into PluginModuleMapping::sModuleListHead and is
@@ -533,7 +525,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
                                          aPluginTag->mSupportsAsyncInit));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
     parent->mSubprocess->SetCallRunnableImmediately(!parent->mIsStartingAsync);
-    TimeStamp launchStart = TimeStamp::Now();
     bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable),
                                                 aPluginTag->mSandboxLevel);
     if (!launched) {
@@ -552,8 +543,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
             return nullptr;
         }
     }
-    TimeStamp launchEnd = TimeStamp::Now();
-    parent->mTimeBlocked = (launchEnd - launchStart);
     return parent.forget();
 }
 
@@ -2214,15 +2203,12 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     PluginSettings settings;
     GetSettings(&settings);
 
-    TimeStamp callNpInitStart = TimeStamp::Now();
     // Asynchronous case
     if (mIsStartingAsync) {
         if (!SendAsyncNP_Initialize(settings)) {
             Close();
             return NS_ERROR_FAILURE;
         }
-        TimeStamp callNpInitEnd = TimeStamp::Now();
-        mTimeBlocked += (callNpInitEnd - callNpInitStart);
         return NS_OK;
     }
 
@@ -2235,8 +2221,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
         Close();
         return NS_ERROR_FAILURE;
     }
-    TimeStamp callNpInitEnd = TimeStamp::Now();
-    mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
     RecvNP_InitializeResult(*error);
 
@@ -2341,13 +2325,10 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     PluginSettings settings;
     GetSettings(&settings);
 
-    TimeStamp callNpInitStart = TimeStamp::Now();
     if (mIsStartingAsync) {
         if (!SendAsyncNP_Initialize(settings)) {
             return NS_ERROR_FAILURE;
         }
-        TimeStamp callNpInitEnd = TimeStamp::Now();
-        mTimeBlocked += (callNpInitEnd - callNpInitStart);
         return NS_OK;
     }
 
@@ -2355,8 +2336,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
         Close();
         return NS_ERROR_FAILURE;
     }
-    TimeStamp callNpInitEnd = TimeStamp::Now();
-    mTimeBlocked += (callNpInitEnd - callNpInitStart);
     RecvNP_InitializeResult(*error);
     return NS_OK;
 }
@@ -2659,18 +2638,6 @@ public:
   }
 };
 
-void
-PluginModuleParent::AccumulateModuleInitBlockedTime()
-{
-    if (mPluginName.IsEmpty()) {
-        GetPluginDetails();
-    }
-    Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
-                          GetHistogramKey(),
-                          static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
-    mTimeBlocked = TimeDuration();
-}
-
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 static void
 ForceWindowless(InfallibleTArray<nsCString>& names,
@@ -2722,13 +2689,6 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     if (mPluginName.IsEmpty()) {
         GetPluginDetails();
         InitQuirksModes(nsDependentCString(pluginType));
-        /** mTimeBlocked measures the time that the main thread has been blocked
-         *  on plugin module initialization. As implemented, this is the sum of
-         *  plugin-container launch + toolhelp32 snapshot + NP_Initialize.
-         *  We don't accumulate its value until here because the plugin info
-         *  for its histogram key is not available until *after* NP_Initialize.
-         */
-        AccumulateModuleInitBlockedTime();
     }
 
     nsCaseInsensitiveUTF8StringArrayComparator comparator;
@@ -2809,9 +2769,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         return NS_ERROR_FAILURE;
     }
 
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS>
-            timer(GetHistogramKey());
+    {
         if (mIsStartingAsync) {
             MOZ_ASSERT(surrogate);
             surrogate->AsyncCallDeparting();
@@ -2839,6 +2797,8 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         }
         return NS_ERROR_FAILURE;
     }
+
+    Telemetry::ScalarAdd(Telemetry::ScalarID::BROWSER_USAGE_PLUGIN_INSTANTIATED, 1);
 
     UpdatePluginTimeout();
 
@@ -3201,7 +3161,6 @@ PluginModuleChromeParent::InitializeInjector()
                           NS_LITERAL_CSTRING(FLASH_PLUGIN_PREFIX)))
         return;
 
-    TimeStamp th32Start = TimeStamp::Now();
     mFinishInitTask = mChromeTaskFactory.NewTask<FinishInjectorInitTask>();
     mFinishInitTask->Init(this);
     if (!::QueueUserWorkItem(&PluginModuleChromeParent::GetToolhelpSnapshot,
@@ -3209,8 +3168,6 @@ PluginModuleChromeParent::InitializeInjector()
         mFinishInitTask = nullptr;
         return;
     }
-    TimeStamp th32End = TimeStamp::Now();
-    mTimeBlocked += (th32End - th32Start);
 }
 
 void

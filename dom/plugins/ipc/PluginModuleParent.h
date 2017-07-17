@@ -127,12 +127,6 @@ public:
 
     virtual bool WaitForIPCConnection() { return true; }
 
-    nsCString GetHistogramKey() const {
-        return mPluginName + mPluginVersion;
-    }
-
-    void AccumulateModuleInitBlockedTime();
-
     virtual nsresult GetRunID(uint32_t* aRunID) override;
     virtual void SetHasLocalInstance() override {
         mHadLocalInstance = true;
@@ -342,7 +336,6 @@ protected:
     nsNPAPIPlugin* mPlugin;
     ipc::TaskFactory<PluginModuleParent> mTaskFactory;
     nsString mHangID;
-    TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
     int32_t mSandboxLevel;
