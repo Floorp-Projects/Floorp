@@ -97,8 +97,12 @@ reflectBoolean({
 
 // TODO: form (HTMLFormElement)
 // TODO: files (FileList)
-// TODO: formAction (URL).  But note that we currently reflect it weirdly; see
-// dom/html/test/test_bug607145.html
+
+// .formAction
+reflectURL({
+  element: document.createElement("button"),
+  attribute: "formAction",
+});
 
 // .formEnctype
 reflectLimitedEnumerated({
