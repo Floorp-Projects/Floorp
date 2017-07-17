@@ -167,34 +167,7 @@ when Leanplum SDK is initialized. When the criteria is met (set in Leanplum back
 and/or targeting certain user attribute ), a prompt message will show up. And there may be buttons for users to click. Those clicks
 may trigger deep links.
 
-List of current messages are:
-* Load Bookmark - Default Browser Promotion
-  LoadBookmark Promote Default Browser : A user click an item in bookmark list, a dialog will be shown to ask you make Fennec default.
-  Event             : E_Opened_Bookmark
-  Deep Link         : firefox://default_browser
-  User Attribute    : defaultBrowser : false
-
-* Open Firefox X times - Default Browser Promotion
-  Open Firefox and show dialog to link to default browser settings
-  Event             : Launch(default Leanplum event, no need to add code)
-  Deep Link         : firefox://default_browser
-  User Attribute    : defaultBrowser : false
-
-* Add Bookmark X times - Default Browser Promotion
-  Add a bookmark and show dialog to link to default browser settings
-  Event             : E_Saved_Bookmark
-  Deep Link         : firefox://default_browser
-  User Attribute    : defaultBrowser : false
-
-* Search URL Area - Default Search Engine Promotion
-  Interact with search Promote Engine : A user enter the url bar, we'll show the search settings
-  Event             : E_Interact_With_Search_URL_Area
-  Deep Link         : firefox://preferences_search
-
-* Save Bookmark - Bookmark List Promotion
-  Save Bookmark Promote Bookmark : When a user save a page as bookmark, we prompt the user to go to bookmark list.
-  Event             : E_Saved_Bookmark
-  Deep Link         : firefox://bookmark_list
+The list of current messages for Android can be found here: https://wiki.mozilla.org/Leanplum_Contextual_Hints#Android
 
 Technical notes
 ~~~~~~~~~~~~~~~
