@@ -40,6 +40,25 @@ protected:
   nsNPAPIPluginStreamListener*          mStreamListener; // only valid if browser initiated
 };
 
+// Used to handle NPN_NewStream() - writes the stream as received by the plugin
+// to a file and at completion (NPN_DestroyStream), tells the browser to load it into
+// a plugin-specified target
+class nsPluginStreamToFile : public nsIOutputStream
+{
+public:
+  nsPluginStreamToFile(const char* target, nsIPluginInstanceOwner* owner);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOUTPUTSTREAM
+protected:
+  virtual ~nsPluginStreamToFile();
+  char* mTarget;
+  nsCString mFileURL;
+  nsCOMPtr<nsIFile> mTempFile;
+  nsCOMPtr<nsIOutputStream> mOutputStream;
+  nsIPluginInstanceOwner* mOwner;
+};
+
 class nsNPAPIPluginStreamListener : public nsITimerCallback,
                                     public nsIHTTPHeaderListener
 {
