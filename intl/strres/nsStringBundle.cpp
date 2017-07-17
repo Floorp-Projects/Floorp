@@ -138,7 +138,6 @@ nsStringBundle::FormatStringFromID(int32_t aID,
 {
   nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
-
   return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
 }
 
@@ -392,18 +391,9 @@ nsExtensibleStringBundle::~nsExtensibleStringBundle()
 
 nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, char16_t ** aResult)
 {
-  nsresult rv;
-  const uint32_t size = mBundles.Count();
-  for (uint32_t i = 0; i < size; ++i) {
-    nsIStringBundle *bundle = mBundles[i];
-    if (bundle) {
-      rv = bundle->GetStringFromID(aID, aResult);
-      if (NS_SUCCEEDED(rv))
-        return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  nsAutoCString idStr;
+  idStr.AppendInt(aID, 10);
+  return GetStringFromName(idStr.get(), aResult);
 }
 
 nsresult nsExtensibleStringBundle::GetStringFromAUTF8Name(
