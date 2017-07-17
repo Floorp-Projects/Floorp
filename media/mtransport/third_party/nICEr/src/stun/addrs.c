@@ -327,7 +327,7 @@ stun_getifaddrs(nr_local_addr addrs[], int maxaddrs, int *count)
             addrs[*count].interface.type = NR_INTERFACE_TYPE_UNKNOWN;
             addrs[*count].interface.estimated_speed = 0;
 #endif
-            strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
+            (void)strlcpy(addrs[*count].addr.ifname, if_addr->ifa_name, sizeof(addrs[*count].addr.ifname));
             ++(*count);
           }
           break;
