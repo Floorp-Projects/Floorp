@@ -43,8 +43,7 @@ add_task(async function home_button_context() {
 // but with tab-specific options instead.
 add_task(async function tabstrip_context() {
   // ensure there are tabs to reload/bookmark:
-  let extraTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  await promiseTabLoadEvent(extraTab, "http://example.com/");
+  let extraTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
   let contextMenu = document.getElementById("toolbar-context-menu");
   let shownPromise = popupShown(contextMenu);
   let tabstrip = document.getElementById("tabbrowser-tabs");
@@ -73,7 +72,7 @@ add_task(async function tabstrip_context() {
   let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   await hiddenPromise;
-  gBrowser.removeTab(extraTab);
+  await BrowserTestUtils.removeTab(extraTab);
 });
 
 // Right-click on an empty bit of extra toolbar should
