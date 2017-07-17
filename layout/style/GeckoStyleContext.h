@@ -31,6 +31,13 @@ public:
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
+#ifdef DEBUG
+  /**
+   * Initializes a cached pref, which is only used in DEBUG code.
+   */
+  static void Initialize();
+#endif
+
   /**
    * Ensures the same structs are cached on this style context as would be
    * done if we called aOther->CalcDifference(this).
@@ -134,9 +141,7 @@ public:
     return;
   }
 
-  ~GeckoStyleContext() {
-    Destructor();
-  }
+  ~GeckoStyleContext();
 
   /**
    * Swaps owned style struct pointers between this and aNewContext, on

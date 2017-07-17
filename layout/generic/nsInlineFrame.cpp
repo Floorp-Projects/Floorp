@@ -1033,11 +1033,11 @@ nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
   MOZ_ASSERT(blockFrame, "Why did we have an IB split?");
 
   // The later inlines need to get our style.
-  nsStyleContext* ourStyle = StyleContext();
+  ServoStyleContext* ourStyle = StyleContext()->AsServo();
 
   // The anonymous block's style inherits from ours, and we already have our new
   // style context.
-  RefPtr<nsStyleContext> newContext =
+  RefPtr<ServoStyleContext> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
       nsCSSAnonBoxes::mozBlockInsideInlineWrapper, ourStyle);
 
