@@ -242,9 +242,11 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append(r'--skip-buildbot-actions')
     mh_command.append(r'--work-dir %cd:Z:=z:%\build')
     for action in run.get('actions', []):
+        assert ' ' not in action
         mh_command.append('--' + action)
 
     for option in run.get('options', []):
+        assert ' ' not in option
         mh_command.append('--' + option)
     if run.get('custom-build-variant-cfg'):
         mh_command.append('--custom-build-variant')
