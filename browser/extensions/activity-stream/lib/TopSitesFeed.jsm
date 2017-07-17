@@ -12,8 +12,11 @@ const {insertPinned} = Cu.import("resource://activity-stream/common/Reducers.jsm
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
+// Keep a reference to PreviewProvider.jsm until it's good to remove. See #2849
 XPCOMUtils.defineLazyModuleGetter(this, "PreviewProvider",
-  "resource:///modules/PreviewProvider.jsm");
+  "resource://app/modules/PreviewProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
+  "resource://activity-stream/lib/Screenshots.jsm");
 
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 const UPDATE_TIME = 15 * 60 * 1000; // 15 minutes
@@ -36,13 +39,15 @@ this.TopSitesFeed = class TopSitesFeed {
     }
   }
   async getScreenshot(url) {
-    let screenshot = await PreviewProvider.getThumbnail(url);
+    let screenshot = await Screenshots.getScreenshotForURL(url);
     const action = {type: at.SCREENSHOT_UPDATED, data: {url, screenshot}};
     this.store.dispatch(ac.BroadcastToContent(action));
   }
   async getLinksWithDefaults(action) {
-    let pinned = NewTabUtils.pinnedLinks.links;
     let frecent = await NewTabUtils.activityStreamLinks.getTopSites();
+    const defaultUrls = DEFAULT_TOP_SITES.map(site => site.url);
+    let pinned = NewTabUtils.pinnedLinks.links;
+    pinned = pinned.map(site => site && Object.assign({}, site, {isDefault: defaultUrls.indexOf(site.url) !== -1}));
 
     if (!frecent) {
       frecent = [];
@@ -91,7 +96,7 @@ this.TopSitesFeed = class TopSitesFeed {
     // Augment the pinned links with any other extra data we have for them already in the store
     const links = this.store.getState().TopSites.rows;
     const pinned = NewTabUtils.pinnedLinks.links;
-    return pinned.map(pinnedLink => (pinnedLink ? Object.assign(links.find(link => link && link.url === pinnedLink.url) || {}, pinnedLink, {isDefault: false}) : pinnedLink));
+    return pinned.map(pinnedLink => (pinnedLink ? Object.assign(links.find(link => link && link.url === pinnedLink.url) || {}, pinnedLink) : pinnedLink));
   }
   pin(action) {
     const {site, index} = action.data;
