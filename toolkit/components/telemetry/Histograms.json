@@ -11201,56 +11201,6 @@
     "kind": "boolean",
     "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
   },
-  "BLOCKED_ON_PLUGIN_MODULE_INIT_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time (ms) that the main thread has been blocked on LoadModule and NP_Initialize in PluginModuleParent"
-  },
-  "BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time (ms) that the main thread has been blocked on NPP_New in an IPC plugin"
-  },
-  "BLOCKED_ON_PLUGIN_STREAM_INIT_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time (ms) that the main thread has been blocked on NPP_NewStream in an IPC plugin"
-  },
-  "BLOCKED_ON_PLUGINASYNCSURROGATE_WAITFORINIT_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "50",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time (ms) that the main thread has been blocked on PluginAsyncSurrogate::WaitForInit in an IPC plugin"
-  },
-  "BLOCKED_ON_PLUGIN_INSTANCE_DESTROY_MS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Time (ms) that the main thread has been blocked on NPP_Destroy in an IPC plugin"
-  },
   "ONBEFOREUNLOAD_PROMPT_ACTION" : {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "45",
