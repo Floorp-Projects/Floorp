@@ -172,25 +172,9 @@ The template is parameterized with the following variables:
 ``<key>``
   Any ``<key>`` defined in the ``variables`` property may also be referenced.
 
-The template is an object that is parameterized by:
-
-1. Replacing substrings ``'${variable}'`` in strings and object keys
-   with the value of the given ``variable``.
-2. Replacing objects on the form ``{$eval: 'variable'}`` with the
-   value of of the given ``variable``.
-3. Replacing objects on the form ``{$fromNow: 'timespan'}`` with a
-   timestamp of ``timespan`` from now. Where ``timespan`` is on the
-   form: ``([0-9]+ *d(ays?)?)? *([0-9]+ *h(ours?)?)? *([0-9]+ *m(in(utes?)?)?)?``
-4. Replacing any object on the form ``{$json: value}`` with the
-   value of ``JSON.stringify(result)`` where ``result`` is the result
-   of recursive application of rules 1-4 on `value`.
-
-.. warning::
-  The template language is currently under active development and additional
-  features will be added in the future. Once feature complete the template
-  language will be frozen to avoid breaking backwards compatibility for user
-  interface implementors. See `JSON-E <https://github.com/taskcluster/json-e>`_
-  for details.
+The template is an object that is parameterized using `JSON-e
+<https://github.com/taskcluster/json-e>`_, with the above variables supplied as
+context.
 
 The following **example** demonstrates how a task template can specify
 timestamps and dump input JSON into environment variables::
