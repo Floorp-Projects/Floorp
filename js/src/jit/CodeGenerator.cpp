@@ -11023,6 +11023,238 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole* lir)
     masm.bind(&done);
 }
 
+template <SwitchTableType tableType>
+class OutOfLineSwitch : public OutOfLineCodeBase<CodeGenerator>
+{
+    using LabelsVector = Vector<Label, 0, JitAllocPolicy>;
+    using CodeLabelsVector = Vector<CodeLabel, 0, JitAllocPolicy>;
+    LabelsVector labels_;
+    CodeLabelsVector codeLabels_;
+    CodeLabel start_;
+    bool isOutOfLine_;
+
+    void accept(CodeGenerator* codegen) {
+        codegen->visitOutOfLineSwitch(this);
+    }
+
+  public:
+    explicit OutOfLineSwitch(TempAllocator& alloc)
+      : labels_(alloc),
+        codeLabels_(alloc),
+        isOutOfLine_(false)
+    {}
+
+    CodeLabel* start() {
+        return &start_;
+    }
+
+    CodeLabelsVector& codeLabels() {
+        return codeLabels_;
+    }
+    LabelsVector& labels() {
+        return labels_;
+    }
+
+    void jumpToCodeEntries(MacroAssembler& masm, Register index, Register temp) {
+        Register base;
+        if (tableType == SwitchTableType::Inline) {
+#if defined(JS_CODEGEN_ARM)
+            base = ::js::jit::pc;
+#else
+            MOZ_CRASH("NYI: SwitchTableType::Inline");
+#endif
+        } else {
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+            MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
+#else
+            masm.mov(start_.patchAt(), temp);
+            base = temp;
+#endif
+        }
+        BaseIndex jumpTarget(base, index, ScalePointer);
+        masm.branchToComputedAddress(jumpTarget);
+    }
+
+    // Register an entry in the switch table.
+    void addTableEntry(MacroAssembler& masm) {
+        if ((!isOutOfLine_ && tableType == SwitchTableType::Inline) ||
+            (isOutOfLine_ && tableType == SwitchTableType::OutOfLine))
+        {
+            CodeLabel cl;
+            masm.writeCodePointer(cl.patchAt());
+            masm.propagateOOM(codeLabels_.append(mozilla::Move(cl)));
+        }
+    }
+    // Register the code, to which the table will jump to.
+    void addCodeEntry(MacroAssembler& masm) {
+        Label entry;
+        masm.bind(&entry);
+        masm.propagateOOM(labels_.append(mozilla::Move(entry)));
+    }
+
+    void setOutOfLine() {
+        isOutOfLine_ = true;
+    }
+};
+
+template <SwitchTableType tableType>
+void
+CodeGenerator::visitOutOfLineSwitch(OutOfLineSwitch<tableType>* jumpTable)
+{
+    jumpTable->setOutOfLine();
+    if (tableType == SwitchTableType::OutOfLine) {
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+        MOZ_CRASH("NYI: SwitchTableType::OutOfLine");
+#else
+        masm.haltingAlign(sizeof(void*));
+        masm.use(jumpTable->start()->target());
+        masm.addCodeLabel(*jumpTable->start());
+#endif
+    }
+
+    // Add table entries if the table is inlined.
+    auto& labels = jumpTable->labels();
+    for (size_t i = 0, e = labels.length(); i < e; i++)
+        jumpTable->addTableEntry(masm);
+
+    auto& codeLabels = jumpTable->codeLabels();
+    for (size_t i = 0, e = codeLabels.length(); i < e; i++) {
+        // The entries of the jump table need to be absolute addresses and thus
+        // must be patched after codegen is finished.
+        auto& cl = codeLabels[i];
+        cl.target()->bind(labels[i].offset());
+        masm.addCodeLabel(cl);
+    }
+}
+
+template void CodeGenerator::visitOutOfLineSwitch(OutOfLineSwitch<SwitchTableType::Inline>* jumpTable);
+template void CodeGenerator::visitOutOfLineSwitch(OutOfLineSwitch<SwitchTableType::OutOfLine>* jumpTable);
+
+void
+CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir)
+{
+    Register index = ToRegister(lir->index());
+    Register temp0 = ToRegister(lir->temp0());
+#ifdef JS_NUNBOX32
+    Register temp1 = ToRegister(lir->temp1());
+#endif
+    FloatRegister tempD = ToFloatRegister(lir->tempD());
+    ValueOperand out = ToOutValue(lir);
+
+    // For each element, load it and box it.
+    MArgumentState* array = lir->array()->toArgumentState();
+    Label join;
+
+    // Jump to the code which is loading the element, based on its index.
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+    auto* jumpTable = new (alloc()) OutOfLineSwitch<SwitchTableType::Inline>(alloc());
+#else
+    auto* jumpTable = new (alloc()) OutOfLineSwitch<SwitchTableType::OutOfLine>(alloc());
+#endif
+
+    {
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
+        // Inhibit pools within the following sequence because we are indexing into
+        // a pc relative table. The region will have one instruction for ma_ldr, one
+        // for breakpoint, and each table case takes one word.
+        AutoForbidPools afp(&masm, 1 + 1 + array->numElements());
+#endif
+        jumpTable->jumpToCodeEntries(masm, index, temp0);
+
+        // Add table entries if the table is inlined.
+        for (size_t i = 0, e = array->numElements(); i < e; i++)
+            jumpTable->addTableEntry(masm);
+    }
+
+    // Add inlined code for loading arguments from where they are allocated.
+    for (size_t i = 0, e = array->numElements(); i < e; i++) {
+        MDefinition* elem = array->getElement(i);
+        ConstantOrRegister input;
+
+        jumpTable->addCodeEntry(masm);
+        Register typeReg = Register::Invalid();
+        const LAllocation* a = lir->getOperand(1 + BOX_PIECES * i);
+        if (a->isBogus()) {
+            if (elem->type() == MIRType::Null) {
+                input = NullValue();
+            } else if (elem->type() == MIRType::Undefined) {
+                input = UndefinedValue();
+            } else if (elem->isConstant() && elem->isEmittedAtUses()) {
+                input = elem->toConstant()->toJSValue();
+            } else {
+                MOZ_CRASH("Unsupported element constant allocation.");
+            }
+        } else if (a->isMemory()) {
+            if (elem->type() == MIRType::Double) {
+                masm.loadDouble(ToAddress(a), tempD);
+                input = TypedOrValueRegister(elem->type(), AnyRegister(tempD));
+            } else if (elem->type() == MIRType::Value) {
+                typeReg = temp0;
+                masm.loadPtr(ToAddress(a), temp0);
+#ifdef JS_PUNBOX64
+                input = TypedOrValueRegister(ValueOperand(temp0));
+#endif
+            } else {
+                typeReg = temp0;
+                size_t width = StackSlotAllocator::width(LDefinition::TypeFrom(elem->type()));
+                if (width == 4)
+                    masm.load32(ToAddress(a), temp0);
+                else if (width == 8)
+                    masm.loadPtr(ToAddress(a), temp0);
+                else
+                    MOZ_CRASH("Unsupported load size");
+                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+            }
+        } else if (a->isGeneralReg()) {
+            typeReg = ToRegister(a);
+            input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+#ifdef JS_PUNBOX64
+            if (elem->type() != MIRType::Value)
+                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+            else
+                input = TypedOrValueRegister(ValueOperand(typeReg));
+#else
+            if (elem->type() != MIRType::Value)
+                input = TypedOrValueRegister(elem->type(), AnyRegister(typeReg));
+#endif
+        } else if (a->isFloatReg()) {
+            input = TypedOrValueRegister(elem->type(), AnyRegister(ToFloatRegister(a)));
+        } else if (a->isConstantValue()) {
+            input = a->toConstant()->toJSValue();
+        } else {
+            MOZ_CRASH("Unsupported element allocation.");
+        }
+
+#ifdef JS_NUNBOX32
+        if (elem->type() == MIRType::Value) {
+            static_assert(TYPE_INDEX == 0, "Unexpected type allocation index");
+            static_assert(PAYLOAD_INDEX == 1, "Unexpected payload allocation index");
+            const LAllocation* a1 = lir->getOperand(1 + BOX_PIECES * i + 1);
+            MOZ_ASSERT(!a1->isBogus());
+            MOZ_ASSERT(typeReg != Register::Invalid());
+            if (a1->isMemory()) {
+                masm.loadPtr(ToAddress(a1), temp1);
+                input = TypedOrValueRegister(ValueOperand(typeReg, temp1));
+            } else if (a1->isGeneralReg()) {
+                input = TypedOrValueRegister(ValueOperand(typeReg, ToRegister(a1)));
+            } else {
+                MOZ_CRASH("Unsupported Value allocation.");
+            }
+        } else {
+            MOZ_ASSERT(lir->getOperand(1 + BOX_PIECES * i + 1)->isBogus());
+        }
+#endif
+        masm.moveValue(input, out);
+
+        // For the last entry, fall-through.
+        if (i + 1 < e)
+            masm.jump(&join);
+    }
+
+    addOutOfLineCode(jumpTable, lir->mir());
+    masm.bind(&join);
+}
+
 template <typename T>
 static inline void
 StoreToTypedArray(MacroAssembler& masm, Scalar::Type writeType, const LAllocation* value,
