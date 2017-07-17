@@ -24,16 +24,23 @@ function runTests()
 {
   var iframe = document.getElementById("iframe");
   iframe.src="data:text/html,hello";
-  iframe.onload = function() {
-    ok(SpecialPowers.wrap(iframe).contentDocument.nodePrincipal.isNullPrincipal,
-       "iframe should have NullPrincipal.");
-  }
+  let p1 = new Promise((resolve, reject) => {
+    iframe.onload = function() {
+      ok(SpecialPowers.wrap(iframe).contentDocument.nodePrincipal.isNullPrincipal,
+         "iframe should have NullPrincipal.");
+      resolve();
+    }
+  });
+
   var iframe1 = document.getElementById("iframe1");
   iframe1.src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82";
-  iframe1.onload = function() {
-    ok(SpecialPowers.wrap(iframe1).contentDocument.nodePrincipal.isNullPrincipal,
-       "iframe1 should have NullPrincipal.");
-  }
+  let p2 = new Promise((resolve, reject) => {
+    iframe1.onload = function() {
+      ok(SpecialPowers.wrap(iframe1).contentDocument.nodePrincipal.isNullPrincipal,
+         "iframe1 should have NullPrincipal.");
+      resolve();
+    }
+  });
 
   var canvas = document.getElementById('canvas');
   var ctx = canvas.getContext('2d');
@@ -42,7 +49,7 @@ function runTests()
   var data = canvas.toDataURL('image/png');
   var img = new Image();
   img.src = data;
-  imgListener(img).then(() => {
+  let p3 = imgListener(img).then(() => {
     dump("img onload\n");
     ctx.drawImage(img, 0, 0);
     return new Promise((resolve, reject) => {
@@ -79,6 +86,9 @@ function runTests()
     return document.fonts.ready;
   }).then(() => {
     is(document.fonts.size, 1, "should load data:font");
+  });
+
+  Promise.all([p1, p2, p3]).then(() => {
     SimpleTest.finish();
   }).catch((e) => {
     ok(false, "throwing " + e);
