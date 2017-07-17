@@ -315,6 +315,7 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoFontComputationData", servo = "::properties::FontComputationData" },
     { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::stylearc::Arc<::custom_properties::CustomPropertiesMap>>" },
     { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::stylearc::Arc<ServoComputedValues2>>" },
+    { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::stylearc::RawOffsetArc" },
 ]
 fixups = [
     { pat = "root::nsString", rep = "::nsstring::nsStringRepr" },
