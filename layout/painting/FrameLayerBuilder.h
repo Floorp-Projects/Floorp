@@ -207,7 +207,6 @@ struct ContainerLayerParameters {
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
-    , mInLowPrecisionDisplayPort(false)
     , mForEventsAndPluginsOnly(false)
     , mLayerCreationHint(layers::LayerManager::NONE)
   {}
@@ -221,7 +220,6 @@ struct ContainerLayerParameters {
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
-    , mInLowPrecisionDisplayPort(false)
     , mForEventsAndPluginsOnly(false)
     , mLayerCreationHint(layers::LayerManager::NONE)
   {}
@@ -238,7 +236,6 @@ struct ContainerLayerParameters {
     , mInTransformedSubtree(aParent.mInTransformedSubtree)
     , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
-    , mInLowPrecisionDisplayPort(aParent.mInLowPrecisionDisplayPort)
     , mForEventsAndPluginsOnly(aParent.mForEventsAndPluginsOnly)
     , mLayerCreationHint(aParent.mLayerCreationHint)
   {}
@@ -271,7 +268,6 @@ struct ContainerLayerParameters {
   bool mInTransformedSubtree;
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;
-  bool mInLowPrecisionDisplayPort;
   bool mForEventsAndPluginsOnly;
   layers::LayerManager::PaintedLayerCreationHint mLayerCreationHint;
 
