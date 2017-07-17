@@ -1728,7 +1728,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 49;
+    const UI_VERSION = 50;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2069,6 +2069,23 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 49) {
       // Annotate that a user haven't seen any onboarding tour
       Services.prefs.setIntPref("browser.onboarding.seen-tourset-version", 0);
+    }
+
+    if (currentUIVersion < 50) {
+      try {
+        // Transform prefs related to old DevTools Console.
+        // The following prefs might be missing when the old DevTools Console
+        // front-end is removed.
+        // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1381834
+        if (Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo")) {
+          Services.prefs.setBoolPref("devtools.webconsole.filter.net", true);
+        }
+        if (Services.prefs.getBoolPref("devtools.webconsole.filter.cssparser")) {
+          Services.prefs.setBoolPref("devtools.webconsole.filter.css", true);
+        }
+      } catch (ex) {
+        // It's ok if a pref is missing.
+      }
     }
 
     // Update the migration version.
