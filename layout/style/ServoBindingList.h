@@ -587,13 +587,7 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    ServoComputedValuesBorrowed, uint32_t index,
                    nsAString* name)
 
-// Style-struct management.
-#define STYLE_STRUCT(name, checkdata_cb)                            \
-  struct nsStyle##name;                                             \
-  SERVO_BINDING_FUNC(Servo_GetStyle##name, const nsStyle##name*,    \
-                     ServoComputedValuesBorrowedOrNull computed_values)
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+SERVO_BINDING_FUNC(Servo_GetEmptyVariables, const nsStyleVariables*)
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \

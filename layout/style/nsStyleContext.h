@@ -28,12 +28,6 @@ class ServoStyleContext;
 extern "C" {
   void Servo_StyleContext_AddRef(mozilla::ServoStyleContext* aContext);
   void Servo_StyleContext_Release(mozilla::ServoStyleContext* aContext);
-#define STYLE_STRUCT(name_, checkdata_cb_)     \
-  struct nsStyle##name_;                       \
-  const nsStyle##name_* Servo_GetStyle##name_( \
-    ServoComputedValuesBorrowedOrNull computed_values);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
 }
 
 /**
@@ -351,18 +345,7 @@ protected:
 
   void SetStyleBits();
 
-  const void* StyleStructFromServoComputedValues(nsStyleStructID aSID) {
-    switch (aSID) {
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-      case eStyleStruct_##name_:                                              \
-        return Servo_GetStyle##name_(ComputedValues());
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected nsStyleStructID value");
-        return nullptr;
-    }
-  }
+  inline const void* StyleStructFromServoComputedValues(nsStyleStructID aSID);
 
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
