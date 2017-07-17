@@ -189,8 +189,7 @@ public:
   // examining the corresponding struct on |this|.  Doing so will likely
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in nsStyleContext::CalcStyleDifference.
-  nsStyleContext* GetStyleIfVisited() const
-    { return mStyleIfVisited; }
+  inline nsStyleContext* GetStyleIfVisited() const;
 
   // To be called only from nsStyleSet / ServoStyleSet.
   void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited);
