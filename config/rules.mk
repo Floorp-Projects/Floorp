@@ -908,9 +908,9 @@ endif
 
 # XXX hack to work around dsymutil failing on cross-OSX builds (bug 1380381)
 ifeq ($(HOST_OS_ARCH)-$(OS_ARCH),Linux-Darwin)
-rust_debug_info=1
+default_rustflags += -C debuginfo=1
 else
-rust_debug_info=2
+default_rustflags += -C debuginfo=2
 endif
 
 # We use the + prefix to pass down the jobserver fds to cargo, but we
@@ -920,7 +920,6 @@ define RUN_CARGO
 $(if $(findstring n,$(filter-out --%, $(MAKEFLAGS))),,+)env $(environment_cleaner) $(rust_unlock_unstable) $(rustflags_override) $(sccache_wrap) \
 	CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 	RUSTC=$(RUSTC) \
-	RUSTFLAGS='-C debuginfo=$(rust_debug_info)' \
 	MOZ_SRC=$(topsrcdir) \
 	MOZ_DIST=$(ABS_DIST) \
 	LIBCLANG_PATH="$(MOZ_LIBCLANG_PATH)" \
