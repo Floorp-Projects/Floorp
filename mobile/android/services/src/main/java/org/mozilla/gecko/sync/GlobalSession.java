@@ -44,6 +44,7 @@ import org.mozilla.gecko.sync.stage.NoSuchStageException;
 import org.mozilla.gecko.sync.stage.PasswordsServerSyncStage;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 import org.mozilla.gecko.sync.stage.UploadMetaGlobalStage;
+import org.mozilla.gecko.sync.stage.ValidateBookmarksSyncStage;
 import org.mozilla.gecko.sync.telemetry.TelemetryCollector;
 import org.mozilla.gecko.sync.telemetry.TelemetryStageCollector;
 
@@ -207,6 +208,7 @@ public class GlobalSession implements HttpResponseObserver {
     stages.put(Stage.syncRecentHistory,       new RecentHistoryServerSyncStage());
 
     stages.put(Stage.syncBookmarks,           new BookmarksServerSyncStage());
+    stages.put(Stage.validateBookmarks,       new ValidateBookmarksSyncStage());
     stages.put(Stage.syncFormHistory,         new FormHistoryServerSyncStage());
     stages.put(Stage.syncFullHistory,         new HistoryServerSyncStage());
 

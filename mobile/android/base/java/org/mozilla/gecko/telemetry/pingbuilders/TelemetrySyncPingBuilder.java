@@ -35,7 +35,7 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
             final TelemetryStageCollector stage = stages.get(stageName);
 
             // Skip stages that did nothing.
-            if (stage.inbound == 0 && stage.outbound == 0) {
+            if (stage.inbound == 0 && stage.outbound == 0 && stage.error == null && stage.validation == null) {
                 continue;
             }
 
@@ -82,6 +82,10 @@ public class TelemetrySyncPingBuilder extends TelemetryLocalPingBuilder {
             // Spreading around our schema definition like that is awkward, but, alas, here we are.
             if (stage.error != null) {
                 stageJSON.put("failureReason", stage.error);
+            }
+            // As above for validation too.
+            if (stage.validation != null) {
+                stageJSON.put("validation", stage.validation);
             }
 
             addUnchecked(engines, stageJSON);

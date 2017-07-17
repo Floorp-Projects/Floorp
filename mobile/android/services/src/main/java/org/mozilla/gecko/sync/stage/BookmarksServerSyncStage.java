@@ -81,7 +81,8 @@ public class BookmarksServerSyncStage extends VersionedServerSyncStage {
             BOOKMARKS_SORT,
             getAllowedMultipleBatches(),
             getAllowedToUseHighWaterMark(),
-            getRepositoryStateProvider()
+            getRepositoryStateProvider(),
+            false
     );
   }
 
