@@ -770,14 +770,6 @@ DownloadsDataCtor.prototype = {
         }
       }
 
-      for (let view of this._views) {
-        try {
-          view.onDownloadStateChanged(download);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      }
-
       if (download.succeeded ||
           (download.error && download.error.becauseBlocked)) {
         this._notifyDownloadEvent("finish");
@@ -911,6 +903,13 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsData", function() {
  * as a view is registered with it.
  */
 const DownloadsViewPrototype = {
+  /**
+   * Contains all the available Download objects and their current state value.
+   *
+   * SUBCLASSES MUST OVERRIDE THIS PROPERTY.
+   */
+  _oldDownloadStates: null,
+
   // Registration of views
 
   /**
@@ -1014,10 +1013,11 @@ const DownloadsViewPrototype = {
    * @param download
    *        Download object that was just added.
    *
-   * @note Subclasses should override this.
+   * @note Subclasses should override this and still call the base method.
    */
   onDownloadAdded(download) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    this._oldDownloadStates.set(download,
+                                DownloadsCommon.stateOfDownload(download));
   },
 
   /**
@@ -1040,10 +1040,16 @@ const DownloadsViewPrototype = {
    * Note that progress notification changes are throttled at the Downloads.jsm
    * API level, and there is no throttling mechanism in the front-end.
    *
-   * @note Subclasses should override this.
+   * @note Subclasses should override this and still call the base method.
    */
   onDownloadChanged(download) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    let oldState = this._oldDownloadStates.get(download);
+    let newState = DownloadsCommon.stateOfDownload(download);
+    this._oldDownloadStates.set(download, newState);
+
+    if (oldState != newState) {
+      this.onDownloadStateChanged(download);
+    }
   },
 
   /**
@@ -1092,6 +1098,7 @@ const DownloadsViewPrototype = {
  * the main browser window until the autostart timeout elapses.
  */
 function DownloadsIndicatorDataCtor(aPrivate) {
+  this._oldDownloadStates = new WeakMap();
   this._isPrivate = aPrivate;
   this._views = [];
 }
@@ -1120,6 +1127,7 @@ DownloadsIndicatorDataCtor.prototype = {
   },
 
   onDownloadAdded(download) {
+    DownloadsViewPrototype.onDownloadAdded.call(this, download);
     this._itemCount++;
     this._updateViews();
   },
@@ -1157,6 +1165,7 @@ DownloadsIndicatorDataCtor.prototype = {
   },
 
   onDownloadChanged(download) {
+    DownloadsViewPrototype.onDownloadChanged.call(this, download);
     this._updateViews();
   },
 
@@ -1322,6 +1331,7 @@ function DownloadsSummaryData(aIsPrivate, aNumToExclude) {
   this._numActive = 0;
   this._percentComplete = -1;
 
+  this._oldDownloadStates = new WeakMap();
   this._isPrivate = aIsPrivate;
   this._views = [];
 }
@@ -1355,6 +1365,7 @@ DownloadsSummaryData.prototype = {
   },
 
   onDownloadAdded(download) {
+    DownloadsViewPrototype.onDownloadAdded.call(this, download);
     this._downloads.unshift(download);
     this._updateViews();
   },
@@ -1365,7 +1376,8 @@ DownloadsSummaryData.prototype = {
     this._lastTimeLeft = -1;
   },
 
-  onDownloadChanged() {
+  onDownloadChanged(download) {
+    DownloadsViewPrototype.onDownloadChanged.call(this, download);
     this._updateViews();
   },
 
