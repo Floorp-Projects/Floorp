@@ -41,12 +41,12 @@ public class HighlightItem extends StreamItem implements IconCallback {
     private Highlight highlight;
     private int position;
 
-    private final FaviconView vIconView;
-    private final TextView vLabel;
+    private final FaviconView pageIconView;
+    private final TextView pageTitleView;
     private final TextView vTimeSince;
-    private final TextView vSourceView;
-    private final TextView vPageView;
-    private final ImageView vSourceIconView;
+    private final TextView pageSourceView;
+    private final TextView pageDomainView;
+    private final ImageView pageSourceIconView;
 
     private Future<IconResponse> ongoingIconLoad;
     private int tilesMargin;
@@ -58,12 +58,12 @@ public class HighlightItem extends StreamItem implements IconCallback {
 
         tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
-        vLabel = (TextView) itemView.findViewById(R.id.card_history_label);
+        pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
         vTimeSince = (TextView) itemView.findViewById(R.id.card_history_time_since);
-        vIconView = (FaviconView) itemView.findViewById(R.id.icon);
-        vSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
-        vPageView = (TextView) itemView.findViewById(R.id.page);
-        vSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
+        pageIconView = (FaviconView) itemView.findViewById(R.id.icon);
+        pageSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
+        pageDomainView = (TextView) itemView.findViewById(R.id.page);
+        pageSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
 
         final ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
 
@@ -86,7 +86,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
                         highlight,
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
-                        vIconView.getWidth(), vIconView.getHeight());
+                        pageIconView.getWidth(), pageIconView.getHeight());
 
                 Telemetry.sendUIEvent(
                         TelemetryContract.Event.SHOW,
@@ -103,13 +103,13 @@ public class HighlightItem extends StreamItem implements IconCallback {
         this.highlight = highlight;
         this.position = position;
 
-        vLabel.setText(highlight.getTitle());
+        pageTitleView.setText(highlight.getTitle());
         vTimeSince.setText(highlight.getRelativeTimeSpan());
 
-        ViewGroup.LayoutParams layoutParams = vIconView.getLayoutParams();
+        ViewGroup.LayoutParams layoutParams = pageIconView.getLayoutParams();
         layoutParams.width = tilesWidth - tilesMargin;
         layoutParams.height = tilesHeight;
-        vIconView.setLayoutParams(layoutParams);
+        pageIconView.setLayoutParams(layoutParams);
 
         updateUiForSource(highlight.getSource());
         updatePage();
@@ -128,18 +128,18 @@ public class HighlightItem extends StreamItem implements IconCallback {
     private void updateUiForSource(Utils.HighlightSource source) {
         switch (source) {
             case BOOKMARKED:
-                vSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
-                vSourceView.setVisibility(View.VISIBLE);
-                vSourceIconView.setImageResource(R.drawable.ic_as_bookmarked);
+                pageSourceView.setText(R.string.activity_stream_highlight_label_bookmarked);
+                pageSourceView.setVisibility(View.VISIBLE);
+                pageSourceIconView.setImageResource(R.drawable.ic_as_bookmarked);
                 break;
             case VISITED:
-                vSourceView.setText(R.string.activity_stream_highlight_label_visited);
-                vSourceView.setVisibility(View.VISIBLE);
-                vSourceIconView.setImageResource(R.drawable.ic_as_visited);
+                pageSourceView.setText(R.string.activity_stream_highlight_label_visited);
+                pageSourceView.setVisibility(View.VISIBLE);
+                pageSourceIconView.setImageResource(R.drawable.ic_as_visited);
                 break;
             default:
-                vSourceView.setVisibility(View.INVISIBLE);
-                vSourceIconView.setImageResource(0);
+                pageSourceView.setVisibility(View.INVISIBLE);
+                pageSourceIconView.setImageResource(0);
                 break;
         }
     }
@@ -147,7 +147,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
     private void updatePage() {
         // First try to set the provider name from the page's metadata.
         if (highlight.getMetadata().hasProvider()) {
-            vPageView.setText(highlight.getMetadata().getProvider());
+            pageDomainView.setText(highlight.getMetadata().getProvider());
             return;
         }
 
@@ -155,13 +155,13 @@ public class HighlightItem extends StreamItem implements IconCallback {
         extractLabel(itemView.getContext(), highlight.getUrl(), false, new ActivityStream.LabelCallback() {
             @Override
             public void onLabelExtracted(String label) {
-                vPageView.setText(TextUtils.isEmpty(label) ? highlight.getUrl() : label);
+                pageDomainView.setText(TextUtils.isEmpty(label) ? highlight.getUrl() : label);
             }
         });
     }
 
     @Override
     public void onIconResponse(IconResponse response) {
-        vIconView.updateImage(response);
+        pageIconView.updateImage(response);
     }
 }
