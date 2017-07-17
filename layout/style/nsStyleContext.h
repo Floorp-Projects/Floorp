@@ -222,7 +222,7 @@ public:
   }
 
   inline nsRuleNode* RuleNode();
-  inline ServoComputedValues* ComputedValues();
+  inline const ServoComputedValues* ComputedValues();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 

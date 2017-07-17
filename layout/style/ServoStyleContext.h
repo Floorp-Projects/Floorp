@@ -17,14 +17,14 @@ public:
                     nsPresContext* aPresContext,
                     nsIAtom* aPseudoTag,
                     CSSPseudoElementType aPseudoType,
-                    already_AddRefed<ServoComputedValues> aComputedValues);
+                    ServoComputedValuesForgotten aComputedValues);
 
   nsPresContext* PresContext() const {
     return mPresContext;
   }
 
-  ServoComputedValues* ComputedValues() const {
-    return mSource;
+  const ServoComputedValues* ComputedValues() const {
+    return &mSource;
   }
 
   void AddRef() {
@@ -58,7 +58,7 @@ public:
 
 private:
   nsPresContext* mPresContext;
-  RefPtr<ServoComputedValues> mSource;
+  ServoComputedValues mSource;
 };
 
 }

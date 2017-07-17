@@ -30,7 +30,7 @@ nsStyleContext::RuleNode()
     return AsGecko()->RuleNode();
 }
 
-ServoComputedValues*
+const ServoComputedValues*
 nsStyleContext::ComputedValues()
 {
     MOZ_RELEASE_ASSERT(IsServo());
