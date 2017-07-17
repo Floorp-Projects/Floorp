@@ -109,7 +109,9 @@
       <method name="initPicker">
         <parameter name="detail"/>
         <body><![CDATA[
-          const locale = Services.locale.getAppLocaleAsBCP47();
+          // TODO: When bug 1376616 lands, replace this.setGregorian with
+          //       mozIntl.Locale for setting calendar to Gregorian
+          const locale = this.setGregorian(Services.locale.getAppLocaleAsBCP47());
           const dir = this.mozIntl.getLocaleInfo(locale).direction;
 
           switch (this.type) {
@@ -277,6 +279,15 @@
         <body><![CDATA[
           const displayNames = this.mozIntl.getDisplayNames(locale, {keys, style});
           return keys.map(key => displayNames.values[key]);
+        ]]></body>
+      </method>
+      <method name="setGregorian">
+        <parameter name="locale"/>
+        <body><![CDATA[
+          if (locale.match(/u-ca-/)) {
+            return locale.replace(/u-ca-[^-]+/, "u-ca-gregory");
+          }
+          return locale + "-u-ca-gregory";
         ]]></body>
       </method>
       <method name="handleEvent">
