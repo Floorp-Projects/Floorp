@@ -45,8 +45,8 @@ function SortTest(dataType, dataSource) {
     typedArray.sort();
 
     // Test against regular array sort
-    assertDeepEq(Array.from(typedArray), Array.from(originalValues).sort(cmp),
-                 `The array is not properly sorted! seed: ${SEED}`);
+    assertEqArray(Array.from(typedArray), Array.from(originalValues).sort(cmp),
+                  `The array is not properly sorted! seed: ${SEED}`);
 
     // Another sanity check
     for (let i=0; i < typedArray.length - 1; i++)
@@ -63,7 +63,7 @@ function SortTest(dataType, dataSource) {
 }
 
 for (let constructor of anyTypedArrayConstructors) {
-    for (let arrayLength of [256, 16, 0]) {
+    for (let arrayLength of [512, 256, 16, 0]) {
         let source = genRandomArrayBuffer(arrayLength, constructor.BYTES_PER_ELEMENT * 8, SEED);
         SortTest(constructor, source);
     }
