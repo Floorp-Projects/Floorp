@@ -50,6 +50,42 @@ public class PublicSuffix {
     }
 
     /**
+     * Returns the public suffix with the specified number of additional parts.
+     *
+     * For example, the public suffix of "www.m.bbc.co.uk" (with 0 additional parts) is "co.uk".
+     * With 1 additional part: "bbc.co.uk".
+     *
+     * @throws IllegalArgumentException if additionalPartCount is less than zero.
+     * @throws NullPointerException if the Context or domain are null.
+     * @return the public suffix with the specified number of additional parts, or the empty string if a public suffix does not exist.
+     */
+    @NonNull
+    @WorkerThread // This method might need to load data from disk
+    public static String getPublicSuffix(@NonNull final Context context, @NonNull final String domain, final int additionalPartCount) {
+        if (context == null) { throw new NullPointerException("Expected non-null Context argument"); }
+        if (domain == null) { throw new NullPointerException("Expected non-null domain argument"); }
+
+        if (additionalPartCount < 0) {
+            throw new IllegalArgumentException("Expected additionalPartCount > 0. Got: " + additionalPartCount);
+        }
+
+        final int publicSuffixCombinedIndex = findPublicSuffixIndex(context, domain);
+        if (publicSuffixCombinedIndex < 0) {
+            return "";
+        }
+
+        final String publicSuffix = domain.substring(publicSuffixCombinedIndex + 1); // +1 to remove prefix ".".
+
+        final int nextPartIndex = publicSuffix.indexOf('.');
+        final String publicSuffixFirstPart = nextPartIndex < 0 ? publicSuffix : publicSuffix.substring(0, nextPartIndex);
+
+        final List<String> domainParts = normalizeAndSplit(domain);
+        final int publicSuffixPartsIndex = domainParts.indexOf(publicSuffixFirstPart);
+        final int returnedPartsIndex = Math.max(0, publicSuffixPartsIndex - additionalPartCount);
+        return TextUtils.join(".", domainParts.subList(returnedPartsIndex, domainParts.size()));
+    }
+
+    /**
      * Returns the index of the leftmost part of the public suffix, or -1 if not found.
      */
     @WorkerThread
