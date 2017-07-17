@@ -150,6 +150,11 @@ struct ServoVisitedStyle {
   uintptr_t mPtr;
 };
 
+template <typename T>
+struct ServoRawOffsetArc {
+  T* mPtr;
+};
+
 /**
  * We want C++ to be abe to read the style struct fields of ComputedValues
  * so we define this type on the C++ side and use the bindgenned version
@@ -161,7 +166,7 @@ struct ServoVisitedStyle {
  * <div rustbindgen nocopy></div>
  */
 struct ServoComputedValues2 {
-#define STYLE_STRUCT(name_, checkdata_cb_) nsStyle##name_* name_;
+#define STYLE_STRUCT(name_, checkdata_cb_) ServoRawOffsetArc<nsStyle##name_> name_;
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
   ServoCustomPropertiesMap custom_properties;
