@@ -36,9 +36,7 @@ using namespace mozilla;
 
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
-nsStringBundle::~nsStringBundle()
-{
-}
+NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
 
 nsStringBundle::nsStringBundle(const char* aURLSpec,
                                nsIStringBundleOverride* aOverrideStrings) :
@@ -47,6 +45,10 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
   mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
   mAttemptedLoad(false),
   mLoaded(false)
+{
+}
+
+nsStringBundle::~nsStringBundle()
 {
 }
 
@@ -136,6 +138,38 @@ nsStringBundle::GetStringFromNameHelper(const char* aName, nsAString& aResult)
 }
 
 NS_IMETHODIMP
+nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
+{
+  nsAutoCString idStr;
+  idStr.AppendInt(aID, 10);
+  return GetStringFromName(idStr.get(), aResult);
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
+                                       char16_t **aResult)
+{
+  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = nullptr;
+
+  nsAutoString tmpstr;
+  nsresult rv = GetStringFromNameHelper(aName, tmpstr);
+  if (NS_FAILED(rv)) return rv;
+
+  *aResult = ToNewUnicode(tmpstr);
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsStringBundle::FormatStringFromID(int32_t aID,
                                    const char16_t **aParams,
                                    uint32_t aLength,
@@ -174,40 +208,6 @@ nsStringBundle::FormatStringFromName(const char* aName,
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.get(), aParams, aLength, aResult);
-}
-
-NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
-{
-  nsAutoCString idStr;
-  idStr.AppendInt(aID, 10);
-  return GetStringFromName(idStr.get(), aResult);
-}
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
-                                       char16_t **aResult)
-{
-  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
-}
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = nullptr;
-
-  nsAutoString tmpstr;
-  nsresult rv = GetStringFromNameHelper(aName, tmpstr);
-  if (NS_FAILED(rv)) return rv;
-
-  *aResult = ToNewUnicode(tmpstr);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
 }
 
 nsresult
