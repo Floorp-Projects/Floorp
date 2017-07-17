@@ -325,7 +325,7 @@ module.exports = function shortURL(link) {
   // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
   const eTLDLength = (eTLD || "").length || hostname.match(/\.com$/) && 3;
   const eTLDExtra = eTLDLength > 0 ? -(eTLDLength + 1) : Infinity;
-  return hostname.slice(0, eTLDExtra).toLowerCase();
+  return hostname.slice(0, eTLDExtra).toLowerCase() || hostname;
 };
 
 /***/ }),
