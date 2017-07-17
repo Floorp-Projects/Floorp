@@ -111,10 +111,15 @@ CodeGeneratorX86::visitBox(LBox* box)
 void
 CodeGeneratorX86::visitBoxFloatingPoint(LBoxFloatingPoint* box)
 {
-    const AnyRegister in = ToAnyRegister(box->getOperand(0));
+    const LAllocation* in = box->getOperand(0);
     const ValueOperand out = ToOutValue(box);
 
-    masm.moveValue(TypedOrValueRegister(box->type(), in), out);
+    FloatRegister reg = ToFloatRegister(in);
+    if (box->type() == MIRType::Float32) {
+        masm.convertFloat32ToDouble(reg, ScratchFloat32Reg);
+        reg = ScratchFloat32Reg;
+    }
+    masm.boxDouble(reg, out, reg);
 }
 
 void

@@ -373,7 +373,7 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     masm.Sub(w2, w6, w8);
 
     // Put an undefined in a register so it can be pushed.
-    masm.moveValue(UndefinedValue(), ValueOperand(r4));
+    masm.moveValue(UndefinedValue(), r4);
 
     // Push undefined N times.
     {
