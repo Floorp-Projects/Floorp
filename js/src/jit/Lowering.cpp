@@ -3236,73 +3236,6 @@ LIRGenerator::visitLoadUnboxedString(MLoadUnboxedString* ins)
 }
 
 void
-LIRGenerator::visitLoadElementFromState(MLoadElementFromState* ins)
-{
-    MOZ_ASSERT(ins->index()->type() == MIRType::Int32);
-
-    LDefinition temp1 = LDefinition::BogusTemp();
-#ifdef JS_NUNBOX32
-    temp1 = temp();
-#endif
-    LLoadElementFromStateV* lir = new(alloc()) LLoadElementFromStateV(temp(), temp1, tempDouble());
-    MOZ_ASSERT(ins->array()->isArgumentState(),
-               "LIRGenerator::visitLoadElementFromState: Unsupported state object");
-    MArgumentState* array = ins->array()->toArgumentState();
-
-    //   1                                 -- for the index as a register
-    //   BOX_PIECES * array->numElements() -- for using as operand all the
-    //                                        elements of the inlined array.
-    size_t numOperands = 1 + BOX_PIECES * array->numElements();
-    if (!lir->init(alloc(), numOperands)) {
-        abort(AbortReason::Alloc, "OOM: LIRGenerator::visitLoadElementFromState");
-        return;
-    }
-    lir->setOperand(0, useRegister(ins->index())); // index
-    for (size_t i = 0, e = array->numElements(); i < e; i++) {
-        MDefinition* elem = array->getElement(i);
-        if (elem->isConstant() && elem->isEmittedAtUses()) {
-            lir->setOperand(1 + BOX_PIECES * i, LAllocation());
-#ifdef JS_NUNBOX32
-            lir->setOperand(1 + BOX_PIECES * i + 1, LAllocation());
-#endif
-            continue;
-        }
-
-        switch (array->getElement(i)->type()) {
-          case MIRType::Value:
-            lir->setBoxOperand(1 + BOX_PIECES * i, useBox(elem, LUse::ANY));
-            break;
-          // Anything which can be boxed:
-          case MIRType::Boolean:
-          case MIRType::Int32:
-          case MIRType::Double:
-          case MIRType::Object:
-          case MIRType::String:
-          case MIRType::Symbol:
-            lir->setOperand(1 + BOX_PIECES * i, use(elem));
-#ifdef JS_NUNBOX32
-            // Bogus second operand.
-            lir->setOperand(1 + BOX_PIECES * i + 1, LAllocation());
-#endif
-            break;
-          case MIRType::Null:
-          case MIRType::Undefined:
-            // Bogus operand, as these can be inlined.
-            lir->setOperand(1 + BOX_PIECES * i, LAllocation());
-#ifdef JS_NUNBOX32
-            lir->setOperand(1 + BOX_PIECES * i + 1, LAllocation());
-#endif
-            break;
-          default:
-            MOZ_CRASH("LIRGenerator::visitLoadElementFromState: Unsupported element type.");
-            return;
-        }
-    }
-
-    defineBox(lir, ins);
-}
-
-void
 LIRGenerator::visitStoreElement(MStoreElement* ins)
 {
     MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
@@ -5195,12 +5128,6 @@ LIRGenerator::visitArrayState(MArrayState* objState)
 {
     // ArrayState nodes are always recovered on bailouts
     MOZ_CRASH("Unexpected ArrayState node during Lowering.");
-}
-
-void
-LIRGenerator::visitArgumentState(MArgumentState* objState)
-{
-    // ArgumentState nodes are always inlined at their uses.
 }
 
 void
