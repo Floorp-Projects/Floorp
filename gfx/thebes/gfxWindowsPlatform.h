@@ -180,6 +180,7 @@ public:
 
     bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
     void SchedulePaintIfDeviceReset() override;
+    void CheckForContentOnlyDeviceReset();
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 
