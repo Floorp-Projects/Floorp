@@ -1424,6 +1424,19 @@ pub extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
     mem::replace(dl_data, WrVecU8::from_vec(data));
 }
 
+pub type VecU8 = Vec<u8>;
+pub type ArcVecU8 = Arc<VecU8>;
+
+#[no_mangle]
+pub extern "C" fn wr_add_ref_arc(arc: &ArcVecU8) -> *const VecU8 {
+    Arc::into_raw(arc.clone())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_dec_ref_arc(arc: *const VecU8) {
+    Arc::from_raw(arc);
+}
+
 // TODO: nical
 // Update for the new blob image interface changes.
 //
