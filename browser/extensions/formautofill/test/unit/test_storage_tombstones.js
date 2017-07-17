@@ -40,10 +40,14 @@ function add_storage_task(test_function) {
   add_task(async function() {
     let path = getTempFile(TEST_STORE_FILE_NAME).path;
     let profileStorage = new ProfileStorage(path);
+    let testCC1 = Object.assign({}, TEST_CC_1);
     await profileStorage.initialize();
 
     for (let [storage, record] of [[profileStorage.addresses, TEST_ADDRESS_1],
-                                   [profileStorage.creditCards, TEST_CC_1]]) {
+                                   [profileStorage.creditCards, testCC1]]) {
+      if (storage.normalizeCCNumberFields) {
+        await storage.normalizeCCNumberFields(record);
+      }
       await test_function(storage, record);
     }
   });

@@ -116,6 +116,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillNameUtils",
                                   "resource://formautofill/FormAutofillNameUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
+                                  "resource://formautofill/MasterPassword.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PhoneNumber",
                                   "resource://formautofill/phonenumberutils/PhoneNumber.jsm");
 
@@ -1471,26 +1473,9 @@ class CreditCards extends AutofillRecords {
   }
 
   _normalizeFields(creditCard) {
-    // Fields that should not be set by content.
-    delete creditCard["cc-number-encrypted"];
-
-    // Validate and encrypt credit card numbers, and calculate the masked numbers
-    if (creditCard["cc-number"]) {
-      let ccNumber = creditCard["cc-number"].replace(/\s/g, "");
-      delete creditCard["cc-number"];
-
-      if (!/^\d+$/.test(ccNumber)) {
-        throw new Error("Credit card number contains invalid characters.");
-      }
-
-      // TODO: Encrypt cc-number here (bug 1337314).
-      // e.g. creditCard["cc-number-encrypted"] = Encrypt(creditCard["cc-number"]);
-
-      if (ccNumber.length > 4) {
-        creditCard["cc-number"] = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
-      } else {
-        creditCard["cc-number"] = ccNumber;
-      }
+    // Check if cc-number is normalized(normalizeCCNumberFields should be called first).
+    if (!creditCard["cc-number-encrypted"] || !creditCard["cc-number"].includes("*")) {
+      throw new Error("Credit card number needs to be normalized first.");
     }
 
     // Normalize name
@@ -1527,6 +1512,38 @@ class CreditCards extends AutofillRecords {
       } else {
         creditCard["cc-exp-year"] = expYear;
       }
+    }
+  }
+
+  /**
+   * Normalize credit card number related field for saving. It should always be
+   * called before adding/updating credit card records.
+   *
+   * @param  {Object} creditCard
+   *         The creditCard record with plaintext number only.
+   */
+  async normalizeCCNumberFields(creditCard) {
+    // Fields that should not be set by content.
+    delete creditCard["cc-number-encrypted"];
+
+    // Validate and encrypt credit card numbers, and calculate the masked numbers
+    if (creditCard["cc-number"]) {
+      let ccNumber = creditCard["cc-number"].replace(/\s/g, "");
+      delete creditCard["cc-number"];
+
+      if (!/^\d+$/.test(ccNumber)) {
+        throw new Error("Credit card number contains invalid characters.");
+      }
+
+      // Based on the information on wiki[1], the shortest valid length should be
+      // 12 digits(Maestro).
+      // [1] https://en.wikipedia.org/wiki/Payment_card_number
+      if (ccNumber.length < 12) {
+        throw new Error("Invalid credit card number because length is under 12 digits.");
+      }
+
+      creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(creditCard["cc-number"]);
+      creditCard["cc-number"] = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
     }
   }
 }
