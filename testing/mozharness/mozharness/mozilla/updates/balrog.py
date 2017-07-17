@@ -39,6 +39,10 @@ class BalrogMixin(object):
             buildbot_properties,
             self.buildbot_properties.items(),
         )))
+        if self.config.get('stage_platform'):
+            balrog_props['properties']['stage_platform'] = self.config['stage_platform']
+        if self.config.get('platform'):
+            balrog_props['properties']['platform'] = self.config['platform']
         if self.config.get('balrog_platform'):
             balrog_props["properties"]["platform"] = self.config['balrog_platform']
         if "branch" not in balrog_props["properties"]:
