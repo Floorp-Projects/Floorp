@@ -2844,7 +2844,7 @@ CreateFontDeclarationForServo(const nsAString& aFont,
   return CreateDeclarationForServo(eCSSProperty_font, aFont, aDocument);
 }
 
-static already_AddRefed<ServoComputedValues>
+static already_AddRefed<ServoStyleContext>
 GetFontStyleForServo(Element* aElement, const nsAString& aFont,
                      nsIPresShell* aPresShell,
                      nsAString& aOutUsedFont,
@@ -2869,7 +2869,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
 
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
 
-  RefPtr<ServoComputedValues> parentStyle;
+  RefPtr<ServoStyleContext> parentStyle;
   // have to get a parent style context for inherit-like relative
   // values (2em, bolder, etc.)
   if (aElement && aElement->IsInUncomposedDoc()) {
@@ -2880,7 +2880,8 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
     // the canvas element is display:none.
     parentStyle =
       styleSet->ResolveTransientServoStyle(aElement,
-                                           CSSPseudoElementType::NotPseudo);
+                                           CSSPseudoElementType::NotPseudo,
+                                           nullptr);
   } else {
     RefPtr<RawServoDeclarationBlock> declarations =
       CreateFontDeclarationForServo(NS_LITERAL_STRING("10px sans-serif"),
@@ -2896,7 +2897,7 @@ GetFontStyleForServo(Element* aElement, const nsAString& aFont,
   MOZ_ASSERT(!aPresShell->IsDestroying(),
              "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
 
-  RefPtr<ServoComputedValues> sc =
+  RefPtr<ServoStyleContext> sc =
     styleSet->ResolveForDeclarations(parentStyle, declarations);
 
   // The font getter is required to be reserialized based on what we
@@ -2960,9 +2961,9 @@ CreateFilterDeclarationForServo(const nsAString& aFilter,
   return CreateDeclarationForServo(eCSSProperty_filter, aFilter, aDocument);
 }
 
-static already_AddRefed<ServoComputedValues>
+static already_AddRefed<ServoStyleContext>
 ResolveFilterStyleForServo(const nsAString& aFilterString,
-                           const ServoComputedValues* aParentStyle,
+                           const ServoStyleContext* aParentStyle,
                            nsIPresShell* aPresShell,
                            ErrorResult& aError)
 {
@@ -2983,7 +2984,7 @@ ResolveFilterStyleForServo(const nsAString& aFilterString,
   }
 
   ServoStyleSet* styleSet = aPresShell->StyleSet()->AsServo();
-  RefPtr<ServoComputedValues> computedValues =
+  RefPtr<ServoStyleContext> computedValues =
     styleSet->ResolveForDeclarations(aParentStyle, declarations);
 
   return computedValues.forget();
@@ -3028,7 +3029,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   // For stylo
   MOZ_ASSERT(presShell->StyleSet()->IsServo());
 
-  RefPtr<ServoComputedValues> parentStyle =
+  RefPtr<ServoStyleContext> parentStyle =
     GetFontStyleForServo(mCanvasElement,
                          GetFont(),
                          presShell,
@@ -3038,7 +3039,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
     return false;
   }
 
-  RefPtr<ServoComputedValues> computedValues =
+  RefPtr<ServoStyleContext> computedValues =
     ResolveFilterStyleForServo(aString,
                                parentStyle,
                                presShell,
@@ -3047,7 +3048,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
      return false;
   }
 
-  const nsStyleEffects* effects = Servo_GetStyleEffects(computedValues);
+  const nsStyleEffects* effects = Servo_GetStyleEffects(computedValues->ComputedValues());
   // XXX: This mFilters is a one shot object, we probably could avoid copying.
   aFilterChain = effects->mFilters;
   return true;
@@ -3955,7 +3956,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   }
 
   RefPtr<nsStyleContext> sc;
-  RefPtr<ServoComputedValues> computedValues;
+  RefPtr<ServoStyleContext> computedValues;
   nsString usedFont;
   const nsStyleFont* fontStyle;
   if (presShell->StyleSet()->IsServo()) {
@@ -3967,7 +3968,7 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
     if (!computedValues) {
       return false;
     }
-    fontStyle = Servo_GetStyleFont(computedValues);
+    fontStyle = Servo_GetStyleFont(computedValues->ComputedValues());
   } else {
     sc = GetFontStyleContext(mCanvasElement,
                              aFont,

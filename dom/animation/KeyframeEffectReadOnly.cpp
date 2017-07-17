@@ -186,12 +186,22 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
   }
 
   RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
-  SetKeyframes(Move(keyframes), styleContext);
+  if (styleContext) {
+    if (auto gecko = styleContext->GetAsGecko()) {
+      SetKeyframes(Move(keyframes), gecko);
+    } else {
+      SetKeyframes(Move(keyframes), styleContext->AsServo());
+    }
+  } else {
+    // SetKeyframes has the same behavior for null StyleType* for
+    // both backends, just pick one and use it.
+    SetKeyframes(Move(keyframes), (GeckoStyleContext*) nullptr);
+  }
 }
 
 void
 KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                                     nsStyleContext* aStyleContext)
+                                     GeckoStyleContext* aStyleContext)
 {
   DoSetKeyframes(Move(aKeyframes), Move(aStyleContext));
 }
@@ -199,7 +209,7 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
 void
 KeyframeEffectReadOnly::SetKeyframes(
   nsTArray<Keyframe>&& aKeyframes,
-  const ServoComputedValues* aComputedValues)
+  const ServoStyleContext* aComputedValues)
 {
   DoSetKeyframes(Move(aKeyframes), aComputedValues);
 }
@@ -209,10 +219,10 @@ void
 KeyframeEffectReadOnly::DoSetKeyframes(nsTArray<Keyframe>&& aKeyframes,
                                        StyleType* aStyle)
 {
-  static_assert(IsSame<StyleType, nsStyleContext>::value ||
-                IsSame<StyleType, const ServoComputedValues>::value,
-                "StyleType should be nsStyleContext* or "
-                "const ServoComputedValues*");
+  static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
+                IsSame<StyleType, const ServoStyleContext>::value,
+                "StyleType should be GeckoStyleContext* or "
+                "const ServoStyleContext*");
 
   if (KeyframesEqualIgnoringComputedOffsets(aKeyframes, mKeyframes)) {
     return;
@@ -296,21 +306,19 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
-  if (!mDocument->IsStyledByServo()) {
-    DoUpdateProperties(Move(aStyleContext));
+  if (auto gecko = aStyleContext->GetAsGecko()) {
+    DoUpdateProperties(Move(gecko));
     return;
   }
 
-  const ServoComputedValues* currentStyle = aStyleContext->ComputedValues();
-
-  DoUpdateProperties(currentStyle);
+  UpdateProperties(aStyleContext->AsServo());
 }
 
 void
 KeyframeEffectReadOnly::UpdateProperties(
-  const ServoComputedValues* aComputedValues)
+  const ServoStyleContext* aStyleContext)
 {
-  DoUpdateProperties(aComputedValues);
+  DoUpdateProperties(aStyleContext);
 }
 
 template<typename StyleType>
@@ -440,7 +448,7 @@ KeyframeEffectReadOnly::CompositeValue(
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
-  nsStyleContext* aStyleContext,
+  GeckoStyleContext* aStyleContext,
   const nsTArray<AnimationProperty>& aProperties)
 {
   if (!mTarget) {
@@ -468,7 +476,7 @@ KeyframeEffectReadOnly::EnsureBaseStyles(
 void
 KeyframeEffectReadOnly::EnsureBaseStyle(
   nsCSSPropertyID aProperty,
-  nsStyleContext* aStyleContext,
+  GeckoStyleContext* aStyleContext,
   RefPtr<nsStyleContext>& aCachedBaseStyleContext)
 {
   if (mBaseStyleValues.Contains(aProperty)) {
@@ -497,7 +505,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
 
 void
 KeyframeEffectReadOnly::EnsureBaseStyles(
-  const ServoComputedValues* aComputedValues,
+  const ServoStyleContext* aComputedValues,
   const nsTArray<AnimationProperty>& aProperties)
 {
   if (!mTarget) {
@@ -528,7 +536,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
   const AnimationProperty& aProperty,
   CSSPseudoElementType aPseudoType,
   nsPresContext* aPresContext,
-  const ServoComputedValues* aComputedStyle,
+  const ServoStyleContext* aComputedStyle,
  RefPtr<ServoStyleContext>& aBaseStyleContext)
 {
   bool hasAdditiveValues = false;
@@ -909,10 +917,10 @@ template<typename StyleType>
 nsTArray<AnimationProperty>
 KeyframeEffectReadOnly::BuildProperties(StyleType* aStyle)
 {
-  static_assert(IsSame<StyleType, nsStyleContext>::value ||
-                IsSame<StyleType, const ServoComputedValues>::value,
-                "StyleType should be nsStyleContext* or "
-                "const ServoComputedValues*");
+  static_assert(IsSame<StyleType, GeckoStyleContext>::value ||
+                IsSame<StyleType, const ServoStyleContext>::value,
+                "StyleType should be GeckoStyleContext* or "
+                "const ServoStyleContext*");
 
   MOZ_ASSERT(aStyle);
 

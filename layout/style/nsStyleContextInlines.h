@@ -37,6 +37,18 @@ nsStyleContext::ComputedValues()
     return AsServo()->ComputedValues();
 }
 
+void
+nsStyleContext::AddRef()
+{
+  MOZ_STYLO_FORWARD(AddRef, ())
+}
+
+void
+nsStyleContext::Release()
+{
+  MOZ_STYLO_FORWARD(Release, ())
+}
+
 #define STYLE_STRUCT(name_, checkdata_cb_)                      \
 const nsStyle##name_ *                                          \
 nsStyleContext::Style##name_() {                                \
@@ -195,5 +207,6 @@ nsStyleContext::StartBackgroundImageLoads()
   // Just get our background struct; that should do the trick
   StyleBackground();
 }
+
 
 #endif // nsStyleContextInlines_h

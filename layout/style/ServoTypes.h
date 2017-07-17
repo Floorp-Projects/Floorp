@@ -169,6 +169,8 @@ struct ServoComputedValueFlags {
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
+} // namespace mozilla
+
 
 /**
  * We want C++ to be abe to read the style struct fields of ComputedValues
@@ -180,27 +182,25 @@ struct ServoComputedValueFlags {
  *
  * <div rustbindgen nocopy></div>
  */
-struct ServoComputedValues2 {
-#define STYLE_STRUCT(name_, checkdata_cb_) ServoRawOffsetArc<Gecko##name_> name_;
+struct ServoComputedValues {
+#define STYLE_STRUCT(name_, checkdata_cb_) mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_;
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
   #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
-  ServoCustomPropertiesMap custom_properties;
-  ServoWritingMode writing_mode;
-  ServoFontComputationData font_computation_data;
+  mozilla::ServoCustomPropertiesMap custom_properties;
+  mozilla::ServoWritingMode writing_mode;
+  mozilla::ServoFontComputationData font_computation_data;
   /// The rule node representing the ordered list of rules matched for this
   /// node.  Can be None for default values and text nodes.  This is
   /// essentially an optimization to avoid referencing the root rule node.
-  ServoRuleNode rules;
+  mozilla::ServoRuleNode rules;
   /// The element's computed values if visited, only computed if there's a
   /// relevant link for this element. A element's "relevant link" is the
   /// element being matched if it is a link or the nearest ancestor link.
-  ServoVisitedStyle visited_style;
-  ServoComputedValueFlags flags;
-  ~ServoComputedValues2() {} // do nothing, but prevent Copy from being impl'd by bindgen
+  mozilla::ServoVisitedStyle visited_style;
+  mozilla::ServoComputedValueFlags flags;
+  ~ServoComputedValues() {} // do nothing, but prevent Copy from being impl'd by bindgen
 };
-
-} // namespace mozilla
 
 #endif // mozilla_ServoTypes_h

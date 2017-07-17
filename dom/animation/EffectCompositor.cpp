@@ -1284,14 +1284,14 @@ EffectCompositor::AnimationStyleRuleProcessor::SizeOfIncludingThis(
 template
 void
 EffectCompositor::UpdateEffectProperties(
-  nsStyleContext* aStyleContext,
+  GeckoStyleContext* aStyleContext,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
 
 template
 void
 EffectCompositor::UpdateEffectProperties(
-  const ServoComputedValues* aServoValues,
+  const ServoStyleContext* aStyleContext,
   Element* aElement,
   CSSPseudoElementType aPseudoType);
 
