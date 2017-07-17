@@ -115,7 +115,7 @@ nsStringBundle::LoadProperties()
 
 
 nsresult
-nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
+nsStringBundle::GetStringFromIDHelper(int32_t aID, nsAString& aResult)
 {
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   nsAutoCString name;
@@ -137,7 +137,7 @@ nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
 }
 
 nsresult
-nsStringBundle::GetStringFromName(const char* aName, nsAString& aResult)
+nsStringBundle::GetStringFromNameHelper(const char* aName, nsAString& aResult)
 {
   nsresult rv;
 
@@ -192,7 +192,7 @@ nsStringBundle::FormatStringFromName(const char* aName,
   if (NS_FAILED(rv)) return rv;
 
   nsAutoString formatStr;
-  rv = GetStringFromName(aName, formatStr);
+  rv = GetStringFromNameHelper(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.get(), aParams, aLength, aResult);
@@ -210,7 +210,7 @@ nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
   *aResult = nullptr;
   nsAutoString tmpstr;
 
-  rv = GetStringFromID(aID, tmpstr);
+  rv = GetStringFromIDHelper(aID, tmpstr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aResult = ToNewUnicode(tmpstr);
@@ -239,7 +239,7 @@ nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   *aResult = nullptr;
   nsAutoString tmpstr;
-  rv = GetStringFromName(aName, tmpstr);
+  rv = GetStringFromNameHelper(aName, tmpstr);
   if (NS_FAILED(rv)) return rv;
 
   *aResult = ToNewUnicode(tmpstr);
