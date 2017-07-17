@@ -940,7 +940,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                            aVisitedRuleNode,
                            aFlags & eSkipParentDisplayBasedStyleFixup);
       resultIfVisited->SetIsStyleIfVisited();
-      result->SetStyleIfVisited(resultIfVisited.forget());
+      result->AsGecko()->SetStyleIfVisited(resultIfVisited.forget());
 
       if (relevantLinkVisited) {
         result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);

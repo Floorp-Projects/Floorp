@@ -191,9 +191,6 @@ public:
   // related to the Peek code in nsStyleContext::CalcStyleDifference.
   inline nsStyleContext* GetStyleIfVisited() const;
 
-  // To be called only from nsStyleSet / ServoStyleSet.
-  void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited);
-
   // Does any descendant of this style context have any style values
   // that were computed based on this style context's ancestors?
   bool HasChildThatUsesGrandancestorStyle() const
@@ -359,11 +356,6 @@ protected:
   #undef STYLE_STRUCT_INHERITED
 
   RefPtr<nsStyleContext> mParent;
-
-  // Style to be used instead for the R, G, and B components of color,
-  // background-color, and border-*-color if the nearest ancestor link
-  // element is visited (see RelevantLinkVisited()).
-  RefPtr<nsStyleContext> mStyleIfVisited;
 
   // If this style context is for a pseudo-element or anonymous box,
   // the relevant atom.

@@ -31,6 +31,9 @@ public:
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
+  // To be called only from nsStyleSet / ServoStyleSet.
+  void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited);
+  nsStyleContext* GetStyleIfVisited() const { return mStyleIfVisited; };
 #ifdef DEBUG
   /**
    * Initializes a cached pref, which is only used in DEBUG code.
@@ -219,6 +222,11 @@ private:
   GeckoStyleContext* mPrevSibling;
   GeckoStyleContext* mNextSibling;
   RefPtr<nsRuleNode> mRuleNode;
+
+  // Style to be used instead for the R, G, and B components of color,
+  // background-color, and border-*-color if the nearest ancestor link
+  // element is visited (see RelevantLinkVisited()).
+  RefPtr<nsStyleContext> mStyleIfVisited;
 
 #ifdef DEBUG
 public:
