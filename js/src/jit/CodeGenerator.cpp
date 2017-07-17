@@ -4171,8 +4171,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.checkStackAlignment();
 
     // Guard that calleereg is actually a function object.
-    masm.loadObjClass(calleereg, nargsreg);
-    masm.branchPtr(Assembler::NotEqual, nargsreg, ImmPtr(&JSFunction::class_), &invoke);
+    masm.branchTestObjClass(Assembler::NotEqual, calleereg, nargsreg, &JSFunction::class_, &invoke);
 
     // Guard that calleereg is an interpreted function with a JSScript.
     // If we are constructing, also ensure the callee is a constructor.
@@ -6584,10 +6583,10 @@ RangePopFront(MacroAssembler& masm, Register range, Register front, Register dat
     masm.add32(Imm32(1), Address(range, OrderedHashTable::Range::offsetOfCount()));
 
     masm.load32(Address(range, OrderedHashTable::Range::offsetOfI()), i);
-    masm.add32(Imm32(1), i);
 
     Label done, seek;
     masm.bind(&seek);
+    masm.add32(Imm32(1), i);
     masm.branch32(Assembler::AboveOrEqual, i, dataLength, &done);
 
     // We can add sizeof(Data) to |front| to select the next element, because
@@ -6595,11 +6594,8 @@ RangePopFront(MacroAssembler& masm, Register range, Register front, Register dat
     MOZ_ASSERT(OrderedHashTable::offsetOfImplDataElement() == 0, "offsetof(Data, element) is 0");
     masm.addPtr(Imm32(OrderedHashTable::sizeofImplData()), front);
 
-    masm.branchTestMagic(Assembler::NotEqual, Address(front, OrderedHashTable::offsetOfEntryKey()),
-                         JS_HASH_KEY_EMPTY, &done);
-
-    masm.add32(Imm32(1), i);
-    masm.jump(&seek);
+    masm.branchTestMagic(Assembler::Equal, Address(front, OrderedHashTable::offsetOfEntryKey()),
+                         JS_HASH_KEY_EMPTY, &seek);
 
     masm.bind(&done);
     masm.store32(i, Address(range, OrderedHashTable::Range::offsetOfI()));
