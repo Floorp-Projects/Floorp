@@ -113,29 +113,6 @@ nsStringBundle::LoadProperties()
   return rv;
 }
 
-
-nsresult
-nsStringBundle::GetStringFromIDHelper(int32_t aID, nsAString& aResult)
-{
-  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
-  nsAutoCString name;
-  name.AppendInt(aID, 10);
-
-  nsresult rv;
-
-  // try override first
-  if (mOverrideStrings) {
-    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
-                                             name,
-                                             aResult);
-    if (NS_SUCCEEDED(rv)) return rv;
-  }
-
-  rv = mProps->GetStringProperty(name, aResult);
-
-  return rv;
-}
-
 nsresult
 nsStringBundle::GetStringFromNameHelper(const char* aName, nsAString& aResult)
 {
@@ -203,20 +180,9 @@ NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
 NS_IMETHODIMP
 nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
 {
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
-  *aResult = nullptr;
-  nsAutoString tmpstr;
-
-  rv = GetStringFromIDHelper(aID, tmpstr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aResult = ToNewUnicode(tmpstr);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
+  nsAutoCString idStr;
+  idStr.AppendInt(aID, 10);
+  return GetStringFromName(idStr.get(), aResult);
 }
 
 NS_IMETHODIMP
