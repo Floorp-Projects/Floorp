@@ -27,12 +27,6 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLHRElement, nsGenericHTMLElement,
 NS_IMPL_ELEMENT_CLONE(HTMLHRElement)
 
 
-NS_IMPL_STRING_ATTR(HTMLHRElement, Align, align)
-NS_IMPL_BOOL_ATTR(HTMLHRElement, NoShade, noshade)
-NS_IMPL_STRING_ATTR(HTMLHRElement, Size, size)
-NS_IMPL_STRING_ATTR(HTMLHRElement, Width, width)
-NS_IMPL_STRING_ATTR(HTMLHRElement, Color, color)
-
 bool
 HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
