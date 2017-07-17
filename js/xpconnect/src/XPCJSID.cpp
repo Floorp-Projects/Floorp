@@ -456,27 +456,26 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative* wrapper,
 static nsresult
 FindObjectForHasInstance(JSContext* cx, HandleObject objArg, MutableHandleObject target)
 {
+    using namespace mozilla::jsipc;
     RootedObject obj(cx, objArg), proto(cx);
-
-    while (obj && !IS_WN_REFLECTOR(obj) &&
-           !IsDOMObject(obj) && !mozilla::jsipc::IsCPOW(obj))
-    {
-        if (js::IsWrapper(obj)) {
-            obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
-            continue;
+    while (true) {
+        // Try the object, or the wrappee if allowed.
+        JSObject* o = js::IsWrapper(obj) ? js::CheckedUnwrap(obj, false) : obj;
+        if (o && (IS_WN_REFLECTOR(o) || IsDOMObject(o) || IsCPOW(o))) {
+            target.set(o);
+            return NS_OK;
         }
 
-        {
-            JSAutoCompartment ac(cx, obj);
-            if (!js::GetObjectProto(cx, obj, &proto))
-                return NS_ERROR_FAILURE;
+        // Walk the prototype chain from the perspective of the callee (i.e.
+        // respecting Xrays if they exist).
+        if (!js::GetObjectProto(cx, obj, &proto))
+            return NS_ERROR_FAILURE;
+        if (!proto) {
+            target.set(nullptr);
+            return NS_OK;
         }
-
         obj = proto;
     }
-
-    target.set(obj);
-    return NS_OK;
 }
 
 nsresult
