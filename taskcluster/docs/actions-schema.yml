@@ -146,30 +146,9 @@ properties:
             action is triggered by parameterizing the task template given in
             this property, and creating the resulting task.
 
-            The template is parameterized with the following variables:
-              * `taskGroupId`
-              * `taskId` (taskId, `null` if not triggered for a given task)
-              * `task` (task definition, `null` if not triggered for a given task)
-              * `input` (input matching `schema`, `null` if no schema is given)
-              * Property defined in the `variables` property.
-
-            The template is an object that is parameterized by:
-              1. Replacing substrings `'${variable}'` in strings and object keys
-                 with the value of the given `variable`.
-              2. Replacing objects on the form `{$eval: 'variable'}` with the
-                 value of of the given `variable`.
-              3. Replacing objects on the form {$fromNow: 'timespan'} with a
-                 timestamp of `timespan` from now. Where `timespan` is on the
-                 form: `([0-9]+ *d(ays?)?)? *([0-9]+ *h(ours?)?)? *([0-9]+ *m(in(utes?)?)?)?`
-              4. Replacing any object on the form `{$json: value}` with the
-                 value of `JSON.stringify(result)` where `result` is the result
-                 of recursive application of rules 1-4 on `value`.
-
-            This template language is still incomplete and additional features
-            will be added in the future. This statment will be changed when the
-            features of the template language is locked, until then consumption
-            of the `public/actions.json` artifact is experimental.
-            # TODO: Freeze the template language with a specification of json-e
+            The template is an object that is parameterized using
+            [JSON-e](https://github.com/taskcluster/json-e), with the above
+            variables supplied as context.
 
             This allows for dumping `input` and `taskId` into environment
             variables for the task to be created. The following task template
