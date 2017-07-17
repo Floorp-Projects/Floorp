@@ -188,6 +188,11 @@ import java.nio.ByteBuffer;
     @Override
     public void queueInputBuffer(final int index, final int offset, final int size,
             final long presentationTimeUs, final int flags) {
+        if ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0) {
+            Bundle params = new Bundle();
+            params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
+            mCodec.setParameters(params);
+        }
         mCodec.queueInputBuffer(index, offset, size, presentationTimeUs, flags);
     }
 
