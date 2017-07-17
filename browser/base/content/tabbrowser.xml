@@ -4312,7 +4312,20 @@
                   this.log(`Switch to tab ${index} - ${this.tinfo(showTab)}`);
                   tabPanel.setAttribute("selectedIndex", index);
                   if (showTab === this.requestedTab) {
-                    this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
+                    if (this._requestingTab) {
+                      /*
+                       * If _requestingTab is set, that means that we're switching the
+                       * visibility of the tab synchronously, and we need to wait for
+                       * the "select" event before shifting focus so that
+                       * _adjustFocusAfterTabSwitch runs with the right information for
+                       * the tab switch.
+                       */
+                      this.tabbrowser.addEventListener("select", () => {
+                        this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
+                      }, {once: true});
+                    } else {
+                      this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
+                    }
                   }
                 }
 
@@ -4655,6 +4668,7 @@
                 return;
               }
 
+              this._requestingTab = true;
               this.logState("requestTab " + this.tinfo(tab));
               this.startTabSwitch();
 
@@ -4676,6 +4690,7 @@
               this.unloadTimer = this.setTimer(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
 
               this.postActions();
+              this._requestingTab = false;
             },
 
             handleEvent(event, delayed = false) {
