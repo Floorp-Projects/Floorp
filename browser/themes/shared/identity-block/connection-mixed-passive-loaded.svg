@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+<svg xmlns="http://www.w3.org/2000/svg"
      width="16" height="16" viewBox="0 0 16 16">
 
   <defs>
@@ -12,13 +12,13 @@
 
     <mask id="mask-clasp-cutout">
       <rect width="16" height="16" fill="#000" />
-      <use xlink:href="#shape-lock-clasp-outer" fill="#fff" />
-      <use xlink:href="#shape-lock-clasp-inner" fill="#000" />
+      <use href="#shape-lock-clasp-outer" fill="#fff"/>
+      <use href="#shape-lock-clasp-inner" fill="#000"/>
     </mask>
 
     <mask id="mask-lock">
-      <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" fill="#fff"/>
-      <use xlink:href="#shape-lock-base" fill="#fff"/>
+      <use href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" fill="#fff"/>
+      <use href="#shape-lock-base" fill="#fff"/>
     </mask>
 
     <g id="warning-triangle">
@@ -29,6 +29,6 @@
     </g>
   </defs>
 
-  <rect fill="context-fill" width="16" height="16" mask="url(#mask-lock)"/>
-  <use xlink:href="#warning-triangle"/>
+  <rect fill="context-fill" fill-opacity="context-fill-opacity" width="16" height="16" mask="url(#mask-lock)"/>
+  <use href="#warning-triangle"/>
 </svg>

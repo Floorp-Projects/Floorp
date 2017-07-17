@@ -1,7 +1,8 @@
 <style>
 
 .fieldtext {
-  fill: GrayText;
+  fill: fieldtext;
+  fill-opacity: .6;
 }
 
 .highlighttext {
