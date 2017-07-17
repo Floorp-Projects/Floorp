@@ -445,7 +445,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
-                                const ServoComputedValues* aComputedStyle,
+                                const ServoStyleContext* aComputedStyle,
                                 AnimationValue& aAnimationValue)
 {
   if (Servo_Property_IsDiscreteAnimatable(aProperty) &&
@@ -454,7 +454,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
   }
 
   aAnimationValue.mServo =
-    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle,
+    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle->ComputedValues(),
                                                aProperty).Consume();
   return !!aAnimationValue.mServo;
 }
@@ -589,8 +589,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                      aElement,
                                      afterChangeStyle->GetPseudoType(),
                                      collection,
-                                     aOldStyleContext,
-                                     afterChangeStyle.get());
+                                     aOldStyleContext->AsGecko(),
+                                     afterChangeStyle->AsGecko());
   }
 
   MOZ_ASSERT(!startedAny || collection,
@@ -624,8 +624,8 @@ bool
 nsTransitionManager::UpdateTransitions(
   dom::Element *aElement,
   CSSPseudoElementType aPseudoType,
-  const ServoComputedValues* aOldStyle,
-  const ServoComputedValues* aNewStyle)
+  const ServoStyleContext* aOldStyle,
+  const ServoStyleContext* aNewStyle)
 {
   if (!mPresContext->IsDynamic()) {
     // For print or print preview, ignore transitions.
@@ -634,7 +634,7 @@ nsTransitionManager::UpdateTransitions(
 
   CSSTransitionCollection* collection =
     CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle);
+  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle->ComputedValues());
   return DoUpdateTransitions(disp,
                              aElement, aPseudoType,
                              collection,

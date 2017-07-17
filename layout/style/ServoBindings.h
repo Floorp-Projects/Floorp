@@ -50,6 +50,7 @@ namespace mozilla {
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
+  class ServoStyleContext;
   class ServoStyleSheet;
   class ServoElementSnapshotTable;
 }
@@ -140,6 +141,12 @@ RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrow
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
+void Gecko_ServoStyleContext_Init(mozilla::ServoStyleContext* context,
+                                  ServoStyleContextBorrowedOrNull parent_context,
+                                  RawGeckoPresContextBorrowed pres_context, ServoComputedValuesStrong values,
+                                  mozilla::CSSPseudoElementType pseudo_type, nsIAtom* pseudo_tag);
+void Gecko_ServoStyleContext_Destroy(mozilla::ServoStyleContext* context);
+
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
 // want to traverse during styling. To support these cases, we create an
@@ -225,8 +232,8 @@ Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
-                            ServoComputedValuesBorrowedOrNull aOldComputedValues,
-                            ServoComputedValuesBorrowedOrNull aComputedValues,
+                            ServoStyleContextBorrowedOrNull aOldComputedValues,
+                            ServoStyleContextBorrowedOrNull aComputedValues,
                             mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);

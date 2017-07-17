@@ -80,9 +80,9 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
 SERVO_BINDING_FUNC(Servo_StyleSet_GetCounterStyleRule, nsCSSCounterStyleRule*,
                    RawServoStyleSetBorrowed set, nsIAtom* name)
 SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
-                   ServoComputedValuesStrong,
+                   ServoStyleContextStrong,
                    RawServoStyleSetBorrowed set,
-                   ServoComputedValuesBorrowedOrNull parent_style,
+                   ServoStyleContextBorrowedOrNull parent_style,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_StyleSet_MightHaveAttributeDependency, bool,
                    RawServoStyleSetBorrowed set,
@@ -459,16 +459,19 @@ SERVO_BINDING_FUNC(Servo_CSSSupports, bool,
 
 // Computed style data
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
-                   ServoComputedValuesStrong,
-                   ServoComputedValuesBorrowedOrNull parent_style_or_null,
+                   ServoStyleContextStrong,
+                   ServoStyleContextBorrowedOrNull parent_style_or_null,
+                   mozilla::CSSPseudoElementType pseudo_type,
                    nsIAtom* pseudo_tag,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoStyleContextStrong,
                    RawServoStyleSetBorrowed set,
-                   ServoComputedValuesBorrowedOrNull parent_style,
+                   mozilla::CSSPseudoElementType pseudo_type,
+                   nsIAtom* pseudo_tag,
+                   ServoStyleContextBorrowedOrNull parent_style,
                    mozilla::InheritTarget target)
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetVisitedStyle,
-                   ServoComputedValuesStrong,
+                   ServoStyleContextStrong,
                    ServoComputedValuesBorrowed values)
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleBits, uint64_t,
                    ServoComputedValuesBorrowed values)
@@ -481,6 +484,15 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_EqualCustomProperties, bool,
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleRuleList, void,
                    ServoComputedValuesBorrowed values,
                    RawGeckoServoStyleRuleListBorrowedMut rules)
+
+SERVO_BINDING_FUNC(Servo_StyleContext_NewContext,
+                   ServoStyleContextStrong,
+                   ServoComputedValuesBorrowed values,
+                   ServoStyleContextBorrowedOrNull parent,
+                   RawGeckoPresContextBorrowed pres_context,
+                   mozilla::CSSPseudoElementType pseudo_type,
+                   nsIAtom* pseudo_tag)
+
 
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,
@@ -496,18 +508,20 @@ SERVO_BINDING_FUNC(Servo_TakeChangeHint,
                    RawGeckoElementBorrowed element,
                    mozilla::TraversalRestyleBehavior restyle_behavior,
                    bool* was_restyled)
-SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    RawServoStyleSetBorrowed set)
-SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    mozilla::CSSPseudoElementType pseudo_type,
+                   nsIAtom* pseudo_tag,
                    bool is_probe,
                    ServoComputedValuesBorrowedOrNull inherited_style,
+                   ServoStyleContextBorrowedOrNull parent_style_context,
                    RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_SetExplicitStyle, void,
                    RawGeckoElementBorrowed element,
-                   ServoComputedValuesBorrowed primary_style)
+                   ServoStyleContextBorrowed primary_style)
 SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
                    RawGeckoElementBorrowed element,
                    uint32_t rule_type_mask,
@@ -521,9 +535,11 @@ SERVO_BINDING_FUNC(Servo_HasAuthorSpecifiedRules, bool,
 //
 // The tree must be in a consistent state such that a normal traversal could be
 // performed, and this function maintains that invariant.
-SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoComputedValuesStrong,
+SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    mozilla::CSSPseudoElementType pseudo_type,
+                   nsIAtom* pseudo_tag,
+                   ServoStyleContextBorrowedOrNull parent_style_context,
                    mozilla::StyleRuleInclusion rule_inclusion,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
@@ -547,10 +563,10 @@ SERVO_BINDING_FUNC(Servo_MaybeGCRuleTree, void, RawServoStyleSetBorrowed set)
 
 // Returns computed values for the given element without any animations rules.
 SERVO_BINDING_FUNC(Servo_StyleSet_GetBaseComputedValuesForElement,
-                   ServoComputedValuesStrong,
+                   ServoStyleContextStrong,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
-                   ServoComputedValuesBorrowed existing_style,
+                   ServoStyleContextBorrowed existing_style,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    mozilla::CSSPseudoElementType pseudo_type)
 
@@ -574,7 +590,7 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                            \
   struct nsStyle##name;                                             \
-  SERVO_BINDING_FUNC(Servo_GetStyle##name, const nsStyle##name*,  \
+  SERVO_BINDING_FUNC(Servo_GetStyle##name, const nsStyle##name*,    \
                      ServoComputedValuesBorrowedOrNull computed_values)
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT

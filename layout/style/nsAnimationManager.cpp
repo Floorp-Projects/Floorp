@@ -404,10 +404,10 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 class MOZ_STACK_CLASS ServoCSSAnimationBuilder final {
 public:
-  explicit ServoCSSAnimationBuilder(const ServoComputedValues* aComputedValues)
-    : mComputedValues(aComputedValues)
+  explicit ServoCSSAnimationBuilder(const ServoStyleContext* aStyleContext)
+    : mStyleContext(aStyleContext)
   {
-    MOZ_ASSERT(aComputedValues);
+    MOZ_ASSERT(aStyleContext);
   }
 
   bool BuildKeyframes(nsPresContext* aPresContext,
@@ -424,11 +424,11 @@ public:
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
   {
-    aEffect.SetKeyframes(Move(aKeyframes), mComputedValues);
+    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
   }
 
 private:
-  const ServoComputedValues* mComputedValues;
+  const ServoStyleContext* mStyleContext;
 };
 
 class MOZ_STACK_CLASS GeckoCSSAnimationBuilder final {
@@ -448,7 +448,7 @@ public:
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
   {
-    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
+    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext->AsGecko());
   }
 
 private:
@@ -990,7 +990,7 @@ BuildAnimations(nsPresContext* aPresContext,
 }
 
 void
-nsAnimationManager::UpdateAnimations(nsStyleContext* aStyleContext,
+nsAnimationManager::UpdateAnimations(GeckoStyleContext* aStyleContext,
                                      mozilla::dom::Element* aElement)
 {
   MOZ_ASSERT(mPresContext->IsDynamic(),
@@ -1015,7 +1015,7 @@ void
 nsAnimationManager::UpdateAnimations(
   dom::Element* aElement,
   CSSPseudoElementType aPseudoType,
-  const ServoComputedValues* aComputedValues)
+  const ServoStyleContext* aStyleContext)
 {
   MOZ_ASSERT(mPresContext->IsDynamic(),
              "Should not update animations for print or print preview");
@@ -1023,7 +1023,7 @@ nsAnimationManager::UpdateAnimations(
              "Should not update animations that are not attached to the "
              "document tree");
 
-  if (!aComputedValues) {
+  if (!aStyleContext) {
     // If we are in a display:none subtree we will have no computed values.
     // Since CSS animations should not run in display:none subtrees we should
     // stop (actually, destroy) any animations on this element here.
@@ -1032,10 +1032,10 @@ nsAnimationManager::UpdateAnimations(
   }
 
   NonOwningAnimationTarget target(aElement, aPseudoType);
-  ServoCSSAnimationBuilder builder(aComputedValues);
+  ServoCSSAnimationBuilder builder(aStyleContext);
 
   const nsStyleDisplay *disp =
-    Servo_GetStyleDisplay(aComputedValues);
+    Servo_GetStyleDisplay(aStyleContext->ComputedValues());
   DoUpdateAnimations(target, *disp, builder);
 }
 
