@@ -694,7 +694,7 @@ class Onboarding {
     div.querySelector("label[for='onboarding-tour-hidden-checkbox']").textContent =
        this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
     div.querySelector("#onboarding-header").textContent =
-       this._bundle.formatStringFromName("onboarding.overlay-title", [BRAND_SHORT_NAME], 1);
+       this._bundle.GetStringFromName("onboarding.overlay-title2");
     return div;
   }
 
