@@ -2428,6 +2428,32 @@ nsGenericHTMLFormElement::IsLabelable() const
          type == NS_FORM_TEXTAREA;
 }
 
+void
+nsGenericHTMLFormElement::GetFormAction(nsString& aValue)
+{
+  uint32_t type = ControlType();
+  if (!(type & NS_FORM_INPUT_ELEMENT) && !(type & NS_FORM_BUTTON_ELEMENT)) {
+    return;
+  }
+
+  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::formaction, aValue) ||
+      aValue.IsEmpty()) {
+    nsIDocument* document = OwnerDoc();
+    nsIURI* docURI = document->GetDocumentURI();
+    if (docURI) {
+      nsAutoCString spec;
+      nsresult rv = docURI->GetSpec(spec);
+      if (NS_FAILED(rv)) {
+        return;
+      }
+
+      CopyUTF8toUTF16(spec, aValue);
+    }
+  } else {
+    GetURIAttr(nsGkAtoms::formaction, nullptr, aValue);
+  }
+}
+
 //----------------------------------------------------------------------
 
 void

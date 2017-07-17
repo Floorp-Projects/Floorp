@@ -314,7 +314,8 @@ public:
     SetHTMLAttr(nsGkAtoms::acceptcharset, aValue, aRv);
   }
 
-  // XPCOM GetAction() is OK
+  void GetAction(nsString& aValue);
+
   void SetAction(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::action, aValue, aRv);
