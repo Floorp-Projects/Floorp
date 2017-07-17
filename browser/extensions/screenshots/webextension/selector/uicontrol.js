@@ -869,7 +869,7 @@ this.uicontrol = (function() {
 
   function addHandlers() {
     ["mouseup", "mousedown", "mousemove", "click"].forEach((eventName) => {
-      let fn = watchFunction((function(eventName, event) {
+      let fn = watchFunction(assertIsTrusted((function(eventName, event) {
         if (typeof event.button == "number" && event.button !== 0) {
           // Not a left click
           return undefined;
@@ -884,10 +884,10 @@ this.uicontrol = (function() {
           return handler[eventName](event);
         }
         return undefined;
-      }).bind(null, eventName));
+      }).bind(null, eventName)));
       primedDocumentHandlers.set(eventName, fn);
     });
-    primedDocumentHandlers.set("keyup", keyupHandler);
+    primedDocumentHandlers.set("keyup", watchFunction(assertIsTrusted(keyupHandler)));
     window.addEventListener('beforeunload', beforeunloadHandler);
   }
 
