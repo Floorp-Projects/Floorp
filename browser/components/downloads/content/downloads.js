@@ -788,13 +788,6 @@ const DownloadsView = {
     }
   },
 
-  onDownloadStateChanged(download) {
-    let viewItem = this._visibleViewItems.get(download);
-    if (viewItem) {
-      viewItem.onStateChanged();
-    }
-  },
-
   onDownloadChanged(download) {
     let viewItem = this._visibleViewItems.get(download);
     if (viewItem) {
@@ -1053,6 +1046,7 @@ XPCOMUtils.defineConstant(this, "DownloadsView", DownloadsView);
  */
 function DownloadsViewItem(download, aElement) {
   this.download = download;
+  this.downloadState = DownloadsCommon.stateOfDownload(download);
   this.element = aElement;
   this.element._shell = this;
 
@@ -1070,11 +1064,12 @@ DownloadsViewItem.prototype = {
    */
   _element: null,
 
-  onStateChanged() {
-    this._updateState();
-  },
-
   onChanged() {
+    let newState = DownloadsCommon.stateOfDownload(this.download);
+    if (this.downloadState != newState) {
+      this.downloadState = newState;
+      this._updateState();
+    }
     this._updateProgress();
   },
 
