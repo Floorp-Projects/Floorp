@@ -1584,10 +1584,8 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
     SnapshotIteratorForBailout snapIter(activation, iter);
-    if (!snapIter.init(cx)) {
-        ReportOutOfMemory(cx);
+    if (!snapIter.init(cx))
         return BAILOUT_RETURN_FATAL_ERROR;
-    }
 
 #ifdef TRACK_SNAPSHOTS
     snapIter.spewBailingFrom();
