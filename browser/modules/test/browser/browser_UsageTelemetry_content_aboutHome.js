@@ -47,7 +47,7 @@ add_task(async function test_abouthome_simpleQuery() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
-  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
+  let search_hist = getSearchCountsHistogram();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 

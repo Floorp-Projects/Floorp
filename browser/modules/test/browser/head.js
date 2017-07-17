@@ -76,30 +76,14 @@ let typeInSearchField = async function(browser, text, fieldName) {
   });
 };
 
-
 /**
- * Clear and get the named histogram
- * @param {String} name
- *        The name of the histogram
+ * Clear and get the SEARCH_COUNTS histogram.
  */
-function getAndClearHistogram(name) {
-  let histogram = Services.telemetry.getHistogramById(name);
-  histogram.clear();
-  return histogram;
+function getSearchCountsHistogram() {
+  let search_hist = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS");
+  search_hist.clear();
+  return search_hist;
 }
-
-
-/**
- * Clear and get the named keyed histogram
- * @param {String} name
- *        The name of the keyed histogram
- */
-function getAndClearKeyedHistogram(name) {
-  let histogram = Services.telemetry.getKeyedHistogramById(name);
-  histogram.clear();
-  return histogram;
-}
-
 
 /**
  * Check that the keyed histogram contains the right value.
