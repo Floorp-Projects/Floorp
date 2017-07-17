@@ -105,8 +105,10 @@ PrepareOsrTempData(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame*
                         AlignBytes(ionOsrTempDataSpace, sizeof(Value));
 
     IonOsrTempData* info = (IonOsrTempData*)cx->allocateOsrTempData(totalSpace);
-    if (!info)
+    if (!info) {
+        ReportOutOfMemory(cx);
         return nullptr;
+    }
 
     memset(info, 0, totalSpace);
 
