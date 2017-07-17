@@ -1017,14 +1017,6 @@ const DebugUtils = {
     }
   },
 
-  getExtensionManifestWarnings(id) {
-    const addon = GlobalManager.extensionMap.get(id);
-    if (addon) {
-      return addon.warnings;
-    }
-    return [];
-  },
-
 
   /**
    * Retrieve a XUL browser element which has been configured to be able to connect

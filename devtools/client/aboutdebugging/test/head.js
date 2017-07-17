@@ -2,7 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /* eslint-env browser */
-/* eslint no-unused-vars: [2, {"vars": "local"}] */
+/* exported openAboutDebugging, changeAboutDebuggingHash, closeAboutDebugging,
+   installAddon, uninstallAddon, waitForMutation, waitForContentMutation, assertHasTarget,
+   getServiceWorkerList, getTabList, openPanel, waitForInitialAddonList,
+   waitForServiceWorkerRegistered, unregisterServiceWorker,
+   waitForDelayedStartupFinished, setupTestAboutDebuggingWebExtension,
+   waitForServiceWorkerActivation, enableServiceWorkerDebugging,
+   getServiceWorkerContainer, promiseAddonEvent, installAddonWithManager, getAddonByID,
+   tearDownAddon */
 /* import-globals-from ../../framework/test/shared-head.js */
 
 "use strict";
@@ -263,23 +270,6 @@ function waitForInitialAddonList(document) {
     result = waitForMutation(addonListContainer, { childList: true });
   }
   return result;
-}
-
-function waitForInstallMessages(target) {
-  return new Promise(resolve => {
-    let observer = new MutationObserver((mutations) => {
-      const messageAdded = mutations.some((mutation) => {
-        return [...mutation.addedNodes].some((node) => {
-          return node.classList.contains("addon-target-messages");
-        });
-      });
-      if (messageAdded) {
-        observer.disconnect();
-        resolve();
-      }
-    });
-    observer.observe(target, { childList: true });
-  });
 }
 
 /**

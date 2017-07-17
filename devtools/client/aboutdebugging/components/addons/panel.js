@@ -5,7 +5,6 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
-const { Management } = require("resource://gre/modules/Extension.jsm");
 const { createFactory, createClass, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const Services = require("Services");
@@ -44,9 +43,6 @@ module.exports = createClass({
 
   componentDidMount() {
     AddonManager.addAddonListener(this);
-    // Listen to startup since that's when errors and warnings
-    // get populated on the extension.
-    Management.on("startup", this.updateAddonsList);
 
     Services.prefs.addObserver(CHROME_ENABLED_PREF,
       this.updateDebugStatus);
@@ -59,8 +55,6 @@ module.exports = createClass({
 
   componentWillUnmount() {
     AddonManager.removeAddonListener(this);
-    Management.off("startup", this.updateAddonsList);
-
     Services.prefs.removeObserver(CHROME_ENABLED_PREF,
       this.updateDebugStatus);
     Services.prefs.removeObserver(REMOTE_ENABLED_PREF,
@@ -87,7 +81,6 @@ module.exports = createClass({
             temporarilyInstalled: addon.temporarilyInstalled,
             url: addon.url,
             manifestURL: addon.manifestURL,
-            warnings: addon.warnings,
           };
         });
 
