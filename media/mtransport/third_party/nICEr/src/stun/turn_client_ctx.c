@@ -257,13 +257,13 @@ static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
       /* TODO(ekr@rtfm.com): Add alternate-server (Mozilla bug 857688) */
       if (ctx->stun->error_code == 438) {
         // track 438s for ice telemetry
-        nr_ice_accumulate_count(&(ctx->tctx->cnt_438s), 1);
+        nr_accumulate_count(&(ctx->tctx->cnt_438s), 1);
       }
       if (ctx->stun->error_code == 401 || ctx->stun->error_code == 438) {
         if (ctx->retry_ct > 0) {
           if (ctx->stun->error_code == 401) {
             // track 401s for ice telemetry
-            nr_ice_accumulate_count(&(ctx->tctx->cnt_401s), 1);
+            nr_accumulate_count(&(ctx->tctx->cnt_401s), 1);
           }
           r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): Exceeded the number of retries", ctx->tctx->label);
           ABORT(R_FAILED);
@@ -615,7 +615,7 @@ static void nr_turn_client_permission_error_cb(NR_SOCKET s, int how, void *arg)
 
   if (ctx->last_error_code == 403) {
     // track 403s for ice telemetry
-    nr_ice_accumulate_count(&(ctx->tctx->cnt_403s), 1);
+    nr_accumulate_count(&(ctx->tctx->cnt_403s), 1);
     r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): mode %d, permission denied",
           ctx->tctx->label, ctx->mode);
 
