@@ -2043,9 +2043,8 @@ TriggerPendingAnimations(nsIDocument* aDocument,
 LayerManager*
 nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView)
 {
-  nsView* view = RootReferenceFrame()->GetView();
   if (aView) {
-    *aView = view;
+    *aView = RootReferenceFrame()->GetView();
   }
   if (RootReferenceFrame() != nsLayoutUtils::GetDisplayRootFrame(RootReferenceFrame())) {
     return nullptr;
