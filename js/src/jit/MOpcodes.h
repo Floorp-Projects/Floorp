@@ -298,6 +298,7 @@ namespace jit {
     _(CheckObjCoercible)                                                    \
     _(DebugCheckSelfHosted)                                                 \
     _(FinishBoundFunctionInit)                                              \
+    _(IsPackedArray)                                                        \
     _(AsmJSLoadHeap)                                                        \
     _(AsmJSStoreHeap)                                                       \
     _(AsmJSCompareExchangeHeap)                                             \
