@@ -24,13 +24,13 @@ const {FormAutofillUtils} = SpecialPowers.Cu.import("resource://formautofill/For
 let MOCK_STORAGE = [{
   organization: "Sesame Street",
   "street-address": "123 Sesame Street.\n2-line\n3-line",
-  tel: "1-345-345-3456",
+  tel: "+13453453456",
   country: "US",
   "address-level1": "NY",
 }, {
   organization: "Mozilla",
   "street-address": "331 E. Evelyn Avenue\n2-line\n3-line",
-  tel: "1-650-903-0800",
+  tel: "+16509030800",
   country: "US",
   "address-level1": "CA",
 }];
@@ -87,7 +87,7 @@ async function setupAddressStorage() {
 
 async function setupFormHistory() {
   await updateFormHistory([
-    {op: "add", fieldname: "tel", value: "1-234-567-890"},
+    {op: "add", fieldname: "tel", value: "+1234567890"},
     {op: "add", fieldname: "email", value: "foo@mozilla.com"},
   ]);
 }
@@ -101,7 +101,7 @@ add_task(async function history_only_menu_checking() {
   await setInput("#tel", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["1-234-567-890"], false);
+  checkMenuEntries(["+1234567890"], false);
 });
 
 // Form with both history and address storage.
@@ -177,7 +177,7 @@ add_task(async function check_fallback_after_form_autofill() {
   await setInput("#tel", "");
   doKey("down");
   await expectPopup();
-  checkMenuEntries(["1-234-567-890"], false);
+  checkMenuEntries(["+1234567890"], false);
 });
 
 // Resume form autofill once all the autofilled fileds are changed.

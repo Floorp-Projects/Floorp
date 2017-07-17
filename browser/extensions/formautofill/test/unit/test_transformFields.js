@@ -105,6 +105,84 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "country-name": "United States",
     },
   },
+
+  // Tel
+  {
+    description: "\"tel\" with US country code",
+    address: {
+      "tel": "+16172535702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
+      "tel-country-code": "+1",
+      "tel-national": "6172535702",
+      "tel-area-code": "617",
+      "tel-local": "2535702",
+      "tel-local-prefix": "253",
+      "tel-local-suffix": "5702",
+    },
+  },
+  {
+    description: "\"tel\" with TW country code (the components won't be parsed)",
+    address: {
+      "tel": "+886212345678",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+      "tel-country-code": "+886",
+      "tel-national": "0212345678",
+      "tel-area-code": "",
+      "tel-local": "",
+      "tel-local-prefix": "",
+      "tel-local-suffix": "",
+    },
+  },
+  {
+    description: "\"tel\" without country code so use \"US\" as default resion",
+    address: {
+      "tel": "6172535702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
+      "tel-country-code": "+1",
+      "tel-national": "6172535702",
+      "tel-area-code": "617",
+      "tel-local": "2535702",
+      "tel-local-prefix": "253",
+      "tel-local-suffix": "5702",
+    },
+  },
+  {
+    description: "\"tel\" without country code but \"country\" is \"TW\"",
+    address: {
+      "tel": "0212345678",
+      "country": "TW",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+      "tel-country-code": "+886",
+      "tel-national": "0212345678",
+      "tel-area-code": "",
+      "tel-local": "",
+      "tel-local-prefix": "",
+      "tel-local-suffix": "",
+    },
+  },
+  {
+    description: "\"tel\" can't be parsed so leave it as-is",
+    address: {
+      "tel": "12345",
+    },
+    expectedResult: {
+      "tel": "12345",
+      "tel-country-code": "",
+      "tel-national": "12345",
+      "tel-area-code": "",
+      "tel-local": "",
+      "tel-local-prefix": "",
+      "tel-local-suffix": "",
+    },
+  },
 ];
 
 const ADDRESS_NORMALIZE_TESTCASES = [
@@ -154,7 +232,6 @@ const ADDRESS_NORMALIZE_TESTCASES = [
       "family-name": "Doe",
     },
   },
-
 
   // Address
   {
@@ -272,6 +349,97 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     expectedResult: {
       "country": undefined,
       "country-name": "",
+    },
+  },
+
+  // Tel
+  {
+    description: "Has \"tel\" with country code",
+    address: {
+      "tel": "+16172535702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
+    },
+  },
+  {
+    description: "Has \"tel\" without country code but \"country\" is set",
+    address: {
+      "tel": "0212345678",
+      "country": "TW",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+    },
+  },
+  {
+    description: "Has \"tel\" without country code and \"country\" so use \"US\" as default region",
+    address: {
+      "tel": "6172535702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
+    },
+  },
+  {
+    description: "\"tel\" can't be parsed so leave it as-is",
+    address: {
+      "tel": "12345",
+    },
+    expectedResult: {
+      "tel": "12345",
+    },
+  },
+  {
+    description: "Has \"tel-national\" and \"tel-country-code\"",
+    address: {
+      "tel-national": "0212345678",
+      "tel-country-code": "+886",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+    },
+  },
+  {
+    description: "Has \"tel-national\" and \"country\"",
+    address: {
+      "tel-national": "0212345678",
+      "country": "TW",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+    },
+  },
+  {
+    description: "Has \"tel-national\", \"tel-country-code\" and \"country\"",
+    address: {
+      "tel-national": "0212345678",
+      "tel-country-code": "+886",
+      "country": "US",
+    },
+    expectedResult: {
+      "tel": "+886212345678",
+    },
+  },
+  {
+    description: "Has \"tel-area-code\" and \"tel-local\"",
+    address: {
+      "tel-area-code": "617",
+      "tel-local": "2535702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
+    },
+  },
+  {
+    description: "Has \"tel-area-code\", \"tel-local-prefix\" and \"tel-local-suffix\"",
+    address: {
+      "tel-area-code": "617",
+      "tel-local-prefix": "253",
+      "tel-local-suffix": "5702",
+    },
+    expectedResult: {
+      "tel": "+16172535702",
     },
   },
 ];
