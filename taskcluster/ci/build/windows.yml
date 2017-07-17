@@ -143,6 +143,32 @@ win64-dmd/opt:
         custom-build-variant-cfg: dmd
     run-on-projects: [ ]
 
+win32-nightly/opt:
+    description: "Win32 Nightly"
+    index:
+        product: firefox
+        job-name: win32-opt
+        type: nightly
+    attributes:
+        nightly: true
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: tc(N)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+    run:
+        using: mozharness
+        script: mozharness/scripts/fx_desktop_build.py
+        config:
+            - builds/taskcluster_firefox_windows_32_opt.py
+            - disable_signing.py
+            - taskcluster_nightly.py
+    run-on-projects: []
+
 win64-nightly/opt:
     description: "Win64 Nightly"
     index:
