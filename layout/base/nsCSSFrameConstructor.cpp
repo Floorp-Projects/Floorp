@@ -1925,11 +1925,11 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   //
   // We don't do this for pseudos that may trigger animations or transitions,
   // since those need to be kicked off by the traversal machinery.
-  bool isServo = pseudoStyleContext->IsServo();
   bool hasServoAnimations = false;
-  if (isServo) {
-    ServoComputedValues* servoStyle = pseudoStyleContext->ComputedValues();
-    hasServoAnimations = Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
+  ServoStyleContext* servoStyle = pseudoStyleContext->GetAsServo();
+  if (servoStyle) {
+    hasServoAnimations =
+      Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle->ComputedValues());
     if (!hasServoAnimations) {
       Servo_SetExplicitStyle(container, servoStyle);
     }
@@ -1971,7 +1971,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   }
 
   // We may need to do a synchronous servo traversal in various uncommon cases.
-  if (isServo) {
+  if (servoStyle) {
     if (hasServoAnimations) {
       // If animations are involved, we avoid the SetExplicitStyle optimization
       // above.
@@ -5886,8 +5886,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
           // styling descendants of elements with a -moz-binding the
           // first time. Thus call StyleNewChildren() again.
           styleSet->StyleNewChildren(element);
+
           styleContext =
-            styleSet->ResolveStyleFor(element, nullptr, LazyComputeBehavior::Assert);
+            styleSet->ResolveStyleFor(element, styleContext->GetParentAllowServo()->AsServo(),
+                                      LazyComputeBehavior::Assert);
         } else {
           styleContext =
             ResolveStyleContext(styleContext->GetParent(), aContent, &aState);

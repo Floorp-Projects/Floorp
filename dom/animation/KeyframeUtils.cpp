@@ -368,12 +368,12 @@ IsComputeValuesFailureKey(const PropertyValuePair& aPair);
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          nsStyleContext* aStyleContext);
+                          GeckoStyleContext* aStyleContext);
 
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          const ServoComputedValues* aComputedValues);
+                          const ServoStyleContext* aComputedValues);
 
 static void
 BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
@@ -1012,7 +1012,7 @@ IsComputeValuesFailureKey(const PropertyValuePair& aPair)
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          nsStyleContext* aStyleContext)
+                          GeckoStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
   MOZ_ASSERT(aElement);
@@ -1087,7 +1087,7 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
 static nsTArray<ComputedKeyframeValues>
 GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
                           dom::Element* aElement,
-                          const ServoComputedValues* aComputedValues)
+                          const ServoStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aElement->IsStyledByServo());
@@ -1096,7 +1096,7 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   MOZ_ASSERT(presContext);
 
   return presContext->StyleSet()->AsServo()
-    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aComputedValues);
+    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aStyleContext->ComputedValues());
 }
 
 static void

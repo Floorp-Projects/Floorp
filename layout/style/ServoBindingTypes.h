@@ -24,6 +24,7 @@ struct RawServoAnimationValueMap;
 
 namespace mozilla {
 class ServoElementSnapshot;
+class ServoStyleContext;
 struct StyleAnimation;
 struct URLExtraData;
 namespace dom {
@@ -101,6 +102,14 @@ typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
   };
 #include "mozilla/ServoArcTypeList.h"
 #undef SERVO_ARC_TYPE
+
+typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowed;
+typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowedOrNull;
+struct MOZ_MUST_USE_TYPE ServoStyleContextStrong
+{
+  mozilla::ServoStyleContext* mPtr;
+  already_AddRefed<mozilla::ServoStyleContext> Consume();
+};
 
 #define DECL_OWNED_REF_TYPE_FOR(type_)    \
   typedef type_* type_##Owned;            \

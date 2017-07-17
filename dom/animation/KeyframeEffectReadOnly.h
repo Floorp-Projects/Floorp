@@ -46,6 +46,7 @@ struct AnimationRule;
 struct TimingParams;
 class EffectSet;
 class ServoStyleContext;
+class GeckoStyleContext;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -165,9 +166,9 @@ public:
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
                     ErrorResult& aRv);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                    nsStyleContext* aStyleContext);
+                    GeckoStyleContext* aStyleContext);
   void SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
-                    const ServoComputedValues* aComputedValues);
+                    const ServoStyleContext* aComputedValues);
 
   // Returns true if the effect includes |aProperty| regardless of whether the
   // property is overridden by !important rule.
@@ -196,7 +197,7 @@ public:
   // |aStyleContext| to resolve specified values.
   void UpdateProperties(nsStyleContext* aStyleContext);
   // Servo version of the above function.
-  void UpdateProperties(const ServoComputedValues* aComputedValues);
+  void UpdateProperties(const ServoStyleContext* aComputedValues);
 
   // Update various bits of state related to running ComposeStyle().
   // We need to update this outside ComposeStyle() because we should avoid
@@ -259,7 +260,7 @@ public:
   // Cumulative change hint on each segment for each property.
   // This is used for deciding the animation is paint-only.
   void CalculateCumulativeChangeHint(nsStyleContext* aStyleContext);
-  void CalculateCumulativeChangeHint(const ServoComputedValues* aComputedValues)
+  void CalculateCumulativeChangeHint(const ServoStyleContext* aComputedValues)
   {
   }
 
@@ -367,9 +368,9 @@ protected:
     const RefPtr<AnimValuesStyleRule>& aAnimationRule);
 
   // Ensure the base styles is available for any properties in |aProperties|.
-  void EnsureBaseStyles(nsStyleContext* aStyleContext,
+  void EnsureBaseStyles(GeckoStyleContext* aStyleContext,
                         const nsTArray<AnimationProperty>& aProperties);
-  void EnsureBaseStyles(const ServoComputedValues* aComputedValues,
+  void EnsureBaseStyles(const ServoStyleContext* aComputedValues,
                         const nsTArray<AnimationProperty>& aProperties);
 
   // If no base style is already stored for |aProperty|, resolves the base style
@@ -378,14 +379,14 @@ protected:
   // base style context will be resolved and stored in
   // |aCachedBaseStyleContext|.
   void EnsureBaseStyle(nsCSSPropertyID aProperty,
-                       nsStyleContext* aStyleContext,
+                       GeckoStyleContext* aStyleContext,
                        RefPtr<nsStyleContext>& aCachedBaseStyleContext);
   // Stylo version of the above function that also first checks for an additive
   // value in |aProperty|'s list of segments.
   void EnsureBaseStyle(const AnimationProperty& aProperty,
                        CSSPseudoElementType aPseudoType,
                        nsPresContext* aPresContext,
-                       const ServoComputedValues* aComputedValues,
+                       const ServoStyleContext* aComputedValues,
                        RefPtr<mozilla::ServoStyleContext>& aBaseComputedValues);
 
   Maybe<OwningAnimationTarget> mTarget;
