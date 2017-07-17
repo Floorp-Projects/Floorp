@@ -81,7 +81,7 @@ class GamepadPlatformService final
  private:
   GamepadPlatformService();
   ~GamepadPlatformService();
-  template<class T> void NotifyGamepadChange(const T& aInfo);
+  template<class T> void NotifyGamepadChange(uint32_t aIndex, const T& aInfo);
 
   // Flush all pending events buffered in mPendingEvents, must be called
   // with mMutex held
