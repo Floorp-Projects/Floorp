@@ -301,9 +301,12 @@ nsNodeUtils::LastRelease(nsINode* aNode)
       Element* elem = aNode->AsElement();
       FragmentOrElement::nsDOMSlots* domSlots =
         static_cast<FragmentOrElement::nsDOMSlots*>(slots);
-      for (auto iter = domSlots->mRegisteredIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
-        DOMIntersectionObserver* observer = iter.Key();
-        observer->UnlinkTarget(*elem);
+      if (domSlots->mExtendedSlots) {
+        for (auto iter = domSlots->mExtendedSlots->mRegisteredIntersectionObservers.Iter();
+             !iter.Done(); iter.Next()) {
+          DOMIntersectionObserver* observer = iter.Key();
+          observer->UnlinkTarget(*elem);
+        }
       }
     }
 
