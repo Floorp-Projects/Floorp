@@ -622,7 +622,7 @@ nsStyleContext::Destroy()
   }
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    CSSPseudoElementType aPseudoType,
@@ -630,7 +630,7 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    bool aSkipParentDisplayBasedStyleFixup)
 {
   RefPtr<nsRuleNode> node = aRuleNode;
-  RefPtr<nsStyleContext> context =
+  RefPtr<GeckoStyleContext> context =
     new (aRuleNode->PresContext())
     GeckoStyleContext(aParentContext, aPseudoTag, aPseudoType, node.forget(),
                    aSkipParentDisplayBasedStyleFixup);

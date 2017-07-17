@@ -467,7 +467,7 @@ protected:
 #endif
 };
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<mozilla::GeckoStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,

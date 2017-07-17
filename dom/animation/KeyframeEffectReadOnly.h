@@ -45,6 +45,7 @@ class ErrorResult;
 struct AnimationRule;
 struct TimingParams;
 class EffectSet;
+class ServoStyleContext;
 
 namespace dom {
 class ElementOrCSSPseudoElement;
@@ -385,7 +386,7 @@ protected:
                        CSSPseudoElementType aPseudoType,
                        nsPresContext* aPresContext,
                        const ServoComputedValues* aComputedValues,
-                       RefPtr<const ServoComputedValues>& aBaseComputedValues);
+                       RefPtr<mozilla::ServoStyleContext>& aBaseComputedValues);
 
   Maybe<OwningAnimationTarget> mTarget;
 
