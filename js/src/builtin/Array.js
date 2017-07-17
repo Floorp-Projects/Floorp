@@ -729,10 +729,13 @@ function ArrayIteratorNext() {
     // Step 8-9.
     var len;
     if (IsPossiblyWrappedTypedArray(a)) {
-        if (PossiblyWrappedTypedArrayHasDetachedBuffer(a))
-            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-
         len = PossiblyWrappedTypedArrayLength(a);
+
+        // If the length is non-zero, the buffer can't be detached.
+        if (len === 0) {
+            if (PossiblyWrappedTypedArrayHasDetachedBuffer(a))
+                ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
     } else {
         len = ToLength(a.length);
     }
