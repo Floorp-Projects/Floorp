@@ -23,12 +23,31 @@ this.urlOverrides = class extends ExtensionAPI {
     }
   }
 
-  async onStartup() {
+  async onManifestEntry(entryName) {
     let {extension} = this;
     let {manifest} = extension;
 
-    // Record the setting if it exists in the manifest.
-    if (manifest.chrome_url_overrides && manifest.chrome_url_overrides.newtab) {
+    if (manifest.chrome_url_overrides.newtab) {
+      // Set up the shutdown code for the setting.
+      extension.callOnClose({
+        close: () => {
+          switch (extension.shutdownReason) {
+            case "ADDON_DISABLE":
+              this.processNewTabSetting("disable");
+              break;
+
+            // We can remove the setting on upgrade or downgrade because it will be
+            // added back in when the manifest is re-read. This will cover the case
+            // where a new version of an add-on removes the manifest key.
+            case "ADDON_DOWNGRADE":
+            case "ADDON_UPGRADE":
+            case "ADDON_UNINSTALL":
+              this.processNewTabSetting("removeSetting");
+              break;
+          }
+        },
+      });
+
       let url = extension.baseURI.resolve(manifest.chrome_url_overrides.newtab);
 
       let item = await ExtensionSettingsStore.addSetting(
@@ -46,25 +65,6 @@ this.urlOverrides = class extends ExtensionAPI {
       if (item) {
         aboutNewTabService.newTabURL = item.value || item.initialValue;
       }
-    // If the setting exists for the extension, but is missing from the manifest,
-    // remove it.
-    } else if (ExtensionSettingsStore.hasSetting(
-               extension, STORE_TYPE, NEW_TAB_SETTING_NAME)) {
-      this.processNewTabSetting("removeSetting");
-    }
-  }
-
-  onShutdown(shutdownReason) {
-    switch (shutdownReason) {
-      case "ADDON_DISABLE":
-      case "ADDON_DOWNGRADE":
-      case "ADDON_UPGRADE":
-        this.processNewTabSetting("disable");
-        break;
-
-      case "ADDON_UNINSTALL":
-        this.processNewTabSetting("removeSetting");
-        break;
     }
   }
 };
