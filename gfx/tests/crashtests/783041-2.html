@@ -43,6 +43,16 @@
       } 
     </style>
     <script>
+      function MaybeReload() {
+        var countdown = 10;
+        if (location.search) {
+          countdown = parseInt(location.search.slice(1)) - 1;
+	}		   
+        if (countdown > 0) {
+          location.search = countdown;
+        }
+      }
+
       onload = function() {
         el0=document.createElement('div')
         el0.setAttribute('id','el0')
@@ -54,7 +64,7 @@
         el2.setAttribute('id','el2')
         el1.appendChild(el2)
         el0.appendChild(document.createTextNode('A'))
-        setTimeout("location.reload()", 100)
+        setTimeout("MaybeReload()", 100)
       }
     </script>
   </head>
