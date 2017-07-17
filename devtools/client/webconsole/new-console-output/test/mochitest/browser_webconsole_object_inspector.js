@@ -99,3 +99,13 @@ add_task(async function () {
 
   is(arrayOiNodes.length, 9, "There is the expected number of nodes in the tree");
 });
+
+function waitForNodeMutation(node, observeConfig = {}) {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(mutations => {
+      resolve(mutations);
+      observer.disconnect();
+    });
+    observer.observe(node, observeConfig);
+  });
+}

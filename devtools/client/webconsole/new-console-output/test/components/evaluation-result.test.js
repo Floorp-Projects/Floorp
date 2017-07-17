@@ -49,13 +49,6 @@ describe("EvaluationResult component:", () => {
     expect(wrapper.find(".message.error").length).toBe(1);
   });
 
-  it("renders an inspect command result", () => {
-    const message = stubPreparedMessages.get("inspect({a: 1})");
-    const wrapper = render(EvaluationResult({ message }));
-
-    expect(wrapper.find(".message-body").text()).toBe("Object { a: 1 }");
-  });
-
   it("displays a [Learn more] link", () => {
     const store = setupStore([]);
 

@@ -20,7 +20,6 @@ const {
 const { ObjectClient } = require("devtools/shared/client/main");
 const {
   MESSAGE_TYPE,
-  JSTERM_COMMANDS,
 } = require("../constants");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
@@ -46,7 +45,6 @@ GripMessageBody.propTypes = {
   escapeWhitespace: PropTypes.bool,
   loadedObjectProperties: PropTypes.object,
   type: PropTypes.string,
-  helperType: PropTypes.string,
 };
 
 GripMessageBody.defaultProps = {
@@ -64,6 +62,7 @@ function GripMessageBody(props) {
     escapeWhitespace,
     mode = MODE.LONG,
     loadedObjectProperties,
+    type,
   } = props;
 
   let styleObject;
@@ -90,7 +89,7 @@ function GripMessageBody(props) {
 
   const objectInspectorProps = {
     // Auto-expand the ObjectInspector when the message is a console.dir one.
-    autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
+    autoExpandDepth: type === MESSAGE_TYPE.DIR ? 1 : 0,
     mode,
     // TODO: we disable focus since it's not currently working well in ObjectInspector.
     // Let's remove the property below when problem are fixed in OI.
@@ -160,18 +159,6 @@ function cleanupStyle(userProvidedStyle, createElement) {
         [name]: dummy.style[name]
       }, object);
     }, {});
-}
-
-function shouldAutoExpandObjectInspector(props) {
-  const {
-    helperType,
-    type,
-  } = props;
-
-  return (
-    type === MESSAGE_TYPE.DIR
-    || helperType === JSTERM_COMMANDS.INSPECT
-  );
 }
 
 module.exports = GripMessageBody;
