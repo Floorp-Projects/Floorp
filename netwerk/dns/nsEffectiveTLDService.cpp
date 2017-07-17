@@ -19,6 +19,13 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 
+namespace etld_dafsa {
+
+// Generated file that includes kDafsa
+#include "etld_data.inc"
+
+} // namespace etld_dafsa
+
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
@@ -26,56 +33,11 @@ NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
 
 // ----------------------------------------------------------------------
 
-#define ETLD_STR_NUM_1(line) str##line
-#define ETLD_STR_NUM(line) ETLD_STR_NUM_1(line)
-#define ETLD_ENTRY_OFFSET(name) offsetof(struct etld_string_list, ETLD_STR_NUM(__LINE__))
-
-const ETLDEntry ETLDEntry::entries[] = {
-#define ETLD_ENTRY(name, ex, wild) { ETLD_ENTRY_OFFSET(name), ex, wild },
-#include "etld_data.inc"
-#undef ETLD_ENTRY
-};
-
-const union ETLDEntry::etld_strings ETLDEntry::strings = {
-  {
-#define ETLD_ENTRY(name, ex, wild) name,
-#include "etld_data.inc"
-#undef ETLD_ENTRY
-  }
-};
-
-/* static */ const ETLDEntry*
-ETLDEntry::GetEntry(const char* aDomain)
-{
-  size_t i;
-  if (BinarySearchIf(entries, 0, ArrayLength(ETLDEntry::entries),
-                     Cmp(aDomain), &i)) {
-    return &entries[i];
-  }
-  return nullptr;
-}
-
-// Dummy function to statically ensure that our indices don't overflow
-// the storage provided for them.
-void
-ETLDEntry::FuncForStaticAsserts(void)
-{
-#define ETLD_ENTRY(name, ex, wild)                                      \
-  static_assert(ETLD_ENTRY_OFFSET(name) < (1 << ETLD_ENTRY_N_INDEX_BITS), \
-                "invalid strtab index");
-#include "etld_data.inc"
-#undef ETLD_ENTRY
-}
-
-#undef ETLD_ENTRY_OFFSET
-#undef ETLD_STR_NUM
-#undef ETLD_STR_NUM1
-
-// ----------------------------------------------------------------------
-
 static nsEffectiveTLDService *gService = nullptr;
 
 nsEffectiveTLDService::nsEffectiveTLDService()
+  : mIDNService()
+  , mGraph(etld_dafsa::kDafsa)
 {
 }
 
@@ -85,24 +47,6 @@ nsEffectiveTLDService::Init()
   nsresult rv;
   mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-
-#ifdef DEBUG
-  // Sanity-check the eTLD entries.
-  for (uint32_t i = 0; i < ArrayLength(ETLDEntry::entries); i++) {
-    const char* domain = ETLDEntry::entries[i].GetEffectiveTLDName();
-    nsDependentCString name(domain);
-    nsAutoCString normalizedName(domain);
-    MOZ_ASSERT(NS_SUCCEEDED(NormalizeHostname(normalizedName)),
-               "normalization failure!");
-    MOZ_ASSERT(name.Equals(normalizedName), "domain not normalized!");
-
-    // Domains must be in sorted order for binary search to work.
-    if (i > 0) {
-      const char* domain0 = ETLDEntry::entries[i - 1].GetEffectiveTLDName();
-      MOZ_ASSERT(strcmp(domain0, domain) < 0, "domains not in sorted order!");
-    }
-  }
-#endif
 
   MOZ_ASSERT(!gService);
   gService = this;
@@ -244,6 +188,9 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
                                              int32_t    aAdditionalParts,
                                              nsACString &aBaseDomain)
 {
+  const int kExceptionRule = 1;
+  const int kWildcardRule = 2;
+
   if (aHostname.IsEmpty())
     return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
 
@@ -280,19 +227,19 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
       return NS_ERROR_INVALID_ARG;
 
     // Perform the lookup.
-    const ETLDEntry* entry = ETLDEntry::GetEntry(currDomain);
-    if (entry) {
-      if (entry->IsWild() && prevDomain) {
+    const int result = mGraph.Lookup(Substring(currDomain, end));
+    if (result != Dafsa::kKeyNotFound) {
+      if (result == kWildcardRule && prevDomain) {
         // wildcard rules imply an eTLD one level inferior to the match.
         eTLD = prevDomain;
         break;
       }
-      if (entry->IsNormal() || !nextDot) {
+      if ((result == kWildcardRule || result != kExceptionRule) || !nextDot) {
         // specific match, or we've hit the top domain level
         eTLD = currDomain;
         break;
       }
-      if (entry->IsException()) {
+      if (result == kExceptionRule) {
         // exception rules imply an eTLD one level superior to the match.
         eTLD = nextDot + 1;
         break;
