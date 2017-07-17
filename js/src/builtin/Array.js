@@ -181,12 +181,17 @@ function ArrayStaticSome(list, callbackfn/*, thisArg*/) {
     return callFunction(ArraySome, list, callbackfn, T);
 }
 
-/* ES6 draft 2016-1-15 22.1.3.25 Array.prototype.sort (comparefn) */
+// ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
+// 22.1.3.25 Array.prototype.sort ( comparefn )
 function ArraySort(comparefn) {
-    /* Step 1. */
-    var O = ToObject(this);
+    // Step 1.
+    assert(typeof comparefn === "function", "Only called when a comparator is present");
 
-    /* Step 2. */
+    // Step 2.
+    assert(IsObject(this), "|this| should be an object");
+    var O = this;
+
+    // Step 3.
     var len = ToLength(O.length);
 
     if (len <= 1)

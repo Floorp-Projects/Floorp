@@ -1155,14 +1155,21 @@ function TypedArrayCompareInt(x, y) {
     return 0;
 }
 
-// ES6 draft 20151210 22.2.3.26 %TypedArray%.prototype.sort ( comparefn ).
+// ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
+// 22.2.3.26 %TypedArray%.prototype.sort ( comparefn )
 function TypedArraySort(comparefn) {
     // This function is not generic.
 
     // Step 1.
-    var obj = this;
+    if (comparefn !== undefined) {
+        if (!IsCallable(comparefn))
+            ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, comparefn));
+    }
 
     // Step 2.
+    var obj = this;
+
+    // Step 3.
     var isTypedArray = IsObject(obj) && IsTypedArray(obj);
 
     var buffer;
@@ -1172,7 +1179,7 @@ function TypedArraySort(comparefn) {
         buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "GetAttachedArrayBuffer");
     }
 
-    // Step 3.
+    // Step 4.
     var len;
     if (isTypedArray) {
         len = TypedArrayLength(obj);
