@@ -5744,6 +5744,47 @@ class LUnboxObjectOrNull : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Load an element from a non-allocated entity represented by its state object
+// such as ArgumentState. The elements of the state object are set as operands
+// of this variadic LIR instruction and inlined in the code generated for this
+// instruction.
+//
+// Each element is represented with BOX_PIECES allocations, even if 1 (typed
+// register) or 0 (constants) is enough. In such case, the unused allocations
+// would be bogus.
+class LLoadElementFromStateV : public LVariadicInstruction<BOX_PIECES, 3>
+{
+  public:
+    LIR_HEADER(LoadElementFromStateV)
+
+    LLoadElementFromStateV(const LDefinition& temp0, const LDefinition& temp1,
+                           const LDefinition& tempD)
+    {
+        setTemp(0, temp0);
+        setTemp(1, temp1);
+        setTemp(2, tempD);
+    }
+
+    const MLoadElementFromState* mir() const {
+        return mir_->toLoadElementFromState();
+    }
+    const LAllocation* index() {
+        return getOperand(0);
+    }
+    const LDefinition* temp0() {
+        return getTemp(0);
+    }
+    const LDefinition* temp1() {
+        return getTemp(1);
+    }
+    const LDefinition* tempD() {
+        return getTemp(2);
+    }
+    MDefinition* array() {
+        return mir()->array();
+    }
+};
+
 // Store a boxed value to a dense array's element vector.
 class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
 {
