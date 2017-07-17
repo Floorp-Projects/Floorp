@@ -33,11 +33,11 @@ jobs:
             mozilla-central: [{hour: 10, minute: 0}]
             # No default
 
-    - name: nightly-desktop-win64
+    - name: nightly-desktop-win
       job:
           type: decision-task
-          treeherder-symbol: Nd-Win64
-          target-tasks-method: nightly_win64
+          treeherder-symbol: Nd-Win
+          target-tasks-method: nightly_win
       run-on-projects:
           - date
       when: [] # never (hook only)
