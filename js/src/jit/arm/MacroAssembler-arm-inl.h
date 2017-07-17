@@ -2057,21 +2057,6 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
     branch32(cond, ToPayload(valaddr), Imm32(why), label);
 }
 
-void
-MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
-{
-    MOZ_ASSERT(addr.base == pc, "Unsupported jump from any other addresses.");
-    MOZ_ASSERT(addr.offset == 0, "NYI: offsets from pc should be shifted by the number of instructions.");
-
-    Register base = addr.base;
-    uint32_t scale = Imm32::ShiftOf(addr.scale).value;
-
-    ma_ldr(DTRAddr(base, DtrRegImmShift(addr.index, LSL, scale)), pc);
-    // When loading from pc, the pc is shifted to the next instruction, we
-    // add one extra instruction to accomodate for this shifted offset.
-    breakpoint();
-}
-
 // ========================================================================
 // Memory access primitives.
 void

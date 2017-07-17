@@ -1266,9 +1266,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
 
-    // Create an unconditional branch to the address given as argument.
-    inline void branchToComputedAddress(const BaseIndex& address) PER_ARCH;
-
   private:
 
     // Implementation for branch* methods.
