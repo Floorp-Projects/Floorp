@@ -75,27 +75,17 @@ FrameSizeClass::frameSize() const
 void
 CodeGeneratorX64::visitValue(LValue* value)
 {
-    LDefinition* reg = value->getDef(0);
-    masm.moveValue(value->value(), ToRegister(reg));
+    ValueOperand result = GetValueOutput(value);
+    masm.moveValue(value->value(), result);
 }
 
 void
 CodeGeneratorX64::visitBox(LBox* box)
 {
     const LAllocation* in = box->getOperand(0);
-    const LDefinition* result = box->getDef(0);
+    ValueOperand result = GetValueOutput(box);
 
-    if (IsFloatingPointType(box->type())) {
-        ScratchDoubleScope scratch(masm);
-        FloatRegister reg = ToFloatRegister(in);
-        if (box->type() == MIRType::Float32) {
-            masm.convertFloat32ToDouble(reg, scratch);
-            reg = scratch;
-        }
-        masm.vmovq(reg, ToRegister(result));
-    } else {
-        masm.boxValue(ValueTypeFromMIRType(box->type()), ToRegister(in), ToRegister(result));
-    }
+    masm.moveValue(TypedOrValueRegister(box->type(), ToAnyRegister(in)), result);
 }
 
 void
@@ -165,7 +155,7 @@ CodeGeneratorX64::visitCompareB(LCompareB* lir)
     // Load boxed boolean in ScratchReg.
     ScratchRegisterScope scratch(masm);
     if (rhs->isConstant())
-        masm.moveValue(rhs->toConstant()->toJSValue(), scratch);
+        masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(scratch));
     else
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), scratch);
 
@@ -187,7 +177,7 @@ CodeGeneratorX64::visitCompareBAndBranch(LCompareBAndBranch* lir)
     // Load boxed boolean in ScratchReg.
     ScratchRegisterScope scratch(masm);
     if (rhs->isConstant())
-        masm.moveValue(rhs->toConstant()->toJSValue(), scratch);
+        masm.moveValue(rhs->toConstant()->toJSValue(), ValueOperand(scratch));
     else
         masm.boxValue(JSVAL_TYPE_BOOLEAN, ToRegister(rhs), scratch);
 

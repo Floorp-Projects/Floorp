@@ -143,7 +143,7 @@ FrameInfo::popRegsAndSync(uint32_t uses)
         // clobbered by the first popValue.
         StackValue* val = peek(-2);
         if (val->kind() == StackValue::Register && val->reg() == R1) {
-            masm.moveValue(R1, R2);
+            masm.moveValue(R1, ValueOperand(R2));
             val->setRegister(R2);
         }
         popValue(R1);
