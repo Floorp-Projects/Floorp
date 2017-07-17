@@ -184,6 +184,16 @@ nsStyleContext::PresContext() const
     MOZ_STYLO_FORWARD(PresContext, ())
 }
 
+
+nsStyleContext*
+nsStyleContext::GetStyleIfVisited() const
+{
+  if (auto servo = GetAsServo()) {
+    return servo->ComputedValues()->visited_style.mPtr;
+  }
+  return mStyleIfVisited;
+}
+
 mozilla::GeckoStyleContext*
 nsStyleContext::GetParent() const
 {

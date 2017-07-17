@@ -470,9 +470,6 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoStyleContextStrong,
                    nsIAtom* pseudo_tag,
                    ServoStyleContextBorrowedOrNull parent_style,
                    mozilla::InheritTarget target)
-SERVO_BINDING_FUNC(Servo_ComputedValues_GetVisitedStyle,
-                   ServoStyleContextStrong,
-                   ServoComputedValuesBorrowed values)
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleBits, uint64_t,
                    ServoComputedValuesBorrowed values)
 SERVO_BINDING_FUNC(Servo_ComputedValues_EqualCustomProperties, bool,

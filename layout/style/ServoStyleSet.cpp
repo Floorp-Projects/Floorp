@@ -226,40 +226,13 @@ ServoStyleSet::GetContext(already_AddRefed<ServoStyleContext> aComputedValues,
   MOZ_ASSERT(result->GetPseudoType() == aPseudoType);
   MOZ_ASSERT(result->GetPseudo() == aPseudoTag);
 
-  RefPtr<ServoStyleContext> resultIfVisited =
-    Servo_ComputedValues_GetVisitedStyle(result->ComputedValues()).Consume();
-
-  // If `resultIfVisited` is non-null, then there was a relevant link and
-  // visited styles were computed.  This corresponds to the cases where Gecko's
-  // style system produces `aVisitedRuleNode`.
-  // Set up `parentIfVisited` depending on whether our parent context has a
-  // a visited style.  If it doesn't but we do have visited styles, use the
-  // regular parent context for visited.
-  nsStyleContext *parentIfVisited =
-    aParentContext ? aParentContext->GetStyleIfVisited() : nullptr;
-  if (!parentIfVisited) {
-    if (resultIfVisited) {
-      parentIfVisited = aParentContext;
-    }
-  }
-
-  ServoStyleContext* parentIfVisitedServo = parentIfVisited ? parentIfVisited->AsServo() : nullptr;
-
   // The true visited state of the relevant link is used to decided whether
   // visited styles should be consulted for all visited dependent properties.
   bool relevantLinkVisited = isLink ? isVisitedLink :
     (aParentContext && aParentContext->RelevantLinkVisited());
 
-  if (resultIfVisited) {
-    RefPtr<ServoStyleContext> visitedContext =
-    Servo_StyleContext_NewContext(resultIfVisited->ComputedValues(), parentIfVisitedServo,
-                                  mPresContext, aPseudoType, aPseudoTag).Consume();
-    visitedContext->SetIsStyleIfVisited();
-    result->SetStyleIfVisited(visitedContext.forget());
-
-    if (relevantLinkVisited) {
-      result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
-    }
+  if (relevantLinkVisited && result->GetStyleIfVisited()) {
+    result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
   }
 
   // Set the body color on the pres context. See nsStyleSet::GetContext

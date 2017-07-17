@@ -322,7 +322,7 @@ mapped-generic-types = [
     { generic = false, gecko = "mozilla::ServoFontComputationData", servo = "::properties::FontComputationData" },
     { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::stylearc::Arc<::custom_properties::CustomPropertiesMap>>" },
     { generic = false, gecko = "mozilla::ServoRuleNode", servo = "Option<::rule_tree::StrongRuleNode>" },
-    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::stylearc::Arc<::properties::ComputedValues>>" },
+    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::stylearc::RawOffsetArc<::properties::ComputedValues>>" },
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
     { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::stylearc::RawOffsetArc" },
     { generic = false, gecko = "ServoStyleContextStrong", servo = "::gecko_bindings::sugar::ownership::Strong<ServoStyleContext>" },
