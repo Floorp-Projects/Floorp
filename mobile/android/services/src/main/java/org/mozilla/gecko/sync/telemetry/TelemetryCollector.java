@@ -64,6 +64,10 @@ public class TelemetryCollector {
         return collector;
     }
 
+    public boolean hasCollectorFor(@NonNull String stageName) {
+        return stageCollectors.containsKey(stageName);
+    }
+
     public void setRestarted() {
         this.didRestart = true;
     }

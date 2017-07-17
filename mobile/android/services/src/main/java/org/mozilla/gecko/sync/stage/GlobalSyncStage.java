@@ -41,6 +41,8 @@ public interface GlobalSyncStage {
     syncFullHistory("history"),
     syncFormHistory("forms"),
 
+    validateBookmarks,
+
     uploadMetaGlobal,
     completed;
 

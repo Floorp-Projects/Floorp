@@ -115,6 +115,10 @@ public class Server15RepositorySession extends RepositorySession {
    */
   @Override
   public long getLastSyncTimestamp() {
+    if (serverRepository.getFullFetchForced()) {
+      return 0;
+    }
+
     if (!serverRepository.getAllowHighWaterMark() || !serverRepository.getSortOrder().equals("oldest")) {
       return super.getLastSyncTimestamp();
     }
