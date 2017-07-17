@@ -20,9 +20,12 @@ before_install:
 
 script:
   - ./gradlew --info clean assembleFocusWebkitDebug
+  - export ADJUST_TOKEN_FOCUS='..no..value..'
+  - ./gradlew jacocoTestReport
 
 after_success:
   - python <(curl -s https://raw.githubusercontent.com/TouK/sputnik-ci/master/sputnik-ci.py)
+  - bash <(curl -s https://codecov.io/bash)
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
