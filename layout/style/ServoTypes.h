@@ -9,6 +9,10 @@
 
 #include "mozilla/TypedEnumBits.h"
 
+#define STYLE_STRUCT(name_, checkdata_cb_) struct nsStyle##name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
 /*
  * Type definitions used to interact with Servo. This gets included by nsINode,
  * so don't add significant include dependencies to this file.
@@ -126,6 +130,45 @@ enum class InheritTarget {
   FirstLetterContinuation,
   // We're requesting a style for a placeholder frame.
   PlaceholderFrame,
+};
+
+struct ServoWritingMode {
+  uint8_t mBits;
+};
+
+struct ServoFontComputationData {
+  // 8 bytes, but is done as 4+4 for alignment
+  uint32_t mFour;
+  uint32_t mFour2;
+};
+
+struct ServoCustomPropertiesMap {
+  uintptr_t mPtr;
+};
+
+struct ServoVisitedStyle {
+  uintptr_t mPtr;
+};
+
+/**
+ * We want C++ to be abe to read the style struct fields of ComputedValues
+ * so we define this type on the C++ side and use the bindgenned version
+ * on the Rust side.
+ *
+ * C++ just sees pointers and opaque types here, so bindgen will attempt to generate a Copy
+ * impl. This will fail because the bindgenned version contains owned types. Opt out.
+ *
+ * <div rustbindgen nocopy></div>
+ */
+struct ServoComputedValues2 {
+#define STYLE_STRUCT(name_, checkdata_cb_) nsStyle##name_* name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+  ServoCustomPropertiesMap custom_properties;
+  ServoWritingMode writing_mode;
+  ServoFontComputationData font_computation_data;
+  ServoVisitedStyle visited_style;
+  ~ServoComputedValues2() {} // do nothing, but prevent Copy from being impl'd by bindgen
 };
 
 } // namespace mozilla
