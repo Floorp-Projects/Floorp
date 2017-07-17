@@ -141,7 +141,6 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance()
 #ifdef MOZ_WIDGET_ANDROID
   , mOnScreen(true)
 #endif
-  , mHaveJavaC2PJSObjectQuirk(false)
   , mCachedParamLength(0)
   , mCachedParamNames(nullptr)
   , mCachedParamValues(nullptr)
@@ -418,8 +417,6 @@ nsNPAPIPluginInstance::Start()
 
   GetMIMEType(&mimetype);
 
-  CheckJavaC2PJSObjectQuirk(quirkParamLength, mCachedParamNames, mCachedParamValues);
-
   bool oldVal = mInPluginInitCall;
   mInPluginInitCall = true;
 
@@ -464,14 +461,8 @@ nsresult nsNPAPIPluginInstance::SetWindow(NPWindow* window)
     return NS_OK;
 
 #if MOZ_WIDGET_GTK
-  // bug 108347, flash plugin on linux doesn't like window->width <=
-  // 0, but Java needs wants this call.
-  if (window && window->type == NPWindowTypeWindow &&
-      (window->width <= 0 || window->height <= 0) &&
-      (nsPluginHost::GetSpecialType(nsDependentCString(mMIMEType)) !=
-       nsPluginHost::eSpecialType_Java)) {
-    return NS_OK;
-  }
+  // bug 108347, flash plugin on linux doesn't like window->width <= 0
+  return NS_OK;
 #endif
 
   if (!mPlugin || !mPlugin->GetLibrary())
@@ -1044,10 +1035,6 @@ nsNPAPIPluginInstance::CSSZoomFactorChanged(float aCSSZoomFactor)
 nsresult
 nsNPAPIPluginInstance::GetJSObject(JSContext *cx, JSObject** outObject)
 {
-  if (mHaveJavaC2PJSObjectQuirk) {
-    return NS_ERROR_FAILURE;
-  }
-
   NPObject *npobj = nullptr;
   nsresult rv = GetValueFromPlugin(NPPVpluginScriptableNPObject, &npobj);
   if (NS_FAILED(rv) || !npobj)
@@ -1597,96 +1584,6 @@ nsNPAPIPluginInstance::SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect *c
   if (mOwner) {
     mOwner->SetCurrentAsyncSurface(surface, changed);
   }
-}
-
-static bool
-GetJavaVersionFromMimetype(nsPluginTag* pluginTag, nsCString& version)
-{
-  for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); ++i) {
-    nsCString type = pluginTag->MimeTypes()[i];
-    nsAutoCString jpi("application/x-java-applet;jpi-version=");
-
-    int32_t idx = type.Find(jpi, false, 0, -1);
-    if (idx != 0) {
-      continue;
-    }
-
-    type.Cut(0, jpi.Length());
-    if (type.IsEmpty()) {
-      continue;
-    }
-
-    type.ReplaceChar('_', '.');
-    version = type;
-    return true;
-  }
-
-  return false;
-}
-
-void
-nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
-                                                 const char* const* paramNames,
-                                                 const char* const* paramValues)
-{
-  if (!mMIMEType || !mPlugin) {
-    return;
-  }
-
-  nsPluginTagType tagtype;
-  nsresult rv = GetTagType(&tagtype);
-  if (NS_FAILED(rv) ||
-      (tagtype != nsPluginTagType_Applet)) {
-    return;
-  }
-
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  if (!pluginHost) {
-    return;
-  }
-
-  nsPluginTag* pluginTag = pluginHost->TagForPlugin(mPlugin);
-  if (!pluginTag ||
-      !pluginTag->mIsJavaPlugin) {
-    return;
-  }
-
-  // check the params for "code" being present and non-empty
-  bool haveCodeParam = false;
-  bool isCodeParamEmpty = true;
-
-  for (uint16_t i = paramCount; i > 0; --i) {
-    if (PL_strcasecmp(paramNames[i - 1], "code") == 0) {
-      haveCodeParam = true;
-      if (strlen(paramValues[i - 1]) > 0) {
-        isCodeParamEmpty = false;
-      }
-      break;
-    }
-  }
-
-  // Due to the Java version being specified inconsistently across platforms
-  // check the version via the mimetype for choosing specific Java versions
-  nsCString javaVersion;
-  if (!GetJavaVersionFromMimetype(pluginTag, javaVersion)) {
-    return;
-  }
-
-  mozilla::Version version(javaVersion.get());
-
-  if (version >= "1.7.0.4") {
-    return;
-  }
-
-  if (!haveCodeParam && version >= "1.6.0.34" && version < "1.7") {
-    return;
-  }
-
-  if (haveCodeParam && !isCodeParamEmpty) {
-    return;
-  }
-
-  mHaveJavaC2PJSObjectQuirk = true;
 }
 
 double
