@@ -159,9 +159,9 @@ LIRGeneratorShared::defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, 
 
 }
 
-template <size_t Temps> void
-LIRGeneratorShared::defineBox(details::LInstructionFixedDefsTempsHelper<BOX_PIECES, Temps>* lir,
-                              MDefinition* mir, LDefinition::Policy policy)
+template <size_t Ops, size_t Temps> void
+LIRGeneratorShared::defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, MDefinition* mir,
+                              LDefinition::Policy policy)
 {
     // Call instructions should use defineReturn.
     MOZ_ASSERT(!lir->isCall());

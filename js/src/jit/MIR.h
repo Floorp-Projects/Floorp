@@ -3957,41 +3957,6 @@ class MArrayState
     }
 };
 
-// Hold the arguments of an inlined frame. At the moment this class is not
-// recovered on bailout as it does not have an implementation and it should
-// be inlined at all its uses.
-class MArgumentState
-  : public MVariadicInstruction,
-    public NoFloatPolicyAfter<0>::Data
-{
-  private:
-    explicit MArgumentState() {
-        setResultType(MIRType::Object);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(ArgumentState)
-
-    static MArgumentState* New(TempAllocator::Fallible view, const MDefinitionVector& args);
-    static MArgumentState* Copy(TempAllocator& alloc, MArgumentState* state);
-
-    size_t numElements() const {
-        return numOperands();
-    }
-
-    MDefinition* getElement(uint32_t index) const {
-        return getOperand(index);
-    }
-
-    bool congruentTo(const MDefinition* ins) const override {
-        return congruentIfOperandsEqual(ins);
-    }
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
-};
-
 // Setting __proto__ in an object literal.
 class MMutateProto
   : public MAryInstruction<2>,
@@ -9691,30 +9656,6 @@ class MStoreElementCommon
     }
 };
 
-// This instruction is used to load an element of a non-escaped inlined array.
-class MLoadElementFromState
-  : public MBinaryInstruction,
-    public SingleObjectPolicy::Data
-{
-    MLoadElementFromState(MDefinition* array, MDefinition* index)
-      : MBinaryInstruction(array, index)
-    {
-        MOZ_ASSERT(array->isArgumentState());
-        MOZ_ASSERT(index->type() == MIRType::Int32);
-        setResultType(MIRType::Value);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(LoadElementFromState)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, array), (1, index));
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
-};
-
 // Store a value to a dense array slots vector.
 class MStoreElement
   : public MAryInstruction<3>,
@@ -12750,7 +12691,7 @@ class MArgumentsLength : public MNullaryInstruction
     AliasSet getAliasSet() const override {
         // Arguments |length| cannot be mutated by Ion Code.
         return AliasSet::None();
-    }
+   }
 
     void computeRange(TempAllocator& alloc) override;
 

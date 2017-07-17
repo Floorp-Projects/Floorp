@@ -387,12 +387,6 @@ class Assembler : public vixl::Assembler
         LabelBase* label = absoluteLabel;
         label->bind(off.getOffset());
     }
-    void writeCodePointer(CodeOffset* label) {
-        uintptr_t x = LabelBase::INVALID_OFFSET;
-        BufferOffset off = EmitData(&x, sizeof(uintptr_t));
-        label->bind(off.getOffset());
-    }
-
 
     void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
                                      const Disassembler::HeapAccess& heapAccess)

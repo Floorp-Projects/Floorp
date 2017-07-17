@@ -42,8 +42,7 @@ namespace JS {
     _(GetElem_TypedArray)                               \
     _(GetElem_String)                                   \
     _(GetElem_Arguments)                                \
-    _(GetElem_ArgumentsInlinedConstant)                 \
-    _(GetElem_ArgumentsInlinedSwitch)                   \
+    _(GetElem_ArgumentsInlined)                         \
     _(GetElem_InlineCache)                              \
                                                         \
     _(SetElem_TypedObject)                              \

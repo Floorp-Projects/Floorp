@@ -7722,20 +7722,13 @@ IonBuilder::jsop_getelem()
         if (emitted)
             return Ok();
 
-        trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlinedConstant);
-        MOZ_TRY(getElemTryArgumentsInlinedConstant(&emitted, obj, index));
+        trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlined);
+        MOZ_TRY(getElemTryArgumentsInlined(&emitted, obj, index));
         if (emitted)
             return Ok();
 
-        trackOptimizationAttempt(TrackedStrategy::GetElem_ArgumentsInlinedSwitch);
-        MOZ_TRY(getElemTryArgumentsInlinedIndex(&emitted, obj, index));
-        if (emitted)
-            return Ok();
-
-        if (script()->argumentsHasVarBinding()) {
-            trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
+        if (script()->argumentsHasVarBinding())
             return abort(AbortReason::Disable, "Type is not definitely lazy arguments.");
-        }
     }
 
     obj = maybeUnboxForPropertyAccess(obj);
@@ -8387,7 +8380,7 @@ IonBuilder::getElemTryArguments(bool* emitted, MDefinition* obj, MDefinition* in
 }
 
 AbortReasonOr<Ok>
-IonBuilder::getElemTryArgumentsInlinedConstant(bool* emitted, MDefinition* obj, MDefinition* index)
+IonBuilder::getElemTryArgumentsInlined(bool* emitted, MDefinition* obj, MDefinition* index)
 {
     MOZ_ASSERT(*emitted == false);
 
@@ -8395,10 +8388,6 @@ IonBuilder::getElemTryArgumentsInlinedConstant(bool* emitted, MDefinition* obj, 
         return Ok();
 
     if (obj->type() != MIRType::MagicOptimizedArguments)
-        return Ok();
-
-    MConstant* indexConst = index->maybeConstantValue();
-    if (!indexConst || indexConst->type() != MIRType::Int32)
         return Ok();
 
     // Emit inlined arguments.
@@ -8407,73 +8396,25 @@ IonBuilder::getElemTryArgumentsInlinedConstant(bool* emitted, MDefinition* obj, 
     MOZ_ASSERT(!info().argsObjAliasesFormals());
 
     // When the id is constant, we can just return the corresponding inlined argument
-    MOZ_ASSERT(inliningDepth_ > 0);
+    MConstant* indexConst = index->maybeConstantValue();
+    if (indexConst && indexConst->type() == MIRType::Int32) {
+        MOZ_ASSERT(inliningDepth_ > 0);
 
-    int32_t id = indexConst->toInt32();
-    index->setImplicitlyUsedUnchecked();
+        int32_t id = indexConst->toInt32();
+        index->setImplicitlyUsedUnchecked();
 
-    if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
-        current->push(inlineCallInfo_->getArg(id));
-    else
-        pushConstant(UndefinedValue());
+        if (id < (int32_t)inlineCallInfo_->argc() && id >= 0)
+            current->push(inlineCallInfo_->getArg(id));
+        else
+            pushConstant(UndefinedValue());
 
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
-}
-
-AbortReasonOr<Ok>
-IonBuilder::getElemTryArgumentsInlinedIndex(bool* emitted, MDefinition* obj, MDefinition* index)
-{
-    MOZ_ASSERT(*emitted == false);
-
-    if (inliningDepth_ == 0)
+        trackOptimizationSuccess();
+        *emitted = true;
         return Ok();
-
-    if (obj->type() != MIRType::MagicOptimizedArguments)
-        return Ok();
-
-    if (!IsNumberType(index->type()))
-        return Ok();
-
-    // Currently, we do not support any arguments vector larger than 10, as this
-    // is being translated into code at the call site, and it would be better to
-    // store the arguments contiguously on the stack.
-    if (inlineCallInfo_->argc() > 10) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineBound);
-        return abort(AbortReason::Disable, "NYI get argument element with too many arguments");
     }
 
-    // Emit inlined arguments.
-    obj->setImplicitlyUsedUnchecked();
-
-    MOZ_ASSERT(!info().argsObjAliasesFormals());
-
-    // Ensure index is an integer.
-    MInstruction* idInt32 = MToInt32::New(alloc(), index);
-    current->add(idInt32);
-    index = idInt32;
-
-    // Bailout if we read more than the number of actual arguments. This bailout
-    // cannot re-enter because reading out of bounds arguments will disable the
-    // lazy arguments optimization for this script, when this code would be
-    // executed in Baseline. (see GetElemOptimizedArguments)
-    index = addBoundsCheck(index, constantInt(inlineCallInfo_->argc()));
-
-    // Get an instruction to represent the state of the argument vector.
-    MInstruction* args = MArgumentState::New(alloc().fallible(), inlineCallInfo_->argv());
-    if (!args)
-        return abort(AbortReason::Alloc);
-    current->add(args);
-
-    // Select a value to pick from a vector.
-    MInstruction* load = MLoadElementFromState::New(alloc(), args, index);
-    current->add(load);
-    current->push(load);
-
-    trackOptimizationSuccess();
-    *emitted = true;
-    return Ok();
+    // inlined not constant not supported, yet.
+    return abort(AbortReason::Disable, "NYI inlined not constant get argument element");
 }
 
 AbortReasonOr<Ok>
