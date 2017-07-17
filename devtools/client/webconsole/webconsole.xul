@@ -19,6 +19,7 @@
         macanimationtype="document"
         fullscreenbutton="true"
         title="&window.title;"
+        browserConsoleTitle="&browserConsole.title;"
         windowtype="devtools:webconsole"
         width="900" height="350"
         persist="screenX screenY width height sizemode">

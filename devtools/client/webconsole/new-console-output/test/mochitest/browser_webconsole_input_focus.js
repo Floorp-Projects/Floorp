@@ -32,7 +32,6 @@ add_task(function* () {
   yield waitForBlurredInput(inputNode);
 
   EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
-
   ok(inputNode.getAttribute("focused"), "input node is focused, second time");
 
   yield waitForBlurredInput(inputNode);

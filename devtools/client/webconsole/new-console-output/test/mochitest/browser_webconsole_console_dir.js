@@ -32,7 +32,7 @@ add_task(async function () {
   });
 
   let dirMessageNode = await waitFor(() =>
-    findConsoleDir(hud.ui.outputNode, 0));
+    findConsoleDir(hud.ui.experimentalOutputNode, 0));
   let objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
 
@@ -65,7 +65,7 @@ add_task(async function () {
     content.wrappedJSObject.console.dir(data);
   });
 
-  dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.outputNode, 1));
+  dirMessageNode = await waitFor(() => findConsoleDir(hud.ui.experimentalOutputNode, 1));
   objectInspectors = [...dirMessageNode.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
 
