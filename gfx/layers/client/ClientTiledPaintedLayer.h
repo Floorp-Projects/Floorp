@@ -40,7 +40,7 @@ class ClientTiledPaintedLayer : public PaintedLayer,
 
 public:
   explicit ClientTiledPaintedLayer(ClientLayerManager* const aManager,
-                                  ClientLayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE);
+                                   PaintedLayerCreationHint aCreationHint = PaintedLayerCreationHint::NONE);
 
 protected:
   ~ClientTiledPaintedLayer();
@@ -87,7 +87,7 @@ public:
                          LayerMetricsWrapper* aOutDisplayPortAncestor,
                          bool* aOutHasTransformAnimation);
 
-  virtual bool IsOptimizedFor(LayerManager::PaintedLayerCreationHint aCreationHint) override;
+  virtual bool IsOptimizedFor(PaintedLayerCreationHint aCreationHint) override;
 
 private:
   ClientLayerManager* ClientManager()

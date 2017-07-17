@@ -209,7 +209,7 @@ struct ContainerLayerParameters {
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
     , mForEventsAndPluginsOnly(false)
-    , mLayerCreationHint(layers::LayerManager::NONE)
+    , mLayerCreationHint(layers::PaintedLayerCreationHint::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale)
     : mXScale(aXScale)
@@ -223,7 +223,7 @@ struct ContainerLayerParameters {
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
     , mForEventsAndPluginsOnly(false)
-    , mLayerCreationHint(layers::LayerManager::NONE)
+    , mLayerCreationHint(layers::PaintedLayerCreationHint::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
@@ -273,7 +273,7 @@ struct ContainerLayerParameters {
   bool mDisableSubpixelAntialiasingInDescendants;
   bool mInLowPrecisionDisplayPort;
   bool mForEventsAndPluginsOnly;
-  layers::LayerManager::PaintedLayerCreationHint mLayerCreationHint;
+  layers::PaintedLayerCreationHint mLayerCreationHint;
 
   /**
    * When this is false, PaintedLayer coordinates are drawn to with an integer
