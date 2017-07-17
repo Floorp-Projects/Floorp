@@ -7,20 +7,20 @@
   <string name="feedback_erase">您的浏览记录已清除。</string>
   <string name="search_hint">搜索 %1$s</string>
   <string name="menu_share">分享…</string>
-  <string name="menu_open_with_default_browser">使用 %1$s 打开</string>
+  <string name="menu_open_with_default_browser">用 %1$s 打开</string>
   <string name="menu_open_with_a_browser">打开方式…</string>
   <string name="menu_settings">设置</string>
   <string name="menu_about">关于</string>
   <string name="menu_help">帮助</string>
   <string name="menu_rights">您的权利</string>
-  <string name="menu_trackers_blocked_title">已拦截跟踪器</string>
+  <string name="menu_trackers_blocked_title">拦截的跟踪器数量</string>
   <string name="share_dialog_title">分享方式</string>
   <string name="notification_erase_text">擦除浏览记录</string>
   <string name="notification_action_open">打开</string>
   <string name="shortcut_erase_short_label">擦除</string>
   <string name="shortcut_erase_long_label">擦除浏览记录</string>
   <string name="text_selection_search_action">私密搜索</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#20351;&#29992;&#23427;&#20316;&#20026;&#38544;&#31169;&#27983;&#35272;&#22120;&#65306;\n  "<ul>"\n    "<li>&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#23631;&#34109;&#36319;&#36394;&#22120;&#65288;&#25110;&#26356;&#26032;&#35774;&#32622;&#20197;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#21024;&#38500; Cookie &#21450;&#25628;&#32034;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#21487;&#20197;&#29992;&#20316;&#38544;&#31169;&#27983;&#35272;&#22120;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_category_search">搜索</string>
   <string name="preference_search_engine_default">默认</string>
   <string name="preference_language">语言</string>
@@ -33,71 +33,71 @@
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
   <string name="preference_privacy_block_content_summary">可能对某些网页与视频有影响</string>
   <string name="preference_privacy_secure_mode">隐形</string>
-  <string name="preference_privacy_secure_mode_summary">关闭隐形模式以允许屏幕截取，以及在您的最近应用列表中查看使用 %1$s 访问的网站</string>
+  <string name="preference_privacy_secure_mode_summary">关闭隐形模式才可以截图，并可在“最近应用列表”中看到您用 %1$s 访问过的网站</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
-  <string name="preference_performance_block_webfonts_summary">可能导致图标或图像缺失</string>
-  <string name="preference_performance_block_images">屏蔽图像</string>
+  <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>
+  <string name="preference_performance_block_images">拦截图像</string>
   <string name="preference_default_browser">设为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">发送匿名使用统计数据</string>
+  <string name="preference_mozilla_telemetry">发送匿名的使用统计数据</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
   <string name="preference_about">关于 %1$s</string>
-  <string name="content_description_clear_input">清空输入框</string>
+  <string name="content_description_clear_input">清空输入内容</string>
   <string name="content_description_dismiss_input">关闭</string>
   <string name="content_description_erase">清除浏览记录</string>
   <string name="content_description_lock">安全连接</string>
-  <string name="accessibility_announcement_loading">正在加载</string>
-  <string name="accessibility_announcement_loading_finished">网站已加载</string>
+  <string name="accessibility_announcement_loading">正在载入</string>
+  <string name="accessibility_announcement_loading_finished">网站已载入</string>
   <string name="content_description_menu">更多选项</string>
-  <string name="content_description_forward">向前导航</string>
-  <string name="content_description_reload">重新加载网站</string>
-  <string name="content_description_back">导航回退</string>
-  <string name="content_description_stop">停止加载</string>
+  <string name="content_description_forward">浏览下一页</string>
+  <string name="content_description_reload">重新载入网站</string>
+  <string name="content_description_back">浏览上一页</string>
+  <string name="content_description_stop">停止载入网站</string>
   <string name="content_description_customtab_exit">返回之前的应用</string>
-  <string name="content_description_blocking_switch">屏蔽跟踪器</string>
-  <string name="context_menu_paste_go">粘贴并转到</string>
+  <string name="content_description_blocking_switch">拦截跟踪器</string>
+  <string name="context_menu_paste_go">粘贴并访问</string>
   <string name="your_rights">您的权利</string>
-  <string name="external_app_prompt_title">在另一个应用中打开链接</string>
-  <string name="external_app_prompt">您可以离开 %1$s 以在 %2$s 中打开此链接。</string>
-  <string name="external_app_prompt_no_app_title">查找可以打开链接的应用</string>
-  <string name="external_app_prompt_no_app">您的设备上的应用都不能打开此链接。您可以离开 %1$s 以搜索 %2$s 来找出适合的应用。</string>
+  <string name="external_app_prompt_title">用另一个应用打开链接</string>
+  <string name="external_app_prompt">"您可以离开 %1$s，用  %2$s 打开此链接。"</string>
+  <string name="external_app_prompt_no_app_title">寻找可以打开此链接的应用</string>
+  <string name="external_app_prompt_no_app">您的设备上的应用都不能打开此链接。您可以离开 %1$s，到 %2$s 寻找适合的应用。</string>
   <string name="external_multiple_apps_matched_exit">退出隐私浏览模式？</string>
-  <string name="download_snackbar_finished">%1$s 完成</string>
+  <string name="download_snackbar_finished">%1$s 下载完毕</string>
   <string name="download_snackbar_open">打开</string>
   <string name="download_dialog_warning"><![CDATA[清除 %1$s 的历史记录时，<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#21024;&#38500;</b>已下载的文件。]]></string>
   <string name="download_dialog_title">下载文件</string>
   <string name="download_dialog_action_cancel">取消</string>
   <string name="download_dialog_action_download">下载</string>
-  <string name="errorpage_title">加载页面遇到问题</string>
+  <string name="errorpage_title">页面载入出错</string>
   <string name="errorpage_refresh">重试</string>
   <string name="error_connectionfailure_title">无法连接</string>
-  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#35813;&#32593;&#31449;&#21487;&#33021;&#26242;&#26102;&#19981;&#21487;&#29992;&#25110;&#22788;&#20110;&#32321;&#24537;&#29366;&#24577;&#12290;&#35831;&#20960;&#20998;&#38047;&#21518;&#20877;&#35797;&#12290;</li>"\n        "<li>&#22914;&#26524;&#24744;&#26080;&#27861;&#21152;&#36733;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#35813;&#31227;&#21160;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
+  <string name="error_connectionfailure_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>&#35813;&#32593;&#31449;&#21487;&#33021;&#26242;&#26102;&#19981;&#21487;&#29992;&#25110;&#22826;&#24537;&#20102;&#12290;&#19968;&#20250;&#20799;&#20877;&#35797;&#35797;&#21543;&#12290;</li>"\n        "<li>&#22914;&#26524;&#20320;&#26080;&#27861;&#36733;&#20837;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#24744;&#30340;&#31227;&#21160;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
   <string name="error_timeout_title">连接超时</string>
   <string name="error_hostLookup_title">找不到服务器</string>
-  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#35831;&#26816;&#26597;&#35813;&#22320;&#22336;&#26159;&#21542;&#36755;&#20837;&#38169;&#35823;&#65292;&#27604;&#22914;&#23558;\n          "<strong>www</strong>".example.com &#38169;&#20889;&#25104; \n          "<strong>ww</strong>.example.com</li>"\n        "<li>&#22914;&#26524;&#24744;&#26080;&#27861;&#36733;&#20837;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#35813;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
+  <string name="error_hostLookup_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n        "<li>"&#35831;&#26816;&#26597;&#35813;&#22320;&#22336;&#26159;&#21542;&#36755;&#38169;&#65292;&#27604;&#22914;&#23558;\n          "<strong>www</strong>".example.com &#38169;&#20889;&#25104; \n          "<strong>ww</strong>.example.com</li>"\n        "<li>&#22914;&#26524;&#24744;&#26080;&#27861;&#36733;&#20837;&#20219;&#20309;&#39029;&#38754;&#65292;&#35831;&#26816;&#26597;&#35813;&#35774;&#22791;&#30340;&#25968;&#25454;&#25110; Wi-Fi &#36830;&#25509;&#12290;</li>"\n      "</ul>]]></string>
   <string name="error_malformedURI_title">地址无效</string>
   <string name="error_malformedURI_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>"&#32593;&#39029;&#22320;&#22336;&#36890;&#24120;&#26684;&#24335;&#20026; "<strong>http://www.example.com/</strong></li>"\n  "<li>"&#35831;&#30830;&#35748;&#24744;&#20351;&#29992;&#30340;&#26159;&#27491;&#26012;&#26464;&#65288;&#21363; "<strong>/</strong>&#65289;&#12290;</li>\n</ul>]]></string>
-  <string name="error_redirectLoop_title">页面不正确地重定向</string>
+  <string name="error_redirectLoop_title">此页面不正确地重定向</string>
   <string name="error_redirectLoop_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#26377;&#26102;&#20505;&#31105;&#29992;&#25110;&#25298;&#32477;&#25509;&#21463; Cookie &#20250;&#23548;&#33268;&#27492;&#38382;&#39064;&#12290;</li>\n</ul>]]></string>
-  <string name="error_unsupportedprotocol_title">地址无法理解</string>
+  <string name="error_unsupportedprotocol_title">无法理解该地址</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#24744;&#21487;&#33021;&#38656;&#35201;&#23433;&#35013;&#20854;&#20182;&#36719;&#20214;&#25165;&#33021;&#25171;&#24320;&#27492;&#22320;&#22336;&#12290;</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">安全连接失败</string>
   <string name="error_sslhandshake_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>&#36825;&#21487;&#33021;&#26159;&#26381;&#21153;&#22120;&#37197;&#32622;&#30340;&#38382;&#39064;&#65292;&#25110;&#32773;&#26377;&#20154;&#23581;&#35797;&#20882;&#20805;&#35813;&#26381;&#21153;&#22120;&#25152;&#33268;&#12290;</li>"\n  "<li>&#22914;&#26524;&#24744;&#20043;&#21069;&#26366;&#25104;&#21151;&#36830;&#25509;&#35813;&#26381;&#21153;&#22120;&#65292;&#37027;&#20040;&#27492;&#38169;&#35823;&#21487;&#33021;&#26159;&#26242;&#26102;&#30340;&#65292;&#24744;&#21487;&#20197;&#31245;&#21518;&#20877;&#35797;&#12290;</li>\n</ul>]]></string>
-  <string name="error_generic_title">哎呀</string>
-  <string name="error_generic_message">由于某些原因，我们无法加载此页面。</string>
+  <string name="error_generic_title">啊哦</string>
+  <string name="error_generic_message">由于某些原因，我们无法载入此页面。</string>
   <string name="contextmenu_link_share">分享链接</string>
   <string name="contextmenu_link_copy">复制链接地址</string>
-  <string name="contextmenu_image_share">分享图片</string>
-  <string name="contextmenu_image_copy">复制图片地址</string>
-  <string name="contextmenu_image_save">保存图片</string>
-  <string name="contextmenu_image_warning"><![CDATA[在您擦除 %1$s 历史记录时，已保存和已分享的图像<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#34987;&#21024;&#38500;</b>。]]></string>
-  <string name="firstrun_tracking_title">避开监视，浏览网络</string>
-  <string name="firstrun_tracking_text">在您浏览时自动屏蔽网络跟踪器。之后可以点按应用程序或通知中的垃圾桶图标来删除访问记录和 Cookie。</string>
+  <string name="contextmenu_image_share">分享图像</string>
+  <string name="contextmenu_image_copy">复制图像地址</string>
+  <string name="contextmenu_image_save">保存图像</string>
+  <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 的历史记录时，<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#21024;&#38500;</b>已保存和已分享的图像。]]></string>
+  <string name="firstrun_tracking_title">畅游网络，拒绝监视。</string>
+  <string name="firstrun_tracking_text">上网时自动拦截网络跟踪器。之后可以点按应用中或通知栏中的垃圾桶图标，即可移除访问记录和 Cookie。</string>
   <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
-  <string name="firstrun_defaultbrowser_text">将 %1$s 设为您的默认浏览器，便于从其他 Android 应用访问网站时使用隐私浏览。</string>
-  <string name="firstrun_breaking_title">快速解决\n拦截导致的故障</string>
-  <string name="firstrun_breaking_text">当拦截网上跟踪器的功能意外致使网站功能故障时，使用菜单可以关闭拦截功能。</string>
+  <string name="firstrun_defaultbrowser_text">将 %1$s 设为您的默认浏览器，让您从其他 Android 应用打开链接时，也能受隐私浏览功能的保护。</string>
+  <string name="firstrun_breaking_title">快速解决\n拦截导致的问题</string>
+  <string name="firstrun_breaking_text">若拦截网络追踪器造成某些网站无法正常使用，您可以在工具菜单中点选暂时关闭拦截功能。</string>
   <string name="firstrun_close_button">明白了！</string>
   <string name="firstrun_skip_button">跳过</string>
   <string name="firstrun_next_button">下一步</string>

@@ -66,6 +66,7 @@
   <string name="download_snackbar_open">کھولیں</string>
   <string name="download_dialog_title">مسل ڈائونلوڈ کریں</string>
   <string name="download_dialog_action_cancel">منسوخ کریں</string>
+  <string name="download_dialog_action_download">ڈاؤن لوڈ</string>
   <string name="errorpage_title">صفحہ لوڈ کرنے میں مسلہ ہے</string>
   <string name="errorpage_refresh">دوبارہ کوشش کریں</string>
   <string name="error_connectionfailure_title">جڑنے میں ناکام رہا</string>

@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">Zablokováno sledujících prvků</string>
   <string name="share_dialog_title">Sdílet přes</string>
   <string name="notification_erase_text">Vymazat historii prohlížení</string>
+  <string name="notification_action_open">Otevřít</string>
   <string name="shortcut_erase_short_label">Vymazat</string>
   <string name="shortcut_erase_long_label">Vymazat historii prohlížení</string>
   <string name="text_selection_search_action">Vyhledávejte soukromě</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">Najít aplikaci, která může otevřít odkaz</string>
   <string name="external_app_prompt_no_app">Žádná z aplikací na vašem zařízení není schopná otevřít tento odkaz. Můžete opustit aplikaci %1$s a najít vhodnou aplikaci v %2$s.</string>
   <string name="external_multiple_apps_matched_exit">Opustit režim anonymního prohlížení?</string>
+  <string name="download_snackbar_finished">Soubor %1$s byl stažen</string>
+  <string name="download_snackbar_open">Otevřít</string>
+  <string name="download_dialog_warning"><![CDATA["Stažené soubory "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou odstran&#283;ny</b>" při vymazání historie prohlížení aplikace %1$s."]]></string>
+  <string name="download_dialog_title">Stáhnout soubor</string>
+  <string name="download_dialog_action_cancel">Zrušit</string>
+  <string name="download_dialog_action_download">Stáhnout</string>
   <string name="errorpage_title">Chyba při načítání stránky</string>
   <string name="errorpage_refresh">Zkusit znovu</string>
   <string name="error_connectionfailure_title">Nepodařilo se připojit</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">OK, rozumím!</string>
   <string name="firstrun_skip_button">Přeskočit</string>
   <string name="firstrun_next_button">Další</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

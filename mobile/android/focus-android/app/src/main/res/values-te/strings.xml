@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">ట్రాకర్లు నిరోధించబడినవి</string>
   <string name="share_dialog_title">దీనిద్వారా పంచుక</string>
   <string name="notification_erase_text">విహరణ చరిత్రను తుడిచేయి</string>
+  <string name="notification_action_open">తెరువు</string>
   <string name="shortcut_erase_short_label">చెరిపివేయి</string>
   <string name="shortcut_erase_long_label">విహరణ చరిత్రను తుడిచేయి</string>
   <string name="text_selection_search_action">వ్యక్తిగతంగా శోధించు</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">లింక్ను తెరవగల అనువర్తనాన్ని కనుగొనండి</string>
   <string name="external_app_prompt_no_app">మీ పరికరంలోని అనువర్తనాల్లో ఏదీ ఈ లింక్ను తెరవలేకపోతుంది. మీరు చేయగల అనువర్తనం కోసం %2$sను శోధించడానికి %1$sను వదిలివేయవచ్చు.</string>
   <string name="external_multiple_apps_matched_exit">ప్రైవేట్ బ్రౌజింగ్ నిష్క్రమించాలా?</string>
+  <string name="download_snackbar_finished">%1$s పూర్తయింది</string>
+  <string name="download_snackbar_open">తెరువు</string>
+  <string name="download_dialog_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు దింపుకొన్న ఫైళ్ళు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
+  <string name="download_dialog_title">ఫైలు దింపుకో</string>
+  <string name="download_dialog_action_cancel">రద్దుచేయి</string>
+  <string name="download_dialog_action_download">దింపుకో</string>
   <string name="errorpage_title">పేజీని లోడుచేయడంలో సమస్య</string>
   <string name="errorpage_refresh">మళ్ళీ ప్రయత్నించు</string>
   <string name="error_connectionfailure_title">అనుసంధానం సాధ్యం కావడంలేదు</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
   <string name="firstrun_skip_button">దాటు</string>
   <string name="firstrun_next_button">తరువాత</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>
