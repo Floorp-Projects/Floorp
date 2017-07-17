@@ -187,11 +187,14 @@ struct ServoComputedValuesForgotten {
  *
  */
 struct ServoComputedValues {
-#define STYLE_STRUCT(name_, checkdata_cb_) mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_;
+#define STYLE_STRUCT(name_, checkdata_cb_)                 \
+  mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
+  inline const nsStyle##name_* GetStyle##name_() const;
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-  #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+  const nsStyleVariables* GetStyleVariables() const;
   mozilla::ServoCustomPropertiesMap custom_properties;
   mozilla::ServoWritingMode writing_mode;
   mozilla::ServoFontComputationData font_computation_data;

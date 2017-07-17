@@ -634,7 +634,8 @@ nsTransitionManager::UpdateTransitions(
 
   CSSTransitionCollection* collection =
     CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
-  const nsStyleDisplay *disp = Servo_GetStyleDisplay(aNewStyle->ComputedValues());
+  const nsStyleDisplay *disp =
+      aNewStyle->ComputedValues()->GetStyleDisplay();
   return DoUpdateTransitions(disp,
                              aElement, aPseudoType,
                              collection,
