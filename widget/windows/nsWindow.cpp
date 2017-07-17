@@ -5049,6 +5049,24 @@ nsWindow::ExternalHandlerProcessMessage(UINT aMessage,
   return false;
 }
 
+/**
+ * the _exit() call is not a safe way to terminate your own process on
+ * Windows, because _exit runs DLL detach callbacks which run static
+ * destructors for xul.dll.
+ *
+ * This method terminates the current process without those issues.
+ */
+static void
+ExitThisProcessSafely()
+{
+  HANDLE process = GetCurrentProcess();
+  if (TerminateProcess(GetCurrentProcess(), 0)) {
+    // TerminateProcess is asynchronous, so we wait on our own process handle
+    WaitForSingleObject(process, INFINITE);
+  }
+  MOZ_CRASH("Just in case extremis crash in ExitThisProcessSafely.");
+}
+
 // The main windows message processing method.
 bool
 nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
@@ -5133,8 +5151,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         obsServ->NotifyObservers(nullptr, "profile-before-change", context);
         obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context);
         obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry", context);
-        // Then a controlled but very quick exit.
-        _exit(0);
+        ExitThisProcessSafely();
       }
       sCanQuit = TRI_UNKNOWN;
       result = true;
