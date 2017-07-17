@@ -822,14 +822,7 @@ WebRenderLayerManager::SetRoot(Layer* aLayer)
 already_AddRefed<PaintedLayer>
 WebRenderLayerManager::CreatePaintedLayer()
 {
-  return CreatePaintedLayerWithHint(PaintedLayerCreationHint::NONE);
-}
-
-already_AddRefed<PaintedLayer>
-WebRenderLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
-{
-  bool allowBlob = !(aHint & PaintedLayerCreationHint::CONTENT_SIDE_PAINT);
-  if (allowBlob && gfxPrefs::WebRenderBlobImages()) {
+  if (gfxPrefs::WebRenderBlobImages()) {
     return MakeAndAddRef<WebRenderPaintedLayerBlob>(this);
   } else {
     return MakeAndAddRef<WebRenderPaintedLayer>(this);

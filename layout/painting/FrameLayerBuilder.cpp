@@ -446,7 +446,6 @@ public:
     mOpaqueForAnimatedGeometryRootParent(false),
     mDisableFlattening(false),
     mBackfaceHidden(false),
-    mShouldPaintOnContentSide(false),
     mImage(nullptr),
     mCommonClipCount(-1),
     mNewChildLayersIndex(-1)
@@ -632,11 +631,6 @@ public:
    * with visible backface.
    */
   bool mBackfaceHidden;
-  /**
-   * Set if it is better to render this layer on the content process, for
-   * example if it contains native theme widgets.
-   */
-  bool mShouldPaintOnContentSide;
   /**
    * Stores the pointer to the nsDisplayImage if we want to
    * convert this to an ImageLayer.
@@ -1219,7 +1213,7 @@ public:
 protected:
   friend class PaintedLayerData;
 
-  PaintedLayerCreationHint
+  LayerManager::PaintedLayerCreationHint
     GetLayerCreationHint(AnimatedGeometryRoot* aAnimatedGeometryRoot);
 
   /**
@@ -2284,15 +2278,15 @@ InvalidateEntirePaintedLayer(PaintedLayer* aLayer, AnimatedGeometryRoot* aAnimat
   ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
 }
 
-PaintedLayerCreationHint
+LayerManager::PaintedLayerCreationHint
 ContainerState::GetLayerCreationHint(AnimatedGeometryRoot* aAnimatedGeometryRoot)
 {
   // Check whether the layer will be scrollable. This is used as a hint to
   // influence whether tiled layers are used or not.
 
   // Check creation hint inherited from our parent.
-  if (mParameters.mLayerCreationHint & PaintedLayerCreationHint::SCROLLABLE) {
-    return PaintedLayerCreationHint::SCROLLABLE;
+  if (mParameters.mLayerCreationHint == LayerManager::SCROLLABLE) {
+    return LayerManager::SCROLLABLE;
   }
 
   // Check whether there's any active scroll frame on the animated geometry
@@ -2306,10 +2300,10 @@ ContainerState::GetLayerCreationHint(AnimatedGeometryRoot* aAnimatedGeometryRoot
     }
     nsIScrollableFrame* scrollable = do_QueryFrame(fParent);
     if (scrollable) {
-      return PaintedLayerCreationHint::SCROLLABLE;
+      return LayerManager::SCROLLABLE;
     }
   }
-  return PaintedLayerCreationHint::NONE;
+  return LayerManager::NONE;
 }
 
 already_AddRefed<PaintedLayer>
@@ -2350,12 +2344,8 @@ ContainerState::AttemptToRecyclePaintedLayer(AnimatedGeometryRoot* aAnimatedGeom
 already_AddRefed<PaintedLayer>
 ContainerState::CreatePaintedLayer(PaintedLayerData* aData)
 {
-  PaintedLayerCreationHint creationHint =
+  LayerManager::PaintedLayerCreationHint creationHint =
     GetLayerCreationHint(aData->mAnimatedGeometryRoot);
-
-  if (aData->mShouldPaintOnContentSide) {
-    creationHint |= PaintedLayerCreationHint::CONTENT_SIDE_PAINT;
-  }
 
   // Create a new painted layer
   RefPtr<PaintedLayer> layer = mManager->CreatePaintedLayerWithHint(creationHint);
@@ -3471,10 +3461,6 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   mItemClip = aClip;
 
   mAssignedDisplayItems.AppendElement(AssignedDisplayItem(aItem, aClip, aLayerState));
-
-  if (aItem->MustPaintOnContentSide()) {
-     mShouldPaintOnContentSide = true;
-  }
 
   if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aVisibleRect) &&
       mVisibleRegion.Contains(aVisibleRect) && !mImage) {

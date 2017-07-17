@@ -208,7 +208,7 @@ struct ContainerLayerParameters {
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mForEventsAndPluginsOnly(false)
-    , mLayerCreationHint(layers::PaintedLayerCreationHint::NONE)
+    , mLayerCreationHint(layers::LayerManager::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale)
     : mXScale(aXScale)
@@ -221,7 +221,7 @@ struct ContainerLayerParameters {
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mForEventsAndPluginsOnly(false)
-    , mLayerCreationHint(layers::PaintedLayerCreationHint::NONE)
+    , mLayerCreationHint(layers::LayerManager::NONE)
   {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
@@ -269,7 +269,7 @@ struct ContainerLayerParameters {
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;
   bool mForEventsAndPluginsOnly;
-  layers::PaintedLayerCreationHint mLayerCreationHint;
+  layers::LayerManager::PaintedLayerCreationHint mLayerCreationHint;
 
   /**
    * When this is false, PaintedLayer coordinates are drawn to with an integer

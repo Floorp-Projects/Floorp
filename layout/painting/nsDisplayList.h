@@ -2028,13 +2028,6 @@ public:
   }
 
   /**
-   * Some items such as those calling into the native themed widget machinery
-   * have to be painted on the content process. In this case it is best to avoid
-   * allocating layers that serializes and forwards the work to the compositor.
-   */
-  virtual bool MustPaintOnContentSide() const { return false; }
-
-  /**
    * If this has a child list where the children are in the same coordinate
    * system as this item (i.e., they have the same reference frame),
    * return the list.
@@ -3287,7 +3280,6 @@ public:
                                    bool* aSnap) override;
   virtual mozilla::Maybe<nscolor> IsUniform(nsDisplayListBuilder* aBuilder) override;
   virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor) override;
-  virtual bool MustPaintOnContentSide() const override { return true; }
 
   /**
    * GetBounds() returns the background painting area.
