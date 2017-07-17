@@ -1187,6 +1187,10 @@ function TypedArraySort(comparefn) {
         len = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "TypedArrayLength");
     }
 
+    // Arrays with less than two elements remain unchanged when sorted.
+    if (len <= 1)
+        return obj;
+
     if (comparefn === undefined) {
         // CountingSort doesn't invoke the comparator function.
         if (IsUint8TypedArray(obj)) {
@@ -1209,39 +1213,33 @@ function TypedArraySort(comparefn) {
 
     // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
     // the user supplied comparefn is wrapped.
-    var wrappedCompareFn = comparefn;
-    comparefn = function(x, y) {
+    var wrappedCompareFn = function(x, y) {
         // Step a.
-        var v = wrappedCompareFn(x, y);
+        var v = comparefn(x, y);
+
         // Step b.
-        if (buffer === null) {
-            // A typed array previously using inline storage may acquire a
-            // buffer, so we must check with the source.
-            if (isTypedArray) {
-                buffer = GetAttachedArrayBuffer(obj);
-            } else {
-                buffer = callFunction(CallTypedArrayMethodIfWrapped, obj, obj,
-                                      "GetAttachedArrayBuffer");
-            }
-        }
-        var bufferDetached;
+        var length;
         if (isTypedArray) {
-            bufferDetached = IsDetachedBuffer(buffer);
+            length = TypedArrayLength(obj);
         } else {
-            // This is totally cheating and only works because we know `obj`
-            // and `buffer` are same-compartment".
-            bufferDetached = callFunction(CallTypedArrayMethodIfWrapped, obj,
-                                          buffer, "IsDetachedBuffer");
+            length = callFunction(CallTypedArrayMethodIfWrapped, obj, obj, "TypedArrayLength");
         }
-        if (bufferDetached)
+
+        // It's faster for us to check the typed array's length than to check
+        // for detached buffers.
+        if (length === 0) {
+            assert(PossiblyWrappedTypedArrayHasDetachedBuffer(obj),
+                   "Length can only change from non-zero to zero when the buffer was detached");
             ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+        }
+
         // Step c. is redundant, see:
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
         // Step d.
         return v;
     }
 
-    return QuickSort(obj, len, comparefn);
+    return QuickSort(obj, len, wrappedCompareFn);
 }
 
 // ES2017 draft rev f8a9be8ea4bd97237d176907a1e3080dce20c68f
