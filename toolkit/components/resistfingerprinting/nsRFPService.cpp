@@ -5,6 +5,7 @@
 
 #include "nsRFPService.h"
 
+#include <algorithm>
 #include <time.h>
 
 #include "mozilla/ClearOnShutdown.h"
@@ -13,6 +14,7 @@
 #include "mozilla/StaticPtr.h"
 
 #include "nsCOMPtr.h"
+#include "nsCoord.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsXULAppAPI.h"
@@ -27,8 +29,15 @@
 #include "js/Date.h"
 
 using namespace mozilla;
+using namespace std;
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
+#define RFP_SPOOFED_FRAMES_PER_SEC_PREF "privacy.resistFingerprinting.video_frames_per_sec"
+#define RFP_SPOOFED_DROPPED_RATIO_PREF  "privacy.resistFingerprinting.video_dropped_ratio"
+#define RFP_TARGET_VIDEO_RES_PREF "privacy.resistFingerprinting.target_video_res"
+#define RFP_SPOOFED_FRAMES_PER_SEC_DEFAULT 30
+#define RFP_SPOOFED_DROPPED_RATIO_DEFAULT  5
+#define RFP_TARGET_VIDEO_RES_DEFAULT 480
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 
 NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
@@ -37,6 +46,9 @@ static StaticRefPtr<nsRFPService> sRFPService;
 static bool sInitialized = false;
 Atomic<bool, ReleaseAcquire> nsRFPService::sPrivacyResistFingerprinting;
 static uint32_t kResolutionUSec = 100000;
+static uint32_t sVideoFramesPerSec;
+static uint32_t sVideoDroppedRatio;
+static uint32_t sTargetVideoRes;
 
 /* static */
 nsRFPService*
@@ -80,6 +92,13 @@ nsRFPService::ReduceTimePrecisionAsUSecs(double aTime)
 }
 
 /* static */
+uint32_t
+nsRFPService::CalculateTargetVideoResolution(uint32_t aVideoQuality)
+{
+  return aVideoQuality * NSToIntCeil(aVideoQuality * 16 / 9.0);
+}
+
+/* static */
 double
 nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
 {
@@ -94,6 +113,53 @@ nsRFPService::ReduceTimePrecisionAsSecs(double aTime)
   }
   const double resolutionSec = kResolutionUSec / 1000000.0;
   return floor(aTime / resolutionSec) * resolutionSec;
+}
+
+/* static */
+uint32_t
+nsRFPService::GetSpoofedTotalFrames(double aTime)
+{
+  double time = ReduceTimePrecisionAsSecs(aTime);
+
+  return NSToIntFloor(time * sVideoFramesPerSec);
+}
+
+/* static */
+uint32_t
+nsRFPService::GetSpoofedDroppedFrames(double aTime, uint32_t aWidth, uint32_t aHeight)
+{
+  uint32_t targetRes = CalculateTargetVideoResolution(sTargetVideoRes);
+
+  // The video resolution is less than or equal to the target resolution, we
+  // report a zero dropped rate for this case.
+  if (targetRes >= aWidth * aHeight) {
+    return 0;
+  }
+
+  double time = ReduceTimePrecisionAsSecs(aTime);
+  // Bound the dropped ratio from 0 to 100.
+  uint32_t boundedDroppedRatio = min(sVideoDroppedRatio, 100u);
+
+  return NSToIntFloor(time * sVideoFramesPerSec * (boundedDroppedRatio / 100.0));
+}
+
+/* static */
+uint32_t
+nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth, uint32_t aHeight)
+{
+  uint32_t targetRes = CalculateTargetVideoResolution(sTargetVideoRes);
+
+  // The target resolution is greater than the current resolution. For this case,
+  // there will be no dropped frames, so we report total frames directly.
+  if (targetRes >= aWidth * aHeight) {
+    return GetSpoofedTotalFrames(aTime);
+  }
+
+  double time = ReduceTimePrecisionAsSecs(aTime);
+  // Bound the dropped ratio from 0 to 100.
+  uint32_t boundedDroppedRatio = min(sVideoDroppedRatio, 100u);
+
+  return NSToIntFloor(time * sVideoFramesPerSec * ((100 - boundedDroppedRatio) / 100.0));
 }
 
 nsresult
@@ -119,6 +185,16 @@ nsRFPService::Init()
 
   rv = prefs->AddObserver(RESIST_FINGERPRINTING_PREF, this, false);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  Preferences::AddUintVarCache(&sVideoFramesPerSec,
+                               RFP_SPOOFED_FRAMES_PER_SEC_PREF,
+                               RFP_SPOOFED_FRAMES_PER_SEC_DEFAULT);
+  Preferences::AddUintVarCache(&sVideoDroppedRatio,
+                               RFP_SPOOFED_DROPPED_RATIO_PREF,
+                               RFP_SPOOFED_DROPPED_RATIO_DEFAULT);
+  Preferences::AddUintVarCache(&sTargetVideoRes,
+                               RFP_TARGET_VIDEO_RES_PREF,
+                               RFP_TARGET_VIDEO_RES_DEFAULT);
 
   // We backup the original TZ value here.
   const char* tzValue = PR_GetEnv("TZ");
