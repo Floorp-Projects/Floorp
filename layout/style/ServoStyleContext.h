@@ -35,10 +35,6 @@ public:
     Servo_StyleContext_Release(this);
   }
 
-  ~ServoStyleContext() {
-    Destructor();
-  }
-
   /**
    * Makes this context match |aOther| in terms of which style structs have
    * been resolved.

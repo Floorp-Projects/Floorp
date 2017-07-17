@@ -133,7 +133,7 @@ public:
 
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
-                  nsStyleContext* aParentContext,
+                  ServoStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
   // Get a style context for a text node (which no rules will match).
@@ -145,7 +145,7 @@ public:
   // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<nsStyleContext>
   ResolveStyleForText(nsIContent* aTextNode,
-                      nsStyleContext* aParentContext);
+                      ServoStyleContext* aParentContext);
 
   // Get a style context for a first-letter continuation (which no rules will
   // match).
@@ -158,7 +158,7 @@ public:
   // any rule matching for them is a first step.  And right now we do use this
   // style context for some things)
   already_AddRefed<nsStyleContext>
-  ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
+  ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext);
 
   // Get a style context for a placeholder frame (which no rules will match).
   //
@@ -179,7 +179,7 @@ public:
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             CSSPseudoElementType aType,
-                            nsStyleContext* aParentContext,
+                            ServoStyleContext* aParentContext,
                             dom::Element* aPseudoElement);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
@@ -207,7 +207,7 @@ public:
   // inherits style from the given aParentContext.
   already_AddRefed<ServoStyleContext>
   ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                     nsStyleContext* aParentContext);
+                                     ServoStyleContext* aParentContext);
 
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
@@ -249,7 +249,7 @@ public:
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
-                          nsStyleContext* aParentContext);
+                          ServoStyleContext* aParentContext);
 
   // Test if style is dependent on content state
   nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
@@ -385,7 +385,7 @@ public:
 
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
-                           nsStyleContext* aParentContext,
+                           ServoStyleContext* aParentContext,
                            nsPresContext* aPresContext,
                            nsIAtom* aPseudoTag,
                            CSSPseudoElementType aPseudoType,
@@ -479,13 +479,13 @@ private:
   };
 
   already_AddRefed<ServoStyleContext> GetContext(already_AddRefed<ServoStyleContext>,
-                                                 nsStyleContext* aParentContext,
+                                                 ServoStyleContext* aParentContext,
                                                  nsIAtom* aPseudoTag,
                                                  CSSPseudoElementType aPseudoType,
                                                  dom::Element* aElementForAnimation);
 
   already_AddRefed<ServoStyleContext> GetContext(nsIContent* aContent,
-                                                 nsStyleContext* aParentContext,
+                                                 ServoStyleContext* aParentContext,
                                                  nsIAtom* aPseudoTag,
                                                  CSSPseudoElementType aPseudoType,
                                                  LazyComputeBehavior aMayCompute);

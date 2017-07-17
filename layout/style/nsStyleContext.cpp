@@ -6,7 +6,6 @@
 /* the interface (to internal code) for retrieving computed style data */
 
 #include "nsStyleContext.h"
-#include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
@@ -77,8 +76,6 @@ const uint32_t nsStyleContext::sDependencyTable[] = {
 #undef STYLE_STRUCT_END
 };
 
-// Whether to perform expensive assertions in the nsStyleContext destructor.
-static bool sExpensiveStyleStructAssertionsEnabled;
 #endif
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
@@ -92,6 +89,20 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mFrameRefCnt(0)
 #endif
 {}
+
+void
+nsStyleContext::AddChild(nsStyleContext* aChild)
+{
+  if (auto gecko = GetAsGecko())
+    gecko->AddChild(aChild->AsGecko());
+}
+
+void
+nsStyleContext::RemoveChild(nsStyleContext* aChild)
+{
+  if (auto gecko = GetAsGecko())
+    gecko->RemoveChild(aChild->AsGecko());
+}
 
 void
 nsStyleContext::FinishConstruction()
@@ -125,66 +136,6 @@ nsStyleContext::FinishConstruction()
   static_assert(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
                 "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
   #undef eStyleStruct_LastItem
-}
-
-void
-nsStyleContext::Destructor()
-{
-  GeckoStyleContext* gecko = GetAsGecko();
-#ifdef DEBUG
-  if (gecko) {
-    NS_ASSERTION(gecko->HasNoChildren(), "destructing context with children");
-    if (sExpensiveStyleStructAssertionsEnabled) {
-      // Assert that the style structs we are about to destroy are not referenced
-      // anywhere else in the style context tree.  These checks are expensive,
-      // which is why they are not enabled by default.
-      GeckoStyleContext* root = gecko;
-      while (root->GetParent()) {
-        root = root->GetParent();
-      }
-      root->AssertStructsNotUsedElsewhere(gecko,
-                                          std::numeric_limits<int32_t>::max());
-    } else {
-      // In DEBUG builds when the pref is not enabled, we perform a more limited
-      // check just of the children of this style context.
-      gecko->AssertStructsNotUsedElsewhere(gecko, 2);
-    }
-  }
-#endif
-
-  nsPresContext *presContext = PresContext();
-  DebugOnly<nsStyleSet*> geckoStyleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
-  NS_ASSERTION(!geckoStyleSet ||
-               geckoStyleSet->GetRuleTree() == AsGecko()->RuleNode()->RuleTree() ||
-               geckoStyleSet->IsInRuleTreeReconstruct(),
-               "destroying style context from old rule tree too late");
-
-  if (mParent) {
-    mParent->RemoveChild(this);
-  } else {
-    presContext->StyleSet()->RootStyleContextRemoved();
-  }
-
-  // Free up our caches.
-  if (gecko) {
-    gecko->DestroyCachedStructs(presContext);
-    // Servo doesn't store things here, and it's not threadsafe
-    CSSVariableImageTable::RemoveAll(this);
-  }
-}
-
-void nsStyleContext::AddChild(nsStyleContext* aChild)
-{
-  if (GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->AddChild(aChild->AsGecko());
-  }
-}
-
-void nsStyleContext::RemoveChild(nsStyleContext* aChild)
-{
-  if (GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->RemoveChild(aChild->AsGecko());
-  }
 }
 
 void
@@ -787,15 +738,5 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
   else
     return false;
   return true;
-}
-#endif
-
-#ifdef DEBUG
-/* static */ void
-nsStyleContext::Initialize()
-{
-  Preferences::AddBoolVarCache(
-      &sExpensiveStyleStructAssertionsEnabled,
-      "layout.css.expensive-style-struct-assertions.enabled");
 }
 #endif

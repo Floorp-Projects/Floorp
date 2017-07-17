@@ -189,7 +189,7 @@ private:
    * element or any descendant or sibling.
    */
   bool ProcessPostTraversal(Element* aElement,
-                            nsStyleContext* aParentContext,
+                            ServoStyleContext* aParentContext,
                             ServoRestyleState& aRestyleState,
                             TraversalRestyleBehavior aRestyleBehavior);
 
