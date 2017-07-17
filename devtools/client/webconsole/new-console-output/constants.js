@@ -83,16 +83,5 @@ const chromeRDPEnums = {
   }
 };
 
-const jstermCommands = {
-  JSTERM_COMMANDS: {
-    INSPECT: "inspectObject"
-  }
-};
-
 // Combine into a single constants object
-module.exports = Object.assign({},
-  actionTypes,
-  chromeRDPEnums,
-  jstermCommands,
-  prefs,
-);
+module.exports = Object.assign({}, actionTypes, prefs, chromeRDPEnums);

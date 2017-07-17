@@ -41,228 +41,198 @@ function transformPacket(packet) {
 
   switch (packet.type) {
     case "consoleAPICall": {
-      return transformConsoleAPICallPacket(packet);
+      let { message } = packet;
+
+      let parameters = message.arguments;
+      let type = message.level;
+      let level = getLevelFromType(type);
+      let messageText = null;
+      const timer = message.timer;
+
+      // Special per-type conversion.
+      switch (type) {
+        case "clear":
+          // We show a message to users when calls console.clear() is called.
+          parameters = [l10n.getStr("consoleCleared")];
+          break;
+        case "count":
+          // Chrome RDP doesn't have a special type for count.
+          type = MESSAGE_TYPE.LOG;
+          let {counter} = message;
+          let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
+          messageText = `${label}: ${counter.count}`;
+          parameters = null;
+          break;
+        case "time":
+          parameters = null;
+          if (timer && timer.error) {
+            messageText = l10n.getFormatStr(timer.error, [timer.name]);
+            level = MESSAGE_LEVEL.WARN;
+          } else {
+            // We don't show anything for console.time calls to match Chrome's behaviour.
+            type = MESSAGE_TYPE.NULL_MESSAGE;
+          }
+          break;
+        case "timeEnd":
+          parameters = null;
+          if (timer && timer.error) {
+            messageText = l10n.getFormatStr(timer.error, [timer.name]);
+            level = MESSAGE_LEVEL.WARN;
+          } else if (timer) {
+            // We show the duration to users when calls console.timeEnd() is called,
+            // if corresponding console.time() was called before.
+            let duration = Math.round(timer.duration * 100) / 100;
+            messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
+          } else {
+            // If the `timer` property does not exists, we don't output anything.
+            type = MESSAGE_TYPE.NULL_MESSAGE;
+          }
+          break;
+        case "table":
+          const supportedClasses = [
+            "Array", "Object", "Map", "Set", "WeakMap", "WeakSet"];
+          if (
+            !Array.isArray(parameters) ||
+            parameters.length === 0 ||
+            !supportedClasses.includes(parameters[0].class)
+          ) {
+            // If the class of the first parameter is not supported,
+            // we handle the call as a simple console.log
+            type = "log";
+          }
+          break;
+        case "group":
+          type = MESSAGE_TYPE.START_GROUP;
+          if (parameters.length === 0) {
+            parameters = [l10n.getStr("noGroupLabel")];
+          }
+          break;
+        case "groupCollapsed":
+          type = MESSAGE_TYPE.START_GROUP_COLLAPSED;
+          if (parameters.length === 0) {
+            parameters = [l10n.getStr("noGroupLabel")];
+          }
+          break;
+        case "groupEnd":
+          type = MESSAGE_TYPE.END_GROUP;
+          parameters = null;
+          break;
+        case "dirxml":
+          // Handle console.dirxml calls as simple console.log
+          type = "log";
+          break;
+      }
+
+      const frame = message.filename ? {
+        source: message.filename,
+        line: message.lineNumber,
+        column: message.columnNumber,
+      } : null;
+
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.CONSOLE_API,
+        type,
+        level,
+        parameters,
+        messageText,
+        stacktrace: message.stacktrace ? message.stacktrace : null,
+        frame,
+        timeStamp: message.timeStamp,
+        userProvidedStyles: message.styles,
+      });
     }
 
     case "navigationMessage": {
-      return transformNavigationMessagePacket(packet);
+      let { message } = packet;
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.CONSOLE_API,
+        type: MESSAGE_TYPE.LOG,
+        level: MESSAGE_LEVEL.LOG,
+        messageText: "Navigated to " + message.url,
+        timeStamp: message.timeStamp
+      });
     }
 
     case "logMessage": {
-      return transformLogMessagePacket(packet);
+      let { message } = packet;
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.CONSOLE_API,
+        type: MESSAGE_TYPE.LOG,
+        level: MESSAGE_LEVEL.LOG,
+        messageText: message.message,
+        timeStamp: message.timeStamp
+      });
     }
 
     case "pageError": {
-      return transformPageErrorPacket(packet);
+      let { pageError } = packet;
+      let level = MESSAGE_LEVEL.ERROR;
+      if (pageError.warning || pageError.strict) {
+        level = MESSAGE_LEVEL.WARN;
+      } else if (pageError.info) {
+        level = MESSAGE_LEVEL.INFO;
+      }
+
+      const frame = pageError.sourceName ? {
+        source: pageError.sourceName,
+        line: pageError.lineNumber,
+        column: pageError.columnNumber
+      } : null;
+
+      let matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
+      let messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
+                                     : MESSAGE_SOURCE.JAVASCRIPT;
+      return new ConsoleMessage({
+        source: messageSource,
+        type: MESSAGE_TYPE.LOG,
+        level,
+        messageText: pageError.errorMessage,
+        stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
+        frame,
+        exceptionDocURL: pageError.exceptionDocURL,
+        timeStamp: pageError.timeStamp,
+        notes: pageError.notes,
+      });
     }
 
     case "networkEvent": {
-      return transformNetworkEventPacket(packet);
+      let { networkEvent } = packet;
+
+      return new NetworkEventMessage({
+        actor: networkEvent.actor,
+        isXHR: networkEvent.isXHR,
+        request: networkEvent.request,
+        response: networkEvent.response,
+        timeStamp: networkEvent.timeStamp,
+        totalTime: networkEvent.totalTime,
+      });
     }
 
     case "evaluationResult":
     default: {
-      return transformEvaluationResultPacket(packet);
+      let {
+        exceptionMessage: messageText,
+        exceptionDocURL,
+        frame,
+        result: parameters,
+        timestamp: timeStamp,
+        notes,
+      } = packet;
+
+      const level = messageText ? MESSAGE_LEVEL.ERROR : MESSAGE_LEVEL.LOG;
+      return new ConsoleMessage({
+        source: MESSAGE_SOURCE.JAVASCRIPT,
+        type: MESSAGE_TYPE.RESULT,
+        level,
+        messageText,
+        parameters,
+        exceptionDocURL,
+        frame,
+        timeStamp,
+        notes,
+      });
     }
   }
-}
-
-function transformConsoleAPICallPacket(packet) {
-  let { message } = packet;
-
-  let parameters = message.arguments;
-  let type = message.level;
-  let level = getLevelFromType(type);
-  let messageText = null;
-  const timer = message.timer;
-
-  // Special per-type conversion.
-  switch (type) {
-    case "clear":
-      // We show a message to users when calls console.clear() is called.
-      parameters = [l10n.getStr("consoleCleared")];
-      break;
-    case "count":
-      // Chrome RDP doesn't have a special type for count.
-      type = MESSAGE_TYPE.LOG;
-      let {counter} = message;
-      let label = counter.label ? counter.label : l10n.getStr("noCounterLabel");
-      messageText = `${label}: ${counter.count}`;
-      parameters = null;
-      break;
-    case "time":
-      parameters = null;
-      if (timer && timer.error) {
-        messageText = l10n.getFormatStr(timer.error, [timer.name]);
-        level = MESSAGE_LEVEL.WARN;
-      } else {
-        // We don't show anything for console.time calls to match Chrome's behaviour.
-        type = MESSAGE_TYPE.NULL_MESSAGE;
-      }
-      break;
-    case "timeEnd":
-      parameters = null;
-      if (timer && timer.error) {
-        messageText = l10n.getFormatStr(timer.error, [timer.name]);
-        level = MESSAGE_LEVEL.WARN;
-      } else if (timer) {
-        // We show the duration to users when calls console.timeEnd() is called,
-        // if corresponding console.time() was called before.
-        let duration = Math.round(timer.duration * 100) / 100;
-        messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
-      } else {
-        // If the `timer` property does not exists, we don't output anything.
-        type = MESSAGE_TYPE.NULL_MESSAGE;
-      }
-      break;
-    case "table":
-      const supportedClasses = [
-        "Array", "Object", "Map", "Set", "WeakMap", "WeakSet"];
-      if (
-        !Array.isArray(parameters) ||
-        parameters.length === 0 ||
-        !supportedClasses.includes(parameters[0].class)
-      ) {
-        // If the class of the first parameter is not supported,
-        // we handle the call as a simple console.log
-        type = "log";
-      }
-      break;
-    case "group":
-      type = MESSAGE_TYPE.START_GROUP;
-      if (parameters.length === 0) {
-        parameters = [l10n.getStr("noGroupLabel")];
-      }
-      break;
-    case "groupCollapsed":
-      type = MESSAGE_TYPE.START_GROUP_COLLAPSED;
-      if (parameters.length === 0) {
-        parameters = [l10n.getStr("noGroupLabel")];
-      }
-      break;
-    case "groupEnd":
-      type = MESSAGE_TYPE.END_GROUP;
-      parameters = null;
-      break;
-    case "dirxml":
-      // Handle console.dirxml calls as simple console.log
-      type = "log";
-      break;
-  }
-
-  const frame = message.filename ? {
-    source: message.filename,
-    line: message.lineNumber,
-    column: message.columnNumber,
-  } : null;
-
-  return new ConsoleMessage({
-    source: MESSAGE_SOURCE.CONSOLE_API,
-    type,
-    level,
-    parameters,
-    messageText,
-    stacktrace: message.stacktrace ? message.stacktrace : null,
-    frame,
-    timeStamp: message.timeStamp,
-    userProvidedStyles: message.styles,
-  });
-}
-
-function transformNavigationMessagePacket(packet) {
-  let { message } = packet;
-  return new ConsoleMessage({
-    source: MESSAGE_SOURCE.CONSOLE_API,
-    type: MESSAGE_TYPE.LOG,
-    level: MESSAGE_LEVEL.LOG,
-    messageText: "Navigated to " + message.url,
-    timeStamp: message.timeStamp
-  });
-}
-
-function transformLogMessagePacket(packet) {
-  let { message } = packet;
-  return new ConsoleMessage({
-    source: MESSAGE_SOURCE.CONSOLE_API,
-    type: MESSAGE_TYPE.LOG,
-    level: MESSAGE_LEVEL.LOG,
-    messageText: message.message,
-    timeStamp: message.timeStamp
-  });
-}
-
-function transformPageErrorPacket(packet) {
-  let { pageError } = packet;
-  let level = MESSAGE_LEVEL.ERROR;
-  if (pageError.warning || pageError.strict) {
-    level = MESSAGE_LEVEL.WARN;
-  } else if (pageError.info) {
-    level = MESSAGE_LEVEL.INFO;
-  }
-
-  const frame = pageError.sourceName ? {
-    source: pageError.sourceName,
-    line: pageError.lineNumber,
-    column: pageError.columnNumber
-  } : null;
-
-  let matchesCSS = /^(?:CSS|Layout)\b/.test(pageError.category);
-  let messageSource = matchesCSS ? MESSAGE_SOURCE.CSS
-                                  : MESSAGE_SOURCE.JAVASCRIPT;
-  return new ConsoleMessage({
-    source: messageSource,
-    type: MESSAGE_TYPE.LOG,
-    level,
-    messageText: pageError.errorMessage,
-    stacktrace: pageError.stacktrace ? pageError.stacktrace : null,
-    frame,
-    exceptionDocURL: pageError.exceptionDocURL,
-    timeStamp: pageError.timeStamp,
-    notes: pageError.notes,
-  });
-}
-
-function transformNetworkEventPacket(packet) {
-  let { networkEvent } = packet;
-
-  return new NetworkEventMessage({
-    actor: networkEvent.actor,
-    isXHR: networkEvent.isXHR,
-    request: networkEvent.request,
-    response: networkEvent.response,
-    timeStamp: networkEvent.timeStamp,
-    totalTime: networkEvent.totalTime,
-  });
-}
-
-function transformEvaluationResultPacket(packet) {
-  let {
-    exceptionMessage: messageText,
-    exceptionDocURL,
-    frame,
-    result,
-    helperResult,
-    timestamp: timeStamp,
-    notes,
-  } = packet;
-
-  let parameters = helperResult && helperResult.object
-    ? helperResult.object
-    : result;
-
-  const level = messageText ? MESSAGE_LEVEL.ERROR : MESSAGE_LEVEL.LOG;
-  return new ConsoleMessage({
-    source: MESSAGE_SOURCE.JAVASCRIPT,
-    type: MESSAGE_TYPE.RESULT,
-    helperType: helperResult ? helperResult.type : null,
-    level,
-    messageText,
-    parameters,
-    exceptionDocURL,
-    frame,
-    timeStamp,
-    notes,
-  });
 }
 
 // Helpers
