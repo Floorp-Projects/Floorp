@@ -34,7 +34,7 @@ html {
 .textbox-search-icon {
   width: 16px;
   height: 16px;
-  background-image: url(chrome://global/skin/icons/Search-glass.png);
+  background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
   display: block;
 }

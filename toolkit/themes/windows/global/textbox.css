@@ -73,9 +73,13 @@ textbox.plain html|*.textbox-textarea {
 
 /* ::::: search textbox ::::: */
 
-.textbox-search-icon {
-  list-style-image: url(chrome://global/skin/icons/Search-glass.png);
-  -moz-image-region: rect(0, 16px, 16px, 0);
+textbox:not([searchbutton]) > .textbox-input-box > .textbox-search-sign {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
+  margin-inline-end: 5px;
+}
+
+.textbox-search-icon[searchbutton] {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
 .textbox-search-icon:-moz-locale-dir(rtl) {
@@ -95,13 +99,11 @@ textbox.plain html|*.textbox-textarea {
   cursor: default;
 }
 
-.textbox-search-clear:not([disabled]):hover ,
-.textbox-search-icon[searchbutton]:not([disabled]):hover {
+.textbox-search-clear:not([disabled]):hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }
 
-.textbox-search-clear:not([disabled]):hover:active ,
-.textbox-search-icon[searchbutton]:not([disabled]):hover:active {
+.textbox-search-clear:not([disabled]):hover:active {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
