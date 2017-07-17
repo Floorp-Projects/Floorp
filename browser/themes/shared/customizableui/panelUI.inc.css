@@ -1298,6 +1298,10 @@ photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
   padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
 }
 
+photonpanelmultiview .subviewbutton-iconic > .toolbarbutton-icon {
+  width: 16px;
+}
+
 photonpanelmultiview .subviewbutton {
   -moz-context-properties: fill;
   fill: currentColor;
