@@ -5728,6 +5728,7 @@ pref("dom.timeout.max_consecutive_callbacks_ms", 4);
 
 // Use this preference to house "Payment Request API" during development
 pref("dom.payments.request.enabled", false);
+pref("dom.payments.loglevel", "Warn");
 
 #ifdef FUZZING
 pref("fuzzing.enabled", false);
