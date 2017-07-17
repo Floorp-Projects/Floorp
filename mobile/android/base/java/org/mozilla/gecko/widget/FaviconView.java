@@ -148,6 +148,10 @@ public class FaviconView extends ImageView {
      */
     private void formatImage() {
         // Both onSizeChanged and updateImage have to be called before an image can be shown.
+        //
+        // Note: getWidth/Height get their non-zero values during layout, at which point onSizeChanged will be called.
+        // Since we block for onSizeChanged (getWidth/Height != 0) and we only call getWidth/Height from this method
+        // and the ones it calls, we should have no problems with zero values for `getWidth/Height`.
         final boolean canImageBeShown = (mIconBitmap != null && getWidth() != 0 && getHeight() != 0);
         if (!canImageBeShown) {
             showNoImage();
