@@ -18,6 +18,8 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 * Mailing list: [mobile-firefox-dev](https://mail.mozilla.org/listinfo/mobile-firefox-dev)
 
+* Wiki: [https://github.com/mozilla-mobile/focus-android/wiki](https://github.com/mozilla-mobile/focus-android/wiki)
+
 Build instructions
 ------------------
 
@@ -34,14 +36,6 @@ Build instructions
   ```
 
 1. Make sure to select the right build variant in Android Studio: **focusWebkitDebug**
-
-Docs
-----
-
-* [Content blocking](docs/contentblocking.md)
-* [Translations](docs/translations.md)
-* [Search](docs/search.md)
-* [Telemetry](docs/telemetry.md)
 
 License
 -------
