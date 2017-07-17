@@ -329,7 +329,6 @@ this.ExtensionData = class {
     this.permissions = new Set();
 
     this.errors = [];
-    this.warnings = [];
   }
 
   get builtinMessages() {
@@ -346,27 +345,10 @@ this.ExtensionData = class {
     this.packagingError(`Reading manifest: ${message}`);
   }
 
-  manifestWarning(message) {
-    this.warnings.push(message);
-    this.logWarning(message);
-  }
-
   // Report an error about the extension's general packaging.
   packagingError(message) {
     this.errors.push(message);
-    this.logError(message);
-  }
-
-  logWarning(message) {
-    this._logMessage(message, "warn");
-  }
-
-  logError(message) {
-    this._logMessage(message, "error");
-  }
-
-  _logMessage(message, severity) {
-    this.logger[severity](`Loading extension '${this.id}': ${message}`);
+    this.logger.error(`Loading extension '${this.id}': ${message}`);
   }
 
   /**
@@ -521,7 +503,7 @@ this.ExtensionData = class {
         principal: this.principal,
 
         logError: error => {
-          this.manifestWarning(error);
+          this.logger.warn(`Loading extension '${this.id}': Reading manifest: ${error}`);
         },
 
         preprocessors: {},
