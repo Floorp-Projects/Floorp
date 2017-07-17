@@ -111,7 +111,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
 
         private synchronized void onBuffer(int index) {
-            if (mStopped) {
+            if (mStopped || !isValidBuffer(index)) {
                 return;
             }
 
@@ -129,6 +129,15 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                 reportError(Error.FATAL, new Exception("FAIL: input buffer queue is full"));
             }
 
+        }
+
+        private boolean isValidBuffer(final int index) {
+            try {
+                return mCodec.getInputBuffer(index) != null;
+            } catch (IllegalStateException e) {
+                if (DEBUG) { Log.d(LOGTAG, "invalid input buffer#" + index, e); }
+                return false;
+            }
         }
 
         private void feedSampleToBuffer() {
@@ -234,7 +243,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
 
         private synchronized void onBuffer(int index, MediaCodec.BufferInfo info) {
-            if (mStopped) {
+            if (mStopped || !isValidBuffer(index)) {
                 return;
             }
 
@@ -250,6 +259,15 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
             if (DEBUG && eos) {
                 Log.d(LOGTAG, "output EOS");
+            }
+        }
+
+        private boolean isValidBuffer(final int index) {
+            try {
+                return mCodec.getOutputBuffer(index) != null;
+            } catch (IllegalStateException e) {
+                if (DEBUG) { Log.e(LOGTAG, "invalid buffer#" + index, e); }
+                return false;
             }
         }
 
