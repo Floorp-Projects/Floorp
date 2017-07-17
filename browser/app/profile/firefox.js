@@ -1276,7 +1276,11 @@ pref("browser.newtabpage.columns", 5);
 pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%");
 
 // activates Activity Stream
+#ifdef NIGHTLY_BUILD
+pref("browser.newtabpage.activity-stream.enabled", true);
+#else
 pref("browser.newtabpage.activity-stream.enabled", false);
+#endif
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
