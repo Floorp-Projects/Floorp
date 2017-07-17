@@ -480,6 +480,13 @@ struct Zone : public JS::shadow::Zone,
   public:
     js::InitialShapeSet& initialShapes() { return initialShapes_.ref(); }
 
+  private:
+    // List of shapes that may contain nursery pointers.
+    using NurseryShapeVector = js::Vector<js::AccessorShape*, 0, js::SystemAllocPolicy>;
+    js::ZoneGroupData<NurseryShapeVector> nurseryShapes_;
+  public:
+    NurseryShapeVector& nurseryShapes() { return nurseryShapes_.ref(); }
+
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkInitialShapesTableAfterMovingGC();
     void checkBaseShapeTableAfterMovingGC();
