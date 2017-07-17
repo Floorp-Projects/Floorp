@@ -56,6 +56,11 @@ bool is_glcontext_egl(void* glcontext_ptr)
   return glcontext->GetContextType() == mozilla::gl::GLContextType::EGL;
 }
 
+bool gfx_use_wrench()
+{
+  return gfxEnv::EnableWebRenderRecording();
+}
+
 void gfx_critical_note(const char* msg)
 {
   gfxCriticalNote << msg;
@@ -574,15 +579,17 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
           NS_ERROR("CompositableHost does not exist");
           break;
         }
-        TextureHost* texture = host->GetAsTextureHostForComposite();
-        if (!texture) {
-          NS_ERROR("TextureHost does not exist");
-          break;
-        }
-        WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
-        if (wrTexture) {
-          wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
-          break;
+        if (!gfxEnv::EnableWebRenderRecording()) {
+          TextureHost* texture = host->GetAsTextureHostForComposite();
+          if (!texture) {
+            NS_ERROR("TextureHost does not exist");
+            break;
+          }
+          WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+          if (wrTexture) {
+            wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
+            break;
+          }
         }
         RefPtr<DataSourceSurface> dSurf = host->GetAsSurface();
         if (!dSurf) {

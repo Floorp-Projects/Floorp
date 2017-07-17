@@ -137,6 +137,7 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
   using nsGenericHTMLFormElementWithState::GetForm;
+  using nsGenericHTMLFormElementWithState::GetFormAction;
 
   enum class FromClone { no, yes };
 

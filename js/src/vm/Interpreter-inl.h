@@ -649,7 +649,7 @@ InitElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue i
     if (!ToPropertyKey(cx, idval, &id))
         return false;
 
-    unsigned flags = JSOp(*pc) == JSOP_INITHIDDENELEM ? 0 : JSPROP_ENUMERATE;
+    unsigned flags = GetInitDataPropAttrs(JSOp(*pc));
     return DefineProperty(cx, obj, id, val, nullptr, nullptr, flags);
 }
 

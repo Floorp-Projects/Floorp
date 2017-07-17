@@ -22,8 +22,10 @@ reflectString({
   otherValues: [ "ISO-8859-1", "UTF-8" ],
 });
 
-// TODO: action (URL).  But note that we currently reflect it weirdly; see
-// dom/html/test/test_bug607145.html
+reflectURL({
+  element: document.createElement("form"),
+  attribute: "action",
+});
 
 // .autocomplete
 reflectLimitedEnumerated({
