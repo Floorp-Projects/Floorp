@@ -143,7 +143,7 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ServoStyleContext_Init(mozilla::ServoStyleContext* context,
                                   ServoStyleContextBorrowedOrNull parent_context,
-                                  RawGeckoPresContextBorrowed pres_context, ServoComputedValuesStrong values,
+                                  RawGeckoPresContextBorrowed pres_context, ServoComputedValuesBorrowed values,
                                   mozilla::CSSPseudoElementType pseudo_type, nsIAtom* pseudo_tag);
 void Gecko_ServoStyleContext_Destroy(mozilla::ServoStyleContext* context);
 

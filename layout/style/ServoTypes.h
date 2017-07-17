@@ -172,15 +172,19 @@ struct ServoComputedValueFlags {
 } // namespace mozilla
 
 
+struct ServoComputedValues;
+struct ServoComputedValuesForgotten {
+  // Make sure you manually mem::forget the backing ServoComputedValues
+  // after calling this
+  explicit ServoComputedValuesForgotten(const ServoComputedValues* aValue) : mPtr(aValue) {}
+  const ServoComputedValues* mPtr;
+};
+
 /**
  * We want C++ to be abe to read the style struct fields of ComputedValues
  * so we define this type on the C++ side and use the bindgenned version
  * on the Rust side.
  *
- * C++ just sees pointers and opaque types here, so bindgen will attempt to generate a Copy
- * impl. This will fail because the bindgenned version contains owned types. Opt out.
- *
- * <div rustbindgen nocopy></div>
  */
 struct ServoComputedValues {
 #define STYLE_STRUCT(name_, checkdata_cb_) mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_;
@@ -200,7 +204,23 @@ struct ServoComputedValues {
   /// element being matched if it is a link or the nearest ancestor link.
   mozilla::ServoVisitedStyle visited_style;
   mozilla::ServoComputedValueFlags flags;
-  ~ServoComputedValues() {} // do nothing, but prevent Copy from being impl'd by bindgen
+
+  // C++ just sees this struct as a bucket of bits, and will
+  // do the wrong thing if we let it use the default copy ctor/assignment
+  // operator. Remove them so that there is no footgun.
+  //
+  // We remove the move ctor/assignment operator as well, because
+  // moves in C++ don't prevent destructors from being called,
+  // which will lead to double frees.
+  ServoComputedValues& operator=(const ServoComputedValues&) = delete;
+  ServoComputedValues(const ServoComputedValues&) = delete;
+  ServoComputedValues&& operator=(const ServoComputedValues&&) = delete;
+  ServoComputedValues(const ServoComputedValues&&) = delete;
+
+  // Constructs via memcpy. Will not invalidate old struct
+  explicit ServoComputedValues(const ServoComputedValuesForgotten aValue);
 };
+
+
 
 #endif // mozilla_ServoTypes_h

@@ -554,16 +554,8 @@ ServoRestyleManager::ProcessPostTraversal(
       aRestyleState.StyleSet().ResolveServoStyle(aElement);
     MOZ_ASSERT(oldStyleContext->ComputedValues() != currentContext->ComputedValues());
 
-    auto pseudo = aElement->GetPseudoElementType();
-    nsIAtom* pseudoTag = pseudo == CSSPseudoElementType::NotPseudo
-      ? nullptr : nsCSSPseudoElements::GetPseudoAtom(pseudo);
 
-    // XXXManishearth we should just reuse the old one here
-    RefPtr<ServoStyleContext> tempContext =
-      Servo_StyleContext_NewContext(currentContext->ComputedValues(), aParentContext,
-                                    PresContext(), pseudo, pseudoTag).Consume();
-    newContext = aRestyleState.StyleSet().GetContext(tempContext.forget(), aParentContext,
-                                                     pseudoTag, pseudo, aElement);
+    newContext = currentContext;
 
     newContext->ResolveSameStructsAs(PresContext(), oldStyleContext);
 
