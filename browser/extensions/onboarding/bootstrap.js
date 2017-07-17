@@ -31,6 +31,7 @@ const PREF_WHITELIST = [
   "onboarding-tour-customize",
   "onboarding-tour-default-browser",
   "onboarding-tour-library",
+  "onboarding-tour-performance",
   "onboarding-tour-private-browsing",
   "onboarding-tour-search",
   "onboarding-tour-singlesearch",

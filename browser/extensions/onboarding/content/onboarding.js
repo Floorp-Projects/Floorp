@@ -277,6 +277,32 @@ var onboardingTourset = {
       return div;
     },
   },
+  "performance": {
+    id: "onboarding-tour-performance",
+    tourNameId: "onboarding.tour-performance",
+    getNotificationStrings(bundle) {
+      return {
+        title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-performance.title"),
+        message: bundle.formatStringFromName("onboarding.notification.onboarding-tour-performance.message", [BRAND_SHORT_NAME], 1),
+        button: bundle.GetStringFromName("onboarding.button.learnMore"),
+      };
+    },
+    getPage(win, bundle) {
+      let div = win.document.createElement("div");
+      // TODO: The content image is a placeholder. It should be replaced upon assets are available.
+      //       This is tracking in Bug 1382520.
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-performance.title"></h1>
+          <p data-l10n-id="onboarding.tour-performance.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_sync.svg" role="presentation"/>
+        </section>
+      `;
+      return div;
+    },
+  },
 };
 
 /**
@@ -444,6 +470,12 @@ class Onboarding {
         this.toggleOverlay();
         this.gotoPage(tourId);
         this._removeTourFromNotificationQueue(tourId);
+        break;
+      // These tours are tagged completed instantly upon showing.
+      case "onboarding-tour-default-browser":
+      case "onboarding-tour-sync":
+      case "onboarding-tour-performance":
+        this.setToursCompleted([ evt.target.id ]);
         break;
     }
     let classList = evt.target.classList;
