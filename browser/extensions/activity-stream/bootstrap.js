@@ -11,8 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
 
 const ACTIVITY_STREAM_ENABLED_PREF = "browser.newtabpage.activity-stream.enabled";
 const BROWSER_READY_NOTIFICATION = "sessionstore-windows-restored";
@@ -119,7 +117,7 @@ function observe(subject, topic, data) {
     case BROWSER_READY_NOTIFICATION:
       Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
       // Avoid running synchronously during this event that's used for timing
-      setTimeout(() => onBrowserReady());
+      Services.tm.dispatchToMainThread(() => onBrowserReady());
       break;
   }
 }
