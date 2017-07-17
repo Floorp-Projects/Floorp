@@ -14,10 +14,6 @@ const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { JSTerm } = require("devtools/client/webconsole/jsterm");
 const { WebConsoleConnectionProxy } = require("devtools/client/webconsole/webconsole-connection-proxy");
-const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
-const system = require("devtools/shared/system");
-const { ZoomKeys } = require("devtools/client/shared/zoom-keys");
 
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 
@@ -94,22 +90,8 @@ NewWebConsoleFrame.prototype = {
 
     this._destroyer = defer();
 
-    Services.prefs.removeObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
+    Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this.React = this.ReactDOM = this.FrameView = null;
-
-    if (this.jsterm) {
-      this.jsterm.off("sidebar-opened", this.resize);
-      this.jsterm.off("sidebar-closed", this.resize);
-      this.jsterm.destroy();
-      this.jsterm = null;
-    }
-
-    let toolbox = gDevTools.getToolbox(this.owner.target);
-    if (toolbox) {
-      toolbox.off("webconsole-selected", this._onPanelSelected);
-    }
-
-    this.window = this.owner = this.newConsoleOutput = null;
 
     let onDestroy = () => {
       this._destroyer.resolve(null);
@@ -221,36 +203,6 @@ NewWebConsoleFrame.prototype = {
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();
-
-    this._initShortcuts();
-  },
-
-  _initShortcuts: function () {
-    let shortcuts = new KeyShortcuts({
-      window: this.window
-    });
-
-    shortcuts.on(l10n.getStr("webconsole.find.key"),
-                 (name, event) => {
-                   this.filterBox.focus();
-                   event.preventDefault();
-                 });
-
-    let clearShortcut;
-    if (system.constants.platform === "macosx") {
-      clearShortcut = l10n.getStr("webconsole.clear.keyOSX");
-    } else {
-      clearShortcut = l10n.getStr("webconsole.clear.key");
-    }
-
-    shortcuts.on(clearShortcut, () => this.jsterm.clearOutput(true));
-
-    if (this.isBrowserConsole) {
-      shortcuts.on(l10n.getStr("webconsole.close.key"),
-                   this.window.close.bind(this.window));
-
-      ZoomKeys.register(this.window);
-    }
   },
 
   /**

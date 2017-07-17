@@ -27,7 +27,7 @@ add_task(function* () {
   let currentPosition = outputScroller.scrollTop;
   const bottom = currentPosition;
 
-  hud.jsterm.inputNode.focus();
+  EventUtils.sendMouseEvent({type: "click"}, hud.jsterm.inputNode);
 
   // Page up.
   EventUtils.synthesizeKey("VK_PAGE_UP", {});

@@ -41,28 +41,6 @@ NewConsoleOutputWrapper.prototype = {
       this.jsterm.hud[id] = node;
     };
 
-    // Focus the input line whenever the output area is clicked.
-    this.parentNode.addEventListener("click", (event) => {
-      // Do not focus on middle/right-click or 2+ clicks.
-      if (event.detail !== 1 || event.button !== 0) {
-        return;
-      }
-
-      // Do not focus if something is selected
-      let selection = this.document.defaultView.getSelection();
-      if (selection && !selection.isCollapsed) {
-        return;
-      }
-
-      // Do not focus if a link was clicked
-      if (event.target.nodeName.toLowerCase() === "a" ||
-          event.target.parentNode.nodeName.toLowerCase() === "a") {
-        return;
-      }
-
-      this.jsterm.focus();
-    });
-
     const serviceContainer = {
       attachRefToHud,
       emitNewMessage: (node, messageId) => {
@@ -164,8 +142,6 @@ NewConsoleOutputWrapper.prototype = {
     ));
 
     this.body = ReactDOM.render(provider, this.parentNode);
-
-    this.jsterm.focus();
   },
 
   dispatchMessageAdd: function (message, waitForResponse) {
