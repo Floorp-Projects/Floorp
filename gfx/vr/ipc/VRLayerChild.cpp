@@ -15,13 +15,13 @@
 namespace mozilla {
 namespace gfx {
 
-VRLayerChild::VRLayerChild(uint32_t aVRDisplayID, VRManagerChild* aVRManagerChild)
-  : mVRDisplayID(aVRDisplayID)
-  , mCanvasElement(nullptr)
+VRLayerChild::VRLayerChild()
+  : mCanvasElement(nullptr)
   , mShSurfClient(nullptr)
   , mFront(nullptr)
-  , mIPCOpen(true)
+  , mIPCOpen(false)
 {
+  MOZ_COUNT_CTOR(VRLayerChild);
 }
 
 VRLayerChild::~VRLayerChild()
@@ -92,6 +92,35 @@ void
 VRLayerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mIPCOpen = false;
+}
+
+// static
+PVRLayerChild*
+VRLayerChild::CreateIPDLActor()
+{
+  VRLayerChild* c = new VRLayerChild();
+  c->AddIPDLReference();
+  return c;
+}
+
+// static
+bool
+VRLayerChild::DestroyIPDLActor(PVRLayerChild* actor)
+{
+  static_cast<VRLayerChild*>(actor)->ReleaseIPDLReference();
+  return true;
+}
+
+void
+VRLayerChild::AddIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  mIPCOpen = true;
+  AddRef();
+}
+void
+VRLayerChild::ReleaseIPDLReference() {
+  MOZ_ASSERT(mIPCOpen == false);
+  Release();
 }
 
 } // namespace gfx

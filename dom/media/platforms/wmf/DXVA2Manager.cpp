@@ -954,7 +954,10 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       hr = mTransform->Output(&sample);
     }
   }
-  if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
+
+  if (!mutex && mDevice != DeviceManagerDx::Get()->GetCompositorDevice() && mSyncObject) {
+    // It appears some race-condition may allow us to arrive here even when mSyncObject
+    // is null. It's better to avoid that crash.
     client->SyncWithObject(mSyncObject);
     mSyncObject->FinalizeFrame();
   }
