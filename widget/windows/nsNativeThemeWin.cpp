@@ -594,8 +594,9 @@ nsNativeThemeWin::DrawThemedProgressMeter(nsIFrame* aFrame, int aWidgetType,
   }
 }
 
-nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, nsUXThemeClass aThemeClass,
-                                                 uint8_t aWidgetType, int32_t aPart, int32_t aState,
+nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, HTHEME aTheme,
+                                                 nsUXThemeClass aThemeClass, uint8_t aWidgetType,
+                                                 int32_t aPart, int32_t aState,
                                                  nsIntMargin * aResult)
 {
   int32_t cacheIndex = aThemeClass * THEME_PART_DISTINCT_VALUE_COUNT + aPart;
@@ -607,13 +608,12 @@ nsresult nsNativeThemeWin::GetCachedWidgetBorder(nsIFrame * aFrame, nsUXThemeCla
     return NS_OK;
   }
 
-  HANDLE theme = nsUXThemeData::GetTheme(aThemeClass);
   // Get our info.
   RECT outerRect; // Create a fake outer rect.
   outerRect.top = outerRect.left = 100;
   outerRect.right = outerRect.bottom = 200;
   RECT contentRect(outerRect);
-  HRESULT res = GetThemeBackgroundContentRect(theme, nullptr, aPart, aState, &outerRect, &contentRect);
+  HRESULT res = GetThemeBackgroundContentRect(aTheme, nullptr, aPart, aState, &outerRect, &contentRect);
 
   if (FAILED(res)) {
     return NS_ERROR_FAILURE;
@@ -1935,8 +1935,12 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
                                   nsIntMargin* aResult)
 {
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
+  HTHEME theme = NULL;
+  if (!themeClass.isNothing()) {
+    theme = nsUXThemeData::GetTheme(themeClass.value());
+  }
   nsresult rv = NS_OK;
-  if (themeClass.isNothing()) {
+  if (!theme) {
     rv = ClassicGetWidgetBorder(aContext, aFrame, aWidgetType, aResult);
     ScaleForFrameDPI(aResult, aFrame);
     return rv;
@@ -1974,7 +1978,7 @@ nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext,
     return NS_OK;
   }
 
-  rv = GetCachedWidgetBorder(aFrame, themeClass.value(), aWidgetType, part, state, aResult);
+  rv = GetCachedWidgetBorder(aFrame, theme, themeClass.value(), aWidgetType, part, state, aResult);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Remove the edges for tabs that are before or after the selected tab,
@@ -2211,13 +2215,16 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aF
   nsresult rv = NS_OK;
 
   mozilla::Maybe<nsUXThemeClass> themeClass = GetThemeClass(aWidgetType);
-  if (themeClass.isNothing()) {
+  HTHEME theme = NULL;
+  if (!themeClass.isNothing()) {
+    theme = nsUXThemeData::GetTheme(themeClass.value());
+  }
+  if (!theme) {
     rv = ClassicGetMinimumWidgetSize(aFrame, aWidgetType, aResult, aIsOverridable);
     ScaleForFrameDPI(aResult, aFrame);
     return rv;
   }
 
-  HANDLE theme = nsUXThemeData::GetTheme(themeClass.value());
   switch (aWidgetType) {
     case NS_THEME_GROUPBOX:
     case NS_THEME_NUMBER_INPUT:
