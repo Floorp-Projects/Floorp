@@ -2049,7 +2049,7 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
     RootedValue fval(cx);
 
     if (args.hasDefined(0)) {
-        if (args[0].isPrimitive()) {
+        if (!IsCallable(args[0])) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_SORT_ARG);
             return false;
         }
