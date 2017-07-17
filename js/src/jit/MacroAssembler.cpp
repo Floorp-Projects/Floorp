@@ -986,7 +986,7 @@ MacroAssembler::fillSlotsWithConstantValue(Address base, Register temp,
     for (unsigned i = start; i < end; ++i, addr.offset += sizeof(GCPtrValue))
         store32(temp, ToType(addr));
 #else
-    moveValue(v, temp);
+    moveValue(v, ValueOperand(temp));
     for (uint32_t i = start; i < end; ++i, base.offset += sizeof(GCPtrValue))
         storePtr(temp, base);
 #endif
