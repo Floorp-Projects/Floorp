@@ -67,8 +67,13 @@ textbox.plain html|*.textbox-textarea {
 
 /* ::::: search textbox ::::: */
 
-.textbox-search-icon {
-  list-style-image: url(moz-icon://stock/gtk-find?size=menu);
+textbox:not([searchbutton]) > .textbox-input-box > .textbox-search-sign {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
+  margin-inline-end: 5px;
+}
+
+.textbox-search-icon[searchbutton] {
+  list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
 }
 
 .textbox-search-clear {

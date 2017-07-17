@@ -46,7 +46,7 @@ html {
 }
 
 .textbox-search-icon {
-  background-image: url(moz-icon://stock/gtk-find?size=menu);
+  background-image: url(chrome://global/skin/icons/search-textbox.svg);
   background-repeat: no-repeat;
   width: 16px;
   height: 16px;
