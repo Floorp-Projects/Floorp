@@ -67,6 +67,7 @@ jobs:
             - - "mobile/android/config/**"
               - "testing/mozharness/configs/builds/releng_sub_android_configs/*gradle_dependencies.py"
               - "**/*.gradle"
+              - "taskcluster/docker/android-gradle-build/**"
         toolchains:
           - linux64-sccache
 
