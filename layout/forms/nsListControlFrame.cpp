@@ -12,7 +12,6 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIPresShell.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIXULRuntime.h"
@@ -24,6 +23,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionsCollection.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/EventStateManager.h"
@@ -281,8 +281,7 @@ GetMaxOptionBSize(nsIFrame* aContainer, WritingMode aWM)
   nscoord result = 0;
   for (nsIFrame* option : aContainer->PrincipalChildList()) {
     nscoord optionBSize;
-    if (nsCOMPtr<nsIDOMHTMLOptGroupElement>
-        (do_QueryInterface(option->GetContent()))) {
+    if (HTMLOptGroupElement::FromContent(option->GetContent())) {
       // An optgroup; drill through any scroll frame and recurse.  |frame| might
       // be null here though if |option| is an anonymous leaf frame of some sort.
       auto frame = option->GetContentInsertionFrame();
@@ -750,7 +749,8 @@ CountOptionsAndOptgroups(nsIFrame* aFrame)
       if (content->IsHTMLElement(nsGkAtoms::option)) {
         ++count;
       } else {
-        nsCOMPtr<nsIDOMHTMLOptGroupElement> optgroup = do_QueryInterface(content);
+        RefPtr<HTMLOptGroupElement> optgroup =
+          HTMLOptGroupElement::FromContent(content);
         if (optgroup) {
           nsAutoString label;
           optgroup->GetLabel(label);
