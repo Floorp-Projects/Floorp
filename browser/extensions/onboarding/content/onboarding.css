@@ -400,6 +400,21 @@
   background-image: url("img/icons_search-colored.svg");
 }
 
+#onboarding-tour-performance {
+  background-image: url("img/icons_performance.svg");
+}
+
+#onboarding-tour-performance.onboarding-active,
+#onboarding-tour-performance:hover {
+  background-image: url("img/icons_performance-colored.svg");
+}
+
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-performance] #onboarding-notification-tour-icon {
+  /* TODO: Placeholder icon. It should be replaced upon assets are available.
+           This is tracking in Bug 1382520. */
+  background-image: url("img/icons_sync-notification.svg");
+}
+
 /* Tour Notifications */
 #onboarding-notification-bar {
   position: fixed;
