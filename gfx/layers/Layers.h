@@ -154,6 +154,18 @@ class DidCompositeObserver {
  * BasicLayerManager for such an implementation.
  */
 
+
+/**
+ * Hints that can be used during PaintedLayer creation to influence the type
+ * or properties of the layer created.
+ */
+enum class PaintedLayerCreationHint: uint8_t {
+  NONE                = 0,
+  SCROLLABLE          = 1 << 0,
+  CONTENT_SIDE_PAINT  = 1 << 1,
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(PaintedLayerCreationHint)
+
 /**
  * A LayerManager controls a tree of layers. All layers in the tree
  * must use the same LayerManager.
@@ -398,17 +410,6 @@ public:
    */
   virtual void Mutated(Layer* aLayer) { }
   virtual void MutatedSimple(Layer* aLayer) { }
-
-  /**
-   * Hints that can be used during PaintedLayer creation to influence the type
-   * or properties of the layer created.
-   *
-   * NONE: No hint.
-   * SCROLLABLE: This layer may represent scrollable content.
-   */
-  enum PaintedLayerCreationHint {
-    NONE, SCROLLABLE
-  };
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -2101,7 +2102,7 @@ public:
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
 
-  LayerManager::PaintedLayerCreationHint GetCreationHint() const { return mCreationHint; }
+  PaintedLayerCreationHint GetCreationHint() const { return mCreationHint; }
 
   bool UsedForReadback() { return mUsedForReadback; }
   void SetUsedForReadback(bool aUsed) { mUsedForReadback = aUsed; }
@@ -2109,7 +2110,7 @@ public:
   /**
    * Returns true if aLayer is optimized for the given PaintedLayerCreationHint.
    */
-  virtual bool IsOptimizedFor(LayerManager::PaintedLayerCreationHint aCreationHint)
+  virtual bool IsOptimizedFor(PaintedLayerCreationHint aCreationHint)
   { return true; }
 
   /**
@@ -2124,7 +2125,7 @@ public:
 
 protected:
   PaintedLayer(LayerManager* aManager, void* aImplData,
-              LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE)
+              PaintedLayerCreationHint aCreationHint = PaintedLayerCreationHint::NONE)
     : Layer(aManager, aImplData)
     , mValidRegion()
     , mValidRegionIsCurrent(true)
@@ -2179,7 +2180,7 @@ protected:
   /**
    * The creation hint that was used when constructing this layer.
    */
-  const LayerManager::PaintedLayerCreationHint mCreationHint;
+  const PaintedLayerCreationHint mCreationHint;
   /**
    * Set when this PaintedLayer is participating in readback, i.e. some
    * ReadbackLayer (may) be getting its background from this layer.

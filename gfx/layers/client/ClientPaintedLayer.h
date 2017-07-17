@@ -36,7 +36,7 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit ClientPaintedLayer(ClientLayerManager* aLayerManager,
-                             LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE) :
+                              PaintedLayerCreationHint aCreationHint = PaintedLayerCreationHint::NONE) :
     PaintedLayer(aLayerManager, static_cast<ClientLayer*>(this), aCreationHint),
     mContentClient(nullptr)
   {

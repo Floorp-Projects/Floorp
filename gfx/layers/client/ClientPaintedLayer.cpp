@@ -271,7 +271,7 @@ ClientPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 already_AddRefed<PaintedLayer>
 ClientLayerManager::CreatePaintedLayer()
 {
-  return CreatePaintedLayerWithHint(NONE);
+  return CreatePaintedLayerWithHint(PaintedLayerCreationHint::NONE);
 }
 
 already_AddRefed<PaintedLayer>
