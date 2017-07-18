@@ -17,18 +17,11 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 
 Atomic<uint32_t> VRSystemManager::sDisplayBase(0);
-Atomic<uint32_t> VRSystemManager::sControllerBase(0);
 
 /* static */ uint32_t
 VRSystemManager::AllocateDisplayID()
 {
   return ++sDisplayBase;
-}
-
-/* static */ uint32_t
-VRSystemManager::AllocateControllerID()
-{
-  return ++sControllerBase;
 }
 
 Matrix4x4
@@ -73,7 +66,6 @@ VRSystemManager::AddGamepad(const VRControllerInfo& controllerInfo)
                       controllerInfo.GetMappingType(),
                       controllerInfo.GetHand(),
                       dom::GamepadServiceType::VR,
-                      controllerInfo.GetDisplayID(),
                       controllerInfo.GetNumButtons(),
                       controllerInfo.GetNumAxes(),
                       controllerInfo.GetNumHaptics());

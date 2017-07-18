@@ -226,7 +226,6 @@ GamepadManager::AddGamepad(uint32_t aIndex,
                            GamepadMappingType aMapping,
                            GamepadHand aHand,
                            GamepadServiceType aServiceType,
-                           uint32_t aDisplayID,
                            uint32_t aNumButtons,
                            uint32_t aNumAxes,
                            uint32_t aNumHaptics)
@@ -241,7 +240,6 @@ GamepadManager::AddGamepad(uint32_t aIndex,
                 newIndex,
                 aMapping,
                 aHand,
-                aDisplayID,
                 aNumButtons,
                 aNumAxes,
                 aNumHaptics);
@@ -511,7 +509,6 @@ GamepadManager::Update(const GamepadChangeEvent& aEvent)
                static_cast<GamepadMappingType>(a.mapping()),
                static_cast<GamepadHand>(a.hand()),
                a.service_type(),
-               a.display_id(),
                a.num_buttons(), a.num_axes(),
                a.num_haptics());
     return;
