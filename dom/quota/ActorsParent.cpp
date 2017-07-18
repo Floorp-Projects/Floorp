@@ -125,7 +125,7 @@ namespace {
 const uint32_t kSQLitePageSizeOverride = 512;
 
 // Major storage version. Bump for backwards-incompatible changes.
-const uint32_t kMajorStorageVersion = 2;
+const uint32_t kMajorStorageVersion = 3;
 
 // Minor storage version. Bump for backwards-compatible changes.
 const uint32_t kMinorStorageVersion = 0;
@@ -1809,6 +1809,29 @@ private:
   nsresult
   MaybeStripObsoleteOriginAttributes(const OriginProps& aOriginProps,
                                      bool* aStripped);
+
+  nsresult
+  ProcessOriginDirectory(const OriginProps& aOriginProps) override;
+};
+
+// XXXtt: The following class is duplicated from
+// UpgradeStorageFrom1_0To2_0Helper and it should be extracted out in
+// bug 1395102.
+class UpgradeStorageFrom2_0To3_0Helper final
+  : public StorageDirectoryHelper
+{
+public:
+  UpgradeStorageFrom2_0To3_0Helper(nsIFile* aDirectory,
+                                   bool aPersistent)
+    : StorageDirectoryHelper(aDirectory, aPersistent)
+  { }
+
+  nsresult
+  DoUpgrade();
+
+private:
+  nsresult
+  MaybeUpgradeClients(const OriginProps& aOriginProps);
 
   nsresult
   ProcessOriginDirectory(const OriginProps& aOriginProps) override;
@@ -4792,6 +4815,69 @@ QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
+nsresult
+QuotaManager::UpgradeStorageFrom2_0To3_0(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  // The upgrade is mainly to create a directory padding file in DOM Cache
+  // directory to record the overall padding size of an origin.
+
+  nsresult rv;
+
+  for (const PersistenceType persistenceType : kAllPersistenceTypes) {
+    nsCOMPtr<nsIFile> directory =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = directory->InitWithPath(GetStoragePath(persistenceType));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = directory->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      continue;
+    }
+
+    bool persistent = persistenceType == PERSISTENCE_TYPE_PERSISTENT;
+    RefPtr<UpgradeStorageFrom2_0To3_0Helper> helper =
+      new UpgradeStorageFrom2_0To3_0Helper(directory, persistent);
+
+    rv = helper->DoUpgrade();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+#ifdef DEBUG
+  {
+    int32_t storageVersion;
+    rv = aConnection->GetSchemaVersion(&storageVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(storageVersion == MakeStorageVersion(2, 0));
+  }
+#endif
+
+  rv = aConnection->SetSchemaVersion(MakeStorageVersion(3, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 #ifdef DEBUG
 
 void
@@ -4940,7 +5026,7 @@ QuotaManager::EnsureStorageIsInitialized()
       MOZ_ASSERT(storageVersion == kStorageVersion);
     } else {
       // This logic needs to change next time we change the storage!
-      static_assert(kStorageVersion == int32_t((2 << 16) + 0),
+      static_assert(kStorageVersion == int32_t((3 << 16) + 0),
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
@@ -4948,6 +5034,8 @@ QuotaManager::EnsureStorageIsInitialized()
           rv = UpgradeStorageFrom0_0To1_0(connection);
         } else if (storageVersion == MakeStorageVersion(1, 0)) {
           rv = UpgradeStorageFrom1_0To2_0(connection);
+        } else if (storageVersion == MakeStorageVersion(2, 0)) {
+          rv = UpgradeStorageFrom2_0To3_0(connection);
         } else {
           NS_WARNING("Unable to initialize storage, no upgrade path is "
                      "available!");
@@ -9283,6 +9371,216 @@ UpgradeStorageFrom1_0To2_0Helper::ProcessOriginDirectory(
   if (stripped) {
     return NS_OK;
   }
+
+  if (aOriginProps.mNeedsRestore) {
+    rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                 aOriginProps.mTimestamp,
+                                 aOriginProps.mSuffix,
+                                 aOriginProps.mGroup,
+                                 aOriginProps.mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (aOriginProps.mNeedsRestore2) {
+    rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                  aOriginProps.mTimestamp,
+                                  /* aPersisted */ false,
+                                  aOriginProps.mSuffix,
+                                  aOriginProps.mGroup,
+                                  aOriginProps.mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom2_0To3_0Helper::DoUpgrade()
+{
+  AssertIsOnIOThread();
+
+  DebugOnly<bool> exists;
+  MOZ_ASSERT(NS_SUCCEEDED(mDirectory->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> originDir = do_QueryInterface(entry);
+    MOZ_ASSERT(originDir);
+
+    bool isDirectory;
+    rv = originDir->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      nsString leafName;
+      rv = originDir->GetLeafName(leafName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOSMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    OriginProps originProps;
+    rv = originProps.Init(originDir);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Only update DOM Cache directory for adding padding file.
+    rv = MaybeUpgradeClients(originProps);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    int64_t timestamp;
+    nsCString group;
+    nsCString origin;
+    Nullable<bool> isApp;
+    nsresult rv = GetDirectoryMetadata(originDir,
+                                       timestamp,
+                                       group,
+                                       origin,
+                                       isApp);
+    if (NS_FAILED(rv) || isApp.IsNull()) {
+      originProps.mNeedsRestore = true;
+    }
+
+    nsCString suffix;
+    rv = GetDirectoryMetadata2(originDir,
+                               timestamp,
+                               suffix,
+                               group,
+                               origin,
+                               isApp.SetValue());
+    if (NS_FAILED(rv)) {
+      originProps.mTimestamp = GetLastModifiedTime(originDir, mPersistent);
+      originProps.mNeedsRestore2 = true;
+    } else {
+      originProps.mTimestamp = timestamp;
+    }
+
+    mOriginProps.AppendElement(Move(originProps));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (mOriginProps.IsEmpty()) {
+    return NS_OK;
+  }
+
+  rv = ProcessOriginDirectories();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom2_0To3_0Helper::MaybeUpgradeClients(
+                                                const OriginProps& aOriginProps)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv =
+    aOriginProps.mDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool hasMore;
+  while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
+    nsCOMPtr<nsISupports> entry;
+    rv = entries->GetNext(getter_AddRefs(entry));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+    if (NS_WARN_IF(!file)) {
+      return rv;
+    }
+
+    bool isDirectory;
+    rv = file->IsDirectory(&isDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsString leafName;
+    rv = file->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!isDirectory) {
+      // Unknown files during upgrade are allowed. Just warn if we find them.
+      if (!IsOriginMetadata(leafName) &&
+          !IsTempMetadata(leafName)) {
+        UNKNOWN_FILE_WARNING(leafName);
+      }
+      continue;
+    }
+
+    Client::Type clientType;
+    rv = Client::TypeFromText(leafName, clientType);
+    if (NS_FAILED(rv)) {
+      UNKNOWN_FILE_WARNING(leafName);
+      continue;
+    }
+
+    Client* client = quotaManager->GetClient(clientType);
+    MOZ_ASSERT(client);
+
+    rv = client->UpgradeStorageFrom2_0To3_0(file);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+UpgradeStorageFrom2_0To3_0Helper::ProcessOriginDirectory(
+                                                const OriginProps& aOriginProps)
+{
+  AssertIsOnIOThread();
+
+  nsresult rv;
 
   if (aOriginProps.mNeedsRestore) {
     rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
