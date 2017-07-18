@@ -320,11 +320,11 @@ mapped-generic-types = [
     { generic = false, gecko = "ServoNodeData", servo = "AtomicRefCell<ElementData>" },
     { generic = false, gecko = "mozilla::ServoWritingMode", servo = "::logical_geometry::WritingMode" },
     { generic = false, gecko = "mozilla::ServoFontComputationData", servo = "::properties::FontComputationData" },
-    { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::stylearc::Arc<::custom_properties::CustomPropertiesMap>>" },
+    { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::servo_arc::Arc<::custom_properties::CustomPropertiesMap>>" },
     { generic = false, gecko = "mozilla::ServoRuleNode", servo = "Option<::rule_tree::StrongRuleNode>" },
-    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::stylearc::RawOffsetArc<::properties::ComputedValues>>" },
+    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::servo_arc::RawOffsetArc<::properties::ComputedValues>>" },
     { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
-    { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::stylearc::RawOffsetArc" },
+    { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::servo_arc::RawOffsetArc" },
     { generic = false, gecko = "ServoStyleContextStrong", servo = "::gecko_bindings::sugar::ownership::Strong<ServoStyleContext>" },
 ]
 fixups = [
