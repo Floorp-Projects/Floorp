@@ -68,8 +68,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToTexture(0, destTex,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       destTarget,
-                                                       true);
+                                                       destTarget);
         } else if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint destRB = dest->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
@@ -77,8 +76,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(0,
                                                            destWrapper.FB(),
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled dest->mAttachType 1.");
         }
@@ -113,8 +111,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, 0,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       srcTarget,
-                                                       !!gl->Screen());
+                                                       srcTarget);
         } else if (src->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint srcRB = src->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer srcWrapper(gl, srcRB);
@@ -122,8 +119,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(srcWrapper.FB(),
                                                            0,
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled src->mAttachType 2.");
         }
@@ -449,10 +445,7 @@ ScopedReadbackFB::ScopedReadbackFB(SharedSurface* src)
                 mSurfToUnlock->LockProd();
             }
 
-            // TODO: This should just be BindFB, but we don't have
-            // the patch for this yet. (bug 1045955)
-            MOZ_ASSERT(mGL->Screen());
-            mGL->Screen()->BindReadFB_Internal(0);
+            mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
             break;
         }
     default:

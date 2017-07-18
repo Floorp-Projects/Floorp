@@ -825,6 +825,8 @@ WebGLContext::ResizeBackbuffer(uint32_t requestedWidth,
     if (!resized)
         return false;
 
+    RebindFramebuffers();
+
     mWidth = gl->OffscreenSize().width;
     mHeight = gl->OffscreenSize().height;
     MOZ_ASSERT((uint32_t)mWidth == width);
@@ -839,6 +841,26 @@ WebGLContext::ResizeBackbuffer(uint32_t requestedWidth,
                         width, height);
     }
     return true;
+}
+
+void
+WebGLContext::RebindFramebuffers() const
+{
+    const auto fnBind = [&](const GLenum target, const WebGLFramebuffer* const fb) {
+        if (fb) {
+            gl->fBindFramebuffer(target, fb->mGLName);
+        } else {
+            gl->Screen()->BindAsFramebuffer(target);
+        }
+    };
+
+    if (IsWebGL2()) {
+        fnBind(LOCAL_GL_DRAW_FRAMEBUFFER, mBoundDrawFramebuffer);
+        fnBind(LOCAL_GL_READ_FRAMEBUFFER, mBoundReadFramebuffer);
+    } else {
+        MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
+        fnBind(LOCAL_GL_FRAMEBUFFER, mBoundDrawFramebuffer);
+    }
 }
 
 void
@@ -1113,7 +1135,7 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     mViewportHeight = mHeight;
 
     gl->fScissor(0, 0, mWidth, mHeight);
-    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    gl->Screen()->BindAsFramebuffer();
 
     //////
     // Check everything
@@ -1494,7 +1516,8 @@ void
 WebGLContext::ClearScreen()
 {
     MakeContextCurrent();
-    ScopedBindFramebuffer autoFB(gl, 0);
+    ScopedBindFramebuffer autoFB(gl);
+    gl->Screen()->BindAsFramebuffer();
 
     const bool changeDrawBuffers = (mDefaultFB_DrawBuffer0 != LOCAL_GL_BACK);
     if (changeDrawBuffers) {
@@ -1627,6 +1650,7 @@ WebGLContext::PresentScreenBuffer()
         ForceLoseContext();
         return false;
     }
+    RebindFramebuffers();
 
     if (!mOptions.preserveDrawingBuffer) {
         mBackbufferNeedsClear = true;
@@ -1966,7 +1990,8 @@ WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
 
     gl->MakeCurrent();
     {
-        ScopedBindFramebuffer autoFB(gl, 0);
+        ScopedBindFramebuffer autoFB(gl);
+        gl->Screen()->BindAsFramebuffer();
         ClearBackbufferIfNeeded();
 
         // Save, override, then restore glReadBuffer.
@@ -2188,24 +2213,6 @@ ScopedUnpackReset::UnwrapImpl()
         }
 
         mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, pbo);
-    }
-}
-
-////////////////////
-
-void
-ScopedFBRebinder::UnwrapImpl()
-{
-    const auto fnName = [&](WebGLFramebuffer* fb) {
-        return fb ? fb->mGLName : 0;
-    };
-
-    if (mWebGL->IsWebGL2()) {
-        mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, fnName(mWebGL->mBoundDrawFramebuffer));
-        mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, fnName(mWebGL->mBoundReadFramebuffer));
-    } else {
-        MOZ_ASSERT(mWebGL->mBoundDrawFramebuffer == mWebGL->mBoundReadFramebuffer);
-        mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fnName(mWebGL->mBoundDrawFramebuffer));
     }
 }
 
