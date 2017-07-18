@@ -1177,6 +1177,14 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
     void setOperand(size_t index, const LAllocation& a) final override {
         operands_[index] = a;
     }
+    void setBoxOperand(size_t index, const LBoxAllocation& a) {
+#ifdef JS_NUNBOX32
+        operands_[index + TYPE_INDEX] = a.type();
+        operands_[index + PAYLOAD_INDEX] = a.payload();
+#else
+        operands_[index] = a.value();
+#endif
+    }
 };
 
 template <size_t Defs, size_t Operands, size_t Temps>
