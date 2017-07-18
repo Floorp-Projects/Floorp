@@ -746,6 +746,9 @@ void
 WebRenderLayerManager::ClearLayer(Layer* aLayer)
 {
   aLayer->ClearCachedResources();
+  if (aLayer->GetMaskLayer()) {
+    aLayer->GetMaskLayer()->ClearCachedResources();
+  }
   for (Layer* child = aLayer->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     ClearLayer(child);
@@ -755,12 +758,13 @@ WebRenderLayerManager::ClearLayer(Layer* aLayer)
 void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
-  WrBridge()->SendClearCachedResources();
+  WrBridge()->BeginClearCachedResources();
   if (aSubtree) {
     ClearLayer(aSubtree);
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
+  WrBridge()->EndClearCachedResources();
 }
 
 void

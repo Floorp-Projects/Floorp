@@ -27,9 +27,15 @@ namespace layers {
 WebRenderCanvasLayer::~WebRenderCanvasLayer()
 {
   MOZ_COUNT_DTOR(WebRenderCanvasLayer);
+  ClearWrResources();
+}
 
+void
+WebRenderCanvasLayer::ClearWrResources()
+{
   if (mExternalImageId.isSome()) {
     WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+    mExternalImageId = Nothing();
   }
 }
 
@@ -95,6 +101,18 @@ CompositableForwarder*
 WebRenderCanvasLayer::GetForwarder()
 {
   return WrManager()->WrBridge();
+}
+
+void
+WebRenderCanvasLayer::ClearCachedResources()
+{
+  ClearWrResources();
+  if (mBufferProvider) {
+    mBufferProvider->ClearCachedResources();
+  }
+  if (mCanvasClient) {
+    mCanvasClient->Clear();
+  }
 }
 
 } // namespace layers

@@ -38,6 +38,7 @@ public:
 
 protected:
   CompositableType GetImageClientType();
+  void ClearWrResources();
 
   void AddWRVideoImage(size_t aChannelNumber);
 
