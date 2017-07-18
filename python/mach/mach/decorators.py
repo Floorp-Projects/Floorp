@@ -255,9 +255,9 @@ class SubCommand(object):
 
         description -- A textual description for this sub command.
     """
-    def __init__(self, command, subcommand, description=None):
+    def __init__(self, command, subcommand, description=None, parser=None):
         self._mach_command = _MachCommand(name=command, subcommand=subcommand,
-                                          description=description)
+                                          description=description, parser=parser)
 
     def __call__(self, func):
         if not hasattr(func, '_mach_command'):
