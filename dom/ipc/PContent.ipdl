@@ -363,6 +363,8 @@ child:
       Endpoint<PVideoDecoderManagerChild> video,
       uint32_t[] namespaces);
 
+    async AudioDefaultDeviceChange();
+
     // Re-create the rendering stack for a device reset.
     async ReinitRenderingForDeviceReset();
 
