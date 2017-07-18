@@ -81,6 +81,11 @@
             "type": "string",
             "optional": true,
             "description": "The session ID used to uniquely identify a Window obtained from the $(ref:sessions) API."
+          },
+          "title": {
+            "type": "string",
+            "optional": true,
+            "description": "The title of the window. Read-only."
           }
         }
       },
@@ -334,6 +339,11 @@
                 "type": "boolean",
                 "optional": true,
                 "description": "Allow scripts to close the window."
+              },
+              "titlePreface": {
+                "type": "string",
+                "optional": true,
+                "description": "A string to add to the beginning of the window title."
               }
             },
             "optional": true
@@ -404,6 +414,11 @@
                 "$ref": "WindowState",
                 "optional": true,
                 "description": "The new state of the window. The 'minimized', 'maximized' and 'fullscreen' states cannot be combined with 'left', 'top', 'width' or 'height'."
+              },
+              "titlePreface": {
+                "type": "string",
+                "optional": true,
+                "description": "A string to add to the beginning of the window title."
               }
             }
           },

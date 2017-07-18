@@ -6,7 +6,6 @@
 /* the interface (to internal code) for retrieving computed style data */
 
 #include "nsStyleContext.h"
-#include "CSSVariableImageTable.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
@@ -77,8 +76,6 @@ const uint32_t nsStyleContext::sDependencyTable[] = {
 #undef STYLE_STRUCT_END
 };
 
-// Whether to perform expensive assertions in the nsStyleContext destructor.
-static bool sExpensiveStyleStructAssertionsEnabled;
 #endif
 
 nsStyleContext::nsStyleContext(nsStyleContext* aParent,
@@ -92,6 +89,20 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   , mFrameRefCnt(0)
 #endif
 {}
+
+void
+nsStyleContext::AddChild(nsStyleContext* aChild)
+{
+  if (auto gecko = GetAsGecko())
+    gecko->AddChild(aChild->AsGecko());
+}
+
+void
+nsStyleContext::RemoveChild(nsStyleContext* aChild)
+{
+  if (auto gecko = GetAsGecko())
+    gecko->RemoveChild(aChild->AsGecko());
+}
 
 void
 nsStyleContext::FinishConstruction()
@@ -128,67 +139,6 @@ nsStyleContext::FinishConstruction()
 }
 
 void
-nsStyleContext::Destructor()
-{
-  GeckoStyleContext* gecko = GetAsGecko();
-#ifdef DEBUG
-  if (gecko) {
-    NS_ASSERTION(gecko->HasNoChildren(), "destructing context with children");
-    if (sExpensiveStyleStructAssertionsEnabled) {
-      // Assert that the style structs we are about to destroy are not referenced
-      // anywhere else in the style context tree.  These checks are expensive,
-      // which is why they are not enabled by default.
-      GeckoStyleContext* root = gecko;
-      while (root->GetParent()) {
-        root = root->GetParent();
-      }
-      root->AssertStructsNotUsedElsewhere(gecko,
-                                          std::numeric_limits<int32_t>::max());
-    } else {
-      // In DEBUG builds when the pref is not enabled, we perform a more limited
-      // check just of the children of this style context.
-      gecko->AssertStructsNotUsedElsewhere(gecko, 2);
-    }
-  }
-#endif
-
-  nsPresContext *presContext = PresContext();
-  DebugOnly<nsStyleSet*> geckoStyleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
-  NS_ASSERTION(!geckoStyleSet ||
-               geckoStyleSet->GetRuleTree() == AsGecko()->RuleNode()->RuleTree() ||
-               geckoStyleSet->IsInRuleTreeReconstruct(),
-               "destroying style context from old rule tree too late");
-
-  if (mParent) {
-    mParent->RemoveChild(this);
-  } else {
-    presContext->StyleSet()->RootStyleContextRemoved();
-  }
-
-  // Free up our data structs.
-  if (gecko) {
-    gecko->DestroyCachedStructs(presContext);
-  }
-
-  // Free any ImageValues we were holding on to for CSS variable values.
-  CSSVariableImageTable::RemoveAll(this);
-}
-
-void nsStyleContext::AddChild(nsStyleContext* aChild)
-{
-  if (GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->AddChild(aChild->AsGecko());
-  }
-}
-
-void nsStyleContext::RemoveChild(nsStyleContext* aChild)
-{
-  if (GeckoStyleContext* gecko = GetAsGecko()) {
-    gecko->RemoveChild(aChild->AsGecko());
-  }
-}
-
-void
 nsStyleContext::MoveTo(nsStyleContext* aNewParent)
 {
   MOZ_ASSERT(aNewParent != mParent);
@@ -217,7 +167,8 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   MOZ_ASSERT(!IsStyleIfVisited());
   MOZ_ASSERT(!mParent->IsStyleIfVisited());
   MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
-  MOZ_ASSERT(!mStyleIfVisited || mStyleIfVisited->mParent == mParent);
+  auto styleIfVisited = GetStyleIfVisited();
+  MOZ_ASSERT(!styleIfVisited || styleIfVisited->mParent == mParent);
 
   if (mParent->HasChildThatUsesResetStyle()) {
     aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
@@ -227,10 +178,10 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   mParent = aNewParent;
   mParent->AddChild(this);
 
-  if (mStyleIfVisited) {
-    mStyleIfVisited->mParent->RemoveChild(mStyleIfVisited);
-    mStyleIfVisited->mParent = aNewParent;
-    mStyleIfVisited->mParent->AddChild(mStyleIfVisited);
+  if (styleIfVisited) {
+    styleIfVisited->mParent->RemoveChild(styleIfVisited);
+    styleIfVisited->mParent = aNewParent;
+    styleIfVisited->mParent->AddChild(styleIfVisited);
   }
 }
 
@@ -301,7 +252,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       structsFound |= NS_STYLE_INHERIT_BIT(struct_);                          \
     } else if (checkUnrequestedServoStructs) {                                \
       this##struct_ =                                                         \
-        Servo_GetStyle##struct_(AsServo()->ComputedValues());                 \
+        AsServo()->ComputedValues()->GetStyle##struct_();                     \
       unrequestedStruct = true;                                               \
     } else {                                                                  \
       unrequestedStruct = false;                                              \
@@ -509,10 +460,10 @@ public:
 
   #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
   const nsStyle##name_ * Style##name_() {                                     \
-    return Servo_GetStyle##name_(mComputedValues);                            \
+    return mComputedValues->GetStyle##name_();                                \
   }                                                                           \
   const nsStyle##name_ * ThreadsafeStyle##name_() {                           \
-    return Servo_GetStyle##name_(mComputedValues);                            \
+    return mComputedValues->GetStyle##name_();                                \
   }
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
@@ -622,7 +573,7 @@ nsStyleContext::Destroy()
   }
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    CSSPseudoElementType aPseudoType,
@@ -630,29 +581,12 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    bool aSkipParentDisplayBasedStyleFixup)
 {
   RefPtr<nsRuleNode> node = aRuleNode;
-  RefPtr<nsStyleContext> context =
+  RefPtr<GeckoStyleContext> context =
     new (aRuleNode->PresContext())
     GeckoStyleContext(aParentContext, aPseudoTag, aPseudoType, node.forget(),
                    aSkipParentDisplayBasedStyleFixup);
   return context.forget();
 }
-
-namespace mozilla {
-
-already_AddRefed<ServoStyleContext>
-ServoStyleContext::Create(nsStyleContext* aParentContext,
-                          nsPresContext* aPresContext,
-                          nsIAtom* aPseudoTag,
-                          CSSPseudoElementType aPseudoType,
-                          already_AddRefed<ServoComputedValues> aComputedValues)
-{
-  RefPtr<ServoStyleContext> context =
-    new ServoStyleContext(aParentContext, aPresContext, aPseudoTag, aPseudoType,
-                          Move(aComputedValues));
-  return context.forget();
-}
-
-} // namespace mozilla
 
 nsIPresShell*
 nsStyleContext::Arena()
@@ -767,15 +701,5 @@ nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
   else
     return false;
   return true;
-}
-#endif
-
-#ifdef DEBUG
-/* static */ void
-nsStyleContext::Initialize()
-{
-  Preferences::AddBoolVarCache(
-      &sExpensiveStyleStructAssertionsEnabled,
-      "layout.css.expensive-style-struct-assertions.enabled");
 }
 #endif

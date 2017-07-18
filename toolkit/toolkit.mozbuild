@@ -71,15 +71,6 @@ if CONFIG['MOZ_WEBRTC'] and CONFIG['COMPILE_ENVIRONMENT']:
         '/media/mtransport',
     ]
 
-if CONFIG['MOZ_OMX_PLUGIN']:
-    DIRS += [
-        '/media/omx-plugin/lib/ics/libutils',
-        '/media/omx-plugin/lib/ics/libstagefright',
-        '/media/omx-plugin/lib/ics/libvideoeditorplayer',
-        '/media/omx-plugin',
-        '/media/omx-plugin/kk',
-    ]
-
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['/testing/specialpowers']
 

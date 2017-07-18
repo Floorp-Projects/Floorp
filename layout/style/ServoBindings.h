@@ -50,6 +50,7 @@ namespace mozilla {
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
+  class ServoStyleContext;
   class ServoStyleSheet;
   class ServoElementSnapshotTable;
 }
@@ -66,6 +67,19 @@ class nsStyleGradient;
 class nsStyleCoord;
 struct nsStyleDisplay;
 class nsXBLBinding;
+
+namespace mozilla {
+  #define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_ {nsStyle##name_ gecko;};
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+}
+
+#define STYLE_STRUCT(name_, checkdata_cb_) \
+  const nsStyle##name_* ServoComputedValues::GetStyle##name_() const { return &name_.mPtr->gecko; }
+#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
@@ -133,6 +147,12 @@ RawGeckoNodeBorrowedOrNull Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed
 RawGeckoElementBorrowedOrNull Gecko_GetBeforeOrAfterPseudo(RawGeckoElementBorrowed element, bool is_before);
 nsTArray<nsIContent*>* Gecko_GetAnonymousContentForElement(RawGeckoElementBorrowed element);
 void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
+
+void Gecko_ServoStyleContext_Init(mozilla::ServoStyleContext* context,
+                                  ServoStyleContextBorrowedOrNull parent_context,
+                                  RawGeckoPresContextBorrowed pres_context, ServoComputedValuesBorrowed values,
+                                  mozilla::CSSPseudoElementType pseudo_type, nsIAtom* pseudo_tag);
+void Gecko_ServoStyleContext_Destroy(mozilla::ServoStyleContext* context);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we
@@ -219,8 +239,8 @@ Gecko_GetSMILOverrideDeclarationBlock(RawGeckoElementBorrowed element);
 bool Gecko_StyleAnimationsEquals(RawGeckoStyleAnimationListBorrowed,
                                  RawGeckoStyleAnimationListBorrowed);
 void Gecko_UpdateAnimations(RawGeckoElementBorrowed aElementOrPseudo,
-                            ServoComputedValuesBorrowedOrNull aOldComputedValues,
-                            ServoComputedValuesBorrowedOrNull aComputedValues,
+                            ServoStyleContextBorrowedOrNull aOldComputedValues,
+                            ServoStyleContextBorrowedOrNull aComputedValues,
                             mozilla::UpdateAnimationsTasks aTasks);
 bool Gecko_ElementHasAnimations(RawGeckoElementBorrowed aElementOrPseudo);
 bool Gecko_ElementHasCSSAnimations(RawGeckoElementBorrowed aElementOrPseudo);

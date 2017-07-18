@@ -940,7 +940,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                            aVisitedRuleNode,
                            aFlags & eSkipParentDisplayBasedStyleFixup);
       resultIfVisited->SetIsStyleIfVisited();
-      result->SetStyleIfVisited(resultIfVisited.forget());
+      result->AsGecko()->SetStyleIfVisited(resultIfVisited.forget());
 
       if (relevantLinkVisited) {
         result->AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
@@ -962,10 +962,10 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     if (PresContext()->IsDynamic() &&
         aElementForAnimation->IsInComposedDoc()) {
       // Update CSS animations in case the animation-name has just changed.
-      PresContext()->AnimationManager()->UpdateAnimations(result,
+      PresContext()->AnimationManager()->UpdateAnimations(result->AsGecko(),
                                                           aElementForAnimation);
       PresContext()->EffectCompositor()->UpdateEffectProperties(
-        result.get(), aElementForAnimation, result->GetPseudoType());
+        result->AsGecko(), aElementForAnimation, result->GetPseudoType());
 
       animRule = PresContext()->EffectCompositor()->
                    GetAnimationRule(aElementForAnimation,

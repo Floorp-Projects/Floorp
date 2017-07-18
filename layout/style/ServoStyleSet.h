@@ -133,7 +133,7 @@ public:
 
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
-                  nsStyleContext* aParentContext,
+                  ServoStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
 
   // Get a style context for a text node (which no rules will match).
@@ -145,7 +145,7 @@ public:
   // present.  However, not doing any rule matching for them is a first step.)
   already_AddRefed<nsStyleContext>
   ResolveStyleForText(nsIContent* aTextNode,
-                      nsStyleContext* aParentContext);
+                      ServoStyleContext* aParentContext);
 
   // Get a style context for a first-letter continuation (which no rules will
   // match).
@@ -158,7 +158,7 @@ public:
   // any rule matching for them is a first step.  And right now we do use this
   // style context for some things)
   already_AddRefed<nsStyleContext>
-  ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext);
+  ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext);
 
   // Get a style context for a placeholder frame (which no rules will match).
   //
@@ -179,7 +179,7 @@ public:
   already_AddRefed<nsStyleContext>
   ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             CSSPseudoElementType aType,
-                            nsStyleContext* aParentContext,
+                            ServoStyleContext* aParentContext,
                             dom::Element* aPseudoElement);
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
@@ -188,16 +188,17 @@ public:
   // |aPeudoTag| and |aPseudoType| must match.
   already_AddRefed<nsStyleContext>
   ResolveTransientStyle(dom::Element* aElement,
-                        nsIAtom* aPseudoTag,
                         CSSPseudoElementType aPseudoType,
+                        nsIAtom* aPseudoTag,
                         StyleRuleInclusion aRules =
                           StyleRuleInclusion::All);
 
   // Similar to ResolveTransientStyle() but returns ServoComputedValues.
   // Unlike ResolveServoStyle() this function calls PreTraverseSync().
-  already_AddRefed<ServoComputedValues>
+  already_AddRefed<ServoStyleContext>
   ResolveTransientServoStyle(dom::Element* aElement,
-                             CSSPseudoElementType aPseudoTag,
+                             CSSPseudoElementType aPseudoType,
+                             nsIAtom* aPseudoTag,
                              StyleRuleInclusion aRules =
                                StyleRuleInclusion::All);
 
@@ -206,7 +207,7 @@ public:
   // inherits style from the given aParentContext.
   already_AddRefed<ServoStyleContext>
   ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                     nsStyleContext* aParentContext);
+                                     ServoStyleContext* aParentContext);
 
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
@@ -248,7 +249,7 @@ public:
   already_AddRefed<nsStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
-                          nsStyleContext* aParentContext);
+                          ServoStyleContext* aParentContext);
 
   // Test if style is dependent on content state
   nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
@@ -361,7 +362,7 @@ public:
    * Resolve style for the given element, and return it as a
    * ServoComputedValues, not an nsStyleContext.
    */
-  already_AddRefed<ServoComputedValues> ResolveServoStyle(dom::Element* aElement);
+  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
@@ -382,18 +383,21 @@ public:
 
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
-  already_AddRefed<ServoComputedValues>
-  GetBaseComputedValuesForElement(dom::Element* aElement,
-                                  CSSPseudoElementType aPseudoType,
-                                  ServoComputedValuesBorrowed aStyle);
+  already_AddRefed<ServoStyleContext>
+  GetBaseContextForElement(dom::Element* aElement,
+                           ServoStyleContext* aParentContext,
+                           nsPresContext* aPresContext,
+                           nsIAtom* aPseudoTag,
+                           CSSPseudoElementType aPseudoType,
+                           const ServoStyleContext* aStyle);
 
   /**
    * Resolve style for a given declaration block with/without the parent style.
    * If the parent style is not specified, the document default computed values
    * is used.
    */
-  already_AddRefed<ServoComputedValues>
-  ResolveForDeclarations(ServoComputedValuesBorrowedOrNull aParentOrNull,
+  already_AddRefed<ServoStyleContext>
+  ResolveForDeclarations(const ServoStyleContext* aParentOrNull,
                          RawServoDeclarationBlockBorrowed aDeclarations);
 
   already_AddRefed<RawServoAnimationValue>
@@ -474,14 +478,8 @@ private:
     ServoStyleSet* mSet;
   };
 
-  already_AddRefed<ServoStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
-                                                 nsStyleContext* aParentContext,
-                                                 nsIAtom* aPseudoTag,
-                                                 CSSPseudoElementType aPseudoType,
-                                                 dom::Element* aElementForAnimation);
-
   already_AddRefed<ServoStyleContext> GetContext(nsIContent* aContent,
-                                                 nsStyleContext* aParentContext,
+                                                 ServoStyleContext* aParentContext,
                                                  nsIAtom* aPseudoTag,
                                                  CSSPseudoElementType aPseudoType,
                                                  LazyComputeBehavior aMayCompute);
@@ -556,9 +554,11 @@ private:
    */
   void UpdateStylist();
 
-  already_AddRefed<ServoComputedValues>
+  already_AddRefed<ServoStyleContext>
     ResolveStyleLazily(dom::Element* aElement,
                        CSSPseudoElementType aPseudoType,
+                       nsIAtom* aPseudoTag,
+                       const ServoStyleContext* aParentContext,
                        StyleRuleInclusion aRules =
                          StyleRuleInclusion::All);
 

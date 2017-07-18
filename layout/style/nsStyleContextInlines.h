@@ -18,6 +18,7 @@
 #include "mozilla/ServoStyleContext.h"
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/ServoBindings.h"
 
 MOZ_DEFINE_STYLO_METHODS(nsStyleContext,
                          mozilla::GeckoStyleContext,
@@ -30,11 +31,23 @@ nsStyleContext::RuleNode()
     return AsGecko()->RuleNode();
 }
 
-ServoComputedValues*
+const ServoComputedValues*
 nsStyleContext::ComputedValues()
 {
     MOZ_RELEASE_ASSERT(IsServo());
     return AsServo()->ComputedValues();
+}
+
+void
+nsStyleContext::AddRef()
+{
+  MOZ_STYLO_FORWARD(AddRef, ())
+}
+
+void
+nsStyleContext::Release()
+{
+  MOZ_STYLO_FORWARD(Release, ())
 }
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                      \
@@ -45,7 +58,7 @@ nsStyleContext::Style##name_() {                                \
 const nsStyle##name_ *                                          \
 nsStyleContext::ThreadsafeStyle##name_() {                      \
   if (mozilla::ServoStyleSet::IsInServoTraversal()) {           \
-    return Servo_GetStyle##name_(AsServo()->ComputedValues());  \
+    return AsServo()->ComputedValues()->GetStyle##name_();      \
   }                                                             \
   return Style##name_();                                        \
 }                                                               \
@@ -118,7 +131,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
   }                                                                 \
                                                                     \
   const nsStyle##name_* data =                                      \
-    Servo_GetStyle##name_(servo->ComputedValues());   \
+    servo->ComputedValues()->GetStyle##name_();                     \
   /* perform any remaining main thread work on the struct */        \
   if (needToCompute) {                                              \
     MOZ_ASSERT(NS_IsMainThread());                                  \
@@ -151,7 +164,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
     return nullptr;                                                           \
   }                                                                           \
   const nsStyle##name_* data =                                                \
-    Servo_GetStyle##name_(servo->ComputedValues());                           \
+    servo->ComputedValues()->GetStyle##name_();                               \
   /* perform any remaining main thread work on the struct */                  \
   if (needToCompute) {                                                        \
     const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());            \
@@ -169,6 +182,13 @@ nsPresContext*
 nsStyleContext::PresContext() const
 {
     MOZ_STYLO_FORWARD(PresContext, ())
+}
+
+
+nsStyleContext*
+nsStyleContext::GetStyleIfVisited() const
+{
+  MOZ_STYLO_FORWARD(GetStyleIfVisited, ())
 }
 
 mozilla::GeckoStyleContext*
@@ -195,5 +215,21 @@ nsStyleContext::StartBackgroundImageLoads()
   // Just get our background struct; that should do the trick
   StyleBackground();
 }
+
+const void*
+nsStyleContext::StyleStructFromServoComputedValues(nsStyleStructID aSID)
+{
+  switch (aSID) {
+#define STYLE_STRUCT(name_, checkdata_cb_)        \
+    case eStyleStruct_##name_:                    \
+      return ComputedValues()->GetStyle##name_();
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected nsStyleStructID value");
+      return nullptr;
+  }
+}
+
 
 #endif // nsStyleContextInlines_h

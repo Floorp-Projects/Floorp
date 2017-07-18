@@ -112,7 +112,7 @@ add_task(async function test_bookmarks() {
 
     browser.bookmarks.get(["not-a-bookmark-guid"]).then(expectedError, invalidGuidError => {
       browser.test.assertTrue(
-        invalidGuidError.message.includes("Invalid value for property 'guid': not-a-bookmark-guid"),
+        invalidGuidError.message.includes("Invalid value for property 'guid': \"not-a-bookmark-guid\""),
         "Expected error thrown when trying to get a bookmark using an invalid guid"
       );
 

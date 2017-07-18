@@ -12,13 +12,23 @@ var gAppManagerDialog = {
 
   init: function appManager_init() {
     this.handlerInfo = window.arguments[0];
-
+    // The applicationManager will be used
+    // in in-content's gApplicationsPane and in-content-new's gMainPane.
+    // Remove this once we use the in-content-new preferences page.
+    var pane;
+    if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/applications.js");
+      pane = gApplicationsPane;
+    } else {
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content-new/main.js");
+      pane = gMainPane;
+    }
     var bundle = document.getElementById("appManagerBundle");
     var contentText;
     if (this.handlerInfo.type == TYPE_MAYBE_FEED)
       contentText = bundle.getString("handleWebFeeds");
     else {
-      var description = gApplicationsPane._describeType(this.handlerInfo);
+      var description = pane._describeType(this.handlerInfo);
       var key =
         (this.handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) ? "handleFile"
                                                                         : "handleProtocol";
@@ -31,12 +41,12 @@ var gAppManagerDialog = {
     var apps = this.handlerInfo.possibleApplicationHandlers.enumerate();
     while (apps.hasMoreElements()) {
       let app = apps.getNext();
-      if (!gApplicationsPane.isValidHandlerApp(app))
+      if (!pane.isValidHandlerApp(app))
         continue;
 
       app.QueryInterface(Ci.nsIHandlerApp);
       var item = list.appendItem(app.name);
-      item.setAttribute("image", gApplicationsPane._getIconURLForHandlerApp(app));
+      item.setAttribute("image", pane._getIconURLForHandlerApp(app));
       item.className = "listitem-iconic";
       item.app = app;
     }

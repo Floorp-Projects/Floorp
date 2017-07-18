@@ -26,6 +26,7 @@ namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
 struct Keyframe;
 struct StyleTransition;
+class ServoStyleContext;
 } // namespace mozilla
 
 /*****************************************************************************
@@ -377,8 +378,8 @@ public:
   bool UpdateTransitions(
     mozilla::dom::Element *aElement,
     mozilla::CSSPseudoElementType aPseudoType,
-    const ServoComputedValues* aOldStyle,
-    const ServoComputedValues* aNewStyle);
+    const mozilla::ServoStyleContext* aOldStyle,
+    const mozilla::ServoStyleContext* aNewStyle);
 
   /**
    * When we're resolving style for an element that previously didn't have

@@ -46,6 +46,9 @@ add_task(function* testWebExtension() {
   let container = document.querySelector(`[data-addon-id="${addonId}"]`);
   testFilePath(container, "/test/addons/test-devtools-webextension-nobg/");
 
+  let extensionID = container.querySelector(".extension-id span");
+  ok(extensionID.textContent === "test-devtools-webextension-nobg@mozilla.org");
+
   let internalUUID = container.querySelector(".internal-uuid span");
   ok(internalUUID.textContent.match(UUID_REGEX), "internalUUID is correct");
 
@@ -73,6 +76,9 @@ add_task(function* testTemporaryWebExtension() {
   // Assuming that our temporary add-on is now at the top.
   let container = addons[addons.length - 1];
   let addonId = container.dataset.addonId;
+
+  let extensionID = container.querySelector(".extension-id span");
+  ok(extensionID.textContent.endsWith("@temporary-addon"));
 
   let temporaryID = container.querySelector(".temporary-id-url");
   ok(temporaryID, "Temporary ID message does appear");

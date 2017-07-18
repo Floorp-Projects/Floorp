@@ -751,6 +751,7 @@ class WindowBase {
       type: this.type,
       state: this.state,
       alwaysOnTop: this.alwaysOnTop,
+      title: this.title,
     };
 
     if (getInfo && getInfo.populate) {

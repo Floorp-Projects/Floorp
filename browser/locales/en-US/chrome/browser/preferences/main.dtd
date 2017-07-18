@@ -10,7 +10,7 @@
 <!ENTITY startupBlankPage.label    "Show a blank page">
 <!ENTITY startupPrevSession.label  "Show your windows and tabs from last time">
 
-<!ENTITY homepage2.label           "Home Page">
+<!ENTITY homepage2.label           "Home page">
 <!ENTITY homepage2.accesskey       "P">
 <!ENTITY useCurrentPage.label      "Use Current Page">
 <!ENTITY useCurrentPage.accesskey  "C">
@@ -33,8 +33,8 @@
 
 <!ENTITY alwaysCheckDefault2.label        "Always check if &brandShortName; is your default browser">
 <!ENTITY alwaysCheckDefault2.accesskey    "y">
-<!ENTITY setAsMyDefaultBrowser2.label     "Make Default">
-<!ENTITY setAsMyDefaultBrowser2.accesskey "D">
+<!ENTITY setAsMyDefaultBrowser3.label     "Make Default…">
+<!ENTITY setAsMyDefaultBrowser3.accesskey "D">
 <!ENTITY isDefault.label                  "&brandShortName; is currently your default browser">
 <!ENTITY isNotDefault.label               "&brandShortName; is not your default browser">
 

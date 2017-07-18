@@ -22,11 +22,11 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/AudioTrack.h"
 #include "mozilla/dom/AudioTrackList.h"
-#include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/VideoTrackList.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsError.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
@@ -34,10 +34,6 @@
 #include "nsTArray.h"
 #include <algorithm>
 #include <limits>
-
-#ifdef MOZ_ANDROID_OMX
-#include "AndroidBridge.h"
-#endif
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -258,8 +254,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
   , mTelemetryReported(false)
-  , mIsMediaElement(!!mOwner->GetMediaElement())
-  , mElement(mOwner->GetMediaElement())
   , mContainerType(aInit.mContainerType)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1490,15 +1484,6 @@ MediaDecoder::IsWebMEnabled()
   return Preferences::GetBool("media.webm.enabled");
 }
 
-#ifdef MOZ_ANDROID_OMX
-bool
-MediaDecoder::IsAndroidMediaPluginEnabled()
-{
-  return jni::GetAPIVersion() < 16
-         && Preferences::GetBool("media.plugins.enabled");
-}
-#endif
-
 NS_IMETHODIMP
 MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData, bool aAnonymize)
@@ -1558,8 +1543,6 @@ MediaDecoderOwner*
 MediaDecoder::GetOwner() const
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // Check object lifetime when mOwner points to a media element.
-  MOZ_DIAGNOSTIC_ASSERT(!mOwner || !mIsMediaElement || mElement);
   // mOwner is valid until shutdown.
   return mOwner;
 }

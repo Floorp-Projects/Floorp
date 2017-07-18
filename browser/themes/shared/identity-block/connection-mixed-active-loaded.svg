@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+<svg xmlns="http://www.w3.org/2000/svg"
      width="16" height="16" viewBox="0 0 16 16">
 
   <defs>
@@ -11,26 +11,26 @@
     <rect id="shape-lock-base" x="3" y="7" width="10" height="7" rx="1" ry="1" />
 
     <mask id="mask-clasp-cutout">
-      <use xlink:href="#shape-lock-clasp-outer" fill="#fff" />
-      <use xlink:href="#shape-lock-clasp-inner" fill="#000" />
+      <use href="#shape-lock-clasp-outer" fill="#fff"/>
+      <use href="#shape-lock-clasp-inner" fill="#000"/>
       <line x1="2" y1="13" x2="14" y2="1.5" stroke="#000" stroke-width="2" />
       <line x1="2" y1="15" x2="14" y2="3.5" stroke="#000" stroke-width="2" />
       <rect x="3" y="7" width="10" height="7" rx="1" ry="1" fill="#000" />
     </mask>
 
     <mask id="mask-base-cutout">
-      <use xlink:href="#shape-lock-base" fill="#fff" />
+      <use href="#shape-lock-base" fill="#fff"/>
       <line x1="2" y1="14.8" x2="14" y2="3.2" stroke="#000" stroke-width="1.8" />
     </mask>
 
     <g id="lock">
-      <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)"/>
-      <use xlink:href="#shape-lock-base" mask="url(#mask-base-cutout)"/>
+      <use href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)"/>
+      <use href="#shape-lock-base" mask="url(#mask-base-cutout)"/>
     </g>
 
     <line id="strike-through-red" x1="2" y1="14.1" x2="14" y2="2.5" stroke="#d92d21" stroke-width="1.8"/>
   </defs>
 
-  <use fill="context-fill" xlink:href="#lock"/>
-  <use xlink:href="#strike-through-red"/>
+  <use fill="context-fill" fill-opacity="context-fill-opacity" href="#lock"/>
+  <use href="#strike-through-red"/>
 </svg>
