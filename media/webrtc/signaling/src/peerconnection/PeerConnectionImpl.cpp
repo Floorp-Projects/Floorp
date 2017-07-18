@@ -1461,10 +1461,6 @@ PeerConnectionImpl::CreateOffer(const RTCOfferOptions& aOptions)
 
   options.mIceRestart = mozilla::Some(aOptions.mIceRestart);
 
-  if (aOptions.mMozDontOfferDataChannel.WasPassed()) {
-    options.mDontOfferDataChannel =
-      mozilla::Some(aOptions.mMozDontOfferDataChannel.Value());
-  }
   return CreateOffer(options);
 }
 
