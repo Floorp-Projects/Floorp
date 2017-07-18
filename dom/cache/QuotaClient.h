@@ -37,9 +37,6 @@ CreateQuotaClient();
  * cannot be trusted, and we need to restore the padding file from the database.
  */
 
-nsresult
-InitPaddingFile(nsIFile* aBaseDir);
-
 /**
  * Note: The aCommitHook argument will be invoked while a lock is held. Callers
  * should be careful not to pass a hook that might lock on something else and

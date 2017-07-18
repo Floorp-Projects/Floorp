@@ -108,11 +108,11 @@ nsresult
 LockedDirectoryPaddingInit(nsIFile* aBaseDir);
 
 nsresult
-LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
-                                      mozIStorageConnection* aConn,
-                                      const int64_t aIncreaseSize,
-                                      const int64_t aDecreaseSize,
-                                      bool* aUpdatedOut);
+LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
+                                 mozIStorageConnection* aConn,
+                                 const int64_t aIncreaseSize,
+                                 const int64_t aDecreaseSize,
+                                 const bool aTemporaryFileExist);
 
 nsresult
 LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir, int64_t aPaddingSize);

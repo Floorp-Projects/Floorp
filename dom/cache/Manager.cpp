@@ -20,6 +20,7 @@
 #include "mozilla/dom/cache/SavedTypes.h"
 #include "mozilla/dom/cache/StreamList.h"
 #include "mozilla/dom/cache/Types.h"
+#include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozStorageHelper.h"
 #include "nsIInputStream.h"
@@ -50,6 +51,8 @@ public:
   RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                         mozIStorageConnection* aConn) override
   {
+    MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
     nsresult rv = BodyCreateDir(aDBDir);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -77,6 +80,7 @@ public:
       nsresult rv = db::FindOrphanedCacheIds(aConn, orphanedCacheIdList);
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+      int64_t overallDeletedPaddingSize = 0;
       for (uint32_t i = 0; i < orphanedCacheIdList.Length(); ++i) {
         AutoTArray<nsID, 16> deletedBodyIdList;
         int64_t deletedPaddingSize = 0;
@@ -90,6 +94,10 @@ public:
         if (deletedPaddingSize > 0) {
           DecreaseUsageForQuotaInfo(aQuotaInfo, deletedPaddingSize);
         }
+
+        MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - deletedPaddingSize >=
+                              overallDeletedPaddingSize);
+        overallDeletedPaddingSize += deletedPaddingSize;
       }
 
       // Clean up orphaned body objects
@@ -97,6 +105,20 @@ public:
       rv = db::GetKnownBodyIds(aConn, knownBodyIdList);
 
       rv = BodyDeleteOrphanedFiles(aQuotaInfo, aDBDir, knownBodyIdList);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+      // Commit() explicitly here, because we want to ensure the padding file
+      // has the correct content.
+      rv = MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
+                                  overallDeletedPaddingSize,
+                                  [&trans]() mutable { return trans.Commit(); });
+      // We'll restore padding file below, so just warn here if failure happens.
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+    }
+
+    if (DirectoryPaddingFileExists(aDBDir, DirPaddingFile::TMP_FILE) ||
+        !DirectoryPaddingFileExists(aDBDir, DirPaddingFile::FILE)) {
+      rv = RestorePaddingFile(aDBDir, aConn);
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     }
 
@@ -462,8 +484,10 @@ public:
                                     &mDeletedPaddingSize);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = trans.Commit();
-    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    rv = MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
+                                mDeletedPaddingSize,
+                                [&trans]() mutable { return trans.Commit(); });
+    Unused << NS_WARN_IF(NS_FAILED(rv));
 
     return rv;
   }
@@ -820,10 +844,10 @@ private:
       mDeletedPaddingSize += deletedPaddingSize;
     }
 
-    // XXXtt: Write .padding file to the cache directory
-    // UpdateDirectoryFile(mDBDir);
-
-    rv = trans.Commit();
+    // Update padding file when it's necessary
+    rv = MaybeUpdatePaddingFile(mDBDir, mConn, mUpdatedPaddingSize,
+                                mDeletedPaddingSize,
+                                [&trans]() mutable { return trans.Commit(); });
     Unused << NS_WARN_IF(NS_FAILED(rv));
 
     DoResolve(rv);
@@ -1065,7 +1089,9 @@ public:
                                   &mDeletedPaddingSize, &mSuccess);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    rv = trans.Commit();
+    rv = MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
+                                mDeletedPaddingSize,
+                                [&trans]() mutable { return trans.Commit(); });
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mSuccess = false;
       return rv;
@@ -1078,6 +1104,11 @@ public:
   Complete(Listener* aListener, ErrorResult&& aRv) override
   {
     mManager->NoteOrphanedBodyIdList(mDeletedBodyIdList);
+
+    if (mDeletedPaddingSize > 0) {
+      DecreaseUsageForQuotaInfo(mQuotaInfo.ref(), mDeletedPaddingSize);
+    }
+
     aListener->OnOpComplete(Move(aRv), CacheDeleteResult(mSuccess));
   }
 
