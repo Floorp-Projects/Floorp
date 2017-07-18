@@ -840,11 +840,11 @@ nsLookAndFeel::GetAccentColorText(nscolor& aColor)
   // here based on the luminance of the accent color with a threshhold
   // value that seem consistent with what Windows does.
 
-  float luminance = 0.2125f * NS_GET_R(accentColor) +
-                    0.7154f * NS_GET_G(accentColor) +
-                    0.0721f * NS_GET_B(accentColor);
+  float luminance = (NS_GET_R(accentColor) * 2 +
+                     NS_GET_G(accentColor) * 5 +
+                     NS_GET_B(accentColor)) / 8;
 
-  aColor = (luminance <= 110) ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0);
+  aColor = (luminance <= 128) ? NS_RGB(255, 255, 255) : NS_RGB(0, 0, 0);
 
   return NS_OK;
 }
