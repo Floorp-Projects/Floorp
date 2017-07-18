@@ -142,8 +142,11 @@ if args.variant == 'nonunified':
     # Note that this modifies the current checkout.
     for dirpath, dirnames, filenames in os.walk(DIR.js_src):
         if 'moz.build' in filenames:
-            subprocess.check_call(['sed', '-i', 's/UNIFIED_SOURCES/SOURCES/',
-                                   os.path.join(dirpath, 'moz.build')])
+            in_place = ['-i']
+            if platform.system() == 'Darwin':
+                in_place.append('')
+            subprocess.check_call(['sed'] + in_place + ['s/UNIFIED_SOURCES/SOURCES/',
+                                                        os.path.join(dirpath, 'moz.build')])
 
 OBJDIR = os.path.join(DIR.source, args.objdir)
 OUTDIR = os.path.join(OBJDIR, "out")
