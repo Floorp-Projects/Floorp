@@ -1,6 +1,6 @@
 # Fetch a tooltool manifest.
 
-cd $HOME/workspace/build/src
+cd $WORKSPACE/build/src
 
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 export TOOLTOOL_CACHE
