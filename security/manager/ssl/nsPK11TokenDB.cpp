@@ -293,11 +293,24 @@ NS_IMETHODIMP
 nsPK11Token::InitPassword(const nsACString& initialPassword)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  return MapSECStatus(
-    PK11_InitPin(mSlot.get(), "", PromiseFlatCString(initialPassword).get()));
+  const nsCString& passwordCStr = PromiseFlatCString(initialPassword);
+  // PSM initializes the sqlite-backed softoken with an empty password. The
+  // implementation considers this not to be a password (GetHasPassword returns
+  // false), but we can't actually call PK11_InitPin again. Instead, we call
+  // PK11_ChangePW with the empty password.
+  bool hasPassword;
+  nsresult rv = GetHasPassword(&hasPassword);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!PK11_NeedUserInit(mSlot.get()) && !hasPassword) {
+    return MapSECStatus(PK11_ChangePW(mSlot.get(), "", passwordCStr.get()));
+  }
+  return MapSECStatus(PK11_InitPin(mSlot.get(), "", passwordCStr.get()));
 }
 
 NS_IMETHODIMP
