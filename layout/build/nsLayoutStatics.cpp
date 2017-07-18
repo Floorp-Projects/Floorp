@@ -121,6 +121,7 @@
 #include "MediaPrefs.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
+#include "mozilla/StylePrefs.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamStorage.h"
 #include "mozilla/dom/U2FTokenManager.h"
@@ -234,7 +235,7 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
-  nsCSSParser::Startup();
+  StylePrefs::Init();
   nsCSSRuleProcessor::Startup();
 
 #ifdef MOZ_XUL
