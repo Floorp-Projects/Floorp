@@ -99,6 +99,8 @@ class JitFrameIterator
 
     void dumpBaseline() const;
 
+    explicit JitFrameIterator(const JitActivation* activation);
+
   public:
     explicit JitFrameIterator();
     explicit JitFrameIterator(JSContext* cx);

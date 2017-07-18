@@ -106,13 +106,13 @@ JitFrameIterator::JitFrameIterator()
 {
 }
 
-JitFrameIterator::JitFrameIterator(JSContext* cx)
-  : current_(cx->activation()->asJit()->exitFP()),
+JitFrameIterator::JitFrameIterator(const JitActivation* activation)
+  : current_(activation->exitFP()),
     type_(JitFrame_Exit),
     returnAddressToFp_(nullptr),
     frameSize_(0),
     cachedSafepointIndex_(nullptr),
-    activation_(cx->activation()->asJit())
+    activation_(activation)
 {
     if (activation_->bailoutData()) {
         current_ = activation_->bailoutData()->fp();
@@ -121,19 +121,14 @@ JitFrameIterator::JitFrameIterator(JSContext* cx)
     }
 }
 
-JitFrameIterator::JitFrameIterator(const ActivationIterator& activations)
-  : current_(activations->asJit()->exitFP()),
-    type_(JitFrame_Exit),
-    returnAddressToFp_(nullptr),
-    frameSize_(0),
-    cachedSafepointIndex_(nullptr),
-    activation_(activations->asJit())
+JitFrameIterator::JitFrameIterator(JSContext* cx)
+  : JitFrameIterator(cx->activation()->asJit())
 {
-    if (activation_->bailoutData()) {
-        current_ = activation_->bailoutData()->fp();
-        frameSize_ = activation_->bailoutData()->topFrameSize();
-        type_ = JitFrame_Bailout;
-    }
+}
+
+JitFrameIterator::JitFrameIterator(const ActivationIterator& activations)
+  : JitFrameIterator(activations->asJit())
+{
 }
 
 bool
@@ -348,7 +343,8 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
     for (unsigned i = 0; i < skipSlots; i++)
         si.skip();
 
-    MaybeReadFallback recover(cx, cx->activation()->asJit(), &frame.frame(), MaybeReadFallback::Fallback_DoNothing);
+    MaybeReadFallback recover(cx, cx->activation()->asJit(), &frame.frame(),
+                              MaybeReadFallback::Fallback_DoNothing);
     Value v = si.maybeRead(recover);
     RootedObject iterObject(cx, &v.toObject());
 
