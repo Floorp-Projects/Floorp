@@ -165,9 +165,10 @@ ThreadedDriver::~ThreadedDriver()
   if (mThread) {
     nsCOMPtr<nsIRunnable> event =
       new MediaStreamGraphShutdownThreadRunnable(mThread.forget());
-    NS_DispatchToMainThread(event);
+    GraphImpl()->Dispatch(event.forget());
   }
 }
+
 class MediaStreamGraphInitThreadRunnable : public Runnable {
 public:
   explicit MediaStreamGraphInitThreadRunnable(ThreadedDriver* aDriver)
@@ -493,10 +494,11 @@ AsyncCubebTask::EnsureThread()
     // since we don't know the order that the shutdown-threads observers
     // will run.  ClearOnShutdown guarantees it runs first.
     if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(
+      nsCOMPtr<nsIRunnable> runnable =
         NS_NewRunnableFunction("AsyncCubebTask::EnsureThread", []() -> void {
           ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
-        }));
+        });
+      AbstractThread::MainThread()->Dispatch(runnable.forget());
     } else {
       ClearOnShutdown(&sThreadPool, ShutdownPhase::ShutdownThreads);
     }
