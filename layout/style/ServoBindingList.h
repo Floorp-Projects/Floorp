@@ -485,15 +485,6 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleRuleList, void,
                    ServoComputedValuesBorrowed values,
                    RawGeckoServoStyleRuleListBorrowedMut rules)
 
-SERVO_BINDING_FUNC(Servo_StyleContext_NewContext,
-                   ServoStyleContextStrong,
-                   ServoComputedValuesBorrowed values,
-                   ServoStyleContextBorrowedOrNull parent,
-                   RawGeckoPresContextBorrowed pres_context,
-                   mozilla::CSSPseudoElementType pseudo_type,
-                   nsIAtom* pseudo_tag)
-
-
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,
                    RawGeckoURLExtraData* dummy_url_data)
