@@ -12,11 +12,13 @@
 </head>
 <body id="body">
     <canvas id="webglCanvas"></canvas>
+    <div id="testDiv"></div>
     <script>
         "use strict";
         var vrDisplay;
         var vrRAF;
         var canvas = document.getElementById('webglCanvas');
+        var div = document.getElementById('testDiv');
         function startTest() {
           promise_test((test) => {
             return attachVRDisplay(test).then(() => {
