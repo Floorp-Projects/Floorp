@@ -644,13 +644,6 @@ add_task(async function test_sync_dateAdded() {
     const item6LastModified = (now - oneYearMS) / 1000;
     collection.insert(item6GUID, encryptPayload(item6.cleartext), item6LastModified);
 
-    let origBuildWeakReuploadMap = engine.buildWeakReuploadMap;
-    engine.buildWeakReuploadMap = async (set) => {
-      let fullMap = await origBuildWeakReuploadMap.call(engine, set);
-      fullMap.delete(item6GUID);
-      return fullMap;
-    };
-
     await sync_engine_and_validate_telem(engine, false);
 
     let record1 = await store.createRecord(item1GUID);
@@ -674,15 +667,6 @@ add_task(async function test_sync_dateAdded() {
     let record5 = await store.createRecord(item5GUID);
     equal(record5.dateAdded, item5LastModified * 1000,
           "If no dateAdded is provided, lastModified should be used (even if it's in the future)");
-
-    let item6WBO = JSON.parse(JSON.parse(collection._wbos[item6GUID].payload).ciphertext);
-    ok(!item6WBO.dateAdded,
-       "If we think an item has been modified locally, we don't upload it to the server");
-
-    let record6 = await store.createRecord(item6GUID);
-    equal(record6.dateAdded, item6LastModified * 1000,
-       "We still remember the more accurate dateAdded if we don't upload a record due to local changes");
-    engine.buildWeakReuploadMap = origBuildWeakReuploadMap;
 
     // Update item2 and try resyncing it.
     item2.dateAdded = now - 100000;
