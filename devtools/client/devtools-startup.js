@@ -4,11 +4,19 @@
 
 /**
  * This XPCOM component is loaded very early.
- * It handles command line arguments like -jsconsole, but also ensures starting
+ * Be careful to lazy load dependencies as much as possible.
+ *
+ * It manages all the possible entry points for DevTools:
+ * - Handles command line arguments like -jsconsole,
+ * - Register all key shortcuts,
+ * - Listen for "Web Developer" system menu opening, under "Tools",
+ * - Inject the wrench icon in toolbar customization, which is used
+ *   by the "Web Developer" list displayed in the hamburger menu,
+ * - Register the JSON Viewer protocol handler.
+ *
+ * Only once any of these entry point is fired, this module ensures starting
  * core modules like 'devtools-browser.js' that hooks the browser windows
  * and ensure setting up tools.
- *
- * Be careful to lazy load dependencies as much as possible.
  **/
 
 "use strict";
@@ -19,7 +27,131 @@ const kDebuggerPrefs = [
   "devtools.chrome.enabled"
 ];
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Bundle", function () {
+  const kUrl = "chrome://devtools/locale/key-shortcuts.properties";
+  return Services.strings.createBundle(kUrl);
+});
+
+XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
+  const isMac = AppConstants.platform == "macosx";
+
+  // Common modifier shared by most key shortcuts
+  const modifiers = isMac ? "accel,alt" : "accel,shift";
+
+  // List of all key shortcuts triggering installation UI
+  // `id` should match tool's id from client/definitions.js
+  return [
+    // The following keys are also registered in /client/menus.js
+    // And should be synced.
+
+    // Both are toggling the toolbox on the last selected panel
+    // or the default one.
+    {
+      id: "toggleToolbox",
+      shortcut: Bundle.GetStringFromName("toggleToolbox.commandkey"),
+      modifiers
+    },
+    // All locales are using F12
+    {
+      id: "toggleToolboxF12",
+      shortcut: Bundle.GetStringFromName("toggleToolboxF12.commandkey"),
+      modifiers: "" // F12 is the only one without modifiers
+    },
+    // Toggle the visibility of the Developer Toolbar (=gcli)
+    {
+      id: "toggleToolbar",
+      shortcut: Bundle.GetStringFromName("toggleToolbar.commandkey"),
+      modifiers: "shift"
+    },
+    // Open WebIDE window
+    {
+      id: "webide",
+      shortcut: Bundle.GetStringFromName("webide.commandkey"),
+      modifiers: "shift"
+    },
+    // Open the Browser Toolbox
+    {
+      id: "browserToolbox",
+      shortcut: Bundle.GetStringFromName("browserToolbox.commandkey"),
+      modifiers: "accel,alt,shift"
+    },
+    // Open the Browser Console
+    {
+      id: "browserConsole",
+      shortcut: Bundle.GetStringFromName("browserConsole.commandkey"),
+      modifiers: "accel,shift"
+    },
+    // Toggle the Responsive Design Mode
+    {
+      id: "responsiveDesignMode",
+      shortcut: Bundle.GetStringFromName("responsiveDesignMode.commandkey"),
+      modifiers
+    },
+    // Open ScratchPad window
+    {
+      id: "scratchpad",
+      shortcut: Bundle.GetStringFromName("scratchpad.commandkey"),
+      modifiers: "shift"
+    },
+
+    // The following keys are also registered in /client/definitions.js
+    // and should be synced.
+
+    // Key for opening the Inspector
+    {
+      toolId: "inspector",
+      shortcut: Bundle.GetStringFromName("inspector.commandkey"),
+      modifiers
+    },
+    // Key for opening the Web Console
+    {
+      toolId: "webconsole",
+      shortcut: Bundle.GetStringFromName("webconsole.commandkey"),
+      modifiers
+    },
+    // Key for opening the Debugger
+    {
+      toolId: "jsdebugger",
+      shortcut: Bundle.GetStringFromName("debugger.commandkey"),
+      modifiers
+    },
+    // Key for opening the Network Monitor
+    {
+      toolId: "netmonitor",
+      shortcut: Bundle.GetStringFromName("netmonitor.commandkey"),
+      modifiers
+    },
+    // Key for opening the Style Editor
+    {
+      toolId: "styleeditor",
+      shortcut: Bundle.GetStringFromName("styleeditor.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the Performance Panel
+    {
+      toolId: "performance",
+      shortcut: Bundle.GetStringFromName("performance.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the Storage Panel
+    {
+      toolId: "storage",
+      shortcut: Bundle.GetStringFromName("storage.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the DOM Panel
+    {
+      toolId: "dom",
+      shortcut: Bundle.GetStringFromName("dom.commandkey"),
+      modifiers
+    },
+  ];
+});
 
 function DevToolsStartup() {}
 
@@ -48,24 +180,104 @@ DevToolsStartup.prototype = {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
 
-    let onStartup = window => {
-      Services.obs.removeObserver(onStartup,
-                                  "browser-delayed-startup-finished");
-      // Ensure loading core module once firefox is ready
-      this.initDevTools();
+    let onWindowReady = window => {
+      this.hookWindow(window);
 
       if (devtoolsFlag) {
         this.handleDevToolsFlag(window);
+        // This listener is called for all Firefox windows, but we want to execute
+        // that command only once
+        devtoolsFlag = false;
       }
     };
-    Services.obs.addObserver(onStartup, "browser-delayed-startup-finished");
+    Services.obs.addObserver(onWindowReady, "browser-delayed-startup-finished");
   },
 
+  /**
+   * Register listeners to all possible entry points for Developer Tools.
+   * But instead of implementing the actual actions, defer to DevTools codebase.
+   * In most cases, it only needs to call this.initDevTools which handles the rest.
+   * We do that to prevent loading any DevTools module until the user intent to use them.
+   */
+  hookWindow(window) {
+    this.hookKeyShortcuts(window);
+
+    // All the other hooks are only necessary if the tools aren't loaded yet.
+    if (this.initialized) {
+      return;
+    }
+
+    this.hookWebDeveloperMenu(window);
+  },
+
+  /**
+   * We listen to the "Web Developer" system menu, which is under "Tools" main item.
+   * This menu item is hardcoded empty in Firefox UI. We listen for its opening to
+   * populate it lazily. Loading main DevTools module is going to populate it.
+   */
+  hookWebDeveloperMenu(window) {
+    let menu = window.document.getElementById("webDeveloperMenu");
+    menu.addEventListener("popupshowing", () => this.initDevTools(), { once: true });
+  },
+
+  hookKeyShortcuts(window) {
+    let doc = window.document;
+    let keyset = doc.createElement("keyset");
+    keyset.setAttribute("id", "devtoolsKeyset");
+
+    for (let key of KeyShortcuts) {
+      let xulKey = this.createKey(doc, key, () => this.onKey(window, key));
+      keyset.appendChild(xulKey);
+    }
+
+    // Appending a <key> element is not always enough. The <keyset> needs
+    // to be detached and reattached to make sure the <key> is taken into
+    // account (see bug 832984).
+    let mainKeyset = doc.getElementById("mainKeyset");
+    mainKeyset.parentNode.insertBefore(keyset, mainKeyset);
+  },
+
+  onKey(window, key) {
+    let require = this.initDevTools();
+    let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+    gDevToolsBrowser.onKeyShortcut(window, key);
+  },
+
+  // Create a <xul:key> DOM Element
+  createKey(doc, { id, toolId, shortcut, modifiers: mod }, oncommand) {
+    let k = doc.createElement("key");
+    k.id = "key_" + (id || toolId);
+
+    if (shortcut.startsWith("VK_")) {
+      k.setAttribute("keycode", shortcut);
+    } else {
+      k.setAttribute("key", shortcut);
+    }
+
+    if (mod) {
+      k.setAttribute("modifiers", mod);
+    }
+
+    // Bug 371900: command event is fired only if "oncommand" attribute is set.
+    k.setAttribute("oncommand", ";");
+    k.addEventListener("command", oncommand);
+
+    return k;
+  },
+
+  /**
+   * Boolean flag to check if DevTools have been already initialized or not.
+   * By initialized, we mean that its main modules are loaded.
+   */
+  initialized: false,
+
   initDevTools: function () {
-    let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    this.initialized = true;
+    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
-    loader.require("devtools/client/framework/devtools-browser");
+    require("devtools/client/framework/devtools-browser");
+    return require;
   },
 
   handleConsoleFlag: function (cmdLine) {
@@ -89,7 +301,7 @@ DevToolsStartup.prototype = {
 
   // Open the toolbox on the selected tab once the browser starts up.
   handleDevToolsFlag: function (window) {
-    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const require = this.initDevTools();
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
     let target = TargetFactory.forTab(window.gBrowser.selectedTab);
