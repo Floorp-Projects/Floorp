@@ -207,13 +207,15 @@ class ReftestResolver(object):
 
 
 class RefTest(object):
+    TEST_SEEN_INITIAL = 'reftest'
+    TEST_SEEN_FINAL = 'Main app process exited normally'
     use_marionette = True
     oldcwd = os.getcwd()
     resolver_cls = ReftestResolver
 
     def __init__(self):
         self.update_mozinfo()
-        self.lastTestSeen = 'reftest'
+        self.lastTestSeen = self.TEST_SEEN_INITIAL
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
         self.log = None
@@ -289,7 +291,8 @@ class RefTest(object):
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.manifests'] = json.dumps(manifests)
 
-        if startAfter is not None:
+        if startAfter not in (None, self.TEST_SEEN_INITIAL, self.TEST_SEEN_FINAL):
+            self.log.info("Setting reftest.startAfter to %s" % startAfter)
             prefs['reftest.startAfter'] = startAfter
 
         if options.e10s:
@@ -669,7 +672,7 @@ class RefTest(object):
             # use process_output so message is logged verbatim
             self.log.process_output(None, msg)
         else:
-            self.lastTestSeen = 'Main app process exited normally'
+            self.lastTestSeen = self.TEST_SEEN_FINAL
 
         crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
                                        symbolsPath, test=self.lastTestSeen)
@@ -721,6 +724,11 @@ class RefTest(object):
                                          stack_fixer=get_stack_fixer_function(options.utilityPath,
                                                                               options.symbolsPath))
                 if status == 0:
+                    break
+
+                if startAfter == self.TEST_SEEN_FINAL:
+                    self.log.info("Finished running all tests, skipping resume "
+                                  "despite non-zero status code: %s" % status)
                     break
 
                 if startAfter is not None and options.shuffle:
