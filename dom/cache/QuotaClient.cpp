@@ -144,7 +144,12 @@ public:
                                LockedDirectoryPaddingGet(dir,
                                                          &paddingSize)))) {
         nsCOMPtr<mozIStorageConnection> conn;
-        // XXXtt: Get db Connection in the next patch.
+        QuotaInfo quotaInfo;
+        quotaInfo.mGroup = aGroup;
+        quotaInfo.mOrigin = aOrigin;
+        rv = mozilla::dom::cache::
+             OpenDBConnection(quotaInfo, dir, getter_AddRefs(conn));
+        if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
         rv = mozilla::dom::cache::LockedDirectoryPaddingRestore(dir, conn);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
