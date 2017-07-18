@@ -1096,7 +1096,7 @@ GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   MOZ_ASSERT(presContext);
 
   return presContext->StyleSet()->AsServo()
-    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aStyleContext->ComputedValues());
+    ->GetComputedKeyframeValuesFor(aKeyframes, aElement, aStyleContext);
 }
 
 static void
