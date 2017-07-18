@@ -1107,18 +1107,6 @@ nsBCTableCellFrame::GetUsedBorder() const
   return GetBorderWidth(wm).GetPhysicalMargin(wm);
 }
 
-/* virtual */ bool
-nsBCTableCellFrame::GetBorderRadii(const nsSize& aFrameSize,
-                                   const nsSize& aBorderArea,
-                                   Sides aSkipSides,
-                                   nscoord aRadii[8]) const
-{
-  NS_FOR_CSS_HALF_CORNERS(corner) {
-    aRadii[corner] = 0;
-  }
-  return false;
-}
-
 #ifdef DEBUG_FRAME_DUMP
 nsresult
 nsBCTableCellFrame::GetFrameName(nsAString& aResult) const
