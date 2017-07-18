@@ -305,7 +305,7 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
   // Don't believe me? See:
   //   http://www.eskimo.com/~scs/C-faq/q15.13.html
   // -alecf
-  char16_t *text =
+  *aResult =
     nsTextFormatter::smprintf(aFormatStr,
                               aLength >= 1 ? aParams[0] : nullptr,
                               aLength >= 2 ? aParams[1] : nullptr,
@@ -317,19 +317,6 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
                               aLength >= 8 ? aParams[7] : nullptr,
                               aLength >= 9 ? aParams[8] : nullptr,
                               aLength >= 10 ? aParams[9] : nullptr);
-
-  if (!text) {
-    *aResult = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // nsTextFormatter does not use the shared nsMemory allocator.
-  // Instead it is required to free the memory it allocates using
-  // nsTextFormatter::smprintf_free.  Let's instead use nsMemory based
-  // allocation for the result that we give out and free the string
-  // returned by smprintf ourselves!
-  *aResult = NS_strdup(text);
-  nsTextFormatter::smprintf_free(text);
 
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
