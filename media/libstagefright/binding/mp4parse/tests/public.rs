@@ -60,9 +60,6 @@ fn public_api() {
                         assert!(!mp4v.is_empty());
                         "MP4V"
                     }
-                    mp4::VideoCodecSpecific::JPEG => {
-                        "JPEG"
-                    }
                 }, "AVC");
             }
             Some(mp4::SampleEntry::Audio(a)) => {
@@ -101,12 +98,6 @@ fn public_api() {
                     }
                     mp4::AudioCodecSpecific::MP3 => {
                         "MP3"
-                    }
-                    mp4::AudioCodecSpecific::AC3SpecificBox => {
-                        "AC3"
-                    }
-                    mp4::AudioCodecSpecific::EC3SpecificBox => {
-                        "EC3"
                     }
                 }, "ES");
                 assert!(a.samplesize > 0);

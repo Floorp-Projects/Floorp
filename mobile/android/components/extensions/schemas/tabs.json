@@ -64,6 +64,7 @@
           "highlighted": {"type": "boolean", "description": "Whether the tab is highlighted. Works as an alias of active."},
           "active": {"type": "boolean", "description": "Whether the tab is active in its window. (Does not necessarily mean the window is focused.)"},
           "pinned": {"type": "boolean", "description": "Whether the tab is pinned."},
+          "lastAccessed": {"type": "integer", "optional": true, "description": "The last time the tab was accessed as the number of milliseconds since epoch."},
           "audible": {"type": "boolean", "optional": true, "description": "Whether the tab has produced sound over the past couple of seconds (but it might not be heard if also muted). Equivalent to whether the speaker audio indicator is showing."},
           "mutedInfo": {"$ref": "MutedInfo", "optional": true, "description": "Current tab muted state and the reason for the last state change."},
           "url": {"type": "string", "optional": true, "permissions": ["tabs"], "description": "The URL the tab is displaying. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},

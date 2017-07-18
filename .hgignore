@@ -120,6 +120,7 @@ GPATH
 
 # Ignore ESLint node_modules
 ^node_modules/
+^tools/lint/eslint/eslint-plugin-mozilla/node_modules/
 
 # Ignore talos virtualenv and tp5n files.
 # The tp5n set is supposed to be decompressed at

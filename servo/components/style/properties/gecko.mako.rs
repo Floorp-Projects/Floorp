@@ -66,7 +66,7 @@ use std::cmp;
 use values::{Auto, CustomIdent, Either, KeyframesName};
 use values::computed::ToComputedValue;
 use values::computed::effects::{BoxShadow, Filter, SimpleShadow};
-use values::specified::length::Percentage;
+use values::computed::length::Percentage;
 use computed_values::border_style;
 
 pub mod style_structs {
@@ -2871,7 +2871,7 @@ fn static_assert() {
                         Gecko_AppendWillChange(&mut self.gecko, feature.0.as_ptr());
                     }
 
-                    if let Ok(prop_id) = PropertyId::parse(feature.0.to_string().into()) {
+                    if let Ok(prop_id) = PropertyId::parse(&feature.0.to_string()) {
                         match prop_id.as_shorthand() {
                             Ok(shorthand) => {
                                 for longhand in shorthand.longhands() {

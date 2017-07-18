@@ -52,6 +52,8 @@
 #endif
 #include "WebrtcGmpVideoCodec.h"
 
+#include "MediaDataDecoderCodec.h"
+
 // for ntohs
 #ifdef _MSC_VER
 #include "Winsock2.h"
@@ -1437,6 +1439,12 @@ WebrtcVideoConduit::CreateDecoder(webrtc::VideoCodecType aType)
   bool enabled = false;
 #endif
 
+  // Attempt to create a decoder using MediaDataDecoder.
+  decoder = MediaDataDecoderCodec::CreateDecoder(aType);
+  if (decoder) {
+    return decoder;
+  }
+
   switch (aType) {
     case webrtc::VideoCodecType::kVideoCodecH264:
       // get an external decoder
@@ -2310,11 +2318,9 @@ WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame)
     }
   }
 
-  const ImageHandle img_handle(nullptr);
   mRenderer->RenderVideoFrame(*video_frame.video_frame_buffer(),
                               video_frame.timestamp(),
-                              video_frame.render_time_ms(),
-                              img_handle);
+                              video_frame.render_time_ms());
 }
 
 // Compare lists of codecs

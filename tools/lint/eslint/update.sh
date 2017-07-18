@@ -63,7 +63,7 @@ chmod +x tooltool.py
 
 echo "Adding eslint.tar.gz to tooltool..."
 rm tools/lint/eslint/manifest.tt
-./tooltool.py add --visibility public eslint.tar.gz
+./tooltool.py add --visibility public --unpack eslint.tar.gz
 
 echo "Uploading eslint.tar.gz to tooltool..."
 ./tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint"

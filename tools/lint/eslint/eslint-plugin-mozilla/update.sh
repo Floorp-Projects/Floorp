@@ -36,7 +36,7 @@ case "$choice" in
 esac
 
 echo ""
-echo "Removing node_modules and npm_shrinkwrap.json..."
+echo "Removing node_modules and package-lock.json..."
 # Move to the top-level directory.
 rm -rf node_modules
 rm package-lock.json
