@@ -240,3 +240,34 @@ def android_ndk_url(os_name, ver='r11c'):
         arch = 'x86'
 
     return '%s-%s-%s-%s.zip' % (base_url, ver, os_name, arch)
+
+
+def main(argv):
+    import optparse # No argparse, which is new in Python 2.7.
+    import platform
+
+    parser = optparse.OptionParser()
+    parser.add_option('-a', '--artifact-mode', dest='artifact_mode', action='store_true',
+                      help='If true, install only the Android SDK (and not the Android NDK).')
+
+    options, _ = parser.parse_args(argv)
+
+    os_name = None
+    if platform.system() == 'Darwin':
+        os_name = 'macosx'
+    elif platform.system() == 'Linux':
+        os_name = 'linux'
+    elif platform.system() == 'Windows':
+        os_name = 'windows'
+    else:
+        raise NotImplementedError("We don't support bootstrapping the Android SDK (or Android NDK) "
+                                  "on {} yet!".format(platform.system()))
+
+    ensure_android(os_name, options.artifact_mode)
+    suggest_mozconfig(os_name, options.artifact_mode)
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
