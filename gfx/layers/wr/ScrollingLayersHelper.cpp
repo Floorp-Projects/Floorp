@@ -71,8 +71,8 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
     // bounds.
     contentRect.MoveTo(clipBounds.TopLeft());
     mBuilder->PushScrollLayer(fm.GetScrollId(),
-        aStackingContext.ToRelativeWrRect(contentRect),
-        aStackingContext.ToRelativeWrRect(clipBounds));
+        aStackingContext.ToRelativeLayoutRect(contentRect),
+        aStackingContext.ToRelativeLayoutRect(clipBounds));
   }
 
   // The scrolled clip on the layer is "inside" all of the scrollable metadatas
@@ -123,7 +123,7 @@ ScrollingLayersHelper::PushLayerLocalClip(const StackingContextHelper& aStacking
     Maybe<wr::WrImageMask> mask = mLayer->BuildWrMaskLayer(aStackingContext);
     LayerRect clipRect = ViewAs<LayerPixel>(clip.ref(),
         PixelCastJustification::MovingDownToChildren);
-    mBuilder->PushClip(aStackingContext.ToRelativeWrRect(clipRect), mask.ptrOr(nullptr));
+    mBuilder->PushClip(aStackingContext.ToRelativeLayoutRect(clipRect), mask.ptrOr(nullptr));
     mPushedLayerLocalClip = true;
   }
 }
@@ -141,7 +141,7 @@ ScrollingLayersHelper::PushLayerClip(const LayerClip& aClip,
     // TODO: check this transform is correct in all cases
     mask = maskWrLayer->RenderMaskLayer(aSc, maskLayer->GetTransform());
   }
-  mBuilder->PushClip(aSc.ToRelativeWrRect(clipRect), mask.ptrOr(nullptr));
+  mBuilder->PushClip(aSc.ToRelativeLayoutRect(clipRect), mask.ptrOr(nullptr));
 }
 
 ScrollingLayersHelper::~ScrollingLayersHelper()

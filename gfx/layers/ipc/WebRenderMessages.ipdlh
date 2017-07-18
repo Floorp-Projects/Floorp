@@ -9,7 +9,7 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
-using mozilla::wr::WrSize from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::LayoutSize from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::WrImageRendering from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";

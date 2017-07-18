@@ -7444,7 +7444,7 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aOffset,
                                                                                param->mAppUnitsPerDevPixel));
-  wr::WrRect transformedRect = aSc.ToRelativeWrRect(borderRect);
+  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
   wr::WrBorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
     wrSide[i] = wr::ToWrBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
@@ -7455,11 +7455,11 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except left side. So setting the widths of
   // each side to width of rect is fine.
-  wr::WrBorderWidths borderWidths = wr::ToWrBorderWidths(transformedRect.width,
-                                                         transformedRect.width,
-                                                         transformedRect.width,
-                                                         transformedRect.width);
-  transformedRect.width *= 2.0f;
+  wr::WrBorderWidths borderWidths = wr::ToWrBorderWidths(transformedRect.size.width,
+                                                         transformedRect.size.width,
+                                                         transformedRect.size.width,
+                                                         transformedRect.size.width);
+  transformedRect.size.width *= 2.0f;
   Range<const wr::WrBorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
@@ -7702,7 +7702,7 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   LayoutDeviceRect borderRect = LayoutDeviceRect::FromUnknownRect(NSRectToRect(param->mBorderRect + aPt,
                                                                                param->mAppUnitsPerDevPixel));
-  wr::WrRect transformedRect = aSc.ToRelativeWrRect(borderRect);
+  wr::LayoutRect transformedRect = aSc.ToRelativeLayoutRect(borderRect);
   wr::WrBorderSide wrSide[4];
   NS_FOR_CSS_SIDES(i) {
     wrSide[i] = wr::ToWrBorderSide(ToDeviceColor(param->mBorderColor), NS_STYLE_BORDER_STYLE_NONE);
@@ -7713,11 +7713,11 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
 
   // All border style is set to none except top side. So setting the widths of
   // each side to height of rect is fine.
-  wr::WrBorderWidths borderWidths = wr::ToWrBorderWidths(transformedRect.height,
-                                                         transformedRect.height,
-                                                         transformedRect.height,
-                                                         transformedRect.height);
-  transformedRect.height *= 2.0f;
+  wr::WrBorderWidths borderWidths = wr::ToWrBorderWidths(transformedRect.size.height,
+                                                         transformedRect.size.height,
+                                                         transformedRect.size.height,
+                                                         transformedRect.size.height);
+  transformedRect.size.height *= 2.0f;
   Range<const wr::WrBorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,

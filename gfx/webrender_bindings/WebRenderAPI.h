@@ -50,7 +50,7 @@ public:
 
   void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
                             const layers::FrameMetrics::ViewID& aScrollId,
-                            const wr::WrPoint& aScrollPosition);
+                            const wr::LayoutPoint& aScrollPosition);
 
   void GenerateFrame();
   void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
@@ -61,7 +61,7 @@ public:
                           Epoch aEpoch,
                           LayerSize aViewportSize,
                           wr::WrPipelineId pipeline_id,
-                          const wr::WrSize& content_size,
+                          const wr::LayoutSize& content_size,
                           wr::WrBuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
                           size_t dl_size);
@@ -138,7 +138,7 @@ protected:
 class DisplayListBuilder {
 public:
   explicit DisplayListBuilder(wr::PipelineId aId,
-                              const wr::WrSize& aContentSize);
+                              const wr::LayoutSize& aContentSize);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
@@ -146,10 +146,10 @@ public:
   void Begin(const LayerIntSize& aSize);
 
   void End();
-  void Finalize(wr::WrSize& aOutContentSize,
+  void Finalize(wr::LayoutSize& aOutContentSize,
                 wr::BuiltDisplayList& aOutDisplayList);
 
-  void PushStackingContext(const wr::WrRect& aBounds, // TODO: We should work with strongly typed rects
+  void PushStackingContext(const wr::LayoutRect& aBounds, // TODO: We should work with strongly typed rects
                            const uint64_t& aAnimationId,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
@@ -158,126 +158,126 @@ public:
                            const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();
 
-  void PushClip(const wr::WrRect& aClipRect,
+  void PushClip(const wr::LayoutRect& aClipRect,
                 const wr::WrImageMask* aMask);
   void PopClip();
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 
   void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
-                       const wr::WrRect& aContentRect, // TODO: We should work with strongly typed rects
-                       const wr::WrRect& aClipRect);
+                       const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
+                       const wr::LayoutRect& aClipRect);
   void PopScrollLayer();
 
   void PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
                              const wr::WrClipId* aClipId);
   void PopClipAndScrollInfo();
 
-  void PushRect(const wr::WrRect& aBounds,
-                const wr::WrRect& aClip,
-                const wr::WrColor& aColor);
+  void PushRect(const wr::LayoutRect& aBounds,
+                const wr::LayoutRect& aClip,
+                const wr::ColorF& aColor);
 
-  void PushLinearGradient(const wr::WrRect& aBounds,
-                          const wr::WrRect& aClip,
-                          const wr::WrPoint& aStartPoint,
-                          const wr::WrPoint& aEndPoint,
+  void PushLinearGradient(const wr::LayoutRect& aBounds,
+                          const wr::LayoutRect& aClip,
+                          const wr::LayoutPoint& aStartPoint,
+                          const wr::LayoutPoint& aEndPoint,
                           const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const wr::WrSize aTileSize,
-                          const wr::WrSize aTileSpacing);
+                          const wr::LayoutSize aTileSize,
+                          const wr::LayoutSize aTileSpacing);
 
-  void PushRadialGradient(const wr::WrRect& aBounds,
-                          const wr::WrRect& aClip,
-                          const wr::WrPoint& aCenter,
-                          const wr::WrSize& aRadius,
+  void PushRadialGradient(const wr::LayoutRect& aBounds,
+                          const wr::LayoutRect& aClip,
+                          const wr::LayoutPoint& aCenter,
+                          const wr::LayoutSize& aRadius,
                           const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const wr::WrSize aTileSize,
-                          const wr::WrSize aTileSpacing);
+                          const wr::LayoutSize aTileSize,
+                          const wr::LayoutSize aTileSpacing);
 
-  void PushImage(const wr::WrRect& aBounds,
-                 const wr::WrRect& aClip,
+  void PushImage(const wr::LayoutRect& aBounds,
+                 const wr::LayoutRect& aClip,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
-  void PushImage(const wr::WrRect& aBounds,
-                 const wr::WrRect& aClip,
-                 const wr::WrSize& aStretchSize,
-                 const wr::WrSize& aTileSpacing,
+  void PushImage(const wr::LayoutRect& aBounds,
+                 const wr::LayoutRect& aClip,
+                 const wr::LayoutSize& aStretchSize,
+                 const wr::LayoutSize& aTileSpacing,
                  wr::ImageRendering aFilter,
                  wr::ImageKey aImage);
 
-  void PushYCbCrPlanarImage(const wr::WrRect& aBounds,
-                            const wr::WrRect& aClip,
+  void PushYCbCrPlanarImage(const wr::LayoutRect& aBounds,
+                            const wr::LayoutRect& aClip,
                             wr::ImageKey aImageChannel0,
                             wr::ImageKey aImageChannel1,
                             wr::ImageKey aImageChannel2,
                             wr::WrYuvColorSpace aColorSpace,
                             wr::ImageRendering aFilter);
 
-  void PushNV12Image(const wr::WrRect& aBounds,
-                     const wr::WrRect& aClip,
+  void PushNV12Image(const wr::LayoutRect& aBounds,
+                     const wr::LayoutRect& aClip,
                      wr::ImageKey aImageChannel0,
                      wr::ImageKey aImageChannel1,
                      wr::WrYuvColorSpace aColorSpace,
                      wr::ImageRendering aFilter);
 
-  void PushYCbCrInterleavedImage(const wr::WrRect& aBounds,
-                                 const wr::WrRect& aClip,
+  void PushYCbCrInterleavedImage(const wr::LayoutRect& aBounds,
+                                 const wr::LayoutRect& aClip,
                                  wr::ImageKey aImageChannel0,
                                  wr::WrYuvColorSpace aColorSpace,
                                  wr::ImageRendering aFilter);
 
-  void PushIFrame(const wr::WrRect& aBounds,
+  void PushIFrame(const wr::LayoutRect& aBounds,
                   wr::PipelineId aPipeline);
 
   // XXX WrBorderSides are passed with Range.
   // It is just to bypass compiler bug. See Bug 1357734.
-  void PushBorder(const wr::WrRect& aBounds,
-                  const wr::WrRect& aClip,
+  void PushBorder(const wr::LayoutRect& aBounds,
+                  const wr::LayoutRect& aClip,
                   const wr::WrBorderWidths& aWidths,
                   const Range<const wr::WrBorderSide>& aSides,
                   const wr::WrBorderRadius& aRadius);
 
-  void PushBorderImage(const wr::WrRect& aBounds,
-                       const wr::WrRect& aClip,
+  void PushBorderImage(const wr::LayoutRect& aBounds,
+                       const wr::LayoutRect& aClip,
                        const wr::WrBorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const wr::WrNinePatchDescriptor& aPatch,
-                       const wr::WrSideOffsets2Df32& aOutset,
+                       const wr::SideOffsets2D_f32& aOutset,
                        const wr::WrRepeatMode& aRepeatHorizontal,
                        const wr::WrRepeatMode& aRepeatVertical);
 
-  void PushBorderGradient(const wr::WrRect& aBounds,
-                          const wr::WrRect& aClip,
+  void PushBorderGradient(const wr::LayoutRect& aBounds,
+                          const wr::LayoutRect& aClip,
                           const wr::WrBorderWidths& aWidths,
-                          const wr::WrPoint& aStartPoint,
-                          const wr::WrPoint& aEndPoint,
+                          const wr::LayoutPoint& aStartPoint,
+                          const wr::LayoutPoint& aEndPoint,
                           const nsTArray<wr::WrGradientStop>& aStops,
                           wr::GradientExtendMode aExtendMode,
-                          const wr::WrSideOffsets2Df32& aOutset);
+                          const wr::SideOffsets2D_f32& aOutset);
 
-  void PushBorderRadialGradient(const wr::WrRect& aBounds,
-                                const wr::WrRect& aClip,
+  void PushBorderRadialGradient(const wr::LayoutRect& aBounds,
+                                const wr::LayoutRect& aClip,
                                 const wr::WrBorderWidths& aWidths,
-                                const wr::WrPoint& aCenter,
-                                const wr::WrSize& aRadius,
+                                const wr::LayoutPoint& aCenter,
+                                const wr::LayoutSize& aRadius,
                                 const nsTArray<wr::WrGradientStop>& aStops,
                                 wr::GradientExtendMode aExtendMode,
-                                const wr::WrSideOffsets2Df32& aOutset);
+                                const wr::SideOffsets2D_f32& aOutset);
 
-  void PushText(const wr::WrRect& aBounds,
-                const wr::WrRect& aClip,
+  void PushText(const wr::LayoutRect& aBounds,
+                const wr::LayoutRect& aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
                 Range<const wr::WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
-  void PushBoxShadow(const wr::WrRect& aRect,
-                     const wr::WrRect& aClip,
-                     const wr::WrRect& aBoxBounds,
-                     const wr::WrPoint& aOffset,
-                     const wr::WrColor& aColor,
+  void PushBoxShadow(const wr::LayoutRect& aRect,
+                     const wr::LayoutRect& aClip,
+                     const wr::LayoutRect& aBoxBounds,
+                     const wr::LayoutVector2D& aOffset,
+                     const wr::ColorF& aColor,
                      const float& aBlurRadius,
                      const float& aSpreadRadius,
                      const float& aBorderRadius,

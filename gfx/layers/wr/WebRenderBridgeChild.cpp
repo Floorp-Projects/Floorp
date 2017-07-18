@@ -108,7 +108,7 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   MOZ_ASSERT(mIsInTransaction);
 
   wr::BuiltDisplayList dl;
-  wr::WrSize contentSize;
+  wr::LayoutSize contentSize;
   aBuilder.Finalize(contentSize, dl);
   ByteBuffer dlData(Move(dl.dl));
 
@@ -218,12 +218,12 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
 
     for (size_t j = 0; j < glyphs.Length(); j++) {
       wr_glyph_instances[j].index = glyphs[j].mIndex;
-      wr_glyph_instances[j].point = aSc.ToRelativeWrPoint(
+      wr_glyph_instances[j].point = aSc.ToRelativeLayoutPoint(
               LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
     }
 
-    aBuilder.PushText(aSc.ToRelativeWrRect(aBounds),
-                      aSc.ToRelativeWrRect(aClip),
+    aBuilder.PushText(aSc.ToRelativeLayoutRect(aBounds),
+                      aSc.ToRelativeLayoutRect(aClip),
                       glyph_array.color().value(),
                       key,
                       Range<const wr::WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),

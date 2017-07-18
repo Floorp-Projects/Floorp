@@ -27,7 +27,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
 {
-  wr::WrRect scBounds = aParentSC.ToRelativeWrRect(aBoundForSC);
+  wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aBoundForSC);
   if (aTransformPtr) {
     mTransform = *aTransformPtr;
   }
@@ -51,7 +51,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
 {
-  wr::WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
   Layer* layer = aLayer->GetLayer();
   mTransform = aTransform.valueOr(layer->GetTransform());
 
@@ -73,7 +73,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
 {
-  wr::WrRect scBounds = aParentSC.ToRelativeWrRect(aLayer->BoundsForStackingContext());
+  wr::LayoutRect scBounds = aParentSC.ToRelativeLayoutRect(aLayer->BoundsForStackingContext());
   if (aTransformPtr) {
     mTransform = *aTransformPtr;
   }
@@ -95,28 +95,28 @@ StackingContextHelper::~StackingContextHelper()
   }
 }
 
-wr::WrRect
-StackingContextHelper::ToRelativeWrRect(const LayerRect& aRect) const
+wr::LayoutRect
+StackingContextHelper::ToRelativeLayoutRect(const LayerRect& aRect) const
 {
-  return wr::ToWrRect(aRect - mOrigin);
+  return wr::ToLayoutRect(aRect - mOrigin);
 }
 
-wr::WrRect
-StackingContextHelper::ToRelativeWrRect(const LayoutDeviceRect& aRect) const
+wr::LayoutRect
+StackingContextHelper::ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const
 {
-  return wr::ToWrRect(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin);
+  return wr::ToLayoutRect(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin);
 }
 
-wr::WrPoint
-StackingContextHelper::ToRelativeWrPoint(const LayerPoint& aPoint) const
+wr::LayoutPoint
+StackingContextHelper::ToRelativeLayoutPoint(const LayerPoint& aPoint) const
 {
-  return wr::ToWrPoint(aPoint - mOrigin);
+  return wr::ToLayoutPoint(aPoint - mOrigin);
 }
 
-wr::WrRect
-StackingContextHelper::ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const
+wr::LayoutRect
+StackingContextHelper::ToRelativeLayoutRectRounded(const LayoutDeviceRect& aRect) const
 {
-  return wr::ToWrRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
+  return wr::ToLayoutRect(RoundedToInt(ViewAs<LayerPixel>(aRect, PixelCastJustification::WebRenderHasUnitResolution) - mOrigin));
 }
 
 } // namespace layers
