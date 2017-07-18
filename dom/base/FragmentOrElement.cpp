@@ -711,10 +711,8 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb, 
   cb.NoteXPCOMChild(mClassList.get());
 
   if (mCustomElementData) {
-    for (uint32_t i = 0; i < mCustomElementData->mReactionQueue.Length(); i++) {
-      if (mCustomElementData->mReactionQueue[i]) {
-        mCustomElementData->mReactionQueue[i]->Traverse(cb);
-      }
+    for (uint32_t i = 0; i < mCustomElementData->mCallbackQueue.Length(); i++) {
+      mCustomElementData->mCallbackQueue[i]->Traverse(cb);
     }
   }
 
