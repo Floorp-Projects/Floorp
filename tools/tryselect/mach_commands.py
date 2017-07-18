@@ -175,7 +175,9 @@ class PushToTry(MachCommandBase):
 
         print("mach try is under development, please file bugs blocking 1149670.")
 
-        resolver_func = lambda: self._spawn(TestResolver)
+        def resolver_func():
+            return self._spawn(TestResolver)
+
         at = AutoTry(self.topsrcdir, resolver_func, self._mach_context)
 
         if kwargs["list"]:

@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import itertools
 import os
 import re
 import subprocess
@@ -21,7 +20,8 @@ def arg_parser():
     parser.add_argument('-b', '--build', dest='builds', default='do',
                         help='Build types to run (d for debug, o for optimized).')
     parser.add_argument('-p', '--platform', dest='platforms', action='append',
-                        help='Platforms to run (required if not found in the environment as AUTOTRY_PLATFORM_HINT).')
+                        help='Platforms to run (required if not found in the environment as '
+                             'AUTOTRY_PLATFORM_HINT).')
     parser.add_argument('-u', '--unittests', dest='tests', action='append',
                         help='Test suites to run in their entirety.')
     parser.add_argument('-t', '--talos', dest='talos', action='append',
@@ -31,7 +31,8 @@ def arg_parser():
     parser.add_argument('--tag', dest='tags', action='append',
                         help='Restrict tests to the given tag (may be specified multiple times).')
     parser.add_argument('--and', action='store_true', dest='intersection',
-                        help='When -u and paths are supplied run only the intersection of the tests specified by the two arguments.')
+                        help='When -u and paths are supplied run only the intersection of the '
+                             'tests specified by the two arguments.')
     parser.add_argument('--no-push', dest='push', action='store_false',
                         help='Do not push to try as a result of running this command (if '
                         'specified this command will only print calculated try '
@@ -39,7 +40,8 @@ def arg_parser():
     parser.add_argument('--save', dest='save', action='store',
                         help='Save the command line arguments for future use with --preset.')
     parser.add_argument('--preset', dest='load', action='store',
-                        help='Load a saved set of arguments. Additional arguments will override saved ones.')
+                        help='Load a saved set of arguments. Additional arguments will override '
+                             'saved ones.')
     parser.add_argument('--list', action='store_true',
                         help='List all saved try strings')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', default=False,
@@ -48,6 +50,7 @@ def arg_parser():
     for arg, opts in AutoTry.pass_through_arguments.items():
         parser.add_argument(arg, **opts)
     return parser
+
 
 class TryArgumentTokenizer(object):
     symbols = [("seperator", ","),
@@ -65,6 +68,7 @@ class TryArgumentTokenizer(object):
                 pass
             else:
                 yield symbol, data
+
 
 class TryArgumentParser(object):
     """Simple three-state parser for handling expressions
@@ -141,10 +145,12 @@ class TryArgumentParser(object):
         self.consume()
         self.state = self.item_state
 
+
 def parse_arg(arg):
     tokenizer = TryArgumentTokenizer()
     parser = TryArgumentParser()
     return parser.parse(tokenizer.tokenize(arg))
+
 
 class AutoTry(object):
 
@@ -441,12 +447,12 @@ class AutoTry(object):
         if suites:
             parts.append("-u")
             parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                                  for k,v in sorted(suites.items())))
+                                  for k, v in sorted(suites.items())))
 
         if talos:
             parts.append("-t")
             parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                                  for k,v in sorted(talos.items())))
+                                  for k, v in sorted(talos.items())))
 
         if jobs:
             parts.append("-j")
