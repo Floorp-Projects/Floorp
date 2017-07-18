@@ -18,6 +18,10 @@
 #include <vector>
 
 namespace mozilla {
+namespace gl {
+class GLBlitHelper;
+}
+
 namespace layers {
 
 class MOZ_RAII AutoTextureLock
@@ -128,6 +132,7 @@ CreateD3D11extureClientWithDevice(gfx::IntSize aSize, gfx::SurfaceFormat aFormat
 
 class DXGIYCbCrTextureData : public TextureData
 {
+  friend class gl::GLBlitHelper;
 public:
   static DXGIYCbCrTextureData*
   Create(IDirect3DTexture9* aTextureY,
