@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<title>border-radius and border-collapse tables</title>
+<style>
+
+body { background: white; color: black }
+
+table { border-collapse: collapse; margin: 1em 2px; }
+td { border: 1px solid black; }
+
+.radius { border: 3px solid teal; background: aqua; color: black; border-radius: 12px }
+
+</style>
+
+<h1>border-radius and border-collapse tables</h1>
+
+<table>
+  <tbody>
+    <tr><td>xx<td>xx<td>xx
+  </tbody>
+  <tbody class="radius">
+    <tr><td>xx<td>xx<td>xx
+    <tr><td>xx<td>xx<td>xx
+  </tbody>
+  <tbody>
+    <tr><td>xx<td>xx<td>xx
+  </tbody>
+</table>
+
+<table>
+  <tr class="radius"><td>xx<td>xx<td>xx
+  <tr><td>xx<td>xx<td>xx
+</table>
+
+<table>
+  <colgroup class="radius"><col><col><colgroup><col>
+  <tr><td>xx<td>xx<td>xx
+  <tr><td>xx<td>xx<td>xx
+</table>
+
+<table>
+  <col><col class="radius"><col>
+  <tr><td>xx<td>xx<td>xx
+  <tr><td>xx<td>xx<td>xx
+</table>
+
