@@ -514,6 +514,11 @@ ContentSearchUIController.prototype = {
     this.input.focus();
   },
 
+  _onMsgBlur(event) {
+    this.input.blur();
+    this._hideSuggestions();
+  },
+
   _onMsgSuggestions(suggestions) {
     // Ignore the suggestions if their search string or engine doesn't match
     // ours.  Due to the async nature of message passing, this can easily happen
@@ -747,11 +752,6 @@ ContentSearchUIController.prototype = {
 
     // Deselect the selected element on mouseout if it wasn't a suggestion.
     this._table.addEventListener("mouseout", this);
-
-    // If a search is loaded in the same tab, ensure the suggestions dropdown
-    // is hidden immediately when the page starts loading and not when it first
-    // appears, in order to provide timely feedback to the user.
-    window.addEventListener("beforeunload", () => { this._hideSuggestions(); });
 
     let headerRow = document.createElementNS(HTML_NS, "tr");
     let header = document.createElementNS(HTML_NS, "td");
