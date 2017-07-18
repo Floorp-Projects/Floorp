@@ -39,7 +39,7 @@ public class EditBookmarkDialog {
     /**
      * A private struct to make it easier to pass bookmark data across threads
      */
-    private class Bookmark {
+    private static final class Bookmark {
         final int id;
         final String title;
         final String url;
@@ -61,7 +61,7 @@ public class EditBookmarkDialog {
      * Callers can also assign a paired partner to the TextWatcher, and callers will check
      * that both are enabled before enabling the ok button.
      */
-    private class EditBookmarkTextWatcher implements TextWatcher {
+    private static class EditBookmarkTextWatcher implements TextWatcher {
         // A stored reference to the dialog containing the text field being watched
         protected AlertDialog mDialog;
 
@@ -101,7 +101,7 @@ public class EditBookmarkDialog {
      * A version of the EditBookmarkTextWatcher for the url field of the dialog.
      * Only checks if the field is empty or not.
      */
-    private class LocationTextWatcher extends EditBookmarkTextWatcher {
+    private static final class LocationTextWatcher extends EditBookmarkTextWatcher {
         public LocationTextWatcher(AlertDialog aDialog) {
             super(aDialog);
         }
@@ -118,7 +118,7 @@ public class EditBookmarkDialog {
      * A version of the EditBookmarkTextWatcher for the keyword field of the dialog.
      * Checks if the field has any (non leading or trailing) spaces.
      */
-    private class KeywordTextWatcher extends EditBookmarkTextWatcher {
+    private static final class KeywordTextWatcher extends EditBookmarkTextWatcher {
         public KeywordTextWatcher(AlertDialog aDialog) {
             super(aDialog);
         }
