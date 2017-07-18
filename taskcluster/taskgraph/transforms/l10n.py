@@ -215,6 +215,12 @@ def setup_nightly_dependency(config, jobs):
             yield job
             continue  # do not add a dep unless we're a nightly
         job['dependencies'] = {'unsigned-build': job['dependent-task'].label}
+        if job['attributes']['build_platform'].startswith('win'):
+            # Weave these in and just assume they will be there in the resulting graph
+            job['dependencies'].update({
+                'signed-build': 'signing-{}'.format(job['name']),
+                'repackage-signed': 'repackage-signing-repackage-{}'.format(job['name'])
+            })
         yield job
 
 
@@ -331,8 +337,9 @@ def mh_options_replace_project(config, jobs):
 def chain_of_trust(config, jobs):
     for job in jobs:
         # add the docker image to the chain of trust inputs in task.extra
-        cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
-        cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
+        if not job['worker-type'].endswith("-b-win2012"):
+            cot = job.setdefault('extra', {}).setdefault('chainOfTrust', {})
+            cot.setdefault('inputs', {})['docker-image'] = {"task-reference": "<docker-image>"}
         yield job
 
 
@@ -348,12 +355,6 @@ def make_job_description(config, jobs):
     for job in jobs:
         job_description = {
             'name': job['name'],
-            'worker': {
-                'docker-image': {'in-tree': 'desktop-build'},
-                'max-run-time': job['run-time'],
-                'chain-of-trust': True,
-            },
-            'extra': job['extra'],
             'worker-type': job['worker-type'],
             'description': job['description'],
             'run': {
@@ -363,8 +364,6 @@ def make_job_description(config, jobs):
                 'script': job['mozharness']['script'],
                 'actions': job['mozharness']['actions'],
                 'options': job['mozharness']['options'],
-                'tooltool-downloads': job['tooltool'],
-                'need-xvfb': True,
             },
             'attributes': job['attributes'],
             'treeherder': {
@@ -375,6 +374,25 @@ def make_job_description(config, jobs):
             },
             'run-on-projects': job.get('run-on-projects') if job.get('run-on-projects') else [],
         }
+        if job.get('extra'):
+            job_description['extra'] = job['extra']
+
+        if job['worker-type'].endswith("-b-win2012"):
+            job_description['worker'] = {
+                'os': 'windows',
+                'max-run-time': 7200,
+                'chain-of-trust': True,
+            }
+            job_description['run']['use-simple-package'] = False
+            job_description['run']['use-magic-mh-args'] = False
+        else:
+            job_description['worker'] = {
+                'docker-image': {'in-tree': 'desktop-build'},
+                'max-run-time': job['run-time'],
+                'chain-of-trust': True,
+            }
+            job_description['run']['tooltool-downloads'] = job['tooltool']
+            job_description['run']['need-xvfb'] = True
 
         if job.get('index'):
             job_description['index'] = {
