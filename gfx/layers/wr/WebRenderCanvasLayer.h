@@ -33,8 +33,12 @@ public:
 
   virtual void AttachCompositable() override;
 
+  virtual void ClearCachedResources() override;
+
 protected:
   virtual ~WebRenderCanvasLayer();
+
+  void ClearWrResources();
 
 public:
   Layer* GetLayer() override { return this; }
