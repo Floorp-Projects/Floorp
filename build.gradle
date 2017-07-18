@@ -47,7 +47,7 @@ buildscript {
                 url repository
             }
         }
-        // For android-sdk-manager SNAPSHOT releases.
+        // For dexcount-gradle-plugin and other in tree plugins.
         maven {
             url "file://${gradle.mozconfig.topsrcdir}/mobile/android/gradle/m2repo"
         }
@@ -60,7 +60,6 @@ buildscript {
             exclude module: 'guava'
         }
         // Provided in tree.
-        classpath 'com.jakewharton.sdkmanager:gradle-plugin:1.5.0-SNAPSHOT'
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.6.1'
     }
 }
