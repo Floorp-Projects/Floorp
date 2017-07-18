@@ -25,6 +25,7 @@ fieldset > legend {
   background-color: var(--in-content-box-background-hover);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px 2px 0 0;
+  -moz-user-select: none;
 }
 
 option:nth-child(even) {

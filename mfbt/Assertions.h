@@ -278,6 +278,10 @@ static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void MOZ_NoReturn(int aLine)
  * arbitrary strings from a potentially compromised process is not without risk.
  * If the string being passed is the result of a printf-style function,
  * consider using MOZ_CRASH_UNSAFE_PRINTF instead.
+ *
+ * @note This macro causes data collection because crash strings are annotated
+ * to crash-stats and are publicly visible. Firefox data stewards must do data
+ * review on usages of this macro.
  */
 #ifndef DEBUG
 MFBT_API MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void
@@ -311,6 +315,10 @@ MOZ_CrashPrintf(const char* aFilename, int aLine, const char* aFormat, ...);
  * 1 and 4 additional arguments. A regular MOZ_CRASH() is preferred wherever
  * possible, as passing arbitrary strings to printf from a potentially
  * compromised process is not without risk.
+ *
+ * @note This macro causes data collection because crash strings are annotated
+ * to crash-stats and are publicly visible. Firefox data stewards must do data
+ * review on usages of this macro.
  */
 #define MOZ_CRASH_UNSAFE_PRINTF(format, ...) \
    do { \

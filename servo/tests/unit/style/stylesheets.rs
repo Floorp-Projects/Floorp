@@ -26,7 +26,8 @@ use style::stylesheets::{Origin, Namespaces};
 use style::stylesheets::{Stylesheet, StylesheetContents, NamespaceRule, CssRule, CssRules, StyleRule, KeyframesRule};
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframePercentage};
 use style::values::{KeyframesName, CustomIdent};
-use style::values::specified::{LengthOrPercentageOrAuto, Percentage, PositionComponent};
+use style::values::computed::Percentage;
+use style::values::specified::{LengthOrPercentageOrAuto, PositionComponent};
 
 pub fn block_from<I>(iterable: I) -> PropertyDeclarationBlock
 where I: IntoIterator<Item=(PropertyDeclaration, Importance)> {
@@ -315,7 +316,7 @@ fn test_report_error_stylesheet() {
 
     let error = errors.pop().unwrap();
     assert_eq!("Unsupported property declaration: 'invalid: true;', \
-                Custom(UnknownProperty(\"invalid\"))", error.message);
+                Custom(PropertyDeclaration(UnknownProperty(\"invalid\")))", error.message);
     assert_eq!(9, error.line);
     assert_eq!(8, error.column);
 
@@ -327,4 +328,31 @@ fn test_report_error_stylesheet() {
 
     // testing for the url
     assert_eq!(url, error.url);
+}
+
+#[test]
+fn test_no_report_unrecognized_vendor_properties() {
+    let css = r"
+    div {
+        -o-background-color: red;
+        _background-color: red;
+        -moz-background-color: red;
+    }
+    ";
+    let url = ServoUrl::parse("about::test").unwrap();
+    let error_reporter = CSSInvalidErrorReporterTest::new();
+
+    let errors = error_reporter.errors.clone();
+
+    let lock = SharedRwLock::new();
+    let media = Arc::new(lock.wrap(MediaList::empty()));
+    Stylesheet::from_str(css, url, Origin::UserAgent, media, lock,
+                         None, &error_reporter, QuirksMode::NoQuirks, 0u64);
+
+    let mut errors = errors.lock().unwrap();
+    let error = errors.pop().unwrap();
+    assert_eq!("Unsupported property declaration: '-moz-background-color: red;', \
+                Custom(PropertyDeclaration(UnknownProperty(\"-moz-background-color\")))",
+               error.message);
+    assert!(errors.is_empty());
 }
