@@ -2024,14 +2024,6 @@ interface nsIDOMWindowUtils : nsISupports {
   long getDirectionFromText(in AString aString);
 
   /**
-   * Calls FrameNeedsReflow on that root frame so that a layout flush
-   * will be necessary.
-   *
-   * This should only be used for testing.
-   */
-  void ensureDirtyRootFrame();
-
-  /**
    * Whether the current document is styled by Servo's style engine.
    *
    * This calls nsIDocument::IsStyledByServo().
