@@ -392,6 +392,7 @@
     _(IsConstructor)                \
     _(IsArrayO)                     \
     _(IsArrayV)                     \
+    _(IsTypedArray)                 \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \

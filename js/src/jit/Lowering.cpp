@@ -4322,6 +4322,16 @@ LIRGenerator::visitIsArray(MIsArray* ins)
 }
 
 void
+LIRGenerator::visitIsTypedArray(MIsTypedArray* ins)
+{
+    MOZ_ASSERT(ins->value()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::Boolean);
+
+    auto* lir = new(alloc()) LIsTypedArray(useRegister(ins->value()));
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitIsCallable(MIsCallable* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType::Object);
