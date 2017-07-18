@@ -91,9 +91,15 @@ public:
     return NS_OK;
   }
 
-  // Methods which are called on the IO thred.
+  // Methods which are called on the IO thread.
   virtual nsresult
   UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory)
+  {
+    return NS_OK;
+  }
+
+  virtual nsresult
+  UpgradeStorageFrom2_0To3_0(nsIFile* aDirectory)
   {
     return NS_OK;
   }
@@ -119,7 +125,7 @@ public:
   virtual void
   ReleaseIOThreadObjects() = 0;
 
-  // Methods which are called on the background thred.
+  // Methods which are called on the background thread.
   virtual void
   AbortOperations(const nsACString& aOrigin) = 0;
 

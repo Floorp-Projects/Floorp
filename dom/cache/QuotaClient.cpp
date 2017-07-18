@@ -19,6 +19,7 @@ namespace {
 using mozilla::Atomic;
 using mozilla::dom::ContentParentId;
 using mozilla::dom::cache::Manager;
+using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
@@ -213,6 +214,17 @@ public:
 
     // spins the event loop and synchronously shuts down all Managers
     Manager::ShutdownAll();
+  }
+
+  nsresult
+  UpgradeStorageFrom2_0To3_0(nsIFile* aDirectory) override
+  {
+    AssertIsOnIOThread();
+    MOZ_DIAGNOSTIC_ASSERT(aDirectory);
+
+    // XXXtt: Will have a patch to write padding size to the file
+
+    return NS_OK;
   }
 
 private:
