@@ -563,7 +563,7 @@ KeyframeEffectReadOnly::EnsureBaseStyle(
           aComputedStyle);
   }
   RefPtr<RawServoAnimationValue> baseValue =
-    Servo_ComputedValues_ExtractAnimationValue(aBaseStyleContext->ComputedValues(),
+    Servo_ComputedValues_ExtractAnimationValue(aBaseStyleContext,
                                                aProperty.mProperty).Consume();
   mBaseStyleValuesForServo.Put(aProperty.mProperty, baseValue);
 }
