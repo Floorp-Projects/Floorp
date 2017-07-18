@@ -81,7 +81,6 @@ public class StringHelper {
     public final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
     public final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
     public final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
-    public final String ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
     public final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
     public final String ROBOCOP_READER_MODE_BASIC_ARTICLE = "/robocop/reader_mode_pages/basic_article.html";
     public final String ROBOCOP_LINK_TO_SLOW_LOADING = "/robocop/robocop_link_to_slow_loading.html";
@@ -218,8 +217,6 @@ public class StringHelper {
     public final String ADVANCED;
     public final String DONT_SHOW_MENU;
     public final String SHOW_MENU;
-    public final String DISABLED;
-    public final String TAP_TO_PLAY;
     public final String HIDE_TITLE_BAR;
     public final String RESTORE_TABS_LABEL;
 
@@ -401,8 +398,6 @@ public class StringHelper {
         ADVANCED = res.getString(R.string.pref_category_advanced);
         DONT_SHOW_MENU = res.getString(R.string.pref_char_encoding_off);
         SHOW_MENU = res.getString(R.string.pref_char_encoding_on);
-        DISABLED = res.getString(R.string.pref_plugins_disabled );
-        TAP_TO_PLAY = res.getString(R.string.pref_plugins_tap_to_play);
         HIDE_TITLE_BAR = res.getString(R.string.pref_scroll_title_bar_summary );
         RESTORE_TABS_LABEL = res.getString(R.string.pref_restore);
 

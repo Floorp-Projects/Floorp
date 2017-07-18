@@ -57,34 +57,6 @@ public final class GeckoLoader {
         return sGREDir;
     }
 
-    private static void setupPluginEnvironment(Context context, String[] pluginDirs) {
-        // setup plugin path directories
-        try {
-            // Check to see if plugins were blocked.
-            if (pluginDirs == null) {
-                putenv("MOZ_PLUGINS_BLOCKED=1");
-                putenv("MOZ_PLUGIN_PATH=");
-                return;
-            }
-
-            StringBuilder pluginSearchPath = new StringBuilder();
-            for (int i = 0; i < pluginDirs.length; i++) {
-                pluginSearchPath.append(pluginDirs[i]);
-                pluginSearchPath.append(":");
-            }
-            putenv("MOZ_PLUGIN_PATH=" + pluginSearchPath);
-
-            File pluginDataDir = context.getDir("plugins", 0);
-            putenv("ANDROID_PLUGIN_DATADIR=" + pluginDataDir.getPath());
-
-            File pluginPrivateDataDir = context.getDir("plugins_private", 0);
-            putenv("ANDROID_PLUGIN_DATADIR_PRIVATE=" + pluginPrivateDataDir.getPath());
-
-        } catch (Exception ex) {
-            Log.w(LOGTAG, "Caught exception getting plugin dirs.", ex);
-        }
-    }
-
     private static void setupDownloadEnvironment(final Context context) {
         try {
             File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
@@ -134,7 +106,7 @@ public final class GeckoLoader {
         }
     }
 
-    public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
+    public static void setupGeckoEnvironment(Context context, String profilePath) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
         final SafeIntent intent = sIntent;
@@ -155,7 +127,6 @@ public final class GeckoLoader {
 
         putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
 
-        setupPluginEnvironment(context, pluginDirs);
         setupDownloadEnvironment(context);
 
         // profile home path

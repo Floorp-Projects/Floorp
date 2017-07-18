@@ -447,14 +447,8 @@ pref("browser.ui.scroll-toolbar-threshold", 10);
 pref("browser.ui.selection.distance", 250);
 
 // plugins
-pref("plugin.disable", false);
+pref("plugin.disable", true);
 pref("dom.ipc.plugins.enabled", false);
-
-// This pref isn't actually used anymore, but we're leaving this here to avoid changing
-// the default so that we can migrate a user-set pref. See bug 885357.
-pref("plugins.click_to_play", true);
-// The default value for nsIPluginTag.enabledState (STATE_CLICKTOPLAY = 1)
-pref("plugin.default.state", 1);
 
 // product URLs
 // The breakpad report server to link to in about:crashes
