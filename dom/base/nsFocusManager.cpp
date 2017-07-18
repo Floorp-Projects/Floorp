@@ -1567,9 +1567,10 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, uint32_t aFlags)
     return nullptr;
   }
 
-  // Make sure that our frames are up to date
+  // Make sure that our frames are up to date while ensuring the presshell is
+  // also initialized in case we come from an autofocus event.
   mEventHandlingNeedsFlush = false;
-  doc->FlushPendingNotifications(FlushType::Frames);
+  doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
 
   nsIPresShell *shell = doc->GetShell();
   if (!shell)
