@@ -2,16 +2,27 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
+import ConfigParser
 import argparse
 import os
 import re
 import subprocess
 import sys
 import which
-
 from collections import defaultdict
 
-import ConfigParser
+import mozpack.path as mozpath
+
+CONFIG_ENVIRONMENT_NOT_FOUND = '''
+No config environment detected. This means we are unable to properly
+detect test files in the specified paths or tags. Please run:
+
+    $ mach configure
+
+and try again.
+'''.lstrip()
 
 
 def arg_parser():
@@ -613,3 +624,169 @@ class AutoTry(object):
                     print("Pushing tests based on the following tags:\n\t%s" %
                           "\n\t".join(tags))
         return paths, tags
+
+    def normalise_list(self, items, allow_subitems=False):
+        rv = defaultdict(list)
+        for item in items:
+            parsed = parse_arg(item)
+            for key, values in parsed.iteritems():
+                rv[key].extend(values)
+
+        if not allow_subitems:
+            if not all(item == [] for item in rv.itervalues()):
+                raise ValueError("Unexpected subitems in argument")
+            return rv.keys()
+        else:
+            return rv
+
+    def validate_args(self, **kwargs):
+        tests_selected = kwargs["tests"] or kwargs["paths"] or kwargs["tags"]
+        if kwargs["platforms"] is None and (kwargs["jobs"] is None or tests_selected):
+            if 'AUTOTRY_PLATFORM_HINT' in os.environ:
+                kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            elif tests_selected:
+                print("Must specify platform when selecting tests.")
+                sys.exit(1)
+            else:
+                print("Either platforms or jobs must be specified as an argument to autotry.")
+                sys.exit(1)
+
+        try:
+            platforms = (self.normalise_list(kwargs["platforms"])
+                         if kwargs["platforms"] else {})
+        except ValueError as e:
+            print("Error parsing -p argument:\n%s" % e.message)
+            sys.exit(1)
+
+        try:
+            tests = (self.normalise_list(kwargs["tests"], allow_subitems=True)
+                     if kwargs["tests"] else {})
+        except ValueError as e:
+            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e.message))
+            sys.exit(1)
+
+        try:
+            talos = (self.normalise_list(kwargs["talos"], allow_subitems=True)
+                     if kwargs["talos"] else [])
+        except ValueError as e:
+            print("Error parsing -t argument:\n%s" % e.message)
+            sys.exit(1)
+
+        try:
+            jobs = (self.normalise_list(kwargs["jobs"]) if kwargs["jobs"] else {})
+        except ValueError as e:
+            print("Error parsing -j argument:\n%s" % e.message)
+            sys.exit(1)
+
+        paths = []
+        for p in kwargs["paths"]:
+            p = mozpath.normpath(os.path.abspath(p))
+            if not (os.path.isdir(p) and p.startswith(self.topsrcdir)):
+                print('Specified path "%s" is not a directory under the srcdir,'
+                      ' unable to specify tests outside of the srcdir' % p)
+                sys.exit(1)
+            if len(p) <= len(self.topsrcdir):
+                print('Specified path "%s" is at the top of the srcdir and would'
+                      ' select all tests.' % p)
+                sys.exit(1)
+            paths.append(os.path.relpath(p, self.topsrcdir))
+
+        try:
+            tags = self.normalise_list(kwargs["tags"]) if kwargs["tags"] else []
+        except ValueError as e:
+            print("Error parsing --tags argument:\n%s" % e.message)
+            sys.exit(1)
+
+        extra_values = {k['dest'] for k in AutoTry.pass_through_arguments.values()}
+        extra_args = {k: v for k, v in kwargs.items()
+                      if k in extra_values and v}
+
+        return kwargs["builds"], platforms, tests, talos, jobs, paths, tags, extra_args
+
+    def run(self, **kwargs):
+        if kwargs["list"]:
+            self.list_presets()
+            sys.exit()
+
+        if kwargs["load"] is not None:
+            defaults = self.load_config(kwargs["load"])
+
+            if defaults is None:
+                print("No saved configuration called %s found in autotry.ini" % kwargs["load"],
+                      file=sys.stderr)
+
+            for key, value in kwargs.iteritems():
+                if value in (None, []) and key in defaults:
+                    kwargs[key] = defaults[key]
+
+        if kwargs["push"] and self.find_uncommited_changes():
+            print('ERROR please commit changes before continuing')
+            sys.exit(1)
+
+        if not any(kwargs[item] for item in ("paths", "tests", "tags")):
+            kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"])
+
+        builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
+
+        if paths or tags:
+            if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
+                print(CONFIG_ENVIRONMENT_NOT_FOUND)
+                sys.exit(1)
+
+            paths = [os.path.relpath(os.path.normpath(os.path.abspath(item)), self.topsrcdir)
+                     for item in paths]
+            paths_by_flavor = self.paths_by_flavor(paths=paths, tags=tags)
+
+            if not paths_by_flavor and not tests:
+                print("No tests were found when attempting to resolve paths:\n\n\t%s" %
+                      paths)
+                sys.exit(1)
+
+            if not kwargs["intersection"]:
+                paths_by_flavor = self.remove_duplicates(paths_by_flavor, tests)
+        else:
+            paths_by_flavor = {}
+
+        # No point in dealing with artifacts if we aren't running any builds
+        local_artifact_build = False
+        if platforms:
+            local_artifact_build = kwargs.get('local_artifact_build', False)
+
+            # Add --artifact if --enable-artifact-builds is set ...
+            if local_artifact_build:
+                extra["artifact"] = True
+            # ... unless --no-artifact is explicitly given.
+            if kwargs["no_artifact"]:
+                if "artifact" in extra:
+                    del extra["artifact"]
+
+        try:
+            msg = self.calc_try_syntax(platforms, tests, talos, jobs, builds,
+                                       paths_by_flavor, tags, extra, kwargs["intersection"])
+        except ValueError as e:
+            print(e.message)
+            sys.exit(1)
+
+        if local_artifact_build:
+            if kwargs["no_artifact"]:
+                print('mozconfig has --enable-artifact-builds but '
+                      '--no-artifact specified, not including --artifact '
+                      'flag in try syntax')
+            else:
+                print('mozconfig has --enable-artifact-builds; including '
+                      '--artifact flag in try syntax (use --no-artifact '
+                      'to override)')
+
+        if kwargs["verbose"] and paths_by_flavor:
+            print('The following tests will be selected: ')
+            for flavor, paths in paths_by_flavor.iteritems():
+                print("%s: %s" % (flavor, ",".join(paths)))
+
+        if kwargs["verbose"] or not kwargs["push"]:
+            print('The following try syntax was calculated:\n%s' % msg)
+
+        if kwargs["push"]:
+            self.push_to_try(msg, kwargs["verbose"])
+
+        if kwargs["save"] is not None:
+            self.save_config(kwargs["save"], msg)
