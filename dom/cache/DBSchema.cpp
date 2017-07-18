@@ -699,6 +699,37 @@ FindOrphanedCacheIds(mozIStorageConnection* aConn,
 }
 
 nsresult
+FindOverallPaddingSize(mozIStorageConnection* aConn,
+                       int64_t* aOverallPaddingSizeOut)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aOverallPaddingSizeOut);
+
+  nsCOMPtr<mozIStorageStatement> state;
+  nsresult rv = aConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT response_padding_size FROM entries "
+    "WHERE response_padding_size IS NOT NULL;"
+  ), getter_AddRefs(state));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  int64_t overallPaddingSize = 0;
+  bool hasMoreData = false;
+  while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
+    int64_t padding_size = 0;
+    rv = state->GetInt64(0, &padding_size);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    MOZ_DIAGNOSTIC_ASSERT(padding_size >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - padding_size >= overallPaddingSize);
+    overallPaddingSize += padding_size;
+  }
+
+  *aOverallPaddingSizeOut = overallPaddingSize;
+
+  return rv;
+}
+
+nsresult
 GetKnownBodyIds(mozIStorageConnection* aConn, nsTArray<nsID>& aBodyIdListOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
