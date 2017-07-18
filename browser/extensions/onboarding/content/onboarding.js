@@ -22,7 +22,7 @@ const BRAND_SHORT_NAME = Services.strings
 const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 
 /**
- * Add any number of tours, following the format
+ * Add any number of tours, key is the tourId, value should follow the format below
  * "tourId": { // The short tour id which could be saved in pref
  *   // The unique tour id
  *   id: "onboarding-tour-addons",
@@ -220,6 +220,33 @@ var onboardingTourset = {
       emailInput.placeholder =
         bundle.GetStringFromName("onboarding.tour-sync.email-input.placeholder");
       emailInput.pattern = emailRegex;
+      return div;
+    },
+  },
+  "library": {
+    id: "onboarding-tour-library",
+    tourNameId: "onboarding.tour-library",
+    getNotificationStrings(bundle) {
+      return {
+        title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-library.title"),
+        message: bundle.formatStringFromName("onboarding.notification.onboarding-tour-library.message", [BRAND_SHORT_NAME], 1),
+        button: bundle.GetStringFromName("onboarding.button.learnMore"),
+      };
+    },
+    getPage(win) {
+      let div = win.document.createElement("div");
+      div.innerHTML = `
+        <section class="onboarding-tour-description">
+          <h1 data-l10n-id="onboarding.tour-library.title"></h1>
+          <p data-l10n-id="onboarding.tour-library.description"></p>
+        </section>
+        <section class="onboarding-tour-content">
+          <img src="resource://onboarding/img/figure_search.svg" role="presentation"/>
+        </section>
+        <aside class="onboarding-tour-button-container">
+          <button id="onboarding-tour-library-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-library.button"></button>
+        </aside>
+      `;
       return div;
     },
   },
