@@ -755,9 +755,25 @@ Tester.prototype = {
         }
         let Promise = this.Promise;
         let PromiseTestUtils = this.PromiseTestUtils;
+
+        // Allow for a task to be skipped; we need only use the structured logger
+        // for this, whilst deactivating log buffering to ensure that messages
+        // are always printed to stdout.
+        let skipTask = (task) => {
+          let logger = this.structuredLogger;
+          logger.deactivateBuffering();
+          logger.testStatus(this.currentTest.path, task.name, "SKIP");
+          logger.warning("Skipping test " + task.name);
+          logger.activateBuffering();
+        };
+
         this.Task.spawn(function*() {
           let task;
           while ((task = this.__tasks.shift())) {
+            if (task.__skipMe || (this.__runOnlyThisTask && task != this.__runOnlyThisTask)) {
+              skipTask(task);
+              continue;
+            }
             this.SimpleTest.info("Entering test " + task.name);
             try {
               yield task();
@@ -1069,9 +1085,18 @@ function testScope(aTester, aTest, expected) {
     })
   };
 }
+
+function decorateTaskFn(fn) {
+  fn = fn.bind(this);
+  fn.skip = () => fn.__skipMe = true;
+  fn.only = () => this.__runOnlyThisTask = fn;
+  return fn;
+}
+
 testScope.prototype = {
   __done: true,
   __tasks: null,
+  __runOnlyThisTask: null,
   __waitTimer: null,
   __cleanupFunctions: [],
   __timeoutFactor: 1,
@@ -1127,7 +1152,9 @@ testScope.prototype = {
       this.waitForExplicitFinish();
       this.__tasks = [];
     }
-    this.__tasks.push(aFunction.bind(this));
+    let bound = decorateTaskFn.call(this, aFunction);
+    this.__tasks.push(bound);
+    return bound;
   },
 
   destroy: function test_destroy() {
