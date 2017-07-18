@@ -412,7 +412,7 @@ AddOrAccumulate(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
   // hopefully become obsolete before we expand that set.
   return StyleAnimationValue::Add(property,
                                   destWrapper->mGeckoValue,
-                                  valueToAddWrapper->mGeckoValue, aCount);
+                                  *valueToAdd, aCount);
 }
 
 nsresult
