@@ -38,7 +38,6 @@ child:
 parent:
   intr NPN_RequestRead(IPCByteRanges ranges)
     returns (NPError result);
-  async NPN_DestroyStream(NPReason reason);
   async StreamDestroyed();
 
 /*

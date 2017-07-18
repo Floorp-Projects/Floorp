@@ -244,12 +244,11 @@ private:
     // contains list of active and idle connections as well as the list of
     // pending transactions.
     //
-    class nsConnectionEntry : public SupportsWeakPtr<nsConnectionEntry>
+    class nsConnectionEntry
     {
     public:
-        MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsConnectionEntry)
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsConnectionEntry)
         explicit nsConnectionEntry(nsHttpConnectionInfo *ci);
-        ~nsConnectionEntry();
 
         RefPtr<nsHttpConnectionInfo> mConnInfo;
         nsTArray<RefPtr<PendingTransactionInfo> > mUrgentStartQ;// the urgent start transaction queue
@@ -337,6 +336,13 @@ private:
 
         // Remove the empty pendingQ in |mPendingTransactionTable|.
         void RemoveEmptyPendingQ();
+        enum {
+          CONN_ENTRY_NOT_REMOVED,
+          CONN_ENTRY_CLEAR_CONNECTION_HISTORY,
+          CONN_ENTRY_REMOVED_SHUTDOWN,
+        }  mHowItWasRemoved;
+    private:
+        ~nsConnectionEntry();
     };
 
 public:
@@ -406,6 +412,7 @@ private:
         void FastOpenNotSupported() override;
         void SetFastOpenStatus(uint8_t tfoStatus) override;
         void CancelFastOpenConnection();
+
     private:
         nsresult SetupConn(nsIAsyncOutputStream *out,
                            bool aFastOpen);
@@ -416,7 +423,6 @@ private:
         already_AddRefed<PendingTransactionInfo>
         FindTransactionHelper(bool removeWhenFound);
 
-        WeakPtr<nsConnectionEntry>     mEnt;
         RefPtr<nsAHttpTransaction>     mTransaction;
         bool                           mDispatchedMTransaction;
         nsCOMPtr<nsISocketTransport>   mSocketTransport;
@@ -443,12 +449,6 @@ private:
         TimeStamp             mPrimarySynStarted;
         TimeStamp             mBackupSynStarted;
 
-        // for syn retry
-        nsCOMPtr<nsITimer>             mSynTimer;
-        nsCOMPtr<nsISocketTransport>   mBackupTransport;
-        nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
-        nsCOMPtr<nsIAsyncInputStream>  mBackupStreamIn;
-
         // mHasConnected tracks whether one of the sockets has completed the
         // connection process. It may have completed unsuccessfully.
         bool                           mHasConnected;
@@ -465,6 +465,18 @@ private:
 
         bool                           mFastOpenInProgress;
         RefPtr<nsHttpConnection>       mConnectionNegotiatingFastOpen;
+
+    private:
+        // nsHttpConnectionMgr is friend class so that we can access them for
+        // diagnostic asserts. The this asserts are removed the following line
+        // needs to be removed.
+        friend class nsHttpConnectionMgr;
+
+        RefPtr<nsConnectionEntry>      mEnt;
+        nsCOMPtr<nsITimer>             mSynTimer;
+        nsCOMPtr<nsISocketTransport>   mBackupTransport;
+        nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
+        nsCOMPtr<nsIAsyncInputStream>  mBackupStreamIn;
     };
     friend class nsHalfOpenSocket;
 
@@ -658,7 +670,7 @@ private:
     // nsConnectionEntry object. It is unlocked and therefore must only
     // be accessed from the socket thread.
     //
-    nsClassHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
+    nsRefPtrHashtable<nsCStringHashKey, nsConnectionEntry> mCT;
 
     // Read Timeout Tick handlers
     void TimeoutTick();

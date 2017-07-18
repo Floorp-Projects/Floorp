@@ -19,18 +19,11 @@ interface StackFrame;
  Exposed=(Window,Worker)]
 interface ExceptionMembers
 {
-  // A custom message set by the thrower.  LenientThis so it can be
-  // gotten on the prototype, which Error.prototype.toString will do
-  // if someone tries to stringify DOMException.prototype.
-  [LenientThis]
+  // A custom message set by the thrower.
   readonly attribute DOMString               message;
   // The nsresult associated with this exception.
   readonly attribute unsigned long           result;
   // The name of the error code (ie, a string repr of |result|).
-  // LenientThis so it can be gotten on the prototype, which
-  // Error.prototype.toString will do if someone tries to stringify
-  // DOMException.prototype.
-  [LenientThis]
   readonly attribute DOMString               name;
 
   // Filename location.  This is the location that caused the

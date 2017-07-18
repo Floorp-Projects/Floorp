@@ -34,5 +34,6 @@ add_task(async function testPermissionUnknownInPrivateWindow() {
   unregisterAllPopupEventHandlers(win);
   win.gBrowser.removeCurrentTab();
   await BrowserTestUtils.closeWindow(win);
+  win = null;
   removePermission(testPageURL, "persistent-storage");
 });

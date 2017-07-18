@@ -18,6 +18,6 @@ i.onload = function() {
      "Check whether an error was reported");
   SimpleTest.finish();
 };
-i.src = "data:text/html,<base href='http://basetag/basetag'><video id='v' onerror='v.failed=true'></video>";
+i.srcdoc = "<base href='http://basetag/basetag'><video id='v' onerror='v.failed=true'></video>";
 </script>
 
