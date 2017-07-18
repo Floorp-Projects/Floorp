@@ -180,11 +180,11 @@ struct WrImageDescriptor {
   }
 };
 
-struct WrByteSlice {
+struct ByteSlice {
   const uint8_t *buffer;
   size_t len;
 
-  bool operator==(const WrByteSlice& aOther) const {
+  bool operator==(const ByteSlice& aOther) const {
     return buffer == aOther.buffer &&
            len == aOther.len;
   }
@@ -433,20 +433,6 @@ struct WrGradientStop {
   }
 };
 
-struct SideOffsets2D_u32 {
-  uint32_t top;
-  uint32_t right;
-  uint32_t bottom;
-  uint32_t left;
-
-  bool operator==(const SideOffsets2D_u32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
-
 struct SideOffsets2D_f32 {
   float top;
   float right;
@@ -454,6 +440,20 @@ struct SideOffsets2D_f32 {
   float left;
 
   bool operator==(const SideOffsets2D_f32& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
+  }
+};
+
+struct SideOffsets2D_u32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
+
+  bool operator==(const SideOffsets2D_u32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -598,7 +598,7 @@ WR_INLINE
 void wr_api_add_blob_image(WrAPI *aApi,
                            WrImageKey aImageKey,
                            const WrImageDescriptor *aDescriptor,
-                           WrByteSlice aBytes)
+                           ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE
@@ -621,7 +621,7 @@ WR_INLINE
 void wr_api_add_image(WrAPI *aApi,
                       WrImageKey aImageKey,
                       const WrImageDescriptor *aDescriptor,
-                      WrByteSlice aBytes)
+                      ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE
@@ -708,7 +708,7 @@ WR_INLINE
 void wr_api_update_image(WrAPI *aApi,
                          WrImageKey aKey,
                          const WrImageDescriptor *aDescriptor,
-                         WrByteSlice aBytes)
+                         ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE

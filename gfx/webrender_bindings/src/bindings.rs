@@ -103,14 +103,14 @@ fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
 }
 
 #[repr(C)]
-pub struct WrByteSlice {
+pub struct ByteSlice {
     buffer: *const u8,
     len: usize,
 }
 
-impl WrByteSlice {
-    pub fn new(slice: &[u8]) -> WrByteSlice {
-        WrByteSlice {
+impl ByteSlice {
+    pub fn new(slice: &[u8]) -> ByteSlice {
+        ByteSlice {
             buffer: &slice[0],
             len: slice.len(),
         }
@@ -753,7 +753,7 @@ pub unsafe extern "C" fn wr_api_delete(api: *mut WrAPI) {
 pub extern "C" fn wr_api_add_image(api: &mut WrAPI,
                                    image_key: WrImageKey,
                                    descriptor: &WrImageDescriptor,
-                                   bytes: WrByteSlice) {
+                                   bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
@@ -766,7 +766,7 @@ pub extern "C" fn wr_api_add_image(api: &mut WrAPI,
 pub extern "C" fn wr_api_add_blob_image(api: &mut WrAPI,
                                         image_key: WrImageKey,
                                         descriptor: &WrImageDescriptor,
-                                        bytes: WrByteSlice) {
+                                        bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
     api.add_image(image_key,
@@ -813,7 +813,7 @@ pub extern "C" fn wr_api_add_external_image_buffer(api: &mut WrAPI,
 pub extern "C" fn wr_api_update_image(api: &mut WrAPI,
                                       key: WrImageKey,
                                       descriptor: &WrImageDescriptor,
-                                      bytes: WrByteSlice) {
+                                      bytes: ByteSlice) {
     assert!(unsafe { is_in_compositor_thread() });
     let copied_bytes = bytes.as_slice().to_owned();
 
@@ -1581,7 +1581,7 @@ pub extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
 //
 extern "C" {
      // TODO: figure out the API for tiled blob images.
-     pub fn wr_moz2d_render_cb(blob: WrByteSlice,
+     pub fn wr_moz2d_render_cb(blob: ByteSlice,
                                width: u32,
                                height: u32,
                                format: WrImageFormat,
