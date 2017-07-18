@@ -5,33 +5,32 @@
 
 package org.mozilla.gecko.activitystream.homepanel.stream;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
+import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
+import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
-
-import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 
 public class HighlightItem extends StreamItem implements IconCallback {
     private static final String LOGTAG = "GeckoHighlightItem";
@@ -103,7 +102,9 @@ public class HighlightItem extends StreamItem implements IconCallback {
         this.highlight = highlight;
         this.position = position;
 
-        pageTitleView.setText(highlight.getTitle());
+        final String backendHightlightTitle = highlight.getTitle();
+        final String uiHighlightTitle = !TextUtils.isEmpty(backendHightlightTitle) ? backendHightlightTitle : highlight.getUrl();
+        pageTitleView.setText(uiHighlightTitle);
         vTimeSince.setText(highlight.getRelativeTimeSpan());
 
         ViewGroup.LayoutParams layoutParams = pageIconView.getLayoutParams();
@@ -112,7 +113,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
         pageIconView.setLayoutParams(layoutParams);
 
         updateUiForSource(highlight.getSource());
-        updatePage();
+        updatePageDomain();
 
         if (ongoingIconLoad != null) {
             ongoingIconLoad.cancel(true);
@@ -144,24 +145,35 @@ public class HighlightItem extends StreamItem implements IconCallback {
         }
     }
 
-    private void updatePage() {
-        // First try to set the provider name from the page's metadata.
-        if (highlight.getMetadata().hasProvider()) {
-            pageDomainView.setText(highlight.getMetadata().getProvider());
-            return;
-        }
-
-        // If there's no provider name available then let's try to extract one from the URL.
-        extractLabel(itemView.getContext(), highlight.getUrl(), false, new ActivityStream.LabelCallback() {
-            @Override
-            public void onLabelExtracted(String label) {
-                pageDomainView.setText(TextUtils.isEmpty(label) ? highlight.getUrl() : label);
-            }
-        });
+    private void updatePageDomain() {
+        final UpdatePageDomainAsyncTask hostSLDTask = new UpdatePageDomainAsyncTask(itemView.getContext(),
+                highlight.getUrl(), pageDomainView);
+        hostSLDTask.execute();
     }
 
     @Override
     public void onIconResponse(IconResponse response) {
         pageIconView.updateImage(response);
+    }
+
+    /** Updates the text of the given view to the host second level domain. */
+    private static class UpdatePageDomainAsyncTask extends URIUtils.GetHostSecondLevelDomainAsyncTask {
+        private final WeakReference<TextView> pageDomainViewWeakReference;
+
+        UpdatePageDomainAsyncTask(final Context contextReference, final String uriString, final TextView pageDomainView) {
+            super(contextReference, uriString);
+            this.pageDomainViewWeakReference = new WeakReference<>(pageDomainView);
+        }
+
+        @Override
+        protected void onPostExecute(final String hostSLD) {
+            super.onPostExecute(hostSLD);
+            final TextView viewToUpdate = pageDomainViewWeakReference.get();
+            if (viewToUpdate == null) {
+                return;
+            }
+
+            viewToUpdate.setText(hostSLD);
+        }
     }
 }
