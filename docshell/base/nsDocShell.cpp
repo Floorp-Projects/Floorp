@@ -10959,21 +10959,25 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   MOZ_ASSERT(aTriggeringPrincipal, "Need a valid triggeringPrincipal");
 
   bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
-  // only inherit if we have a aPrincipalToInherit
-  bool inherit = false;
+
+  // We want to inherit aPrincipalToInherit when:
+  // 1. ChannelShouldInheritPrincipal returns true.
+  // 2. aURI is not data: URI, or data: URI is not configured as unique opaque
+  //    origin.
+  bool inheritAttrs = false, inheritPrincipal = false;
 
   if (aPrincipalToInherit) {
+    inheritAttrs = nsContentUtils::ChannelShouldInheritPrincipal(
+      aPrincipalToInherit,
+      aURI,
+      true, // aInheritForAboutBlank
+      isSrcdoc);
+
     bool isData;
     bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
                              NS_SUCCEEDED(aURI->SchemeIs("data", &isData)) &&
                              isData;
-    // If aURI is data: URI and is treated as a unique opaque origin, we don't
-    // want to inherit principal.
-    inherit = nsContentUtils::ChannelShouldInheritPrincipal(
-      aPrincipalToInherit,
-      aURI,
-      true, // aInheritForAboutBlank
-      isSrcdoc) && !isURIUniqueOrigin ;
+    inheritPrincipal = inheritAttrs && !isURIUniqueOrigin;
   }
 
   nsLoadFlags loadFlags = mDefaultLoadFlags;
@@ -10991,7 +10995,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     securityFlags |= nsILoadInfo::SEC_LOAD_ERROR_PAGE;
   }
 
-  if (inherit) {
+  if (inheritPrincipal) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
   if (isSandBoxed) {
@@ -11040,14 +11044,9 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   OriginAttributes attrs;
 
-  // If inherit is true, which means loadInfo will have SEC_FORCE_INHERIT_PRINCIPAL
-  // set, so later when we create principal of the document from
-  // nsScriptSecurityManager::GetChannelResultPrincipal, we will use
-  // principalToInherit of the loadInfo as the document principal.
-  // Therefore we use the origin attributes from aPrincipalToInherit.
-  //
+  // Inherit origin attributes from aPrincipalToInherit if inheritAttrs is true.
   // Otherwise we just use the origin attributes from docshell.
-  if (inherit) {
+  if (inheritAttrs) {
     MOZ_ASSERT(aPrincipalToInherit, "We should have aPrincipalToInherit here.");
     attrs = aPrincipalToInherit->OriginAttributesRef();
     // If firstPartyIsolation is not enabled, then PrincipalToInherit should
