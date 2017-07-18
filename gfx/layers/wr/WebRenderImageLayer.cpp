@@ -32,16 +32,23 @@ WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
 WebRenderImageLayer::~WebRenderImageLayer()
 {
   MOZ_COUNT_DTOR(WebRenderImageLayer);
+  ClearWrResources();
+}
 
+void
+WebRenderImageLayer::ClearWrResources()
+{
   if (mKey.isSome()) {
     WrManager()->AddImageKeyForDiscard(mKey.value());
+    mKey = Nothing();
   }
-
   if (mExternalImageId.isSome()) {
     WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+    mExternalImageId = Nothing();
   }
   if (mPipelineId.isSome()) {
     WrBridge()->RemovePipelineIdForAsyncCompositable(mPipelineId.ref());
+    mPipelineId = Nothing();
   }
 }
 
@@ -85,6 +92,7 @@ WebRenderImageLayer::GetAsSourceSurface()
 void
 WebRenderImageLayer::ClearCachedResources()
 {
+  ClearWrResources();
   if (mImageClient) {
     mImageClient->ClearCachedResources();
   }

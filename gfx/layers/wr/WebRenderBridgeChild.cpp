@@ -22,6 +22,7 @@ using namespace mozilla::gfx;
 WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mReadLockSequenceNumber(0)
   , mIsInTransaction(false)
+  , mIsInClearCachedResources(false)
   , mIdNamespace(0)
   , mResourceId(0)
   , mPipelineId(aPipelineId)
@@ -57,7 +58,7 @@ WebRenderBridgeChild::ActorDestroy(ActorDestroyReason why)
 void
 WebRenderBridgeChild::AddWebRenderParentCommand(const WebRenderParentCommand& aCmd)
 {
-  MOZ_ASSERT(mIsInTransaction);
+  MOZ_ASSERT(mIsInTransaction || mIsInClearCachedResources);
   mParentCommands.AppendElement(aCmd);
 }
 
@@ -458,6 +459,20 @@ WebRenderBridgeChild::RecvWrUpdated(const uint32_t& aNewIdNameSpace)
   mFontKeys.Clear();
   GetCompositorBridgeChild()->RecvInvalidateLayers(wr::AsUint64(mPipelineId));
   return IPC_OK();
+}
+
+void
+WebRenderBridgeChild::BeginClearCachedResources()
+{
+  mIsInClearCachedResources = true;
+  SendClearCachedResources();
+}
+
+void
+WebRenderBridgeChild::EndClearCachedResources()
+{
+  ProcessWebRenderParentCommands();
+  mIsInClearCachedResources = false;
 }
 
 } // namespace layers
