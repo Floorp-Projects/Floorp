@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Test add_task.only() function"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"/>
+  <script type="application/javascript">
+    <![CDATA[
+
+      // Check that we can skip all but one task by calling `only()`.
+
+      add_task(async function skipMe1() {
+        ok(false, "Not skipped after all.");
+      });
+
+      add_task(async function skipMe2() {
+        ok(false, "Not skipped after all.");
+      }).skip();
+
+      add_task(async function skipMe3() {
+        ok(false, "Not skipped after all.");
+      }).only();
+
+      add_task(async function skipMeNot() {
+        ok(true, "Well well well.");
+      }).only();
+
+      add_task(async function skipMe4() {
+        ok(false, "Not skipped after all.");
+      });
+
+    ]]>
+  </script>
+  <body xmlns="http://www.w3.org/1999/xhtml" >
+  </body>
+</window>
+
+
+
+
