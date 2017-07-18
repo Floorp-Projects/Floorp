@@ -106,8 +106,8 @@
   },
   "APPLICATION_REPUTATION_SERVER_VERDICT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "56",
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1272788],
     "kind": "enumerated",
@@ -123,8 +123,9 @@
   },
   "APPLICATION_REPUTATION_REMOTE_LOOKUP_TIMEOUT": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["safebrowsing-telemetry@mozilla.org"],
-    "expires_in_version": "56",
+    "alert_emails": ["francois@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
     "kind": "boolean",
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
