@@ -55,9 +55,12 @@ function loadevent(event) {
 
 var win;
 function startTest() {
-  const TEST_FILE = location.href.replace("test_videocontrols_jsdisabled.html",
-                                          "file_videocontrols_jsdisabled.html");
-  win = window.open(TEST_FILE);
+  var videoURL = new URL("seek_with_sound.ogg", document.documentURI).href;
+
+  // eslint-disable-next-line no-useless-concat
+  var url = "data:text/html,<video src=" + videoURL + " controls autoplay=true></video><script>window.testExpando = true;</scr" + "ipt>";
+
+  win = window.open(url);
   win.addEventListener("load", loadevent);
 }
 
