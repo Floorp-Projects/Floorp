@@ -68,10 +68,8 @@ nsSMILCSSProperty::GetBaseValue() const
 
   AnimationValue computedValue;
   if (mElement->IsStyledByServo()) {
-    const ServoComputedValues* currentStyle =
-      mBaseStyleContext->ComputedValues();
     computedValue.mServo =
-      Servo_ComputedValues_ExtractAnimationValue(currentStyle, mPropID)
+      Servo_ComputedValues_ExtractAnimationValue(mBaseStyleContext->AsServo(), mPropID)
       .Consume();
     if (!computedValue.mServo) {
       return baseValue;
