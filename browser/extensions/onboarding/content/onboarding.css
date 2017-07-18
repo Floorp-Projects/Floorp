@@ -23,18 +23,22 @@
   display: block;
 }
 
-#onboarding-overlay-icon {
-  width: 36px;
-  height: 29px;
+#onboarding-overlay-button {
   position: absolute;
   cursor: pointer;
   top: 30px;
   offset-inline-start: 30px;
-  background: url("img/overlay-icon.svg") no-repeat;
+  border: none;
+  /* Set to none so no grey contrast background in the high-contrast mode */
+  background: none;
+}
+
+#onboarding-overlay-button-icon {
+  width: 36px;
 }
 
 #onboarding-notification-icon::after,
-#onboarding-overlay-icon::after {
+#onboarding-overlay-button::after {
   background: #5ce6e6;
   position: absolute;
   font-size: 12px;
@@ -44,7 +48,7 @@
   box-sizing: content-box;
 }
 
-#onboarding-overlay-icon::after {
+#onboarding-overlay-button::after {
   content: attr(aria-label);
   top: -6px;
   offset-inline-start: 39px;
@@ -58,29 +62,35 @@
   display: none;
 }
 
-#onboarding-overlay-close-btn,
-#onboarding-notification-close-btn {
-  position: absolute;
-  top: 15px;
-  offset-inline-end: 15px;
-  cursor: pointer;
-  width: 16px;
-  height: 16px;
-  background-image: url(chrome://browser/skin/sidebar/close.svg);
-  background-position: center center;
-  background-repeat: no-repeat;
-  padding: 12px;
+.onboarding-close-btn {
+   position: absolute;
+   top: 15px;
+   offset-inline-end: 15px;
+   cursor: pointer;
+   width: 16px;
+   height: 16px;
+   padding: 12px;
+   border: none;
+   background: var(--onboarding-overlay-dialog-background-color);
+ }
+
+.onboarding-close-btn::before {
+  content: url(chrome://browser/skin/sidebar/close.svg);
+  display: block;
+  margin-top: -8px;
+  margin-inline-start: -8px;
 }
 
-#onboarding-overlay-close-btn:hover,
+.onboarding-close-btn:hover,
 #onboarding-notification-close-btn:hover {
   background-color: rgba(204, 204, 204, 0.6);
 }
 
 #onboarding-overlay.onboarding-opened > #onboarding-overlay-dialog {
+  --onboarding-overlay-dialog-background-color: #f5f5f7;
   width: 960px;
   height: 510px;
-  background: #f5f5f7;
+  background: var(--onboarding-overlay-dialog-background-color);
   border: 1px solid rgba(9, 6, 13, 0.1); /* #09060D, 0.1 opacity */
   border-radius: 3px;
   position: relative;
@@ -136,10 +146,13 @@
 }
 
 #onboarding-tour-list > li {
+  --padding-inline-start: 49px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
   list-style: none;
-  padding-inline-start: 49px;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-inline-start: var(--padding-inline-start);
+  padding-top: var(--padding-top);
+  padding-bottom: var(--padding-bottom);
   margin-inline-start: 16px;
   margin-bottom: 9px;
   background-repeat: no-repeat;
@@ -162,12 +175,19 @@
 }
 
 #onboarding-tour-list > li.onboarding-complete {
-  padding-inline-start: 29px;
+  --padding-inline-start: 29px;
 }
 
 #onboarding-tour-list > li.onboarding-active,
 #onboarding-tour-list > li:hover {
   color: #0A84FF;
+  /* With 1px transparent border, could see a border in the high-constrast mode */
+  border: 1px solid transparent;
+  /* Substract 1px for the 1px transparent or a 1px shift would happen */
+  padding-inline-start: calc(var(--padding-inline-start) - 1px);
+  padding-top: calc(var(--padding-top) - 1px);
+  padding-bottom: calc(var(--padding-bottom) - 1px);
+  background-color: #fff;
 }
 
 /* Default browser tour */
@@ -284,7 +304,8 @@
   font-weight: 600;
   line-height: 21px;
   background: #0a84ff;
-  border: none;
+  /* With 1px transparent border, could see a border in the high-constrast mode */
+  border: 1px solid transparent;
   border-radius: 0;
   color: #fff;
   float: inline-end;
@@ -418,6 +439,7 @@
 
 /* Tour Notifications */
 #onboarding-notification-bar {
+  --onboarding-notification-bar-background-color: rgba(255, 255, 255, 0.97);
   position: fixed;
   z-index: 20998; /* We want this always under #onboarding-overlay */
   left: 0;
@@ -425,7 +447,7 @@
   width: 100%;
   height: 122px;
   min-width: 640px;
-  background: rgba(255, 255, 255, 0.97);
+  background: var(--onboarding-notification-bar-background-color);
   border-top: 2px solid #e9e9e9;
   transition: transform 0.8s;
   transform: translateY(122px);
@@ -463,8 +485,7 @@
 }
 
 #onboarding-notification-close-btn {
-  background-color: rgba(255, 255, 255, 0.97);
-  border: none;
+  background: var(--onboarding-notification-bar-background-color);
   position: absolute;
   offset-block-start: 50%;
   offset-inline-end: 34px;
@@ -509,7 +530,8 @@
 
 #onboarding-notification-action-btn {
   background: #0a84ff;
-  border: none;
+  /* With 1px transparent border, could see a border in the high-constrast mode */
+  border: 1px solid transparent;
   border-radius: 0;
   padding: 10px 20px;
   font-size: 14px;

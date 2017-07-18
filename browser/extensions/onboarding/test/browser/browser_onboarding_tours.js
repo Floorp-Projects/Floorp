@@ -7,7 +7,7 @@ function assertOnboardingDestroyed(browser) {
   return ContentTask.spawn(browser, {}, function() {
     let expectedRemovals = [
       "#onboarding-overlay",
-      "#onboarding-overlay-icon"
+      "#onboarding-overlay-button"
     ];
     for (let selector of expectedRemovals) {
       let removal = content.document.querySelector(selector);
@@ -36,7 +36,7 @@ add_task(async function test_hide_onboarding_tours() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
@@ -67,7 +67,7 @@ add_task(async function test_click_action_button_to_set_tour_completed() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
@@ -101,7 +101,7 @@ add_task(async function test_set_right_tour_completed_style_on_overlay() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
