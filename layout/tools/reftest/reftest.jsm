@@ -477,6 +477,11 @@ function StartTests()
 
     gCleanupPendingCrashes = prefs.getBoolPref("reftest.cleanupPendingCrashes", false);
 
+    // Check if there are any crash dump files from the startup procedure, before
+    // we start running the first test. Otherwise the first test might get
+    // blamed for producing a crash dump file when that was not the case.
+    CleanUpCrashDumpFiles();
+
     // When we repeat this function is called again, so really only want to set
     // gRepeat once.
     if (gRepeat == null) {
@@ -1924,7 +1929,11 @@ function FindUnexpectedCrashDumpFiles()
             if (!foundCrashDumpFile) {
                 ++gTestResults.UnexpectedFail;
                 foundCrashDumpFile = true;
-                logger.testEnd(gCurrentURL, "FAIL", "PASS", "This test left crash dumps behind, but we weren't expecting it to!");
+                if (gCurrentURL) {
+                    logger.testEnd(gCurrentURL, "FAIL", "PASS", "This test left crash dumps behind, but we weren't expecting it to!");
+                } else {
+                    logger.error("Harness startup left crash dumps behind, but we weren't expecting it to!");
+                }
             }
             logger.info("Found unexpected crash dump file " + path);
             gUnexpectedCrashDumpFiles[path] = true;
