@@ -5035,16 +5035,7 @@ dnl ========================================================
 dnl ICU Support
 dnl ========================================================
 
-if test "$MOZ_WIDGET_TOOLKIT" != "android" -o -z "$RELEASE_OR_BETA"; then
-    dnl Disable ICU on android/x86 for testing on tier-1 platform
-    if test "$MOZ_WIDGET_TOOLKIT" = "android" -a "$CPU_ARCH" = "x86"; then
-        _INTL_API=no
-    else
-        _INTL_API=yes
-    fi
-else
-    _INTL_API=no
-fi
+_INTL_API=yes
 
 if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
     USE_ICU=1
