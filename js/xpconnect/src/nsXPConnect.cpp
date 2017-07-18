@@ -837,15 +837,6 @@ nsXPConnect::GetCurrentJSStack(nsIStackFrame * *aCurrentJSStack)
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetCurrentNativeCallContext(nsAXPCNativeCallContext * *aCurrentNativeCallContext)
-{
-    MOZ_ASSERT(aCurrentNativeCallContext, "bad param");
-
-    *aCurrentNativeCallContext = XPCJSContext::Get()->GetCallContext();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
                                        nsIXPCFunctionThisTranslator* aTranslator)
 {
