@@ -93,7 +93,9 @@
               dropPoint.ip = new InsertionPoint(
                                   PlacesUtils.getConcreteItemId(resultNode),
                                   -1,
-                                  Ci.nsITreeView.DROP_ON);
+                                  Ci.nsITreeView.DROP_ON,
+                                  null,
+                                  PlacesUtils.getConcreteItemGuid(resultNode));
               // We can set folderElt if we are dropping over a static menu that
               // has an internal placespopup.
               let isMenu = elt.localName == "menu" ||
@@ -118,7 +120,8 @@
                                     -1,
                                     Ci.nsITreeView.DROP_BEFORE,
                                     tagName,
-                                    elt._placesNode.itemId);
+                                    elt._placesNode,
+                                    PlacesUtils.getConcreteItemGuid(resultNode));
                 return dropPoint;
               } else if (eventY - eltY < eltHeight * 0.80) {
                 // If mouse is in the middle of the element, drop inside folder.
@@ -126,7 +129,9 @@
                                     PlacesUtils.getConcreteItemId(elt._placesNode),
                                     -1,
                                     Ci.nsITreeView.DROP_ON,
-                                    tagName);
+                                    tagName,
+                                    null,
+                                    PlacesUtils.getConcreteItemGuid(elt._placesNode));
                 dropPoint.folderElt = elt;
                 return dropPoint;
               }
@@ -138,7 +143,8 @@
                                   -1,
                                   Ci.nsITreeView.DROP_BEFORE,
                                   tagName,
-                                  elt._placesNode.itemId);
+                                  elt._placesNode,
+                                  PlacesUtils.getConcreteItemGuid(resultNode));
               return dropPoint;
             }
 
@@ -148,7 +154,8 @@
                                 -1,
                                 Ci.nsITreeView.DROP_AFTER,
                                 tagName,
-                                elt._placesNode.itemId);
+                                elt._placesNode,
+                                PlacesUtils.getConcreteItemGuid(resultNode));
             return dropPoint;
         ]]></body>
       </method>

@@ -597,7 +597,7 @@ var PlacesCommandHook = {
 
   /**
    * Adds a bookmark to the page targeted by a link.
-   * @param aParent
+   * @param aParentId
    *        The folder in which to create a new bookmark if aURL isn't
    *        bookmarked.
    * @param aURL (string)
@@ -616,9 +616,13 @@ var PlacesCommandHook = {
       return;
     }
 
+    let parentGuid = aParentId == PlacesUtils.bookmarksMenuFolderId ?
+                       PlacesUtils.bookmarks.menuGuid :
+                       await PlacesUtils.promiseItemGuid(aParentId);
     let ip = new InsertionPoint(aParentId,
                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                Components.interfaces.nsITreeView.DROP_ON);
+                                Components.interfaces.nsITreeView.DROP_ON,
+                                null, null, parentGuid);
     PlacesUIUtils.showBookmarkDialog({ action: "add",
                                        type: "bookmark",
                                        uri: makeURI(aURL),
@@ -696,7 +700,8 @@ var PlacesCommandHook = {
   async addLiveBookmark(url, feedTitle, feedSubtitle) {
     let toolbarIP = new InsertionPoint(PlacesUtils.toolbarFolderId,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                       Components.interfaces.nsITreeView.DROP_ON);
+                                       Components.interfaces.nsITreeView.DROP_ON,
+                                       null, null, PlacesUtils.bookmarks.toolbarGuid);
 
     let feedURI = makeURI(url);
     let title = feedTitle || gBrowser.contentTitle;
@@ -1112,7 +1117,8 @@ var PlacesMenuDNDHandler = {
   onDragOver: function PMDH_onDragOver(event) {
     let ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                Components.interfaces.nsITreeView.DROP_ON);
+                                Components.interfaces.nsITreeView.DROP_ON,
+                                null, null, PlacesUtils.bookmarks.menuGuid);
     if (ip && PlacesControllerDragHelper.canDrop(ip, event.dataTransfer))
       event.preventDefault();
 
@@ -1128,7 +1134,8 @@ var PlacesMenuDNDHandler = {
     // Put the item at the end of bookmark menu.
     let ip = new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
                                 PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                Components.interfaces.nsITreeView.DROP_ON);
+                                Components.interfaces.nsITreeView.DROP_ON,
+                                null, null, PlacesUtils.bookmarks.menuGuid);
     PlacesControllerDragHelper.onDrop(ip, event.dataTransfer);
     PlacesControllerDragHelper.currentDropTarget = null;
     event.stopPropagation();
