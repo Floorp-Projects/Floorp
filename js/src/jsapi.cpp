@@ -4188,11 +4188,16 @@ JS::CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& opt
     return ::Compile(cx, options, ScopeKind::NonSyntactic, filename, script);
 }
 
-JS_PUBLIC_API(bool)
-JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
+enum class OffThread {
+    Compile, Decode,
+};
+
+static bool
+CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length, OffThread what)
 {
     static const size_t TINY_LENGTH = 5 * 1000;
-    static const size_t HUGE_LENGTH = 100 * 1000;
+    static const size_t HUGE_SRC_LENGTH = 100 * 1000;
+    static const size_t HUGE_BC_LENGTH = 367 * 1000;
 
     // These are heuristics which the caller may choose to ignore (e.g., for
     // testing purposes).
@@ -4205,11 +4210,27 @@ JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, si
         // If the parsing task would have to wait for GC to complete, it'll probably
         // be faster to just start it synchronously on the active thread unless the
         // script is huge.
-        if (OffThreadParsingMustWaitForGC(cx->runtime()) && length < HUGE_LENGTH)
-            return false;
+        if (OffThreadParsingMustWaitForGC(cx->runtime())) {
+            if (what == OffThread::Compile && length < HUGE_SRC_LENGTH)
+                return false;
+            if (what == OffThread::Decode && length < HUGE_BC_LENGTH)
+                return false;
+        }
     }
 
     return cx->runtime()->canUseParallelParsing() && CanUseExtraThreads();
+}
+
+JS_PUBLIC_API(bool)
+JS::CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
+{
+    return CanDoOffThread(cx, options, length, OffThread::Compile);
+}
+
+JS_PUBLIC_API(bool)
+JS::CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length)
+{
+    return CanDoOffThread(cx, options, length, OffThread::Decode);
 }
 
 JS_PUBLIC_API(bool)
@@ -4268,7 +4289,7 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           OffThreadCompileCallback callback, void* callbackData)
 {
     JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
-    MOZ_ASSERT(CanCompileOffThread(cx, options, range.length()));
+    MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
     return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
@@ -4277,7 +4298,7 @@ JS::DecodeOffThreadScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                           const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
                           OffThreadCompileCallback callback, void* callbackData)
 {
-    MOZ_ASSERT(CanCompileOffThread(cx, options, range.length()));
+    MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
     return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
