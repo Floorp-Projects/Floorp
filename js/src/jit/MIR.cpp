@@ -6147,34 +6147,6 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
     return BarrierKind::NoBarrier;
 }
 
-static bool
-ObjectSubsumes(TypeSet::ObjectKey* first, TypeSet::ObjectKey* second)
-{
-    if (first->isSingleton() ||
-        second->isSingleton() ||
-        first->clasp() != second->clasp() ||
-        first->unknownProperties() ||
-        second->unknownProperties())
-    {
-        return false;
-    }
-
-    if (first->clasp() == &ArrayObject::class_) {
-        HeapTypeSetKey firstElements = first->property(JSID_VOID);
-        HeapTypeSetKey secondElements = second->property(JSID_VOID);
-
-        return firstElements.maybeTypes() && secondElements.maybeTypes() &&
-               firstElements.maybeTypes()->equals(secondElements.maybeTypes());
-    }
-
-    if (first->clasp() == &UnboxedArrayObject::class_) {
-        return first->group()->unboxedLayout().elementType() ==
-               second->group()->unboxedLayout().elementType();
-    }
-
-    return false;
-}
-
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                                   CompilerConstraintList* constraints,
@@ -6214,30 +6186,6 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                 break;
             obj = TypeSet::ObjectKey::get(obj->proto().toObject());
         } while (obj);
-    }
-
-    // If any objects which could be observed are similar to ones that have
-    // already been observed, add them to the observed type set.
-    if (!key->unknownProperties()) {
-        HeapTypeSetKey property = key->property(name ? NameToId(name) : JSID_VOID);
-
-        if (property.maybeTypes() && !property.maybeTypes()->unknownObject()) {
-            for (size_t i = 0; i < property.maybeTypes()->getObjectCount(); i++) {
-                TypeSet::ObjectKey* key = property.maybeTypes()->getObject(i);
-                if (!key || observed->unknownObject())
-                    continue;
-
-                for (size_t j = 0; j < observed->getObjectCount(); j++) {
-                    TypeSet::ObjectKey* observedKey = observed->getObject(j);
-                    if (observedKey && ObjectSubsumes(observedKey, key)) {
-                        // Note: the return value here is ignored.
-                        observed->addType(TypeSet::ObjectType(key),
-                                          GetJitContext()->temp->lifoAlloc());
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     return PropertyReadNeedsTypeBarrier(constraints, key, name, observed);
