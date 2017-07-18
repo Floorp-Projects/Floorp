@@ -115,7 +115,14 @@ def make_repackage_signing_description(config, jobs):
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
         }
-        if 'macosx' in dep_job.attributes.get('build_platform'):
+
+        funsize_platforms = [
+            'macosx64-nightly',
+            'win32-nightly',
+            'win64-nightly'
+        ]
+        if dep_job.attributes.get('build_platform') in funsize_platforms and \
+                dep_job.attributes.get('nightly'):
             route_template = "project.releng.funsize.level-{level}.{project}"
             task['routes'] = [
                 route_template.format(project=config.params['project'],
