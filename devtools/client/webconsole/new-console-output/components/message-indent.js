@@ -19,8 +19,11 @@ const CONSTANT_INDENTS = [getIndentElement(0), getIndentElement(1)];
 
 function getIndentElement(indent) {
   return dom.span({
+    "data-indent": indent,
     className: "indent",
-    style: {"width": indent * INDENT_WIDTH}
+    style: {
+      "width": indent * INDENT_WIDTH
+    }
   });
 }
 
