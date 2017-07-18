@@ -14,10 +14,31 @@ const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", 
 const {PlacesFeed} = Cu.import("resource://activity-stream/lib/PlacesFeed.jsm", {});
 const {PrefsFeed} = Cu.import("resource://activity-stream/lib/PrefsFeed.jsm", {});
 const {Store} = Cu.import("resource://activity-stream/lib/Store.jsm", {});
+const {SnippetsFeed} = Cu.import("resource://activity-stream/lib/SnippetsFeed.jsm", {});
 const {TelemetryFeed} = Cu.import("resource://activity-stream/lib/TelemetryFeed.jsm", {});
 const {TopSitesFeed} = Cu.import("resource://activity-stream/lib/TopSitesFeed.jsm", {});
+const {DummySectionFeed} = Cu.import("resource://activity-stream/lib/DummySectionFeed.jsm", {});
 
 const REASON_ADDON_UNINSTALL = 6;
+
+// Sections, keyed by section id
+const SECTIONS = new Map([
+  ["dummy_section", {
+    feed: DummySectionFeed,
+    showByDefault: false
+  }]
+]);
+
+const SECTION_FEEDS_CONFIG = Array.from(SECTIONS.entries()).map(entry => {
+  const id = entry[0];
+  const {feed: Feed, showByDefault: value} = entry[1];
+  return {
+    name: `section.${id}`,
+    factory: () => new Feed(),
+    title: `${id} section feed`,
+    value
+  };
+});
 
 const PREFS_CONFIG = new Map([
   ["default.sites", {
@@ -49,7 +70,7 @@ const PREFS_CONFIG = new Map([
 ]);
 
 const FEEDS_CONFIG = new Map();
-for (const {name, factory, title, value} of [
+for (const {name, factory, title, value} of SECTION_FEEDS_CONFIG.concat([
   {
     name: "localization",
     factory: () => new LocalizationFeed(),
@@ -75,6 +96,12 @@ for (const {name, factory, title, value} of [
     value: true
   },
   {
+    name: "snippets",
+    factory: () => new SnippetsFeed(),
+    title: "Gets snippets data",
+    value: false
+  },
+  {
     name: "telemetry",
     factory: () => new TelemetryFeed(),
     title: "Relays telemetry-related actions to TelemetrySender",
@@ -86,7 +113,7 @@ for (const {name, factory, title, value} of [
     title: "Queries places and gets metadata for Top Sites section",
     value: true
   }
-]) {
+])) {
   const pref = `feeds.${name}`;
   FEEDS_CONFIG.set(pref, factory);
   PREFS_CONFIG.set(pref, {title, value});
@@ -135,4 +162,4 @@ this.ActivityStream = class ActivityStream {
 };
 
 this.PREFS_CONFIG = PREFS_CONFIG;
-this.EXPORTED_SYMBOLS = ["ActivityStream"];
+this.EXPORTED_SYMBOLS = ["ActivityStream", "SECTIONS"];
