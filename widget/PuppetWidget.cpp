@@ -592,24 +592,28 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
   return mLayerManager;
 }
 
-LayerManager*
-PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
+bool
+PuppetWidget::RecreateLayerManager(const std::function<bool(LayerManager*)>& aInitializeFunc)
 {
-  // Force the old LM to self destruct, otherwise if the reference dangles we
-  // could fail to revoke the most recent transaction.
-  DestroyLayerManager();
-
+  RefPtr<LayerManager> lm;
   MOZ_ASSERT(mTabChild);
   if (gfxVars::UseWebRender()) {
-    MOZ_ASSERT(!aShadowManager);
-    mLayerManager = new WebRenderLayerManager(this);
+    lm = new WebRenderLayerManager(this);
   } else {
-    mLayerManager = new ClientLayerManager(this);
+    lm = new ClientLayerManager(this);
   }
-  if (ShadowLayerForwarder* lf = mLayerManager->AsShadowForwarder()) {
-    lf->SetShadowManager(aShadowManager);
+
+  if (!aInitializeFunc(lm)) {
+    return false;
   }
-  return mLayerManager;
+
+  // Force the old LM to self destruct, otherwise if the reference dangles we
+  // could fail to revoke the most recent transaction. We only want to replace
+  // it if we successfully create its successor because a partially initialized
+  // layer manager is worse than a fully initialized but shutdown layer manager.
+  DestroyLayerManager();
+  mLayerManager = lm.forget();
+  return true;
 }
 
 nsresult
