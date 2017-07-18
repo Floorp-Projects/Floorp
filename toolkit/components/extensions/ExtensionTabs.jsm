@@ -266,6 +266,17 @@ class TabBase {
   }
 
   /**
+   * @property {integer} lastAccessed
+   *        Returns the last time the tab was accessed as the number of
+   *        milliseconds since epoch.
+   *        @readonly
+   *        @abstract
+   */
+  get lastAccessed() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * @property {boolean} audible
    *        Returns true if the tab is currently playing audio, false otherwise.
    *        @readonly
@@ -481,6 +492,7 @@ class TabBase {
       incognito: this.incognito,
       width: this.width,
       height: this.height,
+      lastAccessed: this.lastAccessed,
       audible: this.audible,
       mutedInfo: this.mutedInfo,
     };

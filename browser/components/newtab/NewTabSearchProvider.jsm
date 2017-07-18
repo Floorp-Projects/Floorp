@@ -68,7 +68,11 @@ SearchProvider.prototype = {
 
   manageEngines(browser) {
     const browserWin = browser.ownerGlobal;
-    browserWin.openPreferences("paneGeneral", { origin: "contentSearch" });
+    if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+      browserWin.openPreferences("paneSearch", { origin: "contentSearch" });
+    } else {
+      browserWin.openPreferences("paneGeneral", { origin: "contentSearch" });
+    }
   },
 
   async asyncGetState() {

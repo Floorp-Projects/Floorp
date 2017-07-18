@@ -168,7 +168,13 @@ var gEMEHandler = {
     let mainAction = {
       label: gNavigatorBundle.getString(btnLabelId),
       accessKey: gNavigatorBundle.getString(btnAccessKeyId),
-      callback() { openPreferences("panePrivacy", {origin: "browserMedia"}); },
+      callback() {
+        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+          openPreferences("paneContent", {origin: "browserMedia"});
+        } else {
+          openPreferences("panePrivacy", {origin: "browserMedia"});
+        }
+      },
       dismiss: true
     };
     let options = {

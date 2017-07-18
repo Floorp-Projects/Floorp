@@ -33,7 +33,8 @@
   background: url("img/overlay-icon.svg") no-repeat;
 }
 
-#onboarding-overlay-dialog {
+#onboarding-overlay-dialog,
+.onboarding-hidden {
   display: none;
 }
 
@@ -149,6 +150,16 @@
   color: #0A84FF;
 }
 
+/* Default browser tour */
+#onboarding-tour-is-default-browser-msg {
+  font-size: 16px;
+  line-height: 21px;
+  float: inline-end;
+  margin-inline-end: 26px;
+  margin-top: -32px;
+  text-align: center;
+}
+
 /* Sync tour */
 #onboarding-tour-sync-page form {
   text-align: center;
@@ -261,13 +272,13 @@
   margin-top: -32px;
 }
 
-.onboarding-tour-action-button:hover:not([disabled="true"]) ,
+.onboarding-tour-action-button:hover:not([disabled]) ,
 #onboarding-notification-action-btn:hover {
   background: #0060df;
   cursor: pointer;
 }
 
-.onboarding-tour-action-button:active:not([disabled="true"]),
+.onboarding-tour-action-button:active:not([disabled]),
 #onboarding-notification-action-btn:active  {
   background: #003EAA;
 }
