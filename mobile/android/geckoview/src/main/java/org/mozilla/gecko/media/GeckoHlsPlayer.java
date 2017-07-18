@@ -48,7 +48,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private static final String LOGTAG = "GeckoHlsPlayer";
     private static final DefaultBandwidthMeter BANDWIDTH_METER = new DefaultBandwidthMeter();
     private static final int MAX_TIMELINE_ITEM_LINES = 3;
-    private static boolean DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;
+    private static final boolean DEBUG = AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD;
 
     private static AtomicInteger sPlayerId = new AtomicInteger(0);
     /*
@@ -594,7 +594,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // =======================================================================
     // Called on HLSDemuxer's TaskQueue
     @Override
-    public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType,
+    public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType,
                                                             int number) {
         if (trackType == TrackType.VIDEO) {
             return mVRenderer != null ? mVRenderer.getQueuedSamples(number) :
@@ -721,7 +721,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on Gecko's main thread.
     @Override
-    public void suspend() {
+    public synchronized void suspend() {
         if (mSuspended) {
             return;
         }
@@ -734,7 +734,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     // Called on Gecko's main thread.
     @Override
-    public void resume() {
+    public synchronized void resume() {
         if (!mSuspended) {
           return;
         }
