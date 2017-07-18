@@ -33,6 +33,12 @@
 namespace js {
 namespace jit {
 
+enum class SwitchTableType {
+    Inline,
+    OutOfLine
+};
+
+template <SwitchTableType tableType> class OutOfLineSwitch;
 class OutOfLineTestObject;
 class OutOfLineNewArray;
 class OutOfLineNewObject;
@@ -307,6 +313,9 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitLoadUnboxedPointerV(LLoadUnboxedPointerV* lir);
     void visitLoadUnboxedPointerT(LLoadUnboxedPointerT* lir);
     void visitUnboxObjectOrNull(LUnboxObjectOrNull* lir);
+    template <SwitchTableType tableType>
+    void visitOutOfLineSwitch(OutOfLineSwitch<tableType>* ool);
+    void visitLoadElementFromStateV(LLoadElementFromStateV* lir);
     void visitStoreElementT(LStoreElementT* lir);
     void visitStoreElementV(LStoreElementV* lir);
     template <typename T> void emitStoreElementHoleT(T* lir);
