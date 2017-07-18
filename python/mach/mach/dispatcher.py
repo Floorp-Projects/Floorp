@@ -389,8 +389,9 @@ class CommandAction(argparse.Action):
         subcommand = subcommand.pop()
         subhandler = handler.subcommand_handlers[subcommand]
 
-        c_parser = argparse.ArgumentParser(add_help=False,
-            formatter_class=CommandFormatter)
+        c_parser = subhandler.parser or argparse.ArgumentParser(add_help=False)
+        c_parser.formatter_class = CommandFormatter
+
         group = c_parser.add_argument_group('Sub Command Arguments')
         self._populate_command_group(c_parser, subhandler, group)
 
