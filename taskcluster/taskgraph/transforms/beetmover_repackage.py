@@ -41,8 +41,6 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "target.jsshell.zip",
     "mozharness.zip",
     "target.langpack.xpi",
-    "host/bin/mar",
-    "host/bin/mbsdiff",
 ]
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
@@ -58,7 +56,10 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N = [
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
-    'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
+    'macosx64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+        "host/bin/mar",
+        "host/bin/mbsdiff",
+    ],
     'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
 }
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
@@ -66,16 +67,16 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_REPACKAGE_PATHS = {
-    'macosx64-nightly': ["target.dmg"],
-    'macosx64-nightly-l10n': ["target.dmg"],
+    'macosx64-nightly': ['target.dmg'],
+    'macosx64-nightly-l10n': ['target.dmg'],
 }
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
 # See example in bug 1348286
 UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS = {
-    'macosx64-nightly': ["target.complete.mar"],
-    'macosx64-nightly-l10n': ["target.complete.mar"],
+    'macosx64-nightly': ['target.complete.mar'],
+    'macosx64-nightly-l10n': ['target.complete.mar'],
 }
 
 # Voluptuous uses marker objects as dictionary *keys*, but they are not
