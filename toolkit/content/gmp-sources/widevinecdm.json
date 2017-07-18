@@ -6,44 +6,44 @@
           "alias": "WINNT_x86-msvc"
         },
         "WINNT_x86-msvc": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-win-ia32.zip",
-          "hashValue": "d7e10d09c87a157af865f8388ba70ae672bd9e38987bdd94077af52d6b1abaa745b3db92e9f93f607af6420c68210f7cfd518a9d2c99fecf79aed3385cbcbc0b",
-          "filesize": 2884452
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/970-win-ia32.zip",
+          "hashValue": "5d658579d19e26038a0f5305395733774aa1663c46341c599f74e18c2a84edcc2c909ef752b818b3c7eaf49c1baf7e1b56f56b701fd379e644796830029aa48f",
+          "filesize": 2342279
         },
         "WINNT_x86-msvc-x86": {
           "alias": "WINNT_x86-msvc"
         },
         "Linux_x86_64-gcc3": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-linux-x64.zip",
-          "hashValue": "1edfb58a44792d2a53694f46fcc698161edafb2a1fe0e5c31b50c1d52408b5e8918d9f33271c62a19a65017694ebeacb4f390fe914688ca7b1952cdb84ed55ec",
-          "filesize": 2975492
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/970-linux-x64.zip",
+          "hashValue": "7a5e5b500264478bd860e6a490995d00c5b065891d7538352f7b930bd75b614738cd4e9058f717d1432cec076e1d5d4aa5bed080d3c8a92b928da203a207ba69",
+          "filesize": 2210161
         },
         "Darwin_x86_64-gcc3-u-i386-x86_64": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-mac-x64.zip",
-          "hashValue": "1916805e84a49e04748204f4e4c48ae52c8312f7c04afedacacd7dfab2de424412bc988a8c3e5bcb0865f8844b569c0eb9589dae51e74d9bdfe46792c9d1631f",
-          "filesize": 2155607
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/970-mac-x64.zip",
+          "hashValue": "e96daedccbb318ff4de2e2d8ffe928e0aaacec7794ca05893d37461ee11e52830c736128ecebe311e973c125ac46435ef011a82ca06f602a085bc6d43f5127c1",
+          "filesize": 1681446
         },
         "Darwin_x86_64-gcc3": {
           "alias": "Darwin_x86_64-gcc3-u-i386-x86_64"
         },
         "Linux_x86-gcc3": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-linux-ia32.zip",
-          "hashValue": "5c4beb72ea693740a013b60bc5491a042bb82fa5ca6845a2f450579e2e1e465263f19e7ab6d08d91deb8219b30f092ab6e6745300d5adda627f270c95e5a66e0",
-          "filesize": 3084582
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/970-linux-ia32.zip",
+          "hashValue": "7f66257164909f5f41ffc2f18b832f7cbaada1db444b4a118df0a4018b4b177bbacd91d0df8b3d4e665448b96a8604485dd57e63bc28bccf638fbf7c9faa5ac5",
+          "filesize": 2296162
         },
         "WINNT_x86_64-msvc-x64": {
           "alias": "WINNT_x86_64-msvc"
         },
         "WINNT_x86_64-msvc": {
-          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/903-win-x64.zip",
-          "hashValue": "33497f3458846e11fa52413f6477bfe1a7f502da262c3a2ce9fe6d773a4a2d023c54228596eb162444b55c87fb126de01f60fa729d897ef5e6eec73b2dfbdc7a",
-          "filesize": 2853777
+          "fileUrl": "https://redirector.gvt1.com/edgedl/widevine-cdm/970-win-x64.zip",
+          "hashValue": "79a60aa7ff62cb0c222740d3cc5e10a5d392153bd3e4436162f35b7076ee6478206dd017a494692ded95804b8727236ac08715beb2564e3907a190b605d5ed75",
+          "filesize": 2346464
         }
       },
-      "version": "1.4.8.903"
+      "version": "1.4.8.970"
     }
   },
   "hashFunction": "sha512",
-  "name": "Widevine-1.4.8.903",
+  "name": "Widevine-1.4.8.970",
   "schema_version": 1000
 }

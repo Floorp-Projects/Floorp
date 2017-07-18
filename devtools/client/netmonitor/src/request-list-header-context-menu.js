@@ -6,7 +6,7 @@
 
 const { HEADERS } = require("./constants");
 const { L10N } = require("./utils/l10n");
-const { showMenu } = require("./utils/menu");
+const { showMenu } = require("devtools/client/netmonitor/src/utils/menu");
 
 const stringMap = HEADERS
   .filter((header) => header.hasOwnProperty("label"))

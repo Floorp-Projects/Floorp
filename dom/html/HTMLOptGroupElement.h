@@ -63,7 +63,10 @@ public:
      SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aError);
   }
 
-  // The XPCOM GetLabel is OK for us
+  void GetLabel(nsAString& aValue) const
+  {
+    GetHTMLAttr(nsGkAtoms::label, aValue);
+  }
   void SetLabel(const nsAString& aLabel, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);

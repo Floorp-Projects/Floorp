@@ -6,7 +6,11 @@ import glob
 import shutil
 
 from marionette_driver import Wait
-from marionette_driver.errors import MarionetteException, NoSuchWindowException
+from marionette_driver.errors import (
+    MarionetteException,
+    NoSuchWindowException,
+    TimeoutException
+)
 
 from marionette_harness import MarionetteTestCase, expectedFailure, run_if_e10s
 
@@ -32,10 +36,19 @@ class MockMozCrash(object):
             """)
 
     def check_for_crashes(self, dump_directory, *args, **kwargs):
-        minidump_files = glob.glob('{}/*.dmp'.format(dump_directory))
-        shutil.rmtree(dump_directory)
-
         if self.crash_reporter_enabled:
+            # Workaround until bug 1376795 has been fixed
+            # Wait at maximum 5s for the minidump files being created
+            # minidump_files = glob.glob('{}/*.dmp'.format(dump_directory))
+            try:
+                minidump_files = Wait(None, timeout=5).until(
+                    lambda _: glob.glob('{}/*.dmp'.format(dump_directory))
+                )
+            except TimeoutException:
+                minidump_files = []
+
+            shutil.rmtree(dump_directory)
+
             return len(minidump_files)
         else:
             return len(minidump_files) == 0
@@ -53,8 +66,13 @@ class BaseCrashTestCase(MarionetteTestCase):
         super(BaseCrashTestCase, self).setUp()
 
         # Monkey patch mozcrash to avoid crash info output only for our triggered crashes.
+        mozcrash_mock = MockMozCrash(self.marionette)
+        if not mozcrash_mock.crash_reporter_enabled:
+            self.skipTest('Crash reporter disabled')
+            return
+
         self.mozcrash = runner.mozcrash
-        runner.mozcrash = MockMozCrash(self.marionette)
+        runner.mozcrash = mozcrash_mock
 
         self.crash_count = self.marionette.crashed
         self.pid = self.marionette.process_id

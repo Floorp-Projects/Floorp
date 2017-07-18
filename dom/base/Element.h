@@ -515,7 +515,7 @@ public:
    */
   inline CustomElementData* GetCustomElementData() const
   {
-    nsDOMSlots *slots = GetExistingDOMSlots();
+    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     if (slots) {
       return slots->mCustomElementData;
     }
@@ -1026,7 +1026,7 @@ public:
 
   ShadowRoot *FastGetShadowRoot() const
   {
-    nsDOMSlots* slots = GetExistingDOMSlots();
+    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mShadowRoot.get() : nullptr;
   }
 

@@ -3,22 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMHTMLElement.idl"
-
-/**
- * The nsIDOMHTMLUListElement interface is the interface to a [X]HTML
- * ul element.
- *
- * This interface is trying to follow the DOM Level 2 HTML specification:
- * http://www.w3.org/TR/DOM-Level-2-HTML/
- *
- * with changes from the work-in-progress WHATWG HTML specification:
- * http://www.whatwg.org/specs/web-apps/current-work/
- */
+#include "nsISupports.idl"
 
 [uuid(8ba1ee8d-36a4-43fc-9148-5144c2a29c96)]
 interface nsIDOMHTMLUListElement : nsISupports
 {
-           attribute boolean          compact;
-           attribute DOMString        type;
 };

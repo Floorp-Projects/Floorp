@@ -6,7 +6,7 @@
 //! a computed style needs in order for it to adhere to the CSS spec.
 
 use app_units::Au;
-use properties::{self, CascadeFlags, ComputedValues};
+use properties::{self, CascadeFlags, ComputedValuesInner};
 use properties::{IS_ROOT_ELEMENT, SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP, StyleBuilder};
 use properties::longhands::display::computed_value::T as display;
 use properties::longhands::float::computed_value::T as float;
@@ -54,7 +54,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     /// Apply the blockification rules based on the table in CSS 2.2 section 9.7.
     /// https://drafts.csswg.org/css2/visuren.html#dis-pos-flo
     fn blockify_if_necessary(&mut self,
-                             layout_parent_style: &ComputedValues,
+                             layout_parent_style: &ComputedValuesInner,
                              flags: CascadeFlags) {
         let mut blockify = false;
         macro_rules! blockify_if {
@@ -136,7 +136,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     /// https://lists.w3.org/Archives/Public/www-style/2017Mar/0045.html
     /// https://github.com/servo/servo/issues/15754
     fn adjust_for_writing_mode(&mut self,
-                               layout_parent_style: &ComputedValues) {
+                               layout_parent_style: &ComputedValuesInner) {
         let our_writing_mode = self.style.get_inheritedbox().clone_writing_mode();
         let parent_writing_mode = layout_parent_style.get_inheritedbox().clone_writing_mode();
 
@@ -196,7 +196,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     ///
     /// See https://github.com/servo/servo/issues/15229
     #[cfg(feature = "servo")]
-    fn adjust_for_alignment(&mut self, layout_parent_style: &ComputedValues) {
+    fn adjust_for_alignment(&mut self, layout_parent_style: &ComputedValuesInner) {
         use computed_values::align_items::T as align_items;
         use computed_values::align_self::T as align_self;
 
@@ -291,6 +291,31 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
         self.style.mutate_box().set_display(display::inline);
     }
 
+    /// If a <fieldset> has grid/flex display type, we need to inherit
+    /// this type into its ::-moz-fieldset-content anonymous box.
+    #[cfg(feature = "gecko")]
+    fn adjust_for_fieldset_content(&mut self,
+                                   layout_parent_style: &ComputedValuesInner,
+                                   flags: CascadeFlags) {
+        use properties::IS_FIELDSET_CONTENT;
+        if !flags.contains(IS_FIELDSET_CONTENT) {
+            return;
+        }
+        debug_assert_eq!(self.style.get_box().clone_display(), display::block);
+        // TODO We actually want style from parent rather than layout
+        // parent, so that this fixup doesn't happen incorrectly when
+        // when <fieldset> has "display: contents".
+        let parent_display = layout_parent_style.get_box().clone_display();
+        let new_display = match parent_display {
+            display::flex | display::inline_flex => Some(display::flex),
+            display::grid | display::inline_grid => Some(display::grid),
+            _ => None,
+        };
+        if let Some(new_display) = new_display {
+            self.style.mutate_box().set_display(new_display);
+        }
+    }
+
     /// -moz-center, -moz-left and -moz-right are used for HTML's alignment.
     ///
     /// This is covering the <div align="right"><table>...</table></div> case.
@@ -315,7 +340,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     }
 
     /// Set the HAS_TEXT_DECORATION_LINES flag based on parent style.
-    fn adjust_for_text_decoration_lines(&mut self, layout_parent_style: &ComputedValues) {
+    fn adjust_for_text_decoration_lines(&mut self, layout_parent_style: &ComputedValuesInner) {
         use properties::computed_value_flags::HAS_TEXT_DECORATION_LINES;
         if layout_parent_style.flags.contains(HAS_TEXT_DECORATION_LINES) ||
            !self.style.get_text().clone_text_decoration_line().is_empty() {
@@ -324,7 +349,7 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     }
 
     #[cfg(feature = "gecko")]
-    fn should_suppress_linebreak(&self, layout_parent_style: &ComputedValues) -> bool {
+    fn should_suppress_linebreak(&self, layout_parent_style: &ComputedValuesInner) -> bool {
         use properties::computed_value_flags::SHOULD_SUPPRESS_LINEBREAK;
         // Line break suppression should only be propagated to in-flow children.
         if self.style.floated() || self.style.out_of_flow_positioned() {
@@ -361,8 +386,8 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     /// * correct unicode-bidi.
     #[cfg(feature = "gecko")]
     fn adjust_for_ruby(&mut self,
-                       layout_parent_style: &ComputedValues,
-                       default_computed_values: &'b ComputedValues,
+                       layout_parent_style: &ComputedValuesInner,
+                       default_computed_values: &'b ComputedValuesInner,
                        flags: CascadeFlags) {
         use properties::SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP;
         use properties::computed_value_flags::SHOULD_SUPPRESS_LINEBREAK;
@@ -406,12 +431,13 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
     /// When comparing to Gecko, this is similar to the work done by
     /// `nsStyleContext::ApplyStyleFixups`.
     pub fn adjust(&mut self,
-                  layout_parent_style: &ComputedValues,
-                  _default_computed_values: &'b ComputedValues,
+                  layout_parent_style: &ComputedValuesInner,
+                  _default_computed_values: &'b ComputedValuesInner,
                   flags: CascadeFlags) {
         #[cfg(feature = "gecko")]
         {
             self.adjust_for_prohibited_display_contents(flags);
+            self.adjust_for_fieldset_content(layout_parent_style, flags);
         }
         self.adjust_for_top_layer();
         self.blockify_if_necessary(layout_parent_style, flags);

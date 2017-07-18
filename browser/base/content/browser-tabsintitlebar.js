@@ -178,7 +178,7 @@ var TabsInTitlebar = {
 
       if (AppConstants.MOZ_PHOTON_THEME &&
           AppConstants.isPlatformAndVersionAtLeast("win", "10.0")) {
-        if (!menuHeight) {
+        if (!menuHeight && window.windowState == window.STATE_MAXIMIZED) {
           titlebarContentHeight = Math.max(titlebarContentHeight, fullTabsHeight);
           $("titlebar-buttonbox").style.height = titlebarContentHeight + "px";
         } else {

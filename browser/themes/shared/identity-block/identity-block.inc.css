@@ -14,6 +14,10 @@
      the forward button when hovered. */
   transition: padding-left, padding-right;
 %endif
+  /* Set default fill for icons in the identity block.
+     Individual icons can override this. */
+  fill: currentColor;
+  fill-opacity: .6;
   /* This is for tracking-protection-icon's slide-in animation. */
   overflow: hidden;
 }
@@ -21,11 +25,13 @@
 %ifdef MOZ_PHOTON_THEME
 #identity-box:hover:not(.no-hover):not([open=true]) {
   background-color: hsla(240,5%,5%,.05);
+  fill-opacity: .8;
 }
 
 #identity-box:hover:active:not(.no-hover),
 #identity-box[open=true] {
   background-color: hsla(240,5%,5%,.1);
+  fill-opacity: .8;
 }
 %endif
 
@@ -113,18 +119,9 @@
   width: 16px;
   height: 16px;
   margin-inline-start: 2px;
-  -moz-context-properties: fill;
-  fill: GrayText;
+  -moz-context-properties: fill, fill-opacity;
 }
 
-#identity-icon:-moz-lwtheme,
-#tracking-protection-icon:-moz-lwtheme,
-#connection-icon:-moz-lwtheme,
-.notification-anchor-icon:-moz-lwtheme,
-#blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme,
-#extension-icon:-moz-lwtheme {
-  fill: rgba(0,0,0,.6);
-}
 /* MAIN IDENTITY ICON */
 #identity-icon {
   margin-inline-start: 0;
@@ -148,7 +145,7 @@
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
-  opacity: .3;
+  fill-opacity: .3;
 }
 
 #urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
@@ -242,6 +239,7 @@
 #urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/connection-secure.svg);
   visibility: visible;
+  -moz-context-properties: fill;
 %ifdef MOZ_PHOTON_THEME
   fill: #12BC00;
 %else

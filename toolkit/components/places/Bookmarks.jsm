@@ -184,7 +184,7 @@ var Bookmarks = Object.freeze({
     if (addedTime > now) {
       modTime = now;
     }
-    let insertInfo = validateBookmarkObject(info,
+    let insertInfo = validateBookmarkObject("Bookmarks.jsm: insert", info,
       { type: { defaultValue: this.TYPE_BOOKMARK },
         index: { defaultValue: this.DEFAULT_INDEX },
         url: { requiredIf: b => b.type == this.TYPE_BOOKMARK,
@@ -347,7 +347,8 @@ var Bookmarks = Object.freeze({
         // Ensure to use the same date for dateAdded and lastModified, even if
         // dateAdded may be imposed by the caller.
         let time = (info && info.dateAdded) || fallbackLastAdded;
-        let insertInfo = validateBookmarkObject(info, {
+        let insertInfo = validateBookmarkObject("Bookmarks.jsm: insertTree",
+                                                info, {
           type: { defaultValue: TYPE_BOOKMARK },
           url: { requiredIf: b => b.type == TYPE_BOOKMARK,
                  validIf: b => b.type == TYPE_BOOKMARK },
@@ -513,7 +514,7 @@ var Bookmarks = Object.freeze({
     // The info object is first validated here to ensure it's consistent, then
     // it's compared to the existing item to remove any properties that don't
     // need to be updated.
-    let updateInfo = validateBookmarkObject(info,
+    let updateInfo = validateBookmarkObject("Bookmarks.jsm: update", info,
       { guid: { required: true },
         index: { requiredIf: b => b.hasOwnProperty("parentGuid"),
                  validIf: b => b.index >= 0 || b.index == this.DEFAULT_INDEX },
@@ -547,7 +548,7 @@ var Bookmarks = Object.freeze({
           "dateAdded" in updateInfo) {
         lastModifiedDefault = new Date(Math.max(item.lastModified, updateInfo.dateAdded));
       }
-      updateInfo = validateBookmarkObject(updateInfo,
+      updateInfo = validateBookmarkObject("Bookmarks.jsm: update", updateInfo,
         { url: { validIf: () => item.type == this.TYPE_BOOKMARK },
           title: { validIf: () => [ this.TYPE_BOOKMARK,
                                     this.TYPE_FOLDER ].includes(item.type) },
@@ -733,7 +734,7 @@ var Bookmarks = Object.freeze({
 
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
-    let removeInfo = validateBookmarkObject(info);
+    let removeInfo = validateBookmarkObject("Bookmarks.jsm: remove", info);
 
     return (async function() {
       let item = await fetchBookmark(removeInfo);
@@ -914,7 +915,8 @@ var Bookmarks = Object.freeze({
 
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
-    let fetchInfo = validateBookmarkObject(info, behavior);
+    let fetchInfo = validateBookmarkObject("Bookmarks.jsm: fetch", info,
+                                           behavior);
 
     return (async function() {
       let results;
@@ -1039,7 +1041,8 @@ var Bookmarks = Object.freeze({
    */
   reorder(parentGuid, orderedChildrenGuids, options = {}) {
     let info = { guid: parentGuid };
-    info = validateBookmarkObject(info, { guid: { required: true } });
+    info = validateBookmarkObject("Bookmarks.jsm: reorder", info,
+                                  { guid: { required: true } });
 
     if (!Array.isArray(orderedChildrenGuids) || !orderedChildrenGuids.length)
       throw new Error("Must provide a sorted array of children GUIDs.");
@@ -2032,8 +2035,8 @@ function rowsToItemsArray(rows) {
   });
 }
 
-function validateBookmarkObject(input, behavior) {
-  return PlacesUtils.validateItemProperties(
+function validateBookmarkObject(name, input, behavior) {
+  return PlacesUtils.validateItemProperties(name,
     PlacesUtils.BOOKMARK_VALIDATORS, input, behavior);
 }
 

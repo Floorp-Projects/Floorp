@@ -187,6 +187,29 @@ opensl_set_draining(cubeb_stream * stm, int value)
   stm->draining = value;
 }
 
+static void
+opensl_notify_drained(cubeb_stream * stm)
+{
+  assert(stm);
+  int r = pthread_mutex_lock(&stm->mutex);
+  assert(r == 0);
+  int draining = opensl_get_draining(stm);
+  r = pthread_mutex_unlock(&stm->mutex);
+  assert(r == 0);
+  if (draining) {
+    stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
+    if (stm->play) {
+      LOG("stop player in play_callback");
+      r = opensl_stop_player(stm);
+      assert(r == CUBEB_OK);
+    }
+    if (stm->recorderItf) {
+      r = opensl_stop_recorder(stm);
+      assert(r == CUBEB_OK);
+    }
+  }
+}
+
 static uint32_t
 opensl_get_shutdown(cubeb_stream * stm)
 {
@@ -217,24 +240,7 @@ play_callback(SLPlayItf caller, void * user_ptr, SLuint32 event)
   assert(stm);
   switch (event) {
     case SL_PLAYEVENT_HEADATMARKER:
-    {
-      int r = pthread_mutex_lock(&stm->mutex);
-      assert(r == 0);
-      draining = opensl_get_draining(stm);
-      r = pthread_mutex_unlock(&stm->mutex);
-      assert(r == 0);
-      if (draining) {
-        stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
-        if (stm->play) {
-          r = opensl_stop_player(stm);
-          assert(r == CUBEB_OK);
-        }
-        if (stm->recorderItf) {
-          r = opensl_stop_recorder(stm);
-          assert(r == CUBEB_OK);
-        }
-      }
-    }
+      opensl_notify_drained(stm);
     break;
   default:
     break;
@@ -330,9 +336,16 @@ bufferqueue_callback(SLBufferQueueItf caller, void * user_ptr)
     opensl_set_draining(stm, 1);
     r = pthread_mutex_unlock(&stm->mutex);
     assert(r == 0);
-    // Use SL_PLAYEVENT_HEADATMARKER event from slPlayCallback of SLPlayItf
-    // to make sure all the data has been processed.
-    (*stm->play)->SetMarkerPosition(stm->play, (SLmillisecond)written_duration);
+
+    if (written_duration == 0) {
+      // since we didn't write any sample, it's not possible to reach the marker
+      // time and trigger the callback. We should initiative notify drained.
+      opensl_notify_drained(stm);
+    } else {
+      // Use SL_PLAYEVENT_HEADATMARKER event from slPlayCallback of SLPlayItf
+      // to make sure all the data has been processed.
+      (*stm->play)->SetMarkerPosition(stm->play, (SLmillisecond)written_duration);
+    }
     return;
   }
 }

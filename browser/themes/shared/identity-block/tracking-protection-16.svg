@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+<svg xmlns="http://www.w3.org/2000/svg"
      width="16" height="16" viewBox="0 0 16 16">
   <style>
     g:not(:target) {
@@ -17,16 +17,16 @@
 
     <mask id="mask-shield-cutout">
       <rect width="16" height="16" fill="#000" />
-      <use xlink:href="#shape-shield-outer" fill="#fff" />
-      <use xlink:href="#shape-shield-inner" fill="#000" />
-      <use xlink:href="#shape-shield-detail" fill="#fff" />
+      <use href="#shape-shield-outer" fill="#fff"/>
+      <use href="#shape-shield-inner" fill="#000"/>
+      <use href="#shape-shield-detail" fill="#fff"/>
     </mask>
 
     <mask id="mask-shield-cutout-disabled">
       <rect width="16" height="16" fill="#000"/>
-      <use xlink:href="#shape-shield-outer" fill="#fff"/>
-      <use xlink:href="#shape-shield-inner" fill="#000"/>
-      <use xlink:href="#shape-shield-detail" fill="#fff"/>
+      <use href="#shape-shield-outer" fill="#fff"/>
+      <use href="#shape-shield-inner" fill="#000"/>
+      <use href="#shape-shield-detail" fill="#fff"/>
       <line x1="3" y1="15" x2="15" y2="3" stroke="#000" stroke-width="2"/>
     </mask>
 
@@ -34,11 +34,11 @@
   </defs>
 
   <g id="enabled">
-    <use fill="context-fill" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
+    <use fill="context-fill" fill-opacity="context-fill-opacity" href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
   </g>
 
   <g id="disabled">
-    <use fill="context-fill" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
-    <use xlink:href="#strike-through-red"/>
+    <use fill="context-fill" fill-opacity="context-fill-opacity" href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
+    <use href="#strike-through-red"/>
   </g>
 </svg>

@@ -9,6 +9,14 @@ use data::ElementData;
 pub type ServoUnsafeCell<T> = ::std::cell::UnsafeCell<T>;
 pub type ServoCell<T> = ::std::cell::Cell<T>;
 pub type ServoNodeData = AtomicRefCell<ElementData>;
+pub type ServoWritingMode = ::logical_geometry::WritingMode;
+pub type ServoFontComputationData = ::properties::FontComputationData;
+pub type ServoCustomPropertiesMap = Option<::stylearc::Arc<::custom_properties::CustomPropertiesMap>>;
+pub type ServoRuleNode = Option<::rule_tree::StrongRuleNode>;
+pub type ServoVisitedStyle = Option<::stylearc::RawOffsetArc<::properties::ComputedValues>>;
+pub type ServoComputedValueFlags = ::properties::computed_value_flags::ComputedValueFlags;
+pub type ServoRawOffsetArc<T> = ::stylearc::RawOffsetArc<T>;
+pub type ServoStyleContextStrong = ::gecko_bindings::sugar::ownership::Strong<ServoStyleContext>;
 
 #[allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
 pub mod root {
@@ -1063,47 +1071,101 @@ pub mod root {
             fn clone(&self) -> Self { *self }
         }
         #[repr(C)]
-        #[derive(Debug, Copy, Clone)]
-        pub struct iterator {
+        #[derive(Debug, Copy)]
+        pub struct forward_iterator_tag {
             pub _address: u8,
         }
-        pub type iterator_iterator_category<_Category> = _Category;
-        pub type iterator_value_type<_Tp> = _Tp;
-        pub type iterator_difference_type<_Distance> = _Distance;
-        pub type iterator_pointer<_Pointer> = _Pointer;
-        pub type iterator_reference<_Reference> = _Reference;
+        #[test]
+        fn bindgen_test_layout_forward_iterator_tag() {
+            assert_eq!(::std::mem::size_of::<forward_iterator_tag>() , 1usize
+                       , concat ! (
+                       "Size of: " , stringify ! ( forward_iterator_tag ) ));
+            assert_eq! (::std::mem::align_of::<forward_iterator_tag>() ,
+                        1usize , concat ! (
+                        "Alignment of " , stringify ! ( forward_iterator_tag )
+                        ));
+        }
+        impl Clone for forward_iterator_tag {
+            fn clone(&self) -> Self { *self }
+        }
+        #[repr(C)]
+        #[derive(Debug, Copy)]
+        pub struct bidirectional_iterator_tag {
+            pub _address: u8,
+        }
+        #[test]
+        fn bindgen_test_layout_bidirectional_iterator_tag() {
+            assert_eq!(::std::mem::size_of::<bidirectional_iterator_tag>() ,
+                       1usize , concat ! (
+                       "Size of: " , stringify ! ( bidirectional_iterator_tag
+                       ) ));
+            assert_eq! (::std::mem::align_of::<bidirectional_iterator_tag>() ,
+                        1usize , concat ! (
+                        "Alignment of " , stringify ! (
+                        bidirectional_iterator_tag ) ));
+        }
+        impl Clone for bidirectional_iterator_tag {
+            fn clone(&self) -> Self { *self }
+        }
+        #[repr(C)]
+        #[derive(Debug, Copy)]
+        pub struct random_access_iterator_tag {
+            pub _address: u8,
+        }
+        #[test]
+        fn bindgen_test_layout_random_access_iterator_tag() {
+            assert_eq!(::std::mem::size_of::<random_access_iterator_tag>() ,
+                       1usize , concat ! (
+                       "Size of: " , stringify ! ( random_access_iterator_tag
+                       ) ));
+            assert_eq! (::std::mem::align_of::<random_access_iterator_tag>() ,
+                        1usize , concat ! (
+                        "Alignment of " , stringify ! (
+                        random_access_iterator_tag ) ));
+        }
+        impl Clone for random_access_iterator_tag {
+            fn clone(&self) -> Self { *self }
+        }
         #[repr(C)]
         pub struct iterator_traits {
             pub _address: u8,
         }
         #[repr(C)]
-        pub struct reverse_iterator<_Iterator> {
-            pub current: _Iterator,
-            pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Iterator>>,
+        #[derive(Debug, Copy, Clone)]
+        pub struct iterator {
+            pub _address: u8,
         }
-        pub type reverse_iterator___traits_type = root::std::iterator_traits;
-        pub type reverse_iterator_iterator_type<_Iterator> = _Iterator;
+        pub type iterator_value_type<_Tp> = _Tp;
+        pub type iterator_difference_type<_Distance> = _Distance;
+        pub type iterator_pointer<_Pointer> = _Pointer;
+        pub type iterator_reference<_Reference> = _Reference;
+        pub type iterator_iterator_category<_Category> = _Category;
+        #[repr(C)]
+        pub struct reverse_iterator<_Iter> {
+            pub __t: _Iter,
+            pub current: _Iter,
+            pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Iter>>,
+        }
+        pub type reverse_iterator_iterator_type<_Iter> = _Iter;
         pub type reverse_iterator_difference_type =
-            root::std::reverse_iterator___traits_type;
-        pub type reverse_iterator_pointer =
-            root::std::reverse_iterator___traits_type;
-        pub type reverse_iterator_reference =
-            root::std::reverse_iterator___traits_type;
+            root::std::iterator_traits;
+        pub type reverse_iterator_reference = root::std::iterator_traits;
+        pub type reverse_iterator_pointer = root::std::iterator_traits;
         #[repr(C)]
         #[derive(Debug, Copy, Clone)]
         pub struct atomic {
         }
-        pub mod chrono {
-            #[allow(unused_imports)]
-            use self::super::super::super::root;
+        pub type atomic___base = u8;
+        #[repr(C)]
+        pub struct __bit_const_reference {
+            pub __seg_: root::std::__bit_const_reference___storage_pointer,
+            pub __mask_: root::std::__bit_const_reference___storage_type,
         }
+        pub type __bit_const_reference___storage_type = [u8; 0usize];
+        pub type __bit_const_reference___storage_pointer = [u8; 0usize];
     }
-    pub mod __gnu_cxx {
-        #[allow(unused_imports)]
-        use self::super::super::root;
-    }
-    pub type __off_t = ::std::os::raw::c_long;
-    pub type __off64_t = ::std::os::raw::c_long;
+    pub type __int64_t = ::std::os::raw::c_longlong;
+    pub type __darwin_off_t = root::__int64_t;
     pub mod mozilla {
         #[allow(unused_imports)]
         use self::super::super::root;
@@ -1354,7 +1416,7 @@ pub mod root {
             #[repr(C)]
             #[derive(Debug)]
             pub struct MutexImpl {
-                pub platformData_: [*mut ::std::os::raw::c_void; 5usize],
+                pub platformData_: [*mut ::std::os::raw::c_void; 8usize],
             }
             #[repr(C)]
             #[derive(Debug, Copy, Clone)]
@@ -1363,7 +1425,7 @@ pub mod root {
             }
             #[test]
             fn bindgen_test_layout_MutexImpl() {
-                assert_eq!(::std::mem::size_of::<MutexImpl>() , 40usize ,
+                assert_eq!(::std::mem::size_of::<MutexImpl>() , 64usize ,
                            concat ! ( "Size of: " , stringify ! ( MutexImpl )
                            ));
                 assert_eq! (::std::mem::align_of::<MutexImpl>() , 8usize ,
@@ -2287,7 +2349,7 @@ pub mod root {
             }
         }
         #[repr(C)]
-        #[derive(Debug)]
+        #[derive(Debug, Copy)]
         pub struct ThreadSafeAutoRefCnt {
             pub mValue: u64,
         }
@@ -2307,6 +2369,9 @@ pub mod root {
                         "Alignment of field: " , stringify ! (
                         ThreadSafeAutoRefCnt ) , "::" , stringify ! ( mValue )
                         ));
+        }
+        impl Clone for ThreadSafeAutoRefCnt {
+            fn clone(&self) -> Self { *self }
         }
         #[repr(C)]
         #[derive(Debug)]
@@ -4022,7 +4087,6 @@ pub mod root {
                             ) , "::" , stringify ! ( mEmpty ) ));
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct Element {
                 pub _base: root::mozilla::dom::FragmentOrElement,
                 pub mState: root::mozilla::EventStates,
@@ -4168,7 +4232,6 @@ pub mod root {
                 fn clone(&self) -> Self { *self }
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct NodeInfo {
                 pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
                 pub _mOwningThread: root::nsAutoOwningThread,
@@ -5241,7 +5304,6 @@ pub mod root {
                 _unused: [u8; 0],
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct Attr {
                 pub _base: root::nsIAttribute,
                 pub _base_1: root::nsIDOMAttr,
@@ -5700,7 +5762,6 @@ pub mod root {
                 _unused: [u8; 0],
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct FragmentOrElement {
                 pub _base: root::nsIContent,
                 pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
@@ -5740,20 +5801,7 @@ pub mod root {
    * accessed through the DOM.
    */
             #[repr(C)]
-            #[derive(Debug)]
-            pub struct FragmentOrElement_nsDOMSlots {
-                pub _base: root::nsINode_nsSlots,
-                /**
-     * The .style attribute (an interface that forwards to the actual
-     * style rules)
-     * @see nsGenericHTMLElement::GetStyle
-     */
-                pub mStyle: root::nsCOMPtr<root::nsICSSDeclaration>,
-                /**
-     * The .dataset attribute.
-     * @see nsGenericHTMLElement::GetDataset
-     */
-                pub mDataset: *mut root::nsDOMStringMap,
+            pub struct FragmentOrElement_nsExtendedDOMSlots {
                 /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
      * @see Element::GetSMILOverrideStyle
@@ -5764,19 +5812,17 @@ pub mod root {
      */
                 pub mSMILOverrideStyleDeclaration: root::RefPtr<root::mozilla::DeclarationBlock>,
                 /**
-     * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
-     * @see FragmentOrElement::GetAttributes
-     */
-                pub mAttributeMap: root::RefPtr<root::nsDOMAttributeMap>,
-                pub __bindgen_anon_1: root::mozilla::dom::FragmentOrElement_nsDOMSlots__bindgen_ty_1,
+    * The nearest enclosing content node with a binding that created us.
+    * @see FragmentOrElement::GetBindingParent
+    */
+                pub mBindingParent: *mut root::nsIContent,
                 /**
-     * An object implementing the .children property for this element.
-     */
-                pub mChildrenList: root::RefPtr<root::nsContentList>,
+    * The controllers of the XUL Element.
+    */
+                pub mControllers: root::nsCOMPtr<root::nsIControllers>,
                 /**
-     * An object implementing the .classList property for this element.
+     * An object implementing the .labels property for this element.
      */
-                pub mClassList: root::RefPtr<root::nsDOMTokenList>,
                 pub mLabelsList: root::RefPtr<root::nsLabelsNodeList>,
                 /**
      * ShadowRoot bound to the element.
@@ -5807,59 +5853,173 @@ pub mod root {
      * Registered Intersection Observers on the element.
      */
                 pub mRegisteredIntersectionObservers: [u64; 6usize],
-            }
-            #[repr(C)]
-            #[derive(Debug, Copy)]
-            pub struct FragmentOrElement_nsDOMSlots__bindgen_ty_1 {
                 /**
-      * The nearest enclosing content node with a binding that created us.
-      * @see FragmentOrElement::GetBindingParent
-      */
-                pub mBindingParent: root::__BindgenUnionField<*mut root::nsIContent>,
-                /**
-      * The controllers of the XUL Element.
-      */
-                pub mControllers: root::__BindgenUnionField<*mut root::nsIControllers>,
-                pub bindgen_union_field: u64,
+     * For XUL to hold either frameloader or opener.
+     */
+                pub mFrameLoaderOrOpener: root::nsCOMPtr<root::nsISupports>,
             }
             #[test]
-            fn bindgen_test_layout_FragmentOrElement_nsDOMSlots__bindgen_ty_1() {
-                assert_eq!(::std::mem::size_of::<FragmentOrElement_nsDOMSlots__bindgen_ty_1>()
-                           , 8usize , concat ! (
+            fn bindgen_test_layout_FragmentOrElement_nsExtendedDOMSlots() {
+                assert_eq!(::std::mem::size_of::<FragmentOrElement_nsExtendedDOMSlots>()
+                           , 144usize , concat ! (
                            "Size of: " , stringify ! (
-                           FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ));
-                assert_eq! (::std::mem::align_of::<FragmentOrElement_nsDOMSlots__bindgen_ty_1>()
+                           FragmentOrElement_nsExtendedDOMSlots ) ));
+                assert_eq! (::std::mem::align_of::<FragmentOrElement_nsExtendedDOMSlots>()
                             , 8usize , concat ! (
                             "Alignment of " , stringify ! (
-                            FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ));
+                            FragmentOrElement_nsExtendedDOMSlots ) ));
                 assert_eq! (unsafe {
                             & (
                             * (
-                            0 as * const
-                            FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ) .
-                            mBindingParent as * const _ as usize } , 0usize ,
-                            concat ! (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mSMILOverrideStyle as * const _ as usize } ,
+                            0usize , concat ! (
                             "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ,
-                            "::" , stringify ! ( mBindingParent ) ));
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mSMILOverrideStyle ) ));
                 assert_eq! (unsafe {
                             & (
                             * (
-                            0 as * const
-                            FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ) .
-                            mControllers as * const _ as usize } , 0usize ,
-                            concat ! (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mSMILOverrideStyleDeclaration as * const _
+                            as usize } , 8usize , concat ! (
                             "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots__bindgen_ty_1 ) ,
-                            "::" , stringify ! ( mControllers ) ));
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mSMILOverrideStyleDeclaration ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mBindingParent as * const _ as usize } ,
+                            16usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mBindingParent ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mControllers as * const _ as usize } ,
+                            24usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mControllers ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mLabelsList as * const _ as usize } ,
+                            32usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mLabelsList ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mShadowRoot as * const _ as usize } ,
+                            40usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mShadowRoot ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mContainingShadow as * const _ as usize } ,
+                            48usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mContainingShadow ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mDestInsertionPoints as * const _ as usize }
+                            , 56usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mDestInsertionPoints ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mXBLBinding as * const _ as usize } ,
+                            64usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mXBLBinding ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mXBLInsertionParent as * const _ as usize }
+                            , 72usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mXBLInsertionParent ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mCustomElementData as * const _ as usize } ,
+                            80usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mCustomElementData ) ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mRegisteredIntersectionObservers as * const
+                            _ as usize } , 88usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mRegisteredIntersectionObservers )
+                            ));
+                assert_eq! (unsafe {
+                            & (
+                            * (
+                            0 as * const FragmentOrElement_nsExtendedDOMSlots
+                            ) ) . mFrameLoaderOrOpener as * const _ as usize }
+                            , 136usize , concat ! (
+                            "Alignment of field: " , stringify ! (
+                            FragmentOrElement_nsExtendedDOMSlots ) , "::" ,
+                            stringify ! ( mFrameLoaderOrOpener ) ));
             }
-            impl Clone for FragmentOrElement_nsDOMSlots__bindgen_ty_1 {
-                fn clone(&self) -> Self { *self }
+            #[repr(C)]
+            pub struct FragmentOrElement_nsDOMSlots {
+                pub _base: root::nsINode_nsSlots,
+                /**
+     * The .style attribute (an interface that forwards to the actual
+     * style rules)
+     * @see nsGenericHTMLElement::GetStyle
+     */
+                pub mStyle: root::nsCOMPtr<root::nsICSSDeclaration>,
+                /**
+     * The .dataset attribute.
+     * @see nsGenericHTMLElement::GetDataset
+     */
+                pub mDataset: *mut root::nsDOMStringMap,
+                /**
+     * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)
+     * @see FragmentOrElement::GetAttributes
+     */
+                pub mAttributeMap: root::RefPtr<root::nsDOMAttributeMap>,
+                /**
+     * An object implementing the .children property for this element.
+     */
+                pub mChildrenList: root::RefPtr<root::nsContentList>,
+                /**
+     * An object implementing the .classList property for this element.
+     */
+                pub mClassList: root::RefPtr<root::nsDOMTokenList>,
+                pub mExtendedSlots: root::mozilla::UniquePtr<root::mozilla::dom::FragmentOrElement_nsExtendedDOMSlots>,
             }
             #[test]
             fn bindgen_test_layout_FragmentOrElement_nsDOMSlots() {
                 assert_eq!(::std::mem::size_of::<FragmentOrElement_nsDOMSlots>()
-                           , 216usize , concat ! (
+                           , 96usize , concat ! (
                            "Size of: " , stringify ! (
                            FragmentOrElement_nsDOMSlots ) ));
                 assert_eq! (::std::mem::align_of::<FragmentOrElement_nsDOMSlots>()
@@ -5885,23 +6045,7 @@ pub mod root {
                 assert_eq! (unsafe {
                             & (
                             * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mSMILOverrideStyle as * const _ as usize } ,
-                            64usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mSMILOverrideStyle ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mSMILOverrideStyleDeclaration as * const _ as
-                            usize } , 72usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mSMILOverrideStyleDeclaration ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mAttributeMap as * const _ as usize } , 80usize
+                            . mAttributeMap as * const _ as usize } , 64usize
                             , concat ! (
                             "Alignment of field: " , stringify ! (
                             FragmentOrElement_nsDOMSlots ) , "::" , stringify
@@ -5909,7 +6053,7 @@ pub mod root {
                 assert_eq! (unsafe {
                             & (
                             * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mChildrenList as * const _ as usize } , 96usize
+                            . mChildrenList as * const _ as usize } , 72usize
                             , concat ! (
                             "Alignment of field: " , stringify ! (
                             FragmentOrElement_nsDOMSlots ) , "::" , stringify
@@ -5917,7 +6061,7 @@ pub mod root {
                 assert_eq! (unsafe {
                             & (
                             * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mClassList as * const _ as usize } , 104usize ,
+                            . mClassList as * const _ as usize } , 80usize ,
                             concat ! (
                             "Alignment of field: " , stringify ! (
                             FragmentOrElement_nsDOMSlots ) , "::" , stringify
@@ -5925,67 +6069,11 @@ pub mod root {
                 assert_eq! (unsafe {
                             & (
                             * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mLabelsList as * const _ as usize } , 112usize ,
-                            concat ! (
+                            . mExtendedSlots as * const _ as usize } , 88usize
+                            , concat ! (
                             "Alignment of field: " , stringify ! (
                             FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mLabelsList ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mShadowRoot as * const _ as usize } , 120usize ,
-                            concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mShadowRoot ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mContainingShadow as * const _ as usize } ,
-                            128usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mContainingShadow ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mDestInsertionPoints as * const _ as usize } ,
-                            136usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mDestInsertionPoints ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mXBLBinding as * const _ as usize } , 144usize ,
-                            concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mXBLBinding ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mXBLInsertionParent as * const _ as usize } ,
-                            152usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mXBLInsertionParent ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mCustomElementData as * const _ as usize } ,
-                            160usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mCustomElementData ) ));
-                assert_eq! (unsafe {
-                            & (
-                            * ( 0 as * const FragmentOrElement_nsDOMSlots ) )
-                            . mRegisteredIntersectionObservers as * const _ as
-                            usize } , 168usize , concat ! (
-                            "Alignment of field: " , stringify ! (
-                            FragmentOrElement_nsDOMSlots ) , "::" , stringify
-                            ! ( mRegisteredIntersectionObservers ) ));
+                            ! ( mExtendedSlots ) ));
             }
             extern "C" {
                 #[link_name =
@@ -6132,7 +6220,6 @@ pub mod root {
                 fn clone(&self) -> Self { *self }
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct DOMIntersectionObserverEntry {
                 pub _base: root::nsISupports,
                 pub _base_1: root::nsWrapperCache,
@@ -6282,7 +6369,6 @@ pub mod root {
                             ! ( mValue ) ));
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct IntersectionObserverInit {
                 pub _base: root::mozilla::dom::DictionaryBase,
                 pub mRoot: root::RefPtr<root::mozilla::dom::Element>,
@@ -6337,7 +6423,6 @@ pub mod root {
                 _unused: [u8; 0],
             }
             #[repr(C)]
-            #[derive(Debug)]
             pub struct DestinationInsertionPointList {
                 pub _base: root::nsINodeList,
                 pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
@@ -7497,6 +7582,9 @@ pub mod root {
         }
         #[repr(i32)]
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub enum LazyComputeBehavior { Allow = 0, Assert = 1, }
+        #[repr(i32)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum TraversalRootBehavior {
             Normal = 0,
             UnstyledChildrenOnly = 1,
@@ -7540,6 +7628,459 @@ pub mod root {
             Text = 0,
             FirstLetterContinuation = 1,
             PlaceholderFrame = 2,
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct ServoStyleContext {
+            pub _base: root::nsStyleContext,
+            pub mPresContext: *mut root::nsPresContext,
+            pub mSource: root::ServoComputedValues,
+        }
+        #[test]
+        fn bindgen_test_layout_ServoStyleContext() {
+            assert_eq!(::std::mem::size_of::<ServoStyleContext>() , 272usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( ServoStyleContext ) ));
+            assert_eq! (::std::mem::align_of::<ServoStyleContext>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( ServoStyleContext )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleContext ) ) .
+                        mPresContext as * const _ as usize } , 32usize ,
+                        concat ! (
+                        "Alignment of field: " , stringify ! (
+                        ServoStyleContext ) , "::" , stringify ! (
+                        mPresContext ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleContext ) ) . mSource
+                        as * const _ as usize } , 40usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        ServoStyleContext ) , "::" , stringify ! ( mSource )
+                        ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoFont {
+            pub gecko: root::nsStyleFont,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoFont() {
+            assert_eq!(::std::mem::size_of::<GeckoFont>() , 120usize , concat
+                       ! ( "Size of: " , stringify ! ( GeckoFont ) ));
+            assert_eq! (::std::mem::align_of::<GeckoFont>() , 8usize , concat
+                        ! ( "Alignment of " , stringify ! ( GeckoFont ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoFont ) ) . gecko as * const
+                        _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoFont ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoColor {
+            pub gecko: root::nsStyleColor,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoColor() {
+            assert_eq!(::std::mem::size_of::<GeckoColor>() , 4usize , concat !
+                       ( "Size of: " , stringify ! ( GeckoColor ) ));
+            assert_eq! (::std::mem::align_of::<GeckoColor>() , 4usize , concat
+                        ! ( "Alignment of " , stringify ! ( GeckoColor ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoColor ) ) . gecko as * const
+                        _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoColor ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoList {
+            pub gecko: root::nsStyleList,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoList() {
+            assert_eq!(::std::mem::size_of::<GeckoList>() , 48usize , concat !
+                       ( "Size of: " , stringify ! ( GeckoList ) ));
+            assert_eq! (::std::mem::align_of::<GeckoList>() , 8usize , concat
+                        ! ( "Alignment of " , stringify ! ( GeckoList ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoList ) ) . gecko as * const
+                        _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoList ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoText {
+            pub gecko: root::nsStyleText,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoText() {
+            assert_eq!(::std::mem::size_of::<GeckoText>() , 160usize , concat
+                       ! ( "Size of: " , stringify ! ( GeckoText ) ));
+            assert_eq! (::std::mem::align_of::<GeckoText>() , 8usize , concat
+                        ! ( "Alignment of " , stringify ! ( GeckoText ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoText ) ) . gecko as * const
+                        _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoText ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoVisibility {
+            pub gecko: root::nsStyleVisibility,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoVisibility() {
+            assert_eq!(::std::mem::size_of::<GeckoVisibility>() , 7usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( GeckoVisibility ) ));
+            assert_eq! (::std::mem::align_of::<GeckoVisibility>() , 1usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoVisibility ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoVisibility ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoVisibility
+                        ) , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoUserInterface {
+            pub gecko: root::nsStyleUserInterface,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoUserInterface() {
+            assert_eq!(::std::mem::size_of::<GeckoUserInterface>() , 24usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( GeckoUserInterface ) ));
+            assert_eq! (::std::mem::align_of::<GeckoUserInterface>() , 8usize
+                        , concat ! (
+                        "Alignment of " , stringify ! ( GeckoUserInterface )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoUserInterface ) ) . gecko as
+                        * const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        GeckoUserInterface ) , "::" , stringify ! ( gecko )
+                        ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoTableBorder {
+            pub gecko: root::nsStyleTableBorder,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoTableBorder() {
+            assert_eq!(::std::mem::size_of::<GeckoTableBorder>() , 12usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( GeckoTableBorder ) ));
+            assert_eq! (::std::mem::align_of::<GeckoTableBorder>() , 4usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoTableBorder ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoTableBorder ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        GeckoTableBorder ) , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoSVG {
+            pub gecko: root::nsStyleSVG,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoSVG() {
+            assert_eq!(::std::mem::size_of::<GeckoSVG>() , 128usize , concat !
+                       ( "Size of: " , stringify ! ( GeckoSVG ) ));
+            assert_eq! (::std::mem::align_of::<GeckoSVG>() , 8usize , concat !
+                        ( "Alignment of " , stringify ! ( GeckoSVG ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoSVG ) ) . gecko as * const _
+                        as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoSVG ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoBackground {
+            pub gecko: root::nsStyleBackground,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoBackground() {
+            assert_eq!(::std::mem::size_of::<GeckoBackground>() , 160usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( GeckoBackground ) ));
+            assert_eq! (::std::mem::align_of::<GeckoBackground>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoBackground ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoBackground ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoBackground
+                        ) , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoPosition {
+            pub gecko: root::nsStylePosition,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoPosition() {
+            assert_eq!(::std::mem::size_of::<GeckoPosition>() , 520usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoPosition )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoPosition>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoPosition ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoPosition ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoPosition )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoTextReset {
+            pub gecko: root::nsStyleTextReset,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoTextReset() {
+            assert_eq!(::std::mem::size_of::<GeckoTextReset>() , 80usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoTextReset )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoTextReset>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoTextReset ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoTextReset ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoTextReset
+                        ) , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoDisplay {
+            pub gecko: root::nsStyleDisplay,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoDisplay() {
+            assert_eq!(::std::mem::size_of::<GeckoDisplay>() , 416usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoDisplay )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoDisplay>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoDisplay ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoDisplay ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoDisplay )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoContent {
+            pub gecko: root::nsStyleContent,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoContent() {
+            assert_eq!(::std::mem::size_of::<GeckoContent>() , 24usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoContent )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoContent>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoContent ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoContent ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoContent )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoUIReset {
+            pub gecko: root::nsStyleUIReset,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoUIReset() {
+            assert_eq!(::std::mem::size_of::<GeckoUIReset>() , 56usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoUIReset )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoUIReset>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoUIReset ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoUIReset ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoUIReset )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoTable {
+            pub gecko: root::nsStyleTable,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoTable() {
+            assert_eq!(::std::mem::size_of::<GeckoTable>() , 8usize , concat !
+                       ( "Size of: " , stringify ! ( GeckoTable ) ));
+            assert_eq! (::std::mem::align_of::<GeckoTable>() , 4usize , concat
+                        ! ( "Alignment of " , stringify ! ( GeckoTable ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoTable ) ) . gecko as * const
+                        _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoTable ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoMargin {
+            pub gecko: root::nsStyleMargin,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoMargin() {
+            assert_eq!(::std::mem::size_of::<GeckoMargin>() , 40usize , concat
+                       ! ( "Size of: " , stringify ! ( GeckoMargin ) ));
+            assert_eq! (::std::mem::align_of::<GeckoMargin>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoMargin ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoMargin ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoMargin ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoPadding {
+            pub gecko: root::nsStylePadding,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoPadding() {
+            assert_eq!(::std::mem::size_of::<GeckoPadding>() , 40usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoPadding )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoPadding>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoPadding ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoPadding ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoPadding )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoBorder {
+            pub gecko: root::nsStyleBorder,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoBorder() {
+            assert_eq!(::std::mem::size_of::<GeckoBorder>() , 312usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoBorder )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoBorder>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoBorder ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoBorder ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoBorder ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoOutline {
+            pub gecko: root::nsStyleOutline,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoOutline() {
+            assert_eq!(::std::mem::size_of::<GeckoOutline>() , 104usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoOutline )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoOutline>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoOutline ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoOutline ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoOutline )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoXUL {
+            pub gecko: root::nsStyleXUL,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoXUL() {
+            assert_eq!(::std::mem::size_of::<GeckoXUL>() , 16usize , concat !
+                       ( "Size of: " , stringify ! ( GeckoXUL ) ));
+            assert_eq! (::std::mem::align_of::<GeckoXUL>() , 4usize , concat !
+                        ( "Alignment of " , stringify ! ( GeckoXUL ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoXUL ) ) . gecko as * const _
+                        as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoXUL ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoSVGReset {
+            pub gecko: root::nsStyleSVGReset,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoSVGReset() {
+            assert_eq!(::std::mem::size_of::<GeckoSVGReset>() , 192usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoSVGReset )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoSVGReset>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoSVGReset ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoSVGReset ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoSVGReset )
+                        , "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoColumn {
+            pub gecko: root::nsStyleColumn,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoColumn() {
+            assert_eq!(::std::mem::size_of::<GeckoColumn>() , 64usize , concat
+                       ! ( "Size of: " , stringify ! ( GeckoColumn ) ));
+            assert_eq! (::std::mem::align_of::<GeckoColumn>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoColumn ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoColumn ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoColumn ) ,
+                        "::" , stringify ! ( gecko ) ));
+        }
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct GeckoEffects {
+            pub gecko: root::nsStyleEffects,
+        }
+        #[test]
+        fn bindgen_test_layout_GeckoEffects() {
+            assert_eq!(::std::mem::size_of::<GeckoEffects>() , 40usize ,
+                       concat ! ( "Size of: " , stringify ! ( GeckoEffects )
+                       ));
+            assert_eq! (::std::mem::align_of::<GeckoEffects>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( GeckoEffects ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const GeckoEffects ) ) . gecko as *
+                        const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( GeckoEffects )
+                        , "::" , stringify ! ( gecko ) ));
         }
         #[repr(u8)]
         /**
@@ -7851,6 +8392,78 @@ pub mod root {
             CORS_USE_CREDENTIALS = 2,
         }
         #[repr(C)]
+        pub struct CSSStyleSheet {
+            pub _base: root::mozilla::StyleSheet,
+            pub mRuleCollection: root::RefPtr<root::CSSRuleListImpl>,
+            pub mInRuleProcessorCache: bool,
+            pub mScopeElement: root::RefPtr<root::mozilla::dom::Element>,
+            pub mRuleProcessors: *mut u8,
+        }
+        pub use self::super::super::root::mozilla::net::ReferrerPolicy as
+                CSSStyleSheet_ReferrerPolicy;
+        #[repr(C)]
+        #[derive(Debug, Copy)]
+        pub struct CSSStyleSheet_cycleCollection {
+            pub _base: root::mozilla::StyleSheet_cycleCollection,
+        }
+        #[test]
+        fn bindgen_test_layout_CSSStyleSheet_cycleCollection() {
+            assert_eq!(::std::mem::size_of::<CSSStyleSheet_cycleCollection>()
+                       , 16usize , concat ! (
+                       "Size of: " , stringify ! (
+                       CSSStyleSheet_cycleCollection ) ));
+            assert_eq! (::std::mem::align_of::<CSSStyleSheet_cycleCollection>()
+                        , 8usize , concat ! (
+                        "Alignment of " , stringify ! (
+                        CSSStyleSheet_cycleCollection ) ));
+        }
+        impl Clone for CSSStyleSheet_cycleCollection {
+            fn clone(&self) -> Self { *self }
+        }
+        #[repr(C)]
+        #[derive(Debug, Copy, Clone)]
+        pub struct CSSStyleSheet_COMTypeInfo {
+            pub _address: u8,
+        }
+        extern "C" {
+            #[link_name =
+                  "_ZN7mozilla13CSSStyleSheet21_cycleCollectorGlobalE"]
+            pub static mut CSSStyleSheet__cycleCollectorGlobal:
+                       root::mozilla::CSSStyleSheet_cycleCollection;
+        }
+        #[test]
+        fn bindgen_test_layout_CSSStyleSheet() {
+            assert_eq!(::std::mem::size_of::<CSSStyleSheet>() , 176usize ,
+                       concat ! ( "Size of: " , stringify ! ( CSSStyleSheet )
+                       ));
+            assert_eq! (::std::mem::align_of::<CSSStyleSheet>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( CSSStyleSheet ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const CSSStyleSheet ) ) .
+                        mRuleCollection as * const _ as usize } , 144usize ,
+                        concat ! (
+                        "Alignment of field: " , stringify ! ( CSSStyleSheet )
+                        , "::" , stringify ! ( mRuleCollection ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const CSSStyleSheet ) ) .
+                        mInRuleProcessorCache as * const _ as usize } ,
+                        152usize , concat ! (
+                        "Alignment of field: " , stringify ! ( CSSStyleSheet )
+                        , "::" , stringify ! ( mInRuleProcessorCache ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const CSSStyleSheet ) ) . mScopeElement
+                        as * const _ as usize } , 160usize , concat ! (
+                        "Alignment of field: " , stringify ! ( CSSStyleSheet )
+                        , "::" , stringify ! ( mScopeElement ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const CSSStyleSheet ) ) .
+                        mRuleProcessors as * const _ as usize } , 168usize ,
+                        concat ! (
+                        "Alignment of field: " , stringify ! ( CSSStyleSheet )
+                        , "::" , stringify ! ( mRuleProcessors ) ));
+        }
+        #[repr(C)]
         #[derive(Debug)]
         pub struct ServoStyleSheet {
             pub _base: root::mozilla::StyleSheet,
@@ -8092,10 +8705,135 @@ pub mod root {
             NotPseudo = 28,
             MAX = 29,
         }
+        /**
+ * The set of style sheets that apply to a document, backed by a Servo
+ * Stylist.  A ServoStyleSet contains ServoStyleSheets.
+ */
         #[repr(C)]
-        #[derive(Debug, Copy, Clone)]
         pub struct ServoStyleSet {
-            _unused: [u8; 0],
+            pub mPresContext: *mut root::nsPresContext,
+            pub mRawSet: root::mozilla::UniquePtr<root::RawServoStyleSet>,
+            pub mSheets: [u64; 9usize],
+            pub mAuthorStyleDisabled: bool,
+            pub mStylistState: root::mozilla::StylistState,
+            pub mUserFontSetUpdateGeneration: u64,
+            pub mUserFontCacheUpdateGeneration: u32,
+            pub mNeedsRestyleAfterEnsureUniqueInner: bool,
+            pub mNonInheritingStyleContexts: [u64; 5usize],
+            pub mPostTraversalTasks: root::nsTArray<root::mozilla::PostTraversalTask>,
+            pub mStyleRuleMap: root::RefPtr<root::mozilla::ServoStyleRuleMap>,
+            pub mBindingManager: root::RefPtr<root::nsBindingManager>,
+        }
+        pub type ServoStyleSet_SnapshotTable =
+            root::mozilla::ServoElementSnapshotTable;
+        #[repr(C)]
+        #[derive(Debug)]
+        pub struct ServoStyleSet_AutoSetInServoTraversal {
+            pub mSet: *mut root::mozilla::ServoStyleSet,
+        }
+        #[test]
+        fn bindgen_test_layout_ServoStyleSet_AutoSetInServoTraversal() {
+            assert_eq!(::std::mem::size_of::<ServoStyleSet_AutoSetInServoTraversal>()
+                       , 8usize , concat ! (
+                       "Size of: " , stringify ! (
+                       ServoStyleSet_AutoSetInServoTraversal ) ));
+            assert_eq! (::std::mem::align_of::<ServoStyleSet_AutoSetInServoTraversal>()
+                        , 8usize , concat ! (
+                        "Alignment of " , stringify ! (
+                        ServoStyleSet_AutoSetInServoTraversal ) ));
+            assert_eq! (unsafe {
+                        & (
+                        * ( 0 as * const ServoStyleSet_AutoSetInServoTraversal
+                        ) ) . mSet as * const _ as usize } , 0usize , concat !
+                        (
+                        "Alignment of field: " , stringify ! (
+                        ServoStyleSet_AutoSetInServoTraversal ) , "::" ,
+                        stringify ! ( mSet ) ));
+        }
+        extern "C" {
+            #[link_name = "_ZN7mozilla13ServoStyleSet17sInServoTraversalE"]
+            pub static mut ServoStyleSet_sInServoTraversal:
+                       *mut root::mozilla::ServoStyleSet;
+        }
+        #[test]
+        fn bindgen_test_layout_ServoStyleSet() {
+            assert_eq!(::std::mem::size_of::<ServoStyleSet>() , 176usize ,
+                       concat ! ( "Size of: " , stringify ! ( ServoStyleSet )
+                       ));
+            assert_eq! (::std::mem::align_of::<ServoStyleSet>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( ServoStyleSet ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) . mPresContext
+                        as * const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mPresContext ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) . mRawSet as *
+                        const _ as usize } , 8usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mRawSet ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) . mSheets as *
+                        const _ as usize } , 16usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mSheets ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mAuthorStyleDisabled as * const _ as usize } , 88usize
+                        , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mAuthorStyleDisabled ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) . mStylistState
+                        as * const _ as usize } , 89usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mStylistState ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mUserFontSetUpdateGeneration as * const _ as usize } ,
+                        96usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mUserFontSetUpdateGeneration )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mUserFontCacheUpdateGeneration as * const _ as usize }
+                        , 104usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mUserFontCacheUpdateGeneration
+                        ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mNeedsRestyleAfterEnsureUniqueInner as * const _ as
+                        usize } , 108usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! (
+                        mNeedsRestyleAfterEnsureUniqueInner ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mNonInheritingStyleContexts as * const _ as usize } ,
+                        112usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mNonInheritingStyleContexts )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mPostTraversalTasks as * const _ as usize } , 152usize
+                        , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mPostTraversalTasks ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) . mStyleRuleMap
+                        as * const _ as usize } , 160usize , concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mStyleRuleMap ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const ServoStyleSet ) ) .
+                        mBindingManager as * const _ as usize } , 168usize ,
+                        concat ! (
+                        "Alignment of field: " , stringify ! ( ServoStyleSet )
+                        , "::" , stringify ! ( mBindingManager ) ));
         }
         #[repr(C)]
         #[derive(Debug, Copy, Clone)]
@@ -8917,7 +9655,7 @@ pub mod root {
         }
         #[test]
         fn bindgen_test_layout_OffTheBooksMutex() {
-            assert_eq!(::std::mem::size_of::<OffTheBooksMutex>() , 72usize ,
+            assert_eq!(::std::mem::size_of::<OffTheBooksMutex>() , 96usize ,
                        concat ! (
                        "Size of: " , stringify ! ( OffTheBooksMutex ) ));
             assert_eq! (::std::mem::align_of::<OffTheBooksMutex>() , 8usize ,
@@ -8925,7 +9663,7 @@ pub mod root {
                         "Alignment of " , stringify ! ( OffTheBooksMutex ) ));
             assert_eq! (unsafe {
                         & ( * ( 0 as * const OffTheBooksMutex ) ) .
-                        mOwningThread as * const _ as usize } , 64usize ,
+                        mOwningThread as * const _ as usize } , 88usize ,
                         concat ! (
                         "Alignment of field: " , stringify ! (
                         OffTheBooksMutex ) , "::" , stringify ! (
@@ -8943,7 +9681,7 @@ pub mod root {
         }
         #[test]
         fn bindgen_test_layout_Mutex() {
-            assert_eq!(::std::mem::size_of::<Mutex>() , 72usize , concat ! (
+            assert_eq!(::std::mem::size_of::<Mutex>() , 96usize , concat ! (
                        "Size of: " , stringify ! ( Mutex ) ));
             assert_eq! (::std::mem::align_of::<Mutex>() , 8usize , concat ! (
                         "Alignment of " , stringify ! ( Mutex ) ));
@@ -11410,7 +12148,6 @@ pub mod root {
             fn clone(&self) -> Self { *self }
         }
         #[repr(C)]
-        #[derive(Debug)]
         pub struct PseudoElementHashEntry {
             pub _base: root::PLDHashEntryHdr,
             pub mElement: root::RefPtr<root::mozilla::dom::Element>,
@@ -11574,6 +12311,76 @@ pub mod root {
                         "Alignment of field: " , stringify ! ( ServoMediaList
                         ) , "::" , stringify ! ( mRawList ) ));
         }
+        /**
+ * A PostTraversalTask is a task to be performed immediately after a Servo
+ * traversal.  There are just a few tasks we need to perform, so we use this
+ * class rather than Runnables, to avoid virtual calls and some allocations.
+ *
+ * A PostTraversalTask is only safe to run immediately after the Servo
+ * traversal, since it can hold raw pointers to DOM objects.
+ */
+        #[repr(C)]
+        #[derive(Debug, Copy)]
+        pub struct PostTraversalTask {
+            pub mType: root::mozilla::PostTraversalTask_Type,
+            pub mTarget: *mut ::std::os::raw::c_void,
+            pub mResult: root::nsresult,
+        }
+        #[repr(i32)]
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub enum PostTraversalTask_Type {
+            ResolveFontFaceLoadedPromise = 0,
+            RejectFontFaceLoadedPromise = 1,
+            DispatchLoadingEventAndReplaceReadyPromise = 2,
+            DispatchFontFaceSetCheckLoadingFinishedAfterDelay = 3,
+            LoadFontEntry = 4,
+        }
+        #[test]
+        fn bindgen_test_layout_PostTraversalTask() {
+            assert_eq!(::std::mem::size_of::<PostTraversalTask>() , 24usize ,
+                       concat ! (
+                       "Size of: " , stringify ! ( PostTraversalTask ) ));
+            assert_eq! (::std::mem::align_of::<PostTraversalTask>() , 8usize ,
+                        concat ! (
+                        "Alignment of " , stringify ! ( PostTraversalTask )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const PostTraversalTask ) ) . mType as
+                        * const _ as usize } , 0usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        PostTraversalTask ) , "::" , stringify ! ( mType ) ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const PostTraversalTask ) ) . mTarget
+                        as * const _ as usize } , 8usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        PostTraversalTask ) , "::" , stringify ! ( mTarget )
+                        ));
+            assert_eq! (unsafe {
+                        & ( * ( 0 as * const PostTraversalTask ) ) . mResult
+                        as * const _ as usize } , 16usize , concat ! (
+                        "Alignment of field: " , stringify ! (
+                        PostTraversalTask ) , "::" , stringify ! ( mResult )
+                        ));
+        }
+        impl Clone for PostTraversalTask {
+            fn clone(&self) -> Self { *self }
+        }
+        #[repr(C)]
+        #[derive(Debug, Copy, Clone)]
+        pub struct ServoStyleRuleMap {
+            _unused: [u8; 0],
+        }
+        #[repr(u8)]
+        /**
+ * A few flags used to track which kind of stylist state we may need to
+ * update.
+ */
+        #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+        pub enum StylistState {
+            NotDirty = 0,
+            StyleSheetsDirty = 1,
+            FullyDirty = 2,
+        }
         #[repr(C)]
         #[derive(Debug)]
         pub struct CSSFontFaceDescriptors {
@@ -11675,196 +12482,194 @@ pub mod root {
             pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<T>>,
         }
     }
+    pub type va_list = root::__builtin_va_list;
+    pub type fpos_t = root::__darwin_off_t;
     #[repr(C)]
     #[derive(Debug, Copy)]
-    pub struct _IO_FILE {
-        pub _flags: ::std::os::raw::c_int,
-        pub _IO_read_ptr: *mut ::std::os::raw::c_char,
-        pub _IO_read_end: *mut ::std::os::raw::c_char,
-        pub _IO_read_base: *mut ::std::os::raw::c_char,
-        pub _IO_write_base: *mut ::std::os::raw::c_char,
-        pub _IO_write_ptr: *mut ::std::os::raw::c_char,
-        pub _IO_write_end: *mut ::std::os::raw::c_char,
-        pub _IO_buf_base: *mut ::std::os::raw::c_char,
-        pub _IO_buf_end: *mut ::std::os::raw::c_char,
-        pub _IO_save_base: *mut ::std::os::raw::c_char,
-        pub _IO_backup_base: *mut ::std::os::raw::c_char,
-        pub _IO_save_end: *mut ::std::os::raw::c_char,
-        pub _markers: *mut root::_IO_marker,
-        pub _chain: *mut root::_IO_FILE,
-        pub _fileno: ::std::os::raw::c_int,
-        pub _flags2: ::std::os::raw::c_int,
-        pub _old_offset: root::__off_t,
-        pub _cur_column: ::std::os::raw::c_ushort,
-        pub _vtable_offset: ::std::os::raw::c_schar,
-        pub _shortbuf: [::std::os::raw::c_char; 1usize],
-        pub _lock: *mut root::_IO_lock_t,
-        pub _offset: root::__off64_t,
-        pub __pad1: *mut ::std::os::raw::c_void,
-        pub __pad2: *mut ::std::os::raw::c_void,
-        pub __pad3: *mut ::std::os::raw::c_void,
-        pub __pad4: *mut ::std::os::raw::c_void,
-        pub __pad5: usize,
-        pub _mode: ::std::os::raw::c_int,
-        pub _unused2: [::std::os::raw::c_char; 20usize],
+    pub struct __sbuf {
+        pub _base: *mut ::std::os::raw::c_uchar,
+        pub _size: ::std::os::raw::c_int,
     }
     #[test]
-    fn bindgen_test_layout__IO_FILE() {
-        assert_eq!(::std::mem::size_of::<_IO_FILE>() , 216usize , concat ! (
-                   "Size of: " , stringify ! ( _IO_FILE ) ));
-        assert_eq! (::std::mem::align_of::<_IO_FILE>() , 8usize , concat ! (
-                    "Alignment of " , stringify ! ( _IO_FILE ) ));
+    fn bindgen_test_layout___sbuf() {
+        assert_eq!(::std::mem::size_of::<__sbuf>() , 16usize , concat ! (
+                   "Size of: " , stringify ! ( __sbuf ) ));
+        assert_eq! (::std::mem::align_of::<__sbuf>() , 8usize , concat ! (
+                    "Alignment of " , stringify ! ( __sbuf ) ));
         assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _flags as * const _ as
+                    & ( * ( 0 as * const __sbuf ) ) . _base as * const _ as
                     usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _flags ) ));
+                    "Alignment of field: " , stringify ! ( __sbuf ) , "::" ,
+                    stringify ! ( _base ) ));
         assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_read_ptr as *
-                    const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_read_ptr ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_read_end as *
-                    const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_read_end ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_read_base as *
-                    const _ as usize } , 24usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_read_base ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_write_base as *
-                    const _ as usize } , 32usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_write_base ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_write_ptr as *
-                    const _ as usize } , 40usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_write_ptr ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_write_end as *
-                    const _ as usize } , 48usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_write_end ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_buf_base as *
-                    const _ as usize } , 56usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_buf_base ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_buf_end as * const
-                    _ as usize } , 64usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_buf_end ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_save_base as *
-                    const _ as usize } , 72usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_save_base ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_backup_base as *
-                    const _ as usize } , 80usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_backup_base ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _IO_save_end as *
-                    const _ as usize } , 88usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _IO_save_end ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _markers as * const _
-                    as usize } , 96usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _markers ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _chain as * const _ as
-                    usize } , 104usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _chain ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _fileno as * const _
-                    as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _fileno ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _flags2 as * const _
-                    as usize } , 116usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _flags2 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _old_offset as * const
-                    _ as usize } , 120usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _old_offset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _cur_column as * const
-                    _ as usize } , 128usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _cur_column ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _vtable_offset as *
-                    const _ as usize } , 130usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _vtable_offset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _shortbuf as * const _
-                    as usize } , 131usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _shortbuf ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _lock as * const _ as
-                    usize } , 136usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _lock ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _offset as * const _
-                    as usize } , 144usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _offset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . __pad1 as * const _ as
-                    usize } , 152usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( __pad1 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . __pad2 as * const _ as
-                    usize } , 160usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( __pad2 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . __pad3 as * const _ as
-                    usize } , 168usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( __pad3 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . __pad4 as * const _ as
-                    usize } , 176usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( __pad4 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . __pad5 as * const _ as
-                    usize } , 184usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( __pad5 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _mode as * const _ as
-                    usize } , 192usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _mode ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_FILE ) ) . _unused2 as * const _
-                    as usize } , 196usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_FILE ) , "::" ,
-                    stringify ! ( _unused2 ) ));
+                    & ( * ( 0 as * const __sbuf ) ) . _size as * const _ as
+                    usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sbuf ) , "::" ,
+                    stringify ! ( _size ) ));
     }
-    impl Clone for _IO_FILE {
+    impl Clone for __sbuf {
         fn clone(&self) -> Self { *self }
     }
-    pub type FILE = root::_IO_FILE;
-    pub type va_list = root::__builtin_va_list;
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct __sFILEX {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct __sFILE {
+        pub _p: *mut ::std::os::raw::c_uchar,
+        pub _r: ::std::os::raw::c_int,
+        pub _w: ::std::os::raw::c_int,
+        pub _flags: ::std::os::raw::c_short,
+        pub _file: ::std::os::raw::c_short,
+        pub _bf: root::__sbuf,
+        pub _lbfsize: ::std::os::raw::c_int,
+        pub _cookie: *mut ::std::os::raw::c_void,
+        pub _close: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                   *mut ::std::os::raw::c_void)
+                                              -> ::std::os::raw::c_int>,
+        pub _read: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                  *mut ::std::os::raw::c_void,
+                                                              arg2:
+                                                                  *mut ::std::os::raw::c_char,
+                                                              arg3:
+                                                                  ::std::os::raw::c_int)
+                                             -> ::std::os::raw::c_int>,
+        pub _seek: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                  *mut ::std::os::raw::c_void,
+                                                              arg2:
+                                                                  root::fpos_t,
+                                                              arg3:
+                                                                  ::std::os::raw::c_int)
+                                             -> root::fpos_t>,
+        pub _write: ::std::option::Option<unsafe extern "C" fn(arg1:
+                                                                   *mut ::std::os::raw::c_void,
+                                                               arg2:
+                                                                   *const ::std::os::raw::c_char,
+                                                               arg3:
+                                                                   ::std::os::raw::c_int)
+                                              -> ::std::os::raw::c_int>,
+        pub _ub: root::__sbuf,
+        pub _extra: *mut root::__sFILEX,
+        pub _ur: ::std::os::raw::c_int,
+        pub _ubuf: [::std::os::raw::c_uchar; 3usize],
+        pub _nbuf: [::std::os::raw::c_uchar; 1usize],
+        pub _lb: root::__sbuf,
+        pub _blksize: ::std::os::raw::c_int,
+        pub _offset: root::fpos_t,
+    }
+    #[test]
+    fn bindgen_test_layout___sFILE() {
+        assert_eq!(::std::mem::size_of::<__sFILE>() , 152usize , concat ! (
+                   "Size of: " , stringify ! ( __sFILE ) ));
+        assert_eq! (::std::mem::align_of::<__sFILE>() , 8usize , concat ! (
+                    "Alignment of " , stringify ! ( __sFILE ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _p as * const _ as
+                    usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _p ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _r as * const _ as
+                    usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _r ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _w as * const _ as
+                    usize } , 12usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _w ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _flags as * const _ as
+                    usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _flags ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _file as * const _ as
+                    usize } , 18usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _file ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _bf as * const _ as
+                    usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _bf ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _lbfsize as * const _
+                    as usize } , 40usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _lbfsize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _cookie as * const _ as
+                    usize } , 48usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _cookie ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _close as * const _ as
+                    usize } , 56usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _close ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _read as * const _ as
+                    usize } , 64usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _read ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _seek as * const _ as
+                    usize } , 72usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _seek ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _write as * const _ as
+                    usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _write ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _ub as * const _ as
+                    usize } , 88usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _ub ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _extra as * const _ as
+                    usize } , 104usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _extra ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _ur as * const _ as
+                    usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _ur ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _ubuf as * const _ as
+                    usize } , 116usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _ubuf ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _nbuf as * const _ as
+                    usize } , 119usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _nbuf ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _lb as * const _ as
+                    usize } , 120usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _lb ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _blksize as * const _
+                    as usize } , 136usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _blksize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const __sFILE ) ) . _offset as * const _ as
+                    usize } , 144usize , concat ! (
+                    "Alignment of field: " , stringify ! ( __sFILE ) , "::" ,
+                    stringify ! ( _offset ) ));
+    }
+    impl Clone for __sFILE {
+        fn clone(&self) -> Self { *self }
+    }
+    pub type FILE = root::__sFILE;
     #[repr(C)]
     #[derive(Debug, Copy)]
     pub struct InfallibleAllocPolicy {
@@ -12421,39 +13226,6 @@ pub mod root {
         NS_OK_NO_NAME_CLAUSE_HANDLED = 7864354,
     }
     pub type nsrefcnt = root::MozRefCountType;
-    pub type _IO_lock_t = ::std::os::raw::c_void;
-    #[repr(C)]
-    #[derive(Debug, Copy)]
-    pub struct _IO_marker {
-        pub _next: *mut root::_IO_marker,
-        pub _sbuf: *mut root::_IO_FILE,
-        pub _pos: ::std::os::raw::c_int,
-    }
-    #[test]
-    fn bindgen_test_layout__IO_marker() {
-        assert_eq!(::std::mem::size_of::<_IO_marker>() , 24usize , concat ! (
-                   "Size of: " , stringify ! ( _IO_marker ) ));
-        assert_eq! (::std::mem::align_of::<_IO_marker>() , 8usize , concat ! (
-                    "Alignment of " , stringify ! ( _IO_marker ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_marker ) ) . _next as * const _
-                    as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_marker ) , "::"
-                    , stringify ! ( _next ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_marker ) ) . _sbuf as * const _
-                    as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_marker ) , "::"
-                    , stringify ! ( _sbuf ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const _IO_marker ) ) . _pos as * const _ as
-                    usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( _IO_marker ) , "::"
-                    , stringify ! ( _pos ) ));
-    }
-    impl Clone for _IO_marker {
-        fn clone(&self) -> Self { *self }
-    }
     #[repr(C)]
     pub struct nsQueryFrame__bindgen_vtable(::std::os::raw::c_void);
     #[repr(C)]
@@ -17089,7 +17861,6 @@ pub mod root {
         APPEND_UNSCROLLED_ONLY = 4,
     }
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsIPresShell_PointerCaptureInfo {
         pub mPendingContent: root::nsCOMPtr<root::nsIContent>,
         pub mOverrideContent: root::nsCOMPtr<root::nsIContent>,
@@ -18078,6 +18849,2380 @@ pub mod root {
                      (16384u64 as u16))
         }
     }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleFont {
+        pub mFont: root::nsFont,
+        pub mSize: root::nscoord,
+        pub mGenericID: u8,
+        pub mScriptLevel: i8,
+        pub mMathVariant: u8,
+        pub mMathDisplay: u8,
+        pub mMinFontSizeRatio: u8,
+        pub mExplicitLanguage: bool,
+        pub mAllowZoom: bool,
+        pub mScriptUnconstrainedSize: root::nscoord,
+        pub mScriptMinSize: root::nscoord,
+        pub mScriptSizeMultiplier: f32,
+        pub mLanguage: root::nsCOMPtr<root::nsIAtom>,
+    }
+    pub const nsStyleFont_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleFont() {
+        assert_eq!(::std::mem::size_of::<nsStyleFont>() , 120usize , concat !
+                   ( "Size of: " , stringify ! ( nsStyleFont ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleFont>() , 8usize , concat !
+                    ( "Alignment of " , stringify ! ( nsStyleFont ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mFont as * const _
+                    as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mFont ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mSize as * const _
+                    as usize } , 88usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mSize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mGenericID as *
+                    const _ as usize } , 92usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mGenericID ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mScriptLevel as *
+                    const _ as usize } , 93usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mScriptLevel ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mMathVariant as *
+                    const _ as usize } , 94usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mMathVariant ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mMathDisplay as *
+                    const _ as usize } , 95usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mMathDisplay ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mMinFontSizeRatio
+                    as * const _ as usize } , 96usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mMinFontSizeRatio ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mExplicitLanguage
+                    as * const _ as usize } , 97usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mExplicitLanguage ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mAllowZoom as *
+                    const _ as usize } , 98usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mAllowZoom ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) .
+                    mScriptUnconstrainedSize as * const _ as usize } ,
+                    100usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mScriptUnconstrainedSize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mScriptMinSize as *
+                    const _ as usize } , 104usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mScriptMinSize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) .
+                    mScriptSizeMultiplier as * const _ as usize } , 108usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mScriptSizeMultiplier ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleFont ) ) . mLanguage as *
+                    const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
+                    "::" , stringify ! ( mLanguage ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleColor {
+        pub mColor: root::nscolor,
+    }
+    pub const nsStyleColor_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleColor() {
+        assert_eq!(::std::mem::size_of::<nsStyleColor>() , 4usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleColor ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleColor>() , 4usize , concat !
+                    ( "Alignment of " , stringify ! ( nsStyleColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColor ) ) . mColor as * const
+                    _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColor ) ,
+                    "::" , stringify ! ( mColor ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_StaticRefPtr_instantiation_21() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_StaticRefPtr_instantiation_22() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleList {
+        pub mListStylePosition: u8,
+        pub mListStyleImage: root::RefPtr<root::nsStyleImageRequest>,
+        pub mCounterStyle: root::mozilla::CounterStylePtr,
+        pub mQuotes: root::RefPtr<root::nsStyleQuoteValues>,
+        pub mImageRegion: root::nsRect,
+    }
+    pub const nsStyleList_kHasFinishStyle: bool = true;
+    extern "C" {
+        #[link_name = "_ZN11nsStyleList14sInitialQuotesE"]
+        pub static mut nsStyleList_sInitialQuotes:
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>;
+    }
+    extern "C" {
+        #[link_name = "_ZN11nsStyleList11sNoneQuotesE"]
+        pub static mut nsStyleList_sNoneQuotes:
+                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>;
+    }
+    #[test]
+    fn bindgen_test_layout_nsStyleList() {
+        assert_eq!(::std::mem::size_of::<nsStyleList>() , 48usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleList ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleList>() , 8usize , concat !
+                    ( "Alignment of " , stringify ! ( nsStyleList ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleList ) ) . mListStylePosition
+                    as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
+                    "::" , stringify ! ( mListStylePosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleList ) ) . mListStyleImage as
+                    * const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
+                    "::" , stringify ! ( mListStyleImage ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleList ) ) . mCounterStyle as *
+                    const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
+                    "::" , stringify ! ( mCounterStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleList ) ) . mQuotes as * const
+                    _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
+                    "::" , stringify ! ( mQuotes ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleList ) ) . mImageRegion as *
+                    const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
+                    "::" , stringify ! ( mImageRegion ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleText {
+        pub mTextAlign: u8,
+        pub mTextAlignLast: u8,
+        pub _bitfield_1: u8,
+        pub mTextJustify: root::mozilla::StyleTextJustify,
+        pub mTextTransform: u8,
+        pub mWhiteSpace: root::mozilla::StyleWhiteSpace,
+        pub mWordBreak: u8,
+        pub mOverflowWrap: u8,
+        pub mHyphens: root::mozilla::StyleHyphens,
+        pub mRubyAlign: u8,
+        pub mRubyPosition: u8,
+        pub mTextSizeAdjust: u8,
+        pub mTextCombineUpright: u8,
+        pub mControlCharacterVisibility: u8,
+        pub mTextEmphasisPosition: u8,
+        pub mTextEmphasisStyle: u8,
+        pub mTextRendering: u8,
+        pub mTextEmphasisColor: root::mozilla::StyleComplexColor,
+        pub mWebkitTextFillColor: root::mozilla::StyleComplexColor,
+        pub mWebkitTextStrokeColor: root::mozilla::StyleComplexColor,
+        pub mTabSize: root::nsStyleCoord,
+        pub mWordSpacing: root::nsStyleCoord,
+        pub mLetterSpacing: root::nsStyleCoord,
+        pub mLineHeight: root::nsStyleCoord,
+        pub mTextIndent: root::nsStyleCoord,
+        pub mWebkitTextStrokeWidth: root::nscoord,
+        pub mTextShadow: root::RefPtr<root::nsCSSShadowArray>,
+        pub mTextEmphasisStyleString: ::nsstring::nsStringRepr,
+    }
+    pub const nsStyleText_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleText() {
+        assert_eq!(::std::mem::size_of::<nsStyleText>() , 160usize , concat !
+                   ( "Size of: " , stringify ! ( nsStyleText ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleText>() , 8usize , concat !
+                    ( "Alignment of " , stringify ! ( nsStyleText ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextAlign as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextAlign ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextAlignLast as *
+                    const _ as usize } , 1usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextAlignLast ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextJustify as *
+                    const _ as usize } , 3usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextJustify ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextTransform as *
+                    const _ as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextTransform ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mWhiteSpace as *
+                    const _ as usize } , 5usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWhiteSpace ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mWordBreak as *
+                    const _ as usize } , 6usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWordBreak ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mOverflowWrap as *
+                    const _ as usize } , 7usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mOverflowWrap ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mHyphens as * const
+                    _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mHyphens ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mRubyAlign as *
+                    const _ as usize } , 9usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mRubyAlign ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mRubyPosition as *
+                    const _ as usize } , 10usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mRubyPosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextSizeAdjust as
+                    * const _ as usize } , 11usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextSizeAdjust ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextCombineUpright
+                    as * const _ as usize } , 12usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextCombineUpright ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mControlCharacterVisibility as * const _ as usize } ,
+                    13usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mControlCharacterVisibility ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mTextEmphasisPosition as * const _ as usize } , 14usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextEmphasisPosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextEmphasisStyle
+                    as * const _ as usize } , 15usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextEmphasisStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextRendering as *
+                    const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextRendering ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextEmphasisColor
+                    as * const _ as usize } , 20usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextEmphasisColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mWebkitTextFillColor as * const _ as usize } , 28usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWebkitTextFillColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mWebkitTextStrokeColor as * const _ as usize } , 36usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWebkitTextStrokeColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTabSize as * const
+                    _ as usize } , 48usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTabSize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mWordSpacing as *
+                    const _ as usize } , 64usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWordSpacing ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mLetterSpacing as *
+                    const _ as usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mLetterSpacing ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mLineHeight as *
+                    const _ as usize } , 96usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mLineHeight ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextIndent as *
+                    const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextIndent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mWebkitTextStrokeWidth as * const _ as usize } , 128usize
+                    , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mWebkitTextStrokeWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) . mTextShadow as *
+                    const _ as usize } , 136usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextShadow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleText ) ) .
+                    mTextEmphasisStyleString as * const _ as usize } ,
+                    144usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
+                    "::" , stringify ! ( mTextEmphasisStyleString ) ));
+    }
+    impl nsStyleText {
+        #[inline]
+        pub fn mTextAlignTrue(&self) -> bool {
+            let mut unit_field_val: u8 =
+                unsafe { ::std::mem::uninitialized() };
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
+                                                    as *const u8,
+                                                &mut unit_field_val as *mut u8
+                                                    as *mut u8,
+                                                ::std::mem::size_of::<u8>())
+            };
+            let mask = 1u64 as u8;
+            let val = (unit_field_val & mask) >> 0usize;
+            unsafe { ::std::mem::transmute(val as u8) }
+        }
+        #[inline]
+        pub fn set_mTextAlignTrue(&mut self, val: bool) {
+            let mask = 1u64 as u8;
+            let val = val as u8 as u8;
+            let mut unit_field_val: u8 =
+                unsafe { ::std::mem::uninitialized() };
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
+                                                    as *const u8,
+                                                &mut unit_field_val as *mut u8
+                                                    as *mut u8,
+                                                ::std::mem::size_of::<u8>())
+            };
+            unit_field_val &= !mask;
+            unit_field_val |= (val << 0usize) & mask;
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&unit_field_val as *const _ as
+                                                    *const u8,
+                                                &mut self._bitfield_1 as
+                                                    *mut _ as *mut u8,
+                                                ::std::mem::size_of::<u8>());
+            }
+        }
+        #[inline]
+        pub fn mTextAlignLastTrue(&self) -> bool {
+            let mut unit_field_val: u8 =
+                unsafe { ::std::mem::uninitialized() };
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
+                                                    as *const u8,
+                                                &mut unit_field_val as *mut u8
+                                                    as *mut u8,
+                                                ::std::mem::size_of::<u8>())
+            };
+            let mask = 2u64 as u8;
+            let val = (unit_field_val & mask) >> 1usize;
+            unsafe { ::std::mem::transmute(val as u8) }
+        }
+        #[inline]
+        pub fn set_mTextAlignLastTrue(&mut self, val: bool) {
+            let mask = 2u64 as u8;
+            let val = val as u8 as u8;
+            let mut unit_field_val: u8 =
+                unsafe { ::std::mem::uninitialized() };
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
+                                                    as *const u8,
+                                                &mut unit_field_val as *mut u8
+                                                    as *mut u8,
+                                                ::std::mem::size_of::<u8>())
+            };
+            unit_field_val &= !mask;
+            unit_field_val |= (val << 1usize) & mask;
+            unsafe {
+                ::std::ptr::copy_nonoverlapping(&unit_field_val as *const _ as
+                                                    *const u8,
+                                                &mut self._bitfield_1 as
+                                                    *mut _ as *mut u8,
+                                                ::std::mem::size_of::<u8>());
+            }
+        }
+        #[inline]
+        pub fn new_bitfield_1(mTextAlignTrue: bool, mTextAlignLastTrue: bool)
+         -> u8 {
+            ({
+                 ({ 0 } |
+                      ((mTextAlignTrue as u8 as u8) << 0usize) & (1u64 as u8))
+             } | ((mTextAlignLastTrue as u8 as u8) << 1usize) & (2u64 as u8))
+        }
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleVisibility {
+        pub mImageOrientation: root::nsStyleImageOrientation,
+        pub mDirection: u8,
+        pub mVisible: u8,
+        pub mImageRendering: u8,
+        pub mWritingMode: u8,
+        pub mTextOrientation: u8,
+        pub mColorAdjust: u8,
+    }
+    pub const nsStyleVisibility_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleVisibility() {
+        assert_eq!(::std::mem::size_of::<nsStyleVisibility>() , 7usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleVisibility )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleVisibility>() , 1usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleVisibility ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) .
+                    mImageOrientation as * const _ as usize } , 0usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mImageOrientation ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) . mDirection as
+                    * const _ as usize } , 1usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mDirection ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) . mVisible as *
+                    const _ as usize } , 2usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mVisible ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) .
+                    mImageRendering as * const _ as usize } , 3usize , concat
+                    ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mImageRendering ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) . mWritingMode
+                    as * const _ as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mWritingMode ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) .
+                    mTextOrientation as * const _ as usize } , 5usize , concat
+                    ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mTextOrientation ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVisibility ) ) . mColorAdjust
+                    as * const _ as usize } , 6usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
+                    , "::" , stringify ! ( mColorAdjust ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleUserInterface {
+        pub mUserInput: root::mozilla::StyleUserInput,
+        pub mUserModify: root::mozilla::StyleUserModify,
+        pub mUserFocus: root::mozilla::StyleUserFocus,
+        pub mPointerEvents: u8,
+        pub mCursor: u8,
+        pub mCursorImages: root::nsTArray<root::nsCursorImage>,
+        pub mCaretColor: root::mozilla::StyleComplexColor,
+    }
+    pub const nsStyleUserInterface_kHasFinishStyle: bool = true;
+    #[test]
+    fn bindgen_test_layout_nsStyleUserInterface() {
+        assert_eq!(::std::mem::size_of::<nsStyleUserInterface>() , 24usize ,
+                   concat ! (
+                   "Size of: " , stringify ! ( nsStyleUserInterface ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleUserInterface>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleUserInterface ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mUserInput
+                    as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! ( mUserInput )
+                    ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
+                    mUserModify as * const _ as usize } , 1usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! ( mUserModify
+                    ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mUserFocus
+                    as * const _ as usize } , 2usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! ( mUserFocus )
+                    ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
+                    mPointerEvents as * const _ as usize } , 3usize , concat !
+                    (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! (
+                    mPointerEvents ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mCursor as
+                    * const _ as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! ( mCursor )
+                    ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
+                    mCursorImages as * const _ as usize } , 8usize , concat !
+                    (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! (
+                    mCursorImages ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
+                    mCaretColor as * const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleUserInterface ) , "::" , stringify ! ( mCaretColor
+                    ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleTableBorder {
+        pub mBorderSpacingCol: root::nscoord,
+        pub mBorderSpacingRow: root::nscoord,
+        pub mBorderCollapse: u8,
+        pub mCaptionSide: u8,
+        pub mEmptyCells: u8,
+    }
+    pub const nsStyleTableBorder_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleTableBorder() {
+        assert_eq!(::std::mem::size_of::<nsStyleTableBorder>() , 12usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleTableBorder )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleTableBorder>() , 4usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleTableBorder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
+                    mBorderSpacingCol as * const _ as usize } , 0usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
+                    ) , "::" , stringify ! ( mBorderSpacingCol ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
+                    mBorderSpacingRow as * const _ as usize } , 4usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
+                    ) , "::" , stringify ! ( mBorderSpacingRow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
+                    mBorderCollapse as * const _ as usize } , 8usize , concat
+                    ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
+                    ) , "::" , stringify ! ( mBorderCollapse ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTableBorder ) ) . mCaptionSide
+                    as * const _ as usize } , 9usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
+                    ) , "::" , stringify ! ( mCaptionSide ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTableBorder ) ) . mEmptyCells
+                    as * const _ as usize } , 10usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
+                    ) , "::" , stringify ! ( mEmptyCells ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleSVG {
+        pub mFill: root::nsStyleSVGPaint,
+        pub mStroke: root::nsStyleSVGPaint,
+        pub mMarkerEnd: root::RefPtr<root::mozilla::css::URLValue>,
+        pub mMarkerMid: root::RefPtr<root::mozilla::css::URLValue>,
+        pub mMarkerStart: root::RefPtr<root::mozilla::css::URLValue>,
+        pub mStrokeDasharray: root::nsTArray<root::nsStyleCoord>,
+        pub mContextProps: root::nsTArray<root::nsCOMPtr<root::nsIAtom>>,
+        pub mStrokeDashoffset: root::nsStyleCoord,
+        pub mStrokeWidth: root::nsStyleCoord,
+        pub mFillOpacity: f32,
+        pub mStrokeMiterlimit: f32,
+        pub mStrokeOpacity: f32,
+        pub mClipRule: root::mozilla::StyleFillRule,
+        pub mColorInterpolation: u8,
+        pub mColorInterpolationFilters: u8,
+        pub mFillRule: root::mozilla::StyleFillRule,
+        pub mPaintOrder: u8,
+        pub mShapeRendering: u8,
+        pub mStrokeLinecap: u8,
+        pub mStrokeLinejoin: u8,
+        pub mTextAnchor: u8,
+        pub mContextPropsBits: u8,
+        pub mContextFlags: u8,
+    }
+    pub const nsStyleSVG_FILL_OPACITY_SOURCE_MASK:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::FILL_OPACITY_SOURCE_MASK;
+    pub const nsStyleSVG_STROKE_OPACITY_SOURCE_MASK:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::STROKE_OPACITY_SOURCE_MASK;
+    pub const nsStyleSVG_STROKE_DASHARRAY_CONTEXT:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::STROKE_DASHARRAY_CONTEXT;
+    pub const nsStyleSVG_STROKE_DASHOFFSET_CONTEXT:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::STROKE_DASHOFFSET_CONTEXT;
+    pub const nsStyleSVG_STROKE_WIDTH_CONTEXT: root::nsStyleSVG__bindgen_ty_1
+              =
+        nsStyleSVG__bindgen_ty_1::STROKE_WIDTH_CONTEXT;
+    pub const nsStyleSVG_FILL_OPACITY_SOURCE_SHIFT:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::FILL_OPACITY_SOURCE_SHIFT;
+    pub const nsStyleSVG_STROKE_OPACITY_SOURCE_SHIFT:
+              root::nsStyleSVG__bindgen_ty_1 =
+        nsStyleSVG__bindgen_ty_1::STROKE_OPACITY_SOURCE_SHIFT;
+    #[repr(u32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum nsStyleSVG__bindgen_ty_1 {
+        FILL_OPACITY_SOURCE_MASK = 3,
+        STROKE_OPACITY_SOURCE_MASK = 12,
+        STROKE_DASHARRAY_CONTEXT = 16,
+        STROKE_DASHOFFSET_CONTEXT = 32,
+        STROKE_WIDTH_CONTEXT = 64,
+        FILL_OPACITY_SOURCE_SHIFT = 0,
+        STROKE_OPACITY_SOURCE_SHIFT = 2,
+    }
+    pub const nsStyleSVG_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleSVG() {
+        assert_eq!(::std::mem::size_of::<nsStyleSVG>() , 128usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleSVG ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleSVG>() , 8usize , concat ! (
+                    "Alignment of " , stringify ! ( nsStyleSVG ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mFill as * const _
+                    as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mFill ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStroke as * const _
+                    as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStroke ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerEnd as *
+                    const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mMarkerEnd ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerMid as *
+                    const _ as usize } , 40usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mMarkerMid ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerStart as *
+                    const _ as usize } , 48usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mMarkerStart ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeDasharray as
+                    * const _ as usize } , 56usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeDasharray ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextProps as *
+                    const _ as usize } , 64usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mContextProps ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeDashoffset as
+                    * const _ as usize } , 72usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeDashoffset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeWidth as *
+                    const _ as usize } , 88usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mFillOpacity as *
+                    const _ as usize } , 104usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mFillOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeMiterlimit as
+                    * const _ as usize } , 108usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeMiterlimit ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeOpacity as *
+                    const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mClipRule as * const
+                    _ as usize } , 116usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mClipRule ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mColorInterpolation
+                    as * const _ as usize } , 117usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mColorInterpolation ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) .
+                    mColorInterpolationFilters as * const _ as usize } ,
+                    118usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mColorInterpolationFilters ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mFillRule as * const
+                    _ as usize } , 119usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mFillRule ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mPaintOrder as *
+                    const _ as usize } , 120usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mPaintOrder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mShapeRendering as *
+                    const _ as usize } , 121usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mShapeRendering ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeLinecap as *
+                    const _ as usize } , 122usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeLinecap ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeLinejoin as *
+                    const _ as usize } , 123usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mStrokeLinejoin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mTextAnchor as *
+                    const _ as usize } , 124usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mTextAnchor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextPropsBits as
+                    * const _ as usize } , 125usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mContextPropsBits ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextFlags as *
+                    const _ as usize } , 126usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
+                    , stringify ! ( mContextFlags ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleVariables {
+        pub mVariables: root::mozilla::CSSVariableValues,
+    }
+    pub const nsStyleVariables_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleVariables() {
+        assert_eq!(::std::mem::size_of::<nsStyleVariables>() , 56usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleVariables )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleVariables>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleVariables ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleVariables ) ) . mVariables as
+                    * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleVariables )
+                    , "::" , stringify ! ( mVariables ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleBackground {
+        pub mImage: root::nsStyleImageLayers,
+        pub mBackgroundColor: root::mozilla::StyleComplexColor,
+    }
+    pub const nsStyleBackground_kHasFinishStyle: bool = true;
+    #[test]
+    fn bindgen_test_layout_nsStyleBackground() {
+        assert_eq!(::std::mem::size_of::<nsStyleBackground>() , 160usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleBackground )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleBackground>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleBackground ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBackground ) ) . mImage as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBackground )
+                    , "::" , stringify ! ( mImage ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBackground ) ) .
+                    mBackgroundColor as * const _ as usize } , 152usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBackground )
+                    , "::" , stringify ! ( mBackgroundColor ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStylePosition {
+        pub mObjectPosition: root::mozilla::Position,
+        pub mOffset: root::nsStyleSides,
+        pub mWidth: root::nsStyleCoord,
+        pub mMinWidth: root::nsStyleCoord,
+        pub mMaxWidth: root::nsStyleCoord,
+        pub mHeight: root::nsStyleCoord,
+        pub mMinHeight: root::nsStyleCoord,
+        pub mMaxHeight: root::nsStyleCoord,
+        pub mFlexBasis: root::nsStyleCoord,
+        pub mGridAutoColumnsMin: root::nsStyleCoord,
+        pub mGridAutoColumnsMax: root::nsStyleCoord,
+        pub mGridAutoRowsMin: root::nsStyleCoord,
+        pub mGridAutoRowsMax: root::nsStyleCoord,
+        pub mGridAutoFlow: u8,
+        pub mBoxSizing: root::mozilla::StyleBoxSizing,
+        pub mAlignContent: u16,
+        pub mAlignItems: u8,
+        pub mAlignSelf: u8,
+        pub mJustifyContent: u16,
+        pub mJustifyItems: u8,
+        pub mJustifySelf: u8,
+        pub mFlexDirection: u8,
+        pub mFlexWrap: u8,
+        pub mObjectFit: u8,
+        pub mOrder: i32,
+        pub mFlexGrow: f32,
+        pub mFlexShrink: f32,
+        pub mZIndex: root::nsStyleCoord,
+        pub mGridTemplateColumns: root::nsStyleGridTemplate,
+        pub mGridTemplateRows: root::nsStyleGridTemplate,
+        pub mGridTemplateAreas: root::RefPtr<root::mozilla::css::GridTemplateAreasValue>,
+        pub mGridColumnStart: root::nsStyleGridLine,
+        pub mGridColumnEnd: root::nsStyleGridLine,
+        pub mGridRowStart: root::nsStyleGridLine,
+        pub mGridRowEnd: root::nsStyleGridLine,
+        pub mGridColumnGap: root::nsStyleCoord,
+        pub mGridRowGap: root::nsStyleCoord,
+    }
+    pub const nsStylePosition_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStylePosition() {
+        assert_eq!(::std::mem::size_of::<nsStylePosition>() , 520usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStylePosition )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStylePosition>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStylePosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mObjectPosition
+                    as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mObjectPosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mOffset as *
+                    const _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mOffset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mWidth as *
+                    const _ as usize } , 64usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mMinWidth as *
+                    const _ as usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mMinWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mMaxWidth as *
+                    const _ as usize } , 96usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mMaxWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mHeight as *
+                    const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mHeight ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mMinHeight as *
+                    const _ as usize } , 128usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mMinHeight ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mMaxHeight as *
+                    const _ as usize } , 144usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mMaxHeight ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexBasis as *
+                    const _ as usize } , 160usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mFlexBasis ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridAutoColumnsMin as * const _ as usize } , 176usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridAutoColumnsMin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridAutoColumnsMax as * const _ as usize } , 192usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridAutoColumnsMax ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridAutoRowsMin as * const _ as usize } , 208usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridAutoRowsMin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridAutoRowsMax as * const _ as usize } , 224usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridAutoRowsMax ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridAutoFlow
+                    as * const _ as usize } , 240usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridAutoFlow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mBoxSizing as *
+                    const _ as usize } , 241usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mBoxSizing ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignContent
+                    as * const _ as usize } , 242usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mAlignContent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignItems as
+                    * const _ as usize } , 244usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mAlignItems ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignSelf as *
+                    const _ as usize } , 245usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mAlignSelf ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifyContent
+                    as * const _ as usize } , 246usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mJustifyContent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifyItems
+                    as * const _ as usize } , 248usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mJustifyItems ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifySelf as
+                    * const _ as usize } , 249usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mJustifySelf ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexDirection
+                    as * const _ as usize } , 250usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mFlexDirection ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexWrap as *
+                    const _ as usize } , 251usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mFlexWrap ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mObjectFit as *
+                    const _ as usize } , 252usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mObjectFit ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mOrder as *
+                    const _ as usize } , 256usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mOrder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexGrow as *
+                    const _ as usize } , 260usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mFlexGrow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexShrink as
+                    * const _ as usize } , 264usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mFlexShrink ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mZIndex as *
+                    const _ as usize } , 272usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mZIndex ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridTemplateColumns as * const _ as usize } , 288usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridTemplateColumns ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridTemplateRows as * const _ as usize } , 336usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridTemplateRows ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridTemplateAreas as * const _ as usize } , 384usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridTemplateAreas ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) .
+                    mGridColumnStart as * const _ as usize } , 392usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridColumnStart ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridColumnEnd
+                    as * const _ as usize } , 416usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridColumnEnd ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowStart
+                    as * const _ as usize } , 440usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridRowStart ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowEnd as
+                    * const _ as usize } , 464usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridRowEnd ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridColumnGap
+                    as * const _ as usize } , 488usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridColumnGap ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowGap as
+                    * const _ as usize } , 504usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
+                    "::" , stringify ! ( mGridRowGap ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleTextReset {
+        pub mTextOverflow: root::nsStyleTextOverflow,
+        pub mTextDecorationLine: u8,
+        pub mTextDecorationStyle: u8,
+        pub mUnicodeBidi: u8,
+        pub mInitialLetterSink: root::nscoord,
+        pub mInitialLetterSize: f32,
+        pub mTextDecorationColor: root::mozilla::StyleComplexColor,
+    }
+    pub const nsStyleTextReset_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleTextReset() {
+        assert_eq!(::std::mem::size_of::<nsStyleTextReset>() , 80usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleTextReset )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleTextReset>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleTextReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) . mTextOverflow
+                    as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mTextOverflow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) .
+                    mTextDecorationLine as * const _ as usize } , 56usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mTextDecorationLine ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) .
+                    mTextDecorationStyle as * const _ as usize } , 57usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mTextDecorationStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) . mUnicodeBidi
+                    as * const _ as usize } , 58usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mUnicodeBidi ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) .
+                    mInitialLetterSink as * const _ as usize } , 60usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mInitialLetterSink ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) .
+                    mInitialLetterSize as * const _ as usize } , 64usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mInitialLetterSize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTextReset ) ) .
+                    mTextDecorationColor as * const _ as usize } , 68usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
+                    , "::" , stringify ! ( mTextDecorationColor ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleDisplay {
+        pub mBinding: root::BindingHolder,
+        pub mDisplay: root::mozilla::StyleDisplay,
+        pub mOriginalDisplay: root::mozilla::StyleDisplay,
+        pub mContain: u8,
+        pub mAppearance: u8,
+        pub mPosition: u8,
+        pub mFloat: root::mozilla::StyleFloat,
+        pub mOriginalFloat: root::mozilla::StyleFloat,
+        pub mBreakType: root::mozilla::StyleClear,
+        pub mBreakInside: u8,
+        pub mBreakBefore: bool,
+        pub mBreakAfter: bool,
+        pub mOverflowX: u8,
+        pub mOverflowY: u8,
+        pub mOverflowClipBox: u8,
+        pub mResize: u8,
+        pub mOrient: root::mozilla::StyleOrient,
+        pub mIsolation: u8,
+        pub mTopLayer: u8,
+        pub mWillChangeBitField: u8,
+        pub mWillChange: root::nsCOMArray,
+        pub mTouchAction: u8,
+        pub mScrollBehavior: u8,
+        pub mScrollSnapTypeX: u8,
+        pub mScrollSnapTypeY: u8,
+        pub mScrollSnapPointsX: root::nsStyleCoord,
+        pub mScrollSnapPointsY: root::nsStyleCoord,
+        pub mScrollSnapDestination: root::mozilla::Position,
+        pub mScrollSnapCoordinate: root::nsTArray<root::mozilla::Position>,
+        pub mBackfaceVisibility: u8,
+        pub mTransformStyle: u8,
+        pub mTransformBox: root::nsStyleDisplay_StyleGeometryBox,
+        pub mSpecifiedTransform: root::RefPtr<root::nsCSSValueSharedList>,
+        pub mTransformOrigin: [root::nsStyleCoord; 3usize],
+        pub mChildPerspective: root::nsStyleCoord,
+        pub mPerspectiveOrigin: [root::nsStyleCoord; 2usize],
+        pub mVerticalAlign: root::nsStyleCoord,
+        pub mTransitions: root::nsStyleAutoArray<root::mozilla::StyleTransition>,
+        pub mTransitionTimingFunctionCount: u32,
+        pub mTransitionDurationCount: u32,
+        pub mTransitionDelayCount: u32,
+        pub mTransitionPropertyCount: u32,
+        pub mAnimations: root::nsStyleAutoArray<root::mozilla::StyleAnimation>,
+        pub mAnimationTimingFunctionCount: u32,
+        pub mAnimationDurationCount: u32,
+        pub mAnimationDelayCount: u32,
+        pub mAnimationNameCount: u32,
+        pub mAnimationDirectionCount: u32,
+        pub mAnimationFillModeCount: u32,
+        pub mAnimationPlayStateCount: u32,
+        pub mAnimationIterationCountCount: u32,
+        pub mShapeOutside: root::mozilla::StyleShapeSource,
+    }
+    pub use self::super::root::mozilla::StyleGeometryBox as
+            nsStyleDisplay_StyleGeometryBox;
+    pub const nsStyleDisplay_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleDisplay() {
+        assert_eq!(::std::mem::size_of::<nsStyleDisplay>() , 416usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleDisplay ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleDisplay>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleDisplay ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBinding as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBinding ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mDisplay as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mDisplay ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOriginalDisplay
+                    as * const _ as usize } , 9usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOriginalDisplay ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mContain as *
+                    const _ as usize } , 10usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mContain ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mAppearance as *
+                    const _ as usize } , 11usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAppearance ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mPosition as *
+                    const _ as usize } , 12usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mPosition ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mFloat as *
+                    const _ as usize } , 13usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mFloat ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOriginalFloat
+                    as * const _ as usize } , 14usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOriginalFloat ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakType as *
+                    const _ as usize } , 15usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBreakType ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakInside as
+                    * const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBreakInside ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakBefore as
+                    * const _ as usize } , 17usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBreakBefore ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakAfter as *
+                    const _ as usize } , 18usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBreakAfter ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowX as *
+                    const _ as usize } , 19usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOverflowX ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowY as *
+                    const _ as usize } , 20usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOverflowY ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowClipBox
+                    as * const _ as usize } , 21usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOverflowClipBox ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mResize as *
+                    const _ as usize } , 22usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mResize ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOrient as *
+                    const _ as usize } , 23usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mOrient ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mIsolation as *
+                    const _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mIsolation ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTopLayer as *
+                    const _ as usize } , 25usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTopLayer ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mWillChangeBitField as * const _ as usize } , 26usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mWillChangeBitField ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mWillChange as *
+                    const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mWillChange ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTouchAction as
+                    * const _ as usize } , 40usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTouchAction ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollBehavior
+                    as * const _ as usize } , 41usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollBehavior ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollSnapTypeX
+                    as * const _ as usize } , 42usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapTypeX ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollSnapTypeY
+                    as * const _ as usize } , 43usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapTypeY ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mScrollSnapPointsX as * const _ as usize } , 48usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapPointsX ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mScrollSnapPointsY as * const _ as usize } , 64usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapPointsY ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mScrollSnapDestination as * const _ as usize } , 80usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapDestination ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mScrollSnapCoordinate as * const _ as usize } , 104usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mScrollSnapCoordinate ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mBackfaceVisibility as * const _ as usize } , 112usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mBackfaceVisibility ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformStyle
+                    as * const _ as usize } , 113usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransformStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformBox as
+                    * const _ as usize } , 114usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransformBox ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mSpecifiedTransform as * const _ as usize } , 120usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mSpecifiedTransform ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformOrigin
+                    as * const _ as usize } , 128usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransformOrigin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mChildPerspective as * const _ as usize } , 176usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mChildPerspective ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mPerspectiveOrigin as * const _ as usize } , 192usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mPerspectiveOrigin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mVerticalAlign
+                    as * const _ as usize } , 224usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mVerticalAlign ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransitions as
+                    * const _ as usize } , 240usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransitions ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mTransitionTimingFunctionCount as * const _ as usize } ,
+                    288usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransitionTimingFunctionCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mTransitionDurationCount as * const _ as usize } ,
+                    292usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransitionDurationCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mTransitionDelayCount as * const _ as usize } , 296usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransitionDelayCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mTransitionPropertyCount as * const _ as usize } ,
+                    300usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mTransitionPropertyCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mAnimations as *
+                    const _ as usize } , 304usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimations ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationTimingFunctionCount as * const _ as usize } ,
+                    368usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationTimingFunctionCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationDurationCount as * const _ as usize } , 372usize
+                    , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationDurationCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationDelayCount as * const _ as usize } , 376usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationDelayCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationNameCount as * const _ as usize } , 380usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationNameCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationDirectionCount as * const _ as usize } ,
+                    384usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationDirectionCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationFillModeCount as * const _ as usize } , 388usize
+                    , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationFillModeCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationPlayStateCount as * const _ as usize } ,
+                    392usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationPlayStateCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) .
+                    mAnimationIterationCountCount as * const _ as usize } ,
+                    396usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mAnimationIterationCountCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleDisplay ) ) . mShapeOutside as
+                    * const _ as usize } , 400usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
+                    "::" , stringify ! ( mShapeOutside ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleContent {
+        pub mContents: root::nsTArray<root::nsStyleContentData>,
+        pub mIncrements: root::nsTArray<root::nsStyleCounterData>,
+        pub mResets: root::nsTArray<root::nsStyleCounterData>,
+    }
+    pub const nsStyleContent_kHasFinishStyle: bool = true;
+    #[test]
+    fn bindgen_test_layout_nsStyleContent() {
+        assert_eq!(::std::mem::size_of::<nsStyleContent>() , 24usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleContent ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleContent>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleContent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContent ) ) . mContents as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
+                    "::" , stringify ! ( mContents ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContent ) ) . mIncrements as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
+                    "::" , stringify ! ( mIncrements ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContent ) ) . mResets as *
+                    const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
+                    "::" , stringify ! ( mResets ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleUIReset {
+        pub mUserSelect: root::mozilla::StyleUserSelect,
+        pub mForceBrokenImageIcon: u8,
+        pub mIMEMode: u8,
+        pub mWindowDragging: root::mozilla::StyleWindowDragging,
+        pub mWindowShadow: u8,
+        pub mWindowOpacity: f32,
+        pub mSpecifiedWindowTransform: root::RefPtr<root::nsCSSValueSharedList>,
+        pub mWindowTransformOrigin: [root::nsStyleCoord; 2usize],
+    }
+    pub const nsStyleUIReset_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleUIReset() {
+        assert_eq!(::std::mem::size_of::<nsStyleUIReset>() , 56usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleUIReset ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleUIReset>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleUIReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) . mUserSelect as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mUserSelect ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) .
+                    mForceBrokenImageIcon as * const _ as usize } , 1usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mForceBrokenImageIcon ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) . mIMEMode as *
+                    const _ as usize } , 2usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mIMEMode ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowDragging
+                    as * const _ as usize } , 3usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mWindowDragging ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowShadow as
+                    * const _ as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mWindowShadow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowOpacity
+                    as * const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mWindowOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) .
+                    mSpecifiedWindowTransform as * const _ as usize } ,
+                    16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mSpecifiedWindowTransform ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleUIReset ) ) .
+                    mWindowTransformOrigin as * const _ as usize } , 24usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
+                    "::" , stringify ! ( mWindowTransformOrigin ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleTable {
+        pub mLayoutStrategy: u8,
+        pub mSpan: i32,
+    }
+    pub const nsStyleTable_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleTable() {
+        assert_eq!(::std::mem::size_of::<nsStyleTable>() , 8usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleTable ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleTable>() , 4usize , concat !
+                    ( "Alignment of " , stringify ! ( nsStyleTable ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTable ) ) . mLayoutStrategy as
+                    * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTable ) ,
+                    "::" , stringify ! ( mLayoutStrategy ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleTable ) ) . mSpan as * const _
+                    as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleTable ) ,
+                    "::" , stringify ! ( mSpan ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleMargin {
+        pub mMargin: root::nsStyleSides,
+    }
+    pub const nsStyleMargin_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleMargin() {
+        assert_eq!(::std::mem::size_of::<nsStyleMargin>() , 40usize , concat !
+                   ( "Size of: " , stringify ! ( nsStyleMargin ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleMargin>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleMargin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleMargin ) ) . mMargin as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleMargin ) ,
+                    "::" , stringify ! ( mMargin ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStylePadding {
+        pub mPadding: root::nsStyleSides,
+    }
+    pub const nsStylePadding_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStylePadding() {
+        assert_eq!(::std::mem::size_of::<nsStylePadding>() , 40usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStylePadding ) ));
+        assert_eq! (::std::mem::align_of::<nsStylePadding>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStylePadding ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStylePadding ) ) . mPadding as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStylePadding ) ,
+                    "::" , stringify ! ( mPadding ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleBorder {
+        pub mBorderColors: *mut *mut root::nsBorderColors,
+        pub mBorderRadius: root::nsStyleCorners,
+        pub mBorderImageSource: root::nsStyleImage,
+        pub mBorderImageSlice: root::nsStyleSides,
+        pub mBorderImageWidth: root::nsStyleSides,
+        pub mBorderImageOutset: root::nsStyleSides,
+        pub mBorderImageFill: u8,
+        pub mBorderImageRepeatH: u8,
+        pub mBorderImageRepeatV: u8,
+        pub mFloatEdge: root::mozilla::StyleFloatEdge,
+        pub mBoxDecorationBreak: root::mozilla::StyleBoxDecorationBreak,
+        pub mBorderStyle: [u8; 4usize],
+        pub __bindgen_anon_1: root::nsStyleBorder__bindgen_ty_1,
+        pub mComputedBorder: root::nsMargin,
+        pub mBorder: root::nsMargin,
+        pub mTwipsPerPixel: root::nscoord,
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsStyleBorder__bindgen_ty_1 {
+        pub __bindgen_anon_1: root::__BindgenUnionField<root::nsStyleBorder__bindgen_ty_1__bindgen_ty_1>,
+        pub mBorderColor: root::__BindgenUnionField<[root::mozilla::StyleComplexColor; 4usize]>,
+        pub bindgen_union_field: [u32; 8usize],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsStyleBorder__bindgen_ty_1__bindgen_ty_1 {
+        pub mBorderTopColor: root::mozilla::StyleComplexColor,
+        pub mBorderRightColor: root::mozilla::StyleComplexColor,
+        pub mBorderBottomColor: root::mozilla::StyleComplexColor,
+        pub mBorderLeftColor: root::mozilla::StyleComplexColor,
+    }
+    #[test]
+    fn bindgen_test_layout_nsStyleBorder__bindgen_ty_1__bindgen_ty_1() {
+        assert_eq!(::std::mem::size_of::<nsStyleBorder__bindgen_ty_1__bindgen_ty_1>()
+                   , 32usize , concat ! (
+                   "Size of: " , stringify ! (
+                   nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleBorder__bindgen_ty_1__bindgen_ty_1>()
+                    , 4usize , concat ! (
+                    "Alignment of " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) ));
+        assert_eq! (unsafe {
+                    & (
+                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
+                    ) ) . mBorderTopColor as * const _ as usize } , 0usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
+                    stringify ! ( mBorderTopColor ) ));
+        assert_eq! (unsafe {
+                    & (
+                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
+                    ) ) . mBorderRightColor as * const _ as usize } , 8usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
+                    stringify ! ( mBorderRightColor ) ));
+        assert_eq! (unsafe {
+                    & (
+                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
+                    ) ) . mBorderBottomColor as * const _ as usize } , 16usize
+                    , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
+                    stringify ! ( mBorderBottomColor ) ));
+        assert_eq! (unsafe {
+                    & (
+                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
+                    ) ) . mBorderLeftColor as * const _ as usize } , 24usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
+                    stringify ! ( mBorderLeftColor ) ));
+    }
+    impl Clone for nsStyleBorder__bindgen_ty_1__bindgen_ty_1 {
+        fn clone(&self) -> Self { *self }
+    }
+    #[test]
+    fn bindgen_test_layout_nsStyleBorder__bindgen_ty_1() {
+        assert_eq!(::std::mem::size_of::<nsStyleBorder__bindgen_ty_1>() ,
+                   32usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleBorder__bindgen_ty_1 )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleBorder__bindgen_ty_1>() ,
+                    4usize , concat ! (
+                    "Alignment of " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1 ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder__bindgen_ty_1 ) ) .
+                    mBorderColor as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    nsStyleBorder__bindgen_ty_1 ) , "::" , stringify ! (
+                    mBorderColor ) ));
+    }
+    impl Clone for nsStyleBorder__bindgen_ty_1 {
+        fn clone(&self) -> Self { *self }
+    }
+    pub const nsStyleBorder_kHasFinishStyle: bool = true;
+    #[test]
+    fn bindgen_test_layout_nsStyleBorder() {
+        assert_eq!(::std::mem::size_of::<nsStyleBorder>() , 312usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleBorder ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleBorder>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleBorder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderColors as
+                    * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderColors ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderRadius as
+                    * const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderRadius ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) .
+                    mBorderImageSource as * const _ as usize } , 80usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageSource ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageSlice
+                    as * const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageSlice ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageWidth
+                    as * const _ as usize } , 152usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) .
+                    mBorderImageOutset as * const _ as usize } , 192usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageOutset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageFill
+                    as * const _ as usize } , 232usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageFill ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) .
+                    mBorderImageRepeatH as * const _ as usize } , 233usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageRepeatH ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) .
+                    mBorderImageRepeatV as * const _ as usize } , 234usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderImageRepeatV ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mFloatEdge as *
+                    const _ as usize } , 235usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mFloatEdge ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) .
+                    mBoxDecorationBreak as * const _ as usize } , 236usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBoxDecorationBreak ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderStyle as *
+                    const _ as usize } , 237usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorderStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mComputedBorder
+                    as * const _ as usize } , 276usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mComputedBorder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorder as *
+                    const _ as usize } , 292usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mBorder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleBorder ) ) . mTwipsPerPixel as
+                    * const _ as usize } , 308usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
+                    "::" , stringify ! ( mTwipsPerPixel ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleOutline {
+        pub mOutlineRadius: root::nsStyleCorners,
+        pub mOutlineWidth: root::nscoord,
+        pub mOutlineOffset: root::nscoord,
+        pub mOutlineColor: root::mozilla::StyleComplexColor,
+        pub mOutlineStyle: u8,
+        pub mActualOutlineWidth: root::nscoord,
+        pub mTwipsPerPixel: root::nscoord,
+    }
+    pub const nsStyleOutline_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleOutline() {
+        assert_eq!(::std::mem::size_of::<nsStyleOutline>() , 104usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleOutline ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleOutline>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleOutline ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineRadius
+                    as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mOutlineRadius ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineWidth as
+                    * const _ as usize } , 72usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mOutlineWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineOffset
+                    as * const _ as usize } , 76usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mOutlineOffset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineColor as
+                    * const _ as usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mOutlineColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineStyle as
+                    * const _ as usize } , 88usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mOutlineStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) .
+                    mActualOutlineWidth as * const _ as usize } , 92usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mActualOutlineWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleOutline ) ) . mTwipsPerPixel
+                    as * const _ as usize } , 96usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
+                    "::" , stringify ! ( mTwipsPerPixel ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleXUL {
+        pub mBoxFlex: f32,
+        pub mBoxOrdinal: u32,
+        pub mBoxAlign: root::mozilla::StyleBoxAlign,
+        pub mBoxDirection: root::mozilla::StyleBoxDirection,
+        pub mBoxOrient: root::mozilla::StyleBoxOrient,
+        pub mBoxPack: root::mozilla::StyleBoxPack,
+        pub mStackSizing: root::mozilla::StyleStackSizing,
+    }
+    pub const nsStyleXUL_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleXUL() {
+        assert_eq!(::std::mem::size_of::<nsStyleXUL>() , 16usize , concat ! (
+                   "Size of: " , stringify ! ( nsStyleXUL ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleXUL>() , 4usize , concat ! (
+                    "Alignment of " , stringify ! ( nsStyleXUL ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxFlex as * const
+                    _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxFlex ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxOrdinal as *
+                    const _ as usize } , 4usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxOrdinal ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxAlign as * const
+                    _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxAlign ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxDirection as *
+                    const _ as usize } , 9usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxDirection ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxOrient as *
+                    const _ as usize } , 10usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxOrient ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxPack as * const
+                    _ as usize } , 11usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mBoxPack ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleXUL ) ) . mStackSizing as *
+                    const _ as usize } , 12usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
+                    , stringify ! ( mStackSizing ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleSVGReset {
+        pub mMask: root::nsStyleImageLayers,
+        pub mClipPath: root::mozilla::StyleShapeSource,
+        pub mStopColor: root::nscolor,
+        pub mFloodColor: root::nscolor,
+        pub mLightingColor: root::nscolor,
+        pub mStopOpacity: f32,
+        pub mFloodOpacity: f32,
+        pub mDominantBaseline: u8,
+        pub mVectorEffect: u8,
+        pub mMaskType: u8,
+    }
+    pub const nsStyleSVGReset_kHasFinishStyle: bool = true;
+    #[test]
+    fn bindgen_test_layout_nsStyleSVGReset() {
+        assert_eq!(::std::mem::size_of::<nsStyleSVGReset>() , 192usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsStyleSVGReset )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsStyleSVGReset>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsStyleSVGReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mMask as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mMask ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mClipPath as *
+                    const _ as usize } , 152usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mClipPath ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mStopColor as *
+                    const _ as usize } , 168usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mStopColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mFloodColor as
+                    * const _ as usize } , 172usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mFloodColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mLightingColor
+                    as * const _ as usize } , 176usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mLightingColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mStopOpacity as
+                    * const _ as usize } , 180usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mStopOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mFloodOpacity
+                    as * const _ as usize } , 184usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mFloodOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) .
+                    mDominantBaseline as * const _ as usize } , 188usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mDominantBaseline ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mVectorEffect
+                    as * const _ as usize } , 189usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mVectorEffect ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mMaskType as *
+                    const _ as usize } , 190usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
+                    "::" , stringify ! ( mMaskType ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleColumn {
+        pub mColumnCount: u32,
+        pub mColumnWidth: root::nsStyleCoord,
+        pub mColumnGap: root::nsStyleCoord,
+        pub mColumnRuleColor: root::mozilla::StyleComplexColor,
+        pub mColumnRuleStyle: u8,
+        pub mColumnFill: u8,
+        pub mColumnSpan: u8,
+        pub mColumnRuleWidth: root::nscoord,
+        pub mTwipsPerPixel: root::nscoord,
+    }
+    pub const nsStyleColumn_kHasFinishStyle: bool = false;
+    pub const nsStyleColumn_kMaxColumnCount: u32 = 1000;
+    #[test]
+    fn bindgen_test_layout_nsStyleColumn() {
+        assert_eq!(::std::mem::size_of::<nsStyleColumn>() , 64usize , concat !
+                   ( "Size of: " , stringify ! ( nsStyleColumn ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleColumn>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleColumn ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnCount as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnCount ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnWidth as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnGap as *
+                    const _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnGap ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleColor
+                    as * const _ as usize } , 40usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnRuleColor ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleStyle
+                    as * const _ as usize } , 48usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnRuleStyle ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnFill as *
+                    const _ as usize } , 49usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnFill ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnSpan as *
+                    const _ as usize } , 50usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnSpan ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleWidth
+                    as * const _ as usize } , 52usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mColumnRuleWidth ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleColumn ) ) . mTwipsPerPixel as
+                    * const _ as usize } , 56usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
+                    "::" , stringify ! ( mTwipsPerPixel ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct nsStyleEffects {
+        pub mFilters: root::nsTArray<root::nsStyleFilter>,
+        pub mBoxShadow: root::RefPtr<root::nsCSSShadowArray>,
+        pub mClip: root::nsRect,
+        pub mOpacity: f32,
+        pub mClipFlags: u8,
+        pub mMixBlendMode: u8,
+    }
+    pub const nsStyleEffects_kHasFinishStyle: bool = false;
+    #[test]
+    fn bindgen_test_layout_nsStyleEffects() {
+        assert_eq!(::std::mem::size_of::<nsStyleEffects>() , 40usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleEffects ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleEffects>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleEffects ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mFilters as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mFilters ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mBoxShadow as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mBoxShadow ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mClip as * const
+                    _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mClip ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mOpacity as *
+                    const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mOpacity ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mClipFlags as *
+                    const _ as usize } , 36usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mClipFlags ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleEffects ) ) . mMixBlendMode as
+                    * const _ as usize } , 37usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
+                    "::" , stringify ! ( mMixBlendMode ) ));
+    }
+    /**
+ * We want C++ to be abe to read the style struct fields of ComputedValues
+ * so we define this type on the C++ side and use the bindgenned version
+ * on the Rust side.
+ *
+ */
+    #[repr(C)]
+    #[derive(Debug)]
+    pub struct ServoComputedValues {
+        pub Font: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoFont>,
+        pub Color: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoColor>,
+        pub List: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoList>,
+        pub Text: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoText>,
+        pub Visibility: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoVisibility>,
+        pub UserInterface: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoUserInterface>,
+        pub TableBorder: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoTableBorder>,
+        pub SVG: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoSVG>,
+        pub Background: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoBackground>,
+        pub Position: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoPosition>,
+        pub TextReset: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoTextReset>,
+        pub Display: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoDisplay>,
+        pub Content: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoContent>,
+        pub UIReset: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoUIReset>,
+        pub Table: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoTable>,
+        pub Margin: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoMargin>,
+        pub Padding: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoPadding>,
+        pub Border: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoBorder>,
+        pub Outline: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoOutline>,
+        pub XUL: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoXUL>,
+        pub SVGReset: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoSVGReset>,
+        pub Column: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoColumn>,
+        pub Effects: ::gecko_bindings::structs::ServoRawOffsetArc<root::mozilla::GeckoEffects>,
+        pub custom_properties: ::gecko_bindings::structs::ServoCustomPropertiesMap,
+        pub writing_mode: ::gecko_bindings::structs::ServoWritingMode,
+        pub font_computation_data: ::gecko_bindings::structs::ServoFontComputationData,
+        /// The rule node representing the ordered list of rules matched for this
+  /// node.  Can be None for default values and text nodes.  This is
+  /// essentially an optimization to avoid referencing the root rule node.
+        pub rules: ::gecko_bindings::structs::ServoRuleNode,
+        /// The element's computed values if visited, only computed if there's a
+  /// relevant link for this element. A element's "relevant link" is the
+  /// element being matched if it is a link or the nearest ancestor link.
+        pub visited_style: ::gecko_bindings::structs::ServoVisitedStyle,
+        pub flags: ::gecko_bindings::structs::ServoComputedValueFlags,
+    }
+    #[test]
+    fn bindgen_test_layout_ServoComputedValues() {
+        assert_eq!(::std::mem::size_of::<ServoComputedValues>() , 232usize ,
+                   concat ! (
+                   "Size of: " , stringify ! ( ServoComputedValues ) ));
+        assert_eq! (::std::mem::align_of::<ServoComputedValues>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( ServoComputedValues ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Font as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Font ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Color as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Color ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . List as *
+                    const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( List ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Text as *
+                    const _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Text ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Visibility
+                    as * const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Visibility ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) .
+                    UserInterface as * const _ as usize } , 40usize , concat !
+                    (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( UserInterface ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . TableBorder
+                    as * const _ as usize } , 48usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( TableBorder ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . SVG as *
+                    const _ as usize } , 56usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( SVG ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Background
+                    as * const _ as usize } , 64usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Background ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Position as
+                    * const _ as usize } , 72usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Position ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . TextReset
+                    as * const _ as usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( TextReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Display as
+                    * const _ as usize } , 88usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Display ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Content as
+                    * const _ as usize } , 96usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Content ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . UIReset as
+                    * const _ as usize } , 104usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( UIReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Table as *
+                    const _ as usize } , 112usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Table ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Margin as *
+                    const _ as usize } , 120usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Margin ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Padding as
+                    * const _ as usize } , 128usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Padding ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Border as *
+                    const _ as usize } , 136usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Border ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Outline as
+                    * const _ as usize } , 144usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Outline ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . XUL as *
+                    const _ as usize } , 152usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( XUL ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . SVGReset as
+                    * const _ as usize } , 160usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( SVGReset ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Column as *
+                    const _ as usize } , 168usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Column ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . Effects as
+                    * const _ as usize } , 176usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( Effects ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) .
+                    custom_properties as * const _ as usize } , 184usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( custom_properties ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) .
+                    writing_mode as * const _ as usize } , 192usize , concat !
+                    (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( writing_mode ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) .
+                    font_computation_data as * const _ as usize } , 196usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( font_computation_data ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . rules as *
+                    const _ as usize } , 208usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( rules ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) .
+                    visited_style as * const _ as usize } , 216usize , concat
+                    ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( visited_style ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValues ) ) . flags as *
+                    const _ as usize } , 224usize , concat ! (
+                    "Alignment of field: " , stringify ! ( ServoComputedValues
+                    ) , "::" , stringify ! ( flags ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct ServoComputedValuesForgotten {
+        pub mPtr: *const root::ServoComputedValues,
+    }
+    #[test]
+    fn bindgen_test_layout_ServoComputedValuesForgotten() {
+        assert_eq!(::std::mem::size_of::<ServoComputedValuesForgotten>() ,
+                   8usize , concat ! (
+                   "Size of: " , stringify ! ( ServoComputedValuesForgotten )
+                   ));
+        assert_eq! (::std::mem::align_of::<ServoComputedValuesForgotten>() ,
+                    8usize , concat ! (
+                    "Alignment of " , stringify ! (
+                    ServoComputedValuesForgotten ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const ServoComputedValuesForgotten ) ) .
+                    mPtr as * const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! (
+                    ServoComputedValuesForgotten ) , "::" , stringify ! ( mPtr
+                    ) ));
+    }
+    impl Clone for ServoComputedValuesForgotten {
+        fn clone(&self) -> Self { *self }
+    }
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     pub enum WeakMapTraceKind {
@@ -18132,7 +21277,7 @@ pub mod root {
  * count is 1.
  */
     #[repr(C)]
-    #[derive(Debug)]
+    #[derive(Debug, Copy)]
     pub struct nsStringBuffer {
         pub mRefCount: u32,
         pub mStorageSize: u32,
@@ -18153,6 +21298,9 @@ pub mod root {
                     * const _ as usize } , 4usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsStringBuffer ) ,
                     "::" , stringify ! ( mStorageSize ) ));
+    }
+    impl Clone for nsStringBuffer {
+        fn clone(&self) -> Self { *self }
     }
     #[repr(C)]
     #[derive(Debug, Copy)]
@@ -18618,7 +21766,6 @@ pub mod root {
  * of nsIContent children and provides access to them.
  */
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsINode {
         pub _base: root::mozilla::dom::EventTarget,
         pub mNodeInfo: root::RefPtr<root::mozilla::dom::NodeInfo>,
@@ -22760,8 +25907,142 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
-    pub struct nsBindingManager {
+    pub struct nsCSSRuleProcessor {
         _unused: [u8; 0],
+    }
+    #[repr(C)]
+    pub struct nsBindingManager {
+        pub _base: root::nsStubMutationObserver,
+        pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
+        pub _mOwningThread: root::nsAutoOwningThread,
+        pub mBoundContentSet: u64,
+        pub mWrapperTable: u64,
+        pub mDocumentTable: u64,
+        pub mLoadingDocTable: u64,
+        pub mAttachedStack: root::nsBindingList,
+        pub mProcessingAttachedStack: bool,
+        pub mDestroyed: bool,
+        pub mAttachedStackSizeOnOutermost: u32,
+        pub mProcessAttachedQueueEvent: u64,
+        pub mDocument: *mut root::nsIDocument,
+    }
+    pub type nsBindingManager_HasThreadSafeRefCnt = root::mozilla::FalseType;
+    #[repr(u32)]
+    /**
+   * Notify the binding manager that an element
+   * has been removed from its document,
+   * so that it can update any bindings or
+   * nsIAnonymousContentCreator-created anonymous
+   * content that may depend on the document.
+   * @param aContent the element that's being moved
+   * @param aOldDocument the old document in which the
+   *   content resided.
+   * @param aDestructorHandling whether or not to run the possible XBL
+   *        destructor.
+   */
+    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    pub enum nsBindingManager_DestructorHandling {
+        eRunDtor = 0,
+        eDoNotRunDtor = 1,
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsBindingManager_cycleCollection {
+        pub _base: root::nsXPCOMCycleCollectionParticipant,
+    }
+    #[test]
+    fn bindgen_test_layout_nsBindingManager_cycleCollection() {
+        assert_eq!(::std::mem::size_of::<nsBindingManager_cycleCollection>() ,
+                   16usize , concat ! (
+                   "Size of: " , stringify ! (
+                   nsBindingManager_cycleCollection ) ));
+        assert_eq! (::std::mem::align_of::<nsBindingManager_cycleCollection>()
+                    , 8usize , concat ! (
+                    "Alignment of " , stringify ! (
+                    nsBindingManager_cycleCollection ) ));
+    }
+    impl Clone for nsBindingManager_cycleCollection {
+        fn clone(&self) -> Self { *self }
+    }
+    pub type nsBindingManager_WrapperHashtable = u8;
+    extern "C" {
+        #[link_name = "_ZN16nsBindingManager21_cycleCollectorGlobalE"]
+        pub static mut nsBindingManager__cycleCollectorGlobal:
+                   root::nsBindingManager_cycleCollection;
+    }
+    #[test]
+    fn bindgen_test_layout_nsBindingManager() {
+        assert_eq!(::std::mem::size_of::<nsBindingManager>() , 88usize ,
+                   concat ! ( "Size of: " , stringify ! ( nsBindingManager )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsBindingManager>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsBindingManager ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mRefCnt as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mRefCnt ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . _mOwningThread
+                    as * const _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( _mOwningThread ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) .
+                    mBoundContentSet as * const _ as usize } , 24usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mBoundContentSet ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mWrapperTable
+                    as * const _ as usize } , 32usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mWrapperTable ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mDocumentTable
+                    as * const _ as usize } , 40usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mDocumentTable ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) .
+                    mLoadingDocTable as * const _ as usize } , 48usize ,
+                    concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mLoadingDocTable ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mAttachedStack
+                    as * const _ as usize } , 56usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mAttachedStack ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) .
+                    mProcessingAttachedStack as * const _ as usize } , 64usize
+                    , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mProcessingAttachedStack ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mDestroyed as
+                    * const _ as usize } , 65usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mDestroyed ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) .
+                    mAttachedStackSizeOnOutermost as * const _ as usize } ,
+                    68usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mAttachedStackSizeOnOutermost ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) .
+                    mProcessAttachedQueueEvent as * const _ as usize } ,
+                    72usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mProcessAttachedQueueEvent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsBindingManager ) ) . mDocument as *
+                    const _ as usize } , 80usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsBindingManager )
+                    , "::" , stringify ! ( mDocument ) ));
     }
     #[repr(C)]
     #[derive(Debug)]
@@ -22822,7 +26103,6 @@ pub mod root {
  * is supported by all content objects.
  */
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsIContent {
         pub _base: root::nsINode,
     }
@@ -22907,10 +26187,69 @@ pub mod root {
         assert_eq! (::std::mem::align_of::<nsIContent>() , 8usize , concat ! (
                     "Alignment of " , stringify ! ( nsIContent ) ));
     }
+    /**
+ * An nsStyleContext represents the computed style data for an element.
+ * The computed style data are stored in a set of structs (see
+ * nsStyleStruct.h) that are cached either on the style context or in
+ * the rule tree (see nsRuleNode.h for a description of this caching and
+ * how the cached structs are shared).
+ *
+ * Since the data in |nsIStyleRule|s and |nsRuleNode|s are immutable
+ * (with a few exceptions, like system color changes), the data in an
+ * nsStyleContext are also immutable (with the additional exception of
+ * GetUniqueStyleData).  When style data change,
+ * ElementRestyler::Restyle creates a new style context.
+ *
+ * Style contexts are reference counted.  References are generally held
+ * by:
+ *  1. the |nsIFrame|s that are using the style context and
+ *  2. any *child* style contexts (this might be the reverse of
+ *     expectation, but it makes sense in this case)
+ */
     #[repr(C)]
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Debug)]
     pub struct nsStyleContext {
-        _unused: [u8; 0],
+        pub mParent: root::RefPtr<root::nsStyleContext>,
+        pub mPseudoTag: root::nsCOMPtr<root::nsIAtom>,
+        pub mBits: u64,
+        pub mRefCnt: u32,
+        pub mFrameRefCnt: u32,
+    }
+    extern "C" {
+        #[link_name = "_ZN14nsStyleContext16sDependencyTableE"]
+        pub static mut nsStyleContext_sDependencyTable: [u32; 0usize];
+    }
+    #[test]
+    fn bindgen_test_layout_nsStyleContext() {
+        assert_eq!(::std::mem::size_of::<nsStyleContext>() , 32usize , concat
+                   ! ( "Size of: " , stringify ! ( nsStyleContext ) ));
+        assert_eq! (::std::mem::align_of::<nsStyleContext>() , 8usize , concat
+                    ! ( "Alignment of " , stringify ! ( nsStyleContext ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContext ) ) . mParent as *
+                    const _ as usize } , 0usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContext ) ,
+                    "::" , stringify ! ( mParent ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContext ) ) . mPseudoTag as *
+                    const _ as usize } , 8usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContext ) ,
+                    "::" , stringify ! ( mPseudoTag ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContext ) ) . mBits as * const
+                    _ as usize } , 16usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContext ) ,
+                    "::" , stringify ! ( mBits ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContext ) ) . mRefCnt as *
+                    const _ as usize } , 24usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContext ) ,
+                    "::" , stringify ! ( mRefCnt ) ));
+        assert_eq! (unsafe {
+                    & ( * ( 0 as * const nsStyleContext ) ) . mFrameRefCnt as
+                    * const _ as usize } , 28usize , concat ! (
+                    "Alignment of field: " , stringify ! ( nsStyleContext ) ,
+                    "::" , stringify ! ( mFrameRefCnt ) ));
     }
     #[repr(C)]
     pub struct nsPresContext {
@@ -26125,7 +29464,6 @@ pub mod root {
     }
     pub const kNameSpaceID_None: i32 = 0;
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsNodeInfoManager {
         pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
         pub _mOwningThread: root::nsAutoOwningThread,
@@ -26551,7 +29889,6 @@ pub mod root {
         _unused: [u8; 0],
     }
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsDOMAttributeMap {
         pub _base: root::nsIDOMMozNamedAttrMap,
         pub _base_1: root::nsWrapperCache,
@@ -26706,57 +30043,57 @@ pub mod root {
     pub struct nsDOMMutationObserver {
         _unused: [u8; 0],
     }
-    pub const NODE_HAS_LISTENERMANAGER: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_LISTENERMANAGER;
-    pub const NODE_HAS_PROPERTIES: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_PROPERTIES;
-    pub const NODE_IS_ANONYMOUS_ROOT: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_ANONYMOUS_ROOT;
-    pub const NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE;
-    pub const NODE_IS_NATIVE_ANONYMOUS_ROOT: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_NATIVE_ANONYMOUS_ROOT;
-    pub const NODE_FORCE_XBL_BINDINGS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_FORCE_XBL_BINDINGS;
-    pub const NODE_MAY_BE_IN_BINDING_MNGR: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_MAY_BE_IN_BINDING_MNGR;
-    pub const NODE_IS_EDITABLE: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_EDITABLE;
-    pub const NODE_IS_NATIVE_ANONYMOUS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_NATIVE_ANONYMOUS;
-    pub const NODE_IS_IN_SHADOW_TREE: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_IN_SHADOW_TREE;
-    pub const NODE_HAS_EMPTY_SELECTOR: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_EMPTY_SELECTOR;
-    pub const NODE_HAS_SLOW_SELECTOR: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_SLOW_SELECTOR;
-    pub const NODE_HAS_EDGE_CHILD_SELECTOR: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_EDGE_CHILD_SELECTOR;
-    pub const NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS;
-    pub const NODE_ALL_SELECTOR_FLAGS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_ALL_SELECTOR_FLAGS;
-    pub const NODE_NEEDS_FRAME: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_NEEDS_FRAME;
-    pub const NODE_DESCENDANTS_NEED_FRAMES: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_DESCENDANTS_NEED_FRAMES;
-    pub const NODE_HAS_ACCESSKEY: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_ACCESSKEY;
-    pub const NODE_HAS_DIRECTION_RTL: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_DIRECTION_RTL;
-    pub const NODE_HAS_DIRECTION_LTR: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_HAS_DIRECTION_LTR;
-    pub const NODE_ALL_DIRECTION_FLAGS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_ALL_DIRECTION_FLAGS;
-    pub const NODE_CHROME_ONLY_ACCESS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_CHROME_ONLY_ACCESS;
-    pub const NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS;
-    pub const NODE_TYPE_SPECIFIC_BITS_OFFSET: root::_bindgen_ty_85 =
-        _bindgen_ty_85::NODE_TYPE_SPECIFIC_BITS_OFFSET;
+    pub const NODE_HAS_LISTENERMANAGER: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_LISTENERMANAGER;
+    pub const NODE_HAS_PROPERTIES: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_PROPERTIES;
+    pub const NODE_IS_ANONYMOUS_ROOT: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_ANONYMOUS_ROOT;
+    pub const NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE;
+    pub const NODE_IS_NATIVE_ANONYMOUS_ROOT: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_NATIVE_ANONYMOUS_ROOT;
+    pub const NODE_FORCE_XBL_BINDINGS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_FORCE_XBL_BINDINGS;
+    pub const NODE_MAY_BE_IN_BINDING_MNGR: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_MAY_BE_IN_BINDING_MNGR;
+    pub const NODE_IS_EDITABLE: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_EDITABLE;
+    pub const NODE_IS_NATIVE_ANONYMOUS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_NATIVE_ANONYMOUS;
+    pub const NODE_IS_IN_SHADOW_TREE: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_IN_SHADOW_TREE;
+    pub const NODE_HAS_EMPTY_SELECTOR: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_EMPTY_SELECTOR;
+    pub const NODE_HAS_SLOW_SELECTOR: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_SLOW_SELECTOR;
+    pub const NODE_HAS_EDGE_CHILD_SELECTOR: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_EDGE_CHILD_SELECTOR;
+    pub const NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS;
+    pub const NODE_ALL_SELECTOR_FLAGS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_ALL_SELECTOR_FLAGS;
+    pub const NODE_NEEDS_FRAME: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_NEEDS_FRAME;
+    pub const NODE_DESCENDANTS_NEED_FRAMES: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_DESCENDANTS_NEED_FRAMES;
+    pub const NODE_HAS_ACCESSKEY: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_ACCESSKEY;
+    pub const NODE_HAS_DIRECTION_RTL: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_DIRECTION_RTL;
+    pub const NODE_HAS_DIRECTION_LTR: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_HAS_DIRECTION_LTR;
+    pub const NODE_ALL_DIRECTION_FLAGS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_ALL_DIRECTION_FLAGS;
+    pub const NODE_CHROME_ONLY_ACCESS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_CHROME_ONLY_ACCESS;
+    pub const NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_IS_ROOT_OF_CHROME_ONLY_ACCESS;
+    pub const NODE_TYPE_SPECIFIC_BITS_OFFSET: root::_bindgen_ty_18 =
+        _bindgen_ty_18::NODE_TYPE_SPECIFIC_BITS_OFFSET;
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-    pub enum _bindgen_ty_85 {
+    pub enum _bindgen_ty_18 {
         NODE_HAS_LISTENERMANAGER = 4,
         NODE_HAS_PROPERTIES = 8,
         NODE_IS_ANONYMOUS_ROOT = 16,
@@ -26825,7 +30162,6 @@ pub mod root {
         _unused: [u8; 0],
     }
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsXBLBinding {
         pub mRefCnt: root::nsCycleCollectingAutoRefCnt,
         pub _mOwningThread: root::nsAutoOwningThread,
@@ -27950,7 +31286,6 @@ pub mod root {
         fn clone(&self) -> Self { *self }
     }
     #[repr(C)]
-    #[derive(Debug)]
     pub struct CapturingContentInfo {
         pub mAllowed: bool,
         pub mPointerLock: bool,
@@ -28301,6 +31636,58 @@ pub mod root {
                     concat ! (
                     "Alignment of " , stringify ! ( nsIScriptGlobalObject )
                     ));
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsIInterfaceInfo {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsIXPConnectJSObjectHolder {
+        pub _base: root::nsISupports,
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsIXPConnectJSObjectHolder_COMTypeInfo {
+        pub _address: u8,
+    }
+    #[test]
+    fn bindgen_test_layout_nsIXPConnectJSObjectHolder() {
+        assert_eq!(::std::mem::size_of::<nsIXPConnectJSObjectHolder>() ,
+                   8usize , concat ! (
+                   "Size of: " , stringify ! ( nsIXPConnectJSObjectHolder )
+                   ));
+        assert_eq! (::std::mem::align_of::<nsIXPConnectJSObjectHolder>() ,
+                    8usize , concat ! (
+                    "Alignment of " , stringify ! ( nsIXPConnectJSObjectHolder
+                    ) ));
+    }
+    impl Clone for nsIXPConnectJSObjectHolder {
+        fn clone(&self) -> Self { *self }
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsIXPConnectWrappedJS {
+        pub _base: root::nsIXPConnectJSObjectHolder,
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsIXPConnectWrappedJS_COMTypeInfo {
+        pub _address: u8,
+    }
+    #[test]
+    fn bindgen_test_layout_nsIXPConnectWrappedJS() {
+        assert_eq!(::std::mem::size_of::<nsIXPConnectWrappedJS>() , 8usize ,
+                   concat ! (
+                   "Size of: " , stringify ! ( nsIXPConnectWrappedJS ) ));
+        assert_eq! (::std::mem::align_of::<nsIXPConnectWrappedJS>() , 8usize ,
+                    concat ! (
+                    "Alignment of " , stringify ! ( nsIXPConnectWrappedJS )
+                    ));
+    }
+    impl Clone for nsIXPConnectWrappedJS {
+        fn clone(&self) -> Self { *self }
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
@@ -29049,353 +32436,6 @@ pub mod root {
     }
     impl Clone for ProfilerBacktraceDestructor {
         fn clone(&self) -> Self { *self }
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleDisplay {
-        pub mBinding: root::BindingHolder,
-        pub mDisplay: root::mozilla::StyleDisplay,
-        pub mOriginalDisplay: root::mozilla::StyleDisplay,
-        pub mContain: u8,
-        pub mAppearance: u8,
-        pub mPosition: u8,
-        pub mFloat: root::mozilla::StyleFloat,
-        pub mOriginalFloat: root::mozilla::StyleFloat,
-        pub mBreakType: root::mozilla::StyleClear,
-        pub mBreakInside: u8,
-        pub mBreakBefore: bool,
-        pub mBreakAfter: bool,
-        pub mOverflowX: u8,
-        pub mOverflowY: u8,
-        pub mOverflowClipBox: u8,
-        pub mResize: u8,
-        pub mOrient: root::mozilla::StyleOrient,
-        pub mIsolation: u8,
-        pub mTopLayer: u8,
-        pub mWillChangeBitField: u8,
-        pub mWillChange: root::nsCOMArray,
-        pub mTouchAction: u8,
-        pub mScrollBehavior: u8,
-        pub mScrollSnapTypeX: u8,
-        pub mScrollSnapTypeY: u8,
-        pub mScrollSnapPointsX: root::nsStyleCoord,
-        pub mScrollSnapPointsY: root::nsStyleCoord,
-        pub mScrollSnapDestination: root::mozilla::Position,
-        pub mScrollSnapCoordinate: root::nsTArray<root::mozilla::Position>,
-        pub mBackfaceVisibility: u8,
-        pub mTransformStyle: u8,
-        pub mTransformBox: root::nsStyleDisplay_StyleGeometryBox,
-        pub mSpecifiedTransform: root::RefPtr<root::nsCSSValueSharedList>,
-        pub mTransformOrigin: [root::nsStyleCoord; 3usize],
-        pub mChildPerspective: root::nsStyleCoord,
-        pub mPerspectiveOrigin: [root::nsStyleCoord; 2usize],
-        pub mVerticalAlign: root::nsStyleCoord,
-        pub mTransitions: root::nsStyleAutoArray<root::mozilla::StyleTransition>,
-        pub mTransitionTimingFunctionCount: u32,
-        pub mTransitionDurationCount: u32,
-        pub mTransitionDelayCount: u32,
-        pub mTransitionPropertyCount: u32,
-        pub mAnimations: root::nsStyleAutoArray<root::mozilla::StyleAnimation>,
-        pub mAnimationTimingFunctionCount: u32,
-        pub mAnimationDurationCount: u32,
-        pub mAnimationDelayCount: u32,
-        pub mAnimationNameCount: u32,
-        pub mAnimationDirectionCount: u32,
-        pub mAnimationFillModeCount: u32,
-        pub mAnimationPlayStateCount: u32,
-        pub mAnimationIterationCountCount: u32,
-        pub mShapeOutside: root::mozilla::StyleShapeSource,
-    }
-    pub use self::super::root::mozilla::StyleGeometryBox as
-            nsStyleDisplay_StyleGeometryBox;
-    pub const nsStyleDisplay_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleDisplay() {
-        assert_eq!(::std::mem::size_of::<nsStyleDisplay>() , 416usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleDisplay ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleDisplay>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleDisplay ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBinding as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBinding ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mDisplay as *
-                    const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mDisplay ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOriginalDisplay
-                    as * const _ as usize } , 9usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOriginalDisplay ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mContain as *
-                    const _ as usize } , 10usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mContain ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mAppearance as *
-                    const _ as usize } , 11usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAppearance ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mPosition as *
-                    const _ as usize } , 12usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mPosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mFloat as *
-                    const _ as usize } , 13usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mFloat ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOriginalFloat
-                    as * const _ as usize } , 14usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOriginalFloat ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakType as *
-                    const _ as usize } , 15usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBreakType ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakInside as
-                    * const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBreakInside ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakBefore as
-                    * const _ as usize } , 17usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBreakBefore ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mBreakAfter as *
-                    const _ as usize } , 18usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBreakAfter ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowX as *
-                    const _ as usize } , 19usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOverflowX ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowY as *
-                    const _ as usize } , 20usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOverflowY ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOverflowClipBox
-                    as * const _ as usize } , 21usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOverflowClipBox ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mResize as *
-                    const _ as usize } , 22usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mResize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mOrient as *
-                    const _ as usize } , 23usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mOrient ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mIsolation as *
-                    const _ as usize } , 24usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mIsolation ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTopLayer as *
-                    const _ as usize } , 25usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTopLayer ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mWillChangeBitField as * const _ as usize } , 26usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mWillChangeBitField ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mWillChange as *
-                    const _ as usize } , 32usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mWillChange ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTouchAction as
-                    * const _ as usize } , 40usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTouchAction ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollBehavior
-                    as * const _ as usize } , 41usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollBehavior ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollSnapTypeX
-                    as * const _ as usize } , 42usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapTypeX ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mScrollSnapTypeY
-                    as * const _ as usize } , 43usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapTypeY ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mScrollSnapPointsX as * const _ as usize } , 48usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapPointsX ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mScrollSnapPointsY as * const _ as usize } , 64usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapPointsY ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mScrollSnapDestination as * const _ as usize } , 80usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapDestination ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mScrollSnapCoordinate as * const _ as usize } , 104usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mScrollSnapCoordinate ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mBackfaceVisibility as * const _ as usize } , 112usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mBackfaceVisibility ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformStyle
-                    as * const _ as usize } , 113usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransformStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformBox as
-                    * const _ as usize } , 114usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransformBox ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mSpecifiedTransform as * const _ as usize } , 120usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mSpecifiedTransform ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransformOrigin
-                    as * const _ as usize } , 128usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransformOrigin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mChildPerspective as * const _ as usize } , 176usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mChildPerspective ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mPerspectiveOrigin as * const _ as usize } , 192usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mPerspectiveOrigin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mVerticalAlign
-                    as * const _ as usize } , 224usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mVerticalAlign ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mTransitions as
-                    * const _ as usize } , 240usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransitions ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mTransitionTimingFunctionCount as * const _ as usize } ,
-                    288usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransitionTimingFunctionCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mTransitionDurationCount as * const _ as usize } ,
-                    292usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransitionDurationCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mTransitionDelayCount as * const _ as usize } , 296usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransitionDelayCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mTransitionPropertyCount as * const _ as usize } ,
-                    300usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mTransitionPropertyCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mAnimations as *
-                    const _ as usize } , 304usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimations ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationTimingFunctionCount as * const _ as usize } ,
-                    368usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationTimingFunctionCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationDurationCount as * const _ as usize } , 372usize
-                    , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationDurationCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationDelayCount as * const _ as usize } , 376usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationDelayCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationNameCount as * const _ as usize } , 380usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationNameCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationDirectionCount as * const _ as usize } ,
-                    384usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationDirectionCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationFillModeCount as * const _ as usize } , 388usize
-                    , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationFillModeCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationPlayStateCount as * const _ as usize } ,
-                    392usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationPlayStateCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) .
-                    mAnimationIterationCountCount as * const _ as usize } ,
-                    396usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mAnimationIterationCountCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleDisplay ) ) . mShapeOutside as
-                    * const _ as usize } , 400usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleDisplay ) ,
-                    "::" , stringify ! ( mShapeOutside ) ));
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
@@ -33316,7 +36356,7 @@ pub mod root {
     pub type imgRequest_HasThreadSafeRefCnt = root::mozilla::TrueType;
     #[test]
     fn bindgen_test_layout_imgRequest() {
-        assert_eq!(::std::mem::size_of::<imgRequest>() , 424usize , concat ! (
+        assert_eq!(::std::mem::size_of::<imgRequest>() , 448usize , concat ! (
                    "Size of: " , stringify ! ( imgRequest ) ));
         assert_eq! (::std::mem::align_of::<imgRequest>() , 8usize , concat ! (
                     "Alignment of " , stringify ! ( imgRequest ) ));
@@ -33584,157 +36624,6 @@ pub mod root {
     #[derive(Debug, Copy, Clone)]
     pub struct ProxyBehaviour {
         _unused: [u8; 0],
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleVisibility {
-        pub mImageOrientation: root::nsStyleImageOrientation,
-        pub mDirection: u8,
-        pub mVisible: u8,
-        pub mImageRendering: u8,
-        pub mWritingMode: u8,
-        pub mTextOrientation: u8,
-        pub mColorAdjust: u8,
-    }
-    pub const nsStyleVisibility_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleVisibility() {
-        assert_eq!(::std::mem::size_of::<nsStyleVisibility>() , 7usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleVisibility )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleVisibility>() , 1usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleVisibility ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) .
-                    mImageOrientation as * const _ as usize } , 0usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mImageOrientation ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) . mDirection as
-                    * const _ as usize } , 1usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mDirection ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) . mVisible as *
-                    const _ as usize } , 2usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mVisible ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) .
-                    mImageRendering as * const _ as usize } , 3usize , concat
-                    ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mImageRendering ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) . mWritingMode
-                    as * const _ as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mWritingMode ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) .
-                    mTextOrientation as * const _ as usize } , 5usize , concat
-                    ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mTextOrientation ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVisibility ) ) . mColorAdjust
-                    as * const _ as usize } , 6usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVisibility )
-                    , "::" , stringify ! ( mColorAdjust ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleFont {
-        pub mFont: root::nsFont,
-        pub mSize: root::nscoord,
-        pub mGenericID: u8,
-        pub mScriptLevel: i8,
-        pub mMathVariant: u8,
-        pub mMathDisplay: u8,
-        pub mMinFontSizeRatio: u8,
-        pub mExplicitLanguage: bool,
-        pub mAllowZoom: bool,
-        pub mScriptUnconstrainedSize: root::nscoord,
-        pub mScriptMinSize: root::nscoord,
-        pub mScriptSizeMultiplier: f32,
-        pub mLanguage: root::nsCOMPtr<root::nsIAtom>,
-    }
-    pub const nsStyleFont_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleFont() {
-        assert_eq!(::std::mem::size_of::<nsStyleFont>() , 120usize , concat !
-                   ( "Size of: " , stringify ! ( nsStyleFont ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleFont>() , 8usize , concat !
-                    ( "Alignment of " , stringify ! ( nsStyleFont ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mFont as * const _
-                    as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mFont ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mSize as * const _
-                    as usize } , 88usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mSize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mGenericID as *
-                    const _ as usize } , 92usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mGenericID ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mScriptLevel as *
-                    const _ as usize } , 93usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mScriptLevel ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mMathVariant as *
-                    const _ as usize } , 94usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mMathVariant ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mMathDisplay as *
-                    const _ as usize } , 95usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mMathDisplay ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mMinFontSizeRatio
-                    as * const _ as usize } , 96usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mMinFontSizeRatio ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mExplicitLanguage
-                    as * const _ as usize } , 97usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mExplicitLanguage ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mAllowZoom as *
-                    const _ as usize } , 98usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mAllowZoom ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) .
-                    mScriptUnconstrainedSize as * const _ as usize } ,
-                    100usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mScriptUnconstrainedSize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mScriptMinSize as *
-                    const _ as usize } , 104usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mScriptMinSize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) .
-                    mScriptSizeMultiplier as * const _ as usize } , 108usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mScriptSizeMultiplier ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleFont ) ) . mLanguage as *
-                    const _ as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleFont ) ,
-                    "::" , stringify ! ( mLanguage ) ));
     }
     #[repr(C)]
     #[derive(Debug)]
@@ -34074,24 +36963,6 @@ pub mod root {
                     const _ as usize } , 24usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsStyleImage ) ,
                     "::" , stringify ! ( mCropRect ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleColor {
-        pub mColor: root::nscolor,
-    }
-    pub const nsStyleColor_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleColor() {
-        assert_eq!(::std::mem::size_of::<nsStyleColor>() , 4usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleColor ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleColor>() , 4usize , concat !
-                    ( "Alignment of " , stringify ! ( nsStyleColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColor ) ) . mColor as * const
-                    _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColor ) ,
-                    "::" , stringify ! ( mColor ) ));
     }
     #[repr(C)]
     #[derive(Debug)]
@@ -34441,69 +37312,6 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug)]
-    pub struct nsStyleBackground {
-        pub mImage: root::nsStyleImageLayers,
-        pub mBackgroundColor: root::mozilla::StyleComplexColor,
-    }
-    pub const nsStyleBackground_kHasFinishStyle: bool = true;
-    #[test]
-    fn bindgen_test_layout_nsStyleBackground() {
-        assert_eq!(::std::mem::size_of::<nsStyleBackground>() , 160usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleBackground )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleBackground>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleBackground ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBackground ) ) . mImage as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBackground )
-                    , "::" , stringify ! ( mImage ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBackground ) ) .
-                    mBackgroundColor as * const _ as usize } , 152usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBackground )
-                    , "::" , stringify ! ( mBackgroundColor ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleMargin {
-        pub mMargin: root::nsStyleSides,
-    }
-    pub const nsStyleMargin_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleMargin() {
-        assert_eq!(::std::mem::size_of::<nsStyleMargin>() , 40usize , concat !
-                   ( "Size of: " , stringify ! ( nsStyleMargin ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleMargin>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleMargin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleMargin ) ) . mMargin as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleMargin ) ,
-                    "::" , stringify ! ( mMargin ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStylePadding {
-        pub mPadding: root::nsStyleSides,
-    }
-    pub const nsStylePadding_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStylePadding() {
-        assert_eq!(::std::mem::size_of::<nsStylePadding>() , 40usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStylePadding ) ));
-        assert_eq! (::std::mem::align_of::<nsStylePadding>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStylePadding ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePadding ) ) . mPadding as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePadding ) ,
-                    "::" , stringify ! ( mPadding ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
     pub struct nsBorderColors {
         pub mNext: *mut root::nsBorderColors,
         pub mColor: root::nscolor,
@@ -34611,250 +37419,6 @@ pub mod root {
                     "Alignment of field: " , stringify ! ( nsCSSShadowArray )
                     , "::" , stringify ! ( mArray ) ));
     }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleBorder {
-        pub mBorderColors: *mut *mut root::nsBorderColors,
-        pub mBorderRadius: root::nsStyleCorners,
-        pub mBorderImageSource: root::nsStyleImage,
-        pub mBorderImageSlice: root::nsStyleSides,
-        pub mBorderImageWidth: root::nsStyleSides,
-        pub mBorderImageOutset: root::nsStyleSides,
-        pub mBorderImageFill: u8,
-        pub mBorderImageRepeatH: u8,
-        pub mBorderImageRepeatV: u8,
-        pub mFloatEdge: root::mozilla::StyleFloatEdge,
-        pub mBoxDecorationBreak: root::mozilla::StyleBoxDecorationBreak,
-        pub mBorderStyle: [u8; 4usize],
-        pub __bindgen_anon_1: root::nsStyleBorder__bindgen_ty_1,
-        pub mComputedBorder: root::nsMargin,
-        pub mBorder: root::nsMargin,
-        pub mTwipsPerPixel: root::nscoord,
-    }
-    #[repr(C)]
-    #[derive(Debug, Copy)]
-    pub struct nsStyleBorder__bindgen_ty_1 {
-        pub __bindgen_anon_1: root::__BindgenUnionField<root::nsStyleBorder__bindgen_ty_1__bindgen_ty_1>,
-        pub mBorderColor: root::__BindgenUnionField<[root::mozilla::StyleComplexColor; 4usize]>,
-        pub bindgen_union_field: [u32; 8usize],
-    }
-    #[repr(C)]
-    #[derive(Debug, Copy)]
-    pub struct nsStyleBorder__bindgen_ty_1__bindgen_ty_1 {
-        pub mBorderTopColor: root::mozilla::StyleComplexColor,
-        pub mBorderRightColor: root::mozilla::StyleComplexColor,
-        pub mBorderBottomColor: root::mozilla::StyleComplexColor,
-        pub mBorderLeftColor: root::mozilla::StyleComplexColor,
-    }
-    #[test]
-    fn bindgen_test_layout_nsStyleBorder__bindgen_ty_1__bindgen_ty_1() {
-        assert_eq!(::std::mem::size_of::<nsStyleBorder__bindgen_ty_1__bindgen_ty_1>()
-                   , 32usize , concat ! (
-                   "Size of: " , stringify ! (
-                   nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleBorder__bindgen_ty_1__bindgen_ty_1>()
-                    , 4usize , concat ! (
-                    "Alignment of " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) ));
-        assert_eq! (unsafe {
-                    & (
-                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
-                    ) ) . mBorderTopColor as * const _ as usize } , 0usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
-                    stringify ! ( mBorderTopColor ) ));
-        assert_eq! (unsafe {
-                    & (
-                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
-                    ) ) . mBorderRightColor as * const _ as usize } , 8usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
-                    stringify ! ( mBorderRightColor ) ));
-        assert_eq! (unsafe {
-                    & (
-                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
-                    ) ) . mBorderBottomColor as * const _ as usize } , 16usize
-                    , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
-                    stringify ! ( mBorderBottomColor ) ));
-        assert_eq! (unsafe {
-                    & (
-                    * ( 0 as * const nsStyleBorder__bindgen_ty_1__bindgen_ty_1
-                    ) ) . mBorderLeftColor as * const _ as usize } , 24usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1__bindgen_ty_1 ) , "::" ,
-                    stringify ! ( mBorderLeftColor ) ));
-    }
-    impl Clone for nsStyleBorder__bindgen_ty_1__bindgen_ty_1 {
-        fn clone(&self) -> Self { *self }
-    }
-    #[test]
-    fn bindgen_test_layout_nsStyleBorder__bindgen_ty_1() {
-        assert_eq!(::std::mem::size_of::<nsStyleBorder__bindgen_ty_1>() ,
-                   32usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleBorder__bindgen_ty_1 )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleBorder__bindgen_ty_1>() ,
-                    4usize , concat ! (
-                    "Alignment of " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1 ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder__bindgen_ty_1 ) ) .
-                    mBorderColor as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleBorder__bindgen_ty_1 ) , "::" , stringify ! (
-                    mBorderColor ) ));
-    }
-    impl Clone for nsStyleBorder__bindgen_ty_1 {
-        fn clone(&self) -> Self { *self }
-    }
-    pub const nsStyleBorder_kHasFinishStyle: bool = true;
-    #[test]
-    fn bindgen_test_layout_nsStyleBorder() {
-        assert_eq!(::std::mem::size_of::<nsStyleBorder>() , 312usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleBorder ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleBorder>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleBorder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderColors as
-                    * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderColors ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderRadius as
-                    * const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderRadius ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) .
-                    mBorderImageSource as * const _ as usize } , 80usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageSource ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageSlice
-                    as * const _ as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageSlice ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageWidth
-                    as * const _ as usize } , 152usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) .
-                    mBorderImageOutset as * const _ as usize } , 192usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageOutset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderImageFill
-                    as * const _ as usize } , 232usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageFill ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) .
-                    mBorderImageRepeatH as * const _ as usize } , 233usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageRepeatH ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) .
-                    mBorderImageRepeatV as * const _ as usize } , 234usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderImageRepeatV ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mFloatEdge as *
-                    const _ as usize } , 235usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mFloatEdge ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) .
-                    mBoxDecorationBreak as * const _ as usize } , 236usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBoxDecorationBreak ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorderStyle as *
-                    const _ as usize } , 237usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorderStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mComputedBorder
-                    as * const _ as usize } , 276usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mComputedBorder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mBorder as *
-                    const _ as usize } , 292usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mBorder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleBorder ) ) . mTwipsPerPixel as
-                    * const _ as usize } , 308usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleBorder ) ,
-                    "::" , stringify ! ( mTwipsPerPixel ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleOutline {
-        pub mOutlineRadius: root::nsStyleCorners,
-        pub mOutlineWidth: root::nscoord,
-        pub mOutlineOffset: root::nscoord,
-        pub mOutlineColor: root::mozilla::StyleComplexColor,
-        pub mOutlineStyle: u8,
-        pub mActualOutlineWidth: root::nscoord,
-        pub mTwipsPerPixel: root::nscoord,
-    }
-    pub const nsStyleOutline_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleOutline() {
-        assert_eq!(::std::mem::size_of::<nsStyleOutline>() , 104usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleOutline ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleOutline>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleOutline ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineRadius
-                    as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mOutlineRadius ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineWidth as
-                    * const _ as usize } , 72usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mOutlineWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineOffset
-                    as * const _ as usize } , 76usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mOutlineOffset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineColor as
-                    * const _ as usize } , 80usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mOutlineColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mOutlineStyle as
-                    * const _ as usize } , 88usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mOutlineStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) .
-                    mActualOutlineWidth as * const _ as usize } , 92usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mActualOutlineWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleOutline ) ) . mTwipsPerPixel
-                    as * const _ as usize } , 96usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleOutline ) ,
-                    "::" , stringify ! ( mTwipsPerPixel ) ));
-    }
     /**
  * An object that allows sharing of arrays that store 'quotes' property
  * values.  This is particularly important for inheritance, where we want
@@ -34887,80 +37451,6 @@ pub mod root {
                     as * const _ as usize } , 8usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsStyleQuoteValues
                     ) , "::" , stringify ! ( mQuotePairs ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_StaticRefPtr_instantiation_88() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_StaticRefPtr_instantiation_89() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues> ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleList {
-        pub mListStylePosition: u8,
-        pub mListStyleImage: root::RefPtr<root::nsStyleImageRequest>,
-        pub mCounterStyle: root::mozilla::CounterStylePtr,
-        pub mQuotes: root::RefPtr<root::nsStyleQuoteValues>,
-        pub mImageRegion: root::nsRect,
-    }
-    pub const nsStyleList_kHasFinishStyle: bool = true;
-    extern "C" {
-        #[link_name = "_ZN11nsStyleList14sInitialQuotesE"]
-        pub static mut nsStyleList_sInitialQuotes:
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>;
-    }
-    extern "C" {
-        #[link_name = "_ZN11nsStyleList11sNoneQuotesE"]
-        pub static mut nsStyleList_sNoneQuotes:
-                   root::mozilla::StaticRefPtr<root::nsStyleQuoteValues>;
-    }
-    #[test]
-    fn bindgen_test_layout_nsStyleList() {
-        assert_eq!(::std::mem::size_of::<nsStyleList>() , 48usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleList ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleList>() , 8usize , concat !
-                    ( "Alignment of " , stringify ! ( nsStyleList ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleList ) ) . mListStylePosition
-                    as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
-                    "::" , stringify ! ( mListStylePosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleList ) ) . mListStyleImage as
-                    * const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
-                    "::" , stringify ! ( mListStyleImage ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleList ) ) . mCounterStyle as *
-                    const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
-                    "::" , stringify ! ( mCounterStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleList ) ) . mQuotes as * const
-                    _ as usize } , 24usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
-                    "::" , stringify ! ( mQuotes ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleList ) ) . mImageRegion as *
-                    const _ as usize } , 32usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleList ) ,
-                    "::" , stringify ! ( mImageRegion ) ));
     }
     #[repr(C)]
     #[derive(Debug)]
@@ -35140,250 +37630,6 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug)]
-    pub struct nsStylePosition {
-        pub mObjectPosition: root::mozilla::Position,
-        pub mOffset: root::nsStyleSides,
-        pub mWidth: root::nsStyleCoord,
-        pub mMinWidth: root::nsStyleCoord,
-        pub mMaxWidth: root::nsStyleCoord,
-        pub mHeight: root::nsStyleCoord,
-        pub mMinHeight: root::nsStyleCoord,
-        pub mMaxHeight: root::nsStyleCoord,
-        pub mFlexBasis: root::nsStyleCoord,
-        pub mGridAutoColumnsMin: root::nsStyleCoord,
-        pub mGridAutoColumnsMax: root::nsStyleCoord,
-        pub mGridAutoRowsMin: root::nsStyleCoord,
-        pub mGridAutoRowsMax: root::nsStyleCoord,
-        pub mGridAutoFlow: u8,
-        pub mBoxSizing: root::mozilla::StyleBoxSizing,
-        pub mAlignContent: u16,
-        pub mAlignItems: u8,
-        pub mAlignSelf: u8,
-        pub mJustifyContent: u16,
-        pub mJustifyItems: u8,
-        pub mJustifySelf: u8,
-        pub mFlexDirection: u8,
-        pub mFlexWrap: u8,
-        pub mObjectFit: u8,
-        pub mOrder: i32,
-        pub mFlexGrow: f32,
-        pub mFlexShrink: f32,
-        pub mZIndex: root::nsStyleCoord,
-        pub mGridTemplateColumns: root::nsStyleGridTemplate,
-        pub mGridTemplateRows: root::nsStyleGridTemplate,
-        pub mGridTemplateAreas: root::RefPtr<root::mozilla::css::GridTemplateAreasValue>,
-        pub mGridColumnStart: root::nsStyleGridLine,
-        pub mGridColumnEnd: root::nsStyleGridLine,
-        pub mGridRowStart: root::nsStyleGridLine,
-        pub mGridRowEnd: root::nsStyleGridLine,
-        pub mGridColumnGap: root::nsStyleCoord,
-        pub mGridRowGap: root::nsStyleCoord,
-    }
-    pub const nsStylePosition_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStylePosition() {
-        assert_eq!(::std::mem::size_of::<nsStylePosition>() , 520usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStylePosition )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStylePosition>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStylePosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mObjectPosition
-                    as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mObjectPosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mOffset as *
-                    const _ as usize } , 24usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mOffset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mWidth as *
-                    const _ as usize } , 64usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mMinWidth as *
-                    const _ as usize } , 80usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mMinWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mMaxWidth as *
-                    const _ as usize } , 96usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mMaxWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mHeight as *
-                    const _ as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mHeight ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mMinHeight as *
-                    const _ as usize } , 128usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mMinHeight ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mMaxHeight as *
-                    const _ as usize } , 144usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mMaxHeight ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexBasis as *
-                    const _ as usize } , 160usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mFlexBasis ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridAutoColumnsMin as * const _ as usize } , 176usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridAutoColumnsMin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridAutoColumnsMax as * const _ as usize } , 192usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridAutoColumnsMax ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridAutoRowsMin as * const _ as usize } , 208usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridAutoRowsMin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridAutoRowsMax as * const _ as usize } , 224usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridAutoRowsMax ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridAutoFlow
-                    as * const _ as usize } , 240usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridAutoFlow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mBoxSizing as *
-                    const _ as usize } , 241usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mBoxSizing ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignContent
-                    as * const _ as usize } , 242usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mAlignContent ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignItems as
-                    * const _ as usize } , 244usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mAlignItems ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mAlignSelf as *
-                    const _ as usize } , 245usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mAlignSelf ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifyContent
-                    as * const _ as usize } , 246usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mJustifyContent ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifyItems
-                    as * const _ as usize } , 248usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mJustifyItems ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mJustifySelf as
-                    * const _ as usize } , 249usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mJustifySelf ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexDirection
-                    as * const _ as usize } , 250usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mFlexDirection ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexWrap as *
-                    const _ as usize } , 251usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mFlexWrap ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mObjectFit as *
-                    const _ as usize } , 252usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mObjectFit ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mOrder as *
-                    const _ as usize } , 256usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mOrder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexGrow as *
-                    const _ as usize } , 260usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mFlexGrow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mFlexShrink as
-                    * const _ as usize } , 264usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mFlexShrink ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mZIndex as *
-                    const _ as usize } , 272usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mZIndex ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridTemplateColumns as * const _ as usize } , 288usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridTemplateColumns ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridTemplateRows as * const _ as usize } , 336usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridTemplateRows ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridTemplateAreas as * const _ as usize } , 384usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridTemplateAreas ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) .
-                    mGridColumnStart as * const _ as usize } , 392usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridColumnStart ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridColumnEnd
-                    as * const _ as usize } , 416usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridColumnEnd ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowStart
-                    as * const _ as usize } , 440usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridRowStart ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowEnd as
-                    * const _ as usize } , 464usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridRowEnd ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridColumnGap
-                    as * const _ as usize } , 488usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridColumnGap ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStylePosition ) ) . mGridRowGap as
-                    * const _ as usize } , 504usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStylePosition ) ,
-                    "::" , stringify ! ( mGridRowGap ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
     pub struct nsStyleTextOverflowSide {
         pub mString: ::nsstring::nsStringRepr,
         pub mType: u8,
@@ -35441,334 +37687,6 @@ pub mod root {
                     concat ! (
                     "Alignment of field: " , stringify ! ( nsStyleTextOverflow
                     ) , "::" , stringify ! ( mLogicalDirections ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleTextReset {
-        pub mTextOverflow: root::nsStyleTextOverflow,
-        pub mTextDecorationLine: u8,
-        pub mTextDecorationStyle: u8,
-        pub mUnicodeBidi: u8,
-        pub mInitialLetterSink: root::nscoord,
-        pub mInitialLetterSize: f32,
-        pub mTextDecorationColor: root::mozilla::StyleComplexColor,
-    }
-    pub const nsStyleTextReset_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleTextReset() {
-        assert_eq!(::std::mem::size_of::<nsStyleTextReset>() , 80usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleTextReset )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleTextReset>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleTextReset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) . mTextOverflow
-                    as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mTextOverflow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) .
-                    mTextDecorationLine as * const _ as usize } , 56usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mTextDecorationLine ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) .
-                    mTextDecorationStyle as * const _ as usize } , 57usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mTextDecorationStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) . mUnicodeBidi
-                    as * const _ as usize } , 58usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mUnicodeBidi ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) .
-                    mInitialLetterSink as * const _ as usize } , 60usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mInitialLetterSink ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) .
-                    mInitialLetterSize as * const _ as usize } , 64usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mInitialLetterSize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTextReset ) ) .
-                    mTextDecorationColor as * const _ as usize } , 68usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTextReset )
-                    , "::" , stringify ! ( mTextDecorationColor ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleText {
-        pub mTextAlign: u8,
-        pub mTextAlignLast: u8,
-        pub _bitfield_1: u8,
-        pub mTextJustify: root::mozilla::StyleTextJustify,
-        pub mTextTransform: u8,
-        pub mWhiteSpace: root::mozilla::StyleWhiteSpace,
-        pub mWordBreak: u8,
-        pub mOverflowWrap: u8,
-        pub mHyphens: root::mozilla::StyleHyphens,
-        pub mRubyAlign: u8,
-        pub mRubyPosition: u8,
-        pub mTextSizeAdjust: u8,
-        pub mTextCombineUpright: u8,
-        pub mControlCharacterVisibility: u8,
-        pub mTextEmphasisPosition: u8,
-        pub mTextEmphasisStyle: u8,
-        pub mTextRendering: u8,
-        pub mTextEmphasisColor: root::mozilla::StyleComplexColor,
-        pub mWebkitTextFillColor: root::mozilla::StyleComplexColor,
-        pub mWebkitTextStrokeColor: root::mozilla::StyleComplexColor,
-        pub mTabSize: root::nsStyleCoord,
-        pub mWordSpacing: root::nsStyleCoord,
-        pub mLetterSpacing: root::nsStyleCoord,
-        pub mLineHeight: root::nsStyleCoord,
-        pub mTextIndent: root::nsStyleCoord,
-        pub mWebkitTextStrokeWidth: root::nscoord,
-        pub mTextShadow: root::RefPtr<root::nsCSSShadowArray>,
-        pub mTextEmphasisStyleString: ::nsstring::nsStringRepr,
-    }
-    pub const nsStyleText_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleText() {
-        assert_eq!(::std::mem::size_of::<nsStyleText>() , 160usize , concat !
-                   ( "Size of: " , stringify ! ( nsStyleText ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleText>() , 8usize , concat !
-                    ( "Alignment of " , stringify ! ( nsStyleText ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextAlign as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextAlign ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextAlignLast as *
-                    const _ as usize } , 1usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextAlignLast ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextJustify as *
-                    const _ as usize } , 3usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextJustify ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextTransform as *
-                    const _ as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextTransform ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mWhiteSpace as *
-                    const _ as usize } , 5usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWhiteSpace ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mWordBreak as *
-                    const _ as usize } , 6usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWordBreak ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mOverflowWrap as *
-                    const _ as usize } , 7usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mOverflowWrap ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mHyphens as * const
-                    _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mHyphens ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mRubyAlign as *
-                    const _ as usize } , 9usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mRubyAlign ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mRubyPosition as *
-                    const _ as usize } , 10usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mRubyPosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextSizeAdjust as
-                    * const _ as usize } , 11usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextSizeAdjust ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextCombineUpright
-                    as * const _ as usize } , 12usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextCombineUpright ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mControlCharacterVisibility as * const _ as usize } ,
-                    13usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mControlCharacterVisibility ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mTextEmphasisPosition as * const _ as usize } , 14usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextEmphasisPosition ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextEmphasisStyle
-                    as * const _ as usize } , 15usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextEmphasisStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextRendering as *
-                    const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextRendering ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextEmphasisColor
-                    as * const _ as usize } , 20usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextEmphasisColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mWebkitTextFillColor as * const _ as usize } , 28usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWebkitTextFillColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mWebkitTextStrokeColor as * const _ as usize } , 36usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWebkitTextStrokeColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTabSize as * const
-                    _ as usize } , 48usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTabSize ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mWordSpacing as *
-                    const _ as usize } , 64usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWordSpacing ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mLetterSpacing as *
-                    const _ as usize } , 80usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mLetterSpacing ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mLineHeight as *
-                    const _ as usize } , 96usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mLineHeight ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextIndent as *
-                    const _ as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextIndent ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mWebkitTextStrokeWidth as * const _ as usize } , 128usize
-                    , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mWebkitTextStrokeWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) . mTextShadow as *
-                    const _ as usize } , 136usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextShadow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleText ) ) .
-                    mTextEmphasisStyleString as * const _ as usize } ,
-                    144usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleText ) ,
-                    "::" , stringify ! ( mTextEmphasisStyleString ) ));
-    }
-    impl nsStyleText {
-        #[inline]
-        pub fn mTextAlignTrue(&self) -> bool {
-            let mut unit_field_val: u8 =
-                unsafe { ::std::mem::uninitialized() };
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
-                                                    as *const u8,
-                                                &mut unit_field_val as *mut u8
-                                                    as *mut u8,
-                                                ::std::mem::size_of::<u8>())
-            };
-            let mask = 1u64 as u8;
-            let val = (unit_field_val & mask) >> 0usize;
-            unsafe { ::std::mem::transmute(val as u8) }
-        }
-        #[inline]
-        pub fn set_mTextAlignTrue(&mut self, val: bool) {
-            let mask = 1u64 as u8;
-            let val = val as u8 as u8;
-            let mut unit_field_val: u8 =
-                unsafe { ::std::mem::uninitialized() };
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
-                                                    as *const u8,
-                                                &mut unit_field_val as *mut u8
-                                                    as *mut u8,
-                                                ::std::mem::size_of::<u8>())
-            };
-            unit_field_val &= !mask;
-            unit_field_val |= (val << 0usize) & mask;
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&unit_field_val as *const _ as
-                                                    *const u8,
-                                                &mut self._bitfield_1 as
-                                                    *mut _ as *mut u8,
-                                                ::std::mem::size_of::<u8>());
-            }
-        }
-        #[inline]
-        pub fn mTextAlignLastTrue(&self) -> bool {
-            let mut unit_field_val: u8 =
-                unsafe { ::std::mem::uninitialized() };
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
-                                                    as *const u8,
-                                                &mut unit_field_val as *mut u8
-                                                    as *mut u8,
-                                                ::std::mem::size_of::<u8>())
-            };
-            let mask = 2u64 as u8;
-            let val = (unit_field_val & mask) >> 1usize;
-            unsafe { ::std::mem::transmute(val as u8) }
-        }
-        #[inline]
-        pub fn set_mTextAlignLastTrue(&mut self, val: bool) {
-            let mask = 2u64 as u8;
-            let val = val as u8 as u8;
-            let mut unit_field_val: u8 =
-                unsafe { ::std::mem::uninitialized() };
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&self._bitfield_1 as *const _
-                                                    as *const u8,
-                                                &mut unit_field_val as *mut u8
-                                                    as *mut u8,
-                                                ::std::mem::size_of::<u8>())
-            };
-            unit_field_val &= !mask;
-            unit_field_val |= (val << 1usize) & mask;
-            unsafe {
-                ::std::ptr::copy_nonoverlapping(&unit_field_val as *const _ as
-                                                    *const u8,
-                                                &mut self._bitfield_1 as
-                                                    *mut _ as *mut u8,
-                                                ::std::mem::size_of::<u8>());
-            }
-        }
-        #[inline]
-        pub fn new_bitfield_1(mTextAlignTrue: bool, mTextAlignLastTrue: bool)
-         -> u8 {
-            ({
-                 ({ 0 } |
-                      ((mTextAlignTrue as u8 as u8) << 0usize) & (1u64 as u8))
-             } | ((mTextAlignLastTrue as u8 as u8) << 1usize) & (2u64 as u8))
-        }
     }
     #[repr(C)]
     #[derive(Debug, Copy)]
@@ -35974,77 +37892,6 @@ pub mod root {
                     "Alignment of field: " , stringify ! ( BindingHolder ) ,
                     "::" , stringify ! ( mPtr ) ));
     }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleTable {
-        pub mLayoutStrategy: u8,
-        pub mSpan: i32,
-    }
-    pub const nsStyleTable_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleTable() {
-        assert_eq!(::std::mem::size_of::<nsStyleTable>() , 8usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleTable ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleTable>() , 4usize , concat !
-                    ( "Alignment of " , stringify ! ( nsStyleTable ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTable ) ) . mLayoutStrategy as
-                    * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTable ) ,
-                    "::" , stringify ! ( mLayoutStrategy ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTable ) ) . mSpan as * const _
-                    as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTable ) ,
-                    "::" , stringify ! ( mSpan ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleTableBorder {
-        pub mBorderSpacingCol: root::nscoord,
-        pub mBorderSpacingRow: root::nscoord,
-        pub mBorderCollapse: u8,
-        pub mCaptionSide: u8,
-        pub mEmptyCells: u8,
-    }
-    pub const nsStyleTableBorder_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleTableBorder() {
-        assert_eq!(::std::mem::size_of::<nsStyleTableBorder>() , 12usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleTableBorder )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleTableBorder>() , 4usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleTableBorder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
-                    mBorderSpacingCol as * const _ as usize } , 0usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
-                    ) , "::" , stringify ! ( mBorderSpacingCol ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
-                    mBorderSpacingRow as * const _ as usize } , 4usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
-                    ) , "::" , stringify ! ( mBorderSpacingRow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTableBorder ) ) .
-                    mBorderCollapse as * const _ as usize } , 8usize , concat
-                    ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
-                    ) , "::" , stringify ! ( mBorderCollapse ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTableBorder ) ) . mCaptionSide
-                    as * const _ as usize } , 9usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
-                    ) , "::" , stringify ! ( mCaptionSide ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleTableBorder ) ) . mEmptyCells
-                    as * const _ as usize } , 10usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleTableBorder
-                    ) , "::" , stringify ! ( mEmptyCells ) ));
-    }
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     pub enum nsStyleContentType {
@@ -36199,99 +38046,6 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug)]
-    pub struct nsStyleContent {
-        pub mContents: root::nsTArray<root::nsStyleContentData>,
-        pub mIncrements: root::nsTArray<root::nsStyleCounterData>,
-        pub mResets: root::nsTArray<root::nsStyleCounterData>,
-    }
-    pub const nsStyleContent_kHasFinishStyle: bool = true;
-    #[test]
-    fn bindgen_test_layout_nsStyleContent() {
-        assert_eq!(::std::mem::size_of::<nsStyleContent>() , 24usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleContent ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleContent>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleContent ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleContent ) ) . mContents as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
-                    "::" , stringify ! ( mContents ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleContent ) ) . mIncrements as *
-                    const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
-                    "::" , stringify ! ( mIncrements ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleContent ) ) . mResets as *
-                    const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleContent ) ,
-                    "::" , stringify ! ( mResets ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleUIReset {
-        pub mUserSelect: root::mozilla::StyleUserSelect,
-        pub mForceBrokenImageIcon: u8,
-        pub mIMEMode: u8,
-        pub mWindowDragging: root::mozilla::StyleWindowDragging,
-        pub mWindowShadow: u8,
-        pub mWindowOpacity: f32,
-        pub mSpecifiedWindowTransform: root::RefPtr<root::nsCSSValueSharedList>,
-        pub mWindowTransformOrigin: [root::nsStyleCoord; 2usize],
-    }
-    pub const nsStyleUIReset_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleUIReset() {
-        assert_eq!(::std::mem::size_of::<nsStyleUIReset>() , 56usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleUIReset ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleUIReset>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleUIReset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) . mUserSelect as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mUserSelect ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) .
-                    mForceBrokenImageIcon as * const _ as usize } , 1usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mForceBrokenImageIcon ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) . mIMEMode as *
-                    const _ as usize } , 2usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mIMEMode ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowDragging
-                    as * const _ as usize } , 3usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mWindowDragging ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowShadow as
-                    * const _ as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mWindowShadow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) . mWindowOpacity
-                    as * const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mWindowOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) .
-                    mSpecifiedWindowTransform as * const _ as usize } ,
-                    16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mSpecifiedWindowTransform ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUIReset ) ) .
-                    mWindowTransformOrigin as * const _ as usize } , 24usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleUIReset ) ,
-                    "::" , stringify ! ( mWindowTransformOrigin ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
     pub struct nsCursorImage {
         pub mHaveHotspot: bool,
         pub mHotspotX: f32,
@@ -36324,192 +38078,6 @@ pub mod root {
                     _ as usize } , 16usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsCursorImage ) ,
                     "::" , stringify ! ( mImage ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleUserInterface {
-        pub mUserInput: root::mozilla::StyleUserInput,
-        pub mUserModify: root::mozilla::StyleUserModify,
-        pub mUserFocus: root::mozilla::StyleUserFocus,
-        pub mPointerEvents: u8,
-        pub mCursor: u8,
-        pub mCursorImages: root::nsTArray<root::nsCursorImage>,
-        pub mCaretColor: root::mozilla::StyleComplexColor,
-    }
-    pub const nsStyleUserInterface_kHasFinishStyle: bool = true;
-    #[test]
-    fn bindgen_test_layout_nsStyleUserInterface() {
-        assert_eq!(::std::mem::size_of::<nsStyleUserInterface>() , 24usize ,
-                   concat ! (
-                   "Size of: " , stringify ! ( nsStyleUserInterface ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleUserInterface>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleUserInterface ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mUserInput
-                    as * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! ( mUserInput )
-                    ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
-                    mUserModify as * const _ as usize } , 1usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! ( mUserModify
-                    ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mUserFocus
-                    as * const _ as usize } , 2usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! ( mUserFocus )
-                    ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
-                    mPointerEvents as * const _ as usize } , 3usize , concat !
-                    (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! (
-                    mPointerEvents ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) . mCursor as
-                    * const _ as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! ( mCursor )
-                    ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
-                    mCursorImages as * const _ as usize } , 8usize , concat !
-                    (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! (
-                    mCursorImages ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleUserInterface ) ) .
-                    mCaretColor as * const _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! (
-                    nsStyleUserInterface ) , "::" , stringify ! ( mCaretColor
-                    ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleXUL {
-        pub mBoxFlex: f32,
-        pub mBoxOrdinal: u32,
-        pub mBoxAlign: root::mozilla::StyleBoxAlign,
-        pub mBoxDirection: root::mozilla::StyleBoxDirection,
-        pub mBoxOrient: root::mozilla::StyleBoxOrient,
-        pub mBoxPack: root::mozilla::StyleBoxPack,
-        pub mStackSizing: root::mozilla::StyleStackSizing,
-    }
-    pub const nsStyleXUL_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleXUL() {
-        assert_eq!(::std::mem::size_of::<nsStyleXUL>() , 16usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleXUL ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleXUL>() , 4usize , concat ! (
-                    "Alignment of " , stringify ! ( nsStyleXUL ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxFlex as * const
-                    _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxFlex ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxOrdinal as *
-                    const _ as usize } , 4usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxOrdinal ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxAlign as * const
-                    _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxAlign ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxDirection as *
-                    const _ as usize } , 9usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxDirection ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxOrient as *
-                    const _ as usize } , 10usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxOrient ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mBoxPack as * const
-                    _ as usize } , 11usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mBoxPack ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleXUL ) ) . mStackSizing as *
-                    const _ as usize } , 12usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleXUL ) , "::"
-                    , stringify ! ( mStackSizing ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleColumn {
-        pub mColumnCount: u32,
-        pub mColumnWidth: root::nsStyleCoord,
-        pub mColumnGap: root::nsStyleCoord,
-        pub mColumnRuleColor: root::mozilla::StyleComplexColor,
-        pub mColumnRuleStyle: u8,
-        pub mColumnFill: u8,
-        pub mColumnSpan: u8,
-        pub mColumnRuleWidth: root::nscoord,
-        pub mTwipsPerPixel: root::nscoord,
-    }
-    pub const nsStyleColumn_kHasFinishStyle: bool = false;
-    pub const nsStyleColumn_kMaxColumnCount: u32 = 1000;
-    #[test]
-    fn bindgen_test_layout_nsStyleColumn() {
-        assert_eq!(::std::mem::size_of::<nsStyleColumn>() , 64usize , concat !
-                   ( "Size of: " , stringify ! ( nsStyleColumn ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleColumn>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleColumn ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnCount as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnCount ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnWidth as *
-                    const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnGap as *
-                    const _ as usize } , 24usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnGap ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleColor
-                    as * const _ as usize } , 40usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnRuleColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleStyle
-                    as * const _ as usize } , 48usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnRuleStyle ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnFill as *
-                    const _ as usize } , 49usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnFill ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnSpan as *
-                    const _ as usize } , 50usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnSpan ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mColumnRuleWidth
-                    as * const _ as usize } , 52usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mColumnRuleWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleColumn ) ) . mTwipsPerPixel as
-                    * const _ as usize } , 56usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleColumn ) ,
-                    "::" , stringify ! ( mTwipsPerPixel ) ));
     }
     #[repr(u8)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -36598,189 +38166,6 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug)]
-    pub struct nsStyleSVG {
-        pub mFill: root::nsStyleSVGPaint,
-        pub mStroke: root::nsStyleSVGPaint,
-        pub mMarkerEnd: root::RefPtr<root::mozilla::css::URLValue>,
-        pub mMarkerMid: root::RefPtr<root::mozilla::css::URLValue>,
-        pub mMarkerStart: root::RefPtr<root::mozilla::css::URLValue>,
-        pub mStrokeDasharray: root::nsTArray<root::nsStyleCoord>,
-        pub mContextProps: root::nsTArray<root::nsCOMPtr<root::nsIAtom>>,
-        pub mStrokeDashoffset: root::nsStyleCoord,
-        pub mStrokeWidth: root::nsStyleCoord,
-        pub mFillOpacity: f32,
-        pub mStrokeMiterlimit: f32,
-        pub mStrokeOpacity: f32,
-        pub mClipRule: root::mozilla::StyleFillRule,
-        pub mColorInterpolation: u8,
-        pub mColorInterpolationFilters: u8,
-        pub mFillRule: root::mozilla::StyleFillRule,
-        pub mPaintOrder: u8,
-        pub mShapeRendering: u8,
-        pub mStrokeLinecap: u8,
-        pub mStrokeLinejoin: u8,
-        pub mTextAnchor: u8,
-        pub mContextPropsBits: u8,
-        pub mContextFlags: u8,
-    }
-    pub const nsStyleSVG_FILL_OPACITY_SOURCE_MASK:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::FILL_OPACITY_SOURCE_MASK;
-    pub const nsStyleSVG_STROKE_OPACITY_SOURCE_MASK:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::STROKE_OPACITY_SOURCE_MASK;
-    pub const nsStyleSVG_STROKE_DASHARRAY_CONTEXT:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::STROKE_DASHARRAY_CONTEXT;
-    pub const nsStyleSVG_STROKE_DASHOFFSET_CONTEXT:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::STROKE_DASHOFFSET_CONTEXT;
-    pub const nsStyleSVG_STROKE_WIDTH_CONTEXT: root::nsStyleSVG__bindgen_ty_1
-              =
-        nsStyleSVG__bindgen_ty_1::STROKE_WIDTH_CONTEXT;
-    pub const nsStyleSVG_FILL_OPACITY_SOURCE_SHIFT:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::FILL_OPACITY_SOURCE_SHIFT;
-    pub const nsStyleSVG_STROKE_OPACITY_SOURCE_SHIFT:
-              root::nsStyleSVG__bindgen_ty_1 =
-        nsStyleSVG__bindgen_ty_1::STROKE_OPACITY_SOURCE_SHIFT;
-    #[repr(u32)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-    pub enum nsStyleSVG__bindgen_ty_1 {
-        FILL_OPACITY_SOURCE_MASK = 3,
-        STROKE_OPACITY_SOURCE_MASK = 12,
-        STROKE_DASHARRAY_CONTEXT = 16,
-        STROKE_DASHOFFSET_CONTEXT = 32,
-        STROKE_WIDTH_CONTEXT = 64,
-        FILL_OPACITY_SOURCE_SHIFT = 0,
-        STROKE_OPACITY_SOURCE_SHIFT = 2,
-    }
-    pub const nsStyleSVG_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleSVG() {
-        assert_eq!(::std::mem::size_of::<nsStyleSVG>() , 128usize , concat ! (
-                   "Size of: " , stringify ! ( nsStyleSVG ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleSVG>() , 8usize , concat ! (
-                    "Alignment of " , stringify ! ( nsStyleSVG ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mFill as * const _
-                    as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mFill ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStroke as * const _
-                    as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStroke ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerEnd as *
-                    const _ as usize } , 32usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mMarkerEnd ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerMid as *
-                    const _ as usize } , 40usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mMarkerMid ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mMarkerStart as *
-                    const _ as usize } , 48usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mMarkerStart ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeDasharray as
-                    * const _ as usize } , 56usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeDasharray ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextProps as *
-                    const _ as usize } , 64usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mContextProps ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeDashoffset as
-                    * const _ as usize } , 72usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeDashoffset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeWidth as *
-                    const _ as usize } , 88usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeWidth ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mFillOpacity as *
-                    const _ as usize } , 104usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mFillOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeMiterlimit as
-                    * const _ as usize } , 108usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeMiterlimit ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeOpacity as *
-                    const _ as usize } , 112usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mClipRule as * const
-                    _ as usize } , 116usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mClipRule ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mColorInterpolation
-                    as * const _ as usize } , 117usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mColorInterpolation ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) .
-                    mColorInterpolationFilters as * const _ as usize } ,
-                    118usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mColorInterpolationFilters ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mFillRule as * const
-                    _ as usize } , 119usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mFillRule ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mPaintOrder as *
-                    const _ as usize } , 120usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mPaintOrder ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mShapeRendering as *
-                    const _ as usize } , 121usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mShapeRendering ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeLinecap as *
-                    const _ as usize } , 122usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeLinecap ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mStrokeLinejoin as *
-                    const _ as usize } , 123usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mStrokeLinejoin ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mTextAnchor as *
-                    const _ as usize } , 124usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mTextAnchor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextPropsBits as
-                    * const _ as usize } , 125usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mContextPropsBits ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVG ) ) . mContextFlags as *
-                    const _ as usize } , 126usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVG ) , "::"
-                    , stringify ! ( mContextFlags ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
     pub struct nsStyleFilter {
         pub mType: u32,
         pub mFilterParameter: root::nsStyleCoord,
@@ -36836,149 +38221,6 @@ pub mod root {
                     as * const _ as usize } , 8usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsStyleFilter ) ,
                     "::" , stringify ! ( mFilterParameter ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleSVGReset {
-        pub mMask: root::nsStyleImageLayers,
-        pub mClipPath: root::mozilla::StyleShapeSource,
-        pub mStopColor: root::nscolor,
-        pub mFloodColor: root::nscolor,
-        pub mLightingColor: root::nscolor,
-        pub mStopOpacity: f32,
-        pub mFloodOpacity: f32,
-        pub mDominantBaseline: u8,
-        pub mVectorEffect: u8,
-        pub mMaskType: u8,
-    }
-    pub const nsStyleSVGReset_kHasFinishStyle: bool = true;
-    #[test]
-    fn bindgen_test_layout_nsStyleSVGReset() {
-        assert_eq!(::std::mem::size_of::<nsStyleSVGReset>() , 192usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleSVGReset )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleSVGReset>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleSVGReset ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mMask as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mMask ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mClipPath as *
-                    const _ as usize } , 152usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mClipPath ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mStopColor as *
-                    const _ as usize } , 168usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mStopColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mFloodColor as
-                    * const _ as usize } , 172usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mFloodColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mLightingColor
-                    as * const _ as usize } , 176usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mLightingColor ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mStopOpacity as
-                    * const _ as usize } , 180usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mStopOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mFloodOpacity
-                    as * const _ as usize } , 184usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mFloodOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) .
-                    mDominantBaseline as * const _ as usize } , 188usize ,
-                    concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mDominantBaseline ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mVectorEffect
-                    as * const _ as usize } , 189usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mVectorEffect ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleSVGReset ) ) . mMaskType as *
-                    const _ as usize } , 190usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleSVGReset ) ,
-                    "::" , stringify ! ( mMaskType ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleVariables {
-        pub mVariables: root::mozilla::CSSVariableValues,
-    }
-    pub const nsStyleVariables_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleVariables() {
-        assert_eq!(::std::mem::size_of::<nsStyleVariables>() , 56usize ,
-                   concat ! ( "Size of: " , stringify ! ( nsStyleVariables )
-                   ));
-        assert_eq! (::std::mem::align_of::<nsStyleVariables>() , 8usize ,
-                    concat ! (
-                    "Alignment of " , stringify ! ( nsStyleVariables ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleVariables ) ) . mVariables as
-                    * const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleVariables )
-                    , "::" , stringify ! ( mVariables ) ));
-    }
-    #[repr(C)]
-    #[derive(Debug)]
-    pub struct nsStyleEffects {
-        pub mFilters: root::nsTArray<root::nsStyleFilter>,
-        pub mBoxShadow: root::RefPtr<root::nsCSSShadowArray>,
-        pub mClip: root::nsRect,
-        pub mOpacity: f32,
-        pub mClipFlags: u8,
-        pub mMixBlendMode: u8,
-    }
-    pub const nsStyleEffects_kHasFinishStyle: bool = false;
-    #[test]
-    fn bindgen_test_layout_nsStyleEffects() {
-        assert_eq!(::std::mem::size_of::<nsStyleEffects>() , 40usize , concat
-                   ! ( "Size of: " , stringify ! ( nsStyleEffects ) ));
-        assert_eq! (::std::mem::align_of::<nsStyleEffects>() , 8usize , concat
-                    ! ( "Alignment of " , stringify ! ( nsStyleEffects ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mFilters as *
-                    const _ as usize } , 0usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mFilters ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mBoxShadow as *
-                    const _ as usize } , 8usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mBoxShadow ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mClip as * const
-                    _ as usize } , 16usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mClip ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mOpacity as *
-                    const _ as usize } , 32usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mOpacity ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mClipFlags as *
-                    const _ as usize } , 36usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mClipFlags ) ));
-        assert_eq! (unsafe {
-                    & ( * ( 0 as * const nsStyleEffects ) ) . mMixBlendMode as
-                    * const _ as usize } , 37usize , concat ! (
-                    "Alignment of field: " , stringify ! ( nsStyleEffects ) ,
-                    "::" , stringify ! ( mMixBlendMode ) ));
     }
     /**
  * These *_Simple types are used to map Gecko types to layout-equivalent but
@@ -37217,6 +38459,15 @@ pub mod root {
     pub type RawGeckoGfxMatrix4x4 = [root::mozilla::gfx::Float; 16usize];
     pub type RawGeckoStyleChildrenIterator =
         root::mozilla::dom::StyleChildrenIterator;
+    pub type RawServoDeclarationBlockBorrowed =
+        *const root::RawServoDeclarationBlock;
+    pub type ServoStyleContextBorrowed =
+        *const root::mozilla::ServoStyleContext;
+    pub type ServoStyleContextBorrowedOrNull =
+        *const root::mozilla::ServoStyleContext;
+    pub type ServoComputedValuesBorrowed = *const root::ServoComputedValues;
+    pub type ServoComputedValuesBorrowedOrNull =
+        *const root::ServoComputedValues;
     pub type RawServoAnimationValueMapBorrowedMut =
         *mut root::RawServoAnimationValueMap;
     pub type RawGeckoNodeBorrowed = *const root::RawGeckoNode;
@@ -37531,6 +38782,11 @@ pub mod root {
     pub struct nsIConsoleReportCollector {
         _unused: [u8; 0],
     }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct CSSRuleListImpl {
+        _unused: [u8; 0],
+    }
     /**
  * An nsMediaQueryResultCacheKey records what feature/value combinations
  * a set of media query results are valid for.  This allows the caller
@@ -37771,6 +39027,11 @@ pub mod root {
     }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
+    pub struct nsXBLDocumentInfo {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
     pub struct ElementRuleProcessorData {
         _unused: [u8; 0],
     }
@@ -37882,7 +39143,6 @@ pub mod root {
         fn clone(&self) -> Self { *self }
     }
     #[repr(C)]
-    #[derive(Debug)]
     pub struct nsIAttribute {
         pub _base: root::nsINode,
         pub mAttrMap: root::RefPtr<root::nsDOMAttributeMap>,
@@ -37903,6 +39163,35 @@ pub mod root {
                     const _ as usize } , 88usize , concat ! (
                     "Alignment of field: " , stringify ! ( nsIAttribute ) ,
                     "::" , stringify ! ( mAttrMap ) ));
+    }
+    /**
+ * There are two advantages to inheriting from nsStubMutationObserver
+ * rather than directly from nsIMutationObserver:
+ *  1. smaller compiled code size (since there's no need for the code
+ *     for the empty virtual function implementations for every
+ *     nsIMutationObserver implementation)
+ *  2. the performance of document's loop over observers benefits from
+ *     the fact that more of the functions called are the same (which
+ *     can reduce instruction cache misses and perhaps improve branch
+ *     prediction)
+ */
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsStubMutationObserver {
+        pub _base: root::nsIMutationObserver,
+    }
+    #[test]
+    fn bindgen_test_layout_nsStubMutationObserver() {
+        assert_eq!(::std::mem::size_of::<nsStubMutationObserver>() , 8usize ,
+                   concat ! (
+                   "Size of: " , stringify ! ( nsStubMutationObserver ) ));
+        assert_eq! (::std::mem::align_of::<nsStubMutationObserver>() , 8usize
+                    , concat ! (
+                    "Alignment of " , stringify ! ( nsStubMutationObserver )
+                    ));
+    }
+    impl Clone for nsStubMutationObserver {
+        fn clone(&self) -> Self { *self }
     }
     /**
  * Structure used as a key for caching Attrs in nsDOMAttributeMap's mAttributeCache.
@@ -38049,46 +39338,46 @@ pub mod root {
     pub struct nsAttrValueOrString {
         _unused: [u8; 0],
     }
-    pub const ELEMENT_SHARED_RESTYLE_BIT_1: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_1;
-    pub const ELEMENT_SHARED_RESTYLE_BIT_2: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_2;
-    pub const ELEMENT_SHARED_RESTYLE_BIT_3: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_3;
-    pub const ELEMENT_SHARED_RESTYLE_BIT_4: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_4;
-    pub const ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_1;
+    pub const ELEMENT_SHARED_RESTYLE_BIT_1: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_1;
+    pub const ELEMENT_SHARED_RESTYLE_BIT_2: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_2;
+    pub const ELEMENT_SHARED_RESTYLE_BIT_3: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_3;
+    pub const ELEMENT_SHARED_RESTYLE_BIT_4: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_4;
+    pub const ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_1;
     pub const ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO:
-              root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_2;
-    pub const ELEMENT_HAS_SNAPSHOT: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_3;
-    pub const ELEMENT_HANDLED_SNAPSHOT: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_4;
-    pub const ELEMENT_HAS_PENDING_RESTYLE: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_1;
-    pub const ELEMENT_IS_POTENTIAL_RESTYLE_ROOT: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_2;
-    pub const ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE: root::_bindgen_ty_87
+              root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_2;
+    pub const ELEMENT_HAS_SNAPSHOT: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_3;
+    pub const ELEMENT_HANDLED_SNAPSHOT: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_4;
+    pub const ELEMENT_HAS_PENDING_RESTYLE: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_1;
+    pub const ELEMENT_IS_POTENTIAL_RESTYLE_ROOT: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_2;
+    pub const ELEMENT_HAS_PENDING_ANIMATION_ONLY_RESTYLE: root::_bindgen_ty_20
               =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_3;
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_3;
     pub const ELEMENT_IS_POTENTIAL_ANIMATION_ONLY_RESTYLE_ROOT:
-              root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_SHARED_RESTYLE_BIT_4;
-    pub const ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR;
-    pub const ELEMENT_PENDING_RESTYLE_FLAGS: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_PENDING_RESTYLE_FLAGS;
-    pub const ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS;
-    pub const ELEMENT_ALL_RESTYLE_FLAGS: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_ALL_RESTYLE_FLAGS;
-    pub const ELEMENT_TYPE_SPECIFIC_BITS_OFFSET: root::_bindgen_ty_87 =
-        _bindgen_ty_87::ELEMENT_TYPE_SPECIFIC_BITS_OFFSET;
+              root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_SHARED_RESTYLE_BIT_4;
+    pub const ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_IS_CONDITIONAL_RESTYLE_ANCESTOR;
+    pub const ELEMENT_PENDING_RESTYLE_FLAGS: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_PENDING_RESTYLE_FLAGS;
+    pub const ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS;
+    pub const ELEMENT_ALL_RESTYLE_FLAGS: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_ALL_RESTYLE_FLAGS;
+    pub const ELEMENT_TYPE_SPECIFIC_BITS_OFFSET: root::_bindgen_ty_20 =
+        _bindgen_ty_20::ELEMENT_TYPE_SPECIFIC_BITS_OFFSET;
     #[repr(u32)]
     #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-    pub enum _bindgen_ty_87 {
+    pub enum _bindgen_ty_20 {
         ELEMENT_SHARED_RESTYLE_BIT_1 = 8388608,
         ELEMENT_SHARED_RESTYLE_BIT_2 = 16777216,
         ELEMENT_SHARED_RESTYLE_BIT_3 = 33554432,
@@ -38125,10 +39414,54 @@ pub mod root {
     impl Clone for LookAndFeelInt {
         fn clone(&self) -> Self { *self }
     }
+    /**
+ * An object implementing |nsIStyleRule| (henceforth, a rule) represents
+ * immutable stylistic information that either applies or does not apply
+ * to a given element.  It belongs to an object or group of objects that
+ * implement |nsIStyleSheet| and |nsIStyleRuleProcessor| (henceforth, a
+ * sheet).
+ *
+ * A rule becomes relevant to the computation of style data when
+ * |nsIStyleRuleProcessor::RulesMatching| creates a rule node that
+ * points to the rule.  (A rule node, |nsRuleNode|, is a node in the
+ * rule tree, which is a lexicographic tree indexed by rules.  The path
+ * from the root of the rule tree to the |nsRuleNode| for a given
+ * |nsStyleContext| contains exactly the rules that match the element
+ * that the style context is for, in priority (weight, origin,
+ * specificity) order.)
+ *
+ * The computation of style data uses the rule tree, which calls
+ * |nsIStyleRule::MapRuleInfoInto| below.
+ *
+ * It is worth emphasizing that the data represented by a rule
+ * implementation are immutable.  When the data need to be changed, a
+ * new rule object must be created.  Failing to do this will lead to
+ * bugs in the handling of dynamic style changes, since the rule tree
+ * caches the results of |MapRuleInfoInto|.
+ *
+ * |nsIStyleRule| objects are owned by |nsRuleNode| objects (in addition
+ * to typically being owned by their sheet), which are in turn garbage
+ * collected (with the garbage collection roots being style contexts).
+ */
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct nsIStyleRule {
+        pub _base: root::nsISupports,
+    }
     #[repr(C)]
     #[derive(Debug, Copy, Clone)]
-    pub struct nsIStyleRule {
-        _unused: [u8; 0],
+    pub struct nsIStyleRule_COMTypeInfo {
+        pub _address: u8,
+    }
+    #[test]
+    fn bindgen_test_layout_nsIStyleRule() {
+        assert_eq!(::std::mem::size_of::<nsIStyleRule>() , 8usize , concat ! (
+                   "Size of: " , stringify ! ( nsIStyleRule ) ));
+        assert_eq! (::std::mem::align_of::<nsIStyleRule>() , 8usize , concat !
+                    ( "Alignment of " , stringify ! ( nsIStyleRule ) ));
+    }
+    impl Clone for nsIStyleRule {
+        fn clone(&self) -> Self { *self }
     }
     #[repr(C)]
     #[derive(Debug)]
@@ -38435,6 +39768,27 @@ pub mod root {
     pub const SERVO_CSS_PSEUDO_ELEMENT_FLAGS_placeholder: u32 = 8;
     pub const SERVO_CSS_PSEUDO_ELEMENT_FLAGS_mozColorSwatch: u32 = 12;
     #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct ElementDependentRuleProcessorData {
+        _unused: [u8; 0],
+    }
+    pub type nsBindingList = root::nsTArray<root::RefPtr<root::nsXBLBinding>>;
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsRuleData {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsCSSFontFeatureValuesRule {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct nsCSSPageRule {
+        _unused: [u8; 0],
+    }
+    #[repr(C)]
     #[derive(Debug, Copy)]
     pub struct nsIDOMCSSCounterStyleRule {
         pub _base: root::nsISupports,
@@ -38676,7 +40030,7 @@ pub mod root {
     }
     pub type __builtin_va_list = [root::__va_list_tag; 1usize];
     #[test]
-    fn __bindgen_test_layout_IntegralConstant_instantiation_90() {
+    fn __bindgen_test_layout_IntegralConstant_instantiation_23() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));
@@ -38685,7 +40039,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntegralConstant_instantiation_91() {
+    fn __bindgen_test_layout_IntegralConstant_instantiation_24() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));
@@ -38694,7 +40048,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCharTraits_instantiation_92() {
+    fn __bindgen_test_layout_nsCharTraits_instantiation_25() {
         assert_eq!(::std::mem::size_of::<root::nsCharTraits>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38705,7 +40059,7 @@ pub mod root {
                    root::nsCharTraits ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsReadingIterator_instantiation_93() {
+    fn __bindgen_test_layout_nsReadingIterator_instantiation_26() {
         assert_eq!(::std::mem::size_of::<root::nsReadingIterator<u16>>() ,
                    24usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38716,7 +40070,7 @@ pub mod root {
                    root::nsReadingIterator<u16> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsWritingIterator_instantiation_94() {
+    fn __bindgen_test_layout_nsWritingIterator_instantiation_27() {
         assert_eq!(::std::mem::size_of::<root::nsWritingIterator<u16>>() ,
                    24usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38727,7 +40081,7 @@ pub mod root {
                    root::nsWritingIterator<u16> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCharTraits_instantiation_95() {
+    fn __bindgen_test_layout_nsCharTraits_instantiation_28() {
         assert_eq!(::std::mem::size_of::<root::nsCharTraits>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38738,7 +40092,7 @@ pub mod root {
                    root::nsCharTraits ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsReadingIterator_instantiation_96() {
+    fn __bindgen_test_layout_nsReadingIterator_instantiation_29() {
         assert_eq!(::std::mem::size_of::<root::nsReadingIterator<::std::os::raw::c_char>>()
                    , 24usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38749,7 +40103,7 @@ pub mod root {
                    root::nsReadingIterator<::std::os::raw::c_char> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsWritingIterator_instantiation_97() {
+    fn __bindgen_test_layout_nsWritingIterator_instantiation_30() {
         assert_eq!(::std::mem::size_of::<root::nsWritingIterator<::std::os::raw::c_char>>()
                    , 24usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38760,7 +40114,7 @@ pub mod root {
                    root::nsWritingIterator<::std::os::raw::c_char> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCharTraits_instantiation_98() {
+    fn __bindgen_test_layout_nsCharTraits_instantiation_31() {
         assert_eq!(::std::mem::size_of::<root::nsCharTraits>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38771,7 +40125,7 @@ pub mod root {
                    root::nsCharTraits ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCharTraits_instantiation_99() {
+    fn __bindgen_test_layout_nsCharTraits_instantiation_32() {
         assert_eq!(::std::mem::size_of::<root::nsCharTraits>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38782,7 +40136,7 @@ pub mod root {
                    root::nsCharTraits ) ));
     }
     #[test]
-    fn __bindgen_test_layout__bindgen_ty_id_215035_instantiation_100() {
+    fn __bindgen_test_layout__bindgen_ty_id_195333_instantiation_33() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));
@@ -38791,7 +40145,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout__bindgen_ty_id_215071_instantiation_101() {
+    fn __bindgen_test_layout__bindgen_ty_id_195369_instantiation_34() {
         assert_eq!(::std::mem::size_of::<u8>() , 1usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u8 )
                    ));
@@ -38800,7 +40154,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_102() {
+    fn __bindgen_test_layout_nsTArray_instantiation_35() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCString>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38811,7 +40165,7 @@ pub mod root {
                    root::nsTArray<root::nsCString> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_103() {
+    fn __bindgen_test_layout_Handle_instantiation_36() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::jsid>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38822,7 +40176,7 @@ pub mod root {
                    root::JS::Handle<root::jsid> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_104() {
+    fn __bindgen_test_layout_Handle_instantiation_37() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38833,7 +40187,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_105() {
+    fn __bindgen_test_layout_Handle_instantiation_38() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38844,7 +40198,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_106() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_39() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38855,7 +40209,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Rooted_instantiation_107() {
+    fn __bindgen_test_layout_Rooted_instantiation_40() {
         assert_eq!(::std::mem::size_of::<[u64; 3usize]>() , 24usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38866,7 +40220,7 @@ pub mod root {
                    [u64; 3usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_108() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_41() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38877,7 +40231,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_109() {
+    fn __bindgen_test_layout_nsTArray_instantiation_42() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38888,7 +40242,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_110() {
+    fn __bindgen_test_layout_nsTArray_instantiation_43() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::mozilla::FontFamilyName>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38899,7 +40253,7 @@ pub mod root {
                    root::nsTArray<root::mozilla::FontFamilyName> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_111() {
+    fn __bindgen_test_layout_nsTArray_instantiation_44() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::std::os::raw::c_uint>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38910,7 +40264,7 @@ pub mod root {
                    root::nsTArray<::std::os::raw::c_uint> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_112() {
+    fn __bindgen_test_layout_nsTArray_instantiation_45() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::std::os::raw::c_uint>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -38921,7 +40275,7 @@ pub mod root {
                    root::nsTArray<::std::os::raw::c_uint> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_PointTyped_instantiation_113() {
+    fn __bindgen_test_layout_PointTyped_instantiation_46() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38932,7 +40286,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntPointTyped_instantiation_114() {
+    fn __bindgen_test_layout_IntPointTyped_instantiation_47() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38943,7 +40297,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_SizeTyped_instantiation_115() {
+    fn __bindgen_test_layout_SizeTyped_instantiation_48() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38954,7 +40308,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RectTyped_instantiation_116() {
+    fn __bindgen_test_layout_RectTyped_instantiation_49() {
         assert_eq!(::std::mem::size_of::<[u32; 4usize]>() , 16usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38965,7 +40319,7 @@ pub mod root {
                    [u32; 4usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntPointTyped_instantiation_117() {
+    fn __bindgen_test_layout_IntPointTyped_instantiation_50() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38976,7 +40330,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntSizeTyped_instantiation_118() {
+    fn __bindgen_test_layout_IntSizeTyped_instantiation_51() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38987,7 +40341,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntRectTyped_instantiation_119() {
+    fn __bindgen_test_layout_IntRectTyped_instantiation_52() {
         assert_eq!(::std::mem::size_of::<[u32; 4usize]>() , 16usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -38998,7 +40352,7 @@ pub mod root {
                    [u32; 4usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MarginTyped_instantiation_120() {
+    fn __bindgen_test_layout_MarginTyped_instantiation_53() {
         assert_eq!(::std::mem::size_of::<[u32; 4usize]>() , 16usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39009,7 +40363,7 @@ pub mod root {
                    [u32; 4usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RectTyped_instantiation_121() {
+    fn __bindgen_test_layout_RectTyped_instantiation_54() {
         assert_eq!(::std::mem::size_of::<[u32; 4usize]>() , 16usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39020,7 +40374,7 @@ pub mod root {
                    [u32; 4usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_IntRectTyped_instantiation_122() {
+    fn __bindgen_test_layout_IntRectTyped_instantiation_55() {
         assert_eq!(::std::mem::size_of::<[u32; 4usize]>() , 16usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39031,7 +40385,7 @@ pub mod root {
                    [u32; 4usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_ScaleFactor_instantiation_123() {
+    fn __bindgen_test_layout_ScaleFactor_instantiation_56() {
         assert_eq!(::std::mem::size_of::<u32>() , 4usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u32 )
                    ));
@@ -39040,7 +40394,7 @@ pub mod root {
                    u32 ) ));
     }
     #[test]
-    fn __bindgen_test_layout_ScaleFactors2D_instantiation_124() {
+    fn __bindgen_test_layout_ScaleFactors2D_instantiation_57() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39051,7 +40405,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_ScaleFactors2D_instantiation_125() {
+    fn __bindgen_test_layout_ScaleFactors2D_instantiation_58() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39062,7 +40416,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_ScaleFactors2D_instantiation_126() {
+    fn __bindgen_test_layout_ScaleFactors2D_instantiation_59() {
         assert_eq!(::std::mem::size_of::<[u32; 2usize]>() , 8usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -39073,7 +40427,7 @@ pub mod root {
                    [u32; 2usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_BaseTimeDuration_instantiation_127() {
+    fn __bindgen_test_layout_BaseTimeDuration_instantiation_60() {
         assert_eq!(::std::mem::size_of::<root::mozilla::BaseTimeDuration>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39084,7 +40438,7 @@ pub mod root {
                    root::mozilla::BaseTimeDuration ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_128() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_61() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIContent>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39095,7 +40449,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIContent> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_129() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_62() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIContent>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39106,7 +40460,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIContent> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_130() {
+    fn __bindgen_test_layout_RefPtr_instantiation_63() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39117,7 +40471,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_131() {
+    fn __bindgen_test_layout_nsTArray_instantiation_64() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39130,7 +40484,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_132() {
+    fn __bindgen_test_layout_RefPtr_instantiation_65() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39141,7 +40495,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_133() {
+    fn __bindgen_test_layout_nsTArray_instantiation_66() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39154,7 +40508,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_WeakPtr_instantiation_134() {
+    fn __bindgen_test_layout_WeakPtr_instantiation_67() {
         assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u64 )
                    ));
@@ -39163,7 +40517,7 @@ pub mod root {
                    u64 ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsPtrHashKey_instantiation_135() {
+    fn __bindgen_test_layout_nsPtrHashKey_instantiation_68() {
         assert_eq!(::std::mem::size_of::<root::nsPtrHashKey<::std::os::raw::c_void>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39174,7 +40528,7 @@ pub mod root {
                    root::nsPtrHashKey<::std::os::raw::c_void> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsPtrHashKey_instantiation_136() {
+    fn __bindgen_test_layout_nsPtrHashKey_instantiation_69() {
         assert_eq!(::std::mem::size_of::<root::nsPtrHashKey<root::WeakFrame>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39185,7 +40539,40 @@ pub mod root {
                    root::nsPtrHashKey<root::WeakFrame> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_137() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_70() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_71() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_72() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIAtom>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIAtom>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_73() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39196,7 +40583,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_TErrorResult_instantiation_138() {
+    fn __bindgen_test_layout_TErrorResult_instantiation_74() {
         assert_eq!(::std::mem::size_of::<root::mozilla::binding_danger::TErrorResult>()
                    , 32usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39207,7 +40594,7 @@ pub mod root {
                    root::mozilla::binding_danger::TErrorResult ) ));
     }
     #[test]
-    fn __bindgen_test_layout_TErrorResult_instantiation_139() {
+    fn __bindgen_test_layout_TErrorResult_instantiation_75() {
         assert_eq!(::std::mem::size_of::<root::mozilla::binding_danger::TErrorResult>()
                    , 32usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39218,7 +40605,7 @@ pub mod root {
                    root::mozilla::binding_danger::TErrorResult ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_140() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_76() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStringBuffer>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39229,7 +40616,7 @@ pub mod root {
                    root::already_AddRefed<root::nsStringBuffer> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_141() {
+    fn __bindgen_test_layout_Handle_instantiation_77() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39240,7 +40627,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_142() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_78() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39251,7 +40638,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_143() {
+    fn __bindgen_test_layout_Handle_instantiation_79() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39262,7 +40649,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_144() {
+    fn __bindgen_test_layout_nsTArray_instantiation_80() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39273,7 +40660,7 @@ pub mod root {
                    root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_145() {
+    fn __bindgen_test_layout_Handle_instantiation_81() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39284,7 +40671,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_146() {
+    fn __bindgen_test_layout_RefPtr_instantiation_82() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39295,7 +40682,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_147() {
+    fn __bindgen_test_layout_Handle_instantiation_83() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39306,7 +40693,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_148() {
+    fn __bindgen_test_layout_Handle_instantiation_84() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39317,7 +40704,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_149() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_85() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39328,7 +40715,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_150() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_86() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39339,7 +40726,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_151() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_87() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsINode>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39350,7 +40737,7 @@ pub mod root {
                    root::already_AddRefed<root::nsINode> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_152() {
+    fn __bindgen_test_layout_Handle_instantiation_88() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39361,7 +40748,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_153() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_89() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39372,7 +40759,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_154() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_90() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39383,7 +40770,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_155() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_91() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39394,7 +40781,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_156() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_92() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39405,7 +40792,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_157() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_93() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39416,7 +40803,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_158() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_94() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39427,7 +40814,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_159() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_95() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39438,7 +40825,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_160() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_96() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39449,7 +40836,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_161() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_97() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39460,7 +40847,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_162() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_98() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39471,7 +40858,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_163() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_99() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39482,7 +40869,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_164() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_100() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39493,7 +40880,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_iterator_instantiation_165() {
+    fn __bindgen_test_layout_iterator_instantiation_101() {
         assert_eq!(::std::mem::size_of::<root::std::iterator>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39504,7 +40891,7 @@ pub mod root {
                    root::std::iterator ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_166() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_102() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39515,7 +40902,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_167() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_103() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39526,7 +40913,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DeletePolicy_instantiation_168() {
+    fn __bindgen_test_layout_DeletePolicy_instantiation_104() {
         assert_eq!(::std::mem::size_of::<root::JS::DeletePolicy>() , 1usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39537,7 +40924,7 @@ pub mod root {
                    root::JS::DeletePolicy ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_169() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_105() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::JSErrorNotes_Note>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39548,7 +40935,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::JSErrorNotes_Note> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_170() {
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_106() {
         assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIPrincipal>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39559,7 +40946,7 @@ pub mod root {
                    root::nsCOMPtr<root::nsIPrincipal> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_171() {
+    fn __bindgen_test_layout_Handle_instantiation_107() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39570,7 +40957,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_172() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_108() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39581,7 +40968,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_173() {
+    fn __bindgen_test_layout_nsTArray_instantiation_109() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCString>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39592,7 +40979,7 @@ pub mod root {
                    root::nsTArray<root::nsCString> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_174() {
+    fn __bindgen_test_layout_nsTArray_instantiation_110() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCString>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39603,7 +40990,7 @@ pub mod root {
                    root::nsTArray<root::nsCString> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Heap_instantiation_175() {
+    fn __bindgen_test_layout_Heap_instantiation_111() {
         assert_eq!(::std::mem::size_of::<root::JS::Heap<root::JS::Value>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39614,7 +41001,7 @@ pub mod root {
                    root::JS::Heap<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Heap_instantiation_176() {
+    fn __bindgen_test_layout_Heap_instantiation_112() {
         assert_eq!(::std::mem::size_of::<root::JS::Heap<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39625,7 +41012,7 @@ pub mod root {
                    root::JS::Heap<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_TenuredHeap_instantiation_177() {
+    fn __bindgen_test_layout_TenuredHeap_instantiation_113() {
         assert_eq!(::std::mem::size_of::<root::JS::TenuredHeap>() , 8usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39636,7 +41023,7 @@ pub mod root {
                    root::JS::TenuredHeap ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_178() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_114() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39647,7 +41034,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_NotNull_instantiation_179() {
+    fn __bindgen_test_layout_NotNull_instantiation_115() {
         assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39660,7 +41047,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_180() {
+    fn __bindgen_test_layout_nsTArray_instantiation_116() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::AnonymousContent>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39673,7 +41060,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_181() {
+    fn __bindgen_test_layout_RefPtr_instantiation_117() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39684,7 +41071,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_182() {
+    fn __bindgen_test_layout_nsTArray_instantiation_118() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39697,7 +41084,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_183() {
+    fn __bindgen_test_layout_RefPtr_instantiation_119() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39708,7 +41095,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_184() {
+    fn __bindgen_test_layout_nsTArray_instantiation_120() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39721,7 +41108,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_185() {
+    fn __bindgen_test_layout_nsTArray_instantiation_121() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::dom::Element>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39732,7 +41119,7 @@ pub mod root {
                    root::nsTArray<*mut root::mozilla::dom::Element> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_186() {
+    fn __bindgen_test_layout_RefPtr_instantiation_122() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::Element>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39743,7 +41130,20 @@ pub mod root {
                    root::RefPtr<root::mozilla::dom::Element> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_187() {
+    fn __bindgen_test_layout_nsTArray_instantiation_123() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::Element>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::dom::Element>> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::Element>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::dom::Element>> )
+                   ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_124() {
         assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIObserver>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39754,7 +41154,7 @@ pub mod root {
                    root::nsCOMPtr<root::nsIObserver> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_188() {
+    fn __bindgen_test_layout_nsTArray_instantiation_125() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCOMPtr<root::nsIObserver>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39765,7 +41165,7 @@ pub mod root {
                    root::nsTArray<root::nsCOMPtr<root::nsIObserver>> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_189() {
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_126() {
         assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIObserver>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39776,7 +41176,7 @@ pub mod root {
                    root::nsCOMPtr<root::nsIObserver> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_190() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_127() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIDocument>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39787,7 +41187,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIDocument> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_191() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_128() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39798,7 +41198,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_192() {
+    fn __bindgen_test_layout_RefPtr_instantiation_129() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39809,7 +41209,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_193() {
+    fn __bindgen_test_layout_nsTArray_instantiation_130() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::dom::Element>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39820,7 +41220,7 @@ pub mod root {
                    root::nsTArray<*mut root::mozilla::dom::Element> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_194() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_131() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIDocument>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39831,7 +41231,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIDocument> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_195() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_132() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39842,7 +41242,7 @@ pub mod root {
                    root::JS::MutableHandle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_196() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_133() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsContentList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39853,7 +41253,7 @@ pub mod root {
                    root::already_AddRefed<root::nsContentList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_197() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_134() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsContentList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39864,7 +41264,7 @@ pub mod root {
                    root::already_AddRefed<root::nsContentList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_198() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_135() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsINode>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39875,7 +41275,7 @@ pub mod root {
                    root::already_AddRefed<root::nsINode> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_199() {
+    fn __bindgen_test_layout_RefPtr_instantiation_136() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::Element>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -39884,6 +41284,715 @@ pub mod root {
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
                    root::RefPtr<root::mozilla::dom::Element> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_137() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::Element>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::dom::Element>> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::Element>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::dom::Element>> )
+                   ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_138() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_139() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_140() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIRunnable> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIRunnable> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_141() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::mozilla::dom::Link>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::mozilla::dom::Link> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::mozilla::dom::Link>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::mozilla::dom::Link> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_142() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIWeakReference>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIWeakReference> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIWeakReference>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIWeakReference> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_143() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_144() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>> )
+                   ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_145() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_146() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_147() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_148() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_149() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_150() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_151() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_152() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_153() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_154() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_155() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_156() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_157() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::RawServoAnimationValue>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::RawServoAnimationValue> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::RawServoAnimationValue>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::RawServoAnimationValue> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_DefaultDelete_instantiation_158() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_159() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::ServoStyleSheet>>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_160() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::nsStyleContext> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::nsStyleContext>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::nsStyleContext> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_DefaultDelete_instantiation_161() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_UniquePtr_instantiation_162() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsISMILAttr>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::UniquePtr<root::nsISMILAttr> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::UniquePtr<root::nsISMILAttr>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::UniquePtr<root::nsISMILAttr> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_163() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_164() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_165() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_166() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_167() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_168() {
+        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
+                   , 16usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsDataHashtable_instantiation_169() {
+        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
+                   (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
+                   (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_170() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_171() {
+        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::nsIContent>>()
+                   , 16usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTHashtable_instantiation_172() {
+        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
+                   (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
+                   (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_173() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_174() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_175() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_176() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_177() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_178() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIStyleRule>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIStyleRule> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIStyleRule>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIStyleRule> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_179() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::CSSStyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::CSSStyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::CSSStyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::CSSStyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_180() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_181() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_182() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::CSSStyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::CSSStyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::CSSStyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::CSSStyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_183() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::CSSStyleSheet>>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_184() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIStyleRuleProcessor>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIStyleRuleProcessor> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIStyleRuleProcessor>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIStyleRuleProcessor> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_SupportsWeakPtr_instantiation_185() {
+        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! ( u64 )
+                   ));
+        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   u64 ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_186() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_187() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsRect>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::nsRect> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::nsRect>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::nsRect> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_NotNull_instantiation_188() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+    }
+    #[test]
+    fn __bindgen_test_layout_NotNull_instantiation_189() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_190() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsITimer>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsITimer> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsITimer>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsITimer> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_DefaultDelete_instantiation_191() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_192() {
+        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::nsIAtom>>()
+                   , 16usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_193() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIAtom>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIAtom>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_194() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCOMPtr<root::nsIAtom>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::nsCOMPtr<root::nsIAtom>> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::nsCOMPtr<root::nsIAtom>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::nsCOMPtr<root::nsIAtom>> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_195() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIAtom> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_196() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_197() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_198() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_199() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_200() {
@@ -39897,83 +42006,81 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_201() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+    fn __bindgen_test_layout_Handle_instantiation_201() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
+                   root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_202() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
+    fn __bindgen_test_layout_Handle_instantiation_202() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
+                   root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_203() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::mozilla::dom::Link>>()
-                   , 8usize , concat ! (
+    fn __bindgen_test_layout_nsPIDOMWindow_instantiation_203() {
+        assert_eq!(::std::mem::size_of::<[u64; 31usize]>() , 248usize , concat
+                   ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::mozilla::dom::Link> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::mozilla::dom::Link>>()
-                   , 8usize , concat ! (
+                   [u64; 31usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 31usize]>() , 8usize , concat
+                   ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::mozilla::dom::Link> ) ));
+                   [u64; 31usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_204() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIWeakReference>>()
+    fn __bindgen_test_layout_already_AddRefed_instantiation_204() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIContent>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIWeakReference> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIWeakReference>>()
+                   root::already_AddRefed<root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIContent>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIWeakReference> ) ));
+                   root::already_AddRefed<root::nsIContent> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_205() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
+    fn __bindgen_test_layout_nsRefPtrHashtable_instantiation_205() {
+        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
+                   (
                    "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
+                   [u64; 6usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
+                   (
                    "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+                   [u64; 6usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_206() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
+    fn __bindgen_test_layout_Handle_instantiation_206() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>> )
-                   ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>>>()
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<root::RefPtr<root::mozilla::StyleSheet>> )
-                   ));
+                   root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
     fn __bindgen_test_layout_nsTArray_instantiation_207() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
+        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::mozilla::StyleSheet> ) ));
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_208() {
@@ -39987,59 +42094,59 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_209() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
+    fn __bindgen_test_layout_OwningNonNull_instantiation_209() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
+                   , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
+                   , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_210() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsISMILAttr>>()
-                   , 8usize , concat ! (
+    fn __bindgen_test_layout_OwningNonNull_instantiation_210() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
+                   , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::mozilla::UniquePtr<root::nsISMILAttr> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::UniquePtr<root::nsISMILAttr>>()
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::UniquePtr<root::nsISMILAttr> ) ));
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_211() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
+    fn __bindgen_test_layout_OwningNonNull_instantiation_211() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
+                   , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+                   root::mozilla::OwningNonNull<root::nsINode> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_212() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
+    fn __bindgen_test_layout_Handle_instantiation_212() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+                   root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_213() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
+                   root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_214() {
@@ -40053,42 +42160,62 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_215() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+    fn __bindgen_test_layout_MutableHandle_instantiation_215() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
+                   root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_216() {
-        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
-                   , 16usize , concat ! (
+    fn __bindgen_test_layout_Handle_instantiation_216() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::jsid>>() ,
+                   8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
-                   ) ));
-        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
-                   , 8usize , concat ! (
+                   root::JS::Handle<root::jsid> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::jsid>>() ,
+                   8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
-                   ) ));
+                   root::JS::Handle<root::jsid> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsDataHashtable_instantiation_217() {
-        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
-                   (
+    fn __bindgen_test_layout_MutableHandle_instantiation_217() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
+                   , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
-                   (
+                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
+                   , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
+                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_218() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::jsid>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<root::jsid> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::jsid>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<root::jsid> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_219() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_220() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40099,163 +42226,108 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_219() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+    fn __bindgen_test_layout_Handle_instantiation_221() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
+                   root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_220() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+    fn __bindgen_test_layout_Handle_instantiation_222() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
+                   root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_221() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+    fn __bindgen_test_layout_MutableHandle_instantiation_223() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   root::JS::MutableHandle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
+                   root::JS::MutableHandle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_222() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+    fn __bindgen_test_layout_RefPtr_instantiation_224() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::XBLChildrenElement>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   root::RefPtr<root::mozilla::dom::XBLChildrenElement> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::dom::XBLChildrenElement>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
+                   root::RefPtr<root::mozilla::dom::XBLChildrenElement> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_SupportsWeakPtr_instantiation_223() {
-        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! ( u64 )
-                   ));
-        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   u64 ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_224() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_225() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIWeakReference>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
+                   root::nsCOMPtr<root::nsIWeakReference> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIWeakReference>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
+                   root::nsCOMPtr<root::nsIWeakReference> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_225() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsRect>>() ,
-                   8usize , concat ! (
+    fn __bindgen_test_layout_nsPtrHashKey_instantiation_226() {
+        assert_eq!(::std::mem::size_of::<root::nsPtrHashKey<::std::os::raw::c_void>>()
+                   , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<root::nsRect> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<root::nsRect>>() ,
-                   8usize , concat ! (
+                   root::nsPtrHashKey<::std::os::raw::c_void> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsPtrHashKey<::std::os::raw::c_void>>()
+                   , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<root::nsRect> ) ));
+                   root::nsPtrHashKey<::std::os::raw::c_void> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_NotNull_instantiation_226() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+    fn __bindgen_test_layout_already_AddRefed_instantiation_227() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   root::already_AddRefed<root::nsIRunnable> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-    }
-    #[test]
-    fn __bindgen_test_layout_NotNull_instantiation_227() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
+                   root::already_AddRefed<root::nsIRunnable> ) ));
     }
     #[test]
     fn __bindgen_test_layout_already_AddRefed_instantiation_228() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsITimer>>()
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsITimer> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsITimer>>()
+                   root::already_AddRefed<root::nsIRunnable> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsITimer> ) ));
+                   root::already_AddRefed<root::nsIRunnable> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_229() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_230() {
-        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::nsIAtom>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_231() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIAtom>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIAtom>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_232() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsCOMPtr<root::nsIAtom>>>()
+    fn __bindgen_test_layout_NotNull_instantiation_229() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::nsTArray<root::nsCOMPtr<root::nsIAtom>> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<root::nsCOMPtr<root::nsIAtom>>>()
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<root::nsCOMPtr<root::nsIAtom>> ) ));
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_233() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_230() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40266,84 +42338,37 @@ pub mod root {
                    root::already_AddRefed<root::nsIAtom> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_234() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+    fn __bindgen_test_layout_already_AddRefed_instantiation_231() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   root::already_AddRefed<root::nsIAtom> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+                   root::already_AddRefed<root::nsIAtom> ) ));
+    }
+    #[repr(C)]
+    #[derive(Debug, Copy)]
+    pub struct _bindgen_ty_11 {
+        pub _address: u8,
+    }
+    impl Clone for _bindgen_ty_11 {
+        fn clone(&self) -> Self { *self }
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_235() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+    fn __bindgen_test_layout_already_AddRefed_instantiation_232() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   root::already_AddRefed<root::nsIRunnable> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+                   root::already_AddRefed<root::nsIRunnable> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_236() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_237() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_238() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_239() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_240() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsPIDOMWindow_instantiation_241() {
+    fn __bindgen_test_layout_nsPIDOMWindow_instantiation_233() {
         assert_eq!(::std::mem::size_of::<[u64; 31usize]>() , 248usize , concat
                    ! (
                    "Size of template specialization: " , stringify ! (
@@ -40354,18 +42379,51 @@ pub mod root {
                    [u64; 31usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_242() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIContent>>()
+    fn __bindgen_test_layout_MutableHandle_instantiation_234() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIContent>>()
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIContent> ) ));
+                   root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsRefPtrHashtable_instantiation_243() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_235() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_236() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_DefaultDelete_instantiation_237() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashtable_instantiation_238() {
         assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -40376,15 +42434,72 @@ pub mod root {
                    [u64; 6usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_244() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+    fn __bindgen_test_layout_Rooted_instantiation_239() {
+        assert_eq!(::std::mem::size_of::<[u64; 3usize]>() , 24usize , concat !
+                   (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 3usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 3usize]>() , 8usize , concat !
+                   (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 3usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Rooted_instantiation_240() {
+        assert_eq!(::std::mem::size_of::<[u64; 3usize]>() , 24usize , concat !
+                   (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 3usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 3usize]>() , 8usize , concat !
+                   (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 3usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_241() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsISupports>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   root::already_AddRefed<root::nsISupports> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsISupports>>()
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
+                   root::already_AddRefed<root::nsISupports> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_242() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsISupports>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsISupports> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsISupports>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsISupports> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_243() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIRunnable>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIRunnable> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIRunnable>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIRunnable> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_NotNull_instantiation_244() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
+                   ));
     }
     #[test]
     fn __bindgen_test_layout_nsTArray_instantiation_245() {
@@ -40399,50 +42514,6 @@ pub mod root {
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_246() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_OwningNonNull_instantiation_247() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_OwningNonNull_instantiation_248() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_OwningNonNull_instantiation_249() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::OwningNonNull<root::nsINode>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::OwningNonNull<root::nsINode> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_250() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40453,29 +42524,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_251() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_252() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_253() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_247() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40486,51 +42535,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_254() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::jsid>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::jsid> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::jsid>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::jsid> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_255() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_256() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::jsid>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::jsid> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::jsid>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::jsid> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_257() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::PropertyDescriptor>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::PropertyDescriptor> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_258() {
+    fn __bindgen_test_layout_Handle_instantiation_248() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40539,6 +42544,118 @@ pub mod root {
                    , 8usize , concat ! (
                    "Alignment of template specialization: " , stringify ! (
                    root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_249() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_250() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_251() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_252() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_253() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_254() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_255() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_256() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::StyleSheet> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_257() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_258() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_259() {
@@ -40552,431 +42669,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_260() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_261() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_262() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::XBLChildrenElement>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::dom::XBLChildrenElement> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::dom::XBLChildrenElement>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::dom::XBLChildrenElement> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_263() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIWeakReference>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIWeakReference> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIWeakReference>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIWeakReference> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsPtrHashKey_instantiation_264() {
-        assert_eq!(::std::mem::size_of::<root::nsPtrHashKey<::std::os::raw::c_void>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsPtrHashKey<::std::os::raw::c_void> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsPtrHashKey<::std::os::raw::c_void>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsPtrHashKey<::std::os::raw::c_void> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_265() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_266() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_NotNull_instantiation_267() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_268() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_269() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_270() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIRunnable> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsPIDOMWindow_instantiation_271() {
-        assert_eq!(::std::mem::size_of::<[u64; 31usize]>() , 248usize , concat
-                   ! (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 31usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 31usize]>() , 8usize , concat
-                   ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 31usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_272() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_273() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_274() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_275() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
-                   1usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::DefaultDelete ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsRefPtrHashtable_instantiation_276() {
-        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
-                   (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
-                   (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Rooted_instantiation_277() {
-        assert_eq!(::std::mem::size_of::<[u64; 3usize]>() , 24usize , concat !
-                   (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 3usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 3usize]>() , 8usize , concat !
-                   (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 3usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Rooted_instantiation_278() {
-        assert_eq!(::std::mem::size_of::<[u64; 3usize]>() , 24usize , concat !
-                   (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 3usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 3usize]>() , 8usize , concat !
-                   (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 3usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_279() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsISupports>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsISupports> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsISupports>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsISupports> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_280() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsISupports>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsISupports> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsISupports>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsISupports> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_281() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIRunnable> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIRunnable>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIRunnable> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_NotNull_instantiation_282() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::NotNull<*const root::mozilla::Encoding>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::NotNull<*const root::mozilla::Encoding> )
-                   ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_283() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_284() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_285() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_286() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_287() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_288() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_289() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_290() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_291() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_292() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_293() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>
-                   ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<root::RefPtr<root::mozilla::css::SheetLoadData>>
-                   ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_294() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::StyleSheet>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::StyleSheet> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_295() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_296() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_297() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_298() {
+    fn __bindgen_test_layout_nsTArray_instantiation_260() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<f64>>() , 8usize ,
                    concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -40987,7 +42680,7 @@ pub mod root {
                    root::nsTArray<f64> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_299() {
+    fn __bindgen_test_layout_RefPtr_instantiation_261() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::DOMIntersectionObserverEntry>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41000,7 +42693,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_300() {
+    fn __bindgen_test_layout_nsTArray_instantiation_262() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::mozilla::dom::DOMIntersectionObserverEntry>>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41013,7 +42706,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_301() {
+    fn __bindgen_test_layout_RefPtr_instantiation_263() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::DOMIntersectionObserverEntry>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41026,7 +42719,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_302() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_264() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::ProfilerBacktrace>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41037,7 +42730,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::ProfilerBacktrace> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_303() {
+    fn __bindgen_test_layout_nsTArray_instantiation_265() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41048,7 +42741,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_304() {
+    fn __bindgen_test_layout_Handle_instantiation_266() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41059,7 +42752,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_305() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_267() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41070,7 +42763,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Handle_instantiation_306() {
+    fn __bindgen_test_layout_Handle_instantiation_268() {
         assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41081,7 +42774,7 @@ pub mod root {
                    root::JS::Handle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_307() {
+    fn __bindgen_test_layout_MutableHandle_instantiation_269() {
         assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41092,7 +42785,7 @@ pub mod root {
                    root::JS::MutableHandle<root::JS::Value> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_308() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_270() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41103,7 +42796,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIAtom> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsDataHashtable_instantiation_309() {
+    fn __bindgen_test_layout_nsDataHashtable_instantiation_271() {
         assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -41114,7 +42807,7 @@ pub mod root {
                    [u64; 6usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_OwningNonNull_instantiation_310() {
+    fn __bindgen_test_layout_OwningNonNull_instantiation_272() {
         assert_eq!(::std::mem::size_of::<root::mozilla::OwningNonNull<root::mozilla::EffectCompositor_AnimationStyleRuleProcessor>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41127,7 +42820,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_311() {
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_273() {
         assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::nsIAtom>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41138,7 +42831,7 @@ pub mod root {
                    root::nsRefPtrHashKey<root::nsIAtom> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_312() {
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_274() {
         assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::nsIContent>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41149,7 +42842,7 @@ pub mod root {
                    root::nsRefPtrHashKey<root::nsIContent> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_313() {
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_275() {
         assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIRunnable>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41160,7 +42853,7 @@ pub mod root {
                    root::nsCOMPtr<root::nsIRunnable> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_314() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_276() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41171,7 +42864,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_315() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_277() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::URLExtraData>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41182,7 +42875,7 @@ pub mod root {
                    root::already_AddRefed<root::mozilla::URLExtraData> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsMainThreadPtrHolder_instantiation_316() {
+    fn __bindgen_test_layout_nsMainThreadPtrHolder_instantiation_278() {
         assert_eq!(::std::mem::size_of::<root::nsMainThreadPtrHolder<root::nsIURI>>()
                    , 40usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41193,7 +42886,7 @@ pub mod root {
                    root::nsMainThreadPtrHolder<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_317() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_279() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::URLExtraData>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41204,7 +42897,7 @@ pub mod root {
                    root::already_AddRefed<root::mozilla::URLExtraData> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_318() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_280() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41215,7 +42908,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_319() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_281() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41226,7 +42919,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_320() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_282() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::URLExtraData>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41237,7 +42930,7 @@ pub mod root {
                    root::already_AddRefed<root::mozilla::URLExtraData> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_321() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_283() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::URLExtraData>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41248,7 +42941,7 @@ pub mod root {
                    root::already_AddRefed<root::mozilla::URLExtraData> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsPtrHashKey_instantiation_322() {
+    fn __bindgen_test_layout_nsPtrHashKey_instantiation_284() {
         assert_eq!(::std::mem::size_of::<root::nsPtrHashKey<root::nsIDocument>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41259,7 +42952,7 @@ pub mod root {
                    root::nsPtrHashKey<root::nsIDocument> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_323() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_285() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41270,7 +42963,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIAtom> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_324() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_286() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41281,7 +42974,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_325() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_287() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsCSSValueList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41292,7 +42985,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsCSSValueList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_326() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_288() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41303,7 +42996,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_327() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_289() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsCSSValuePairList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41314,7 +43007,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsCSSValuePairList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_328() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_290() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStringBuffer>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41325,7 +43018,7 @@ pub mod root {
                    root::already_AddRefed<root::nsStringBuffer> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_SupportsWeakPtr_instantiation_329() {
+    fn __bindgen_test_layout_SupportsWeakPtr_instantiation_291() {
         assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! ( u64 )
                    ));
@@ -41334,7 +43027,7 @@ pub mod root {
                    u64 ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_330() {
+    fn __bindgen_test_layout_nsTArray_instantiation_292() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41345,7 +43038,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_331() {
+    fn __bindgen_test_layout_nsTArray_instantiation_293() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41356,18 +43049,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_332() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIAtom>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_333() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_294() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41378,7 +43060,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Maybe_instantiation_334() {
+    fn __bindgen_test_layout_Maybe_instantiation_295() {
         assert_eq!(::std::mem::size_of::<[u32; 3usize]>() , 12usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -41389,7 +43071,7 @@ pub mod root {
                    [u32; 3usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Maybe_instantiation_335() {
+    fn __bindgen_test_layout_Maybe_instantiation_296() {
         assert_eq!(::std::mem::size_of::<[u32; 3usize]>() , 12usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -41400,7 +43082,7 @@ pub mod root {
                    [u32; 3usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_336() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_297() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsStyleImageRequest>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41411,7 +43093,7 @@ pub mod root {
                    root::already_AddRefed<root::nsStyleImageRequest> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_337() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_298() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIAtom>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41422,7 +43104,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIAtom> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_338() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_299() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41433,7 +43115,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_339() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_300() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsStyleSides>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41444,7 +43126,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsStyleSides> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_340() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_301() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41455,7 +43137,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_341() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_302() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsStyleSides>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41466,7 +43148,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsStyleSides> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_342() {
+    fn __bindgen_test_layout_already_AddRefed_instantiation_303() {
         assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41477,7 +43159,7 @@ pub mod root {
                    root::already_AddRefed<root::nsIURI> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_Maybe_instantiation_343() {
+    fn __bindgen_test_layout_Maybe_instantiation_304() {
         assert_eq!(::std::mem::size_of::<[u32; 3usize]>() , 12usize , concat !
                    (
                    "Size of template specialization: " , stringify ! (
@@ -41488,7 +43170,7 @@ pub mod root {
                    [u32; 3usize] ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_344() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_305() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41499,7 +43181,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_345() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_306() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41510,7 +43192,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_pair_instantiation_346() {
+    fn __bindgen_test_layout_pair_instantiation_307() {
         assert_eq!(::std::mem::size_of::<root::std::pair<::nsstring::nsStringRepr, ::nsstring::nsStringRepr>>()
                    , 32usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41521,7 +43203,7 @@ pub mod root {
                    root::std::pair<::nsstring::nsStringRepr, ::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_347() {
+    fn __bindgen_test_layout_nsTArray_instantiation_308() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::std::pair<::nsstring::nsStringRepr,
                                                      ::nsstring::nsStringRepr>>>()
                    , 8usize , concat ! (
@@ -41536,18 +43218,7 @@ pub mod root {
                    ) ));
     }
     #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_348() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::nsIURI>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::nsIURI>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::nsIURI> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_349() {
+    fn __bindgen_test_layout_nsTArray_instantiation_309() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
                    8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41558,7 +43229,7 @@ pub mod root {
                    root::nsTArray<::nsstring::nsStringRepr> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_350() {
+    fn __bindgen_test_layout_nsTArray_instantiation_310() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsStyleCoord>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41569,7 +43240,7 @@ pub mod root {
                    root::nsTArray<root::nsStyleCoord> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_351() {
+    fn __bindgen_test_layout_nsTArray_instantiation_311() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<root::nsStyleCoord>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41580,18 +43251,7 @@ pub mod root {
                    root::nsTArray<root::nsStyleCoord> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_352() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIAtom>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIAtom> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIAtom>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIAtom> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_353() {
+    fn __bindgen_test_layout_RefPtr_instantiation_312() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::RawServoAnimationValue>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41602,7 +43262,7 @@ pub mod root {
                    root::RefPtr<root::RawServoAnimationValue> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsStyleAutoArray_instantiation_354() {
+    fn __bindgen_test_layout_nsStyleAutoArray_instantiation_313() {
         assert_eq!(::std::mem::size_of::<root::nsStyleAutoArray<root::mozilla::StyleAnimation>>()
                    , 64usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41613,7 +43273,7 @@ pub mod root {
                    root::nsStyleAutoArray<root::mozilla::StyleAnimation> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_355() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_314() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41624,7 +43284,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_356() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_315() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsCSSValueList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41635,7 +43295,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsCSSValueList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_DefaultDelete_instantiation_357() {
+    fn __bindgen_test_layout_DefaultDelete_instantiation_316() {
         assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
                    1usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41646,7 +43306,7 @@ pub mod root {
                    root::mozilla::DefaultDelete ) ));
     }
     #[test]
-    fn __bindgen_test_layout_UniquePtr_instantiation_358() {
+    fn __bindgen_test_layout_UniquePtr_instantiation_317() {
         assert_eq!(::std::mem::size_of::<root::mozilla::UniquePtr<root::nsCSSValuePairList>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41657,7 +43317,7 @@ pub mod root {
                    root::mozilla::UniquePtr<root::nsCSSValuePairList> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_359() {
+    fn __bindgen_test_layout_RefPtr_instantiation_318() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41668,7 +43328,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_360() {
+    fn __bindgen_test_layout_RefPtr_instantiation_319() {
         assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::StyleSheet>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41679,7 +43339,7 @@ pub mod root {
                    root::RefPtr<root::mozilla::StyleSheet> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_NonNull_instantiation_361() {
+    fn __bindgen_test_layout_NonNull_instantiation_320() {
         assert_eq!(::std::mem::size_of::<root::mozilla::dom::NonNull<root::mozilla::dom::Element>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41692,7 +43352,7 @@ pub mod root {
                    ));
     }
     #[test]
-    fn __bindgen_test_layout_NonNull_instantiation_362() {
+    fn __bindgen_test_layout_NonNull_instantiation_321() {
         assert_eq!(::std::mem::size_of::<root::mozilla::dom::NonNull<root::mozilla::dom::CSSPseudoElement>>()
                    , 16usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -41703,6 +43363,455 @@ pub mod root {
                    "Alignment of template specialization: " , stringify ! (
                    root::mozilla::dom::NonNull<root::mozilla::dom::CSSPseudoElement>
                    ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_322() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_323() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Maybe_instantiation_324() {
+        assert_eq!(::std::mem::size_of::<[u64; 18usize]>() , 144usize , concat
+                   ! (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 18usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 18usize]>() , 8usize , concat
+                   ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 18usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Maybe_instantiation_325() {
+        assert_eq!(::std::mem::size_of::<[u64; 18usize]>() , 144usize , concat
+                   ! (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 18usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 18usize]>() , 8usize , concat
+                   ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 18usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_BaseTimeDuration_instantiation_326() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::BaseTimeDuration>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::BaseTimeDuration ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::BaseTimeDuration>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::BaseTimeDuration ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_327() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIURI>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIURI> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIURI>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIURI> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_328() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_329() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_330() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_331() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsCOMPtr_instantiation_332() {
+        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIContent>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsCOMPtr<root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_333() {
+        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
+                   , 16usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_DefaultDelete_instantiation_334() {
+        assert_eq!(::std::mem::size_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+        assert_eq!(::std::mem::align_of::<root::mozilla::DefaultDelete>() ,
+                   1usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::mozilla::DefaultDelete ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_335() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_336() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>
+                   ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>
+                   ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_337() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_338() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_339() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::DOMRect>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::dom::DOMRect> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::dom::DOMRect>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::mozilla::dom::DOMRect> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_340() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_341() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Sequence_instantiation_342() {
+        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! ( u64 )
+                   ));
+        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   u64 ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_343() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Sequence_instantiation_344() {
+        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! ( u64 )
+                   ));
+        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   u64 ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Sequence_instantiation_345() {
+        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! ( u64 )
+                   ));
+        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   u64 ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_346() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_347() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_348() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_349() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_MutableHandle_instantiation_350() {
+        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::MutableHandle<root::JS::Value> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_351() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_352() {
+        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::Element>>()
+                   , 16usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::Element> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::Element>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsRefPtrHashKey<root::mozilla::dom::Element> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsClassHashtable_instantiation_353() {
+        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
+                   (
+                   "Size of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
+                   (
+                   "Alignment of template specialization: " , stringify ! (
+                   [u64; 6usize] ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_Handle_instantiation_354() {
+        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::JS::Handle<*mut root::JSObject> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_355() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_356() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<*mut root::nsIContent> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_357() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
+                   8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<::nsstring::nsStringRepr> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_RefPtr_instantiation_358() {
+        assert_eq!(::std::mem::size_of::<root::RefPtr<root::nsXBLBinding>>() ,
+                   8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::RefPtr<root::nsXBLBinding> ) ));
+        assert_eq!(::std::mem::align_of::<root::RefPtr<root::nsXBLBinding>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::RefPtr<root::nsXBLBinding> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_359() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::RefPtr<root::nsXBLBinding>>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::nsXBLBinding>> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::RefPtr<root::nsXBLBinding>>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::RefPtr<root::nsXBLBinding>> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_360() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::gfxFontFeature>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::gfxFontFeature> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::gfxFontFeature>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::gfxFontFeature> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_nsTArray_instantiation_361() {
+        assert_eq!(::std::mem::size_of::<root::nsTArray<root::mozilla::gfx::FontVariation>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::nsTArray<root::mozilla::gfx::FontVariation> ) ));
+        assert_eq!(::std::mem::align_of::<root::nsTArray<root::mozilla::gfx::FontVariation>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::nsTArray<root::mozilla::gfx::FontVariation> ) ));
+    }
+    #[test]
+    fn __bindgen_test_layout_already_AddRefed_instantiation_362() {
+        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
+                   , 8usize , concat ! (
+                   "Size of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
+        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
+                   , 8usize , concat ! (
+                   "Alignment of template specialization: " , stringify ! (
+                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
     }
     #[test]
     fn __bindgen_test_layout_Handle_instantiation_363() {
@@ -41716,401 +43825,7 @@ pub mod root {
                    root::JS::Handle<*mut root::JSObject> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_364() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Maybe_instantiation_365() {
-        assert_eq!(::std::mem::size_of::<[u64; 18usize]>() , 144usize , concat
-                   ! (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 18usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 18usize]>() , 8usize , concat
-                   ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 18usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Maybe_instantiation_366() {
-        assert_eq!(::std::mem::size_of::<[u64; 18usize]>() , 144usize , concat
-                   ! (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 18usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 18usize]>() , 8usize , concat
-                   ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 18usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_BaseTimeDuration_instantiation_367() {
-        assert_eq!(::std::mem::size_of::<root::mozilla::BaseTimeDuration>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::mozilla::BaseTimeDuration ) ));
-        assert_eq!(::std::mem::align_of::<root::mozilla::BaseTimeDuration>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::mozilla::BaseTimeDuration ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_368() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIURI>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIURI> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIURI>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIURI> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_369() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_370() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_371() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_372() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsCOMPtr_instantiation_373() {
-        assert_eq!(::std::mem::size_of::<root::nsCOMPtr<root::nsIContent>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsCOMPtr<root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsCOMPtr<root::nsIContent> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_374() {
-        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
-                   ) ));
-        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::DOMIntersectionObserver>
-                   ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_375() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::NodeInfo>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::NodeInfo> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_376() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>
-                   ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<root::mozilla::DisplayItemClip_RoundedRect>
-                   ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_377() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_378() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_RefPtr_instantiation_379() {
-        assert_eq!(::std::mem::size_of::<root::RefPtr<root::mozilla::dom::DOMRect>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::dom::DOMRect> ) ));
-        assert_eq!(::std::mem::align_of::<root::RefPtr<root::mozilla::dom::DOMRect>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::RefPtr<root::mozilla::dom::DOMRect> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_380() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_381() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Sequence_instantiation_382() {
-        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! ( u64 )
-                   ));
-        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   u64 ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_383() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Sequence_instantiation_384() {
-        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! ( u64 )
-                   ));
-        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   u64 ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Sequence_instantiation_385() {
-        assert_eq!(::std::mem::size_of::<u64>() , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! ( u64 )
-                   ));
-        assert_eq!(::std::mem::align_of::<u64>() , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   u64 ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_386() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_387() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_388() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_389() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_MutableHandle_instantiation_390() {
-        assert_eq!(::std::mem::size_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::MutableHandle<root::JS::Value>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::MutableHandle<root::JS::Value> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_391() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsRefPtrHashKey_instantiation_392() {
-        assert_eq!(::std::mem::size_of::<root::nsRefPtrHashKey<root::mozilla::dom::Element>>()
-                   , 16usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::Element> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsRefPtrHashKey<root::mozilla::dom::Element>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsRefPtrHashKey<root::mozilla::dom::Element> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsClassHashtable_instantiation_393() {
-        assert_eq!(::std::mem::size_of::<[u64; 6usize]>() , 48usize , concat !
-                   (
-                   "Size of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
-        assert_eq!(::std::mem::align_of::<[u64; 6usize]>() , 8usize , concat !
-                   (
-                   "Alignment of template specialization: " , stringify ! (
-                   [u64; 6usize] ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_394() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_395() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_396() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<*mut root::nsIContent>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<*mut root::nsIContent> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_397() {
-        assert_eq!(::std::mem::size_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-        assert_eq!(::std::mem::align_of::<root::nsTArray<::nsstring::nsStringRepr>>() ,
-                   8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::nsTArray<::nsstring::nsStringRepr> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_already_AddRefed_instantiation_398() {
-        assert_eq!(::std::mem::size_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
-        assert_eq!(::std::mem::align_of::<root::already_AddRefed<root::mozilla::dom::CSSValue>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::already_AddRefed<root::mozilla::dom::CSSValue> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_Handle_instantiation_399() {
-        assert_eq!(::std::mem::size_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Size of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-        assert_eq!(::std::mem::align_of::<root::JS::Handle<*mut root::JSObject>>()
-                   , 8usize , concat ! (
-                   "Alignment of template specialization: " , stringify ! (
-                   root::JS::Handle<*mut root::JSObject> ) ));
-    }
-    #[test]
-    fn __bindgen_test_layout_nsTArray_instantiation_400() {
+    fn __bindgen_test_layout_nsTArray_instantiation_364() {
         assert_eq!(::std::mem::size_of::<root::nsTArray<*mut root::mozilla::css::DocumentRule>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (
@@ -42121,7 +43836,7 @@ pub mod root {
                    root::nsTArray<*mut root::mozilla::css::DocumentRule> ) ));
     }
     #[test]
-    fn __bindgen_test_layout_nsAutoPtr_instantiation_401() {
+    fn __bindgen_test_layout_nsAutoPtr_instantiation_365() {
         assert_eq!(::std::mem::size_of::<root::nsAutoPtr<root::nsMediaQuery>>()
                    , 8usize , concat ! (
                    "Size of template specialization: " , stringify ! (

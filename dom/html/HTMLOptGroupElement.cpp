@@ -43,10 +43,6 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLOptGroupElement, nsGenericHTMLElement,
 NS_IMPL_ELEMENT_CLONE(HTMLOptGroupElement)
 
 
-NS_IMPL_BOOL_ATTR(HTMLOptGroupElement, Disabled, disabled)
-NS_IMPL_STRING_ATTR(HTMLOptGroupElement, Label, label)
-
-
 nsresult
 HTMLOptGroupElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
 {

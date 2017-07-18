@@ -8045,9 +8045,9 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
                nsCSSAnonBoxes::tableWrapper,
              "What happened to our parent?");
 
-  RefPtr<nsStyleContext> newContext =
+  RefPtr<ServoStyleContext> newContext =
     aRestyleState.StyleSet().ResolveInheritingAnonymousBoxStyle(
-      nsCSSAnonBoxes::tableWrapper, aOwningFrame->StyleContext());
+      nsCSSAnonBoxes::tableWrapper, aOwningFrame->StyleContext()->AsServo());
 
   // Figure out whether we have an actual change.  It's important that we do
   // this, even though all the wrapper's changes are due to properties it

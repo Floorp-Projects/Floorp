@@ -62,8 +62,8 @@ function runTest(win) {
   gElements = tab.getElementById("mainPrefPane").children;
 
   let panes = [
-    "General", "Applications",
-    "Privacy", "Sync", "Advanced",
+    "General", "Search",
+    "Privacy", "Sync",
   ];
 
   for (let pane of panes) {

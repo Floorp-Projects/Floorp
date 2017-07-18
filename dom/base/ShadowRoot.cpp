@@ -75,8 +75,8 @@ ShadowRoot::ShadowRoot(nsIContent* aContent,
 
   SetFlags(NODE_IS_IN_SHADOW_TREE);
 
-  DOMSlots()->mBindingParent = aContent;
-  DOMSlots()->mContainingShadow = this;
+  ExtendedDOMSlots()->mBindingParent = aContent;
+  ExtendedDOMSlots()->mContainingShadow = this;
 
   // Add the ShadowRoot as a mutation observer on the host to watch
   // for mutations because the insertion points in this ShadowRoot

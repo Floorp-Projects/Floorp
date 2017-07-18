@@ -48,7 +48,8 @@ overrider.set({
           clearUserPref() {}
         };
       }
-    }
+    },
+    tm: {dispatchToMainThread: cb => cb()}
   },
   XPCOMUtils: {
     defineLazyModuleGetter() {},

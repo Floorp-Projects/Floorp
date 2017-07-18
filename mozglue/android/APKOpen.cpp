@@ -25,6 +25,7 @@
 #include "dlfcn.h"
 #include "APKOpen.h"
 #include <sys/time.h>
+#include <sys/syscall.h>
 #include <sys/resource.h>
 #include <sys/prctl.h>
 #include "sqlite3.h"
@@ -506,21 +507,102 @@ IsMediaProcess()
   return false;
 }
 
+#ifndef SYS_rt_tgsigqueueinfo
+#define SYS_rt_tgsigqueueinfo __NR_rt_tgsigqueueinfo
+#endif
+/* Copy of http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#262,
+ * with debuggerd related code stripped.
+ *
+ * Copyright (C) 2008 The Android Open Source Project
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *  * Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+ * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+static void
+CatchFatalSignals(int num, siginfo_t *info, void *context)
+{
+  // It's possible somebody cleared the SA_SIGINFO flag, which would mean
+  // our "info" arg holds an undefined value.
+  struct sigaction action = {};
+  if ((sigaction(num, nullptr, &action) < 0) ||
+      !(action.sa_flags & SA_SIGINFO)) {
+    info = nullptr;
+  }
+
+  // We need to return from the signal handler so that debuggerd can dump the
+  // thread that crashed, but returning here does not guarantee that the signal
+  // will be thrown again, even for SIGSEGV and friends, since the signal could
+  // have been sent manually. Resend the signal with rt_tgsigqueueinfo(2) to
+  // preserve the SA_SIGINFO contents.
+  signal(num, SIG_DFL);
+
+  struct siginfo si;
+  if (!info) {
+    memset(&si, 0, sizeof(si));
+    si.si_code = SI_USER;
+    si.si_pid = getpid();
+    si.si_uid = getuid();
+    info = &si;
+  } else if (info->si_code >= 0 || info->si_code == SI_TKILL) {
+    // rt_tgsigqueueinfo(2)'s documentation appears to be incorrect on kernels
+    // that contain commit 66dd34a (3.9+). The manpage claims to only allow
+    // negative si_code values that are not SI_TKILL, but 66dd34a changed the
+    // check to allow all si_code values in calls coming from inside the house.
+  }
+
+  int rc = syscall(SYS_rt_tgsigqueueinfo, getpid(), gettid(), num, info);
+  if (rc != 0) {
+    __android_log_print(ANDROID_LOG_FATAL, "mozglue",
+                        "failed to resend signal during crash: %s",
+                        strerror(errno));
+    _exit(0);
+  }
+}
+
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_suppressCrashDialog(JNIEnv *jenv, jclass jc)
 {
   MOZ_RELEASE_ASSERT(IsMediaProcess(), "Suppress crash dialog only for media process");
-  // Restore all signal actions changed by Android debugger.
-  // See http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#312
-  struct sigaction dfl = {};
-  dfl.sa_handler = SIG_DFL;
-  sigaction(SIGABRT, &dfl, nullptr);
-  sigaction(SIGBUS, &dfl, nullptr);
-  sigaction(SIGILL, &dfl, nullptr);
-  sigaction(SIGFPE, &dfl, nullptr);
-  sigaction(SIGSEGV, &dfl, nullptr);
+  // Restoring to SIG_DFL will crash on x86/Android M devices (see bug 1374556)
+  // so copy Android code (http://androidxref.com/7.1.1_r6/xref/bionic/linker/debugger.cpp#302).
+  // See comments above CatchFatalSignals() for copyright notice.
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  sigemptyset(&action.sa_mask);
+  action.sa_sigaction = &CatchFatalSignals;
+  action.sa_flags = SA_RESTART | SA_SIGINFO;
+
+  // Use the alternate signal stack if available so we can catch stack overflows.
+  action.sa_flags |= SA_ONSTACK;
+
+  sigaction(SIGABRT, &action, nullptr);
+  sigaction(SIGBUS, &action, nullptr);
+  sigaction(SIGFPE, &action, nullptr);
+  sigaction(SIGILL, &action, nullptr);
+  sigaction(SIGSEGV, &action, nullptr);
 #if defined(SIGSTKFLT)
-  sigaction(SIGSTKFLT, &dfl, nullptr);
+  sigaction(SIGSTKFLT, &action, nullptr);
 #endif
-  sigaction(SIGTRAP, &dfl, nullptr);
+  sigaction(SIGTRAP, &action, nullptr);
 }

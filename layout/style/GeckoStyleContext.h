@@ -31,6 +31,16 @@ public:
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
+  // To be called only from nsStyleSet / ServoStyleSet.
+  void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited);
+  nsStyleContext* GetStyleIfVisited() const { return mStyleIfVisited; };
+#ifdef DEBUG
+  /**
+   * Initializes a cached pref, which is only used in DEBUG code.
+   */
+  static void Initialize();
+#endif
+
   /**
    * Ensures the same structs are cached on this style context as would be
    * done if we called aOther->CalcDifference(this).
@@ -110,9 +120,31 @@ public:
     return mRuleNode;
   }
 
-  ~GeckoStyleContext() {
-    Destructor();
+  void AddRef() {
+    if (mRefCnt == UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return;
+    }
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
+    return;
   }
+
+  void Release() {
+    if (mRefCnt == UINT32_MAX) {
+      NS_WARNING("refcount overflow, leaking object");
+      return;
+    }
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
+    if (mRefCnt == 0) {
+      Destroy();
+      return;
+    }
+    return;
+  }
+
+  ~GeckoStyleContext();
 
   /**
    * Swaps owned style struct pointers between this and aNewContext, on
@@ -190,6 +222,11 @@ private:
   GeckoStyleContext* mPrevSibling;
   GeckoStyleContext* mNextSibling;
   RefPtr<nsRuleNode> mRuleNode;
+
+  // Style to be used instead for the R, G, and B components of color,
+  // background-color, and border-*-color if the nearest ancestor link
+  // element is visited (see RelevantLinkVisited()).
+  RefPtr<nsStyleContext> mStyleIfVisited;
 
 #ifdef DEBUG
 public:

@@ -16,3 +16,5 @@ FINAL_TARGET_PP_FILES.features['activity-stream@mozilla.org'] += [
 ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+BROWSER_CHROME_MANIFESTS += ['test/functional/mochitest/browser.ini']
