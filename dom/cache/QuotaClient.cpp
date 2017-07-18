@@ -34,6 +34,8 @@ static nsresult
 GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
              UsageInfo* aUsageInfo)
 {
+  AssertIsOnIOThread();
+
   nsCOMPtr<nsISimpleEnumerator> entries;
   nsresult rv = aDir->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -99,6 +101,8 @@ public:
              const nsACString& aOrigin, const AtomicBool& aCanceled,
              UsageInfo* aUsageInfo) override
   {
+    AssertIsOnIOThread();
+
     // The QuotaManager passes a nullptr UsageInfo if there is no quota being
     // enforced against the origin.
     if (!aUsageInfo) {
@@ -114,6 +118,7 @@ public:
                     const nsACString& aOrigin, const AtomicBool& aCanceled,
                     UsageInfo* aUsageInfo) override
   {
+    AssertIsOnIOThread();
     MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
 
     QuotaManager* qm = QuotaManager::Get();
@@ -260,6 +265,7 @@ public:
                                  const int64_t aDecreaseSize,
                                  Callable aCommitHook)
   {
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
     MOZ_DIAGNOSTIC_ASSERT(aConn);
     MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
@@ -315,6 +321,7 @@ public:
   nsresult
   RestorePaddingFileInternal(nsIFile* aBaseDir, mozIStorageConnection* aConn)
   {
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
     MOZ_DIAGNOSTIC_ASSERT(aConn);
 
@@ -331,6 +338,7 @@ public:
   nsresult
   WipePaddingFileInternal(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir)
   {
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
     MutexAutoLock lock(mDirPaddingFileMutex);
@@ -410,6 +418,7 @@ MaybeUpdatePaddingFile(nsIFile* aBaseDir,
                        const int64_t aDecreaseSize,
                        Callable aCommitHook)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
   MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
@@ -432,6 +441,7 @@ MaybeUpdatePaddingFile(nsIFile* aBaseDir,
 nsresult
 RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
 
@@ -449,6 +459,7 @@ RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn)
 nsresult
 WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir)
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   RefPtr<CacheQuotaClient> cacheQuotaClient = CacheQuotaClient::Get();
