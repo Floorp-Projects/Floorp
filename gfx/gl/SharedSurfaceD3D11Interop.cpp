@@ -471,8 +471,8 @@ SharedSurface_D3D11Interop::ProducerReleaseImpl()
     MOZ_ASSERT(mLockedForGL);
 
     if (mProdTex) {
-        mGL->BlitHelper()->DrawBlitTextureToFramebuffer(mProdTex, mInteropFB, mSize,
-                                                        mSize);
+        const ScopedBindFramebuffer bindFB(mGL, mInteropFB);
+        mGL->BlitHelper()->DrawBlitTextureToFramebuffer(mProdTex, mSize, mSize);
     }
 
     if (mNeedsFinish) {

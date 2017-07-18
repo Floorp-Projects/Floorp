@@ -48,6 +48,9 @@ protected:
   RefPtr<dom::VideoDecoderManagerChild> mManager;
   SurfaceDescriptorGPUVideo mSD;
   gfx::IntSize mSize;
+
+public:
+  const decltype(mSD)& SD() const { return mSD; }
 };
 
 } // namespace layers

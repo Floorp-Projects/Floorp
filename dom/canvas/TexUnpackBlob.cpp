@@ -701,9 +701,7 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         const gfx::IntSize destSize(mWidth, mHeight);
         const auto dstOrigin = (webgl->mPixelStore_FlipY ? gl::OriginPos::TopLeft
                                                          : gl::OriginPos::BottomLeft);
-        if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, destSize, scopedFB.FB(),
-                                                      dstOrigin))
-        {
+        if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, destSize, dstOrigin)) {
             fallbackReason = "likely bug: failed to blit";
             break;
         }
