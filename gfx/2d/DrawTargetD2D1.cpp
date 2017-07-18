@@ -16,6 +16,7 @@
 #include "ExtendInputEffectD2D1.h"
 #include "Tools.h"
 #include "nsAppRunner.h"
+#include "MainThreadUtils.h"
 
 #include "mozilla/Mutex.h"
 
@@ -1070,12 +1071,10 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
 {
   HRESULT hr;
 
-  RefPtr<ID2D1Device> device = Factory::GetD2D1Device();
+  RefPtr<ID2D1Device> device = Factory::GetD2D1Device(&mDeviceSeq);
   if (!device) {
     gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init(ID3D11Texture2D*, SurfaceFormat).";
     return false;
-  } else {
-    mDeviceSeq = Factory::GetD2D1DeviceSeq();
   }
 
   hr = device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, getter_AddRefs(mDC));
@@ -1137,12 +1136,11 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 {
   HRESULT hr;
 
-  RefPtr<ID2D1Device> device = Factory::GetD2D1Device();
+  RefPtr<ID2D1Device> device = Factory::GetD2D1Device(&mDeviceSeq);
   if (!device) {
     gfxCriticalNote << "[D2D1.1] Failed to obtain a device for DrawTargetD2D1::Init(IntSize, SurfaceFormat).";
     return false;
   }
-  mDeviceSeq = Factory::GetD2D1DeviceSeq();
 
   hr = device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, getter_AddRefs(mDC));
 
@@ -1204,9 +1202,14 @@ DrawTargetD2D1::GetByteSize() const
 RefPtr<ID2D1Factory1>
 DrawTargetD2D1::factory()
 {
-  if (mFactory) {
+  StaticMutexAutoLock lock(Factory::mDeviceLock);
+
+  if (mFactory || !NS_IsMainThread()) {
     return mFactory;
   }
+
+  // We don't allow initializing the factory off the main thread.
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   RefPtr<ID2D1Factory> factory;
   D2D1CreateFactoryFunc createD2DFactory;
@@ -1254,6 +1257,9 @@ DrawTargetD2D1::factory()
 void
 DrawTargetD2D1::CleanupD2D()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  Factory::mDeviceLock.AssertCurrentThreadOwns();
+
   if (mFactory) {
     RadialGradientEffectD2D1::Unregister(mFactory);
     ExtendInputEffectD2D1::Unregister(mFactory);
@@ -1999,7 +2005,8 @@ DrawTargetD2D1::PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, 
 
 bool
 DrawTargetD2D1::IsDeviceContextValid() {
-  return (mDeviceSeq == Factory::GetD2D1DeviceSeq()) && Factory::GetD2D1Device();
+  uint32_t seqNo;
+  return Factory::GetD2D1Device(&seqNo) && seqNo == mDeviceSeq;
 }
 
 }
