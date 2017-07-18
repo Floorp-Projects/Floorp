@@ -61,7 +61,6 @@ add_task(async function() {
     return extension.awaitMessage("manifest");
   }
 
-  Components.manager.addBootstrappedManifestLocation(do_get_file("data/locales/"));
 
   await extension.startup();
 
