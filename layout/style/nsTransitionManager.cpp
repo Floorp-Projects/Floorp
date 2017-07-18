@@ -454,7 +454,7 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
   }
 
   aAnimationValue.mServo =
-    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle->ComputedValues(),
+    Servo_ComputedValues_ExtractAnimationValue(aComputedStyle,
                                                aProperty).Consume();
   return !!aAnimationValue.mServo;
 }
