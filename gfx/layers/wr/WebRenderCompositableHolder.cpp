@@ -264,14 +264,14 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
       continue;
     }
 
-    wr::WrSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
+    wr::LayoutSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
     wr::DisplayListBuilder builder(pipelineId, contentSize);
 
     if (!keys.IsEmpty()) {
       MOZ_ASSERT(holder->mCurrentTexture.get());
 
       float opacity = 1.0f;
-      builder.PushStackingContext(wr::ToWrRect(holder->mScBounds),
+      builder.PushStackingContext(wr::ToLayoutRect(holder->mScBounds),
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
@@ -288,15 +288,15 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
         MOZ_ASSERT(holder->mCurrentTexture->AsWebRenderTextureHost());
         Range<const wr::ImageKey> range_keys(&keys[0], keys.Length());
         holder->mCurrentTexture->PushExternalImage(builder,
-                                                   wr::ToWrRect(rect),
-                                                   wr::ToWrRect(rect),
+                                                   wr::ToLayoutRect(rect),
+                                                   wr::ToLayoutRect(rect),
                                                    holder->mFilter,
                                                    range_keys);
         HoldExternalImage(pipelineId, epoch, holder->mCurrentTexture->AsWebRenderTextureHost());
       } else {
         MOZ_ASSERT(keys.Length() == 1);
-        builder.PushImage(wr::ToWrRect(rect),
-                          wr::ToWrRect(rect),
+        builder.PushImage(wr::ToLayoutRect(rect),
+                          wr::ToLayoutRect(rect),
                           holder->mFilter,
                           keys[0]);
       }
@@ -304,7 +304,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
     }
 
     wr::BuiltDisplayList dl;
-    wr::WrSize builderContentSize;
+    wr::LayoutSize builderContentSize;
     builder.Finalize(builderContentSize, dl);
     aApi->SetRootDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(holder->mScBounds.width, holder->mScBounds.height),
                              pipelineId, builderContentSize,

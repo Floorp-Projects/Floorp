@@ -13,9 +13,8 @@ use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
-use euclid::{TypedPoint2D, TypedSize2D, TypedRect, TypedTransform3D, SideOffsets2D};
-use euclid::TypedVector2D;
 use rayon;
+use euclid::SideOffsets2D;
 
 extern crate webrender_api;
 
@@ -28,8 +27,6 @@ type WrImageRendering = ImageRendering;
 type WrMixBlendMode = MixBlendMode;
 type WrTransformStyle = TransformStyle;
 type WrRenderer = Renderer;
-type WrSideOffsets2Du32 = WrSideOffsets2D<u32>;
-type WrSideOffsets2Df32 = WrSideOffsets2D<f32>;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrExternalImageBufferType = ExternalImageType;
@@ -161,139 +158,9 @@ impl Into<ExtendMode> for WrGradientExtendMode {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrPoint {
-    x: f32,
-    y: f32,
-}
-
-impl<U> Into<TypedPoint2D<f32, U>> for WrPoint {
-    fn into(self) -> TypedPoint2D<f32, U> {
-        TypedPoint2D::new(self.x, self.y)
-    }
-}
-
-impl<U> Into<TypedVector2D<f32, U>> for WrPoint {
-    fn into(self) -> TypedVector2D<f32, U> {
-        TypedVector2D::new(self.x, self.y)
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrSize {
-    width: f32,
-    height: f32,
-}
-
-impl WrSize {
-    fn new(width: f32, height: f32) -> WrSize {
-        WrSize { width: width, height: height }
-    }
-
-    fn zero() -> WrSize {
-        WrSize { width: 0.0, height: 0.0 }
-    }
-}
-
-impl<U> Into<TypedSize2D<f32, U>> for WrSize {
-    fn into(self) -> TypedSize2D<f32, U> {
-        TypedSize2D::new(self.width, self.height)
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrRect {
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32,
-}
-
-impl<U> Into<TypedRect<f32, U>> for WrRect {
-    fn into(self) -> TypedRect<f32, U> {
-        TypedRect::new(TypedPoint2D::new(self.x, self.y),
-                       TypedSize2D::new(self.width, self.height))
-    }
-}
-impl<U> From<TypedRect<f32, U>> for WrRect {
-    fn from(rect: TypedRect<f32, U>) -> Self {
-        WrRect {
-            x: rect.origin.x,
-            y: rect.origin.y,
-            width: rect.size.width,
-            height: rect.size.height,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrMatrix {
-    values: [f32; 16],
-}
-
-impl<'a, U, E> Into<TypedTransform3D<f32, U, E>> for &'a WrMatrix {
-    fn into(self) -> TypedTransform3D<f32, U, E> {
-        TypedTransform3D::row_major(self.values[0],
-                                    self.values[1],
-                                    self.values[2],
-                                    self.values[3],
-                                    self.values[4],
-                                    self.values[5],
-                                    self.values[6],
-                                    self.values[7],
-                                    self.values[8],
-                                    self.values[9],
-                                    self.values[10],
-                                    self.values[11],
-                                    self.values[12],
-                                    self.values[13],
-                                    self.values[14],
-                                    self.values[15])
-    }
-}
-impl<U, E> Into<TypedTransform3D<f32, U, E>> for WrMatrix {
-    fn into(self) -> TypedTransform3D<f32, U, E> {
-        TypedTransform3D::row_major(self.values[0],
-                                    self.values[1],
-                                    self.values[2],
-                                    self.values[3],
-                                    self.values[4],
-                                    self.values[5],
-                                    self.values[6],
-                                    self.values[7],
-                                    self.values[8],
-                                    self.values[9],
-                                    self.values[10],
-                                    self.values[11],
-                                    self.values[12],
-                                    self.values[13],
-                                    self.values[14],
-                                    self.values[15])
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrColor {
-    r: f32,
-    g: f32,
-    b: f32,
-    a: f32,
-}
-
-impl Into<ColorF> for WrColor {
-    fn into(self) -> ColorF {
-        ColorF::new(self.r, self.g, self.b, self.a)
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
 pub struct WrGlyphInstance {
     index: u32,
-    point: WrPoint,
+    point: LayoutPoint,
 }
 
 impl<'a> Into<GlyphInstance> for &'a WrGlyphInstance {
@@ -309,7 +176,7 @@ impl<'a> Into<GlyphInstance> for &'a WrGlyphInstance {
 #[derive(Debug, Clone, Copy)]
 pub struct WrGradientStop {
     offset: f32,
-    color: WrColor,
+    color: ColorF,
 }
 
 impl<'a> Into<GradientStop> for &'a WrGradientStop {
@@ -324,7 +191,7 @@ impl<'a> Into<GradientStop> for &'a WrGradientStop {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrBorderSide {
-    color: WrColor,
+    color: ColorF,
     style: WrBorderStyle,
 }
 
@@ -340,10 +207,10 @@ impl Into<BorderSide> for WrBorderSide {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrBorderRadius {
-    pub top_left: WrSize,
-    pub top_right: WrSize,
-    pub bottom_left: WrSize,
-    pub bottom_right: WrSize,
+    pub top_left: LayoutSize,
+    pub top_right: LayoutSize,
+    pub bottom_left: LayoutSize,
+    pub bottom_right: LayoutSize,
 }
 
 impl Into<BorderRadius> for WrBorderRadius {
@@ -382,7 +249,7 @@ impl Into<BorderWidths> for WrBorderWidths {
 pub struct WrNinePatchDescriptor {
     width: u32,
     height: u32,
-    slice: WrSideOffsets2Du32,
+    slice: SideOffsets2D<u32>,
 }
 
 impl Into<NinePatchDescriptor> for WrNinePatchDescriptor {
@@ -392,21 +259,6 @@ impl Into<NinePatchDescriptor> for WrNinePatchDescriptor {
             height: self.height,
             slice: self.slice.into(),
         }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrSideOffsets2D<T> {
-    top: T,
-    right: T,
-    bottom: T,
-    left: T,
-}
-
-impl<T: Copy> Into<SideOffsets2D<T>> for WrSideOffsets2D<T> {
-    fn into(self) -> SideOffsets2D<T> {
-        SideOffsets2D::new(self.top, self.right, self.bottom, self.left)
     }
 }
 
@@ -433,7 +285,7 @@ impl Into<RepeatMode> for WrRepeatMode {
 #[derive(Debug, Clone, Copy)]
 pub struct WrImageMask {
     image: WrImageKey,
-    rect: WrRect,
+    rect: LayoutRect,
     repeat: bool,
 }
 
@@ -468,7 +320,7 @@ impl From<ImageMask> for WrImageMask {
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrComplexClipRegion {
-    rect: WrRect,
+    rect: LayoutRect,
     radii: WrBorderRadius,
 }
 
@@ -617,7 +469,7 @@ pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
 #[derive(Debug)]
 pub struct WrTransformProperty {
     pub id: u64,
-    pub transform: WrMatrix,
+    pub transform: LayoutTransform,
 }
 
 #[repr(C)]
@@ -992,12 +844,12 @@ pub extern "C" fn wr_api_set_window_parameters(api: &mut WrAPI,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_set_root_display_list(api: &mut WrAPI,
-                                                      color: WrColor,
+                                                      color: ColorF,
                                                       epoch: WrEpoch,
                                                       viewport_width: f32,
                                                       viewport_height: f32,
                                                       pipeline_id: WrPipelineId,
-                                                      content_size: WrSize,
+                                                      content_size: LayoutSize,
                                                       dl_descriptor: WrBuiltDisplayListDescriptor,
                                                       dl_data: *mut u8,
                                                       dl_size: usize) {
@@ -1029,7 +881,7 @@ pub unsafe extern "C" fn wr_api_clear_root_display_list(api: &mut WrAPI,
                                                         epoch: WrEpoch,
                                                         pipeline_id: WrPipelineId) {
     let preserve_frame_state = true;
-    let frame_builder = WebRenderFrameBuilder::new(pipeline_id, WrSize::zero());
+    let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
 
     api.set_display_list(None,
                          epoch,
@@ -1137,7 +989,7 @@ pub struct WebRenderFrameBuilder {
 
 impl WebRenderFrameBuilder {
     pub fn new(root_pipeline_id: WrPipelineId,
-               content_size: WrSize) -> WebRenderFrameBuilder {
+               content_size: LayoutSize) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
             dl_builder: webrender_api::DisplayListBuilder::new(root_pipeline_id, content_size.into()),
@@ -1153,7 +1005,7 @@ pub struct WrState {
 
 #[no_mangle]
 pub extern "C" fn wr_state_new(pipeline_id: WrPipelineId,
-                               content_size: WrSize) -> *mut WrState {
+                               content_size: LayoutSize) -> *mut WrState {
     assert!(unsafe { !is_in_render_thread() });
 
     let state = Box::new(WrState {
@@ -1204,10 +1056,10 @@ pub extern "C" fn wr_dp_end(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
-                                              bounds: WrRect,
+                                              bounds: LayoutRect,
                                               animation_id: u64,
                                               opacity: *const f32,
-                                              transform: *const WrMatrix,
+                                              transform: *const LayoutTransform,
                                               transform_style: WrTransformStyle,
                                               mix_blend_mode: WrMixBlendMode,
                                               filters: *const WrFilterOp,
@@ -1243,7 +1095,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     let transform = unsafe { transform.as_ref() };
     let transform_binding = match animation_id {
         0 => match transform {
-            Some(transform) => Some(PropertyBinding::Value(transform.into())),
+            Some(transform) => Some(PropertyBinding::Value(transform.clone())),
             None => None,
         },
         _ => Some(PropertyBinding::Binding(PropertyBindingKey::new(animation_id))),
@@ -1268,7 +1120,7 @@ pub extern "C" fn wr_dp_pop_stacking_context(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_clip(state: &mut WrState,
-                                  rect: WrRect,
+                                  rect: LayoutRect,
                                   complex: *const WrComplexClipRegion,
                                   complex_count: usize,
                                   mask: *const WrImageMask)
@@ -1301,8 +1153,8 @@ pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
 #[no_mangle]
 pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
                                           scroll_id: u64,
-                                          content_rect: WrRect,
-                                          clip_rect: WrRect) {
+                                          content_rect: LayoutRect,
+                                          clip_rect: LayoutRect) {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = ClipId::new(scroll_id, state.pipeline_id);
     // Avoid defining multiple scroll clips with the same clip id, as that
@@ -1327,7 +1179,7 @@ pub extern "C" fn wr_dp_pop_scroll_layer(state: &mut WrState) {
 pub extern "C" fn wr_scroll_layer_with_id(api: &mut WrAPI,
                                           pipeline_id: WrPipelineId,
                                           scroll_id: u64,
-                                          new_scroll_origin: WrPoint) {
+                                          new_scroll_origin: LayoutPoint) {
     assert!(unsafe { is_in_compositor_thread() });
     let clip_id = ClipId::new(scroll_id, pipeline_id);
     api.scroll_node_with_id(new_scroll_origin.into(), clip_id, ScrollClamping::NoClamping);
@@ -1357,7 +1209,7 @@ pub extern "C" fn wr_dp_pop_clip_and_scroll_info(state: &mut WrState) {
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
-                                    rect: WrRect,
+                                    rect: LayoutRect,
                                     pipeline_id: WrPipelineId) {
     assert!(unsafe { is_in_main_thread() });
 
@@ -1366,9 +1218,9 @@ pub extern "C" fn wr_dp_push_iframe(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
-                                  rect: WrRect,
-                                  clip: WrRect,
-                                  color: WrColor) {
+                                  rect: LayoutRect,
+                                  clip: LayoutRect,
+                                  color: ColorF) {
     assert!(unsafe { !is_in_render_thread() });
 
     state.frame_builder.dl_builder.push_rect(rect.into(),
@@ -1378,10 +1230,10 @@ pub extern "C" fn wr_dp_push_rect(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_image(state: &mut WrState,
-                                   bounds: WrRect,
-                                   clip: WrRect,
-                                   stretch_size: WrSize,
-                                   tile_spacing: WrSize,
+                                   bounds: LayoutRect,
+                                   clip: LayoutRect,
+                                   stretch_size: LayoutSize,
+                                   tile_spacing: LayoutSize,
                                    image_rendering: WrImageRendering,
                                    key: WrImageKey) {
     assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
@@ -1399,8 +1251,8 @@ pub extern "C" fn wr_dp_push_image(state: &mut WrState,
 /// Push a 3 planar yuv image.
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
-                                              bounds: WrRect,
-                                              clip: WrRect,
+                                              bounds: LayoutRect,
+                                              clip: LayoutRect,
                                               image_key_0: WrImageKey,
                                               image_key_1: WrImageKey,
                                               image_key_2: WrImageKey,
@@ -1420,8 +1272,8 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
 /// Push a 2 planar NV12 image.
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
-                                            bounds: WrRect,
-                                            clip: WrRect,
+                                            bounds: LayoutRect,
+                                            clip: LayoutRect,
                                             image_key_0: WrImageKey,
                                             image_key_1: WrImageKey,
                                             color_space: WrYuvColorSpace,
@@ -1440,8 +1292,8 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
 /// Push a yuv interleaved image.
 #[no_mangle]
 pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
-                                                   bounds: WrRect,
-                                                   clip: WrRect,
+                                                   bounds: LayoutRect,
+                                                   clip: LayoutRect,
                                                    image_key_0: WrImageKey,
                                                    color_space: WrYuvColorSpace,
                                                    image_rendering: WrImageRendering) {
@@ -1458,9 +1310,9 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_text(state: &mut WrState,
-                                  bounds: WrRect,
-                                  clip: WrRect,
-                                  color: WrColor,
+                                  bounds: LayoutRect,
+                                  clip: LayoutRect,
+                                  color: ColorF,
                                   font_key: WrFontKey,
                                   glyphs: *const WrGlyphInstance,
                                   glyph_count: u32,
@@ -1486,8 +1338,8 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
-                                    rect: WrRect,
-                                    clip: WrRect,
+                                    rect: LayoutRect,
+                                    clip: LayoutRect,
                                     widths: WrBorderWidths,
                                     top: WrBorderSide,
                                     right: WrBorderSide,
@@ -1513,12 +1365,12 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
-                                          rect: WrRect,
-                                          clip: WrRect,
+                                          rect: LayoutRect,
+                                          clip: LayoutRect,
                                           widths: WrBorderWidths,
                                           image: WrImageKey,
                                           patch: WrNinePatchDescriptor,
-                                          outset: WrSideOffsets2Df32,
+                                          outset: SideOffsets2D<f32>,
                                           repeat_horizontal: WrRepeatMode,
                                           repeat_vertical: WrRepeatMode) {
     assert!(unsafe { is_in_main_thread() });
@@ -1541,15 +1393,15 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
-                                             rect: WrRect,
-                                             clip: WrRect,
+                                             rect: LayoutRect,
+                                             clip: LayoutRect,
                                              widths: WrBorderWidths,
-                                             start_point: WrPoint,
-                                             end_point: WrPoint,
+                                             start_point: LayoutPoint,
+                                             end_point: LayoutPoint,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
                                              extend_mode: WrGradientExtendMode,
-                                             outset: WrSideOffsets2Df32) {
+                                             outset: SideOffsets2D<f32>) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
@@ -1575,15 +1427,15 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
-                                                    rect: WrRect,
-                                                    clip: WrRect,
+                                                    rect: LayoutRect,
+                                                    clip: LayoutRect,
                                                     widths: WrBorderWidths,
-                                                    center: WrPoint,
-                                                    radius: WrSize,
+                                                    center: LayoutPoint,
+                                                    radius: LayoutSize,
                                                     stops: *const WrGradientStop,
                                                     stops_count: usize,
                                                     extend_mode: WrGradientExtendMode,
-                                                    outset: WrSideOffsets2Df32) {
+                                                    outset: SideOffsets2D<f32>) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
@@ -1610,15 +1462,15 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
-                                             rect: WrRect,
-                                             clip: WrRect,
-                                             start_point: WrPoint,
-                                             end_point: WrPoint,
+                                             rect: LayoutRect,
+                                             clip: LayoutRect,
+                                             start_point: LayoutPoint,
+                                             end_point: LayoutPoint,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
                                              extend_mode: WrGradientExtendMode,
-                                             tile_size: WrSize,
-                                             tile_spacing: WrSize) {
+                                             tile_size: LayoutSize,
+                                             tile_spacing: LayoutSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
@@ -1641,15 +1493,15 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
-                                             rect: WrRect,
-                                             clip: WrRect,
-                                             center: WrPoint,
-                                             radius: WrSize,
+                                             rect: LayoutRect,
+                                             clip: LayoutRect,
+                                             center: LayoutPoint,
+                                             radius: LayoutSize,
                                              stops: *const WrGradientStop,
                                              stops_count: usize,
                                              extend_mode: WrGradientExtendMode,
-                                             tile_size: WrSize,
-                                             tile_spacing: WrSize) {
+                                             tile_size: LayoutSize,
+                                             tile_spacing: LayoutSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
@@ -1672,11 +1524,11 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
 
 #[no_mangle]
 pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
-                                        rect: WrRect,
-                                        clip: WrRect,
-                                        box_bounds: WrRect,
-                                        offset: WrPoint,
-                                        color: WrColor,
+                                        rect: LayoutRect,
+                                        clip: LayoutRect,
+                                        box_bounds: LayoutRect,
+                                        offset: LayoutVector2D,
+                                        color: ColorF,
                                         blur_radius: f32,
                                         spread_radius: f32,
                                         border_radius: f32,
@@ -1688,7 +1540,7 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
          .push_box_shadow(rect.into(),
                           Some(LocalClip::Rect(clip.into())),
                           box_bounds.into(),
-                          offset.into(),
+                          offset,
                           color.into(),
                           blur_radius,
                           spread_radius,
@@ -1698,14 +1550,14 @@ pub extern "C" fn wr_dp_push_box_shadow(state: &mut WrState,
 
 #[no_mangle]
 pub unsafe extern "C" fn wr_api_finalize_builder(state: &mut WrState,
-                                                 content_size: &mut WrSize,
+                                                 content_size: &mut LayoutSize,
                                                  dl_descriptor: &mut WrBuiltDisplayListDescriptor,
                                                  dl_data: &mut WrVecU8) {
     let frame_builder = mem::replace(&mut state.frame_builder,
                                      WebRenderFrameBuilder::new(state.pipeline_id,
-                                                                WrSize::zero()));
+                                                                LayoutSize::zero()));
     let (_, size, dl) = frame_builder.dl_builder.finalize();
-    *content_size = WrSize::new(size.width, size.height);
+    *content_size = LayoutSize::new(size.width, size.height);
     let (data, descriptor) = dl.into_data();
     *dl_data = WrVecU8::from_vec(data);
     *dl_descriptor = descriptor;

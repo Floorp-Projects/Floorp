@@ -150,7 +150,7 @@ WebRenderRefLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
       PixelCastJustification::MovingDownToChildren);
   DumpLayerInfo("RefLayer", rect);
 
-  wr::WrRect r = aSc.ToRelativeWrRect(rect);
+  wr::LayoutRect r = aSc.ToRelativeLayoutRect(rect);
   aBuilder.PushIFrame(r, wr::AsPipelineId(mId));
 }
 

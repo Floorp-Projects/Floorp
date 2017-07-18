@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.14 */
+/* Generated with cbindgen:0.1.16 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -142,6 +142,8 @@ enum class WrYuvColorSpace : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+struct LayerPixel;
+
 struct WrAPI;
 
 struct WrRenderedEpochs;
@@ -230,11 +232,11 @@ struct WrPipelineId {
   }
 };
 
-struct WrSize {
+struct LayoutSize {
   float width;
   float height;
 
-  bool operator==(const WrSize& aOther) const {
+  bool operator==(const LayoutSize& aOther) const {
     return width == aOther.width &&
            height == aOther.height;
   }
@@ -272,13 +274,47 @@ struct WrOpacityProperty {
   }
 };
 
-struct WrMatrix {
-  float values[16];
+struct LayoutTransform {
+  float m11;
+  float m12;
+  float m13;
+  float m14;
+  float m21;
+  float m22;
+  float m23;
+  float m24;
+  float m31;
+  float m32;
+  float m33;
+  float m34;
+  float m41;
+  float m42;
+  float m43;
+  float m44;
+
+  bool operator==(const LayoutTransform& aOther) const {
+    return m11 == aOther.m11 &&
+           m12 == aOther.m12 &&
+           m13 == aOther.m13 &&
+           m14 == aOther.m14 &&
+           m21 == aOther.m21 &&
+           m22 == aOther.m22 &&
+           m23 == aOther.m23 &&
+           m24 == aOther.m24 &&
+           m31 == aOther.m31 &&
+           m32 == aOther.m32 &&
+           m33 == aOther.m33 &&
+           m34 == aOther.m34 &&
+           m41 == aOther.m41 &&
+           m42 == aOther.m42 &&
+           m43 == aOther.m43 &&
+           m44 == aOther.m44;
+  }
 };
 
 struct WrTransformProperty {
   uint64_t id;
-  WrMatrix transform;
+  LayoutTransform transform;
 };
 
 struct WrIdNamespace {
@@ -295,13 +331,13 @@ struct WrIdNamespace {
   }
 };
 
-struct WrColor {
+struct ColorF {
   float r;
   float g;
   float b;
   float a;
 
-  bool operator==(const WrColor& aOther) const {
+  bool operator==(const ColorF& aOther) const {
     return r == aOther.r &&
            g == aOther.g &&
            b == aOther.b &&
@@ -309,17 +345,33 @@ struct WrColor {
   }
 };
 
-struct WrRect {
+struct TypedPoint2D_f32__LayerPixel {
   float x;
   float y;
+
+  bool operator==(const TypedPoint2D_f32__LayerPixel& aOther) const {
+    return x == aOther.x &&
+           y == aOther.y;
+  }
+};
+
+struct TypedSize2D_f32__LayerPixel {
   float width;
   float height;
 
-  bool operator==(const WrRect& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y &&
-           width == aOther.width &&
+  bool operator==(const TypedSize2D_f32__LayerPixel& aOther) const {
+    return width == aOther.width &&
            height == aOther.height;
+  }
+};
+
+struct LayoutRect {
+  TypedPoint2D_f32__LayerPixel origin;
+  TypedSize2D_f32__LayerPixel size;
+
+  bool operator==(const LayoutRect& aOther) const {
+    return origin == aOther.origin &&
+           size == aOther.size;
   }
 };
 
@@ -338,7 +390,7 @@ struct WrBorderWidths {
 };
 
 struct WrBorderSide {
-  WrColor color;
+  ColorF color;
   WrBorderStyle style;
 
   bool operator==(const WrBorderSide& aOther) const {
@@ -348,10 +400,10 @@ struct WrBorderSide {
 };
 
 struct WrBorderRadius {
-  WrSize top_left;
-  WrSize top_right;
-  WrSize bottom_left;
-  WrSize bottom_right;
+  LayoutSize top_left;
+  LayoutSize top_right;
+  LayoutSize bottom_left;
+  LayoutSize bottom_right;
 
   bool operator==(const WrBorderRadius& aOther) const {
     return top_left == aOther.top_left &&
@@ -361,11 +413,11 @@ struct WrBorderRadius {
   }
 };
 
-struct WrPoint {
+struct LayoutPoint {
   float x;
   float y;
 
-  bool operator==(const WrPoint& aOther) const {
+  bool operator==(const LayoutPoint& aOther) const {
     return x == aOther.x &&
            y == aOther.y;
   }
@@ -373,7 +425,7 @@ struct WrPoint {
 
 struct WrGradientStop {
   float offset;
-  WrColor color;
+  ColorF color;
 
   bool operator==(const WrGradientStop& aOther) const {
     return offset == aOther.offset &&
@@ -381,13 +433,13 @@ struct WrGradientStop {
   }
 };
 
-struct WrSideOffsets2Df32 {
-  float top;
-  float right;
-  float bottom;
-  float left;
+struct SideOffsets2D_u32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
 
-  bool operator==(const WrSideOffsets2Df32& aOther) const {
+  bool operator==(const SideOffsets2D_u32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -395,13 +447,13 @@ struct WrSideOffsets2Df32 {
   }
 };
 
-struct WrSideOffsets2Du32 {
-  uint32_t top;
-  uint32_t right;
-  uint32_t bottom;
-  uint32_t left;
+struct SideOffsets2D_f32 {
+  float top;
+  float right;
+  float bottom;
+  float left;
 
-  bool operator==(const WrSideOffsets2Du32& aOther) const {
+  bool operator==(const SideOffsets2D_f32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -412,7 +464,7 @@ struct WrSideOffsets2Du32 {
 struct WrNinePatchDescriptor {
   uint32_t width;
   uint32_t height;
-  WrSideOffsets2Du32 slice;
+  SideOffsets2D_u32 slice;
 
   bool operator==(const WrNinePatchDescriptor& aOther) const {
     return width == aOther.width &&
@@ -421,8 +473,18 @@ struct WrNinePatchDescriptor {
   }
 };
 
+struct LayoutVector2D {
+  float x;
+  float y;
+
+  bool operator==(const LayoutVector2D& aOther) const {
+    return x == aOther.x &&
+           y == aOther.y;
+  }
+};
+
 struct WrComplexClipRegion {
-  WrRect rect;
+  LayoutRect rect;
   WrBorderRadius radii;
 
   bool operator==(const WrComplexClipRegion& aOther) const {
@@ -433,7 +495,7 @@ struct WrComplexClipRegion {
 
 struct WrImageMask {
   WrImageKey image;
-  WrRect rect;
+  LayoutRect rect;
   bool repeat;
 
   bool operator==(const WrImageMask& aOther) const {
@@ -455,7 +517,7 @@ struct WrFilterOp {
 
 struct WrGlyphInstance {
   uint32_t index;
-  WrPoint point;
+  LayoutPoint point;
 
   bool operator==(const WrGlyphInstance& aOther) const {
     return index == aOther.index &&
@@ -592,7 +654,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_api_finalize_builder(WrState *aState,
-                             WrSize *aContentSize,
+                             LayoutSize *aContentSize,
                              WrBuiltDisplayListDescriptor *aDlDescriptor,
                              WrVecU8 *aDlData)
 WR_FUNC;
@@ -620,12 +682,12 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 void wr_api_set_root_display_list(WrAPI *aApi,
-                                  WrColor aColor,
+                                  ColorF aColor,
                                   WrEpoch aEpoch,
                                   float aViewportWidth,
                                   float aViewportHeight,
                                   WrPipelineId aPipelineId,
-                                  WrSize aContentSize,
+                                  LayoutSize aContentSize,
                                   WrBuiltDisplayListDescriptor aDlDescriptor,
                                   uint8_t *aDlData,
                                   size_t aDlSize)
@@ -677,8 +739,8 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border(WrState *aState,
-                       WrRect aRect,
-                       WrRect aClip,
+                       LayoutRect aRect,
+                       LayoutRect aClip,
                        WrBorderWidths aWidths,
                        WrBorderSide aTop,
                        WrBorderSide aRight,
@@ -689,49 +751,49 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border_gradient(WrState *aState,
-                                WrRect aRect,
-                                WrRect aClip,
+                                LayoutRect aRect,
+                                LayoutRect aClip,
                                 WrBorderWidths aWidths,
-                                WrPoint aStartPoint,
-                                WrPoint aEndPoint,
+                                LayoutPoint aStartPoint,
+                                LayoutPoint aEndPoint,
                                 const WrGradientStop *aStops,
                                 size_t aStopsCount,
                                 WrGradientExtendMode aExtendMode,
-                                WrSideOffsets2Df32 aOutset)
+                                SideOffsets2D_f32 aOutset)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border_image(WrState *aState,
-                             WrRect aRect,
-                             WrRect aClip,
+                             LayoutRect aRect,
+                             LayoutRect aClip,
                              WrBorderWidths aWidths,
                              WrImageKey aImage,
                              WrNinePatchDescriptor aPatch,
-                             WrSideOffsets2Df32 aOutset,
+                             SideOffsets2D_f32 aOutset,
                              WrRepeatMode aRepeatHorizontal,
                              WrRepeatMode aRepeatVertical)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border_radial_gradient(WrState *aState,
-                                       WrRect aRect,
-                                       WrRect aClip,
+                                       LayoutRect aRect,
+                                       LayoutRect aClip,
                                        WrBorderWidths aWidths,
-                                       WrPoint aCenter,
-                                       WrSize aRadius,
+                                       LayoutPoint aCenter,
+                                       LayoutSize aRadius,
                                        const WrGradientStop *aStops,
                                        size_t aStopsCount,
                                        WrGradientExtendMode aExtendMode,
-                                       WrSideOffsets2Df32 aOutset)
+                                       SideOffsets2D_f32 aOutset)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_box_shadow(WrState *aState,
-                           WrRect aRect,
-                           WrRect aClip,
-                           WrRect aBoxBounds,
-                           WrPoint aOffset,
-                           WrColor aColor,
+                           LayoutRect aRect,
+                           LayoutRect aClip,
+                           LayoutRect aBoxBounds,
+                           LayoutVector2D aOffset,
+                           ColorF aColor,
                            float aBlurRadius,
                            float aSpreadRadius,
                            float aBorderRadius,
@@ -746,7 +808,7 @@ WR_FUNC;
 
 WR_INLINE
 uint64_t wr_dp_push_clip(WrState *aState,
-                         WrRect aRect,
+                         LayoutRect aRect,
                          const WrComplexClipRegion *aComplex,
                          size_t aComplexCount,
                          const WrImageMask *aMask)
@@ -760,66 +822,66 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_iframe(WrState *aState,
-                       WrRect aRect,
+                       LayoutRect aRect,
                        WrPipelineId aPipelineId)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_image(WrState *aState,
-                      WrRect aBounds,
-                      WrRect aClip,
-                      WrSize aStretchSize,
-                      WrSize aTileSpacing,
+                      LayoutRect aBounds,
+                      LayoutRect aClip,
+                      LayoutSize aStretchSize,
+                      LayoutSize aTileSpacing,
                       WrImageRendering aImageRendering,
                       WrImageKey aKey)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_linear_gradient(WrState *aState,
-                                WrRect aRect,
-                                WrRect aClip,
-                                WrPoint aStartPoint,
-                                WrPoint aEndPoint,
+                                LayoutRect aRect,
+                                LayoutRect aClip,
+                                LayoutPoint aStartPoint,
+                                LayoutPoint aEndPoint,
                                 const WrGradientStop *aStops,
                                 size_t aStopsCount,
                                 WrGradientExtendMode aExtendMode,
-                                WrSize aTileSize,
-                                WrSize aTileSpacing)
+                                LayoutSize aTileSize,
+                                LayoutSize aTileSpacing)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_radial_gradient(WrState *aState,
-                                WrRect aRect,
-                                WrRect aClip,
-                                WrPoint aCenter,
-                                WrSize aRadius,
+                                LayoutRect aRect,
+                                LayoutRect aClip,
+                                LayoutPoint aCenter,
+                                LayoutSize aRadius,
                                 const WrGradientStop *aStops,
                                 size_t aStopsCount,
                                 WrGradientExtendMode aExtendMode,
-                                WrSize aTileSize,
-                                WrSize aTileSpacing)
+                                LayoutSize aTileSize,
+                                LayoutSize aTileSpacing)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_rect(WrState *aState,
-                     WrRect aRect,
-                     WrRect aClip,
-                     WrColor aColor)
+                     LayoutRect aRect,
+                     LayoutRect aClip,
+                     ColorF aColor)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_scroll_layer(WrState *aState,
                              uint64_t aScrollId,
-                             WrRect aContentRect,
-                             WrRect aClipRect)
+                             LayoutRect aContentRect,
+                             LayoutRect aClipRect)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_stacking_context(WrState *aState,
-                                 WrRect aBounds,
+                                 LayoutRect aBounds,
                                  uint64_t aAnimationId,
                                  const float *aOpacity,
-                                 const WrMatrix *aTransform,
+                                 const LayoutTransform *aTransform,
                                  WrTransformStyle aTransformStyle,
                                  WrMixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
@@ -828,9 +890,9 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_text(WrState *aState,
-                     WrRect aBounds,
-                     WrRect aClip,
-                     WrColor aColor,
+                     LayoutRect aBounds,
+                     LayoutRect aClip,
+                     ColorF aColor,
                      WrFontKey aFontKey,
                      const WrGlyphInstance *aGlyphs,
                      uint32_t aGlyphCount,
@@ -839,8 +901,8 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_yuv_NV12_image(WrState *aState,
-                               WrRect aBounds,
-                               WrRect aClip,
+                               LayoutRect aBounds,
+                               LayoutRect aClip,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrYuvColorSpace aColorSpace,
@@ -849,8 +911,8 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_yuv_interleaved_image(WrState *aState,
-                                      WrRect aBounds,
-                                      WrRect aClip,
+                                      LayoutRect aBounds,
+                                      LayoutRect aClip,
                                       WrImageKey aImageKey0,
                                       WrYuvColorSpace aColorSpace,
                                       WrImageRendering aImageRendering)
@@ -858,8 +920,8 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_yuv_planar_image(WrState *aState,
-                                 WrRect aBounds,
-                                 WrRect aClip,
+                                 LayoutRect aBounds,
+                                 LayoutRect aClip,
                                  WrImageKey aImageKey0,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
@@ -923,7 +985,7 @@ WR_INLINE
 void wr_scroll_layer_with_id(WrAPI *aApi,
                              WrPipelineId aPipelineId,
                              uint64_t aScrollId,
-                             WrPoint aNewScrollOrigin)
+                             LayoutPoint aNewScrollOrigin)
 WR_FUNC;
 
 WR_INLINE
@@ -932,7 +994,7 @@ WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
 WrState *wr_state_new(WrPipelineId aPipelineId,
-                      WrSize aContentSize)
+                      LayoutSize aContentSize)
 WR_FUNC;
 
 WR_INLINE

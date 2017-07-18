@@ -21,9 +21,9 @@
 namespace mozilla {
 
 namespace wr {
-struct WrColor;
-struct WrRect;
-struct WrSize;
+struct ColorF;
+struct LayoutRect;
+struct LayoutSize;
 } // namespace wr
 
 namespace gfx {
@@ -95,15 +95,15 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRectTyped<T>& 
 }
 
 void
-AppendToString(std::stringstream& aStream, const wr::WrColor& c,
+AppendToString(std::stringstream& aStream, const wr::ColorF& c,
                const char* pfx="", const char* sfx="");
 
 void
-AppendToString(std::stringstream& aStream, const wr::WrRect& r,
+AppendToString(std::stringstream& aStream, const wr::LayoutRect& r,
                const char* pfx="", const char* sfx="");
 
 void
-AppendToString(std::stringstream& aStream, const wr::WrSize& s,
+AppendToString(std::stringstream& aStream, const wr::LayoutSize& s,
                const char* pfx="", const char* sfx="");
 
 void
