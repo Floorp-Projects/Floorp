@@ -71,7 +71,7 @@ private:
 class VRControllerPuppet : public VRControllerHost
 {
 public:
-  explicit VRControllerPuppet(dom::GamepadHand aHand, uint32_t aDisplayID);
+  explicit VRControllerPuppet(dom::GamepadHand aHand);
   void SetButtonPressState(uint32_t aButton, bool aPressed);
   uint64_t GetButtonPressState();
   void SetButtonTouchState(uint32_t aButton, bool aTouched);
