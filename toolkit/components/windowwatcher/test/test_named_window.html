@@ -21,7 +21,8 @@ window.
     "use strict";
 
     const NAME = "my_window";
-    const TARGET_URL = "data:text/html,<html><body>test_named_window.html new window</body></html>";
+    const TARGET_URL = location.href.replace("test_named_window.html",
+                                             "file_named_window.html");
     const TARGET_URL_2 = TARGET_URL + "#2";
     const TARGET_URL_3 = TARGET_URL + "#3";
 
