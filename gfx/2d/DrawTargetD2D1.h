@@ -11,6 +11,7 @@
 #include <d2d1_1.h>
 #include "PathD2D.h"
 #include "HelpersD2D.h"
+#include "mozilla/StaticPtr.h"
 
 #include <vector>
 #include <sstream>
@@ -153,7 +154,7 @@ public:
     return GetImageForSurface(aSurface, mat, aExtendMode, nullptr);
   }
 
-  static ID2D1Factory1 *factory();
+  static RefPtr<ID2D1Factory1> factory();
   static void CleanupD2D();
 
   operator std::string() const {
@@ -292,7 +293,7 @@ private:
   // we can avoid the subsequent hang. (See bug 1293586)
   bool mDidComplexBlendWithListInList;
 
-  static ID2D1Factory1 *mFactory;
+  static StaticRefPtr<ID2D1Factory1> mFactory;
   // This value is uesed to verify if the DrawTarget is created by a stale device.
   uint32_t mDeviceSeq;
 
