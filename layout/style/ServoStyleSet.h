@@ -362,7 +362,9 @@ public:
    * Resolve style for the given element, and return it as a
    * ServoComputedValues, not an nsStyleContext.
    */
-  already_AddRefed<ServoStyleContext> ResolveServoStyle(dom::Element* aElement);
+  already_AddRefed<ServoStyleContext>
+  ResolveServoStyle(dom::Element* aElement,
+                    TraversalRestyleBehavior aRestyleBehavior);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
