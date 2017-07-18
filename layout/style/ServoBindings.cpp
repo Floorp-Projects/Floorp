@@ -374,10 +374,23 @@ void
 Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed aElement)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
     shell->EnsureStyleFlush();
   }
+}
+
+void
+Gecko_NoteDirtyDescendants(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  const_cast<Element*>(aElement)->NoteDirtyDescendantsForServo();
+}
+
+void
+Gecko_NoteAnimationOnlyDirtyDescendants(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  const_cast<Element*>(aElement)->NoteAnimationOnlyDirtyDescendantsForServo();
 }
 
 nsStyleContext*
