@@ -8,7 +8,7 @@ add_task(async function() {
   await pushPrefs(["accessibility.tabfocus", 7]);
 
   // When the onboarding component is enabled, it would inject extra tour notification into
-  // the newtab page so there would be 2 more notification close button and action button
+  // the newtab page so there would be 3 more overlay button, notification close button and action button
   let onbardingEnabled = AppConstants.NIGHTLY_BUILD && Services.prefs.getBoolPref("browser.onboarding.enabled");
 
   // Focus count in new tab page.
@@ -26,7 +26,7 @@ add_task(async function() {
   }
   let tab = await addNewTabPageTab();
   if (onbardingEnabled) {
-    FOCUS_COUNT += 2;
+    FOCUS_COUNT += 3;
     await promiseTourNotificationOpened(tab.linkedBrowser);
   }
   gURLBar.focus();
@@ -37,7 +37,7 @@ add_task(async function() {
 
   let expectedCount = 4;
   if (onbardingEnabled) {
-    expectedCount += 2;
+    expectedCount += 3;
   }
   countFocus(expectedCount);
 
