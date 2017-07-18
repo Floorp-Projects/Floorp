@@ -65,11 +65,17 @@ namespace JS {
     D(RESET)                                    \
     D(OUT_OF_NURSERY)                           \
     D(EVICT_NURSERY)                            \
-    D(FULL_STORE_BUFFER)                        \
+    D(UNUSED0)                                  \
     D(SHARED_MEMORY_LIMIT)                      \
     D(UNUSED1)                                  \
     D(INCREMENTAL_TOO_SLOW)                     \
     D(ABORT_GC)                                 \
+    D(FULL_WHOLE_CELL_BUFFER)                   \
+    D(FULL_GENERIC_BUFFER)                      \
+    D(FULL_VALUE_BUFFER)                        \
+    D(FULL_CELL_PTR_BUFFER)                     \
+    D(FULL_SLOT_BUFFER)                         \
+    D(FULL_SHAPE_BUFFER)                        \
                                                 \
     /* These are reserved for future use. */    \
     D(RESERVED0)                                \
@@ -82,12 +88,6 @@ namespace JS {
     D(RESERVED7)                                \
     D(RESERVED8)                                \
     D(RESERVED9)                                \
-    D(RESERVED10)                               \
-    D(RESERVED11)                               \
-    D(RESERVED12)                               \
-    D(RESERVED13)                               \
-    D(RESERVED14)                               \
-    D(RESERVED15)                               \
                                                 \
     /* Reasons from Firefox */                  \
     D(DOM_WINDOW_UTILS)                         \

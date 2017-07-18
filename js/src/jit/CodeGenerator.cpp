@@ -3448,7 +3448,7 @@ CodeGenerator::visitMaybeToDoubleElement(LMaybeToDoubleElement* lir)
 
     masm.bind(&convert);
     masm.convertInt32ToDouble(value, temp);
-    masm.boxDouble(temp, out);
+    masm.boxDouble(temp, out, temp);
 
     masm.bind(&done);
 }

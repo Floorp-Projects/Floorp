@@ -1623,6 +1623,15 @@ Shape::fixupAfterMovingGC()
 }
 
 void
+NurseryShapesRef::trace(JSTracer* trc)
+{
+    auto& shapes = zone_->nurseryShapes();
+    for (auto shape : shapes)
+        shape->fixupGetterSetterForBarrier(trc);
+    shapes.clearAndFree();
+}
+
+void
 Shape::fixupGetterSetterForBarrier(JSTracer* trc)
 {
     if (!hasGetterValue() && !hasSetterValue())

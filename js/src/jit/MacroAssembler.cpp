@@ -438,7 +438,7 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, const V
             bind(&isDouble);
             {
                 convertUInt32ToDouble(temp, ScratchDoubleReg);
-                boxDouble(ScratchDoubleReg, dest);
+                boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
             }
             bind(&done);
         } else {
@@ -451,12 +451,12 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, const V
         loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloat32Reg), dest.scratchReg(),
                            nullptr);
         convertFloat32ToDouble(ScratchFloat32Reg, ScratchDoubleReg);
-        boxDouble(ScratchDoubleReg, dest);
+        boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
         break;
       case Scalar::Float64:
         loadFromTypedArray(arrayType, src, AnyRegister(ScratchDoubleReg), dest.scratchReg(),
                            nullptr);
-        boxDouble(ScratchDoubleReg, dest);
+        boxDouble(ScratchDoubleReg, dest, ScratchDoubleReg);
         break;
       default:
         MOZ_CRASH("Invalid typed array type");
@@ -1917,7 +1917,7 @@ MacroAssembler::convertInt32ValueToDouble(ValueOperand val)
     branchTestInt32(Assembler::NotEqual, val, &done);
     unboxInt32(val, val.scratchReg());
     convertInt32ToDouble(val.scratchReg(), ScratchDoubleReg);
-    boxDouble(ScratchDoubleReg, val);
+    boxDouble(ScratchDoubleReg, val, ScratchDoubleReg);
     bind(&done);
 }
 
