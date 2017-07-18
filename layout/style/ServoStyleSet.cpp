@@ -196,7 +196,8 @@ ServoStyleSet::GetContext(nsIContent* aContent,
       ResolveStyleLazily(element, CSSPseudoElementType::NotPseudo, aPseudoTag, aParentContext);
       computedValues->UpdateWithElementState(element);
   } else {
-    computedValues = ResolveServoStyle(element);
+    computedValues = ResolveServoStyle(element,
+                                       TraversalRestyleBehavior::Normal);
   }
 
   MOZ_ASSERT(computedValues);
@@ -443,8 +444,10 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   nsIAtom* pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
   if (aPseudoElement) {
     MOZ_ASSERT(aType == aPseudoElement->GetPseudoElementType());
-    computedValues = Servo_ResolveStyle(aPseudoElement,
-                                        mRawSet.get()).Consume();
+    computedValues =
+      Servo_ResolveStyle(aPseudoElement,
+                         mRawSet.get(),
+                         TraversalRestyleBehavior::Normal).Consume();
   } else {
     const ServoComputedValues* parentStyle =
       aParentContext ? aParentContext->ComputedValues() : nullptr;
@@ -1096,10 +1099,13 @@ ServoStyleSet::CompatibilityModeChanged()
 }
 
 already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveServoStyle(Element* aElement)
+ServoStyleSet::ResolveServoStyle(Element* aElement,
+                                 TraversalRestyleBehavior aRestyleBehavior)
 {
   UpdateStylistIfNeeded();
-  return Servo_ResolveStyle(aElement, mRawSet.get()).Consume();
+  return Servo_ResolveStyle(aElement,
+                            mRawSet.get(),
+                            aRestyleBehavior).Consume();
 }
 
 void
