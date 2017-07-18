@@ -17,7 +17,7 @@ interface ShadowRoot : DocumentFragment
   HTMLCollection getElementsByTagName(DOMString localName);
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   HTMLCollection getElementsByClassName(DOMString classNames);
-  [CEReactions, SetterThrows, TreatNullAs=EmptyString]
+  [SetterThrows,TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
   readonly attribute Element host;
   readonly attribute ShadowRoot? olderShadowRoot;
