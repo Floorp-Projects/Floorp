@@ -12919,7 +12919,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["luke@mozilla.com", "bbouvier@mozilla.com"],
     "bug_numbers": [1288778],
-    "expires_in_version": "56",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 4,
     "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."

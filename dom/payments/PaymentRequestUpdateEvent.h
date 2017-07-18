@@ -41,6 +41,7 @@ public:
               const nsAString& aType,
               const PaymentRequestUpdateEventInit& aEventInitDict);
 
+  // Called by WebIDL constructor
   static already_AddRefed<PaymentRequestUpdateEvent>
   Constructor(const GlobalObject& aGlobal,
               const nsAString& aType,
@@ -48,6 +49,8 @@ public:
               ErrorResult& aRv);
 
   void UpdateWith(Promise& aPromise, ErrorResult& aRv);
+
+  void SetRequest(PaymentRequest* aRequest);
 
 protected:
   ~PaymentRequestUpdateEvent();
