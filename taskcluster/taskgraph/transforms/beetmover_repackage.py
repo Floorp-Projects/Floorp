@@ -42,6 +42,7 @@ _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US = [
     "mozharness.zip",
     "target.langpack.xpi",
 ]
+
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
 # with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
@@ -61,6 +62,12 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
         "host/bin/mbsdiff",
     ],
     'macosx64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_L10N,
+}
+# Until bug 1331141 is fixed, if you are adding any new artifacts here that
+# need to be transfered to S3, please be aware you also need to follow-up
+# with a beetmover patch in https://github.com/mozilla-releng/beetmoverscript/.
+# See example in bug 1348286
+UPSTREAM_ARTIFACT_SIGNED_PATHS = {
 }
 # Until bug 1331141 is fixed, if you are adding any new artifacts here that
 # need to be transfered to S3, please be aware you also need to follow-up
@@ -137,13 +144,14 @@ def make_task_description(config, jobs):
         dependent_kind = str(dep_job.kind)
         dependencies = {dependent_kind: dep_job.label}
 
-        # macosx nightly builds depend on repackage which use in tree docker
-        # images and thus have two dependencies
-        # change the signing_dependencies to be use the ones in
-        docker_dependencies = {"docker-image":
-                               dep_job.dependencies['docker-image']
-                               }
-        dependencies.update(docker_dependencies)
+        if 'docker-image' in dep_job.dependencies:
+            # macosx nightly builds depend on repackage which use in tree
+            # docker images and thus have two dependencies
+            # change the signing_dependencies to be use the ones in
+            docker_dependencies = {"docker-image":
+                                   dep_job.dependencies['docker-image']
+                                   }
+            dependencies.update(docker_dependencies)
 
         signing_name = "build-signing"
         if job.get('locale'):
@@ -190,11 +198,12 @@ def make_task_description(config, jobs):
         yield task
 
 
-def generate_upstream_artifacts(build_task_ref, repackage_task_ref,
-                                repackage_signing_task_ref, platform,
-                                locale=None):
+def generate_upstream_artifacts(build_task_ref, build_signing_task_ref,
+                                repackage_task_ref, repackage_signing_task_ref,
+                                platform, locale=None):
 
     build_mapping = UPSTREAM_ARTIFACT_UNSIGNED_PATHS
+    build_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_PATHS
     repackage_mapping = UPSTREAM_ARTIFACT_REPACKAGE_PATHS
     repackage_signing_mapping = UPSTREAM_ARTIFACT_SIGNED_REPACKAGE_PATHS
 
@@ -203,40 +212,51 @@ def generate_upstream_artifacts(build_task_ref, repackage_task_ref,
         artifact_prefix = 'public/build/{}'.format(locale)
         platform = "{}-l10n".format(platform)
 
-    upstream_artifacts = [{
-        "taskId": {"task-reference": build_task_ref},
-        "taskType": "build",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in build_mapping[platform]],
-        "locale": locale or "en-US",
-        }, {
-        "taskId": {"task-reference": repackage_task_ref},
-        "taskType": "repackage",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in repackage_mapping[platform]],
-        "locale": locale or "en-US",
-        }, {
-        "taskId": {"task-reference": repackage_signing_task_ref},
-        "taskType": "repackage",
-        "paths": ["{}/{}".format(artifact_prefix, p)
-                  for p in repackage_signing_mapping[platform]],
-        "locale": locale or "en-US",
-    }]
+    upstream_artifacts = []
+
+    task_refs = [
+        build_task_ref,
+        build_signing_task_ref,
+        repackage_task_ref,
+        repackage_signing_task_ref
+    ]
+    tasktypes = ['build', 'signing', 'repackage', 'repackage']
+    mapping = [
+        build_mapping,
+        build_signing_mapping,
+        repackage_mapping,
+        repackage_signing_mapping
+    ]
+
+    for ref, tasktype, mapping in zip(task_refs, tasktypes, mapping):
+        if platform in mapping:
+            upstream_artifacts.append({
+                "taskId": {"task-reference": ref},
+                "taskType": tasktype,
+                "paths": ["{}/{}".format(artifact_prefix, p)
+                          for p in mapping[platform]],
+                "locale": locale or "en-US",
+            })
 
     return upstream_artifacts
+
+
+def is_valid_beetmover_job(job):
+    # windows builds don't have docker-image, so fewer dependencies
+    return (len(job["dependencies"]) == 5 and
+            any(['repackage' in j for j in job['dependencies']]))
 
 
 @transforms.add
 def make_task_worker(config, jobs):
     for job in jobs:
-        valid_beetmover_job = (len(job["dependencies"]) == 5 and
-                               any(['repackage' in j for j in job['dependencies']]))
-        if not valid_beetmover_job:
+        if not is_valid_beetmover_job(job):
             raise NotImplementedError("Beetmover_repackage must have five dependencies.")
 
         locale = job["attributes"].get("locale")
         platform = job["attributes"]["build_platform"]
         build_task = None
+        build_signing_task = None
         repackage_task = None
         repackage_signing_task = None
         for dependency in job["dependencies"].keys():
@@ -245,15 +265,17 @@ def make_task_worker(config, jobs):
             elif 'repackage' in dependency:
                 repackage_task = dependency
             elif 'signing' in dependency:
-                pass
+                # catches build-signing and nightly-l10n-signing
+                build_signing_task = dependency
             else:
                 build_task = "build"
 
         build_task_ref = "<" + str(build_task) + ">"
+        build_signing_task_ref = "<" + str(build_signing_task) + ">"
         repackage_task_ref = "<" + str(repackage_task) + ">"
         repackage_signing_task_ref = "<" + str(repackage_signing_task) + ">"
         upstream_artifacts = generate_upstream_artifacts(
-            build_task_ref, repackage_task_ref,
+            build_task_ref, build_signing_task_ref, repackage_task_ref,
             repackage_signing_task_ref, platform, locale
         )
 
