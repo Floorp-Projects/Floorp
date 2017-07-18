@@ -23,7 +23,7 @@ class HeapCopyOfStackArray
 {
 public:
   template<size_t N>
-  MOZ_IMPLICIT HeapCopyOfStackArray(ElemType (&array)[N])
+  MOZ_IMPLICIT HeapCopyOfStackArray(const ElemType (&array)[N])
     : mArrayLength(N)
     , mArrayData(MakeUnique<ElemType[]>(N))
   {

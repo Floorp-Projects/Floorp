@@ -114,7 +114,7 @@ protected:
     friend class GLContextEGLFactory;
 
 public:
-    const EGLConfig  mConfig;
+    const EGLConfig mConfig;
 protected:
     EGLSurface mSurface;
 public:
