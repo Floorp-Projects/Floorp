@@ -1256,27 +1256,6 @@ public:
 
     static auto KillAnyZombies() -> void;
 
-    struct LoadPluginClass_t {
-        typedef GeckoAppShell Owner;
-        typedef mozilla::jni::Class::LocalRef ReturnType;
-        typedef mozilla::jni::Class::Param SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::String::Param,
-                mozilla::jni::String::Param> Args;
-        static constexpr char name[] = "loadPluginClass";
-        static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto LoadPluginClass(mozilla::jni::String::Param, mozilla::jni::String::Param) -> mozilla::jni::Class::LocalRef;
-
     struct LockScreenOrientation_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;

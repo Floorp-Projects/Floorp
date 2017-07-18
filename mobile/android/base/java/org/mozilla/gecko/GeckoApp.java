@@ -194,9 +194,6 @@ public abstract class GeckoApp extends GeckoActivity
 
     protected GeckoView mLayerView;
 
-    private FullScreenHolder mFullScreenPluginContainer;
-    private View mFullScreenPluginView;
-
     protected boolean mLastSessionCrashed;
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
@@ -809,11 +806,6 @@ public abstract class GeckoApp extends GeckoActivity
         } else if ("Update:Install".equals(event)) {
             UpdateServiceHelper.applyUpdate(this);
 
-        } else if ("PluginHelper:playFlash".equals(event)) {
-            final SharedPreferences prefs = getSharedPreferences();
-            int count = prefs.getInt(PREFS_FLASH_USAGE, 0);
-            prefs.edit().putInt(PREFS_FLASH_USAGE, ++count).apply();
-
         } else if ("Mma:reader_available".equals(event)) {
             MmaDelegate.track(READER_AVAILABLE);
 
@@ -915,113 +907,6 @@ public abstract class GeckoApp extends GeckoActivity
                 }
             }
         });
-    }
-
-    /* package */ void addFullScreenPluginView(View view) {
-        if (mFullScreenPluginView != null) {
-            Log.w(LOGTAG, "Already have a fullscreen plugin view");
-            return;
-        }
-
-        setFullScreen(true);
-
-        view.setWillNotDraw(false);
-        if (view instanceof SurfaceView) {
-            ((SurfaceView) view).setZOrderOnTop(true);
-        }
-
-        mFullScreenPluginContainer = new FullScreenHolder(this);
-
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            Gravity.CENTER);
-        mFullScreenPluginContainer.addView(view, layoutParams);
-
-
-        FrameLayout decor = (FrameLayout)getWindow().getDecorView();
-        decor.addView(mFullScreenPluginContainer, layoutParams);
-
-        mFullScreenPluginView = view;
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void addPluginView(final View view) {
-        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
-        if (!(activity instanceof GeckoApp)) {
-            return;
-        }
-
-        final GeckoApp geckoApp = (GeckoApp) activity;
-        if (ThreadUtils.isOnUiThread()) {
-            geckoApp.addFullScreenPluginView(view);
-        } else {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    geckoApp.addFullScreenPluginView(view);
-                }
-            });
-        }
-    }
-
-    /* package */ void removeFullScreenPluginView(View view) {
-        if (mFullScreenPluginView == null) {
-            Log.w(LOGTAG, "Don't have a fullscreen plugin view");
-            return;
-        }
-
-        if (mFullScreenPluginView != view) {
-            Log.w(LOGTAG, "Passed view is not the current full screen view");
-            return;
-        }
-
-        mFullScreenPluginContainer.removeView(mFullScreenPluginView);
-
-        // We need do do this on the next iteration in order to avoid
-        // a deadlock, see comment below in FullScreenHolder
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mLayerView.showSurface();
-            }
-        });
-
-        FrameLayout decor = (FrameLayout)getWindow().getDecorView();
-        decor.removeView(mFullScreenPluginContainer);
-
-        mFullScreenPluginView = null;
-
-        GeckoScreenOrientation.getInstance().unlock();
-        setFullScreen(false);
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static void removePluginView(final View view) {
-        final Activity activity = GeckoActivityMonitor.getInstance().getCurrentActivity();
-        if (!(activity instanceof GeckoApp)) {
-            return;
-        }
-
-        final GeckoApp geckoApp = (GeckoApp) activity;
-        if (ThreadUtils.isOnUiThread()) {
-            geckoApp.removeFullScreenPluginView(view);
-        } else {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    geckoApp.removeFullScreenPluginView(view);
-                }
-            });
-        }
-    }
-
-    @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    private static native void onFullScreenPluginHidden(View view);
-
-    @WrapForJNI(calledFrom = "gecko")
-    private static Context getPluginContext() {
-        return GeckoActivityMonitor.getInstance().getCurrentActivity();
     }
 
     private void showSetImageResult(final boolean success, final int message, final String path) {
@@ -1303,7 +1188,6 @@ public abstract class GeckoApp extends GeckoActivity
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Accessibility:Ready",
             "Gecko:Ready",
-            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -2330,7 +2214,6 @@ public abstract class GeckoApp extends GeckoActivity
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Accessibility:Ready",
             "Gecko:Ready",
-            "PluginHelper:playFlash",
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
@@ -2545,12 +2428,6 @@ public abstract class GeckoApp extends GeckoActivity
             return;
         }
 
-        if (mFullScreenPluginView != null) {
-            onFullScreenPluginHidden(mFullScreenPluginView);
-            removeFullScreenPluginView(mFullScreenPluginView);
-            return;
-        }
-
         if (mLayerView != null && mLayerView.isFullScreen()) {
             EventDispatcher.getInstance().dispatch("FullScreen:Exit", null);
             return;
@@ -2680,71 +2557,6 @@ public abstract class GeckoApp extends GeckoActivity
             // enable drawing caching on its children. This is mainly used in
             // animations (see PropertyAnimator)
             super.setChildrenDrawnWithCacheEnabled(enabled);
-        }
-    }
-
-    private class FullScreenHolder extends FrameLayout {
-
-        public FullScreenHolder(Context ctx) {
-            super(ctx);
-            setBackgroundColor(0xff000000);
-        }
-
-        @Override
-        public void addView(View view, int index) {
-            /**
-             * This normally gets called when Flash adds a separate SurfaceView
-             * for the video. It is unhappy if we have the LayerView underneath
-             * it for some reason so we need to hide that. Hiding the LayerView causes
-             * its surface to be destroyed, which causes a pause composition
-             * event to be sent to Gecko. We synchronously wait for that to be
-             * processed. Simultaneously, however, Flash is waiting on a mutex so
-             * the post() below is an attempt to avoid a deadlock.
-             */
-            super.addView(view, index);
-
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mLayerView.hideSurface();
-                }
-            });
-        }
-
-        /**
-         * The methods below are simply copied from what Android WebKit does.
-         * It wasn't ever called in my testing, but might as well
-         * keep it in case it is for some reason. The methods
-         * all return true because we don't want any events
-         * leaking out from the fullscreen view.
-         */
-        @Override
-        public boolean onKeyDown(int keyCode, KeyEvent event) {
-            if (event.isSystem()) {
-                return super.onKeyDown(keyCode, event);
-            }
-            mFullScreenPluginView.onKeyDown(keyCode, event);
-            return true;
-        }
-
-        @Override
-        public boolean onKeyUp(int keyCode, KeyEvent event) {
-            if (event.isSystem()) {
-                return super.onKeyUp(keyCode, event);
-            }
-            mFullScreenPluginView.onKeyUp(keyCode, event);
-            return true;
-        }
-
-        @Override
-        public boolean onTouchEvent(MotionEvent event) {
-            return true;
-        }
-
-        @Override
-        public boolean onTrackballEvent(MotionEvent event) {
-            mFullScreenPluginView.onTrackballEvent(event);
-            return true;
         }
     }
 

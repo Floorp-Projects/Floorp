@@ -13,16 +13,6 @@
         <item>0</item>
         <item>1</item>
     </string-array>
-    <string-array name="pref_plugins_entries">
-        <item>@string/pref_plugins_enabled</item>
-        <item>@string/pref_plugins_tap_to_play</item>
-        <item>@string/pref_plugins_disabled</item>
-    </string-array>
-    <string-array name="pref_plugins_values">
-        <item>1</item>
-        <item>2</item>
-        <item>0</item>
-    </string-array>
     <string-array name="pref_char_encoding_entries">
         <item>@string/pref_char_encoding_on</item>
         <item>@string/pref_char_encoding_off</item>
