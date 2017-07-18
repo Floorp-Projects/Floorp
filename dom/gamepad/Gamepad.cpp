@@ -41,13 +41,12 @@ Gamepad::Gamepad(nsISupports* aParent,
                  uint32_t aHashKey,
                  GamepadMappingType aMapping,
                  GamepadHand aHand,
-                 uint32_t aDisplayID, uint32_t aNumButtons,
-                 uint32_t aNumAxes, uint32_t aNumHaptics)
+                 uint32_t aNumButtons, uint32_t aNumAxes,
+                 uint32_t aNumHaptics)
   : mParent(aParent),
     mID(aID),
     mIndex(aIndex),
     mHashKey(aHashKey),
-    mDisplayId(aDisplayID),
     mMapping(aMapping),
     mHand(aHand),
     mConnected(true),
@@ -156,7 +155,7 @@ Gamepad::Clone(nsISupports* aParent)
 {
   RefPtr<Gamepad> out =
     new Gamepad(aParent, mID, mIndex, mHashKey, mMapping,
-                mHand, mDisplayId, mButtons.Length(), mAxes.Length(),
+                mHand, mButtons.Length(), mAxes.Length(),
                 mHapticActuators.Length());
   out->SyncState(this);
   return out.forget();

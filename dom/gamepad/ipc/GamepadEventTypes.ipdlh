@@ -17,7 +17,6 @@ struct GamepadAdded {
   GamepadMappingType mapping;
   GamepadHand hand;
   GamepadServiceType service_type;
-  uint32_t display_id;
   uint32_t num_buttons;
   uint32_t num_axes;
   uint32_t num_haptics;

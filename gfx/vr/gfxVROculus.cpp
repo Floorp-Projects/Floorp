@@ -1180,8 +1180,8 @@ VRDisplayOculus::NotifyVSync()
   VRDisplayHost::NotifyVSync();
 }
 
-VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplayID)
-  : VRControllerHost(VRDeviceType::Oculus, aHand, aDisplayID)
+VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand)
+  : VRControllerHost(VRDeviceType::Oculus)
   , mIndexTrigger(0.0f)
   , mHandTrigger(0.0f)
   , mVibrateThread(nullptr)
@@ -1202,6 +1202,8 @@ VRControllerOculus::VRControllerOculus(dom::GamepadHand aHand, uint32_t aDisplay
       break;
   }
   mControllerInfo.mControllerName = touchID;
+  mControllerInfo.mMappingType = GamepadMappingType::_empty;
+  mControllerInfo.mHand = aHand;
 
   MOZ_ASSERT(kNumOculusButton ==
              static_cast<uint32_t>(OculusLeftControllerButtonType::NumButtonType)
@@ -1794,8 +1796,7 @@ VRSystemManagerOculus::ScanForControllers()
           hand = GamepadHand::Right;
           break;
       }
-      RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand,
-                                                      mHMDInfo->GetDisplayInfo().GetDisplayID());
+      RefPtr<VRControllerOculus> oculusController = new VRControllerOculus(hand);
       mOculusController.AppendElement(oculusController);
 
       // Not already present, add it.

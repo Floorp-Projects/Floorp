@@ -98,8 +98,7 @@ public:
   uint64_t GetVibrateIndex();
 
 protected:
-  explicit VRControllerHost(VRDeviceType aType, dom::GamepadHand aHand,
-                            uint32_t aDisplayID);
+  explicit VRControllerHost(VRDeviceType aType);
   virtual ~VRControllerHost();
 
   VRControllerInfo mControllerInfo;

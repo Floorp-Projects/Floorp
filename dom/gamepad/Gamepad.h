@@ -44,8 +44,8 @@ public:
           const nsAString& aID, uint32_t aIndex,
           uint32_t aHashKey,
           GamepadMappingType aMapping, GamepadHand aHand,
-          uint32_t aDisplayID, uint32_t aNumButtons,
-          uint32_t aNumAxes, uint32_t aNumHaptics);
+          uint32_t aNumButtons, uint32_t aNumAxes,
+          uint32_t aNumHaptics);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Gamepad)
@@ -85,11 +85,6 @@ public:
   GamepadMappingType Mapping()
   {
     return mMapping;
-  }
-
-  uint32_t DisplayId() const
-  {
-    return mDisplayId;
   }
 
   GamepadHand Hand()
@@ -142,7 +137,7 @@ protected:
   uint32_t mIndex;
   // the gamepad hash key in GamepadManager
   uint32_t mHashKey;
-  uint32_t mDisplayId;
+
   // The mapping in use.
   GamepadMappingType mMapping;
   GamepadHand mHand;
