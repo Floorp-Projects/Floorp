@@ -980,6 +980,10 @@ pref("browser.zoom.updateBackgroundTabs", true);
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
 
+// URL for "Learn More" for DataCollection
+pref("toolkit.datacollection.infoURL",
+     "https://www.mozilla.org/legal/privacy/firefox.html");
+
 // URL for "Learn More" for Crash Reporter
 pref("toolkit.crashreporter.infoURL",
      "https://www.mozilla.org/legal/privacy/firefox.html#crash-reporter");
@@ -1276,7 +1280,11 @@ pref("browser.newtabpage.columns", 5);
 pref("browser.newtabpage.directory.source", "https://tiles.services.mozilla.com/v3/links/fetch/%LOCALE%/%CHANNEL%");
 
 // activates Activity Stream
+#ifdef NIGHTLY_BUILD
+pref("browser.newtabpage.activity-stream.enabled", true);
+#else
 pref("browser.newtabpage.activity-stream.enabled", false);
+#endif
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

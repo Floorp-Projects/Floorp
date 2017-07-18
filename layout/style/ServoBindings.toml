@@ -63,6 +63,7 @@ headers = [
     "mozilla/LookAndFeel.h",
     "mozilla/ServoBindings.h",
     "mozilla/ServoMediaList.h",
+    "mozilla/ServoStyleContext.h",
     "nsCSSCounterStyleRule.h",
     "nsCSSFontFaceRule.h",
     "nsMediaFeatures.h",
@@ -121,6 +122,7 @@ whitelist-types = [
     "mozilla::ComputedTimingFunction",
     "mozilla::ComputedTimingFunction::BeforeFlag",
     "mozilla::ServoElementSnapshot.*",
+    "mozilla::ServoStyleContext",
     "mozilla::ServoStyleSheetInner",
     "mozilla::CSSPseudoClassType",
     "mozilla::css::ErrorReporter",
@@ -245,7 +247,13 @@ whitelist-types = [
     "Runnable",
     "ServoAttrSnapshot",
     "ServoBundledURI",
+    "ServoComputedValues",
+    "ServoComputedValuesBorrowed",
+    "ServoComputedValuesBorrowedOrNull",
     "ServoElementSnapshot",
+    "ServoStyleContextStrong",
+    "ServoStyleContextBorrowed",
+    "ServoStyleContextBorrowedOrNull",
     "SheetParsingMode",
     "StaticRefPtr",
     "StyleAnimation",
@@ -310,6 +318,14 @@ mapped-generic-types = [
     { generic = true, gecko = "mozilla::ServoUnsafeCell", servo = "::std::cell::UnsafeCell" },
     { generic = true, gecko = "mozilla::ServoCell", servo = "::std::cell::Cell" },
     { generic = false, gecko = "ServoNodeData", servo = "AtomicRefCell<ElementData>" },
+    { generic = false, gecko = "mozilla::ServoWritingMode", servo = "::logical_geometry::WritingMode" },
+    { generic = false, gecko = "mozilla::ServoFontComputationData", servo = "::properties::FontComputationData" },
+    { generic = false, gecko = "mozilla::ServoCustomPropertiesMap", servo = "Option<::stylearc::Arc<::custom_properties::CustomPropertiesMap>>" },
+    { generic = false, gecko = "mozilla::ServoRuleNode", servo = "Option<::rule_tree::StrongRuleNode>" },
+    { generic = false, gecko = "mozilla::ServoVisitedStyle", servo = "Option<::stylearc::RawOffsetArc<::properties::ComputedValues>>" },
+    { generic = false, gecko = "mozilla::ServoComputedValueFlags", servo = "::properties::computed_value_flags::ComputedValueFlags" },
+    { generic = true, gecko = "mozilla::ServoRawOffsetArc", servo = "::stylearc::RawOffsetArc" },
+    { generic = false, gecko = "ServoStyleContextStrong", servo = "::gecko_bindings::sugar::ownership::Strong<ServoStyleContext>" },
 ]
 fixups = [
     { pat = "root::nsString", rep = "::nsstring::nsStringRepr" },
@@ -320,6 +336,8 @@ headers = ["mozilla/ServoBindings.h"]
 hide-types = [
     "nsACString_internal",
     "nsAString_internal",
+    "ServoStyleContextBorrowed",
+    "ServoStyleContextBorrowedOrNull",
 ]
 raw-lines = [
     "pub use nsstring::{nsACString, nsAString, nsString, nsStringRepr};",
@@ -327,6 +345,10 @@ raw-lines = [
     "use gecko_bindings::structs::nsTArray;",
     "type nsACString_internal = nsACString;",
     "type nsAString_internal = nsAString;",
+    "pub type ServoStyleContextBorrowed<'a> = &'a ServoStyleContext;",
+    "pub type ServoStyleContextBorrowedOrNull<'a> = Option<&'a ::properties::ComputedValues>;",
+    "pub type ServoComputedValuesBorrowed<'a> = &'a ServoComputedValues;",
+    "pub type ServoComputedValuesBorrowedOrNull<'a> = Option<&'a ServoComputedValues>;",
 ]
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
 structs-types = [
@@ -452,6 +474,9 @@ structs-types = [
     "Loader",
     "LoaderReusableStyleSheets",
     "ServoStyleSheet",
+    "ServoComputedValues",
+    "ServoStyleContext",
+    "ServoStyleContextStrong",
     "EffectCompositor_CascadeLevel",
     "UpdateAnimationsTasks",
     "ParsingMode",

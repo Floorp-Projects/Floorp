@@ -14,6 +14,7 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "nsStyleStruct.h"
+#include "nsStyleContext.h"
 
 namespace mozilla {
 
@@ -34,6 +35,15 @@ ArenaRefPtr<T>::AssertValidType()
 #endif
 }
 
+template<>
+struct ArenaRefPtrTraits<nsStyleContext>
+{
+  static bool UsesArena(nsStyleContext* aPtr) {
+    MOZ_ASSERT(aPtr);
+    return aPtr->IsGecko();
+  }
+};
+
 } // namespace mozilla
 
 template<typename T>
@@ -43,5 +53,6 @@ nsPresArena::RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
   MOZ_ASSERT(!mArenaRefPtrs.Contains(aPtr));
   mArenaRefPtrs.Put(aPtr, T::ArenaObjectID());
 }
+
 
 #endif

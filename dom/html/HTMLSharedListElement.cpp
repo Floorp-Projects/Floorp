@@ -38,11 +38,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLSharedListElement)
 
 
-NS_IMPL_BOOL_ATTR(HTMLSharedListElement, Compact, compact)
-NS_IMPL_INT_ATTR_DEFAULT_VALUE(HTMLSharedListElement, Start, start, 1)
-NS_IMPL_STRING_ATTR(HTMLSharedListElement, Type, type)
-NS_IMPL_BOOL_ATTR(HTMLSharedListElement, Reversed, reversed)
-
 // Shared with nsHTMLSharedElement.cpp
 nsAttrValue::EnumTable kListTypeTable[] = {
   { "none", NS_STYLE_LIST_STYLE_NONE },

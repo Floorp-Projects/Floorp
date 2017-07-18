@@ -39,6 +39,10 @@ var gSearchResultsPane = {
         }
       });
     }
+    let strings = this.strings;
+    this.searchInput.placeholder = AppConstants.platform == "win" ?
+      strings.getString("searchInput.labelWin") :
+      strings.getString("searchInput.labelUnix");
   },
 
   handleEvent(event) {

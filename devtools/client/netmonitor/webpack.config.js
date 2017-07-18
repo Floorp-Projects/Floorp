@@ -42,6 +42,7 @@ let webpackConfig = {
       "devtools/client/framework/menu": "devtools-modules/src/menu",
       "devtools/client/framework/menu-item": path.join(__dirname, "../../client/framework/menu-item"),
       "devtools/client/locales": path.join(__dirname, "../../client/locales/en-US"),
+      "devtools/client/netmonitor/src/utils/menu": "devtools-contextmenu",
       "devtools/client/shared/components/autocomplete-popup": path.join(__dirname, "../../client/shared/components/autocomplete-popup"),
       "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
       "devtools/client/shared/components/search-box": path.join(__dirname, "../../client/shared/components/search-box"),
@@ -82,15 +83,11 @@ let webpackConfig = {
       "devtools/shared/task": path.join(__dirname, "../../shared/task"),
       "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
       "Services": "devtools-modules/src/Services",
-      "./utils/menu": path.join(__dirname, "devtools-contextmenu"),
     },
   },
 };
 
 const mappings = [
-  [
-    /utils\/menu/, "devtools-launchpad/src/components/shared/menu"
-  ],
   [
     /chrome:\/\/devtools\/skin/,
     (result) => {

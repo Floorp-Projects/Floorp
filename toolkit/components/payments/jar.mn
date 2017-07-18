@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+%   content payments %content/payments/
+    content/payments/paymentRequest.css                (content/paymentRequest.css)
+    content/payments/paymentRequest.js                 (content/paymentRequest.js)
+    content/payments/paymentRequest.xhtml              (content/paymentRequest.xhtml)

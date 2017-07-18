@@ -8,6 +8,9 @@ add_task(async function test_settingsOpen_observer() {
     gBrowser,
     url: "about:robots"
   }, async function dummyTabTask(aBrowser) {
+    // Ensure preferences is loaded before removing the tab.
+    let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);
+
     let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
     info("simulate a notifications-open-settings notification");
     let uri = NetUtil.newURI("https://example.com");
@@ -15,6 +18,7 @@ add_task(async function test_settingsOpen_observer() {
     Services.obs.notifyObservers(principal, "notifications-open-settings");
     let tab = await tabPromise;
     ok(tab, "The notification settings tab opened");
+    await syncPaneLoadedPromise;
     await BrowserTestUtils.removeTab(tab);
   });
 });
@@ -29,6 +33,9 @@ add_task(async function test_settingsOpen_button() {
       gBrowser,
       url: notificationURL
     }, async function tabTask(aBrowser) {
+      // Ensure preferences is loaded before removing the tab.
+      let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);
+
       info("Waiting for notification");
       await openNotification(aBrowser, "showNotification2");
 
@@ -48,6 +55,7 @@ add_task(async function test_settingsOpen_button() {
       let tab = await tabPromise;
       ok(tab, "The notification settings tab opened");
 
+      await syncPaneLoadedPromise;
       await closePromise;
       await BrowserTestUtils.removeTab(tab);
     });

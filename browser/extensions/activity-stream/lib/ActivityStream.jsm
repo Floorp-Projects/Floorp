@@ -44,7 +44,7 @@ const PREFS_CONFIG = new Map([
   }],
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
-    value: "https://onyx_tiles.stage.mozaws.net/v4/links/activity-stream"
+    value: "https://tiles.services.mozilla.com/v4/links/activity-stream"
   }]
 ]);
 

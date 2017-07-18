@@ -105,6 +105,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.layout.style.test['css-visited'] += [
     '/layout/reftests/css-visited/subject-of-selector-descendant-1.html',
     '/layout/reftests/css-visited/subject-of-selector-descendant-2-ref.xhtml',
     '/layout/reftests/css-visited/subject-of-selector-descendant-2.xhtml',
+    '/layout/reftests/css-visited/visited-inherit-1-ref.html',
+    '/layout/reftests/css-visited/visited-inherit-1.html',
     '/layout/reftests/css-visited/visited-page.html',
     '/layout/reftests/css-visited/white-to-transparent-1-ref.html',
     '/layout/reftests/css-visited/white-to-transparent-1.html',

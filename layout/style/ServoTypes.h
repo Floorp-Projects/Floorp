@@ -9,6 +9,10 @@
 
 #include "mozilla/TypedEnumBits.h"
 
+#define STYLE_STRUCT(name_, checkdata_cb_) struct nsStyle##name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
 /*
  * Type definitions used to interact with Servo. This gets included by nsINode,
  * so don't add significant include dependencies to this file.
@@ -128,6 +132,107 @@ enum class InheritTarget {
   PlaceholderFrame,
 };
 
+struct ServoWritingMode {
+  uint8_t mBits;
+};
+
+struct ServoFontComputationData {
+  // 8 bytes, but is done as 4+4 for alignment
+  uint32_t mFour;
+  uint32_t mFour2;
+};
+
+struct ServoCustomPropertiesMap {
+  uintptr_t mPtr;
+};
+
+struct ServoRuleNode {
+  uintptr_t mPtr;
+};
+
+
+class ServoStyleContext;
+
+struct ServoVisitedStyle {
+  // This is actually a strong reference
+  // but ServoComputedValues' destructor is
+  // managed by the Rust code so we just use a
+  // regular pointer
+  ServoStyleContext* mPtr;
+};
+
+template <typename T>
+struct ServoRawOffsetArc {
+  // Again, a strong reference, but
+  // managed by the Rust code
+  T* mPtr;
+};
+
+struct ServoComputedValueFlags {
+  uint8_t mFlags;
+};
+
+#define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_;
+#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+
 } // namespace mozilla
+
+
+struct ServoComputedValues;
+struct ServoComputedValuesForgotten {
+  // Make sure you manually mem::forget the backing ServoComputedValues
+  // after calling this
+  explicit ServoComputedValuesForgotten(const ServoComputedValues* aValue) : mPtr(aValue) {}
+  const ServoComputedValues* mPtr;
+};
+
+/**
+ * We want C++ to be abe to read the style struct fields of ComputedValues
+ * so we define this type on the C++ side and use the bindgenned version
+ * on the Rust side.
+ *
+ */
+struct ServoComputedValues {
+#define STYLE_STRUCT(name_, checkdata_cb_)                 \
+  mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
+  inline const nsStyle##name_* GetStyle##name_() const;
+  #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
+  const nsStyleVariables* GetStyleVariables() const;
+  mozilla::ServoCustomPropertiesMap custom_properties;
+  mozilla::ServoWritingMode writing_mode;
+  mozilla::ServoFontComputationData font_computation_data;
+  /// The rule node representing the ordered list of rules matched for this
+  /// node.  Can be None for default values and text nodes.  This is
+  /// essentially an optimization to avoid referencing the root rule node.
+  mozilla::ServoRuleNode rules;
+  /// The element's computed values if visited, only computed if there's a
+  /// relevant link for this element. A element's "relevant link" is the
+  /// element being matched if it is a link or the nearest ancestor link.
+  mozilla::ServoVisitedStyle visited_style;
+  mozilla::ServoComputedValueFlags flags;
+
+  // C++ just sees this struct as a bucket of bits, and will
+  // do the wrong thing if we let it use the default copy ctor/assignment
+  // operator. Remove them so that there is no footgun.
+  //
+  // We remove the move ctor/assignment operator as well, because
+  // moves in C++ don't prevent destructors from being called,
+  // which will lead to double frees.
+  ServoComputedValues& operator=(const ServoComputedValues&) = delete;
+  ServoComputedValues(const ServoComputedValues&) = delete;
+  ServoComputedValues&& operator=(const ServoComputedValues&&) = delete;
+  ServoComputedValues(const ServoComputedValues&&) = delete;
+
+  // Constructs via memcpy. Will not invalidate old struct
+  explicit ServoComputedValues(const ServoComputedValuesForgotten aValue);
+};
+
+
 
 #endif // mozilla_ServoTypes_h

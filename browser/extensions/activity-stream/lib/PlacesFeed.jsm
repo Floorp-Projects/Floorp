@@ -187,7 +187,8 @@ class PlacesFeed {
   onAction(action) {
     switch (action.type) {
       case at.INIT:
-        this.addObservers();
+        // Briefly avoid loading services for observing for better startup timing
+        Services.tm.dispatchToMainThread(() => this.addObservers());
         break;
       case at.UNINIT:
         this.removeObservers();

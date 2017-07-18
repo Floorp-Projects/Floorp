@@ -26,12 +26,8 @@ class ServoStyleContext;
 } // namespace mozilla
 
 extern "C" {
-#define STYLE_STRUCT(name_, checkdata_cb_)     \
-  struct nsStyle##name_;                       \
-  const nsStyle##name_* Servo_GetStyle##name_( \
-    ServoComputedValuesBorrowedOrNull computed_values);
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
+  void Servo_StyleContext_AddRef(mozilla::ServoStyleContext* aContext);
+  void Servo_StyleContext_Release(mozilla::ServoStyleContext* aContext);
 }
 
 /**
@@ -75,36 +71,11 @@ public:
   }
   nsIPresShell* Arena();
 
-#ifdef DEBUG
-  /**
-   * Initializes a cached pref, which is only used in DEBUG code.
-   */
-  static void Initialize();
-#endif
+  void AddChild(nsStyleContext* aChild);
+  void RemoveChild(nsStyleContext* aChild);
 
-  nsrefcnt AddRef() {
-    if (mRefCnt == UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking object");
-      return mRefCnt;
-    }
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsStyleContext", sizeof(nsStyleContext));
-    return mRefCnt;
-  }
-
-  nsrefcnt Release() {
-    if (mRefCnt == UINT32_MAX) {
-      NS_WARNING("refcount overflow, leaking object");
-      return mRefCnt;
-    }
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsStyleContext");
-    if (mRefCnt == 0) {
-      Destroy();
-      return 0;
-    }
-    return mRefCnt;
-  }
+  inline void AddRef();
+  inline void Release();
 
 #ifdef DEBUG
   void FrameAddRef() {
@@ -218,35 +189,7 @@ public:
   // examining the corresponding struct on |this|.  Doing so will likely
   // both (1) lead to a privacy leak and (2) lead to dynamic change bugs
   // related to the Peek code in nsStyleContext::CalcStyleDifference.
-  nsStyleContext* GetStyleIfVisited() const
-    { return mStyleIfVisited; }
-
-  // To be called only from nsStyleSet / ServoStyleSet.
-  void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
-  {
-    MOZ_ASSERT(!IsStyleIfVisited(), "this context is not visited data");
-    NS_ASSERTION(!mStyleIfVisited, "should only be set once");
-
-    mStyleIfVisited = aStyleIfVisited;
-
-    MOZ_ASSERT(mStyleIfVisited->IsStyleIfVisited(),
-               "other context is visited data");
-    MOZ_ASSERT(!mStyleIfVisited->GetStyleIfVisited(),
-               "other context does not have visited data");
-    NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
-                 "pseudo tag mismatch");
-    if (GetParentAllowServo() && GetParentAllowServo()->GetStyleIfVisited()) {
-      NS_ASSERTION(GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo()->GetStyleIfVisited() ||
-                   GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo(),
-                   "parent mismatch");
-    } else {
-      NS_ASSERTION(GetStyleIfVisited()->GetParentAllowServo() ==
-                     GetParentAllowServo(),
-                   "parent mismatch");
-    }
-  }
+  inline nsStyleContext* GetStyleIfVisited() const;
 
   // Does any descendant of this style context have any style values
   // that were computed based on this style context's ancestors?
@@ -269,7 +212,7 @@ public:
   }
 
   inline nsRuleNode* RuleNode();
-  inline ServoComputedValues* ComputedValues();
+  inline const ServoComputedValues* ComputedValues();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
@@ -387,11 +330,7 @@ public:
 protected:
   // protected destructor to discourage deletion outside of Release()
   ~nsStyleContext() {}
-  // Where the actual destructor lives
-  // We use this instead of a real destructor because we need
-  // this to be called *before* the subclass fields are destroyed
-  // by the subclass destructor
-  void Destructor();
+
   // Delegated Helper constructor.
   nsStyleContext(nsStyleContext* aParent,
                  nsIAtom* aPseudoTag,
@@ -400,24 +339,9 @@ protected:
   // Helper post-contruct hook.
   void FinishConstruction();
 
-  // Only does stuff in Gecko mode
-  void AddChild(nsStyleContext* aChild);
-  void RemoveChild(nsStyleContext* aChild);
-
   void SetStyleBits();
 
-  const void* StyleStructFromServoComputedValues(nsStyleStructID aSID) {
-    switch (aSID) {
-#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
-      case eStyleStruct_##name_:                                              \
-        return Servo_GetStyle##name_(ComputedValues());
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected nsStyleStructID value");
-        return nullptr;
-    }
-  }
+  inline const void* StyleStructFromServoComputedValues(nsStyleStructID aSID);
 
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
@@ -432,11 +356,6 @@ protected:
   #undef STYLE_STRUCT_INHERITED
 
   RefPtr<nsStyleContext> mParent;
-
-  // Style to be used instead for the R, G, and B components of color,
-  // background-color, and border-*-color if the nearest ancestor link
-  // element is visited (see RelevantLinkVisited()).
-  RefPtr<nsStyleContext> mStyleIfVisited;
 
   // If this style context is for a pseudo-element or anonymous box,
   // the relevant atom.
@@ -467,7 +386,7 @@ protected:
 #endif
 };
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<mozilla::GeckoStyleContext>
 NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,

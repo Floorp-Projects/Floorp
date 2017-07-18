@@ -5,6 +5,7 @@
 
 #include "mozilla/GeckoStyleContext.h"
 
+#include "CSSVariableImageTable.h"
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"
 #include "nsPresContext.h"
@@ -16,6 +17,19 @@
 #include "RubyUtils.h"
 
 using namespace mozilla;
+
+#ifdef DEBUG
+// Whether to perform expensive assertions in the nsStyleContext destructor.
+static bool sExpensiveStyleStructAssertionsEnabled;
+
+/* static */ void
+GeckoStyleContext::Initialize()
+{
+  Preferences::AddBoolVarCache(
+      &sExpensiveStyleStructAssertionsEnabled,
+      "layout.css.expensive-style-struct-assertions.enabled");
+}
+#endif
 
 GeckoStyleContext::GeckoStyleContext(nsStyleContext* aParent,
                                      nsIAtom* aPseudoTag,
@@ -67,6 +81,44 @@ GeckoStyleContext::operator new(size_t sz, nsPresContext* aPresContext)
     AllocateByObjectID(eArenaObjectID_GeckoStyleContext, sz);
 }
 
+GeckoStyleContext::~GeckoStyleContext()
+{
+  nsPresContext *presContext = PresContext();
+#ifdef DEBUG
+  NS_ASSERTION(HasNoChildren(), "destructing context with children");
+  if (sExpensiveStyleStructAssertionsEnabled) {
+    // Assert that the style structs we are about to destroy are not referenced
+    // anywhere else in the style context tree.  These checks are expensive,
+    // which is why they are not enabled by default.
+    GeckoStyleContext* root = this;
+    while (root->GetParent()) {
+      root = root->GetParent();
+    }
+    root->AssertStructsNotUsedElsewhere(this,
+                                        std::numeric_limits<int32_t>::max());
+  } else {
+    // In DEBUG builds when the pref is not enabled, we perform a more limited
+    // check just of the children of this style context.
+    this->AssertStructsNotUsedElsewhere(this, 2);
+  }
+
+  nsStyleSet* geckoStyleSet = presContext->PresShell()->StyleSet()->GetAsGecko();
+  NS_ASSERTION(!geckoStyleSet ||
+               geckoStyleSet->GetRuleTree() == AsGecko()->RuleNode()->RuleTree() ||
+               geckoStyleSet->IsInRuleTreeReconstruct(),
+               "destroying style context from old rule tree too late");
+#endif
+
+  if (mParent) {
+    mParent->AsGecko()->RemoveChild(this);
+  } else {
+    presContext->StyleSet()->RootStyleContextRemoved();
+  }
+
+  // Free up our data structs.
+  DestroyCachedStructs(presContext);
+  CSSVariableImageTable::RemoveAll(this);
+}
 
 void
 GeckoStyleContext::AddChild(GeckoStyleContext* aChild)
@@ -1012,3 +1064,32 @@ GeckoStyleContext::SwapStyleData(GeckoStyleContext* aNewContext, uint32_t aStruc
     }
   }
 }
+
+
+void
+GeckoStyleContext::SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
+{
+  MOZ_ASSERT(!IsStyleIfVisited(), "this context is not visited data");
+  NS_ASSERTION(!mStyleIfVisited, "should only be set once");
+
+  mStyleIfVisited = aStyleIfVisited;
+
+  MOZ_ASSERT(mStyleIfVisited->IsStyleIfVisited(),
+             "other context is visited data");
+  MOZ_ASSERT(!mStyleIfVisited->GetStyleIfVisited(),
+             "other context does not have visited data");
+  NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
+               "pseudo tag mismatch");
+  if (GetParent() && GetParent()->GetStyleIfVisited()) {
+    MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
+                   GetParent()->GetStyleIfVisited() ||
+                 GetStyleIfVisited()->GetParent() ==
+                   GetParent(),
+                 "parent mismatch");
+  } else {
+    MOZ_ASSERT(GetStyleIfVisited()->GetParent() ==
+                   GetParent(),
+                 "parent mismatch");
+  }
+}
+

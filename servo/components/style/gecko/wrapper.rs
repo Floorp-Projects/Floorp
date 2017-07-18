@@ -88,7 +88,7 @@ use std::mem;
 use std::ops::DerefMut;
 use std::ptr;
 use string_cache::{Atom, Namespace, WeakAtom, WeakNamespace};
-use stylearc::Arc;
+use stylearc::{Arc, ArcBorrow, RawOffsetArc};
 use stylesheets::UrlExtraData;
 use stylist::Stylist;
 
@@ -505,13 +505,20 @@ impl<'le> GeckoElement<'le> {
 
     /// Returns true if this element has a shadow root.
     fn has_shadow_root(&self) -> bool {
-        self.get_dom_slots().map_or(false, |slots| !slots.mShadowRoot.mRawPtr.is_null())
+        self.get_extended_slots().map_or(false, |slots| !slots.mShadowRoot.mRawPtr.is_null())
     }
 
     /// Returns a reference to the DOM slots for this Element, if they exist.
     fn get_dom_slots(&self) -> Option<&structs::FragmentOrElement_nsDOMSlots> {
         let slots = self.as_node().0.mSlots as *const structs::FragmentOrElement_nsDOMSlots;
         unsafe { slots.as_ref() }
+    }
+
+    /// Returns a reference to the extended DOM slots for this Element.
+    fn get_extended_slots(&self) -> Option<&structs::FragmentOrElement_nsExtendedDOMSlots> {
+        self.get_dom_slots().and_then(|s| {
+            unsafe { s.mExtendedSlots.mPtr.as_ref() }
+        })
     }
 
     #[inline]
@@ -556,10 +563,9 @@ impl<'le> GeckoElement<'le> {
 
     fn get_non_xul_xbl_binding_parent_raw_content(&self) -> *mut nsIContent {
         debug_assert!(!self.is_xul_element());
-        match self.get_dom_slots() {
-            Some(slots) => unsafe { *slots.__bindgen_anon_1.mBindingParent.as_ref() },
-            None => ptr::null_mut(),
-        }
+        self.get_extended_slots().map_or(ptr::null_mut(), |slots| {
+            slots.mBindingParent
+        })
     }
 
     fn has_xbl_binding_parent(&self) -> bool {
@@ -854,13 +860,15 @@ impl<'le> TElement for GeckoElement<'le> {
             device.pres_context().mDocument.raw::<structs::nsIDocument>()
     }
 
-    fn style_attribute(&self) -> Option<&Arc<Locked<PropertyDeclarationBlock>>> {
+    fn style_attribute(&self) -> Option<ArcBorrow<Locked<PropertyDeclarationBlock>>> {
         if !self.may_have_style_attribute() {
             return None;
         }
 
         let declarations = unsafe { Gecko_GetStyleAttrDeclarationBlock(self.0) };
-        declarations.map_or(None, |s| s.as_arc_opt())
+        let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+            declarations.and_then(|s| s.as_arc_opt());
+        declarations.map(|s| s.borrow_arc())
     }
 
     fn unset_dirty_style_attribute(&self) {
@@ -871,9 +879,11 @@ impl<'le> TElement for GeckoElement<'le> {
         unsafe { Gecko_UnsetDirtyStyleAttr(self.0) };
     }
 
-    fn get_smil_override(&self) -> Option<&Arc<Locked<PropertyDeclarationBlock>>> {
+    fn get_smil_override(&self) -> Option<ArcBorrow<Locked<PropertyDeclarationBlock>>> {
         let declarations = unsafe { Gecko_GetSMILOverrideDeclarationBlock(self.0) };
-        declarations.map(|s| s.as_arc_opt()).unwrap_or(None)
+        let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+            declarations.and_then(|s| s.as_arc_opt());
+        declarations.map(|s| s.borrow_arc())
     }
 
     fn get_animation_rule_by_cascade(&self, cascade_level: ServoCascadeLevel)
@@ -1091,10 +1101,9 @@ impl<'le> TElement for GeckoElement<'le> {
         let computed_data = self.borrow_data();
         let computed_values =
             computed_data.as_ref().map(|d| d.styles.primary());
-        let computed_values_opt =
-            computed_values.map(|v| *HasArcFFI::arc_as_borrowed(v));
         let before_change_values =
-            before_change_style.as_ref().map(|v| *HasArcFFI::arc_as_borrowed(v));
+            before_change_style.as_ref().map(|x| &**x);
+        let computed_values_opt = computed_values.as_ref().map(|x| &***x);
         unsafe {
             Gecko_UpdateAnimations(self.0,
                                    before_change_values,
@@ -1176,7 +1185,7 @@ impl<'le> TElement for GeckoElement<'le> {
             };
             let end_value = AnimationValue::arc_from_borrowed(&raw_end_value);
             debug_assert!(end_value.is_some());
-            map.insert(property, end_value.unwrap().clone());
+            map.insert(property, end_value.unwrap().clone_arc());
         }
         map
     }
@@ -1422,17 +1431,19 @@ impl<'le> PresentationalHintsSynthesizer for GeckoElement<'le> {
             }
         }
         let declarations = unsafe { Gecko_GetHTMLPresentationAttrDeclarationBlock(self.0) };
-        let declarations = declarations.and_then(|s| s.as_arc_opt());
+        let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+            declarations.and_then(|s| s.as_arc_opt());
         if let Some(decl) = declarations {
             hints.push(
-                ApplicableDeclarationBlock::from_declarations(Clone::clone(decl), ServoCascadeLevel::PresHints)
+                ApplicableDeclarationBlock::from_declarations(decl.clone_arc(), ServoCascadeLevel::PresHints)
             );
         }
         let declarations = unsafe { Gecko_GetExtraContentStyleDeclarations(self.0) };
-        let declarations = declarations.and_then(|s| s.as_arc_opt());
+        let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+            declarations.and_then(|s| s.as_arc_opt());
         if let Some(decl) = declarations {
             hints.push(
-                ApplicableDeclarationBlock::from_declarations(Clone::clone(decl), ServoCascadeLevel::PresHints)
+                ApplicableDeclarationBlock::from_declarations(decl.clone_arc(), ServoCascadeLevel::PresHints)
             );
         }
 
@@ -1452,20 +1463,22 @@ impl<'le> PresentationalHintsSynthesizer for GeckoElement<'le> {
                     Gecko_GetVisitedLinkAttrDeclarationBlock(self.0)
                 },
             };
-            let declarations = declarations.and_then(|s| s.as_arc_opt());
+            let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+                declarations.and_then(|s| s.as_arc_opt());
             if let Some(decl) = declarations {
                 hints.push(
-                    ApplicableDeclarationBlock::from_declarations(Clone::clone(decl), ServoCascadeLevel::PresHints)
+                    ApplicableDeclarationBlock::from_declarations(decl.clone_arc(), ServoCascadeLevel::PresHints)
                 );
             }
 
             let active = self.get_state().intersects(NonTSPseudoClass::Active.state_flag());
             if active {
                 let declarations = unsafe { Gecko_GetActiveLinkAttrDeclarationBlock(self.0) };
-                let declarations = declarations.and_then(|s| s.as_arc_opt());
+                let declarations: Option<&RawOffsetArc<Locked<PropertyDeclarationBlock>>> =
+                    declarations.and_then(|s| s.as_arc_opt());
                 if let Some(decl) = declarations {
                     hints.push(
-                        ApplicableDeclarationBlock::from_declarations(Clone::clone(decl), ServoCascadeLevel::PresHints)
+                        ApplicableDeclarationBlock::from_declarations(decl.clone_arc(), ServoCascadeLevel::PresHints)
                     );
                 }
             }
