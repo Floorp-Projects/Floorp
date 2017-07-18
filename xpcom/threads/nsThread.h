@@ -21,6 +21,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Array.h"
 
 namespace mozilla {
 class CycleCollectedJSContext;
@@ -93,7 +94,8 @@ public:
   static bool SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave);
 #endif
 
-  static const char* sMainThreadRunnableName;
+  static const uint32_t kRunnableNameBufSize = 1000;
+  static mozilla::Array<char, kRunnableNameBufSize> sMainThreadRunnableName;
 
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);

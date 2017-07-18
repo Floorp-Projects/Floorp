@@ -3714,6 +3714,7 @@ var gDetailView = {
     browser.setAttribute("id", "addon-options");
     browser.setAttribute("class", "inline-options-browser");
     browser.setAttribute("forcemessagemanager", "true");
+    browser.setAttribute("selectmenulist", "ContentSelectDropdown");
 
     let {optionsURL} = this._addon;
     let remote = !E10SUtils.canLoadURIInProcess(optionsURL, Services.appinfo.PROCESS_TYPE_DEFAULT);

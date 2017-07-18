@@ -31,7 +31,6 @@
 #include "mozilla/plugins/PluginInstanceChild.h"
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
-#include "mozilla/plugins/PluginStreamChild.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 
@@ -841,15 +840,6 @@ static NPError
 _posturl(NPP aNPP, const char* relativeURL, const char *target, uint32_t len,
          const char *buf, NPBool file);
 
-static NPError
-_newstream(NPP aNPP, NPMIMEType type, const char* window, NPStream** pstream);
-
-static int32_t
-_write(NPP aNPP, NPStream *pstream, int32_t len, void *buffer);
-
-static NPError
-_destroystream(NPP aNPP, NPStream *pstream, NPError reason);
-
 static void
 _status(NPP aNPP, const char *message);
 
@@ -984,9 +974,9 @@ const NPNetscapeFuncs PluginModuleChild::sBrowserFuncs = {
     mozilla::plugins::child::_geturl,
     mozilla::plugins::child::_posturl,
     mozilla::plugins::child::_requestread,
-    mozilla::plugins::child::_newstream,
-    mozilla::plugins::child::_write,
-    mozilla::plugins::child::_destroystream,
+    nullptr,
+    nullptr,
+    nullptr,
     mozilla::plugins::child::_status,
     mozilla::plugins::child::_useragent,
     mozilla::plugins::child::_memalloc,
@@ -1237,55 +1227,6 @@ _posturl(NPP aNPP,
     return err;
 }
 
-NPError
-_newstream(NPP aNPP,
-           NPMIMEType aMIMEType,
-           const char* aWindow,
-           NPStream** aStream)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    ENSURE_PLUGIN_THREAD(NPERR_INVALID_PARAM);
-    return InstCast(aNPP)->NPN_NewStream(aMIMEType, aWindow, aStream);
-}
-
-int32_t
-_write(NPP aNPP,
-       NPStream* aStream,
-       int32_t aLength,
-       void* aBuffer)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    ENSURE_PLUGIN_THREAD(0);
-
-    PluginStreamChild* ps =
-        static_cast<PluginStreamChild*>(static_cast<AStream*>(aStream->ndata));
-    ps->EnsureCorrectInstance(InstCast(aNPP));
-    ps->EnsureCorrectStream(aStream);
-    return ps->NPN_Write(aLength, aBuffer);
-}
-
-NPError
-_destroystream(NPP aNPP,
-               NPStream* aStream,
-               NPError aReason)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    ENSURE_PLUGIN_THREAD(NPERR_INVALID_PARAM);
-
-    PluginInstanceChild* p = InstCast(aNPP);
-    AStream* s = static_cast<AStream*>(aStream->ndata);
-    if (s->IsBrowserStream()) {
-        BrowserStreamChild* bs = static_cast<BrowserStreamChild*>(s);
-        bs->EnsureCorrectInstance(p);
-        bs->NPN_DestroyStream(aReason);
-    }
-    else {
-        PluginStreamChild* ps = static_cast<PluginStreamChild*>(s);
-        ps->EnsureCorrectInstance(p);
-        PPluginStreamChild::Call__delete__(ps, aReason, false);
-    }
-    return NPERR_NO_ERROR;
-}
 
 void
 _status(NPP aNPP,

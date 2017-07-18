@@ -105,6 +105,16 @@ Preferences::DirtyCallback()
 
     NS_WARNING_ASSERTION(!sPreferences->mProfileShutdown,
                          "Setting user pref after profile shutdown.");
+
+    if (sPreferences->AllowOffMainThreadSave() && !sPreferences->mSavePending) {
+      sPreferences->mSavePending = true;
+      static const int PREF_DELAY_MS = 500;
+      NS_DelayedDispatchToCurrentThread(
+        mozilla::NewRunnableMethod("Preferences::SavePrefFileAsynchronous",
+                                   sPreferences,
+                                   &Preferences::SavePrefFileAsynchronous),
+        PREF_DELAY_MS);
+    }
   }
 }
 
@@ -1158,6 +1168,8 @@ Preferences::SavePrefFileInternal(nsIFile *aFile, SaveMethod aSaveMethod)
   // unmodified pref file (see the original bug 160377 when we added this.)
 
   if (nullptr == aFile) {
+    mSavePending = false;
+
     // Off main thread writing only if allowed
     if (!AllowOffMainThreadSave()) {
       aSaveMethod = SaveMethod::Blocking;

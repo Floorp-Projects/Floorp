@@ -99,7 +99,7 @@ static LazyLogModule sThreadLog("nsThread");
 
 NS_DECL_CI_INTERFACE_GETTER(nsThread)
 
-const char* nsThread::sMainThreadRunnableName = nullptr;
+Array<char, nsThread::kRunnableNameBufSize> nsThread::sMainThreadRunnableName;
 
 //-----------------------------------------------------------------------------
 // Because we do not have our own nsIFactory, we have to implement nsIClassInfo
@@ -1422,15 +1422,24 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
       // If we're on the main thread, we want to record our current runnable's
       // name in a static so that BHR can record it.
-      const char* restoreRunnableName = nullptr;
+      Array<char, kRunnableNameBufSize> restoreRunnableName;
+      restoreRunnableName[0] = '\0';
       auto clear = MakeScopeExit([&] {
         if (MAIN_THREAD == mIsMainThread) {
+          MOZ_ASSERT(NS_IsMainThread());
           sMainThreadRunnableName = restoreRunnableName;
         }
       });
       if (MAIN_THREAD == mIsMainThread) {
+        MOZ_ASSERT(NS_IsMainThread());
         restoreRunnableName = sMainThreadRunnableName;
-        sMainThreadRunnableName = name.get();
+
+        // Copy the name into sMainThreadRunnableName's buffer, and append a
+        // terminating null.
+        uint32_t length = std::min((uint32_t) kRunnableNameBufSize - 1,
+                                   (uint32_t) name.Length());
+        memcpy(sMainThreadRunnableName.begin(), name.BeginReading(), length);
+        sMainThreadRunnableName[length] = '\0';
       }
 #endif
 

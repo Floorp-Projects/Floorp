@@ -8,7 +8,6 @@
 #include "PluginInstanceChild.h"
 #include "PluginModuleChild.h"
 #include "BrowserStreamChild.h"
-#include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
 #include "PluginProcessChild.h"
 #include "gfxASurface.h"
@@ -2529,22 +2528,6 @@ PluginInstanceChild::DeallocPBrowserStreamChild(PBrowserStreamChild* stream)
     return true;
 }
 
-PPluginStreamChild*
-PluginInstanceChild::AllocPPluginStreamChild(const nsCString& mimeType,
-                                             const nsCString& target,
-                                             NPError* result)
-{
-    MOZ_CRASH("not callable");
-    return nullptr;
-}
-
-bool
-PluginInstanceChild::DeallocPPluginStreamChild(PPluginStreamChild* stream)
-{
-    AssertPluginThread();
-    delete stream;
-    return true;
-}
 
 PStreamNotifyChild*
 PluginInstanceChild::AllocPStreamNotifyChild(const nsCString& url,
@@ -2658,28 +2641,6 @@ PluginInstanceChild::GetActorForNPObject(NPObject* aObject)
 
     actor->InitializeLocal(aObject);
     return actor;
-}
-
-NPError
-PluginInstanceChild::NPN_NewStream(NPMIMEType aMIMEType, const char* aWindow,
-                                   NPStream** aStream)
-{
-    AssertPluginThread();
-    AutoStackHelper guard(this);
-
-    auto* ps = new PluginStreamChild();
-
-    NPError result;
-    CallPPluginStreamConstructor(ps, nsDependentCString(aMIMEType),
-                                 NullableString(aWindow), &result);
-    if (NPERR_NO_ERROR != result) {
-        *aStream = nullptr;
-        PPluginStreamChild::Call__delete__(ps, NPERR_GENERIC_ERROR, true);
-        return result;
-    }
-
-    *aStream = &ps->mStream;
-    return NPERR_NO_ERROR;
 }
 
 void

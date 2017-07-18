@@ -341,7 +341,8 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     sandbox::MITIGATION_HEAP_TERMINATE |
     sandbox::MITIGATION_SEHOP |
     sandbox::MITIGATION_DEP_NO_ATL_THUNK |
-    sandbox::MITIGATION_DEP;
+    sandbox::MITIGATION_DEP |
+    sandbox::MITIGATION_EXTENSION_POINT_DISABLE;
 
   result = mPolicy->SetProcessMitigations(mitigations);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,

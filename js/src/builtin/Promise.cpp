@@ -692,7 +692,7 @@ NewPromiseCapability(JSContext* cx, HandleObject C, MutableHandleObject promise,
 
     // Steps 1-2.
     if (!IsConstructor(C)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, -1, cVal, nullptr);
+        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_SEARCH_STACK, cVal, nullptr);
         return false;
     }
 
