@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
           Social:false, TabCrashHandler:false, Task:false, TelemetryStopwatch:false,
           Translation:false, UITour:false, UpdateUtils:false, Weave:false,
           WebNavigationFrames: false, fxAccounts:false, gDevTools:false,
-          gDevToolsBrowser:false, webrtcUI:false, FullZoomUI:false,
+          gDevToolsBrowser:false, webrtcUI:false, ZoomUI:false,
           Marionette:false,
  */
 
@@ -59,7 +59,6 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
   ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
-  ["FullZoomUI", "resource:///modules/FullZoomUI.jsm"],
   ["GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm"],
   ["LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm"],
   ["Log", "resource://gre/modules/Log.jsm"],
@@ -91,6 +90,7 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   ["gDevTools", "resource://devtools/client/framework/gDevTools.jsm"],
   ["gDevToolsBrowser", "resource://devtools/client/framework/gDevTools.jsm"],
   ["webrtcUI", "resource:///modules/webrtcUI.jsm"],
+  ["ZoomUI", "resource:///modules/ZoomUI.jsm"],
 ].forEach(([name, resource]) => XPCOMUtils.defineLazyModuleGetter(this, name, resource));
 
 XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
@@ -1273,7 +1273,7 @@ var gBrowserInit = {
     TrackingProtection.init();
     RefreshBlocker.init();
     CaptivePortalWatcher.init();
-    FullZoomUI.init(window);
+    ZoomUI.init(window);
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
