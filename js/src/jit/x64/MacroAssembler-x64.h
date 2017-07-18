@@ -707,7 +707,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         emitSet(cond, dest);
     }
 
-    void boxDouble(FloatRegister src, const ValueOperand& dest) {
+    void boxDouble(FloatRegister src, const ValueOperand& dest, FloatRegister) {
         vmovq(src, dest.valueReg());
     }
     void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest) {

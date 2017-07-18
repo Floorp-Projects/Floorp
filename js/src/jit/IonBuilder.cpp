@@ -3422,7 +3422,8 @@ IonBuilder::powTrySpecialized(bool* emitted, MDefinition* base, MDefinition* pow
 static inline bool
 SimpleArithOperand(MDefinition* op)
 {
-    return !op->mightBeType(MIRType::Object)
+    return !op->emptyResultTypeSet()
+        && !op->mightBeType(MIRType::Object)
         && !op->mightBeType(MIRType::String)
         && !op->mightBeType(MIRType::Symbol)
         && !op->mightBeType(MIRType::MagicOptimizedArguments)
@@ -7242,7 +7243,6 @@ IonBuilder::ensureDefiniteType(MDefinition* def, MIRType definiteType)
                 replace = MToDouble::New(alloc(), def);
                 break;
             }
-            MOZ_ASSERT(def->type() == definiteType);
             return def;
         }
         replace = MUnbox::New(alloc(), def, definiteType, MUnbox::Infallible);
