@@ -174,7 +174,23 @@ var loadListener = {
       curContainer.frame.addEventListener("unload", this);
 
       Services.obs.addObserver(this, "outer-window-destroyed");
+
     } else {
+      // The frame script got reloaded due to a new content process.
+      // Due to the time it takes to re-register the browser in Marionette,
+      // it can happen that page load events are missed before the listeners
+      // are getting attached again. By checking the document readyState the
+      // command can return immediately if the page load is already done.
+      let readyState = content.document.readyState;
+      let documentURI = content.document.documentURI;
+      logger.debug(`Check readyState "${readyState} for "${documentURI}"`);
+
+      // If the page load has already finished, don't setup listeners and
+      // timers but return immediatelly.
+      if (this.handleReadyState(readyState, documentURI)) {
+        return;
+      }
+
       addEventListener("DOMContentLoaded", loadListener);
       addEventListener("pageshow", loadListener);
     }
@@ -250,43 +266,77 @@ var loadListener = {
         // Now wait until the target page has been loaded
         addEventListener("DOMContentLoaded", this, false);
         addEventListener("pageshow", this, false);
-
         break;
 
       case "hashchange":
         this.stop();
         sendOk(this.command_id);
-
         break;
 
       case "DOMContentLoaded":
-        if (event.target.documentURI.startsWith("about:certerror")) {
+      case "pageshow":
+        this.handleReadyState(event.target.readyState,
+            event.target.documentURI);
+        break;
+    }
+  },
+
+  /**
+   * Checks the value of readyState for the current page
+   * load activity, and resolves the command if the load
+   * has been finished. It also takes care of the selected
+   * page load strategy.
+   *
+   * @param {string} readyState
+   *     Current ready state of the document.
+   * @param {string} documentURI
+   *     Current document URI of the document.
+   *
+   * @return {boolean}
+   *     True if the page load has been finished.
+   */
+  handleReadyState(readyState, documentURI) {
+    let finished = false;
+
+    switch (readyState) {
+      case "interactive":
+        if (documentURI.startsWith("about:certerror")) {
           this.stop();
           sendError(new InsecureCertificateError(), this.command_id);
+          finished = true;
 
-        } else if (/about:.*(error)\?/.exec(event.target.documentURI)) {
+        } else if (/about:.*(error)\?/.exec(documentURI)) {
           this.stop();
-          sendError(new UnknownError("Reached error page: " +
-              event.target.documentURI), this.command_id);
+          sendError(new UnknownError(`Reached error page: ${documentURI}`),
+              this.command_id);
+          finished = true;
 
         // Return early with a page load strategy of eager, and also
         // special-case about:blocked pages which should be treated as
-        // non-error pages but do not raise a pageshow event.
+        // non-error pages but do not raise a pageshow event. about:blank
+        // is also treaded specifically here, because it gets temporary
+        // loaded for new content processes, and we only want to rely on
+        // complete loads for it.
         } else if ((capabilities.get("pageLoadStrategy") ===
-            session.PageLoadStrategy.Eager) ||
-            /about:blocked\?/.exec(event.target.documentURI)) {
+            session.PageLoadStrategy.Eager &&
+            documentURI != "about:blank") ||
+            /about:blocked\?/.exec(documentURI)) {
           this.stop();
           sendOk(this.command_id);
+          finished = true;
         }
 
         break;
 
-      case "pageshow":
+      case "complete":
         this.stop();
         sendOk(this.command_id);
+        finished = true;
 
         break;
     }
+
+    return finished;
   },
 
   /**
