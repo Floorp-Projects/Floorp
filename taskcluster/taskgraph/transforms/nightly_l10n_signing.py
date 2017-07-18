@@ -36,6 +36,27 @@ def make_signing_description(config, jobs):
                     'format': 'macapp',
                 }
             ]
+        elif 'win32' in dep_platform:
+            job_specs = [
+                {
+                    'artifacts': [
+                        'public/build/{locale}/target.zip',
+                        'public/build/{locale}/setup.exe',
+                        'public/build/{locale}/setup-stub.exe'
+                    ],
+                    'format': 'sha2signcode',
+                }
+            ]
+        elif 'win64' in dep_platform:
+            job_specs = [
+                {
+                    'artifacts': [
+                        'public/build/{locale}/target.zip',
+                        'public/build/{locale}/setup.exe',
+                    ],
+                    'format': 'sha2signcode',
+                }
+            ]
         elif 'linux' in dep_platform:
             job_specs = [
                 {
