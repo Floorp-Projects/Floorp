@@ -67,6 +67,7 @@
 
 #include "mozilla/Mutex.h"
 #endif
+#include "MainThreadUtils.h"
 
 #if defined(MOZ_LOGGING)
 GFX2D_API mozilla::LogModule*
@@ -200,12 +201,13 @@ Mutex* Factory::mFTLock = nullptr;
 #endif
 
 #ifdef WIN32
+// Note: mDeviceLock must be held when mutating these values.
 static uint32_t mDeviceSeq = 0;
 StaticRefPtr<ID3D11Device> Factory::mD3D11Device;
 StaticRefPtr<ID2D1Device> Factory::mD2D1Device;
 StaticRefPtr<IDWriteFactory> Factory::mDWriteFactory;
 bool Factory::mDWriteFactoryInitialized = false;
-Mutex* Factory::mDWriteFactoryLock = nullptr;
+StaticMutex Factory::mDeviceLock;
 #endif
 
 DrawEventRecorder *Factory::mRecorder;
@@ -220,10 +222,6 @@ Factory::Init(const Config& aConfig)
 
 #ifdef MOZ_ENABLE_FREETYPE
   mFTLock = new Mutex("Factory::mFTLock");
-#endif
-
-#ifdef WIN32
-  mDWriteFactoryLock = new Mutex("Factory::mDWriteFactoryLock");
 #endif
 }
 
@@ -241,13 +239,6 @@ Factory::ShutDown()
   if (mFTLock) {
     delete mFTLock;
     mFTLock = nullptr;
-  }
-#endif
-
-#ifdef WIN32
-  if (mDWriteFactoryLock) {
-    delete mDWriteFactoryLock;
-    mDWriteFactoryLock = nullptr;
   }
 #endif
 }
@@ -750,6 +741,14 @@ Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceForma
 bool
 Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  // D2DFactory already takes the device lock, so we get the factory before
+  // entering the lock scope.
+  RefPtr<ID2D1Factory1> factory = D2DFactory();
+
+  StaticMutexAutoLock lock(mDeviceLock);
+
   mD3D11Device = aDevice;
 
   if (mD2D1Device) {
@@ -759,8 +758,6 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
   if (!aDevice) {
     return true;
   }
-
-  RefPtr<ID2D1Factory1> factory = D2DFactory();
 
   RefPtr<IDXGIDevice> device;
   aDevice->QueryInterface((IDXGIDevice**)getter_AddRefs(device));
@@ -782,12 +779,17 @@ Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 RefPtr<ID3D11Device>
 Factory::GetDirect3D11Device()
 {
+  StaticMutexAutoLock lock(mDeviceLock);
   return mD3D11Device;
 }
 
 RefPtr<ID2D1Device>
-Factory::GetD2D1Device()
+Factory::GetD2D1Device(uint32_t* aOutSeqNo)
 {
+  StaticMutexAutoLock lock(mDeviceLock);
+  if (aOutSeqNo) {
+    *aOutSeqNo = mDeviceSeq;
+  }
   return mD2D1Device.get();
 }
 
@@ -797,23 +799,17 @@ Factory::HasD2D1Device()
   return !!GetD2D1Device();
 }
 
-uint32_t
-Factory::GetD2D1DeviceSeq()
-{
-  return mDeviceSeq;
-}
-
 RefPtr<IDWriteFactory>
 Factory::GetDWriteFactory()
 {
+  StaticMutexAutoLock lock(mDeviceLock);
   return mDWriteFactory;
 }
 
-IDWriteFactory*
+RefPtr<IDWriteFactory>
 Factory::EnsureDWriteFactory()
 {
-  MOZ_ASSERT(mDWriteFactoryLock);
-  MutexAutoLock lock(*mDWriteFactoryLock);
+  StaticMutexAutoLock lock(mDeviceLock);
 
   if (mDWriteFactoryInitialized) {
     return mDWriteFactory;
@@ -870,6 +866,7 @@ Factory::GetD2DVRAMUsageSourceSurface()
 void
 Factory::D2DCleanup()
 {
+  StaticMutexAutoLock lock(mDeviceLock);
   if (mD2D1Device) {
     mD2D1Device = nullptr;
   }
