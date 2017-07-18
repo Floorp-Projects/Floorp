@@ -2299,12 +2299,6 @@ Gecko_CSSValue_InitSharedList(nsCSSValueBorrowedMut aCSSValue,
   }
 }
 
-bool
-Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id)
-{
-  return nsCSSProps::IsEnabled(id);
-}
-
 void
 Gecko_CSSValue_Drop(nsCSSValueBorrowedMut aCSSValue)
 {
