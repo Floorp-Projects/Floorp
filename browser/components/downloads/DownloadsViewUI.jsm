@@ -225,11 +225,12 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
           let [size, unit] =
             DownloadUtils.convertByteUnits(this.download.target.size);
           stateLabel = s.sizeWithUnits(size, unit);
+          status = s.statusSeparator(s.stateCompleted, stateLabel);
         } else {
           // History downloads may not have a size defined.
           stateLabel = s.sizeUnknown;
+          status = s.stateCompleted;
         }
-        status = s.stateCompleted;
         hoverStatus = status;
       } else if (this.download.canceled) {
         stateLabel = s.stateCanceled;
