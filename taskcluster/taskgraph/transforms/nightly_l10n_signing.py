@@ -31,15 +31,12 @@ def make_signing_description(config, jobs):
             ]
         elif 'macosx' in dep_platform:
             job_specs = [
-                 {
+                {
                     'artifacts': ['public/build/{locale}/target.dmg'],
                     'format': 'macapp',
-                 }, {
-                    'artifacts': ['public/build/{locale}/target.complete.mar'],
-                    'format': 'mar',
-                 }
+                }
             ]
-        else:
+        elif 'linux' in dep_platform:
             job_specs = [
                 {
                     'artifacts': ['public/build/{locale}/target.tar.bz2'],
@@ -49,6 +46,9 @@ def make_signing_description(config, jobs):
                     'format': 'mar',
                 }
             ]
+        else:
+            raise Exception("Platform not implemented for signing")
+
         upstream_artifacts = []
         for spec in job_specs:
             fmt = spec['format']
