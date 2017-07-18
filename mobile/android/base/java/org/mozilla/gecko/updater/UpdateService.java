@@ -783,7 +783,7 @@ public class UpdateService extends IntentService {
         editor.commit();
     }
 
-    private class UpdateInfo {
+    private static final class UpdateInfo {
         public URI uri;
         public String buildID;
         public String hashFunction;

@@ -496,7 +496,7 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
     /**
      * This text watcher enables the menu item if the dialog contains valid information, or disables otherwise.
      */
-    private class BookmarkTextWatcher implements TextWatcher {
+    private static final class BookmarkTextWatcher implements TextWatcher {
         // A stored reference to the dialog containing the text field being watched.
         private final WeakReference<MenuItem> doneItemWeakReference;
 

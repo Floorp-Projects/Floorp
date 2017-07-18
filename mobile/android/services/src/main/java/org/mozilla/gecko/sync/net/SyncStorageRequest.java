@@ -95,7 +95,7 @@ public class SyncStorageRequest implements Resource {
   /**
    * A ResourceDelegate that mediates between Resource-level notifications and the SyncStorageRequest.
    */
-  public class SyncStorageResourceDelegate extends BaseResourceDelegate {
+  public static class SyncStorageResourceDelegate extends BaseResourceDelegate {
     private static final String LOG_TAG = "SSResourceDelegate";
     protected SyncStorageRequest request;
 

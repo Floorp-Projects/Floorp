@@ -110,7 +110,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
         return true;
     }
 
-    private class IconGridAdapter extends ArrayAdapter<IconGridItem> {
+    private static final class IconGridAdapter extends ArrayAdapter<IconGridItem> {
         public IconGridAdapter(Context context, int resource, List<IconGridItem> items) {
             super(context, resource, items);
         }

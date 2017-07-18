@@ -85,7 +85,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   @WebRTCJNITarget
   private static native Context GetContext();
 
-  private class CameraThread extends Thread {
+  private static final class CameraThread extends Thread {
     private Exchanger<Handler> handlerExchanger;
     public CameraThread(Exchanger<Handler> handlerExchanger) {
       this.handlerExchanger = handlerExchanger;
