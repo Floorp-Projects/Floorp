@@ -387,6 +387,8 @@ uint32_t Gecko_GetNodeFlags(RawGeckoNodeBorrowed node);
 void Gecko_SetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
 void Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
 void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
+void Gecko_NoteDirtyDescendants(RawGeckoElementBorrowed element);
+void Gecko_NoteAnimationOnlyDirtyDescendants(RawGeckoElementBorrowed element);
 
 // Incremental restyle.
 // Also, we might want a ComputedValues to ComputedValues API for animations?
