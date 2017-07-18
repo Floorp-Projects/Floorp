@@ -2,6 +2,7 @@ from .registry import register_callback_action
 
 
 @register_callback_action(
+    name='hello',
     title='Say Hello',
     symbol='hw',
     description="""

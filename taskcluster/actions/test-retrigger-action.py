@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 @register_callback_action(
+    name='run-with-options',
     title='Schedule test retrigger',
     symbol='tr',
     description="Retriggers the specified test job with additional options",

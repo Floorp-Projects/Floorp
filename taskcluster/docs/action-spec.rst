@@ -73,6 +73,7 @@ timestamps and dump input JSON into environment variables::
     "actions": [
       {
         "kind": "task",
+        "name": "thing",
         "title: "Do A Thing",
         "description": "Do something",
         "task": {
@@ -99,9 +100,18 @@ timestamps and dump input JSON into environment variables::
 MetaData
 ........
 
-Each action entry must define a ``title`` and ``description``.  furthermore,
-the list of actions should be sorted by the order in which actions should
-appear in a menu.
+Each action entry must define a ``name``, ``title`` and ``description``.
+furthermore, the list of actions should be sorted by the order in which actions
+should appear in a menu.
+
+The ``name`` is used by user interfaces to identify the action. For example, a
+retrigger button might look for an action with `name = "retrigger"`.
+
+Action names must be unique for a given task, or for a taskgroup, but the same
+name may be used for actions applying to disjoint sets of tasks. For example,
+it may be helpful to define different "retrigger" actions for build tasks
+`[{jobKind: 'build'}]` and test tasks `[{jobKind: 'test'}]`, and in this case
+only one such action would apply to any given task.
 
 The ``title`` is a human readable string intended to be used as label on the
 button, link or menu entry that triggers the action. This should be short and
@@ -175,6 +185,7 @@ specified with by the action's ``schema`` property.  For example::
     "actions": [
       {
         "kind": "task",
+        "name": "thing",
         "title: "Do A Thing",
         "description": "Do something",
         "schema": {

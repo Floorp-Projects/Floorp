@@ -39,6 +39,20 @@ properties:
     items:
       type: object
       properties:
+        name:
+          type: string
+          maxLength: 255
+          description: |
+            The name of this action.  This is used by user interfaces to
+            identify the action. For example, a retrigger button might look for
+            an action with `name = "retrigger"`.
+
+            Action names must be unique for a given task, or for a taskgroup,
+            but the same name may be used for actions applying to disjoint sets
+            of tasks. For example, it may be helpful to define different
+            "retrigger" actions for build tasks `[{jobKind: 'build'}]` and test
+            tasks `[{jobKind: 'test'}]`, and in this case only one such action
+            would apply to any given task.
         title:
           type: string
           maxLength: 255

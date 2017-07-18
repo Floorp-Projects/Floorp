@@ -17,7 +17,7 @@ a custom action task can be more efficient.
 Creating a Callback Action
 --------------------------
 A *callback action* is an action that calls back into in-tree logic. That is,
-you register the action with title, description, context, input schema and a
+you register the action with name, title, description, context, input schema and a
 python callback. When the action is triggered in a user interface,
 input matching the schema is collected, passed to a new task which then calls
 your python callback, enabling it to do pretty much anything it wants to.
@@ -28,6 +28,7 @@ To create a new action you must create a file
   from registry import register_callback_action
 
   @register_callback_action(
+      name='hello',
       title='Say Hello',
       symbol='hw',  # Show the callback task in treeherder as 'hw'
       description="Simple **proof-of-concept** callback action",
@@ -72,6 +73,7 @@ The example action below will be shown in the context-menu for tasks with
   from registry import register_callback_action
 
   @register_callback_action(
+      name='retrigger',
       title='Retrigger',
       symbol='re-c',  # Show the callback task in treeherder as 're-c'
       description="Create a clone of the task",
@@ -114,6 +116,7 @@ both ``input`` and ``context``::
   from registry import register_callback_action
 
   @register_callback_action(
+      name='run-all',
       title='Run All Tasks',
       symbol='ra-c',  # Show the callback task in treeherder as 'ra-c'
       description="**Run all tasks** that have been _optimized_ away.",
@@ -168,6 +171,7 @@ The feature is illustrated below::
   from registry import register_callback_action
 
   @register_callback_action(
+      name='hello',
       title='Say Hello',
       symbol='hw',  # Show the callback task in treeherder as 'hw'
       description="Simple **proof-of-concept** callback action",
@@ -194,6 +198,7 @@ the example below illustrates how to create such an action::
   from registry import register_task_action
 
   @register_task_action(
+      name='retrigger',
       title='Retrigger',
       description="Create a clone of the task",
       order=1,
