@@ -768,7 +768,7 @@ mozJSComponentLoader::UnloadModules()
     }
 }
 
-NS_IMETHODIMP
+nsresult
 mozJSComponentLoader::Import(const nsACString& registryLocation,
                              HandleValue targetValArg,
                              JSContext* cx,
@@ -823,25 +823,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
     return rv;
 }
 
-NS_IMETHODIMP
-mozJSComponentLoader::ImportInto(const nsACString& aLocation,
-                                 JSObject* aTargetObj,
-                                 nsAXPCNativeCallContext* cc,
-                                 JSObject** _retval)
-{
-    JSContext* callercx;
-    nsresult rv = cc->GetJSContext(&callercx);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    RootedObject targetObject(callercx, aTargetObj);
-    RootedObject global(callercx);
-    rv = ImportInto(aLocation, targetObject, callercx, &global);
-    NS_ENSURE_SUCCESS(rv, rv);
-    *_retval = global;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
                                      bool* retval)
 {
@@ -1116,7 +1098,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 mozJSComponentLoader::Unload(const nsACString & aLocation)
 {
     nsresult rv;
