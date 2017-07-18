@@ -279,12 +279,6 @@ WebGLShader::GetShaderSource(nsAString* out) const
 void
 WebGLShader::GetShaderTranslatedSource(nsAString* out) const
 {
-    if (!mCompilationSuccessful) {
-        mContext->ErrorInvalidOperation("getShaderTranslatedSource: Shader has"
-                                        " not been successfully compiled.");
-        return;
-    }
-
     out->SetIsVoid(false);
     CopyASCIItoUTF16(mTranslatedSource, *out);
 }
