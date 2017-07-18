@@ -26,8 +26,8 @@ class ServoStyleContext;
 } // namespace mozilla
 
 extern "C" {
-  void Servo_StyleContext_AddRef(mozilla::ServoStyleContext* aContext);
-  void Servo_StyleContext_Release(mozilla::ServoStyleContext* aContext);
+  void Servo_StyleContext_AddRef(const mozilla::ServoStyleContext* aContext);
+  void Servo_StyleContext_Release(const mozilla::ServoStyleContext* aContext);
 }
 
 /**
