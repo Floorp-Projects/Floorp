@@ -1618,11 +1618,14 @@ ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest)
     return rv;
   }
 
-  size_t len = aRequest->IsSource()
-    ? aRequest->mScriptText.length()
-    : aRequest->mScriptBytecode.length();
-  if (!JS::CanCompileOffThread(cx, options, len)) {
-    return NS_ERROR_FAILURE;
+  if (aRequest->IsSource()) {
+    if (!JS::CanCompileOffThread(cx, options, aRequest->mScriptText.length())) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    if (!JS::CanDecodeOffThread(cx, options, aRequest->mScriptBytecode.length())) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
