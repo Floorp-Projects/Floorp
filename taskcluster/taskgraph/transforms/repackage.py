@@ -141,6 +141,10 @@ def make_job_description(config, jobs):
             'max-run-time': 3600,
         }
 
+        if locale:
+            # Make sure we specify the locale-specific upload dir
+            worker['env'].update(LOCALE=locale)
+
         if build_platform.startswith('macosx'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-macosx64' % level
 
@@ -199,11 +203,13 @@ def _generate_task_output_files(build_platform, locale=None):
     if build_platform.startswith('macosx'):
         return [{
             'type': 'file',
-            'path': '/home/worker/workspace/build/artifacts/target.dmg',
+            'path': '/home/worker/workspace/build/artifacts/{}target.dmg'
+                    .format(locale_output_path),
             'name': 'public/build/{}target.dmg'.format(locale_output_path),
         }, {
             'type': 'file',
-            'path': '/home/worker/workspace/build/artifacts/target.complete.mar',
+            'path': '/home/worker/workspace/build/artifacts/{}target.complete.mar'
+                    .format(locale_output_path),
             'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
         }]
     else:
