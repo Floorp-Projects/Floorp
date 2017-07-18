@@ -561,6 +561,7 @@ PaymentRequest::DispatchUpdateEvent(const nsAString& aType)
   RefPtr<PaymentRequestUpdateEvent> event =
     PaymentRequestUpdateEvent::Constructor(this, aType, init);
   event->SetTrusted(true);
+  event->SetRequest(this);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }

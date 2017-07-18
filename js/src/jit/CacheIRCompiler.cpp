@@ -71,7 +71,7 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
 
       case OperandLocation::DoubleReg: {
         ValueOperand reg = allocateValueRegister(masm);
-        masm.boxDouble(loc.doubleReg(), reg);
+        masm.boxDouble(loc.doubleReg(), reg, ScratchDoubleReg);
         loc.setValueReg(reg);
         return reg;
       }
@@ -117,7 +117,7 @@ CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm, ValOperandId
         masm.tagValue(loc.payloadType(), reg.scratchReg(), reg);
         break;
       case OperandLocation::DoubleReg:
-        masm.boxDouble(loc.doubleReg(), reg);
+        masm.boxDouble(loc.doubleReg(), reg, ScratchDoubleReg);
         break;
       case OperandLocation::Uninitialized:
         MOZ_CRASH();

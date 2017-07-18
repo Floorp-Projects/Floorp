@@ -81,8 +81,6 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
     mImageKey = Some(GetImageKey());
     WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, size.width * 4, dt->GetFormat(), bytes);
     mImageBounds = visibleRegion.GetBounds();
-  } else {
-    MOZ_ASSERT(GetInvalidRegion().IsEmpty());
   }
 
   ScrollingLayersHelper scroller(this, aBuilder, aSc);
