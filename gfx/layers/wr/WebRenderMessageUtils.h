@@ -115,17 +115,17 @@ struct ParamTraits<mozilla::wr::WrImageFormat>
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrSize>
+struct ParamTraits<mozilla::wr::LayoutSize>
 {
   static void
-  Write(Message* aMsg, const mozilla::wr::WrSize& aParam)
+  Write(Message* aMsg, const mozilla::wr::LayoutSize& aParam)
   {
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.height);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrSize* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::LayoutSize* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->width)
         && ReadParam(aMsg, aIter, &aResult->height);
@@ -133,39 +133,39 @@ struct ParamTraits<mozilla::wr::WrSize>
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrRect>
+struct ParamTraits<mozilla::wr::LayoutRect>
 {
   static void
-  Write(Message* aMsg, const mozilla::wr::WrRect& aParam)
+  Write(Message* aMsg, const mozilla::wr::LayoutRect& aParam)
   {
-    WriteParam(aMsg, aParam.x);
-    WriteParam(aMsg, aParam.y);
-    WriteParam(aMsg, aParam.width);
-    WriteParam(aMsg, aParam.height);
+    WriteParam(aMsg, aParam.origin.x);
+    WriteParam(aMsg, aParam.origin.y);
+    WriteParam(aMsg, aParam.size.width);
+    WriteParam(aMsg, aParam.size.height);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrRect* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::LayoutRect* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->x)
-        && ReadParam(aMsg, aIter, &aResult->y)
-        && ReadParam(aMsg, aIter, &aResult->width)
-        && ReadParam(aMsg, aIter, &aResult->height);
+    return ReadParam(aMsg, aIter, &aResult->origin.x)
+        && ReadParam(aMsg, aIter, &aResult->origin.y)
+        && ReadParam(aMsg, aIter, &aResult->size.width)
+        && ReadParam(aMsg, aIter, &aResult->size.height);
   }
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrPoint>
+struct ParamTraits<mozilla::wr::LayoutPoint>
 {
   static void
-  Write(Message* aMsg, const mozilla::wr::WrPoint& aParam)
+  Write(Message* aMsg, const mozilla::wr::LayoutPoint& aParam)
   {
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrPoint* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::LayoutPoint* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->x) &&
            ReadParam(aMsg, aIter, &aResult->y);

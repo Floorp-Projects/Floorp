@@ -182,7 +182,7 @@ WebRenderAPI::~WebRenderAPI()
 void
 WebRenderAPI::UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
                                    const layers::FrameMetrics::ViewID& aScrollId,
-                                   const wr::WrPoint& aScrollPosition)
+                                   const wr::LayoutPoint& aScrollPosition)
 {
   wr_scroll_layer_with_id(mWrApi, aPipelineId, aScrollId, aScrollPosition);
 }
@@ -211,13 +211,13 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
                                  LayerSize aViewportSize,
                                  wr::WrPipelineId pipeline_id,
-                                 const WrSize& content_size,
+                                 const LayoutSize& content_size,
                                  wr::WrBuiltDisplayListDescriptor dl_descriptor,
                                  uint8_t *dl_data,
                                  size_t dl_size)
 {
     wr_api_set_root_display_list(mWrApi,
-                                 ToWrColor(aBgColor),
+                                 ToColorF(aBgColor),
                                  aEpoch,
                                  aViewportSize.width, aViewportSize.height,
                                  pipeline_id,
@@ -518,7 +518,7 @@ WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 }
 
 DisplayListBuilder::DisplayListBuilder(PipelineId aId,
-                                       const wr::WrSize& aContentSize)
+                                       const wr::LayoutSize& aContentSize)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWrState = wr_state_new(aId, aContentSize);
@@ -543,7 +543,7 @@ DisplayListBuilder::End()
 }
 
 void
-DisplayListBuilder::Finalize(wr::WrSize& aOutContentSize,
+DisplayListBuilder::Finalize(wr::LayoutSize& aOutContentSize,
                              BuiltDisplayList& aOutDisplayList)
 {
   wr_api_finalize_builder(mWrState,
@@ -553,7 +553,7 @@ DisplayListBuilder::Finalize(wr::WrSize& aOutContentSize,
 }
 
 void
-DisplayListBuilder::PushStackingContext(const wr::WrRect& aBounds,
+DisplayListBuilder::PushStackingContext(const wr::LayoutRect& aBounds,
                                         const uint64_t& aAnimationId,
                                         const float* aOpacity,
                                         const gfx::Matrix4x4* aTransform,
@@ -561,11 +561,11 @@ DisplayListBuilder::PushStackingContext(const wr::WrRect& aBounds,
                                         const wr::WrMixBlendMode& aMixBlendMode,
                                         const nsTArray<wr::WrFilterOp>& aFilters)
 {
-  wr::WrMatrix matrix;
+  wr::LayoutTransform matrix;
   if (aTransform) {
-    matrix = ToWrMatrix(*aTransform);
+    matrix = ToLayoutTransform(*aTransform);
   }
-  const wr::WrMatrix* maybeTransform = aTransform ? &matrix : nullptr;
+  const wr::LayoutTransform* maybeTransform = aTransform ? &matrix : nullptr;
   WRDL_LOG("PushStackingContext b=%s t=%s\n", Stringify(aBounds).c_str(),
       aTransform ? Stringify(*aTransform).c_str() : "none");
   wr_dp_push_stacking_context(mWrState, aBounds, aAnimationId, aOpacity,
@@ -581,7 +581,7 @@ DisplayListBuilder::PopStackingContext()
 }
 
 void
-DisplayListBuilder::PushClip(const wr::WrRect& aClipRect,
+DisplayListBuilder::PushClip(const wr::LayoutRect& aClipRect,
                              const wr::WrImageMask* aMask)
 {
   uint64_t clip_id = wr_dp_push_clip(mWrState, aClipRect, nullptr, 0, aMask);
@@ -609,8 +609,8 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList &dl)
 
 void
 DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
-                                    const wr::WrRect& aContentRect,
-                                    const wr::WrRect& aClipRect)
+                                    const wr::LayoutRect& aContentRect,
+                                    const wr::LayoutRect& aClipRect)
 {
   WRDL_LOG("PushScrollLayer id=%" PRIu64 " co=%s cl=%s\n",
       aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
@@ -651,9 +651,9 @@ DisplayListBuilder::PopClipAndScrollInfo()
 }
 
 void
-DisplayListBuilder::PushRect(const wr::WrRect& aBounds,
-                             const wr::WrRect& aClip,
-                             const wr::WrColor& aColor)
+DisplayListBuilder::PushRect(const wr::LayoutRect& aBounds,
+                             const wr::LayoutRect& aClip,
+                             const wr::ColorF& aColor)
 {
   WRDL_LOG("PushRect b=%s cl=%s c=%s\n",
       Stringify(aBounds).c_str(),
@@ -663,14 +663,14 @@ DisplayListBuilder::PushRect(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushLinearGradient(const wr::WrRect& aBounds,
-                                       const wr::WrRect& aClip,
-                                       const wr::WrPoint& aStartPoint,
-                                       const wr::WrPoint& aEndPoint,
+DisplayListBuilder::PushLinearGradient(const wr::LayoutRect& aBounds,
+                                       const wr::LayoutRect& aClip,
+                                       const wr::LayoutPoint& aStartPoint,
+                                       const wr::LayoutPoint& aEndPoint,
                                        const nsTArray<wr::WrGradientStop>& aStops,
                                        wr::GradientExtendMode aExtendMode,
-                                       const wr::WrSize aTileSize,
-                                       const wr::WrSize aTileSpacing)
+                                       const wr::LayoutSize aTileSize,
+                                       const wr::LayoutSize aTileSpacing)
 {
   wr_dp_push_linear_gradient(mWrState,
                              aBounds, aClip,
@@ -681,14 +681,14 @@ DisplayListBuilder::PushLinearGradient(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushRadialGradient(const wr::WrRect& aBounds,
-                                       const wr::WrRect& aClip,
-                                       const wr::WrPoint& aCenter,
-                                       const wr::WrSize& aRadius,
+DisplayListBuilder::PushRadialGradient(const wr::LayoutRect& aBounds,
+                                       const wr::LayoutRect& aClip,
+                                       const wr::LayoutPoint& aCenter,
+                                       const wr::LayoutSize& aRadius,
                                        const nsTArray<wr::WrGradientStop>& aStops,
                                        wr::GradientExtendMode aExtendMode,
-                                       const wr::WrSize aTileSize,
-                                       const wr::WrSize aTileSpacing)
+                                       const wr::LayoutSize aTileSize,
+                                       const wr::LayoutSize aTileSpacing)
 {
   wr_dp_push_radial_gradient(mWrState,
                              aBounds, aClip,
@@ -699,22 +699,22 @@ DisplayListBuilder::PushRadialGradient(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushImage(const wr::WrRect& aBounds,
-                              const wr::WrRect& aClip,
+DisplayListBuilder::PushImage(const wr::LayoutRect& aBounds,
+                              const wr::LayoutRect& aClip,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
-  wr::WrSize size;
-  size.width = aBounds.width;
-  size.height = aBounds.height;
+  wr::LayoutSize size;
+  size.width = aBounds.size.width;
+  size.height = aBounds.size.height;
   PushImage(aBounds, aClip, size, size, aFilter, aImage);
 }
 
 void
-DisplayListBuilder::PushImage(const wr::WrRect& aBounds,
-                              const wr::WrRect& aClip,
-                              const wr::WrSize& aStretchSize,
-                              const wr::WrSize& aTileSpacing,
+DisplayListBuilder::PushImage(const wr::LayoutRect& aBounds,
+                              const wr::LayoutRect& aClip,
+                              const wr::LayoutSize& aStretchSize,
+                              const wr::LayoutSize& aTileSpacing,
                               wr::ImageRendering aFilter,
                               wr::ImageKey aImage)
 {
@@ -725,8 +725,8 @@ DisplayListBuilder::PushImage(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushYCbCrPlanarImage(const wr::WrRect& aBounds,
-                                         const wr::WrRect& aClip,
+DisplayListBuilder::PushYCbCrPlanarImage(const wr::LayoutRect& aBounds,
+                                         const wr::LayoutRect& aClip,
                                          wr::ImageKey aImageChannel0,
                                          wr::ImageKey aImageChannel1,
                                          wr::ImageKey aImageChannel2,
@@ -744,8 +744,8 @@ DisplayListBuilder::PushYCbCrPlanarImage(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushNV12Image(const wr::WrRect& aBounds,
-                                  const wr::WrRect& aClip,
+DisplayListBuilder::PushNV12Image(const wr::LayoutRect& aBounds,
+                                  const wr::LayoutRect& aClip,
                                   wr::ImageKey aImageChannel0,
                                   wr::ImageKey aImageChannel1,
                                   wr::WrYuvColorSpace aColorSpace,
@@ -761,8 +761,8 @@ DisplayListBuilder::PushNV12Image(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushYCbCrInterleavedImage(const wr::WrRect& aBounds,
-                                              const wr::WrRect& aClip,
+DisplayListBuilder::PushYCbCrInterleavedImage(const wr::LayoutRect& aBounds,
+                                              const wr::LayoutRect& aClip,
                                               wr::ImageKey aImageChannel0,
                                               wr::WrYuvColorSpace aColorSpace,
                                               wr::ImageRendering aRendering)
@@ -776,15 +776,15 @@ DisplayListBuilder::PushYCbCrInterleavedImage(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushIFrame(const wr::WrRect& aBounds,
+DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
                                PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWrState, aBounds, aPipeline);
 }
 
 void
-DisplayListBuilder::PushBorder(const wr::WrRect& aBounds,
-                               const wr::WrRect& aClip,
+DisplayListBuilder::PushBorder(const wr::LayoutRect& aBounds,
+                               const wr::LayoutRect& aClip,
                                const wr::WrBorderWidths& aWidths,
                                const Range<const wr::WrBorderSide>& aSides,
                                const wr::WrBorderRadius& aRadius)
@@ -798,12 +798,12 @@ DisplayListBuilder::PushBorder(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushBorderImage(const wr::WrRect& aBounds,
-                                    const wr::WrRect& aClip,
+DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
+                                    const wr::LayoutRect& aClip,
                                     const wr::WrBorderWidths& aWidths,
                                     wr::ImageKey aImage,
                                     const wr::WrNinePatchDescriptor& aPatch,
-                                    const wr::WrSideOffsets2Df32& aOutset,
+                                    const wr::SideOffsets2D_f32& aOutset,
                                     const wr::WrRepeatMode& aRepeatHorizontal,
                                     const wr::WrRepeatMode& aRepeatVertical)
 {
@@ -813,14 +813,14 @@ DisplayListBuilder::PushBorderImage(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushBorderGradient(const wr::WrRect& aBounds,
-                                       const wr::WrRect& aClip,
+DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
+                                       const wr::LayoutRect& aClip,
                                        const wr::WrBorderWidths& aWidths,
-                                       const wr::WrPoint& aStartPoint,
-                                       const wr::WrPoint& aEndPoint,
+                                       const wr::LayoutPoint& aStartPoint,
+                                       const wr::LayoutPoint& aEndPoint,
                                        const nsTArray<wr::WrGradientStop>& aStops,
                                        wr::GradientExtendMode aExtendMode,
-                                       const wr::WrSideOffsets2Df32& aOutset)
+                                       const wr::SideOffsets2D_f32& aOutset)
 {
   wr_dp_push_border_gradient(mWrState, aBounds, aClip,
                              aWidths, aStartPoint, aEndPoint,
@@ -829,14 +829,14 @@ DisplayListBuilder::PushBorderGradient(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushBorderRadialGradient(const wr::WrRect& aBounds,
-                                             const wr::WrRect& aClip,
+DisplayListBuilder::PushBorderRadialGradient(const wr::LayoutRect& aBounds,
+                                             const wr::LayoutRect& aClip,
                                              const wr::WrBorderWidths& aWidths,
-                                             const wr::WrPoint& aCenter,
-                                             const wr::WrSize& aRadius,
+                                             const wr::LayoutPoint& aCenter,
+                                             const wr::LayoutSize& aRadius,
                                              const nsTArray<wr::WrGradientStop>& aStops,
                                              wr::GradientExtendMode aExtendMode,
-                                             const wr::WrSideOffsets2Df32& aOutset)
+                                             const wr::SideOffsets2D_f32& aOutset)
 {
   wr_dp_push_border_radial_gradient(
     mWrState, aBounds, aClip, aWidths, aCenter,
@@ -845,26 +845,26 @@ DisplayListBuilder::PushBorderRadialGradient(const wr::WrRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushText(const wr::WrRect& aBounds,
-                             const wr::WrRect& aClip,
+DisplayListBuilder::PushText(const wr::LayoutRect& aBounds,
+                             const wr::LayoutRect& aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
                              Range<const wr::WrGlyphInstance> aGlyphBuffer,
                              float aGlyphSize)
 {
   wr_dp_push_text(mWrState, aBounds, aClip,
-                  ToWrColor(aColor),
+                  ToColorF(aColor),
                   aFontKey,
                   &aGlyphBuffer[0], aGlyphBuffer.length(),
                   aGlyphSize);
 }
 
 void
-DisplayListBuilder::PushBoxShadow(const wr::WrRect& aRect,
-                                  const wr::WrRect& aClip,
-                                  const wr::WrRect& aBoxBounds,
-                                  const wr::WrPoint& aOffset,
-                                  const wr::WrColor& aColor,
+DisplayListBuilder::PushBoxShadow(const wr::LayoutRect& aRect,
+                                  const wr::LayoutRect& aClip,
+                                  const wr::LayoutRect& aBoxBounds,
+                                  const wr::LayoutVector2D& aOffset,
+                                  const wr::ColorF& aColor,
                                   const float& aBlurRadius,
                                   const float& aSpreadRadius,
                                   const float& aBorderRadius,

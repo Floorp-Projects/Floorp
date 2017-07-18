@@ -178,8 +178,8 @@ WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
 
 void
 WebRenderTextureHost::PushExternalImage(wr::DisplayListBuilder& aBuilder,
-                                        const wr::WrRect& aBounds,
-                                        const wr::WrRect& aClip,
+                                        const wr::LayoutRect& aBounds,
+                                        const wr::LayoutRect& aClip,
                                         wr::ImageRendering aFilter,
                                         Range<const wr::ImageKey>& aImageKeys)
 {

@@ -61,19 +61,19 @@ public:
   ~StackingContextHelper();
 
   // When this StackingContextHelper is in scope, this function can be used
-  // to convert a rect from the layer system's coordinate space to a WrRect
+  // to convert a rect from the layer system's coordinate space to a LayoutRect
   // that is relative to the stacking context. This is useful because most
   // things that are pushed inside the stacking context need to be relative
   // to the stacking context.
   // We allow passing in a LayoutDeviceRect for convenience because in a lot of
   // cases with WebRender display item generate the layout device space is the
   // same as the layer space. (TODO: try to make this more explicit somehow).
-  wr::WrRect ToRelativeWrRect(const LayerRect& aRect) const;
-  wr::WrRect ToRelativeWrRect(const LayoutDeviceRect& aRect) const;
+  wr::LayoutRect ToRelativeLayoutRect(const LayerRect& aRect) const;
+  wr::LayoutRect ToRelativeLayoutRect(const LayoutDeviceRect& aRect) const;
   // Same but for points
-  wr::WrPoint ToRelativeWrPoint(const LayerPoint& aPoint) const;
+  wr::LayoutPoint ToRelativeLayoutPoint(const LayerPoint& aPoint) const;
   // Same but rounds the rectangle to ints after transforming.
-  wr::WrRect ToRelativeWrRectRounded(const LayoutDeviceRect& aRect) const;
+  wr::LayoutRect ToRelativeLayoutRectRounded(const LayoutDeviceRect& aRect) const;
 
 private:
   wr::DisplayListBuilder* mBuilder;
