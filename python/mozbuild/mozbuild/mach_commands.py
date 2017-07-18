@@ -1791,6 +1791,7 @@ class PackageFrontend(MachCommandBase):
                 try:
                     record.fetch_with(cache)
                 except (requests.exceptions.HTTPError,
+                        requests.exceptions.ChunkedEncodingError,
                         requests.exceptions.ConnectionError) as e:
 
                     if isinstance(e, requests.exceptions.ConnectionError):
