@@ -8,7 +8,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
 
-import org.mozilla.gecko.util.StringUtils;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +59,7 @@ public class PublicSuffix {
         final Set<String> exact = PublicSuffixPatterns.getExactSet(context);
 
         for (int i = 0; i < partsSize; i++) {
-            String ancestorName = StringUtils.join(".", parts.subList(i, partsSize));
+            String ancestorName = TextUtils.join(".", parts.subList(i, partsSize));
 
             if (exact.contains(ancestorName)) {
                 return joinIndex(parts, i);
