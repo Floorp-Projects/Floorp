@@ -49,6 +49,10 @@ class Kind(object):
         else:
             config['args'] = None
 
+        kind_dependencies = config.get('kind-dependencies', [])
+        kind_dependencies_tasks = [task for task in loaded_tasks
+                                   if task.kind in kind_dependencies]
+
         inputs = loader(self.name, self.path, config, parameters, loaded_tasks)
 
         transforms = TransformSequence()
@@ -57,7 +61,8 @@ class Kind(object):
             transforms.add(transform)
 
         # perform the transformations on the loaded inputs
-        trans_config = TransformConfig(self.name, self.path, config, parameters)
+        trans_config = TransformConfig(self.name, self.path, config, parameters,
+                                       kind_dependencies_tasks)
         tasks = [Task(self.name,
                       label=task_dict['label'],
                       attributes=task_dict['attributes'],
