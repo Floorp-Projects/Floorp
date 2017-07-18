@@ -963,7 +963,6 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     ////////////////////////////////////////////////////////////////////////////
 
     // We're ready for final setup.
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
     // TODO: Remove SurfaceCaps::any.
     if (mCaps.any) {
@@ -1963,7 +1962,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     if (texture) {
         readFB = 0;
         fGenFramebuffers(1, &readFB);
-        BindFB(readFB);
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, readFB);
         fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                               LOCAL_GL_COLOR_ATTACHMENT0,
                               LOCAL_GL_TEXTURE_2D,
@@ -1974,7 +1973,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     if (colorMSRB) {
         drawFB = 0;
         fGenFramebuffers(1, &drawFB);
-        BindFB(drawFB);
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, drawFB);
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
                                  LOCAL_GL_COLOR_ATTACHMENT0,
                                  LOCAL_GL_RENDERBUFFER,
@@ -1982,7 +1981,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     } else {
         drawFB = readFB;
     }
-    MOZ_ASSERT(GetFB() == drawFB);
+    MOZ_ASSERT(GetIntAs<GLuint>(LOCAL_GL_FRAMEBUFFER_BINDING) == drawFB);
 
     if (depthRB) {
         fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
@@ -2361,8 +2360,11 @@ GLContext::OffscreenSize() const
 }
 
 bool
-GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
+GLContext::CreateScreenBuffer(const IntSize& size, const SurfaceCaps& caps)
 {
+    if (!IsOffscreenSizeAllowed(size))
+        return false;
+
     UniquePtr<GLScreenBuffer> newScreen = GLScreenBuffer::Create(this, size, caps);
     if (!newScreen)
         return false;
@@ -2370,10 +2372,6 @@ GLContext::CreateScreenBufferImpl(const IntSize& size, const SurfaceCaps& caps)
     if (!newScreen->Resize(size)) {
         return false;
     }
-
-    // This will rebind to 0 (Screen) if needed when
-    // it falls out of scope.
-    ScopedBindFramebuffer autoFB(this);
 
     mScreen = Move(newScreen);
 
@@ -2387,26 +2385,6 @@ GLContext::ResizeScreenBuffer(const IntSize& size)
         return false;
 
     return mScreen->Resize(size);
-}
-
-void
-GLContext::ForceDirtyScreen()
-{
-    ScopedBindFramebuffer autoFB(0);
-
-    BeforeGLDrawCall();
-    // no-op; just pretend we did something
-    AfterGLDrawCall();
-}
-
-void
-GLContext::CleanDirtyScreen()
-{
-    ScopedBindFramebuffer autoFB(0);
-
-    BeforeGLReadCall();
-    // no-op; we just want to make sure the Read FBO is updated if it needs to be
-    AfterGLReadCall();
 }
 
 bool
@@ -2540,7 +2518,7 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
         src->ProducerReadAcquire();
 
         if (src->mAttachType == AttachmentType::Screen) {
-            fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+            mScreen->BindAsFramebuffer();
         } else {
             fGenFramebuffers(1, &tempFB);
             fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, tempFB);
@@ -2615,37 +2593,19 @@ GLContext::AfterGLDrawCall()
 void
 GLContext::BeforeGLReadCall()
 {
-    if (mScreen)
+    if (mScreen) {
         mScreen->BeforeReadCall();
+    }
 }
 
 void
 GLContext::fBindFramebuffer(GLenum target, GLuint framebuffer)
 {
-    if (!mScreen) {
-        raw_fBindFramebuffer(target, framebuffer);
-        return;
-    }
-
-    switch (target) {
-        case LOCAL_GL_DRAW_FRAMEBUFFER_EXT:
-            mScreen->BindDrawFB(framebuffer);
-            return;
-
-        case LOCAL_GL_READ_FRAMEBUFFER_EXT:
-            mScreen->BindReadFB(framebuffer);
-            return;
-
-        case LOCAL_GL_FRAMEBUFFER:
-            mScreen->BindFB(framebuffer);
-            return;
-
-        default:
-            // Nothing we care about, likely an error.
-            break;
-    }
-
     raw_fBindFramebuffer(target, framebuffer);
+
+    if (mScreen) {
+        mScreen->OnBindFramebuffer(target, framebuffer);
+    }
 }
 
 void
@@ -2679,25 +2639,6 @@ void
 GLContext::fGetIntegerv(GLenum pname, GLint* params)
 {
     switch (pname) {
-        // LOCAL_GL_FRAMEBUFFER_BINDING is equal to
-        // LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT,
-        // so we don't need two cases.
-        case LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT:
-            if (mScreen) {
-                *params = mScreen->GetDrawFB();
-            } else {
-                raw_fGetIntegerv(pname, params);
-            }
-            break;
-
-        case LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT:
-            if (mScreen) {
-                *params = mScreen->GetReadFB();
-            } else {
-                raw_fGetIntegerv(pname, params);
-            }
-            break;
-
         case LOCAL_GL_MAX_TEXTURE_SIZE:
             MOZ_ASSERT(mMaxTextureSize>0);
             *params = mMaxTextureSize;
@@ -2785,7 +2726,7 @@ GLContext::fDeleteFramebuffers(GLsizei n, const GLuint* names)
         // Notify mScreen which framebuffers we're deleting.
         // Otherwise, we will get framebuffer binding mispredictions.
         for (int i = 0; i < n; i++) {
-            mScreen->DeletingFB(names[i]);
+            mScreen->OnDeleteFramebuffer(names[i]);
         }
     }
 
@@ -2851,47 +2792,6 @@ GLContext::fTexImage2D(GLenum target, GLint level, GLint internalformat,
     raw_fTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
-GLuint
-GLContext::GetDrawFB()
-{
-    if (mScreen)
-        return mScreen->GetDrawFB();
-
-    GLuint ret = 0;
-    GetUIntegerv(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING_EXT, &ret);
-    return ret;
-}
-
-GLuint
-GLContext::GetReadFB()
-{
-    if (mScreen)
-        return mScreen->GetReadFB();
-
-    GLenum bindEnum = IsSupported(GLFeature::split_framebuffer)
-                        ? LOCAL_GL_READ_FRAMEBUFFER_BINDING_EXT
-                        : LOCAL_GL_FRAMEBUFFER_BINDING;
-
-    GLuint ret = 0;
-    GetUIntegerv(bindEnum, &ret);
-    return ret;
-}
-
-GLuint
-GLContext::GetFB()
-{
-    if (mScreen) {
-        // This has a very important extra assert that checks that we're
-        // not accidentally ignoring a situation where the draw and read
-        // FBs differ.
-        return mScreen->GetFB();
-    }
-
-    GLuint ret = 0;
-    GetUIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &ret);
-    return ret;
-}
-
 bool
 GLContext::InitOffscreen(const gfx::IntSize& size, const SurfaceCaps& caps)
 {
@@ -2899,7 +2799,7 @@ GLContext::InitOffscreen(const gfx::IntSize& size, const SurfaceCaps& caps)
         return false;
 
     MakeCurrent();
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    mScreen->BindAsFramebuffer();
     fScissor(0, 0, size.width, size.height);
     fViewport(0, 0, size.width, size.height);
 
