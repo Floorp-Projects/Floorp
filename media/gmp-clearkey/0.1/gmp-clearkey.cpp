@@ -31,12 +31,12 @@
 
 extern "C" {
 
-CDM_API
+CDM_EXPORT
 void INITIALIZE_CDM_MODULE() {
 
 }
 
-CDM_API
+CDM_EXPORT
 void* CreateCdmInstance(int cdm_interface_version,
                         const char* key_system,
                         uint32_t key_system_size,
