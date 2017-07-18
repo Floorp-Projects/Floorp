@@ -282,7 +282,7 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
   }
 
   // Not thread-safe. Use with caution.
-  private class WipeWaiter {
+  private static final class WipeWaiter {
     public boolean sessionSucceeded = true;
     public boolean wipeSucceeded = true;
     public Exception error;

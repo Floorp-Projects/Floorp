@@ -79,7 +79,7 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
     inner.begin(new MiddlewareRepositorySessionBeginDelegate(this, delegate));
   }
 
-  public class MiddlewareRepositorySessionFinishDelegate implements RepositorySessionFinishDelegate {
+  public static final class MiddlewareRepositorySessionFinishDelegate implements RepositorySessionFinishDelegate {
     private final MiddlewareRepositorySession outerSession;
     private final RepositorySessionFinishDelegate next;
 

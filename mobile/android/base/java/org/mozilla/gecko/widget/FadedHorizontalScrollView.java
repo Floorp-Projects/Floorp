@@ -152,7 +152,7 @@ public class FadedHorizontalScrollView extends HorizontalScrollView {
         mVerticalFadeBordersDirty = false;
     }
 
-    private class FadePaint extends Paint {
+    private static final class FadePaint extends Paint {
         public final Matrix matrix;
         public final Shader fade;
 
