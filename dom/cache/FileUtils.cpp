@@ -809,7 +809,10 @@ LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
       if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     }
 
-    // XXXtt: will have a function to retore from db.
+    // We don't need to add the aIncreaseSize or aDecreaseSize here, because
+    // it's already encompassed within the database.
+    rv = db::FindOverallPaddingSize(aConn, &currentPaddingSize);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   } else {
     if (aIncreaseSize > 0) {
       MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - currentPaddingSize >= aIncreaseSize);
@@ -820,6 +823,14 @@ LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
       MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= aDecreaseSize);
       currentPaddingSize -= aDecreaseSize;
     }
+
+#ifdef DEBUG
+    int64_t paddingSizeFromDB = 0;
+    rv = db::FindOverallPaddingSize(aConn, &paddingSizeFromDB);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+    MOZ_DIAGNOSTIC_ASSERT(paddingSizeFromDB == currentPaddingSize);
+#endif // DEBUG
   }
 
   MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= 0);
@@ -882,7 +893,13 @@ LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn)
   rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  // XXXtt: will have a function to retore from db.
+  int64_t paddingSize = 0;
+  rv = db::FindOverallPaddingSize(aConn, &paddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_DIAGNOSTIC_ASSERT(paddingSize >= 0);
+
+  LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, paddingSize);
 
   return rv;
 }
