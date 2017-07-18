@@ -1063,7 +1063,13 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
     nsIDocShell *docShell = window->GetDocShell();
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
-    docShell->GetRestoringDocument(&restoring);
+    // Unfortunately, docShell->GetRestoringDocument() might no longer be set
+    // correctly.  In particular, it can be false by now if someone took it upon
+    // themselves to block onload from inside restoration and unblock it later.
+    // But we can detect the restoring case very simply: by whether our
+    // document's readyState is COMPLETE.
+    restoring = (mDocument->GetReadyStateEnum() ==
+                 nsIDocument::READYSTATE_COMPLETE);
     if (!restoring) {
       NS_ASSERTION(mDocument->IsXULDocument() || // readyState for XUL is bogus
                    mDocument->GetReadyStateEnum() ==
@@ -1074,6 +1080,13 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
                       nsIDocument::READYSTATE_UNINITIALIZED &&
                     NS_IsAboutBlank(mDocument->GetDocumentURI())),
                    "Bad readystate");
+#ifdef DEBUG
+      bool docShellThinksWeAreRestoring;
+      docShell->GetRestoringDocument(&docShellThinksWeAreRestoring);
+      MOZ_ASSERT(!docShellThinksWeAreRestoring,
+                 "How can docshell think we are restoring if we don't have a "
+                 "READYSTATE_COMPLETE document?");
+#endif // DEBUG
       nsCOMPtr<nsIDocument> d = mDocument;
       mDocument->SetReadyStateInternal(nsIDocument::READYSTATE_COMPLETE);
 

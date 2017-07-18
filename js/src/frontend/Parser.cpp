@@ -3054,6 +3054,8 @@ Parser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandling,
             argModifier = firstTokenModifier;
         }
     }
+
+    TokenPos firstTokenPos;
     if (!parenFreeArrow) {
         TokenKind tt;
         if (!tokenStream.getToken(&tt, firstTokenModifier))
@@ -3063,12 +3065,19 @@ Parser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandling,
             return false;
         }
 
+        firstTokenPos = pos();
+
         // Record the start of function source (for FunctionToString). If we
         // are parenFreeArrow, we will set this below, after consuming the NAME.
         funbox->setStart(tokenStream);
+    } else {
+        // When delazifying, we may not have a current token and pos() is
+        // garbage. In that case, substitute the first token's position.
+        if (!tokenStream.peekTokenPos(&firstTokenPos, firstTokenModifier))
+            return false;
     }
 
-    Node argsbody = handler.newList(PNK_PARAMSBODY, pos());
+    Node argsbody = handler.newList(PNK_PARAMSBODY, firstTokenPos);
     if (!argsbody)
         return false;
     handler.setFunctionFormalParametersAndBody(funcpn, argsbody);
@@ -3295,13 +3304,7 @@ Parser<FullParseHandler, char16_t>::skipLazyInnerFunction(ParseNode* pn, uint32_
 
     PropagateTransitiveParseFlags(lazy, pc->sc());
 
-    // The position passed to tokenStream.advance() is an offset of the sort
-    // returned by userbuf.offset() and expected by userbuf.rawCharPtrAt(),
-    // while LazyScript::{begin,end} offsets are relative to the outermost
-    // script source.
-    Rooted<LazyScript*> lazyOuter(context, handler.lazyOuterFunction());
-    uint32_t userbufBase = lazyOuter->begin() - lazyOuter->column();
-    if (!tokenStream.advance(fun->lazyScript()->end() - userbufBase))
+    if (!tokenStream.advance(fun->lazyScript()->end()))
         return false;
 
 #if JS_HAS_EXPR_CLOSURES

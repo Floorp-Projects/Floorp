@@ -434,12 +434,6 @@ class ScriptSource
     UniqueTwoByteChars sourceMapURL_;
     bool mutedErrors_;
 
-    // The start column of the source. Offsets kept for toString and the
-    // function source in LazyScripts are absolute positions within a
-    // ScriptSource buffer. To get their positions, they need to be offset
-    // with the starting column.
-    uint32_t startColumn_;
-
     // bytecode offset in caller script that generated this code.
     // This is present for eval-ed code, as well as "new Function(...)"-introduced
     // scripts.
@@ -516,7 +510,6 @@ class ScriptSource
         displayURL_(nullptr),
         sourceMapURL_(nullptr),
         mutedErrors_(false),
-        startColumn_(0),
         introductionOffset_(0),
         parameterListEnd_(0),
         introducerFilename_(nullptr),
@@ -630,8 +623,6 @@ class ScriptSource
     }
 
     bool mutedErrors() const { return mutedErrors_; }
-
-    uint32_t startColumn() const { return startColumn_; }
 
     bool hasIntroductionOffset() const { return hasIntroductionOffset_; }
     uint32_t introductionOffset() const {

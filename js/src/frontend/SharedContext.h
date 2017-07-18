@@ -561,17 +561,8 @@ class FunctionBox : public ObjectBox, public SharedContext
     }
 
     void setStart(const TokenStream& tokenStream) {
-        // Token positions are already offset from the start column in
-        // CompileOptions. bufStart and toStringStart, however, refer to
-        // absolute positions within the ScriptSource buffer, and need to
-        // de-offset from the starting column.
         uint32_t offset = tokenStream.currentToken().pos.begin;
-        uint32_t sourceStartColumn = tokenStream.options().sourceStartColumn;
-
-        MOZ_ASSERT(offset >= sourceStartColumn);
-        MOZ_ASSERT(toStringStart >= sourceStartColumn);
-        toStringStart -= sourceStartColumn;
-        bufStart = offset - sourceStartColumn;
+        bufStart = offset;
         tokenStream.srcCoords.lineNumAndColumnIndex(offset, &startLine, &startColumn);
     }
 
@@ -579,14 +570,9 @@ class FunctionBox : public ObjectBox, public SharedContext
         // For all functions except class constructors, the buffer and
         // toString ending positions are the same. Class constructors override
         // the toString ending position with the end of the class definition.
-        //
-        // Offsets are de-offset for the same reason as in setStart above.
         uint32_t offset = tokenStream.currentToken().pos.end;
-        uint32_t sourceStartColumn = tokenStream.options().sourceStartColumn;
-
-        MOZ_ASSERT(offset >= sourceStartColumn);
-        bufEnd = offset - sourceStartColumn;
-        toStringEnd = bufEnd;
+        bufEnd = offset;
+        toStringEnd = offset;
     }
 
     void trace(JSTracer* trc) override;

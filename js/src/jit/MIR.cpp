@@ -6187,36 +6187,33 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
     // If this access has never executed, try to add types to the observed set
     // according to any property which exists on the object or its prototype.
     if (observed->empty() && name) {
-        JSObject* obj;
-        if (key->isSingleton())
-            obj = key->singleton();
-        else
-            obj = key->proto().isDynamic() ? nullptr : key->proto().toObjectOrNull();
-
-        while (obj) {
-            if (!obj->getClass()->isNative())
+        TypeSet::ObjectKey* obj = key;
+        do {
+            if (!obj->clasp()->isNative())
                 break;
 
-            TypeSet::ObjectKey* key = TypeSet::ObjectKey::get(obj);
             if (propertycx)
-                key->ensureTrackedProperty(propertycx, NameToId(name));
+                obj->ensureTrackedProperty(propertycx, NameToId(name));
 
-            if (!key->unknownProperties()) {
-                HeapTypeSetKey property = key->property(NameToId(name));
-                if (property.maybeTypes()) {
-                    TypeSet::TypeList types;
-                    if (!property.maybeTypes()->enumerateTypes(&types))
-                        break;
-                    if (types.length() == 1) {
-                        // Note: the return value here is ignored.
-                        observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
-                        break;
-                    }
+            if (obj->unknownProperties())
+                break;
+
+            HeapTypeSetKey property = obj->property(NameToId(name));
+            if (property.maybeTypes()) {
+                TypeSet::TypeList types;
+                if (!property.maybeTypes()->enumerateTypes(&types))
+                    break;
+                if (types.length() == 1) {
+                    // Note: the return value here is ignored.
+                    observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
                 }
+                break;
             }
 
-            obj = obj->staticPrototype();
-        }
+            if (!obj->proto().isObject())
+                break;
+            obj = TypeSet::ObjectKey::get(obj->proto().toObject());
+        } while (obj);
     }
 
     // If any objects which could be observed are similar to ones that have
