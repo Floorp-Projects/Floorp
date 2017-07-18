@@ -8,7 +8,7 @@ authors = [
 ]
 
 description = "Parser for ISO base media file format (mp4)"
-documentation = "https://mp4parse-docs.surge.sh/mp4parse/"
+documentation = "https://docs.rs/mp4parse/"
 license = "MPL-2.0"
 categories = ["multimedia::video"]
 
@@ -19,8 +19,6 @@ exclude = [
   "*.mp4",
 ]
 
-[badges]
-travis-ci = { repository = "https://github.com/mozilla/mp4parse-rust" }
 
 [dependencies]
 byteorder = "1.0.0"
@@ -30,6 +28,3 @@ num-traits = "0.1.37"
 [dev-dependencies]
 test-assembler = "0.1.2"
 
-# Somewhat heavy-handed, but we want at least -Z force-overflow-checks=on.
-[profile.release]
-debug-assertions = true

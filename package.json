@@ -4,16 +4,11 @@
   "repository": {},
   "license": "MPL-2.0",
   "dependencies": {
-    "escope": "^3.6.0",
     "eslint": "3.19.0",
     "eslint-plugin-html": "2.0.3",
     "eslint-plugin-mozilla": "file:tools/lint/eslint/eslint-plugin-mozilla",
     "eslint-plugin-no-unsanitized": "2.0.1",
     "eslint-plugin-react": "7.1.0",
-    "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js",
-    "espree": "^3.4.0",
-    "estraverse": "^4.2.0",
-    "ini-parser": "^0.0.2",
-    "sax": "^1.2.2"
+    "eslint-plugin-spidermonkey-js": "file:tools/lint/eslint/eslint-plugin-spidermonkey-js"
   }
 }

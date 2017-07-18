@@ -13,9 +13,7 @@ mozlint-eslint:
         using: run-task
         command: >
             cd /home/worker/checkouts/gecko/ &&
-            /build/tooltool.py fetch -m tools/lint/eslint/manifest.tt &&
-            tar xvfz eslint.tar.gz &&
-            rm eslint.tar.gz &&
+            cp -r /build/node_modules_eslint node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             ./mach lint -l eslint -f treeherder --quiet

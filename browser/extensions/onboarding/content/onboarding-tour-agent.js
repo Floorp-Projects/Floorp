@@ -15,8 +15,19 @@ document.getElementById("onboarding-overlay")
     case "onboarding-tour-customize-button":
       Mozilla.UITour.showHighlight("customize");
       break;
-   case "onboarding-tour-default-browser-button":
-      Mozilla.UITour.setConfiguration("defaultBrowser");
+    case "onboarding-tour-default-browser-button":
+      Mozilla.UITour.getConfiguration("appinfo", (config) => {
+        let isDefaultBrowser = config.defaultBrowser;
+        let btn = document.getElementById("onboarding-tour-default-browser-button");
+        let msg = document.getElementById("onboarding-tour-is-default-browser-msg");
+        if (isDefaultBrowser) {
+          btn.classList.add("onboarding-hidden");
+          msg.classList.remove("onboarding-hidden");
+        } else {
+          btn.disabled = true;
+          Mozilla.UITour.setConfiguration("defaultBrowser");
+        }
+      });
       break;
     case "onboarding-tour-private-browsing-button":
       Mozilla.UITour.showHighlight("privateWindow");
@@ -34,6 +45,7 @@ document.getElementById("onboarding-overlay")
     case "onboarding-overlay-close-btn":
       // Dismiss any highlights if a user tries to close the dialog.
       Mozilla.UITour.hideHighlight();
+      break;
   }
   // Dismiss any highlights if a user tries to change to other tours.
   if (evt.target.classList.contains("onboarding-tour-item")) {

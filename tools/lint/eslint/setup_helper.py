@@ -16,9 +16,19 @@ sys.path.append(os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "third_party", "python", "which"))
 import which
 
+NODE_MIN_VERSION = "6.9.1"
+NPM_MIN_VERSION = "3.10.8"
+
 NODE_MACHING_VERSION_NOT_FOUND_MESSAGE = """
-nodejs is out of date. You currently have node %s but v6.9.1 is required.
+nodejs is out of date. You currently have node v%s but v%s is required.
 Please update nodejs from https://nodejs.org and try again.
+""".strip()
+
+NPM_MACHING_VERSION_NOT_FOUND_MESSAGE = """
+npm is out of date. You currently have npm v%s but v%s is required.
+You can usually update npm with:
+
+npm i -g npm
 """.strip()
 
 NODE_NOT_FOUND_MESSAGE = """
@@ -53,8 +63,6 @@ def eslint_setup():
     orig_cwd = os.getcwd()
     sys.path.append(os.path.dirname(__file__))
 
-    module_path = get_eslint_module_path()
-
     # npm sometimes fails to respect cwd when it is run using check_call so
     # we manually switch folders here instead.
     os.chdir(get_project_root())
@@ -70,22 +78,6 @@ def eslint_setup():
     cmd.extend(extra_parameters)
     print("Installing eslint for mach using \"%s\"..." % (" ".join(cmd)))
     if not call_process("eslint", cmd):
-        return 1
-
-    # Install in-tree ESLint plugin mozilla.
-    cmd = [npm_path, "install",
-           os.path.join(module_path, "eslint-plugin-mozilla")]
-    cmd.extend(extra_parameters)
-    print("Installing eslint-plugin-mozilla using \"%s\"..." % (" ".join(cmd)))
-    if not call_process("eslint-plugin-mozilla", cmd):
-        return 1
-
-    # Install in-tree ESLint plugin spidermonkey.
-    cmd = [npm_path, "install",
-           os.path.join(module_path, "eslint-plugin-spidermonkey-js")]
-    cmd.extend(extra_parameters)
-    print("Installing eslint-plugin-spidermonkey-js using \"%s\"..." % (" ".join(cmd)))
-    if not call_process("eslint-plugin-spidermonkey-js", cmd):
         return 1
 
     eslint_path = os.path.join(get_project_root(), "node_modules", ".bin", "eslint")
@@ -117,17 +109,19 @@ def expected_eslint_modules():
     with open(expected_modules_path, "r") as f:
         expected_modules = json.load(f)["dependencies"]
 
-    # Also read the in-tree ESLint plugin mozilla information.
+    # Also read the in-tree ESLint plugin mozilla information, to ensure the
+    # dependencies are up to date.
     mozilla_json_path = os.path.join(get_eslint_module_path(),
                                      "eslint-plugin-mozilla", "package.json")
     with open(mozilla_json_path, "r") as f:
-        expected_modules["eslint-plugin-mozilla"] = json.load(f)
+        expected_modules.update(json.load(f)["dependencies"])
 
-    # Also read the in-tree ESLint plugin spidermonkey information.
+    # Also read the in-tree ESLint plugin spidermonkey information, to ensure the
+    # dependencies are up to date.
     mozilla_json_path = os.path.join(get_eslint_module_path(),
                                      "eslint-plugin-spidermonkey-js", "package.json")
     with open(mozilla_json_path, "r") as f:
-        expected_modules["eslint-plugin-spidermonkey-js"] = json.load(f)
+        expected_modules.update(json.load(f)["dependencies"])
 
     return expected_modules
 
@@ -177,24 +171,15 @@ def eslint_module_needs_setup():
 
         data = json.load(open(path))
 
+        if version_range.startswith("file:"):
+            # We don't need to check local file installations for versions, as
+            # these are symlinked, so we'll always pick up the latest.
+            continue
+
         if not version_in_range(data["version"], version_range):
             print("%s v%s should be v%s." % (name, data["version"], version_range))
             has_issues = True
             continue
-
-        if name == "eslint-plugin-mozilla" or name == "eslint-plugin-spidermonkey-js":
-            # For our in-tree modules, check that package.json has the same dependencies.
-            if (cmp(data["dependencies"], expected_data["dependencies"]) != 0 or
-                cmp(data["devDependencies"], expected_data["devDependencies"]) != 0):
-                print("Dependencies of %s differ." % (name))
-                has_issues = True
-                continue
-
-            # We also need to check the files themselves in case one changed without
-            # the version number being updated.
-            if check_eslint_files(node_modules_path, name):
-                print("%s has out of-date files." % (name))
-                has_issues = True
 
     return has_issues
 
@@ -299,14 +284,17 @@ def get_node_or_npm_path(filename, minversion=None):
     if not minversion:
         return node_or_npm_path
 
-    version_str = get_version(node_or_npm_path)
+    version_str = get_version(node_or_npm_path).lstrip('v')
 
-    version = LooseVersion(version_str.lstrip('v'))
+    version = LooseVersion(version_str)
 
     if version > minversion:
         return node_or_npm_path
 
-    print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % version_str.strip())
+    if filename == "npm":
+        print(NPM_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
+    else:
+        print(NODE_MACHING_VERSION_NOT_FOUND_MESSAGE % (version_str.strip(), minversion))
 
     return None
 
@@ -365,11 +353,11 @@ def get_eslint_module_path():
 
 def check_node_executables_valid():
     # eslint requires at least node 6.9.1
-    node_path = get_node_or_npm_path("node", LooseVersion("6.9.1"))
+    node_path = get_node_or_npm_path("node", LooseVersion(NODE_MIN_VERSION))
     if not node_path:
         return False
 
-    npm_path = get_node_or_npm_path("npm")
+    npm_path = get_node_or_npm_path("npm", LooseVersion(NPM_MIN_VERSION))
     if not npm_path:
         return False
 

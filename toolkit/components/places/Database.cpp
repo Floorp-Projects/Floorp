@@ -158,52 +158,6 @@ hasRecentCorruptDB()
 }
 
 /**
- * Updates sqlite_stat1 table through ANALYZE.
- * Since also nsPlacesExpiration.js executes ANALYZE, the analyzed tables
- * must be the same in both components.  So ensure they are in sync.
- *
- * @param aDBConn
- *        The database connection.
- */
-nsresult
-updateSQLiteStatistics(mozIStorageConnection* aDBConn)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<mozIStorageAsyncStatement> analyzePlacesStmt;
-  aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "ANALYZE moz_places"
-  ), getter_AddRefs(analyzePlacesStmt));
-  NS_ENSURE_STATE(analyzePlacesStmt);
-  nsCOMPtr<mozIStorageAsyncStatement> analyzeBookmarksStmt;
-  aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "ANALYZE moz_bookmarks"
-  ), getter_AddRefs(analyzeBookmarksStmt));
-  NS_ENSURE_STATE(analyzeBookmarksStmt);
-  nsCOMPtr<mozIStorageAsyncStatement> analyzeVisitsStmt;
-  aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "ANALYZE moz_historyvisits"
-  ), getter_AddRefs(analyzeVisitsStmt));
-  NS_ENSURE_STATE(analyzeVisitsStmt);
-  nsCOMPtr<mozIStorageAsyncStatement> analyzeInputStmt;
-  aDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
-    "ANALYZE moz_inputhistory"
-  ), getter_AddRefs(analyzeInputStmt));
-  NS_ENSURE_STATE(analyzeInputStmt);
-
-  mozIStorageBaseStatement *stmts[] = {
-    analyzePlacesStmt,
-    analyzeBookmarksStmt,
-    analyzeVisitsStmt,
-    analyzeInputStmt
-  };
-
-  nsCOMPtr<mozIStoragePendingStatement> ps;
-  (void)aDBConn->ExecuteAsync(stmts, ArrayLength(stmts), nullptr,
-                              getter_AddRefs(ps));
-  return NS_OK;
-}
-
-/**
  * Sets the connection journal mode to one of the JOURNAL_* types.
  *
  * @param aDBConn
@@ -642,11 +596,6 @@ Database::EnsureConnection()
 
     if (databaseMigrated) {
       mDatabaseStatus = nsINavHistoryService::DATABASE_STATUS_UPGRADED;
-    }
-
-    if (mDatabaseStatus == nsINavHistoryService::DATABASE_STATUS_UPGRADED ||
-        mDatabaseStatus == nsINavHistoryService::DATABASE_STATUS_CREATE) {
-      MOZ_ALWAYS_SUCCEEDS(updateSQLiteStatistics(mMainConn));
     }
 
     // Initialize here all the items that are not part of the on-disk database,
@@ -2625,6 +2574,13 @@ Database::Shutdown()
   DispatchToAsyncThread(event);
 
   mClosed = true;
+
+  // Execute PRAGMA optimized as last step, this will ensure proper database
+  // performance across restarts.
+  nsCOMPtr<mozIStoragePendingStatement> ps;
+  MOZ_ALWAYS_SUCCEEDS(mMainConn->ExecuteSimpleSQLAsync(NS_LITERAL_CSTRING(
+    "PRAGMA optimize(0x02)"
+  ), nullptr, getter_AddRefs(ps)));
 
   (void)mMainConn->AsyncClose(connectionShutdown);
   mMainConn = nullptr;

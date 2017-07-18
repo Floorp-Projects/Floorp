@@ -101,6 +101,10 @@ TESTING_JS_MODULES += [
   'tests/unit/TelemetryArchiveTesting.jsm',
 ]
 
+PYTHON_UNITTEST_MANIFESTS += [
+    'tests/python/python.ini',
+]
+
 GENERATED_FILES = [
     'TelemetryEventData.h',
     'TelemetryEventEnums.h',

@@ -722,7 +722,7 @@
     "vi": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "ddg", "wikipedia-vi", "zing-mp3"
+          "google", "coccoc", "ddg", "wikipedia-vi", "zing-mp3"
         ]
       }
     },

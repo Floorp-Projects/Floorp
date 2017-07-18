@@ -2127,7 +2127,8 @@ void MediaPipelineReceiveAudio::DetachMedia()
   }
 }
 
-nsresult MediaPipelineReceiveAudio::Init() {
+nsresult MediaPipelineReceiveAudio::Init()
+{
   ASSERT_ON_THREAD(main_thread_);
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__);
 
@@ -2148,13 +2149,11 @@ void MediaPipelineReceiveAudio::SetPrincipalHandle_m(const PrincipalHandle& prin
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
-  PipelineListener(SourceMediaStream * source, TrackID track_id)
-    : GenericReceiveListener(source, track_id),
-      width_(0),
-      height_(0),
-      image_container_(),
-      image_(),
-      monitor_("Video PipelineListener")
+  PipelineListener(SourceMediaStream* source, TrackID track_id)
+    : GenericReceiveListener(source, track_id)
+    , image_container_()
+    , image_()
+    , mutex_("Video PipelineListener")
   {
     image_container_ =
       LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
@@ -2163,7 +2162,7 @@ public:
   // Implement MediaStreamListener
   void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override
   {
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MutexAutoLock lock(mutex_);
 
     RefPtr<Image> image = image_;
     StreamTime delta = desired_time - played_ticks_;
@@ -2173,8 +2172,8 @@ public:
     // delta and thus messes up handling of the graph
     if (delta > 0) {
       VideoSegment segment;
-      segment.AppendFrame(image.forget(), delta, IntSize(width_, height_),
-                          principal_handle_);
+      IntSize size = image ? image->GetSize() : IntSize(width_, height_);
+      segment.AppendFrame(image.forget(), delta, size, principal_handle_);
       // Handle track not actually added yet or removed/finished
       if (source_->AppendToTrack(track_id_, &segment)) {
         played_ticks_ = desired_time;
@@ -2189,7 +2188,7 @@ public:
   void FrameSizeChange(unsigned int width,
                        unsigned int height,
                        unsigned int number_of_streams) {
-    ReentrantMonitorAutoEnter enter(monitor_);
+    MutexAutoLock enter(mutex_);
 
     width_ = width;
     height_ = height;
@@ -2197,55 +2196,44 @@ public:
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const RefPtr<layers::Image>& video_image)
+                        int64_t render_time)
   {
-    RenderVideoFrame(buffer.DataY(),
-                     buffer.StrideY(),
-                     buffer.DataU(),
-                     buffer.StrideU(),
-                     buffer.DataV(),
-                     buffer.StrideV(),
-                     time_stamp, render_time, video_image);
-  }
-
-  void RenderVideoFrame(const uint8_t* buffer_y,
-                        uint32_t y_stride,
-                        const uint8_t* buffer_u,
-                        uint32_t u_stride,
-                        const uint8_t* buffer_v,
-                        uint32_t v_stride,
-                        uint32_t time_stamp,
-                        int64_t render_time,
-                        const RefPtr<layers::Image>& video_image)
-  {
-    ReentrantMonitorAutoEnter enter(monitor_);
-
-    if (buffer_y) {
-      // Create a video frame using |buffer|.
-      RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
-
-      PlanarYCbCrData yuvData;
-      yuvData.mYChannel = const_cast<uint8_t*>(buffer_y);
-      yuvData.mYSize = IntSize(y_stride, height_);
-      yuvData.mYStride = y_stride;
-      MOZ_ASSERT(u_stride == v_stride);
-      yuvData.mCbCrStride = u_stride;
-      yuvData.mCbChannel = const_cast<uint8_t*>(buffer_u);
-      yuvData.mCrChannel = const_cast<uint8_t*>(buffer_v);
-      yuvData.mCbCrSize = IntSize(yuvData.mCbCrStride, (height_ + 1) >> 1);
-      yuvData.mPicX = 0;
-      yuvData.mPicY = 0;
-      yuvData.mPicSize = IntSize(width_, height_);
-      yuvData.mStereoMode = StereoMode::MONO;
-
-      if (!yuvImage->CopyData(yuvData)) {
-        MOZ_ASSERT(false);
-        return;
-      }
-
-      image_ = yuvImage;
+    if (buffer.native_handle()) {
+      // We assume that only native handles are used with the
+      // WebrtcMediaDataDecoderCodec decoder.
+      RefPtr<Image> image = static_cast<Image*>(buffer.native_handle());
+      MutexAutoLock lock(mutex_);
+      image_ = image;
+      return;
     }
+
+    MOZ_ASSERT(buffer.DataY());
+    // Create a video frame using |buffer|.
+    RefPtr<PlanarYCbCrImage> yuvImage =
+      image_container_->CreatePlanarYCbCrImage();
+
+    PlanarYCbCrData yuvData;
+    yuvData.mYChannel = const_cast<uint8_t*>(buffer.DataY());
+    yuvData.mYSize = IntSize(buffer.width(), buffer.height());
+    yuvData.mYStride = buffer.StrideY();
+    MOZ_ASSERT(buffer.StrideU() == buffer.StrideV());
+    yuvData.mCbCrStride = buffer.StrideU();
+    yuvData.mCbChannel = const_cast<uint8_t*>(buffer.DataU());
+    yuvData.mCrChannel = const_cast<uint8_t*>(buffer.DataV());
+    yuvData.mCbCrSize =
+      IntSize((buffer.width() + 1) >> 1, (buffer.height() + 1) >> 1);
+    yuvData.mPicX = 0;
+    yuvData.mPicY = 0;
+    yuvData.mPicSize = IntSize(buffer.width(), buffer.height());
+    yuvData.mStereoMode = StereoMode::MONO;
+
+    if (!yuvImage->CopyData(yuvData)) {
+      MOZ_ASSERT(false);
+      return;
+    }
+
+    MutexAutoLock lock(mutex_);
+    image_ = yuvImage;
   }
 
 private:
@@ -2253,10 +2241,10 @@ private:
   int height_;
   RefPtr<layers::ImageContainer> image_container_;
   RefPtr<layers::Image> image_;
-  mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
-                                      // Protects image_ against:
-                                      // - Writing from the GIPS thread
-                                      // - Reading from the MSG thread
+  Mutex mutex_; // Mutex for processing WebRTC frames.
+                // Protects image_ against:
+                // - Writing from the GIPS thread
+                // - Reading from the MSG thread
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer : public mozilla::VideoRenderer
@@ -2277,29 +2265,9 @@ public:
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& buffer,
                         uint32_t time_stamp,
-                        int64_t render_time,
-                        const ImageHandle& handle) override
+                        int64_t render_time) override
   {
-    pipeline_->listener_->RenderVideoFrame(buffer,
-                                           time_stamp, render_time,
-                                           handle.GetImage());
-  }
-
-  void RenderVideoFrame(const uint8_t* buffer_y,
-                        uint32_t y_stride,
-                        const uint8_t* buffer_u,
-                        uint32_t u_stride,
-                        const uint8_t* buffer_v,
-                        uint32_t v_stride,
-                        uint32_t time_stamp,
-                        int64_t render_time,
-                        const ImageHandle& handle) override
-  {
-    pipeline_->listener_->RenderVideoFrame(buffer_y, y_stride,
-                                           buffer_u, u_stride,
-                                           buffer_v, v_stride,
-                                           time_stamp, render_time,
-                                           handle.GetImage());
+    pipeline_->listener_->RenderVideoFrame(buffer, time_stamp, render_time);
   }
 
 private:

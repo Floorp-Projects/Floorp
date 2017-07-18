@@ -69,6 +69,7 @@ pub enum mp4parse_status {
     UNSUPPORTED = 3,
     EOF = 4,
     IO = 5,
+    TABLE_TOO_LARGE = 6,
 }
 
 #[allow(non_camel_case_types)]
@@ -335,7 +336,8 @@ pub unsafe extern fn mp4parse_read(parser: *mut mp4parse_parser) -> mp4parse_sta
             // those to our Error::UnexpectedEOF variant.
             (*parser).set_poisoned(true);
             mp4parse_status::IO
-        }
+        },
+        Err(Error::TableTooLarge) => mp4parse_status::TABLE_TOO_LARGE,
     }
 }
 
@@ -417,6 +419,7 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
         TrackType::Unknown => return mp4parse_status::UNSUPPORTED,
     };
 
+    // Return UNKNOWN for unsupported format.
     info.codec = match context.tracks[track_index].data {
         Some(SampleEntry::Audio(ref audio)) => match audio.codec_specific {
             AudioCodecSpecific::OpusSpecificBox(_) =>
@@ -431,20 +434,14 @@ pub unsafe extern fn mp4parse_get_track_info(parser: *mut mp4parse_parser, track
                 mp4parse_codec::UNKNOWN,
             AudioCodecSpecific::MP3 =>
                 mp4parse_codec::MP3,
-            AudioCodecSpecific::AC3SpecificBox =>
-                mp4parse_codec::AC3,
-            AudioCodecSpecific::EC3SpecificBox =>
-                mp4parse_codec::EC3,
         },
         Some(SampleEntry::Video(ref video)) => match video.codec_specific {
             VideoCodecSpecific::VPxConfig(_) =>
                 mp4parse_codec::VP9,
             VideoCodecSpecific::AVCConfig(_) =>
                 mp4parse_codec::AVC,
-            VideoCodecSpecific::ESDSConfig(_) =>
-                mp4parse_codec::MP4V,
-            VideoCodecSpecific::JPEG =>
-                mp4parse_codec::JPEG,
+            VideoCodecSpecific::ESDSConfig(_) => // MP4V (14496-2) video is unsupported.
+                mp4parse_codec::UNKNOWN,
         },
         _ => mp4parse_codec::UNKNOWN,
     };
@@ -573,8 +570,6 @@ pub unsafe extern fn mp4parse_get_track_audio_info(parser: *mut mp4parse_parser,
                 }
             }
         }
-        AudioCodecSpecific::AC3SpecificBox => (),
-        AudioCodecSpecific::EC3SpecificBox => (),
         AudioCodecSpecific::MP3 => (),
     }
 

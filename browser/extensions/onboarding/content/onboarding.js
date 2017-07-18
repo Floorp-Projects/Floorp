@@ -160,10 +160,12 @@ var onboardingTourset = {
         button: bundle.GetStringFromName("onboarding.button.learnMore"),
       };
     },
-    getPage(win) {
+    getPage(win, bundle) {
       let div = win.document.createElement("div");
       let defaultBrowserButtonId = win.matchMedia("(-moz-os-version: windows-win7)").matches ?
         "onboarding.tour-default-browser.win7.button" : "onboarding.tour-default-browser.button";
+      let isDefaultMessage = bundle.GetStringFromName("onboarding.tour-default-browser.is-default.message");
+      let isDefault2ndMessage = bundle.formatStringFromName("onboarding.tour-default-browser.is-default.2nd-message", [BRAND_SHORT_NAME], 1);
       // eslint-disable-next-line no-unsanitized/property
       div.innerHTML = `
         <section class="onboarding-tour-description">
@@ -175,6 +177,7 @@ var onboardingTourset = {
         </section>
         <aside class="onboarding-tour-button-container">
           <button id="onboarding-tour-default-browser-button" class="onboarding-tour-action-button" data-l10n-id="${defaultBrowserButtonId}"></button>
+          <div id="onboarding-tour-is-default-browser-msg" class="onboarding-hidden">${isDefaultMessage}<br/>${isDefault2ndMessage}</div>
         </aside>
       `;
       return div;
@@ -233,8 +236,6 @@ class Onboarding {
 
   async init(contentWindow) {
     this._window = contentWindow;
-    this._tourItems = [];
-    this._tourPages = [];
     this._tours = [];
 
     let tourIds = this._getTourIDList(Services.prefs.getStringPref("browser.onboarding.tour-type", "update"));
@@ -280,6 +281,8 @@ class Onboarding {
       return;
     }
     this.uiInitialized = true;
+    this._tourItems = [];
+    this._tourPages = [];
 
     this._overlayIcon = this._renderOverlayIcon();
     this._overlayIcon.addEventListener("click", this);
@@ -411,6 +414,7 @@ class Onboarding {
       this._notificationBar.remove();
     }
 
+    this._tourItems = this._tourPages =
     this._overlayIcon = this._overlay = this._notificationBar = null;
   }
 
@@ -464,7 +468,7 @@ class Onboarding {
 
   markTourCompletionState(tourId) {
     // We are doing lazy load so there might be no items.
-    if (this._tourItems.length > 0 && this.isTourCompleted(tourId)) {
+    if (this._tourItems && this._tourItems.length > 0 && this.isTourCompleted(tourId)) {
       let targetItem = this._tourItems.find(item => item.id == tourId);
       targetItem.classList.add("onboarding-complete");
     }
