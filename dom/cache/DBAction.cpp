@@ -9,6 +9,7 @@
 #include "mozilla/dom/cache/Connection.h"
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozilla/dom/cache/FileUtils.h"
+#include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/net/nsFileProtocolHandler.h"
 #include "mozIStorageConnection.h"
@@ -202,6 +203,9 @@ DBAction::WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
 
   // Delete the morgue as well.
   rv = BodyDeleteDir(aQuotaInfo, aDBDir);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = WipePaddingFile(aQuotaInfo, aDBDir);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
