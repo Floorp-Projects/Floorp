@@ -51,7 +51,7 @@ class GamepadManager final : public nsIObserver,
 
   // Add a gamepad to the list of known gamepads.
   void AddGamepad(uint32_t aIndex, const nsAString& aID, GamepadMappingType aMapping,
-                  GamepadHand aHand, GamepadServiceType aServiceType, uint32_t aDisplayID,
+                  GamepadHand aHand, GamepadServiceType aServiceType,
                   uint32_t aNumButtons, uint32_t aNumAxes, uint32_t aNumHaptics);
 
   // Remove the gamepad at |aIndex| from the list of known gamepads.
