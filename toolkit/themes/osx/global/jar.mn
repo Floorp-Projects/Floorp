@@ -76,7 +76,6 @@ toolkit.jar:
   skin/classic/global/icons/blacklist_64.png                         (icons/blacklist_64.png)
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
   skin/classic/global/icons/glyph-dropdown@2x.png                    (icons/glyph-dropdown@2x.png)
-  skin/classic/global/icons/menulist-dropmarker.png                  (icons/menulist-dropmarker.png)
   skin/classic/global/icons/notfound.png                             (icons/notfound.png)
   skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
   skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
