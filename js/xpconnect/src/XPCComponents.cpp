@@ -8,7 +8,6 @@
 
 #include "xpcprivate.h"
 #include "xpc_make_class.h"
-#include "xpcIJSModuleLoader.h"
 #include "XPCJSWeakReference.h"
 #include "WrapperFactory.h"
 #include "nsJSUtils.h"
@@ -2496,10 +2495,8 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
                               uint8_t optionalArgc,
                               MutableHandleValue retval)
 {
-    nsCOMPtr<xpcIJSModuleLoader> moduleloader =
-        do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
-    if (!moduleloader)
-        return NS_ERROR_FAILURE;
+    RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+    MOZ_ASSERT(moduleloader);
 
     const nsCString& flatLocation = PromiseFlatCString(registryLocation);
     AUTO_PROFILER_LABEL_DYNAMIC("nsXPCComponents_Utils::Import", OTHER,
@@ -2511,20 +2508,16 @@ nsXPCComponents_Utils::Import(const nsACString& registryLocation,
 NS_IMETHODIMP
 nsXPCComponents_Utils::IsModuleLoaded(const nsACString& registryLocation, bool* retval)
 {
-    nsCOMPtr<xpcIJSModuleLoader> moduleloader =
-        do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
-    if (!moduleloader)
-        return NS_ERROR_FAILURE;
+    RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+    MOZ_ASSERT(moduleloader);
     return moduleloader->IsModuleLoaded(registryLocation, retval);
 }
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::Unload(const nsACString & registryLocation)
 {
-    nsCOMPtr<xpcIJSModuleLoader> moduleloader =
-        do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
-    if (!moduleloader)
-        return NS_ERROR_FAILURE;
+    RefPtr<mozJSComponentLoader> moduleloader = mozJSComponentLoader::Get();
+    MOZ_ASSERT(moduleloader);
     return moduleloader->Unload(registryLocation);
 }
 
