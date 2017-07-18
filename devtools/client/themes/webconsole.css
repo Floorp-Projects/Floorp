@@ -807,6 +807,9 @@ a.learn-more-link.webconsole-learn-more-link {
   display: inline-block;
   border-inline-end: solid 1px var(--theme-splitter-color);
 }
+.webconsole-output-wrapper .message .indent[data-indent="0"] {
+  border-inline-end: none;
+}
 
 .message.startGroup .indent,
 .message.startGroupCollapsed .indent {
