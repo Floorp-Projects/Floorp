@@ -89,7 +89,7 @@ union GPUVideoSubDescriptor {
 
 struct SurfaceDescriptorGPUVideo {
   uint64_t handle;
-  GPUVideoSubDescriptor desc;
+  GPUVideoSubDescriptor subdesc;
 };
 
 struct RGBDescriptor {

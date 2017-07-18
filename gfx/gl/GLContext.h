@@ -1417,6 +1417,22 @@ public:
         return retval;
     }
 
+    void SetEnabled(const GLenum cap, const bool val) {
+        if (val) {
+            fEnable(cap);
+        } else {
+            fDisable(cap);
+        }
+    }
+
+    bool PushEnabled(const GLenum cap, const bool newVal) {
+        const bool oldVal = fIsEnabled(cap);
+        if (oldVal != newVal) {
+            SetEnabled(cap, newVal);
+        }
+        return oldVal;
+    }
+
     realGLboolean fIsProgram(GLuint program) {
         BEFORE_GL_CALL;
         realGLboolean retval = mSymbols.fIsProgram(program);
