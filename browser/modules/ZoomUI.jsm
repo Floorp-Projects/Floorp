@@ -5,17 +5,19 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = [ "FullZoomUI" ];
+this.EXPORTED_SYMBOLS = [ "ZoomUI" ];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-var FullZoomUI = {
+var ZoomUI = {
   init(aWindow) {
     aWindow.addEventListener("EndSwapDocShells", onEndSwapDocShells, true);
-    aWindow.addEventListener("FullZoomChange", onFullZoomChange);
+    aWindow.addEventListener("FullZoomChange", onZoomChange);
+    aWindow.addEventListener("TextZoomChange", onZoomChange);
     aWindow.addEventListener("unload", () => {
       aWindow.removeEventListener("EndSwapDocShells", onEndSwapDocShells, true);
-      aWindow.removeEventListener("FullZoomChange", onFullZoomChange);
+      aWindow.removeEventListener("FullZoomChange", onZoomChange);
+      aWindow.removeEventListener("TextZoomChange", onZoomChange);
     }, {once: true});
   },
 }
@@ -35,7 +37,7 @@ function onEndSwapDocShells(event) {
   updateZoomUI(event.originalTarget);
 }
 
-function onFullZoomChange(event) {
+function onZoomChange(event) {
   let browser;
   if (event.target.nodeType == event.target.DOCUMENT_NODE) {
     // In non-e10s, the event is dispatched on the contentDocument
