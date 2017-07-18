@@ -433,20 +433,6 @@ struct WrGradientStop {
   }
 };
 
-struct SideOffsets2D_f32 {
-  float top;
-  float right;
-  float bottom;
-  float left;
-
-  bool operator==(const SideOffsets2D_f32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
-
 struct SideOffsets2D_u32 {
   uint32_t top;
   uint32_t right;
@@ -454,6 +440,20 @@ struct SideOffsets2D_u32 {
   uint32_t left;
 
   bool operator==(const SideOffsets2D_u32& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
+  }
+};
+
+struct SideOffsets2D_f32 {
+  float top;
+  float right;
+  float bottom;
+  float left;
+
+  bool operator==(const SideOffsets2D_f32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -515,11 +515,11 @@ struct WrFilterOp {
   }
 };
 
-struct WrGlyphInstance {
+struct GlyphInstance {
   uint32_t index;
   LayoutPoint point;
 
-  bool operator==(const WrGlyphInstance& aOther) const {
+  bool operator==(const GlyphInstance& aOther) const {
     return index == aOther.index &&
            point == aOther.point;
   }
@@ -894,7 +894,7 @@ void wr_dp_push_text(WrState *aState,
                      LayoutRect aClip,
                      ColorF aColor,
                      WrFontKey aFontKey,
-                     const WrGlyphInstance *aGlyphs,
+                     const GlyphInstance *aGlyphs,
                      uint32_t aGlyphCount,
                      float aGlyphSize)
 WR_FUNC;

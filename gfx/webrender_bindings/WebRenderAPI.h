@@ -270,7 +270,7 @@ public:
                 const wr::LayoutRect& aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
-                Range<const wr::WrGlyphInstance> aGlyphBuffer,
+                Range<const wr::GlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
   void PushBoxShadow(const wr::LayoutRect& aRect,

@@ -213,7 +213,7 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
 
-    nsTArray<wr::WrGlyphInstance> wr_glyph_instances;
+    nsTArray<wr::GlyphInstance> wr_glyph_instances;
     wr_glyph_instances.SetLength(glyphs.Length());
 
     for (size_t j = 0; j < glyphs.Length(); j++) {
@@ -226,7 +226,7 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
                       aSc.ToRelativeLayoutRect(aClip),
                       glyph_array.color().value(),
                       key,
-                      Range<const wr::WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
+                      Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
                       aFont->GetSize());
 
   }

@@ -158,22 +158,6 @@ impl Into<ExtendMode> for WrGradientExtendMode {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrGlyphInstance {
-    index: u32,
-    point: LayoutPoint,
-}
-
-impl<'a> Into<GlyphInstance> for &'a WrGlyphInstance {
-    fn into(self) -> GlyphInstance {
-        GlyphInstance {
-            index: self.index,
-            point: self.point.into(),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
 pub struct WrGradientStop {
     offset: f32,
     color: ColorF,
@@ -1314,13 +1298,12 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
                                   clip: LayoutRect,
                                   color: ColorF,
                                   font_key: WrFontKey,
-                                  glyphs: *const WrGlyphInstance,
+                                  glyphs: *const GlyphInstance,
                                   glyph_count: u32,
                                   glyph_size: f32) {
     assert!(unsafe { is_in_main_thread() });
 
     let glyph_slice = make_slice(glyphs, glyph_count as usize);
-    let glyph_vector: Vec<_> = glyph_slice.iter().map(|x| x.into()).collect();
 
     let colorf = ColorF::new(color.r, color.g, color.b, color.a);
 
@@ -1329,7 +1312,7 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
          .dl_builder
          .push_text(bounds.into(),
                     Some(LocalClip::Rect(clip.into())),
-                    &glyph_vector,
+                    &glyph_slice,
                     font_key,
                     colorf,
                     Au::from_f32_px(glyph_size),

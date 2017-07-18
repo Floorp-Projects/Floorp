@@ -849,7 +849,7 @@ DisplayListBuilder::PushText(const wr::LayoutRect& aBounds,
                              const wr::LayoutRect& aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
-                             Range<const wr::WrGlyphInstance> aGlyphBuffer,
+                             Range<const wr::GlyphInstance> aGlyphBuffer,
                              float aGlyphSize)
 {
   wr_dp_push_text(mWrState, aBounds, aClip,
