@@ -22,12 +22,6 @@ const gTokenPasswordDialogs = {
 };
 
 function run_test() {
-  // We have to set a password and login before we attempt to encrypt anything.
-  // In particular, failing to do so will cause the Encrypt() implementation to
-  // pop up a dialog asking for a password to be set. This won't work in the
-  // xpcshell environment and will lead to an assertion.
-  loginToDBWithDefaultPassword();
-
   let sdr = Cc["@mozilla.org/security/sdr;1"]
               .getService(Ci.nsISecretDecoderRing);
 
