@@ -774,32 +774,20 @@ LockedDirectoryPaddingInit(nsIFile* aBaseDir)
 
 // static
 nsresult
-LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
-                                      mozIStorageConnection* aConn,
-                                      const int64_t aIncreaseSize,
-                                      const int64_t aDecreaseSize,
-                                      bool* aUpdatedOut)
+LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
+                                 mozIStorageConnection* aConn,
+                                 const int64_t aIncreaseSize,
+                                 const int64_t aDecreaseSize,
+                                 const bool aTemporaryFileExist)
 {
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
   MOZ_DIAGNOSTIC_ASSERT(aConn);
   MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
   MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
-  MOZ_DIAGNOSTIC_ASSERT(aUpdatedOut);
-
-  // Temporary should be removed at the end of each action. If not, it means the
-  // failure happened.
-  bool temporaryFileExisted =
-    DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE);
-
-  nsresult rv = NS_OK;
-
-  if (aIncreaseSize == aDecreaseSize && !temporaryFileExisted) {
-    return rv;
-  }
 
   int64_t currentPaddingSize = 0;
-  rv = LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize);
-  if (NS_WARN_IF(NS_FAILED(rv)) || temporaryFileExisted) {
+  nsresult rv = LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv)) || aTemporaryFileExist) {
     // Fail to read padding size from the dir padding file, so try to restore.
     if (rv != NS_ERROR_FILE_NOT_FOUND &&
         rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
@@ -837,8 +825,6 @@ LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
 
   rv = LockedDirectoryPaddingTemporaryWrite(aBaseDir, currentPaddingSize);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  *aUpdatedOut = true;
 
   return rv;
 }
