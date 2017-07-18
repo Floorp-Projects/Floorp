@@ -56,7 +56,7 @@ function promiseOnboardingOverlayLoaded(browser) {
     condition,
     "Should load onboarding overlay",
     100,
-    30
+    50 // Bug 1381335 increased retries, so debug builds can trigger idle in time
   );
 }
 

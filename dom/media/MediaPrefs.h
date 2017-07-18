@@ -124,6 +124,8 @@ private:
   DECL_MEDIA_PREF("media.android-media-codec.preferred",      PDMAndroidMediaCodecPreferred, bool, false);
   DECL_MEDIA_PREF("media.navigator.hardware.vp8_encode.acceleration_remote_enabled", RemoteMediaCodecVP8EncoderEnabled, bool, false);
 #endif
+  // WebRTC
+  DECL_MEDIA_PREF("media.navigator.mediadatadecoder_enabled", MediaDataDecoderEnabled, bool, false);
 #ifdef MOZ_FFMPEG
   DECL_MEDIA_PREF("media.ffmpeg.enabled",                     PDMFFmpegEnabled, bool, true);
   DECL_MEDIA_PREF("media.libavcodec.allow-obsolete",          LibavcodecAllowObsolete, bool, false);
