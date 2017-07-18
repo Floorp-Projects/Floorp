@@ -754,15 +754,16 @@ WebGLContext::AssertCachedBindings()
     // Framebuffers
     if (IsWebGL2()) {
         GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
-                                             : 0;
+                                             : gl->Screen()->DrawFB();
         AssertUintParamCorrect(gl, LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, bound);
 
-        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->mGLName : 0;
+        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->mGLName
+                                      : gl->Screen()->ReadFB();
         AssertUintParamCorrect(gl, LOCAL_GL_READ_FRAMEBUFFER_BINDING, bound);
     } else {
         MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
         GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
-                                             : 0;
+                                             : gl->Screen()->ReadFB();
         AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
     }
 

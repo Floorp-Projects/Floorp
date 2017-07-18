@@ -1888,6 +1888,8 @@ protected:
     bool mPixelStore_PremultiplyAlpha;
     bool mPixelStore_RequireFastPath;
 
+    void RebindFramebuffers() const;
+
     ////////////////////////////////////
     class FakeBlackTexture {
     public:
@@ -2160,7 +2162,9 @@ public:
     { }
 
 private:
-    void UnwrapImpl();
+    void UnwrapImpl() {
+        mWebGL->RebindFramebuffers();
+    }
 };
 
 class ScopedLazyBind final

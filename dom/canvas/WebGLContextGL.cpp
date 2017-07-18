@@ -141,10 +141,9 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
     MakeContextCurrent();
 
     if (!wfb) {
-        gl->fBindFramebuffer(target, 0);
+        gl->Screen()->BindAsFramebuffer(target);
     } else {
-        GLuint framebuffername = wfb->mGLName;
-        gl->fBindFramebuffer(target, framebuffername);
+        gl->fBindFramebuffer(target, wfb->mGLName);
 #ifdef ANDROID
         wfb->mIsFB = true;
 #endif
@@ -162,7 +161,7 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
         mBoundReadFramebuffer = wfb;
         break;
     default:
-        break;
+        MOZ_CRASH();
     }
 }
 

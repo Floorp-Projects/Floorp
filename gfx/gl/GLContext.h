@@ -3340,25 +3340,6 @@ public:
      */
     const gfx::IntSize& OffscreenSize() const;
 
-    void BindFB(GLuint fb) {
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
-        MOZ_ASSERT(!fb || fIsFramebuffer(fb));
-    }
-
-    void BindDrawFB(GLuint fb) {
-        fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER_EXT, fb);
-    }
-
-    void BindReadFB(GLuint fb) {
-        fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER_EXT, fb);
-    }
-
-    GLuint GetDrawFB();
-
-    GLuint GetReadFB();
-
-    GLuint GetFB();
-
 private:
     void GetShaderPrecisionFormatNonES2(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
         switch (precisiontype) {
@@ -3383,10 +3364,6 @@ private:
     }
 
 public:
-
-    void ForceDirtyScreen();
-    void CleanDirtyScreen();
-
     virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
     virtual GLenum GetPreferredEGLImageTextureTarget() const {
@@ -3458,15 +3435,7 @@ public:
 
 protected:
     // Note that it does -not- clear the resized buffers.
-    bool CreateScreenBuffer(const gfx::IntSize& size, const SurfaceCaps& caps) {
-        if (!IsOffscreenSizeAllowed(size))
-            return false;
-
-       return CreateScreenBufferImpl(size, caps);
-    }
-
-    bool CreateScreenBufferImpl(const gfx::IntSize& size,
-                                const SurfaceCaps& caps);
+    bool CreateScreenBuffer(const gfx::IntSize& size, const SurfaceCaps& caps);
 
 public:
     bool ResizeScreenBuffer(const gfx::IntSize& size);

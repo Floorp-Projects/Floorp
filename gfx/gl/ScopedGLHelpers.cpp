@@ -63,10 +63,10 @@ void
 ScopedBindFramebuffer::Init()
 {
     if (mGL->IsSupported(GLFeature::split_framebuffer)) {
-        mOldReadFB = mGL->GetReadFB();
-        mOldDrawFB = mGL->GetDrawFB();
+        mOldReadFB = mGL->GetIntAs<GLuint>(LOCAL_GL_READ_FRAMEBUFFER_BINDING);
+        mOldDrawFB = mGL->GetIntAs<GLuint>(LOCAL_GL_DRAW_FRAMEBUFFER_BINDING);
     } else {
-        mOldReadFB = mOldDrawFB = mGL->GetFB();
+        mOldReadFB = mOldDrawFB = mGL->GetIntAs<GLuint>(LOCAL_GL_FRAMEBUFFER_BINDING);
     }
 }
 
@@ -80,17 +80,17 @@ ScopedBindFramebuffer::ScopedBindFramebuffer(GLContext* aGL, GLuint aNewFB)
     : ScopedGLWrapper<ScopedBindFramebuffer>(aGL)
 {
     Init();
-    mGL->BindFB(aNewFB);
+    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aNewFB);
 }
 
 void
 ScopedBindFramebuffer::UnwrapImpl()
 {
     if (mOldReadFB == mOldDrawFB) {
-        mGL->BindFB(mOldDrawFB);
+        mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mOldDrawFB);
     } else {
-        mGL->BindDrawFB(mOldDrawFB);
-        mGL->BindReadFB(mOldReadFB);
+        mGL->fBindFramebuffer(LOCAL_GL_DRAW_FRAMEBUFFER, mOldDrawFB);
+        mGL->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mOldReadFB);
     }
 }
 

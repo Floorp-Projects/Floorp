@@ -125,28 +125,19 @@ public:
     // the first BlitFramebufferToFramebuffer.
     void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
                                       const gfx::IntSize& srcSize,
-                                      const gfx::IntSize& destSize,
-                                      bool internalFBs = false);
-    void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                      const gfx::IntSize& srcSize,
-                                      const gfx::IntSize& destSize,
-                                      const GLFormats& srcFormats,
-                                      bool internalFBs = false);
+                                      const gfx::IntSize& destSize);
     void BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
                                   const gfx::IntSize& srcSize,
                                   const gfx::IntSize& destSize,
-                                  GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
-                                  bool internalFBs = false);
+                                  GLenum srcTarget = LOCAL_GL_TEXTURE_2D);
     void DrawBlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
                                       const gfx::IntSize& srcSize,
                                       const gfx::IntSize& destSize,
-                                      GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
-                                      bool internalFBs = false);
+                                      GLenum srcTarget = LOCAL_GL_TEXTURE_2D);
     void BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
                                   const gfx::IntSize& srcSize,
                                   const gfx::IntSize& destSize,
-                                  GLenum destTarget = LOCAL_GL_TEXTURE_2D,
-                                  bool internalFBs = false);
+                                  GLenum destTarget = LOCAL_GL_TEXTURE_2D);
     void BlitTextureToTexture(GLuint srcTex, GLuint destTex,
                               const gfx::IntSize& srcSize,
                               const gfx::IntSize& destSize,
