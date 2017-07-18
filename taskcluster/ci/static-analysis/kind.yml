@@ -18,54 +18,6 @@ job-defaults:
         tier: 1
 
 jobs:
-    macosx64-st-an/debug:
-        description: "MacOS X x64 Debug Cross-compile Static Analysis"
-        index:
-            job-name: macosx64-st-an-debug
-        treeherder:
-            platform: osx-cross/debug
-        worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
-        worker:
-            docker-image: {in-tree: desktop-build}
-            max-run-time: 36000
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-        run:
-            using: mozharness
-            actions: [build update]
-            config:
-                - builds/releng_base_mac_64_cross_builds.py
-                - balrog/production.py
-            # enables static analysis.
-            custom-build-variant-cfg: cross-debug-st-an
-            script: "mozharness/scripts/fx_desktop_build.py"
-            tooltool-downloads: internal
-            keep-artifacts: false
-
-    macosx64-st-an/opt:
-        description: "MacOS X x64 Opt Cross-compile Static Analysis"
-        index:
-            job-name: macosx64-st-an-opt
-        treeherder:
-            platform: osx-cross/opt
-        worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
-        worker:
-            docker-image: {in-tree: desktop-build}
-            max-run-time: 36000
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
-        run:
-            using: mozharness
-            actions: [build update]
-            config:
-                - builds/releng_base_mac_64_cross_builds.py
-                - balrog/production.py
-            # enables static analysis.
-            custom-build-variant-cfg: cross-opt-st-an
-            script: "mozharness/scripts/fx_desktop_build.py"
-            tooltool-downloads: internal
-            keep-artifacts: false
-
     linux64-st-an/debug:
         description: "Linux64 Debug Static Analysis"
         index:
