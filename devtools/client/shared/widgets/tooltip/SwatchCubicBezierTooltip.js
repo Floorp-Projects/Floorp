@@ -26,8 +26,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *        inline editor.
  */
 function SwatchCubicBezierTooltip(document) {
-  let stylesheet = "chrome://devtools/content/shared/widgets/cubic-bezier.css";
-  SwatchBasedEditorTooltip.call(this, document, stylesheet);
+  SwatchBasedEditorTooltip.call(this, document);
 
   // Creating a cubic-bezier instance.
   // this.widget will always be a promise that resolves to the widget instance

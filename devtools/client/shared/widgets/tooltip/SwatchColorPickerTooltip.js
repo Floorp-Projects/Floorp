@@ -38,10 +38,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 function SwatchColorPickerTooltip(document,
                                   inspector,
                                   {supportsCssColor4ColorFunction}) {
-  let stylesheet = NEW_COLOR_WIDGET ?
-    "chrome://devtools/content/shared/widgets/color-widget.css" :
-    "chrome://devtools/content/shared/widgets/spectrum.css";
-  SwatchBasedEditorTooltip.call(this, document, stylesheet);
+  SwatchBasedEditorTooltip.call(this, document);
 
   this.inspector = inspector;
 

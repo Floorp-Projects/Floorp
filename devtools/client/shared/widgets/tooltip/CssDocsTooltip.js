@@ -23,8 +23,7 @@ function CssDocsTooltip(toolboxDoc) {
     type: "arrow",
     consumeOutsideClicks: true,
     autofocus: true,
-    useXulWrapper: true,
-    stylesheet: "chrome://devtools/content/shared/widgets/mdn-docs.css",
+    useXulWrapper: true
   });
   this.widget = this.setMdnDocsContent();
   this._onVisitLink = this._onVisitLink.bind(this);
