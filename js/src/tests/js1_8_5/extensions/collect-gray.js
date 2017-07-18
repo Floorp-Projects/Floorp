@@ -9,6 +9,9 @@ var summary =
 
 print(BUGNUMBER + ": " + summary);
 
+if (typeof gczeal !== 'undefined')
+    gczeal(0);
+
 grayRoot().x = Object.create(null);
 addMarkObservers([grayRoot(), grayRoot().x, this, Object.create(null)]);
 gc();
@@ -67,9 +70,6 @@ assertEq(marks[3], 'gray', 'black map, gray key => gray value');
 // black. If either is gray and the other is marked (gray or black), then x
 // must be gray (unless otherwise reachable from black.) If neither a nor b is
 // marked at all, then they will not keep x alive.
-
-if (typeof gczeal !== 'undefined')
-    gczeal(0);
 
 clearMarkObservers();
 
