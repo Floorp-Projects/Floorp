@@ -114,11 +114,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    */
   async getChangedIds() {
     let db = await PlacesUtils.promiseDBConnection();
-    let result = await db.executeCached(`
-      SELECT guid FROM moz_bookmarks
-      WHERE syncChangeCounter >= 1`);
-    return result.map(row =>
-      BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid")));
+    let changes = await pullSyncChanges(db);
+    return Object.keys(changes);
   },
 
   /**
@@ -1733,9 +1730,8 @@ function addRowToChangeRecords(row, changeRecords) {
 }
 
 /**
- * Queries the database for synced bookmarks and tombstones, updates the sync
- * status of all "NEW" bookmarks to "NORMAL", and returns a changeset for the
- * Sync bookmarks engine.
+ * Queries the database for synced bookmarks and tombstones, and returns a
+ * changeset for the Sync bookmarks engine.
  *
  * @param db
  *        The Sqlite.jsm connection handle.
