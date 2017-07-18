@@ -85,6 +85,15 @@ linux64-asan/opt:
 
 # Stylo builds only run a subset of tests for the moment. So give them
 # their own test set.
+# Stylo doesn't work on 32-bit Linux yet (bug 1385025)
+# linux32-stylo/debug:
+#     build-platform: linux/debug
+#     test-sets:
+#         - stylo-tests
+# linux32-stylo/opt:
+#     build-platform: linux/opt
+#     test-sets:
+#         - stylo-tests
 linux64-stylo/debug:
     build-platform: linux64/debug
     test-sets:
@@ -103,6 +112,31 @@ linux64-stylo-sequential/opt:
     test-sets:
         - stylo-sequential-tests
         - talos
+macosx64-stylo/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - stylo-tests
+macosx64-stylo/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - stylo-tests
+# Windows needs more work to green up (bug 1385027)
+# windows7-32-stylo/debug:
+#     build-platform: win32/debug
+#     test-sets:
+#         - stylo-tests
+# windows7-32-stylo/opt:
+#     build-platform: win32/opt
+#     test-sets:
+#         - stylo-tests
+# windows10-64-stylo/debug:
+#     build-platform: win64/debug
+#     test-sets:
+#         - stylo-tests
+# windows10-64-stylo/opt:
+#     build-platform: win64/opt
+#     test-sets:
+#         - stylo-tests
 
 # QR builds just run a subset right now. Note that the tests in this
 # test set are further restricted in tests.yml to run on certain projects

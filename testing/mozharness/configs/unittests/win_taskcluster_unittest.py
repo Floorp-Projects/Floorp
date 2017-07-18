@@ -182,6 +182,8 @@ config = {
         "jetpack-package-clipboard": ["--flavor=jetpack-package", "--subsuite=clipboard"],
         "jetpack-addon": ["--flavor=jetpack-addon"],
         "a11y": ["--flavor=a11y"],
+        "plain-style": ["--failure-pattern-file=stylo-failures.md", "layout/style/test", "dom/smil/test", "dom/animation/test"],
+        "chrome-style": ["--flavor=chrome", "--failure-pattern-file=../stylo-failures.md", "layout/style/test/chrome", "dom/animation/test"],
     },
     # local reftest suites
     "all_reftest_suites": {
@@ -206,6 +208,11 @@ config = {
             "options": ["--suite=reftest",
                         "--setpref=layers.acceleration.disabled=true"],
             "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
+        },
+        "reftest-stylo": {
+            "options": ["--suite=reftest",
+                        "--setpref=reftest.compareStyloToGecko=true"],
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"],
         },
     },
     "all_xpcshell_suites": {
