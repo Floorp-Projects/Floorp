@@ -16,11 +16,15 @@ namespace mozilla {
 namespace dom {
 class VideoDecoderManagerChild;
 }
+namespace gl {
+class GLBlitHelper;
+}
 namespace layers {
 
 // Image class that refers to a decoded video frame within
 // the GPU process.
 class GPUVideoImage final : public Image {
+  friend class gl::GLBlitHelper;
 public:
   GPUVideoImage(dom::VideoDecoderManagerChild* aManager,
                 const SurfaceDescriptorGPUVideo& aSD,
@@ -45,12 +49,21 @@ public:
 
   gfx::IntSize GetSize() override { return mSize; }
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
-  {
+private:
+  GPUVideoTextureData* GetData() const {
     if (!mTextureClient) {
       return nullptr;
     }
-    GPUVideoTextureData* data = mTextureClient->GetInternalData()->AsGPUVideoTextureData();
+    return mTextureClient->GetInternalData()->AsGPUVideoTextureData();
+  }
+
+public:
+  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
+  {
+    GPUVideoTextureData* data = GetData();
+    if (!data) {
+      return nullptr;
+    }
     return data->GetAsSourceSurface();
   }
 

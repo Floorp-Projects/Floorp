@@ -5249,9 +5249,17 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
 
       const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
-      bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage, srcImage->GetSize(),
-                                                     videoTexture, LOCAL_GL_TEXTURE_2D,
-                                                     destOrigin);
+      bool ok = false;
+      do {
+        const gl::ScopedFramebufferForTexture autoFBForTex(gl, videoTexture);
+        if (!autoFBForTex.IsComplete()) {
+          MOZ_ASSERT(false, "ScopedFramebufferForTexture not complete.");
+          break;
+        }
+        const gl::ScopedBindFramebuffer bindFB(gl, autoFBForTex.FB());
+        ok = gl->BlitHelper()->BlitImageToFramebuffer(srcImage, srcImage->GetSize(),
+                                                      destOrigin);
+      } while (false);
       if (ok) {
         NativeSurface texSurf;
         texSurf.mType = NativeSurfaceType::OPENGL_TEXTURE;
