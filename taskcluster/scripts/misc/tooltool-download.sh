@@ -2,7 +2,21 @@
 
 cd $WORKSPACE/build/src
 
+case "`uname -s`" in
+Linux)
+    TOOLTOOL_AUTH_FILE=/builds/relengapi.tok
+    ;;
+MINGW*)
+    TOOLTOOL_AUTH_FILE=c:/builds/relengapi.tok
+    ;;
+esac
+
 TOOLTOOL_DL_FLAGS=
+
+if [ -e "$TOOLTOOL_AUTH_FILE" ]; then
+    # When the worker has the relengapi token pass it down
+    TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --authentication-file=$TOOLTOOL_AUTH_FILE"
+fi
 
 if [ -n "$RELENGAPI_PORT" ]; then
     # When the worker has the relengapi proxy setup, use it.
