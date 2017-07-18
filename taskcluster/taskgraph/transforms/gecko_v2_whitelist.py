@@ -79,6 +79,7 @@ JOB_NAME_WHITELIST = set([
     'win32-clang-tidy',
     'win32-debug',
     'win32-nightly-repackage',
+    'win32-nightly-repackage-signing',
     'win32-noopt-debug',
     'win32-opt',
     'win32-pgo',
