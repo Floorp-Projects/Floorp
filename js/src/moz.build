@@ -234,6 +234,7 @@ UNIFIED_SOURCES += [
     'jit/IonIC.cpp',
     'jit/IonOptimizationLevels.cpp',
     'jit/JitcodeMap.cpp',
+    'jit/JitFrameIterator.cpp',
     'jit/JitFrames.cpp',
     'jit/JitOptions.cpp',
     'jit/JitSpewer.cpp',

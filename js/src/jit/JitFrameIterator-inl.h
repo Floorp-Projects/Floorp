@@ -16,6 +16,34 @@
 namespace js {
 namespace jit {
 
+inline uint8_t*
+JitFrameIterator::returnAddress() const
+{
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
+    return current->returnAddress();
+}
+
+inline FrameType
+JitFrameIterator::prevType() const
+{
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
+    return current->prevType();
+}
+
+inline ExitFrameLayout*
+JitFrameIterator::exitFrame() const
+{
+    MOZ_ASSERT(isExitFrame());
+    return (ExitFrameLayout*) fp();
+}
+
+inline size_t
+JitFrameIterator::prevFrameLocalSize() const
+{
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
+    return current->prevFrameLocalSize();
+}
+
 inline JitFrameLayout*
 JitProfilingFrameIterator::framePtr()
 {
