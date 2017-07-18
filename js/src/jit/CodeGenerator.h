@@ -389,6 +389,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);
     void visitIsArrayO(LIsArrayO* lir);
     void visitIsArrayV(LIsArrayV* lir);
+    void visitIsTypedArray(LIsTypedArray* lir);
     void visitIsObject(LIsObject* lir);
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);
