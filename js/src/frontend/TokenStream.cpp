@@ -248,8 +248,9 @@ TokenStreamAnyChars::reservedWordToPropertyName(TokenKind tt) const
     return nullptr;
 }
 
-TokenStream::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln)
-  : lineStartOffsets_(cx), initialLineNum_(ln), lastLineIndex_(0)
+TokenStream::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln, uint32_t col,
+                                        uint32_t initialLineOffset)
+  : lineStartOffsets_(cx), initialLineNum_(ln), initialColumn_(col), lastLineIndex_(0)
 {
     // This is actually necessary!  Removing it causes compile errors on
     // GCC and clang.  You could try declaring this:
@@ -260,12 +261,12 @@ TokenStream::SourceCoords::SourceCoords(JSContext* cx, uint32_t ln)
     //
     uint32_t maxPtr = MAX_PTR;
 
-    // The first line begins at buffer offset 0.  MAX_PTR is the sentinel.  The
-    // appends cannot fail because |lineStartOffsets_| has statically-allocated
-    // elements.
+    // The first line begins at buffer offset |initialLineOffset|.  MAX_PTR is
+    // the sentinel.  The appends cannot fail because |lineStartOffsets_| has
+    // statically-allocated elements.
     MOZ_ASSERT(lineStartOffsets_.capacity() >= 2);
     MOZ_ALWAYS_TRUE(lineStartOffsets_.reserve(2));
-    lineStartOffsets_.infallibleAppend(0);
+    lineStartOffsets_.infallibleAppend(initialLineOffset);
     lineStartOffsets_.infallibleAppend(maxPtr);
 }
 
@@ -275,7 +276,8 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
     uint32_t lineIndex = lineNumToIndex(lineNum);
     uint32_t sentinelIndex = lineStartOffsets_.length() - 1;
 
-    MOZ_ASSERT(lineStartOffsets_[0] == 0 && lineStartOffsets_[sentinelIndex] == MAX_PTR);
+    MOZ_ASSERT(lineStartOffsets_[0] <= lineStartOffset &&
+               lineStartOffsets_[sentinelIndex] == MAX_PTR);
 
     if (lineIndex == sentinelIndex) {
         // We haven't seen this newline before.  Update lineStartOffsets_
@@ -303,6 +305,7 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
 MOZ_ALWAYS_INLINE bool
 TokenStreamAnyChars::SourceCoords::fill(const TokenStreamAnyChars::SourceCoords& other)
 {
+    MOZ_ASSERT(lineStartOffsets_[0] == other.lineStartOffsets_[0]);
     MOZ_ASSERT(lineStartOffsets_.back() == MAX_PTR);
     MOZ_ASSERT(other.lineStartOffsets_.back() == MAX_PTR);
 
@@ -380,21 +383,16 @@ TokenStreamAnyChars::SourceCoords::lineNum(uint32_t offset) const
 uint32_t
 TokenStreamAnyChars::SourceCoords::columnIndex(uint32_t offset) const
 {
-    uint32_t lineIndex = lineIndexOf(offset);
-    uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
-    MOZ_ASSERT(offset >= lineStartOffset);
-    return offset - lineStartOffset;
+    return lineIndexAndOffsetToColumn(lineIndexOf(offset), offset);
 }
 
 void
 TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32_t* lineNum,
-                                                         uint32_t* columnIndex) const
+                                                         uint32_t* column) const
 {
     uint32_t lineIndex = lineIndexOf(offset);
     *lineNum = lineIndexToNum(lineIndex);
-    uint32_t lineStartOffset = lineStartOffsets_[lineIndex];
-    MOZ_ASSERT(offset >= lineStartOffset);
-    *columnIndex = offset - lineStartOffset;
+    *column = lineIndexAndOffsetToColumn(lineIndex, offset);
 }
 
 #ifdef _MSC_VER
@@ -404,7 +402,7 @@ TokenStreamAnyChars::SourceCoords::lineNumAndColumnIndex(uint32_t offset, uint32
 
 TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOptions& options,
                                          StrictModeGetter* smg)
-  : srcCoords(cx, options.lineno),
+  : srcCoords(cx, options.lineno, options.column, options.scriptSourceOffset),
     options_(options),
     tokens(),
     cursor(),
@@ -425,7 +423,7 @@ TokenStreamAnyChars::TokenStreamAnyChars(JSContext* cx, const ReadOnlyCompileOpt
 TokenStream::TokenStream(JSContext* cx, const ReadOnlyCompileOptions& options,
                          const CharT* base, size_t length, StrictModeGetter* smg)
   : TokenStreamAnyChars(cx, options, smg),
-    userbuf(cx, base, length, options.column),
+    userbuf(cx, base, length, options.scriptSourceOffset),
     tokenbuf(cx)
 {
     // Nb: the following tables could be static, but initializing them here is
