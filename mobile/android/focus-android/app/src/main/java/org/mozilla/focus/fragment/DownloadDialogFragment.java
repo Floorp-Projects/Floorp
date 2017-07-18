@@ -25,6 +25,7 @@ import org.mozilla.focus.web.Download;
  * Fragment displaying a download dialog
  */
 public class DownloadDialogFragment extends DialogFragment {
+    public static final String FRAGMENT_TAG = "should-download-prompt-dialog";
 
     public static DownloadDialogFragment newInstance(Download download) {
         DownloadDialogFragment frag = new DownloadDialogFragment();

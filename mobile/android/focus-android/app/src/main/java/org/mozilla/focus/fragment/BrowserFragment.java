@@ -9,7 +9,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -26,6 +25,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,7 +74,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     private static final int ANIMATION_DURATION = 300;
     private static final String ARGUMENT_URL = "url";
     private static final String RESTORE_KEY_DOWNLOAD = "download";
-    private static final String DOWNLOAD_DIALOG_TAG = "should-download-prompt-dialog";
 
     public static BrowserFragment create(String url) {
         Bundle arguments = new Bundle();
@@ -497,17 +496,28 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             return;
         }
 
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            showDownloadPromptDialog(pendingDownload);
+        if (grantResults.length <= 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            // We didn't get the storage permission: We are not able to start this download.
+            pendingDownload = null;
         }
 
-        pendingDownload = null;
+        // The actual download dialog will be shown from onResume(). If this activity/fragment is
+        // getting restored then we need to 'resume' first before we can show a dialog (attaching
+        // another fragment).
     }
 
     void showDownloadPromptDialog(Download download) {
-        final DialogFragment newFragment = DownloadDialogFragment.newInstance(download);
-        newFragment.setTargetFragment(BrowserFragment.this, 300);
-        newFragment.show(getFragmentManager(), DOWNLOAD_DIALOG_TAG);
+        final FragmentManager fragmentManager = getFragmentManager();
+
+        if (fragmentManager.findFragmentByTag(DownloadDialogFragment.FRAGMENT_TAG) != null) {
+            // We are already displaying a download dialog fragment (Probably a restored fragment).
+            // No need to show another one.
+            return;
+        }
+
+        final DialogFragment downloadDialogFragment = DownloadDialogFragment.newInstance(download);
+        downloadDialogFragment.setTargetFragment(BrowserFragment.this, 300);
+        downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG);
     }
 
     @Override
@@ -526,8 +536,18 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
     @Override
     public void onResume() {
         super.onResume();
+
         final IntentFilter filter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         getContext().registerReceiver(downloadBroadcastReceiver, filter);
+
+        if (pendingDownload != null
+                && PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            // There's a pending download (waiting for the storage permission) and now we have the
+            // missing permission: Show the dialog to ask whether the user wants to actually proceed
+            // with downloading this file.
+            showDownloadPromptDialog(pendingDownload);
+            pendingDownload = null;
+        }
     }
 
     /**
