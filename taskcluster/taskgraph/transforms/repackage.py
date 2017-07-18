@@ -138,14 +138,17 @@ def make_job_description(config, jobs):
                                       signing_task_ref, locale=locale),
             'artifacts': _generate_task_output_files(build_platform, locale=locale),
             'chain-of-trust': True,
-            'max-run-time': 3600,
+            'max-run-time': 7200 if build_platform.startswith('win') else 3600,
         }
 
         if locale:
             # Make sure we specify the locale-specific upload dir
             worker['env'].update(LOCALE=locale)
 
-        if build_platform.startswith('macosx'):
+        if build_platform.startswith('win'):
+            worker_type = 'aws-provisioner-v1/gecko-%s-b-win2012' % level
+            run['use-magic-mh-args'] = False
+        elif build_platform.startswith('macosx'):
             worker_type = 'aws-provisioner-v1/gecko-%s-b-macosx64' % level
 
             run['tooltool-downloads'] = 'internal'
@@ -174,6 +177,9 @@ def make_job_description(config, jobs):
 def _generate_task_mozharness_config(build_platform):
     if build_platform.startswith('macosx'):
         return ['repackage/osx_signed.py']
+    elif build_platform.startswith('win'):
+        return ['repackage/win32_signed.py'] if '32' in build_platform \
+            else ['repackage/win64_signed.py']
     else:
         raise NotImplemented('Unsupported build_platform: "{}"'.format(build_platform))
 
@@ -187,6 +193,20 @@ def _generate_task_env(build_platform, build_task_ref, signing_task_ref, locale=
             'SIGNED_INPUT': {'task-reference': '{}target.tar.gz'.format(signed_prefix)},
             'UNSIGNED_MAR': {'task-reference': '{}mar'.format(mar_prefix)},
         }
+    elif build_platform.startswith('win'):
+        task_env = {
+            'SIGNED_ZIP': {'task-reference': '{}target.zip'.format(signed_prefix)},
+            'SIGNED_SETUP': {'task-reference': '{}setup.exe'.format(signed_prefix)},
+            'UNSIGNED_MAR': {'task-reference': '{}mar.exe'.format(mar_prefix)},
+        }
+
+        # Stub installer is only generated on win32
+        if '32' in build_platform:
+            task_env['SIGNED_SETUP_STUB'] = {
+                'task-reference': '{}setup-stub.exe'.format(signed_prefix),
+            }
+        return task_env
+
     else:
         raise NotImplemented('Unsupported build_platform: "{}"'.format(build_platform))
 
@@ -212,5 +232,25 @@ def _generate_task_output_files(build_platform, locale=None):
                     .format(locale_output_path),
             'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
         }]
+    elif build_platform.startswith('win'):
+        output_files = [{
+            'type': 'file',
+            'path': 'public/build/{}target.installer.exe'.format(locale_output_path),
+            'name': 'public/build/{}target.installer.exe'.format(locale_output_path),
+        }, {
+            'type': 'file',
+            'path': 'public/build/{}target.complete.mar'.format(locale_output_path),
+            'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
+        }]
+
+        # Stub installer is only generated on win32
+        if '32' in build_platform:
+            output_files.append({
+                'type': 'file',
+                'path': 'public/build/{}target.stub-installer.exe'.format(locale_output_path),
+                'name': 'public/build/{}target.stub-installer.exe'.format(locale_output_path),
+            })
+
+        return output_files
     else:
         raise NotImplemented('Unsupported build_platform: "{}"'.format(build_platform))
