@@ -85,25 +85,6 @@ BrowserStreamParent::AnswerNPN_RequestRead(const IPCByteRanges& ranges,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-BrowserStreamParent::RecvNPN_DestroyStream(const NPReason& reason)
-{
-  switch (mState) {
-  case ALIVE:
-    break;
-
-  case DYING:
-    return IPC_OK();
-
-  default:
-    NS_ERROR("Unexpected state");
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  mNPP->mNPNIface->destroystream(mNPP->mNPP, mStream, reason);
-  return IPC_OK();
-}
-
 void
 BrowserStreamParent::NPP_DestroyStream(NPReason reason)
 {

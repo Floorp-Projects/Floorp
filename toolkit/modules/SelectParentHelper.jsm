@@ -116,11 +116,15 @@ this.SelectParentHelper = {
 
     menupopup.classList.toggle("isOpenedViaTouch", isOpenedViaTouch);
 
-    let constraintRect = browser.getBoundingClientRect();
-    constraintRect = new win.DOMRect(constraintRect.left + win.mozInnerScreenX,
-                                     constraintRect.top + win.mozInnerScreenY,
-                                     constraintRect.width, constraintRect.height);
-    menupopup.setConstraintRect(constraintRect);
+    if (browser.getAttribute("selectmenuconstrained") != "false") {
+      let constraintRect = browser.getBoundingClientRect();
+      constraintRect = new win.DOMRect(constraintRect.left + win.mozInnerScreenX,
+                                       constraintRect.top + win.mozInnerScreenY,
+                                       constraintRect.width, constraintRect.height);
+      menupopup.setConstraintRect(constraintRect);
+    } else {
+      menupopup.setConstraintRect(new win.DOMRect(0, 0, 0, 0));
+    }
     menupopup.openPopupAtScreenRect(AppConstants.platform == "macosx" ? "selection" : "after_start", rect.left, rect.top, rect.width, rect.height, false, false);
   },
 

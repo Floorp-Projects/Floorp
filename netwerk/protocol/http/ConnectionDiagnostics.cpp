@@ -49,7 +49,7 @@ nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase *)
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
   for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
-    nsAutoPtr<nsConnectionEntry>& ent = iter.Data();
+    RefPtr<nsConnectionEntry> ent = iter.Data();
 
     mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
                           ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get());

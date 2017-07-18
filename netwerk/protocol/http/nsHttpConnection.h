@@ -223,7 +223,8 @@ public:
     // connection since CheckForTraffic() was called.
     bool NoTraffic() {
         return mTrafficStamp &&
-            (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead));
+            (mTrafficCount == (mTotalBytesWritten + mTotalBytesRead)) &&
+            !mFastOpen;
     }
     // override of nsAHttpConnection
     virtual uint32_t Version();

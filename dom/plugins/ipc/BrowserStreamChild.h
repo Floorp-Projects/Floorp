@@ -54,7 +54,6 @@ public:
   }
 
   NPError NPN_RequestRead(NPByteRange* aRangeList);
-  void NPN_DestroyStream(NPReason reason);
 
   void NotifyPending() {
     NS_ASSERTION(!mNotifyPending, "Pending twice?");
@@ -85,7 +84,6 @@ public:
 
 private:
   friend class StreamNotifyChild;
-  using PBrowserStreamChild::SendNPN_DestroyStream;
 
   /**
    * Post an event to ensure delivery of pending data/destroy/urlnotify events
@@ -116,7 +114,7 @@ private:
   /**
    * The plugin's notion of whether a stream has been "closed" (no more
    * data delivery) differs from the plugin host due to asynchronous delivery
-   * of data and NPN_DestroyStream. While the plugin-visible stream is open,
+   * of data and stream destruction. While the plugin-visible stream is open,
    * mStreamStatus should be kStreamOpen (-1). mStreamStatus will be a
    * failure code if either the parent or child indicates stream failure.
    */

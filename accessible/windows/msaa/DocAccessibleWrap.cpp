@@ -163,13 +163,16 @@ DocAccessibleWrap::DoInitialUpdate()
         docShell->GetIsActive(&isActive);
       }
 
+      RefPtr<DocAccessibleWrap> self(this);
+      nsWinUtils::NativeWindowCreateProc onCreate([self](HWND aHwnd) -> void {
+        ::SetPropW(aHwnd, kPropNameDocAcc, reinterpret_cast<HANDLE>(self.get()));
+      });
+
       HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
       mHWND = nsWinUtils::CreateNativeWindow(kClassNameTabContent, parentWnd,
                                              rect.x, rect.y,
-                                             rect.width, rect.height, isActive);
-
-      ::SetPropW(static_cast<HWND>(mHWND), kPropNameDocAcc, (HANDLE)this);
-
+                                             rect.width, rect.height, isActive,
+                                             &onCreate);
     } else {
       DocAccessible* parentDocument = ParentDocument();
       if (parentDocument)

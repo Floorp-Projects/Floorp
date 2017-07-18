@@ -338,6 +338,11 @@ typedef GenericFlingAnimation FlingAnimation;
  * the main thread doesn't actually need to do a repaint. This pref allows the
  * main thread to skip doing those repaints in cases where it doesn't need to.
  *
+ * \li\b apz.popups.enabled
+ * Determines whether APZ is used for XUL popup widgets with remote content.
+ * Ideally, this should always be true, but it is currently not well tested, and
+ * has known issues, so needs to be prefable.
+ *
  * \li\b apz.record_checkerboarding
  * Whether or not to record detailed info on checkerboarding events.
  *

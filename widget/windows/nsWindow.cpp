@@ -1246,13 +1246,14 @@ void nsWindow::SubclassWindow(BOOL bState)
 void
 nsWindow::SetParent(nsIWidget *aNewParent)
 {
-  mParent = aNewParent;
-
   nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
   nsIWidget* parent = GetParent();
   if (parent) {
     parent->RemoveChild(this);
   }
+
+  mParent = aNewParent;
+
   if (aNewParent) {
     ReparentNativeWidget(aNewParent);
     aNewParent->AddChild(this);
