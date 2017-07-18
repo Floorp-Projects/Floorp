@@ -149,6 +149,7 @@ public final class NotificationClient implements NotificationListener {
                 .setContentIntent(contentIntent)
                 .setDeleteIntent(deleteIntent)
                 .setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_SOUND)
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(alertText)
                         .setSummaryText(host));
