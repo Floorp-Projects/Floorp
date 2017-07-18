@@ -32,9 +32,8 @@ add_task(async function test_first_time_save() {
       });
 
       await promiseShown;
-      let notificationElement = PopupNotifications.panel.firstChild;
       // Open the panel via main button
-      notificationElement.button.click();
+      await clickDoorhangerButton(MAIN_BUTTON_INDEX);
       let tab = await tabPromise;
       ok(tab, "Privacy panel opened");
       await BrowserTestUtils.removeTab(tab);

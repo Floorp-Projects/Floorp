@@ -11,12 +11,7 @@ add_task(async function test_update_address() {
     async function(browser) {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown");
-      await ContentTask.spawn(browser, null, async function() {
-        content.document.querySelector("form #organization").focus();
-      });
-
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await expectPopupOpen(browser);
+      await openPopupOn(browser, "form #organization");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
@@ -32,8 +27,7 @@ add_task(async function test_update_address() {
       });
 
       await promiseShown;
-      let notificationElement = PopupNotifications.panel.firstChild;
-      notificationElement.button.click();
+      await clickDoorhangerButton(MAIN_BUTTON_INDEX);
     }
   );
 
@@ -50,12 +44,7 @@ add_task(async function test_create_new_address() {
     async function(browser) {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown");
-      await ContentTask.spawn(browser, null, async function() {
-        content.document.querySelector("form #tel").focus();
-      });
-
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await expectPopupOpen(browser);
+      await openPopupOn(browser, "form #tel");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
@@ -71,8 +60,7 @@ add_task(async function test_create_new_address() {
       });
 
       await promiseShown;
-      let notificationElement = PopupNotifications.panel.firstChild;
-      notificationElement.secondaryButton.click();
+      await clickDoorhangerButton(SECONDARY_BUTTON_INDEX);
     }
   );
 
@@ -83,18 +71,13 @@ add_task(async function test_create_new_address() {
 
 add_task(async function test_create_new_address_merge() {
   let addresses = await getAddresses();
-  is(addresses.length, 2, "2 address in storage");
+  is(addresses.length, 2, "2 addresses in storage");
 
   await BrowserTestUtils.withNewTab({gBrowser, url: FORM_URL},
     async function(browser) {
       let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
                                                        "popupshown");
-      await ContentTask.spawn(browser, null, async function() {
-        content.document.querySelector("form #tel").focus();
-      });
-
-      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await expectPopupOpen(browser);
+      await openPopupOn(browser, "form #tel");
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
 
@@ -110,8 +93,7 @@ add_task(async function test_create_new_address_merge() {
       });
 
       await promiseShown;
-      let notificationElement = PopupNotifications.panel.firstChild;
-      notificationElement.secondaryButton.click();
+      await clickDoorhangerButton(SECONDARY_BUTTON_INDEX);
     }
   );
 

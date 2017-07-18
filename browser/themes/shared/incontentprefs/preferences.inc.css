@@ -17,7 +17,8 @@
 }
 
 button,
-treecol {
+treecol,
+html|option {
   /* override the * rule */
   -moz-user-select: none;
 }

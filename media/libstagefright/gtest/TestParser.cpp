@@ -221,7 +221,7 @@ static const TestFileData rustTestFiles[] = {
   { "test_case_1181213.mp4",        1, 416666,
                                            320, 240, 1, 477460,
                                                              true,   0, false, false, 2 },
-  { "test_case_1181215.mp4",        1, 4966666,   190,   240, 0, -1, false,   0, false, false, 0 },
+  { "test_case_1181215.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
   { "test_case_1181220.mp4",        0, -1,   0,   0, 0, -1, false,   0, false, false, 0 },
   { "test_case_1181223.mp4",        0, 416666,
                                            320, 240, 0, -1, false,   0, false, false, 0 },
@@ -306,43 +306,40 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
       EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0).Ref());
       MP4Metadata::ResultAndTrackInfo trackInfo =
         metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-      if (tests[test].mNumberVideoTracks == 0 ||
-          tests[test].mNumberVideoTracks == E) {
-        EXPECT_TRUE(!trackInfo.Ref());
-      } else {
+      if (!!tests[test].mNumberVideoTracks) {
         ASSERT_TRUE(!!trackInfo.Ref());
         const VideoInfo* videoInfo = trackInfo.Ref()->GetAsVideoInfo();
         ASSERT_TRUE(!!videoInfo);
-        EXPECT_TRUE(videoInfo->IsValid());
-        EXPECT_TRUE(videoInfo->IsVideo());
+        EXPECT_TRUE(videoInfo->IsValid()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_TRUE(videoInfo->IsVideo()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         EXPECT_EQ(tests[test].mVideoDuration,
-                  videoInfo->mDuration.ToMicroseconds());
-        EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width);
-        EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height);
+                  videoInfo->mDuration.ToMicroseconds()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_EQ(tests[test].mWidth, videoInfo->mDisplay.width) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_EQ(tests[test].mHeight, videoInfo->mDisplay.height) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
 
         MP4Metadata::ResultAndIndice indices =
           metadata.GetTrackIndice(videoInfo->mTrackId);
-        EXPECT_TRUE(!!indices.Ref());
+        EXPECT_TRUE(!!indices.Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         for (size_t i = 0; i < indices.Ref()->Length(); i++) {
           Index::Indice data;
-          EXPECT_TRUE(indices.Ref()->GetIndice(i, data));
-          EXPECT_TRUE(data.start_offset <= data.end_offset);
-          EXPECT_TRUE(data.start_composition <= data.end_composition);
+          EXPECT_TRUE(indices.Ref()->GetIndice(i, data)) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+          EXPECT_TRUE(data.start_offset <= data.end_offset) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+          EXPECT_TRUE(data.start_composition <= data.end_composition) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         }
       }
       trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
       if (tests[test].mNumberAudioTracks == 0 ||
           tests[test].mNumberAudioTracks == E) {
-        EXPECT_TRUE(!trackInfo.Ref());
+        EXPECT_TRUE(!trackInfo.Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
       } else {
         ASSERT_TRUE(!!trackInfo.Ref());
         const AudioInfo* audioInfo = trackInfo.Ref()->GetAsAudioInfo();
         ASSERT_TRUE(!!audioInfo);
-        EXPECT_TRUE(audioInfo->IsValid());
-        EXPECT_TRUE(audioInfo->IsAudio());
+        EXPECT_TRUE(audioInfo->IsValid()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_TRUE(audioInfo->IsAudio()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         EXPECT_EQ(tests[test].mAudioDuration,
-                  audioInfo->mDuration.ToMicroseconds());
-        EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile);
+                  audioInfo->mDuration.ToMicroseconds()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+        EXPECT_EQ(tests[test].mAudioProfile, audioInfo->mProfile) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         if (tests[test].mAudioDuration !=
             audioInfo->mDuration.ToMicroseconds()) {
           MOZ_RELEASE_ASSERT(false);
@@ -350,19 +347,19 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
 
         MP4Metadata::ResultAndIndice indices =
           metadata.GetTrackIndice(audioInfo->mTrackId);
-        EXPECT_TRUE(!!indices.Ref());
+        EXPECT_TRUE(!!indices.Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         for (size_t i = 0; i < indices.Ref()->Length(); i++) {
           Index::Indice data;
-          EXPECT_TRUE(indices.Ref()->GetIndice(i, data));
-          EXPECT_TRUE(data.start_offset <= data.end_offset);
-          EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition));
+          EXPECT_TRUE(indices.Ref()->GetIndice(i, data)) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+          EXPECT_TRUE(data.start_offset <= data.end_offset) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+          EXPECT_TRUE(int64_t(data.start_composition) <= int64_t(data.end_composition)) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
         }
       }
-      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0).Ref());
-      EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0).Ref());
+      EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0).Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+      EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0).Ref()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
       // We can see anywhere in any MPEG4.
-      EXPECT_TRUE(metadata.CanSeek());
-      EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().Ref()->valid);
+      EXPECT_TRUE(metadata.CanSeek()) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
+      EXPECT_EQ(tests[test].mHasCrypto, metadata.Crypto().Ref()->valid) << (rust ? "rust/" : "stagefright/") << tests[test].mFilename;
     }
   }
 }
