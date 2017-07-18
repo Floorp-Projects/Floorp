@@ -1,0 +1,8 @@
+<html><p>One</p>
+<p id="myStyle">Two</p>
+<p style='margin-top: 4000px'>This is some text</p>
+</html>
+
+<script type="application/javascript">
+document.getElementById("myStyle").style.marginTop = new URL(location.href).searchParams.get("topPos");
+</script>
