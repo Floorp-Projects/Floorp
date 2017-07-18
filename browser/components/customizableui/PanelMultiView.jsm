@@ -415,6 +415,7 @@ this.PanelMultiView = class {
       if (this.panelViews) {
         viewNode.removeAttribute("current");
         this.showSubView(this._mainViewId);
+        this.node.setAttribute("viewtype", "main");
       } else {
         this._transitionHeight(() => {
           viewNode.removeAttribute("current");
@@ -513,11 +514,11 @@ this.PanelMultiView = class {
         }
       }
 
+      this._viewShowing = null;
       if (cancel) {
         return;
       }
 
-      this._viewShowing = null;
       this._currentSubView = viewNode;
       viewNode.setAttribute("current", true);
       if (this.panelViews) {
@@ -567,7 +568,7 @@ this.PanelMultiView = class {
         this._panel.setAttribute("width", rect.width);
         this._panel.setAttribute("height", rect.height);
 
-        this._viewBoundsOffscreen(viewNode, viewRect => {
+        this._viewBoundsOffscreen(viewNode, previousRect, viewRect => {
           this._transitioning = true;
           if (this._autoResizeWorkaroundTimer)
             window.clearTimeout(this._autoResizeWorkaroundTimer);
@@ -677,12 +678,27 @@ this.PanelMultiView = class {
    * amount of paint flashing and keep the stack vs panel layouts from interfering.
    *
    * @param {panelview} viewNode Node to measure the bounds of.
+   * @param {Rect}      previousRect Rect representing the previous view
+   *                                 (used to fill in any blanks).
    * @param {Function}  callback Called when we got the measurements in and pass
    *                             them on as its first argument.
    */
-  _viewBoundsOffscreen(viewNode, callback) {
+  _viewBoundsOffscreen(viewNode, previousRect, callback) {
     if (viewNode.__lastKnownBoundingRect) {
       callback(viewNode.__lastKnownBoundingRect);
+      return;
+    }
+
+    if (viewNode.customRectGetter) {
+      // Can't use Object.assign directly with a DOM Rect object because its properties
+      // aren't enumerable.
+      let {height, width} = previousRect;
+      let rect = Object.assign({height, width}, viewNode.customRectGetter());
+      let {header} = viewNode;
+      if (header) {
+        rect.height += this._dwu.getBoundsWithoutFlushing(header).height;
+      }
+      callback(rect);
       return;
     }
 
@@ -909,6 +925,10 @@ this.PanelMultiView = class {
         this.descriptionHeightWorkaround();
         break;
       case "popuphidden":
+        // WebExtensions consumers can hide the popup from viewshowing, or
+        // mid-transition, which disrupts our state:
+        this._viewShowing = null;
+        this._transitioning = false;
         this.node.removeAttribute("panelopen");
         this.showMainView();
         if (this.panelViews) {
