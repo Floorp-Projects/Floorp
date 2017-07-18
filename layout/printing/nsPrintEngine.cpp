@@ -536,6 +536,14 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
                  printData->mPrintObject);
   }
 
+  // The nsAutoScriptBlocker above will now have been destroyed, which may
+  // cause our print/print-preview operation to finish. In this case, we
+  // should immediately return an error code so that the root caller knows
+  // it shouldn't continue to do anything with this instance.
+  if (mIsDestroying || (aIsPrintPreview && !GetIsCreatingPrintPreview())) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (!aIsPrintPreview) {
     SetIsPrinting(true);
   }
@@ -3602,6 +3610,13 @@ nsPrintEngine::FinishPrintPreview()
 
   rv = DocumentReadyForPrinting();
 
+  // Note that this method may be called while the instance is being
+  // initialized.  Some methods which initialize the instance (e.g.,
+  // DoCommonPrint) may need to stop initializing and return error if
+  // this is called.  Therefore it's important to set IsCreatingPrintPreview
+  // state to false here.  If you need to remove this call of
+  // SetIsCreatingPrintPreview here, you need to keep them being able to
+  // check whether the owner stopped using this instance.
   SetIsCreatingPrintPreview(false);
 
   // mPrt may be cleared during a call of nsPrintData::OnEndPrinting()
