@@ -320,19 +320,6 @@ static const struct EVInfo kEVInfos[] = {
     "AQ==",
   },
   {
-    // CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US
-    "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "Comodo EV OID",
-    { 0x6E, 0xA5, 0x47, 0x41, 0xD0, 0x04, 0x66, 0x7E, 0xED, 0x1B, 0x48,
-      0x16, 0x63, 0x4A, 0xA3, 0xA7, 0x9E, 0x6E, 0x4B, 0x96, 0x95, 0x0F,
-      0x82, 0x79, 0xDA, 0xFC, 0x8D, 0x9B, 0xD8, 0x81, 0x21, 0x37 },
-    "MIGXMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFr"
-    "ZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsT"
-    "GGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTEfMB0GA1UEAxMWVVROLVVTRVJGaXJz"
-    "dC1IYXJkd2FyZQ==",
-    "RL4Mi1AAJLQR0zYq/mUK/Q==",
-  },
-  {
     // OU=Go Daddy Class 2 Certification Authority,O=\"The Go Daddy Group, Inc.\",C=US
     "2.16.840.1.114413.1.7.23.3",
     "Go Daddy EV OID a",
