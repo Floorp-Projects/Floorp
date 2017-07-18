@@ -133,6 +133,14 @@ public class GeckoViewActivity extends Activity {
                 getActionBar().show();
             }
         }
+
+        @Override
+        public void onContextMenu(GeckoView view, int screenX, int screenY,
+                                  String uri, String imageSrc) {
+            Log.d(LOGTAG, "onContextMenu screenX=" + screenX +
+                          " screenY=" + screenY + " uri=" + uri +
+                          " imageSrc=" + imageSrc);
+        }
     }
 
     private class MyGeckoViewProgress implements GeckoView.ProgressListener {
