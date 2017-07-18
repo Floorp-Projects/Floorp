@@ -3605,5 +3605,18 @@ HttpChannelChild::RecvSetPriority(const int16_t& aPriority)
   return IPC_OK();
 }
 
+void
+HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // OnStartRequest might be dropped if IPDL is destroyed abnormally
+  // and BackgroundChild might have pending IPC messages.
+  // Clean up BackgroundChild at this time to prevent memleak.
+  if (aWhy != Deletion) {
+    CleanupBackgroundChannel();
+  }
+}
+
 } // namespace net
 } // namespace mozilla
