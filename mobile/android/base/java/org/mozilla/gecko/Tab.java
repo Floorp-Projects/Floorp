@@ -69,7 +69,6 @@ public class Tab {
     private int mFaviconLoadId;
     private String mContentType;
     private boolean mHasTouchListeners;
-    private final ArrayList<View> mPluginViews;
     private int mState;
     private Bitmap mThumbnailBitmap;
     private boolean mDesktopMode;
@@ -129,7 +128,6 @@ public class Tab {
         mTitle = title == null ? "" : title;
         mSiteIdentity = new SiteIdentity();
         mContentType = "";
-        mPluginViews = new ArrayList<View>();
         mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
         mLoadProgress = LOAD_PROGRESS_INIT;
         mIconRequestBuilder = Icons.with(mAppContext).pageUrl(mUrl);
@@ -734,18 +732,6 @@ public class Tab {
         } catch (Exception e) {
             // ignore
         }
-    }
-
-    public void addPluginView(View view) {
-        mPluginViews.add(view);
-    }
-
-    public void removePluginView(View view) {
-        mPluginViews.remove(view);
-    }
-
-    public View[] getPluginViews() {
-        return mPluginViews.toArray(new View[mPluginViews.size()]);
     }
 
     public void setDesktopMode(boolean enabled) {

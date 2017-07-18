@@ -259,15 +259,8 @@ public class GeckoThread extends Thread {
             res.updateConfiguration(config, null);
         }
 
-        String[] pluginDirs = null;
-        try {
-            pluginDirs = GeckoAppShell.getPluginDirectories();
-        } catch (Exception e) {
-            Log.w(LOGTAG, "Caught exception getting plugin dirs.", e);
-        }
-
         final String resourcePath = context.getPackageResourcePath();
-        GeckoLoader.setupGeckoEnvironment(context, pluginDirs, context.getFilesDir().getPath());
+        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath());
 
         try {
             loadGeckoLibs(context, resourcePath);
