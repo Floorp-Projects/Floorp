@@ -2953,7 +2953,6 @@ TEST_F(JsepSessionTest, OfferAnswerRecvOnlyLines)
   JsepOfferOptions options;
   options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
   options.mOfferToReceiveVideo = Some(static_cast<size_t>(2U));
-  options.mDontOfferDataChannel = Some(true);
   std::string offer = CreateOffer(Some(options));
 
   UniquePtr<Sdp> parsedOffer(Parse(offer));
@@ -3030,7 +3029,6 @@ TEST_F(JsepSessionTest, OfferAnswerSendOnlyLines)
   JsepOfferOptions options;
   options.mOfferToReceiveAudio = Some(static_cast<size_t>(0U));
   options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
-  options.mDontOfferDataChannel = Some(true);
   std::string offer = CreateOffer(Some(options));
 
   UniquePtr<Sdp> outputSdp(Parse(offer));
