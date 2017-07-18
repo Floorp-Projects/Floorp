@@ -600,18 +600,6 @@ static const struct EVInfo kEVInfos[] = {
     "AQ==",
   },
   {
-    // CN=China Internet Network Information Center EV Certificates Root,O=China Internet Network Information Center,C=CN
-    "1.3.6.1.4.1.29836.1.10",
-    "CNNIC EV OID",
-    { 0x1C, 0x01, 0xC6, 0xF4, 0xDB, 0xB2, 0xFE, 0xFC, 0x22, 0x55, 0x8B,
-      0x2B, 0xCA, 0x32, 0x56, 0x3F, 0x49, 0x84, 0x4A, 0xCF, 0xC3, 0x2B,
-      0x7B, 0xE4, 0xB0, 0xFF, 0x59, 0x9F, 0x9E, 0x8C, 0x7A, 0xF7 },
-    "MIGKMQswCQYDVQQGEwJDTjEyMDAGA1UECgwpQ2hpbmEgSW50ZXJuZXQgTmV0d29y"
-    "ayBJbmZvcm1hdGlvbiBDZW50ZXIxRzBFBgNVBAMMPkNoaW5hIEludGVybmV0IE5l"
-    "dHdvcmsgSW5mb3JtYXRpb24gQ2VudGVyIEVWIENlcnRpZmljYXRlcyBSb290",
-    "SJ8AAQ==",
-  },
-  {
     // CN=TWCA Root Certification Authority,OU=Root CA,O=TAIWAN-CA,C=TW
     "1.3.6.1.4.1.40869.1.1.22.3",
     "TWCA EV OID",
