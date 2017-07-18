@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1381710
+-->
+<head>
+  <title>Test for Mozilla Bug 1381710</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1381710">Mozilla Bug 1381710</a>
+<div id="content">
+  <div id="nonedit"></div>
+  <div id="edit" contenteditable=true></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+function test(element)
+{
+  let selection = window.getSelection();
+  selection.removeAllRanges();
+  let range = document.createRange();
+
+  element.innerHTML = "<table><tr id=tr><td id=td>A</td><td>B</td><tr></table>";
+  let td = document.getElementById("td");
+  range.selectNode(td);
+  // Don't throw exception
+  selection.addRange(range);
+  is(selection.anchorNode, document.getElementById("tr"),
+     "anchor node should be <TR> element");
+  element.innerHTML = "";
+}
+
+test(document.getElementById("nonedit"));
+test(document.getElementById("edit"));
+</script>
+</pre>
+</body>
+</html>
