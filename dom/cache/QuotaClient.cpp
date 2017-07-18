@@ -226,9 +226,10 @@ public:
     AssertIsOnIOThread();
     MOZ_DIAGNOSTIC_ASSERT(aDirectory);
 
-    // XXXtt: Will have a patch to write padding size to the file
+    nsresult rv = mozilla::dom::cache::InitPaddingFile(aDirectory);
+    if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-    return NS_OK;
+    return rv;
   }
 
 private:
@@ -250,6 +251,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+// static
 already_AddRefed<quota::Client> CreateQuotaClient()
 {
   AssertIsOnBackgroundThread();
@@ -258,6 +260,115 @@ already_AddRefed<quota::Client> CreateQuotaClient()
   return ref.forget();
 }
 
+
+// static
+nsresult
+InitPaddingFile(nsIFile* aBaseDir)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+
+  // XXXtt: Acquire lock here
+
+  nsresult rv = LockedDirectoryPaddingInit(aBaseDir);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return rv;
+}
+
+// static
+template<typename Callable>
+nsresult
+MaybeUpdatePaddingFile(nsIFile* aBaseDir,
+                       mozIStorageConnection* aConn,
+                       const int64_t aIncreaseSize,
+                       const int64_t aDecreaseSize,
+                       Callable aCommitHook)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
+
+  // XXXtt: Acquire lock here
+
+  bool updated = false;
+  nsresult rv =
+    LockedMaybeUpdateDirectoryPaddingFile(aBaseDir, aConn, aIncreaseSize,
+                                          aDecreaseSize, &updated);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
+    return rv;
+  }
+
+  rv = aCommitHook();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::TMP_FILE);
+    return rv;
+  }
+
+  if (updated) {
+    rv = LockedDirectoryPaddingFinalizeWrite(aBaseDir);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Force restore file next time.
+      LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+      return rv;
+    }
+  }
+
+  return rv;
+}
+
+// static
+nsresult
+RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  // XXXtt: Acquire lock here
+
+  nsresult rv = LockedDirectoryPaddingRestore(aBaseDir, aConn);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return rv;
+}
+
+// static
+nsresult
+WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+
+  // XXXtt: Acquire lock here
+
+  // Remove temporary file if we have one.
+  nsresult rv = LockedDirectoryPaddingDeleteFile(aBaseDir,
+                                                 DirPaddingFile::TMP_FILE);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_DIAGNOSTIC_ASSERT(DirectoryPaddingFileExists(aBaseDir,
+                                                   DirPaddingFile::FILE));
+
+  int64_t paddingSize = 0;
+  rv = LockedDirectoryPaddingGet(aBaseDir, &paddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // If read file fail, there is nothing we can do to recover the file.
+    NS_WARNING("Cannnot read padding size from file!");
+    paddingSize = 0;
+  }
+
+  if (paddingSize > 0) {
+    DecreaseUsageForQuotaInfo(aQuotaInfo, paddingSize);
+  }
+
+  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = LockedDirectoryPaddingInit(aBaseDir);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
 } // namespace cache
 } // namespace dom
 } // namespace mozilla

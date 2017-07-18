@@ -11,9 +11,12 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/Unused.h"
+#include "nsIBinaryInputStream.h"
+#include "nsIBinaryOutputStream.h"
 #include "nsIFile.h"
 #include "nsIUUIDGenerator.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsISimpleEnumerator.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -22,6 +25,9 @@
 namespace mozilla {
 namespace dom {
 namespace cache {
+
+#define PADDING_FILE_NAME ".padding"
+#define PADDING_TMP_FILE_NAME ".padding-tmp"
 
 using mozilla::dom::quota::FileInputStream;
 using mozilla::dom::quota::FileOutputStream;
@@ -56,6 +62,10 @@ RoundUp(const int64_t aX, const int64_t aY);
 // Finally, the virtual padding size will be the result minus the response size.
 int64_t
 BodyGeneratePadding(const int64_t aBodyFileSize, const uint32_t aPaddingInfo);
+
+nsresult
+LockedDirectoryPaddingWrite(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType,
+                            int64_t aPaddingSize);
 
 } // namespace
 
@@ -388,6 +398,41 @@ BodyGeneratePadding(const int64_t aBodyFileSize, const uint32_t aPaddingInfo)
   return RoundUp(randomSize, kRoundUpNumber) - aBodyFileSize;
 }
 
+nsresult
+LockedDirectoryPaddingWrite(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType,
+                            int64_t aPaddingSize)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSize >= 0);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
+    rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+  } else {
+    rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIBinaryOutputStream> binaryStream =
+    do_CreateInstance("@mozilla.org/binaryoutputstream;1");
+  if (NS_WARN_IF(!binaryStream)) { return NS_ERROR_FAILURE; }
+
+  rv = binaryStream->SetOutputStream(outputStream);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = binaryStream->Write64(aPaddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
 } // namespace
 
 nsresult
@@ -648,6 +693,227 @@ DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
                                        aUpdatingSize);
 }
 
+// static
+bool
+DirectoryPaddingFileExists(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return false; }
+
+  nsString fileName;
+  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
+    fileName = NS_LITERAL_STRING(PADDING_TMP_FILE_NAME);
+  } else {
+    fileName = NS_LITERAL_STRING(PADDING_FILE_NAME);
+  }
+
+  rv = file->Append(fileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return false; }
+
+  bool exists = false;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return false; }
+
+  return exists;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSizeOut);
+  MOZ_DIAGNOSTIC_ASSERT(!DirectoryPaddingFileExists(aBaseDir,
+                                                    DirPaddingFile::TMP_FILE));
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(stream), file);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIInputStream> bufferedStream;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream), stream, 512);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  nsCOMPtr<nsIBinaryInputStream> binaryStream =
+    do_CreateInstance("@mozilla.org/binaryinputstream;1");
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = binaryStream->SetInputStream(bufferedStream);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  uint64_t paddingSize = 0;
+  rv = binaryStream->Read64(&paddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  *aPaddingSizeOut = paddingSize;
+
+  return rv;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingInit(nsIFile* aBaseDir)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+
+  nsresult rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::FILE, 0);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  return rv;
+}
+
+// static
+nsresult
+LockedMaybeUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
+                                      mozIStorageConnection* aConn,
+                                      const int64_t aIncreaseSize,
+                                      const int64_t aDecreaseSize,
+                                      bool* aUpdatedOut)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aIncreaseSize >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(aDecreaseSize >= 0);
+  MOZ_DIAGNOSTIC_ASSERT(aUpdatedOut);
+
+  // Temporary should be removed at the end of each action. If not, it means the
+  // failure happened.
+  bool temporaryFileExisted =
+    DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE);
+
+  nsresult rv = NS_OK;
+
+  if (aIncreaseSize == aDecreaseSize && !temporaryFileExisted) {
+    return rv;
+  }
+
+  int64_t currentPaddingSize = 0;
+  rv = LockedDirectoryPaddingGet(aBaseDir, &currentPaddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv)) || temporaryFileExisted) {
+    // Fail to read padding size from the dir padding file, so try to restore.
+    if (rv != NS_ERROR_FILE_NOT_FOUND &&
+        rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+      // Not delete the temporary padding file here, because we're going to
+      // overwrite it below anyway.
+      rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+      if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+    }
+
+    // XXXtt: will have a function to retore from db.
+  } else {
+    if (aIncreaseSize > 0) {
+      MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - currentPaddingSize >= aIncreaseSize);
+      currentPaddingSize += aIncreaseSize;
+    }
+
+    if (aDecreaseSize > 0) {
+      MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= aDecreaseSize);
+      currentPaddingSize -= aDecreaseSize;
+    }
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(currentPaddingSize >= 0);
+
+  rv = LockedDirectoryPaddingTemporaryWrite(aBaseDir, currentPaddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  *aUpdatedOut = true;
+
+  return rv;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir, int64_t aPaddingSize)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSize >= 0);
+
+  nsresult rv = LockedDirectoryPaddingWrite(aBaseDir, DirPaddingFile::TMP_FILE,
+                                            aPaddingSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(DirectoryPaddingFileExists(aBaseDir,
+                                                   DirPaddingFile::TMP_FILE));
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = file->RenameTo(nullptr, NS_LITERAL_STRING(PADDING_FILE_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  // The content of padding file is untrusted, so remove it here.
+  nsresult rv = LockedDirectoryPaddingDeleteFile(aBaseDir,
+                                                 DirPaddingFile::TMP_FILE);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = LockedDirectoryPaddingDeleteFile(aBaseDir, DirPaddingFile::FILE);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // XXXtt: will have a function to retore from db.
+
+  return rv;
+}
+
+// static
+nsresult
+LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
+                                 DirPaddingFile aPaddingFileType)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aBaseDir->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  if (aPaddingFileType == DirPaddingFile::TMP_FILE) {
+    rv = file->Append(NS_LITERAL_STRING(PADDING_TMP_FILE_NAME));
+  } else {
+    rv = file->Append(NS_LITERAL_STRING(PADDING_FILE_NAME));
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = file->Remove( /* recursive */ false);
+  if (rv == NS_ERROR_FILE_NOT_FOUND ||
+      rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+    return NS_OK;
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
