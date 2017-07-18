@@ -1404,7 +1404,7 @@ CodeGeneratorARM::visitBox(LBox* box)
 
     MOZ_ASSERT(!box->getOperand(0)->isConstant());
 
-    // On x86, the input operand and the output payload have the same virtual
+    // On arm, the input operand and the output payload have the same virtual
     // register. All that needs to be written is the type tag for the type
     // definition.
     masm.ma_mov(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
@@ -1413,18 +1413,10 @@ CodeGeneratorARM::visitBox(LBox* box)
 void
 CodeGeneratorARM::visitBoxFloatingPoint(LBoxFloatingPoint* box)
 {
-    const LDefinition* payload = box->getDef(PAYLOAD_INDEX);
-    const LDefinition* type = box->getDef(TYPE_INDEX);
-    const LAllocation* in = box->getOperand(0);
-    FloatRegister reg = ToFloatRegister(in);
+    const AnyRegister in = ToAnyRegister(box->getOperand(0));
+    const ValueOperand out = ToOutValue(box);
 
-    if (box->type() == MIRType::Float32) {
-        ScratchFloat32Scope scratch(masm);
-        masm.convertFloat32ToDouble(reg, scratch);
-        masm.ma_vxfer(VFPRegister(scratch), ToRegister(payload), ToRegister(type));
-    } else {
-        masm.ma_vxfer(VFPRegister(reg), ToRegister(payload), ToRegister(type));
-    }
+    masm.moveValue(TypedOrValueRegister(box->type(), in), out);
 }
 
 void
