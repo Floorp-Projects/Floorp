@@ -195,8 +195,10 @@ function securityOnLoad(uri, windowInfo) {
   /* Set Identity section text */
   setText("security-identity-domain-value", info.hostName);
 
-  var owner, verifier;
+  var owner, verifier, validity;
   if (info.cert && !info.isBroken) {
+    validity = info.cert.validity.notAfterLocalDay;
+
     // Try to pull out meaningful values.  Technically these fields are optional
     // so we'll employ fallbacks where appropriate.  The EV spec states that Org
     // fields must be specified for subject and issuer so that case is simpler.
@@ -222,6 +224,11 @@ function securityOnLoad(uri, windowInfo) {
 
   setText("security-identity-owner-value", owner);
   setText("security-identity-verifier-value", verifier);
+  if (validity) {
+    setText("security-identity-validity-value", validity);
+  } else {
+    document.getElementById("security-identity-validity-row").hidden = true;
+  }
 
   /* Manage the View Cert button*/
   var viewCert = document.getElementById("security-view-cert");
