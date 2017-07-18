@@ -103,7 +103,7 @@ class CommandAction(argparse.Action):
             if command == 'help':
                 if args and args[0] not in ['-h', '--help']:
                     # Make sure args[0] is indeed a command.
-                    self._handle_command_help(parser, args[0])
+                    self._handle_command_help(parser, args[0], args)
                 else:
                     self._handle_main_help(parser, namespace.verbose)
                 sys.exit(0)
@@ -113,10 +113,10 @@ class CommandAction(argparse.Action):
                     # -- is in command arguments
                     if '-h' in args[:args.index('--')] or '--help' in args[:args.index('--')]:
                         # Honor -h or --help only if it appears before --
-                        self._handle_command_help(parser, command)
+                        self._handle_command_help(parser, command, args)
                         sys.exit(0)
                 else:
-                    self._handle_command_help(parser, command)
+                    self._handle_command_help(parser, command, args)
                     sys.exit(0)
         else:
             raise NoCommandError()
@@ -141,16 +141,11 @@ class CommandAction(argparse.Action):
 
         # If there are sub-commands, parse the intent out immediately.
         if handler.subcommand_handlers and args:
-            if len(args) == 1 and args[0] in ('help', '--help'):
-                self._handle_subcommand_main_help(parser, handler)
-                sys.exit(0)
             # mach <command> help <subcommand>
-            elif len(args) == 2 and args[0] == 'help':
-                subcommand = args[1]
-                subhandler = handler.subcommand_handlers[subcommand]
-                self._handle_subcommand_help(parser, command, subcommand, subhandler)
+            if set(args).intersection(('help', '--help')):
+                self._handle_subcommand_help(parser, handler, args)
                 sys.exit(0)
-            # We are running a sub command.
+            # mach <command> <subcommand> ...
             elif args[0] in handler.subcommand_handlers:
                 subcommand = args[0]
                 handler = handler.subcommand_handlers[subcommand]
@@ -304,14 +299,14 @@ class CommandAction(argparse.Action):
                 group = extra_groups[group_name]
             group.add_argument(*arg[0], **arg[1])
 
-    def _handle_command_help(self, parser, command):
+    def _handle_command_help(self, parser, command, args):
         handler = self._mach_registrar.command_handlers.get(command)
 
         if not handler:
             raise UnknownCommandError(command, 'query')
 
         if handler.subcommand_handlers:
-            self._handle_subcommand_main_help(parser, handler)
+            self._handle_subcommand_help(parser, handler, args)
             return
 
         # This code is worth explaining. Because we are doing funky things with
@@ -386,19 +381,25 @@ class CommandAction(argparse.Action):
 
         parser.print_help()
 
-    def _handle_subcommand_help(self, parser, command, subcommand, handler):
-        parser.usage = '%(prog)s [global arguments] ' + command + \
-            ' ' + subcommand + ' [command arguments]'
+    def _handle_subcommand_help(self, parser, handler, args):
+        subcommand = set(args).intersection(handler.subcommand_handlers.keys())
+        if not subcommand:
+            return self._handle_subcommand_main_help(parser, handler)
+
+        subcommand = subcommand.pop()
+        subhandler = handler.subcommand_handlers[subcommand]
 
         c_parser = argparse.ArgumentParser(add_help=False,
             formatter_class=CommandFormatter)
         group = c_parser.add_argument_group('Sub Command Arguments')
-        self._populate_command_group(c_parser, handler, group)
+        self._populate_command_group(c_parser, subhandler, group)
 
-        if handler.docstring:
-            parser.description = format_docstring(handler.docstring)
+        if subhandler.docstring:
+            parser.description = format_docstring(subhandler.docstring)
 
         parser.formatter_class = argparse.RawDescriptionHelpFormatter
+        parser.usage = '%(prog)s [global arguments] ' + handler.name + \
+            ' ' + subcommand + ' [command arguments]'
 
         parser.print_help()
         print('')
