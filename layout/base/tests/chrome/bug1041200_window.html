@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 window.onload = function() {
   window.waitForAllPaintsFlushed(function () {
     // Supply random key to ensure load actually happens
-    ourFrame.src = "data:text/html,<body onload='parent.childLoaded()' style='background:lime'><p>Hello<p>Hello<p>Hello<p>Hello<p>Hello<p>" + Math.random();
+    ourFrame.src = "bug1041200_frame.html?" + Math.random();
   }, document.getElementById("ourFrame").contentDocument);
 };
 
