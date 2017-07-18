@@ -51,7 +51,7 @@ def add_optimizations(config, run, taskdesc):
 
     label = taskdesc['label']
     subs = {
-        'name': label.replace('toolchain-', '').split('/')[0],
+        'name': label.replace('%s-' % config.kind, ''),
         'digest': hash_paths(GECKO, files),
     }
 
