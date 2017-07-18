@@ -25,7 +25,7 @@ SimpleTest.waitForExplicitFinish();
 var f = document.createElement('iframe');
 document.body.appendChild(f);
 
-src = "data:text/html,<meta charset='utf-8'><body><p id='sel'>Selection</p><scr" + "ipt>"
+src = "<meta charset='utf-8'><body><p id='sel'>Selection</p><scr" + "ipt>"
 src += "try {"
 src += "var range = document.createRange();"
 src += "range.selectNode(document.getElementById('sel'));"
@@ -37,7 +37,7 @@ src += "parent.is(sel.toString(), 'Selection', 'Selection.toString() after expli
 src += "} finally { parent.ok(true,'silence no test run warning'); parent.SimpleTest.finish(); }"
 src += "</scr"+"ipt>";
 
-f.src = src;
+f.srcdoc = src;
 
 </script>
 </pre>

@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=458898
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-var win = window.openDialog("data:text/html,<div style='height:200px; width:100px;'>");
+var win = window.openDialog("file_bug458898.html");
 
 function loaded() {
   var disableWindowResizePref = "dom.disable_window_move_resize";

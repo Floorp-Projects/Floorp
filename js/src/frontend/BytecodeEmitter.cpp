@@ -10780,14 +10780,8 @@ BytecodeEmitter::emitClass(ParseNode* pn)
         // offsets in the source buffer as source notes so that when we
         // actually make the constructor during execution, we can give it the
         // correct toString output.
-        //
-        // Token positions are already offset from the start column. Since
-        // toString offsets are absolute offsets into the ScriptSource,
-        // de-offset from the starting column.
-        ptrdiff_t classStart = ptrdiff_t(pn->pn_pos.begin) -
-                               tokenStream().options().sourceStartColumn;
-        ptrdiff_t classEnd = ptrdiff_t(pn->pn_pos.end) -
-                             tokenStream().options().sourceStartColumn;
+        ptrdiff_t classStart = ptrdiff_t(pn->pn_pos.begin);
+        ptrdiff_t classEnd = ptrdiff_t(pn->pn_pos.end);
         if (!newSrcNote3(SRC_CLASS_SPAN, classStart, classEnd))
             return false;
 
