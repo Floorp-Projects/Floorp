@@ -64,7 +64,7 @@ public class ResizableKeyboardLayout extends CoordinatorLayout {
             int difference = calculateDifferenceBetweenHeightAndUsableArea();
 
             // If difference > 0, keyboard is showing. 
-            // If difference =< 0, keyboard is not showing or is in multiview mode
+            // If difference =< 0, keyboard is not showing or is in multiview mode.
             if (difference > 0) {
                 // Keyboard showing -> Set difference has bottom padding.
                 if (getPaddingBottom() != difference) {
