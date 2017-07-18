@@ -14,7 +14,7 @@ actions = []
 callbacks = {}
 
 Action = namedtuple('Action', [
-    'title', 'description', 'order', 'context', 'schema', 'task_template_builder',
+    'name', 'title', 'description', 'order', 'context', 'schema', 'task_template_builder',
 ])
 
 
@@ -27,7 +27,7 @@ def is_json(data):
     return True
 
 
-def register_task_action(title, description, order, context, schema):
+def register_task_action(name, title, description, order, context, schema):
     """
     Register an action task that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -43,6 +43,8 @@ def register_task_action(title, description, order, context, schema):
 
     Parameters
     ----------
+    name : str
+        An identifier for this action, used by UIs to find the action.
     title : str
         A human readable title for the action to be used as label on a button
         or text on a link for triggering the action.
@@ -73,6 +75,7 @@ def register_task_action(title, description, order, context, schema):
         The decorated function will be given decision parameters and may return
         ``None`` instead of a task template, if the action is disabled.
     """
+    assert isinstance(name, basestring), 'name must be a string'
     assert isinstance(title, basestring), 'title must be a string'
     assert isinstance(description, basestring), 'description must be a string'
     assert isinstance(order, int), 'order must be an integer'
@@ -82,14 +85,15 @@ def register_task_action(title, description, order, context, schema):
     def register_task_template_builder(task_template_builder):
         assert not mem['registered'], 'register_task_action must be used as decorator'
         actions.append(Action(
-            title.strip(), description.strip(), order, context, schema, task_template_builder,
+            name.strip(), title.strip(), description.strip(), order, context,
+            schema, task_template_builder,
         ))
         mem['registered'] = True
     return register_task_template_builder
 
 
-def register_callback_action(title, symbol, description, order=10000, context=[],
-                             available=lambda parameters: True, schema=None):
+def register_callback_action(name, title, symbol, description, order=10000,
+                             context=[], available=lambda parameters: True, schema=None):
     """
     Register an action callback that can be triggered from supporting
     user interfaces, such as Treeherder.
@@ -111,6 +115,8 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
 
     Parameters
     ----------
+    name : str
+        An identifier for this action, used by UIs to find the action.
     title : str
         A human readable title for the action to be used as label on a button
         or text on a link for triggering the action.
@@ -156,7 +162,7 @@ def register_callback_action(title, symbol, description, order=10000, context=[]
         assert cb.__name__ not in callbacks, 'callback name {} is not unique'.format(cb.__name__)
         source_path = os.path.relpath(inspect.stack()[1][1], GECKO)
 
-        @register_task_action(title, description, order, context, schema)
+        @register_task_action(name, title, description, order, context, schema)
         def build_callback_action_task(parameters):
             if not available(parameters):
                 return None
@@ -263,6 +269,7 @@ def render_actions_json(parameters):
             assert is_json(task), 'task must be a JSON compatible object'
             result.append({
                 'kind': 'task',
+                'name': action.name,
                 'title': action.title,
                 'description': action.description,
                 'context': action.context,
