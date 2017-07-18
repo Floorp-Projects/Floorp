@@ -6,7 +6,6 @@
  * The origin of this IDL file is
  * https://w3c.github.io/gamepad/
  * https://w3c.github.io/gamepad/extensions.html
- * https://w3c.github.io/webvr/spec/1.1/#interface-gamepad
  */
 
 [Pref="dom.gamepad.enabled"]
@@ -52,13 +51,6 @@ interface Gamepad {
    */
   [Pref="dom.gamepad.extensions.enabled"]
   readonly attribute GamepadHand hand;
-
-  /**
-   * The displayId in use for as an association point in the VRDisplay API
-   * to identify which VRDisplay that the gamepad is associated with.
-   */
-  [Pref="dom.vr.enabled"]
-  readonly attribute unsigned long displayId;
 
   /**
    * true if this gamepad is currently connected to the system.
