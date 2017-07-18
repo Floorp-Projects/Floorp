@@ -4074,6 +4074,9 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
     "",
     "Content",
     "ContentAndNotify",
+    // As far as the profiler is concerned, EnsurePresShellInitAndFrames and
+    // Frames are the same
+    "Style",
     "Style",
     "InterruptibleLayout",
     "Layout",
