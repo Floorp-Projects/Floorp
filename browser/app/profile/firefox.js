@@ -1629,7 +1629,13 @@ pref("browser.esedbreader.loglevel", "Error");
 
 pref("browser.laterrun.enabled", false);
 
+// Disable prelaunch in the same way activity-stream is enabled addressing
+// bug 1381804 memory usage until bug 1376895 is fixed.
+#ifdef NIGHTLY_BUILD
+pref("dom.ipc.processPrelaunch.enabled", false);
+#else
 pref("dom.ipc.processPrelaunch.enabled", true);
+#endif
 
 pref("browser.migrate.automigrate.enabled", false);
 // 4 here means the suggestion notification will be automatically
