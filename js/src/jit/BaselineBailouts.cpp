@@ -10,6 +10,7 @@
 #include "jsprf.h"
 #include "jsutil.h"
 #include "jit/arm/Simulator-arm.h"
+#include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
