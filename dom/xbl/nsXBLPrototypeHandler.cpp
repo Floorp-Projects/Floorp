@@ -158,8 +158,8 @@ nsXBLPrototypeHandler::TryConvertToKeyboardShortcut(
   }
 
   // Convert the modifiers
-  Modifiers modifiersMask = GetModifiers();
-  Modifiers modifiers = GetModifiersMask();
+  Modifiers modifiersMask = GetModifiersMask();
+  Modifiers modifiers = GetModifiers();
 
   // Mask away any bits that won't be compared
   modifiers &= modifiersMask;
