@@ -177,8 +177,7 @@ public:
           refchanged.forget());
       } else { // Help people diagnose bug 924718
         WebAudioUtils::LogToDeveloperConsole(mWindowID,
-                                             "BiquadFilterChannelCountChangeWarning",
-                                             aStream->Graph()->AbstractMainThread());
+                                             "BiquadFilterChannelCountChangeWarning");
       }
 
       // Adjust the number of biquads based on the number of channels
