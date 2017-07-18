@@ -373,12 +373,12 @@ public:
   nsTArray<ComputedKeyframeValues>
   GetComputedKeyframeValuesFor(const nsTArray<Keyframe>& aKeyframes,
                                dom::Element* aElement,
-                               ServoComputedValuesBorrowed aComputedValues);
+                               const ServoStyleContext* aContext);
 
   void
   GetAnimationValues(RawServoDeclarationBlock* aDeclarations,
                      dom::Element* aElement,
-                     ServoComputedValuesBorrowed aComputedValues,
+                     const ServoStyleContext* aContext,
                      nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
 
   bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
@@ -405,7 +405,7 @@ public:
   already_AddRefed<RawServoAnimationValue>
   ComputeAnimationValue(dom::Element* aElement,
                         RawServoDeclarationBlock* aDeclaration,
-                        ServoComputedValuesBorrowed aComputedValues);
+                        const ServoStyleContext* aContext);
 
   void AppendTask(PostTraversalTask aTask)
   {

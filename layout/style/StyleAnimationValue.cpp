@@ -5432,13 +5432,11 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
       return result;
     }
 
-    const ServoComputedValues* computedValues =
-      servoContext->ComputedValues();
     result.mServo = presContext->StyleSet()
                                ->AsServo()
                                ->ComputeAnimationValue(aElement,
                                                        declarations,
-                                                       computedValues);
+                                                       servoContext);
     return result;
   }
 
