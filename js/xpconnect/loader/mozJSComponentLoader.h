@@ -72,9 +72,12 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                             JSAddonId* aAddonID,
                             JS::MutableHandleObject aGlobal);
 
+    bool ReuseGlobal(bool aIsAddon, nsIURI* aComponent);
+
     JSObject* PrepareObjectForLocation(JSContext* aCx,
                                        nsIFile* aComponentFile,
                                        nsIURI* aComponent,
+                                       bool* aReuseGlobal,
                                        bool* aRealFile);
 
     nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
@@ -168,6 +171,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsClassHashtable<nsCStringHashKey, nsCString> mLocations;
 
     bool mInitialized;
+    bool mShareLoaderGlobal;
+    JS::PersistentRooted<JSObject*> mLoaderGlobal;
 };
 
 #endif
