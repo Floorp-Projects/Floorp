@@ -7,6 +7,7 @@
   </head>
   <body>
     <script type="text/javascript">
+
     const supportedInstruments = [{
       supportedMethods: "MyPay",
     }];
@@ -17,7 +18,18 @@
         amount: { currency: "USD", value: "55.00" }
       },
     };
-    const payRequest = new PaymentRequest(supportedInstruments, details);
+
+    try {
+      const payRequest = new PaymentRequest(supportedInstruments, details);
+      if(window.parent) {
+        window.parent.postMessage("successful", '*');
+      }
+    } catch(err) {
+      if(window.parent) {
+        window.parent.postMessage(err.name, '*');
+      }
+    }
+
     </script>
   </body>
 </html>
