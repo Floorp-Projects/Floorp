@@ -11,7 +11,3 @@ transforms:
 
 kind-dependencies:
   - build
-
-not-for-build-platforms:
-   - win32-nightly/opt
-   - win64-nightly/opt
