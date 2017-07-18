@@ -88,6 +88,8 @@ crashtest:
     e10s:
         by-test-platform:
             macosx64/debug: true
+            # Bug 1384701: e10s-off parallel reftest runs crash on shutdown
+            linux64-stylo/debug: true
             default: both
     mozharness:
         by-test-platform:
@@ -672,6 +674,8 @@ mochitest-chrome-style:
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - unittests/mac_unittest.py
                 default:
@@ -949,13 +953,19 @@ mochitest-style:
     treeherder-symbol: tc-M(s)
     loopback-video: true
     docker-image: {"in-tree": "desktop1604-test"}
-    e10s: both
+    e10s:
+        by-test-platform:
+            # Bug 1384701: e10s-off parallel reftest runs crash on shutdown
+            linux64-stylo/debug: true
+            default: both
     mozharness:
         mochitest-flavor: plain
         script: desktop_unittest.py
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - unittests/mac_unittest.py
                 default:
@@ -1099,6 +1109,8 @@ reftest:
     e10s:
         by-test-platform:
             macosx.*: true
+            # Bug 1384701: e10s-off parallel reftest runs crash on shutdown
+            linux64-stylo/debug: true
             default: both
     mozharness:
         by-test-platform:
@@ -1227,22 +1239,20 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            linux64-stylo/opt: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
+            .*-stylo/opt: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
             linux64-stylo-sequential/opt: [ 'mozilla-central']
             default: built-projects
     e10s:
         # run only e10s tests for this platform see bug 1343301
         by-test-platform:
-            linux64-stylo/opt:
+            .*-stylo/opt:
                 # no opt on inbound see bug 1339604
                 by-project:
-                    stylo: true
                     autoland: true
                     mozilla-central: true
                     default: true
-            linux64-stylo/debug:
+            .*-stylo/debug:
                 by-project:
-                    stylo: true
                     autoland: true
                     mozilla-central: true
                     mozilla-inbound: true
@@ -1260,6 +1270,8 @@ reftest-stylo:
         no-read-buildbot-config: true
         config:
             by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
                 macosx.*:
                     - unittests/mac_unittest.py
                 default:
