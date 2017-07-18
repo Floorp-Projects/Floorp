@@ -127,9 +127,6 @@ function runOneTestcase(testcase) {
 }
 
 function run_test() {
-  // We have to set a password and login before we attempt to import anything.
-  loginToDBWithDefaultPassword();
-
   let certificateDialogsCID =
     MockRegistrar.register("@mozilla.org/nsCertificateDialogs;1",
                            gCertificateDialogs);
