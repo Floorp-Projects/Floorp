@@ -29,6 +29,7 @@ native nscolor(nscolor);
 [ptr] native gfxContext(gfxContext);
 typedef unsigned long long nsViewID;
 
+interface nsIArray;
 interface nsICycleCollectorListener;
 interface nsIDOMNode;
 interface nsIDOMNodeList;
@@ -1425,6 +1426,28 @@ interface nsIDOMWindowUtils : nsISupports {
    * Returns the current audio backend as a free-form string.
    */
   readonly attribute AString currentAudioBackend;
+
+  /**
+   * Returns the max channel counts of the current audio device.
+   */
+  readonly attribute unsigned long currentMaxAudioChannels;
+
+  /**
+   * Returns the preferred channel layout of the current audio device.
+   */
+  readonly attribute AString currentPreferredChannelLayout;
+
+  /**
+   * Returns the preferred sample rate of the current audio device.
+   */
+  readonly attribute unsigned long currentPreferredSampleRate;
+
+  /**
+   * Returns all the audio input/output devices.
+   */
+  const unsigned short AUDIO_INPUT   = 0;
+  const unsigned short AUDIO_OUTPUT  = 1;
+  nsIArray audioDevices(in unsigned short aSide);
 
   /**
    * Record (and return) frame-intervals for frames which were presented
