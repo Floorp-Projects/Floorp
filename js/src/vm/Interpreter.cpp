@@ -1470,6 +1470,12 @@ ComputeImplicitThis(JSObject* obj)
     if (IsCacheableEnvironment(obj))
         return UndefinedValue();
 
+    // Debugger environments need special casing, as despite being
+    // non-syntactic, they wrap syntactic environments and should not be
+    // treated like other embedding-specific non-syntactic environments.
+    if (obj->is<DebugEnvironmentProxy>())
+        return ComputeImplicitThis(&obj->as<DebugEnvironmentProxy>().environment());
+
     return GetThisValue(obj);
 }
 
