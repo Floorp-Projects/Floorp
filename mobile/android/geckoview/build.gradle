@@ -1,6 +1,5 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
-apply plugin: 'android-sdk-manager' // Must come before 'com.android.*'.
 apply plugin: 'com.android.library'
 
 def VERSION_NAME = '0.0.1'
