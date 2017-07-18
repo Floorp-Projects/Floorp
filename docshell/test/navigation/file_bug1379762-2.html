@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 1379762</title>
+  </head>
+  <script type="text/just-data">
+    onunload = null; // enable bfcache
+    ++opener.testCount;
+    onpageshow = function(e) {
+      opener.ok(!e.persisted, "Pageshow should not be coming from bfcache " + opener.testCount);
+    }
+    if (opener.testCount == 1) {
+      onload = function () {
+        setTimeout(function() {
+          document.write(testScript);
+        }, 0);
+      }
+    } else if (opener.testCount == 2) {
+      // Do this async, just in case.
+      setTimeout(function() {
+        history.back();
+      }, 0);
+    } else if (opener.testCount == 3) {
+      // Do this async, just in case.
+      setTimeout(function() {
+        history.forward();
+      }, 0);
+    } else if (opener.testCount == 4) {
+      onload = function() {
+        opener.nextTest();
+        window.close();
+      }
+    }
+  </script>
+  <script>
+    var data = document.querySelector("script[type='text/just-data']").textContent;
+    // Store the string that does all out work in a global variable, so we can
+    // get at it later.
+    var testScript = "<script>" + data + "</" + "script>";
+    document.write(testScript);
+  </script>
+</html>

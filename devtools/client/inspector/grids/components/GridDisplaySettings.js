@@ -73,30 +73,13 @@ module.exports = createClass({
             {},
             dom.input(
               {
-                id: "grid-setting-extend-grid-lines",
-                type: "checkbox",
-                checked: highlighterSettings.showInfiniteLines,
-                onChange: this.onShowInfiniteLinesCheckboxClick,
-              }
-            ),
-            getStr("layout.extendGridLinesInfinitely")
-          )
-        ),
-        dom.li(
-          {
-            className: "grid-settings-item",
-          },
-          dom.label(
-            {},
-            dom.input(
-              {
                 id: "grid-setting-show-grid-line-numbers",
                 type: "checkbox",
                 checked: highlighterSettings.showGridLineNumbers,
                 onChange: this.onShowGridLineNumbersCheckboxClick,
               }
             ),
-            getStr("layout.displayNumbersOnLines2")
+            getStr("layout.displayLineNumbers")
           )
         ),
         dom.li(
@@ -113,7 +96,24 @@ module.exports = createClass({
                onChange: this.onShowGridAreasCheckboxClick,
              }
            ),
-           getStr("layout.displayGridAreas")
+           getStr("layout.displayAreaNames")
+          )
+        ),
+        dom.li(
+          {
+            className: "grid-settings-item",
+          },
+          dom.label(
+            {},
+            dom.input(
+              {
+                id: "grid-setting-extend-grid-lines",
+                type: "checkbox",
+                checked: highlighterSettings.showInfiniteLines,
+                onChange: this.onShowInfiniteLinesCheckboxClick,
+              }
+            ),
+            getStr("layout.extendLinesInfinitely")
           )
         )
       )

@@ -33,8 +33,6 @@ public:
   virtual mozilla::ipc::IPCResult AnswerNPN_RequestRead(const IPCByteRanges& ranges,
                                                         NPError* result) override;
 
-  virtual mozilla::ipc::IPCResult RecvNPN_DestroyStream(const NPReason& reason) override;
-
   virtual mozilla::ipc::IPCResult RecvStreamDestroyed() override;
 
   int32_t WriteReady();

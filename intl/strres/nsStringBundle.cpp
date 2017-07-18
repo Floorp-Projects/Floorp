@@ -36,9 +36,7 @@ using namespace mozilla;
 
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 
-nsStringBundle::~nsStringBundle()
-{
-}
+NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
 
 nsStringBundle::nsStringBundle(const char* aURLSpec,
                                nsIStringBundleOverride* aOverrideStrings) :
@@ -47,6 +45,10 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
   mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
   mAttemptedLoad(false),
   mLoaded(false)
+{
+}
+
+nsStringBundle::~nsStringBundle()
 {
 }
 
@@ -113,33 +115,15 @@ nsStringBundle::LoadProperties()
   return rv;
 }
 
-
 nsresult
-nsStringBundle::GetStringFromID(int32_t aID, nsAString& aResult)
+nsStringBundle::GetStringFromNameHelper(const char* aName, nsAString& aResult)
 {
+  NS_ENSURE_ARG_POINTER(aName);
+
+  nsresult rv = LoadProperties();
+  if (NS_FAILED(rv)) return rv;
+
   ReentrantMonitorAutoEnter automon(mReentrantMonitor);
-  nsAutoCString name;
-  name.AppendInt(aID, 10);
-
-  nsresult rv;
-
-  // try override first
-  if (mOverrideStrings) {
-    rv = mOverrideStrings->GetStringFromName(mPropertiesURL,
-                                             name,
-                                             aResult);
-    if (NS_SUCCEEDED(rv)) return rv;
-  }
-
-  rv = mProps->GetStringProperty(name, aResult);
-
-  return rv;
-}
-
-nsresult
-nsStringBundle::GetStringFromName(const char* aName, nsAString& aResult)
-{
-  nsresult rv;
 
   // try override first
   if (mOverrideStrings) {
@@ -154,6 +138,38 @@ nsStringBundle::GetStringFromName(const char* aName, nsAString& aResult)
 }
 
 NS_IMETHODIMP
+nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
+{
+  nsAutoCString idStr;
+  idStr.AppendInt(aID, 10);
+  return GetStringFromName(idStr.get(), aResult);
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
+                                       char16_t **aResult)
+{
+  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
+}
+
+NS_IMETHODIMP
+nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = nullptr;
+
+  nsAutoString tmpstr;
+  nsresult rv = GetStringFromNameHelper(aName, tmpstr);
+  if (NS_FAILED(rv)) return rv;
+
+  *aResult = ToNewUnicode(tmpstr);
+  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsStringBundle::FormatStringFromID(int32_t aID,
                                    const char16_t **aParams,
                                    uint32_t aLength,
@@ -161,7 +177,6 @@ nsStringBundle::FormatStringFromID(int32_t aID,
 {
   nsAutoCString idStr;
   idStr.AppendInt(aID, 10);
-
   return FormatStringFromName(idStr.get(), aParams, aLength, aResult);
 }
 
@@ -183,69 +198,16 @@ nsStringBundle::FormatStringFromName(const char* aName,
                                      uint32_t aLength,
                                      char16_t** aResult)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-  NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
   NS_ENSURE_ARG_POINTER(aResult);
+  NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
 
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
+  *aResult = nullptr;
 
   nsAutoString formatStr;
-  rv = GetStringFromName(aName, formatStr);
+  nsresult rv = GetStringFromNameHelper(aName, formatStr);
   if (NS_FAILED(rv)) return rv;
 
   return FormatString(formatStr.get(), aParams, aLength, aResult);
-}
-
-NS_IMPL_ISUPPORTS(nsStringBundle, nsIStringBundle)
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
-{
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
-  *aResult = nullptr;
-  nsAutoString tmpstr;
-
-  rv = GetStringFromID(aID, tmpstr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aResult = ToNewUnicode(tmpstr);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromAUTF8Name(const nsACString& aName,
-                                       char16_t **aResult)
-{
-  return GetStringFromName(PromiseFlatCString(aName).get(), aResult);
-}
-
-NS_IMETHODIMP
-nsStringBundle::GetStringFromName(const char* aName, char16_t** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aName);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  nsresult rv;
-  rv = LoadProperties();
-  if (NS_FAILED(rv)) return rv;
-
-  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
-  *aResult = nullptr;
-  nsAutoString tmpstr;
-  rv = GetStringFromName(aName, tmpstr);
-  if (NS_FAILED(rv)) return rv;
-
-  *aResult = ToNewUnicode(tmpstr);
-  NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
 }
 
 nsresult
@@ -343,7 +305,7 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
   // Don't believe me? See:
   //   http://www.eskimo.com/~scs/C-faq/q15.13.html
   // -alecf
-  char16_t *text =
+  *aResult =
     nsTextFormatter::smprintf(aFormatStr,
                               aLength >= 1 ? aParams[0] : nullptr,
                               aLength >= 2 ? aParams[1] : nullptr,
@@ -355,19 +317,6 @@ nsStringBundle::FormatString(const char16_t *aFormatStr,
                               aLength >= 8 ? aParams[7] : nullptr,
                               aLength >= 9 ? aParams[8] : nullptr,
                               aLength >= 10 ? aParams[9] : nullptr);
-
-  if (!text) {
-    *aResult = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // nsTextFormatter does not use the shared nsMemory allocator.
-  // Instead it is required to free the memory it allocates using
-  // nsTextFormatter::smprintf_free.  Let's instead use nsMemory based
-  // allocation for the result that we give out and free the string
-  // returned by smprintf ourselves!
-  *aResult = NS_strdup(text);
-  nsTextFormatter::smprintf_free(text);
 
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -426,18 +375,9 @@ nsExtensibleStringBundle::~nsExtensibleStringBundle()
 
 nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, char16_t ** aResult)
 {
-  nsresult rv;
-  const uint32_t size = mBundles.Count();
-  for (uint32_t i = 0; i < size; ++i) {
-    nsIStringBundle *bundle = mBundles[i];
-    if (bundle) {
-      rv = bundle->GetStringFromID(aID, aResult);
-      if (NS_SUCCEEDED(rv))
-        return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  nsAutoCString idStr;
+  idStr.AppendInt(aID, 10);
+  return GetStringFromName(idStr.get(), aResult);
 }
 
 nsresult nsExtensibleStringBundle::GetStringFromAUTF8Name(
