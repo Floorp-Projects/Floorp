@@ -5,17 +5,22 @@
 package org.mozilla.gecko.util;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.mozilla.gecko.util.publicsuffix.PublicSuffix;
 
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 /** Utilities for operating on URLs. */
 public class URIUtils {
+    private static final String LOGTAG = "GeckoURIUtils";
+
     private URIUtils() {}
 
     /**
@@ -78,5 +83,35 @@ public class URIUtils {
     private static boolean isIPv6(final URI uri) {
         final String host = uri.getHost();
         return !TextUtils.isEmpty(host) && host.contains(":");
+    }
+
+    /**
+     * An async task that will take a URI formatted as a String and will retrieve
+     * {@link #getHostSecondLevelDomain(Context, String)}. To use this, extend the class and override
+     * {@link #onPostExecute(Object)}, where the secondLevelDomain will be returned.
+     */
+    public static abstract class GetHostSecondLevelDomainAsyncTask extends AsyncTask<Void, Void, String> {
+        protected final WeakReference<Context> contextWeakReference;
+        protected final String uriString;
+
+        public GetHostSecondLevelDomainAsyncTask(final Context contextWeakReference, final String uriString) {
+            this.contextWeakReference = new WeakReference<>(contextWeakReference);
+            this.uriString = uriString;
+        }
+
+        @Override
+        protected String doInBackground(final Void... params) {
+            final Context context = contextWeakReference.get();
+            if (context == null) {
+                return null;
+            }
+
+            try {
+                return URIUtils.getHostSecondLevelDomain(context, uriString);
+            } catch (final URISyntaxException e) {
+                Log.w(LOGTAG, "Unable to fetch second level domain."); // Don't log exception to avoid logging pii/urls.
+                return null;
+            }
+        }
     }
 }
