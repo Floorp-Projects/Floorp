@@ -1116,6 +1116,10 @@ public class BrowserApp extends GeckoApp
         // We can't show the first run experience until Gecko has finished initialization (bug 1077583).
         checkFirstrun(this, intent);
 
+        if (Versions.preJB) {
+           conditionallyNotifyEOL();
+        }
+
         if (!IntentUtils.getIsInAutomationFromEnvironment(intent)) {
             DawnHelper.conditionallyNotifyDawn(this);
         }
