@@ -55,6 +55,10 @@ FindOrphanedCacheIds(mozIStorageConnection* aConn,
                      nsTArray<CacheId>& aOrphanedListOut);
 
 nsresult
+FindOverallPaddingSize(mozIStorageConnection* aConn,
+                       int64_t* aOverallPaddingSizeOut);
+
+nsresult
 GetKnownBodyIds(mozIStorageConnection* aConn, nsTArray<nsID>& aBodyIdListOut);
 
 nsresult
