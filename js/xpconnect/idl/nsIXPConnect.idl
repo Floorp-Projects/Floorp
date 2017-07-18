@@ -17,7 +17,6 @@
 struct JSFreeOp;
 
 class nsWrapperCache;
-class nsAXPCNativeCallContext;
 %}
 
 /***************************************************************************/
@@ -32,7 +31,6 @@ class nsAXPCNativeCallContext;
       native JSEqualityOp(JSEqualityOp);
 [ptr] native JSScriptPtr(JSScript);
 [ptr] native voidPtrPtr(void*);
-[ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
 [ref] native JSCompartmentOptions(JS::CompartmentOptions);
 [ref] native JSCallArgsRef(const JS::CallArgs);
@@ -415,7 +413,6 @@ interface nsIXPConnect : nsISupports
 
     // Will return null if there is no JS stack right now.
     readonly attribute nsIStackFrame                CurrentJSStack;
-    readonly attribute nsAXPCNativeCallContextPtr   CurrentNativeCallContext;
 
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);
