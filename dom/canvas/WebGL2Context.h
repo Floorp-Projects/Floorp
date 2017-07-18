@@ -115,6 +115,17 @@ protected:
     ////////////////////////////////////
 
 public:
+    void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
+                              GLsizei width, GLsizei height, GLsizei depth, GLint border,
+                              GLsizei imageSize, WebGLintptr offset)
+    {
+        const char funcName[] = "compressedTexImage3D";
+        const uint8_t funcDims = 3;
+        const TexImageSourceAdapter src(&offset, 0, 0);
+        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
+                           height, depth, border, src, Some(imageSize));
+    }
+
     template<typename T>
     void CompressedTexImage3D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLsizei depth, GLint border,
@@ -125,7 +136,19 @@ public:
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
-                           height, depth, border, src);
+                           height, depth, border, src, Nothing());
+    }
+
+    void CompressedTexSubImage3D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
+                                 GLint zOffset, GLsizei width, GLsizei height,
+                                 GLsizei depth, GLenum unpackFormat,
+                                 GLsizei imageSize, WebGLintptr offset)
+    {
+        const char funcName[] = "compressedTexSubImage3D";
+        const uint8_t funcDims = 3;
+        const TexImageSourceAdapter src(&offset, 0, 0);
+        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
+                              zOffset, width, height, depth, unpackFormat, src, Some(imageSize));
     }
 
     template<typename T>
@@ -139,7 +162,7 @@ public:
         const uint8_t funcDims = 3;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
-                              zOffset, width, height, depth, unpackFormat, src);
+                              zOffset, width, height, depth, unpackFormat, src, Nothing());
     }
 
     ////////////////////////////////////
