@@ -48,32 +48,4 @@ void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
 #undef WR_FUNC
 #undef WR_DESTRUCTOR_SAFE_FUNC
 
-namespace mozilla {
-namespace wr {
-
-struct WrGlyphArray
-{
-  mozilla::gfx::Color color;
-  nsTArray<wr::WrGlyphInstance> glyphs;
-
-  bool operator==(const wr::WrGlyphArray& other) const
-  {
-    if (!(color == other.color) ||
-       (glyphs.Length() != other.glyphs.Length())) {
-      return false;
-    }
-
-    for (size_t i = 0; i < glyphs.Length(); i++) {
-      if (!(glyphs[i] == other.glyphs[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-};
-
-} // namespace wr
-} // namespace mozilla
-
 #endif // WR_h
