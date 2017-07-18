@@ -19,21 +19,21 @@
   -moz-user-select: none;
 }
 
-.filters-list,
-.presets-list {
+#filter-container .filters-list,
+#filter-container .presets-list {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-.filters-list {
+#filter-container .filters-list {
   /* Allow the filters list to take the full width when the presets list is
      hidden */
   flex-grow: 1;
   padding: 0 6px;
 }
 
-.presets-list {
+#filter-container .presets-list {
   /* Make sure that when the presets list is shown, it has a fixed width */
   width: 200px;
   padding-left: 6px;
@@ -55,8 +55,8 @@
 /* The list of filters and list of presets should push their footers to the
    bottom, so they can take as much space as there is */
 
-#filters,
-#presets {
+#filter-container #filters,
+#filter-container #presets {
   flex-grow: 1;
   /* Avoid pushing below the tooltip's area */
   overflow-y: auto;
@@ -66,47 +66,47 @@
    These footers have some input (taking up as much space as possible) and an
    add button next */
 
-.footer {
+#filter-container .footer {
   display: flex;
   margin: 10px 3px;
   align-items: center;
 }
 
-.footer :not(button) {
+#filter-container .footer :not(button) {
   flex-grow: 1;
   margin-right: 3px;
 }
 
 /* Styles for 1 filter function item */
 
-.filter,
-.filter-name,
-.filter-value {
+#filter-container .filter,
+#filter-container .filter-name,
+#filter-container .filter-value {
   display: flex;
   align-items: center;
 }
 
-.filter {
+#filter-container .filter {
   margin: 5px 0;
 }
 
-.filter-name {
+#filter-container .filter-name {
   width: 120px;
   margin-right: 10px;
 }
 
-.filter-name label {
+#filter-container .filter-name label {
   -moz-user-select: none;
   flex-grow: 1;
 }
 
-.filter-name label.devtools-draglabel {
+#filter-container .filter-name label.devtools-draglabel {
   cursor: ew-resize;
 }
 
 /* drag/drop handle */
 
-.filter-name i {
+#filter-container .filter-name i {
   width: 10px;
   height: 10px;
   margin-right: 10px;
@@ -121,23 +121,23 @@
   background-position: 0 1px;
 }
 
-.filter-value {
+#filter-container .filter-value {
   min-width: 150px;
   margin-right: 10px;
   flex: 1;
 }
 
-.filter-value input {
+#filter-container .filter-value input {
   flex-grow: 1;
 }
 
 /* Fix the size of inputs */
 /* Especially needed on Linux where input are bigger */
-input {
+#filter-container input {
   width: 8em;
 }
 
-.preset {
+#filter-container .preset {
   display: flex;
   margin-bottom: 10px;
   cursor: pointer;
@@ -147,31 +147,32 @@ input {
   flex-wrap: wrap;
 }
 
-.preset label,
-.preset span {
+#filter-container .preset label,
+#filter-container .preset span {
   display: flex;
   align-items: center;
 }
 
-.preset label {
+#filter-container .preset label {
   flex: 1 0;
   cursor: pointer;
   color: var(--theme-body-color);
 }
 
-.preset:hover {
+#filter-container .preset:hover {
   background: var(--theme-selection-background);
 }
 
-.preset:hover label, .preset:hover span {
+#filter-container .preset:hover label,
+#filter-container .preset:hover span {
   color: var(--theme-selection-color);
 }
 
-.preset .remove-button {
+#filter-container .preset .remove-button {
   order: 2;
 }
 
-.preset span {
+#filter-container .preset span {
   flex: 2 100%;
   white-space: nowrap;
   overflow: hidden;
@@ -181,7 +182,7 @@ input {
   color: var(--theme-body-color-alt);
 }
 
-.remove-button {
+#filter-container .remove-button {
   width: 16px;
   height: 16px;
   background: url(chrome://devtools/skin/images/close.svg);
@@ -191,7 +192,7 @@ input {
   cursor: pointer;
 }
 
-.hidden {
+#filter-container .hidden {
   display: none !important;
 }
 
@@ -207,7 +208,7 @@ input {
   line-height: 20px;
 }
 
-.add,
+#filter-container .add,
 #toggle-presets {
   background-size: cover;
   border: none;
@@ -219,7 +220,7 @@ input {
   margin: 0 5px;
 }
 
-.add {
+#filter-container .add {
   background: url(chrome://devtools/skin/images/add.svg);
 }
 
@@ -227,8 +228,8 @@ input {
   background: url(chrome://devtools/skin/images/pseudo-class.svg);
 }
 
-.add,
-.remove-button,
+#filter-container .add,
+#filter-container .remove-button,
 #toggle-presets {
   filter: var(--icon-filter);
 }
