@@ -186,7 +186,8 @@ FromView(WebGLContext* webgl, const char* funcName, TexImageTarget target,
 
 static UniquePtr<webgl::TexUnpackBytes>
 FromPboOffset(WebGLContext* webgl, const char* funcName, TexImageTarget target,
-              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset)
+              uint32_t width, uint32_t height, uint32_t depth, WebGLsizeiptr pboOffset,
+              const Maybe<GLsizei>& expectedImageSize)
 {
     if (pboOffset < 0) {
         webgl->ErrorInvalidValue("%s: offset cannot be negative.", funcName);
@@ -204,7 +205,17 @@ FromPboOffset(WebGLContext* webgl, const char* funcName, TexImageTarget target,
         return nullptr;
     }
     availBufferBytes -= pboOffset;
-
+    if (expectedImageSize.isSome()) {
+        if (expectedImageSize.ref() < 0) {
+            webgl->ErrorInvalidValue("%s: ImageSize can't be less than 0.", funcName);
+            return nullptr;
+        }
+        if (size_t(expectedImageSize.ref()) != availBufferBytes) {
+            webgl->ErrorInvalidOperation("%s: ImageSize doesn't match the required upload byte size.", funcName);
+            return nullptr;
+        }
+        availBufferBytes = size_t(expectedImageSize.ref());
+    }
     const bool isClientData = false;
     const auto ptr = (const uint8_t*)pboOffset;
     return MakeUnique<webgl::TexUnpackBytes>(webgl, target, width, height, depth,
@@ -399,7 +410,7 @@ WebGLContext::From(const char* funcName, TexImageTarget target, GLsizei rawWidth
 
     if (src.mPboOffset) {
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset));
+                             *(src.mPboOffset), Nothing());
     }
 
     if (mBoundPixelUnpackBuffer) {
@@ -1415,7 +1426,8 @@ WebGLTexture::TexSubImage(const char* funcName, TexImageTarget target, GLint lev
 UniquePtr<webgl::TexUnpackBytes>
 WebGLContext::FromCompressed(const char* funcName, TexImageTarget target,
                              GLsizei rawWidth, GLsizei rawHeight, GLsizei rawDepth,
-                             GLint border, const TexImageSource& src)
+                             GLint border, const TexImageSource& src,
+                             const Maybe<GLsizei>& expectedImageSize)
 {
     uint32_t width, height, depth;
     if (!ValidateExtents(this, funcName, rawWidth, rawHeight, rawDepth, border, &width,
@@ -1426,7 +1438,7 @@ WebGLContext::FromCompressed(const char* funcName, TexImageTarget target,
 
     if (src.mPboOffset) {
         return FromPboOffset(this, funcName, target, width, height, depth,
-                             *(src.mPboOffset));
+                             *(src.mPboOffset), expectedImageSize);
     }
 
     if (mBoundPixelUnpackBuffer) {
@@ -1442,10 +1454,10 @@ void
 WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
                                  GLenum internalFormat, GLsizei rawWidth,
                                  GLsizei rawHeight, GLsizei rawDepth, GLint border,
-                                 const TexImageSource& src)
+                                 const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
 {
     const auto blob = mContext->FromCompressed(funcName, target, rawWidth, rawHeight,
-                                               rawDepth, border, src);
+                                               rawDepth, border, src, expectedImageSize);
     if (!blob)
         return;
 
@@ -1500,6 +1512,8 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
     // Do the thing!
 
     mContext->gl->MakeCurrent();
+    const ScopedLazyBind bindPBO(mContext->gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                                 mContext->mBoundPixelUnpackBuffer);
 
     // Warning: Possibly shared memory.  See bug 1225033.
     GLenum error = DoCompressedTexImage(mContext->gl, target, level, internalFormat,
@@ -1553,11 +1567,11 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
                                     GLint level, GLint xOffset, GLint yOffset,
                                     GLint zOffset, GLsizei rawWidth, GLsizei rawHeight,
                                     GLsizei rawDepth, GLenum sizedUnpackFormat,
-                                    const TexImageSource& src)
+                                    const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
 {
     const GLint border = 0;
     const auto blob = mContext->FromCompressed(funcName, target, rawWidth, rawHeight,
-                                               rawDepth, border, src);
+                                               rawDepth, border, src, expectedImageSize);
     if (!blob)
         return;
 
@@ -1650,6 +1664,9 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
     {
         return;
     }
+
+    const ScopedLazyBind bindPBO(mContext->gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                                 mContext->mBoundPixelUnpackBuffer);
 
     // Warning: Possibly shared memory.  See bug 1225033.
     GLenum error = DoCompressedTexSubImage(mContext->gl, target, level, xOffset, yOffset,
