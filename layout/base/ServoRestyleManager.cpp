@@ -552,7 +552,7 @@ ServoRestyleManager::ProcessPostTraversal(
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
     RefPtr<ServoStyleContext> currentContext =
-      aRestyleState.StyleSet().ResolveServoStyle(aElement);
+      aRestyleState.StyleSet().ResolveServoStyle(aElement, aRestyleBehavior);
     MOZ_ASSERT(oldStyleContext->ComputedValues() != currentContext->ComputedValues());
 
     newContext = currentContext;
