@@ -14,3 +14,7 @@ kind-dependencies:
 
 only-for-attributes:
   - nightly
+
+not-for-build-platforms:
+   - win32-nightly/opt
+   - win64-nightly/opt
