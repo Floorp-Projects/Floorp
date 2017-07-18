@@ -158,6 +158,7 @@ public:
 
     static const float* YuvToRgbMatrix4x3RowMajor(mozilla::YUVColorSpace aYUVColorSpace);
     static const float* YuvToRgbMatrix3x3ColumnMajor(mozilla::YUVColorSpace aYUVColorSpace);
+    static const float* YuvToRgbMatrix4x4ColumnMajor(mozilla::YUVColorSpace aYUVColorSpace);
 
     /**
      * Creates a copy of aSurface, but having the SurfaceFormat aFormat.
