@@ -94,8 +94,7 @@ WebAudioUtils::SpeexResamplerProcess(SpeexResamplerState* aResampler,
 }
 
 void
-WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID, const char* aKey,
-                                     AbstractThread* aMainThread)
+WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID, const char* aKey)
 {
   // This implementation is derived from dom/media/VideoUtils.cpp, but we
   // use a windowID so that the message is delivered to the developer console.
@@ -104,8 +103,8 @@ WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID, const char* aKey,
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
       "dom::WebAudioUtils::LogToDeveloperConsole",
-      [aWindowID, aKey, aMainThread]() { LogToDeveloperConsole(aWindowID, aKey, aMainThread); });
-    aMainThread->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+      [aWindowID, aKey]() { LogToDeveloperConsole(aWindowID, aKey); });
+    NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);
     return;
   }
 

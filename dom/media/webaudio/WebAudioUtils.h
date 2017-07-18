@@ -229,8 +229,7 @@ namespace WebAudioUtils {
                         int16_t* aOut, uint32_t* aOutLen);
 
   void
-  LogToDeveloperConsole(uint64_t aWindowID, const char* aKey,
-                        AbstractThread* aMainThread);
+  LogToDeveloperConsole(uint64_t aWindowID, const char* aKey);
 
   } // namespace WebAudioUtils
 
