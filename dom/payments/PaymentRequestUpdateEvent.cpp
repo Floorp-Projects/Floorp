@@ -46,11 +46,9 @@ PaymentRequestUpdateEvent::Constructor(const GlobalObject& aGlobal,
 PaymentRequestUpdateEvent::PaymentRequestUpdateEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
   , mWaitForUpdate(false)
+  , mRequest(nullptr)
 {
   MOZ_ASSERT(aOwner);
-
-  // event's target should be a PaymentRequest object
-  mRequest = static_cast<PaymentRequest *>(aOwner);
 }
 
 void
@@ -101,10 +99,14 @@ PaymentRequestUpdateEvent::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value
 void
 PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise, ErrorResult& aRv)
 {
+  if (!IsTrusted()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
   MOZ_ASSERT(mRequest);
 
-  if (mWaitForUpdate || !mRequest->ReadyForUpdate() ||
-      !mEvent->mFlags.mIsBeingDispatched) {
+  if (mWaitForUpdate || !mRequest->ReadyForUpdate()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -115,6 +117,16 @@ PaymentRequestUpdateEvent::UpdateWith(Promise& aPromise, ErrorResult& aRv)
   StopImmediatePropagation();
   mWaitForUpdate = true;
   mRequest->SetUpdating(true);
+}
+
+void
+PaymentRequestUpdateEvent::SetRequest(PaymentRequest* aRequest)
+{
+  MOZ_ASSERT(IsTrusted());
+  MOZ_ASSERT(!mRequest);
+  MOZ_ASSERT(aRequest);
+
+  mRequest = aRequest;
 }
 
 PaymentRequestUpdateEvent::~PaymentRequestUpdateEvent()

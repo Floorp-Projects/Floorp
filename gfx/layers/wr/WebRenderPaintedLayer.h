@@ -38,7 +38,7 @@ protected:
   }
 
   wr::MaybeExternalImageId mExternalImageId;
-
+  LayerIntRect mPaintedRect;
 public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {

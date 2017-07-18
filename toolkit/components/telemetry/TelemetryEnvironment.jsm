@@ -1178,8 +1178,11 @@ EnvironmentCache.prototype = {
       Services.search.getDefaultEngineInfo();
 
     // Record the cohort identifier used for search defaults A/B testing.
-    if (Services.prefs.prefHasUserValue(PREF_SEARCH_COHORT))
-      this._currentEnvironment.settings.searchCohort = Services.prefs.getCharPref(PREF_SEARCH_COHORT);
+    if (Services.prefs.prefHasUserValue(PREF_SEARCH_COHORT)) {
+      const searchCohort = Services.prefs.getCharPref(PREF_SEARCH_COHORT);
+      this._currentEnvironment.settings.searchCohort = searchCohort;
+      TelemetryEnvironment.setExperimentActive("searchCohort", searchCohort);
+    }
   },
 
   /**
