@@ -700,14 +700,10 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
     return result;
   }
 
-  // Get a suitable style context for Servo
-  const ServoComputedValues* currentStyle =
-    aStyleContext->ComputedValues();
-
   // Compute value
   aPresContext->StyleSet()->AsServo()->GetAnimationValues(servoDeclarationBlock,
                                                           aTargetElement,
-                                                          currentStyle,
+                                                          aStyleContext->AsServo(),
                                                           result);
   if (result.IsEmpty()) {
     return result;
