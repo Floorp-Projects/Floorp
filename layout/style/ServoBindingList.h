@@ -84,6 +84,9 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    RawServoStyleSetBorrowed set,
                    ServoStyleContextBorrowedOrNull parent_style,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_StyleContext_AddRef, void, mozilla::ServoStyleContext* ctx);
+SERVO_BINDING_FUNC(Servo_StyleContext_Release, void, mozilla::ServoStyleContext* ctx);
+
 SERVO_BINDING_FUNC(Servo_StyleSet_MightHaveAttributeDependency, bool,
                    RawServoStyleSetBorrowed set,
                    RawGeckoElementBorrowed element,
@@ -585,6 +588,7 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    nsAString* name)
 
 SERVO_BINDING_FUNC(Servo_GetEmptyVariables, const nsStyleVariables*)
+
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
