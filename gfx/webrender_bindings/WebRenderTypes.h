@@ -596,11 +596,11 @@ struct ByteBuffer
   bool mOwned;
 };
 
-inline wr::WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
-  return wr::WrByteSlice { aRange.begin().get(), aRange.length() };
+inline wr::ByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
+  return wr::ByteSlice { aRange.begin().get(), aRange.length() };
 }
 
-inline mozilla::Range<const uint8_t> ByteSliceToRange(wr::WrByteSlice aWrSlice) {
+inline mozilla::Range<const uint8_t> ByteSliceToRange(wr::ByteSlice aWrSlice) {
   return mozilla::Range<const uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
