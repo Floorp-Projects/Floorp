@@ -237,6 +237,50 @@ add_task(function this_test_will_fail() {
 });
 '''
 
+ADD_TASK_SKIP = '''
+add_task(async function skipMeNot1() {
+  Assert.ok(true, "Well well well.");
+});
+
+add_task(async function skipMe1() {
+  Assert.ok(false, "Not skipped after all.");
+}).skip();
+
+add_task(async function skipMeNot2() {
+  Assert.ok(true, "Well well well.");
+});
+
+add_task(async function skipMeNot3() {
+  Assert.ok(true, "Well well well.");
+});
+
+add_task(async function skipMe2() {
+  Assert.ok(false, "Not skipped after all.");
+}).skip();
+'''
+
+ADD_TASK_SKIPALL = '''
+add_task(async function skipMe1() {
+  Assert.ok(false, "Not skipped after all.");
+});
+
+add_task(async function skipMe2() {
+  Assert.ok(false, "Not skipped after all.");
+}).skip();
+
+add_task(async function skipMe3() {
+  Assert.ok(false, "Not skipped after all.");
+}).only();
+
+add_task(async function skipMeNot() {
+  Assert.ok(true, "Well well well.");
+}).only();
+
+add_task(async function skipMe4() {
+  Assert.ok(false, "Not skipped after all.");
+});
+'''
+
 ADD_TEST_THROW_STRING = '''
 function run_test() {do_throw("Passing a string to do_throw")};
 '''
@@ -1037,6 +1081,24 @@ add_test({
         self.assertInLog("run_next_test")
         self.assertInLog("run_test")
         self.assertNotInLog("Task.jsm")
+
+    def testAddTaskSkip(self):
+        self.writeFile("test_tasks_skip.js", ADD_TASK_SKIP)
+        self.writeManifest(["test_tasks_skip.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+
+    def testAddTaskSkipAll(self):
+        self.writeFile("test_tasks_skipall.js", ADD_TASK_SKIPALL)
+        self.writeManifest(["test_tasks_skipall.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
 
     def testMissingHeadFile(self):
         """
