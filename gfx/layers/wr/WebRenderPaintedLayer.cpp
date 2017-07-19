@@ -163,5 +163,29 @@ WebRenderPaintedLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   CreateWebRenderDisplayList(aBuilder, aSc);
 }
 
+void
+WebRenderPaintedLayer::ClearCachedResources()
+{
+  ClearWrResources();
+  if (mImageClient) {
+    mImageClient->FlushAllImages();
+    mImageClient->ClearCachedResources();
+  }
+  if (mImageContainer) {
+    mImageContainer->ClearAllImages();
+    mImageContainer->ClearCachedResources();
+  }
+  ClearValidRegion();
+}
+
+void
+WebRenderPaintedLayer::ClearWrResources()
+{
+  if (mExternalImageId.isSome()) {
+    WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+    mExternalImageId = Nothing();
+  }
+}
+
 } // namespace layers
 } // namespace mozilla

@@ -922,6 +922,12 @@ MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMag
     branch32(cond, ToPayload(valaddr), Imm32(why), label);
 }
 
+void
+MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
+{
+    jmp(Operand(addr));
+}
+
 // ========================================================================
 // Truncate floating point.
 

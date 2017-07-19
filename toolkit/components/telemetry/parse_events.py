@@ -215,8 +215,11 @@ class EventData:
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
         # Finish setup.
-        definition['expiry_version'] = \
-            utils.add_expiration_postfix(definition.get('expiry_version', 'never'))
+        expiry_version = definition.get('expiry_version', 'never')
+        if not utils.validate_expiration_version(expiry_version):
+            raise ParserError('{}: invalid expiry_version: {}.'
+                              .format(self.identifier, expiry_version))
+        definition['expiry_version'] = utils.add_expiration_postfix(expiry_version)
 
     @property
     def category(self):

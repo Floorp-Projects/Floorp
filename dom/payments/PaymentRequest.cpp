@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "nsContentUtils.h"
@@ -225,7 +226,36 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // [TODO] Bug 1318988 - Implement `allowPaymentRequest` on iframe
+  // the feature can only be used in an active document
+  if (!window->IsCurrentInnerWindow()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  // If the node has the same origin as the parent node, the feature is allowed-to-use.
+  // Otherwise, only allow-to-use this feature when the browsing context container is
+  // an iframe with "allowpaymentrequest" attribute.
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsINode* node = static_cast<nsINode*>(doc);
+  if (!node) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  do {
+    nsINode* parentNode = nsContentUtils::GetCrossDocParentNode(node);
+    if (parentNode) {
+      nsresult rv = nsContentUtils::CheckSameOrigin(node, parentNode);
+      if (NS_FAILED(rv)) {
+        nsIContent* content = static_cast<nsIContent*>(parentNode);
+        if (!content->IsHTMLElement(nsGkAtoms::iframe) ||
+            !content->HasAttr(kNameSpaceID_None, nsGkAtoms::allowpaymentrequest)) {
+          aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+          return nullptr;
+        }
+      }
+    }
+    node = parentNode;
+  } while (node);
 
   // Check payment methods and details
   nsAutoString message;

@@ -3018,15 +3018,16 @@ TabChild::ReinitRendering()
   SendEnsureLayersConnected(&options);
   mCompositorOptions = Some(options);
 
+  bool success = false;
   RefPtr<CompositorBridgeChild> cb = CompositorBridgeChild::Get();
   if (gfxVars::UseWebRender()) {
-    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(nullptr);
-    MOZ_ASSERT(lm->AsWebRenderLayerManager());
-    lm->AsWebRenderLayerManager()->Initialize(cb,
-                                              wr::AsPipelineId(mLayersId),
-                                              &mTextureFactoryIdentifier);
+    success = mPuppetWidget->RecreateLayerManager([&] (LayerManager* aLayerManager) -> bool {
+      MOZ_ASSERT(aLayerManager->AsWebRenderLayerManager());
+      return aLayerManager->AsWebRenderLayerManager()->Initialize(cb,
+                                                                  wr::AsPipelineId(mLayersId),
+                                                                  &mTextureFactoryIdentifier);
+    });
   } else {
-    bool success = false;
     nsTArray<LayersBackend> ignored;
     PLayerTransactionChild* shadowManager = cb->SendPLayerTransactionConstructor(ignored, LayersId());
     if (shadowManager &&
@@ -3040,9 +3041,17 @@ TabChild::ReinitRendering()
       return;
     }
 
-    RefPtr<LayerManager> lm = mPuppetWidget->RecreateLayerManager(shadowManager);
-    ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-    lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+    success = mPuppetWidget->RecreateLayerManager([&] (LayerManager* aLayerManager) -> bool {
+      ShadowLayerForwarder* lf = aLayerManager->AsShadowForwarder();
+      lf->SetShadowManager(shadowManager);
+      lf->IdentifyTextureHost(mTextureFactoryIdentifier);
+      return true;
+    });
+  }
+
+  if (!success) {
+    NS_WARNING("failed to recreate layer manager");
+    return;
   }
 
   ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);

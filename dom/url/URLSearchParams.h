@@ -77,8 +77,7 @@ public:
 
   bool Has(const nsAString& aName);
 
-  // Returns true if aName was found and deleted, false otherwise.
-  bool Delete(const nsAString& aName);
+  void Delete(const nsAString& aName);
 
   void DeleteAll()
   {

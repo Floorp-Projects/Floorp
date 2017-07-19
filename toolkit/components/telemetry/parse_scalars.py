@@ -38,7 +38,7 @@ class ScalarType:
 
         # Everything is ok, set the rest of the data.
         self._definition = definition
-        definition['expires'] = utils.add_expiration_postfix(definition['expires'])
+        self._expires = utils.add_expiration_postfix(definition['expires'])
 
     def validate_names(self, group_name, probe_name):
         """Validate the group and probe name:
@@ -189,6 +189,12 @@ class ScalarType:
                 raise ParserError(self._name + ' - unknown value in record_in_processes: ' + proc +
                                   '.\nSee: {}'.format(BASE_DOC_URL))
 
+        # Validate the expiration version.
+        expires = definition.get('expires')
+        if not utils.validate_expiration_version(expires):
+            raise ParserError('{} - invalid expires: {}.\nSee: {}#required-fields'
+                              .format(self._name, expires, BASE_DOC_URL))
+
     @property
     def name(self):
         """Get the scalar name"""
@@ -222,7 +228,7 @@ class ScalarType:
     @property
     def expires(self):
         """Get the scalar expiration"""
-        return self._definition['expires']
+        return self._expires
 
     @property
     def kind(self):

@@ -83,6 +83,14 @@ public:
   {
     SetHTMLBoolAttr(nsGkAtoms::allowfullscreen, aAllow, aError);
   }
+  bool AllowPaymentRequest() const
+  {
+    return GetBoolAttr(nsGkAtoms::allowpaymentrequest);
+  }
+  void SetAllowPaymentRequest(bool aAllow, ErrorResult& aError)
+  {
+    SetHTMLBoolAttr(nsGkAtoms::allowpaymentrequest, aAllow, aError);
+  }
   void GetWidth(DOMString& aWidth)
   {
     GetHTMLAttr(nsGkAtoms::width, aWidth);

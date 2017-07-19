@@ -53,6 +53,7 @@ NS_IMPL_STRING_ATTR(HTMLIFrameElement, Scrolling, scrolling)
 NS_IMPL_URI_ATTR(HTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(HTMLIFrameElement, AllowFullscreen, allowfullscreen)
+NS_IMPL_BOOL_ATTR(HTMLIFrameElement, AllowPaymentRequest, allowpaymentrequest)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Srcdoc, srcdoc)
 
 NS_IMETHODIMP

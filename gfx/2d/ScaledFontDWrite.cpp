@@ -151,7 +151,7 @@ SkTypeface*
 ScaledFontDWrite::GetSkTypeface()
 {
   if (!mTypeface) {
-    IDWriteFactory *factory = Factory::GetDWriteFactory();
+    RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
     if (!factory) {
       return nullptr;
     }

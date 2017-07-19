@@ -221,7 +221,7 @@ already_AddRefed<NativeFontResourceDWrite>
 NativeFontResourceDWrite::Create(uint8_t *aFontData, uint32_t aDataLength,
                                  bool aNeedsCairo)
 {
-  IDWriteFactory *factory = Factory::EnsureDWriteFactory();
+  RefPtr<IDWriteFactory> factory = Factory::GetDWriteFactory();
   if (!factory) {
     gfxWarning() << "Failed to get DWrite Factory.";
     return nullptr;

@@ -86,20 +86,16 @@ URLParams::Set(const nsAString& aName, const nsAString& aValue)
   param->mValue = aValue;
 }
 
-bool
+void
 URLParams::Delete(const nsAString& aName)
 {
-  bool found = false;
   for (uint32_t i = 0; i < mParams.Length();) {
     if (mParams[i].mKey.Equals(aName)) {
       mParams.RemoveElementAt(i);
-      found = true;
     } else {
       ++i;
     }
   }
-
-  return found;
 }
 
 void
@@ -375,9 +371,8 @@ URLSearchParams::Has(const nsAString& aName)
 void
 URLSearchParams::Delete(const nsAString& aName)
 {
-  if (mParams->Delete(aName)) {
-    NotifyObserver();
-  }
+  mParams->Delete(aName);
+  NotifyObserver();
 }
 
 void

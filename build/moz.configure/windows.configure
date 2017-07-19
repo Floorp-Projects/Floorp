@@ -363,10 +363,10 @@ set_config('LIB', lib_path)
 
 option(env='MT', nargs=1, help='Path to the Microsoft Manifest Tool')
 
-@depends(valid_windows_sdk_dir)
+@depends(valid_windows_sdk_dir, valid_ucrt_sdk_dir)
 @imports(_from='os', _import='environ')
 @imports('platform')
-def sdk_bin_path(valid_windows_sdk_dir):
+def sdk_bin_path(valid_windows_sdk_dir, valid_ucrt_sdk_dir):
     if not valid_windows_sdk_dir:
         return
 
@@ -375,13 +375,16 @@ def sdk_bin_path(valid_windows_sdk_dir):
         'AMD64': 'x64',
     }.get(platform.machine())
 
+    # From version 10.0.15063.0 onwards the bin path contains the version number.
+    versioned_bin = ('bin' if valid_ucrt_sdk_dir.version < '10.0.15063.0'
+                     else os.path.join('bin', str(valid_ucrt_sdk_dir.version)))
     result = [
         environ['PATH'],
-        os.path.join(valid_windows_sdk_dir.path, 'bin', vc_host)
+        os.path.join(valid_windows_sdk_dir.path, versioned_bin, vc_host)
     ]
     if vc_host == 'x64':
         result.append(
-            os.path.join(valid_windows_sdk_dir.path, 'bin', 'x86'))
+            os.path.join(valid_windows_sdk_dir.path, versioned_bin, 'x86'))
     return result
 
 

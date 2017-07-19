@@ -122,6 +122,7 @@
     _(IntrinsicSubstringKernel)     \
     _(IntrinsicObjectHasPrototype)  \
     _(IntrinsicFinishBoundFunctionInit) \
+    _(IntrinsicIsPackedArray)       \
                                     \
     _(IntrinsicIsArrayIterator)     \
     _(IntrinsicIsMapIterator)       \
