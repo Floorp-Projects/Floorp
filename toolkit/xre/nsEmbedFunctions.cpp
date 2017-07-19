@@ -89,9 +89,7 @@
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #include "mozilla/SandboxSettings.h"
-#if !defined(MOZ_WIDGET_GONK)
 #include "mozilla/Preferences.h"
-#endif
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
@@ -309,7 +307,7 @@ SetTaskbarGroupId(const nsString& aId)
 #endif
 
 #if defined(MOZ_CRASHREPORTER)
-#if defined(MOZ_CONTENT_SANDBOX) && !defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_CONTENT_SANDBOX)
 void
 AddContentSandboxLevelAnnotation()
 {
@@ -321,7 +319,7 @@ AddContentSandboxLevelAnnotation()
       NS_LITERAL_CSTRING("ContentSandboxLevel"), levelString);
   }
 }
-#endif /* MOZ_CONTENT_SANDBOX && !MOZ_WIDGET_GONK */
+#endif /* MOZ_CONTENT_SANDBOX */
 #endif /* MOZ_CRASHREPORTER */
 
 namespace {
@@ -702,7 +700,7 @@ XRE_InitChildProcess(int aArgc,
       OverrideDefaultLocaleIfNeeded();
 
 #if defined(MOZ_CRASHREPORTER)
-#if defined(MOZ_CONTENT_SANDBOX) && !defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_CONTENT_SANDBOX)
       AddContentSandboxLevelAnnotation();
 #endif
 #endif
