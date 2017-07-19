@@ -1083,7 +1083,7 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
 
   // Clone the request we were given.
   RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
-  nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
+  nsresult rv = aRequest->SyncClone(this, GetOurOwnerDoc(), getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
   } else {
@@ -1568,7 +1568,8 @@ nsImageLoadingContent::UntrackImage(imgIRequest* aImage,
 void
 nsImageLoadingContent::CreateStaticImageClone(nsImageLoadingContent* aDest) const
 {
-  aDest->mCurrentRequest = nsContentUtils::GetStaticRequest(mCurrentRequest);
+  aDest->mCurrentRequest =
+    nsContentUtils::GetStaticRequest(aDest->GetOurOwnerDoc(), mCurrentRequest);
   aDest->TrackImage(aDest->mCurrentRequest);
   aDest->mForcedImageState = mForcedImageState;
   aDest->mImageBlockingStatus = mImageBlockingStatus;
