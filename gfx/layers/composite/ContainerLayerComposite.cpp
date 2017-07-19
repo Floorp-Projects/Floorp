@@ -626,7 +626,7 @@ ContainerRender(ContainerT* aContainer,
   // attached to it has a nonempty async transform, then that transform is not applied
   // to any visible content. Display a warning box (conditioned on the FPS display being
   // enabled).
-  if (gfxPrefs::LayersDrawFPS() && aContainer->IsScrollInfoLayer()) {
+  if (gfxPrefs::LayersDrawFPS() && aContainer->IsScrollableWithoutContent()) {
     // Since aContainer doesn't have any children we can just iterate from the top metrics
     // on it down to the bottom using GetFirstChild and not worry about walking onto another
     // underlying layer.
