@@ -6,11 +6,13 @@
 
 #include "mozilla/MozPromise.h"
 #include "MediaDecoderReaderWrapper.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
-MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
-                                                     MediaDecoderReader* aReader)
+MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(
+  AbstractThread* aOwnerThread,
+  MediaFormatReader* aReader)
   : mOwnerThread(aOwnerThread)
   , mReader(aReader)
   , mWatchManager(this, aReader->OwnerThread())
@@ -39,11 +41,15 @@ MediaDecoderReaderWrapper::ReadMetadata()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::AsyncReadMetadata)
-         ->Then(mOwnerThread, __func__, this,
-                &MediaDecoderReaderWrapper::OnMetadataRead,
-                &MediaDecoderReaderWrapper::OnMetadataNotRead);
+  return InvokeAsync(mReader->OwnerThread(),
+                     mReader.get(),
+                     __func__,
+                     &MediaFormatReader::AsyncReadMetadata)
+    ->Then(mOwnerThread,
+           __func__,
+           this,
+           &MediaDecoderReaderWrapper::OnMetadataRead,
+           &MediaDecoderReaderWrapper::OnMetadataNotRead);
 }
 
 RefPtr<MediaDecoderReaderWrapper::AudioDataPromise>
@@ -53,14 +59,17 @@ MediaDecoderReaderWrapper::RequestAudioData()
   MOZ_ASSERT(!mShutdown);
 
   int64_t startTime = StartTime().ToMicroseconds();
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(),
-                     __func__, &MediaDecoderReader::RequestAudioData)
-    ->Then(mOwnerThread, __func__,
-           [startTime] (RefPtr<AudioData> aAudio) {
+  return InvokeAsync(mReader->OwnerThread(),
+                     mReader.get(),
+                     __func__,
+                     &MediaFormatReader::RequestAudioData)
+    ->Then(mOwnerThread,
+           __func__,
+           [startTime](RefPtr<AudioData> aAudio) {
              aAudio->AdjustForStartTime(startTime);
              return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
            },
-           [] (const MediaResult& aError) {
+           [](const MediaResult& aError) {
              return AudioDataPromise::CreateAndReject(aError, __func__);
            });
 }
@@ -76,17 +85,21 @@ MediaDecoderReaderWrapper::RequestVideoData(const media::TimeUnit& aTimeThreshol
                          : aTimeThreshold;
 
   int64_t startTime = StartTime().ToMicroseconds();
-  return InvokeAsync(
-    mReader->OwnerThread(), mReader.get(), __func__,
-    &MediaDecoderReader::RequestVideoData, threshold)
-  ->Then(mOwnerThread, __func__,
-         [startTime] (RefPtr<VideoData> aVideo) {
-           aVideo->AdjustForStartTime(startTime);
-           return VideoDataPromise::CreateAndResolve(aVideo.forget(), __func__);
-         },
-         [] (const MediaResult& aError) {
-           return VideoDataPromise::CreateAndReject(aError, __func__);
-         });
+  return InvokeAsync(mReader->OwnerThread(),
+                     mReader.get(),
+                     __func__,
+                     &MediaFormatReader::RequestVideoData,
+                     threshold)
+    ->Then(mOwnerThread,
+           __func__,
+           [startTime](RefPtr<VideoData> aVideo) {
+             aVideo->AdjustForStartTime(startTime);
+             return VideoDataPromise::CreateAndResolve(aVideo.forget(),
+                                                       __func__);
+           },
+           [](const MediaResult& aError) {
+             return VideoDataPromise::CreateAndReject(aError, __func__);
+           });
 }
 
 RefPtr<MediaDecoderReader::SeekPromise>
@@ -95,10 +108,11 @@ MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   SeekTarget adjustedTarget = aTarget;
   adjustedTarget.SetTime(adjustedTarget.GetTime() + StartTime());
-  return InvokeAsync(
-           mReader->OwnerThread(), mReader.get(), __func__,
-           &MediaDecoderReader::Seek,
-           Move(adjustedTarget));
+  return InvokeAsync(mReader->OwnerThread(),
+                     mReader.get(),
+                     __func__,
+                     &MediaFormatReader::Seek,
+                     Move(adjustedTarget));
 }
 
 RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
@@ -106,8 +120,11 @@ MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(mReader->IsWaitForDataSupported());
-  return InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
-                     &MediaDecoderReader::WaitForData, aType);
+  return InvokeAsync(mReader->OwnerThread(),
+                     mReader.get(),
+                     __func__,
+                     &MediaFormatReader::WaitForData,
+                     aType);
 }
 
 void
@@ -115,9 +132,9 @@ MediaDecoderReaderWrapper::ReleaseResources()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod("MediaDecoderReader::ReleaseResources",
+    NewRunnableMethod("MediaFormatReader::ReleaseResources",
                       mReader,
-                      &MediaDecoderReader::ReleaseResources);
+                      &MediaFormatReader::ReleaseResources);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 
@@ -126,9 +143,9 @@ MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<TrackSet>("MediaDecoderReader::ResetDecode",
+    NewRunnableMethod<TrackSet>("MediaFormatReader::ResetDecode",
                                 mReader,
-                                &MediaDecoderReader::ResetDecode,
+                                &MediaFormatReader::ResetDecode,
                                 aTracks);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
@@ -172,9 +189,9 @@ MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<bool>("MediaDecoderReader::SetVideoNullDecode",
+    NewRunnableMethod<bool>("MediaFormatReader::SetVideoNullDecode",
                             mReader,
-                            &MediaDecoderReader::SetVideoNullDecode,
+                            &MediaFormatReader::SetVideoNullDecode,
                             aIsBlankDecode);
   mReader->OwnerThread()->Dispatch(r.forget());
 }

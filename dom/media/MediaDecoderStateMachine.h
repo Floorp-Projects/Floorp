@@ -154,8 +154,7 @@ class MediaDecoderStateMachine
 public:
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
   typedef mozilla::layers::ImageContainer::FrameID FrameID;
-  MediaDecoderStateMachine(MediaDecoder* aDecoder,
-                           MediaDecoderReader* aReader);
+  MediaDecoderStateMachine(MediaDecoder* aDecoder, MediaFormatReader* aReader);
 
   nsresult Init(MediaDecoder* aDecoder);
 
