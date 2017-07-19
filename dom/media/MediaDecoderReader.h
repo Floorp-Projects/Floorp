@@ -149,7 +149,7 @@ public:
   // queues need to be reset, defaulting to both audio and video tracks.
   virtual nsresult ResetDecode(
     TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
-                                TrackInfo::kVideoTrack));
+                                TrackInfo::kVideoTrack)) = 0;
 
   // Requests one audio sample from the reader.
   //
@@ -181,13 +181,6 @@ public:
   virtual RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) = 0;
 
   virtual void SetCDMProxy(CDMProxy* aProxy) = 0;
-
-  // Tell the reader that the data decoded are not for direct playback, so it
-  // can accept more files, in particular those which have more channels than
-  // available in the audio output.
-  void SetIgnoreAudioOutputFormat()
-  {
-  }
 
   // The MediaDecoderStateMachine uses various heuristics that assume that
   // raw media data is arriving sequentially from a network channel. This

@@ -2480,7 +2480,7 @@ MediaFormatReader::ResetDecode(TrackSet aTracks)
     }
   }
 
-  return MediaDecoderReader::ResetDecode(aTracks);
+  return NS_OK;
 }
 
 void

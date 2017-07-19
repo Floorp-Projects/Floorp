@@ -71,11 +71,6 @@ MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
   UpdateBuffered();
 }
 
-nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
-{
-  return NS_OK;
-}
-
 RefPtr<ShutdownPromise>
 MediaDecoderReader::Shutdown()
 {
