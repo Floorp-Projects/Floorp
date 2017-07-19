@@ -1643,14 +1643,12 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   RefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
   // Swap pointers in child message managers.
   if (mChildMessageManager) {
-    nsInProcessTabChildGlobal* tabChild =
-      static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());
+    nsInProcessTabChildGlobal* tabChild = mChildMessageManager;
     tabChild->SetOwner(otherContent);
     tabChild->SetChromeMessageManager(otherMessageManager);
   }
   if (aOther->mChildMessageManager) {
-    nsInProcessTabChildGlobal* otherTabChild =
-      static_cast<nsInProcessTabChildGlobal*>(aOther->mChildMessageManager.get());
+    nsInProcessTabChildGlobal* otherTabChild = aOther->mChildMessageManager;
     otherTabChild->SetOwner(ourContent);
     otherTabChild->SetChromeMessageManager(ourMessageManager);
   }
@@ -1885,7 +1883,7 @@ nsFrameLoader::DestroyDocShell()
 
   // Fire the "unload" event if we're in-process.
   if (mChildMessageManager) {
-    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->FireUnloadEvent();
+    mChildMessageManager->FireUnloadEvent();
   }
 
   // Destroy the docshell.
@@ -1897,7 +1895,7 @@ nsFrameLoader::DestroyDocShell()
 
   if (mChildMessageManager) {
     // Stop handling events in the in-process frame script.
-    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->DisconnectEventListeners();
+    mChildMessageManager->DisconnectEventListeners();
   }
 }
 
@@ -1932,7 +1930,7 @@ nsFrameLoader::DestroyComplete()
   }
 
   if (mChildMessageManager) {
-    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->Disconnect();
+    mChildMessageManager->Disconnect();
   }
 
   mMessageManager = nullptr;
@@ -2988,12 +2986,11 @@ public:
 
   NS_IMETHOD Run() override
   {
-    nsInProcessTabChildGlobal* tabChild =
-      static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
+    nsInProcessTabChildGlobal* tabChild = mFrameLoader->mChildMessageManager;
     // Since bug 1126089, messages can arrive even when the docShell is destroyed.
     // Here we make sure that those messages are not delivered.
     if (tabChild && tabChild->GetInnerManager() && mFrameLoader->GetExistingDocShell()) {
-      JS::Rooted<JSObject*> kungFuDeathGrip(dom::RootingCx(), tabChild->GetGlobal());
+      JS::Rooted<JSObject*> kungFuDeathGrip(dom::RootingCx(), tabChild->GetWrapper());
       ReceiveMessage(static_cast<EventTarget*>(tabChild), mFrameLoader,
                      tabChild->GetInnerManager());
     }
@@ -3141,7 +3138,7 @@ nsFrameLoader::ReallyLoadFrameScripts()
 EventTarget*
 nsFrameLoader::GetTabChildGlobalAsEventTarget()
 {
-  return static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());
+  return mChildMessageManager.get();
 }
 
 already_AddRefed<Element>
