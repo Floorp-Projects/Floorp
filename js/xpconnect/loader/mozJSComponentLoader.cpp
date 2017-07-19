@@ -648,7 +648,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_LATEST)
                .setFileAndLine(nativePath.get(), 1)
-               .setSourceIsLazy(!!cache);
+               .setSourceIsLazy(cache || ScriptPreloader::GetSingleton().Active());
 
         if (realFile) {
             AutoMemMap map;
