@@ -857,6 +857,7 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
+    "bug_numbers": [1372042],
     "description": "Percent of cycle collector slice done during idle time"
   },
   "DEFERRED_FINALIZE_ASYNC": {
@@ -922,6 +923,7 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
+    "bug_numbers": [1372042],
     "description": "Percent of the cycle collector's forget skippable done during idle time"
   },
   "FULLSCREEN_TRANSITION_BLACK_MS": {
@@ -1197,6 +1199,7 @@
     "kind": "linear",
     "high": 100,
     "n_buckets": 50,
+    "bug_numbers": [1372042],
     "description": "Percent of GC slice done during idle time"
   },
   "GC_BUDGET_OVERRUN": {
@@ -1206,6 +1209,7 @@
     "kind": "exponential",
     "high": 100000,
     "n_buckets": 100,
+    "bug_numbers": [1381777],
     "description": "How long a GC slice ran over its budget in microseconds"
   },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
@@ -5070,6 +5074,7 @@
     "kind": "enumerated",
     "n_values": 6,
     "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1356812],
     "description": "PLACES: stage reached when trying to fix a database corruption , see Places::Database::eCorruptDBReplaceStatus"
   },
   "PLACES_PAGES_COUNT": {
@@ -7235,6 +7240,7 @@
     "low": 10,
     "high": 1024,
     "n_buckets": 20,
+    "bug_numbers": [1367094],
     "description": "The size (KB) of the Telemetry successfully sent pings"
   },
   "TELEMETRY_FAILED_SEND_PINGS_SIZE_KB": {
@@ -7245,6 +7251,7 @@
     "low": 10,
     "high": 1024,
     "n_buckets": 20,
+    "bug_numbers": [1367094],
     "description": "The size (KB) of the Telemetry unsuccessfully sent pings"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
