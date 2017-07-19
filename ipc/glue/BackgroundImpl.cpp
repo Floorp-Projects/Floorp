@@ -320,6 +320,11 @@ class ChildImpl final : public BackgroundChildImpl
 #endif
   };
 
+  // On the main thread, we store TLS in this global instead of in
+  // sThreadLocalIndex. That way, cooperative main threads all share the same
+  // thread info.
+  static ThreadLocalInfo* sMainThreadInfo;
+
   // This is only modified on the main thread. It prevents us from trying to
   // create the background thread after application shutdown has started.
   static bool sShutdownHasStarted;
@@ -1446,21 +1451,26 @@ ChildImpl::Shutdown()
 
   sShutdownHasStarted = true;
 
-#ifdef DEBUG
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex);
 
-  auto threadLocalInfo =
-    static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
+  ThreadLocalInfo* threadLocalInfo;
+#ifdef DEBUG
+  threadLocalInfo = static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
+  MOZ_ASSERT(!threadLocalInfo);
+#endif
+  threadLocalInfo = sMainThreadInfo;
 
   if (threadLocalInfo) {
+#ifdef DEBUG
     MOZ_ASSERT(!threadLocalInfo->mClosed);
     threadLocalInfo->mClosed = true;
-  }
 #endif
 
-  DebugOnly<PRStatus> status = PR_SetThreadPrivate(sThreadLocalIndex, nullptr);
-  MOZ_ASSERT(status == PR_SUCCESS);
+    ThreadLocalDestructor(threadLocalInfo);
+  }
 }
+
+ChildImpl::ThreadLocalInfo* ChildImpl::sMainThreadInfo = nullptr;
 
 // static
 PBackgroundChild*
@@ -1469,6 +1479,7 @@ ChildImpl::GetForCurrentThread()
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex);
 
   auto threadLocalInfo =
+    NS_IsMainThread() ? sMainThreadInfo :
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
 
   if (!threadLocalInfo) {
@@ -1504,15 +1515,19 @@ ChildImpl::GetOrCreateForCurrentThread()
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
              "BackgroundChild::Startup() was never called!");
 
-  auto threadLocalInfo =
+  auto threadLocalInfo = NS_IsMainThread() ? sMainThreadInfo :
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
 
   if (!threadLocalInfo) {
     nsAutoPtr<ThreadLocalInfo> newInfo(new ThreadLocalInfo());
 
-    if (PR_SetThreadPrivate(sThreadLocalIndex, newInfo) != PR_SUCCESS) {
-      CRASH_IN_CHILD_PROCESS("PR_SetThreadPrivate failed!");
-      return nullptr;
+    if (NS_IsMainThread()) {
+      sMainThreadInfo = newInfo;
+    } else {
+      if (PR_SetThreadPrivate(sThreadLocalIndex, newInfo) != PR_SUCCESS) {
+        CRASH_IN_CHILD_PROCESS("PR_SetThreadPrivate failed!");
+        return nullptr;
+      }
     }
 
     threadLocalInfo = newInfo.forget();
@@ -1589,6 +1604,9 @@ ChildImpl::GetOrCreateForCurrentThread()
 void
 ChildImpl::CloseForCurrentThread()
 {
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "PBackground for the main thread should be shut down via ChildImpl::Shutdown().");
+
   if (sThreadLocalIndex == kBadThreadLocalIndex) {
     return;
   }
@@ -1617,7 +1635,7 @@ ChildImpl::GetThreadLocalForCurrentThread()
   MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
              "BackgroundChild::Startup() was never called!");
 
-  auto threadLocalInfo =
+  auto threadLocalInfo = NS_IsMainThread() ? sMainThreadInfo :
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
 
   if (!threadLocalInfo) {
