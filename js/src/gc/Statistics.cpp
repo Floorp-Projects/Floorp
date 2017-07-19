@@ -986,14 +986,18 @@ Statistics::endSlice()
             if (budget_ms == runtime->gc.defaultSliceBudget())
                 runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
 
-            // Record any phase that goes more than 2x over its budget.
-            if (sliceTime.ToMilliseconds() > 2 * budget_ms) {
-                reportLongestPhaseInMajorGC(slice.phaseTimes, JS_TELEMETRY_GC_SLOW_PHASE);
-                // If we spend a significant length of time waiting for parallel
-                // tasks then report the longest task.
-                TimeDuration joinTime = SumPhase(PhaseKind::JOIN_PARALLEL_TASKS, slice.phaseTimes);
-                if (joinTime.ToMilliseconds() > budget_ms)
-                    reportLongestPhaseInMajorGC(slice.parallelTimes, JS_TELEMETRY_GC_SLOW_TASK);
+            // Record any phase that goes 1.5 times or 5ms over its budget.
+            double longSliceThreshold = std::min(1.5 * budget_ms, budget_ms + 5.0);
+            if (sliceTime.ToMilliseconds() > longSliceThreshold) {
+                PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
+                reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
+
+                // If the longest phase was waiting for parallel tasks then
+                // record the longest task.
+                if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
+                    PhaseKind longestParallel = LongestPhaseSelfTimeInMajorGC(slice.parallelTimes);
+                    reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
+                }
             }
 
             // Record how long we went over budget.
@@ -1047,14 +1051,12 @@ Statistics::endSlice()
 }
 
 void
-Statistics::reportLongestPhaseInMajorGC(const PhaseTimeTable& times, int telemetryId)
+Statistics::reportLongestPhaseInMajorGC(PhaseKind longest, int telemetryId)
 {
-    PhaseKind longest = LongestPhaseSelfTimeInMajorGC(times);
-    if (longest == PhaseKind::NONE)
-        return;
-
-    uint8_t bucket = phaseKinds[longest].telemetryBucket;
-    runtime->addTelemetry(telemetryId, bucket);
+    if (longest != PhaseKind::NONE) {
+        uint8_t bucket = phaseKinds[longest].telemetryBucket;
+        runtime->addTelemetry(telemetryId, bucket);
+    }
 }
 
 bool
