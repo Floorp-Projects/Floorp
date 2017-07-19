@@ -29,6 +29,7 @@
                 android:layout_width="@dimen/favicon_bg"
                 android:layout_height="@dimen/favicon_bg"
                 android:layout_marginStart="@dimen/activity_stream_base_margin"
+                android:layout_marginLeft="@dimen/activity_stream_base_margin"
                 android:layout_marginTop="@dimen/activity_stream_base_margin"
                 android:layout_marginBottom="@dimen/activity_stream_base_margin"
                 android:layout_gravity="center"
