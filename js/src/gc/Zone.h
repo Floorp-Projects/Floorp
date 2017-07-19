@@ -8,6 +8,7 @@
 #define gc_Zone_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jscntxt.h"
@@ -508,7 +509,7 @@ struct Zone : public JS::shadow::Zone,
 #endif
 
     static js::HashNumber UniqueIdToHash(uint64_t uid) {
-        return js::HashNumber(uid >> 32) ^ js::HashNumber(uid & 0xFFFFFFFF);
+        return mozilla::HashGeneric(uid);
     }
 
     // Creates a HashNumber based on getUniqueId. Returns false on OOM.
