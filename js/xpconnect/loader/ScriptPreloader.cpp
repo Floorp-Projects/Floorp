@@ -548,8 +548,6 @@ ScriptPreloader::PrepareCacheWriteInternal()
 
         if (!script->mSize && !script->XDREncode(jsapi.cx())) {
             script.Remove();
-        } else {
-            script->mSize = script->Range().length();
         }
     }
 
@@ -709,6 +707,21 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
+    }
+
+    // If we don't already have bytecode for this script, and it doesn't already
+    // exist in the child cache, encode it now, before it's ever executed.
+    //
+    // Ideally, we would like to do the encoding lazily, during idle slices.
+    // There are subtle issues with encoding scripts which have already been
+    // executed, though, which makes that somewhat risky. So until that
+    // situation is improved, and thoroughly tested, we need to encode eagerly.
+    //
+    // (See also the TranscodeResult_Failure_RunOnceNotSupported failure case in
+    // js::XDRScript)
+    if (!script->mSize && !(mChildCache && mChildCache->mScripts.Get(cachePath))) {
+        AutoSafeJSAPI jsapi;
+        Unused << script->XDREncode(jsapi.cx());
     }
 
     script->UpdateLoadTime(TimeStamp::Now());
@@ -986,8 +999,10 @@ ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
     JS::TranscodeResult code = JS::EncodeScript(cx, Buffer(), jsscript);
     if (code == JS::TranscodeResult_Ok) {
         mXDRRange.emplace(Buffer().begin(), Buffer().length());
+        mSize = Range().length();
         return true;
     }
+    mXDRData.destroy();
     JS_ClearPendingException(cx);
     return false;
 }
