@@ -44,6 +44,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/ProcessGlobal.h"
+#include "mozilla/dom/ResolveSystemBinding.h"
 #include "mozilla/dom/SameProcessMessageQueue.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -1617,7 +1618,6 @@ StaticRefPtr<nsScriptCacheCleaner> nsMessageManagerScriptExecutor::sScriptCacheC
 void
 nsMessageManagerScriptExecutor::DidCreateGlobal()
 {
-  NS_ASSERTION(mGlobal, "Should have mGlobal!");
   if (!sCachedScripts) {
     sCachedScripts =
       new nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>;
@@ -1652,13 +1652,14 @@ nsMessageManagerScriptExecutor::Shutdown()
 }
 
 void
-nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
+nsMessageManagerScriptExecutor::LoadScriptInternal(JS::Handle<JSObject*> aGlobal,
+                                                   const nsAString& aURL,
                                                    bool aRunInGlobalScope)
 {
   AUTO_PROFILER_LABEL_DYNAMIC_LOSSY_NSSTRING(
     "nsMessageManagerScriptExecutor::LoadScriptInternal", OTHER, aURL);
 
-  if (!mGlobal || !sCachedScripts) {
+  if (!sCachedScripts) {
     return;
   }
 
@@ -1676,21 +1677,18 @@ nsMessageManagerScriptExecutor::LoadScriptInternal(const nsAString& aURL,
                                  shouldCache, &script);
   }
 
-  JS::Rooted<JSObject*> global(rcx, mGlobal);
-  if (global) {
-    AutoEntryScript aes(global, "message manager script load");
-    JSContext* cx = aes.cx();
-    if (script) {
-      if (aRunInGlobalScope) {
-        JS::RootedValue rval(cx);
-        JS::CloneAndExecuteScript(cx, script, &rval);
-      } else {
-        JS::Rooted<JSObject*> scope(cx);
-        bool ok = js::ExecuteInGlobalAndReturnScope(cx, global, script, &scope);
-        if (ok) {
-          // Force the scope to stay alive.
-          mAnonymousGlobalScopes.AppendElement(scope);
-        }
+  AutoEntryScript aes(aGlobal, "message manager script load");
+  JSContext* cx = aes.cx();
+  if (script) {
+    if (aRunInGlobalScope) {
+      JS::RootedValue rval(cx);
+      JS::CloneAndExecuteScript(cx, script, &rval);
+    } else {
+      JS::Rooted<JSObject*> scope(cx);
+      bool ok = js::ExecuteInGlobalAndReturnScope(cx, aGlobal, script, &scope);
+      if (ok) {
+        // Force the scope to stay alive.
+        mAnonymousGlobalScopes.AppendElement(scope);
       }
     }
   }
@@ -1811,45 +1809,38 @@ nsMessageManagerScriptExecutor::Trace(const TraceCallbacks& aCallbacks, void* aC
   for (size_t i = 0, length = mAnonymousGlobalScopes.Length(); i < length; ++i) {
     aCallbacks.Trace(&mAnonymousGlobalScopes[i], "mAnonymousGlobalScopes[i]", aClosure);
   }
-  aCallbacks.Trace(&mGlobal, "mGlobal", aClosure);
 }
 
 void
 nsMessageManagerScriptExecutor::Unlink()
 {
   ImplCycleCollectionUnlink(mAnonymousGlobalScopes);
-  mGlobal = nullptr;
 }
 
 bool
-nsMessageManagerScriptExecutor::InitChildGlobalInternal(
-  nsISupports* aScope,
-  const nsACString& aID)
+nsMessageManagerScriptExecutor::InitChildGlobalInternal(const nsACString& aID)
 {
   AutoSafeJSContext cx;
-  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
+  if (!SystemBindingInitIds(cx)) {
+    return false;
+  }
 
-  const uint32_t flags = xpc::INIT_JS_STANDARD_CLASSES;
+  nsContentUtils::GetSecurityManager()->GetSystemPrincipal(getter_AddRefs(mPrincipal));
 
   JS::CompartmentOptions options;
   options.creationOptions().setSystemZone();
 
-  if (xpc::SharedMemoryEnabled()) {
-    options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
+  xpc::InitGlobalObjectOptions(options, mPrincipal);
+  JS::Rooted<JSObject*> global(cx);
+  if (!WrapGlobalObject(cx, options, &global)) {
+    return false;
   }
 
-  JS::Rooted<JSObject*> global(cx);
-  nsresult rv = xpc::InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
-                                                     flags, options,
-                                                     &global);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  mGlobal = global;
-  NS_ENSURE_TRUE(mGlobal, false);
+  xpc::InitGlobalObject(cx, global, 0);
 
   // Set the location information for the new global, so that tools like
   // about:memory may use that information.
-  xpc::SetLocationForGlobal(mGlobal, aID);
+  xpc::SetLocationForGlobal(global, aID);
 
   DidCreateGlobal();
   return true;
