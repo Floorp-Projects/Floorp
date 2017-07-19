@@ -131,7 +131,6 @@ struct Statistics
 
     void beginPhase(PhaseKind phaseKind);
     void endPhase(PhaseKind phaseKind);
-    void endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task);
     void recordParallelPhase(PhaseKind phaseKind, TimeDuration duration);
 
     // Occasionally, we may be in the middle of something that is tracked by
