@@ -85,6 +85,14 @@ no such emphasized headings will appear.
 A `Debugger.Script` instance inherits the following accessor properties
 from its prototype:
 
+`isGeneratorFunction`
+:   True if this instance refers to a `JSScript` for a function defined with a
+    `function*` expression or statement. False otherwise.
+
+`isAsyncFunction`
+:   True if this instance refers to a `JSScript` for an async function, defined
+    with an `async function` expression or statement. False otherwise.
+
 `displayName`
 :   **If the instance refers to a `JSScript`**, this is the script's display
     name, if it has one. If the script has no display name &mdash; for example,
