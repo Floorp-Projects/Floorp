@@ -7,10 +7,10 @@ from contextlib import contextmanager
 import sys, os, re, atexit, io
 import py
 from py._path import common
-from py._path.common import iswin32
+from py._path.common import iswin32, fspath
 from stat import S_ISLNK, S_ISDIR, S_ISREG
 
-from os.path import abspath, normpath, isabs, exists, isdir, isfile, islink, dirname
+from os.path import abspath, normcase, normpath, isabs, exists, isdir, isfile, islink, dirname
 
 if sys.version_info > (3,0):
     def map_as_list(func, iter):
@@ -147,22 +147,25 @@ class LocalPath(FSBase):
         """
         if path is None:
             self.strpath = py.error.checked_call(os.getcwd)
-        elif isinstance(path, common.PathBase):
-            self.strpath = path.strpath
-        elif isinstance(path, py.builtin._basestring):
+        else:
+            try:
+                path = fspath(path)
+            except TypeError:
+                raise ValueError("can only pass None, Path instances "
+                                 "or non-empty strings to LocalPath")
             if expanduser:
                 path = os.path.expanduser(path)
             self.strpath = abspath(path)
-        else:
-            raise ValueError("can only pass None, Path instances "
-                             "or non-empty strings to LocalPath")
 
     def __hash__(self):
         return hash(self.strpath)
 
     def __eq__(self, other):
-        s1 = self.strpath
-        s2 = getattr(other, "strpath", other)
+        s1 = fspath(self)
+        try:
+            s2 = fspath(other)
+        except TypeError:
+            return False
         if iswin32:
             s1 = s1.lower()
             try:
@@ -175,15 +178,15 @@ class LocalPath(FSBase):
         return not (self == other)
 
     def __lt__(self, other):
-        return self.strpath < getattr(other, "strpath", other)
+        return fspath(self) < fspath(other)
 
     def __gt__(self, other):
-        return self.strpath > getattr(other, "strpath", other)
+        return fspath(self) > fspath(other)
 
     def samefile(self, other):
         """ return True if 'other' references the same file as 'self'.
         """
-        other = getattr(other, "strpath", other)
+        other = fspath(other)
         if not isabs(other):
             other = abspath(other)
         if self == other:
@@ -202,14 +205,14 @@ class LocalPath(FSBase):
             if rec:
                 # force remove of readonly files on windows
                 if iswin32:
-                    self.chmod(448, rec=1) # octcal 0700
+                    self.chmod(0o700, rec=1)
                 py.error.checked_call(py.std.shutil.rmtree, self.strpath,
                     ignore_errors=ignore_errors)
             else:
                 py.error.checked_call(os.rmdir, self.strpath)
         else:
             if iswin32:
-                self.chmod(448) # octcal 0700
+                self.chmod(0o700)
             py.error.checked_call(os.remove, self.strpath)
 
     def computehash(self, hashtype="md5", chunksize=524288):
@@ -320,7 +323,7 @@ class LocalPath(FSBase):
         of the args is an absolute path.
         """
         sep = self.sep
-        strargs = [getattr(arg, "strpath", arg) for arg in args]
+        strargs = [fspath(arg) for arg in args]
         strpath = self.strpath
         if kwargs.get('abs'):
             newargs = []
@@ -402,8 +405,13 @@ class LocalPath(FSBase):
         """ return last modification time of the path. """
         return self.stat().mtime
 
-    def copy(self, target, mode=False):
-        """ copy path to target."""
+    def copy(self, target, mode=False, stat=False):
+        """ copy path to target.
+
+            If mode is True, will copy copy permission from path to target.
+            If stat is True, copy permission, last modification
+            time, last access time, and flags from path to target.
+        """
         if self.check(file=1):
             if target.check(dir=1):
                 target = target.join(self.basename)
@@ -411,6 +419,8 @@ class LocalPath(FSBase):
             copychunked(self, target)
             if mode:
                 copymode(self.strpath, target.strpath)
+            if stat:
+                copystat(self, target)
         else:
             def rec(p):
                 return p.check(link=0)
@@ -427,10 +437,12 @@ class LocalPath(FSBase):
                     newx.ensure(dir=1)
                 if mode:
                     copymode(x.strpath, newx.strpath)
+                if stat:
+                    copystat(x, newx)
 
     def rename(self, target):
         """ rename this path to target. """
-        target = getattr(target, "strpath", target)
+        target = fspath(target)
         return py.error.checked_call(os.rename, self.strpath, target)
 
     def dump(self, obj, bin=1):
@@ -444,7 +456,7 @@ class LocalPath(FSBase):
     def mkdir(self, *args):
         """ create & return the directory joined with args. """
         p = self.join(*args)
-        py.error.checked_call(os.mkdir, getattr(p, "strpath", p))
+        py.error.checked_call(os.mkdir, fspath(p))
         return p
 
     def write_binary(self, data, ensure=False):
@@ -789,12 +801,13 @@ class LocalPath(FSBase):
         if rootdir is None:
             rootdir = cls.get_temproot()
 
+        nprefix = normcase(prefix)
         def parse_num(path):
             """ parse the number out of a path (if it matches the prefix) """
-            bn = path.basename
-            if bn.startswith(prefix):
+            nbasename = normcase(path.basename)
+            if nbasename.startswith(nprefix):
                 try:
-                    return int(bn[len(prefix):])
+                    return int(nbasename[len(nprefix):])
                 except ValueError:
                     pass
 
@@ -886,8 +899,14 @@ class LocalPath(FSBase):
         return udir
     make_numbered_dir = classmethod(make_numbered_dir)
 
+
 def copymode(src, dest):
+    """ copy permission from src to dst. """
     py.std.shutil.copymode(src, dest)
+
+def copystat(src, dest):
+    """ copy permission,  last modification time, last access time, and flags from src to dst."""
+    py.std.shutil.copystat(str(src), str(dest))
 
 def copychunked(src, dest):
     chunksize = 524288 # half a meg of bytes

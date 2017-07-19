@@ -1,4 +1,6 @@
 """ (disabled by default) support for testing pytest and pytest plugins. """
+from __future__ import absolute_import, division, print_function
+
 import codecs
 import gc
 import os
@@ -10,12 +12,14 @@ import time
 import traceback
 from fnmatch import fnmatch
 
-from py.builtin import print_
+from weakref import WeakKeyDictionary
 
+from _pytest.capture import MultiCapture, SysCapture
 from _pytest._code import Source
 import py
 import pytest
 from _pytest.main import Session, EXIT_OK
+from _pytest.assertion.rewrite import AssertionRewritingHook
 
 
 def pytest_addoption(parser):
@@ -84,7 +88,7 @@ class LsofFdLeakChecker(object):
             return True
 
     @pytest.hookimpl(hookwrapper=True, tryfirst=True)
-    def pytest_runtest_item(self, item):
+    def pytest_runtest_protocol(self, item):
         lines1 = self.get_open_files()
         yield
         if hasattr(sys, "pypy_version_info"):
@@ -103,7 +107,8 @@ class LsofFdLeakChecker(object):
             error.extend([str(f) for f in lines2])
             error.append(error[0])
             error.append("*** function %s:%s: %s " % item.location)
-            pytest.fail("\n".join(error), pytrace=False)
+            error.append("See issue #2366")
+            item.warn('', "\n".join(error))
 
 
 # XXX copied from execnet's conftest.py - needs to be merged
@@ -123,15 +128,18 @@ def getexecutable(name, cache={}):
     except KeyError:
         executable = py.path.local.sysfind(name)
         if executable:
+            import subprocess
+            popen = subprocess.Popen([str(executable), "--version"],
+                universal_newlines=True, stderr=subprocess.PIPE)
+            out, err = popen.communicate()
             if name == "jython":
-                import subprocess
-                popen = subprocess.Popen([str(executable), "--version"],
-                    universal_newlines=True, stderr=subprocess.PIPE)
-                out, err = popen.communicate()
                 if not err or "2.5" not in err:
                     executable = None
                 if "2.5.2" in err:
                     executable = None # http://bugs.jython.org/issue1790
+            elif popen.returncode != 0:
+                # Handle pyenv's 127.
+                executable = None
         cache[name] = executable
         return executable
 
@@ -222,15 +230,15 @@ class HookRecorder:
             name, check = entries.pop(0)
             for ind, call in enumerate(self.calls[i:]):
                 if call._name == name:
-                    print_("NAMEMATCH", name, call)
+                    print("NAMEMATCH", name, call)
                     if eval(check, backlocals, call.__dict__):
-                        print_("CHECKERMATCH", repr(check), "->", call)
+                        print("CHECKERMATCH", repr(check), "->", call)
                     else:
-                        print_("NOCHECKERMATCH", repr(check), "-", call)
+                        print("NOCHECKERMATCH", repr(check), "-", call)
                         continue
                     i += ind + 1
                     break
-                print_("NONAMEMATCH", name, "with", call)
+                print("NONAMEMATCH", name, "with", call)
             else:
                 pytest.fail("could not find %r check %r" % (name, check))
 
@@ -318,7 +326,8 @@ def linecomp(request):
     return LineComp()
 
 
-def pytest_funcarg__LineMatcher(request):
+@pytest.fixture(name='LineMatcher')
+def LineMatcher_fixture(request):
     return LineMatcher
 
 
@@ -327,7 +336,7 @@ def testdir(request, tmpdir_factory):
     return Testdir(request, tmpdir_factory)
 
 
-rex_outcome = re.compile("(\d+) ([\w-]+)")
+rex_outcome = re.compile(r"(\d+) ([\w-]+)")
 class RunResult:
     """The result of running a command.
 
@@ -362,6 +371,7 @@ class RunResult:
                     for num, cat in outcomes:
                         d[cat] = int(num)
                     return d
+        raise ValueError("Pytest terminal report not found")
 
     def assert_outcomes(self, passed=0, skipped=0, failed=0):
         """ assert that the specified outcomes appear with the respective
@@ -374,10 +384,10 @@ class RunResult:
 
 
 class Testdir:
-    """Temporary test directory with tools to test/run py.test itself.
+    """Temporary test directory with tools to test/run pytest itself.
 
     This is based on the ``tmpdir`` fixture but provides a number of
-    methods which aid with testing py.test itself.  Unless
+    methods which aid with testing pytest itself.  Unless
     :py:meth:`chdir` is used all methods will use :py:attr:`tmpdir` as
     current working directory.
 
@@ -396,6 +406,7 @@ class Testdir:
 
     def __init__(self, request, tmpdir_factory):
         self.request = request
+        self._mod_collections  = WeakKeyDictionary()
         # XXX remove duplication with tmpdir plugin
         basetmp = tmpdir_factory.ensuretemp("testdir")
         name = request.function.__name__
@@ -441,9 +452,10 @@ class Testdir:
         the module is re-imported.
         """
         for name in set(sys.modules).difference(self._savemodulekeys):
-            # it seems zope.interfaces is keeping some state
-            # (used by twisted related tests)
-            if name != "zope.interface":
+            # some zope modules used by twisted-related tests keeps internal
+            # state and can't be deleted; we had some trouble in the past
+            # with zope.interface for example
+            if not name.startswith("zope"):
                 del sys.modules[name]
 
     def make_hook_recorder(self, pluginmanager):
@@ -463,7 +475,7 @@ class Testdir:
         if not hasattr(self, '_olddir'):
             self._olddir = old
 
-    def _makefile(self, ext, args, kwargs):
+    def _makefile(self, ext, args, kwargs, encoding="utf-8"):
         items = list(kwargs.items())
         if args:
             source = py.builtin._totext("\n").join(
@@ -473,14 +485,17 @@ class Testdir:
         ret = None
         for name, value in items:
             p = self.tmpdir.join(name).new(ext=ext)
+            p.dirpath().ensure_dir()
             source = Source(value)
+
             def my_totext(s, encoding="utf-8"):
                 if py.builtin._isbytes(s):
                     s = py.builtin._totext(s, encoding=encoding)
                 return s
+
             source_unicode = "\n".join([my_totext(line) for line in source.lines])
             source = py.builtin._totext(source_unicode)
-            content = source.strip().encode("utf-8") # + "\n"
+            content = source.strip().encode(encoding) # + "\n"
             #content = content.rstrip() + "\n"
             p.write(content, "wb")
             if ret is None:
@@ -557,7 +572,7 @@ class Testdir:
     def mkpydir(self, name):
         """Create a new python package.
 
-        This creates a (sub)direcotry with an empty ``__init__.py``
+        This creates a (sub)directory with an empty ``__init__.py``
         file so that is recognised as a python package.
 
         """
@@ -588,7 +603,7 @@ class Testdir:
         """Return the collection node of a file.
 
         This is like :py:meth:`getnode` but uses
-        :py:meth:`parseconfigure` to create the (configured) py.test
+        :py:meth:`parseconfigure` to create the (configured) pytest
         Config instance.
 
         :param path: A :py:class:`py.path.local` instance of the file.
@@ -652,11 +667,11 @@ class Testdir:
     def inline_genitems(self, *args):
         """Run ``pytest.main(['--collectonly'])`` in-process.
 
-        Retuns a tuple of the collected items and a
+        Returns a tuple of the collected items and a
         :py:class:`HookRecorder` instance.
 
         This runs the :py:func:`pytest.main` function to run all of
-        py.test inside the test process itself like
+        pytest inside the test process itself like
         :py:meth:`inline_run`.  However the return value is a tuple of
         the collection items and a :py:class:`HookRecorder` instance.
 
@@ -669,7 +684,7 @@ class Testdir:
         """Run ``pytest.main()`` in-process, returning a HookRecorder.
 
         This runs the :py:func:`pytest.main` function to run all of
-        py.test inside the test process itself.  This means it can
+        pytest inside the test process itself.  This means it can
         return a :py:class:`HookRecorder` instance which gives more
         detailed results from then run then can be done by matching
         stdout/stderr from :py:meth:`runpytest`.
@@ -681,9 +696,21 @@ class Testdir:
            ``pytest.main()`` instance should use.
 
         :return: A :py:class:`HookRecorder` instance.
-
         """
+        # When running py.test inline any plugins active in the main
+        # test process are already imported.  So this disables the
+        # warning which will trigger to say they can no longer be
+        # re-written, which is fine as they are already re-written.
+        orig_warn = AssertionRewritingHook._warn_already_imported
+
+        def revert():
+            AssertionRewritingHook._warn_already_imported = orig_warn
+
+        self.request.addfinalizer(revert)
+        AssertionRewritingHook._warn_already_imported = lambda *a: None
+
         rec = []
+
         class Collect:
             def pytest_configure(x, config):
                 rec.append(self.make_hook_recorder(config.pluginmanager))
@@ -713,19 +740,24 @@ class Testdir:
         if kwargs.get("syspathinsert"):
             self.syspathinsert()
         now = time.time()
-        capture = py.io.StdCapture()
+        capture = MultiCapture(Capture=SysCapture)
+        capture.start_capturing()
         try:
             try:
                 reprec = self.inline_run(*args, **kwargs)
             except SystemExit as e:
+
                 class reprec:
                     ret = e.args[0]
+
             except Exception:
                 traceback.print_exc()
+
                 class reprec:
                     ret = 3
         finally:
-            out, err = capture.reset()
+            out, err = capture.readouterr()
+            capture.stop_capturing()
             sys.stdout.write(out)
             sys.stderr.write(err)
 
@@ -755,9 +787,9 @@ class Testdir:
         return args
 
     def parseconfig(self, *args):
-        """Return a new py.test Config instance from given commandline args.
+        """Return a new pytest Config instance from given commandline args.
 
-        This invokes the py.test bootstrapping code in _pytest.config
+        This invokes the pytest bootstrapping code in _pytest.config
         to create a new :py:class:`_pytest.core.PluginManager` and
         call the pytest_cmdline_parse hook to create new
         :py:class:`_pytest.config.Config` instance.
@@ -777,7 +809,7 @@ class Testdir:
         return config
 
     def parseconfigure(self, *args):
-        """Return a new py.test configured Config instance.
+        """Return a new pytest configured Config instance.
 
         This returns a new :py:class:`_pytest.config.Config` instance
         like :py:meth:`parseconfig`, but also calls the
@@ -792,7 +824,7 @@ class Testdir:
     def getitem(self,  source, funcname="test_func"):
         """Return the test item for a test function.
 
-        This writes the source to a python file and runs py.test's
+        This writes the source to a python file and runs pytest's
         collection on the resulting module, returning the test item
         for the requested function name.
 
@@ -812,7 +844,7 @@ class Testdir:
     def getitems(self,  source):
         """Return all test items collected from the module.
 
-        This writes the source to a python file and runs py.test's
+        This writes the source to a python file and runs pytest's
         collection on the resulting module, returning all test items
         contained within.
 
@@ -824,7 +856,7 @@ class Testdir:
         """Return the module collection node for ``source``.
 
         This writes ``source`` to a file using :py:meth:`makepyfile`
-        and then runs the py.test collection on it, returning the
+        and then runs the pytest collection on it, returning the
         collection node for the test module.
 
         :param source: The source code of the module to collect.
@@ -833,7 +865,7 @@ class Testdir:
            :py:meth:`parseconfigure`.
 
         :param withinit: Whether to also write a ``__init__.py`` file
-           to the temporarly directory to ensure it is a package.
+           to the temporary directory to ensure it is a package.
 
         """
         kw = {self.request.function.__name__: Source(source).strip()}
@@ -842,6 +874,7 @@ class Testdir:
             self.makepyfile(__init__ = "#")
         self.config = config = self.parseconfigure(path, *configargs)
         node = self.getnode(config, path)
+
         return node
 
     def collect_by_name(self, modcol, name):
@@ -856,7 +889,9 @@ class Testdir:
         :param name: The name of the node to return.
 
         """
-        for colitem in modcol._memocollect():
+        if modcol not in self._mod_collections:
+            self._mod_collections[modcol] = list(modcol.collect())
+        for colitem in self._mod_collections[modcol]:
             if colitem.name == name:
                 return colitem
 
@@ -891,8 +926,8 @@ class Testdir:
         cmdargs = [str(x) for x in cmdargs]
         p1 = self.tmpdir.join("stdout")
         p2 = self.tmpdir.join("stderr")
-        print_("running:", ' '.join(cmdargs))
-        print_("     in:", str(py.path.local()))
+        print("running:", ' '.join(cmdargs))
+        print("     in:", str(py.path.local()))
         f1 = codecs.open(str(p1), "w", encoding="utf8")
         f2 = codecs.open(str(p2), "w", encoding="utf8")
         try:
@@ -918,13 +953,13 @@ class Testdir:
     def _dump_lines(self, lines, fp):
         try:
             for line in lines:
-                py.builtin.print_(line, file=fp)
+                print(line, file=fp)
         except UnicodeEncodeError:
             print("couldn't print to %s because of encoding" % (fp,))
 
     def _getpytestargs(self):
         # we cannot use "(sys.executable,script)"
-        # because on windows the script is e.g. a py.test.exe
+        # because on windows the script is e.g. a pytest.exe
         return (sys.executable, _pytest_fullpath,) # noqa
 
     def runpython(self, script):
@@ -939,7 +974,7 @@ class Testdir:
         return self.run(sys.executable, "-c", command)
 
     def runpytest_subprocess(self, *args, **kwargs):
-        """Run py.test as a subprocess with given arguments.
+        """Run pytest as a subprocess with given arguments.
 
         Any plugins added to the :py:attr:`plugins` list will added
         using the ``-p`` command line option.  Addtionally
@@ -967,15 +1002,15 @@ class Testdir:
         return self.run(*args)
 
     def spawn_pytest(self, string, expect_timeout=10.0):
-        """Run py.test using pexpect.
+        """Run pytest using pexpect.
 
-        This makes sure to use the right py.test and sets up the
+        This makes sure to use the right pytest and sets up the
         temporary directory locations.
 
         The pexpect child is returned.
 
         """
-        basetemp = self.tmpdir.mkdir("pexpect")
+        basetemp = self.tmpdir.mkdir("temp-pexpect")
         invoke = " ".join(map(str, self._getpytestargs()))
         cmd = "%s --basetemp=%s %s" % (invoke, basetemp, string)
         return self.spawn(cmd, expect_timeout=expect_timeout)
@@ -988,8 +1023,6 @@ class Testdir:
         pexpect = pytest.importorskip("pexpect", "3.0")
         if hasattr(sys, 'pypy_version_info') and '64' in platform.machine():
             pytest.skip("pypy-64 bit not supported")
-        if sys.platform == "darwin":
-            pytest.xfail("pexpect does not work reliably on darwin?!")
         if sys.platform.startswith("freebsd"):
             pytest.xfail("pexpect does not work reliably on freebsd")
         logfile = self.tmpdir.join("spawn.out").open("wb")
@@ -1035,6 +1068,7 @@ class LineMatcher:
 
     def __init__(self,  lines):
         self.lines = lines
+        self._log_output = []
 
     def str(self):
         """Return the entire original text."""
@@ -1058,10 +1092,11 @@ class LineMatcher:
         for line in lines2:
             for x in self.lines:
                 if line == x or fnmatch(x, line):
-                    print_("matched: ", repr(line))
+                    self._log("matched: ", repr(line))
                     break
             else:
-                raise ValueError("line %r not found in output" % line)
+                self._log("line %r not found in output" % line)
+                raise ValueError(self._log_text)
 
     def get_lines_after(self, fnline):
         """Return all lines following the given line in the text.
@@ -1073,6 +1108,13 @@ class LineMatcher:
                 return self.lines[i+1:]
         raise ValueError("line %r not found in output" % fnline)
 
+    def _log(self, *args):
+        self._log_output.append(' '.join((str(x) for x in args)))
+
+    @property
+    def _log_text(self):
+        return '\n'.join(self._log_output)
+
     def fnmatch_lines(self, lines2):
         """Search the text for matching lines.
 
@@ -1082,8 +1124,6 @@ class LineMatcher:
         stdout.
 
         """
-        def show(arg1, arg2):
-            py.builtin.print_(arg1, arg2, file=sys.stderr)
         lines2 = self._getlines(lines2)
         lines1 = self.lines[:]
         nextline = None
@@ -1094,17 +1134,18 @@ class LineMatcher:
             while lines1:
                 nextline = lines1.pop(0)
                 if line == nextline:
-                    show("exact match:", repr(line))
+                    self._log("exact match:", repr(line))
                     break
                 elif fnmatch(nextline, line):
-                    show("fnmatch:", repr(line))
-                    show("   with:", repr(nextline))
+                    self._log("fnmatch:", repr(line))
+                    self._log("   with:", repr(nextline))
                     break
                 else:
                     if not nomatchprinted:
-                        show("nomatch:", repr(line))
+                        self._log("nomatch:", repr(line))
                         nomatchprinted = True
-                    show("    and:", repr(nextline))
+                    self._log("    and:", repr(nextline))
                 extralines.append(nextline)
             else:
-                pytest.fail("remains unmatched: %r, see stderr" % (line,))
+                self._log("remains unmatched: %r" % (line,))
+                pytest.fail(self._log_text)
