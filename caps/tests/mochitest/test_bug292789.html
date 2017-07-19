@@ -100,7 +100,12 @@ function loadImage(uri, expect, callback) {
 }
 
 // Start off the script src test, and have it start the img tests when complete.
-testScriptSrc(runImgTest);
+// Temporarily allow content to access all resource:// URIs.
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["security.all_resource_uri_content_accessible", true]
+  ]
+}, () => testScriptSrc(runImgTest));
 </script>
 </pre>
 </body>
