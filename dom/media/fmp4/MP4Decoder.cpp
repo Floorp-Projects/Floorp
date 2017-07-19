@@ -32,7 +32,7 @@ MP4Decoder::MP4Decoder(MediaDecoderInit& aInit)
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
 {
-  MediaDecoderReaderInit init(this);
+  MediaFormatReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();

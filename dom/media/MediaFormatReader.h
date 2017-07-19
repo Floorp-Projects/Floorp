@@ -14,7 +14,6 @@
 
 #include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
-#include "MediaDecoderReader.h"
 #include "MediaPrefs.h"
 #include "nsAutoPtr.h"
 #include "PDMFactory.h"
@@ -22,6 +21,8 @@
 namespace mozilla {
 
 class CDMProxy;
+class GMPCrashHelper;
+class VideoFrameContainer;
 
 struct WaitForDataRejectValue
 {
@@ -67,11 +68,27 @@ struct MetadataHolder
   UniquePtr<MetadataTags> mTags;
 };
 
-class MediaFormatReader final : public MediaDecoderReader
+struct MOZ_STACK_CLASS MediaFormatReaderInit
+{
+  AbstractMediaDecoder* const mDecoder;
+  MediaResource* mResource = nullptr;
+  VideoFrameContainer* mVideoFrameContainer = nullptr;
+  already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
+  already_AddRefed<GMPCrashHelper> mCrashHelper;
+
+  explicit MediaFormatReaderInit(AbstractMediaDecoder* aDecoder)
+    : mDecoder(aDecoder)
+  {
+  }
+};
+
+class MediaFormatReader final
 {
   static const bool IsExclusive = true;
   typedef TrackInfo::TrackType TrackType;
   typedef MozPromise<bool, MediaResult, IsExclusive> NotifyDataArrivedPromise;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaFormatReader)
 
 public:
   using TrackSet = EnumSet<TrackInfo::TrackType>;
@@ -91,9 +108,7 @@ public:
   using WaitForDataPromise =
     MozPromise<MediaData::Type, WaitForDataRejectValue, IsExclusive>;
 
-  MediaFormatReader(MediaDecoderReaderInit& aInit, MediaDataDemuxer* aDemuxer);
-
-  virtual ~MediaFormatReader();
+  MediaFormatReader(MediaFormatReaderInit& aInit, MediaDataDemuxer* aDemuxer);
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -238,6 +253,8 @@ public:
   MediaEventSource<MediaResult>& OnDecodeWarning() { return mOnDecodeWarning; }
 
 private:
+  ~MediaFormatReader();
+
   bool HasVideo() const { return mVideo.mTrackDemuxer; }
   bool HasAudio() const { return mAudio.mTrackDemuxer; }
 

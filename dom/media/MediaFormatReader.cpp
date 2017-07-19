@@ -1093,10 +1093,9 @@ MediaFormatReader::DemuxerProxy::NotifyDataArrived()
   });
 }
 
-MediaFormatReader::MediaFormatReader(MediaDecoderReaderInit& aInit,
+MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
                                      MediaDataDemuxer* aDemuxer)
-  : MediaDecoderReader(aInit)
-  , mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
+  : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                              "MediaFormatReader::mTaskQueue",
                              /* aSupportsTailDispatch = */ true))
   , mAudio(this, MediaData::AUDIO_DATA, MediaPrefs::MaxAudioDecodeError())

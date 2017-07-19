@@ -37,7 +37,7 @@ extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
 #define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 
-MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
+MediaDecoderReader::MediaDecoderReader()
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());

@@ -29,20 +29,6 @@ class MediaDecoderReader;
 class TaskQueue;
 class VideoFrameContainer;
 
-struct MOZ_STACK_CLASS MediaDecoderReaderInit
-{
-  AbstractMediaDecoder* const mDecoder;
-  MediaResource* mResource = nullptr;
-  VideoFrameContainer* mVideoFrameContainer = nullptr;
-  already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
-  already_AddRefed<GMPCrashHelper> mCrashHelper;
-
-  explicit MediaDecoderReaderInit(AbstractMediaDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {
-  }
-};
-
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
 // performed on a background thread, with the result being returned by
@@ -56,7 +42,7 @@ public:
 
   // The caller must ensure that Shutdown() is called before aDecoder is
   // destroyed.
-  explicit MediaDecoderReader(MediaDecoderReaderInit& aInit);
+  MediaDecoderReader();
 
 protected:
   virtual ~MediaDecoderReader();
