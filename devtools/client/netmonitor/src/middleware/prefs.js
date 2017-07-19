@@ -10,6 +10,7 @@ const {
   RESET_COLUMNS,
   TOGGLE_COLUMN,
   TOGGLE_REQUEST_FILTER_TYPE,
+  DISABLE_BROWSER_CACHE,
 } = require("../constants");
 const { getRequestFilterTypes } = require("../selectors/index");
 
@@ -29,6 +30,10 @@ function prefsMiddleware(store) {
           .map(([type, check]) => type);
         Services.prefs.setCharPref(
           "devtools.netmonitor.filters", JSON.stringify(filters));
+        break;
+      case DISABLE_BROWSER_CACHE:
+        Services.prefs.setBoolPref(
+          "devtools.cache.disabled", store.getState().ui.browserCacheDisabled);
         break;
       case TOGGLE_COLUMN:
       case RESET_COLUMNS:
