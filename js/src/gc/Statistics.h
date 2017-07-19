@@ -370,7 +370,7 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void sccDurations(TimeDuration* total, TimeDuration* maxPause) const;
     void printStats();
 
-    void reportLongestPhaseInMajorGC(const PhaseTimeTable& times, int telemetryId);
+    void reportLongestPhaseInMajorGC(PhaseKind longest, int telemetryId);
 
     UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
 
