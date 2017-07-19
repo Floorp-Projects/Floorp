@@ -86,6 +86,8 @@ FlyWebFetchEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   RefPtr<InternalResponse> intResponse;
   if (response && response->Type() != ResponseType::Opaque) {
     intResponse = response->GetInternalResponse();
+
+    response->SetBodyUsed();
   }
 
   if (!intResponse) {
