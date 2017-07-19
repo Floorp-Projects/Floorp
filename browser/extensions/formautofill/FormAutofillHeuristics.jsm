@@ -182,28 +182,6 @@ class FieldScanner {
  * Returns the autocomplete information of fields according to heuristics.
  */
 this.FormAutofillHeuristics = {
-  FIELD_GROUPS: {
-    NAME: [
-      "name",
-      "given-name",
-      "additional-name",
-      "family-name",
-    ],
-    ADDRESS: [
-      "organization",
-      "street-address",
-      "address-line1",
-      "address-line2",
-      "address-line3",
-      "address-level2",
-      "address-level1",
-      "postal-code",
-      "country",
-    ],
-    TEL: ["tel"],
-    EMAIL: ["email"],
-  },
-
   RULES: null,
 
   /**
@@ -269,6 +247,16 @@ this.FormAutofillHeuristics = {
       }
     }
 
+    if (fieldScanner.parsingFinished) {
+      return parsedField;
+    }
+
+    let nextField = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+    if (nextField && nextField.fieldName == "tel-extension") {
+      fieldScanner.parsingIndex++;
+      parsedField = true;
+    }
+
     return parsedField;
   },
 
@@ -319,45 +307,6 @@ this.FormAutofillHeuristics = {
     return fieldScanner.trimmedFieldDetail;
   },
 
-  /**
-   * Get the autocomplete info (e.g. fieldName) determined by the regexp
-   * (this.RULES) matching to a feature string.
-   *
-   * @param {string} string a feature string to be determined.
-   * @returns {Object}
-   *          Provide the predicting result including the field name.
-   *
-   */
-  _matchStringToFieldName(string) {
-    let result = {
-      fieldName: "",
-      section: "",
-      addressType: "",
-      contactType: "",
-    };
-    if (this.RULES.email.test(string)) {
-      result.fieldName = "email";
-      return result;
-    }
-    if (this.RULES.tel.test(string)) {
-      result.fieldName = "tel";
-      return result;
-    }
-    for (let fieldName of this.FIELD_GROUPS.ADDRESS) {
-      if (this.RULES[fieldName].test(string)) {
-        result.fieldName = fieldName;
-        return result;
-      }
-    }
-    for (let fieldName of this.FIELD_GROUPS.NAME) {
-      if (this.RULES[fieldName].test(string)) {
-        result.fieldName = fieldName;
-        return result;
-      }
-    }
-    return null;
-  },
-
   getInfo(element) {
     if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {
       return null;
@@ -387,23 +336,32 @@ this.FormAutofillHeuristics = {
       };
     }
 
-    for (let elementString of [element.id, element.name]) {
-      let fieldNameResult = this._matchStringToFieldName(elementString);
-      if (fieldNameResult) {
-        return fieldNameResult;
+    let regexps = Object.keys(this.RULES);
+
+    let labelStrings;
+    let getElementStrings = {};
+    getElementStrings[Symbol.iterator] = function* () {
+      yield element.id;
+      yield element.name;
+      if (!labelStrings) {
+        labelStrings = [];
+        let labels = FormAutofillUtils.findLabelElements(element);
+        for (let label of labels) {
+          labelStrings.push(...FormAutofillUtils.extractLabelStrings(label));
+        }
       }
-    }
-    let labels = FormAutofillUtils.findLabelElements(element);
-    if (!labels || labels.length == 0) {
-      log.debug("No label found for", element);
-      return null;
-    }
-    for (let label of labels) {
-      let strings = FormAutofillUtils.extractLabelStrings(label);
-      for (let string of strings) {
-        let fieldNameResult = this._matchStringToFieldName(string);
-        if (fieldNameResult) {
-          return fieldNameResult;
+      yield *labelStrings;
+    };
+
+    for (let regexp of regexps) {
+      for (let string of getElementStrings) {
+        if (this.RULES[regexp].test(string)) {
+          return {
+            fieldName: regexp,
+            section: "",
+            addressType: "",
+            contactType: "",
+          };
         }
       }
     }

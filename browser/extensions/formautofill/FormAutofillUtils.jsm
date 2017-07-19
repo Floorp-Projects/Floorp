@@ -38,6 +38,7 @@ this.FormAutofillUtils = {
     "tel-local": "tel",
     "tel-local-prefix": "tel",
     "tel-local-suffix": "tel",
+    "tel-extension": "tel",
     "email": "email",
     "cc-name": "creditCard",
     "cc-number": "creditCard",
