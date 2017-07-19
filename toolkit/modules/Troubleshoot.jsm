@@ -237,8 +237,9 @@ var dataProviders = {
     data.styloDefault = Services.prefs.getDefaultBranch(null)
                                 .getBoolPref("layout.css.servo.enabled", false);
     data.styloResult =
-      !!env.get("STYLO_FORCE_ENABLED") ||
-      Services.prefs.getBoolPref("layout.css.servo.enabled", false);
+      AppConstants.MOZ_STYLO &&
+      (!!env.get("STYLO_FORCE_ENABLED") ||
+       Services.prefs.getBoolPref("layout.css.servo.enabled", false));
 
     const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
     data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
