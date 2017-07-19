@@ -392,8 +392,13 @@ nsresult
 nsPrintEngine::CommonPrint(bool                    aIsPrintPreview,
                            nsIPrintSettings*       aPrintSettings,
                            nsIWebProgressListener* aWebProgressListener,
-                           nsIDOMDocument* aDoc) {
-  RefPtr<nsPrintEngine> kungfuDeathGrip = this;
+                           nsIDOMDocument* aDoc)
+{
+  // Callers must hold a strong reference to |this| to ensure that we stay
+  // alive for the duration of this method, because our main owning reference
+  // (on nsDocumentViewer) might be cleared during this function (if we cause
+  // script to run and it cancels the print operation).
+
   nsresult rv = DoCommonPrint(aIsPrintPreview, aPrintSettings,
                               aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
