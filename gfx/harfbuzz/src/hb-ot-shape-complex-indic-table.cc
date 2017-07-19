@@ -398,28 +398,28 @@ hb_indic_get_categories (hb_codepoint_t u)
   switch (u >> 12)
   {
     case 0x0u:
-      if (hb_in_range (u, 0x0028u, 0x003Fu)) return indic_table[u - 0x0028u + indic_offset_0x0028u];
-      if (hb_in_range (u, 0x00B0u, 0x00D7u)) return indic_table[u - 0x00B0u + indic_offset_0x00b0u];
-      if (hb_in_range (u, 0x0900u, 0x0DF7u)) return indic_table[u - 0x0900u + indic_offset_0x0900u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x0028u, 0x003Fu)) return indic_table[u - 0x0028u + indic_offset_0x0028u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x00B0u, 0x00D7u)) return indic_table[u - 0x00B0u + indic_offset_0x00b0u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x0900u, 0x0DF7u)) return indic_table[u - 0x0900u + indic_offset_0x0900u];
       if (unlikely (u == 0x00A0u)) return _(CP,x);
       break;
 
     case 0x1u:
-      if (hb_in_range (u, 0x1000u, 0x109Fu)) return indic_table[u - 0x1000u + indic_offset_0x1000u];
-      if (hb_in_range (u, 0x1780u, 0x17EFu)) return indic_table[u - 0x1780u + indic_offset_0x1780u];
-      if (hb_in_range (u, 0x1CD0u, 0x1CFFu)) return indic_table[u - 0x1CD0u + indic_offset_0x1cd0u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1000u, 0x109Fu)) return indic_table[u - 0x1000u + indic_offset_0x1000u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1780u, 0x17EFu)) return indic_table[u - 0x1780u + indic_offset_0x1780u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1CD0u, 0x1CFFu)) return indic_table[u - 0x1CD0u + indic_offset_0x1cd0u];
       break;
 
     case 0x2u:
-      if (hb_in_range (u, 0x2008u, 0x2017u)) return indic_table[u - 0x2008u + indic_offset_0x2008u];
-      if (hb_in_range (u, 0x2070u, 0x2087u)) return indic_table[u - 0x2070u + indic_offset_0x2070u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x2008u, 0x2017u)) return indic_table[u - 0x2008u + indic_offset_0x2008u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x2070u, 0x2087u)) return indic_table[u - 0x2070u + indic_offset_0x2070u];
       if (unlikely (u == 0x25CCu)) return _(CP,x);
       break;
 
     case 0xAu:
-      if (hb_in_range (u, 0xA8E0u, 0xA8F7u)) return indic_table[u - 0xA8E0u + indic_offset_0xa8e0u];
-      if (hb_in_range (u, 0xA9E0u, 0xA9FFu)) return indic_table[u - 0xA9E0u + indic_offset_0xa9e0u];
-      if (hb_in_range (u, 0xAA60u, 0xAA7Fu)) return indic_table[u - 0xAA60u + indic_offset_0xaa60u];
+      if (hb_in_range<hb_codepoint_t> (u, 0xA8E0u, 0xA8F7u)) return indic_table[u - 0xA8E0u + indic_offset_0xa8e0u];
+      if (hb_in_range<hb_codepoint_t> (u, 0xA9E0u, 0xA9FFu)) return indic_table[u - 0xA9E0u + indic_offset_0xa9e0u];
+      if (hb_in_range<hb_codepoint_t> (u, 0xAA60u, 0xAA7Fu)) return indic_table[u - 0xAA60u + indic_offset_0xaa60u];
       break;
 
     case 0x11u:

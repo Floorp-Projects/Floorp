@@ -138,7 +138,7 @@ struct hb_ot_face_metrics_accelerator_t
 	return this->default_advance;
     }
 
-    return this->table->longMetric[MIN (glyph, this->num_advances - 1)].advance
+    return this->table->longMetric[MIN (glyph, (uint32_t) this->num_advances - 1)].advance
 	 + this->var->get_advance_var (glyph, font->coords, font->num_coords); // TODO Optimize?!
   }
 };
