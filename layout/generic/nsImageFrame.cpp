@@ -212,7 +212,7 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
       // deregister with our refresh driver.
       imageLoader->FrameDestroyed(this);
 
-      imageLoader->RemoveObserver(mListener);
+      imageLoader->RemoveNativeObserver(mListener);
     }
 
     reinterpret_cast<nsImageListener*>(mListener.get())->SetFrame(nullptr);
@@ -269,7 +269,7 @@ nsImageFrame::Init(nsIContent*       aContent,
     MOZ_CRASH("Why do we have an nsImageFrame here at all?");
   }
 
-  imageLoader->AddObserver(mListener);
+  imageLoader->AddNativeObserver(mListener);
 
   nsPresContext *aPresContext = PresContext();
 
