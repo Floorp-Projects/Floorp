@@ -68,7 +68,7 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
       ],
       [ // check out
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
