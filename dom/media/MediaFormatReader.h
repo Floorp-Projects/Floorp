@@ -47,8 +47,9 @@ public:
 
   RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;
 
-protected:
   void NotifyDataArrived() override;
+
+protected:
   void UpdateBuffered() override;
 
 public:

@@ -18,7 +18,7 @@
 namespace mozilla {
 
 /**
- * A wrapper around MediaDecoderReader to offset the timestamps of Audio/Video
+ * A wrapper around MediaFormatReader to offset the timestamps of Audio/Video
  * samples by the start time to ensure MDSM can always assume zero start time.
  * It also adjusts the seek target passed to Seek() to ensure correct seek time
  * is passed to the underlying reader.
@@ -34,7 +34,7 @@ class MediaDecoderReaderWrapper {
 
 public:
   MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
-                            MediaDecoderReader* aReader);
+                            MediaFormatReader* aReader);
 
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
@@ -91,7 +91,7 @@ private:
   void UpdateDuration();
 
   const RefPtr<AbstractThread> mOwnerThread;
-  const RefPtr<MediaDecoderReader> mReader;
+  const RefPtr<MediaFormatReader> mReader;
 
   bool mShutdown = false;
   Maybe<media::TimeUnit> mStartTime;
