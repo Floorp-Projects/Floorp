@@ -129,8 +129,7 @@ public:
   {
     MOZ_ASSERT(IsValid());
 
-    return Metrics().IsScrollable()
-        && mLayer->IsScrollInfoLayer();
+    return Metrics().IsScrollInfoLayer();
   }
 
   WebRenderScrollDataWrapper GetLastChild() const

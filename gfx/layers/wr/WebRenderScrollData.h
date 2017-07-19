@@ -52,7 +52,6 @@ public:
   const ScrollMetadata& GetScrollMetadata(const WebRenderScrollData& aOwner,
                                           size_t aIndex) const;
 
-  bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
   gfx::Matrix4x4 GetTransform() const { return mTransform; }
   CSSTransformMatrix GetTransformTyped() const;
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
@@ -84,7 +83,6 @@ private:
   // Various data that we collect from the Layer in Initialize(), serialize
   // over IPC, and use on the parent side in APZ.
 
-  bool mIsScrollInfoLayer;
   gfx::Matrix4x4 mTransform;
   bool mTransformIsPerspective;
   EventRegions mEventRegions;
@@ -188,7 +186,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
   {
     WriteParam(aMsg, aParam.mDescendantCount);
     WriteParam(aMsg, aParam.mScrollIds);
-    WriteParam(aMsg, aParam.mIsScrollInfoLayer);
     WriteParam(aMsg, aParam.mTransform);
     WriteParam(aMsg, aParam.mTransformIsPerspective);
     WriteParam(aMsg, aParam.mEventRegions);
@@ -207,7 +204,6 @@ struct ParamTraits<mozilla::layers::WebRenderLayerScrollData>
   {
     return ReadParam(aMsg, aIter, &aResult->mDescendantCount)
         && ReadParam(aMsg, aIter, &aResult->mScrollIds)
-        && ReadParam(aMsg, aIter, &aResult->mIsScrollInfoLayer)
         && ReadParam(aMsg, aIter, &aResult->mTransform)
         && ReadParam(aMsg, aIter, &aResult->mTransformIsPerspective)
         && ReadParam(aMsg, aIter, &aResult->mEventRegions)
