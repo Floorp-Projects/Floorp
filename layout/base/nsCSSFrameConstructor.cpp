@@ -29,6 +29,7 @@
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
+#include "nsIDocumentInlines.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableRowFrame.h"
@@ -2548,6 +2549,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   // --------- CREATE AREA OR BOX FRAME -------
   if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
+    // We need to explicitly set a restyle root for the first traversal.
+    aDocElement->OwnerDoc()->SetServoRestyleRoot(aDocElement->OwnerDocAsNode(),
+                                                 ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
     // NOTE(emilio): If the root has a non-null binding, we'll stop at the
     // document element and won't process any children, loading the bindings (or
     // failing to do so) will take care of the rest.
@@ -7217,6 +7221,52 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
   ContentInserted(aParentContent, aContent, nullptr, false);
 }
 
+#ifdef DEBUG
+void
+nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
+{
+  // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
+  // we want to assert, but leaf frames that process their own children and may
+  // ignore anonymous children (eg framesets) make this complicated. So we set
+  // these two booleans if we encounter these situations and unset them if we
+  // hit a node with a leaf frame.
+  //
+  // It's fine if one of node without primary frame is in a display:none
+  // subtree.
+  //
+  // Also, it's fine if one of the nodes without primary frame is a display:
+  // contents node except if it's the direct ancestor of the children we're
+  // recreating frames for.
+  bool noPrimaryFrame = false;
+  bool needsFrameBitSet = false;
+  nsIContent* content = aParent;
+  while (content &&
+         !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+    if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
+      noPrimaryFrame = needsFrameBitSet = false;
+    }
+    if (!noPrimaryFrame && !content->GetPrimaryFrame()) {
+      nsStyleContext* sc = GetDisplayNoneStyleFor(content);
+      noPrimaryFrame = !GetDisplayContentsStyleFor(content) &&
+        (sc && !sc->IsInDisplayNoneSubtree());
+    }
+    if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME)) {
+      needsFrameBitSet = true;
+    }
+
+    content = content->GetFlattenedTreeParent();
+  }
+  if (content && content->GetPrimaryFrame() &&
+      content->GetPrimaryFrame()->IsLeaf()) {
+    noPrimaryFrame = needsFrameBitSet = false;
+  }
+  NS_ASSERTION(!noPrimaryFrame, "Ancestors of nodes with frames to be "
+    "constructed lazily should have frames");
+  NS_ASSERTION(!needsFrameBitSet, "Ancestors of nodes with frames to be "
+    "constructed lazily should not have NEEDS_FRAME bit set");
+}
+#endif
+
 // For inserts aChild should be valid, for appends it should be null.
 // Returns true if this operation can be lazy, false if not.
 bool
@@ -7254,54 +7304,6 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   // We can construct lazily; just need to set suitable bits in the content
   // tree.
 
-  // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
-  nsIContent* content = aChild->GetFlattenedTreeParent();
-
-#ifdef DEBUG
-  // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
-  // we want to assert, but leaf frames that process their own children and may
-  // ignore anonymous children (eg framesets) make this complicated. So we set
-  // these two booleans if we encounter these situations and unset them if we
-  // hit a node with a leaf frame.
-  //
-  // It's fine if one of node without primary frame is in a display:none
-  // subtree.
-  //
-  // Also, it's fine if one of the nodes without primary frame is a display:
-  // contents node except if it's the direct ancestor of the children we're
-  // recreating frames for.
-  bool noPrimaryFrame = false;
-  bool needsFrameBitSet = false;
-#endif
-  while (content &&
-         !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
-#ifdef DEBUG
-    if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
-      noPrimaryFrame = needsFrameBitSet = false;
-    }
-    if (!noPrimaryFrame && !content->GetPrimaryFrame()) {
-      nsStyleContext* sc = GetDisplayNoneStyleFor(content);
-      noPrimaryFrame = !GetDisplayContentsStyleFor(content) &&
-        (sc && !sc->IsInDisplayNoneSubtree());
-    }
-    if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME)) {
-      needsFrameBitSet = true;
-    }
-#endif
-    content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
-    content = content->GetFlattenedTreeParent();
-  }
-#ifdef DEBUG
-  if (content && content->GetPrimaryFrame() &&
-      content->GetPrimaryFrame()->IsLeaf()) {
-    noPrimaryFrame = needsFrameBitSet = false;
-  }
-  NS_ASSERTION(!noPrimaryFrame, "Ancestors of nodes with frames to be "
-    "constructed lazily should have frames");
-  NS_ASSERTION(!needsFrameBitSet, "Ancestors of nodes with frames to be "
-    "constructed lazily should not have NEEDS_FRAME bit set");
-#endif
-
   // Set NODE_NEEDS_FRAME on the new nodes.
   if (aOperation == CONTENTINSERT) {
     NS_ASSERTION(!aChild->GetPrimaryFrame() ||
@@ -7323,8 +7325,19 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     }
   }
 
+  // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
+  // We need different handling for servo given the scoped restyle roots.
+  nsIContent* parent = aChild->GetFlattenedTreeParent();
+  CheckBitsForLazyFrameConstruction(parent);
+
   if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+    while (parent && !parent->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+      parent->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+      parent = parent->GetFlattenedTreeParent();
+    }
     geckoRM->PostRestyleEventForLazyConstruction();
+  } else {
+    parent->AsElement()->NoteDescendantsNeedFramesForServo();
   }
 
   return true;
@@ -7555,11 +7568,6 @@ nsCSSFrameConstructor::LazilyStyleNewChildRange(nsIContent* aStartChild,
       child->AsElement()->NoteDirtyForServo();
     }
   }
-
-  // NoteDirtyForServo() will ensure a style flush, but we don't invoke it for
-  // text nodes. So since this range might include no elements, we still need
-  // to manually ensure a style flush.
-  mPresShell->EnsureStyleFlush();
 }
 
 void

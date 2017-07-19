@@ -11,15 +11,23 @@
 
 namespace mozilla {
 
-DocumentStyleRootIterator::DocumentStyleRootIterator(nsIDocument* aDocument)
+DocumentStyleRootIterator::DocumentStyleRootIterator(nsINode* aStyleRoot)
   : mPosition(0)
 {
   MOZ_COUNT_CTOR(DocumentStyleRootIterator);
-  if (Element* root = aDocument->GetRootElement()) {
+  MOZ_ASSERT(aStyleRoot);
+  if (aStyleRoot->IsElement()) {
+    mStyleRoots.AppendElement(aStyleRoot->AsElement());
+    return;
+  }
+
+  nsIDocument* doc = aStyleRoot->OwnerDoc();
+  MOZ_ASSERT(doc == aStyleRoot);
+  if (Element* root = doc->GetRootElement()) {
     mStyleRoots.AppendElement(root);
   }
   nsContentUtils::AppendDocumentLevelNativeAnonymousContentTo(
-      aDocument, mStyleRoots);
+      doc, mStyleRoots);
 }
 
 Element*

@@ -102,6 +102,12 @@ private:
                               nsIContent* aContainer,
                               nsIContent* aChild);
 
+#ifdef DEBUG
+  void CheckBitsForLazyFrameConstruction(nsIContent* aParent);
+#else
+  void CheckBitsForLazyFrameConstruction(nsIContent*) {}
+#endif
+
   // Issues a single ContentInserted for each child of aContainer in the range
   // [aStartChild, aEndChild).
   void IssueSingleInsertNofications(nsIContent* aContainer,
