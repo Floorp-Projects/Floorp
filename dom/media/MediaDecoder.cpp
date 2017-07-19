@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
 #include "VideoFrameContainer.h"
@@ -1074,9 +1075,9 @@ MediaDecoder::NotifyCompositor()
   if (knowsCompositor) {
     nsCOMPtr<nsIRunnable> r =
       NewRunnableMethod<already_AddRefed<KnowsCompositor>&&>(
-        "MediaDecoderReader::UpdateCompositor",
+        "MediaFormatReader::UpdateCompositor",
         mReader,
-        &MediaDecoderReader::UpdateCompositor,
+        &MediaFormatReader::UpdateCompositor,
         knowsCompositor.forget());
     mReader->OwnerThread()->Dispatch(r.forget(),
                                      AbstractThread::DontAssertDispatchSuccess);
@@ -1385,9 +1386,9 @@ MediaDecoder::NotifyDataArrivedInternal()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   mReader->OwnerThread()->Dispatch(
-    NewRunnableMethod("MediaDecoderReader::NotifyDataArrived",
+    NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
                       mReader.get(),
-                      &MediaDecoderReader::NotifyDataArrived));
+                      &MediaFormatReader::NotifyDataArrived));
 }
 
 void
