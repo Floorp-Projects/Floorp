@@ -16,7 +16,7 @@ NO_NDK=1
 # We want to download Gradle.
 ac_add_options --with-gradle
 # We want to use (and populate!) the local Nexus repository.
-export GRADLE_MAVEN_REPOSITORY="http://localhost:8081/nexus/content/repositories/central/"
+export GRADLE_MAVEN_REPOSITORY="http://localhost:8081/nexus/content/repositories/jcenter/"
 
 # From here on, just like ../android-api-15-frontend/nightly.
 
