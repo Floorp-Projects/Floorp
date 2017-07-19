@@ -32,7 +32,7 @@
 class nsIURI;
 class nsSubDocumentFrame;
 class nsView;
-class nsIInProcessContentFrameMessageManager;
+class nsInProcessTabChildGlobal;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
 class nsITabParent;
@@ -321,7 +321,7 @@ public:
 
   // public because a callback needs these.
   RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
-  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+  RefPtr<nsInProcessTabChildGlobal> mChildMessageManager;
 
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override;
 
