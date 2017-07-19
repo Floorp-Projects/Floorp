@@ -1251,9 +1251,7 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   EventStates previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 
-  if (Element* parent = aElement->GetFlattenedTreeParentElementForStyle()) {
-    parent->NoteDirtyDescendantsForServo();
-  }
+  aElement->NoteDirtyForServo();
 
   if (restyleHint || changeHint) {
     Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
@@ -1373,9 +1371,7 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
     snapshot.AddOtherPseudoClassState(aElement);
   }
 
-  if (Element* parent = aElement->GetFlattenedTreeParentElementForStyle()) {
-    parent->NoteDirtyDescendantsForServo();
-  }
+  aElement->NoteDirtyForServo();
 }
 
 // For some attribute changes we must restyle the whole subtree:
