@@ -66,7 +66,7 @@ public:
               RefPtr<gl::GLContext>&& aGL,
               RefPtr<widget::CompositorWidget>&&,
               wr::WindowId aWindowId,
-              wr::WrRenderer* aWrRenderer,
+              wr::Renderer* aRenderer,
               layers::CompositorBridgeParentBase* aBridge);
 
   /// This can be called on the render thread only.
@@ -81,14 +81,14 @@ public:
 
   RenderTextureHost* GetRenderTexture(wr::WrExternalImageId aExternalImageId);
 
-  wr::WrRenderer* GetWrRenderer() { return mWrRenderer; }
+  wr::Renderer* GetRenderer() { return mRenderer; }
 
 protected:
 
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
   RefPtr<widget::CompositorWidget> mWidget;
-  wr::WrRenderer* mWrRenderer;
+  wr::Renderer* mRenderer;
   layers::CompositorBridgeParentBase* mBridge;
   wr::WindowId mWindowId;
 };

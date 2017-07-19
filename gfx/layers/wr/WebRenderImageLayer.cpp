@@ -185,7 +185,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     }
     LayerRect scBounds = BoundsForStackingContext();
     wr::ImageRendering filter = wr::ToImageRendering(mSamplingFilter);
-    wr::MixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+    wr::MixBlendMode mixBlendMode = wr::ToMixBlendMode(GetMixBlendMode());
 
     WrBridge()->AddWebRenderParentCommand(OpUpdateAsyncImagePipeline(mPipelineId.value(),
                                                                      scBounds,

@@ -36,9 +36,9 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
-                                wr::WrTransformStyle::Flat,
+                                wr::TransformStyle::Flat,
                                 // TODO: set correct blend mode.
-                                wr::ToWrMixBlendMode(gfx::CompositionOp::OP_OVER),
+                                wr::ToMixBlendMode(gfx::CompositionOp::OP_OVER),
                                 aFilters);
 
   mOrigin = aOrigin;
@@ -58,8 +58,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   float opacity = 1.0f;
   mBuilder->PushStackingContext(scBounds, 0, &opacity,
                                 mTransform.IsIdentity() ? nullptr : &mTransform,
-                                wr::WrTransformStyle::Flat,
-                                wr::ToWrMixBlendMode(layer->GetMixBlendMode()),
+                                wr::TransformStyle::Flat,
+                                wr::ToMixBlendMode(layer->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
 }
@@ -82,8 +82,8 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                 aAnimationsId,
                                 aOpacityPtr,
                                 aTransformPtr,
-                                wr::WrTransformStyle::Flat,
-                                wr::ToWrMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
+                                wr::TransformStyle::Flat,
+                                wr::ToMixBlendMode(aLayer->GetLayer()->GetMixBlendMode()),
                                 aFilters);
   mOrigin = aLayer->Bounds().TopLeft();
 }

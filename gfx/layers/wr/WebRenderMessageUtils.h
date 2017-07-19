@@ -106,11 +106,11 @@ struct ParamTraits<mozilla::wr::PipelineId>
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrImageFormat>
+struct ParamTraits<mozilla::wr::ImageFormat>
   : public ContiguousEnumSerializer<
-        mozilla::wr::WrImageFormat,
-        mozilla::wr::WrImageFormat::Invalid,
-        mozilla::wr::WrImageFormat::Sentinel>
+        mozilla::wr::ImageFormat,
+        mozilla::wr::ImageFormat::Invalid,
+        mozilla::wr::ImageFormat::Sentinel>
 {
 };
 
@@ -193,35 +193,35 @@ struct ParamTraits<mozilla::wr::WrImageMask>
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrImageRendering>
+struct ParamTraits<mozilla::wr::ImageRendering>
   : public ContiguousEnumSerializer<
-        mozilla::wr::WrImageRendering,
-        mozilla::wr::WrImageRendering::Auto,
-        mozilla::wr::WrImageRendering::Sentinel>
+        mozilla::wr::ImageRendering,
+        mozilla::wr::ImageRendering::Auto,
+        mozilla::wr::ImageRendering::Sentinel>
 {
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrMixBlendMode>
+struct ParamTraits<mozilla::wr::MixBlendMode>
   : public ContiguousEnumSerializer<
-        mozilla::wr::WrMixBlendMode,
-        mozilla::wr::WrMixBlendMode::Normal,
-        mozilla::wr::WrMixBlendMode::Sentinel>
+        mozilla::wr::MixBlendMode,
+        mozilla::wr::MixBlendMode::Normal,
+        mozilla::wr::MixBlendMode::Sentinel>
 {
 };
 
 template<>
-struct ParamTraits<mozilla::wr::WrBuiltDisplayListDescriptor>
+struct ParamTraits<mozilla::wr::BuiltDisplayListDescriptor>
 {
   static void
-  Write(Message* aMsg, const mozilla::wr::WrBuiltDisplayListDescriptor& aParam)
+  Write(Message* aMsg, const mozilla::wr::BuiltDisplayListDescriptor& aParam)
   {
     WriteParam(aMsg, aParam.builder_start_time);
     WriteParam(aMsg, aParam.builder_finish_time);
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::WrBuiltDisplayListDescriptor* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::BuiltDisplayListDescriptor* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->builder_start_time)
         && ReadParam(aMsg, aIter, &aResult->builder_finish_time);

@@ -34,9 +34,57 @@ enum class BorderStyle : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class BoxShadowClipMode : uint32_t {
+  None = 0,
+  Outset = 1,
+  Inset = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class ExtendMode : uint32_t {
   Clamp = 0,
   Repeat = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class ImageFormat : uint32_t {
+  Invalid = 0,
+  A8 = 1,
+  RGB8 = 2,
+  BGRA8 = 3,
+  RGBAF32 = 4,
+  RG8 = 5,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class ImageRendering : uint32_t {
+  Auto = 0,
+  CrispEdges = 1,
+  Pixelated = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class MixBlendMode : uint32_t {
+  Normal = 0,
+  Multiply = 1,
+  Screen = 2,
+  Overlay = 3,
+  Darken = 4,
+  Lighten = 5,
+  ColorDodge = 6,
+  ColorBurn = 7,
+  HardLight = 8,
+  SoftLight = 9,
+  Difference = 10,
+  Exclusion = 11,
+  Hue = 12,
+  Saturation = 13,
+  Color = 14,
+  Luminosity = 15,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -50,10 +98,9 @@ enum class RepeatMode : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class WrBoxShadowClipMode : uint32_t {
-  None = 0,
-  Outset = 1,
-  Inset = 2,
+enum class TransformStyle : uint32_t {
+  Flat = 0,
+  Preserve3D = 1,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -88,53 +135,6 @@ enum class WrFilterOpType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class WrImageFormat : uint32_t {
-  Invalid = 0,
-  A8 = 1,
-  RGB8 = 2,
-  BGRA8 = 3,
-  RGBAF32 = 4,
-  RG8 = 5,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class WrImageRendering : uint32_t {
-  Auto = 0,
-  CrispEdges = 1,
-  Pixelated = 2,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class WrMixBlendMode : uint32_t {
-  Normal = 0,
-  Multiply = 1,
-  Screen = 2,
-  Overlay = 3,
-  Darken = 4,
-  Lighten = 5,
-  ColorDodge = 6,
-  ColorBurn = 7,
-  HardLight = 8,
-  SoftLight = 9,
-  Difference = 10,
-  Exclusion = 11,
-  Hue = 12,
-  Saturation = 13,
-  Color = 14,
-  Luminosity = 15,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class WrTransformStyle : uint32_t {
-  Flat = 0,
-  Preserve3D = 1,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
 enum class WrYuvColorSpace : uint32_t {
   Rec601 = 0,
   Rec709 = 1,
@@ -144,11 +144,11 @@ enum class WrYuvColorSpace : uint32_t {
 
 struct LayerPixel;
 
-struct WrAPI;
+struct RenderApi;
+
+struct Renderer;
 
 struct WrRenderedEpochs;
-
-struct WrRenderer;
 
 struct WrState;
 
@@ -165,7 +165,7 @@ struct WrImageKey {
 };
 
 struct WrImageDescriptor {
-  WrImageFormat format;
+  ImageFormat format;
   uint32_t width;
   uint32_t height;
   uint32_t stride;
@@ -242,11 +242,11 @@ struct LayoutSize {
   }
 };
 
-struct WrBuiltDisplayListDescriptor {
+struct BuiltDisplayListDescriptor {
   uint64_t builder_start_time;
   uint64_t builder_finish_time;
 
-  bool operator==(const WrBuiltDisplayListDescriptor& aOther) const {
+  bool operator==(const BuiltDisplayListDescriptor& aOther) const {
     return builder_start_time == aOther.builder_start_time &&
            builder_finish_time == aOther.builder_finish_time;
   }
@@ -595,14 +595,14 @@ struct WrExternalImageHandler {
  */
 
 WR_INLINE
-void wr_api_add_blob_image(WrAPI *aApi,
+void wr_api_add_blob_image(RenderApi *aApi,
                            WrImageKey aImageKey,
                            const WrImageDescriptor *aDescriptor,
                            ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_external_image(WrAPI *aApi,
+void wr_api_add_external_image(RenderApi *aApi,
                                WrImageKey aImageKey,
                                const WrImageDescriptor *aDescriptor,
                                WrExternalImageId aExternalImageId,
@@ -611,21 +611,21 @@ void wr_api_add_external_image(WrAPI *aApi,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_external_image_buffer(WrAPI *aApi,
+void wr_api_add_external_image_buffer(RenderApi *aApi,
                                       WrImageKey aImageKey,
                                       const WrImageDescriptor *aDescriptor,
                                       WrExternalImageId aExternalImageId)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_image(WrAPI *aApi,
+void wr_api_add_image(RenderApi *aApi,
                       WrImageKey aImageKey,
                       const WrImageDescriptor *aDescriptor,
                       ByteSlice aBytes)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_raw_font(WrAPI *aApi,
+void wr_api_add_raw_font(RenderApi *aApi,
                          WrFontKey aKey,
                          uint8_t *aFontBuffer,
                          size_t aBufferSize,
@@ -633,38 +633,38 @@ void wr_api_add_raw_font(WrAPI *aApi,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_clear_root_display_list(WrAPI *aApi,
+void wr_api_clear_root_display_list(RenderApi *aApi,
                                     WrEpoch aEpoch,
                                     WrPipelineId aPipelineId)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_delete(WrAPI *aApi)
+void wr_api_delete(RenderApi *aApi)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-void wr_api_delete_font(WrAPI *aApi,
+void wr_api_delete_font(RenderApi *aApi,
                         WrFontKey aKey)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_delete_image(WrAPI *aApi,
+void wr_api_delete_image(RenderApi *aApi,
                          WrImageKey aKey)
 WR_FUNC;
 
 WR_INLINE
 void wr_api_finalize_builder(WrState *aState,
                              LayoutSize *aContentSize,
-                             WrBuiltDisplayListDescriptor *aDlDescriptor,
+                             BuiltDisplayListDescriptor *aDlDescriptor,
                              WrVecU8 *aDlData)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_generate_frame(WrAPI *aApi)
+void wr_api_generate_frame(RenderApi *aApi)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_generate_frame_with_properties(WrAPI *aApi,
+void wr_api_generate_frame_with_properties(RenderApi *aApi,
                                            const WrOpacityProperty *aOpacityArray,
                                            size_t aOpacityCount,
                                            const WrTransformProperty *aTransformArray,
@@ -672,40 +672,40 @@ void wr_api_generate_frame_with_properties(WrAPI *aApi,
 WR_FUNC;
 
 WR_INLINE
-WrIdNamespace wr_api_get_namespace(WrAPI *aApi)
+WrIdNamespace wr_api_get_namespace(RenderApi *aApi)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_send_external_event(WrAPI *aApi,
+void wr_api_send_external_event(RenderApi *aApi,
                                 size_t aEvt)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-void wr_api_set_root_display_list(WrAPI *aApi,
+void wr_api_set_root_display_list(RenderApi *aApi,
                                   ColorF aColor,
                                   WrEpoch aEpoch,
                                   float aViewportWidth,
                                   float aViewportHeight,
                                   WrPipelineId aPipelineId,
                                   LayoutSize aContentSize,
-                                  WrBuiltDisplayListDescriptor aDlDescriptor,
+                                  BuiltDisplayListDescriptor aDlDescriptor,
                                   uint8_t *aDlData,
                                   size_t aDlSize)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_set_root_pipeline(WrAPI *aApi,
+void wr_api_set_root_pipeline(RenderApi *aApi,
                               WrPipelineId aPipelineId)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_set_window_parameters(WrAPI *aApi,
+void wr_api_set_window_parameters(RenderApi *aApi,
                                   int32_t aWidth,
                                   int32_t aHeight)
 WR_FUNC;
 
 WR_INLINE
-void wr_api_update_image(WrAPI *aApi,
+void wr_api_update_image(RenderApi *aApi,
                          WrImageKey aKey,
                          const WrImageDescriptor *aDescriptor,
                          ByteSlice aBytes)
@@ -797,12 +797,12 @@ void wr_dp_push_box_shadow(WrState *aState,
                            float aBlurRadius,
                            float aSpreadRadius,
                            float aBorderRadius,
-                           WrBoxShadowClipMode aClipMode)
+                           BoxShadowClipMode aClipMode)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_built_display_list(WrState *aState,
-                                   WrBuiltDisplayListDescriptor aDlDescriptor,
+                                   BuiltDisplayListDescriptor aDlDescriptor,
                                    WrVecU8 *aDlData)
 WR_FUNC;
 
@@ -832,7 +832,7 @@ void wr_dp_push_image(WrState *aState,
                       LayoutRect aClip,
                       LayoutSize aStretchSize,
                       LayoutSize aTileSpacing,
-                      WrImageRendering aImageRendering,
+                      ImageRendering aImageRendering,
                       WrImageKey aKey)
 WR_FUNC;
 
@@ -882,8 +882,8 @@ void wr_dp_push_stacking_context(WrState *aState,
                                  uint64_t aAnimationId,
                                  const float *aOpacity,
                                  const LayoutTransform *aTransform,
-                                 WrTransformStyle aTransformStyle,
-                                 WrMixBlendMode aMixBlendMode,
+                                 TransformStyle aTransformStyle,
+                                 MixBlendMode aMixBlendMode,
                                  const WrFilterOp *aFilters,
                                  size_t aFilterCount)
 WR_FUNC;
@@ -906,7 +906,7 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                WrImageKey aImageKey0,
                                WrImageKey aImageKey1,
                                WrYuvColorSpace aColorSpace,
-                               WrImageRendering aImageRendering)
+                               ImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE
@@ -915,7 +915,7 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aClip,
                                       WrImageKey aImageKey0,
                                       WrYuvColorSpace aColorSpace,
-                                      WrImageRendering aImageRendering)
+                                      ImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE
@@ -926,7 +926,7 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  WrImageKey aImageKey1,
                                  WrImageKey aImageKey2,
                                  WrYuvColorSpace aColorSpace,
-                                 WrImageRendering aImageRendering)
+                                 ImageRendering aImageRendering)
 WR_FUNC;
 
 WR_INLINE
@@ -940,21 +940,21 @@ bool wr_rendered_epochs_next(WrRenderedEpochs *aPipelineEpochs,
 WR_FUNC;
 
 WR_INLINE
-bool wr_renderer_current_epoch(WrRenderer *aRenderer,
+bool wr_renderer_current_epoch(Renderer *aRenderer,
                                WrPipelineId aPipelineId,
                                WrEpoch *aOutEpoch)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_delete(WrRenderer *aRenderer)
+void wr_renderer_delete(Renderer *aRenderer)
 WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE
-WrRenderedEpochs *wr_renderer_flush_rendered_epochs(WrRenderer *aRenderer)
+WrRenderedEpochs *wr_renderer_flush_rendered_epochs(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_readback(WrRenderer *aRenderer,
+void wr_renderer_readback(Renderer *aRenderer,
                           uint32_t aWidth,
                           uint32_t aHeight,
                           uint8_t *aDstBuffer,
@@ -962,27 +962,27 @@ void wr_renderer_readback(WrRenderer *aRenderer,
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_render(WrRenderer *aRenderer,
+void wr_renderer_render(Renderer *aRenderer,
                         uint32_t aWidth,
                         uint32_t aHeight)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_set_external_image_handler(WrRenderer *aRenderer,
+void wr_renderer_set_external_image_handler(Renderer *aRenderer,
                                             WrExternalImageHandler *aExternalImageHandler)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_set_profiler_enabled(WrRenderer *aRenderer,
+void wr_renderer_set_profiler_enabled(Renderer *aRenderer,
                                       bool aEnabled)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_update(WrRenderer *aRenderer)
+void wr_renderer_update(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
-void wr_scroll_layer_with_id(WrAPI *aApi,
+void wr_scroll_layer_with_id(RenderApi *aApi,
                              WrPipelineId aPipelineId,
                              uint64_t aScrollId,
                              LayoutPoint aNewScrollOrigin)
@@ -1016,8 +1016,8 @@ bool wr_window_new(WrWindowId aWindowId,
                    void *aGlContext,
                    WrThreadPool *aThreadPool,
                    bool aEnableProfiler,
-                   WrAPI **aOutApi,
-                   WrRenderer **aOutRenderer)
+                   RenderApi **aOutApi,
+                   Renderer **aOutRenderer)
 WR_FUNC;
 
 } // namespace wr

@@ -126,7 +126,7 @@ WebRenderLayer::DumpLayerInfo(const char* aLayerType, const LayerRect& aRect)
   Layer* layer = GetLayer();
   Matrix4x4 transform = layer->GetTransform();
   LayerRect bounds = Bounds();
-  wr::WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetLayer()->GetMixBlendMode());
+  wr::MixBlendMode mixBlendMode = wr::ToMixBlendMode(GetLayer()->GetMixBlendMode());
 
   printf_stderr("%s %p using bounds=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
                 aLayerType,

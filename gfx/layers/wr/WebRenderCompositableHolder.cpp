@@ -19,8 +19,8 @@ WebRenderCompositableHolder::AsyncImagePipelineHolder::AsyncImagePipelineHolder(
  : mInitialised(false)
  , mIsChanged(false)
  , mUseExternalImage(false)
- , mFilter(wr::WrImageRendering::Auto)
- , mMixBlendMode(wr::WrMixBlendMode::Normal)
+ , mFilter(wr::ImageRendering::Auto)
+ , mMixBlendMode(wr::MixBlendMode::Normal)
 {}
 
 WebRenderCompositableHolder::WebRenderCompositableHolder(uint32_t aIdNamespace)
@@ -135,8 +135,8 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
                                                       const LayerRect& aScBounds,
                                                       const gfx::Matrix4x4& aScTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
-                                                      const wr::WrImageRendering& aFilter,
-                                                      const wr::WrMixBlendMode& aMixBlendMode)
+                                                      const wr::ImageRendering& aFilter,
+                                                      const wr::MixBlendMode& aMixBlendMode)
 {
   if (mDestroyed) {
     return;
@@ -275,7 +275,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
-                                  wr::WrTransformStyle::Flat,
+                                  wr::TransformStyle::Flat,
                                   holder->mMixBlendMode,
                                   nsTArray<wr::WrFilterOp>());
 

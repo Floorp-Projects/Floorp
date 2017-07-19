@@ -93,8 +93,8 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
                                                       const LayerRect& aSCBounds,
                                                       const Matrix4x4& aSCTransform,
                                                       const MaybeIntSize& aScaleToSize,
-                                                      const wr::WrImageRendering& aFilter,
-                                                      const wr::WrMixBlendMode& aMixBlendMode)
+                                                      const wr::ImageRendering& aFilter,
+                                                      const wr::MixBlendMode& aMixBlendMode)
 {
   MOZ_ASSERT(aContainer->IsAsync());
   if (!mPipelineId) {

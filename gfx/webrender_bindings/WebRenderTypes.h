@@ -20,9 +20,6 @@
 namespace mozilla {
 namespace wr {
 
-typedef wr::WrMixBlendMode MixBlendMode;
-typedef wr::WrImageRendering ImageRendering;
-typedef wr::WrImageFormat ImageFormat;
 typedef wr::WrWindowId WindowId;
 typedef wr::WrPipelineId PipelineId;
 typedef wr::WrImageKey ImageKey;
@@ -45,32 +42,32 @@ inline Epoch NewEpoch(uint32_t aEpoch) {
   return e;
 }
 
-inline Maybe<wr::WrImageFormat>
-SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
+inline Maybe<wr::ImageFormat>
+SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
       // TODO: use RGBA + opaque flag
-      return Some(wr::WrImageFormat::BGRA8);
+      return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::B8G8R8X8:
       // TODO: WebRender will have a BGRA + opaque flag for this but does not
       // have it yet (cf. issue #732).
     case gfx::SurfaceFormat::B8G8R8A8:
-      return Some(wr::WrImageFormat::BGRA8);
+      return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::B8G8R8:
-      return Some(wr::WrImageFormat::RGB8);
+      return Some(wr::ImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
-      return Some(wr::WrImageFormat::A8);
+      return Some(wr::ImageFormat::A8);
     case gfx::SurfaceFormat::R8G8:
-      return Some(wr::WrImageFormat::RG8);
+      return Some(wr::ImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
-      return Some(wr::WrImageFormat::Invalid);
+      return Some(wr::ImageFormat::Invalid);
     default:
       return Nothing();
   }
 }
 
 inline gfx::SurfaceFormat
-WrImageFormatToSurfaceFormat(ImageFormat aFormat) {
+ImageFormatToSurfaceFormat(ImageFormat aFormat) {
   switch (aFormat) {
     case ImageFormat::BGRA8:
       return gfx::SurfaceFormat::B8G8R8A8;
@@ -86,7 +83,7 @@ WrImageFormatToSurfaceFormat(ImageFormat aFormat) {
 struct ImageDescriptor: public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat)
   {
-    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = 0;
@@ -95,7 +92,7 @@ struct ImageDescriptor: public wr::WrImageDescriptor {
 
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride, gfx::SurfaceFormat aFormat)
   {
-    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
@@ -153,7 +150,7 @@ inline ImageRendering ToImageRendering(gfx::SamplingFilter aFilter)
                                                : ImageRendering::Auto;
 }
 
-static inline MixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
+static inline MixBlendMode ToMixBlendMode(gfx::CompositionOp compositionOp)
 {
   switch (compositionOp)
   {
@@ -609,7 +606,7 @@ inline mozilla::Range<uint8_t> MutByteSliceToRange(wr::MutByteSlice aWrSlice) {
 
 struct BuiltDisplayList {
   wr::VecU8 dl;
-  wr::WrBuiltDisplayListDescriptor dl_desc;
+  wr::BuiltDisplayListDescriptor dl_desc;
 };
 
 static inline wr::WrFilterOpType ToWrFilterOpType(const layers::CSSFilterType type) {
