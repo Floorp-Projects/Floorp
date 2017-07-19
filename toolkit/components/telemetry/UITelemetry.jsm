@@ -6,14 +6,12 @@
 
 const Cu = Components.utils;
 
-const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
-
 this.EXPORTED_SYMBOLS = [
   "UITelemetry",
 ];
 
 Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 /**
  * UITelemetry is a helper JSM used to record UI specific telemetry events.
@@ -32,11 +30,11 @@ this.UITelemetry = {
     }
 
     // Set an observer to watch for changes at runtime.
-    Services.prefs.addObserver(PREF_ENABLED, this);
+    Services.prefs.addObserver(TelemetryUtils.Preferences.TelemetryEnabled, this);
     Services.obs.addObserver(this, "profile-before-change");
 
     // Pick up the current value.
-    this._enabled = Services.prefs.getBoolPref(PREF_ENABLED, false);
+    this._enabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false);
 
     return this._enabled;
   },
@@ -44,15 +42,15 @@ this.UITelemetry = {
   observe(aSubject, aTopic, aData) {
     if (aTopic == "profile-before-change") {
       Services.obs.removeObserver(this, "profile-before-change");
-      Services.prefs.removeObserver(PREF_ENABLED, this);
+      Services.prefs.removeObserver(TelemetryUtils.Preferences.TelemetryEnabled, this);
       this._enabled = undefined;
       return;
     }
 
     if (aTopic == "nsPref:changed") {
       switch (aData) {
-        case PREF_ENABLED:
-          let on = Services.prefs.getBoolPref(PREF_ENABLED);
+        case TelemetryUtils.Preferences.TelemetryEnabled:
+          let on = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled);
           this._enabled = on;
 
           // Wipe ourselves if we were just disabled.
