@@ -258,7 +258,8 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
       unrequestedStruct = false;                                              \
     }                                                                         \
     if (this##struct_) {                                                      \
-      const nsStyle##struct_* other##struct_ = aNewContext->Style##struct_(); \
+      const nsStyle##struct_* other##struct_ =                                \
+        aNewContext->ThreadsafeStyle##struct_();                              \
       if (this##struct_ == other##struct_) {                                  \
         /* The very same struct, so we know that there will be no */          \
         /* differences.                                           */          \
@@ -338,7 +339,7 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
 #define STYLE_STRUCT(name_, callback_)                                        \
   {                                                                           \
     const nsStyle##name_* data = PeekStyle##name_();                          \
-    if (!data || data == aNewContext->Style##name_()) {                       \
+    if (!data || data == aNewContext->ThreadsafeStyle##name_()) {             \
       *aSamePointerStructs |= NS_STYLE_INHERIT_BIT(name_);                    \
     }                                                                         \
   }
@@ -387,8 +388,10 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
 #define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_
 #define STYLE_STRUCT(name_, fields_)                                    \
     if (!change && PeekStyle##name_()) {                                \
-      const nsStyle##name_* thisVisStruct = thisVis->Style##name_();    \
-      const nsStyle##name_* otherVisStruct = otherVis->Style##name_();  \
+      const nsStyle##name_* thisVisStruct =                             \
+        thisVis->ThreadsafeStyle##name_();                              \
+      const nsStyle##name_* otherVisStruct =                            \
+        otherVis->ThreadsafeStyle##name_();                             \
       if (MOZ_FOR_EACH_SEPARATED(STYLE_FIELD, (||), (), fields_)) {     \
         change = true;                                                  \
       }                                                                 \
