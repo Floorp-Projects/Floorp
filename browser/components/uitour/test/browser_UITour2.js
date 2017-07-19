@@ -15,22 +15,26 @@ var tests = [
   function test_info_customize_auto_open_close(done) {
     let popup = document.getElementById("UITourTooltip");
     gContentAPI.showInfo("customize", "Customization", "Customize me please!");
-    UITour.getTarget(window, "customize").then((customizeTarget) => {
-      waitForPopupAtAnchor(popup, customizeTarget.node, function checkPanelIsOpen() {
-        isnot(PanelUI.panel.state, "closed", "Panel should have opened before the popup anchored");
-        ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been set");
 
-        // Move the info outside which should close the app menu.
-        gContentAPI.showInfo("appMenu", "Open Me", "You know you want to");
-        UITour.getTarget(window, "appMenu").then((target) => {
-          waitForPopupAtAnchor(popup, target.node, function checkPanelIsClosed() {
-            isnot(PanelUI.panel.state, "open",
-                  "Panel should have closed after the info moved elsewhere.");
-            ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up on close");
-            done();
-          }, "Info should move to the appMenu button");
-        });
-      }, "Info panel should be anchored to the customize button");
+    let shownPromise = promisePanelShown(window);
+    shownPromise.then(() => {
+      UITour.getTarget(window, "customize").then((customizeTarget) => {
+        waitForPopupAtAnchor(popup, customizeTarget.node, function checkPanelIsOpen() {
+          isnot(PanelUI.panel.state, "closed", "Panel should have opened before the popup anchored");
+          ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been set");
+
+          // Move the info outside which should close the app menu.
+          gContentAPI.showInfo("appMenu", "Open Me", "You know you want to");
+          UITour.getTarget(window, "appMenu").then((target) => {
+            waitForPopupAtAnchor(popup, target.node, function checkPanelIsClosed() {
+              isnot(PanelUI.panel.state, "open",
+                    "Panel should have closed after the info moved elsewhere.");
+              ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up on close");
+              done();
+            }, "Info should move to the appMenu button");
+          });
+        }, "Info panel should be anchored to the customize button");
+      });
     });
   },
   function test_info_customize_manual_open_close(done) {
