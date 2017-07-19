@@ -458,18 +458,20 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
     int32_t index = -1;
     if (parentNode == mEndContainer && mEndOffset > 0 &&
         (index = parentNode->IndexOf(aContent)) + 1 == mEndOffset) {
-      ++mEndOffset;
+      newEndNode = mEndContainer;
+      newEndOffset = mEndOffset + 1;
       mEndOffsetWasIncremented = true;
     }
     if (parentNode == mStartContainer && mStartOffset > 0 &&
         (index != -1 ? index : parentNode->IndexOf(aContent)) + 1 == mStartOffset) {
-      ++mStartOffset;
+      newStartNode = mStartContainer;
+      newStartOffset = mStartOffset + 1;
       mStartOffsetWasIncremented = true;
     }
 #ifdef DEBUG
     if (mStartOffsetWasIncremented || mEndOffsetWasIncremented) {
       mAssertNextInsertOrAppendIndex =
-        (mStartOffsetWasIncremented ? mStartOffset : mEndOffset) - 1;
+        (mStartOffsetWasIncremented ? newStartOffset : newEndOffset) - 1;
       mAssertNextInsertOrAppendNode = aInfo->mDetails->mNextSibling;
     }
 #endif
@@ -504,7 +506,8 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
     } else {
       // If boundary is inside changed text, position it before change
       // else adjust start offset for the change in length.
-      mStartOffset = static_cast<uint32_t>(mStartOffset) <= aInfo->mChangeEnd ?
+      newStartNode = mStartContainer;
+      newStartOffset = static_cast<uint32_t>(mStartOffset) <= aInfo->mChangeEnd ?
         aInfo->mChangeStart :
         mStartOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
           aInfo->mReplaceLength;
@@ -538,7 +541,8 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
         newEndNode->SetDescendantOfCommonAncestorForRangeInSelection();
       }
     } else {
-      mEndOffset = static_cast<uint32_t>(mEndOffset) <= aInfo->mChangeEnd ?
+      newEndNode = mEndContainer;
+      newEndOffset = static_cast<uint32_t>(mEndOffset) <= aInfo->mChangeEnd ?
         aInfo->mChangeStart :
         mEndOffset + aInfo->mChangeStart - aInfo->mChangeEnd +
           aInfo->mReplaceLength;
@@ -640,16 +644,21 @@ nsRange::ContentInserted(nsIDocument* aDocument,
 {
   NS_ASSERTION(mIsPositioned, "shouldn't be notified if not positioned");
 
+  bool rangeChanged = false;
+  uint32_t newStartOffset = mStartOffset;
+  uint32_t newEndOffset = mEndOffset;
   nsINode* container = NODE_FROM(aContainer, aDocument);
 
   // Adjust position if a sibling was inserted.
   if (container == mStartContainer && aIndexInContainer < mStartOffset &&
       !mStartOffsetWasIncremented) {
-    ++mStartOffset;
+    ++newStartOffset;
+    rangeChanged = true;
   }
   if (container == mEndContainer && aIndexInContainer < mEndOffset &&
       !mEndOffsetWasIncremented) {
-    ++mEndOffset;
+    ++newEndOffset;
+    rangeChanged = true;
   }
   if (container->IsSelectionDescendant() &&
       !aChild->IsDescendantOfCommonAncestorForRangeInSelection()) {
@@ -666,6 +675,11 @@ nsRange::ContentInserted(nsIDocument* aDocument,
     mAssertNextInsertOrAppendIndex = -1;
     mAssertNextInsertOrAppendNode = nullptr;
 #endif
+  }
+
+  if (rangeChanged) {
+    DoSetRange(mStartContainer, newStartOffset,
+               mEndContainer, newEndOffset, mRoot);
   }
 }
 
@@ -685,11 +699,15 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
   bool gravitateStart = false;
   bool gravitateEnd = false;
   bool didCheckStartParentDescendant = false;
+  bool rangeChanged = false;
+  uint32_t newStartOffset = mStartOffset;
+  uint32_t newEndOffset = mEndOffset;
 
   // Adjust position if a sibling was removed...
   if (container == mStartContainer) {
     if (aIndexInContainer < mStartOffset) {
-      --mStartOffset;
+      --newStartOffset;
+      rangeChanged = true;
     }
   } else { // ...or gravitate if an ancestor was removed.
     didCheckStartParentDescendant = true;
@@ -700,7 +718,8 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
   // Do same thing for end boundry.
   if (container == mEndContainer) {
     if (aIndexInContainer < mEndOffset) {
-      --mEndOffset;
+      --newEndOffset;
+      rangeChanged = true;
     }
   } else if (didCheckStartParentDescendant &&
              mStartContainer == mEndContainer) {
@@ -709,11 +728,11 @@ nsRange::ContentRemoved(nsIDocument* aDocument,
     gravitateEnd = nsContentUtils::ContentIsDescendantOf(mEndContainer, aChild);
   }
 
-  if (gravitateStart || gravitateEnd) {
+  if (gravitateStart || gravitateEnd || rangeChanged) {
     DoSetRange(gravitateStart ? container : mStartContainer.get(),
-               gravitateStart ? aIndexInContainer : mStartOffset,
+               gravitateStart ? aIndexInContainer : newStartOffset,
                gravitateEnd ? container : mEndContainer.get(),
-               gravitateEnd ? aIndexInContainer : mEndOffset,
+               gravitateEnd ? aIndexInContainer : newEndOffset,
                mRoot);
   }
   if (container->IsSelectionDescendant() &&
