@@ -102,7 +102,7 @@ MediaDecoderReaderWrapper::RequestVideoData(const media::TimeUnit& aTimeThreshol
            });
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+RefPtr<MediaDecoderReaderWrapper::SeekPromise>
 MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
