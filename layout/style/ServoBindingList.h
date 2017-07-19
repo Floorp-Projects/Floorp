@@ -235,7 +235,7 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_ExtractAnimationValue,
                    ServoStyleContextBorrowed computed_values,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_ComputedValues_SpecifiesAnimationsOrTransitions, bool,
-                   ServoComputedValuesBorrowed computed_values)
+                   ServoStyleContextBorrowed computed_values)
 SERVO_BINDING_FUNC(Servo_Property_IsAnimatable, bool,
                    nsCSSPropertyID property)
 SERVO_BINDING_FUNC(Servo_Property_IsTransitionable, bool,
@@ -472,7 +472,7 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoStyleContextStrong,
                    ServoStyleContextBorrowedOrNull parent_style,
                    mozilla::InheritTarget target)
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleBits, uint64_t,
-                   ServoComputedValuesBorrowed values)
+                   ServoStyleContextBorrowed values)
 SERVO_BINDING_FUNC(Servo_ComputedValues_EqualCustomProperties, bool,
                    ServoComputedValuesBorrowed first,
                    ServoComputedValuesBorrowed second)
@@ -480,7 +480,7 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_EqualCustomProperties, bool,
 // the result via rules, which would include a list of unowned pointers
 // to RawServoStyleRule.
 SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleRuleList, void,
-                   ServoComputedValuesBorrowed values,
+                   ServoStyleContextBorrowed values,
                    RawGeckoServoStyleRuleListBorrowedMut rules)
 
 // Initialize Servo components. Should be called exactly once at startup.
@@ -563,14 +563,14 @@ SERVO_BINDING_FUNC(Servo_SerializeFontValueForCanvas, void,
 
 // Get custom property value.
 SERVO_BINDING_FUNC(Servo_GetCustomPropertyValue, bool,
-                   ServoComputedValuesBorrowed computed_values,
+                   ServoStyleContextBorrowed computed_values,
                    const nsAString* name, nsAString* value)
 
 SERVO_BINDING_FUNC(Servo_GetCustomPropertiesCount, uint32_t,
-                   ServoComputedValuesBorrowed computed_values)
+                   ServoStyleContextBorrowed computed_values)
 
 SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
-                   ServoComputedValuesBorrowed, uint32_t index,
+                   ServoStyleContextBorrowed, uint32_t index,
                    nsAString* name)
 
 SERVO_BINDING_FUNC(Servo_GetEmptyVariables, const nsStyleVariables*)

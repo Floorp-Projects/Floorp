@@ -1929,7 +1929,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   ServoStyleContext* servoStyle = pseudoStyleContext->GetAsServo();
   if (servoStyle) {
     hasServoAnimations =
-      Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle->ComputedValues());
+      Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
     if (!hasServoAnimations) {
       Servo_SetExplicitStyle(container, servoStyle);
     }
