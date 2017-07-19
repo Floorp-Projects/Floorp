@@ -17,7 +17,7 @@ let whitelist = [
   {sourceName: /devtools\/client\/debugger\/new\/debugger.css/i,
    isFromDevTools: true},
    // Reps uses cross-browser CSS.
-   {sourceName: /devtools\/client\/shared\/components\/reps\/reps.css/i,
+   {sourceName: /devtools-client-shared\/components\/reps\/reps.css/i,
    isFromDevTools: true},
   // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
   {sourceName: /web\/viewer\.css$/i,
@@ -288,41 +288,49 @@ add_task(async function checkAllTheCSS() {
   // Wait for all manifest to be parsed
   await Promise.all(manifestPromises);
 
-  // We build a list of promises that get resolved when their respective
-  // files have loaded and produced no errors.
-  let allPromises = [];
-
   // filter out either the devtools paths or the non-devtools paths:
   let isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
   let devtoolsPathBits = ["webide", "devtools"];
   uris = uris.filter(uri => isDevtools == devtoolsPathBits.some(path => uri.spec.includes(path)));
 
-  for (let uri of uris) {
-    let linkEl = doc.createElement("link");
+  let loadCSS = chromeUri => new Promise(resolve => {
+    let linkEl, onLoad, onError;
+    onLoad = e => {
+      processCSSRules(linkEl.sheet);
+      resolve();
+      linkEl.removeEventListener("load", onLoad);
+      linkEl.removeEventListener("error", onError);
+    };
+    onError = e => {
+      ok(false, "Loading " + linkEl.getAttribute("href") + " threw an error!");
+      resolve();
+      linkEl.removeEventListener("load", onLoad);
+      linkEl.removeEventListener("error", onError);
+    };
+    linkEl = doc.createElement("link");
     linkEl.setAttribute("rel", "stylesheet");
-    allPromises.push(new Promise(resolve => {
-      let onLoad = (e) => {
-        processCSSRules(linkEl.sheet);
-        resolve();
-        linkEl.removeEventListener("load", onLoad);
-        linkEl.removeEventListener("error", onError);
-      };
-      let onError = (e) => {
-        ok(false, "Loading " + linkEl.getAttribute("href") + " threw an error!");
-        resolve();
-        linkEl.removeEventListener("load", onLoad);
-        linkEl.removeEventListener("error", onError);
-      };
-      linkEl.addEventListener("load", onLoad);
-      linkEl.addEventListener("error", onError);
-      linkEl.setAttribute("type", "text/css");
-      let chromeUri = convertToCodeURI(uri.spec);
-      linkEl.setAttribute("href", chromeUri + kPathSuffix);
-    }));
+    linkEl.setAttribute("type", "text/css");
+    linkEl.addEventListener("load", onLoad);
+    linkEl.addEventListener("error", onError);
+    linkEl.setAttribute("href", chromeUri + kPathSuffix);
     doc.head.appendChild(linkEl);
+  });
+
+  // We build a list of promises that get resolved when their respective
+  // files have loaded and produced no errors.
+  const kInContentCommonCSS = "chrome://global/skin/in-content/common.css";
+  let allPromises = uris.map((uri) => convertToCodeURI(uri.spec))
+                    .filter((uri) => uri !== kInContentCommonCSS);
+
+  // Make sure chrome://global/skin/in-content/common.css is loaded before other
+  // stylesheets in order to guarantee the --in-content variables can be
+  // correctly referenced.
+  if (allPromises.length !== uris.length) {
+    await loadCSS(kInContentCommonCSS);
   }
 
   // Wait for all the files to have actually loaded:
+  allPromises = allPromises.map(loadCSS);
   await Promise.all(allPromises);
 
   // Check if all the files referenced from CSS actually exist.
