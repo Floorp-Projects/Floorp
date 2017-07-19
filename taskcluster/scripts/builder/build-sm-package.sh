@@ -21,6 +21,11 @@ tar -xjvf $UPLOAD_DIR/mozjs-*.tar.bz2
 
 # Build the freshly extracted, packaged SpiderMonkey.
 pushd ./mozjs-*/js/src
+
+# MOZ_AUTOMATION enforces certain requirements that don't apply to
+# packaged builds. Unset it.
+unset MOZ_AUTOMATION
+
 AUTOMATION=1 $PYTHON ./devtools/automation/autospider.py --skip-tests=checks $SPIDERMONKEY_VARIANT
 popd
 
