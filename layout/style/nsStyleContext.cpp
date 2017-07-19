@@ -459,37 +459,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                      aRelevantStructs);
 }
 
-class MOZ_STACK_CLASS FakeStyleContext
-{
-public:
-  explicit FakeStyleContext(const ServoComputedValues* aComputedValues)
-    : mComputedValues(aComputedValues) {}
-
-  nsStyleContext* GetStyleIfVisited() {
-    // Bug 1364484: Figure out what to do here for Stylo visited values.  We can
-    // get the visited computed values:
-    // RefPtr<ServoComputedValues> visitedComputedValues =
-    //   Servo_ComputedValues_GetVisitedStyle(mComputedValues).Consume();
-    // But what's the best way to create the nsStyleContext?
-    return nullptr;
-  }
-
-  #define STYLE_STRUCT(name_, checkdata_cb_)                                  \
-  const nsStyle##name_ * Style##name_() {                                     \
-    return mComputedValues->GetStyle##name_();                                \
-  }                                                                           \
-  const nsStyle##name_ * ThreadsafeStyle##name_() {                           \
-    return mComputedValues->GetStyle##name_();                                \
-  }
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT
-
-  const ServoComputedValues* ComputedValues() { return mComputedValues; }
-
-private:
-  const ServoComputedValues* MOZ_NON_OWNING_REF mComputedValues;
-};
-
 namespace mozilla {
 
 void
