@@ -50,6 +50,7 @@ namespace mozilla {
   };
   enum class UpdateAnimationsTasks : uint8_t;
   struct LangGroupFontPrefs;
+  class SeenPtrs;
   class ServoStyleContext;
   class ServoStyleSheet;
   class ServoElementSnapshotTable;
@@ -396,6 +397,10 @@ Gecko_GetElementSnapshot(const mozilla::ServoElementSnapshotTable* table,
                          RawGeckoElementBorrowed element);
 
 void Gecko_DropElementSnapshot(ServoElementSnapshotOwned snapshot);
+
+// Have we seen this pointer before?
+bool
+Gecko_HaveSeenPtr(mozilla::SeenPtrs* table, const void* ptr);
 
 // `array` must be an nsTArray
 // If changing this signature, please update the
