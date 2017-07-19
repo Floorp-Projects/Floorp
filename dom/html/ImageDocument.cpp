@@ -121,7 +121,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(imgDoc->mImageContent);
     NS_ENSURE_TRUE(imageLoader, NS_ERROR_UNEXPECTED);
 
-    imageLoader->AddObserver(imgDoc);
+    imageLoader->AddNativeObserver(imgDoc);
     imgDoc->mObservingImageLoader = true;
     imageLoader->LoadImageWithChannel(channel, getter_AddRefs(mNextStream));
   }
@@ -232,7 +232,7 @@ ImageDocument::Destroy()
     if (mObservingImageLoader) {
       nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mImageContent);
       if (imageLoader) {
-        imageLoader->RemoveObserver(this);
+        imageLoader->RemoveNativeObserver(this);
       }
     }
 
