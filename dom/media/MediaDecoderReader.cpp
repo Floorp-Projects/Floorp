@@ -45,7 +45,6 @@ MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
       /* aSupportsTailDispatch = */ true))
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
   , mShutdown(false)
-  , mResource(aInit.mResource)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
@@ -67,7 +66,6 @@ void
 MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
 {
   MOZ_ASSERT(OnTaskQueue());
-  mDuration = Some(aDuration);
   UpdateBuffered();
 }
 

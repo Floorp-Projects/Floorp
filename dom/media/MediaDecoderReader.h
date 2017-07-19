@@ -274,8 +274,6 @@ protected:
   // Buffered range.
   Canonical<media::TimeIntervals> mBuffered;
 
-  media::NullableTimeUnit mDuration;
-
   bool mShutdown;
 
   // Used to send TimedMetadata to the listener.
@@ -292,8 +290,6 @@ protected:
   MediaEventProducer<void> mOnWaitingForKey;
 
   MediaEventProducer<MediaResult> mOnDecodeWarning;
-
-  RefPtr<MediaResource> mResource;
 
 private:
   virtual nsresult InitInternal() = 0;
