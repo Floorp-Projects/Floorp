@@ -48,43 +48,6 @@ type WrFontKey = FontKey;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrYuvColorSpace = YuvColorSpace;
 
-/// cbindgen:field-names=[mHandle]
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct WrExternalImageId(pub u64);
-
-#[repr(u32)]
-#[derive(Copy, Clone)]
-pub enum WrFilterOpType {
-  Blur = 0,
-  Brightness = 1,
-  Contrast = 2,
-  Grayscale = 3,
-  HueRotate = 4,
-  Invert = 5,
-  Opacity = 6,
-  Saturate = 7,
-  Sepia = 8,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
-pub struct WrFilterOp {
-    filter_type: WrFilterOpType,
-    argument: c_float,
-}
-
-impl Into<ExternalImageId> for WrExternalImageId {
-    fn into(self) -> ExternalImageId {
-        ExternalImageId(self.0)
-    }
-}
-impl Into<WrExternalImageId> for ExternalImageId {
-    fn into(self) -> WrExternalImageId {
-        WrExternalImageId(self.0)
-    }
-}
-
 fn make_slice<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
     if ptr.is_null() {
         &[]
@@ -99,6 +62,33 @@ fn make_slice_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
     } else {
         unsafe { slice::from_raw_parts_mut(ptr, len) }
     }
+}
+
+#[repr(C)]
+pub struct WrVecU8 {
+    data: *mut u8,
+    length: usize,
+    capacity: usize,
+}
+
+impl WrVecU8 {
+    fn to_vec(self) -> Vec<u8> {
+        unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
+    }
+    fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
+        let w = WrVecU8 {
+            data: v.as_mut_ptr(),
+            length: v.len(),
+            capacity: v.capacity(),
+        };
+        mem::forget(v);
+        w
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
+    v.to_vec();
 }
 
 #[repr(C)]
@@ -177,18 +167,45 @@ impl From<ImageMask> for WrImageMask {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrComplexClipRegion {
-    rect: LayoutRect,
-    radii: BorderRadius,
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct WrImageDescriptor {
+    pub format: WrImageFormat,
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub is_opaque: bool,
 }
 
-impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
-    fn into(self) -> ComplexClipRegion {
-        ComplexClipRegion {
-            rect: self.rect.into(),
-            radii: self.radii.into(),
+impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
+    fn into(self) -> ImageDescriptor {
+        ImageDescriptor {
+            width: self.width,
+            height: self.height,
+            stride: if self.stride != 0 {
+                Some(self.stride)
+            } else {
+                None
+            },
+            format: self.format,
+            is_opaque: self.is_opaque,
+            offset: 0,
         }
+    }
+}
+
+/// cbindgen:field-names=[mHandle]
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct WrExternalImageId(pub u64);
+
+impl Into<ExternalImageId> for WrExternalImageId {
+    fn into(self) -> ExternalImageId {
+        ExternalImageId(self.0)
+    }
+}
+impl Into<WrExternalImageId> for ExternalImageId {
+    fn into(self) -> WrExternalImageId {
+        WrExternalImageId(self.0)
     }
 }
 
@@ -262,65 +279,41 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 }
 
-/// cbindgen:field-names=[mHandle]
-/// cbindgen:derive-lt=true
-/// cbindgen:derive-lte=true
 #[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct WrWindowId(u64);
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct WrImageDescriptor {
-    pub format: WrImageFormat,
-    pub width: u32,
-    pub height: u32,
-    pub stride: u32,
-    pub is_opaque: bool,
+#[derive(Debug, Clone, Copy)]
+pub struct WrComplexClipRegion {
+    rect: LayoutRect,
+    radii: BorderRadius,
 }
 
-impl<'a> Into<ImageDescriptor> for &'a WrImageDescriptor {
-    fn into(self) -> ImageDescriptor {
-        ImageDescriptor {
-            width: self.width,
-            height: self.height,
-            stride: if self.stride != 0 {
-                Some(self.stride)
-            } else {
-                None
-            },
-            format: self.format,
-            is_opaque: self.is_opaque,
-            offset: 0,
+impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
+    fn into(self) -> ComplexClipRegion {
+        ComplexClipRegion {
+            rect: self.rect.into(),
+            radii: self.radii.into(),
         }
     }
 }
 
+#[repr(u32)]
+#[derive(Copy, Clone)]
+pub enum WrFilterOpType {
+  Blur = 0,
+  Brightness = 1,
+  Contrast = 2,
+  Grayscale = 3,
+  HueRotate = 4,
+  Invert = 5,
+  Opacity = 6,
+  Saturate = 7,
+  Sepia = 8,
+}
+
 #[repr(C)]
-pub struct WrVecU8 {
-    data: *mut u8,
-    length: usize,
-    capacity: usize,
-}
-
-impl WrVecU8 {
-    fn to_vec(self) -> Vec<u8> {
-        unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) }
-    }
-    fn from_vec(mut v: Vec<u8>) -> WrVecU8 {
-        let w = WrVecU8 {
-            data: v.as_mut_ptr(),
-            length: v.len(),
-            capacity: v.capacity(),
-        };
-        mem::forget(v);
-        w
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn wr_vec_u8_free(v: WrVecU8) {
-    v.to_vec();
+#[derive(Copy, Clone)]
+pub struct WrFilterOp {
+    filter_type: WrFilterOpType,
+    argument: c_float,
 }
 
 /// cbindgen:derive-eq=false
@@ -337,6 +330,13 @@ pub struct WrOpacityProperty {
     pub id: u64,
     pub opacity: f32,
 }
+
+/// cbindgen:field-names=[mHandle]
+/// cbindgen:derive-lt=true
+/// cbindgen:derive-lte=true
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct WrWindowId(u64);
 
 fn get_proc_address(glcontext_ptr: *mut c_void,
                     name: &str)
