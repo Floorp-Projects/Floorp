@@ -83,11 +83,8 @@ add_task(async function test_remote_window_open_data_uri() {
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
               "The principal of data: document should be a NullPrincipal.");
 
-    let str = content.document.nodePrincipal.originNoSuffix;
-    let expectDomain = str.substring("moz-nullprincipal:{".length, str.length - 1) + ".mozilla";
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectDomain,
-                 "data: URI should have firstPartyDomain set to " + expectDomain);
+    Assert.ok(content.document.nodePrincipal.originAttributes.firstPartyDomain != "",
+              "data: URI should have firstPartyDomain set.");
   });
 
   win.close();
@@ -116,14 +113,11 @@ add_task(async function test_remote_window_open_data_uri2() {
     Assert.ok(content.document.nodePrincipal.isNullPrincipal,
               "The principal of data: document should be a NullPrincipal.");
 
-    let str = content.document.nodePrincipal.originNoSuffix;
-    let expectDomain = str.substring("moz-nullprincipal:{".length, str.length - 1) + ".mozilla";
-    Assert.equal(content.document.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectDomain,
-                 "data: URI should have firstPartyDomain set to " + expectDomain);
+    Assert.ok(content.document.nodePrincipal.originAttributes.firstPartyDomain != "",
+              "data: URI should have firstPartyDomain set.");
 
     Assert.equal(iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-                 expectDomain,
+                 content.document.nodePrincipal.originAttributes.firstPartyDomain,
                  "iframe should inherit firstPartyDomain from parent document.");
     Assert.equal(iframe.contentDocument.cookie, "test2=foo", "iframe should have cookies");
   });

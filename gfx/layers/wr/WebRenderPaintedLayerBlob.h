@@ -32,11 +32,17 @@ protected:
   virtual ~WebRenderPaintedLayerBlob()
   {
     MOZ_COUNT_DTOR(WebRenderPaintedLayerBlob);
+    ClearWrResources();
+  }
+  void ClearWrResources()
+  {
     if (mExternalImageId.isSome()) {
       WrBridge()->DeallocExternalImageId(mExternalImageId.ref());
+      mExternalImageId = Nothing();
     }
     if (mImageKey.isSome()) {
       WrManager()->AddImageKeyForDiscard(mImageKey.value());
+      mImageKey = Nothing();
     }
   }
 
@@ -48,7 +54,10 @@ public:
     mInvalidRegion.Add(aRegion);
     UpdateValidRegionAfterInvalidRegionChanged();
   }
-
+  virtual void ClearCachedResources() override
+  {
+    ClearWrResources();
+  }
   Layer* GetLayer() override { return this; }
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
                    const StackingContextHelper& aSc) override;

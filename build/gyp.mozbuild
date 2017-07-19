@@ -88,6 +88,8 @@ gyp_vars.update({
     'include_pcm16b': 1,
 
     #'rtc_opus_variable_complexity': 1,
+
+    'apm_debug_dump': 1,
 })
 
 if os == 'Android':

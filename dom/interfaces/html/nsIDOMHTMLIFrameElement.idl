@@ -34,4 +34,5 @@ interface nsIDOMHTMLIFrameElement : nsISupports
   readonly attribute nsIDOMDocument   contentDocument;
 
            attribute boolean          allowFullscreen;
+           attribute boolean          allowPaymentRequest;
 };

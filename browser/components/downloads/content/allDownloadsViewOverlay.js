@@ -178,7 +178,7 @@ HistoryDownload.prototype = {
  * caller must do it and remove the element when it's no longer needed.
  *
  * The caller is also responsible for forwarding status notifications for
- * session downloads, calling the onStateChanged and onChanged methods.
+ * session downloads, calling the onSessionDownloadChanged method.
  *
  * @param [optional] aSessionDownload
  *        The session download, required if aHistoryDownload is not set.
@@ -239,6 +239,9 @@ HistoryDownloadElementShell.prototype = {
       }
 
       this._sessionDownload = aValue;
+      if (aValue) {
+        this.sessionDownloadState = DownloadsCommon.stateOfDownload(aValue);
+      }
 
       this.ensureActive();
       this._updateUI();
@@ -291,7 +294,13 @@ HistoryDownloadElementShell.prototype = {
     }
   },
 
-  onChanged() {
+  onSessionDownloadChanged() {
+    let newState = DownloadsCommon.stateOfDownload(this.sessionDownload);
+    if (this.sessionDownloadState != newState) {
+      this.sessionDownloadState = newState;
+      this.onStateChanged();
+    }
+
     // This cannot be placed within onStateChanged because
     // when a download goes from hasBlockedData to !hasBlockedData
     // it will still remain in the same state.
@@ -610,7 +619,7 @@ DownloadsPlacesView.prototype = {
    * @param [optional] aPlacesNode
    *        The Places node for a history download, or null for session downloads.
    * @param [optional] aNewest
-   *        @see onDownloadAdded. Ignored for history downloads.
+   *        Whether the download should be added at the top of the list.
    * @param [optional] aDocumentFragment
    *        To speed up the appending of multiple elements to the end of the
    *        list which are coming in a single batch (i.e. invalidateContainer),
@@ -938,7 +947,8 @@ DownloadsPlacesView.prototype = {
   },
 
   get selectedNodes() {
-      return this._richlistbox.selectedItems.filter(element => element._placesNode);
+      return Array.filter(this._richlistbox.selectedItems,
+                          element => element._placesNode);
   },
 
   get selectedNode() {
@@ -1095,21 +1105,16 @@ DownloadsPlacesView.prototype = {
     }
   },
 
-  onDataLoadStarting() {},
-  onDataLoadCompleted() {
+  onDownloadBatchEnded() {
     this._ensureInitialSelection();
   },
 
-  onDownloadAdded(download, newest) {
-    this._addDownloadData(download, null, newest);
-  },
-
-  onDownloadStateChanged(download) {
-    this._viewItemsForDownloads.get(download).onStateChanged();
+  onDownloadAdded(download) {
+    this._addDownloadData(download, null, true);
   },
 
   onDownloadChanged(download) {
-    this._viewItemsForDownloads.get(download).onChanged();
+    this._viewItemsForDownloads.get(download).onSessionDownloadChanged();
   },
 
   onDownloadRemoved(download) {
@@ -1171,7 +1176,8 @@ DownloadsPlacesView.prototype = {
   },
 
   _copySelectedDownloadsToClipboard() {
-    let urls = this._richlistbox.selectedItems.map(element => element._shell.download.source.url);
+    let urls = Array.map(this._richlistbox.selectedItems,
+                         element => element._shell.download.source.url);
 
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)

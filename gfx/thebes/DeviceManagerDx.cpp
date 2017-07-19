@@ -15,9 +15,11 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "mozilla/layers/MLGDeviceD3D11.h"
+#include "mozilla/layers/PaintThread.h"
 #include "nsIGfxInfo.h"
 #include "nsString.h"
 #include <d3d11.h>
@@ -701,6 +703,14 @@ DeviceManagerDx::CreateMLGDevice()
 void
 DeviceManagerDx::ResetDevices()
 {
+  // Flush the paint thread before revoking all these singletons. This
+  // should ensure that the paint thread doesn't start mixing and matching
+  // old and new objects together.
+  if (PaintThread::Get()) {
+    CompositorBridgeChild* cbc = CompositorBridgeChild::Get();
+    cbc->FlushAsyncPaints();
+  }
+
   MutexAutoLock lock(mDeviceLock);
 
   mAdapter = nullptr;

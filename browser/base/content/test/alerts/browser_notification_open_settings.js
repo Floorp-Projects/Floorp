@@ -1,6 +1,8 @@
 "use strict";
 
 var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
+var expectedURL = Services.prefs.getBoolPref("browser.preferences.useOldOrganization") ? "about:preferences#content"
+                                                                                       : "about:preferences#privacy";
 
 add_task(async function test_settingsOpen_observer() {
   info("Opening a dummy tab so openPreferences=>switchToTabHavingURI doesn't use the blank tab.");
@@ -11,7 +13,7 @@ add_task(async function test_settingsOpen_observer() {
     // Ensure preferences is loaded before removing the tab.
     let syncPaneLoadedPromise = TestUtils.topicObserved("sync-pane-loaded", () => true);
 
-    let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
+    let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
     info("simulate a notifications-open-settings notification");
     let uri = NetUtil.newURI("https://example.com");
     let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
@@ -47,7 +49,7 @@ add_task(async function test_settingsOpen_button() {
       }
 
       let closePromise = promiseWindowClosed(alertWindow);
-      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy");
+      let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, expectedURL);
       let openSettingsMenuItem = alertWindow.document.getElementById("openSettingsMenuItem");
       openSettingsMenuItem.click();
 

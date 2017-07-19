@@ -359,10 +359,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void moveValue(const Value& src, const ValueOperand& dest) {
         moveValue(src, dest.valueReg());
     }
-    void moveValue(const ValueOperand& src, const ValueOperand& dest) {
-        if (src.valueReg() != dest.valueReg())
-            movePtr(src.valueReg(), dest.valueReg());
-    }
 
     CodeOffset pushWithPatch(ImmWord imm) {
         vixl::UseScratchRegisterScope temps(this);

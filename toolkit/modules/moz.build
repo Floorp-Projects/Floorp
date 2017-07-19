@@ -312,4 +312,6 @@ for var in ('MOZ_TOOLKIT_SEARCH',
     if CONFIG[var]:
         DEFINES[var] = True
 
+JAR_MANIFESTS += ['jar.mn']
+
 DEFINES['TOPOBJDIR'] = TOPOBJDIR

@@ -1389,8 +1389,17 @@ WebGLFramebuffer::FramebufferRenderbuffer(const char* funcName, GLenum attachEnu
     }
 
     // `rb`
-    if (rb && !mContext->ValidateObject("framebufferRenderbuffer: rb", *rb))
-        return;
+    if (rb) {
+        if (!mContext->ValidateObject("framebufferRenderbuffer: rb", *rb))
+            return;
+
+        if (!rb->mHasBeenBound) {
+            mContext->ErrorInvalidOperation("%s: bindRenderbuffer must be called before"
+                                            " attachment to %04x",
+                                            funcName, attachEnum);
+            return;
+      }
+    }
 
     // End of validation.
 
