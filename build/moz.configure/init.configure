@@ -309,6 +309,86 @@ def shell(value, mozillabuild):
     return find_program(shell)
 
 
+# Source checkout and version control integration.
+# ================================================
+
+@depends(check_build_environment, 'MOZ_AUTOMATION')
+@checking('for vcs source checkout')
+@imports('os')
+def vcs_checkout_type(build_env, automation):
+    if os.path.exists(os.path.join(build_env.topsrcdir, '.hg')):
+        return 'hg'
+    elif os.path.exists(os.path.join(build_env.topsrcdir, '.git')):
+        return 'git'
+    elif automation:
+        raise FatalCheckError('unable to resolve VCS type; must run '
+                              'from a source checkout when MOZ_AUTOMATION '
+                              'is set')
+
+# Resolve VCS binary for detected repository type.
+hg = check_prog('HG', ('hg',), allow_missing=True,
+                when=depends(vcs_checkout_type)(lambda x: x == 'hg'))
+git = check_prog('GIT', ('git',), allow_missing=True,
+                 when=depends(vcs_checkout_type)(lambda x: x == 'git'))
+
+@depends_if(hg)
+@checking('for Mercurial version')
+@imports('os')
+@imports('re')
+def hg_version(hg):
+    # HGPLAIN in Mercurial 1.5+ forces stable output, regardless of set
+    # locale or encoding.
+    env = dict(os.environ)
+    env['HGPLAIN'] = '1'
+
+    out = check_cmd_output(hg, '--version', env=env)
+
+    match = re.search(r'Mercurial Distributed SCM \(version ([^\)]+)', out)
+
+    if not match:
+        raise FatalCheckError('unable to determine Mercurial version: %s' % out)
+
+    # The version string may be "unknown" for Mercurial run out of its own
+    # source checkout or for bad builds. But LooseVersion handles it.
+
+    return Version(match.group(1))
+
+@depends_if(git)
+@checking('for Git version')
+@imports('re')
+def git_version(git):
+    out = check_cmd_output(git, '--version').rstrip()
+
+    match = re.search('git version (.*)$', out)
+
+    if not match:
+        raise FatalCheckError('unable to determine Git version: %s' % out)
+
+    return Version(match.group(1))
+
+# Only set VCS_CHECKOUT_TYPE if we resolved the VCS binary.
+# Require resolved VCS info when running in automation so automation's
+# environment is more well-defined.
+@depends(vcs_checkout_type, hg_version, git_version, 'MOZ_AUTOMATION')
+def exposed_vcs_checkout_type(vcs_checkout_type, hg, git, automation):
+    if vcs_checkout_type == 'hg':
+        if hg:
+            return 'hg'
+
+        if automation:
+            raise FatalCheckError('could not resolve Mercurial binary info')
+
+    elif vcs_checkout_type == 'git':
+        if git:
+            return 'git'
+
+        if automation:
+            raise FatalCheckError('could not resolve Git binary info')
+    elif vcs_checkout_type:
+        raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
+
+set_config('VCS_CHECKOUT_TYPE', exposed_vcs_checkout_type)
+
 # Host and target systems
 # ==============================================================
 option('--host', nargs=1, help='Define the system type performing the build')
