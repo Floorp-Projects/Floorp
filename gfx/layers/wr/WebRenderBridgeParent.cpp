@@ -402,7 +402,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const uint64_t& aTransactionId,
                                  const wr::LayoutSize& aContentSize,
                                  const wr::ByteBuffer& dl,
-                                 const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                 const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const uint32_t& aIdNameSpace)
 {
@@ -515,7 +515,7 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const uint64_t& aTransactionId,
                                  const wr::LayoutSize& aContentSize,
                                  const wr::ByteBuffer& dl,
-                                 const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                 const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
                                  const uint32_t& aIdNameSpace)
 {
@@ -535,7 +535,7 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const uint64_t& aTransactionId,
                                      const wr::LayoutSize& aContentSize,
                                      const wr::ByteBuffer& dl,
-                                     const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                     const wr::BuiltDisplayListDescriptor& dlDesc,
                                      const WebRenderScrollData& aScrollData,
                                      const uint32_t& aIdNameSpace)
 {
@@ -657,7 +657,7 @@ void
 WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
                                                 const wr::LayoutSize& aContentSize, const wr::ByteBuffer& dl,
-                                                const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                                const wr::BuiltDisplayListDescriptor& dlDesc,
                                                 const uint32_t& aIdNameSpace)
 {
   mCompositableHolder->SetCompositionTime(TimeStamp::Now());

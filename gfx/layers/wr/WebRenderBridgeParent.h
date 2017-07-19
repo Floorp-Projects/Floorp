@@ -100,7 +100,7 @@ public:
                                     const uint64_t& aTransactionId,
                                     const wr::LayoutSize& aContentSize,
                                     const wr::ByteBuffer& dl,
-                                    const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                    const wr::BuiltDisplayListDescriptor& dlDesc,
                                     const WebRenderScrollData& aScrollData,
                                     const uint32_t& aIdNameSpace) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
@@ -110,7 +110,7 @@ public:
                                         const uint64_t& aTransactionId,
                                         const wr::LayoutSize& aContentSize,
                                         const wr::ByteBuffer& dl,
-                                        const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                        const wr::BuiltDisplayListDescriptor& dlDesc,
                                         const WebRenderScrollData& aScrollData,
                                         const uint32_t& aIdNameSpace) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
@@ -219,7 +219,7 @@ private:
                                 const wr::Epoch& aEpoch,
                                 const wr::LayoutSize& aContentSize,
                                 const wr::ByteBuffer& dl,
-                                const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                                const wr::BuiltDisplayListDescriptor& dlDesc,
                                 const uint32_t& aIdNameSpace);
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
@@ -231,7 +231,7 @@ private:
                    const uint64_t& aTransactionId,
                    const wr::LayoutSize& aContentSize,
                    const wr::ByteBuffer& dl,
-                   const wr::WrBuiltDisplayListDescriptor& dlDesc,
+                   const wr::BuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData,
                    const uint32_t& aIdNameSpace);
   mozilla::ipc::IPCResult HandleShutdown();

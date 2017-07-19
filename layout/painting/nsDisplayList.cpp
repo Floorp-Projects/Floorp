@@ -5366,7 +5366,7 @@ nsDisplayBoxShadowOuter::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder
                              blurRadius,
                              spreadRadius,
                              borderRadius,
-                             wr::WrBoxShadowClipMode::Outset);
+                             wr::BoxShadowClipMode::Outset);
     }
   }
 
@@ -5524,7 +5524,7 @@ nsDisplayBoxShadowInner::CreateInsetBoxShadowWebRenderCommands(mozilla::wr::Disp
                              blurRadius,
                              spreadRadius,
                              borderRadius,
-                             wr::WrBoxShadowClipMode::Inset
+                             wr::BoxShadowClipMode::Inset
                              );
     }
   }
