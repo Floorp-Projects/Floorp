@@ -195,14 +195,6 @@ public:
   // cases like MSE.
   virtual bool UseBufferingHeuristics() const = 0;
 
-  // Returns the number of bytes of memory allocated by structures/frames in
-  // the video queue.
-  size_t SizeOfVideoQueueInBytes() const;
-
-  // Returns the number of bytes of memory allocated by structures/frames in
-  // the audio queue.
-  size_t SizeOfAudioQueueInBytes() const;
-
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
 

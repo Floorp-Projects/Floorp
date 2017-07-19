@@ -64,12 +64,6 @@ public:
   MediaEventSource<void>& OnMediaNotSeekable() {
     return mReader->OnMediaNotSeekable();
   }
-  size_t SizeOfVideoQueueInBytes() const {
-    return mReader->SizeOfVideoQueueInBytes();
-  }
-  size_t SizeOfAudioQueueInBytes() const {
-    return mReader->SizeOfAudioQueueInBytes();
-  }
   size_t SizeOfAudioQueueInFrames() const {
     return mReader->SizeOfAudioQueueInFrames();
   }
