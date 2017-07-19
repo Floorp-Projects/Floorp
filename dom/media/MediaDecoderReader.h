@@ -300,9 +300,6 @@ protected:
   // Buffered range.
   Canonical<media::TimeIntervals> mBuffered;
 
-  // Stores presentation info required for playback.
-  MediaInfo mInfo;
-
   media::NullableTimeUnit mDuration;
 
   bool mShutdown;
