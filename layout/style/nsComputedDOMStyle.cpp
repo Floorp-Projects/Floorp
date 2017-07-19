@@ -354,7 +354,7 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
   UpdateCurrentStyleSources(false);
   if (mStyleContext) {
     length += mStyleContext->IsServo()
-      ? Servo_GetCustomPropertiesCount(mStyleContext->ComputedValues())
+      ? Servo_GetCustomPropertiesCount(mStyleContext->AsServo())
       : StyleVariables()->mVariables.Count();
   }
 
@@ -1094,7 +1094,7 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
     : StyleVariables();
 
   const uint32_t count = isServo
-    ? Servo_GetCustomPropertiesCount(mStyleContext->ComputedValues())
+    ? Servo_GetCustomPropertiesCount(mStyleContext->AsServo())
     : variables->mVariables.Count();
 
   const uint32_t index = aIndex - length;
@@ -1102,8 +1102,7 @@ nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
     aFound = true;
     nsString varName;
     if (isServo) {
-      Servo_GetCustomPropertyNameAt(mStyleContext->ComputedValues(),
-                                    index, &varName);
+      Servo_GetCustomPropertyNameAt(mStyleContext->AsServo(), index, &varName);
     } else {
       variables->mVariables.GetVariableAt(index, varName);
     }
@@ -6949,8 +6948,7 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
   const nsAString& name = Substring(aPropertyName,
                                     CSS_CUSTOM_NAME_PREFIX_LENGTH);
   bool present = mStyleContext->IsServo()
-    ? Servo_GetCustomPropertyValue(mStyleContext->ComputedValues(),
-                                   &name, &variableValue)
+    ? Servo_GetCustomPropertyValue(mStyleContext->AsServo(), &name, &variableValue)
     : StyleVariables()->mVariables.Get(name, variableValue);
   if (!present) {
     return nullptr;
