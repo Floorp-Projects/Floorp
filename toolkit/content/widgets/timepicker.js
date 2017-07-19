@@ -14,8 +14,6 @@ function TimePicker(context) {
 
 {
   const DAY_PERIOD_IN_HOURS = 12,
-        SECOND_IN_MS = 1000,
-        MINUTE_IN_MS = 60000,
         DAY_IN_MS = 86400000;
 
   TimePicker.prototype = {
@@ -25,9 +23,9 @@ function TimePicker(context) {
      *         {
      *           {Number} hour [optional]: Hour in 24 hours format (0~23), default is current hour
      *           {Number} minute [optional]: Minute (0~59), default is current minute
-     *           {String} min [optional]: Minimum time, in 24 hours format. ex: "05:45"
-     *           {String} max [optional]: Maximum time, in 24 hours format. ex: "23:00"
-     *           {Number} step [optional]: Step size in minutes. Default is 60.
+     *           {Number} min: Minimum time, in ms
+     *           {Number} max: Maximum time, in ms
+     *           {Number} step: Step size in ms
      *           {String} format [optional]: "12" for 12 hours, "24" for 24 hours format
      *           {String} locale [optional]: User preferred locale
      *         }
@@ -51,28 +49,15 @@ function TimePicker(context) {
 
       let timerHour = hour == undefined ? now.getHours() : hour;
       let timerMinute = minute == undefined ? now.getMinutes() : minute;
-
-      // The spec defines 1 step == 1 second, need to convert to ms for timekeeper
       let timeKeeper = new TimeKeeper({
-        min: this._parseTimeString(min) || new Date(0),
-        max: this._parseTimeString(max) || new Date(DAY_IN_MS - 1),
-        stepInMs: step ? step * SECOND_IN_MS : MINUTE_IN_MS,
+        min: new Date(Number.isNaN(min) ? 0 : min),
+        max: new Date(Number.isNaN(max) ? DAY_IN_MS - 1 : max),
+        step,
         format: format || "12"
       });
       timeKeeper.setState({ hour: timerHour, minute: timerMinute });
 
       this.state = { timeKeeper };
-    },
-
-    /**
-     * Convert a time string from DOM attribute to a date object.
-     *
-     * @param  {String} timeString: (ex. "10:30", "23:55", "12:34:56.789")
-     * @return {Date/Boolean} Date object or false if date is invalid.
-     */
-    _parseTimeString(timeString) {
-      let time = new Date("1970-01-01T" + timeString + "Z");
-      return time.toString() == "Invalid Date" ? false : time;
     },
 
     /**
