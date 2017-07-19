@@ -174,7 +174,7 @@ AddToHash(uint32_t aHash, A* aA)
 
 // We use AddUintptrToHash() for hashing all integral types.  8-byte integral types
 // are treated the same as 64-bit pointers, and smaller integral types are first
-// implicitly converted to 32 bits and then passed to AddUintptrToHash() to be hased.
+// implicitly converted to 32 bits and then passed to AddUintptrToHash() to be hashed.
 template<typename T,
          typename U = typename mozilla::EnableIf<mozilla::IsIntegral<T>::value>::Type>
 MOZ_MUST_USE inline uint32_t
