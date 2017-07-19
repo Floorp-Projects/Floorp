@@ -21,6 +21,7 @@ struct D3D11DeviceStatus
   bool textureSharingWorks;
   uint32_t featureLevel;
   DxgiAdapterDesc adapter;
+  int32_t sequenceNumber;
 };
 
 struct DevicePrefs

@@ -252,6 +252,9 @@ parent:
   sync PWebRenderBridge(PipelineId pipelineId, LayoutDeviceIntSize aSize)
     returns (TextureFactoryIdentifier textureFactoryIdentifier, uint32_t idNamespace); //XXX: use the WrIdNamespace type
 
+  sync CheckContentOnlyTDR(uint32_t sequenceNum)
+    returns (bool isContentOnlyTDR);
+
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
   // update progressively.
