@@ -11,6 +11,7 @@
 #include "nsTHashtable.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WritingModes.h"
 #include <algorithm>
 
@@ -32,8 +33,18 @@ class MOZ_HEAP_CLASS TextOverflow final {
    * Allocate an object for text-overflow processing.
    * @return nullptr if no processing is necessary.  The caller owns the object.
    */
-  static TextOverflow* WillProcessLines(nsDisplayListBuilder*   aBuilder,
-                                        nsIFrame*               aBlockFrame);
+  static UniquePtr<TextOverflow>
+  WillProcessLines(nsDisplayListBuilder* aBuilder,
+                   nsIFrame*             aBlockFrame);
+
+  /**
+   * Constructor, which client code SHOULD NOT use directly. Instead, clients
+   * should call WillProcessLines(), which is basically the factory function
+   * for TextOverflow instances.
+   */
+  TextOverflow(nsDisplayListBuilder* aBuilder,
+               nsIFrame* aBlockFrame);
+
   /**
    * Analyze the display lists for text overflow and what kind of item is at
    * the content edges.  Add display items for text-overflow markers as needed
@@ -59,9 +70,6 @@ class MOZ_HEAP_CLASS TextOverflow final {
   typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
 
  private:
-  TextOverflow(nsDisplayListBuilder* aBuilder,
-               nsIFrame* aBlockFrame);
-
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalRect LogicalRect;
 
