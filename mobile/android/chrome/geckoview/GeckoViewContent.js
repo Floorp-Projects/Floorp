@@ -82,14 +82,17 @@ class GeckoViewContent extends GeckoViewContentModule {
         let node = aEvent.target;
         let hrefNode = nearestParentHref(node);
         let isImageNode = node instanceof Ci.nsIDOMHTMLImageElement;
+        let isMediaNode = node instanceof Ci.nsIDOMHTMLMediaElement;
         let msg = {
           screenX: aEvent.screenX,
           screenY: aEvent.screenY,
           uri: hrefNode,
-          imageSrc: isImageNode ? node.src : null
+          elementSrc: isImageNode || isMediaNode
+                      ? node.currentSrc || node.src
+                      : null
         };
 
-        if (hrefNode || isImageNode) {
+        if (hrefNode || isImageNode || isMediaNode) {
           sendAsyncMessage("GeckoView:ContextMenu", msg);
           aEvent.preventDefault();
         }

@@ -3458,7 +3458,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onContextMenu(GeckoView view, int screenX, int screenY,
-                              String uri, String imageSrc) {}
+                              String uri, String elementSrc) {}
 
     @Override
     public boolean onPrepareOptionsMenu(Menu aMenu) {

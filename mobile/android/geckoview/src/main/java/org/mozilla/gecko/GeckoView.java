@@ -113,7 +113,7 @@ public class GeckoView extends LayerView {
                                            message.getInt("screenX"),
                                            message.getInt("screenY"),
                                            message.getString("uri"),
-                                           message.getString("imageSrc"));
+                                           message.getString("elementSrc"));
                 } else if ("GeckoView:DOMTitleChanged".equals(event)) {
                     listener.onTitleChange(GeckoView.this,
                                            message.getString("title"));
@@ -1298,19 +1298,19 @@ public class GeckoView extends LayerView {
 
         /**
          * A user has initiated the context menu via long-press.
-         * This event is fired on links, images and image-links (images nested
-         * in link nodes).
+         * This event is fired on links, (nested) images and (nested) media
+         * elements.
          *
          * @param view The GeckoView that initiated the callback.
          * @param screenX The screen coordinates of the press.
          * @param screenY The screen coordinates of the press.
          * @param uri The URI of the pressed link, set for links and
          *            image-links.
-         * @param imageSrc The URI of the pressed image, set for images and
-         *                 image-links.
+         * @param elementSrc The source URI of the pressed element, set for
+         *                   (nested) images and media elements.
          */
         void onContextMenu(GeckoView view, int screenX, int screenY,
-                           String uri, String imageSrc);
+                           String uri, String elementSrc);
     }
 
     public interface NavigationListener {
