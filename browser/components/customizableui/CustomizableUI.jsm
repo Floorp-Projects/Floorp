@@ -4209,7 +4209,7 @@ OverflowableToolbar.prototype = {
     return new Promise(resolve => {
       let doc = this._panel.ownerDocument;
       this._panel.hidden = false;
-      let photonView = this._panel.querySelector("panelmultiview");
+      let photonView = this._panel.querySelector("photonpanelmultiview");
       let contextMenu;
       if (photonView) {
         let mainViewId = photonView.getAttribute("mainViewId");
