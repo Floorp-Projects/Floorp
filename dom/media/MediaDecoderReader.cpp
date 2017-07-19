@@ -63,16 +63,6 @@ MediaDecoderReader::~MediaDecoderReader()
   MOZ_COUNT_DTOR(MediaDecoderReader);
 }
 
-size_t MediaDecoderReader::SizeOfVideoQueueInFrames()
-{
-  return 0;
-}
-
-size_t MediaDecoderReader::SizeOfAudioQueueInFrames()
-{
-  return 0;
-}
-
 void
 MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
 {
