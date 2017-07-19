@@ -8,6 +8,7 @@ use cssparser::ToCss as ParserToCss;
 use env_logger::LogBuilder;
 use selectors::Element;
 use selectors::matching::{MatchingContext, MatchingMode, matches_selector};
+use servo_arc::{Arc, RawOffsetArc};
 use std::env;
 use std::fmt::Write;
 use std::ptr;
@@ -102,7 +103,6 @@ use style::sequential;
 use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard, Locked};
 use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
-use style::stylearc::{Arc, RawOffsetArc};
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, DocumentRule};
 use style::stylesheets::{ImportRule, KeyframesRule, MallocSizeOfWithGuard, MediaRule};
 use style::stylesheets::{NamespaceRule, Origin, PageRule, StyleRule, SupportsRule};
@@ -117,6 +117,7 @@ use style::traversal::{ANIMATION_ONLY, DomTraversal, FOR_CSS_RULE_CHANGES, FOR_R
 use style::traversal::{TraversalDriver, TraversalFlags, UNSTYLED_CHILDREN_ONLY};
 use style::traversal::resolve_style;
 use style::values::{CustomIdent, KeyframesName};
+use style::values::animated::ToAnimatedZero;
 use style::values::computed::Context;
 use style_traits::{PARSING_MODE_DEFAULT, ToCss};
 use super::error_reporter::ErrorReporter;
@@ -375,7 +376,7 @@ pub extern "C" fn Servo_AnimationValues_GetZeroValue(
     -> RawServoAnimationValueStrong
 {
     let value_to_match = AnimationValue::as_arc(&value_to_match);
-    if let Ok(zero_value) = value_to_match.get_zero_value() {
+    if let Ok(zero_value) = value_to_match.to_animated_zero() {
         Arc::new(zero_value).into_strong()
     } else {
         RawServoAnimationValueStrong::null()

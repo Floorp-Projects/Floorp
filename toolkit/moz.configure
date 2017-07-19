@@ -514,6 +514,18 @@ def photon_animations(value):
 set_config('MOZ_PHOTON_ANIMATIONS', photon_animations)
 set_define('MOZ_PHOTON_ANIMATIONS', photon_animations)
 
+option(env='MOZ_PHOTON_PREFERENCES',
+       help='Enable Photon preferences',
+       default=milestone.is_nightly)
+
+@depends('MOZ_PHOTON_PREFERENCES')
+def photon_preferences(value):
+    if value:
+        return bool(value)
+
+set_config('MOZ_PHOTON_PREFERENCES', photon_preferences)
+set_define('MOZ_PHOTON_PREFERENCES', photon_preferences)
+
 option(env='MOZ_PHOTON_THEME',
        help='Enable Photon theme',
        default=milestone.is_nightly)

@@ -22,16 +22,7 @@
 namespace webrtc {
 
 const uint16_t kRtpOneByteHeaderExtensionId = 0xBEDE;
-
 const size_t kRtpOneByteHeaderLength = 4;
-const size_t kTransmissionTimeOffsetLength = 4;
-const size_t kAudioLevelLength = 2;
-const size_t kAbsoluteSendTimeLength = 4;
-const size_t kVideoRotationLength = 2;
-const size_t kTransportSequenceNumberLength = 3;
-const size_t kPlayoutDelayLength = 4;
-// kRtpStreamIdLength is variable
-const size_t kRtpStreamIdLength = 4; // max 1-byte header extension length
 
 // Playout delay in milliseconds. A playout delay limit (min or max)
 // has 12 bits allocated. This allows a range of 0-4095 values which translates
@@ -39,6 +30,11 @@ const size_t kRtpStreamIdLength = 4; // max 1-byte header extension length
 const int kPlayoutDelayGranularityMs = 10;
 // Maximum playout delay value in milliseconds.
 const int kPlayoutDelayMaxMs = 40950;
+
+struct RtpExtensionSize {
+  RTPExtensionType type;
+  uint8_t value_size;
+};
 
 class RtpHeaderExtensionMap {
  public:
@@ -50,8 +46,7 @@ class RtpHeaderExtensionMap {
 
   template <typename Extension>
   bool Register(uint8_t id) {
-    return Register(id, Extension::kId, Extension::kValueSizeBytes,
-                    Extension::kUri);
+    return Register(id, Extension::kId, Extension::kUri);
   }
   bool RegisterByType(uint8_t id, RTPExtensionType type);
   bool RegisterByUri(uint8_t id, const std::string& uri);
@@ -72,7 +67,8 @@ class RtpHeaderExtensionMap {
     return ids_[type];
   }
 
-  size_t GetTotalLengthInBytes() const;
+  size_t GetTotalLengthInBytes(
+      rtc::ArrayView<const RtpExtensionSize> extensions) const;
 
   // TODO(danilchap): Remove use of the functions below.
   int32_t Register(RTPExtensionType type, uint8_t id) {
@@ -83,12 +79,8 @@ class RtpHeaderExtensionMap {
  private:
   static constexpr uint8_t kMinId = 1;
   static constexpr uint8_t kMaxId = 14;
-  bool Register(uint8_t id,
-                RTPExtensionType type,
-                size_t value_size,
-                const char* uri);
+  bool Register(uint8_t id, RTPExtensionType type, const char* uri);
 
-  size_t total_values_size_bytes_ = 0;
   RTPExtensionType types_[kMaxId + 1];
   uint8_t ids_[kRtpExtensionNumberOfExtensions];
 };

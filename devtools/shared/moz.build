@@ -52,6 +52,7 @@ DevToolsModules(
     'dom-node-constants.js',
     'dom-node-filter-constants.js',
     'event-emitter.js',
+    'extend.js',
     'flags.js',
     'indentation.js',
     'l10n.js',

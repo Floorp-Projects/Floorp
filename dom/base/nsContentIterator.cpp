@@ -15,6 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIParserService.h"
 
 using mozilla::DebugOnly;
 
@@ -371,10 +372,17 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       //      the next sibling?
 
       // Normally we would skip the start node because the start node is outside
-      // of the range in pre mode. However, if startIndx == 0, it means the node
-      // has no children, and the node may be <br> or something. We don't skip
-      // the node in this case in order to address bug 1215798.
-      if (!startIsData && startIndx) {
+      // of the range in pre mode. However, if startIndx == 0, and the node is a
+      // non-container node (e.g. <br>), we don't skip the node in this case in
+      // order to address bug 1215798.
+      bool startIsContainer = true;
+      if (startNode->IsHTMLElement()) {
+        if (nsIParserService* ps = nsContentUtils::GetParserService()) {
+          nsIAtom* name = startNode->NodeInfo()->NameAtom();
+          ps->IsContainer(ps->HTMLAtomTagToId(name), startIsContainer);
+        }
+      }
+      if (!startIsData && (startIsContainer || startIndx)) {
         mFirst = GetNextSibling(startNode);
         NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
 
@@ -427,14 +435,22 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         // Not much else to do here...
         mLast = nullptr;
       } else {
-        // If the end node is an empty element and the end offset is 0,
+        // If the end node is a non-container element and the end offset is 0,
         // the last element should be the previous node (i.e., shouldn't
         // include the end node in the range).
-        if (!endIsData && !endNode->HasChildren() && !endIndx) {
+        bool endIsContainer = true;
+        if (endNode->IsHTMLElement()) {
+          if (nsIParserService* ps = nsContentUtils::GetParserService()) {
+            nsIAtom* name = endNode->NodeInfo()->NameAtom();
+            ps->IsContainer(ps->HTMLAtomTagToId(name), endIsContainer);
+          }
+        }
+        if (!endIsData && !endIsContainer && !endIndx) {
           mLast = PrevNode(endNode);
           NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
-          if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
-                                                 startNode, startIndx,
+          if (mLast && mLast != mFirst &&
+              NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
+                                                 mFirst, 0,
                                                  endNode, endIndx))) {
             mLast = nullptr;
           }

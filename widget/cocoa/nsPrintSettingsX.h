@@ -66,6 +66,8 @@ public:
   void GetInchesScale(float *aWidthScale, float *aHeightScale);
 
   NS_IMETHOD SetScaling(double aScaling) override;
+  NS_IMETHOD GetScaling(double *aScaling) override;
+
   NS_IMETHOD SetToFileName(const char16_t * aToFileName) override;
 
   NS_IMETHOD GetOrientation(int32_t *aOrientation) override;

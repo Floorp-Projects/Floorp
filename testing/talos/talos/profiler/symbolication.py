@@ -137,8 +137,10 @@ class ProfileSymbolicator:
             return None
 
     def integrate_symbol_zip_from_url(self, symbol_zip_url):
-        if self.have_integrated(symbol_zip_url):
+        if platform.system() not in self.options['platformsRequiringSymbols']\
+                or self.have_integrated(symbol_zip_url):
             return
+
         LogMessage("Retrieving symbol zip from {symbol_zip_url}...".format(
             symbol_zip_url=symbol_zip_url))
         try:

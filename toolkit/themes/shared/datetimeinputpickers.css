@@ -261,6 +261,10 @@ button.month-year.active::after {
   color: var(--weekend-disabled-font-color);
 }
 
+.days-view > .today {
+  font-weight: bold;
+}
+
 .days-view > .out-of-range::before,
 .days-view > .off-step::before {
   display: none;
@@ -350,6 +354,11 @@ button.month-year.active::after {
 .calendar-container .days-view > div:hover::before {
   background: var(--fill-color);
   border: var(--border);
+  content: "";
+}
+
+.calendar-container .days-view > div.today::before {
+  background: var(--today-fill-color);
   content: "";
 }
 

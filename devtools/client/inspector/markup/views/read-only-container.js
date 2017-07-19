@@ -6,7 +6,7 @@
 
 const ReadOnlyEditor = require("devtools/client/inspector/markup/views/read-only-editor");
 const MarkupContainer = require("devtools/client/inspector/markup/views/markup-container");
-const {extend} = require("devtools/client/inspector/markup/utils");
+const {extend} = require("devtools/shared/extend");
 
 /**
  * An implementation of MarkupContainer for Pseudo Elements,
