@@ -23,66 +23,221 @@ namespace mozilla {
 
 class CDMProxy;
 
+struct WaitForDataRejectValue
+{
+  enum Reason
+  {
+    SHUTDOWN,
+    CANCELED
+  };
+
+  WaitForDataRejectValue(MediaData::Type aType, Reason aReason)
+    : mType(aType)
+    , mReason(aReason)
+  {
+  }
+  MediaData::Type mType;
+  Reason mReason;
+};
+
+struct SeekRejectValue
+{
+  MOZ_IMPLICIT SeekRejectValue(const MediaResult& aError)
+    : mType(MediaData::NULL_DATA)
+    , mError(aError)
+  {
+  }
+  MOZ_IMPLICIT SeekRejectValue(nsresult aResult)
+    : mType(MediaData::NULL_DATA)
+    , mError(aResult)
+  {
+  }
+  SeekRejectValue(MediaData::Type aType, const MediaResult& aError)
+    : mType(aType)
+    , mError(aError)
+  {
+  }
+  MediaData::Type mType;
+  MediaResult mError;
+};
+
+struct MetadataHolder
+{
+  UniquePtr<MediaInfo> mInfo;
+  UniquePtr<MetadataTags> mTags;
+};
+
 class MediaFormatReader final : public MediaDecoderReader
 {
+  static const bool IsExclusive = true;
   typedef TrackInfo::TrackType TrackType;
-  typedef MozPromise<bool, MediaResult, /* IsExclusive = */ true> NotifyDataArrivedPromise;
+  typedef MozPromise<bool, MediaResult, IsExclusive> NotifyDataArrivedPromise;
 
 public:
+  using TrackSet = EnumSet<TrackInfo::TrackType>;
+  using MetadataPromise = MozPromise<MetadataHolder, MediaResult, IsExclusive>;
+
+  template<typename Type>
+  using DataPromise = MozPromise<RefPtr<Type>, MediaResult, IsExclusive>;
+  using AudioDataPromise = DataPromise<AudioData>;
+  using VideoDataPromise = DataPromise<VideoData>;
+
+  using SeekPromise = MozPromise<media::TimeUnit, SeekRejectValue, IsExclusive>;
+
+  // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
+  // But in the current architecture it's only ever used exclusively (by MDSM),
+  // so we mark it that way to verify our assumptions. If you have a use-case
+  // for multiple WaitForData consumers, feel free to flip the exclusivity here.
+  using WaitForDataPromise =
+    MozPromise<MediaData::Type, WaitForDataRejectValue, IsExclusive>;
+
   MediaFormatReader(MediaDecoderReaderInit& aInit, MediaDataDemuxer* aDemuxer);
 
   virtual ~MediaFormatReader();
 
-  size_t SizeOfVideoQueueInFrames() override;
-  size_t SizeOfAudioQueueInFrames() override;
+  // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
+  // on failure.
+  nsresult Init();
 
-  RefPtr<VideoDataPromise>
-  RequestVideoData(const media::TimeUnit& aTimeThreshold) override;
+  size_t SizeOfVideoQueueInFrames();
+  size_t SizeOfAudioQueueInFrames();
 
-  RefPtr<AudioDataPromise> RequestAudioData() override;
+  // Requests one video sample from the reader.
+  RefPtr<VideoDataPromise> RequestVideoData(
+    const media::TimeUnit& aTimeThreshold);
 
-  RefPtr<MetadataPromise> AsyncReadMetadata() override;
+  // Requests one audio sample from the reader.
+  //
+  // The decode should be performed asynchronously, and the promise should
+  // be resolved when it is complete.
+  RefPtr<AudioDataPromise> RequestAudioData();
 
-  void ReadUpdatedMetadata(MediaInfo* aInfo) override;
+  // The default implementation of AsyncReadMetadata is implemented in terms of
+  // synchronous ReadMetadata() calls. Implementations may also
+  // override AsyncReadMetadata to create a more proper async implementation.
+  RefPtr<MetadataPromise> AsyncReadMetadata();
 
-  RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) override;
+  // Fills aInfo with the latest cached data required to present the media,
+  // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
+  void ReadUpdatedMetadata(MediaInfo* aInfo);
 
-  void NotifyDataArrived() override;
+  RefPtr<SeekPromise> Seek(const SeekTarget& aTarget);
+
+  // Called once new data has been cached by the MediaResource.
+  // mBuffered should be recalculated and updated accordingly.
+  void NotifyDataArrived();
 
 protected:
-  void UpdateBuffered() override;
+  // Recomputes mBuffered.
+  void UpdateBuffered();
 
 public:
-  // For Media Resource Management
-  void ReleaseResources() override;
+  // Called by MDSM in dormant state to release resources allocated by this
+  // reader. The reader can resume decoding by calling Seek() to a specific
+  // position.
+  void ReleaseResources();
 
-  nsresult ResetDecode(TrackSet aTracks) override;
+  bool OnTaskQueue() const { return OwnerThread()->IsCurrentThreadIn(); }
 
-  RefPtr<ShutdownPromise> Shutdown() override;
+  // Resets all state related to decoding, emptying all buffers etc.
+  // Cancels all pending Request*Data() request callbacks, rejects any
+  // outstanding seek promises, and flushes the decode pipeline. The
+  // decoder must not call any of the callbacks for outstanding
+  // Request*Data() calls after this is called. Calls to Request*Data()
+  // made after this should be processed as usual.
+  //
+  // Normally this call preceedes a Seek() call, or shutdown.
+  //
+  // aParam is a set of TrackInfo::TrackType enums specifying which
+  // queues need to be reset, defaulting to both audio and video tracks.
+  nsresult ResetDecode(TrackSet aTracks);
 
-  bool VideoIsHardwareAccelerated() const override;
+  // Destroys the decoding state. The reader cannot be made usable again.
+  // This is different from ReleaseMediaResources() as it is irreversable,
+  // whereas ReleaseMediaResources() is.  Must be called on the decode
+  // thread.
+  RefPtr<ShutdownPromise> Shutdown();
 
-  bool IsWaitForDataSupported() const override { return true; }
-  RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
+  // Returns true if this decoder reader uses hardware accelerated video
+  // decoding.
+  bool VideoIsHardwareAccelerated() const;
 
-  bool UseBufferingHeuristics() const override
-  {
-    return mTrackDemuxersMayBlock;
-  }
+  // By default, the state machine polls the reader once per second when it's
+  // in buffering mode. Some readers support a promise-based mechanism by which
+  // they notify the state machine when the data arrives.
+  bool IsWaitForDataSupported() const { return true; }
 
-  void SetCDMProxy(CDMProxy* aProxy) override;
+  RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType);
+
+  // The MediaDecoderStateMachine uses various heuristics that assume that
+  // raw media data is arriving sequentially from a network channel. This
+  // makes sense in the <video src="foo"> case, but not for more advanced use
+  // cases like MSE.
+  bool UseBufferingHeuristics() const { return mTrackDemuxersMayBlock; }
+
+  void SetCDMProxy(CDMProxy* aProxy);
 
   // Returns a string describing the state of the decoder data.
   // Used for debugging purposes.
   void GetMozDebugReaderData(nsACString& aString);
 
-  void SetVideoNullDecode(bool aIsNullDecode) override;
+  // Switch the video decoder to NullDecoderModule. It might takes effective
+  // since a few samples later depends on how much demuxed samples are already
+  // queued in the original video decoder.
+  void SetVideoNullDecode(bool aIsNullDecode);
 
-  void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>) override;
+  void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>);
+
+  void UpdateDuration(const media::TimeUnit& aDuration)
+  {
+    MOZ_ASSERT(OnTaskQueue());
+    UpdateBuffered();
+  }
+
+  AbstractCanonical<media::TimeIntervals>* CanonicalBuffered()
+  {
+    return &mBuffered;
+  }
+
+  TaskQueue* OwnerThread() const { return mTaskQueue; }
+
+  TimedMetadataEventSource& TimedMetadataEvent() { return mTimedMetadataEvent; }
+
+  // Notified by the OggDemuxer during playback when chained ogg is detected.
+  MediaEventSource<void>& OnMediaNotSeekable() { return mOnMediaNotSeekable; }
+
+  TimedMetadataEventProducer& TimedMetadataProducer()
+  {
+    return mTimedMetadataEvent;
+  }
+
+  MediaEventProducer<void>& MediaNotSeekableProducer()
+  {
+    return mOnMediaNotSeekable;
+  }
+
+  // Notified if the reader can't decode a sample due to a missing decryption
+  // key.
+  MediaEventSource<TrackInfo::TrackType>& OnTrackWaitingForKey()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
+  MediaEventProducer<TrackInfo::TrackType>& OnTrackWaitingForKeyProducer()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
+  MediaEventSource<nsTArray<uint8_t>, nsString>& OnEncrypted()
+  {
+    return mOnEncrypted;
+  }
+
+  MediaEventSource<void>& OnWaitingForKey() { return mOnWaitingForKey; }
+
+  MediaEventSource<MediaResult>& OnDecodeWarning() { return mOnDecodeWarning; }
 
 private:
-  nsresult InitInternal() override;
-
   bool HasVideo() const { return mVideo.mTrackDemuxer; }
   bool HasAudio() const { return mAudio.mTrackDemuxer; }
 
@@ -445,6 +600,9 @@ private:
     Atomic<bool> mHasPromise;
   };
 
+  // Decode task queue.
+  RefPtr<TaskQueue> mTaskQueue;
+
   DecoderDataWithPromise<AudioData> mAudio;
   DecoderDataWithPromise<VideoData> mVideo;
 
@@ -565,6 +723,29 @@ private:
 
   void ShutdownDecoder(TrackType aTrack);
   RefPtr<ShutdownPromise> TearDownDecoders();
+
+  // Reference to the owning decoder object.
+  AbstractMediaDecoder* mDecoder;
+
+  bool mShutdown = false;
+
+  // Buffered range.
+  Canonical<media::TimeIntervals> mBuffered;
+
+  // Used to send TimedMetadata to the listener.
+  TimedMetadataEventProducer mTimedMetadataEvent;
+
+  // Notify if this media is not seekable.
+  MediaEventProducer<void> mOnMediaNotSeekable;
+
+  // Notify if we are waiting for a decryption key.
+  MediaEventProducer<TrackInfo::TrackType> mOnTrackWaitingForKey;
+
+  MediaEventProducer<nsTArray<uint8_t>, nsString> mOnEncrypted;
+
+  MediaEventProducer<void> mOnWaitingForKey;
+
+  MediaEventProducer<MediaResult> mOnDecodeWarning;
 };
 
 } // namespace mozilla

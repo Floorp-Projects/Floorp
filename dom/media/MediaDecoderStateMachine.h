@@ -89,9 +89,9 @@ hardware (via AudioStream).
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
+#include "MediaFormatReader.h"
 #include "MediaMetadataManager.h"
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
@@ -149,7 +149,7 @@ class MediaDecoderStateMachine
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 
-  using TrackSet = MediaDecoderReader::TrackSet;
+  using TrackSet = MediaFormatReader::TrackSet;
 
 public:
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
@@ -581,9 +581,9 @@ private:
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
-  using AudioDataPromise = MediaDecoderReader::AudioDataPromise;
-  using VideoDataPromise = MediaDecoderReader::VideoDataPromise;
-  using WaitForDataPromise = MediaDecoderReader::WaitForDataPromise;
+  using AudioDataPromise = MediaFormatReader::AudioDataPromise;
+  using VideoDataPromise = MediaFormatReader::VideoDataPromise;
+  using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;
