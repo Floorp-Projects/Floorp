@@ -197,7 +197,7 @@ MediaDecodeTask::CreateReader()
   // If you change this list to add support for new decoders, please consider
   // updating HTMLMediaElement::CreateDecoder as well.
 
-  MediaDecoderReaderInit init(mBufferDecoder);
+  MediaFormatReaderInit init(mBufferDecoder);
   init.mResource = resource;
   mDecoderReader = DecoderTraits::CreateReader(mContainerType, init);
 
