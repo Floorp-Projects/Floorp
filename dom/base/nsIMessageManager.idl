@@ -8,6 +8,7 @@
 interface mozIDOMWindowProxy;
 interface nsIDocShell;
 interface nsIContent;
+interface nsIEventTarget;
 interface nsIFrameLoader;
 interface nsIPrincipal;
 
@@ -398,6 +399,12 @@ interface nsIContentFrameMessageManager : nsIMessageManagerGlobal
    * The top level docshell or null.
    */
   readonly attribute nsIDocShell docShell;
+
+  /**
+   * Returns the SchedulerEventTarget corresponding to the TabGroup
+   * for this frame.
+   */
+  readonly attribute nsIEventTarget tabEventTarget;
 };
 
 [uuid(b39a3324-b574-4f85-8cdb-274d04f807ef)]
