@@ -210,9 +210,6 @@ public:
   // mBuffered should be recalculated and updated accordingly.
   virtual void NotifyDataArrived() = 0;
 
-  virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
-  virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
-
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered()
   {
     return &mBuffered;
@@ -282,14 +279,6 @@ protected:
 
   // Recomputes mBuffered.
   virtual void UpdateBuffered() = 0;
-
-  // Queue of audio frames. This queue is threadsafe, and is accessed from
-  // the audio, decoder, state machine, and main threads.
-  MediaQueue<AudioData> mAudioQueue;
-
-  // Queue of video frames. This queue is threadsafe, and is accessed from
-  // the decoder, state machine, and main threads.
-  MediaQueue<VideoData> mVideoQueue;
 
   // Reference to the owning decoder object.
   AbstractMediaDecoder* mDecoder;
