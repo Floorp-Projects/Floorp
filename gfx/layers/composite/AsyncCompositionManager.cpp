@@ -924,7 +924,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
               AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
             * overscrollTransform;
 
-          if (!layer->IsScrollInfoLayer()) {
+          if (!layer->IsScrollableWithoutContent()) {
             controller->MarkAsyncTransformAppliedToContent();
           }
 
