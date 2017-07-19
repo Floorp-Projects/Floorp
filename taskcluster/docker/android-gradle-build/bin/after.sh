@@ -9,9 +9,13 @@ set -v
 
 # Package everything up.
 pushd ${WORKSPACE}
-# Not yet.  See notes on tooltool below.
-# cp -R /root/.android-sdk android-sdk-linux
-# tar cJf android-sdk-linux.tar.xz android-sdk-linux
+
+cp -R /home/worker/.mozbuild/android-sdk-linux android-sdk-linux
+tar cJf android-sdk-linux.tar.xz android-sdk-linux
+
+# We can't redistribute the Android SDK publicly.
+mkdir -p /home/worker/private/android-sdk
+mv android-sdk-linux.tar.xz /home/worker/private/android-sdk
 
 cp -R /workspace/nexus/storage/jcenter jcentral
 tar cJf jcentral.tar.xz jcentral
@@ -27,9 +31,6 @@ mv gradle-${GRADLE_VERSION} gradle-dist
 tar cJf gradle-dist.tar.xz gradle-dist
 
 mkdir -p /home/worker/artifacts
-# We can't redistribute the Android SDK publicly just yet.  We'll
-# upload to (internal) tooltool eventually.  mv
-# android-sdk-linux.tar.xz /home/worker/artifacts
 mv jcentral.tar.xz /home/worker/artifacts
 mv gradle-dist.tar.xz /home/worker/artifacts
 popd

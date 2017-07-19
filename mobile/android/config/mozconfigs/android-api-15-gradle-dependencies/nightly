@@ -44,3 +44,9 @@ export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
+
+# End ../android-api-15-frontend/nightly.
+
+# Populated after checking out the sources and before building the
+# tree as part of the dependencies task bin/ scripts.
+ac_add_options --with-android-sdk="/home/worker/.mozbuild/android-sdk-linux"
