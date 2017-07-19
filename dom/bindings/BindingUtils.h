@@ -3213,11 +3213,11 @@ class PinnedStringId
     return true;
   }
 
-  operator const jsid& () {
+  operator const jsid& () const {
     return id;
   }
 
-  operator JS::Handle<jsid> () {
+  operator JS::Handle<jsid> () const {
     /* This is safe because we have pinned the string. */
     return JS::Handle<jsid>::fromMarkedLocation(&id);
   }
