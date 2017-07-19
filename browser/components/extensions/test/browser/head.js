@@ -205,7 +205,7 @@ var awaitExtensionPanel = async function(extension, win = window, awaitLoad = tr
   await Promise.all([
     promisePopupShown(getPanelForNode(browser)),
 
-    awaitLoad && awaitBrowserLoaded(browser),
+    awaitLoad && awaitBrowserLoaded(browser, awaitLoad),
   ]);
 
   return browser;
@@ -252,7 +252,8 @@ var clickBrowserAction = async function(extension, win = window) {
   await showBrowserAction(extension, win);
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
-  widget.node.click();
+
+  EventUtils.synthesizeMouseAtCenter(widget.node, {}, win);
 };
 
 function closeBrowserAction(extension, win = window) {

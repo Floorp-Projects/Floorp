@@ -326,9 +326,6 @@ class BasePopup {
       // available to us in the panel.
       height = Math.max(height, this.viewHeight);
       this.viewNode.style.maxHeight = `${height}px`;
-      // Used by the panelmultiview code to figure out sizing without reparenting
-      // (which would destroy the browser and break us).
-      this.lastCalculatedInViewHeight = height;
     } else {
       this.browser.style.width = `${width}px`;
       this.browser.style.minWidth = `${width}px`;
@@ -521,10 +518,6 @@ class ViewPopup extends BasePopup {
     if (this.dimensions && !this.fixedWidth) {
       this.resizeBrowser(this.dimensions);
     }
-
-    this.viewNode.customRectGetter = () => {
-      return {height: this.lastCalculatedInViewHeight || this.viewHeight};
-    };
 
     this.tempPanel.remove();
     this.tempPanel = null;
