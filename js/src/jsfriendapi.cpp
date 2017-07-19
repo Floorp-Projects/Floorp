@@ -1500,5 +1500,5 @@ JS_FRIEND_API(bool)
 js::SystemZoneAvailable(JSContext* cx)
 {
     CooperatingContext& owner = cx->runtime()->gc.systemZoneGroup->ownerContext();
-    return owner.context() == cx || owner.context() == nullptr;
+    return owner.context() == nullptr;
 }
