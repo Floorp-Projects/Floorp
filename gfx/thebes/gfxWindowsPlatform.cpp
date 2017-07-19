@@ -8,7 +8,6 @@
 
 #include "cairo.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/layers/CompositorBridgeChild.h"
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
@@ -21,7 +20,6 @@
 #include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Telemetry.h"
 #include "GeckoProfiler.h"
 
@@ -72,7 +70,7 @@
 #include "gfxConfig.h"
 #include "VsyncSource.h"
 #include "DriverCrashGuard.h"
-#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "D3D11Checks.h"
@@ -896,44 +894,12 @@ gfxWindowsPlatform::SchedulePaintIfDeviceReset()
 
   gfxCriticalNote << "(gfxWindowsPlatform) Detected device reset: " << (int)resetReason;
 
-  if (XRE_IsParentProcess()) {
-    // Trigger an ::OnPaint for each window.
-    ::EnumThreadWindows(GetCurrentThreadId(),
-                        InvalidateWindowForDeviceReset,
-                        0);
-  } else {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "gfx::gfxWindowsPlatform::SchedulePaintIfDeviceReset",
-      []() -> void {
-        gfxWindowsPlatform::GetPlatform()->CheckForContentOnlyDeviceReset();
-      }
-    ));
-  }
+  // Trigger an ::OnPaint for each window.
+  ::EnumThreadWindows(GetCurrentThreadId(),
+                      InvalidateWindowForDeviceReset,
+                      0);
 
-  gfxCriticalNote << "(gfxWindowsPlatform) scheduled device update.";
-}
-
-void
-gfxWindowsPlatform::CheckForContentOnlyDeviceReset()
-{
-  if (!DidRenderingDeviceReset()) {
-    return;
-  }
-
-  bool isContentOnlyTDR;
-  D3D11DeviceStatus status;
-
-  DeviceManagerDx::Get()->ExportDeviceInfo(&status);
-  CompositorBridgeChild::Get()->SendCheckContentOnlyTDR(
-    status.sequenceNumber(), &isContentOnlyTDR);
-
-  // The parent process doesn't know about the reset yet, or the reset is
-  // local to our device.
-  if (isContentOnlyTDR) {
-    gfxCriticalNote << "A content-only TDR is detected.";
-    dom::ContentChild* cc = dom::ContentChild::GetSingleton();
-    cc->RecvReinitRenderingForDeviceReset();
-  }
+  gfxCriticalNote << "(gfxWindowsPlatform) Finished device reset.";
 }
 
 void
