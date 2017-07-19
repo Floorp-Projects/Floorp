@@ -233,14 +233,16 @@ private:
   nsLoadFlags mLoadFlags;
   uint32_t    mLockCount;
   uint32_t    mAnimationConsumers;
-  bool mCanceled;
-  bool mIsInLoadGroup;
-  bool mListenerIsStrongRef;
-  bool mDecodeRequested;
+  bool mCanceled : 1;
+  bool mIsInLoadGroup : 1;
+  bool mListenerIsStrongRef : 1;
+  bool mDecodeRequested : 1;
 
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
-  bool mDeferNotifications;
+  bool mDeferNotifications : 1;
+  bool mHadListener : 1;
+  bool mHadDispatch : 1;
 };
 
 // Used for static image proxies for which no requests are available, so

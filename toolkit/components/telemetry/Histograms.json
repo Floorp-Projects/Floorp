@@ -1790,6 +1790,14 @@
     "n_buckets": 50,
     "description": "PNG image decode speed (Kbytes/sec)"
   },
+  "IMAGE_REQUEST_DISPATCHED": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","aosmond@mozilla.com"],
+    "expires_in_version": "62",
+    "kind": "boolean",
+    "description": "Track how many image requests required event dispatching because we were unable to predict the correct scheduler group: true if the request required dispatching. See image/imgRequestProxy.cpp for details.",
+    "bug_numbers": [1359833]
+  },
   "CANVAS_2D_USED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
