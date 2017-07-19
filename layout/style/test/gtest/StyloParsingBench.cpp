@@ -62,13 +62,11 @@ MOZ_GTEST_BENCH(Stylo, Gecko_nsCSSParser_ParseSheet_Bench, GeckoParsingBench);
 
 #ifdef MOZ_STYLO
 
-static void ServoSetPropertyByIdBench() {
+static void ServoSetPropertyByIdBench(const nsACString& css) {
   RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
   RefPtr<URLExtraData> data = new URLExtraData(
     NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
 
-  NS_NAMED_LITERAL_CSTRING(css_, " 10px");
-  const nsACString& css = css_;
   ASSERT_TRUE(IsUTF8(css));
 
   for (int i = 0; i < SETPROPERTY_REPETITIONS; i++) {
@@ -85,6 +83,12 @@ static void ServoSetPropertyByIdBench() {
   }
 }
 
-MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench, ServoSetPropertyByIdBench);
+MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench, [] {
+  ServoSetPropertyByIdBench(NS_LITERAL_CSTRING("10px"));
+});
+
+MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_WithInitialSpace_Bench, [] {
+  ServoSetPropertyByIdBench(NS_LITERAL_CSTRING(" 10px"));
+});
 
 #endif
