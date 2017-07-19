@@ -60,7 +60,7 @@ buildscript {
             exclude module: 'guava'
         }
         // Provided in tree.
-        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.6.1'
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.7.3'
     }
 }
 
