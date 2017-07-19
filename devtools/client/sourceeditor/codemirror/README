@@ -5,12 +5,12 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 5.16.0. To upgrade: download a new version of
+Currently used version is 5.27.4. To upgrade: download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
 Then to recreate codemirror.bundle.js:
- > cd devtools/client
+ > cd devtools/client/sourceeditor
  > npm install
  > webpack
 
