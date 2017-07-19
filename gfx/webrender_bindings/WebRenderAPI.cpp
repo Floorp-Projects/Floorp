@@ -785,9 +785,9 @@ DisplayListBuilder::PushIFrame(const wr::LayoutRect& aBounds,
 void
 DisplayListBuilder::PushBorder(const wr::LayoutRect& aBounds,
                                const wr::LayoutRect& aClip,
-                               const wr::WrBorderWidths& aWidths,
-                               const Range<const wr::WrBorderSide>& aSides,
-                               const wr::WrBorderRadius& aRadius)
+                               const wr::BorderWidths& aWidths,
+                               const Range<const wr::BorderSide>& aSides,
+                               const wr::BorderRadius& aRadius)
 {
   MOZ_ASSERT(aSides.length() == 4);
   if (aSides.length() != 4) {
@@ -800,12 +800,12 @@ DisplayListBuilder::PushBorder(const wr::LayoutRect& aBounds,
 void
 DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
                                     const wr::LayoutRect& aClip,
-                                    const wr::WrBorderWidths& aWidths,
+                                    const wr::BorderWidths& aWidths,
                                     wr::ImageKey aImage,
-                                    const wr::WrNinePatchDescriptor& aPatch,
+                                    const wr::NinePatchDescriptor& aPatch,
                                     const wr::SideOffsets2D_f32& aOutset,
-                                    const wr::WrRepeatMode& aRepeatHorizontal,
-                                    const wr::WrRepeatMode& aRepeatVertical)
+                                    const wr::RepeatMode& aRepeatHorizontal,
+                                    const wr::RepeatMode& aRepeatVertical)
 {
   wr_dp_push_border_image(mWrState, aBounds, aClip,
                           aWidths, aImage, aPatch, aOutset,
@@ -815,7 +815,7 @@ DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
 void
 DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutRect& aClip,
-                                       const wr::WrBorderWidths& aWidths,
+                                       const wr::BorderWidths& aWidths,
                                        const wr::LayoutPoint& aStartPoint,
                                        const wr::LayoutPoint& aEndPoint,
                                        const nsTArray<wr::GradientStop>& aStops,
@@ -831,7 +831,7 @@ DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
 void
 DisplayListBuilder::PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                              const wr::LayoutRect& aClip,
-                                             const wr::WrBorderWidths& aWidths,
+                                             const wr::BorderWidths& aWidths,
                                              const wr::LayoutPoint& aCenter,
                                              const wr::LayoutSize& aRadius,
                                              const nsTArray<wr::GradientStop>& aStops,

@@ -235,22 +235,22 @@ public:
   // It is just to bypass compiler bug. See Bug 1357734.
   void PushBorder(const wr::LayoutRect& aBounds,
                   const wr::LayoutRect& aClip,
-                  const wr::WrBorderWidths& aWidths,
-                  const Range<const wr::WrBorderSide>& aSides,
-                  const wr::WrBorderRadius& aRadius);
+                  const wr::BorderWidths& aWidths,
+                  const Range<const wr::BorderSide>& aSides,
+                  const wr::BorderRadius& aRadius);
 
   void PushBorderImage(const wr::LayoutRect& aBounds,
                        const wr::LayoutRect& aClip,
-                       const wr::WrBorderWidths& aWidths,
+                       const wr::BorderWidths& aWidths,
                        wr::ImageKey aImage,
-                       const wr::WrNinePatchDescriptor& aPatch,
+                       const wr::NinePatchDescriptor& aPatch,
                        const wr::SideOffsets2D_f32& aOutset,
-                       const wr::WrRepeatMode& aRepeatHorizontal,
-                       const wr::WrRepeatMode& aRepeatVertical);
+                       const wr::RepeatMode& aRepeatHorizontal,
+                       const wr::RepeatMode& aRepeatVertical);
 
   void PushBorderGradient(const wr::LayoutRect& aBounds,
                           const wr::LayoutRect& aClip,
-                          const wr::WrBorderWidths& aWidths,
+                          const wr::BorderWidths& aWidths,
                           const wr::LayoutPoint& aStartPoint,
                           const wr::LayoutPoint& aEndPoint,
                           const nsTArray<wr::GradientStop>& aStops,
@@ -259,7 +259,7 @@ public:
 
   void PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                 const wr::LayoutRect& aClip,
-                                const wr::WrBorderWidths& aWidths,
+                                const wr::BorderWidths& aWidths,
                                 const wr::LayoutPoint& aCenter,
                                 const wr::LayoutSize& aRadius,
                                 const nsTArray<wr::GradientStop>& aStops,

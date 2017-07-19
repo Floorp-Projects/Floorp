@@ -308,46 +308,46 @@ static inline wr::LayoutTransform ToLayoutTransform(const gfx::Matrix4x4Typed<S,
   return transform;
 }
 
-static inline wr::WrBorderStyle ToWrBorderStyle(const uint8_t& style)
+static inline wr::BorderStyle ToBorderStyle(const uint8_t& style)
 {
   switch (style) {
   case NS_STYLE_BORDER_STYLE_NONE:
-    return wr::WrBorderStyle::None;
+    return wr::BorderStyle::None;
   case NS_STYLE_BORDER_STYLE_SOLID:
-    return wr::WrBorderStyle::Solid;
+    return wr::BorderStyle::Solid;
   case NS_STYLE_BORDER_STYLE_DOUBLE:
-    return wr::WrBorderStyle::Double;
+    return wr::BorderStyle::Double;
   case NS_STYLE_BORDER_STYLE_DOTTED:
-    return wr::WrBorderStyle::Dotted;
+    return wr::BorderStyle::Dotted;
   case NS_STYLE_BORDER_STYLE_DASHED:
-    return wr::WrBorderStyle::Dashed;
+    return wr::BorderStyle::Dashed;
   case NS_STYLE_BORDER_STYLE_HIDDEN:
-    return wr::WrBorderStyle::Hidden;
+    return wr::BorderStyle::Hidden;
   case NS_STYLE_BORDER_STYLE_GROOVE:
-    return wr::WrBorderStyle::Groove;
+    return wr::BorderStyle::Groove;
   case NS_STYLE_BORDER_STYLE_RIDGE:
-    return wr::WrBorderStyle::Ridge;
+    return wr::BorderStyle::Ridge;
   case NS_STYLE_BORDER_STYLE_INSET:
-    return wr::WrBorderStyle::Inset;
+    return wr::BorderStyle::Inset;
   case NS_STYLE_BORDER_STYLE_OUTSET:
-    return wr::WrBorderStyle::Outset;
+    return wr::BorderStyle::Outset;
   default:
     MOZ_ASSERT(false);
   }
-  return wr::WrBorderStyle::None;
+  return wr::BorderStyle::None;
 }
 
-static inline wr::WrBorderSide ToWrBorderSide(const gfx::Color& color, const uint8_t& style)
+static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const uint8_t& style)
 {
-  wr::WrBorderSide bs;
+  wr::BorderSide bs;
   bs.color = ToColorF(color);
-  bs.style = ToWrBorderStyle(style);
+  bs.style = ToBorderStyle(style);
   return bs;
 }
 
-static inline wr::WrBorderRadius ToWrUniformBorderRadius(const LayerSize& aSize)
+static inline wr::BorderRadius ToUniformBorderRadius(const LayerSize& aSize)
 {
-  wr::WrBorderRadius br;
+  wr::BorderRadius br;
   br.top_left = ToLayoutSize(aSize);
   br.top_right = ToLayoutSize(aSize);
   br.bottom_left = ToLayoutSize(aSize);
@@ -355,10 +355,10 @@ static inline wr::WrBorderRadius ToWrUniformBorderRadius(const LayerSize& aSize)
   return br;
 }
 
-static inline wr::WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
-                                                  const LayerSize& bottomLeft, const LayerSize& bottomRight)
+static inline wr::BorderRadius ToBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
+                                              const LayerSize& bottomLeft, const LayerSize& bottomRight)
 {
-  wr::WrBorderRadius br;
+  wr::BorderRadius br;
   br.top_left = ToLayoutSize(topLeft);
   br.top_right = ToLayoutSize(topRight);
   br.bottom_left = ToLayoutSize(bottomLeft);
@@ -366,9 +366,9 @@ static inline wr::WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, cons
   return br;
 }
 
-static inline wr::WrBorderWidths ToWrBorderWidths(float top, float right, float bottom, float left)
+static inline wr::BorderWidths ToBorderWidths(float top, float right, float bottom, float left)
 {
-  wr::WrBorderWidths bw;
+  wr::BorderWidths bw;
   bw.top = top;
   bw.right = right;
   bw.bottom = bottom;
@@ -376,10 +376,10 @@ static inline wr::WrBorderWidths ToWrBorderWidths(float top, float right, float 
   return bw;
 }
 
-static inline wr::WrNinePatchDescriptor ToWrNinePatchDescriptor(uint32_t width, uint32_t height,
-                                                                const wr::SideOffsets2D_u32& slice)
+static inline wr::NinePatchDescriptor ToNinePatchDescriptor(uint32_t width, uint32_t height,
+                                                            const wr::SideOffsets2D_u32& slice)
 {
-  WrNinePatchDescriptor patch;
+  NinePatchDescriptor patch;
   patch.width = width;
   patch.height = height;
   patch.slice = slice;
@@ -406,22 +406,22 @@ static inline wr::SideOffsets2D_f32 ToSideOffsets2D_f32(float top, float right, 
   return offset;
 }
 
-static inline wr::WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
+static inline wr::RepeatMode ToRepeatMode(uint8_t repeatMode)
 {
   switch (repeatMode) {
   case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
-    return wr::WrRepeatMode::Stretch;
+    return wr::RepeatMode::Stretch;
   case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
-    return wr::WrRepeatMode::Repeat;
+    return wr::RepeatMode::Repeat;
   case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
-    return wr::WrRepeatMode::Round;
+    return wr::RepeatMode::Round;
   case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
-    return wr::WrRepeatMode::Space;
+    return wr::RepeatMode::Space;
   default:
     MOZ_ASSERT(false);
   }
 
-  return wr::WrRepeatMode::Stretch;
+  return wr::RepeatMode::Stretch;
 }
 
 template<class S, class T>
@@ -447,7 +447,7 @@ static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const wr::LayoutRect
 {
   wr::WrComplexClipRegion complex_clip;
   complex_clip.rect = rect;
-  complex_clip.radii = wr::ToWrUniformBorderRadius(size);
+  complex_clip.radii = wr::ToUniformBorderRadius(size);
   return complex_clip;
 }
 
