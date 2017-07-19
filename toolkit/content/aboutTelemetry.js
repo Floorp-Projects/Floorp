@@ -1393,7 +1393,7 @@ var Search = {
         };
       }
     }
-    return {filter, isPassFunc}
+    return [isPassFunc, filter]
   },
 
   filterElements(elements, filterText) {
@@ -1407,9 +1407,7 @@ var Search = {
   },
 
   filterKeyedElements(keyedElements, filterText) {
-    let res = this.chooseFilter(filterText);
-    let isPassFunc = res.isPassFunc;
-    let filter = res.filter;
+    let [isPassFunc, filter] = this.chooseFilter(filterText);
 
     let needLowerCase = (isPassFunc === this.isPassText);
     keyedElements.forEach((keyedElement) => {
