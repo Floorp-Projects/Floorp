@@ -508,7 +508,7 @@ panel[arrowposition="start_after"]:-moz-locale-dir(rtl) {
   -moz-window-transform-origin: left calc(100% - 20px);
 }
 
-%elifndef MOZ_WIDGET_GTK
+%else
 
 panel[type="arrow"]:not([animate="false"]) {
   transform: scale(.4);
