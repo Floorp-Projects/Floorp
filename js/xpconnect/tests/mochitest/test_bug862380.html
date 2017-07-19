@@ -13,16 +13,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862380
   /** Test for Bug 862380 **/
   SimpleTest.waitForExplicitFinish();
   function go() {
-    checkNotEnumerable($('ifr').contentWindow);
-    checkNotEnumerable($('ifr').contentWindow.location);
+    checkNotEnumerable($('ifr').contentWindow, true);
+    checkNotEnumerable($('ifr').contentWindow.location, false);
     SimpleTest.finish();
   }
 
-  function checkNotEnumerable(obj) {
+function checkNotEnumerable(obj, isWindow) {
     try {
-      is(Object.keys(obj).length, 0, "Object.keys gives empty array");
+      const expectedWindow = ["0", "window", "location", "top", "close",
+                              "focus", "blur", "postMessage", "self", "closed",
+                              "frames", "length", "opener", "parent"];
+      const expectedLocation = ["replace", "href"];
+      const expected = isWindow ? expectedWindow : expectedLocation;
+      is(Object.keys(obj).length, expected.length,
+         "Object.keys gives right array length");
+      var actual = [];
       for (var i in obj)
-        ok(false, "Enumerated something: " + i);
+        actual.push(i);
+      is(actual.length, expected.length,
+         "Enumeration sees the right number of props");
+      actual.sort();
+      expected.sort();
+      for (var i = 0; i < actual.length; ++i)
+        is(actual[i], expected[i], "Arrays should be the same " + i);
     } catch (e) {
       ok(false, "threw: " + e);
     }
