@@ -9,8 +9,11 @@ import java.util.concurrent.Future;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.TextViewCompat;
+import android.text.Spannable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -54,6 +57,8 @@ public class TwoLinePageRow extends ThemedLinearLayout
     private String mPageUrl;
 
     private boolean mHasReaderCacheItem;
+
+    private TitleFormatter mTitleFormatter;
 
     public TwoLinePageRow(Context context) {
         this(context, null);
@@ -141,7 +146,7 @@ public class TwoLinePageRow extends ThemedLinearLayout
         }
     }
 
-    private void setTitle(String text) {
+    private void setTitle(CharSequence text) {
         mTitle.setText(text);
     }
 
@@ -249,7 +254,12 @@ public class TwoLinePageRow extends ThemedLinearLayout
 
         // Use the URL instead of an empty title for consistency with the normal URL
         // bar view - this is the equivalent of getDisplayTitle() in Tab.java
-        setTitle(TextUtils.isEmpty(title) ? url : title);
+        final String titleToShow = TextUtils.isEmpty(title) ? url : title;
+        if (mTitleFormatter != null) {
+            setTitle(mTitleFormatter.format(titleToShow));
+        } else {
+            setTitle(titleToShow);
+        }
 
         // No point updating the below things if URL has not changed. Prevents evil Favicon flicker.
         if (url.equals(mPageUrl)) {
@@ -328,5 +338,14 @@ public class TwoLinePageRow extends ThemedLinearLayout
         final boolean hasReaderCacheItem = rch.isURLCached(url);
 
         update(title, url, bookmarkId, hasReaderCacheItem);
+    }
+
+    public void setTitleFormatter(TitleFormatter formatter) {
+        mTitleFormatter = formatter;
+    }
+
+    // Use this interface to decorate content in title view.
+    interface TitleFormatter {
+        CharSequence format(@NonNull CharSequence title);
     }
 }

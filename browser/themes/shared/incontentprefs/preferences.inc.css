@@ -12,6 +12,12 @@
   font-size: 1.25rem;
 }
 
+description.indent,
+.indent > description {
+  font-size: 1.18rem;
+  color: #737373;
+}
+
 * {
   -moz-user-select: text;
 }

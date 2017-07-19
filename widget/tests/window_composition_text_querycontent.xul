@@ -4286,6 +4286,28 @@ function runQueryTextContentEventTest()
   is(result.text, "abc", "runQueryTextContentEventTest #16 (0, 3), \"" + contenteditable.innerHTML + "\"");
 }
 
+function runQuerySelectionEventTest()
+{
+  contenteditable.focus();
+
+  var selection = windowOfContenteditable.getSelection();
+
+  // #1
+  contenteditable.innerHTML = "<br/>a";
+  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild, 1);
+  checkSelection(0, kLF + "a", "runQuerySelectionEventTest #1, \"" + contenteditable.innerHTML + "\"");
+
+  // #2
+  contenteditable.innerHTML = "<p></p><p>abc</p>";
+  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild.firstChild, 1);
+  checkSelection(kLFLen, kLF + "a", "runQuerySelectionEventTest #2, \"" + contenteditable.innerHTML + "\"");
+
+  // #3
+  contenteditable.innerHTML = "<p>abc</p><p>def</p>";
+  selection.setBaseAndExtent(contenteditable.firstChild, 0, contenteditable.lastChild.firstChild, 1);
+  checkSelection(kLFLen, "abc" + kLF + "d", "runQuerySelectionEventTest #3, \"" + contenteditable.innerHTML + "\"");
+}
+
 function runQueryIMESelectionTest()
 {
   textarea.focus();
@@ -7862,9 +7884,9 @@ function* runIMEContentObserverTest()
       dumpUnexpectedNotifications(description, 3);
     } else {
       checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
-      todo_is(notifications.length, 3, description + " should cause 3 notifications");
-      todo_is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
-      todo_is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
+      is(notifications.length, 3, description + " should cause 3 notifications");
+      is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
+      is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
     }
 
     // "a[B]d"
@@ -8120,6 +8142,7 @@ function* testBody()
   runCharAtPointAtOutsideTest();
   runSetSelectionEventTest();
   runQueryTextContentEventTest();
+  runQuerySelectionEventTest();
   runQueryIMESelectionTest();
   runQueryContentEventRelativeToInsertionPoint();
   yield* runIMEContentObserverTest();

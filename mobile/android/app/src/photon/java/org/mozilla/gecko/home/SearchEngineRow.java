@@ -215,14 +215,10 @@ class SearchEngineRow extends ThemedRelativeLayout {
         refreshOccurrencesWith(searchTerm, suggestion);
         if (mOccurrences.size() > 0) {
             final SpannableStringBuilder sb = new SpannableStringBuilder(suggestion);
-            int nextStartSpanIndex = 0;
-            // Done to make sure that the stretch of text after the last occurrence, till the end of the suggestion, is made bold
-            mOccurrences.add(suggestion.length());
             for (int occurrence : mOccurrences) {
                 // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
-                StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
-                sb.setSpan(boldSpan, nextStartSpanIndex, occurrence, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                nextStartSpanIndex = occurrence + searchTermLength;
+                final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+                sb.setSpan(boldSpan, occurrence, occurrence + searchTermLength, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
             }
             mOccurrences.clear();
             suggestionText.setText(sb);
@@ -245,7 +241,10 @@ class SearchEngineRow extends ThemedRelativeLayout {
     }
 
     public void setSearchTerm(String searchTerm) {
-        mUserEnteredTextView.setText(searchTerm);
+        final SpannableStringBuilder sb = new SpannableStringBuilder(searchTerm);
+        final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+        sb.setSpan(boldSpan, 0, searchTerm.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+        mUserEnteredTextView.setText(sb);
 
         // mSearchEngine is not set in the first call to this method; the content description
         // is instead initially set in updateSuggestions().

@@ -924,7 +924,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
               AsyncTransformComponentMatrix(asyncTransformWithoutOverscroll)
             * overscrollTransform;
 
-          if (!layer->IsScrollInfoLayer()) {
+          if (!layer->IsScrollableWithoutContent()) {
             controller->MarkAsyncTransformAppliedToContent();
           }
 
@@ -1100,7 +1100,7 @@ LayerIsScrollbarTarget(const LayerMetricsWrapper& aTarget, Layer* aScrollbar)
   if (metrics.GetScrollId() != aScrollbar->GetScrollbarTargetContainerId()) {
     return false;
   }
-  return !aTarget.IsScrollInfoLayer();
+  return !metrics.IsScrollInfoLayer();
 }
 
 static void

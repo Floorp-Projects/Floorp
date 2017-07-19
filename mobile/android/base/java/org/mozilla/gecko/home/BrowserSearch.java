@@ -33,6 +33,7 @@ import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -43,6 +44,12 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.graphics.Typeface;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.database.Cursor;
 import android.net.Uri;
@@ -1189,11 +1196,46 @@ public class BrowserSearch extends HomeFragment
 
                 final Cursor c = getCursor(position);
                 final TwoLinePageRow row = (TwoLinePageRow) view;
+
+                if (SkinConfig.isPhoton()) {
+                    // Highlight all substrings in title field if they matches the search term.
+                    row.setTitleFormatter(mTwoLinePageRowTitleFormatter);
+                }
                 row.updateFromCursor(c);
                 row.setPrivateMode(isPrivate);
             }
         }
     }
+
+    private TwoLinePageRow.TitleFormatter mTwoLinePageRowTitleFormatter = new TwoLinePageRow.TitleFormatter() {
+        @Override
+        public CharSequence format(@NonNull CharSequence title) {
+            // Don't try to search for an empty string - String.indexOf will return 0, which would result
+            // in us iterating with lastIndexOfMatch = 0, which eventually results in an OOM.
+            if (TextUtils.isEmpty(mSearchTerm)) {
+                return title;
+            }
+
+            // Find matching substrings in title field in TwoLinePageRow, ignoring cases.
+            final String titleInLowerCase = title.toString().toLowerCase();
+            final String pattern = mSearchTerm.toLowerCase();
+            final int patternLength = pattern.length();
+
+            final SpannableStringBuilder sb = new SpannableStringBuilder(title);
+
+            int indexOfMatch = 0;
+            int lastIndexOfMatch = 0;
+            while (indexOfMatch != -1) {
+                indexOfMatch = titleInLowerCase.indexOf(pattern, lastIndexOfMatch);
+                lastIndexOfMatch = indexOfMatch + patternLength;
+                if (indexOfMatch != -1) {
+                    final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+                    sb.setSpan(boldSpan, indexOfMatch, lastIndexOfMatch, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                }
+            }
+            return sb;
+        }
+    };
 
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override

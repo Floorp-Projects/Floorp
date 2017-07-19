@@ -1,0 +1,18 @@
+<!doctype html>
+<style>
+.foo :not(.bar) + baz {
+  color: red;
+}
+
+.descendant::before {
+  content: "";
+}
+</style>
+<div class="foo">
+  <div class="descendant">
+  </div>
+</div>
+<script>
+  document.body.offsetTop;
+  document.querySelector('.foo').classList.remove('foo');
+</script>

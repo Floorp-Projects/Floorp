@@ -139,10 +139,9 @@
     console.warn("`workerify` should only be used in tests or measuring performance. " +
                  "This creates an object URL on the browser window, and should not be " +
                  "used in production.");
-    // Fetch via window/utils here as we don't want to include
-    // this module normally.
-    let { getMostRecentBrowserWindow } = require("sdk/window/utils");
-    let { URL, Blob } = getMostRecentBrowserWindow();
+    // Fetch modules here as we don't want to include it normally.
+    const Services = require("Services");
+    let { URL, Blob } = Services.wm.getMostRecentWindow("navigator:browser");
     let stringifiedFn = createWorkerString(fn);
     let blob = new Blob([stringifiedFn]);
     let url = URL.createObjectURL(blob);

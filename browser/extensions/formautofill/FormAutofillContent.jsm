@@ -29,8 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
 const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);
 
-const AUTOFILL_FIELDS_THRESHOLD = 3;
-
 // Register/unregister a constructor as a factory.
 function AutocompleteFactory() {}
 AutocompleteFactory.prototype = {
@@ -365,7 +363,7 @@ var FormAutofillContent = {
     }
 
     let pendingAddress = handler.createProfile();
-    if (Object.keys(pendingAddress).length < AUTOFILL_FIELDS_THRESHOLD) {
+    if (Object.keys(pendingAddress).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD) {
       this.log.debug(`Not saving since there are only ${Object.keys(pendingAddress).length} usable fields`);
       return true;
     }
@@ -476,15 +474,23 @@ var FormAutofillContent = {
     this._formsDetails.set(formHandler.form.rootElement, formHandler);
     this.log.debug("Adding form handler to _formsDetails:", formHandler);
 
-    if (formHandler.fieldDetails.length < AUTOFILL_FIELDS_THRESHOLD) {
-      this.log.debug("Ignoring form since it has only", formHandler.fieldDetails.length,
+    if (formHandler.isValidAddressForm) {
+      formHandler.addressFieldDetails.forEach(
+        detail => this._markAsAutofillField(detail.elementWeakRef.get())
+      );
+    } else {
+      this.log.debug("Ignoring address related fields since it has only",
+                     formHandler.addressFieldDetails.length,
                      "field(s)");
-      return;
     }
 
-    formHandler.fieldDetails.forEach(detail =>
-      this._markAsAutofillField(detail.elementWeakRef.get())
-    );
+    if (formHandler.isValidCreditCardForm) {
+      formHandler.creditCardFieldDetails.forEach(
+        detail => this._markAsAutofillField(detail.elementWeakRef.get())
+      );
+    } else {
+      this.log.debug("Ignoring credit card related fields since it's without credit card number field");
+    }
   },
 
   _markAsAutofillField(field) {

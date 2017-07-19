@@ -914,6 +914,14 @@ pref("browser.sessionstore.dom_storage_limit", 2048);
 // allow META refresh by default
 pref("accessibility.blockautorefresh", false);
 
+// Whether useAsyncTransactions is enabled or not.
+// Currently we only enable them for nightly.
+#ifdef NIGHTLY_BUILD
+pref("browser.places.useAsyncTransactions", true);
+#else
+pref("browser.places.useAsyncTransactions", false);
+#endif
+
 // Whether history is enabled or not.
 pref("places.history.enabled", true);
 

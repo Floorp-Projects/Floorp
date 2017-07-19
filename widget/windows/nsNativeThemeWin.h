@@ -124,7 +124,7 @@ protected:
                                int aPart, int aState,
                                RECT* aWidgetRect, RECT* aClipRect);
 
-  nsresult GetCachedWidgetBorder(nsIFrame* aFrame, nsUXThemeClass aThemeClass,
+  nsresult GetCachedWidgetBorder(nsIFrame* aFrame, HANDLE aTheme, nsUXThemeClass aThemeClass,
                                  uint8_t aWidgetType, int32_t aPart, int32_t aState,
                                  nsIntMargin* aResult);
 

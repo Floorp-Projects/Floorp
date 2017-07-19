@@ -54,7 +54,8 @@ public class FadedSingleColorTextView extends FadedTextView {
         super.setText(text, type);
         final boolean previousTextDirectionRtl = mIsTextDirectionRtl;
         if (!TextUtils.isEmpty(text)) {
-            mIsTextDirectionRtl = BidiFormatter.getInstance().isRtl((String) text);
+            // The text is an instance of CharSequence, not String. It cannot cast to String directly, use toString() instead.
+            mIsTextDirectionRtl = BidiFormatter.getInstance().isRtl(text.toString());
         }
         if (mIsTextDirectionRtl != previousTextDirectionRtl) {
             mTextGradient = null;

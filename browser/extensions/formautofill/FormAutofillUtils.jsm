@@ -13,6 +13,8 @@ const ADDRESS_REFERENCES = "chrome://formautofill/content/addressReferences.js";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.FormAutofillUtils = {
+  get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
+
   _fieldNameInfo: {
     "name": "name",
     "given-name": "name",
