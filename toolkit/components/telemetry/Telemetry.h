@@ -46,6 +46,13 @@ enum TimerResolution {
 };
 
 /**
+ * Create and destroy the underlying base::StatisticsRecorder singleton.
+ * Creation has to be done very early in the startup sequence.
+ */
+void CreateStatisticsRecorder();
+void DestroyStatisticsRecorder();
+
+/**
  * Initialize the Telemetry service on the main thread at startup.
  */
 void Init();
@@ -143,7 +150,7 @@ void AccumulateCategorical(HistogramID id, const nsCString& label);
 void AccumulateTimeDelta(HistogramID id, TimeStamp start, TimeStamp end = TimeStamp::Now());
 
 /**
- * Enable/disable recording for this histogram in this process at runtime.
+ * Enable/disable recording for this histogram at runtime.
  * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
  * id must be a valid telemetry enum, otherwise an assertion is triggered.
  *
