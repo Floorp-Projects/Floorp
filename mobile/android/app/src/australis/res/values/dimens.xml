@@ -225,7 +225,7 @@
 
     <item name="notification_media_cover" type="dimen">128dp</item>
 
-    <item name="activity_stream_base_margin" type="dimen">10dp</item>
+    <item name="activity_stream_base_margin" type="dimen">8dp</item>
     <item name="activity_stream_desired_tile_width" type="dimen">90dp</item>
     <item name="activity_stream_desired_tile_height" type="dimen">70dp</item>
     <item name="activity_stream_top_sites_text_height" type="dimen">30dp</item>
