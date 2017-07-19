@@ -1550,9 +1550,7 @@ nsMathMLContainerFrame::ReportInvalidChildError(nsIAtom* aChildTag)
 nsContainerFrame*
 NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  auto newFrame = new (aPresShell) nsMathMLmathBlockFrame(aContext);
-  newFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);
-  return newFrame;
+  return new (aPresShell) nsMathMLmathBlockFrame(aContext);
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
