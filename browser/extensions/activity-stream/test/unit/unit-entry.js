@@ -29,7 +29,6 @@ overrider.set({
   Preferences: FakePrefs,
   Services: {
     locale: {getRequestedLocale() {}},
-    urlFormatter: {formatURL: str => str},
     mm: {
       addMessageListener: (msg, cb) => cb(),
       removeMessageListener() {}
@@ -40,8 +39,6 @@ overrider.set({
       removeObserver() {}
     },
     prefs: {
-      addObserver() {},
-      removeObserver() {},
       getStringPref() {},
       getDefaultBranch() {
         return {

@@ -1,6 +1,5 @@
 const {reducers, INITIAL_STATE, insertPinned} = require("common/Reducers.jsm");
-const {TopSites, App, Snippets, Prefs, Dialog, Sections} = reducers;
-
+const {TopSites, App, Prefs, Dialog} = reducers;
 const {actionTypes: at} = require("common/Actions.jsm");
 
 describe("Reducers", () => {
@@ -180,61 +179,6 @@ describe("Reducers", () => {
       assert.deepEqual(INITIAL_STATE.Dialog, nextState);
     });
   });
-  describe("Sections", () => {
-    let oldState;
-
-    beforeEach(() => {
-      oldState = new Array(5).fill(null).map((v, i) => ({
-        id: `foo_bar_${i}`,
-        title: `Foo Bar ${i}`,
-        initialized: false,
-        rows: []
-      }));
-    });
-
-    it("should return INITIAL_STATE by default", () => {
-      assert.equal(INITIAL_STATE.Sections, Sections(undefined, {type: "non_existent"}));
-    });
-    it("should remove the correct section on SECTION_DEREGISTER", () => {
-      const newState = Sections(oldState, {type: at.SECTION_DEREGISTER, data: "foo_bar_2"});
-      assert.lengthOf(newState, 4);
-      const expectedNewState = oldState.splice(2, 1) && oldState;
-      assert.deepEqual(newState, expectedNewState);
-    });
-    it("should add a section on SECTION_REGISTER if it doesn't already exist", () => {
-      const action = {type: at.SECTION_REGISTER, data: {id: "foo_bar_5", title: "Foo Bar 5"}};
-      const newState = Sections(oldState, action);
-      assert.lengthOf(newState, 6);
-      const insertedSection = newState.find(section => section.id === "foo_bar_5");
-      assert.propertyVal(insertedSection, "title", action.data.title);
-    });
-    it("should set newSection.rows === [] if no rows are provided on SECTION_REGISTER", () => {
-      const action = {type: at.SECTION_REGISTER, data: {id: "foo_bar_5", title: "Foo Bar 5"}};
-      const newState = Sections(oldState, action);
-      const insertedSection = newState.find(section => section.id === "foo_bar_5");
-      assert.deepEqual(insertedSection.rows, []);
-    });
-    it("should update a section on SECTION_REGISTER if it already exists", () => {
-      const NEW_TITLE = "New Title";
-      const action = {type: at.SECTION_REGISTER, data: {id: "foo_bar_2", title: NEW_TITLE}};
-      const newState = Sections(oldState, action);
-      assert.lengthOf(newState, 5);
-      const updatedSection = newState.find(section => section.id === "foo_bar_2");
-      assert.ok(updatedSection && updatedSection.title === NEW_TITLE);
-    });
-    it("should have no effect on SECTION_ROWS_UPDATE if the id doesn't exist", () => {
-      const action = {type: at.SECTION_ROWS_UPDATE, data: {id: "fake_id", data: "fake_data"}};
-      const newState = Sections(oldState, action);
-      assert.deepEqual(oldState, newState);
-    });
-    it("should update the section rows with the correct data on SECTION_ROWS_UPDATE", () => {
-      const FAKE_DATA = ["some", "fake", "data"];
-      const action = {type: at.SECTION_ROWS_UPDATE, data: {id: "foo_bar_2", rows: FAKE_DATA}};
-      const newState = Sections(oldState, action);
-      const updatedSection = newState.find(section => section.id === "foo_bar_2");
-      assert.equal(updatedSection.rows, FAKE_DATA);
-    });
-  });
   describe("#insertPinned", () => {
     let links;
 
@@ -298,25 +242,6 @@ describe("Reducers", () => {
       const pinned = [links[7]];
       const result = insertPinned(links, pinned);
       assert.equal(links.length, result.length);
-    });
-  });
-  describe("Snippets", () => {
-    it("should return INITIAL_STATE by default", () => {
-      assert.equal(Snippets(undefined, {type: "some_action"}), INITIAL_STATE.Snippets);
-    });
-    it("should set initialized to true on a SNIPPETS_DATA action", () => {
-      const state = Snippets(undefined, {type: at.SNIPPETS_DATA, data: {}});
-      assert.isTrue(state.initialized);
-    });
-    it("should set the snippet data on a SNIPPETS_DATA action", () => {
-      const data = {snippetsURL: "foo.com", version: 4};
-      const state = Snippets(undefined, {type: at.SNIPPETS_DATA, data});
-      assert.propertyVal(state, "snippetsURL", data.snippetsURL);
-      assert.propertyVal(state, "version", data.version);
-    });
-    it("should reset to the initial state on a SNIPPETS_RESET action", () => {
-      const state = Snippets({initalized: true, foo: "bar"}, {type: at.SNIPPETS_RESET});
-      assert.equal(state, INITIAL_STATE.Snippets);
     });
   });
 });
