@@ -49,6 +49,9 @@ jobs:
               - name: public/build
                 path: /home/worker/artifacts/
                 type: directory
+              - name: private/android-sdk
+                path: /home/worker/private/android-sdk
+                type: directory
             caches:
               - name: tooltool-cache
                 mount-point: /home/worker/tooltool-cache
