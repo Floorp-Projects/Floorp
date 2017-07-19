@@ -11,23 +11,6 @@ import stat
 import subprocess
 import sys
 
-# These are the platform and build-tools versions for building
-# mobile/android, respectively. Try to keep these in synch with the
-# build system and Mozilla's automation.
-ANDROID_TARGET_SDK = '23'
-ANDROID_BUILD_TOOLS_VERSION = '23.0.3'
-
-# These are the "Android packages" needed for building Firefox for Android.
-# Use |android list sdk --extended| to see these identifiers.
-ANDROID_PACKAGES = [
-    'tools',
-    'platform-tools',
-    'build-tools-%s' % ANDROID_BUILD_TOOLS_VERSION,
-    'android-%s' % ANDROID_TARGET_SDK,
-    'extra-google-m2repository',
-    'extra-android-m2repository',
-]
-
 ANDROID_NDK_EXISTS = '''
 Looks like you have the Android NDK installed at:
 %s
@@ -224,7 +207,6 @@ def ensure_android_packages(sdkmanager_tool, packages=None):
     # This tries to install all the required Android packages.  The user
     # may be prompted to agree to the Android license.
     package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), 'android-packages.txt'))
-    print(package_file_name)
     print(INSTALLING_ANDROID_PACKAGES % open(package_file_name, 'rt').read())
     subprocess.check_call([sdkmanager_tool,
                            '--package_file={}'.format(package_file_name)])
