@@ -5248,6 +5248,12 @@ JS_RequestInterruptCallback(JSContext* cx)
     cx->requestInterrupt(JSContext::RequestInterruptUrgent);
 }
 
+JS_PUBLIC_API(void)
+JS_RequestInterruptCallbackCanWait(JSContext* cx)
+{
+    cx->requestInterrupt(JSContext::RequestInterruptCanWait);
+}
+
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
   JSContext* cx, HandleObject stack, const char* asyncCause,
   JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
