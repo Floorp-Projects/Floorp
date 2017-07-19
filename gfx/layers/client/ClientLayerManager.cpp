@@ -516,9 +516,7 @@ ClientLayerManager::DidComposite(uint64_t aTransactionId,
     if (listener) {
       listener->DidCompositeWindow(aTransactionId, aCompositeStart, aCompositeEnd);
     }
-    if (mTransactionIdAllocator) {
-      mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
-    }
+    mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
   }
 
   // These observers fire whether or not we were in a transaction.
