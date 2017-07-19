@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface MozFrameLoader;
+interface nsIEventTarget;
 interface Principal;
 
 dictionary ReceiveMessageArgument
@@ -195,6 +196,31 @@ interface ChildProcessMessageManager : SyncMessageSender
 };
 
 [NoInterfaceObject]
+interface MessageManagerGlobal : SyncMessageSender
+{
+  /**
+   * Print a string to stdout.
+   */
+  [Throws]
+  void dump(DOMString str);
+
+  /**
+   * If leak detection is enabled, print a note to the leak log that this
+   * process will intentionally crash.
+   */
+  [Throws]
+  void privateNoteIntentionalCrash();
+
+  /**
+   * Ascii base64 data to binary data and vice versa
+   */
+  [Throws]
+  DOMString atob(DOMString asciiString);
+  [Throws]
+  DOMString btoa(DOMString base64Data);
+};
+
+[NoInterfaceObject]
 interface FrameScriptLoader
 {
   /**
@@ -267,6 +293,47 @@ interface GlobalProcessScriptLoader : ProcessScriptLoader
   [Throws]
   readonly attribute any initialProcessData;
 };
+
+[ChromeOnly, Global, NeedResolve]
+interface ContentFrameMessageManager : EventTarget
+{
+  /**
+   * The current top level window in the frame or null.
+   */
+  [Throws]
+  readonly attribute WindowProxy? content;
+
+  /**
+   * The top level docshell or null.
+   */
+  [Throws]
+  readonly attribute nsIDocShell? docShell;
+
+  /**
+   * Returns the SchedulerEventTarget corresponding to the TabGroup
+   * for this frame.
+   */
+  readonly attribute nsIEventTarget? tabEventTarget;
+};
+// MessageManagerGlobal inherits from SyncMessageSender, which is a real interface, not a
+// mixin. This will need to change when we implement mixins according to the current
+// WebIDL spec.
+ContentFrameMessageManager implements MessageManagerGlobal;
+
+[ChromeOnly, Global, NeedResolve]
+interface ContentProcessMessageManager
+{
+  /**
+   * Read out a copy of the object that was initialized in the parent
+   * process via ProcessScriptLoader.initialProcessData.
+   */
+  [Throws]
+  readonly attribute any initialProcessData;
+};
+// MessageManagerGlobal inherits from SyncMessageSender, which is a real interface, not a
+// mixin. This will need to change when we implement mixins according to the current
+// WebIDL spec.
+ContentProcessMessageManager implements MessageManagerGlobal;
 
 [ChromeOnly]
 interface ChromeMessageBroadcaster : MessageListenerManager
