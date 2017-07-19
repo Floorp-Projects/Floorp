@@ -56,6 +56,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
+#include "mozilla/SizeOfState.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ServoMediaList.h"
@@ -450,6 +451,18 @@ Gecko_GetElementSnapshot(const ServoElementSnapshotTable* aTable,
   MOZ_ASSERT(aElement);
 
   return aTable->Get(const_cast<Element*>(aElement));
+}
+
+bool
+Gecko_HaveSeenPtr(SeenPtrs* aTable, const void* aPtr)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTable);
+  // Empty Rust allocations are indicated by small values up to the alignment
+  // of the relevant type. We shouldn't see anything like that here.
+  MOZ_ASSERT(uintptr_t(aPtr) > 16);
+
+  return aTable->HaveSeenPtr(aPtr);
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull
