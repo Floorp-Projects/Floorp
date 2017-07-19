@@ -133,9 +133,12 @@ public:
   // imgRequest::RemoveProxy
   void ClearAnimationConsumers();
 
-  virtual nsresult Clone(imgINotificationObserver* aObserver,
-                         nsIDocument* aLoadingDocument,
-                         imgRequestProxy** aClone);
+  nsresult SyncClone(imgINotificationObserver* aObserver,
+                     nsIDocument* aLoadingDocument,
+                     imgRequestProxy** aClone);
+  nsresult Clone(imgINotificationObserver* aObserver,
+                 nsIDocument* aLoadingDocument,
+                 imgRequestProxy** aClone);
   nsresult GetStaticRequest(nsIDocument* aLoadingDocument,
                             imgRequestProxy** aReturn);
 
@@ -195,8 +198,10 @@ protected:
 
   nsresult PerformClone(imgINotificationObserver* aObserver,
                         nsIDocument* aLoadingDocument,
-                        imgRequestProxy* (aAllocFn)(imgRequestProxy*),
+                        bool aSyncNotify,
                         imgRequestProxy** aClone);
+
+  virtual imgRequestProxy* NewClonedProxy();
 
 public:
   NS_FORWARD_SAFE_NSITIMEDCHANNEL(TimedChannel())
@@ -206,7 +211,6 @@ protected:
 
 private:
   friend class imgCacheValidator;
-  friend imgRequestProxy* NewStaticProxy(imgRequestProxy* aThis);
 
   void AddToOwner(nsIDocument* aLoadingDocument);
 
@@ -249,14 +253,8 @@ public:
 
   NS_IMETHOD GetImagePrincipal(nsIPrincipal** aPrincipal) override;
 
-  using imgRequestProxy::Clone;
-
-  virtual nsresult Clone(imgINotificationObserver* aObserver,
-                         nsIDocument* aLoadingDocument,
-                         imgRequestProxy** aClone) override;
-
 protected:
-  friend imgRequestProxy* NewStaticProxy(imgRequestProxy*);
+  imgRequestProxy* NewClonedProxy() override;
 
   // Our principal. We have to cache it, rather than accessing the underlying
   // request on-demand, because static proxies don't have an underlying request.
