@@ -19,9 +19,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_DOMPrototype_id,
   eDOMClassInfo_DOMConstructor_id,
 
-  eDOMClassInfo_ContentFrameMessageManager_id,
-  eDOMClassInfo_ContentProcessMessageManager_id,
-
   eDOMClassInfo_XULControlElement_id,
   eDOMClassInfo_XULLabeledControlElement_id,
   eDOMClassInfo_XULButtonElement_id,

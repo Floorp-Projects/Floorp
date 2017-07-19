@@ -23,7 +23,7 @@ add_task(async function () {
   await waitForContentRequests;
 
   info("Clicking stack-trace tab and waiting for stack-trace panel to open");
-  let wait = waitForDOM(document, "#stack-trace-panel .frame-link", 4);
+  let wait = waitForDOM(document, "#stack-trace-panel .frame-link", 5);
   // Click on the first request
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector(".request-list-item"));
