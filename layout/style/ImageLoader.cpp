@@ -121,7 +121,7 @@ ImageLoader::MaybeRegisterCSSImage(ImageLoader::Image* aImage)
   // Ignore errors here.  If cloning fails for some reason we'll put a null
   // entry in the hash and we won't keep trying to clone.
   mInClone = true;
-  canonicalRequest->Clone(this, getter_AddRefs(request));
+  canonicalRequest->SyncClone(this, mDocument, getter_AddRefs(request));
   mInClone = false;
 
   aImage->mRequests.Put(mDocument, request);
@@ -280,7 +280,7 @@ ImageLoader::LoadImage(nsIURI* aURI, nsIPrincipal* aOriginPrincipal,
 
   RefPtr<imgRequestProxy> clonedRequest;
   mInClone = true;
-  rv = request->Clone(this, getter_AddRefs(clonedRequest));
+  rv = request->SyncClone(this, mDocument, getter_AddRefs(clonedRequest));
   mInClone = false;
 
   if (NS_FAILED(rv)) {
