@@ -174,13 +174,6 @@ public:
     return IsValid();
   }
 
-  bool IsScrollInfoLayer() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    return Metrics().IsScrollInfoLayer();
-  }
-
   LayerMetricsWrapper GetParent() const
   {
     MOZ_ASSERT(IsValid());
