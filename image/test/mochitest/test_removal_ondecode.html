@@ -34,6 +34,8 @@ var gIsTestFinished = false;
 var gFiles;
 var gNotifications = 0;
 var gLoads = 0;
+var gRemovals = 0;
+var gExpected = 5;
 
 function* fileToLoad() {
   yield "red.png";
@@ -47,16 +49,34 @@ function onSizeAvailable(aRequest) {
   ok(true, "AfterLoad.onSizeAvailable called for " + gImg.src);
 }
 function onLoadComplete(aRequest) {
-  ok(true, "AfterLoad.onLoadComplete called for " + gImg.src);
+  ok(gExpected > gLoads, "AfterLoad.onLoadComplete called for " + gImg.src);
   gLoads++;
+
+  // We aren't going to get a decode complete event if the metadata decoding
+  // failed (i.e. for invalid.jpg). By definition we should have the size or
+  // an error once we get a load complete event, so check if the size is valid
+  // and if not, trigger a decode complete event manually.
+  var hasSize = false;
+  try {
+    hasSize = aRequest.image.width > 0 && aRequest.image.height > 0;
+  } catch(e) {}
+
+  if (hasSize) {
+    maybeAdvance();
+  } else {
+    onDecodeComplete(aRequest);
+  }
 }
+
 function onDecodeComplete(aRequest) {
-  ok(true, "AfterLoad.onDecodeComplete called for " + gImg.src);
+  ok(gExpected > gRemovals, "AfterLoad.onDecodeComplete called for " + gImg.src);
   SimpleTest.executeSoon(function() {
     try {
       gContent.removeChild(gImg);
     } 
     catch (e) {} 
+    gRemovals++;
+    maybeAdvance();
   });
 }
 
@@ -68,7 +88,17 @@ function failTest() {
 
 function onNotification()
 {
+  ok(gExpected > gNotifications, "AfterLoad.onNotification called for " + gImg.src);
   gNotifications++;
+  maybeAdvance();
+}
+
+function maybeAdvance()
+{
+  if (gNotifications != gLoads || gNotifications != gRemovals) {
+    return;
+  }
+
   let {done, value} = gFiles.next();
   if (done) {
     cleanUpAndFinish();
@@ -114,7 +144,8 @@ function main() {
   clearAllImageCaches();
 
   // kick off image-loading! myOnStopFrame handles the rest.
-  gImg.setAttribute("src", gFiles.next());
+  gImg.setAttribute("src", gFiles.next().value);
+  gContent.appendChild(gImg);
 
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
