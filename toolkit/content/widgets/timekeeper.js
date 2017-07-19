@@ -14,7 +14,7 @@
  *        {
  *          {Date} min
  *          {Date} max
- *          {Number} stepInMs
+ *          {Number} step
  *          {String} format: Either "12" or "24"
  *        }
  */
@@ -284,15 +284,15 @@ function TimeKeeper(props) {
      *         }
      */
     _getSteps(startValue, endValue, minStep, formatter) {
-      const { min, max, stepInMs } = this.props;
+      const { min, max, step } = this.props;
       // The timeStep should be big enough so that there won't be
       // duplications. Ex: minimum step for minute should be 60000ms,
       // if smaller than that, next step might return the same minute.
-      const timeStep = Math.max(minStep, stepInMs);
+      const timeStep = Math.max(minStep, step);
 
       // Make sure the starting point and end point is not off step
       let time = min.valueOf() + Math.ceil((startValue - min.valueOf()) / timeStep) * timeStep;
-      let maxValue = min.valueOf() + Math.floor((max.valueOf() - min.valueOf()) / stepInMs) * stepInMs;
+      let maxValue = min.valueOf() + Math.floor((max.valueOf() - min.valueOf()) / step) * step;
       let steps = [];
 
       // Increment by timeStep until reaching the end of the range.
@@ -408,9 +408,9 @@ function TimeKeeper(props) {
      * @return {Boolean}
      */
     _isOffStep(time) {
-      const { min, stepInMs } = this.props;
+      const { min, step } = this.props;
 
-      return (time.valueOf() - min.valueOf()) % stepInMs != 0;
+      return (time.valueOf() - min.valueOf()) % step != 0;
     }
   };
 }
