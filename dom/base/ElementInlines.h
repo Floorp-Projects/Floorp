@@ -29,8 +29,11 @@ Element::UnregisterActivityObserver()
   OwnerDoc()->UnregisterActivityObserver(this);
 }
 
+} // namespace dom
+} // namespace mozilla
+
 inline Element*
-Element::GetFlattenedTreeParentElement() const
+nsINode::GetFlattenedTreeParentElement() const
 {
   nsINode* parentNode = GetFlattenedTreeParentNode();
   if MOZ_LIKELY(parentNode && parentNode->IsElement()) {
@@ -41,7 +44,7 @@ Element::GetFlattenedTreeParentElement() const
 }
 
 inline Element*
-Element::GetFlattenedTreeParentElementForStyle() const
+nsINode::GetFlattenedTreeParentElementForStyle() const
 {
   nsINode* parentNode = GetFlattenedTreeParentNodeForStyle();
   if MOZ_LIKELY(parentNode && parentNode->IsElement()) {
@@ -50,8 +53,5 @@ Element::GetFlattenedTreeParentElementForStyle() const
 
   return nullptr;
 }
-
-} // namespace dom
-} // namespace mozilla
 
 #endif // mozilla_dom_ElementInlines_h

@@ -468,9 +468,6 @@ public:
 
   Directionality GetComputedDirectionality() const;
 
-  inline Element* GetFlattenedTreeParentElement() const;
-  inline Element* GetFlattenedTreeParentElementForStyle() const;
-
   bool HasDirtyDescendantsForServo() const
   {
     MOZ_ASSERT(IsStyledByServo());
@@ -486,9 +483,6 @@ public:
     MOZ_ASSERT(IsStyledByServo());
     UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
-
-  void NoteDirtyDescendantsForServo();
-  void NoteAnimationOnlyDirtyDescendantsForServo();
 
   bool HasAnimationOnlyDirtyDescendantsForServo() const {
     MOZ_ASSERT(IsStyledByServo());
