@@ -85,6 +85,8 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
   && rm -rf /tmp/nexus-${NEXUS_VERSION} \
   && rm -rf /tmp/nexus-${NEXUS_VERSION}-bundle.tar.gz
 
+COPY nexus.xml /workspace/nexus/conf/nexus.xml
+
 # Install tooltool directly from github.
 RUN mkdir /build
 ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py /build/tooltool.py
