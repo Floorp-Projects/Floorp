@@ -1,14 +1,15 @@
 """ discovery and running of std-library "unittest" style tests. """
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import sys
 import traceback
 
-import pytest
-# for transfering markers
+# for transferring markers
 import _pytest._code
-from _pytest.python import transfer_markers
-from _pytest.skipping import MarkEvaluator
+from _pytest.config import hookimpl
+from _pytest.runner import fail, skip
+from _pytest.python import transfer_markers, Class, Module, Function
+from _pytest.skipping import MarkEvaluator, xfail
 
 
 def pytest_pycollect_makeitem(collector, name, obj):
@@ -22,11 +23,11 @@ def pytest_pycollect_makeitem(collector, name, obj):
     return UnitTestCase(name, parent=collector)
 
 
-class UnitTestCase(pytest.Class):
+class UnitTestCase(Class):
     # marker for fixturemanger.getfixtureinfo()
     # to declare that our children do not support funcargs
     nofuncargs = True
-                                              
+
     def setup(self):
         cls = self.obj
         if getattr(cls, '__unittest_skip__', False):
@@ -46,10 +47,12 @@ class UnitTestCase(pytest.Class):
             return
         self.session._fixturemanager.parsefactories(self, unittest=True)
         loader = TestLoader()
-        module = self.getparent(pytest.Module).obj
+        module = self.getparent(Module).obj
         foundsomething = False
         for name in loader.getTestCaseNames(self.obj):
             x = getattr(self.obj, name)
+            if not getattr(x, '__test__', True):
+                continue
             funcobj = getattr(x, 'im_func', x)
             transfer_markers(funcobj, cls, module)
             yield TestCaseFunction(name, parent=self)
@@ -63,8 +66,7 @@ class UnitTestCase(pytest.Class):
                     yield TestCaseFunction('runTest', parent=self)
 
 
-
-class TestCaseFunction(pytest.Function):
+class TestCaseFunction(Function):
     _excinfo = None
 
     def setup(self):
@@ -92,6 +94,9 @@ class TestCaseFunction(pytest.Function):
     def teardown(self):
         if hasattr(self._testcase, 'teardown_method'):
             self._testcase.teardown_method(self._obj)
+        # Allow garbage collection on TestCase instance attributes.
+        self._testcase = None
+        self._obj = None
 
     def startTest(self, testcase):
         pass
@@ -106,36 +111,37 @@ class TestCaseFunction(pytest.Function):
                 try:
                     l = traceback.format_exception(*rawexcinfo)
                     l.insert(0, "NOTE: Incompatible Exception Representation, "
-                        "displaying natively:\n\n")
-                    pytest.fail("".join(l), pytrace=False)
-                except (pytest.fail.Exception, KeyboardInterrupt):
+                                "displaying natively:\n\n")
+                    fail("".join(l), pytrace=False)
+                except (fail.Exception, KeyboardInterrupt):
                     raise
                 except:
-                    pytest.fail("ERROR: Unknown Incompatible Exception "
-                        "representation:\n%r" %(rawexcinfo,), pytrace=False)
+                    fail("ERROR: Unknown Incompatible Exception "
+                         "representation:\n%r" % (rawexcinfo,), pytrace=False)
             except KeyboardInterrupt:
                 raise
-            except pytest.fail.Exception:
+            except fail.Exception:
                 excinfo = _pytest._code.ExceptionInfo()
         self.__dict__.setdefault('_excinfo', []).append(excinfo)
 
     def addError(self, testcase, rawexcinfo):
         self._addexcinfo(rawexcinfo)
+
     def addFailure(self, testcase, rawexcinfo):
         self._addexcinfo(rawexcinfo)
 
     def addSkip(self, testcase, reason):
         try:
-            pytest.skip(reason)
-        except pytest.skip.Exception:
+            skip(reason)
+        except skip.Exception:
             self._evalskip = MarkEvaluator(self, 'SkipTest')
             self._evalskip.result = True
             self._addexcinfo(sys.exc_info())
 
     def addExpectedFailure(self, testcase, rawexcinfo, reason=""):
         try:
-            pytest.xfail(str(reason))
-        except pytest.xfail.Exception:
+            xfail(str(reason))
+        except xfail.Exception:
             self._addexcinfo(sys.exc_info())
 
     def addUnexpectedSuccess(self, testcase, reason=""):
@@ -147,17 +153,42 @@ class TestCaseFunction(pytest.Function):
     def stopTest(self, testcase):
         pass
 
+    def _handle_skip(self):
+        # implements the skipping machinery (see #2137)
+        # analog to pythons Lib/unittest/case.py:run
+        testMethod = getattr(self._testcase, self._testcase._testMethodName)
+        if (getattr(self._testcase.__class__, "__unittest_skip__", False) or
+            getattr(testMethod, "__unittest_skip__", False)):
+            # If the class or method was skipped.
+            skip_why = (getattr(self._testcase.__class__, '__unittest_skip_why__', '') or
+                        getattr(testMethod, '__unittest_skip_why__', ''))
+            try:  # PY3, unittest2 on PY2
+                self._testcase._addSkip(self, self._testcase, skip_why)
+            except TypeError:  # PY2
+                if sys.version_info[0] != 2:
+                    raise
+                self._testcase._addSkip(self, skip_why)
+            return True
+        return False
+
     def runtest(self):
-        self._testcase(result=self)
+        if self.config.pluginmanager.get_plugin("pdbinvoke") is None:
+            self._testcase(result=self)
+        else:
+            # disables tearDown and cleanups for post mortem debugging (see #1890)
+            if self._handle_skip():
+                return
+            self._testcase.debug()
 
     def _prunetraceback(self, excinfo):
-        pytest.Function._prunetraceback(self, excinfo)
+        Function._prunetraceback(self, excinfo)
         traceback = excinfo.traceback.filter(
-            lambda x:not x.frame.f_globals.get('__unittest'))
+            lambda x: not x.frame.f_globals.get('__unittest'))
         if traceback:
             excinfo.traceback = traceback
 
-@pytest.hookimpl(tryfirst=True)
+
+@hookimpl(tryfirst=True)
 def pytest_runtest_makereport(item, call):
     if isinstance(item, TestCaseFunction):
         if item._excinfo:
@@ -169,13 +200,15 @@ def pytest_runtest_makereport(item, call):
 
 # twisted trial support
 
-@pytest.hookimpl(hookwrapper=True)
+
+@hookimpl(hookwrapper=True)
 def pytest_runtest_protocol(item):
     if isinstance(item, TestCaseFunction) and \
        'twisted.trial.unittest' in sys.modules:
         ut = sys.modules['twisted.python.failure']
         Failure__init__ = ut.Failure.__init__
         check_testcase_implements_trial_reporter()
+
         def excstore(self, exc_value=None, exc_type=None, exc_tb=None,
             captureVars=None):
             if exc_value is None:
@@ -189,6 +222,7 @@ def pytest_runtest_protocol(item):
                     captureVars=captureVars)
             except TypeError:
                 Failure__init__(self, exc_value, exc_type, exc_tb)
+
         ut.Failure.__init__ = excstore
         yield
         ut.Failure.__init__ = Failure__init__

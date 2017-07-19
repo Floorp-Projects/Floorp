@@ -1,15 +1,19 @@
 """ monkeypatching and mocking functionality.  """
+from __future__ import absolute_import, division, print_function
 
-import os, sys
+import os
+import sys
 import re
 
 from py.builtin import _basestring
+from _pytest.fixtures import fixture
 
 RE_IMPORT_ERROR_NAME = re.compile("^No module named (.*)$")
 
 
-def pytest_funcarg__monkeypatch(request):
-    """The returned ``monkeypatch`` funcarg provides these
+@fixture
+def monkeypatch():
+    """The returned ``monkeypatch`` fixture provides these
     helper methods to modify objects, dictionaries or os.environ::
 
         monkeypatch.setattr(obj, name, value, raising=True)
@@ -22,13 +26,13 @@ def pytest_funcarg__monkeypatch(request):
         monkeypatch.chdir(path)
 
     All modifications will be undone after the requesting
-    test function has finished. The ``raising``
+    test function or fixture has finished. The ``raising``
     parameter determines if a KeyError or AttributeError
     will be raised if the set/deletion operation has no target.
     """
-    mpatch = monkeypatch()
-    request.addfinalizer(mpatch.undo)
-    return mpatch
+    mpatch = MonkeyPatch()
+    yield mpatch
+    mpatch.undo()
 
 
 def resolve(name):
@@ -93,8 +97,9 @@ class Notset:
 notset = Notset()
 
 
-class monkeypatch:
-    """ Object keeping a record of setattr/item/env/syspath changes. """
+class MonkeyPatch:
+    """ Object returned by the ``monkeypatch`` fixture keeping a record of setattr/item/env/syspath changes.
+    """
 
     def __init__(self):
         self._setattr = []
@@ -220,10 +225,10 @@ class monkeypatch:
         """ Undo previous changes.  This call consumes the
         undo stack. Calling it a second time has no effect unless
         you do more monkeypatching after the undo call.
-        
+
         There is generally no need to call `undo()`, since it is
         called automatically during tear-down.
-        
+
         Note that the same `monkeypatch` fixture is used across a
         single test function invocation. If `monkeypatch` is used both by
         the test function itself and one of the test fixtures,

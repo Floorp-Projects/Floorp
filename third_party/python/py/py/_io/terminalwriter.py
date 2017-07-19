@@ -137,9 +137,18 @@ class TerminalWriter(object):
             file = colorama.AnsiToWin32(file).stream
         self.encoding = encoding or getattr(file, 'encoding', "utf-8")
         self._file = file
-        self.fullwidth = get_terminal_width()
         self.hasmarkup = should_do_markup(file)
         self._lastlen = 0
+
+    @property
+    def fullwidth(self):
+        if hasattr(self, '_terminal_width'):
+            return self._terminal_width
+        return get_terminal_width()
+
+    @fullwidth.setter
+    def fullwidth(self, value):
+        self._terminal_width = value
 
     def _escaped(self, text, esc):
         if esc and self.hasmarkup:

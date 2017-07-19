@@ -1,13 +1,48 @@
 """ version info, help messages, tracing configuration.  """
+from __future__ import absolute_import, division, print_function
+
 import py
 import pytest
+from _pytest.config import PrintHelp
 import os, sys
+from argparse import Action
+
+
+class HelpAction(Action):
+    """This is an argparse Action that will raise an exception in
+    order to skip the rest of the argument parsing when --help is passed.
+    This prevents argparse from quitting due to missing required arguments
+    when any are defined, for example by ``pytest_addoption``.
+    This is similar to the way that the builtin argparse --help option is
+    implemented by raising SystemExit.
+    """
+
+    def __init__(self,
+                 option_strings,
+                 dest=None,
+                 default=False,
+                 help=None):
+        super(HelpAction, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            const=True,
+            default=default,
+            nargs=0,
+            help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, self.const)
+
+        # We should only skip the rest of the parsing after preparse is done
+        if getattr(parser._parser, 'after_preparse', False):
+            raise PrintHelp
+
 
 def pytest_addoption(parser):
     group = parser.getgroup('debugconfig')
     group.addoption('--version', action="store_true",
             help="display pytest lib version and import information.")
-    group._addoption("-h", "--help", action="store_true", dest="help",
+    group._addoption("-h", "--help", action=HelpAction, dest="help",
             help="show help message and configuration info")
     group._addoption('-p', action="append", dest="plugins", default = [],
                metavar="name",
@@ -20,6 +55,10 @@ def pytest_addoption(parser):
     group.addoption('--debug',
                action="store_true", dest="debug", default=False,
                help="store internal tracing debug information in 'pytestdebug.log'.")
+    group._addoption(
+        '-o', '--override-ini', nargs='*', dest="override_ini",
+        action="append",
+        help="override config option with option=value style, e.g. `-o xfail_strict=True`.")
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -37,12 +76,14 @@ def pytest_cmdline_parse():
         config.trace.root.setwriter(debugfile.write)
         undo_tracing = config.pluginmanager.enable_tracing()
         sys.stderr.write("writing pytestdebug information to %s\n" % path)
+
         def unset_tracing():
             debugfile.close()
             sys.stderr.write("wrote pytestdebug information to %s\n" %
                              debugfile.name)
             config.trace.root.setwriter(None)
             undo_tracing()
+
         config.add_cleanup(unset_tracing)
 
 def pytest_cmdline_main(config):
@@ -67,9 +108,8 @@ def showhelp(config):
     tw.write(config._parser.optparser.format_help())
     tw.line()
     tw.line()
-    #tw.sep( "=", "config file settings")
-    tw.line("[pytest] ini-options in the next "
-            "pytest.ini|tox.ini|setup.cfg file:")
+    tw.line("[pytest] ini-options in the first "
+            "pytest.ini|tox.ini|setup.cfg file found:")
     tw.line()
 
     for name in config._parser._ininames:
@@ -92,8 +132,8 @@ def showhelp(config):
     tw.line()
     tw.line()
 
-    tw.line("to see available markers type: py.test --markers")
-    tw.line("to see available fixtures type: py.test --fixtures")
+    tw.line("to see available markers type: pytest --markers")
+    tw.line("to see available fixtures type: pytest --fixtures")
     tw.line("(shown according to specified file_or_dir or current dir "
             "if not specified)")
 

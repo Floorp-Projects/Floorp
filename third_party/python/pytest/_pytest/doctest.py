@@ -1,22 +1,41 @@
 """ discover and run doctests in modules and test files."""
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
 import traceback
 
 import pytest
-from _pytest._code.code import TerminalRepr, ReprFileLocation, ExceptionInfo
-from _pytest.python import FixtureRequest
+from _pytest._code.code import ExceptionInfo, ReprFileLocation, TerminalRepr
+from _pytest.fixtures import FixtureRequest
 
 
+DOCTEST_REPORT_CHOICE_NONE = 'none'
+DOCTEST_REPORT_CHOICE_CDIFF = 'cdiff'
+DOCTEST_REPORT_CHOICE_NDIFF = 'ndiff'
+DOCTEST_REPORT_CHOICE_UDIFF = 'udiff'
+DOCTEST_REPORT_CHOICE_ONLY_FIRST_FAILURE = 'only_first_failure'
+
+DOCTEST_REPORT_CHOICES = (
+    DOCTEST_REPORT_CHOICE_NONE,
+    DOCTEST_REPORT_CHOICE_CDIFF,
+    DOCTEST_REPORT_CHOICE_NDIFF,
+    DOCTEST_REPORT_CHOICE_UDIFF,
+    DOCTEST_REPORT_CHOICE_ONLY_FIRST_FAILURE,
+)
 
 def pytest_addoption(parser):
     parser.addini('doctest_optionflags', 'option flags for doctests',
         type="args", default=["ELLIPSIS"])
+    parser.addini("doctest_encoding", 'encoding used for doctest files', default="utf-8")
     group = parser.getgroup("collect")
     group.addoption("--doctest-modules",
         action="store_true", default=False,
         help="run doctests in all .py modules",
         dest="doctestmodules")
+    group.addoption("--doctest-report",
+        type=str.lower, default="udiff",
+        help="choose another output format for diffs on doctest failure",
+        choices=DOCTEST_REPORT_CHOICES,
+        dest="doctestreport")
     group.addoption("--doctest-glob",
         action="append", default=[], metavar="pat",
         help="doctests file matching pattern, default: test*.txt",
@@ -59,7 +78,6 @@ class ReprFailDoctest(TerminalRepr):
 
 
 class DoctestItem(pytest.Item):
-
     def __init__(self, name, parent, runner=None, dtest=None):
         super(DoctestItem, self).__init__(name, parent)
         self.runner = runner
@@ -70,7 +88,9 @@ class DoctestItem(pytest.Item):
     def setup(self):
         if self.dtest is not None:
             self.fixture_request = _setup_fixtures(self)
-            globs = dict(getfixture=self.fixture_request.getfuncargvalue)
+            globs = dict(getfixture=self.fixture_request.getfixturevalue)
+            for name, value in self.fixture_request.getfixturevalue('doctest_namespace').items():
+                globs[name] = value
             self.dtest.globs.update(globs)
 
     def runtest(self):
@@ -92,7 +112,7 @@ class DoctestItem(pytest.Item):
             message = excinfo.type.__name__
             reprlocation = ReprFileLocation(filename, lineno, message)
             checker = _get_checker()
-            REPORT_UDIFF = doctest.REPORT_UDIFF
+            report_choice = _get_report_choice(self.config.getoption("doctestreport"))
             if lineno is not None:
                 lines = doctestfailure.test.docstring.splitlines(False)
                 # add line numbers to the left of the error message
@@ -108,7 +128,7 @@ class DoctestItem(pytest.Item):
                     indent = '...'
             if excinfo.errisinstance(doctest.DocTestFailure):
                 lines += checker.output_difference(example,
-                        doctestfailure.got, REPORT_UDIFF).split("\n")
+                        doctestfailure.got, report_choice).split("\n")
             else:
                 inner_excinfo = ExceptionInfo(excinfo.value.exc_info)
                 lines += ["UNEXPECTED EXCEPTION: %s" %
@@ -143,30 +163,29 @@ def get_optionflags(parent):
         flag_acc |= flag_lookup_table[flag]
     return flag_acc
 
+class DoctestTextfile(pytest.Module):
+    obj = None
 
-class DoctestTextfile(DoctestItem, pytest.Module):
-
-    def runtest(self):
+    def collect(self):
         import doctest
-        fixture_request = _setup_fixtures(self)
 
         # inspired by doctest.testfile; ideally we would use it directly,
         # but it doesn't support passing a custom checker
-        text = self.fspath.read()
+        encoding = self.config.getini("doctest_encoding")
+        text = self.fspath.read_text(encoding)
         filename = str(self.fspath)
         name = self.fspath.basename
-        globs = dict(getfixture=fixture_request.getfuncargvalue)
-        if '__name__' not in globs:
-            globs['__name__'] = '__main__'
+        globs = {'__name__': '__main__'}
 
         optionflags = get_optionflags(self)
         runner = doctest.DebugRunner(verbose=0, optionflags=optionflags,
                                      checker=_get_checker())
+        _fix_spoof_python2(runner, encoding)
 
         parser = doctest.DocTestParser()
         test = parser.get_doctest(text, globs, name, filename, 0)
-        _check_all_skipped(test)
-        runner.run(test)
+        if test.examples:
+            yield DoctestItem(test.name, self, runner, test)
 
 
 def _check_all_skipped(test):
@@ -197,6 +216,7 @@ class DoctestModule(pytest.Module):
         optionflags = get_optionflags(self)
         runner = doctest.DebugRunner(verbose=0, optionflags=optionflags,
                                      checker=_get_checker())
+
         for test in finder.find(module, module.__name__):
             if test.examples:  # skip empty doctests
                 yield DoctestItem(test.name, self, runner, test)
@@ -288,3 +308,53 @@ def _get_allow_bytes_flag():
     """
     import doctest
     return doctest.register_optionflag('ALLOW_BYTES')
+
+
+def _get_report_choice(key):
+    """
+    This function returns the actual `doctest` module flag value, we want to do it as late as possible to avoid
+    importing `doctest` and all its dependencies when parsing options, as it adds overhead and breaks tests.
+    """
+    import doctest
+
+    return {
+        DOCTEST_REPORT_CHOICE_UDIFF: doctest.REPORT_UDIFF,
+        DOCTEST_REPORT_CHOICE_CDIFF: doctest.REPORT_CDIFF,
+        DOCTEST_REPORT_CHOICE_NDIFF: doctest.REPORT_NDIFF,
+        DOCTEST_REPORT_CHOICE_ONLY_FIRST_FAILURE: doctest.REPORT_ONLY_FIRST_FAILURE,
+        DOCTEST_REPORT_CHOICE_NONE: 0,
+    }[key]
+
+
+def _fix_spoof_python2(runner, encoding):
+    """
+    Installs a "SpoofOut" into the given DebugRunner so it properly deals with unicode output. This
+    should patch only doctests for text files because they don't have a way to declare their
+    encoding. Doctests in docstrings from Python modules don't have the same problem given that
+    Python already decoded the strings.
+    
+    This fixes the problem related in issue #2434.
+    """
+    from _pytest.compat import _PY2
+    if not _PY2:
+        return
+
+    from doctest import _SpoofOut
+
+    class UnicodeSpoof(_SpoofOut):
+
+        def getvalue(self):
+            result = _SpoofOut.getvalue(self)
+            if encoding:
+                result = result.decode(encoding)
+            return result
+
+    runner._fakeout = UnicodeSpoof()
+
+
+@pytest.fixture(scope='session')
+def doctest_namespace():
+    """
+    Inject names into the doctest namespace.
+    """
+    return dict()

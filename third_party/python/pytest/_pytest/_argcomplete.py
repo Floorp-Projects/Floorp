@@ -57,7 +57,7 @@ If things do not work right away:
   which should throw a KeyError: 'COMPLINE' (which is properly set by the
   global argcomplete script).
 """
-
+from __future__ import absolute_import, division, print_function
 import sys
 import os
 from glob import glob
@@ -86,6 +86,7 @@ class FastFilesCompleter:
             # append stripping the prefix (like bash, not like compgen)
             completion.append(x[prefix_dir:])
         return completion
+
 
 if os.environ.get('_ARGCOMPLETE'):
     try:

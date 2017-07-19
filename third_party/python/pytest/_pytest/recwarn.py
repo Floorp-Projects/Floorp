@@ -1,4 +1,5 @@
 """ recording warnings during test function execution. """
+from __future__ import absolute_import, division, print_function
 
 import inspect
 
@@ -6,11 +7,11 @@ import _pytest._code
 import py
 import sys
 import warnings
-import pytest
+from _pytest.fixtures import yield_fixture
 
 
-@pytest.yield_fixture
-def recwarn(request):
+@yield_fixture
+def recwarn():
     """Return a WarningsRecorder instance that provides these methods:
 
     * ``pop(category=None)``: return last warning matching the category.
@@ -25,54 +26,59 @@ def recwarn(request):
         yield wrec
 
 
-def pytest_namespace():
-    return {'deprecated_call': deprecated_call,
-            'warns': warns}
-
-
 def deprecated_call(func=None, *args, **kwargs):
-    """ assert that calling ``func(*args, **kwargs)`` triggers a
-    ``DeprecationWarning`` or ``PendingDeprecationWarning``.
+    """context manager that can be used to ensure a block of code triggers a
+    ``DeprecationWarning`` or ``PendingDeprecationWarning``::
 
-    This function can be used as a context manager::
+        >>> import warnings
+        >>> def api_call_v2():
+        ...     warnings.warn('use v3 of this api', DeprecationWarning)
+        ...     return 200
 
         >>> with deprecated_call():
-        ...    myobject.deprecated_method()
+        ...    assert api_call_v2() == 200
 
-    Note: we cannot use WarningsRecorder here because it is still subject
-    to the mechanism that prevents warnings of the same type from being
-    triggered twice for the same module. See #1190.
+    ``deprecated_call`` can also be used by passing a function and ``*args`` and ``*kwargs``,
+    in which case it will ensure calling ``func(*args, **kwargs)`` produces one of the warnings
+    types above.
     """
     if not func:
-        return WarningsChecker(expected_warning=DeprecationWarning)
-
-    categories = []
-
-    def warn_explicit(message, category, *args, **kwargs):
-        categories.append(category)
-        old_warn_explicit(message, category, *args, **kwargs)
-
-    def warn(message, category=None, *args, **kwargs):
-        if isinstance(message, Warning):
-            categories.append(message.__class__)
-        else:
-            categories.append(category)
-        old_warn(message, category, *args, **kwargs)
-
-    old_warn = warnings.warn
-    old_warn_explicit = warnings.warn_explicit
-    warnings.warn_explicit = warn_explicit
-    warnings.warn = warn
-    try:
-        ret = func(*args, **kwargs)
-    finally:
-        warnings.warn_explicit = old_warn_explicit
-        warnings.warn = old_warn
-    deprecation_categories = (DeprecationWarning, PendingDeprecationWarning)
-    if not any(issubclass(c, deprecation_categories) for c in categories):
+        return _DeprecatedCallContext()
+    else:
         __tracebackhide__ = True
-        raise AssertionError("%r did not produce DeprecationWarning" % (func,))
-    return ret
+        with _DeprecatedCallContext():
+            return func(*args, **kwargs)
+
+
+class _DeprecatedCallContext(object):
+    """Implements the logic to capture deprecation warnings as a context manager."""
+
+    def __enter__(self):
+        self._captured_categories = []
+        self._old_warn = warnings.warn
+        self._old_warn_explicit = warnings.warn_explicit
+        warnings.warn_explicit = self._warn_explicit
+        warnings.warn = self._warn
+
+    def _warn_explicit(self, message, category, *args, **kwargs):
+        self._captured_categories.append(category)
+
+    def _warn(self, message, category=None, *args, **kwargs):
+        if isinstance(message, Warning):
+            self._captured_categories.append(message.__class__)
+        else:
+            self._captured_categories.append(category)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        warnings.warn_explicit = self._old_warn_explicit
+        warnings.warn = self._old_warn
+
+        if exc_type is None:
+            deprecation_categories = (DeprecationWarning, PendingDeprecationWarning)
+            if not any(issubclass(c, deprecation_categories) for c in self._captured_categories):
+                __tracebackhide__ = True
+                msg = "Did not produce DeprecationWarning or PendingDeprecationWarning"
+                raise AssertionError(msg)
 
 
 def warns(expected_warning, *args, **kwargs):
@@ -110,24 +116,14 @@ def warns(expected_warning, *args, **kwargs):
             return func(*args[1:], **kwargs)
 
 
-class RecordedWarning(object):
-    def __init__(self, message, category, filename, lineno, file, line):
-        self.message = message
-        self.category = category
-        self.filename = filename
-        self.lineno = lineno
-        self.file = file
-        self.line = line
-
-
-class WarningsRecorder(object):
+class WarningsRecorder(warnings.catch_warnings):
     """A context manager to record raised warnings.
 
     Adapted from `warnings.catch_warnings`.
     """
 
-    def __init__(self, module=None):
-        self._module = sys.modules['warnings'] if module is None else module
+    def __init__(self):
+        super(WarningsRecorder, self).__init__(record=True)
         self._entered = False
         self._list = []
 
@@ -164,38 +160,20 @@ class WarningsRecorder(object):
         if self._entered:
             __tracebackhide__ = True
             raise RuntimeError("Cannot enter %r twice" % self)
-        self._entered = True
-        self._filters = self._module.filters
-        self._module.filters = self._filters[:]
-        self._showwarning = self._module.showwarning
-
-        def showwarning(message, category, filename, lineno,
-                        file=None, line=None):
-            self._list.append(RecordedWarning(
-                message, category, filename, lineno, file, line))
-
-            # still perform old showwarning functionality
-            self._showwarning(
-                message, category, filename, lineno, file=file, line=line)
-
-        self._module.showwarning = showwarning
-
-        # allow the same warning to be raised more than once
-
-        self._module.simplefilter('always')
+        self._list = super(WarningsRecorder, self).__enter__()
+        warnings.simplefilter('always')
         return self
 
     def __exit__(self, *exc_info):
         if not self._entered:
             __tracebackhide__ = True
             raise RuntimeError("Cannot exit %r without entering first" % self)
-        self._module.filters = self._filters
-        self._module.showwarning = self._showwarning
+        super(WarningsRecorder, self).__exit__(*exc_info)
 
 
 class WarningsChecker(WarningsRecorder):
-    def __init__(self, expected_warning=None, module=None):
-        super(WarningsChecker, self).__init__(module=module)
+    def __init__(self, expected_warning=None):
+        super(WarningsChecker, self).__init__()
 
         msg = ("exceptions must be old-style classes or "
                "derived from Warning, not %s")
@@ -216,6 +194,11 @@ class WarningsChecker(WarningsRecorder):
         # only check if we're not currently handling an exception
         if all(a is None for a in exc_info):
             if self.expected_warning is not None:
-                if not any(r.category in self.expected_warning for r in self):
+                if not any(issubclass(r.category, self.expected_warning)
+                           for r in self):
                     __tracebackhide__ = True
-                    pytest.fail("DID NOT WARN")
+                    from _pytest.runner import fail
+                    fail("DID NOT WARN. No warnings of type {0} was emitted. "
+                         "The list of emitted warnings is: {1}.".format(
+                            self.expected_warning,
+                            [each.message for each in self]))
