@@ -597,6 +597,10 @@ this.PanelMultiView = class {
           // has taken full effect; once both views are visible, we want to
           // correctly measure rects using `dwu.getBoundsWithoutFlushing`.
           window.addEventListener("MozAfterPaint", () => {
+            if (this._panel.state != "open") {
+              onTransitionEnd();
+              return;
+            }
             // Now set the viewContainer dimensions to that of the new view, which
             // kicks of the height animation.
             this._viewContainer.style.height = Math.max(viewRect.height, this._mainViewHeight) + "px";
@@ -613,15 +617,15 @@ this.PanelMultiView = class {
             // sliding animation with smaller views.
             nodeToAnimate.style.width = viewRect.width + "px";
 
-            let listener;
-            this._viewContainer.addEventListener("transitionend", listener = ev => {
+            this._viewContainer.addEventListener("transitionend", this._transitionEndListener = ev => {
               // It's quite common that `height` on the view container doesn't need
               // to transition, so we make sure to do all the work on the transform
               // transition-end, because that is guaranteed to happen.
               if (ev.target != nodeToAnimate || ev.propertyName != "transform")
                 return;
 
-              this._viewContainer.removeEventListener("transitionend", listener);
+              this._viewContainer.removeEventListener("transitionend", this._transitionEndListener);
+              this._transitionEndListener = null;
               onTransitionEnd();
               this._transitioning = false;
               this._resetKeyNavigation(previousViewNode);
@@ -932,6 +936,10 @@ this.PanelMultiView = class {
         this.node.removeAttribute("panelopen");
         this.showMainView();
         if (this.panelViews) {
+          if (this._transitionEndListener) {
+            this._viewContainer.removeEventListener("transitionend", this._transitionEndListener);
+            this._transitionEndListener = null;
+          }
           for (let panelView of this._viewStack.children) {
             if (panelView.nodeName != "children") {
               panelView.style.removeProperty("min-width");
