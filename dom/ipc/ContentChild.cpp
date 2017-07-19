@@ -1458,23 +1458,6 @@ GetDirectoryPath(const char *aPath) {
 }
 #endif // DEBUG
 
-static nsresult
-NormalizePath(const char* aPath, nsCString& aOutPath)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> file;
-  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(aPath), true, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = file->Normalize();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = file->GetNativePath(aOutPath);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
 static bool
 StartMacOSContentSandbox()
 {
@@ -1519,15 +1502,6 @@ StartMacOSContentSandbox()
   }
 
   bool isFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
-  char *developer_repo_dir = nullptr;
-  char *developer_obj_dir = nullptr;
-  if (mozilla::IsDevelopmentBuild()) {
-    // If this is a developer build the resources in the .app are symlinks to
-    // outside of the .app. Therefore in non-release builds we allow reads from
-    // the whole repository. MOZ_DEVELOPER_REPO_DIR is set by mach run.
-    developer_repo_dir = PR_GetEnv("MOZ_DEVELOPER_REPO_DIR");
-    developer_obj_dir = PR_GetEnv("MOZ_DEVELOPER_OBJ_DIR");
-  }
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
@@ -1554,21 +1528,24 @@ StartMacOSContentSandbox()
     info.testingReadPath2.assign(testingReadPath2.get());
   }
 
-  if (developer_repo_dir) {
+  if (mozilla::IsDevelopmentBuild()) {
+    nsCOMPtr<nsIFile> repoDir;
+    rv = mozilla::GetRepoDir(getter_AddRefs(repoDir));
+    if (NS_FAILED(rv)) {
+      MOZ_CRASH("Failed to get path to repo dir");
+    }
     nsCString repoDirPath;
-    rv = NormalizePath(developer_repo_dir, repoDirPath);
-    if (NS_FAILED(rv)) {
-      MOZ_CRASH("Failed to normalize repo path");
-    }
+    Unused << repoDir->GetNativePath(repoDirPath);
     info.testingReadPath3.assign(repoDirPath.get());
-  }
 
-  if (developer_obj_dir) {
-    nsCString objDirPath;
-    rv = NormalizePath(developer_obj_dir, objDirPath);
+    nsCOMPtr<nsIFile> objDir;
+    rv = mozilla::GetObjDir(getter_AddRefs(objDir));
     if (NS_FAILED(rv)) {
-      MOZ_CRASH("Failed to normalize obj dir path");
+      MOZ_CRASH("Failed to get path to build object dir");
     }
+
+    nsCString objDirPath;
+    Unused << objDir->GetNativePath(objDirPath);
     info.testingReadPath4.assign(objDirPath.get());
   }
 
