@@ -22,6 +22,7 @@
         android:paddingTop="@dimen/browser_toolbar_site_security_padding_vertical"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_search_icon"
+        android:background="@android:color/transparent"
         android:visibility="gone"/>
 
     <org.mozilla.gecko.toolbar.ToolbarEditText
