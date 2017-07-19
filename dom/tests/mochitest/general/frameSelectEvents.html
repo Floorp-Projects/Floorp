@@ -461,6 +461,24 @@
         is(inputSelectionchange, 0, "tdn - isc 2");
         is(textareaSelectionchange, 0, "tdn - tsc 2");
         reset();
+
+        // When selection is at the end of contentEditable's content,
+        // clearing the content should trigger selection events.
+        var savedContent = elt("ce").innerHTML;
+        document.getSelection().setBaseAndExtent(elt("ce"), 1, elt("ce"), 1);
+        await spin();
+        reset();
+
+        elt("ce").firstChild.remove();
+        await spin();
+        is(selectstart, 0, "clear ce - ss");
+        is(selectionchange, 1, "clear ce - sc");
+        is(inputSelectionchange, 0, "clear ce - isc");
+        is(textareaSelectionchange, 0, "clear ce - tsc");
+
+        elt("ce").innerHTML = savedContent;
+        await spin();
+        reset();
       });
     </script>
   </body>

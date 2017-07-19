@@ -7884,9 +7884,9 @@ function* runIMEContentObserverTest()
       dumpUnexpectedNotifications(description, 3);
     } else {
       checkTextChangeNotification(notifications[0], description, { offset: 2 + offsetAtContainer, removedLength: kLFLen, addedLength: 0 });
-      todo_is(notifications.length, 3, description + " should cause 3 notifications");
-      todo_is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
-      todo_is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
+      is(notifications.length, 3, description + " should cause 3 notifications");
+      is(notifications[1] && notifications[1].type, "notify-selection-change", description + " should cause selection change notification");
+      is(notifications[2] && notifications[2].type, "notify-position-change", description + " should cause position change notification");
     }
 
     // "a[B]d"
