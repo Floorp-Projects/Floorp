@@ -39,7 +39,6 @@ let App = createClass({
     devices: PropTypes.shape(Types.devices).isRequired,
     dispatch: PropTypes.func.isRequired,
     displayPixelRatio: Types.pixelRatio.value.isRequired,
-    location: Types.location.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
@@ -144,7 +143,6 @@ let App = createClass({
     let {
       devices,
       displayPixelRatio,
-      location,
       networkThrottling,
       screenshot,
       touchSimulation,
@@ -203,7 +201,6 @@ let App = createClass({
       }),
       Viewports({
         devices,
-        location,
         screenshot,
         viewports,
         onBrowserMounted,
