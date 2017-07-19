@@ -67,6 +67,14 @@ public:
     return !sRunningDispatcher || mAccessValid;
   }
 
+  // This function returns true if it's currently safe to run unlabeled code
+  // with no known SchedulerGroup. It will only return true if we're inside an
+  // unlabeled runnable.
+  static bool IsSafeToRunUnlabeled()
+  {
+    return !sRunningDispatcher;
+  }
+
   // Ensure that it's valid to access the TabGroup at this time.
   void ValidateAccess() const
   {
