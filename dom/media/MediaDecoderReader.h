@@ -85,9 +85,6 @@ struct MOZ_STACK_CLASS MediaDecoderReaderInit
 // be accessed on the decode task queue.
 class MediaDecoderReader
 {
-  friend class ReRequestVideoWithSkipTask;
-  friend class ReRequestAudioTask;
-
   static const bool IsExclusive = true;
 
 public:
@@ -293,8 +290,6 @@ protected:
   // Recomputes mBuffered.
   virtual void UpdateBuffered() = 0;
 
-  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
-
   // Queue of audio frames. This queue is threadsafe, and is accessed from
   // the audio, decoder, state machine, and main threads.
   MediaQueue<AudioData> mAudioQueue;
@@ -354,47 +349,6 @@ protected:
 
 private:
   virtual nsresult InitInternal() = 0;
-
-  // Read header data for all bitstreams in the file. Fills aInfo with
-  // the data required to present the media, and optionally fills *aTags
-  // with tag metadata from the file.
-  // Returns NS_OK on success, or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
-  {
-    MOZ_CRASH();
-  }
-
-  virtual void VisibilityChanged();
-
-  // Overrides of this function should decodes an unspecified amount of
-  // audio data, enqueuing the audio data in mAudioQueue. Returns true
-  // when there's more audio to decode, false if the audio is finished,
-  // end of file has been reached, or an un-recoverable read error has
-  // occured. This function blocks until the decode is complete.
-  virtual bool DecodeAudioData()
-  {
-    return false;
-  }
-
-  // Overrides of this function should read and decodes one video frame.
-  // Packets with a timestamp less than aTimeThreshold will be decoded
-  // (unless they're not keyframes and aKeyframeSkip is true), but will
-  // not be added to the queue. This function blocks until the decode
-  // is complete.
-  virtual bool DecodeVideoFrame(bool& aKeyframeSkip,
-                                const media::TimeUnit& aTimeThreshold)
-  {
-    return false;
-  }
-
-  // GetBuffered estimates the time ranges buffered by interpolating the cached
-  // byte ranges with the duration of the media. Reader subclasses should
-  // override this method if they can quickly calculate the buffered ranges more
-  // accurately.
-  //
-  // The primary advantage of this implementation in the reader base class is
-  // that it's a fast approximation, which does not perform any I/O.
-  media::TimeIntervals GetBuffered();
 
   // Promises used only for the base-class (sync->async adapter) implementation
   // of Request{Audio,Video}Data.
