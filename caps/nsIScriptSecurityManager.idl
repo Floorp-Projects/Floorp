@@ -126,6 +126,13 @@ interface nsIScriptSecurityManager : nsISupports
                                       in AUTF8String uri,
                                       in unsigned long flags);
 
+    /**
+     * Returns true if the URI is from a domain that is white-listed through
+     * prefs to be allowed to use file:// URIs.
+     * @param aUri the URI to be tested
+     */
+    bool inFileURIWhitelist(in nsIURI aUri);
+
     ///////////////// Principals ///////////////////////
 
     /**
