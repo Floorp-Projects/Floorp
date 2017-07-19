@@ -242,11 +242,6 @@ MediaDecodeTask::Decode()
 
   mBufferDecoder->BeginDecoding(mDecoderReader->OwnerThread());
 
-  // Tell the decoder reader that we are not going to play the data directly,
-  // and that we should not reject files with more channels than the audio
-  // backend support.
-  mDecoderReader->SetIgnoreAudioOutputFormat();
-
   mDecoderReader->AsyncReadMetadata()->Then(mDecoderReader->OwnerThread(), __func__, this,
                                        &MediaDecodeTask::OnMetadataRead,
                                        &MediaDecodeTask::OnMetadataNotRead);
