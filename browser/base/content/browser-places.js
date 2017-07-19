@@ -10,8 +10,9 @@ XPCOMUtils.defineLazyScriptGetter(this, ["PlacesToolbar", "PlacesMenu",
                                   "chrome://browser/content/places/browserPlacesViews.js");
 
 var StarUI = {
-  _itemId: -1,
-  uri: null,
+  _itemGuids: null,
+  // TODO (bug 1131491): _itemIdsMap is only used for the old transactions manager.
+  _itemIdsMap: null,
   _batching: false,
   _isNewBookmark: false,
   _isComposing: false,
@@ -20,6 +21,7 @@ var StarUI = {
   // popup, such as making a change through typing or clicking on
   // the popup.
   _autoCloseTimerEnabled: true,
+  _removeBookmarksOnPopupHidden: false,
 
   _element(aID) {
     return document.getElementById(aID);
@@ -103,12 +105,19 @@ var StarUI = {
             this._anchorToolbarButton = null;
           }
           this._restoreCommandsState();
-          this._itemId = -1;
-          if (this._batching)
+          let removeBookmarksOnPopupHidden = this._removeBookmarksOnPopupHidden;
+          this._removeBookmarksOnPopupHidden = false;
+          let idsForRemoval = this._itemIdsMap;
+          let guidsForRemoval = this._itemGuids;
+          this._itemGuids = null;
+          this._itemIdsMap = null;
+
+          if (this._batching) {
             this.endBatch();
+          }
 
           let libraryButton;
-          if (this._uriForRemoval) {
+          if (removeBookmarksOnPopupHidden && guidsForRemoval) {
             if (this._isNewBookmark) {
               if (!PlacesUIUtils.useAsyncTransactions) {
                 PlacesUtils.transactionManager.undoTransaction();
@@ -120,15 +129,16 @@ var StarUI = {
             // Remove all bookmarks for the bookmark's url, this also removes
             // the tags for the url.
             if (!PlacesUIUtils.useAsyncTransactions) {
-              let itemIds = PlacesUtils.getBookmarksForURI(this._uriForRemoval);
-              for (let itemId of itemIds) {
-                let txn = new PlacesRemoveItemTransaction(itemId);
-                PlacesUtils.transactionManager.doTransaction(txn);
+              if (idsForRemoval) {
+                for (let itemId of idsForRemoval.values()) {
+                  let txn = new PlacesRemoveItemTransaction(itemId);
+                  PlacesUtils.transactionManager.doTransaction(txn);
+                }
               }
               break;
             }
 
-            PlacesTransactions.RemoveBookmarksForUrls([this._uriForRemoval])
+            PlacesTransactions.Remove(guidsForRemoval)
                               .transact().catch(Cu.reportError);
           } else if (this._isNewBookmark &&
                      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
@@ -241,7 +251,8 @@ var StarUI = {
     }
 
     this._isNewBookmark = aIsNewBookmark;
-    this._uriForRemoval = "";
+    this._itemIdsMap = null;
+    this._itemGuids = null;
     // TODO (bug 1131491): Deprecate this once async transactions are enabled
     // and the legacy transactions code is gone.
     if (typeof(aNode) == "number") {
@@ -256,7 +267,7 @@ var StarUI = {
       return;
 
     if (this._overlayLoaded) {
-      this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
+      await this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
       return;
     }
 
@@ -278,7 +289,7 @@ var StarUI = {
     );
   },
 
-  _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
+  async _doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition) {
     if (this.panel.state != "closed")
       return;
 
@@ -296,15 +307,23 @@ var StarUI = {
 
     // The label of the remove button differs if the URI is bookmarked
     // multiple times.
-    let bookmarks = PlacesUtils.getBookmarksForURI(gBrowser.currentURI);
+    this._itemGuids = [];
+
+    await PlacesUtils.bookmarks.fetch({url: gBrowser.currentURI},
+      bookmark => this._itemGuids.push(bookmark.guid));
+
+    if (!PlacesUIUtils.useAsyncTransactions) {
+      this._itemIdsMap = await PlacesUtils.promiseManyItemIds(this._itemGuids);
+    }
     let forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
-    let label = PluralForm.get(bookmarks.length, forms).replace("#1", bookmarks.length);
+    let bookmarksCount = this._itemGuids.length;
+    let label = PluralForm.get(bookmarksCount, forms)
+                          .replace("#1", bookmarksCount);
     this._element("editBookmarkPanelRemoveButton").label = label;
 
     // unset the unstarred state, if set
     this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
 
-    this._itemId = aNode.itemId;
     this.beginBatch();
 
     if (aAnchorElement) {
@@ -361,7 +380,7 @@ var StarUI = {
   },
 
   removeBookmarkButtonCommand: function SU_removeBookmarkButtonCommand() {
-    this._uriForRemoval = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
+    this._removeBookmarksOnPopupHidden = true;
     this.panel.hidePopup();
   },
 
