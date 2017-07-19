@@ -15,6 +15,7 @@
 #include "imgINotificationObserver.h"
 #include "mozilla/dom/TabGroup.h"       // for TabGroup
 #include "mozilla/dom/DocGroup.h"       // for DocGroup
+#include "mozilla/Telemetry.h"          // for Telemetry
 
 using namespace mozilla::image;
 
@@ -116,7 +117,9 @@ imgRequestProxy::imgRequestProxy() :
   mIsInLoadGroup(false),
   mListenerIsStrongRef(false),
   mDecodeRequested(false),
-  mDeferNotifications(false)
+  mDeferNotifications(false),
+  mHadListener(false),
+  mHadDispatch(false)
 {
   /* member initializers and constructor code */
 
@@ -127,6 +130,21 @@ imgRequestProxy::~imgRequestProxy()
   /* destructor code */
   NS_PRECONDITION(!mListener,
                   "Someone forgot to properly cancel this request!");
+
+  // If we had a listener, that means we would have issued notifications. With
+  // bug 1359833, we added support for main thread scheduler groups. Each
+  // imgRequestProxy may have its own associated listener, document and/or
+  // scheduler group. Typically most imgRequestProxy belong to the same
+  // document, or have no listener, which means we will want to execute all main
+  // thread code in that shared scheduler group. Less frequently, there may be
+  // multiple imgRequests and they have separate documents, which means that
+  // when we issue state notifications, some or all need to be dispatched to the
+  // appropriate scheduler group for each request. This should be rare, so we
+  // want to monitor the frequency of dispatching in the wild.
+  if (mHadListener) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::IMAGE_REQUEST_DISPATCHED,
+                                   mHadDispatch);
+  }
 
   // Unlock the image the proper number of times if we're holding locks on
   // it. Note that UnlockImage() decrements mLockCount each time it's called.
@@ -174,6 +192,7 @@ imgRequestProxy::Init(imgRequest* aOwner,
   // that call might well want to release it if the imgRequest has
   // already seen OnStopRequest.
   if (mListener) {
+    mHadListener = true;
     mListenerIsStrongRef = true;
     NS_ADDREF(mListener);
   }
@@ -274,6 +293,7 @@ imgRequestProxy::Dispatch(already_AddRefed<nsIRunnable> aEvent)
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mEventTarget);
 
+  mHadDispatch = true;
   mEventTarget->Dispatch(Move(aEvent), NS_DISPATCH_NORMAL);
 }
 
