@@ -1683,7 +1683,16 @@ nsPrintEngine::ReconstructAndReflow(bool doSetPixelScale)
 nsresult
 nsPrintEngine::SetupToPrintContent()
 {
-  if (NS_WARN_IF(!mPrt)) {
+  // This method may be called while DoCommonPrint() initializes the instance
+  // when its script blocker goes out of scope.  In such case, this cannot do
+  // its job as expected because some objects in mPrt have not been initialized
+  // yet but they are necessary.
+  // Note: it shouldn't be possible for mPrt->mPrintObject to be null; we
+  // just check it for good measure, as we check its owner & members.
+  if (NS_WARN_IF(!mPrt) ||
+      NS_WARN_IF(!mPrt->mPrintObject) ||
+      NS_WARN_IF(!mPrt->mPrintObject->mPresShell) ||
+      NS_WARN_IF(!mPrt->mPrintObject->mPresContext)) {
     return NS_ERROR_FAILURE;
   }
 
