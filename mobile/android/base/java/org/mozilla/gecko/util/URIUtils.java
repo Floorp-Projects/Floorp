@@ -23,6 +23,16 @@ public class URIUtils {
 
     private URIUtils() {}
 
+    /** @return a {@link URI} if possible, else null. */
+    @Nullable
+    public static URI uriOrNull(final String uriString) {
+        try {
+            return new URI(uriString);
+        } catch (final URISyntaxException e) {
+            return null;
+        }
+    }
+
     /**
      * Returns the second level domain (SLD) of a url. It removes any subdomain/TLD.
      * e.g. https://m.foo.com/bar/baz?noo=abc#123  => foo
