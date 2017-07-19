@@ -504,7 +504,11 @@ var AddonTestUtils = {
 
           let fakeCert = {commonName: id};
           if (this.usePrivilegedSignatures) {
-            fakeCert.organizationalUnit = "Mozilla Extensions";
+            let privileged = typeof this.usePrivilegedSignatures == "function" ?
+                             this.usePrivilegedSignatures(id) : this.usePrivilegedSignatures;
+            if (privileged) {
+              fakeCert.organizationalUnit = "Mozilla Extensions";
+            }
           }
 
           return [callback, Cr.NS_OK, fakeCert];
