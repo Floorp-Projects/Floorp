@@ -3988,16 +3988,60 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
   }
 }
 
+class VideoQueueMemoryFunctor : public nsDequeFunctor
+{
+public:
+  VideoQueueMemoryFunctor()
+    : mSize(0)
+  {
+  }
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject)
+  {
+    const VideoData* v = static_cast<const VideoData*>(aObject);
+    mSize += v->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
+  }
+
+  size_t mSize;
+};
+
+class AudioQueueMemoryFunctor : public nsDequeFunctor
+{
+public:
+  AudioQueueMemoryFunctor()
+    : mSize(0)
+  {
+  }
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject)
+  {
+    const AudioData* audioData = static_cast<const AudioData*>(aObject);
+    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
+  }
+
+  size_t mSize;
+};
+
 size_t
 MediaDecoderStateMachine::SizeOfVideoQueue() const
 {
-  return mReader->SizeOfVideoQueueInBytes();
+  VideoQueueMemoryFunctor functor;
+  mVideoQueue.LockedForEach(functor);
+  return functor.mSize;
 }
 
 size_t
 MediaDecoderStateMachine::SizeOfAudioQueue() const
 {
-  return mReader->SizeOfAudioQueueInBytes();
+  AudioQueueMemoryFunctor functor;
+  mAudioQueue.LockedForEach(functor);
+  return functor.mSize;
 }
 
 AbstractCanonical<media::TimeIntervals>*

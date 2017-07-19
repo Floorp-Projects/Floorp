@@ -37,37 +37,6 @@ extern LazyLogModule gMediaDecoderLog;
 #define DECODER_LOG(...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(__VA_ARGS__)))
 #define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 
-class VideoQueueMemoryFunctor : public nsDequeFunctor {
-public:
-  VideoQueueMemoryFunctor() : mSize(0) {}
-
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
-
-  virtual void* operator()(void* aObject) {
-    const VideoData* v = static_cast<const VideoData*>(aObject);
-    mSize += v->SizeOfIncludingThis(MallocSizeOf);
-    return nullptr;
-  }
-
-  size_t mSize;
-};
-
-
-class AudioQueueMemoryFunctor : public nsDequeFunctor {
-public:
-  AudioQueueMemoryFunctor() : mSize(0) {}
-
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
-
-  virtual void* operator()(void* aObject) {
-    const AudioData* audioData = static_cast<const AudioData*>(aObject);
-    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
-    return nullptr;
-  }
-
-  size_t mSize;
-};
-
 MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
   : mDecoder(aInit.mDecoder)
   , mTaskQueue(new TaskQueue(
