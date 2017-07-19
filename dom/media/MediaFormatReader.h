@@ -59,8 +59,6 @@ public:
 
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  bool IsAsync() const override { return true; }
-
   bool VideoIsHardwareAccelerated() const override;
 
   bool IsWaitForDataSupported() const override { return true; }

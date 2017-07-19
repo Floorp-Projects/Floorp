@@ -53,7 +53,6 @@ public:
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
-  bool IsAsync() const { return mReader->IsAsync(); }
   bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
 
   bool VideoIsHardwareAccelerated() const {

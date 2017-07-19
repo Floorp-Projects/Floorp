@@ -223,12 +223,6 @@ public:
     return mTaskQueue;
   }
 
-  // Returns true if the reader implements RequestAudioData()
-  // and RequestVideoData() asynchronously, rather than using the
-  // implementation in this class to adapt the old synchronous to
-  // the newer async model.
-  virtual bool IsAsync() const = 0;
-
   // Returns true if this decoder reader uses hardware accelerated video
   // decoding.
   virtual bool VideoIsHardwareAccelerated() const = 0;
