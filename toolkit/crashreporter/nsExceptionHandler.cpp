@@ -1601,11 +1601,9 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-#if !defined(DEBUG) || defined(MOZ_WIDGET_GONK)
+#if !defined(DEBUG)
   // In non-debug builds, enable the crash reporter by default, and allow
   // disabling it with the MOZ_CRASHREPORTER_DISABLE environment variable.
-  // Also enable it by default in debug gonk builds as it is difficult to
-  // set environment on startup.
   const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DISABLE");
   if (envvar && *envvar && !force)
     return NS_OK;
@@ -1617,10 +1615,7 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     return NS_OK;
 #endif
 
-#if defined(MOZ_WIDGET_GONK)
-  doReport = false;
-  headlessClient = true;
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
   doReport = ShouldReport();
 #else
   // this environment variable prevents us from launching
