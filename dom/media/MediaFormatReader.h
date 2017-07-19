@@ -554,6 +554,9 @@ private:
 
   void MaybeResolveMetadataPromise();
 
+  // Stores presentation info required for playback.
+  MediaInfo mInfo;
+
   UniquePtr<MetadataTags> mTags;
 
   // A flag indicating if the start time is known or not.
