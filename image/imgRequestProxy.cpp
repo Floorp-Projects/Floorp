@@ -688,17 +688,9 @@ imgRequestProxy::GetMimeType(char** aMimeType)
   return NS_OK;
 }
 
-static imgRequestProxy* NewProxy(imgRequestProxy* /*aThis*/)
+imgRequestProxy* imgRequestProxy::NewClonedProxy()
 {
   return new imgRequestProxy();
-}
-
-imgRequestProxy* NewStaticProxy(imgRequestProxy* aThis)
-{
-  nsCOMPtr<nsIPrincipal> currentPrincipal;
-  aThis->GetImagePrincipal(getter_AddRefs(currentPrincipal));
-  RefPtr<mozilla::image::Image> image = aThis->GetImage();
-  return new imgRequestProxyStatic(image, currentPrincipal);
 }
 
 NS_IMETHODIMP
@@ -707,22 +699,31 @@ imgRequestProxy::Clone(imgINotificationObserver* aObserver,
 {
   nsresult result;
   imgRequestProxy* proxy;
-  result = Clone(aObserver, nullptr, &proxy);
+  result = PerformClone(aObserver, nullptr, /* aSyncNotify */ true, &proxy);
   *aClone = proxy;
   return result;
+}
+
+nsresult imgRequestProxy::SyncClone(imgINotificationObserver* aObserver,
+                                    nsIDocument* aLoadingDocument,
+                                    imgRequestProxy** aClone)
+{
+  return PerformClone(aObserver, aLoadingDocument,
+                      /* aSyncNotify */ true, aClone);
 }
 
 nsresult imgRequestProxy::Clone(imgINotificationObserver* aObserver,
                                 nsIDocument* aLoadingDocument,
                                 imgRequestProxy** aClone)
 {
-  return PerformClone(aObserver, aLoadingDocument, NewProxy, aClone);
+  return PerformClone(aObserver, aLoadingDocument,
+                      /* aSyncNotify */ false, aClone);
 }
 
 nsresult
 imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
                               nsIDocument* aLoadingDocument,
-                              imgRequestProxy* (aAllocFn)(imgRequestProxy*),
+                              bool aSyncNotify,
                               imgRequestProxy** aClone)
 {
   NS_PRECONDITION(aClone, "Null out param");
@@ -730,7 +731,7 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
   LOG_SCOPE(gImgLog, "imgRequestProxy::Clone");
 
   *aClone = nullptr;
-  RefPtr<imgRequestProxy> clone = aAllocFn(this);
+  RefPtr<imgRequestProxy> clone = NewClonedProxy();
 
   // It is important to call |SetLoadFlags()| before calling |Init()| because
   // |Init()| adds the request to the loadgroup.
@@ -745,19 +746,28 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
     return rv;
   }
 
-  if (GetOwner() && GetOwner()->GetValidator()) {
-    clone->SetNotificationsDeferred(true);
-    GetOwner()->GetValidator()->AddProxy(clone);
-  }
-
   // Assign to *aClone before calling Notify so that if the caller expects to
   // only be notified for requests it's already holding pointers to it won't be
   // surprised.
   NS_ADDREF(*aClone = clone);
 
-  // This is wrong!!! We need to notify asynchronously, but there's code that
-  // assumes that we don't. This will be fixed in bug 580466.
-  clone->SyncNotifyListener();
+  if (GetOwner() && GetOwner()->GetValidator()) {
+    // Note that if we have a validator, we don't want to issue notifications at
+    // here because we want to defer until that completes.
+    clone->SetNotificationsDeferred(true);
+    GetOwner()->GetValidator()->AddProxy(clone);
+  } else if (aSyncNotify) {
+    // This is wrong!!! We need to notify asynchronously, but there's code that
+    // assumes that we don't. This will be fixed in bug 580466. Note that if we
+    // have a validator, we won't issue notifications anyways because they are
+    // deferred, so there is no point in requesting.
+    clone->SyncNotifyListener();
+  } else {
+    // Without a validator, we can request asynchronous notifications
+    // immediately. If there was a validator, this would override the deferral
+    // and that would be incorrect.
+    clone->NotifyListener();
+  }
 
   return NS_OK;
 }
@@ -1238,10 +1248,10 @@ imgRequestProxyStatic::GetImagePrincipal(nsIPrincipal** aPrincipal)
   return NS_OK;
 }
 
-nsresult
-imgRequestProxyStatic::Clone(imgINotificationObserver* aObserver,
-                             nsIDocument* aLoadingDocument,
-                             imgRequestProxy** aClone)
+imgRequestProxy* imgRequestProxyStatic::NewClonedProxy()
 {
-  return PerformClone(aObserver, aLoadingDocument, NewStaticProxy, aClone);
+  nsCOMPtr<nsIPrincipal> currentPrincipal;
+  GetImagePrincipal(getter_AddRefs(currentPrincipal));
+  RefPtr<mozilla::image::Image> image = GetImage();
+  return new imgRequestProxyStatic(image, currentPrincipal);
 }
