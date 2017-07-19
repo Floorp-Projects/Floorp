@@ -4016,36 +4016,40 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
   if (pDoc)
     return pDoc->Print();
 
-  if (!mPrintEngine) {
+  // Our call to nsPrintEngine::Print() may cause mPrintEngine to be
+  // Release()'d in Destroy().  Therefore, we need to grab the instance with
+  // a local variable, so that it won't be deleted during its own method.
+  RefPtr<nsPrintEngine> printEngine = mPrintEngine;
+  if (!printEngine) {
     NS_ENSURE_STATE(mDeviceContext);
-    mPrintEngine = new nsPrintEngine();
+    printEngine = new nsPrintEngine();
 
-    rv = mPrintEngine->Initialize(this, mContainer, mDocument,
-                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                  mPageZoom,
+    rv = printEngine->Initialize(this, mContainer, mDocument,
+                                 float(mDeviceContext->AppUnitsPerCSSInch()) /
+                                 float(mDeviceContext->AppUnitsPerDevPixel()) /
+                                 mPageZoom,
 #ifdef DEBUG
-                                  mDebugFile
+                                 mDebugFile
 #else
-                                  nullptr
+                                 nullptr
 #endif
-                                  );
+                                 );
     if (NS_FAILED(rv)) {
-      mPrintEngine->Destroy();
-      mPrintEngine = nullptr;
+      printEngine->Destroy();
       return rv;
     }
+    mPrintEngine = printEngine;
   }
-  if (mPrintEngine->HasPrintCallbackCanvas()) {
+  if (printEngine->HasPrintCallbackCanvas()) {
     // Postpone the 'afterprint' event until after the mozPrintCallback
     // callbacks have been called:
     mAutoBeforeAndAfterPrint = autoBeforeAndAfterPrint;
   }
   dom::Element* root = mDocument->GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
-    mPrintEngine->SetDisallowSelectionPrint(true);
+    printEngine->SetDisallowSelectionPrint(true);
   }
-  rv = mPrintEngine->Print(aPrintSettings, aWebProgressListener);
+  rv = printEngine->Print(aPrintSettings, aWebProgressListener);
   if (NS_FAILED(rv)) {
     OnDonePrinting();
   }
@@ -4106,27 +4110,32 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   // beforeprint event may have caused ContentViewer to be shutdown.
   NS_ENSURE_STATE(mContainer);
   NS_ENSURE_STATE(mDeviceContext);
-  if (!mPrintEngine) {
-    mPrintEngine = new nsPrintEngine();
 
-    rv = mPrintEngine->Initialize(this, mContainer, doc,
-                                  float(mDeviceContext->AppUnitsPerCSSInch()) /
-                                  float(mDeviceContext->AppUnitsPerDevPixel()) /
-                                  mPageZoom,
+  // Our call to nsPrintEngine::PrintPreview() may cause mPrintEngine to be
+  // Release()'d in Destroy().  Therefore, we need to grab the instance with
+  // a local variable, so that it won't be deleted during its own method.
+  RefPtr<nsPrintEngine> printEngine = mPrintEngine;
+  if (!printEngine) {
+    printEngine = new nsPrintEngine();
+
+    rv = printEngine->Initialize(this, mContainer, doc,
+                                 float(mDeviceContext->AppUnitsPerCSSInch()) /
+                                 float(mDeviceContext->AppUnitsPerDevPixel()) /
+                                 mPageZoom,
 #ifdef DEBUG
-                                  mDebugFile
+                                 mDebugFile
 #else
-                                  nullptr
+                                 nullptr
 #endif
-                                  );
+                                 );
     if (NS_FAILED(rv)) {
-      mPrintEngine->Destroy();
-      mPrintEngine = nullptr;
+      printEngine->Destroy();
       return rv;
     }
+    mPrintEngine = printEngine;
   }
   if (autoBeforeAndAfterPrint &&
-      mPrintEngine->HasPrintCallbackCanvas()) {
+      printEngine->HasPrintCallbackCanvas()) {
     // Postpone the 'afterprint' event until after the mozPrintCallback
     // callbacks have been called:
     mAutoBeforeAndAfterPrint = autoBeforeAndAfterPrint;
@@ -4134,9 +4143,10 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   dom::Element* root = doc->GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint)) {
     PR_PL(("PrintPreview: found mozdisallowselectionprint"));
-    mPrintEngine->SetDisallowSelectionPrint(true);
+    printEngine->SetDisallowSelectionPrint(true);
   }
-  rv = mPrintEngine->PrintPreview(aPrintSettings, aChildDOMWin, aWebProgressListener);
+  rv = printEngine->PrintPreview(aPrintSettings, aChildDOMWin,
+                                 aWebProgressListener);
   mPrintPreviewZoomed = false;
   if (NS_FAILED(rv)) {
     OnDonePrinting();
@@ -4651,6 +4661,10 @@ nsDocumentViewer::OnDonePrinting()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   SetPrintRelated();
+  // If Destroy() has been called during calling nsPrintEngine::Print() or
+  // nsPrintEngine::PrintPreview(), mPrintEngine is already nullptr here.
+  // So, the following clean up does nothing in such case.
+  // (Do we need some of this for that case?)
   if (mPrintEngine) {
     RefPtr<nsPrintEngine> pe = mPrintEngine;
     if (GetIsPrintPreview()) {
