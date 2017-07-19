@@ -348,15 +348,13 @@ private:
     static BOOL WINAPI ImmNotifyIME(HIMC aIMC, DWORD aAction, DWORD aIndex,
                                     DWORD aValue);
 
-    class FlashThrottleAsyncMsg : public ChildAsyncCall
+    class FlashThrottleMsg : public CancelableRunnable
     {
       public:
-        FlashThrottleAsyncMsg();
-        FlashThrottleAsyncMsg(PluginInstanceChild* aInst,
-                              HWND aWnd, UINT aMsg,
-                              WPARAM aWParam, LPARAM aLParam,
-                              bool isWindowed)
-          : ChildAsyncCall(aInst, nullptr, nullptr),
+        FlashThrottleMsg(PluginInstanceChild* aInstance, HWND aWnd, UINT aMsg,
+                         WPARAM aWParam, LPARAM aLParam, bool isWindowed)
+          : CancelableRunnable("FlashThrottleMsg"),
+          mInstance(aInstance),
           mWnd(aWnd),
           mMsg(aMsg),
           mWParam(aWParam),
@@ -365,6 +363,7 @@ private:
         {}
 
         NS_IMETHOD Run() override;
+        nsresult Cancel() override;
 
         WNDPROC GetProc();
         HWND GetWnd() { return mWnd; }
@@ -373,6 +372,7 @@ private:
         LPARAM GetLParam() { return mLParam; }
 
       private:
+        PluginInstanceChild* mInstance;
         HWND                 mWnd;
         UINT                 mMsg;
         WPARAM               mWParam;
@@ -450,6 +450,9 @@ private:
 
     friend class ChildAsyncCall;
 
+#if defined(OS_WIN)
+    nsTArray<FlashThrottleMsg*> mPendingFlashThrottleMsgs;
+#endif
     Mutex mAsyncCallMutex;
     nsTArray<ChildAsyncCall*> mPendingAsyncCalls;
     nsTArray<nsAutoPtr<ChildTimer> > mTimers;
