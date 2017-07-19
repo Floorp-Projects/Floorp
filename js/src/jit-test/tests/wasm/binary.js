@@ -446,9 +446,9 @@ for (let i = FirstInvalidOpcode; i <= LastInvalidOpcode; i++) {
 // Prefixed opcodes
 for (let prefix of [AtomicPrefix, MozPrefix]) {
     for (let i = 0; i <= 255; i++) {
-	let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, i]})])]);
-	assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
-	assertEq(WebAssembly.validate(binary), false);
+        let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, i]})])]);
+        assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
+        assertEq(WebAssembly.validate(binary), false);
     }
 
     // Prefix without a subsequent opcode
@@ -498,3 +498,15 @@ runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 2}], 'wasm-function
 runStackTraceTest(null, [{name:'blah'}, {name:'test', index: 100000}], 'wasm-function[1]'); // invalid index
 runStackTraceTest(null, [{name:'blah'}, {name:'test', nameLen: 100}], 'wasm-function[1]'); // invalid name size
 runStackTraceTest(null, [{name:'blah'}, {name:''}], 'wasm-function[1]'); // empty name
+
+// Enable and disable Gecko profiling mode, to ensure all live instances
+// names won't make us crash.
+enableGeckoProfiling();
+disableGeckoProfiling();
+
+function testValidNameSectionWithProfiling() {
+    enableGeckoProfiling();
+    wasmEval(moduleWithSections([v2vSigSection, declSec, bodySec, nameSec]));
+    disableGeckoProfiling();
+}
+testValidNameSectionWithProfiling();
