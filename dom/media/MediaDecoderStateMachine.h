@@ -576,21 +576,8 @@ private:
   // Must hold monitor.
   uint32_t GetAmpleVideoFrames() const;
 
-  // Low audio threshold. If we've decoded less than this much audio we
-  // consider our audio decode "behind", and we may skip video decoding
-  // in order to allow our audio decoding to catch up. We favour audio
-  // decoding over video. We increase this threshold if we're slow to
-  // decode video frames, in order to reduce the chance of audio underruns.
-  // Note that we don't ever reset this threshold, it only ever grows as
-  // we detect that the decode can't keep up with rendering.
-  media::TimeUnit mLowAudioThreshold;
-
   // Our "ample" audio threshold. Once we've this much audio decoded, we
-  // pause decoding. If we increase mLowAudioThreshold, we'll also
-  // increase this too appropriately (we don't want mLowAudioThreshold
-  // to be greater than mAmpleAudioThreshold, else we'd stop decoding!).
-  // Note that we don't ever reset this threshold, it only ever grows as
-  // we detect that the decode can't keep up with rendering.
+  // pause decoding.
   media::TimeUnit mAmpleAudioThreshold;
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
