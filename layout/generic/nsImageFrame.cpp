@@ -1896,7 +1896,7 @@ nsImageFrame::ShouldDisplaySelection()
             int32_t thisOffset = parentContent->IndexOf(mContent);
             nsCOMPtr<nsIDOMNode> parentNode = do_QueryInterface(parentContent);
             nsCOMPtr<nsIDOMNode> rangeNode;
-            int32_t rangeOffset;
+            uint32_t rangeOffset;
             nsCOMPtr<nsIDOMRange> range;
             selection->GetRangeAt(0,getter_AddRefs(range));
             if (range)
@@ -1904,12 +1904,16 @@ nsImageFrame::ShouldDisplaySelection()
               range->GetStartContainer(getter_AddRefs(rangeNode));
               range->GetStartOffset(&rangeOffset);
 
-              if (parentNode && rangeNode && (rangeNode == parentNode) && rangeOffset == thisOffset)
-              {
+              if (parentNode && rangeNode && rangeNode == parentNode &&
+                  static_cast<int32_t>(rangeOffset) == thisOffset) {
                 range->GetEndContainer(getter_AddRefs(rangeNode));
                 range->GetEndOffset(&rangeOffset);
-                if ((rangeNode == parentNode) && (rangeOffset == (thisOffset +1))) //+1 since that would mean this whole content is selected only
-                  return false; //do not allow nsFrame do draw any further selection
+                // +1 since that would mean this whole content is selected only
+                if (rangeNode == parentNode &&
+                    static_cast<int32_t>(rangeOffset) == thisOffset + 1) {
+                  // Do not allow nsFrame do draw any further selection
+                  return false;
+                }
               }
             }
           }

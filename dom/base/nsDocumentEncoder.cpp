@@ -1569,10 +1569,13 @@ nsHTMLCopyEncoder::IncludeInContext(nsINode *aNode)
 nsresult
 nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
 {
-  if (!inRange) return NS_ERROR_NULL_POINTER;
+  RefPtr<nsRange> range = static_cast<nsRange*>(inRange);
+  if (!range) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsresult rv;
   nsCOMPtr<nsIDOMNode> startNode, endNode, common;
-  int32_t startOffset, endOffset;
+  uint32_t startOffset, endOffset;
 
   rv = inRange->GetCommonAncestorContainer(getter_AddRefs(common));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1590,9 +1593,11 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
   int32_t opStartOffset, opEndOffset;
 
   // examine range endpoints.
-  rv = GetPromotedPoint( kStart, startNode, startOffset, address_of(opStartNode), &opStartOffset, common);
+  rv = GetPromotedPoint(kStart, startNode, static_cast<int32_t>(startOffset),
+                        address_of(opStartNode), &opStartOffset, common);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = GetPromotedPoint( kEnd, endNode, endOffset, address_of(opEndNode), &opEndOffset, common);
+  rv = GetPromotedPoint(kEnd, endNode, static_cast<int32_t>(endOffset),
+                        address_of(opEndNode), &opEndOffset, common);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if both range endpoints are at the common ancestor, check for possible inclusion of ancestors
@@ -1604,9 +1609,9 @@ nsHTMLCopyEncoder::PromoteRange(nsIDOMRange *inRange)
   }
 
   // set the range to the new values
-  rv = inRange->SetStart(opStartNode, opStartOffset);
+  rv = inRange->SetStart(opStartNode, static_cast<uint32_t>(opStartOffset));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = inRange->SetEnd(opEndNode, opEndOffset);
+  rv = inRange->SetEnd(opEndNode, static_cast<uint32_t>(opEndOffset));
   return rv;
 }
 
