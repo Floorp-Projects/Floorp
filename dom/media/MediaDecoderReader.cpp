@@ -174,14 +174,6 @@ MediaDecoderReader::DecodeToFirstVideoData()
 }
 
 void
-MediaDecoderReader::UpdateBuffered()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE_VOID(!mShutdown);
-  mBuffered = GetBuffered();
-}
-
-void
 MediaDecoderReader::VisibilityChanged()
 {}
 
@@ -196,35 +188,6 @@ MediaDecoderReader::GetBuffered()
 
   AutoPinned<MediaResource> stream(mResource);
   return GetEstimatedBufferedTimeRanges(stream, mDuration->ToMicroseconds());
-}
-
-RefPtr<MediaDecoderReader::MetadataPromise>
-MediaDecoderReader::AsyncReadMetadata()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("MediaDecoderReader::AsyncReadMetadata");
-
-  // Attempt to read the metadata.
-  MetadataHolder metadata;
-  metadata.mInfo = MakeUnique<MediaInfo>();
-  MetadataTags* tags = nullptr;
-  nsresult rv = ReadMetadata(metadata.mInfo.get(), &tags);
-  metadata.mTags.reset(tags);
-  metadata.mInfo->AssertValid();
-
-  // Update the buffer ranges before resolving the metadata promise. Bug 1320258.
-  UpdateBuffered();
-
-  // We're not waiting for anything. If we didn't get the metadata, that's an
-  // error.
-  if (NS_FAILED(rv) || !metadata.mInfo->HasValidMedia()) {
-    DECODER_WARN("ReadMetadata failed, rv=%" PRIx32 " HasValidMedia=%d",
-                 static_cast<uint32_t>(rv), metadata.mInfo->HasValidMedia());
-    return MetadataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR, __func__);
-  }
-
-  // Success!
-  return MetadataPromise::CreateAndResolve(Move(metadata), __func__);
 }
 
 class ReRequestVideoWithSkipTask : public Runnable
@@ -279,73 +242,6 @@ public:
 private:
   RefPtr<MediaDecoderReader> mReader;
 };
-
-RefPtr<MediaDecoderReader::VideoDataPromise>
-MediaDecoderReader::RequestVideoData(const media::TimeUnit& aTimeThreshold)
-{
-  RefPtr<VideoDataPromise> p = mBaseVideoPromise.Ensure(__func__);
-  bool skip = false;
-  while (VideoQueue().GetSize() == 0 &&
-         !VideoQueue().IsFinished()) {
-    if (!DecodeVideoFrame(skip, aTimeThreshold)) {
-      VideoQueue().Finish();
-    } else if (skip) {
-      // We still need to decode more data in order to skip to the next
-      // keyframe. Post another task to the decode task queue to decode
-      // again. We don't just decode straight in a loop here, as that
-      // would hog the decode task queue.
-      RefPtr<nsIRunnable> task(
-        new ReRequestVideoWithSkipTask(this, aTimeThreshold));
-      mTaskQueue->Dispatch(task.forget());
-      return p;
-    }
-  }
-  if (VideoQueue().GetSize() > 0) {
-    RefPtr<VideoData> v = VideoQueue().PopFront();
-    mBaseVideoPromise.Resolve(v, __func__);
-  } else if (VideoQueue().IsFinished()) {
-    mBaseVideoPromise.Reject(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
-  } else {
-    MOZ_ASSERT(false, "Dropping this promise on the floor");
-  }
-
-  return p;
-}
-
-RefPtr<MediaDecoderReader::AudioDataPromise>
-MediaDecoderReader::RequestAudioData()
-{
-  RefPtr<AudioDataPromise> p = mBaseAudioPromise.Ensure(__func__);
-  while (AudioQueue().GetSize() == 0 &&
-         !AudioQueue().IsFinished()) {
-    if (!DecodeAudioData()) {
-      AudioQueue().Finish();
-      break;
-    }
-    // AudioQueue size is still zero, post a task to try again. Don't spin
-    // waiting in this while loop since it somehow prevents audio EOS from
-    // coming in gstreamer 1.x when there is still video buffer waiting to be
-    // consumed. (|mVideoSinkBufferCount| > 0)
-    if (AudioQueue().GetSize() == 0) {
-      RefPtr<nsIRunnable> task(new ReRequestAudioTask(this));
-      mTaskQueue->Dispatch(task.forget());
-      return p;
-    }
-  }
-  if (AudioQueue().GetSize() > 0) {
-    RefPtr<AudioData> a = AudioQueue().PopFront();
-    mBaseAudioPromise.Resolve(a, __func__);
-  } else if (AudioQueue().IsFinished()) {
-    mBaseAudioPromise.Reject(mHitAudioDecodeError
-                             ? NS_ERROR_DOM_MEDIA_FATAL_ERR
-                             : NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
-    mHitAudioDecodeError = false;
-  } else {
-    MOZ_ASSERT(false, "Dropping this promise on the floor");
-  }
-
-  return p;
-}
 
 RefPtr<ShutdownPromise>
 MediaDecoderReader::Shutdown()

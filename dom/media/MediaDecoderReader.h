@@ -122,7 +122,7 @@ public:
   // Called by MDSM in dormant state to release resources allocated by this
   // reader. The reader can resume decoding by calling Seek() to a specific
   // position.
-  virtual void ReleaseResources() { }
+  virtual void ReleaseResources() = 0;
 
   // Destroys the decoding state. The reader cannot be made usable again.
   // This is different from ReleaseMediaResources() as it is irreversable,
@@ -137,7 +137,7 @@ public:
 
   void UpdateDuration(const media::TimeUnit& aDuration);
 
-  virtual void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>) {}
+  virtual void UpdateCompositor(already_AddRefed<layers::KnowsCompositor>) = 0;
 
   // Resets all state related to decoding, emptying all buffers etc.
   // Cancels all pending Request*Data() request callbacks, rejects any
@@ -158,35 +158,32 @@ public:
   //
   // The decode should be performed asynchronously, and the promise should
   // be resolved when it is complete.
-  virtual RefPtr<AudioDataPromise> RequestAudioData();
+  virtual RefPtr<AudioDataPromise> RequestAudioData() = 0;
 
   // Requests one video sample from the reader.
   virtual RefPtr<VideoDataPromise>
-  RequestVideoData(const media::TimeUnit& aTimeThreshold);
+  RequestVideoData(const media::TimeUnit& aTimeThreshold) = 0;
 
   // By default, the state machine polls the reader once per second when it's
   // in buffering mode. Some readers support a promise-based mechanism by which
   // they notify the state machine when the data arrives.
-  virtual bool IsWaitForDataSupported() const { return false; }
+  virtual bool IsWaitForDataSupported() const = 0;
 
-  virtual RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType)
-  {
-    MOZ_CRASH();
-  }
+  virtual RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) = 0;
 
   // The default implementation of AsyncReadMetadata is implemented in terms of
   // synchronous ReadMetadata() calls. Implementations may also
   // override AsyncReadMetadata to create a more proper async implementation.
-  virtual RefPtr<MetadataPromise> AsyncReadMetadata();
+  virtual RefPtr<MetadataPromise> AsyncReadMetadata() = 0;
 
   // Fills aInfo with the latest cached data required to present the media,
   // ReadUpdatedMetadata will always be called once ReadMetadata has succeeded.
-  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) {}
+  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) = 0;
 
   // Moves the decode head to aTime microseconds.
   virtual RefPtr<SeekPromise> Seek(const SeekTarget& aTarget) = 0;
 
-  virtual void SetCDMProxy(CDMProxy* aProxy) {}
+  virtual void SetCDMProxy(CDMProxy* aProxy) = 0;
 
   // Tell the reader that the data decoded are not for direct playback, so it
   // can accept more files, in particular those which have more channels than
@@ -200,7 +197,7 @@ public:
   // raw media data is arriving sequentially from a network channel. This
   // makes sense in the <video src="foo"> case, but not for more advanced use
   // cases like MSE.
-  virtual bool UseBufferingHeuristics() const { return true; }
+  virtual bool UseBufferingHeuristics() const = 0;
 
   // Returns the number of bytes of memory allocated by structures/frames in
   // the video queue.
@@ -215,12 +212,7 @@ public:
 
   // Called once new data has been cached by the MediaResource.
   // mBuffered should be recalculated and updated accordingly.
-  virtual void NotifyDataArrived()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    NS_ENSURE_TRUE_VOID(!mShutdown);
-    UpdateBuffered();
-  }
+  virtual void NotifyDataArrived() = 0;
 
   virtual MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
   virtual MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
@@ -239,11 +231,11 @@ public:
   // and RequestVideoData() asynchronously, rather than using the
   // implementation in this class to adapt the old synchronous to
   // the newer async model.
-  virtual bool IsAsync() const { return false; }
+  virtual bool IsAsync() const = 0;
 
   // Returns true if this decoder reader uses hardware accelerated video
   // decoding.
-  virtual bool VideoIsHardwareAccelerated() const { return false; }
+  virtual bool VideoIsHardwareAccelerated() const = 0;
 
   TimedMetadataEventSource& TimedMetadataEvent()
   {
@@ -293,13 +285,13 @@ public:
   // Switch the video decoder to NullDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
-  virtual void SetVideoNullDecode(bool aIsNullDecode) { }
+  virtual void SetVideoNullDecode(bool aIsNullDecode) = 0;
 
 protected:
   virtual ~MediaDecoderReader();
 
   // Recomputes mBuffered.
-  virtual void UpdateBuffered();
+  virtual void UpdateBuffered() = 0;
 
   RefPtr<VideoDataPromise> DecodeToFirstVideoData();
 
@@ -361,7 +353,7 @@ protected:
   RefPtr<MediaResource> mResource;
 
 private:
-  virtual nsresult InitInternal() { return NS_OK; }
+  virtual nsresult InitInternal() = 0;
 
   // Read header data for all bitstreams in the file. Fills aInfo with
   // the data required to present the media, and optionally fills *aTags
