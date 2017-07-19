@@ -37,7 +37,6 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
     mScrollIds.AppendElement(aOwner.AddMetadata(aLayer->GetScrollMetadata(i)));
   }
 
-  mIsScrollInfoLayer = aLayer->AsContainerLayer() && !aLayer->GetFirstChild();
   mTransform = aLayer->GetTransform();
   mTransformIsPerspective = aLayer->GetTransformIsPerspective();
   mEventRegions = aLayer->GetEventRegions();
