@@ -355,6 +355,14 @@ SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
 {
 }
 
+bool
+SchedulerGroup::Runnable::GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+{
+  aGroups.Clear();
+  aGroups.AppendElement(Group());
+  return true;
+}
+
 NS_IMETHODIMP
 SchedulerGroup::Runnable::GetName(nsACString& aName)
 {
@@ -406,6 +414,7 @@ SchedulerGroup::Runnable::GetPriority(uint32_t* aPriority)
 NS_IMPL_ISUPPORTS_INHERITED(SchedulerGroup::Runnable,
                             mozilla::Runnable,
                             nsIRunnablePriority,
+                            nsILabelableRunnable,
                             SchedulerGroup::Runnable)
 
 SchedulerGroup::AutoProcessEvent::AutoProcessEvent()
