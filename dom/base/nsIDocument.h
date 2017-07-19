@@ -3030,6 +3030,26 @@ public:
 
   bool IsScopedStyleEnabled();
 
+  nsINode* GetServoRestyleRoot() const
+  {
+    return mServoRestyleRoot;
+  }
+
+  uint32_t GetServoRestyleRootDirtyBits() const
+  {
+    MOZ_ASSERT(mServoRestyleRoot);
+    MOZ_ASSERT(mServoRestyleRootDirtyBits);
+    return mServoRestyleRootDirtyBits;
+  }
+
+  void ClearServoRestyleRoot()
+  {
+    mServoRestyleRoot = nullptr;
+    mServoRestyleRootDirtyBits = 0;
+  }
+
+  inline void SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits);
+
 protected:
   bool GetUseCounter(mozilla::UseCounter aUseCounter)
   {
@@ -3549,6 +3569,17 @@ protected:
   // CSP violation reports that have been buffered up due to a call to
   // StartBufferingCSPViolations.
   nsTArray<nsCOMPtr<nsIRunnable>> mBufferedCSPViolations;
+
+  // Restyle root for servo's style system.
+  //
+  // We store this as an nsINode, rather than as an Element, so that we can store
+  // the Document node as the restyle root if the entire document (along with all
+  // document-level native-anonymous content) needs to be restyled.
+  //
+  // We also track which "descendant" bits (normal/animation-only/lazy-fc) the
+  // root corresponds to.
+  nsCOMPtr<nsINode> mServoRestyleRoot;
+  uint32_t mServoRestyleRootDirtyBits;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)

@@ -57,4 +57,17 @@ nsIDocument::FindDocStyleSheetInsertionPoint(
   return size_t(index);
 }
 
+inline void
+nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
+{
+  MOZ_ASSERT(aRoot);
+  MOZ_ASSERT(aDirtyBits);
+  MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
+
+  MOZ_ASSERT(aRoot == aRoot->OwnerDocAsNode() ||
+             (aRoot->IsElement() && aRoot->IsInComposedDoc()));
+  mServoRestyleRoot = aRoot;
+  mServoRestyleRootDirtyBits = aDirtyBits;
+}
+
 #endif // nsIDocumentInlines_h

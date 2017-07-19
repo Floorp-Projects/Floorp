@@ -20,13 +20,17 @@ class Element;
 
 /**
  * DocumentStyleRootIterator traverses the roots of the document from the
- * perspective of the Servo-backed style system.  This will first traverse
- * the document root, followed by any document level native anonymous content.
+ * perspective of the Servo-backed style system. In the general case, this
+ * will first traverse the document root, followed by any document level
+ * native anonymous content.
+ *
+ * If the caller passes an element to the constructor rather than the document,
+ * that element (and nothing else) is returned from GetNextStyleRoot.
  */
 class DocumentStyleRootIterator
 {
 public:
-  explicit DocumentStyleRootIterator(nsIDocument* aDocument);
+  explicit DocumentStyleRootIterator(nsINode* aStyleRoot);
   ~DocumentStyleRootIterator() { MOZ_COUNT_DTOR(DocumentStyleRootIterator); }
 
   dom::Element* GetNextStyleRoot();

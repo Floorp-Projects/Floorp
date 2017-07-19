@@ -1342,6 +1342,7 @@ PresShell::Destroy()
   // this presshell while the frames are being torn down
   if (mDocument) {
     NS_ASSERTION(mDocument->GetShell() == this, "Wrong shell?");
+    mDocument->ClearServoRestyleRoot();
     mDocument->DeleteShell();
 
     if (mDocument->HasAnimationController()) {
