@@ -161,6 +161,8 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
     if (state_->should_quit)  // Handle WM_QUIT.
       break;
   }
+  // Histogram what was really being used, to help to adjust kMaxPeekCount.
+  DHISTOGRAM_COUNTS("Loop.PumpOutPendingPaintMessages Peeks", peek_count);
 }
 
 //-----------------------------------------------------------------------------
