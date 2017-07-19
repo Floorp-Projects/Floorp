@@ -125,13 +125,6 @@ public:
     return IsValid();
   }
 
-  bool IsScrollInfoLayer() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    return Metrics().IsScrollInfoLayer();
-  }
-
   WebRenderScrollDataWrapper GetLastChild() const
   {
     MOZ_ASSERT(IsValid());
