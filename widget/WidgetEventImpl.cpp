@@ -6,12 +6,14 @@
 #include "gfxPrefs.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "nsIContent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPrintfCString.h"
 
@@ -347,6 +349,24 @@ WidgetEvent::CanBeSentToRemoteProcess() const
     default:
       return false;
   }
+}
+
+bool
+WidgetEvent::WillBeSentToRemoteProcess() const
+{
+  // This event won't be posted to remote process if it's already explicitly
+  // stopped.
+  if (IsCrossProcessForwardingStopped()) {
+    return false;
+  }
+
+  // When mOriginalTarget is nullptr, this method shouldn't be used.
+  if (NS_WARN_IF(!mOriginalTarget)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIContent> originalTarget = do_QueryInterface(mOriginalTarget);
+  return EventStateManager::IsRemoteTarget(originalTarget);
 }
 
 bool
