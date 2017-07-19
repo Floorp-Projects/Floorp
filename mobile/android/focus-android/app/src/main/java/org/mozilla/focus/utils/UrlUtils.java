@@ -14,8 +14,10 @@ import android.text.TextUtils;
 import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 
 public class UrlUtils {
     public static String normalize(@NonNull String input) {
@@ -60,6 +62,74 @@ public class UrlUtils {
                 .getDefaultSearchEngine(context);
 
         return searchEngine.buildSearchUrl(searchTerm);
+    }
+
+    /**
+     * @return The search terms for the first search performed with the default search engine or the current URL.
+     */
+    public static String getSearchTermsOrUrl(Context context, String url) {
+        String searchTermsOrUrl = null;
+
+        if (UrlUtils.isDefaultSearchUrl(context, url)) {
+            searchTermsOrUrl = UrlUtils.getSearchTermsFromUrl(context, url);
+        }
+
+        if (TextUtils.isEmpty(searchTermsOrUrl)) {
+            searchTermsOrUrl = url;
+        }
+
+        return searchTermsOrUrl;
+    }
+
+    /**
+     * @return If a url matches the form of a first search URL for the current default search engine.
+     */
+    private static boolean isDefaultSearchUrl(Context context, String urlSearch) {
+        if (TextUtils.isEmpty(urlSearch)) {
+            return false;
+        }
+
+        final SearchEngine searchEngine = SearchEngineManager.getInstance()
+                .getDefaultSearchEngine(context);
+
+        final String baseSearchUrl = searchEngine.getBaseSearchUrl();
+        if (TextUtils.isEmpty(baseSearchUrl)) {
+            return false;
+        }
+        // %7B is a placeholder for search terms - if it is a default search engine url, the urls should match before the placeholder.
+        if (baseSearchUrl.contains("%7B")) {
+            final int searchPlaceholderIndex = baseSearchUrl.lastIndexOf("%7B");
+            return urlSearch.startsWith(baseSearchUrl.substring(0, searchPlaceholderIndex));
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return The search parameters decoded from the search url or null if they could not be extracted.
+     */
+    private static String getSearchTermsFromUrl(Context context, String url) {
+        String searchParams = null;
+        final Uri uri = Uri.parse(url);
+        try {
+            final String queryKey = getSearchQueryKeyForSearchEngine(context);
+            if (queryKey != null) {
+                searchParams = URLDecoder.decode(uri.getQueryParameter(queryKey), "UTF-8");
+            }
+        } catch (UnsupportedEncodingException exception) {
+            searchParams = null;
+        }
+        return searchParams;
+    }
+
+    /**
+     * @return The key needed to access the search terms from the URI.
+     */
+    private static String getSearchQueryKeyForSearchEngine(Context context) {
+        final SearchEngine searchEngine = SearchEngineManager.getInstance()
+                .getDefaultSearchEngine(context);
+
+        return searchEngine.getSearchTermsParamName();
     }
 
     public static String stripUserInfo(@Nullable String url) {

@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
     private static final String URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
     private static final String URLTYPE_SEARCH_HTML  = "text/html";
     private static final String URL_REL_MOBILE = "mobile";
+    private static final String SEARCH_TERM_VALUE = "{searchTerms}";
 
     private static final String IMAGE_URI_PREFIX = "data:image/png;base64,";
 
@@ -99,6 +100,9 @@ import java.nio.charset.StandardCharsets;
             if (tag.equals("Param")) {
                 final String name = parser.getAttributeValue(null, "name");
                 final String value = parser.getAttributeValue(null, "value");
+                if (value.equals(SEARCH_TERM_VALUE)) {
+                    searchEngine.searchTermsParamName = name;
+                }
                 uri = uri.buildUpon().appendQueryParameter(name, value).build();
                 parser.nextTag();
             } else {

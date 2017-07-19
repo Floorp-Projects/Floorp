@@ -683,7 +683,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.display_url:
-                final Fragment urlFragment = UrlInputFragment.createWithBrowserScreenAnimation(getUrl(), urlView);
+                final Fragment urlFragment = UrlInputFragment
+                        .createWithBrowserScreenAnimation(UrlUtils.getSearchTermsOrUrl(getContext(), getUrl()), urlView);
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
