@@ -19,14 +19,7 @@ extern "C" {
 namespace mozilla {
 namespace wr {
 
-enum class ExtendMode : uint32_t {
-  Clamp = 0,
-  Repeat = 1,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class WrBorderStyle : uint32_t {
+enum class BorderStyle : uint32_t {
   None = 0,
   Solid = 1,
   Double = 2,
@@ -37,6 +30,22 @@ enum class WrBorderStyle : uint32_t {
   Ridge = 7,
   Inset = 8,
   Outset = 9,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class ExtendMode : uint32_t {
+  Clamp = 0,
+  Repeat = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class RepeatMode : uint32_t {
+  Stretch = 0,
+  Repeat = 1,
+  Round = 2,
+  Space = 3,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -115,15 +124,6 @@ enum class WrMixBlendMode : uint32_t {
   Saturation = 13,
   Color = 14,
   Luminosity = 15,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
-enum class WrRepeatMode : uint32_t {
-  Stretch = 0,
-  Repeat = 1,
-  Round = 2,
-  Space = 3,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -375,13 +375,13 @@ struct LayoutRect {
   }
 };
 
-struct WrBorderWidths {
+struct BorderWidths {
   float left;
   float top;
   float right;
   float bottom;
 
-  bool operator==(const WrBorderWidths& aOther) const {
+  bool operator==(const BorderWidths& aOther) const {
     return left == aOther.left &&
            top == aOther.top &&
            right == aOther.right &&
@@ -389,23 +389,23 @@ struct WrBorderWidths {
   }
 };
 
-struct WrBorderSide {
+struct BorderSide {
   ColorF color;
-  WrBorderStyle style;
+  BorderStyle style;
 
-  bool operator==(const WrBorderSide& aOther) const {
+  bool operator==(const BorderSide& aOther) const {
     return color == aOther.color &&
            style == aOther.style;
   }
 };
 
-struct WrBorderRadius {
+struct BorderRadius {
   LayoutSize top_left;
   LayoutSize top_right;
   LayoutSize bottom_left;
   LayoutSize bottom_right;
 
-  bool operator==(const WrBorderRadius& aOther) const {
+  bool operator==(const BorderRadius& aOther) const {
     return top_left == aOther.top_left &&
            top_right == aOther.top_right &&
            bottom_left == aOther.bottom_left &&
@@ -461,12 +461,12 @@ struct SideOffsets2D_u32 {
   }
 };
 
-struct WrNinePatchDescriptor {
+struct NinePatchDescriptor {
   uint32_t width;
   uint32_t height;
   SideOffsets2D_u32 slice;
 
-  bool operator==(const WrNinePatchDescriptor& aOther) const {
+  bool operator==(const NinePatchDescriptor& aOther) const {
     return width == aOther.width &&
            height == aOther.height &&
            slice == aOther.slice;
@@ -485,7 +485,7 @@ struct LayoutVector2D {
 
 struct WrComplexClipRegion {
   LayoutRect rect;
-  WrBorderRadius radii;
+  BorderRadius radii;
 
   bool operator==(const WrComplexClipRegion& aOther) const {
     return rect == aOther.rect &&
@@ -741,19 +741,19 @@ WR_INLINE
 void wr_dp_push_border(WrState *aState,
                        LayoutRect aRect,
                        LayoutRect aClip,
-                       WrBorderWidths aWidths,
-                       WrBorderSide aTop,
-                       WrBorderSide aRight,
-                       WrBorderSide aBottom,
-                       WrBorderSide aLeft,
-                       WrBorderRadius aRadius)
+                       BorderWidths aWidths,
+                       BorderSide aTop,
+                       BorderSide aRight,
+                       BorderSide aBottom,
+                       BorderSide aLeft,
+                       BorderRadius aRadius)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border_gradient(WrState *aState,
                                 LayoutRect aRect,
                                 LayoutRect aClip,
-                                WrBorderWidths aWidths,
+                                BorderWidths aWidths,
                                 LayoutPoint aStartPoint,
                                 LayoutPoint aEndPoint,
                                 const GradientStop *aStops,
@@ -766,19 +766,19 @@ WR_INLINE
 void wr_dp_push_border_image(WrState *aState,
                              LayoutRect aRect,
                              LayoutRect aClip,
-                             WrBorderWidths aWidths,
+                             BorderWidths aWidths,
                              WrImageKey aImage,
-                             WrNinePatchDescriptor aPatch,
+                             NinePatchDescriptor aPatch,
                              SideOffsets2D_f32 aOutset,
-                             WrRepeatMode aRepeatHorizontal,
-                             WrRepeatMode aRepeatVertical)
+                             RepeatMode aRepeatHorizontal,
+                             RepeatMode aRepeatVertical)
 WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_border_radial_gradient(WrState *aState,
                                        LayoutRect aRect,
                                        LayoutRect aClip,
-                                       WrBorderWidths aWidths,
+                                       BorderWidths aWidths,
                                        LayoutPoint aCenter,
                                        LayoutSize aRadius,
                                        const GradientStop *aStops,
