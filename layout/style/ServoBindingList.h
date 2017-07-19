@@ -33,6 +33,9 @@ SERVO_BINDING_FUNC(Servo_Element_HasPseudoComputedValues, bool,
 SERVO_BINDING_FUNC(Servo_Element_GetPseudoComputedValues,
                    ServoStyleContextStrong,
                    RawGeckoElementBorrowed node, size_t index)
+SERVO_BINDING_FUNC(Servo_Element_IsDisplayNone,
+                   bool,
+                   RawGeckoElementBorrowed element)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStrong,

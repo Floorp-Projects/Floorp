@@ -468,8 +468,14 @@ public:
 
   Directionality GetComputedDirectionality() const;
 
+  static const uint32_t kAllServoDescendantBits =
+    ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO |
+    ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO |
+    NODE_DESCENDANTS_NEED_FRAMES;
+
   void NoteDirtyForServo();
   void NoteAnimationOnlyDirtyForServo();
+  void NoteDescendantsNeedFramesForServo();
 
   bool HasDirtyDescendantsForServo() const
   {
@@ -506,7 +512,8 @@ public:
     return !!mServoData.Get();
   }
 
-  void ClearServoData();
+  void ClearServoData() { ClearServoData(GetComposedDoc()); }
+  void ClearServoData(nsIDocument* aDocument);
 
   /**
    * Gets the custom element data used by web components custom element.
