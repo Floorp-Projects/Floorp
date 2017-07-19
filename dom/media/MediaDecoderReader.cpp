@@ -69,15 +69,12 @@ public:
 };
 
 MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
-  : mAudioCompactor(mAudioQueue)
-  , mDecoder(aInit.mDecoder)
+  : mDecoder(aInit.mDecoder)
   , mTaskQueue(new TaskQueue(
       GetMediaThreadPool(MediaThreadType::PLAYBACK),
       "MediaDecoderReader::mTaskQueue",
       /* aSupportsTailDispatch = */ true))
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
-  , mIgnoreAudioOutputFormat(false)
-  , mHitAudioDecodeError(false)
   , mShutdown(false)
   , mResource(aInit.mResource)
 {
@@ -133,12 +130,10 @@ nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
 {
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     VideoQueue().Reset();
-    mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
   if (aTracks.contains(TrackInfo::kAudioTrack)) {
     AudioQueue().Reset();
-    mBaseAudioPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
   }
 
   return NS_OK;
@@ -149,9 +144,6 @@ MediaDecoderReader::Shutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
   mShutdown = true;
-
-  mBaseAudioPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
-  mBaseVideoPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
 
   ReleaseResources();
   mBuffered.DisconnectAll();
