@@ -9,6 +9,7 @@
 
 #include "nsDisplayList.h"
 #include "nsTHashtable.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/WritingModes.h"
 #include <algorithm>
@@ -25,7 +26,7 @@ namespace css {
  *  1. allocate an object using WillProcessLines
  *  2. then call ProcessLine for each line you are building display lists for
  */
-class TextOverflow {
+class MOZ_HEAP_CLASS TextOverflow final {
  public:
   /**
    * Allocate an object for text-overflow processing.
@@ -55,9 +56,9 @@ class TextOverflow {
    */
   static bool CanHaveTextOverflow(nsIFrame* aBlockFrame);
 
-  typedef nsTHashtable<nsPtrHashKey<nsIFrame> > FrameHashtable;
+  typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
 
- protected:
+ private:
   TextOverflow(nsDisplayListBuilder* aBuilder,
                nsIFrame* aBlockFrame);
 
