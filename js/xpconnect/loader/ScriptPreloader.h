@@ -91,6 +91,11 @@ public:
 
     Result<Ok, nsresult> InitCache(const Maybe<ipc::FileDescriptor>& cacheFile, ScriptCacheChild* cacheChild);
 
+    bool Active()
+    {
+      return mCacheInitialized && !mStartupFinished;
+    }
+
 private:
     Result<Ok, nsresult> InitCacheInternal();
 
