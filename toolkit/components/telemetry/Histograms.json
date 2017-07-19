@@ -1199,6 +1199,15 @@
     "n_buckets": 50,
     "description": "Percent of GC slice done during idle time"
   },
+  "GC_BUDGET_OVERRUN": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 100,
+    "description": "How long a GC slice ran over its budget in microseconds"
+  },
   "GEOLOCATION_ACCURACY_EXPONENTIAL": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
