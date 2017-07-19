@@ -4201,34 +4201,36 @@ BitIsPropagated(const Element* aElement)
 #endif
 
 template<typename Traits>
-inline void NoteDescendants(Element* aElement)
+void
+NoteDirtyContent(nsIContent* aContent)
 {
-  if (!aElement->HasServoData()) {
+  if (nsIPresShell* shell = aContent->OwnerDoc()->GetShell()) {
+    shell->EnsureStyleFlush();
+  }
+
+  Element* parent = aContent->GetFlattenedTreeParentElementForStyle();
+  if (!parent || !parent->HasServoData()) {
     // The bits only apply to styled elements.
     return;
   }
 
-  Element* curr = aElement;
+  Element* curr = parent;
   while (curr && !Traits::HasBit(curr)) {
     Traits::SetBit(curr);
     curr = curr->GetFlattenedTreeParentElementForStyle();
   }
 
-  if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
-    shell->EnsureStyleFlush();
-  }
-
-  MOZ_ASSERT(BitIsPropagated<Traits>(aElement));
+  MOZ_ASSERT(BitIsPropagated<Traits>(parent));
 }
 
 void
-Element::NoteDirtyDescendantsForServo()
+nsIContent::NoteDirtyForServo()
 {
-  NoteDescendants<DirtyDescendantsBit>(this);
+  NoteDirtyContent<DirtyDescendantsBit>(this);
 }
 
 void
-Element::NoteAnimationOnlyDirtyDescendantsForServo()
+nsIContent::NoteAnimationOnlyDirtyForServo()
 {
-  NoteDescendants<AnimationOnlyDirtyDescendantsBit>(this);
+  NoteDirtyContent<AnimationOnlyDirtyDescendantsBit>(this);
 }
