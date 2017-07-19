@@ -20,7 +20,6 @@
 namespace mozilla {
 namespace wr {
 
-typedef wr::WrGradientExtendMode GradientExtendMode;
 typedef wr::WrMixBlendMode MixBlendMode;
 typedef wr::WrImageRendering ImageRendering;
 typedef wr::WrImageFormat ImageFormat;

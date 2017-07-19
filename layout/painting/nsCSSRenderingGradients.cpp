@@ -1001,13 +1001,13 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
 
 void
 nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
-                                                wr::WrGradientExtendMode& aMode,
-                                                nsTArray<wr::WrGradientStop>& aStops,
+                                                wr::ExtendMode& aMode,
+                                                nsTArray<wr::GradientStop>& aStops,
                                                 LayoutDevicePoint& aLineStart,
                                                 LayoutDevicePoint& aLineEnd,
                                                 LayoutDeviceSize& aGradientRadius)
 {
-  aMode = mGradient->mRepeating ? wr::WrGradientExtendMode::Repeat : wr::WrGradientExtendMode::Clamp;
+  aMode = mGradient->mRepeating ? wr::ExtendMode::Repeat : wr::ExtendMode::Clamp;
 
   aStops.SetLength(mStops.Length());
   for(uint32_t i = 0; i < mStops.Length(); i++) {
@@ -1037,8 +1037,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     return;
   }
 
-  wr::WrGradientExtendMode extendMode;
-  nsTArray<wr::WrGradientStop> stops;
+  wr::ExtendMode extendMode;
+  nsTArray<wr::GradientStop> stops;
   LayoutDevicePoint lineStart;
   LayoutDevicePoint lineEnd;
   LayoutDeviceSize gradientRadius;

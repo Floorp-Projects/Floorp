@@ -141,37 +141,6 @@ impl MutByteSlice {
     }
 }
 
-#[repr(u32)]
-pub enum WrGradientExtendMode {
-    Clamp,
-    Repeat,
-}
-
-impl Into<ExtendMode> for WrGradientExtendMode {
-    fn into(self) -> ExtendMode {
-        match self {
-            WrGradientExtendMode::Clamp => ExtendMode::Clamp,
-            WrGradientExtendMode::Repeat => ExtendMode::Repeat,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrGradientStop {
-    offset: f32,
-    color: ColorF,
-}
-
-impl<'a> Into<GradientStop> for &'a WrGradientStop {
-    fn into(self) -> GradientStop {
-        GradientStop {
-            offset: self.offset,
-            color: self.color.into(),
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct WrBorderSide {
@@ -1381,14 +1350,14 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              widths: WrBorderWidths,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
-                                             stops: *const WrGradientStop,
+                                             stops: *const GradientStop,
                                              stops_count: usize,
-                                             extend_mode: WrGradientExtendMode,
+                                             extend_mode: ExtendMode,
                                              outset: SideOffsets2D<f32>) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
-    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+    let stops_vector = stops_slice.to_owned();
 
     let border_details = BorderDetails::Gradient(GradientBorder {
                                                      gradient:
@@ -1415,14 +1384,14 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     widths: WrBorderWidths,
                                                     center: LayoutPoint,
                                                     radius: LayoutSize,
-                                                    stops: *const WrGradientStop,
+                                                    stops: *const GradientStop,
                                                     stops_count: usize,
-                                                    extend_mode: WrGradientExtendMode,
+                                                    extend_mode: ExtendMode,
                                                     outset: SideOffsets2D<f32>) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
-    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+    let stops_vector = stops_slice.to_owned();
 
     let border_details =
         BorderDetails::RadialGradient(RadialGradientBorder {
@@ -1449,15 +1418,15 @@ pub extern "C" fn wr_dp_push_linear_gradient(state: &mut WrState,
                                              clip: LayoutRect,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
-                                             stops: *const WrGradientStop,
+                                             stops: *const GradientStop,
                                              stops_count: usize,
-                                             extend_mode: WrGradientExtendMode,
+                                             extend_mode: ExtendMode,
                                              tile_size: LayoutSize,
                                              tile_spacing: LayoutSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
-    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+    let stops_vector = stops_slice.to_owned();
 
     let gradient = state.frame_builder
                         .dl_builder
@@ -1480,15 +1449,15 @@ pub extern "C" fn wr_dp_push_radial_gradient(state: &mut WrState,
                                              clip: LayoutRect,
                                              center: LayoutPoint,
                                              radius: LayoutSize,
-                                             stops: *const WrGradientStop,
+                                             stops: *const GradientStop,
                                              stops_count: usize,
-                                             extend_mode: WrGradientExtendMode,
+                                             extend_mode: ExtendMode,
                                              tile_size: LayoutSize,
                                              tile_spacing: LayoutSize) {
     assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = make_slice(stops, stops_count);
-    let stops_vector = stops_slice.iter().map(|x| x.into()).collect();
+    let stops_vector = stops_slice.to_owned();
 
     let gradient = state.frame_builder
                         .dl_builder
