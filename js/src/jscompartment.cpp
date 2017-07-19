@@ -157,7 +157,11 @@ JSCompartment::init(JSContext* maybecx)
     if (!enumerators)
         return false;
 
-    if (!savedStacks_.init() || !varNames_.init() || !templateLiteralMap_.init()) {
+    if (!savedStacks_.init() ||
+        !varNames_.init() ||
+        !templateLiteralMap_.init() ||
+        !iteratorCache.init())
+    {
         if (maybecx)
             ReportOutOfMemory(maybecx);
         return false;
@@ -1069,6 +1073,7 @@ JSCompartment::purge()
     dtoaCache.purge();
     newProxyCache.purge();
     objectGroups.purge();
+    iteratorCache.clearAndShrink();
 }
 
 void
