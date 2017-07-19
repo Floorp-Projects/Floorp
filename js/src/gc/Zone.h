@@ -79,7 +79,7 @@ struct UniqueIdGCPolicy {
 // Maps a Cell* to a unique, 64bit id.
 using UniqueIdMap = GCHashMap<Cell*,
                               uint64_t,
-                              PointerHasher<Cell*, 3>,
+                              PointerHasher<Cell*>,
                               SystemAllocPolicy,
                               UniqueIdGCPolicy>;
 

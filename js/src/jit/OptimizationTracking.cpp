@@ -214,7 +214,7 @@ static inline HashNumber
 HashType(TypeSet::Type ty)
 {
     if (ty.isObjectUnchecked())
-        return PointerHasher<TypeSet::ObjectKey*, 3>::hash(ty.objectKey());
+        return PointerHasher<TypeSet::ObjectKey*>::hash(ty.objectKey());
     return HashNumber(ty.raw());
 }
 

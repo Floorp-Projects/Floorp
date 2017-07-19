@@ -40,7 +40,7 @@ class BufferableRef
     bool maybeInRememberedSet(const Nursery&) const { return true; }
 };
 
-typedef HashSet<void*, PointerHasher<void*, 3>, SystemAllocPolicy> EdgeSet;
+typedef HashSet<void*, PointerHasher<void*>, SystemAllocPolicy> EdgeSet;
 
 /* The size of a single block of store buffer storage space. */
 static const size_t LifoAllocBlockSize = 1 << 13; /* 8KiB */

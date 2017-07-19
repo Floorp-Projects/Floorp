@@ -814,7 +814,7 @@ class Node {
     // This simply uses the stock PointerHasher on the ubi::Node's pointer.
     // We specialize DefaultHasher below to make this the default.
     class HashPolicy {
-        typedef js::PointerHasher<void*, mozilla::tl::FloorLog2<sizeof(void*)>::value> PtrHash;
+        typedef js::PointerHasher<void*> PtrHash;
 
       public:
         typedef Node Lookup;
