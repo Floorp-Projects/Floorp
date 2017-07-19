@@ -188,7 +188,7 @@ struct SavedFrame::HashPolicy
 {
     typedef SavedFrame::Lookup              Lookup;
     typedef MovableCellHasher<SavedFrame*>  SavedFramePtrHasher;
-    typedef PointerHasher<JSPrincipals*, 3> JSPrincipalsPtrHasher;
+    typedef PointerHasher<JSPrincipals*> JSPrincipalsPtrHasher;
 
     static bool       hasHash(const Lookup& l);
     static bool       ensureHash(const Lookup& l);
