@@ -1271,7 +1271,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  overflow-x: hidden;
 }
 
 #customization-container:not([photon]) #customization-panelHolder {
