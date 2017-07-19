@@ -267,8 +267,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       if (NS_SUCCEEDED(res)) {
         return res;
       }
-      NS_WARNING("Using fallback for accent color - UI code failed to use the "
-                 "-moz-windows-accent-color-applies media query properly");
       // Seems to be the default color (hardcoded because of bug 1065998)
       aColor = NS_RGB(158, 158, 158);
       return NS_OK;
@@ -440,10 +438,31 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_DWMCompositor:
         aResult = nsUXThemeData::CheckForCompositor();
         break;
-    case eIntID_WindowsAccentColorApplies:
+    case eIntID_WindowsAccentColorInTitlebar:
         {
           nscolor unused;
-          aResult = NS_SUCCEEDED(GetAccentColor(unused)) ? 1 : 0;
+          if (NS_WARN_IF(NS_FAILED(GetAccentColor(unused)))) {
+            aResult = 0;
+            break;
+          }
+
+          uint32_t colorPrevalence;
+          nsresult rv = mDwmKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                      NS_LITERAL_STRING("SOFTWARE\\Microsoft\\Windows\\DWM"),
+                                      nsIWindowsRegKey::ACCESS_QUERY_VALUE);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+          }
+
+          // The ColorPrevalence value is set to 1 when the "Show color on title bar"
+          // setting in the Color section of Window's Personalization settings is
+          // turned on.
+          aResult =
+            (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("ColorPrevalence"),
+                                                &colorPrevalence)) &&
+             colorPrevalence == 1) ? 1 : 0;
+
+          mDwmKey->Close();
         }
         break;
     case eIntID_WindowsGlass:
@@ -789,13 +808,8 @@ nsLookAndFeel::GetAccentColor(nscolor& aColor)
     return rv;
   }
 
-  // The ColorPrevalence value is set to 1 when the "Show color on title bar"
-  // setting in the Color section of Window's Personalization settings is
-  // turned on.
-  uint32_t accentColor, colorPrevalence;
-  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("AccentColor"), &accentColor)) &&
-      NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("ColorPrevalence"), &colorPrevalence)) &&
-      colorPrevalence == 1) {
+  uint32_t accentColor;
+  if (NS_SUCCEEDED(mDwmKey->ReadIntValue(NS_LITERAL_STRING("AccentColor"), &accentColor))) {
     // The order of the color components in the DWORD stored in the registry
     // happens to be the same order as we store the components in nscolor
     // so we can just assign directly here.
