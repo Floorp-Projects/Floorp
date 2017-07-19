@@ -29,7 +29,7 @@ const brandBundle = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties");
 
 // Maximum height of a histogram bar (in em for html, in chars for text)
-const MAX_BAR_HEIGHT = 18;
+const MAX_BAR_HEIGHT = 8;
 const MAX_BAR_CHARS = 25;
 const PREF_TELEMETRY_SERVER_OWNER = "toolkit.telemetry.server_owner";
 const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
@@ -1321,11 +1321,12 @@ var Histogram = {
     let maxBarValue = aOptions.exponential ? this.getLogValue(aHgram.max) : aHgram.max;
 
     for (let [label, value] of aHgram.values) {
+      label = String(label);
       let barValue = aOptions.exponential ? this.getLogValue(value) : value;
 
       // Create a text representation: <right-aligned-label> |<bar-of-#><value>  <percentage>
       text += EOL
-              + " ".repeat(Math.max(0, labelPadTo - String(label).length)) + label // Right-aligned label
+              + " ".repeat(Math.max(0, labelPadTo - label.length)) + label // Right-aligned label
               + " |" + "#".repeat(Math.round(MAX_BAR_CHARS * barValue / maxBarValue)) // Bar
               + "  " + value // Value
               + "  " + Math.round(100 * value / aHgram.sample_count) + "%"; // Percentage
@@ -1347,6 +1348,10 @@ var Histogram = {
       bar.style.height = belowEm + "em";
       barDiv.appendChild(bar);
 
+      // Add a special class to move the text down to prevent text overlap
+      if (label.length > 3) {
+          bar.classList.add('long-label');
+      }
       // Add bucket label
       barDiv.appendChild(document.createTextNode(label));
 
@@ -2357,8 +2362,6 @@ function displayRichPingData(ping, updatePayloadList) {
   if (payloadIndex > 0) {
     payload = ping.payload.childPayloads[payloadIndex - 1];
   }
-
-  console.log(payload);
 
   // Show chrome hang stacks
   ChromeHangs.render(payload);
