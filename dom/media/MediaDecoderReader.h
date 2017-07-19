@@ -187,7 +187,6 @@ public:
   // available in the audio output.
   void SetIgnoreAudioOutputFormat()
   {
-    mIgnoreAudioOutputFormat = true;
   }
 
   // The MediaDecoderStateMachine uses various heuristics that assume that
@@ -298,12 +297,6 @@ protected:
   // the decoder, state machine, and main threads.
   MediaQueue<VideoData> mVideoQueue;
 
-  // An adapter to the audio queue which first copies data to buffers with
-  // minimal allocation slop and then pushes them to the queue.  This is
-  // useful for decoders working with formats that give awkward numbers of
-  // frames such as mp3.
-  AudioCompactor mAudioCompactor;
-
   // Reference to the owning decoder object.
   AbstractMediaDecoder* mDecoder;
 
@@ -318,16 +311,6 @@ protected:
 
   media::NullableTimeUnit mDuration;
 
-  // Whether we should accept media that we know we can't play
-  // directly, because they have a number of channel higher than
-  // what we support.
-  bool mIgnoreAudioOutputFormat;
-
-  // This is a quick-and-dirty way for DecodeAudioData implementations to
-  // communicate the presence of a decoding error to RequestAudioData. We should
-  // replace this with a promise-y mechanism as we make this stuff properly
-  // async.
-  bool mHitAudioDecodeError;
   bool mShutdown;
 
   // Used to send TimedMetadata to the listener.
@@ -349,11 +332,6 @@ protected:
 
 private:
   virtual nsresult InitInternal() = 0;
-
-  // Promises used only for the base-class (sync->async adapter) implementation
-  // of Request{Audio,Video}Data.
-  MozPromiseHolder<AudioDataPromise> mBaseAudioPromise;
-  MozPromiseHolder<VideoDataPromise> mBaseVideoPromise;
 };
 
 } // namespace mozilla
