@@ -30,13 +30,13 @@
 
     <org.mozilla.gecko.widget.themed.ThemedTextView
         android:id="@+id/suggestion_text"
+        style="@style/TextAppearance.SearchSuggestion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         android:gravity="center_vertical"
         android:lineSpacingMultiplier="1.1"
         android:textColor="@color/search_suggestion_text"
-        android:textSize="14sp"
         tools:text="suggestion text"/>
 
 </org.mozilla.gecko.home.SuggestionItem>
