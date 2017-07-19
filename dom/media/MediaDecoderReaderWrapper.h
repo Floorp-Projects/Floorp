@@ -12,8 +12,8 @@
 #include "mozilla/Variant.h"
 #include "nsISupportsImpl.h"
 
-#include "MediaDecoderReader.h"
 #include "MediaEventSource.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
@@ -24,12 +24,12 @@ namespace mozilla {
  * is passed to the underlying reader.
  */
 class MediaDecoderReaderWrapper {
-  typedef MediaDecoderReader::MetadataPromise MetadataPromise;
-  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
-  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
-  typedef MediaDecoderReader::SeekPromise SeekPromise;
-  typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
-  typedef MediaDecoderReader::TrackSet TrackSet;
+  using MetadataPromise = MediaFormatReader::MetadataPromise;
+  using AudioDataPromise = MediaFormatReader::AudioDataPromise;
+  using VideoDataPromise = MediaFormatReader::VideoDataPromise;
+  using SeekPromise = MediaFormatReader::SeekPromise;
+  using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
+  using TrackSet = MediaFormatReader::TrackSet;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
 
 public:

@@ -38,49 +38,14 @@ extern LazyLogModule gMediaDecoderLog;
 #define DECODER_WARN(...) NS_WARNING(nsPrintfCString(FMT(__VA_ARGS__)).get())
 
 MediaDecoderReader::MediaDecoderReader(MediaDecoderReaderInit& aInit)
-  : mDecoder(aInit.mDecoder)
-  , mTaskQueue(new TaskQueue(
-      GetMediaThreadPool(MediaThreadType::PLAYBACK),
-      "MediaDecoderReader::mTaskQueue",
-      /* aSupportsTailDispatch = */ true))
-  , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
-  , mShutdown(false)
 {
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-nsresult
-MediaDecoderReader::Init()
-{
-  return InitInternal();
-}
-
 MediaDecoderReader::~MediaDecoderReader()
 {
-  MOZ_ASSERT(mShutdown);
   MOZ_COUNT_DTOR(MediaDecoderReader);
-}
-
-void
-MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  UpdateBuffered();
-}
-
-RefPtr<ShutdownPromise>
-MediaDecoderReader::Shutdown()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mShutdown = true;
-
-  ReleaseResources();
-  mBuffered.DisconnectAll();
-
-  mDecoder = nullptr;
-
-  return mTaskQueue->BeginShutdown();
 }
 
 } // namespace mozilla
