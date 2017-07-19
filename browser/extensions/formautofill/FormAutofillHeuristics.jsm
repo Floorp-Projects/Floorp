@@ -22,6 +22,82 @@ FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 const PREF_HEURISTICS_ENABLED = "extensions.formautofill.heuristics.enabled";
 
 /**
+ * A scanner for traversing all elements in a form and retrieving the field
+ * detail with FormAutofillHeuristics.getInfo function.
+ */
+class FieldScanner {
+  /**
+   * Create a FieldScanner based on form elements with the existing
+   * fieldDetails.
+   *
+   * @param {Array.DOMElement} elements
+   *        The elements from a form for each parser.
+   */
+  constructor(elements) {
+    this._elementsWeakRef = Cu.getWeakReference(elements);
+    this.fieldDetails = [];
+  }
+
+  get _elements() {
+    return this._elementsWeakRef.get();
+  }
+
+  /**
+   * This function will prepare an autocomplete info object with getInfo
+   * function and push the detail to fieldDetails property. Any duplicated
+   * detail will be marked as _duplicated = true for the parser.
+   *
+   * Any element without the related detail will be used for adding the detail
+   * to the end of field details.
+   */
+  pushDetail() {
+    let elementIndex = this.fieldDetails.length;
+    if (elementIndex >= this._elements.length) {
+      throw new Error("Try to push the non-existing element info.");
+    }
+    let element = this._elements[elementIndex];
+    let info = FormAutofillHeuristics.getInfo(element);
+    if (!info) {
+      info = {};
+    }
+    let fieldInfo = {
+      section: info.section,
+      addressType: info.addressType,
+      contactType: info.contactType,
+      fieldName: info.fieldName,
+      elementWeakRef: Cu.getWeakReference(element),
+    };
+
+    // Store the association between the field metadata and the element.
+    if (this.findSameField(info) != -1) {
+      // A field with the same identifier already exists.
+      log.debug("Not collecting a field matching another with the same info:", info);
+      fieldInfo._duplicated = true;
+    }
+
+    this.fieldDetails.push(fieldInfo);
+  }
+
+  findSameField(info) {
+    return this.fieldDetails.findIndex(f => f.section == info.section &&
+                                       f.addressType == info.addressType &&
+                                       f.contactType == info.contactType &&
+                                       f.fieldName == info.fieldName);
+  }
+
+  /**
+   * Provide the field details without invalid field name and duplicated fields.
+   *
+   * @returns {Array<Object>}
+   *          The array with the field details without invalid field name and
+   *          duplicated fields.
+   */
+  get trimmedFieldDetail() {
+    return this.fieldDetails.filter(f => f.fieldName && !f._duplicated);
+  }
+}
+
+/**
  * Returns the autocomplete information of fields according to heuristics.
  */
 this.FormAutofillHeuristics = {
@@ -50,39 +126,16 @@ this.FormAutofillHeuristics = {
   RULES: null,
 
   getFormInfo(form) {
-    let fieldDetails = [];
     if (form.autocomplete == "off") {
       return [];
     }
-    for (let element of form.elements) {
-      // Exclude elements to which no autocomplete field has been assigned.
-      let info = this.getInfo(element, fieldDetails);
-      if (!info) {
-        continue;
-      }
-
-      // Store the association between the field metadata and the element.
-      if (fieldDetails.some(f => f.section == info.section &&
-                                 f.addressType == info.addressType &&
-                                 f.contactType == info.contactType &&
-                                 f.fieldName == info.fieldName)) {
-        // A field with the same identifier already exists.
-        log.debug("Not collecting a field matching another with the same info:", info);
-        continue;
-      }
-
-      let formatWithElement = {
-        section: info.section,
-        addressType: info.addressType,
-        contactType: info.contactType,
-        fieldName: info.fieldName,
-        elementWeakRef: Cu.getWeakReference(element),
-      };
-
-      fieldDetails.push(formatWithElement);
+    let fieldScanner = new FieldScanner(form.elements);
+    for (let i = 0; i < fieldScanner.elements.length; i++) {
+      let element = fieldScanner.elements[i];
+      let info = this.getInfo(element, fieldScanner.fieldDetails);
+      fieldScanner.pushDetail(i, info);
     }
-
-    return fieldDetails;
+    return fieldScanner.trimmedFieldDetail;
   },
 
   /**
