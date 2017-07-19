@@ -112,7 +112,8 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
         self.dnf_install(*self.mobile_android_packages)
 
         import android
-        android.ensure_android('linux', artifact_mode=artifact_mode)
+        android.ensure_android('linux', artifact_mode=artifact_mode,
+                               no_interactive=self.no_interactive)
 
     def suggest_mobile_android_mozconfig(self, artifact_mode=False):
         import android
