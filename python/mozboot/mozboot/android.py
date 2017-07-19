@@ -153,13 +153,13 @@ def ensure_android(os_name, artifact_mode):
     # The user may have an external Android SDK (in which case we
     # save them a lengthy download), or they may have already
     # completed the download. We unpack to
-    # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-r11c}.
+    # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
     mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
     os_tag = 'darwin' if os_name == 'macosx' else os_name
     sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{}-3859397.zip'.format(os_tag)
     ndk_url = android_ndk_url(os_name)
 
-    ensure_android_sdk_and_ndk(path=os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)),
+    ensure_android_sdk_and_ndk(mozbuild_path, os_name,
                                sdk_path=sdk_path, sdk_url=sdk_url,
                                ndk_path=ndk_path, ndk_url=ndk_url,
                                artifact_mode=artifact_mode)
@@ -170,10 +170,10 @@ def ensure_android(os_name, artifact_mode):
     ensure_android_packages(sdkmanager_tool=sdkmanager_tool)
 
 
-def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artifact_mode):
+def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_path, ndk_url, artifact_mode):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
-    and unpack the SDK and/or NDK from the given URLs into |path|.
+    and unpack the SDK and/or NDK from the given URLs into |mozbuild_path/{android-sdk-$OS_NAME,android-ndk-$VER}|.
     '''
 
     # It's not particularly bad to overwrite the NDK toolchain, but it does take
@@ -184,7 +184,8 @@ def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artif
         if os.path.isdir(ndk_path):
             print(ANDROID_NDK_EXISTS % ndk_path)
         else:
-            install_mobile_android_sdk_or_ndk(ndk_url, path)
+            # The NDK archive unpacks into a top-level android-ndk-$VER directory.
+            install_mobile_android_sdk_or_ndk(ndk_url, mozbuild_path)
 
     # We don't want to blindly overwrite, since we use the
     # |sdkmanager| tool to install additional parts of the Android
@@ -195,7 +196,11 @@ def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url, artif
     elif os.path.isdir(sdk_path):
         raise NotImplementedError(ANDROID_SDK_TOO_OLD % sdk_path)
     else:
-        install_mobile_android_sdk_or_ndk(sdk_url, path)
+        # The SDK archive used to include a top-level
+        # android-sdk-$OS_NAME directory; it no longer does so.  We
+        # preserve the old convention to smooth detecting existing SDK
+        # installations.
+        install_mobile_android_sdk_or_ndk(sdk_url, os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)))
 
 
 def ensure_android_packages(sdkmanager_tool, packages=None):
@@ -222,7 +227,7 @@ def suggest_mozconfig(os_name, artifact_mode=False):
 
 def android_ndk_url(os_name, ver='r11c'):
     # Produce a URL like
-    # 'https://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
+    # 'https://dl.google.com/android/repository/android-ndk-$VER-linux-x86_64.zip
     base_url = 'https://dl.google.com/android/repository/android-ndk'
 
     if os_name == 'macosx':
