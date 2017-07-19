@@ -1362,7 +1362,7 @@ public:
   uint32_t GetScrollMetadataCount() const { return mScrollMetadata.Length(); }
   const nsTArray<ScrollMetadata>& GetAllScrollMetadata() { return mScrollMetadata; }
   bool HasScrollableFrameMetrics() const;
-  bool IsScrollInfoLayer() const;
+  bool IsScrollableWithoutContent() const;
   const EventRegions& GetEventRegions() const { return mEventRegions; }
   ContainerLayer* GetParent() { return mParent; }
   Layer* GetNextSibling() {

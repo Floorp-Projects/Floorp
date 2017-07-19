@@ -100,7 +100,7 @@ const TESTCASES = [
     document: `<label for="targetElement">street</label>
                <input id="targetElement" type="text">`,
     elementId: "targetElement",
-    fieldDetails: [{fieldName: "address-line1"}],
+    addressFieldDetails: [{fieldName: "address-line1"}],
     expectedReturnValue: {
       fieldName: "address-line2",
       section: "",
@@ -113,7 +113,7 @@ const TESTCASES = [
     document: `<label for="targetElement">street</label>
                <input id="targetElement" type="text">`,
     elementId: "targetElement",
-    fieldDetails: [
+    addressFieldDetails: [
       {fieldName: "address-line1"},
       {fieldName: "address-line2"},
     ],
@@ -218,7 +218,7 @@ TESTCASES.forEach(testcase => {
       "http://localhost:8080/test/", testcase.document);
 
     let element = doc.getElementById(testcase.elementId);
-    let value = FormAutofillHeuristics.getInfo(element, testcase.fieldDetails);
+    let value = FormAutofillHeuristics.getInfo(element, testcase.addressFieldDetails);
 
     Assert.deepEqual(value, testcase.expectedReturnValue);
   });

@@ -174,19 +174,6 @@ public:
     return IsValid();
   }
 
-  bool IsScrollInfoLayer() const
-  {
-    MOZ_ASSERT(IsValid());
-
-    // If we are not at the bottommost layer then it's
-    // a stack of container layers all the way down to
-    // mLayer, which we can ignore. We only care about
-    // non-container descendants.
-    return Metrics().IsScrollable()
-        && mLayer->AsContainerLayer()
-        && !mLayer->GetFirstChild();
-  }
-
   LayerMetricsWrapper GetParent() const
   {
     MOZ_ASSERT(IsValid());

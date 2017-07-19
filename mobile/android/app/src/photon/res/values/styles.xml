@@ -432,6 +432,8 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <style name="TextAppearance.SearchSuggestion" parent="TextAppearance.Small"/>
+
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">match_parent</item>

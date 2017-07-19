@@ -140,8 +140,7 @@
 .identity-popup-expander[panel-multiview-anchor] {
   transition: background-color 250ms ease-in;
   background-color: Highlight;
-  background-image: url("chrome://browser/skin/controlcenter/arrow-subview-back.svg"),
-                    linear-gradient(rgba(255,255,255,0.3), transparent);
+  background-image: url("chrome://browser/skin/controlcenter/arrow-subview-back.svg");
 }
 
 .identity-popup-expander > .button-box {
@@ -154,8 +153,7 @@
 
 .identity-popup-expander:hover {
   background-color: var(--arrowpanel-dimmed);
-  background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg"),
-                    linear-gradient(rgba(255,255,255,0.3), transparent);
+  background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg");
 }
 
 .identity-popup-expander:hover:active {

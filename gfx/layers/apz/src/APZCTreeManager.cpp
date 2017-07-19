@@ -583,7 +583,7 @@ APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
   mApzcTreeLog << "APZC " << apzc->GetGuid()
                << "\tcb=" << metrics.GetCompositionBounds()
                << "\tsr=" << metrics.GetScrollableRect()
-               << (aLayer.IsScrollInfoLayer() ? "\tscrollinfo" : "")
+               << (metrics.IsScrollInfoLayer() ? "\tscrollinfo" : "")
                << (apzc->HasScrollgrab() ? "\tscrollgrab" : "") << "\t"
                << aLayer.Metadata().GetContentDescription().get();
 }
@@ -607,7 +607,7 @@ APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
 template<class ScrollNode> static EventRegions
 GetEventRegions(const ScrollNode& aLayer)
 {
-  if (aLayer.IsScrollInfoLayer()) {
+  if (aLayer.Metrics().IsScrollInfoLayer()) {
     ParentLayerIntRect compositionBounds(RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
     nsIntRegion hitRegion(compositionBounds.ToUnknownRect());
     EventRegions eventRegions(hitRegion);
