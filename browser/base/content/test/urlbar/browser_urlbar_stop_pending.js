@@ -74,7 +74,7 @@ add_task(async function() {
   let newTab = (await newTabPromise).target;
   await BrowserTestUtils.switchTab(gBrowser, newTab);
   is(gURLBar.value, SLOW_HOST, "Should have slow page in URL bar");
-  let browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser);
+  let browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser, null, true);
   BrowserStop();
   await browserStoppedPromise;
 
@@ -121,13 +121,13 @@ add_task(async function() {
   let newTab = (await newTabPromise).target;
   await BrowserTestUtils.switchTab(gBrowser, newTab);
   is(gURLBar.value, SLOW_HOST1, "Should have slow page in URL bar");
-  let browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser);
+  let browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser, null, true);
   gURLBar.value = SLOW_HOST2;
   gURLBar.handleCommand();
   await browserStoppedPromise;
 
   is(gURLBar.value, SLOW_HOST2, "Should have second slow page in URL bar");
-  browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser);
+  browserStoppedPromise = BrowserTestUtils.browserStopped(newTab.linkedBrowser, null, true);
   BrowserStop();
   await browserStoppedPromise;
 
