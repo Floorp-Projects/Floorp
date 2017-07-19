@@ -398,18 +398,25 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 }
 
 nsChangeHint
-Gecko_CalcStyleDifference(nsStyleContext* aOldStyleFromFrame,
+Gecko_CalcStyleDifference(const ServoStyleContext* aOldStyle,
                           const ServoStyleContext* aNewStyle,
+                          uint64_t aOldStyleBits,
                           bool* aAnyStyleChanged)
 {
-  MOZ_ASSERT(aOldStyleFromFrame);
+  MOZ_ASSERT(aOldStyle);
   MOZ_ASSERT(aNewStyle);
 
-  uint32_t equalStructs, samePointerStructs;
-  nsChangeHint result =
-    aOldStyleFromFrame->CalcStyleDifference(aNewStyle->ComputedValues(),
-                                            &equalStructs,
-                                            &samePointerStructs);
+  uint32_t relevantStructs = aOldStyleBits & NS_STYLE_INHERIT_MASK;
+
+  uint32_t equalStructs;
+  uint32_t samePointerStructs;  // unused
+  nsChangeHint result = const_cast<ServoStyleContext*>(aOldStyle)->
+    CalcStyleDifference(
+      const_cast<ServoStyleContext*>(aNewStyle),
+      &equalStructs,
+      &samePointerStructs,
+      relevantStructs);
+
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
   return result;
 }
