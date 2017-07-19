@@ -2927,11 +2927,10 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
 
-  int32_t startOffset;
-  rv = aRange->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t startOffset = aRange->StartOffset();
 
-  nsCOMPtr<nsIDOMNode> childNode = GetChildAt(startContainer, startOffset);
+  nsCOMPtr<nsIDOMNode> childNode =
+    GetChildAt(startContainer, static_cast<int32_t>(startOffset));
   // This means selection is probably at a text node (or end of doc?)
   if (!childNode) {
     return NS_ERROR_FAILURE;
@@ -2942,15 +2941,11 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
 
-  int32_t endOffset;
-  rv = aRange->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // If a cell is deleted, the range is collapse
-  //   (startOffset == endOffset)
+  //   (startOffset == aRange->EndOffset())
   //   so tell caller the cell wasn't found
   if (startContainer == endContainer &&
-      endOffset == startOffset+1 &&
+      aRange->EndOffset() == startOffset+1 &&
       HTMLEditUtils::IsTableCell(childNode)) {
     // Should we also test if frame is selected? (Use GetCellDataAt())
     // (Let's not for now -- more efficient)
