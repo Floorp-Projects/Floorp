@@ -5887,8 +5887,10 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
           // first time. Thus call StyleNewChildren() again.
           styleSet->StyleNewChildren(element);
 
+          // Because of LazyComputeBehavior::Assert we never create a style
+          // context here, so it's fine to pass a null parent.
           styleContext =
-            styleSet->ResolveStyleFor(element, styleContext->GetParentAllowServo()->AsServo(),
+            styleSet->ResolveStyleFor(element, nullptr,
                                       LazyComputeBehavior::Assert);
         } else {
           styleContext =
