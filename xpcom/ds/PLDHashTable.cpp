@@ -72,7 +72,10 @@ PLDHashTable::HashStringKey(const void* aKey)
 /* static */ PLDHashNumber
 PLDHashTable::HashVoidPtrKeyStub(const void* aKey)
 {
-  return uintptr_t(aKey) >> 2;
+  // Be careful!  We don't want to do the cast to PLDHashNumber which is a
+  // trimming cast on 64-bit platforms before the shift, otherwise we will lose
+  // valuable bits from our hash key!
+  return PLDHashNumber(uintptr_t(aKey) >> 2);
 }
 
 /* static */ bool
@@ -255,10 +258,10 @@ PLDHashTable::Hash1(PLDHashNumber aHash0)
 
 void
 PLDHashTable::Hash2(PLDHashNumber aHash0,
-                    size_t& aHash2Out, size_t& aSizeMaskOut)
+                    uint32_t& aHash2Out, uint32_t& aSizeMaskOut)
 {
-  size_t sizeLog2 = kHashBits - mHashShift;
-  size_t sizeMask = (PLDHashNumber(1) << sizeLog2) - 1;
+  uint32_t sizeLog2 = kHashBits - mHashShift;
+  uint32_t sizeMask = (PLDHashNumber(1) << sizeLog2) - 1;
   aSizeMaskOut = sizeMask;
 
   // The incoming aHash0 always has the low bit unset (since we leave it
@@ -292,7 +295,7 @@ PLDHashTable::MatchEntryKeyhash(PLDHashEntryHdr* aEntry, PLDHashNumber aKeyHash)
 
 // Compute the address of the indexed entry in table.
 PLDHashEntryHdr*
-PLDHashTable::AddressEntry(size_t aIndex)
+PLDHashTable::AddressEntry(uint32_t aIndex)
 {
   return reinterpret_cast<PLDHashEntryHdr*>(
     mEntryStore.Get() + aIndex * mEntrySize);
@@ -370,7 +373,7 @@ PLDHashTable::SearchTable(const void* aKey, PLDHashNumber aKeyHash)
 
   // Collision: double hash.
   PLDHashNumber hash2;
-  size_t sizeMask;
+  uint32_t sizeMask;
   Hash2(aKeyHash, hash2, sizeMask);
 
   // Save the first removed entry pointer so Add() can recycle it. (Only used
@@ -430,7 +433,7 @@ PLDHashTable::FindFreeEntry(PLDHashNumber aKeyHash)
 
   // Collision: double hash.
   PLDHashNumber hash2;
-  size_t sizeMask;
+  uint32_t sizeMask;
   Hash2(aKeyHash, hash2, sizeMask);
 
   for (;;) {
