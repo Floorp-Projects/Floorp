@@ -97,7 +97,7 @@ bool wr_moz2d_render_cb(const mozilla::wr::ByteSlice blob,
 {
   return mozilla::wr::Moz2DRenderCallback(mozilla::wr::ByteSliceToRange(blob),
                                           mozilla::gfx::IntSize(width, height),
-                                          mozilla::wr::WrImageFormatToSurfaceFormat(aFormat),
+                                          mozilla::wr::ImageFormatToSurfaceFormat(aFormat),
                                           mozilla::wr::MutByteSliceToRange(output));
 }
 

@@ -62,7 +62,7 @@ public:
                           LayerSize aViewportSize,
                           wr::WrPipelineId pipeline_id,
                           const wr::LayoutSize& content_size,
-                          wr::WrBuiltDisplayListDescriptor dl_descriptor,
+                          wr::BuiltDisplayListDescriptor dl_descriptor,
                           uint8_t *dl_data,
                           size_t dl_size);
 
@@ -112,8 +112,8 @@ public:
   bool GetUseANGLE() const { return mUseANGLE; }
 
 protected:
-  WebRenderAPI(wr::WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
-    : mWrApi(aRawApi)
+  WebRenderAPI(wr::RenderApi* aRawApi, wr::WindowId aId, GLint aMaxTextureSize, bool aUseANGLE)
+    : mRenderApi(aRawApi)
     , mId(aId)
     , mMaxTextureSize(aMaxTextureSize)
     , mUseANGLE(aUseANGLE)
@@ -123,7 +123,7 @@ protected:
   // Should be used only for shutdown handling
   void WaitFlushed();
 
-  wr::WrAPI* mWrApi;
+  wr::RenderApi* mRenderApi;
   wr::WindowId mId;
   GLint mMaxTextureSize;
   bool mUseANGLE;
@@ -153,8 +153,8 @@ public:
                            const uint64_t& aAnimationId,
                            const float* aOpacity,
                            const gfx::Matrix4x4* aTransform,
-                           wr::WrTransformStyle aTransformStyle,
-                           const wr::WrMixBlendMode& aMixBlendMode,
+                           wr::TransformStyle aTransformStyle,
+                           const wr::MixBlendMode& aMixBlendMode,
                            const nsTArray<wr::WrFilterOp>& aFilters);
   void PopStackingContext();
 
@@ -281,7 +281,7 @@ public:
                      const float& aBlurRadius,
                      const float& aSpreadRadius,
                      const float& aBorderRadius,
-                     const wr::WrBoxShadowClipMode& aClipMode);
+                     const wr::BoxShadowClipMode& aClipMode);
 
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
@@ -310,8 +310,8 @@ protected:
   friend class WebRenderAPI;
 };
 
-Maybe<wr::WrImageFormat>
-SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat);
+Maybe<wr::ImageFormat>
+SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat);
 
 } // namespace wr
 } // namespace mozilla

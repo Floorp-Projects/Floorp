@@ -476,7 +476,7 @@ BulletRenderer::CreateWebRenderCommandsForImage(nsDisplayItem* aItem,
 
   aBuilder.PushImage(dest,
                      dest,
-                     wr::WrImageRendering::Auto,
+                     wr::ImageRendering::Auto,
                      key.value());
 }
 
