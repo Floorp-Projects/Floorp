@@ -1632,21 +1632,11 @@ public:
   nsRevocableEventPtr() : mEvent(nullptr) {}
   ~nsRevocableEventPtr() { Revoke(); }
 
-  const nsRevocableEventPtr& operator=(T* aEvent)
+  const nsRevocableEventPtr& operator=(RefPtr<T>&& aEvent)
   {
     if (mEvent != aEvent) {
       Revoke();
-      mEvent = aEvent;
-    }
-    return *this;
-  }
-
-  const nsRevocableEventPtr& operator=(already_AddRefed<T> aEvent)
-  {
-    RefPtr<T> event = aEvent;
-    if (mEvent != event) {
-      Revoke();
-      mEvent = event.forget();
+      mEvent = Move(aEvent);
     }
     return *this;
   }
