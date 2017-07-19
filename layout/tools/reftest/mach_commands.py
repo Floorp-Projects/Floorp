@@ -20,8 +20,6 @@ from mach.decorators import (
     Command,
 )
 
-import reftestcommandline
-
 
 parser = None
 
@@ -184,6 +182,8 @@ def process_test_objects(kwargs):
 
 
 def get_parser():
+    import reftestcommandline
+
     global parser
     here = os.path.abspath(os.path.dirname(__file__))
     build_obj = MozbuildObject.from_environment(cwd=here)
