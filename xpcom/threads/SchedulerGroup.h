@@ -11,6 +11,7 @@
 #include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
+#include "nsILabelableRunnable.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 
@@ -81,11 +82,15 @@ public:
     MOZ_ASSERT(IsSafeToRun());
   }
 
-  class Runnable final : public mozilla::Runnable, public nsIRunnablePriority
+  class Runnable final : public mozilla::Runnable
+                       , public nsIRunnablePriority
+                       , public nsILabelableRunnable
   {
   public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
              SchedulerGroup* aGroup);
+
+    bool GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
 
     SchedulerGroup* Group() const { return mGroup; }
 

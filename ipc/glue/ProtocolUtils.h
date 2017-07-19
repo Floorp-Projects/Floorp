@@ -62,6 +62,8 @@ enum {
 class nsIEventTarget;
 
 namespace mozilla {
+class SchedulerGroup;
+
 namespace dom {
 class ContentParent;
 } // namespace dom
@@ -379,6 +381,16 @@ public:
     }
 
     virtual void ProcessRemoteNativeEventsInInterruptCall() {
+    }
+
+    // Override this method in top-level protocols to change the SchedulerGroups
+    // that a message might affect. This should be used only as a last resort
+    // when it's difficult to determine an EventTarget ahead of time. See the
+    // comment in nsILabelableRunnable.h for more information.
+    virtual bool
+    GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+    {
+        return false;
     }
 
     virtual already_AddRefed<nsIEventTarget>
