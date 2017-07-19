@@ -17,7 +17,7 @@ add_task(async function() {
   let exceptions = Services.prefs.getCharPref("extensions.legacy.exceptions");
   exceptions = [ exceptions, ...IGNORE ].join(",");
 
-  SpecialPowers.pushPrefEnv({
+  await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.legacy.enabled", false],
       ["extensions.legacy.exceptions", exceptions],
@@ -206,5 +206,20 @@ add_task(async function() {
     "unsigned_legacy@tests.mozilla.org",
   ]);
 
+  await close_manager(mgrWin);
+
+  // Now enable legacy extensions and open a new addons manager tab.
+  // The remembered last view will be the list of legacy extensions but
+  // now that legacy extensions are enabled, we should jump to the
+  // regular Extensions list.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.legacy.enabled", true],
+    ],
+  });
+
+  mgrWin = await open_manager(null);
+  is(mgrWin.gViewController.currentViewId, "addons://list/extension",
+     "addons manager switched to extensions list");
   await close_manager(mgrWin);
 });
