@@ -27,6 +27,9 @@ dictionary HitRegionOptions {
 };
 
 typedef (HTMLImageElement or
+         SVGImageElement) HTMLOrSVGImageElement;
+
+typedef (HTMLOrSVGImageElement or
          HTMLCanvasElement or
          HTMLVideoElement or
          ImageBitmap) CanvasImageSource;
