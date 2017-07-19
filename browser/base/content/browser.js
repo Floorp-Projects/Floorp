@@ -7993,8 +7993,8 @@ var gPageActionButton = {
     if (gSync.syncConfiguredAndLoading) {
       body.setAttribute("state", "notready");
       // Force a background Sync
-      Services.tm.dispatchToMainThread(() => {
-        Weave.Service.sync([]);  // [] = clients engine only
+      Services.tm.dispatchToMainThread(async () => {
+        await Weave.Service.sync([]);  // [] = clients engine only
         // There's no way Sync is still syncing at this point, but we check
         // anyway to avoid infinite looping.
         if (!window.closed && !gSync.syncConfiguredAndLoading) {
