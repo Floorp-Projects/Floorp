@@ -570,5 +570,5 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onContextMenu(GeckoView view, int screenX, int screenY,
-                              String uri, String imageSrc) {}
+                              String uri, String elementSrc) {}
 }
