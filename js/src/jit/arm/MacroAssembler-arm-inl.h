@@ -2053,8 +2053,16 @@ MacroAssembler::branchTestMagicImpl(Condition cond, const T& t, L label)
 void
 MacroAssembler::branchTestMagic(Condition cond, const Address& valaddr, JSWhyMagic why, Label* label)
 {
-    branchTestMagic(cond, valaddr, label);
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label notMagic;
+    if (cond == Assembler::Equal)
+        branchTestMagic(Assembler::NotEqual, valaddr, &notMagic);
+    else
+        branchTestMagic(Assembler::NotEqual, valaddr, label);
+
     branch32(cond, ToPayload(valaddr), Imm32(why), label);
+    bind(&notMagic);
 }
 
 void
