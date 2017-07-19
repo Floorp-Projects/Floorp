@@ -141,7 +141,17 @@ def get_paths(os_name):
     return (mozbuild_path, sdk_path, ndk_path)
 
 
-def ensure_android(os_name, artifact_mode):
+def ensure_dir(dir):
+    '''Ensures the given directory exists'''
+    if dir and not os.path.exists(dir):
+        try:
+            os.makedirs(dir)
+        except OSError as error:
+            if error.errno != errno.EEXIST:
+                raise
+
+
+def ensure_android(os_name, artifact_mode=False, no_interactive=False):
     '''
     Ensure the Android SDK (and NDK, if `artifact_mode` is falsy) are
     installed.  If not, fetch and unpack the SDK and/or NDK from the
@@ -163,6 +173,21 @@ def ensure_android(os_name, artifact_mode):
                                sdk_path=sdk_path, sdk_url=sdk_url,
                                ndk_path=ndk_path, ndk_url=ndk_url,
                                artifact_mode=artifact_mode)
+
+    if no_interactive:
+        # Cribbed from observation and https://stackoverflow.com/a/38381577.
+        path = os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name), 'licenses')
+        ensure_dir(path)
+
+        licenses = {
+            'android-sdk-license': '8933bad161af4178b1185d1a37fbf41ea5269c55',
+            'android-sdk-preview-license': '84831b9409646a918e30573bab4c9c91346d8abd',
+        }
+        for license, tag in licenses.items():
+            lname = os.path.join(path, license)
+            if not os.path.isfile(lname):
+                open(lname, 'w').write('\n{}\n'.format(tag))
+
 
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/bin/sdkmanager.
@@ -249,6 +274,8 @@ def main(argv):
     parser = optparse.OptionParser()
     parser.add_option('-a', '--artifact-mode', dest='artifact_mode', action='store_true',
                       help='If true, install only the Android SDK (and not the Android NDK).')
+    parser.add_option('--no-interactive', dest='no_interactive', action='store_true',
+                      help='Accept the Android SDK licenses without user interaction.')
 
     options, _ = parser.parse_args(argv)
 
@@ -263,7 +290,7 @@ def main(argv):
         raise NotImplementedError("We don't support bootstrapping the Android SDK (or Android NDK) "
                                   "on {} yet!".format(platform.system()))
 
-    ensure_android(os_name, options.artifact_mode)
+    ensure_android(os_name, artifact_mode=options.artifact_mode, no_interactive=options.no_interactive)
     suggest_mozconfig(os_name, options.artifact_mode)
 
     return 0
