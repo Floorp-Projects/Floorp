@@ -87,6 +87,18 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <style name="TextAppearance.PrivateTab.Title" parent="TextAppearance.Large">
+        <item name="android:textSize">26sp</item>
+        <item name="android:maxWidth">300dp</item>
+        <item name="android:layout_marginTop">21dp</item>
+        <item name="android:layout_marginBottom">10dp</item>
+    </style>
+
+    <style name="TextAppearance.PrivateTab.Description" parent="TextAppearance.Small">
+        <item name="android:textSize">18sp</item>
+        <item name="android:maxWidth">398dp</item>
+    </style>
+
     <style name="UrlBar.Base" />
 
     <style name="UrlBar.MenuMargin" parent="UrlBar.V15.MenuMargin" />
