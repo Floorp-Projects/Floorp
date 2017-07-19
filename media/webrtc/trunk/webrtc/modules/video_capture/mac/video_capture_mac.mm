@@ -101,7 +101,6 @@ rtc::scoped_refptr<VideoCaptureModule> VideoCaptureImpl::Create(
         WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, 0,
                      "could not Create for unique device %s, "
                      "newCaptureModule->Init()!=0", deviceUniqueIdUTF8);
-        delete newCaptureModule;
         return NULL;
     }
 
