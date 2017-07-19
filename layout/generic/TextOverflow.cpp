@@ -335,7 +335,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
   // has overflow on that side.
 }
 
-/* static */ UniquePtr<TextOverflow>
+/* static */ TextOverflow*
 TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
                                nsIFrame*               aBlockFrame)
 {
@@ -350,7 +350,7 @@ TextOverflow::WillProcessLines(nsDisplayListBuilder*   aBuilder,
     // If the APZ is actively scrolling this, don't bother with markers.
     return nullptr;
   }
-  return MakeUnique<TextOverflow>(aBuilder, aBlockFrame);
+  return new TextOverflow(aBuilder, aBlockFrame);
 }
 
 void

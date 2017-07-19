@@ -9,9 +9,7 @@
 
 #include "nsDisplayList.h"
 #include "nsTHashtable.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/WritingModes.h"
 #include <algorithm>
 
@@ -27,16 +25,14 @@ namespace css {
  *  1. allocate an object using WillProcessLines
  *  2. then call ProcessLine for each line you are building display lists for
  */
-class MOZ_HEAP_CLASS TextOverflow final {
+class TextOverflow {
  public:
   /**
    * Allocate an object for text-overflow processing.
    * @return nullptr if no processing is necessary.  The caller owns the object.
    */
-  static UniquePtr<TextOverflow>
-  WillProcessLines(nsDisplayListBuilder* aBuilder,
-                   nsIFrame*             aBlockFrame);
-
+  static TextOverflow* WillProcessLines(nsDisplayListBuilder*   aBuilder,
+                                        nsIFrame*               aBlockFrame);
   /**
    * Analyze the display lists for text overflow and what kind of item is at
    * the content edges.  Add display items for text-overflow markers as needed
@@ -59,13 +55,9 @@ class MOZ_HEAP_CLASS TextOverflow final {
    */
   static bool CanHaveTextOverflow(nsIFrame* aBlockFrame);
 
-  typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
+  typedef nsTHashtable<nsPtrHashKey<nsIFrame> > FrameHashtable;
 
- private:
-  // Let MakeUnique invoke our (private) constructor:
-  friend mozilla::detail::UniqueSelector<TextOverflow>::SingleObject
-    mozilla::MakeUnique<TextOverflow>(nsDisplayListBuilder*&, nsIFrame*&);
-
+ protected:
   TextOverflow(nsDisplayListBuilder* aBuilder,
                nsIFrame* aBlockFrame);
 
