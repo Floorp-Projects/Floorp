@@ -28,7 +28,7 @@ HLSDecoder::CreateStateMachine()
   MOZ_ASSERT(resource);
   auto resourceWrapper = static_cast<HLSResource*>(resource)->GetResourceWrapper();
   MOZ_ASSERT(resourceWrapper);
-  MediaDecoderReaderInit init(this);
+  MediaFormatReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();

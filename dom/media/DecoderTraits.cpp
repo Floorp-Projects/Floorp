@@ -292,7 +292,7 @@ DecoderTraits::CreateDecoder(MediaDecoderInit& aInit,
 /* static */
 MediaFormatReader*
 DecoderTraits::CreateReader(const MediaContainerType& aType,
-                            MediaDecoderReaderInit& aInit)
+                            MediaFormatReaderInit& aInit)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MediaFormatReader* decoderReader = nullptr;

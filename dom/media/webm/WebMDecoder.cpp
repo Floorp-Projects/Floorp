@@ -18,7 +18,7 @@ namespace mozilla {
 
 MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 {
-  MediaDecoderReaderInit init(this);
+  MediaFormatReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
