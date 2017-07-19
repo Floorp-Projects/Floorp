@@ -26,4 +26,6 @@ fi
 
 . $HOME/bin/checkout-sources.sh
 
+. $HOME/bin/after-checkout.sh
+
 . $WORKSPACE/build/src/taskcluster/scripts/builder/build-linux.sh

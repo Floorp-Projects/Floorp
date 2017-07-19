@@ -1,20 +1,5 @@
 [
   {
-    "versions": [
-      "Android SDK 6.0 / API 23",
-      "Android tools r24.4",
-      "Android build tools 23.0.3",
-      "Android Support Repository (Support Library 23.0.1)",
-      "Google Support Repository (Google Play Services 8.1.0)"
-    ],
-    "size": 573952124,
-    "visibility": "internal",
-    "digest": "1d495d7a7386af3f27b14982e0ff7b0963fd1a63a08040b9b1db0e94c9681fa3704c195ba8be23b5f73e15101b2b767293bc8f96e0584e17867ef13b074e5038",
-    "algorithm": "sha512",
-    "filename": "android-sdk-linux.tar.xz",
-    "unpack": true
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 151322128,
     "digest": "1d6d6e8bbf7535a4f1c8f1292562e30c868bfd3ac323992fc287be09f7fa3167c2f9e01dc98143967983e30488fe3ecaebff530ba4ec9113033d60af936c4f4d",
