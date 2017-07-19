@@ -32,8 +32,7 @@ nsWebRequestListener::OnStartRequest(nsIRequest *request, nsISupports * aCtxt)
   MOZ_ASSERT(mTargetStreamListener, "Should have mTargetStreamListener");
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
 
-  nsresult rv = mTargetStreamListener->OnStartRequest(request, aCtxt);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mTargetStreamListener->OnStartRequest(request, aCtxt);
 
   return mOrigStreamListener->OnStartRequest(request, aCtxt);
 }
@@ -45,8 +44,7 @@ nsWebRequestListener::OnStopRequest(nsIRequest *request, nsISupports *aCtxt,
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
   MOZ_ASSERT(mTargetStreamListener, "Should have mTargetStreamListener");
 
-  nsresult rv = mOrigStreamListener->OnStopRequest(request, aCtxt, aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mOrigStreamListener->OnStopRequest(request, aCtxt, aStatus);
 
   return mTargetStreamListener->OnStopRequest(request, aCtxt, aStatus);
 }
