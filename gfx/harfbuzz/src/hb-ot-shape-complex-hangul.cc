@@ -105,16 +105,16 @@ data_destroy_hangul (void *data)
 #define NCount (VCount * TCount)
 #define SCount (LCount * NCount)
 
-#define isCombiningL(u) (hb_in_range ((u), LBase, LBase+LCount-1))
-#define isCombiningV(u) (hb_in_range ((u), VBase, VBase+VCount-1))
-#define isCombiningT(u) (hb_in_range ((u), TBase+1, TBase+TCount-1))
-#define isCombinedS(u) (hb_in_range ((u), SBase, SBase+SCount-1))
+#define isCombiningL(u) (hb_in_range<hb_codepoint_t> ((u), LBase, LBase+LCount-1))
+#define isCombiningV(u) (hb_in_range<hb_codepoint_t> ((u), VBase, VBase+VCount-1))
+#define isCombiningT(u) (hb_in_range<hb_codepoint_t> ((u), TBase+1, TBase+TCount-1))
+#define isCombinedS(u) (hb_in_range<hb_codepoint_t> ((u), SBase, SBase+SCount-1))
 
-#define isL(u) (hb_in_ranges ((u), 0x1100u, 0x115Fu, 0xA960u, 0xA97Cu))
-#define isV(u) (hb_in_ranges ((u), 0x1160u, 0x11A7u, 0xD7B0u, 0xD7C6u))
-#define isT(u) (hb_in_ranges ((u), 0x11A8u, 0x11FFu, 0xD7CBu, 0xD7FBu))
+#define isL(u) (hb_in_ranges<hb_codepoint_t> ((u), 0x1100u, 0x115Fu, 0xA960u, 0xA97Cu))
+#define isV(u) (hb_in_ranges<hb_codepoint_t> ((u), 0x1160u, 0x11A7u, 0xD7B0u, 0xD7C6u))
+#define isT(u) (hb_in_ranges<hb_codepoint_t> ((u), 0x11A8u, 0x11FFu, 0xD7CBu, 0xD7FBu))
 
-#define isHangulTone(u) (hb_in_range ((u), 0x302Eu, 0x302Fu))
+#define isHangulTone(u) (hb_in_range<hb_codepoint_t> ((u), 0x302Eu, 0x302Fu))
 
 /* buffer var allocations */
 #define hangul_shaping_feature() complex_var_u8_0() /* hangul jamo shaping feature */

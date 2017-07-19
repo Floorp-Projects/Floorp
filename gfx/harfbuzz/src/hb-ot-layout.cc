@@ -279,7 +279,7 @@ hb_ot_layout_get_ligature_carets (hb_font_t      *font,
 				  hb_codepoint_t  glyph,
 				  unsigned int    start_offset,
 				  unsigned int   *caret_count /* IN/OUT */,
-				  int            *caret_array /* OUT */)
+				  hb_position_t  *caret_array /* OUT */)
 {
   return _get_gdef (font->face).get_lig_carets (font, direction, glyph, start_offset, caret_count, caret_array);
 }
@@ -1219,6 +1219,7 @@ inline void hb_ot_map_t::apply (const Proxy &proxy,
       c.set_lookup_index (lookup_index);
       c.set_lookup_mask (lookups[table_index][i].mask);
       c.set_auto_zwj (lookups[table_index][i].auto_zwj);
+      c.set_auto_zwnj (lookups[table_index][i].auto_zwnj);
       apply_string<Proxy> (&c,
 			   proxy.table.get_lookup (lookup_index),
 			   proxy.accels[lookup_index]);

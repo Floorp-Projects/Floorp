@@ -134,7 +134,7 @@ def print_joining_table(f):
 		for (start,end) in ranges:
 			if p not in [start>>page_bits, end>>page_bits]: continue
 			offset = "joining_offset_0x%04xu" % start
-			print "      if (hb_in_range (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset)
+			print "      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return joining_table[u - 0x%04Xu + %s];" % (start, end, start, offset)
 		print "      break;"
 		print ""
 	print "    default:"
