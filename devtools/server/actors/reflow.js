@@ -28,7 +28,6 @@ const {Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const events = require("sdk/event/core");
-const Heritage = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {reflowSpec} = require("devtools/shared/specs/reflow");
 
@@ -425,24 +424,21 @@ exports.releaseLayoutChangesObserver = releaseLayoutChangesObserver;
  * @param {TabActor} tabActor
  * @param {Function} callback Executed everytime a reflow occurs
  */
-function ReflowObserver(tabActor, callback) {
-  Observable.call(this, tabActor, callback);
-}
+class ReflowObserver extends Observable {
+  constructor(tabActor, callback) {
+    super(tabActor, callback);
+  }
 
-ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-                                         Ci.nsISupportsWeakReference]),
-
-  _startListeners: function (windows) {
+  _startListeners(windows) {
     for (let window of windows) {
       let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIWebNavigation)
                      .QueryInterface(Ci.nsIDocShell);
       docshell.addWeakReflowObserver(this);
     }
-  },
+  }
 
-  _stopListeners: function (windows) {
+  _stopListeners(windows) {
     for (let window of windows) {
       try {
         let docshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -454,16 +450,19 @@ ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
         // which case, no need to remove the observer.
       }
     }
-  },
+  }
 
-  reflow: function (start, end) {
+  reflow(start, end) {
     this.notifyCallback(start, end, false);
-  },
+  }
 
-  reflowInterruptible: function (start, end) {
+  reflowInterruptible(start, end) {
     this.notifyCallback(start, end, true);
   }
-});
+}
+
+ReflowObserver.prototype.QueryInterface = XPCOMUtils
+  .generateQI([Ci.nsIReflowObserver, Ci.nsISupportsWeakReference]);
 
 /**
  * Reports window resize events on the tabActor's windows.
@@ -471,23 +470,24 @@ ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
  * @param {TabActor} tabActor
  * @param {Function} callback Executed everytime a resize occurs
  */
-function WindowResizeObserver(tabActor, callback) {
-  Observable.call(this, tabActor, callback);
-  this.onResize = this.onResize.bind(this);
-}
+class WindowResizeObserver extends Observable {
 
-WindowResizeObserver.prototype = Heritage.extend(Observable.prototype, {
-  _startListeners: function () {
+  constructor(tabActor, callback) {
+    super(tabActor, callback);
+    this.onResize = this.onResize.bind(this);
+  }
+
+  _startListeners() {
     this.listenerTarget.addEventListener("resize", this.onResize);
-  },
+  }
 
-  _stopListeners: function () {
+  _stopListeners() {
     this.listenerTarget.removeEventListener("resize", this.onResize);
-  },
+  }
 
-  onResize: function () {
+  onResize() {
     this.notifyCallback();
-  },
+  }
 
   get listenerTarget() {
     // For the rootActor, return its window.
@@ -501,4 +501,4 @@ WindowResizeObserver.prototype = Heritage.extend(Observable.prototype, {
                                .QueryInterface(Ci.nsIDocShell)
                                .chromeEventHandler;
   }
-});
+}
