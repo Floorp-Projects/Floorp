@@ -1005,7 +1005,8 @@ this.UITour = {
    * Called before opening or after closing a highlight or info panel to see if
    * we need to open or close the appMenu to see the annotation's anchor.
    */
-  _setAppMenuStateForAnnotation(aWindow, aAnnotationType, aShouldOpenForHighlight, aCallback = null) {
+  _setAppMenuStateForAnnotation(aWindow, aAnnotationType, aShouldOpenForHighlight, aTarget = null,
+                                aCallback = null) {
     log.debug("_setAppMenuStateForAnnotation:", aAnnotationType);
     log.debug("_setAppMenuStateForAnnotation: Menu is expected to be:", aShouldOpenForHighlight ? "open" : "closed");
 
@@ -1035,7 +1036,16 @@ this.UITour = {
     // Actually show or hide the menu
     if (this.appMenuOpenForAnnotation.size) {
       log.debug("_setAppMenuStateForAnnotation: Opening the menu");
-      this.showMenu(aWindow, "appMenu", aCallback);
+      this.showMenu(aWindow, "appMenu", async () => {
+        // PanelMultiView's like the AppMenu might shuffle the DOM, which might result
+        // in our target being invalidated if it was anonymous content (since the XBL
+        // binding it belonged to got destroyed). We work around this by re-querying for
+        // the node and stuffing it into the old target structure.
+        log.debug("_setAppMenuStateForAnnotation: Refreshing target");
+        let refreshedTarget = await this.getTarget(aWindow, aTarget.targetName);
+        aTarget.node = refreshedTarget.node;
+        aCallback();
+      });
     } else {
       log.debug("_setAppMenuStateForAnnotation: Closing the menu");
       this.hideMenu(aWindow, "appMenu");
@@ -1152,6 +1162,7 @@ this.UITour = {
 
     this._setAppMenuStateForAnnotation(aChromeWindow, "highlight",
                                        this.targetIsInAppMenu(aTarget),
+                                       aTarget,
                                        showHighlightPanel.bind(this));
   },
 
@@ -1281,9 +1292,17 @@ this.UITour = {
       return;
     }
 
+    // We need to bind the anchor argument to the showInfoPanel function call
+    // after _setAppMenuStateForAnnotation has finished, since
+    // _setAppMenuStateForAnnotation might have refreshed the anchor node.
+    let callShowInfoPanel = () => {
+      showInfoPanel.call(this, this._correctAnchor(aAnchor.node));
+    };
+
     this._setAppMenuStateForAnnotation(aChromeWindow, "info",
                                        this.targetIsInAppMenu(aAnchor),
-                                       showInfoPanel.bind(this, this._correctAnchor(aAnchor.node)));
+                                       aAnchor,
+                                       callShowInfoPanel);
   },
 
   isInfoOnTarget(aChromeWindow, aTargetName) {
