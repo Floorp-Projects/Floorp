@@ -17,9 +17,7 @@
 %define inAnyPanel :-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 
 %ifdef MOZ_PHOTON_THEME
-%define attributeSelectorForToolbar
 %define panelPaletteIconSize var(--panel-palette-icon-size)
 %else
-%define attributeSelectorForToolbar [cui-areatype="toolbar"]
 %define panelPaletteIconSize 32px
 %endif

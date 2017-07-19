@@ -784,7 +784,7 @@ var CustomizableUIInternal = {
 
         this.ensureButtonContextMenu(node, aAreaNode);
         if (node.localName == "toolbarbutton") {
-          if (areaIsPanel && !gPhotonStructure) {
+          if (areaIsPanel) {
             node.setAttribute("wrap", "true");
           } else {
             node.removeAttribute("wrap");
@@ -970,9 +970,7 @@ var CustomizableUIInternal = {
         continue;
       }
       this.ensureButtonContextMenu(child, aPanelContents, true);
-      if (!gPhotonStructure) {
-        child.setAttribute("wrap", "true");
-      }
+      child.setAttribute("wrap", "true");
     }
 
     this.registerBuildArea(aArea, aPanelContents);
@@ -4211,7 +4209,7 @@ OverflowableToolbar.prototype = {
     return new Promise(resolve => {
       let doc = this._panel.ownerDocument;
       this._panel.hidden = false;
-      let photonView = this._panel.querySelector("photonpanelmultiview");
+      let photonView = this._panel.querySelector("panelmultiview");
       let contextMenu;
       if (photonView) {
         let mainViewId = photonView.getAttribute("mainViewId");

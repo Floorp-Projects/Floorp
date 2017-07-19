@@ -165,25 +165,25 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 %endif
 
-#home-button@attributeSelectorForToolbar@ {
+#home-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/home.svg");
 }
 
-#bookmarks-menu-button@attributeSelectorForToolbar@ {
+#bookmarks-menu-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 
-#bookmarks-menu-button@attributeSelectorForToolbar@[starred] {
+#bookmarks-menu-button[cui-areatype="toolbar"][starred] {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
-toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[starred] > .toolbarbutton-menubutton-button {
+toolbar:not([brighttext]) #bookmarks-menu-button[cui-areatype="toolbar"][starred] > .toolbarbutton-menubutton-button {
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill-attention);
 }
 
 %ifdef MOZ_PHOTON_THEME
-#bookmarks-menu-button > .toolbarbutton-icon {
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
 }
 %else
@@ -192,11 +192,11 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 }
 %endif
 
-#history-panelmenu@attributeSelectorForToolbar@ {
+#history-panelmenu[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/history.svg");
 }
 
-#downloads-button@attributeSelectorForToolbar@ {
+#downloads-button[cui-areatype="toolbar"] {
 %ifdef MOZ_PHOTON_THEME
   list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
 %else
@@ -204,43 +204,43 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 %endif
 }
 
-#add-ons-button@attributeSelectorForToolbar@ {
+#add-ons-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/addons.svg");
 }
 
-#open-file-button@attributeSelectorForToolbar@ {
+#open-file-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/open.svg");
 }
 
-#save-page-button@attributeSelectorForToolbar@ {
+#save-page-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/save.svg");
 }
 
-#sync-button@attributeSelectorForToolbar@ {
+#sync-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
 
-#containers-panelmenu@attributeSelectorForToolbar@ {
+#containers-panelmenu[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/containers.svg");
 }
 
-#feed-button@attributeSelectorForToolbar@ {
+#feed-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/feed.svg");
 }
 
-#social-share-button@attributeSelectorForToolbar@ {
+#social-share-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/share.svg");
 }
 
-#characterencoding-button@attributeSelectorForToolbar@{
+#characterencoding-button[cui-areatype="toolbar"]{
   list-style-image: url("chrome://browser/skin/characterEncoding.svg");
 }
 
-#new-window-button@attributeSelectorForToolbar@ {
+#new-window-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/new-window.svg");
 }
 
-#e10s-button@attributeSelectorForToolbar@ {
+#e10s-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/new-window.svg");
 }
 
@@ -248,34 +248,34 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   transform: scaleY(-1);
 }
 
-#new-tab-button@attributeSelectorForToolbar@ {
+#new-tab-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/new-tab.svg");
 }
 
-#privatebrowsing-button@attributeSelectorForToolbar@ {
+#privatebrowsing-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/privateBrowsing.svg");
 }
 
-#find-button@attributeSelectorForToolbar@ {
+#find-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/find.svg");
 }
 
-#print-button@attributeSelectorForToolbar@ {
+#print-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/print.svg");
 }
 
 %ifdef XP_MACOSX
 #restore-button,
 %endif
-#fullscreen-button@attributeSelectorForToolbar@ {
+#fullscreen-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/fullscreen.svg");
 }
 
-#developer-button@attributeSelectorForToolbar@ {
+#developer-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/developer.svg");
 }
 
-#preferences-button@attributeSelectorForToolbar@ {
+#preferences-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/settings.svg");
 }
 
@@ -283,29 +283,23 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   list-style-image: url("chrome://browser/skin/menu.svg");
 }
 
-%ifdef MOZ_PHOTON_THEME
-%define PSEUDO_FOR_COMBINED_BUTTONS
-%else
-%define PSEUDO_FOR_COMBINED_BUTTONS :not(@inAnyPanel@)
-%endif
-
-#edit-controls@PSEUDO_FOR_COMBINED_BUTTONS@ > #cut-button {
+#edit-controls:not(@inAnyPanel@) > #cut-button {
   list-style-image: url("chrome://browser/skin/edit-cut.svg");
 }
 
-#edit-controls@PSEUDO_FOR_COMBINED_BUTTONS@ > #copy-button {
+#edit-controls:not(@inAnyPanel@) > #copy-button {
   list-style-image: url("chrome://browser/skin/edit-copy.svg");
 }
 
-#edit-controls@PSEUDO_FOR_COMBINED_BUTTONS@ > #paste-button {
+#edit-controls:not(@inAnyPanel@) > #paste-button {
   list-style-image: url("chrome://browser/skin/edit-paste.svg");
 }
 
-#zoom-controls@PSEUDO_FOR_COMBINED_BUTTONS@ > #zoom-out-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-out-button {
   list-style-image: url("chrome://browser/skin/zoom-out.svg");
 }
 
-#zoom-controls@PSEUDO_FOR_COMBINED_BUTTONS@ > #zoom-in-button {
+#zoom-controls:not(@inAnyPanel@) > #zoom-in-button {
   list-style-image: url("chrome://browser/skin/zoom-in.svg");
 }
 
@@ -378,28 +372,28 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 }
 %endif
 
-#email-link-button@attributeSelectorForToolbar@ {
+#email-link-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }
 
-#sidebar-button@attributeSelectorForToolbar@ {
+#sidebar-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/sidebars-right.svg");
 }
 
-#sidebar-button@attributeSelectorForToolbar@:-moz-locale-dir(ltr):not([positionend]),
-#sidebar-button@attributeSelectorForToolbar@:-moz-locale-dir(rtl)[positionend] {
+#sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(ltr):not([positionend]),
+#sidebar-button[cui-areatype="toolbar"]:-moz-locale-dir(rtl)[positionend] {
   list-style-image: url("chrome://browser/skin/sidebars.svg");
 }
 
-#panic-button@attributeSelectorForToolbar@ {
+#panic-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/forget.svg");
 }
 
-#panic-button@attributeSelectorForToolbar@[open] {
+#panic-button[cui-areatype="toolbar"][open] {
   fill: rgb(213, 32, 20);
 }
 
-#webide-button@attributeSelectorForToolbar@ {
+#webide-button[cui-areatype="toolbar"] {
   list-style-image: url("chrome://browser/skin/webIDE.svg");
 }
 

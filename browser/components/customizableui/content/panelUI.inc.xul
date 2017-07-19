@@ -406,7 +406,7 @@
 #endif
        hidden="true">
 #ifdef MOZ_PHOTON_THEME
-  <photonpanelmultiview mainViewId="widget-overflow-mainView">
+  <panelmultiview mainViewId="widget-overflow-mainView">
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
 #endif
@@ -419,7 +419,7 @@
       </vbox>
 #ifdef MOZ_PHOTON_THEME
     </panelview>
-  </photonpanelmultiview>
+  </panelmultiview>
 #endif
 </panel>
 

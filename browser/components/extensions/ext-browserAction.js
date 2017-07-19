@@ -181,6 +181,10 @@ this.browserAction = class extends ExtensionAPI {
         // Google Chrome onClicked extension API.
         if (popupURL) {
           try {
+            // FIXME: The line below needs to change eventually, but for now:
+            // ensure the view is _always_ visible _before_ `popup.attach()` is
+            // called. PanelMultiView.jsm dictates different behavior.
+            event.target.setAttribute("current", true);
             let popup = this.getPopup(document.defaultView, popupURL);
             let attachPromise = popup.attach(event.target);
             event.detail.addBlocker(attachPromise);
