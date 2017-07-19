@@ -26,6 +26,8 @@ ChildProcessMessageManager implements LegacyQueryInterface;
 ChromeMessageBroadcaster implements LegacyQueryInterface;
 ChromeMessageSender implements LegacyQueryInterface;
 Comment implements LegacyQueryInterface;
+ContentFrameMessageManager implements LegacyQueryInterface;
+ContentProcessMessageManager implements LegacyQueryInterface;
 Crypto implements LegacyQueryInterface;
 CSSMozDocumentRule implements LegacyQueryInterface;
 CSSPrimitiveValue implements LegacyQueryInterface;

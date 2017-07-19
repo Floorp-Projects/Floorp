@@ -476,10 +476,6 @@ class nsMessageManagerScriptExecutor
 public:
   static void PurgeCache();
   static void Shutdown();
-  JSObject* GetGlobal()
-  {
-    return mGlobal;
-  }
 
   void MarkScopesForCC();
 protected:
@@ -488,17 +484,20 @@ protected:
   ~nsMessageManagerScriptExecutor() { MOZ_COUNT_DTOR(nsMessageManagerScriptExecutor); }
 
   void DidCreateGlobal();
-  void LoadScriptInternal(const nsAString& aURL, bool aRunInGlobalScope);
+  void LoadScriptInternal(JS::Handle<JSObject*> aGlobal, const nsAString& aURL,
+                          bool aRunInGlobalScope);
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
                                     bool aRunInGlobalScope,
                                     bool aShouldCache,
                                     JS::MutableHandle<JSScript*> aScriptp);
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
                                     bool aRunInGlobalScope);
-  bool InitChildGlobalInternal(nsISupports* aScope, const nsACString& aID);
+  bool InitChildGlobalInternal(const nsACString& aID);
+  virtual bool WrapGlobalObject(JSContext* aCx,
+                                JS::CompartmentOptions& aOptions,
+                                JS::MutableHandle<JSObject*> aReflector) = 0;
   void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
   void Unlink();
-  JS::TenuredHeap<JSObject*> mGlobal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   AutoTArray<JS::Heap<JSObject*>, 2> mAnonymousGlobalScopes;
 
