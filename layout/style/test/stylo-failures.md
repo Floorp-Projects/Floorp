@@ -33,8 +33,8 @@ to mochitest command.
   * "layout.css.prefixes.device-pixel-ratio-webkit" support bug 1366956
     * test_media_queries.html `-device-pixel-ratio` [27]
     * test_webkit_device_pixel_ratio.html [3]
-  * test_media_queries_dynamic.html `restyle`: bug 1357461 [4]
-  * test_media_queries_dynamic_xbl.html: xbl support bug 1290276 [1]
+  * test_media_queries_dynamic.html `restyle`: bug 1382077 [4]
+  * test_media_queries_dynamic_xbl.html: xbl support bug 1382078 [1]
 * Animation support:
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
@@ -45,7 +45,7 @@ to mochitest command.
   * test_grid_item_shorthands.html [23]
   * test_grid_shorthand_serialization.html [28]
 * Unsupported values
-  * SVG-in-OpenType values not supported servo/servo#15211 bug 1355412
+  * SVG-in-OpenType values not supported servo/servo#15211 bug 1338764
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [3]
 * Incorrect parsing
@@ -55,21 +55,20 @@ to mochitest command.
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
-  * system font serialization with subprop specified bug 1364286
+  * system font serialization with subprop specified bug 1382080
     * test_system_font_serialization.html [3]
   * radial gradients are not serialized using modern unprefixed style bug 1380259
     * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
-* getComputedStyle style doesn't contain custom properties bug 1336891
-  * test_variables.html `custom property name` [2]
 * test_css_supports.html: issues around @supports syntax servo/servo#15482 [2]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
-* :visited support (bug 1328509)
+* :visited support bug 1381635
   * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
   * test_visited_reftests.html `selector-descendant-2.xhtml`: bug 1381635 [4]
   * ... `mathml-links.html` [2]
+* test_selectors_on_anonymous_content.html: xbl and :nth-child bug 1382102 [1]
 
 ## Assertions
 
@@ -78,8 +77,6 @@ to mochitest command.
 * test_specified_value_serialization.html `-webkit-radial-gradient`: bug 1380259 [1]
 
 ## Unknown / Unsure
-
-* test_selectors_on_anonymous_content.html: xbl and :nth-child [1]
 
 ## Ignore
 
