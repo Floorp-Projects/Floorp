@@ -19,7 +19,6 @@ use euclid::SideOffsets2D;
 extern crate webrender_api;
 
 type WrAPI = RenderApi;
-type WrBorderStyle = BorderStyle;
 type WrBoxShadowClipMode = BoxShadowClipMode;
 type WrBuiltDisplayListDescriptor = BuiltDisplayListDescriptor;
 type WrImageFormat = ImageFormat;
@@ -143,99 +142,6 @@ impl MutByteSlice {
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct WrBorderSide {
-    color: ColorF,
-    style: WrBorderStyle,
-}
-
-impl Into<BorderSide> for WrBorderSide {
-    fn into(self) -> BorderSide {
-        BorderSide {
-            color: self.color.into(),
-            style: self.style,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrBorderRadius {
-    pub top_left: LayoutSize,
-    pub top_right: LayoutSize,
-    pub bottom_left: LayoutSize,
-    pub bottom_right: LayoutSize,
-}
-
-impl Into<BorderRadius> for WrBorderRadius {
-    fn into(self) -> BorderRadius {
-        BorderRadius {
-            top_left: self.top_left.into(),
-            top_right: self.top_right.into(),
-            bottom_left: self.bottom_left.into(),
-            bottom_right: self.bottom_right.into(),
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrBorderWidths {
-    left: f32,
-    top: f32,
-    right: f32,
-    bottom: f32,
-}
-
-impl Into<BorderWidths> for WrBorderWidths {
-    fn into(self) -> BorderWidths {
-        BorderWidths {
-            left: self.left,
-            top: self.top,
-            right: self.right,
-            bottom: self.bottom,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrNinePatchDescriptor {
-    width: u32,
-    height: u32,
-    slice: SideOffsets2D<u32>,
-}
-
-impl Into<NinePatchDescriptor> for WrNinePatchDescriptor {
-    fn into(self) -> NinePatchDescriptor {
-        NinePatchDescriptor {
-            width: self.width,
-            height: self.height,
-            slice: self.slice.into(),
-        }
-    }
-}
-
-#[repr(u32)]
-pub enum WrRepeatMode {
-    Stretch,
-    Repeat,
-    Round,
-    Space,
-}
-
-impl Into<RepeatMode> for WrRepeatMode {
-    fn into(self) -> RepeatMode {
-        match self {
-            WrRepeatMode::Stretch => RepeatMode::Stretch,
-            WrRepeatMode::Repeat => RepeatMode::Repeat,
-            WrRepeatMode::Round => RepeatMode::Round,
-            WrRepeatMode::Space => RepeatMode::Space,
-        }
-    }
-}
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
 pub struct WrImageMask {
     image: WrImageKey,
     rect: LayoutRect,
@@ -274,7 +180,7 @@ impl From<ImageMask> for WrImageMask {
 #[derive(Debug, Clone, Copy)]
 pub struct WrComplexClipRegion {
     rect: LayoutRect,
-    radii: WrBorderRadius,
+    radii: BorderRadius,
 }
 
 impl<'a> Into<ComplexClipRegion> for &'a WrComplexClipRegion {
@@ -1292,12 +1198,12 @@ pub extern "C" fn wr_dp_push_text(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border(state: &mut WrState,
                                     rect: LayoutRect,
                                     clip: LayoutRect,
-                                    widths: WrBorderWidths,
-                                    top: WrBorderSide,
-                                    right: WrBorderSide,
-                                    bottom: WrBorderSide,
-                                    left: WrBorderSide,
-                                    radius: WrBorderRadius) {
+                                    widths: BorderWidths,
+                                    top: BorderSide,
+                                    right: BorderSide,
+                                    bottom: BorderSide,
+                                    left: BorderSide,
+                                    radius: BorderRadius) {
     assert!(unsafe { is_in_main_thread() });
 
     let border_details = BorderDetails::Normal(NormalBorder {
@@ -1319,12 +1225,12 @@ pub extern "C" fn wr_dp_push_border(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
                                           rect: LayoutRect,
                                           clip: LayoutRect,
-                                          widths: WrBorderWidths,
+                                          widths: BorderWidths,
                                           image: WrImageKey,
-                                          patch: WrNinePatchDescriptor,
+                                          patch: NinePatchDescriptor,
                                           outset: SideOffsets2D<f32>,
-                                          repeat_horizontal: WrRepeatMode,
-                                          repeat_vertical: WrRepeatMode) {
+                                          repeat_horizontal: RepeatMode,
+                                          repeat_vertical: RepeatMode) {
     assert!(unsafe { is_in_main_thread() });
     let border_details =
         BorderDetails::Image(ImageBorder {
@@ -1347,7 +1253,7 @@ pub extern "C" fn wr_dp_push_border_image(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              rect: LayoutRect,
                                              clip: LayoutRect,
-                                             widths: WrBorderWidths,
+                                             widths: BorderWidths,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
@@ -1381,7 +1287,7 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
 pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     rect: LayoutRect,
                                                     clip: LayoutRect,
-                                                    widths: WrBorderWidths,
+                                                    widths: BorderWidths,
                                                     center: LayoutPoint,
                                                     radius: LayoutSize,
                                                     stops: *const GradientStop,

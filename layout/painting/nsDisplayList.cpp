@@ -4999,15 +4999,15 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
       aBuilder.PushBorderImage(dest,
                                clip,
-                               wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                               wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                key.value(),
-                               wr::ToWrNinePatchDescriptor(
+                               wr::ToNinePatchDescriptor(
                                  (float)(mBorderImageRenderer->mImageSize.width) / appUnitsPerDevPixel,
                                  (float)(mBorderImageRenderer->mImageSize.height) / appUnitsPerDevPixel,
                                  wr::ToSideOffsets2D_u32(slice[0], slice[1], slice[2], slice[3])),
                                wr::ToSideOffsets2D_f32(outset[0], outset[1], outset[2], outset[3]),
-                               wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
-                               wr::ToWrRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
+                               wr::ToRepeatMode(mBorderImageRenderer->mRepeatModeHorizontal),
+                               wr::ToRepeatMode(mBorderImageRenderer->mRepeatModeVertical));
       break;
     }
     case eStyleImageType_Gradient:
@@ -5032,7 +5032,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
 
         aBuilder.PushBorderGradient(dest,
                                     clip,
-                                    wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                                    wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                     wr::ToLayoutPoint(startPoint),
                                     wr::ToLayoutPoint(endPoint),
                                     stops,
@@ -5041,7 +5041,7 @@ nsDisplayBorder::CreateBorderImageWebRenderCommands(mozilla::wr::DisplayListBuil
       } else {
         aBuilder.PushBorderRadialGradient(dest,
                                           clip,
-                                          wr::ToWrBorderWidths(widths[0], widths[1], widths[2], widths[3]),
+                                          wr::ToBorderWidths(widths[0], widths[1], widths[2], widths[3]),
                                           wr::ToLayoutPoint(lineStart),
                                           wr::ToLayoutSize(gradientRadius),
                                           stops,
