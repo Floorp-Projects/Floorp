@@ -26,4 +26,7 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <style name="TextAppearance.SearchSuggestion" parent="TextAppearance.Small">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
 </resources>
