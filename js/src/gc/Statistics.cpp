@@ -929,6 +929,9 @@ void
 Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                        SliceBudget budget, JS::gcreason::Reason reason)
 {
+    MOZ_ASSERT(phaseStack.empty() ||
+               (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
+
     this->zoneStats = zoneStats;
 
     bool first = !runtime->gc.isIncrementalGCInProgress();
@@ -962,6 +965,9 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 void
 Statistics::endSlice()
 {
+    MOZ_ASSERT(phaseStack.empty() ||
+               (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
+
     if (!aborted) {
         auto& slice = slices_.back();
         slice.end = TimeStamp::Now();
@@ -1210,6 +1216,8 @@ Statistics::endPhase(PhaseKind phaseKind)
 void
 Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+
     Phase phase = lookupChildPhase(phaseKind);
 
     // Record the duration for all phases in the tree up to the root. This is
@@ -1221,18 +1229,6 @@ Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
         parallelTimes[phase] += duration;
         phase = phases[phase].parent;
     }
-}
-
-void
-Statistics::endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task)
-{
-    Phase phase = lookupChildPhase(phaseKind);
-    phaseStack.popBack();
-
-    if (!slices_.empty())
-        slices_.back().phaseTimes[phase] += task->duration();
-    phaseTimes[phase] += task->duration();
-    phaseStartTimes[phase] = TimeStamp();
 }
 
 TimeStamp

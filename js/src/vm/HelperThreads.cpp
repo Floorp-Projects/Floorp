@@ -37,6 +37,7 @@ using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::Unused;
 using mozilla::TimeDuration;
+using mozilla::TimeStamp;
 
 namespace js {
 
@@ -1315,14 +1316,28 @@ js::GCParallelTask::join()
     joinWithLockHeld(helperLock);
 }
 
+static inline
+TimeDuration
+TimeSince(TimeStamp prev)
+{
+    TimeStamp now = TimeStamp::Now();
+#ifdef ANDROID
+    // Sadly this happens sometimes.
+    if (now < prev)
+        now = prev;
+#endif
+    MOZ_RELEASE_ASSERT(now >= prev);
+    return now - prev;
+}
+
 void
 js::GCParallelTask::runFromActiveCooperatingThread(JSRuntime* rt)
 {
     MOZ_ASSERT(state == NotStarted);
     MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
-    mozilla::TimeStamp timeStart = mozilla::TimeStamp::Now();
+    TimeStamp timeStart = TimeStamp::Now();
     run();
-    duration_ = mozilla::TimeStamp::Now() - timeStart;
+    duration_ = TimeSince(timeStart);
 }
 
 void
@@ -1333,11 +1348,11 @@ js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& locked)
 
     {
         AutoUnlockHelperThreadState parallelSection(locked);
-        mozilla::TimeStamp timeStart = mozilla::TimeStamp::Now();
+        TimeStamp timeStart = TimeStamp::Now();
         TlsContext.get()->heapState = JS::HeapState::MajorCollecting;
         run();
         TlsContext.get()->heapState = JS::HeapState::Idle;
-        duration_ = mozilla::TimeStamp::Now() - timeStart;
+        duration_ = TimeSince(timeStart);
     }
 
     state = Finished;
