@@ -789,6 +789,11 @@ public:
    */
   bool CanBeSentToRemoteProcess() const;
   /**
+   * Returns true if the original target is a remote process and the event
+   * will be posted to the remote process later.
+   */
+  bool WillBeSentToRemoteProcess() const;
+  /**
    * Returns true if the event is native event deliverer event for plugin and
    * it should be retarted to focused document.
    */
