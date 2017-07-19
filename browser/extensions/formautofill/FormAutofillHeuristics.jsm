@@ -339,6 +339,124 @@ this.FormAutofillHeuristics = {
 
     return null;
   },
+
+/**
+ * Phone field grammars - first matched grammar will be parsed. Grammars are
+ * separated by { REGEX_SEPARATOR, FIELD_NONE, 0 }. Suffix and extension are
+ * parsed separately unless they are necessary parts of the match.
+ * The following notation is used to describe the patterns:
+ * <cc> - country code field.
+ * <ac> - area code field.
+ * <phone> - phone or prefix.
+ * <suffix> - suffix.
+ * <ext> - extension.
+ * :N means field is limited to N characters, otherwise it is unlimited.
+ * (pattern <field>)? means pattern is optional and matched separately.
+ *
+ * This grammar list from Chromium will be enabled partially once we need to
+ * support more cases of Telephone fields.
+ */
+  PHONE_FIELD_GRAMMARS: [
+    // Country code: <cc> Area Code: <ac> Phone: <phone> (- <suffix>
+
+    // (Ext: <ext>)?)?
+      // {REGEX_COUNTRY, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_AREA, FIELD_AREA_CODE, 0},
+      // {REGEX_PHONE, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // \( <ac> \) <phone>:3 <suffix>:4 (Ext: <ext>)?
+      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 3},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
+      // {REGEX_PHONE, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc> <ac>:3 - <phone>:3 - <suffix>:4 (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_PHONE, FIELD_AREA_CODE, 3},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
+      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc>:3 <ac>:3 <phone>:3 <suffix>:4 (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
+      // {REGEX_PHONE, FIELD_AREA_CODE, 3},
+      // {REGEX_PHONE, FIELD_PHONE, 3},
+      // {REGEX_PHONE, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Area Code: <ac> Phone: <phone> (- <suffix> (Ext: <ext>)?)?
+      // {REGEX_AREA, FIELD_AREA_CODE, 0},
+      // {REGEX_PHONE, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <ac> <phone>:3 <suffix>:4 (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
+      // {REGEX_PHONE, FIELD_PHONE, 3},
+      // {REGEX_PHONE, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc> \( <ac> \) <phone> (- <suffix> (Ext: <ext>)?)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: \( <ac> \) <phone> (- <suffix> (Ext: <ext>)?)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_AREA_NOTEXT, FIELD_AREA_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc> - <ac> - <phone> - <suffix> (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 0},
+      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Area code: <ac>:3 Prefix: <prefix>:3 Suffix: <suffix>:4 (Ext: <ext>)?
+      // {REGEX_AREA, FIELD_AREA_CODE, 3},
+      // {REGEX_PREFIX, FIELD_PHONE, 3},
+      // {REGEX_SUFFIX, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <ac> Prefix: <phone> Suffix: <suffix> (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
+      // {REGEX_PREFIX, FIELD_PHONE, 0},
+      // {REGEX_SUFFIX, FIELD_SUFFIX, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <ac> - <phone>:3 - <suffix>:4 (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_AREA_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_PHONE, 3},
+      // {REGEX_SUFFIX_SEPARATOR, FIELD_SUFFIX, 4},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc> - <ac> - <phone> (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 0},
+      // {REGEX_PREFIX_SEPARATOR, FIELD_AREA_CODE, 0},
+      // {REGEX_SUFFIX_SEPARATOR, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <ac> - <phone> (Ext: <ext>)?
+      // {REGEX_AREA, FIELD_AREA_CODE, 0},
+      // {REGEX_PHONE, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <cc>:3 - <phone>:10 (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_COUNTRY_CODE, 3},
+      // {REGEX_PHONE, FIELD_PHONE, 10},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Ext: <ext>
+      // {REGEX_EXTENSION, FIELD_EXTENSION, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+
+    // Phone: <phone> (Ext: <ext>)?
+      // {REGEX_PHONE, FIELD_PHONE, 0},
+      // {REGEX_SEPARATOR, FIELD_NONE, 0},
+  ],
 };
 
 XPCOMUtils.defineLazyGetter(this.FormAutofillHeuristics, "RULES", () => {
