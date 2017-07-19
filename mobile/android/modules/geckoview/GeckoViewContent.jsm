@@ -90,7 +90,7 @@ class GeckoViewContent extends GeckoViewModule {
           type: aMsg.name,
           screenX: aMsg.data.screenX,
           screenY: aMsg.data.screenY,
-          imageSrc: aMsg.data.imageSrc,
+          elementSrc: aMsg.data.elementSrc,
           uri: aMsg.data.uri
         });
         break;
