@@ -293,11 +293,21 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
             final int shadowEnd = mShadowNewEnd + Math.max(0, mCurrentOldEnd - mShadowOldEnd);
             final int currentEnd = mCurrentNewEnd + Math.max(0, mShadowOldEnd - mCurrentOldEnd);
 
-            // Perform replacement in two steps (delete and insert) so that old spans are
-            // properly deleted before identical new spans are inserted. Otherwise the new
-            // spans won't be inserted due to the text already having the old spans.
-            mShadowText.delete(start, shadowEnd);
-            mShadowText.insert(start, mCurrentText, start, currentEnd);
+            // Remove identical spans that are in the new text from the old text.
+            // Otherwise the new spans won't be inserted due to the text already having
+            // the old spans.
+            Object[] spans = mCurrentText.getSpans(start, currentEnd, Object.class);
+            for (final Object span : spans) {
+                mShadowText.removeSpan(span);
+            }
+
+            // Also remove existing spans that are no longer in the new text.
+            spans = mShadowText.getSpans(start, shadowEnd, Object.class);
+            for (final Object span : spans) {
+                mShadowText.removeSpan(span);
+            }
+
+            mShadowText.replace(start, shadowEnd, mCurrentText, start, currentEnd);
 
             // SpannableStringBuilder has some internal logic to fix up selections, but we
             // don't want that, so we always fix up the selection a second time.
