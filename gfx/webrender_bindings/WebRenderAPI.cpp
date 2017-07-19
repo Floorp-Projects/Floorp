@@ -667,8 +667,8 @@ DisplayListBuilder::PushLinearGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutRect& aClip,
                                        const wr::LayoutPoint& aStartPoint,
                                        const wr::LayoutPoint& aEndPoint,
-                                       const nsTArray<wr::WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode,
+                                       const nsTArray<wr::GradientStop>& aStops,
+                                       wr::ExtendMode aExtendMode,
                                        const wr::LayoutSize aTileSize,
                                        const wr::LayoutSize aTileSpacing)
 {
@@ -685,8 +685,8 @@ DisplayListBuilder::PushRadialGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutRect& aClip,
                                        const wr::LayoutPoint& aCenter,
                                        const wr::LayoutSize& aRadius,
-                                       const nsTArray<wr::WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode,
+                                       const nsTArray<wr::GradientStop>& aStops,
+                                       wr::ExtendMode aExtendMode,
                                        const wr::LayoutSize aTileSize,
                                        const wr::LayoutSize aTileSpacing)
 {
@@ -818,8 +818,8 @@ DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
                                        const wr::WrBorderWidths& aWidths,
                                        const wr::LayoutPoint& aStartPoint,
                                        const wr::LayoutPoint& aEndPoint,
-                                       const nsTArray<wr::WrGradientStop>& aStops,
-                                       wr::GradientExtendMode aExtendMode,
+                                       const nsTArray<wr::GradientStop>& aStops,
+                                       wr::ExtendMode aExtendMode,
                                        const wr::SideOffsets2D_f32& aOutset)
 {
   wr_dp_push_border_gradient(mWrState, aBounds, aClip,
@@ -834,8 +834,8 @@ DisplayListBuilder::PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                              const wr::WrBorderWidths& aWidths,
                                              const wr::LayoutPoint& aCenter,
                                              const wr::LayoutSize& aRadius,
-                                             const nsTArray<wr::WrGradientStop>& aStops,
-                                             wr::GradientExtendMode aExtendMode,
+                                             const nsTArray<wr::GradientStop>& aStops,
+                                             wr::ExtendMode aExtendMode,
                                              const wr::SideOffsets2D_f32& aOutset)
 {
   wr_dp_push_border_radial_gradient(

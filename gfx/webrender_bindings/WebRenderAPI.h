@@ -181,8 +181,8 @@ public:
                           const wr::LayoutRect& aClip,
                           const wr::LayoutPoint& aStartPoint,
                           const wr::LayoutPoint& aEndPoint,
-                          const nsTArray<wr::WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode,
+                          const nsTArray<wr::GradientStop>& aStops,
+                          wr::ExtendMode aExtendMode,
                           const wr::LayoutSize aTileSize,
                           const wr::LayoutSize aTileSpacing);
 
@@ -190,8 +190,8 @@ public:
                           const wr::LayoutRect& aClip,
                           const wr::LayoutPoint& aCenter,
                           const wr::LayoutSize& aRadius,
-                          const nsTArray<wr::WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode,
+                          const nsTArray<wr::GradientStop>& aStops,
+                          wr::ExtendMode aExtendMode,
                           const wr::LayoutSize aTileSize,
                           const wr::LayoutSize aTileSpacing);
 
@@ -253,8 +253,8 @@ public:
                           const wr::WrBorderWidths& aWidths,
                           const wr::LayoutPoint& aStartPoint,
                           const wr::LayoutPoint& aEndPoint,
-                          const nsTArray<wr::WrGradientStop>& aStops,
-                          wr::GradientExtendMode aExtendMode,
+                          const nsTArray<wr::GradientStop>& aStops,
+                          wr::ExtendMode aExtendMode,
                           const wr::SideOffsets2D_f32& aOutset);
 
   void PushBorderRadialGradient(const wr::LayoutRect& aBounds,
@@ -262,8 +262,8 @@ public:
                                 const wr::WrBorderWidths& aWidths,
                                 const wr::LayoutPoint& aCenter,
                                 const wr::LayoutSize& aRadius,
-                                const nsTArray<wr::WrGradientStop>& aStops,
-                                wr::GradientExtendMode aExtendMode,
+                                const nsTArray<wr::GradientStop>& aStops,
+                                wr::ExtendMode aExtendMode,
                                 const wr::SideOffsets2D_f32& aOutset);
 
   void PushText(const wr::LayoutRect& aBounds,
