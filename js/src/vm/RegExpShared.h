@@ -248,7 +248,8 @@ class RegExpZone
 
         typedef Key Lookup;
         static HashNumber hash(const Lookup& l) {
-            return DefaultHasher<JSAtom*>::hash(l.atom) ^ (l.flag << 1);
+            HashNumber hash = DefaultHasher<JSAtom*>::hash(l.atom);
+            return mozilla::AddToHash(hash, l.flag);
         }
         static bool match(Key l, Key r) {
             return l.atom == r.atom && l.flag == r.flag;

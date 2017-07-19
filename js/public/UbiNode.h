@@ -10,6 +10,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
@@ -426,7 +427,7 @@ class StackFrame {
         using Lookup = JS::ubi::StackFrame;
 
         static js::HashNumber hash(const Lookup& lookup) {
-            return lookup.identifier();
+            return mozilla::HashGeneric(lookup.identifier());
         }
 
         static bool match(const StackFrame& key, const Lookup& lookup) {
