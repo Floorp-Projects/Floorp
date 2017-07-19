@@ -66,7 +66,6 @@ to mochitest command.
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support bug 1381635
   * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
-  * test_visited_reftests.html `selector-descendant-2.xhtml`: bug 1381635 [4]
   * ... `mathml-links.html` [2]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child bug 1382102 [1]
 
