@@ -11,6 +11,7 @@
 #include <X11/Xlibint.h>  /* For XESetCloseDisplay */
 #undef max // Xlibint.h defines this and it breaks std::max
 #undef min // Xlibint.h defines this and it breaks std::min
+#undef Data
 
 #include "nsTArray.h"
 #include "nsAlgorithm.h"

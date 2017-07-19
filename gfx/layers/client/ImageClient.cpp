@@ -84,8 +84,6 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 void
 ImageClientSingle::FlushAllImages()
 {
-  MOZ_ASSERT(GetForwarder()->GetTextureForwarder()->UsesImageBridge());
-
   for (auto& b : mBuffers) {
     RemoveTexture(b.mTextureClient);
   }

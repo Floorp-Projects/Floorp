@@ -182,8 +182,11 @@ public:
                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
 
-  // This is used after a compositor reset.
-  LayerManager* RecreateLayerManager(PLayerTransactionChild* aShadowManager);
+  // This is used after a compositor reset. The lambda aInitializeFunc is used
+  // to perform any caller-required initialization for the newly created layer
+  // manager; in the event of a failure, return false and it will destroy the
+  // new layer manager without changing the state of the widget.
+  bool RecreateLayerManager(const std::function<bool(LayerManager*)>& aInitializeFunc);
 
   virtual void SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction) override;

@@ -429,7 +429,7 @@ void InitLibrary()
   // calling this callback on init would immediately re-disble the logging.
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOGGING_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
-  NS_DispatchToMainThread(
+  AbstractThread::MainThread()->Dispatch(
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 }

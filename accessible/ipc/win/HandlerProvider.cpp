@@ -131,8 +131,10 @@ HandlerProvider::GetHandlerPayloadSize(NotNull<DWORD*> aOutPayloadSize)
 
   GetAndSerializePayload(lock);
 
-  if (!mSerializer) {
-    return E_FAIL;
+  if (!mSerializer || !(*mSerializer)) {
+    // Failed payload serialization is non-fatal
+    *aOutPayloadSize = mscom::StructToStream::GetEmptySize();
+    return S_OK;
   }
 
   *aOutPayloadSize = mSerializer->GetSize();
@@ -176,7 +178,8 @@ HandlerProvider::WriteHandlerPayload(NotNull<IStream*> aStream)
 {
   MutexAutoLock lock(mMutex);
 
-  if (!mSerializer) {
+  if (!mSerializer || !(*mSerializer)) {
+    // Failed payload serialization is non-fatal
     mscom::StructToStream emptyStruct;
     return emptyStruct.Write(aStream);
   }

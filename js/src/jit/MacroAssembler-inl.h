@@ -328,6 +328,20 @@ MacroAssembler::hasSelfReference() const
 }
 
 // ===============================================================
+// Move instructions
+
+void
+MacroAssembler::moveValue(const ConstantOrRegister& src, const ValueOperand& dest)
+{
+    if (src.constant()) {
+        moveValue(src.value(), dest);
+        return;
+    }
+
+    moveValue(src.reg(), dest);
+}
+
+// ===============================================================
 // Arithmetic functions
 
 void

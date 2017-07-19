@@ -157,9 +157,9 @@ class LIRGeneratorShared : public MDefinitionVisitor
     inline void defineFixed(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir,
                             const LAllocation& output);
 
-    template <size_t Ops, size_t Temps>
-    inline void defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps>* lir, MDefinition* mir,
-                          LDefinition::Policy policy = LDefinition::REGISTER);
+    template <size_t Temps>
+    inline void defineBox(details::LInstructionFixedDefsTempsHelper<BOX_PIECES, Temps>* lir,
+                          MDefinition* mir, LDefinition::Policy policy = LDefinition::REGISTER);
 
     template <size_t Ops, size_t Temps>
     inline void defineInt64(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir, MDefinition* mir,

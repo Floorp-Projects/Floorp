@@ -283,6 +283,7 @@
     _(LoadUnboxedScalar)            \
     _(LoadUnboxedPointerV)          \
     _(LoadUnboxedPointerT)          \
+    _(LoadElementFromStateV)        \
     _(UnboxObjectOrNull)            \
     _(StoreElementV)                \
     _(StoreElementT)                \
@@ -414,6 +415,7 @@
     _(CheckObjCoercible)            \
     _(DebugCheckSelfHosted)         \
     _(FinishBoundFunctionInit)      \
+    _(IsPackedArray)                \
     _(AsmJSLoadHeap)                \
     _(AsmJSStoreHeap)               \
     _(AsmJSCompareExchangeHeap)     \

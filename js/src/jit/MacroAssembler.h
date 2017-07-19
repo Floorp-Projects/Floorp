@@ -736,6 +736,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void move8SignExtend(Register src, Register dest) PER_SHARED_ARCH;
     inline void move16SignExtend(Register src, Register dest) PER_SHARED_ARCH;
 
+    // Copy a constant, typed-register, or a ValueOperand into a ValueOperand
+    // destination.
+    inline void moveValue(const ConstantOrRegister& src, const ValueOperand& dest);
+    void moveValue(const TypedOrValueRegister& src, const ValueOperand& dest) PER_ARCH;
+    void moveValue(const ValueOperand& src, const ValueOperand& dest) PER_ARCH;
+    void moveValue(const Value& src, const ValueOperand& dest) PER_ARCH;
+
+  public:
     // ===============================================================
     // Logical instructions
 
@@ -1257,6 +1265,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchTestBooleanTruthy(bool truthy, const ValueOperand& value, Label* label) PER_ARCH;
     inline void branchTestStringTruthy(bool truthy, const ValueOperand& value, Label* label)
         DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+    // Create an unconditional branch to the address given as argument.
+    inline void branchToComputedAddress(const BaseIndex& address) PER_ARCH;
 
   private:
 

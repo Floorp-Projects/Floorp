@@ -5098,6 +5098,28 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
     return res;
 }
 
+MArgumentState*
+MArgumentState::New(TempAllocator::Fallible view, const MDefinitionVector& args)
+{
+    MArgumentState* res = new(view.alloc) MArgumentState();
+    if (!res || !res->init(view.alloc, args.length()))
+        return nullptr;
+    for (size_t i = 0, e = args.length(); i < e; i++)
+        res->initOperand(i, args[i]);
+    return res;
+}
+
+MArgumentState*
+MArgumentState::Copy(TempAllocator& alloc, MArgumentState* state)
+{
+    MArgumentState* res = new(alloc) MArgumentState();
+    if (!res || !res->init(alloc, state->numElements()))
+        return nullptr;
+    for (size_t i = 0, e = res->numOperands(); i < e; i++)
+        res->initOperand(i, state->getOperand(i));
+    return res;
+}
+
 MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
                      gc::InitialHeap initialHeap, jsbytecode* pc, bool vmCall)
   : MUnaryInstruction(templateConst),
@@ -6147,34 +6169,6 @@ PropertyReadNeedsTypeBarrier(CompilerConstraintList* constraints,
     return BarrierKind::NoBarrier;
 }
 
-static bool
-ObjectSubsumes(TypeSet::ObjectKey* first, TypeSet::ObjectKey* second)
-{
-    if (first->isSingleton() ||
-        second->isSingleton() ||
-        first->clasp() != second->clasp() ||
-        first->unknownProperties() ||
-        second->unknownProperties())
-    {
-        return false;
-    }
-
-    if (first->clasp() == &ArrayObject::class_) {
-        HeapTypeSetKey firstElements = first->property(JSID_VOID);
-        HeapTypeSetKey secondElements = second->property(JSID_VOID);
-
-        return firstElements.maybeTypes() && secondElements.maybeTypes() &&
-               firstElements.maybeTypes()->equals(secondElements.maybeTypes());
-    }
-
-    if (first->clasp() == &UnboxedArrayObject::class_) {
-        return first->group()->unboxedLayout().elementType() ==
-               second->group()->unboxedLayout().elementType();
-    }
-
-    return false;
-}
-
 BarrierKind
 jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                                   CompilerConstraintList* constraints,
@@ -6214,30 +6208,6 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                 break;
             obj = TypeSet::ObjectKey::get(obj->proto().toObject());
         } while (obj);
-    }
-
-    // If any objects which could be observed are similar to ones that have
-    // already been observed, add them to the observed type set.
-    if (!key->unknownProperties()) {
-        HeapTypeSetKey property = key->property(name ? NameToId(name) : JSID_VOID);
-
-        if (property.maybeTypes() && !property.maybeTypes()->unknownObject()) {
-            for (size_t i = 0; i < property.maybeTypes()->getObjectCount(); i++) {
-                TypeSet::ObjectKey* key = property.maybeTypes()->getObject(i);
-                if (!key || observed->unknownObject())
-                    continue;
-
-                for (size_t j = 0; j < observed->getObjectCount(); j++) {
-                    TypeSet::ObjectKey* observedKey = observed->getObject(j);
-                    if (observedKey && ObjectSubsumes(observedKey, key)) {
-                        // Note: the return value here is ignored.
-                        observed->addType(TypeSet::ObjectType(key),
-                                          GetJitContext()->temp->lifoAlloc());
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     return PropertyReadNeedsTypeBarrier(constraints, key, name, observed);

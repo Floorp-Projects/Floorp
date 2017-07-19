@@ -587,6 +587,7 @@ NoFloatPolicyAfter<FirstOp>::adjustInputs(TempAllocator& alloc, MInstruction* de
     return true;
 }
 
+template bool NoFloatPolicyAfter<0>::adjustInputs(TempAllocator& alloc, MInstruction* def);
 template bool NoFloatPolicyAfter<1>::adjustInputs(TempAllocator& alloc, MInstruction* def);
 template bool NoFloatPolicyAfter<2>::adjustInputs(TempAllocator& alloc, MInstruction* def);
 
@@ -1268,6 +1269,7 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
     _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
     _(MixPolicy<BoxPolicy<0>, BoxPolicy<1> >)                           \
     _(NoFloatPolicy<0>)                                                 \
+    _(NoFloatPolicyAfter<0>)                                            \
     _(NoFloatPolicyAfter<1>)                                            \
     _(NoFloatPolicyAfter<2>)                                            \
     _(ObjectPolicy<0>)                                                  \

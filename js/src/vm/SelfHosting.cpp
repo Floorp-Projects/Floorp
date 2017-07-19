@@ -2301,7 +2301,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("UnsafeGetBooleanFromReservedSlot", intrinsic_UnsafeGetBooleanFromReservedSlot,2,0,
                     IntrinsicUnsafeGetBooleanFromReservedSlot),
 
-    JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
+    JS_INLINABLE_FN("IsPackedArray", intrinsic_IsPackedArray,           1,0,
+                    IntrinsicIsPackedArray),
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
 

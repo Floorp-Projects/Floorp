@@ -774,6 +774,54 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
 }
 
 // ===============================================================
+// Move instructions
+
+void
+MacroAssembler::moveValue(const TypedOrValueRegister& src, const ValueOperand& dest)
+{
+    if (src.hasValue()) {
+        moveValue(src.valueReg(), dest);
+        return;
+    }
+
+    MIRType type = src.type();
+    AnyRegister reg = src.typedReg();
+
+    if (!IsFloatingPointType(type)) {
+        boxNonDouble(ValueTypeFromMIRType(type), reg.gpr(), dest);
+        return;
+    }
+
+    FloatRegister scratch = ScratchDoubleReg;
+    FloatRegister freg = reg.fpu();
+    if (type == MIRType::Float32) {
+        convertFloat32ToDouble(freg, scratch);
+        freg = scratch;
+    }
+    boxDouble(freg, dest, scratch);
+}
+
+void
+MacroAssembler::moveValue(const ValueOperand& src, const ValueOperand& dest)
+{
+    if (src == dest)
+        return;
+    movePtr(src.valueReg(), dest.valueReg());
+}
+
+void
+MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
+{
+    if (!src.isGCThing()) {
+        movePtr(ImmWord(src.asRawBits()), dest.valueReg());
+        return;
+    }
+
+    BufferOffset load = movePatchablePtr(ImmPtr(src.bitsAsPunboxPointer()), dest.valueReg());
+    writeDataRelocation(src, load);
+}
+
+// ===============================================================
 // Branch functions
 
 void

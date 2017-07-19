@@ -149,6 +149,12 @@ this.DownloadList.prototype = {
    *          onDownloadRemoved: function (aDownload) {
    *            // Called after aDownload is removed from the list.
    *          },
+   *          onDownloadBatchStarting: function () {
+   *            // Called before multiple changes are made at the same time.
+   *          },
+   *          onDownloadBatchEnded: function () {
+   *            // Called after all the changes have been made.
+   *          },
    *        }
    *
    * @return {Promise}
@@ -160,6 +166,7 @@ this.DownloadList.prototype = {
     this._views.add(aView);
 
     if ("onDownloadAdded" in aView) {
+      this._notifyAllViews("onDownloadBatchStarting");
       for (let download of this._downloads) {
         try {
           aView.onDownloadAdded(download);
@@ -167,6 +174,7 @@ this.DownloadList.prototype = {
           Cu.reportError(ex);
         }
       }
+      this._notifyAllViews("onDownloadBatchEnded");
     }
 
     return Promise.resolve();

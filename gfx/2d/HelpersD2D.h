@@ -25,8 +25,7 @@
 namespace mozilla {
 namespace gfx {
 
-ID2D1Factory1* D2DFactory1();
-static ID2D1Factory* D2DFactory() { return D2DFactory1(); }
+RefPtr<ID2D1Factory1> D2DFactory();
 
 static inline D2D1_POINT_2F D2DPoint(const Point &aPoint)
 {
