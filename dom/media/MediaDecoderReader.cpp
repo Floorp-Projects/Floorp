@@ -96,26 +96,22 @@ MediaDecoderReader::~MediaDecoderReader()
 
 size_t MediaDecoderReader::SizeOfVideoQueueInBytes() const
 {
-  VideoQueueMemoryFunctor functor;
-  mVideoQueue.LockedForEach(functor);
-  return functor.mSize;
+  return 0;
 }
 
 size_t MediaDecoderReader::SizeOfAudioQueueInBytes() const
 {
-  AudioQueueMemoryFunctor functor;
-  mAudioQueue.LockedForEach(functor);
-  return functor.mSize;
+  return 0;
 }
 
 size_t MediaDecoderReader::SizeOfVideoQueueInFrames()
 {
-  return mVideoQueue.GetSize();
+  return 0;
 }
 
 size_t MediaDecoderReader::SizeOfAudioQueueInFrames()
 {
-  return mAudioQueue.GetSize();
+  return 0;
 }
 
 void
@@ -128,14 +124,6 @@ MediaDecoderReader::UpdateDuration(const media::TimeUnit& aDuration)
 
 nsresult MediaDecoderReader::ResetDecode(TrackSet aTracks)
 {
-  if (aTracks.contains(TrackInfo::kVideoTrack)) {
-    VideoQueue().Reset();
-  }
-
-  if (aTracks.contains(TrackInfo::kAudioTrack)) {
-    AudioQueue().Reset();
-  }
-
   return NS_OK;
 }
 
