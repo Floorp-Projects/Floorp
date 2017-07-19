@@ -1338,13 +1338,48 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 {
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot a script blocker");
-  MOZ_ASSERT(!mDestroyedFrames);
+
+  // See bug 1378219 comment 9:
+  // Recursive calls here are a bit worrying, but apparently do happen in the
+  // wild (although not currently in any of our automated tests). Try to get a
+  // stack from Nightly/Dev channel to figure out what's going on and whether
+  // it's OK.
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyedFrames, "ProcessRestyledFrames recursion");
 
   if (aChangeList.IsEmpty()) {
     return;
   }
 
-  mDestroyedFrames = MakeUnique<nsTHashtable<nsPtrHashKey<const nsIFrame>>>();
+  // If mDestroyedFrames is null, we want to create a new hashtable here
+  // and destroy it on exit; but if it is already non-null (because we're in
+  // a recursive call), we will continue to use the existing table to
+  // accumulate destroyed frames, and NOT clear mDestroyedFrames on exit.
+  // We use a MaybeClearDestroyedFrames helper to conditionally reset the
+  // mDestroyedFrames pointer when this method returns.
+  typedef decltype(mDestroyedFrames) DestroyedFramesT;
+  class MOZ_RAII MaybeClearDestroyedFrames
+  {
+  private:
+    DestroyedFramesT& mDestroyedFramesRef; // ref to caller's mDestroyedFrames
+    const bool        mResetOnDestruction;
+  public:
+    explicit MaybeClearDestroyedFrames(DestroyedFramesT& aTarget)
+      : mDestroyedFramesRef(aTarget)
+      , mResetOnDestruction(!aTarget) // reset only if target starts out null
+    {
+    }
+    ~MaybeClearDestroyedFrames()
+    {
+      if (mResetOnDestruction) {
+        mDestroyedFramesRef.reset(nullptr);
+      }
+    }
+  };
+
+  MaybeClearDestroyedFrames maybeClear(mDestroyedFrames);
+  if (!mDestroyedFrames) {
+    mDestroyedFrames = MakeUnique<nsTHashtable<nsPtrHashKey<const nsIFrame>>>();
+  }
 
   PROFILER_LABEL("RestyleManager", "ProcessRestyledFrames",
                  js::ProfileEntry::Category::CSS);
@@ -1717,7 +1752,6 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   }
 
   frameConstructor->EndUpdate();
-  mDestroyedFrames.reset(nullptr);
 
 #ifdef DEBUG
   // Verify the style tree.  Note that this needs to happen once we've
