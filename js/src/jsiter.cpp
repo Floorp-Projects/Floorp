@@ -48,6 +48,7 @@ using JS::ForOfIterator;
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 using mozilla::PodCopy;
+using mozilla::PodEqual;
 using mozilla::PodZero;
 
 typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
@@ -590,25 +591,6 @@ GetCustomIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandle
     return true;
 }
 
-template <typename T>
-static inline bool
-Compare(T* a, T* b, size_t c)
-{
-    size_t n = (c + size_t(7)) / size_t(8);
-    switch (c % 8) {
-      case 0: do { if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 7:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 6:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 5:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 4:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 3:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 2:      if (*a++ != *b++) return false; MOZ_FALLTHROUGH;
-      case 1:      if (*a++ != *b++) return false;
-              } while (--n > 0);
-    }
-    return true;
-}
-
 static bool legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp);
 
 static inline PropertyIteratorObject*
@@ -746,7 +728,7 @@ RegisterEnumerator(JSContext* cx, PropertyIteratorObject* iterobj, NativeIterato
 
 static inline PropertyIteratorObject*
 VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& keys,
-                    uint32_t numGuards, uint32_t key)
+                    uint32_t numGuards)
 {
     MOZ_ASSERT(!(flags & JSITER_FOREACH));
 
@@ -763,22 +745,29 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
         return nullptr;
 
     iterobj->setNativeIterator(ni);
-    ni->init(obj, iterobj, flags, numGuards, key);
+    ni->init(obj, iterobj, flags, numGuards, 0);
     if (!ni->initProperties(cx, iterobj, keys))
         return nullptr;
 
     if (numGuards) {
-        // Fill in the guard array from scratch.
+        // Fill in the guard array from scratch. Also recompute the guard key
+        // as we might have reshaped the object (see for instance the
+        // setIteratedSingleton call above) or GC might have moved shapes and
+        // groups in memory.
         JSObject* pobj = obj;
         size_t ind = 0;
+        uint32_t key = 0;
         do {
-            ni->guard_array[ind++].init(ReceiverGuard(pobj));
+            ReceiverGuard guard(pobj);
+            ni->guard_array[ind++].init(guard);
+            key = mozilla::AddToHash(key, guard.hash());
 
             // The one caller of this method that passes |numGuards > 0|, does
             // so only if the entire chain consists of cacheable objects (that
             // necessarily have static prototypes).
             pobj = pobj->staticPrototype();
         } while (pobj);
+        ni->guard_key = key;
         MOZ_ASSERT(ind == numGuards);
     }
 
@@ -817,7 +806,7 @@ js::EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags
                                  AutoIdVector& props)
 {
     if (!(flags & JSITER_FOREACH))
-        return VectorToKeyIterator(cx, obj, flags, props, 0, 0);
+        return VectorToKeyIterator(cx, obj, flags, props, 0);
 
     return VectorToValueIterator(cx, obj, flags, props);
 }
@@ -844,6 +833,17 @@ js::NewEmptyPropertyIterator(JSContext* cx, unsigned flags)
     return iterobj;
 }
 
+/* static */ bool
+IteratorHashPolicy::match(PropertyIteratorObject* obj, const Lookup& lookup)
+{
+    NativeIterator* ni = obj->getNativeIterator();
+    if (ni->guard_key != lookup.key || ni->guard_length != lookup.numGuards)
+        return false;
+
+    return PodEqual(reinterpret_cast<ReceiverGuard*>(ni->guard_array), lookup.guards,
+                    ni->guard_length);
+}
+
 static inline void
 UpdateNativeIterator(NativeIterator* ni, JSObject* obj)
 {
@@ -868,28 +868,26 @@ CanCompareIterableObjectToCache(JSObject* obj)
 using ReceiverGuardVector = Vector<ReceiverGuard, 8>;
 
 static MOZ_ALWAYS_INLINE PropertyIteratorObject*
-LookupInIteratorCache(JSContext* cx, JSObject* obj, ReceiverGuardVector& guards, uint32_t* keyArg)
+LookupInIteratorCache(JSContext* cx, JSObject* obj, uint32_t* numGuards)
 {
-    MOZ_ASSERT(guards.empty());
+    MOZ_ASSERT(*numGuards == 0);
 
     // The iterator object for JSITER_ENUMERATE never escapes, so we don't
     // care that the "proper" prototype is set.  This also lets us reuse an
     // old, inactive iterator object.
 
+    ReceiverGuardVector guards(cx);
     uint32_t key = 0;
     JSObject* pobj = obj;
     do {
-        if (!CanCompareIterableObjectToCache(pobj)) {
-            guards.clear();
+        if (!CanCompareIterableObjectToCache(pobj))
             return nullptr;
-        }
 
         ReceiverGuard guard(pobj);
-        key = (key + (key << 16)) ^ guard.hash();
+        key = mozilla::AddToHash(key, guard.hash());
 
         if (MOZ_UNLIKELY(!guards.append(guard))) {
             cx->recoverFromOutOfMemory();
-            guards.clear();
             return nullptr;
         }
 
@@ -897,22 +895,19 @@ LookupInIteratorCache(JSContext* cx, JSObject* obj, ReceiverGuardVector& guards,
     } while (pobj);
 
     MOZ_ASSERT(!guards.empty());
-    *keyArg = key;
+    *numGuards = guards.length();
 
-    PropertyIteratorObject* iterobj = cx->caches().nativeIterCache.get(key);
-    if (!iterobj)
+    IteratorHashPolicy::Lookup lookup(guards.begin(), guards.length(), key);
+    auto p = cx->compartment()->iteratorCache.lookup(lookup);
+    if (!p)
         return nullptr;
+
+    PropertyIteratorObject* iterobj = *p;
+    MOZ_ASSERT(iterobj->compartment() == cx->compartment());
 
     NativeIterator* ni = iterobj->getNativeIterator();
-    if ((ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) ||
-        ni->guard_key != key ||
-        ni->guard_length != guards.length() ||
-        !Compare(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
-                 guards.begin(), ni->guard_length) ||
-        iterobj->compartment() != cx->compartment())
-    {
+    if (ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE))
         return nullptr;
-    }
 
     return iterobj;
 }
@@ -944,30 +939,50 @@ CanStoreInIteratorCache(JSContext* cx, JSObject* obj)
     return true;
 }
 
-static void
-StoreInIteratorCache(JSContext* cx, JSObject* obj, uint32_t key, PropertyIteratorObject* iterobj)
+static MOZ_MUST_USE bool
+StoreInIteratorCache(JSContext* cx, JSObject* obj, PropertyIteratorObject* iterobj)
 {
     MOZ_ASSERT(CanStoreInIteratorCache(cx, obj));
-    MOZ_ASSERT(iterobj->getNativeIterator()->guard_length > 0);
 
-    cx->caches().nativeIterCache.set(key, iterobj);
+    NativeIterator* ni = iterobj->getNativeIterator();
+    MOZ_ASSERT(ni->guard_length > 0);
+
+    IteratorHashPolicy::Lookup lookup(reinterpret_cast<ReceiverGuard*>(ni->guard_array),
+                                      ni->guard_length, ni->guard_key);
+
+    JSCompartment::IteratorCache& cache = cx->compartment()->iteratorCache;
+    bool ok;
+    auto p = cache.lookupForAdd(lookup);
+    if (MOZ_LIKELY(!p)) {
+        ok = cache.add(p, iterobj);
+    } else {
+        // If we weren't able to use an existing cached iterator, just
+        // replace it.
+        cache.remove(p);
+        ok = cache.relookupOrAdd(p, lookup, iterobj);
+    }
+    if (!ok) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
 }
 
 JSObject*
 js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
 {
-    ReceiverGuardVector guards(cx);
-    uint32_t key = 0;
+    uint32_t numGuards = 0;
     if (flags == JSITER_ENUMERATE) {
-        if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, guards, &key)) {
+        if (PropertyIteratorObject* iterobj = LookupInIteratorCache(cx, obj, &numGuards)) {
             NativeIterator* ni = iterobj->getNativeIterator();
             UpdateNativeIterator(ni, obj);
             RegisterEnumerator(cx, iterobj, ni);
             return iterobj;
         }
 
-        if (!guards.empty() && !CanStoreInIteratorCache(cx, obj))
-            guards.clear();
+        if (numGuards > 0 && !CanStoreInIteratorCache(cx, obj))
+            numGuards = 0;
     }
 
     if (MOZ_UNLIKELY(obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()))
@@ -995,12 +1010,12 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
         return nullptr;
 
     if (flags & JSITER_FOREACH) {
-        MOZ_ASSERT(guards.empty());
+        MOZ_ASSERT(numGuards == 0);
         res = VectorToValueIterator(cx, obj, flags, keys);
         if (!res)
             return nullptr;
     } else {
-        res = VectorToKeyIterator(cx, obj, flags, keys, guards.length(), key);
+        res = VectorToKeyIterator(cx, obj, flags, keys, numGuards);
         if (!res)
             return nullptr;
     }
@@ -1009,8 +1024,10 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
     assertSameCompartment(cx, iterobj);
 
     // Cache the iterator object.
-    if (!guards.empty())
-        StoreInIteratorCache(cx, obj, key, iterobj);
+    if (numGuards > 0) {
+        if (!StoreInIteratorCache(cx, obj, iterobj))
+            return nullptr;
+    }
 
     return iterobj;
 }
@@ -1018,9 +1035,8 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
 PropertyIteratorObject*
 js::LookupInIteratorCache(JSContext* cx, HandleObject obj)
 {
-    ReceiverGuardVector guards(cx);
-    uint32_t key;
-    return LookupInIteratorCache(cx, obj, guards, &key);
+    uint32_t numGuards = 0;
+    return LookupInIteratorCache(cx, obj, &numGuards);
 }
 
 // ES 2017 draft 7.4.7.
