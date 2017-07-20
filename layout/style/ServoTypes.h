@@ -136,10 +136,32 @@ struct ServoWritingMode {
   uint8_t mBits;
 };
 
+// Don't attempt to read from this
+// (see comment on ServoFontComputationData
+enum ServoKeywordSize {
+  Empty, // when the Option is None
+  XXSmall,
+  XSmall,
+  Small,
+  Medium,
+  Large,
+  XLarge,
+  XXLarge,
+  XXXLarge,
+};
+
+// Don't attempt to read from this. We can't
+// always guarantee that the interior representation
+// of this is correct (the mKeyword field may have a different padding),
+// but the entire struct should
+// have the same size and alignment as the Rust version.
+// Ensure layout tests get run if touching either side.
 struct ServoFontComputationData {
-  // 8 bytes, but is done as 4+4 for alignment
-  uint32_t mFour;
-  uint32_t mFour2;
+private:
+  ServoKeywordSize mKeyword;
+  float/*32_t*/ mRatio;
+
+  static_assert(sizeof(float) == 4, "float should be 32 bit");
 };
 
 struct ServoCustomPropertiesMap {
@@ -206,7 +228,7 @@ struct ServoComputedValues {
   const nsStyleVariables* GetStyleVariables() const;
   mozilla::ServoCustomPropertiesMap custom_properties;
   mozilla::ServoWritingMode writing_mode;
-  mozilla::ServoFontComputationData font_computation_data;
+  mozilla::ServoComputedValueFlags flags;
   /// The rule node representing the ordered list of rules matched for this
   /// node.  Can be None for default values and text nodes.  This is
   /// essentially an optimization to avoid referencing the root rule node.
@@ -215,7 +237,14 @@ struct ServoComputedValues {
   /// relevant link for this element. A element's "relevant link" is the
   /// element being matched if it is a link or the nearest ancestor link.
   mozilla::ServoVisitedStyle visited_style;
-  mozilla::ServoComputedValueFlags flags;
+
+  // this is the last member because most of the other members
+  // are pointer sized. This makes it easier to deal with the
+  // alignment of the fields when replacing things via bindgen
+  //
+  // This is opaque, please don't read from it from C++
+  // (see comment on ServoFontComputationData)
+  mozilla::ServoFontComputationData font_computation_data;
 
   // C++ just sees this struct as a bucket of bits, and will
   // do the wrong thing if we let it use the default copy ctor/assignment
