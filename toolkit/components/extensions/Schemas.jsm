@@ -2636,9 +2636,21 @@ this.Schemas = {
       value: new Namespace("", []),
     });
 
-    for (let blob of this.schemaJSON.values()) {
+    for (let [key, schema] of this.schemaJSON.entries()) {
       try {
-        this.loadSchema(blob.deserialize(global));
+        if (typeof schema.deserialize === "function") {
+          schema = schema.deserialize(global);
+
+          // If we're in the parent process, we need to keep the
+          // StructuredCloneHolder blob around in order to send to future child
+          // processes. If we're in a child, we have no further use for it, so
+          // just store the deserialized schema data in its place.
+          if (!isParentProcess) {
+            this.schemaJSON.set(key, schema);
+          }
+        }
+
+        this.loadSchema(schema);
       } catch (e) {
         Cu.reportError(e);
       }
