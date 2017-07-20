@@ -1179,7 +1179,7 @@ talos-chrome:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1209,7 +1209,7 @@ talos-dromaeojs:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1239,7 +1239,7 @@ talos-g1:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1269,7 +1269,7 @@ talos-g2:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1298,7 +1298,7 @@ talos-g3:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1328,7 +1328,7 @@ talos-g4:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1358,7 +1358,7 @@ talos-g5:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
                     - remove_executables.py
@@ -1389,7 +1389,7 @@ talos-other:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1417,7 +1417,7 @@ talos-perf-reftest:
         config:
             by-test-platform:
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1445,7 +1445,7 @@ talos-svgr:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1475,7 +1475,7 @@ talos-tp5o:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
