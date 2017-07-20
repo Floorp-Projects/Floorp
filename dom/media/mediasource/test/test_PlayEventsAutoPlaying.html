@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: basic functionality</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// This test checks that readyState is properly set and the appropriate events are being fired accordingly:
+// 1. Ensure that play/playing aren't fired before any media data been added.
+// 2. Load 1.6s of data and ensure that canplay, play and playing events are fired.
+
+runWithMSE(function(ms, el) {
+  el.controls = true;
+  el.autoplay = true;
+  var eventCounts = { play: 0, playing: 0};
+  function ForbiddenEvents(e) {
+    var v = e.target;
+    ok(v.readyState >= v.HAVE_FUTURE_DATA, "Must not have received event too early");
+    is(eventCounts[e.type], 0, "event should have only be fired once");
+    eventCounts[e.type]++;
+  }
+  once(ms, 'sourceopen').then(function() {
+    // Log events for debugging.
+    var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                  "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                  "waiting", "pause", "durationchange", "seeking", "seeked"];
+    function logEvent(e) {
+      info("got " + e.type + " event");
+    }
+    events.forEach(function(e) {
+      el.addEventListener(e, logEvent);
+    });
+    el.addEventListener("play", ForbiddenEvents);
+    el.addEventListener("playing", ForbiddenEvents);
+
+    ok(true, "Receive a sourceopen event");
+    var videosb = ms.addSourceBuffer("video/mp4");
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    var promises = [];
+    promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));
+    promises.push(once(el, 'loadedmetadata'));
+    Promise.all(promises)
+    .then(function() {
+       ok(true, "got loadedmetadata event");
+       var promises = [];
+       promises.push(once(el, 'loadeddata'));
+       promises.push(once(el, 'canplay'));
+       promises.push(once(el, 'play'));
+       promises.push(once(el, 'playing'));
+       promises.push(once(el, 'ended'));
+       // We're only adding 1.6s worth of data, not enough for readyState to change to HAVE_ENOUGH_DATA
+       // So we end the media source so that all the playable data is available.
+       promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', range(1, 3), '.m4s')
+                     .then(() => ms.endOfStream()));
+       return Promise.all(promises);
+    })
+    .then(function() {
+      ok(true, "got all required event");
+      SimpleTest.finish();
+    })
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
