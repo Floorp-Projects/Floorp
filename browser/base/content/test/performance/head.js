@@ -65,17 +65,20 @@
  *        it defaults to the empty Array, meaning no reflows are expected.
  * @param window (browser window, optional)
  *        The browser window to monitor. Defaults to the current window.
+ * @param elemToDirty (DOM node, optional)
+ *        Callers can provide a custom DOM node to change some layout style
+ *        on in the event that the action being tested is occurring within
+ *        a scrollable frame. Otherwise, withReflowObserver defaults to dirtying
+ *        the first element child of the window.
  */
-async function withReflowObserver(testFn, expectedStacks = [], win = window) {
-  let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
-               .getInterface(Ci.nsIDOMWindowUtils);
-  let dirtyFrameFn = () => {
-    try {
-      dwu.ensureDirtyRootFrame();
-    } catch (e) {
-      // If this fails, we should probably make note of it, but it's not fatal.
-      info("Note: ensureDirtyRootFrame threw an exception.");
-    }
+async function withReflowObserver(testFn, expectedStacks = [], win = window, elemToDirty) {
+  if (!elemToDirty) {
+    elemToDirty = win.document.firstElementChild;
+  }
+
+  let i = 0;
+  let dirtyFrameFn = (e) => {
+    elemToDirty.style.margin = (++i % 4) + "px";
   };
 
   let els = Cc["@mozilla.org/eventlistenerservice;1"]
@@ -117,9 +120,7 @@ async function withReflowObserver(testFn, expectedStacks = [], win = window) {
     },
 
     reflowInterruptible(start, end) {
-      // We're not interested in interruptible reflows, but might as well take the
-      // opportuntiy to dirty the root frame.
-      dirtyFrameFn();
+      // We're not interested in interruptible reflows.
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
@@ -147,6 +148,8 @@ async function withReflowObserver(testFn, expectedStacks = [], win = window) {
 
     els.removeListenerForAllEvents(win, dirtyFrameFn, true);
     docShell.removeWeakReflowObserver(observer);
+
+    elemToDirty.style.margin = "";
   }
 }
 
