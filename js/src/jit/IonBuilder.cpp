@@ -2226,6 +2226,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
 
+      case JSOP_CLASSCONSTRUCTOR:
+        return jsop_classconstructor();
+
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR:
         return jsop_typeof();
@@ -2360,7 +2363,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OBJWITHPROTO:
       case JSOP_BUILTINPROTO:
       case JSOP_INITHOMEOBJECT:
-      case JSOP_CLASSCONSTRUCTOR:
       case JSOP_DERIVEDCONSTRUCTOR:
       case JSOP_CHECKTHIS:
       case JSOP_CHECKRETURN:
@@ -12159,6 +12161,15 @@ IonBuilder::jsop_object(JSObject* obj)
     compartment->setSingletonsAsValues();
     pushConstant(ObjectValue(*obj));
     return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_classconstructor()
+{
+    MClassConstructor* constructor = MClassConstructor::New(alloc(), pc);
+    current->add(constructor);
+    current->push(constructor);
+    return resumeAfter(constructor);
 }
 
 AbortReasonOr<Ok>

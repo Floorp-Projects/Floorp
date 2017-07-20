@@ -8486,6 +8486,29 @@ class MSubstr
     }
 };
 
+class MClassConstructor : public MNullaryInstruction
+{
+    jsbytecode* pc_;
+
+    explicit MClassConstructor(jsbytecode* pc)
+      : pc_(pc)
+    {
+        setResultType(MIRType::Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ClassConstructor)
+    TRIVIAL_NEW_WRAPPERS
+
+    jsbytecode* pc() const {
+      return pc_;
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in
