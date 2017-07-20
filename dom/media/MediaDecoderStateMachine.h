@@ -93,6 +93,7 @@ hardware (via AudioStream).
 #include "MediaEventSource.h"
 #include "MediaFormatReader.h"
 #include "MediaMetadataManager.h"
+#include "MediaQueue.h"
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"

@@ -8,6 +8,7 @@
 
 #include "FFmpegAudioDecoder.h"
 #include "TimeUnits.h"
+#include "VideoUtils.h"
 
 #define MAX_CHANNELS 16
 

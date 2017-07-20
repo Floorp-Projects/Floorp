@@ -8,6 +8,7 @@
 #define OmxDataDecoder_h_
 
 #include "mozilla/Monitor.h"
+#include "mozilla/StateWatching.h"
 
 #include "AudioCompactor.h"
 #include "ImageContainer.h"

@@ -15,6 +15,7 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "MediaFormatReader.h"
+#include "MediaQueue.h"
 #include "BufferMediaResource.h"
 #include "DecoderTraits.h"
 #include "AudioContext.h"

@@ -14,14 +14,18 @@
 
 #include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
+#include "MediaMetadataManager.h"
 #include "MediaPrefs.h"
 #include "nsAutoPtr.h"
 #include "PDMFactory.h"
+#include "SeekTarget.h"
 
 namespace mozilla {
 
+class AbstractMediaDecoder;
 class CDMProxy;
 class GMPCrashHelper;
+class MediaResource;
 class VideoFrameContainer;
 
 struct WaitForDataRejectValue
