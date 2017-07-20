@@ -50,3 +50,5 @@ fails == background-position-important.html background-position-ref.html # This 
 == mask-size-after-finish-1b.html mask-anim-ref.html
 == mask-size-in-delay-1a.html mask-anim-ref.html
 == mask-size-in-delay-1b.html mask-anim-ref.html
+
+== updating-animation-on-pseudo-element.html updating-animation-on-pseudo-element-ref.html
