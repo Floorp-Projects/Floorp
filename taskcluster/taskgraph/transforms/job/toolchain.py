@@ -14,6 +14,7 @@ from taskgraph.transforms.job import run_job_using
 from taskgraph.transforms.job.common import (
     docker_worker_add_tc_vcs_cache,
     docker_worker_add_gecko_vcs_env_vars,
+    docker_worker_add_public_artifacts,
     support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
@@ -80,12 +81,7 @@ def docker_worker_toolchain(config, job, taskdesc):
     worker['artifacts'] = []
     worker['caches'] = []
 
-    worker['artifacts'].append({
-        'name': 'public',
-        'path': '/home/worker/workspace/artifacts/',
-        'type': 'directory',
-    })
-
+    docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_tc_vcs_cache(config, job, taskdesc)
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
     support_vcs_checkout(config, job, taskdesc)
