@@ -119,12 +119,21 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
       // Note there is always at least one element when we get here,
       // because we created the first element before the loop.
       mIndexDeltas.LastElement().Compact();
-      mIndexDeltas.AppendElement();
-      mIndexPrefixes.AppendElement(aPrefixes[i]);
+      if (!mIndexDeltas.AppendElement(fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      if (!mIndexPrefixes.AppendElement(aPrefixes[i], fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       numOfDeltas = 0;
     } else {
       uint16_t delta = aPrefixes[i] - previousItem;
-      mIndexDeltas.LastElement().AppendElement(delta);
+      if (!mIndexDeltas.LastElement().AppendElement(delta, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       numOfDeltas++;
       totalDeltas++;
     }
@@ -420,9 +429,11 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
     }
 
     nsTArray<uint32_t> indexStarts;
-    indexStarts.SetLength(indexSize);
-    mIndexPrefixes.SetLength(indexSize);
-    mIndexDeltas.SetLength(indexSize);
+    if (!indexStarts.SetLength(indexSize, fallible) ||
+        !mIndexPrefixes.SetLength(indexSize, fallible) ||
+        !mIndexDeltas.SetLength(indexSize, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     mTotalPrefixes = indexSize;
 
@@ -445,7 +456,9 @@ nsUrlClassifierPrefixSet::LoadPrefixes(nsIInputStream* in)
         return NS_ERROR_FILE_CORRUPTED;
       }
       if (numInDelta > 0) {
-        mIndexDeltas[i].SetLength(numInDelta);
+        if (!mIndexDeltas[i].SetLength(numInDelta, fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         mTotalPrefixes += numInDelta;
         toRead = numInDelta * sizeof(uint16_t);
         rv = in->Read(reinterpret_cast<char*>(mIndexDeltas[i].Elements()), toRead, &read);
@@ -499,7 +512,9 @@ nsUrlClassifierPrefixSet::WritePrefixes(nsIOutputStream* out)
   for (uint32_t i = 0; i < indexDeltaSize; i++) {
     uint32_t deltaLength = mIndexDeltas[i].Length();
     totalDeltas += deltaLength;
-    indexStarts.AppendElement(totalDeltas);
+    if (!indexStarts.AppendElement(totalDeltas, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   rv = out->Write(reinterpret_cast<char*>(&indexSize), writelen, &written);

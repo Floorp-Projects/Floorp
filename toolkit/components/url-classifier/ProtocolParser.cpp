@@ -970,8 +970,12 @@ ProtocolParserProtobuf::ProcessRawRemoval(TableUpdateV4& aTableUpdate,
   PARSER_LOG(("* Raw removal"));
   PARSER_LOG(("  - # of removal: %d", indices.size()));
 
-  aTableUpdate.NewRemovalIndices((const uint32_t*)indices.data(),
-                                 indices.size());
+  nsresult rv = aTableUpdate.NewRemovalIndices((const uint32_t*)indices.data(),
+                                               indices.size());
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to create new removal indices."));
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -1104,7 +1108,11 @@ ProtocolParserProtobuf::ProcessEncodedRemoval(TableUpdateV4& aTableUpdate,
   }
 
   // The encoded prefixes are always 4 bytes.
-  aTableUpdate.NewRemovalIndices(&decoded[0], decoded.Length());
+  rv = aTableUpdate.NewRemovalIndices(&decoded[0], decoded.Length());
+  if (NS_FAILED(rv)) {
+    PARSER_LOG(("Failed to create new removal indices."));
+    return rv;
+  }
 
   return NS_OK;
 }
