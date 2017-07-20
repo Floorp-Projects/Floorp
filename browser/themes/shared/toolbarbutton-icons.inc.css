@@ -353,6 +353,21 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   }
 }
 
+/* The animation is supposed to show the blue fill color for 520ms, then the
+   fade to the toolbarbutton-fill color for the remaining 210ms. Thus with an
+   animation-duration of 730ms, 71% is the point where we start the fade out. */
+@keyframes overflow-fade {
+  from {
+    fill: #30A3FF;
+  }
+  71% {
+    fill: #30A3FF;
+  }
+  to {
+    fill: inherit;
+  }
+}
+
 #nav-bar-overflow-button > .toolbarbutton-animatable-box {
   position: fixed;
   overflow: hidden;
@@ -381,6 +396,12 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 
 #nav-bar-overflow-button[animate]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: overflow-animation-rtl;
+}
+
+#nav-bar-overflow-button[animate][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: overflow-fade;
+  animation-timing-function: ease-out;
+  animation-duration: 730ms;
 }
 %endif
 
