@@ -487,7 +487,7 @@ public:
     UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
   }
 
-  inline void NoteDirtyDescendantsForServo();
+  void NoteDirtyDescendantsForServo();
 
   bool HasAnimationOnlyDirtyDescendantsForServo() const {
     MOZ_ASSERT(IsStyledByServo());
@@ -500,7 +500,7 @@ public:
   }
 
 #ifdef DEBUG
-  inline bool DirtyDescendantsBitIsPropagatedForServo();
+  bool DirtyDescendantsBitIsPropagatedForServo();
 #endif
 
   bool HasServoData() const {
