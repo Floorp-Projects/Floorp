@@ -4988,16 +4988,6 @@ var CombinedStopReload = {
     });
   },
 
-  /* This function is necessary to correctly vertically center the animation
-     within the toolbar, which uses -moz-pack-align:stretch; and thus a height
-     which is dependant on the font-size. */
-  setAnimationImageHeightRelativeToToolbarButtonHeight() {
-    let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
-    let toolbarItem = this.stopReloadContainer.closest(".customization-target > toolbaritem");
-    let bounds = dwu.getBoundsWithoutFlushing(toolbarItem);
-    toolbarItem.style.setProperty("--toolbarbutton-height", bounds.height + "px");
-  },
-
   switchToStop(aRequest, aWebProgress) {
     if (!this._initialized)
       return;
@@ -5010,7 +5000,7 @@ var CombinedStopReload = {
 
     this._cancelTransition();
     if (shouldAnimate) {
-      this.setAnimationImageHeightRelativeToToolbarButtonHeight();
+      BrowserUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
       this.stopReloadContainer.setAttribute("animate", "true");
     } else {
       this.stopReloadContainer.removeAttribute("animate");
@@ -5029,7 +5019,7 @@ var CombinedStopReload = {
                         this.animate;
 
     if (shouldAnimate) {
-      this.setAnimationImageHeightRelativeToToolbarButtonHeight();
+      BrowserUtils.setToolbarButtonHeightProperty(this.stopReloadContainer);
       this.stopReloadContainer.setAttribute("animate", "true");
     } else {
       this.stopReloadContainer.removeAttribute("animate");

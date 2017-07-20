@@ -23,6 +23,170 @@ toolbar[brighttext] #pocket-button {
   fill: var(--toolbarbutton-icon-fill-inverted);
 }
 
+#pocket-button[open="true"][animationsenabled] > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes pocket-animation {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-220px);
+  }
+}
+
+@keyframes pocket-animation-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+  }
+  to {
+    transform: scaleX(-1) translateX(-220px);
+  }
+}
+
+#pocket-button > .toolbarbutton-animatable-box {
+  position: absolute;
+  overflow: hidden;
+  top: calc(50% - 9px); /* 9px is half the height of the sprite */
+  /* Since .toolbarbutton-icon uses a different width than the animatable box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 20px) / 2);
+  width: 20px; /* Width of each frame within the SVG sprite */
+  height: 18px; /* Height of each frame within the SVG sprite */
+}
+
+#pocket-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
+}
+
+#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]) {
+  position: relative;
+}
+
+/* Preload pocket-animation.svg and library-pocket-animation.svg to prevent
+   a flicker at the start of either animation. The preloading of the library
+   animation is triggered off of hovering the pocket button since the pocket
+   button always animates before the library button. */
+#pocket-button[animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]):not([open="true"]):hover > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://pocket-shared/skin/pocket-animation.svg"),
+                    url("chrome://pocket-shared/skin/library-pocket-animation.svg");
+  background-size: 0, 0;
+}
+
+#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: pocket-animation;
+  animation-timing-function: steps(11);
+  animation-duration: 184ms;
+  background-image: url("chrome://pocket-shared/skin/pocket-animation.svg");
+  width: 240px;
+}
+
+#pocket-button[open="true"][animationsenabled][cui-areatype="toolbar"]:not([overflowedItem="true"]):-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: pocket-animation-rtl;
+}
+
+#library-button[animate="pocket"] > .toolbarbutton-icon {
+  fill: transparent;
+}
+
+@keyframes library-pocket-animation {
+  from {
+    transform: translateX(0);
+    fill: inherit;
+  }
+  25% {
+    fill: inherit;
+  }
+  50% {
+    fill: rgb(213,32,20);
+  }
+  to {
+    transform: translateX(-1056px);
+    fill: rgb(213,32,20);
+  }
+}
+
+@keyframes library-pocket-animation-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+    fill: inherit;
+  }
+  25% {
+    fill: inherit;
+  }
+  50% {
+    fill: rgb(213,32,20);
+  }
+  to {
+    transform: scaleX(-1) translateX(-1056px);
+    fill: rgb(213,32,20);
+  }
+}
+
+/* The animations for the pocket-button and library-button are disabled
+   outside of the nav-bar due to bug 1382894. */
+:-moz-any(#pocket-button, #library-button) > .toolbarbutton-animatable-box {
+  display: none;
+}
+#nav-bar :-moz-any(#pocket-button, #library-button) > .toolbarbutton-animatable-box {
+  display: -moz-box;
+}
+
+/* We need to use an animation here instead of a transition
+   to guarantee that the animation succeeds. With transitions
+   if the starting value is already equal to the end value
+   then no transition will occur and thus no transitionend event. */
+@keyframes library-pocket-fade {
+  from {
+    fill: rgb(213,32,20);
+  }
+  to {
+    fill: inherit;
+  }
+}
+
+#library-button[animate="pocket"] {
+  position: relative;
+}
+
+#library-button[animate="pocket"] > .toolbarbutton-animatable-box {
+  position: absolute;
+  overflow: hidden;
+  top: calc(50% - 27px); /* 27px is half the height of the sprite */
+  /* Since .toolbarbutton-icon uses a different width than the animatable box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
+  width: 22px; /* Width of each frame within the SVG sprite */
+  /* Height of each frame within the SVG sprite. The sprite must have equal amount
+     of space above and below the icon to allow it to vertically center with the
+     sprite's icon on top of the toolbar icon when using position:absolute;. */
+  height: 54px;
+}
+
+#library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
+}
+
+#library-button[animate="pocket"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  background-image: url("chrome://pocket-shared/skin/library-pocket-animation.svg");
+  width: 1078px;
+  animation-name: library-pocket-animation;
+  animation-duration: 768ms;
+  animation-timing-function: steps(48);
+}
+
+#library-button[animate="pocket"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: library-pocket-animation-rtl;
+  transform: scaleX(-1);
+}
+
+#library-button[animate="pocket"][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-name: library-pocket-fade;
+  animation-duration: 2s;
+  animation-timing-function: ease-out;
+}
+
 #pocket-button[cui-areatype="toolbar"][open] {
   fill: rgb(213,32,20);
 }
