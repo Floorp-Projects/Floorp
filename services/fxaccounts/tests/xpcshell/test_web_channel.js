@@ -10,11 +10,7 @@ const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
 const URL_STRING = "https://example.com";
 
 const mockSendingContext = {
-  browser: {
-    docShell: {
-      usePrivateBrowsing: false
-    }
-  },
+  browser: {},
   principal: {},
   eventTarget: {}
 };
@@ -487,6 +483,9 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
           verified: true
         });
       }
+    },
+    privateBrowsingUtils: {
+      isBrowserPrivate: () => true
     }
   });
 
@@ -720,19 +719,41 @@ add_task(async function test_helpers_shouldAllowFxaStatus_no_service_private_bro
 });
 
 add_task(async function test_helpers_isPrivateBrowsingMode_private_browsing() {
-  let helpers = new FxAccountsWebChannelHelpers({});
-  mockSendingContext.browser.docShell.usePrivateBrowsing = true;
+  let wasCalled = {
+    isBrowserPrivate: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({
+    privateBrowsingUtils: {
+      isBrowserPrivate(browser) {
+        wasCalled.isBrowserPrivate = true;
+        do_check_eq(browser, mockSendingContext.browser);
+        return true;
+      }
+    }
+  });
 
   let isPrivateBrowsingMode = helpers.isPrivateBrowsingMode(mockSendingContext);
   do_check_true(isPrivateBrowsingMode);
+  do_check_true(wasCalled.isBrowserPrivate);
 });
 
 add_task(async function test_helpers_isPrivateBrowsingMode_private_browsing() {
-  let helpers = new FxAccountsWebChannelHelpers({});
-  mockSendingContext.browser.docShell.usePrivateBrowsing = false;
+  let wasCalled = {
+    isBrowserPrivate: false
+  };
+  let helpers = new FxAccountsWebChannelHelpers({
+    privateBrowsingUtils: {
+      isBrowserPrivate(browser) {
+        wasCalled.isBrowserPrivate = true;
+        do_check_eq(browser, mockSendingContext.browser);
+        return false;
+      }
+    }
+  });
 
   let isPrivateBrowsingMode = helpers.isPrivateBrowsingMode(mockSendingContext);
   do_check_false(isPrivateBrowsingMode);
+  do_check_true(wasCalled.isBrowserPrivate);
 });
 
 add_task(async function test_helpers_change_password() {
