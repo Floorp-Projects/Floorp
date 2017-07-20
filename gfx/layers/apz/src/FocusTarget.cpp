@@ -94,10 +94,18 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
 
   // Key events can be retargeted to a child PresShell when there is an iframe
   nsCOMPtr<nsIPresShell> presShell = GetRetargetEventPresShell(aRootPresShell);
-  nsCOMPtr<nsIDocument> document = presShell->GetDocument();
 
-  if (!presShell || !document) {
+  if (!presShell) {
     FT_LOG("Creating nil target with seq=%" PRIu64 " (can't find retargeted presshell)\n",
+           aFocusSequenceNumber);
+
+    mType = FocusTarget::eNone;
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> document = presShell->GetDocument();
+  if (!document) {
+    FT_LOG("Creating nil target with seq=%" PRIu64 " (no document)\n",
            aFocusSequenceNumber);
 
     mType = FocusTarget::eNone;
