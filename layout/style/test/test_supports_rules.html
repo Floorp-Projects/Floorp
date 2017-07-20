@@ -63,19 +63,19 @@ function runTest() {
   check_balanced_condition("not(color: green)", false);
   check_balanced_condition("not(colour: green)", false);
   check_balanced_condition("not/* */(color: green)", false);
-  check_balanced_condition("not/* */(colour: green)", false);
+  check_balanced_condition("not/* */(colour: green)", true);
   check_balanced_condition("not /* */ (color: green)", false);
   check_balanced_condition("not /* */ (colour: green)", true);
   check_balanced_condition("(color: green) and (color: blue)", true);
   check_balanced_condition("(color: green) /* */ /* */ and /* */ /* */ (color: blue)", true);
   check_balanced_condition("(color: green) and(color: blue)", false);
-  check_balanced_condition("(color: green) and/* */(color: blue)", false);
-  check_balanced_condition("(color: green)and (color: blue)", false);
+  check_balanced_condition("(color: green) and/* */(color: blue)", true);
+  check_balanced_condition("(color: green)and (color: blue)", true);
   check_balanced_condition("(color: green) or (color: blue)", true);
   check_balanced_condition("(color: green) /* */ /* */ or /* */ /* */ (color: blue)", true);
   check_balanced_condition("(color: green) or(color: blue)", false);
-  check_balanced_condition("(color: green) or/* */(color: blue)", false);
-  check_balanced_condition("(color: green)or (color: blue)", false);
+  check_balanced_condition("(color: green) or/* */(color: blue)", true);
+  check_balanced_condition("(color: green)or (color: blue)", true);
 
   SimpleTest.finish();
 }
