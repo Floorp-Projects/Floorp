@@ -270,8 +270,10 @@ var Settings = {
    */
   render() {
     let homeExplanation = document.getElementById("home-explanation");
-    let fhrEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
-    let extendedEnabled = this.getStatusStringForSetting(this.SETTINGS[1]);
+    let fhrEnabled = Preferences.get(this.SETTINGS[0].pref, this.SETTINGS[0].defaultPrefValue);
+    fhrEnabled = bundle.GetStringFromName(fhrEnabled ? "telemetryEnabled" : "telemetryDisabled");
+    let extendedEnabled = Preferences.get(this.SETTINGS[1].pref, this.SETTINGS[1].defaultPrefValue);
+    extendedEnabled = bundle.GetStringFromName(extendedEnabled ? "extendedTelemetryEnabled" : "extendedTelemetryDisabled");
     let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
 
     let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
