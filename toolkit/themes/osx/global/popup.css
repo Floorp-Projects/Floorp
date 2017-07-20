@@ -42,6 +42,7 @@ panel[type="arrow"][side="right"] {
 .panel-arrowcontent {
   -moz-appearance: none;
   background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
   box-shadow: 0 0 0 1px var(--arrowpanel-border-color);
   color: var(--arrowpanel-color);
   border: none;
