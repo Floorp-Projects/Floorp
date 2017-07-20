@@ -88,5 +88,9 @@ public interface BaseHlsPlayer {
 
     public void resume();
 
+    public void play();
+
+    public void pause();
+
     public void release();
 }
