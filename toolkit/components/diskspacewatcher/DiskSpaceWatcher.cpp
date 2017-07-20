@@ -145,9 +145,6 @@ static const mozilla::Module::ContractIDEntry kDiskSpaceWatcherContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kDiskSpaceWatcherCategories[] = {
-#ifdef MOZ_WIDGET_GONK
-  { "profile-after-change", "Disk Space Watcher Service", DISKSPACEWATCHER_CONTRACTID },
-#endif
   { nullptr }
 };
 
