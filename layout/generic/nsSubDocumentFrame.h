@@ -127,6 +127,13 @@ public:
    */
   bool PassPointerEventsToChildren();
 
+  void MaybeShowViewer()
+  {
+    if (!mDidCreateDoc && !mCallingShow) {
+      ShowViewer();
+    }
+  }
+
 protected:
   friend class AsyncFrameInit;
 
