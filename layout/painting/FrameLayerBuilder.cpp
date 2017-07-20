@@ -4996,13 +4996,6 @@ FindDirectChildASR(const ActiveScrolledRoot* aParent, const ActiveScrolledRoot* 
   return directChild;
 }
 
-static FrameMetrics::ViewID
-ViewIDForASR(const ActiveScrolledRoot* aASR)
-{
-  nsIContent* content = aASR->mScrollableFrame->GetScrolledFrame()->GetContent();
-  return nsLayoutUtils::FindOrCreateIDFor(content);
-}
-
 static void
 FixUpFixedPositionLayer(Layer* aLayer,
                         const ActiveScrolledRoot* aTargetASR,
@@ -5051,7 +5044,7 @@ FixUpFixedPositionLayer(Layer* aLayer,
   if (compositorASR && aTargetASR != compositorASR) {
     // Mark this layer as fixed with respect to the child scroll frame of aTargetASR.
     aLayer->SetFixedPositionData(
-      ViewIDForASR(FindDirectChildASR(aTargetASR, compositorASR)),
+      nsLayoutUtils::ViewIDForASR(FindDirectChildASR(aTargetASR, compositorASR)),
       aLayer->GetFixedPositionAnchor(),
       aLayer->GetFixedPositionSides());
   } else {

@@ -72,6 +72,7 @@ struct ContainerLayerParameters;
 class WritingMode;
 class DisplayItemClip;
 class EffectSet;
+struct ActiveScrolledRoot;
 namespace dom {
 class CanvasRenderingContext2D;
 class DOMRectList;
@@ -182,6 +183,12 @@ public:
    * Find content for given ID.
    */
   static nsIContent* FindContentFor(ViewID aId);
+
+  /**
+   * Find the view ID (or generate a new one) for the content element
+   * corresponding to the ASR.
+   */
+  static ViewID ViewIDForASR(const mozilla::ActiveScrolledRoot* aASR);
 
   /**
    * Find the scrollable frame for a given ID.

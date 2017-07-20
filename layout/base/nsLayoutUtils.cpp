@@ -835,6 +835,13 @@ nsLayoutUtils::FindContentFor(ViewID aId)
   }
 }
 
+ViewID
+nsLayoutUtils::ViewIDForASR(const mozilla::ActiveScrolledRoot* aASR)
+{
+  nsIContent* content = aASR->mScrollableFrame->GetScrolledFrame()->GetContent();
+  return nsLayoutUtils::FindOrCreateIDFor(content);
+}
+
 nsIFrame*
 GetScrollFrameFromContent(nsIContent* aContent)
 {
