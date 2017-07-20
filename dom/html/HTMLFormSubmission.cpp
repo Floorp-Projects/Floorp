@@ -35,7 +35,6 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIFileStreams.h"
 #include "nsContentUtils.h"
-#include "mozilla/Telemetry.h"
 
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"

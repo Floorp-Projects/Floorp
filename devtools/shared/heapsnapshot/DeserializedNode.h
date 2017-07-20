@@ -9,6 +9,7 @@
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "mozilla/devtools/CoreDump.pb.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/Vector.h"
@@ -142,13 +143,7 @@ private:
 static inline js::HashNumber
 hashIdDerivedFromPtr(uint64_t id)
 {
-    // NodeIds and StackFrameIds are always 64 bits, but they are derived from
-    // the original referents' addresses, which could have been either 32 or 64
-    // bits long. As such, NodeId and StackFrameId have little entropy in their
-    // bottom three bits, and may or may not have entropy in their upper 32
-    // bits. This hash should manage both cases well.
-    id >>= 3;
-    return js::HashNumber((id >> 32) ^ id);
+    return mozilla::HashGeneric(id);
 }
 
 struct DeserializedNode::HashPolicy
