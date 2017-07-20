@@ -121,8 +121,6 @@ protected:
   DOMHighResTimeStamp ResolveTimestampFromName(const nsAString& aName,
                                                ErrorResult& aRv);
 
-  virtual nsISupports* GetAsISupports() = 0;
-
   virtual void DispatchBufferFullEvent() = 0;
 
   virtual TimeStamp CreationTimeStamp() const = 0;
