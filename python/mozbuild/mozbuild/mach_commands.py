@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import collections
 import errno
+import hashlib
 import itertools
 import json
 import logging
@@ -38,6 +39,7 @@ from mozbuild.base import (
     MozconfigLoadException,
     ObjdirMismatchException,
 )
+from mozbuild.util import ensureParentDir
 
 from mozbuild.backend import (
     backends,
@@ -1691,6 +1693,8 @@ class PackageFrontend(MachCommandBase):
         help='Do not unpack any downloaded file')
     @CommandArgument('--retry', type=int, default=0,
         help='Number of times to retry failed downloads')
+    @CommandArgument('--artifact-manifest', metavar='FILE',
+        help='Store a manifest about the downloaded taskcluster artifacts')
     @CommandArgument('files', nargs='*',
         help='A list of files to download, in the form path@task-id, in '
              'addition to the files listed in the tooltool manifest.')
@@ -1698,7 +1702,7 @@ class PackageFrontend(MachCommandBase):
                           skip_cache=False, from_build=(),
                           tooltool_manifest=None, authentication_file=None,
                           tooltool_url=None, no_unpack=False, retry=None,
-                          files=()):
+                          artifact_manifest=None, files=()):
         '''Download, cache and install pre-built toolchains.
         '''
         from mozbuild.artifacts import ArtifactCache
@@ -1916,6 +1920,8 @@ class PackageFrontend(MachCommandBase):
                          'Failed to download {name}')
                 return 1
 
+        artifacts = {} if artifact_manifest else None
+
         for record in downloaded:
             local = os.path.join(os.getcwd(), record.basename)
             if os.path.exists(local):
@@ -1928,6 +1934,19 @@ class PackageFrontend(MachCommandBase):
                 os.link(record.filename, local)
             except Exception:
                 shutil.copy(record.filename, local)
+            # Keep a sha256 of each downloaded file, for the chain-of-trust
+            # validation.
+            if artifact_manifest is not None:
+                with open(local) as fh:
+                    h = hashlib.sha256()
+                    while True:
+                        data = fh.read(1024 * 1024)
+                        if not data:
+                            break
+                        h.update(data)
+                artifacts[record.url] = {
+                    'sha256': h.hexdigest(),
+                }
             if record.unpack and not no_unpack:
                 unpack_file(local, record.setup)
                 os.unlink(local)
@@ -1936,6 +1955,11 @@ class PackageFrontend(MachCommandBase):
             self.log(logging.ERROR, 'artifact', {}, 'Nothing to download')
             if files:
                 return 1
+
+        if artifacts:
+            ensureParentDir(artifact_manifest)
+            with open(artifact_manifest, 'w') as fh:
+                json.dump(artifacts, fh, indent=4, sort_keys=True)
 
         return 0
 
