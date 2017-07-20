@@ -155,6 +155,22 @@ browser.engagement:
     record_in_processes:
       - 'main'
 
+  active_ticks:
+    bug_numbers:
+      - 1376942
+    description: >
+      The count of the number of five-second intervals ('ticks') the user
+      was considered 'active' in a subsession. Session activity involves keyboard or mouse
+      interaction with the application. It does not take into account whether or not the window
+      has focus or is in the foreground, only if it is receiving these interaction events.
+    expires: never
+    kind: uint
+    notification_emails:
+      - bcolloran@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
   urlbar:
