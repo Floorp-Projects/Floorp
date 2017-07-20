@@ -162,7 +162,6 @@ function gotoPref(aCategory) {
   category = friendlyPrefCategoryNameToInternalName(category);
   if (category != "paneSearchResults") {
     gSearchResultsPane.searchInput.value = "";
-    gSearchResultsPane.searchResultsCategory.hidden = true;
     gSearchResultsPane.getFindSelection(window).removeAllRanges();
     gSearchResultsPane.removeAllSearchTooltips();
     gSearchResultsPane.removeAllSearchMenuitemIndicators();
@@ -178,10 +177,14 @@ function gotoPref(aCategory) {
   // will re-enter gotoPref.
   if (gLastHash == category && !subcategory)
     return;
-  let item = categories.querySelector(".category[value=" + category + "]");
-  if (!item) {
-    category = kDefaultCategoryInternalName;
+
+  let item;
+  if (category != "paneSearchResults") {
     item = categories.querySelector(".category[value=" + category + "]");
+    if (!item) {
+      category = kDefaultCategoryInternalName;
+      item = categories.querySelector(".category[value=" + category + "]");
+    }
   }
 
   try {
@@ -198,7 +201,11 @@ function gotoPref(aCategory) {
   // Need to set the gLastHash before setting categories.selectedItem since
   // the categories 'select' event will re-enter the gotoPref codepath.
   gLastHash = category;
-  categories.selectedItem = item;
+  if (item) {
+    categories.selectedItem = item;
+  } else {
+    categories.clearSelection();
+  }
   window.history.replaceState(category, document.title);
   search(category, "data-category", subcategory, "data-subcategory");
 
