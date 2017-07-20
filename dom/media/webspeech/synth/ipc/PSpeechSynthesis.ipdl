@@ -42,7 +42,7 @@ parent:
     async __delete__();
 
     async PSpeechSynthesisRequest(nsString aText, nsString aUri, nsString aLang,
-                                  float aVolume, float aRate, float aPitch);
+                                  float aVolume, float aRate, float aPitch, bool aIsChrome);
 };
 
 } // namespace dom

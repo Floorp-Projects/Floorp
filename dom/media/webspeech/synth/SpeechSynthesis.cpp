@@ -14,8 +14,10 @@
 
 #include "mozilla/dom/SpeechSynthesisBinding.h"
 #include "SpeechSynthesis.h"
+#include "nsContentUtils.h"
 #include "nsSynthVoiceRegistry.h"
 #include "nsIDocument.h"
+#include "nsIDocShell.h"
 
 #undef LOG
 mozilla::LogModule*
@@ -249,6 +251,13 @@ SpeechSynthesis::GetVoices(nsTArray< RefPtr<SpeechSynthesisVoice> >& aResult)
 {
   aResult.Clear();
   uint32_t voiceCount = 0;
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  nsCOMPtr<nsIDocShell> docShell = window ? window->GetDocShell() : nullptr;
+
+
+  if (nsContentUtils::ShouldResistFingerprinting(docShell)) {
+    return;
+  }
 
   nsresult rv = nsSynthVoiceRegistry::GetInstance()->GetVoiceCount(&voiceCount);
   if(NS_WARN_IF(NS_FAILED(rv))) {
@@ -318,10 +327,15 @@ SpeechSynthesis::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (strcmp(aTopic, "synth-voices-changed") == 0) {
     LOG(LogLevel::Debug, ("SpeechSynthesis::onvoiceschanged"));
-    DispatchTrustedEvent(NS_LITERAL_STRING("voiceschanged"));
-    // If we have a pending item, and voices become available, speak it.
-    if (!mCurrentTask && !mHoldQueue && HasVoices()) {
-      AdvanceQueue();
+    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+    nsCOMPtr<nsIDocShell> docShell = window ? window->GetDocShell() : nullptr;
+
+    if (!nsContentUtils::ShouldResistFingerprinting(docShell)) {
+      DispatchTrustedEvent(NS_LITERAL_STRING("voiceschanged"));
+      // If we have a pending item, and voices become available, speak it.
+      if (!mCurrentTask && !mHoldQueue && HasVoices()) {
+        AdvanceQueue();
+      }
     }
   }
 

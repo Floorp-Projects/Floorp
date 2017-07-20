@@ -35,8 +35,8 @@ public:
   NS_DECL_NSISPEECHTASK
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
-  explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance);
-  nsSpeechTask(float aVolume, const nsAString& aText);
+  explicit nsSpeechTask(SpeechSynthesisUtterance* aUtterance, bool aIsChrome);
+  nsSpeechTask(float aVolume, const nsAString& aText, bool aIsChrome);
 
   virtual void Pause();
 
@@ -59,6 +59,8 @@ public:
 
   virtual void SetAudioOutputVolume(float aVolume);
 
+  void ForceError(float aElapsedTime, uint32_t aCharIndex);
+
   bool IsPreCanceled()
   {
     return mPreCanceled;
@@ -67,6 +69,11 @@ public:
   bool IsPrePaused()
   {
     return mPrePaused;
+  }
+
+  bool IsChrome()
+  {
+    return mIsChrome;
   }
 
 protected:
@@ -112,6 +119,7 @@ private:
 
   nsresult DispatchStartInner();
 
+  nsresult DispatchErrorInner(float aElapsedTime, uint32_t aCharIndex);
   nsresult DispatchEndInner(float aElapsedTime, uint32_t aCharIndex);
 
   void CreateAudioChannelAgent();
@@ -133,6 +141,8 @@ private:
   bool mIndirectAudio;
 
   nsString mChosenVoiceURI;
+
+  bool mIsChrome;
 };
 
 } // namespace dom
