@@ -688,9 +688,7 @@ nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
   // if our capacity is reduced to zero, then free our buffer.
   if (aCapacity == 0) {
     ::ReleaseData(mData, mDataFlags);
-    mData = char_traits::sEmptyBuffer;
-    mLength = 0;
-    mDataFlags = DataFlags::TERMINATED;
+    SetToEmptyBuffer();
     return true;
   }
 
