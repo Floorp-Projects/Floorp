@@ -248,9 +248,11 @@ default::
 	@echo "===SCCACHE STATS==="
 	-$(CCACHE) --show-stats
 	@echo "==================="
+ifndef MOZ_PROFILE_GENERATE
 # Ideally we'd do that in the same file as we set the sccache.log location for
 # sccache, but it's too late in the build.
 	-gzip -9 $(DIST)/sccache.log
+endif
 endif
 
 distclean::
