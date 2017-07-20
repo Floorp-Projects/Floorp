@@ -527,6 +527,7 @@
 #ifdef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/GeckoView.manifest
 @BINPATH@/components/GeckoViewPrompt.js
+@BINPATH@/components/GeckoViewPermission.js
 #else
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
