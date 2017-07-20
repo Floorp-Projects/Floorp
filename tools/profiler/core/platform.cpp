@@ -1952,6 +1952,33 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
+static bool
+HasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
+{
+  for (size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+uint32_t
+ParseFeaturesFromStringArray(const char** aFeatures, uint32_t aFeatureCount)
+{
+  #define ADD_FEATURE_BIT(n_, str_, Name_) \
+    if (HasFeature(aFeatures, aFeatureCount, str_)) { \
+      features |= ProfilerFeature::Name_; \
+    }
+
+  uint32_t features = 0;
+  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE_BIT)
+
+  #undef ADD_FEATURE_BIT
+
+  return features;
+}
+
 // Find the ThreadInfo for the current thread. This should only be called in
 // places where TLSInfo can't be used. On success, *aIndexOut is set to the
 // index if it is non-null.
