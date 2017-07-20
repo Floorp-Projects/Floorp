@@ -7613,12 +7613,8 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
                            transformForSC,
                            filters);
 
-  aManager->CreateWebRenderCommandsFromDisplayList(mStoredList.GetChildren(),
-                                                   aDisplayListBuilder,
-                                                   sc,
-                                                   aBuilder);
-
-  return true;
+  return mStoredList.CreateWebRenderCommands(aBuilder, sc, aParentCommands,
+                                             aManager, aDisplayListBuilder);
 }
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
