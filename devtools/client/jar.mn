@@ -6,6 +6,7 @@
 %   content devtools %content/
     content/preferences/debugger.js (preferences/debugger.js)
 *   content/preferences/devtools.js (preferences/devtools.js)
+    content/preferences/DevToolsPreferences.jsm (preferences/DevToolsPreferences.jsm)
     content/webide/webide-prefs.js (webide/webide-prefs.js)
     content/shared/vendor/d3.js (shared/vendor/d3.js)
     content/shared/vendor/dagre-d3.js (shared/vendor/dagre-d3.js)
