@@ -2584,6 +2584,21 @@ CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
     }
 }
 
+typedef JSFunction* (*MakeDefaultConstructorFn)(JSContext*, HandleScript,
+                                                jsbytecode*, HandleObject);
+static const VMFunction MakeDefaultConstructorInfo =
+    FunctionInfo<MakeDefaultConstructorFn>(js::MakeDefaultConstructor,
+                                           "MakeDefaultConstructor");
+
+void
+CodeGenerator::visitClassConstructor(LClassConstructor* lir)
+{
+    pushArg(ImmPtr(nullptr));
+    pushArg(ImmPtr(lir->mir()->pc()));
+    pushArg(ImmGCPtr(current->mir()->info().script()));
+    callVM(MakeDefaultConstructorInfo, lir);
+}
+
 typedef JSObject* (*LambdaFn)(JSContext*, HandleFunction, HandleObject);
 static const VMFunction LambdaInfo = FunctionInfo<LambdaFn>(js::Lambda, "Lambda");
 
