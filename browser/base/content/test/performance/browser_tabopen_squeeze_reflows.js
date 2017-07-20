@@ -33,13 +33,20 @@ add_task(async function() {
 
   await createTabs(TAB_COUNT_FOR_SQUEEZE);
 
+  // Because the tab strip is a scrollable frame, we can't use the
+  // default dirtying function from withReflowObserver and reliably
+  // get reflows for the strip. Instead, we provide a node that's
+  // already in the scrollable frame to dirty - in this case, the
+  // original tab.
+  let origTab = gBrowser.selectedTab;
+
   await withReflowObserver(async function() {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
     BrowserOpenTab();
     await BrowserTestUtils.waitForEvent(gBrowser.selectedTab, "transitionend",
       false, e => e.propertyName === "max-width");
     await switchDone;
-  }, EXPECTED_REFLOWS);
+  }, EXPECTED_REFLOWS, window, origTab);
 
   await removeAllButFirstTab();
 });
