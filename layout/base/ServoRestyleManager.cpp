@@ -558,7 +558,7 @@ ServoRestyleManager::ProcessPostTraversal(
     newContext = currentContext;
     newContext->UpdateWithElementState(aElement);
 
-    newContext->ResolveSameStructsAs(oldStyleContext);
+    newContext->ResolveSameStructsAs(PresContext(), oldStyleContext);
 
     // We want to walk all the continuations here, even the ones with different
     // styles.  In practice, the only reason we get continuations with different
