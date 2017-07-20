@@ -30,9 +30,10 @@
 #include <algorithm>
 
 // Activate BHR only for one every BHR_BETA_MOD users.
-// This is now 100% of Beta population for the Beta 45/46 e10s A/B trials
-// It can be scaled back again in the future
-#define BHR_BETA_MOD 1;
+// We're doing experimentation with collecting a lot more data from BHR, and
+// don't want to enable it for beta users at the moment. We can scale this up in
+// the future.
+#define BHR_BETA_MOD INT32_MAX;
 
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
