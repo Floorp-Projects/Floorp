@@ -17,8 +17,8 @@
 
 class nsIGlobalObject;
 class nsStyleContext;
-class ServoComputedValues;
 struct nsStyleDisplay;
+struct ServoComputedValues;
 
 namespace mozilla {
 namespace css {
@@ -29,10 +29,11 @@ class KeyframeEffectReadOnly;
 class Promise;
 } /* namespace dom */
 
-class GeckoStyleContext;
-class ServoStyleContext;
 enum class CSSPseudoElementType : uint8_t;
 struct NonOwningAnimationTarget;
+
+class GeckoStyleContext;
+class ServoStyleContext;
 
 struct AnimationEventInfo {
   RefPtr<dom::Element> mElement;
