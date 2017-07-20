@@ -1059,6 +1059,13 @@ protected:
   {
   }
 
+  // initialization with ClassFlags
+  explicit nsTSubstring_CharT(ClassFlags aClassFlags)
+    : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
+                          aClassFlags)
+  {
+  }
+
  /**
    * allows for direct initialization of a nsTSubstring object.
    */
