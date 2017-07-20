@@ -850,6 +850,17 @@
         </body>
       </method>
 
+      <method name="unselectedTabHover">
+        <parameter name="hovered"/>
+        <body>
+          <![CDATA[
+            // TODO : only dispatch event when someone is waiting for this message
+            this.messageManager.sendAsyncMessage("Browser:UnselectedTabHover",
+              { hovered });
+          ]]>
+        </body>
+      </method>
+
       <property name="securityUI">
         <getter>
           <![CDATA[
