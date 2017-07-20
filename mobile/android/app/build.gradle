@@ -148,13 +148,6 @@ android {
                     exclude 'org/mozilla/gecko/MediaPlayerManager.java'
                 }
 
-                if (mozconfig.substs.MOZ_WEBRTC) {
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/base/java/src"
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src"
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src"
-                    srcDir "${topsrcdir}/media/webrtc/trunk/webrtc/modules/video_render/android/java/src"
-                }
-
                 if (mozconfig.substs.MOZ_INSTALL_TRACKING) {
                     exclude 'org/mozilla/gecko/adjust/StubAdjustHelper.java'
                 } else {
