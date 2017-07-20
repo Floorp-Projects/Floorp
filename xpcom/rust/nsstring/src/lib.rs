@@ -156,7 +156,8 @@ mod class_flags {
         // over FFI safely as a u16.
         #[repr(C)]
         pub flags ClassFlags : u16 {
-            const FIXED = 1 << 0, // indicates that |this| is of type nsTFixedString
+            const FIXED = 1 << 0, // |this| is of type nsTFixedString
+            const NULL_TERMINATED = 1 << 1, // |this| requires its buffer is null-terminated
         }
     }
 }
@@ -409,7 +410,7 @@ macro_rules! define_string_types {
                         data: ptr::null(),
                         length: 0,
                         dataflags: DataFlags::empty(),
-                        classflags: ClassFlags::empty(),
+                        classflags: class_flags::NULL_TERMINATED,
                     },
                     _marker: PhantomData,
                 }
@@ -463,7 +464,7 @@ macro_rules! define_string_types {
                         data: if s.is_empty() { ptr::null() } else { s.as_ptr() },
                         length: s.len() as u32,
                         dataflags: DataFlags::empty(),
-                        classflags: ClassFlags::empty(),
+                        classflags: class_flags::NULL_TERMINATED,
                     },
                     _marker: PhantomData,
                 }
@@ -493,7 +494,7 @@ macro_rules! define_string_types {
                         data: ptr,
                         length: length,
                         dataflags: data_flags::OWNED,
-                        classflags: ClassFlags::empty(),
+                        classflags: class_flags::NULL_TERMINATED,
                     },
                     _marker: PhantomData,
                 }
@@ -584,7 +585,7 @@ macro_rules! define_string_types {
                             data: ptr::null(),
                             length: 0,
                             dataflags: DataFlags::empty(),
-                            classflags: class_flags::FIXED,
+                            classflags: class_flags::FIXED | class_flags::NULL_TERMINATED,
                         },
                         _marker: PhantomData,
                     },
@@ -1137,7 +1138,8 @@ pub mod test_helpers {
                                           f_owned: *mut u16,
                                           f_fixed: *mut u16,
                                           f_literal: *mut u16,
-                                          f_class_fixed: *mut u16) {
+                                          f_class_fixed: *mut u16,
+                                          f_class_null_terminated: *mut u16) {
         unsafe {
             *f_terminated = data_flags::TERMINATED.bits();
             *f_voided = data_flags::VOIDED.bits();
@@ -1146,6 +1148,7 @@ pub mod test_helpers {
             *f_fixed = data_flags::FIXED.bits();
             *f_literal = data_flags::LITERAL.bits();
             *f_class_fixed = class_flags::FIXED.bits();
+            *f_class_null_terminated = class_flags::NULL_TERMINATED.bits();
         }
     }
 }

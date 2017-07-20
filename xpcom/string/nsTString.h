@@ -30,13 +30,13 @@ public:
    */
 
   nsTString_CharT()
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
   }
 
   explicit
   nsTString_CharT(const char_type* aData, size_type aLength = size_type(-1))
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
     Assign(aData, aLength);
   }
@@ -44,27 +44,27 @@ public:
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
   explicit
   nsTString_CharT(char16ptr_t aStr, size_type aLength = size_type(-1))
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
     Assign(static_cast<const char16_t*>(aStr), aLength);
   }
 #endif
 
   nsTString_CharT(const self_type& aStr)
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
     Assign(aStr);
   }
 
   MOZ_IMPLICIT nsTString_CharT(const substring_tuple_type& aTuple)
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
     Assign(aTuple);
   }
 
   explicit
   nsTString_CharT(const substring_type& aReadable)
-    : substring_type()
+    : substring_type(ClassFlags::NULL_TERMINATED)
   {
     Assign(aReadable);
   }
@@ -466,7 +466,8 @@ protected:
   // allow subclasses to initialize fields directly
   nsTString_CharT(char_type* aData, size_type aLength, DataFlags aDataFlags,
                   ClassFlags aClassFlags)
-    : substring_type(aData, aLength, aDataFlags, aClassFlags)
+    : substring_type(aData, aLength, aDataFlags,
+                     aClassFlags | ClassFlags::NULL_TERMINATED)
   {
   }
 
