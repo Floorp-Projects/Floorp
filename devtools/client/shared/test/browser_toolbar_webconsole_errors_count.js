@@ -7,6 +7,8 @@
 
 // Tests that the developer toolbar errors count works properly.
 
+const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+
 // Use the old webconsole since this is directly accessing old DOM, and
 // the error count isn't reset when pressing the clear button in new one
 // See Bug 1304794.
@@ -14,6 +16,8 @@ Services.prefs.setBoolPref("devtools.webconsole.new-frontend-enabled", false);
 registerCleanupFunction(function* () {
   Services.prefs.clearUserPref("devtools.webconsole.new-frontend-enabled");
 });
+
+let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
 
 function test() {
   const TEST_URI = TEST_URI_ROOT + "doc_toolbar_webconsole_errors_count.html";
@@ -35,15 +39,15 @@ function test() {
 
     expectUncaughtException();
 
-    if (!DeveloperToolbar.visible) {
-      DeveloperToolbar.show(true).then(onOpenToolbar);
+    if (!toolbar.visible) {
+      toolbar.show(true).then(onOpenToolbar);
     } else {
       onOpenToolbar();
     }
   }
 
   function onOpenToolbar() {
-    ok(DeveloperToolbar.visible, "DeveloperToolbar is visible");
+    ok(toolbar.visible, "DeveloperToolbar is visible");
     webconsole = document.getElementById("developer-toolbar-toolbox-button");
 
     waitForButtonUpdate({
@@ -240,9 +244,9 @@ function test() {
 
     if (!check()) {
       info("wait for: " + options.name);
-      DeveloperToolbar.on("errors-counter-updated", function onUpdate(event) {
+      toolbar.on("errors-counter-updated", function onUpdate(event) {
         if (check()) {
-          DeveloperToolbar.off(event, onUpdate);
+          toolbar.off(event, onUpdate);
         }
       });
     }
