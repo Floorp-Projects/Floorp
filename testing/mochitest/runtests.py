@@ -1484,7 +1484,7 @@ toolbar#nav-bar {
             manifest_relpath = os.path.relpath(test['manifest'], manifest_root)
             self.tests_by_manifest[manifest_relpath].append(tp)
 
-            testob = {'path': tp}
+            testob = {'path': tp, 'manifest': manifest_relpath}
             if 'disabled' in test:
                 testob['disabled'] = test['disabled']
             if 'expected' in test:
@@ -2253,21 +2253,6 @@ toolbar#nav-bar {
                 norm_paths.append(p)
         return norm_paths
 
-    def getTestsToRun(self, options):
-        """
-          This method makes a list of tests that are to be run. Required mainly for --bisect-chunk.
-        """
-        tests = self.getActiveTests(options)
-        self.logPreamble(tests)
-
-        testsToRun = []
-        for test in tests:
-            if 'disabled' in test:
-                continue
-            testsToRun.append(test['path'])
-
-        return testsToRun
-
     def runMochitests(self, options, testsToRun):
         "This is a base method for calling other methods in this class for --bisect-chunk."
         # Making an instance of bisect class for --bisect-chunk option.
@@ -2447,25 +2432,25 @@ toolbar#nav-bar {
         if options.cleanupCrashes:
             mozcrash.cleanup_pending_crash_reports()
 
-        # Until we have all green, this only runs on bc*/dt*/mochitest-chrome
-        # jobs, not jetpack*, a11yr (for perf reasons), or plain
+        tests = self.getActiveTests(options)
+        self.logPreamble(tests)
+        tests = [t for t in tests if 'disabled' not in t]
 
-        testsToRun = self.getTestsToRun(options)
-        if not options.runByDir:
-            return self.runMochitests(options, testsToRun)
+        # Until we have all green, this does not run on jetpack*, or a11y (for perf reasons)
+        if not options.runByManifest:
+            return self.runMochitests(options, [t['path'] for t in tests])
 
-        # code for --run-by-dir
-        dirs = self.getDirectories(options)
-
+        # code for --run-by-manifest
+        manifests = set(t['manifest'] for t in tests)
         result = 1  # default value, if no tests are run.
-        for d in dirs:
-            print("dir: %s" % d)
-            tests_in_dir = [t for t in testsToRun if os.path.dirname(t) == d]
+        for m in sorted(manifests):
+            self.log.info("Running manifest: {}".format(m))
+            tests_in_manifest = [t['path'] for t in tests if t['manifest'] == m]
 
-            # If we are using --run-by-dir, we should not use the profile path (if) provided
+            # If we are using --run-by-manifest, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face
             # problems if we use the directory provided by the user.
-            result = self.runMochitests(options, tests_in_dir)
+            result = self.runMochitests(options, tests_in_manifest)
 
             # Dump the logging buffer
             self.message_logger.dump_buffered()
@@ -2497,7 +2482,7 @@ toolbar#nav-bar {
     def doTests(self, options, testsToFilter=None):
         # A call to initializeLooping method is required in case of --run-by-dir or --bisect-chunk
         # since we need to initialize variables for each loop.
-        if options.bisectChunk or options.runByDir:
+        if options.bisectChunk or options.runByManifest:
             self.initializeLooping(options)
 
         # get debugger info, a dict of:
@@ -2887,22 +2872,6 @@ toolbar#nav-bar {
                 self.shutdownLeaks.log(message)
             return message
 
-    def getDirectories(self, options):
-        """
-            Make the list of directories by parsing manifests
-        """
-        tests = self.getActiveTests(options)
-        dirlist = []
-        for test in tests:
-            if 'disabled' in test:
-                continue
-
-            rootdir = '/'.join(test['path'].split('/')[:-1])
-            if rootdir not in dirlist:
-                dirlist.append(rootdir)
-
-        return dirlist
-
 
 def run_test_harness(parser, options):
     parser.validate(options)
@@ -2913,10 +2882,9 @@ def run_test_harness(parser, options):
 
     runner = MochitestDesktop(options.flavor, logger_options, quiet=options.quiet)
 
-    options.runByDir = False
-
+    options.runByManifest = False
     if options.flavor in ('plain', 'browser', 'chrome'):
-        options.runByDir = True
+        options.runByManifest = True
 
     if options.verify:
         result = runner.verifyTests(options)
