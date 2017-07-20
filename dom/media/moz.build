@@ -3,6 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+include('/media/webrtc/webrtc.mozbuild')
 
 FILES_PER_UNIFIED_FILE = 6
 
@@ -315,11 +316,6 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 DEFINES['MOZILLA_INTERNAL_API'] = True
-
-if CONFIG['OS_TARGET'] == 'WINNT':
-    DEFINES['WEBRTC_WIN'] = True
-else:
-    DEFINES['WEBRTC_POSIX'] = True
 
 if CONFIG['ANDROID_VERSION'] > '15':
     DEFINES['MOZ_OMX_WEBM_DECODER'] = True

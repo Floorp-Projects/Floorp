@@ -158,16 +158,6 @@
          './src/sdp/SipccSdp.cpp',
          './src/sdp/SipccSdpMediaSection.cpp',
          './src/sdp/SipccSdpParser.cpp',
-
-         # JSEP
-         './src/jsep/JsepCodecDescription.h',
-         './src/jsep/JsepSession.h',
-         './src/jsep/JsepSessionImpl.cpp',
-         './src/jsep/JsepSessionImpl.h',
-         './src/jsep/JsepTrack.cpp',
-         './src/jsep/JsepTrack.h',
-         './src/jsep/JsepTrackEncoding.h',
-         './src/jsep/JsepTransport.h'
       ],
 
       #
