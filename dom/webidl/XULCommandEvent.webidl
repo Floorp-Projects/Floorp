@@ -12,6 +12,8 @@ interface XULCommandEvent : UIEvent
   readonly attribute boolean altKey;
   readonly attribute boolean metaKey;
 
+  readonly attribute unsigned short inputSource;
+
   readonly attribute Event? sourceEvent;
 
   void initCommandEvent(DOMString type,
@@ -23,5 +25,6 @@ interface XULCommandEvent : UIEvent
                         optional boolean altKey = false,
                         optional boolean shiftKey = false,
                         optional boolean metaKey = false,
-                        optional Event? sourceEvent = null);
+                        optional Event? sourceEvent = null,
+                        optional unsigned short inputSource = 0);
 };

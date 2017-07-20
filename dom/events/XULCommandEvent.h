@@ -40,6 +40,7 @@ public:
   bool CtrlKey();
   bool ShiftKey();
   bool MetaKey();
+  uint16_t InputSource();
 
   already_AddRefed<Event> GetSourceEvent()
   {
@@ -54,17 +55,19 @@ public:
                         int32_t aDetail,
                         bool aCtrlKey, bool aAltKey,
                         bool aShiftKey, bool aMetaKey,
-                        Event* aSourceEvent)
+                        Event* aSourceEvent,
+                        uint16_t aInputSource)
   {
     InitCommandEvent(aType, aCanBubble, aCancelable, aView->AsInner(),
                      aDetail, aCtrlKey, aAltKey, aShiftKey, aMetaKey,
-                     aSourceEvent);
+                     aSourceEvent, aInputSource);
   }
 
 protected:
   ~XULCommandEvent() {}
 
   nsCOMPtr<nsIDOMEvent> mSourceEvent;
+  uint16_t mInputSource;
 };
 
 } // namespace dom

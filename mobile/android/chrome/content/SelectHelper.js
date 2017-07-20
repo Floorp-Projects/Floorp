@@ -154,7 +154,7 @@ var SelectHelper = {
     let win = element.ownerGlobal;
     let event = element.ownerDocument.createEvent("XULCommandEvent");
     event.initCommandEvent("command", true, true, element.defaultView, 0,
-        false, false, false, false, null);
+        false, false, false, false, null, 0);
     win.setTimeout(function() {
       element.dispatchEvent(event);
     }, 0);

@@ -11,7 +11,7 @@ exports.VERTICAL_AXIS = 2;
 exports.command = (node) => {
   let ev = node.ownerDocument.createEvent("XULCommandEvent");
   ev.initCommandEvent("command", true, true, node.ownerDocument.defaultView, 0, false,
-                      false, false, false, null);
+                      false, false, false, null, 0);
   node.dispatchEvent(ev);
 };
 
