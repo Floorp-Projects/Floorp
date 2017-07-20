@@ -380,3 +380,8 @@ user_pref("marionette.prefs.recommended", false);
 
 // Disable Screenshots by default for now
 user_pref("extensions.screenshots.system-disabled", true);
+
+// Set places maintenance far in the future to avoid it kicking in during tests.
+// The maintenance can take a relatively long time which may cause unnecessary
+// intermittents and slow down tests.
+user_pref("places.database.lastMaintenance", 7258114800);
