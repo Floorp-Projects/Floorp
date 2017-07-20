@@ -675,9 +675,17 @@ function OnDocumentLoad(event)
         // Ignore load events for subframes.
         return;
 
-    if (gClearingForAssertionCheck &&
-        currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
-        DoAssertionCheck();
+    if (gClearingForAssertionCheck) {
+        if (currentDoc.location.href == BLANK_URL_FOR_CLEARING) {
+            DoAssertionCheck();
+            return;
+        }
+
+        // It's likely the previous test document reloads itself and causes the
+        // attempt of loading blank page fails. In this case we should retry
+        // loading the blank page.
+        LogInfo("Retry loading a blank page");
+        LoadURI(BLANK_URL_FOR_CLEARING);
         return;
     }
 
