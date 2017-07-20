@@ -982,6 +982,10 @@ addMessageListener("WebChannelMessageToContent", function(e) {
   }
 });
 
+addMessageListener("Browser:UnselectedTabHover", message => {
+  Services.obs.notifyObservers(content.window, "unselected-tab-hover", message.data.hovered);
+});
+
 var AudioPlaybackListener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
