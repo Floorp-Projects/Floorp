@@ -185,6 +185,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitBinarySharedStub(MBinarySharedStub* ins);
     void visitUnarySharedStub(MUnarySharedStub* ins);
     void visitNullarySharedStub(MNullarySharedStub* ins);
+    void visitClassConstructor(MClassConstructor* ins);
     void visitLambda(MLambda* ins);
     void visitLambdaArrow(MLambdaArrow* ins);
     void visitSetFunName(MSetFunName* ins);

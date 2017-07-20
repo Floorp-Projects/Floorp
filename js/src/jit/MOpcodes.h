@@ -161,6 +161,7 @@ namespace jit {
     _(RegExpInstanceOptimizable)                                            \
     _(GetFirstDollarIndex)                                                  \
     _(StringReplace)                                                        \
+    _(ClassConstructor)                                                     \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
     _(SetFunName)                                                           \

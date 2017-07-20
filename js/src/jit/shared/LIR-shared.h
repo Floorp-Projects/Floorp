@@ -4987,6 +4987,16 @@ class LNullarySharedStub : public LCallInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+class LClassConstructor : public LCallInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(ClassConstructor)
+
+    const MClassConstructor* mir() const {
+        return mir_->toClassConstructor();
+    }
+};
+
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:

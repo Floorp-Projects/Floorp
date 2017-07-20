@@ -2506,6 +2506,14 @@ LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
 }
 
 void
+LIRGenerator::visitClassConstructor(MClassConstructor* ins)
+{
+    LClassConstructor* lir = new(alloc()) LClassConstructor();
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitLambda(MLambda* ins)
 {
     if (ins->info().singletonType || ins->info().useSingletonForClone) {
