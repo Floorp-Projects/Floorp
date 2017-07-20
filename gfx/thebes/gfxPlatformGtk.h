@@ -84,12 +84,6 @@ public:
                                            uint32_t aLength) override;
 
     /**
-     * Check whether format is supported on a platform or not (if unclear,
-     * returns true).
-     */
-    virtual bool IsFontFormatSupported(uint32_t aFormatFlags) override;
-
-    /**
      * Calls XFlush if xrender is enabled.
      */
     virtual void FlushContentDrawing() override;
