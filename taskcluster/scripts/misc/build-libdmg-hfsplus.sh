@@ -6,7 +6,7 @@ set -x -e -v
 
 WORKSPACE=$HOME/workspace
 STAGE=$WORKSPACE/dmg
-UPLOAD_DIR=$WORKSPACE/artifacts
+UPLOAD_DIR=$HOME/artifacts
 
 # There's no single well-maintained fork of libdmg-hfsplus, so we forked
 # https://github.com/andreas56/libdmg-hfsplus/ to get a specific version and
