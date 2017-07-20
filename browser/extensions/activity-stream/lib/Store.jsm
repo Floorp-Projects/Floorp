@@ -9,6 +9,7 @@ const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
+const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -91,6 +92,7 @@ this.Store = class Store {
     if (this._feedFactories.has(name)) {
       if (value) {
         this.initFeed(name);
+        this.dispatch({type: at.FEED_INIT, data: name});
       } else {
         this.uninitFeed(name);
       }
