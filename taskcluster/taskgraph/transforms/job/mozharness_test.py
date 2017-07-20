@@ -40,6 +40,9 @@ BUILDER_NAME_PREFIX = {
     'windows7-32': 'Windows 7 32-bit',
     'windows7-32-nightly': 'Windows 7 32-bit',
     'windows7-32-pgo': 'Windows 7 32-bit',
+    'windows8-64': 'Windows 8 64-bit',
+    'windows8-64-nightly': 'Windows 8 64-bit',
+    'windows8-64-pgo': 'Windows 8 64-bit',
 }
 
 VARIANTS = [
