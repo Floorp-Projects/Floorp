@@ -801,7 +801,8 @@ public:
   /**
    * Helper method to call imgIRequest::GetStaticRequest.
    */
-  static already_AddRefed<imgRequestProxy> GetStaticRequest(imgRequestProxy* aRequest);
+  static already_AddRefed<imgRequestProxy> GetStaticRequest(nsIDocument* aLoadingDocument,
+                                                            imgRequestProxy* aRequest);
 
   /**
    * Method that decides whether a content node is draggable

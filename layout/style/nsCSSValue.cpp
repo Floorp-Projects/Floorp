@@ -378,7 +378,7 @@ nsCSSValue::GetPossiblyStaticImageValue(nsIDocument* aDocument,
   if (aPresContext->IsDynamic()) {
     return do_AddRef(req);
   }
-  return nsContentUtils::GetStaticRequest(req);
+  return nsContentUtils::GetStaticRequest(aDocument, req);
 }
 
 nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const

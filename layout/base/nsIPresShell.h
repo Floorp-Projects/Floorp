@@ -23,7 +23,6 @@
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
-#include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSetHandle.h"
@@ -181,7 +180,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
 
 protected:
-  typedef mozilla::layers::FocusTarget FocusTarget;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
@@ -435,6 +433,12 @@ public:
    * target for scrolling.
    */
   already_AddRefed<nsIContent> GetContentForScrolling() const;
+
+  /**
+   * Get the DOM selection that should be the target for scrolling, if there
+   * is no focused content.
+   */
+  already_AddRefed<nsIContent> GetSelectedContentForScrolling() const;
 
   /**
    * Gets nearest scrollable frame from the specified content node. The frame
@@ -1443,6 +1447,11 @@ public:
    * I.e., when we are deactive, this returns the *last* focused DOM window.
    */
   virtual already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() = 0;
+
+  /**
+   * Get the focused content under this window.
+   */
+  already_AddRefed<nsIContent> GetFocusedContentInOurWindow() const;
 
   /**
    * Get the layer manager for the widget of the root view, if it has

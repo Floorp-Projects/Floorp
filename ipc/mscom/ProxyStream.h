@@ -39,6 +39,7 @@ public:
 
   bool GetInterface(void** aOutInterface);
   const BYTE* GetBuffer(int& aReturnedBufSize) const;
+  RefPtr<IStream> GetStream() const;
 
   bool operator==(const ProxyStream& aOther) const
   {

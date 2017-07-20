@@ -75,8 +75,8 @@ public:
                                 const LayerRect& aScBounds,
                                 const gfx::Matrix4x4& aScTransform,
                                 const gfx::MaybeIntSize& aScaleToSize,
-                                const WrImageRendering& aFilter,
-                                const WrMixBlendMode& aMixBlendMode);
+                                const wr::ImageRendering& aFilter,
+                                const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImages(wr::WebRenderAPI* aApi);
 
 private:
@@ -117,8 +117,8 @@ private:
     LayerRect mScBounds;
     gfx::Matrix4x4 mScTransform;
     gfx::MaybeIntSize mScaleToSize;
-    WrImageRendering mFilter;
-    WrMixBlendMode mMixBlendMode;
+    wr::ImageRendering mFilter;
+    wr::MixBlendMode mMixBlendMode;
     RefPtr<WebRenderImageHost> mImageHost;
     CompositableTextureHostRef mCurrentTexture;
     nsTArray<wr::ImageKey> mKeys;

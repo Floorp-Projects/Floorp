@@ -17,22 +17,17 @@
 #include "RoundedRect.h"
 #include "nsStyleConsts.h"
 
-typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
-
 namespace mozilla {
 namespace wr {
 
-typedef WrGradientExtendMode GradientExtendMode;
-typedef WrMixBlendMode MixBlendMode;
-typedef WrImageRendering ImageRendering;
-typedef WrImageFormat ImageFormat;
-typedef WrWindowId WindowId;
-typedef WrPipelineId PipelineId;
-typedef WrImageKey ImageKey;
-typedef WrFontKey FontKey;
-typedef WrEpoch Epoch;
-typedef WrExternalImageId ExternalImageId;
+typedef wr::WrWindowId WindowId;
+typedef wr::WrPipelineId PipelineId;
+typedef wr::WrImageKey ImageKey;
+typedef wr::WrFontKey FontKey;
+typedef wr::WrEpoch Epoch;
+typedef wr::WrExternalImageId ExternalImageId;
 
+typedef mozilla::Maybe<mozilla::wr::WrImageMask> MaybeImageMask;
 typedef Maybe<ExternalImageId> MaybeExternalImageId;
 
 inline WindowId NewWindowId(uint64_t aId) {
@@ -47,32 +42,32 @@ inline Epoch NewEpoch(uint32_t aEpoch) {
   return e;
 }
 
-inline Maybe<WrImageFormat>
-SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
+inline Maybe<wr::ImageFormat>
+SurfaceFormatToImageFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
     case gfx::SurfaceFormat::R8G8B8X8:
       // TODO: use RGBA + opaque flag
-      return Some(WrImageFormat::BGRA8);
+      return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::B8G8R8X8:
       // TODO: WebRender will have a BGRA + opaque flag for this but does not
       // have it yet (cf. issue #732).
     case gfx::SurfaceFormat::B8G8R8A8:
-      return Some(WrImageFormat::BGRA8);
+      return Some(wr::ImageFormat::BGRA8);
     case gfx::SurfaceFormat::B8G8R8:
-      return Some(WrImageFormat::RGB8);
+      return Some(wr::ImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
-      return Some(WrImageFormat::A8);
+      return Some(wr::ImageFormat::A8);
     case gfx::SurfaceFormat::R8G8:
-      return Some(WrImageFormat::RG8);
+      return Some(wr::ImageFormat::RG8);
     case gfx::SurfaceFormat::UNKNOWN:
-      return Some(WrImageFormat::Invalid);
+      return Some(wr::ImageFormat::Invalid);
     default:
       return Nothing();
   }
 }
 
 inline gfx::SurfaceFormat
-WrImageFormatToSurfaceFormat(ImageFormat aFormat) {
+ImageFormatToSurfaceFormat(ImageFormat aFormat) {
   switch (aFormat) {
     case ImageFormat::BGRA8:
       return gfx::SurfaceFormat::B8G8R8A8;
@@ -85,10 +80,10 @@ WrImageFormatToSurfaceFormat(ImageFormat aFormat) {
   }
 }
 
-struct ImageDescriptor: public WrImageDescriptor {
+struct ImageDescriptor: public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat)
   {
-    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = 0;
@@ -97,7 +92,7 @@ struct ImageDescriptor: public WrImageDescriptor {
 
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride, gfx::SurfaceFormat aFormat)
   {
-    format = SurfaceFormatToWrImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).value();
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
@@ -155,7 +150,7 @@ inline ImageRendering ToImageRendering(gfx::SamplingFilter aFilter)
                                                : ImageRendering::Auto;
 }
 
-static inline MixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
+static inline MixBlendMode ToMixBlendMode(gfx::CompositionOp compositionOp)
 {
   switch (compositionOp)
   {
@@ -194,9 +189,9 @@ static inline MixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
   }
 }
 
-static inline WrColor ToWrColor(const gfx::Color& color)
+static inline wr::ColorF ToColorF(const gfx::Color& color)
 {
-  WrColor c;
+  wr::ColorF c;
   c.r = color.r;
   c.g = color.g;
   c.b = color.b;
@@ -205,152 +200,172 @@ static inline WrColor ToWrColor(const gfx::Color& color)
 }
 
 template<class T>
-static inline WrPoint ToWrPoint(const gfx::PointTyped<T>& point)
+static inline wr::LayoutPoint ToLayoutPoint(const gfx::PointTyped<T>& point)
 {
-  WrPoint p;
+  wr::LayoutPoint p;
   p.x = point.x;
   p.y = point.y;
   return p;
 }
 
 template<class T>
-static inline WrPoint ToWrPoint(const gfx::IntPointTyped<T>& point)
+static inline wr::LayoutPoint ToLayoutPoint(const gfx::IntPointTyped<T>& point)
 {
-  return ToWrPoint(IntPointToPoint(point));
+  return ToLayoutPoint(IntPointToPoint(point));
 }
 
-static inline WrPoint ToWrPoint(const gfx::Point& point)
+template<class T>
+static inline wr::LayoutVector2D ToLayoutVector2D(const gfx::PointTyped<T>& point)
 {
-  WrPoint p;
+  wr::LayoutVector2D p;
   p.x = point.x;
   p.y = point.y;
   return p;
 }
 
 template<class T>
-static inline WrRect ToWrRect(const gfx::RectTyped<T>& rect)
+static inline wr::LayoutVector2D ToLayoutVector2D(const gfx::IntPointTyped<T>& point)
 {
-  WrRect r;
-  r.x = rect.x;
-  r.y = rect.y;
-  r.width = rect.width;
-  r.height = rect.height;
+  return ToLayoutVector2D(IntPointToPoint(point));
+}
+
+template<class T>
+static inline wr::LayoutRect ToLayoutRect(const gfx::RectTyped<T>& rect)
+{
+  wr::LayoutRect r;
+  r.origin.x = rect.x;
+  r.origin.y = rect.y;
+  r.size.width = rect.width;
+  r.size.height = rect.height;
   return r;
 }
 
-static inline WrRect ToWrRect(const gfxRect rect)
+static inline wr::LayoutRect ToLayoutRect(const gfxRect rect)
 {
-  WrRect r;
-  r.x = rect.x;
-  r.y = rect.y;
-  r.width = rect.width;
-  r.height = rect.height;
+  wr::LayoutRect r;
+  r.origin.x = rect.x;
+  r.origin.y = rect.y;
+  r.size.width = rect.width;
+  r.size.height = rect.height;
   return r;
 }
 
 template<class T>
-static inline WrRect ToWrRect(const gfx::IntRectTyped<T>& rect)
+static inline wr::LayoutRect ToLayoutRect(const gfx::IntRectTyped<T>& rect)
 {
-  return ToWrRect(IntRectToRect(rect));
+  return ToLayoutRect(IntRectToRect(rect));
 }
 
 template<class T>
-static inline WrSize ToWrSize(const gfx::SizeTyped<T>& size)
+static inline wr::LayoutSize ToLayoutSize(const gfx::SizeTyped<T>& size)
 {
-  WrSize ls;
+  wr::LayoutSize ls;
   ls.width = size.width;
   ls.height = size.height;
   return ls;
 }
 
-static inline WrComplexClipRegion ToWrComplexClipRegion(const RoundedRect& rect)
+static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const RoundedRect& rect)
 {
-  WrComplexClipRegion ret;
-  ret.rect               = ToWrRect(rect.rect);
-  ret.radii.top_left     = ToWrSize(rect.corners.radii[mozilla::eCornerTopLeft]);
-  ret.radii.top_right    = ToWrSize(rect.corners.radii[mozilla::eCornerTopRight]);
-  ret.radii.bottom_left  = ToWrSize(rect.corners.radii[mozilla::eCornerBottomLeft]);
-  ret.radii.bottom_right = ToWrSize(rect.corners.radii[mozilla::eCornerBottomRight]);
+  wr::WrComplexClipRegion ret;
+  ret.rect               = ToLayoutRect(rect.rect);
+  ret.radii.top_left     = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopLeft]);
+  ret.radii.top_right    = ToLayoutSize(rect.corners.radii[mozilla::eCornerTopRight]);
+  ret.radii.bottom_left  = ToLayoutSize(rect.corners.radii[mozilla::eCornerBottomLeft]);
+  ret.radii.bottom_right = ToLayoutSize(rect.corners.radii[mozilla::eCornerBottomRight]);
   return ret;
 }
 
 template<class T>
-static inline WrSize ToWrSize(const gfx::IntSizeTyped<T>& size)
+static inline wr::LayoutSize ToLayoutSize(const gfx::IntSizeTyped<T>& size)
 {
-  return ToWrSize(IntSizeToSize(size));
+  return ToLayoutSize(IntSizeToSize(size));
 }
 
 template<class S, class T>
-static inline WrMatrix ToWrMatrix(const gfx::Matrix4x4Typed<S, T>& m)
+static inline wr::LayoutTransform ToLayoutTransform(const gfx::Matrix4x4Typed<S, T>& m)
 {
-  WrMatrix transform;
-  static_assert(sizeof(m.components) == sizeof(transform.values),
-      "Matrix components size mismatch!");
-  memcpy(transform.values, m.components, sizeof(transform.values));
+  wr::LayoutTransform transform;
+  transform.m11 = m._11;
+  transform.m12 = m._12;
+  transform.m13 = m._13;
+  transform.m14 = m._14;
+  transform.m21 = m._21;
+  transform.m22 = m._22;
+  transform.m23 = m._23;
+  transform.m24 = m._24;
+  transform.m31 = m._31;
+  transform.m32 = m._32;
+  transform.m33 = m._33;
+  transform.m34 = m._34;
+  transform.m41 = m._41;
+  transform.m42 = m._42;
+  transform.m43 = m._43;
+  transform.m44 = m._44;
   return transform;
 }
 
-static inline WrBorderStyle ToWrBorderStyle(const uint8_t& style)
+static inline wr::BorderStyle ToBorderStyle(const uint8_t& style)
 {
   switch (style) {
   case NS_STYLE_BORDER_STYLE_NONE:
-    return WrBorderStyle::None;
+    return wr::BorderStyle::None;
   case NS_STYLE_BORDER_STYLE_SOLID:
-    return WrBorderStyle::Solid;
+    return wr::BorderStyle::Solid;
   case NS_STYLE_BORDER_STYLE_DOUBLE:
-    return WrBorderStyle::Double;
+    return wr::BorderStyle::Double;
   case NS_STYLE_BORDER_STYLE_DOTTED:
-    return WrBorderStyle::Dotted;
+    return wr::BorderStyle::Dotted;
   case NS_STYLE_BORDER_STYLE_DASHED:
-    return WrBorderStyle::Dashed;
+    return wr::BorderStyle::Dashed;
   case NS_STYLE_BORDER_STYLE_HIDDEN:
-    return WrBorderStyle::Hidden;
+    return wr::BorderStyle::Hidden;
   case NS_STYLE_BORDER_STYLE_GROOVE:
-    return WrBorderStyle::Groove;
+    return wr::BorderStyle::Groove;
   case NS_STYLE_BORDER_STYLE_RIDGE:
-    return WrBorderStyle::Ridge;
+    return wr::BorderStyle::Ridge;
   case NS_STYLE_BORDER_STYLE_INSET:
-    return WrBorderStyle::Inset;
+    return wr::BorderStyle::Inset;
   case NS_STYLE_BORDER_STYLE_OUTSET:
-    return WrBorderStyle::Outset;
+    return wr::BorderStyle::Outset;
   default:
     MOZ_ASSERT(false);
   }
-  return WrBorderStyle::None;
+  return wr::BorderStyle::None;
 }
 
-static inline WrBorderSide ToWrBorderSide(const gfx::Color& color, const uint8_t& style)
+static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const uint8_t& style)
 {
-  WrBorderSide bs;
-  bs.color = ToWrColor(color);
-  bs.style = ToWrBorderStyle(style);
+  wr::BorderSide bs;
+  bs.color = ToColorF(color);
+  bs.style = ToBorderStyle(style);
   return bs;
 }
 
-static inline WrBorderRadius ToWrUniformBorderRadius(const LayerSize& aSize)
+static inline wr::BorderRadius ToUniformBorderRadius(const LayerSize& aSize)
 {
-  WrBorderRadius br;
-  br.top_left = ToWrSize(aSize);
-  br.top_right = ToWrSize(aSize);
-  br.bottom_left = ToWrSize(aSize);
-  br.bottom_right = ToWrSize(aSize);
+  wr::BorderRadius br;
+  br.top_left = ToLayoutSize(aSize);
+  br.top_right = ToLayoutSize(aSize);
+  br.bottom_left = ToLayoutSize(aSize);
+  br.bottom_right = ToLayoutSize(aSize);
   return br;
 }
 
-static inline WrBorderRadius ToWrBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
+static inline wr::BorderRadius ToBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
                                               const LayerSize& bottomLeft, const LayerSize& bottomRight)
 {
-  WrBorderRadius br;
-  br.top_left = ToWrSize(topLeft);
-  br.top_right = ToWrSize(topRight);
-  br.bottom_left = ToWrSize(bottomLeft);
-  br.bottom_right = ToWrSize(bottomRight);
+  wr::BorderRadius br;
+  br.top_left = ToLayoutSize(topLeft);
+  br.top_right = ToLayoutSize(topRight);
+  br.bottom_left = ToLayoutSize(bottomLeft);
+  br.bottom_right = ToLayoutSize(bottomRight);
   return br;
 }
 
-static inline WrBorderWidths ToWrBorderWidths(float top, float right, float bottom, float left)
+static inline wr::BorderWidths ToBorderWidths(float top, float right, float bottom, float left)
 {
-  WrBorderWidths bw;
+  wr::BorderWidths bw;
   bw.top = top;
   bw.right = right;
   bw.bottom = bottom;
@@ -358,19 +373,19 @@ static inline WrBorderWidths ToWrBorderWidths(float top, float right, float bott
   return bw;
 }
 
-static inline WrNinePatchDescriptor ToWrNinePatchDescriptor(uint32_t width, uint32_t height,
-                                                            const WrSideOffsets2Du32& slice)
+static inline wr::NinePatchDescriptor ToNinePatchDescriptor(uint32_t width, uint32_t height,
+                                                            const wr::SideOffsets2D_u32& slice)
 {
-  WrNinePatchDescriptor patch;
+  NinePatchDescriptor patch;
   patch.width = width;
   patch.height = height;
   patch.slice = slice;
   return patch;
 }
 
-static inline WrSideOffsets2Du32 ToWrSideOffsets2Du32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
+static inline wr::SideOffsets2D_u32 ToSideOffsets2D_u32(uint32_t top, uint32_t right, uint32_t bottom, uint32_t left)
 {
-  WrSideOffsets2Du32 offset;
+  SideOffsets2D_u32 offset;
   offset.top = top;
   offset.right = right;
   offset.bottom = bottom;
@@ -378,9 +393,9 @@ static inline WrSideOffsets2Du32 ToWrSideOffsets2Du32(uint32_t top, uint32_t rig
   return offset;
 }
 
-static inline WrSideOffsets2Df32 ToWrSideOffsets2Df32(float top, float right, float bottom, float left)
+static inline wr::SideOffsets2D_f32 ToSideOffsets2D_f32(float top, float right, float bottom, float left)
 {
-  WrSideOffsets2Df32 offset;
+  SideOffsets2D_f32 offset;
   offset.top = top;
   offset.right = right;
   offset.bottom = bottom;
@@ -388,56 +403,56 @@ static inline WrSideOffsets2Df32 ToWrSideOffsets2Df32(float top, float right, fl
   return offset;
 }
 
-static inline WrRepeatMode ToWrRepeatMode(uint8_t repeatMode)
+static inline wr::RepeatMode ToRepeatMode(uint8_t repeatMode)
 {
   switch (repeatMode) {
   case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
-    return WrRepeatMode::Stretch;
+    return wr::RepeatMode::Stretch;
   case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
-    return WrRepeatMode::Repeat;
+    return wr::RepeatMode::Repeat;
   case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
-    return WrRepeatMode::Round;
+    return wr::RepeatMode::Round;
   case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
-    return WrRepeatMode::Space;
+    return wr::RepeatMode::Space;
   default:
     MOZ_ASSERT(false);
   }
 
-  return WrRepeatMode::Stretch;
+  return wr::RepeatMode::Stretch;
 }
 
 template<class S, class T>
-static inline WrTransformProperty ToWrTransformProperty(uint64_t id,
-                                                        const gfx::Matrix4x4Typed<S, T>& transform)
+static inline wr::WrTransformProperty ToWrTransformProperty(uint64_t id,
+                                                            const gfx::Matrix4x4Typed<S, T>& transform)
 {
-  WrTransformProperty prop;
+  wr::WrTransformProperty prop;
   prop.id = id;
-  prop.transform = ToWrMatrix(transform);
+  prop.transform = ToLayoutTransform(transform);
   return prop;
 }
 
-static inline WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float opacity)
+static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float opacity)
 {
-  WrOpacityProperty prop;
+  wr::WrOpacityProperty prop;
   prop.id = id;
   prop.opacity = opacity;
   return prop;
 }
 
-static inline WrComplexClipRegion ToWrComplexClipRegion(const WrRect& rect,
-                                                        const LayerSize& size)
+static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const wr::LayoutRect& rect,
+                                                            const LayerSize& size)
 {
-  WrComplexClipRegion complex_clip;
+  wr::WrComplexClipRegion complex_clip;
   complex_clip.rect = rect;
-  complex_clip.radii = wr::ToWrUniformBorderRadius(size);
+  complex_clip.radii = wr::ToUniformBorderRadius(size);
   return complex_clip;
 }
 
 template<class T>
-static inline WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
-                                                        const LayerSize& size)
+static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
+                                                            const LayerSize& size)
 {
-  return ToWrComplexClipRegion(wr::ToWrRect(rect), size);
+  return ToWrComplexClipRegion(wr::ToLayoutRect(rect), size);
 }
 
 // Whenever possible, use wr::ExternalImageId instead of manipulating uint64_t.
@@ -452,29 +467,29 @@ static inline ExternalImageId ToExternalImageId(uint64_t aID)
   return Id;
 }
 
-static inline WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
-                                                       size_t size)
+static inline wr::WrExternalImage RawDataToWrExternalImage(const uint8_t* aBuff,
+                                                           size_t size)
 {
-  return WrExternalImage {
-    WrExternalImageType::RawData,
+  return wr::WrExternalImage {
+    wr::WrExternalImageType::RawData,
     0, 0.0f, 0.0f, 0.0f, 0.0f,
     aBuff, size
   };
 }
 
-static inline WrExternalImage NativeTextureToWrExternalImage(uint32_t aHandle,
-                                                             float u0, float v0,
-                                                             float u1, float v1)
+static inline wr::WrExternalImage NativeTextureToWrExternalImage(uint32_t aHandle,
+                                                                 float u0, float v0,
+                                                                 float u1, float v1)
 {
-  return WrExternalImage {
-    WrExternalImageType::NativeTexture,
+  return wr::WrExternalImage {
+    wr::WrExternalImageType::NativeTexture,
     aHandle, u0, v0, u1, v1,
     nullptr, 0
   };
 }
 
 struct VecU8 {
-  WrVecU8 inner;
+  wr::WrVecU8 inner;
   VecU8() {
     SetEmpty();
   }
@@ -491,9 +506,9 @@ struct VecU8 {
     return *this;
   }
 
-  WrVecU8
+  wr::WrVecU8
   Extract() {
-    WrVecU8 ret = inner;
+    wr::WrVecU8 ret = inner;
     SetEmpty();
     return ret;
   }
@@ -577,49 +592,49 @@ struct ByteBuffer
   bool mOwned;
 };
 
-inline WrByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
-  return WrByteSlice { aRange.begin().get(), aRange.length() };
+inline wr::ByteSlice RangeToByteSlice(mozilla::Range<uint8_t> aRange) {
+  return wr::ByteSlice { aRange.begin().get(), aRange.length() };
 }
 
-inline mozilla::Range<const uint8_t> ByteSliceToRange(WrByteSlice aWrSlice) {
+inline mozilla::Range<const uint8_t> ByteSliceToRange(wr::ByteSlice aWrSlice) {
   return mozilla::Range<const uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
-inline mozilla::Range<uint8_t> MutByteSliceToRange(MutByteSlice aWrSlice) {
+inline mozilla::Range<uint8_t> MutByteSliceToRange(wr::MutByteSlice aWrSlice) {
   return mozilla::Range<uint8_t>(aWrSlice.buffer, aWrSlice.len);
 }
 
 struct BuiltDisplayList {
-  VecU8 dl;
-  WrBuiltDisplayListDescriptor dl_desc;
+  wr::VecU8 dl;
+  wr::BuiltDisplayListDescriptor dl_desc;
 };
 
-static inline WrFilterOpType ToWrFilterOpType(const layers::CSSFilterType type) {
+static inline wr::WrFilterOpType ToWrFilterOpType(const layers::CSSFilterType type) {
   switch (type) {
     case layers::CSSFilterType::BLUR:
-      return WrFilterOpType::Blur;
+      return wr::WrFilterOpType::Blur;
     case layers::CSSFilterType::BRIGHTNESS:
-      return WrFilterOpType::Brightness;
+      return wr::WrFilterOpType::Brightness;
     case layers::CSSFilterType::CONTRAST:
-      return WrFilterOpType::Contrast;
+      return wr::WrFilterOpType::Contrast;
     case layers::CSSFilterType::GRAYSCALE:
-      return WrFilterOpType::Grayscale;
+      return wr::WrFilterOpType::Grayscale;
     case layers::CSSFilterType::HUE_ROTATE:
-      return WrFilterOpType::HueRotate;
+      return wr::WrFilterOpType::HueRotate;
     case layers::CSSFilterType::INVERT:
-      return WrFilterOpType::Invert;
+      return wr::WrFilterOpType::Invert;
     case layers::CSSFilterType::OPACITY:
-      return WrFilterOpType::Opacity;
+      return wr::WrFilterOpType::Opacity;
     case layers::CSSFilterType::SATURATE:
-      return WrFilterOpType::Saturate;
+      return wr::WrFilterOpType::Saturate;
     case layers::CSSFilterType::SEPIA:
-      return WrFilterOpType::Sepia;
+      return wr::WrFilterOpType::Sepia;
   }
   MOZ_ASSERT_UNREACHABLE("Tried to convert unknown filter type.");
-  return WrFilterOpType::Grayscale;
+  return wr::WrFilterOpType::Grayscale;
 }
 
-static inline WrFilterOp ToWrFilterOp(const layers::CSSFilter& filter) {
+static inline wr::WrFilterOp ToWrFilterOp(const layers::CSSFilter& filter) {
   return {
     ToWrFilterOpType(filter.type),
     filter.argument,

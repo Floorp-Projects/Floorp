@@ -674,7 +674,13 @@ DocAccessibleParent::SendParentCOMProxy()
 
   IAccessibleHolder::COMPtrType ptr(rawNative);
   IAccessibleHolder holder(Move(ptr));
-  Unused << PDocAccessibleParent::SendParentCOMProxy(holder);
+  if (!PDocAccessibleParent::SendParentCOMProxy(holder)) {
+    return;
+  }
+
+#if defined(MOZ_CONTENT_SANDBOX)
+  mParentProxyStream = Move(holder.GetPreservedStream());
+#endif // defined(MOZ_CONTENT_SANDBOX)
 }
 
 void

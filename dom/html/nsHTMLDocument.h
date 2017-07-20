@@ -74,6 +74,8 @@ public:
     return mWriteLevel != uint32_t(0);
   }
 
+  virtual nsIContent* GetUnfocusedKeyEventTarget() override;
+
   virtual nsContentList* GetForms() override;
 
   virtual nsContentList* GetFormControls() override;

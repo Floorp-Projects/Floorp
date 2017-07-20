@@ -255,6 +255,7 @@ nsHttpHandler::nsHttpHandler()
     , mUseFastOpen(true)
     , mFastOpenConsecutiveFailureLimit(5)
     , mFastOpenConsecutiveFailureCounter(0)
+    , mActiveTabPriority(true)
     , mProcessId(0)
     , mNextChannelId(1)
 {
@@ -406,6 +407,12 @@ nsHttpHandler::Init()
         NeckoChild::InitNeckoChild();
 
     InitUserAgentComponents();
+
+    // This perference is only used in parent process.
+    if (!IsNeckoChild()) {
+        mActiveTabPriority =
+            Preferences::GetBool(HTTP_PREF("active_tab_priority"), true);
+    }
 
     // monitor some preference changes
     nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);

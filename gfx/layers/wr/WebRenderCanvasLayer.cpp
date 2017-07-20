@@ -83,11 +83,11 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   Stringify(filter).c_str());
   }
 
-  WrImageKey key = GetImageKey();
+  wr::WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
-  WrRect r = sc.ToRelativeWrRect(rect);
+  wr::LayoutRect r = sc.ToRelativeLayoutRect(rect);
   aBuilder.PushImage(r, r, filter, key);
 }
 

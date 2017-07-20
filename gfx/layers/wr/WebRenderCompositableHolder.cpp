@@ -19,8 +19,8 @@ WebRenderCompositableHolder::AsyncImagePipelineHolder::AsyncImagePipelineHolder(
  : mInitialised(false)
  , mIsChanged(false)
  , mUseExternalImage(false)
- , mFilter(WrImageRendering::Auto)
- , mMixBlendMode(WrMixBlendMode::Normal)
+ , mFilter(wr::ImageRendering::Auto)
+ , mMixBlendMode(wr::MixBlendMode::Normal)
 {}
 
 WebRenderCompositableHolder::WebRenderCompositableHolder(uint32_t aIdNamespace)
@@ -135,8 +135,8 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
                                                       const LayerRect& aScBounds,
                                                       const gfx::Matrix4x4& aScTransform,
                                                       const gfx::MaybeIntSize& aScaleToSize,
-                                                      const WrImageRendering& aFilter,
-                                                      const WrMixBlendMode& aMixBlendMode)
+                                                      const wr::ImageRendering& aFilter,
+                                                      const wr::MixBlendMode& aMixBlendMode)
 {
   if (mDestroyed) {
     return;
@@ -264,20 +264,20 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
       continue;
     }
 
-    WrSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
+    wr::LayoutSize contentSize { holder->mScBounds.width, holder->mScBounds.height };
     wr::DisplayListBuilder builder(pipelineId, contentSize);
 
     if (!keys.IsEmpty()) {
       MOZ_ASSERT(holder->mCurrentTexture.get());
 
       float opacity = 1.0f;
-      builder.PushStackingContext(wr::ToWrRect(holder->mScBounds),
+      builder.PushStackingContext(wr::ToLayoutRect(holder->mScBounds),
                                   0,
                                   &opacity,
                                   holder->mScTransform.IsIdentity() ? nullptr : &holder->mScTransform,
-                                  WrTransformStyle::Flat,
+                                  wr::TransformStyle::Flat,
                                   holder->mMixBlendMode,
-                                  nsTArray<WrFilterOp>());
+                                  nsTArray<wr::WrFilterOp>());
 
       LayerRect rect(0, 0, holder->mCurrentTexture->GetSize().width, holder->mCurrentTexture->GetSize().height);
       if (holder->mScaleToSize.isSome()) {
@@ -288,15 +288,15 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
         MOZ_ASSERT(holder->mCurrentTexture->AsWebRenderTextureHost());
         Range<const wr::ImageKey> range_keys(&keys[0], keys.Length());
         holder->mCurrentTexture->PushExternalImage(builder,
-                                                   wr::ToWrRect(rect),
-                                                   wr::ToWrRect(rect),
+                                                   wr::ToLayoutRect(rect),
+                                                   wr::ToLayoutRect(rect),
                                                    holder->mFilter,
                                                    range_keys);
         HoldExternalImage(pipelineId, epoch, holder->mCurrentTexture->AsWebRenderTextureHost());
       } else {
         MOZ_ASSERT(keys.Length() == 1);
-        builder.PushImage(wr::ToWrRect(rect),
-                          wr::ToWrRect(rect),
+        builder.PushImage(wr::ToLayoutRect(rect),
+                          wr::ToLayoutRect(rect),
                           holder->mFilter,
                           keys[0]);
       }
@@ -304,7 +304,7 @@ WebRenderCompositableHolder::ApplyAsyncImages(wr::WebRenderAPI* aApi)
     }
 
     wr::BuiltDisplayList dl;
-    WrSize builderContentSize;
+    wr::LayoutSize builderContentSize;
     builder.Finalize(builderContentSize, dl);
     aApi->SetRootDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(holder->mScBounds.width, holder->mScBounds.height),
                              pipelineId, builderContentSize,

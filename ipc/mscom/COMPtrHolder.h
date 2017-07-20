@@ -7,10 +7,15 @@
 #ifndef mozilla_mscom_COMPtrHolder_h
 #define mozilla_mscom_COMPtrHolder_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Ptr.h"
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/SandboxSettings.h"
+#endif // defined(MOZ_CONTENT_SANDBOX)
 
 namespace mozilla {
 namespace mscom {
@@ -47,6 +52,22 @@ public:
   {
     mPtr = Forward<COMPtrType>(aPtr);
   }
+
+#if defined(MOZ_CONTENT_SANDBOX)
+  // This method is const because we need to call it during IPC write, where
+  // we are passed as a const argument. At higher sandboxing levels we need to
+  // save this artifact from the serialization process for later deletion.
+  void PreserveStream(RefPtr<IStream>&& aPtr) const
+  {
+    MOZ_ASSERT(!mMarshaledStream);
+    mMarshaledStream = ToPreservedStreamPtr(Move(aPtr));
+  }
+
+  PreservedStreamPtr GetPreservedStream()
+  {
+    return Move(mMarshaledStream);
+  }
+#endif // defined(MOZ_CONTENT_SANDBOX)
 
   COMPtrHolder(const COMPtrHolder& aOther) = delete;
 
@@ -87,6 +108,12 @@ public:
 private:
   // This is mutable to facilitate the above operator= hack
   mutable COMPtrType mPtr;
+
+#if defined(MOZ_CONTENT_SANDBOX)
+  // This is mutable so that we may optionally store a reference to a marshaled
+  // stream to be cleaned up later via PreserveStream().
+  mutable PreservedStreamPtr mMarshaledStream;
+#endif // defined(MOZ_CONTENT_SANDBOX)
 };
 
 } // namespace mscom
@@ -109,6 +136,24 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     if (bufLen) {
       aMsg->WriteBytes(reinterpret_cast<const char*>(buf), bufLen);
     }
+
+#if defined(MOZ_CONTENT_SANDBOX)
+    if (XRE_IsParentProcess()) {
+      static const bool sIsStreamPreservationNeeded =
+        mozilla::GetEffectiveContentSandboxLevel() >= 3;
+      if (sIsStreamPreservationNeeded) {
+        /**
+         * When we're sending a ProxyStream from parent to content and the
+         * content sandboxing level is >= 3, content is unable to communicate
+         * its releasing of its reference to the proxied object. We preserve the
+         * marshaled proxy data here and later manually release it on content's
+         * behalf.
+         */
+        RefPtr<IStream> stream(proxyStream.GetStream());
+        aParam.PreserveStream(mozilla::Move(stream));
+      }
+    }
+#endif // defined(MOZ_CONTENT_SANDBOX)
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)

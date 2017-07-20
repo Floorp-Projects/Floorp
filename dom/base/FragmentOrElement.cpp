@@ -714,8 +714,10 @@ FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
 
   if (mExtendedSlots->mCustomElementData) {
     for (uint32_t i = 0;
-         i < mExtendedSlots->mCustomElementData->mCallbackQueue.Length(); i++) {
-      mExtendedSlots->mCustomElementData->mCallbackQueue[i]->Traverse(cb);
+         i < mExtendedSlots->mCustomElementData->mReactionQueue.Length(); i++) {
+      if (mExtendedSlots->mCustomElementData->mReactionQueue[i]) {
+        mExtendedSlots->mCustomElementData->mReactionQueue[i]->Traverse(cb);
+      }
     }
   }
 

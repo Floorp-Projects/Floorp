@@ -23,7 +23,7 @@ using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
-using WrBuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 
 namespace mozilla {
@@ -55,10 +55,10 @@ parent:
   async DeleteFont(FontKey aFontKey);
   async DPBegin(IntSize aSize);
   async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-              WrSize aContentSize, ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc,
+              LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
               WebRenderScrollData aScrollData, uint32_t idNameSpace);
   sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-                 WrSize aContentSize, ByteBuffer aDL, WrBuiltDisplayListDescriptor aDLDesc,
+                 LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
                  WebRenderScrollData aScrollData, uint32_t idNameSpace);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync DPGetSnapshot(PTexture texture);

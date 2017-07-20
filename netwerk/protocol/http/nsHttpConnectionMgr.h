@@ -535,8 +535,20 @@ private:
     MOZ_MUST_USE bool ProcessPendingQForEntry(nsConnectionEntry *,
                                               bool considerAll);
     bool DispatchPendingQ(nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
-                                   nsConnectionEntry *ent,
-                                   bool considerAll);
+                          nsConnectionEntry *ent,
+                          bool considerAll);
+
+    // This function selects transactions from mPendingTransactionTable to dispatch
+    // according to the following conditions:
+    // 1. When ActiveTabPriority() is false, only get transactions from the queue
+    //    whose window id is 0.
+    // 2. If |considerAll| is false, either get transactions from the focused window
+    //    queue or non-focused ones.
+    // 3. If |considerAll| is true, fill the |pendingQ| with the transactions from
+    //    both focused window and non-focused window queues.
+    void PreparePendingQForDispatching(nsConnectionEntry *ent,
+                                       nsTArray<RefPtr<PendingTransactionInfo>> &pendingQ,
+                                       bool considerAll);
 
     // Return total active connection count, which is the sum of
     // active connections and unconnected half open connections.
@@ -732,6 +744,9 @@ private:
     bool mActiveTabUnthrottledTransactionsExist;
 
     void LogActiveTransactions(char);
+
+    nsTArray<RefPtr<PendingTransactionInfo>>*
+    GetTransactionPendingQHelper(nsConnectionEntry *ent, nsAHttpTransaction *trans);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnectionMgr::nsHalfOpenSocket, NS_HALFOPENSOCKET_IID)

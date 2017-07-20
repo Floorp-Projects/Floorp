@@ -4256,6 +4256,9 @@ CompileForNonSyntacticScope(JSContext* cx, const ReadOnlyCompileOptions& options
 extern JS_PUBLIC_API(bool)
 CanCompileOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
 
+extern JS_PUBLIC_API(bool)
+CanDecodeOffThread(JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
+
 /*
  * Off thread compilation control flow.
  *

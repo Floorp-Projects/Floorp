@@ -113,6 +113,34 @@ struct InterceptorTargetDeleter
   }
 };
 
+struct PreservedStreamDeleter
+{
+  void operator()(IStream* aPtr)
+  {
+    if (!aPtr) {
+      return;
+    }
+
+    // Static analysis doesn't recognize that, even though aPtr escapes the
+    // current scope, we are in effect moving our strong ref into the lambda.
+    void* ptr = aPtr;
+    auto cleanup = [ptr]() -> void {
+      DebugOnly<HRESULT> hr =
+        ::CoReleaseMarshalData(reinterpret_cast<LPSTREAM>(ptr));
+      MOZ_ASSERT(SUCCEEDED(hr));
+      reinterpret_cast<LPSTREAM>(ptr)->Release();
+    };
+
+    if (XRE_IsParentProcess()) {
+      MOZ_ASSERT(NS_IsMainThread());
+      cleanup();
+      return;
+    }
+
+    EnsureMTA::AsyncOperation(cleanup);
+  }
+};
+
 } // namespace detail
 
 template <typename T>
@@ -130,6 +158,9 @@ using ProxyUniquePtr = mozilla::UniquePtr<T, detail::MTAReleaseInChildProcess<T>
 template <typename T>
 using InterceptorTargetPtr =
   mozilla::UniquePtr<T, detail::InterceptorTargetDeleter>;
+
+using PreservedStreamPtr =
+  mozilla::UniquePtr<IStream, detail::PreservedStreamDeleter>;
 
 namespace detail {
 
@@ -272,6 +303,12 @@ ToInterceptorTargetPtr(const UniquePtr<T, Deleter>& aTargetPtr)
   return InterceptorTargetPtr<T>(aTargetPtr.get());
 }
 
+inline PreservedStreamPtr
+ToPreservedStreamPtr(RefPtr<IStream>&& aStream)
+{
+  return PreservedStreamPtr(aStream.forget().take());
+}
+
 template <typename T, typename Deleter>
 inline detail::UniquePtrGetterAddRefs<T, Deleter>
 getter_AddRefs(UniquePtr<T, Deleter>& aSmartPtr)
@@ -308,6 +345,12 @@ template<typename T>
 struct SmartPointerStorageClass<mozilla::mscom::InterceptorTargetPtr<T>>
 {
   typedef StoreCopyPassByRRef<mozilla::mscom::InterceptorTargetPtr<T>> Type;
+};
+
+template<>
+struct SmartPointerStorageClass<mozilla::mscom::PreservedStreamPtr>
+{
+  typedef StoreCopyPassByRRef<mozilla::mscom::PreservedStreamPtr> Type;
 };
 
 } // namespace detail

@@ -28,8 +28,8 @@ WebRenderColorLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("ColorLayer", rect);
 
-  WrRect r = sc.ToRelativeWrRect(rect);
-  aBuilder.PushRect(r, r, wr::ToWrColor(mColor));
+  wr::LayoutRect r = sc.ToRelativeLayoutRect(rect);
+  aBuilder.PushRect(r, r, wr::ToColorF(mColor));
 }
 
 } // namespace layers
