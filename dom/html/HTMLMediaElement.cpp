@@ -5884,8 +5884,7 @@ bool HTMLMediaElement::CanActivateAutoplay()
 
   bool hasData =
     (mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
-    (mSrcStream && mSrcStream->Active()) ||
-    mMediaSource;
+    (mSrcStream && mSrcStream->Active());
 
   return hasData;
 }
