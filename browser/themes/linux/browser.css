@@ -1032,62 +1032,19 @@ html|span.ac-emphasize-text-url {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 96, 16, 80);
 }
 
-/* Tabstrip new tab button */
-.tabs-newtab-button,
-#TabsToolbar > #new-tab-button ,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
-  -moz-image-region: auto;
-}
+/* Tab bar scroll arrows */
 
-#TabsToolbar[brighttext] .tabs-newtab-button,
-#TabsToolbar[brighttext] > #new-tab-button,
-#TabsToolbar[brighttext] > toolbarpaletteitem > #new-tab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.svg);
-}
-
-/* Tabbrowser arrowscrollbox arrows */
 .tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
 .tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
   -moz-appearance: none;
 }
 
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-}
-
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}
-
-#alltabs-button {
-  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
-}
-
-#TabsToolbar[brighttext] > #alltabs-button,
-#TabsToolbar[brighttext] > toolbarpaletteitem > #alltabs-button {
-  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs-inverted.png");
-}
-
 /* All tabs menupopup */
-.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
-}
 
 .alltabs-item[selected="true"] {
   font-weight: bold;
 }
 
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
 
 toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;

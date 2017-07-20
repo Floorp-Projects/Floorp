@@ -525,7 +525,29 @@
   display: -moz-box;
 }
 
+/* Tab bar scroll arrows */
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  list-style-image: url(chrome://browser/skin/arrow-left.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
 /* New tab button */
+
+.tabs-newtab-button,
+#TabsToolbar > #new-tab-button ,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button {
+  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
 
 .tabs-newtab-button {
   width: calc(36px + var(--tab-curve-width));
@@ -587,7 +609,27 @@
   }
 }
 
-/* All tabs menupopup */
+/* All tabs button and menupopup */
+
+#alltabs-button {
+  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+}
+
+.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+  list-style-image: url("chrome://global/skin/icons/loading.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
+    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
+}
 
 .alltabs-item[tabIsVisible] {
   /* box-shadow instead of background-color to work around native styling */

@@ -1454,78 +1454,12 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
   border: none;
 }
 
-/* Tab scrollbox arrow, tabstrip new tab and all-tabs buttons */
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up,
-.tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.svg");
-}
-
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.svg);
-}
-
-.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
-.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
-  transform: scaleX(-1);
-}
-
-.tabs-newtab-button > .toolbarbutton-icon {
-  margin-top: -1px;
-  margin-bottom: -1px;
-}
-
-.tabs-newtab-button,
-#TabsToolbar > #new-tab-button,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
-  -moz-image-region: auto;
-}
-
-#TabsToolbar[brighttext] .tabs-newtab-button,
-#TabsToolbar[brighttext] > #new-tab-button,
-#TabsToolbar[brighttext] > toolbarpaletteitem > #new-tab-button {
-  list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.svg);
-}
-
-.tabs-newtab-button > .toolbarbutton-icon,
-#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
-#TabsToolbar > toolbarpaletteitem > #new-tab-button > .toolbarbutton-icon {
-  width: 16px;
-}
-
-#TabsToolbar > #new-tab-button {
-  width: 26px;
-}
-
-#alltabs-button {
-  list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
-}
-
-#TabsToolbar[brighttext] > #alltabs-button,
-#TabsToolbar[brighttext] > toolbarpaletteitem > #alltabs-button {
-  list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
-}
-
 /* All tabs menupopup */
-.alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
-}
 
 .alltabs-item[selected="true"] {
   font-weight: bold;
 }
 
-.alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url("chrome://global/skin/icons/loading.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .alltabs-item[busy] > .menu-iconic-left > .menu-iconic-icon {
-    list-style-image: url("chrome://global/skin/icons/loading@2x.png");
-  }
-}
 
 toolbarbutton.chevron {
   list-style-image: url("chrome://global/skin/toolbar/chevron.gif") !important;
