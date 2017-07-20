@@ -356,6 +356,11 @@ photonpanelmultiview panelview {
   max-width: 30em;
 }
 
+/* Add 2 * 12px extra width for touch mode button padding. */
+#appMenu-popup[touchmode] panelview {
+  min-width: calc(@menuPanelWidth@ + 24px);
+}
+
 photonpanelmultiview .panel-subview-body {
   margin: 4px 0;
 }

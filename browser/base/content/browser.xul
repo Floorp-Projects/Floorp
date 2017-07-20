@@ -1218,7 +1218,7 @@
                      tooltip="dynamic-shortcut-tooltip"/>
 #ifdef MOZ_PHOTON_THEME
       <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, true);"
+                     oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
                      closemenu="none"
                      label="&places.library.title;"/>
 #endif
