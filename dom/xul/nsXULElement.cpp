@@ -1255,6 +1255,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
         // sourceEvent will be the original command event that we're
         // handling.
         nsCOMPtr<nsIDOMEvent> domEvent = aVisitor.mDOMEvent;
+        uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
         while (domEvent) {
             Event* event = domEvent->InternalDOMEvent();
             NS_ENSURE_STATE(!SameCOMIdentity(event->GetOriginalTarget(),
@@ -1263,6 +1264,7 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
                 do_QueryInterface(domEvent);
             if (commandEvent) {
                 commandEvent->GetSourceEvent(getter_AddRefs(domEvent));
+                commandEvent->GetInputSource(&inputSource);
             } else {
                 domEvent = nullptr;
             }
@@ -1276,7 +1278,8 @@ nsXULElement::DispatchXULCommand(const EventChainVisitor& aVisitor,
           orig->IsControl(),
           orig->IsAlt(),
           orig->IsShift(),
-          orig->IsMeta());
+          orig->IsMeta(),
+          inputSource);
     } else {
         NS_WARNING("A XUL element is attached to a command that doesn't exist!\n");
     }
