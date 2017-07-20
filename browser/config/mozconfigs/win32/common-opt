@@ -1,8 +1,6 @@
 # This file is sourced by the nightly, beta, and release mozconfigs.
 
-# TODO remove once configure defaults to stylo once stylo enabled
-# on all platforms.
-ac_add_options --enable-stylo=build
+. "$topsrcdir/build/mozconfig.stylo"
 
 . "$topsrcdir/browser/config/mozconfigs/common"
 

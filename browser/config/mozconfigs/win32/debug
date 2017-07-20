@@ -2,9 +2,7 @@
 MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/browser/config/mozconfigs/common"
 
-# TODO remove once configure defaults to stylo once stylo enabled
-# on all platforms.
-ac_add_options --enable-stylo=build
+. "$topsrcdir/build/mozconfig.stylo"
 
 ac_add_options --enable-debug
 ac_add_options --enable-dmd

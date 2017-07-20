@@ -1,0 +1,6 @@
+# Tell the build system where to find llvm-config for builds on automation.
+export LLVM_CONFIG="${TOOLTOOL_DIR:-$topsrcdir}/clang/bin/llvm-config"
+
+# TODO remove once configure defaults to stylo once stylo enabled
+# on all platforms.
+ac_add_options --enable-stylo=build
