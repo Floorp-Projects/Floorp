@@ -15,6 +15,7 @@ import os
 import time
 from copy import deepcopy
 
+from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import validate_schema, Schema
@@ -476,6 +477,12 @@ V2_ROUTE_TEMPLATES = [
     "index.gecko.v2.{project}.revision.{head_rev}.{product}.{job-name}",
 ]
 
+# {central, inbound, autoland} write to a "trunk" index prefix. This facilitates
+# walking of tasks with similar configurations.
+V2_TRUNK_ROUTE_TEMPLATES = [
+    "index.gecko.v2.trunk.revision.{head_rev}.{product}.{job-name}",
+]
+
 V2_NIGHTLY_TEMPLATES = [
     "index.gecko.v2.{project}.nightly.latest.{product}.{job-name}",
     "index.gecko.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}.{job-name}",
@@ -820,8 +827,16 @@ def add_generic_index_routes(config, task):
                                             time.gmtime(config.params['build_date']))
     subs['product'] = index['product']
 
+    project = config.params.get('project')
+
     for tpl in V2_ROUTE_TEMPLATES:
         routes.append(tpl.format(**subs))
+
+    # Additionally alias all tasks for "trunk" repos into a common
+    # namespace.
+    if project and project in TRUNK_PROJECTS:
+        for tpl in V2_TRUNK_ROUTE_TEMPLATES:
+            routes.append(tpl.format(**subs))
 
     return task
 
