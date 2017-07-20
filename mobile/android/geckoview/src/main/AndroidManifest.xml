@@ -22,16 +22,18 @@
     <uses-feature android:name="android.hardware.location.gps" android:required="false"/>
     <uses-feature android:name="android.hardware.touchscreen"/>
 
-    <!--#ifdef MOZ_WEBRTC-->
-    <!--<uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
-    <!--<uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>-->
-    <!--<uses-feature android:name="android.hardware.camera.any" android:required="false"/>-->
-    <!--<uses-feature android:name="android.hardware.microphone" android:required="false"/>-->
-    <!--#endif-->
-
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+
+    <!--#ifdef MOZ_WEBRTC-->
+    <!-- TODO preprocess AndroidManifest.xml so that we can
+         conditionally include WebRTC permissions based on MOZ_WEBRTC. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>-->
+    <uses-feature android:name="android.hardware.audio.low_latency" android:required="false"/>-->
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>-->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>-->
+    <!--#endif-->
 
     <!-- App requires OpenGL ES 2.0 -->
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
