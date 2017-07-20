@@ -1349,31 +1349,6 @@ class LMutateProto : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
     }
 };
 
-// Takes in an Object and a Value.
-class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(InitProp)
-
-    LInitProp(const LAllocation& object, const LBoxAllocation& value) {
-        setOperand(0, object);
-        setBoxOperand(ValueIndex, value);
-    }
-
-    static const size_t ValueIndex = 1;
-
-    const LAllocation* getObject() {
-        return getOperand(0);
-    }
-    const LAllocation* getValue() {
-        return getOperand(1);
-    }
-
-    MInitProp* mir() const {
-        return mir_->toInitProp();
-    }
-};
-
 class LInitPropGetterSetter : public LCallInstructionHelper<0, 2, 0>
 {
   public:

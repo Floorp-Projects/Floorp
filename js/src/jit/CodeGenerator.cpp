@@ -6263,22 +6263,6 @@ CodeGenerator::visitMutateProto(LMutateProto* lir)
     callVM(MutatePrototypeInfo, lir);
 }
 
-typedef bool(*InitPropFn)(JSContext*, HandleObject, HandlePropertyName, HandleValue, jsbytecode* pc);
-static const VMFunction InitPropInfo = FunctionInfo<InitPropFn>(InitProp, "InitProp");
-
-void
-CodeGenerator::visitInitProp(LInitProp* lir)
-{
-    Register objReg = ToRegister(lir->getObject());
-
-    pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
-    pushArg(ToValue(lir, LInitProp::ValueIndex));
-    pushArg(ImmGCPtr(lir->mir()->propertyName()));
-    pushArg(objReg);
-
-    callVM(InitPropInfo, lir);
-}
-
 typedef bool(*InitPropGetterSetterFn)(JSContext*, jsbytecode*, HandleObject, HandlePropertyName,
                                       HandleObject);
 static const VMFunction InitPropGetterSetterInfo =
