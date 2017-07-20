@@ -413,19 +413,6 @@ DoStat(const char* aPath, void* aBuff, int aFlags)
   return statsyscall(aPath, (statstruct*)aBuff);
 }
 
-static int
-DoLink(const char* aPath, const char* aPath2,
-       SandboxBrokerCommon::Operation aOper)
-{
-  if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_LINK) {
-    return link(aPath, aPath2);
-  }
-  if (aOper == SandboxBrokerCommon::Operation::SANDBOX_FILE_SYMLINK) {
-    return symlink(aPath, aPath2);
-  }
-  MOZ_CRASH("SandboxBroker: Unknown link operation");
-}
-
 size_t
 SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
 {
@@ -685,31 +672,6 @@ SandboxBroker::ThreadMain(void)
       case SANDBOX_FILE_CHMOD:
         if (permissive || AllowOperation(W_OK, perms)) {
           if (chmod(pathBuf, req.mFlags) == 0) {
-            resp.mError = 0;
-          } else {
-            resp.mError = -errno;
-          }
-        } else {
-          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
-        }
-        break;
-
-      case SANDBOX_FILE_LINK:
-      case SANDBOX_FILE_SYMLINK:
-        if (permissive || AllowOperation(W_OK, perms)) {
-          if (DoLink(pathBuf, pathBuf2, req.mOp) == 0) {
-            resp.mError = 0;
-          } else {
-            resp.mError = -errno;
-          }
-        } else {
-          AuditDenial(req.mOp, req.mFlags, perms, pathBuf);
-        }
-        break;
-
-      case SANDBOX_FILE_RENAME:
-        if (permissive || AllowOperation(W_OK, perms)) {
-          if (rename(pathBuf, pathBuf2) == 0) {
             resp.mError = 0;
           } else {
             resp.mError = -errno;
