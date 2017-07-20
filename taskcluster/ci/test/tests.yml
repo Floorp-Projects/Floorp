@@ -119,7 +119,6 @@ firefox-ui-functional-local:
     suite: "firefox-ui/functional local"
     treeherder-symbol: tc-Fxfn-l(en-US)
     max-run-time: 5400
-    tier: 1
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: firefox_ui_tests/functional.py
