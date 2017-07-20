@@ -1,0 +1,3 @@
+component {117c8cdf-69e6-4f31-a439-b8a654c67127} BHRTelemetryService.js
+contract @mozilla.org/bhr-telemetry-service;1 {117c8cdf-69e6-4f31-a439-b8a654c67127}
+category profile-after-change BHRTelemetryService @mozilla.org/bhr-telemetry-service;1
