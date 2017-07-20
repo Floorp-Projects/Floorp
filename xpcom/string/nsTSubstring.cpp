@@ -23,6 +23,7 @@ nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        ClassFlags aClassFlags)
   : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
 {
+  AssertValid();
   MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
 
   if (aDataFlags & DataFlags::OWNED) {

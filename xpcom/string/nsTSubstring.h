@@ -997,6 +997,15 @@ public:
     }
   }
 
+protected:
+  void AssertValid()
+  {
+    MOZ_ASSERT(!(mClassFlags & ClassFlags::NULL_TERMINATED) ||
+               (mDataFlags & DataFlags::TERMINATED),
+               "String classes whose static type guarantees a null-terminated "
+               "buffer must not be assigned a non-null-terminated buffer.");
+  }
+
 public:
 
   /**
@@ -1006,6 +1015,7 @@ public:
   MOZ_IMPLICIT nsTSubstring_CharT(const substring_tuple_type& aTuple)
     : nsTStringRepr_CharT(nullptr, 0, DataFlags(0), ClassFlags(0))
   {
+    AssertValid();
     Assign(aTuple);
   }
 
@@ -1046,6 +1056,7 @@ protected:
     : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
                           ClassFlags(0))
   {
+    AssertValid();
   }
 
   // copy-constructor, constructs as dependent on given object
@@ -1055,6 +1066,7 @@ protected:
                           aStr.mDataFlags & (DataFlags::TERMINATED | DataFlags::VOIDED),
                           ClassFlags(0))
   {
+    AssertValid();
   }
 
   // initialization with ClassFlags
@@ -1062,6 +1074,7 @@ protected:
     : nsTStringRepr_CharT(char_traits::sEmptyBuffer, 0, DataFlags::TERMINATED,
                           aClassFlags)
   {
+    AssertValid();
   }
 
  /**
@@ -1077,6 +1090,7 @@ protected:
 #undef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
     : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
   {
+    AssertValid();
     MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
@@ -1086,6 +1100,7 @@ protected:
     mData = char_traits::sEmptyBuffer;
     mLength = 0;
     mDataFlags = DataFlags::TERMINATED;
+    AssertValid();
   }
 
   void SetData(char_type* aData, size_type aLength, DataFlags aDataFlags)
@@ -1093,6 +1108,7 @@ protected:
     mData = aData;
     mLength = aLength;
     mDataFlags = aDataFlags;
+    AssertValid();
   }
 
   /**
