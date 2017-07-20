@@ -1980,6 +1980,22 @@
         </body>
       </method>
 
+      <method name="removePreloadedBrowser">
+        <body>
+          <![CDATA[
+            if (!this._isPreloadingEnabled()) {
+              return;
+            }
+
+            let browser = this._getPreloadedBrowser();
+
+            if (browser) {
+              browser.remove();
+            }
+          ]]>
+        </body>
+      </method>
+
       <field name="_preloadedBrowser">null</field>
       <method name="_getPreloadedBrowser">
         <body>
@@ -5694,9 +5710,7 @@
           // Preloaded browsers do not actually have any tabs. If one crashes,
           // it should be released and removed.
           if (browser === this._preloadedBrowser) {
-            // Calling _getPreloadedBrowser is necessary to actually consume the preloaded browser
-            let preloaded = this._getPreloadedBrowser();
-            preloaded.remove();
+            this.removePreloadedBrowser();
             return;
           }
 
