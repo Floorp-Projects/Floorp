@@ -58,12 +58,6 @@ protected:
 
   ~PerformanceMainThread();
 
-  nsISupports* GetAsISupports() override
-  {
-    Performance* performance = this;
-    return performance;
-  }
-
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 
   bool IsPerformanceTimingAttribute(const nsAString& aName) override;
