@@ -123,6 +123,9 @@ add_task(async function test_settings_store() {
       "getLevelOfControl returns correct levelOfControl when another extension is in control.");
   }
 
+  // Reload the settings store to emulate a browser restart.
+  await ExtensionSettingsStore._reloadFile();
+
   // Add a setting for the newest extension.
   for (let key of KEY_LIST) {
     let extensionIndex = 2;
