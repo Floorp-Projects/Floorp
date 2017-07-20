@@ -819,6 +819,15 @@ CustomizeMode.prototype = {
         Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
       let overflowButton = this.document.getElementById("nav-bar-overflow-button");
       overflowButton.setAttribute("animate", "true");
+      overflowButton.addEventListener("animationend", function onAnimationEnd(event) {
+        if (event.animationName.startsWith("overflow-animation")) {
+          this.setAttribute("fade", "true");
+        } else if (event.animationName == "overflow-fade") {
+          this.removeEventListener("animationend", onAnimationEnd);
+          this.removeAttribute("animate");
+          this.removeAttribute("fade");
+        }
+      });
     }
   },
 
