@@ -96,7 +96,7 @@ this.slides = (function() {
     };
     let linkUrls = {
       [termsSentinel]: "https://www.mozilla.org/about/legal/terms/services/",
-      [privacySentinel]: "https://www.mozilla.org/privacy/firefox-cloud/"
+      [privacySentinel]: "https://www.mozilla.org/privacy/firefox/"
     };
     let text = browser.i18n.getMessage(
       "termsAndPrivacyNoticeCloudServices",
