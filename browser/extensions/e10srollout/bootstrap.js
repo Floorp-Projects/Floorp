@@ -10,27 +10,39 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
 
 // The amount of people to be part of e10s
 const TEST_THRESHOLD = {
-  "beta"    : 0.9,  // 90%
-  "release" : 1.0,  // 100%
-  "esr"     : 1.0,  // 100%
+  "beta": 0.9,  // 90%
+  "release": 1.0,  // 100%
+  "esr": 1.0,  // 100%
 };
 
 // If a user qualifies for the e10s-multi experiement, this is how many
 // content processes to use and whether to allow addons for the experiment.
 const MULTI_EXPERIMENT = {
   "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
-            addons: true },
-  "release": { buckets: { 1: .2, 4: 1 }, // 1 process: 20%, 4 processes: 80%
-               addons: false },
+
+            // When on the "beta" channel, getAddonsDisqualifyForMulti
+            // will return true if any addon installed is not a web extension.
+            // Therefore, this returns true if and only if all addons
+            // installed are web extensions or if no addons are installed
+            // at all.
+            addonsDisableExperiment(prefix) { return getAddonsDisqualifyForMulti(); } },
+
+  "release": { buckets: { 1: .99, 4: 1 }, // 1 process: 99%, 4 processes: 1%
+
+               // We don't want to allow users with any extension
+               // (webextension or otherwise in the experiment). prefix will
+               // be non-empty if there is any addon.
+               addonsDisableExperiment(prefix) { return !!prefix; } }
 };
 
 const ADDON_ROLLOUT_POLICY = {
-  "beta"    : "50allmpc", // Any WebExtension or addon except with mpc = false
-  "release" : "50allmpc",
-  "esr"     : "esrA", // WebExtensions and Addons with mpc=true
+  "beta": "50allmpc",
+  "release": "50allmpc",
+  "esr": "esrA", // WebExtensions and Addons with mpc=true
 };
 
 if (AppConstants.RELEASE_OR_BETA) {
@@ -173,7 +185,7 @@ function defineCohort() {
   //   the default number of content processes (1 on beta) but still in the
   //   test cohort.
   if (!(updateChannel in MULTI_EXPERIMENT) ||
-      (!MULTI_EXPERIMENT[updateChannel].addons && cohortPrefix) ||
+      MULTI_EXPERIMENT[updateChannel].addonsDisableExperiment(cohortPrefix) ||
       !eligibleForMulti ||
       userOptedIn.multi ||
       disqualified) {
@@ -197,7 +209,9 @@ function defineCohort() {
   for (let sampleName of Object.getOwnPropertyNames(buckets)) {
     if (multiUserSample < buckets[sampleName]) {
       setCohort(`${cohortPrefix}multiBucket${sampleName}`);
-      Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", sampleName);
+
+      // NB: Coerce sampleName to an integer because this is an integer pref.
+      Preferences.set(PREF_E10S_PROCESSCOUNT + ".web", +sampleName);
       break;
     }
   }
@@ -232,6 +246,9 @@ function getUserSample(multi) {
 
 function setCohort(cohortName) {
   Preferences.set(PREF_COHORT_NAME, cohortName);
+  if (cohortName != "unsupportedChannel") {
+    TelemetryEnvironment.setExperimentActive("e10sCohort", cohortName);
+  }
   try {
     if (Ci.nsICrashReporter) {
       Services.appinfo.QueryInterface(Ci.nsICrashReporter).annotateCrashReport("E10SCohort", cohortName);
