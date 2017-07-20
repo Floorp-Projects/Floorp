@@ -7,36 +7,6 @@ const testPageURL = "http://mochi.test:8888/browser/" +
   "dom/indexedDB/test/browser_permissionsPrompt.html";
 const notificationID = "indexedDB-permissions-prompt";
 
-function waitForMessage(aMessage, browser) {
-  return new Promise((resolve, reject) => {
-    /* eslint-disable no-undef */
-    function contentScript() {
-      addEventListener("message", function(event) {
-        sendAsyncMessage("testLocal:exception",
-          {exception: event.data});
-      }, {once: true}, true);
-    }
-    /* eslint-enable no-undef */
-
-    let script = "data:,(" + contentScript.toString() + ")();";
-
-    let mm = browser.selectedBrowser.messageManager;
-
-    mm.addMessageListener("testLocal:exception", function listener(msg) {
-      mm.removeMessageListener("testLocal:exception", listener);
-      mm.removeDelayedFrameScript(script);
-      is(msg.data.exception, aMessage, "received " + aMessage);
-      if (msg.data.exception == aMessage) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-
-    mm.loadFrameScript(script, true);
-  });
-}
-
 add_task(async function test1() {
   removePermission(testPageURL, "indexedDB");
 
