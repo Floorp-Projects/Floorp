@@ -160,6 +160,7 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
       if (observerService) {
         observerService->AddObserver(this, "unselected-tab-hover", false);
         mIsRegisteredForEvent = true;
+        EnableEvent();
       }
     }
 
@@ -171,11 +172,70 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
         mIsRegisteredForEvent = false;
         mDecoder->mIsBackgroundVideoDecodingAllowed = false;
         mDecoder->UpdateVideoDecodeMode();
+        DisableEvent();
       }
     }
   private:
     ~BackgroundVideoDecodingPermissionObserver() {
       MOZ_ASSERT(!mIsRegisteredForEvent);
+    }
+
+    void EnableEvent() const
+    {
+      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
+      if (!win) {
+        return;
+      }
+      nsContentUtils::DispatchEventOnlyToChrome(
+        GetOwnerDoc(), ToSupports(win),
+        NS_LITERAL_STRING("UnselectedTabHover:Enable"),
+        /* Bubbles */ true,
+        /* Cancelable */ false,
+        /* DefaultAction */ nullptr);
+    }
+
+    void DisableEvent() const
+    {
+      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
+      if (!win) {
+        return;
+      }
+      nsContentUtils::DispatchEventOnlyToChrome(
+        GetOwnerDoc(), ToSupports(win),
+        NS_LITERAL_STRING("UnselectedTabHover:Disable"),
+        /* Bubbles */ true,
+        /* Cancelable */ false,
+        /* DefaultAction */ nullptr);
+    }
+
+    already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const
+    {
+      nsIDocument* doc = GetOwnerDoc();
+      if (!doc) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowInner> innerWin = doc->GetInnerWindow();
+      if (!innerWin) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> outerWin = innerWin->GetOuterWindow();
+      if (!outerWin) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetTop();
+      return topWin.forget();
+    }
+
+    nsIDocument* GetOwnerDoc() const
+    {
+      if (!mDecoder->mOwner) {
+        return nullptr;
+      }
+
+      return mDecoder->mOwner->GetDocument();
     }
 
     bool IsValidEventSender(nsISupports* aSubject) const
@@ -195,22 +255,11 @@ class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
         return false;
       }
 
-      nsIDocument* doc = mDecoder->GetOwner()->GetDocument();
-      if (!doc) {
+      nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
+      if (!ownerTop) {
         return false;
       }
 
-      nsCOMPtr<nsPIDOMWindowInner> ownerInner = doc->GetInnerWindow();
-      if (!ownerInner) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> ownerOuter = ownerInner->GetOuterWindow();
-      if (!ownerOuter) {
-        return false;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> ownerTop = ownerOuter->GetTop();
       return ownerTop == senderTop;
     }
     // The life cycle of observer would always be shorter than decoder, so we
