@@ -423,6 +423,58 @@ UpdateFirstLetterIfNeeded(nsIFrame* aFrame, ServoRestyleState& aRestyleState)
 }
 
 static void
+UpdateOneAdditionalStyleContext(nsIFrame* aFrame,
+                                uint32_t aIndex,
+                                ServoStyleContext& aOldContext,
+                                ServoRestyleState& aRestyleState)
+{
+  auto pseudoType = aOldContext.GetPseudoType();
+  MOZ_ASSERT(pseudoType != CSSPseudoElementType::NotPseudo);
+  MOZ_ASSERT(
+      !nsCSSPseudoElements::PseudoElementSupportsUserActionState(pseudoType));
+
+  RefPtr<ServoStyleContext> newContext =
+    aRestyleState.StyleSet().ResolvePseudoElementStyle(
+        aFrame->GetContent()->AsElement(),
+        pseudoType,
+        aFrame->StyleContext()->AsServo(),
+        /* aPseudoElement = */ nullptr);
+
+  uint32_t equalStructs, samePointerStructs; // Not used, actually.
+  nsChangeHint childHint = aOldContext.CalcStyleDifference(
+    newContext,
+    &equalStructs,
+    &samePointerStructs);
+  if (!aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    childHint = NS_RemoveSubsumedHints(
+        childHint, aRestyleState.ChangesHandledFor(*aFrame));
+  }
+
+  if (childHint) {
+    aRestyleState.ChangeList().AppendChange(
+        aFrame, aFrame->GetContent(), childHint);
+  }
+
+  aFrame->SetAdditionalStyleContext(aIndex, newContext);
+}
+
+static void
+UpdateAdditionalStyleContexts(nsIFrame* aFrame,
+                              ServoRestyleState& aRestyleState)
+{
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->GetContent() && aFrame->GetContent()->IsElement());
+
+  // FIXME(emilio): Consider adding a bit or something to avoid the initial
+  // virtual call?
+  uint32_t index = 0;
+  while (auto* oldContext = aFrame->GetAdditionalStyleContext(index)) {
+    UpdateOneAdditionalStyleContext(
+        aFrame, index++, *oldContext->AsServo(), aRestyleState);
+  }
+}
+
+static void
 UpdateFramePseudoElementStyles(nsIFrame* aFrame,
                                ServoRestyleState& aRestyleState)
 {
@@ -571,6 +623,7 @@ ServoRestyleManager::ProcessPostTraversal(
     // This does mean that we may be setting the wrong style context on our
     // initial continuations; ::first-line fixes that up after the fact.
     for (nsIFrame* f = styleFrame; f; f = f->GetNextContinuation()) {
+      MOZ_ASSERT_IF(f != styleFrame, !f->GetAdditionalStyleContext(0));
       f->SetStyleContext(newContext);
     }
 
@@ -580,6 +633,7 @@ ServoRestyleManager::ProcessPostTraversal(
     }
 
     if (styleFrame) {
+      UpdateAdditionalStyleContexts(styleFrame, aRestyleState);
       styleFrame->UpdateStyleOfOwnedAnonBoxes(childrenRestyleState);
     }
 
