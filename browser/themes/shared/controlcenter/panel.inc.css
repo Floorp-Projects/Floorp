@@ -127,20 +127,25 @@
   padding: 4px 0;
   min-width: auto;
   width: var(--identity-popup-expander-width);
-  border: 0 none;
+  border-style: none;
   -moz-appearance: none;
-  background: url("chrome://browser/skin/controlcenter/arrow-subview.svg") center no-repeat;
+  background: url("chrome://browser/skin/arrow-left.svg") center no-repeat;
   background-size: 16px, auto;
-}
-
-.identity-popup-expander:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
 }
 
 .identity-popup-expander[panel-multiview-anchor] {
   transition: background-color 250ms ease-in;
   background-color: Highlight;
-  background-image: url("chrome://browser/skin/controlcenter/arrow-subview-back.svg");
+  background-image: url("chrome://browser/skin/arrow-left.svg");
+  color: HighlightText;
+}
+
+.identity-popup-expander[panel-multiview-anchor]:-moz-locale-dir(rtl),
+.identity-popup-expander:not([panel-multiview-anchor]):-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
 }
 
 .identity-popup-expander > .button-box {
@@ -148,12 +153,12 @@
 }
 
 .identity-popup-expander:not([panel-multiview-anchor]) > .button-box {
-  border-left: 1px solid var(--panel-separator-color);
+  border-right: 1px solid var(--panel-separator-color);
 }
 
 .identity-popup-expander:hover {
   background-color: var(--arrowpanel-dimmed);
-  background-image: url("chrome://browser/skin/controlcenter/arrow-subview.svg");
+  background-image: url("chrome://browser/skin/arrow-left.svg");
 }
 
 .identity-popup-expander:hover:active {
