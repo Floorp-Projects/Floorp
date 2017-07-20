@@ -398,6 +398,21 @@ preferences:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  search_query:
+    bug_numbers:
+        - 1359306
+      description: >-
+        Each key is a search query string when user performs a search action within
+        about:preferences, and each value is the number of times that key is recorded.
+        The telemetry data will be recorded if there is a successful search result highlighted.
+      expires: "62"
+      kind: uint
+      keyed: true
+      notification_emails:
+        - chsiang@mozilla.com
+      release_channel_collection: opt-in
+      record_in_processes:
+        - main
 
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245

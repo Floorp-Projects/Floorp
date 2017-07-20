@@ -225,6 +225,11 @@ var gSearchResultsPane = {
     this.removeAllSearchTooltips();
     this.removeAllSearchMenuitemIndicators();
 
+    // Clear telemetry request if user types very frequently.
+    if (this.telemetryTimer) {
+      clearTimeout(this.telemetryTimer);
+    }
+
     let srHeader = document.getElementById("header-searchResults");
 
     if (this.query) {
@@ -274,6 +279,13 @@ var gSearchResultsPane = {
       } else {
         // Creating tooltips for all the instances found
         this.listSearchTooltips.forEach((anchorNode) => this.createSearchTooltip(anchorNode, this.query));
+
+        // Implant search telemetry probe after user stops typing for a while
+        if (this.query.length >= 2) {
+          this.telemetryTimer = setTimeout(() => {
+            Services.telemetry.keyedScalarAdd("preferences.search_query", this.query, 1);
+          }, 1000);
+        }
       }
     } else {
       document.getElementById("sorry-message").textContent = "";
