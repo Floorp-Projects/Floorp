@@ -314,8 +314,8 @@ public class DateTimePicker extends FrameLayout {
             });
 
             final int height;
-            if (Versions.preLollipop) {
-                // The 4.X version of CalendarView doesn't request any height, resulting in
+            if (Versions.preLollipopMR1) {
+                // Older versions of CalendarView don't request any height, resulting in
                 // the whole dialog not appearing unless we manually request height.
                 height =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());;
             } else {

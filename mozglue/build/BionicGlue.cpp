@@ -64,23 +64,6 @@ private:
 static std::vector<AtForkFuncs, SpecialAllocator<AtForkFuncs> > atfork;
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "cpuacct.h"
-
-#if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
-extern "C" NS_EXPORT int
-timer_create(clockid_t, struct sigevent*, timer_t*)
-{
-  __android_log_print(ANDROID_LOG_ERROR, "BionicGlue", "timer_create not supported!");
-  abort();
-  return -1;
-}
-#endif
-
-#else
-#define cpuacct_add(x)
-#endif
-
 #if ANDROID_VERSION < 17 || defined(MOZ_WIDGET_ANDROID)
 extern "C" NS_EXPORT int
 pthread_atfork(void (*prepare)(void), void (*parent)(void), void (*child)(void))
@@ -108,7 +91,6 @@ fork(void)
 
   switch ((pid = syscall(__NR_clone, SIGCHLD, NULL, NULL, NULL, NULL))) {
   case 0:
-    cpuacct_add(getuid());
     for (auto it = atfork.begin();
          it < atfork.end(); ++it)
       if (it->child)
@@ -140,7 +122,6 @@ raise(int sig)
 }
 
 /* Flash plugin uses symbols that are not present in Android >= 4.4 */
-#ifndef MOZ_WIDGET_GONK
 namespace android {
   namespace VectorImpl {
     NS_EXPORT void reservedVectorImpl1(void) { }
@@ -153,5 +134,4 @@ namespace android {
     NS_EXPORT void reservedVectorImpl8(void) { }
   }
 }
-#endif
 

@@ -5,10 +5,10 @@
 // The ext-* files are imported into the same scopes.
 /* import-globals-from ext-browserAction.js */
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 var {
   normalizeTime,
@@ -213,7 +213,7 @@ this.history = class extends ExtensionAPI {
           options.resultType = options.RESULTS_AS_VISIT;
 
           let historyQuery = PlacesUtils.history.getNewQuery();
-          historyQuery.uri = NetUtil.newURI(url);
+          historyQuery.uri = Services.io.newURI(url);
           let queryResult = PlacesUtils.history.executeQuery(historyQuery, options).root;
           let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
           return Promise.resolve(results);

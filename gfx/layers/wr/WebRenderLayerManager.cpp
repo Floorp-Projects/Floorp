@@ -630,18 +630,18 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 void
 WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 {
-  mImageKeys.push_back(key);
+  mImageKeysToDelete.push_back(key);
 }
 
 void
 WebRenderLayerManager::DiscardImages()
 {
   if (WrBridge()->IPCOpen()) {
-    for (auto key : mImageKeys) {
+    for (auto key : mImageKeysToDelete) {
       WrBridge()->SendDeleteImage(key);
     }
   }
-  mImageKeys.clear();
+  mImageKeysToDelete.clear();
 }
 
 void
@@ -666,7 +666,7 @@ WebRenderLayerManager::DiscardLocalImages()
   // Removes images but doesn't tell the parent side about them
   // This is useful in empty / failed transactions where we created
   // image keys but didn't tell the parent about them yet.
-  mImageKeys.clear();
+  mImageKeysToDelete.clear();
 }
 
 void
@@ -764,6 +764,7 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
+  DiscardImages();
   WrBridge()->EndClearCachedResources();
 }
 

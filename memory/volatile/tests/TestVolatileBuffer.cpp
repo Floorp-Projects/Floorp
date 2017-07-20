@@ -68,14 +68,7 @@ TEST(VolatileBufferTest, RealVolatileBuffersWork)
   }
 
   // Test purging if we know how to
-#if defined(MOZ_WIDGET_GONK)
-  // This also works on Android, but we need root.
-  int fd = open("/" ASHMEM_NAME_DEF, O_RDWR);
-
-  ASSERT_GE(fd, 0) << "Failed to open ashmem device";
-  ASSERT_GE(ioctl(fd, ASHMEM_PURGE_ALL_CACHES, NULL), 0)
-    << "Failed to purge ashmem caches";
-#elif defined(XP_DARWIN)
+#if defined(XP_DARWIN)
   int state;
   vm_purgable_control(mach_task_self(), (vm_address_t)NULL,
                       VM_PURGABLE_PURGE_ALL, &state);
