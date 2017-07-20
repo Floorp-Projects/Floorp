@@ -202,6 +202,25 @@ windows10-64-asan/opt:
     test-sets:
         - common-tests
 
+# Windows8 tests; all via BBB
+# Disabled until flag day
+windows8-64/debug:
+    build-platform: win64/debug
+    test-sets: []
+        #- windows8-tests
+windows8-64/opt:
+    build-platform: win64/opt
+    test-sets: []
+        #- windows8-tests
+windows8-64-pgo/opt:
+    build-platform: win64-pgo/opt
+    test-sets: []
+        #- windows8-tests
+windows8-64-nightly/opt:
+    build-platform: win64-nightly/opt
+    test-sets: []
+        #- windows8-tests
+
 ##
 # MacOS X platforms (matching /macosx.*/)
 
