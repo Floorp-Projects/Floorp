@@ -41,4 +41,5 @@ jobs:
             tooltool-downloads: public
             need-xvfb: true
             keep-artifacts: false
-
+        toolchains:
+          - linux64-sccache
