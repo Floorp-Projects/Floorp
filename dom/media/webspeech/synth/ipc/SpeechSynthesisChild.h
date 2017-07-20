@@ -45,7 +45,8 @@ protected:
                                                                   const nsString& aText,
                                                                   const float& aVolume,
                                                                   const float& aPitch,
-                                                                  const float& aRate) override;
+                                                                  const float& aRate,
+                                                                  const bool& aIsChrome) override;
   bool DeallocPSpeechSynthesisRequestChild(PSpeechSynthesisRequestChild* aActor) override;
 };
 
@@ -82,7 +83,7 @@ class SpeechTaskChild : public nsSpeechTask
   friend class SpeechSynthesisRequestChild;
 public:
 
-  explicit SpeechTaskChild(SpeechSynthesisUtterance* aUtterance);
+  explicit SpeechTaskChild(SpeechSynthesisUtterance* aUtterance, bool aIsChrome);
 
   NS_IMETHOD Setup(nsISpeechTaskCallback* aCallback,
                    uint32_t aChannels, uint32_t aRate, uint8_t argc) override;

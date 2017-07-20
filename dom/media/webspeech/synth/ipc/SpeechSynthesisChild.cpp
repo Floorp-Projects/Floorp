@@ -69,7 +69,8 @@ SpeechSynthesisChild::AllocPSpeechSynthesisRequestChild(const nsString& aText,
                                                         const nsString& aUri,
                                                         const float& aVolume,
                                                         const float& aRate,
-                                                        const float& aPitch)
+                                                        const float& aPitch,
+                                                        const bool& aIsChrome)
 {
   MOZ_CRASH("Caller is supposed to manually construct a request!");
 }
@@ -159,8 +160,8 @@ SpeechSynthesisRequestChild::RecvOnMark(const nsString& aName,
 
 // SpeechTaskChild
 
-SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance)
-  : nsSpeechTask(aUtterance)
+SpeechTaskChild::SpeechTaskChild(SpeechSynthesisUtterance* aUtterance, bool aIsChrome)
+  : nsSpeechTask(aUtterance, aIsChrome)
 {
 }
 

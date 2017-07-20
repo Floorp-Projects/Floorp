@@ -120,19 +120,20 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSpeechTask)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSpeechTask)
 
-nsSpeechTask::nsSpeechTask(SpeechSynthesisUtterance* aUtterance)
+nsSpeechTask::nsSpeechTask(SpeechSynthesisUtterance* aUtterance, bool aIsChrome)
   : mUtterance(aUtterance)
   , mInited(false)
   , mPrePaused(false)
   , mPreCanceled(false)
   , mCallback(nullptr)
   , mIndirectAudio(false)
+  , mIsChrome(aIsChrome)
 {
   mText = aUtterance->mText;
   mVolume = aUtterance->Volume();
 }
 
-nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText)
+nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText, bool aIsChrome)
   : mUtterance(nullptr)
   , mVolume(aVolume)
   , mText(aText)
@@ -141,6 +142,7 @@ nsSpeechTask::nsSpeechTask(float aVolume, const nsAString& aText)
   , mPreCanceled(false)
   , mCallback(nullptr)
   , mIndirectAudio(false)
+  , mIsChrome(aIsChrome)
 {
 }
 
@@ -513,6 +515,12 @@ nsSpeechTask::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
   return NS_OK;
 }
 
+void
+nsSpeechTask::ForceError(float aElapsedTime, uint32_t aCharIndex)
+{
+  DispatchErrorInner(aElapsedTime, aCharIndex);
+}
+
 NS_IMETHODIMP
 nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
 {
@@ -523,6 +531,12 @@ nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex)
     return NS_ERROR_FAILURE;
   }
 
+  return DispatchErrorInner(aElapsedTime, aCharIndex);
+}
+
+nsresult
+nsSpeechTask::DispatchErrorInner(float aElapsedTime, uint32_t aCharIndex)
+{
   if (!mPreCanceled) {
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
