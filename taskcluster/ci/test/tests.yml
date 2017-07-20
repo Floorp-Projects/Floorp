@@ -76,6 +76,7 @@ crashtest:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     chunks:
         by-test-platform:
@@ -427,6 +428,7 @@ mochitest:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     mozharness:
         by-test-platform:
@@ -521,6 +523,7 @@ mochitest-browser-chrome:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     mozharness:
         mochitest-flavor: browser
@@ -605,6 +608,7 @@ mochitest-chrome:
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     mozharness:
         by-test-platform:
@@ -682,6 +686,7 @@ mochitest-clipboard:
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     mozharness:
         by-test-platform:
@@ -737,6 +742,7 @@ mochitest-devtools-chrome:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     e10s:
         by-test-platform:
@@ -869,6 +875,7 @@ mochitest-media:
         by-test-platform:
             android.*: 3
             macosx64.*: 1
+            windows8-64.*: 1
             default: 3
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
@@ -896,6 +903,7 @@ mochitest-media:
                 chunked:
                   by-test-platform:
                     macosx64.*: false
+                    windows8-64.*: false
                     default: true
                 config:
                     by-test-platform:
@@ -975,6 +983,7 @@ mochitest-webgl:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     chunks:
         by-test-platform:
@@ -1039,6 +1048,7 @@ reftest:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     instance-size:
         by-test-platform:
@@ -1051,6 +1061,8 @@ reftest:
             android.*: 16
             macosx64/opt: 1
             macosx64/debug: 2
+            windows8-64.*/opt: 1
+            windows8-64.*/debug: 2
             default: 8
     max-run-time:
         by-test-platform:
@@ -1075,6 +1087,8 @@ reftest:
                 chunked:
                   by-test-platform:
                     macosx64/opt: false
+                    windows8-64.*/opt: false
+                    windows8-64.*/debug: true
                     default: true
                 config:
                     by-test-platform:
@@ -1147,14 +1161,20 @@ reftest-no-accel:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
             default: null
     chunks:
         by-test-platform:
             macosx.*: 1
+            windows8-64.*/debug: 2
             default: 8
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
+        chunked:
+            by-test-platform:
+                windows8-64.*/debug: true
+                default: false
         config:
             by-test-platform:
                 windows.*:
