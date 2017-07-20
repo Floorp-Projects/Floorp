@@ -18,7 +18,7 @@ function BHRTelemetryService() {
   Services.obs.addObserver(this, "bhr-thread-hang");
 
   this.resetPayload();
-};
+}
 
 BHRTelemetryService.prototype = Object.freeze({
   classID: Components.ID("{117c8cdf-69e6-4f31-a439-b8a654c67127}"),
