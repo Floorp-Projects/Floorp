@@ -328,6 +328,8 @@ private:
                          NS_EVENT_STATE_DIR_ATTR_RTL |          \
                          NS_EVENT_STATE_DIR_ATTR_LIKE_AUTO)
 
+#define DISABLED_STATES (NS_EVENT_STATE_DISABLED | NS_EVENT_STATE_ENABLED)
+
 // Event states that can be added and removed through
 // Element::{Add,Remove}ManuallyManagedStates.
 //
@@ -347,6 +349,7 @@ private:
 #define EXTERNALLY_MANAGED_STATES (           \
   MANUALLY_MANAGED_STATES |                   \
   DIR_ATTR_STATES |                           \
+  DISABLED_STATES |                           \
   NS_EVENT_STATE_ACTIVE |                     \
   NS_EVENT_STATE_DRAGOVER |                   \
   NS_EVENT_STATE_FOCUS |                      \
