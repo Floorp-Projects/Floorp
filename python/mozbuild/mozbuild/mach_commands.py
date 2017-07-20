@@ -1629,16 +1629,24 @@ class PackageFrontend(MachCommandBase):
         state_dir = self._mach_context.state_dir
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
+        import which
+
         here = os.path.abspath(os.path.dirname(__file__))
         build_obj = MozbuildObject.from_environment(cwd=here)
 
         hg = None
         if conditions.is_hg(build_obj):
-            hg = build_obj.substs['HG']
+            if self._is_windows():
+                hg = which.which('hg.exe')
+            else:
+                hg = which.which('hg')
 
         git = None
         if conditions.is_git(build_obj):
-            git = build_obj.substs['GIT']
+            if self._is_windows():
+                git = which.which('git.exe')
+            else:
+                git = which.which('git')
 
         from mozbuild.artifacts import Artifacts
         artifacts = Artifacts(tree, self.substs, self.defines, job,

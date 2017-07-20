@@ -13,9 +13,6 @@ from distutils.version import LooseVersion
 
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
-    if os.path.isabs(tool) and os.path.exists(tool):
-        return tool
-
     # We use subprocess in places, which expects a Win32 executable or
     # batch script. On some versions of MozillaBuild, we have "hg.exe",
     # "hg.bat," and "hg" (a Python script). "which" will happily return the
@@ -86,8 +83,8 @@ class Repository(object):
 
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
-    def __init__(self, path, hg='hg'):
-        super(HgRepository, self).__init__(path, tool=hg)
+    def __init__(self, path):
+        super(HgRepository, self).__init__(path, 'hg')
         self._env[b'HGPLAIN'] = b'1'
 
     def get_modified_files(self):
@@ -115,8 +112,8 @@ class HgRepository(Repository):
 
 class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
-    def __init__(self, path, git='git'):
-        super(GitRepository, self).__init__(path, tool=git)
+    def __init__(self, path):
+        super(GitRepository, self).__init__(path, 'git')
 
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
@@ -151,47 +148,8 @@ def get_repository_object(path):
                               path)
 
 
-class MissingVCSInfo(Exception):
-    """Represents a general failure to resolve a VCS interface."""
-
-
-class MissingConfigureInfo(MissingVCSInfo):
-    """Represents error finding VCS info from configure data."""
-
-
 def get_repository_from_env():
-    """Obtain a repository object by looking at the environment.
-
-    If inside a build environment (denoted by presence of a ``buildconfig``
-    module), VCS info is obtained from it, as found via configure. This allows
-    us to respect what was passed into configure. Otherwise, we fall back to
-    scanning the filesystem.
-    """
-    try:
-        import buildconfig
-
-        flavor = buildconfig.substs.get('VCS_CHECKOUT_TYPE')
-
-        # If in build mode, only use what configure found. That way we ensure
-        # that everything in the build system can be controlled via configure.
-        if not flavor:
-            raise MissingConfigureInfo('could not find VCS_CHECKOUT_TYPE '
-                                       'in build config; check configure '
-                                       'output and verify it could find a '
-                                       'VCS binary')
-
-        if flavor == 'hg':
-            return HgRepository(buildconfig.topsrcdir,
-                                hg=buildconfig.substs['HG'])
-        elif flavor == 'git':
-            return GitRepository(buildconfig.topsrcdir,
-                                 git=buildconfig.subst['GIT'])
-        else:
-            raise MissingVCSInfo('unknown VCS_CHECKOUT_TYPE value: %s' % flavor)
-
-    except ImportError:
-        pass
-
+    """Obtain a repository object by looking at the environment."""
     def ancestors(path):
         while path:
             yield path
@@ -205,5 +163,5 @@ def get_repository_from_env():
         except InvalidRepoPath:
             continue
 
-    raise MissingVCSInfo('Could not find Mercurial or Git checkout for %s' %
-                         os.getcwd())
+    raise Exception('Could not find Mercurial or Git checkout for %s' %
+                    os.getcwd())
