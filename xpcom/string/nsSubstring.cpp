@@ -147,9 +147,7 @@ public:
   void set(char_type* aData, size_type aLen, DataFlags aDataFlags)
   {
     ReleaseData(mData, mDataFlags);
-    mData = aData;
-    mLength = aLen;
-    mDataFlags = aDataFlags;
+    SetData(aData, aLen, aDataFlags);
   }
 };
 
@@ -175,9 +173,7 @@ public:
   void set(char_type* aData, size_type aLen, DataFlags aDataFlags)
   {
     ReleaseData(mData, mDataFlags);
-    mData = aData;
-    mLength = aLen;
-    mDataFlags = aDataFlags;
+    SetData(aData, aLen, aDataFlags);
   }
 };
 

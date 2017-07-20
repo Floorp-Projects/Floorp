@@ -1088,6 +1088,13 @@ protected:
     mDataFlags = DataFlags::TERMINATED;
   }
 
+  void SetData(char_type* aData, size_type aLength, DataFlags aDataFlags)
+  {
+    mData = aData;
+    mLength = aLength;
+    mDataFlags = aDataFlags;
+  }
+
   /**
    * this function releases mData and does not change the value of
    * any of its member variables.  in other words, this function acts
