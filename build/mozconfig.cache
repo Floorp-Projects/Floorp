@@ -14,7 +14,7 @@ $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.j
 EOF
 
 bucket=
-if test -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
+if test -z "$SCCACHE_DISABLE"; then
     case "${branch}" in
     try)
         case "${master}" in
@@ -44,7 +44,7 @@ fi
 fi
 
 # builds where buildprops didn't have the data (eg: taskcluster or non-buildbot) and without sccache disabled:
-if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
+if test -z "$bucket" -a -z "$SCCACHE_DISABLE"; then
 
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then
