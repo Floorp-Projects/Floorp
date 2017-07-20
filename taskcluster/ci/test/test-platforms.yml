@@ -148,6 +148,23 @@ windows7-32/opt:
         #- windows-talos
         - windows-tests
 
+windows7-32-pgo/opt:
+    build-platform: win32-pgo/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        - windows-tests
+        #- windows-talos
+
+windows7-32-nightly/opt:
+    build-platform: win32-nightly/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        - windows-tests
+
 # win64
 windows10-64/debug:
     build-platform: win64/debug
@@ -163,10 +180,27 @@ windows10-64/opt:
         #- windows-talos
         - windows-tests
 
+windows10-64-pgo/opt:
+    build-platform: win64-pgo/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        #- windows-talos
+        - windows-tests
+
+windows10-64-nightly/opt:
+    build-platform: win64-nightly/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        - windows-tests
+
 windows10-64-asan/opt:
     build-platform: win64-asan/opt
     test-sets:
-        - common-tests     
+        - common-tests
 
 ##
 # MacOS X platforms (matching /macosx.*/)
