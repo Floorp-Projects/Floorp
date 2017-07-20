@@ -4158,42 +4158,77 @@ Element::SizeOfExcludingThis(SizeOfState& aState) const
   return n;
 }
 
-void
-Element::NoteDirtyDescendantsForServo()
-{
-  if (!HasServoData()) {
-    // The dirty descendants bit only applies to styled elements.
-    return;
+struct DirtyDescendantsBit {
+  static bool HasBit(const Element* aElement)
+  {
+    return aElement->HasDirtyDescendantsForServo();
   }
-
-  Element* curr = this;
-  while (curr && !curr->HasDirtyDescendantsForServo()) {
-    curr->SetHasDirtyDescendantsForServo();
-    curr = curr->GetFlattenedTreeParentElementForStyle();
+  static void SetBit(Element* aElement)
+  {
+    aElement->SetHasDirtyDescendantsForServo();
   }
+};
 
-  if (nsIPresShell* shell = OwnerDoc()->GetShell()) {
-    shell->EnsureStyleFlush();
+struct AnimationOnlyDirtyDescendantsBit {
+  static bool HasBit(const Element* aElement)
+  {
+    return aElement->HasAnimationOnlyDirtyDescendantsForServo();
   }
-
-  MOZ_ASSERT(DirtyDescendantsBitIsPropagatedForServo());
-}
+  static void SetBit(Element* aElement)
+  {
+    aElement->SetHasAnimationOnlyDirtyDescendantsForServo();
+  }
+};
 
 #ifdef DEBUG
+template<typename Traits>
 bool
-Element::DirtyDescendantsBitIsPropagatedForServo()
+BitIsPropagated(const Element* aElement)
 {
-  Element* curr = this;
+  const Element* curr = aElement;
   while (curr) {
-    if (!curr->HasDirtyDescendantsForServo()) {
+    if (!Traits::HasBit(curr)) {
       return false;
     }
     nsINode* parentNode = curr->GetParentNode();
     curr = curr->GetFlattenedTreeParentElementForStyle();
     MOZ_ASSERT_IF(!curr,
-                  parentNode == OwnerDoc() ||
+                  parentNode == aElement->OwnerDoc() ||
                   parentNode == parentNode->OwnerDoc()->GetRootElement());
   }
   return true;
 }
 #endif
+
+template<typename Traits>
+inline void NoteDescendants(Element* aElement)
+{
+  if (!aElement->HasServoData()) {
+    // The bits only apply to styled elements.
+    return;
+  }
+
+  Element* curr = aElement;
+  while (curr && !Traits::HasBit(curr)) {
+    Traits::SetBit(curr);
+    curr = curr->GetFlattenedTreeParentElementForStyle();
+  }
+
+  if (nsIPresShell* shell = aElement->OwnerDoc()->GetShell()) {
+    shell->EnsureStyleFlush();
+  }
+
+  MOZ_ASSERT(BitIsPropagated<Traits>(aElement));
+}
+
+void
+Element::NoteDirtyDescendantsForServo()
+{
+  NoteDescendants<DirtyDescendantsBit>(this);
+}
+
+void
+Element::NoteAnimationOnlyDirtyDescendantsForServo()
+{
+  NoteDescendants<AnimationOnlyDirtyDescendantsBit>(this);
+}
