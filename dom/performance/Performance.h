@@ -101,6 +101,8 @@ public:
 
   virtual nsITimedChannel* GetChannel() const = 0;
 
+  void MemoryPressure();
+
 protected:
   Performance();
   explicit Performance(nsPIDOMWindowInner* aWindow);
