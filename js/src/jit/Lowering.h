@@ -91,7 +91,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInitElem(MInitElem* ins);
     void visitInitElemGetterSetter(MInitElemGetterSetter* ins);
     void visitMutateProto(MMutateProto* ins);
-    void visitInitProp(MInitProp* ins);
     void visitInitPropGetterSetter(MInitPropGetterSetter* ins);
     void visitCheckOverRecursed(MCheckOverRecursed* ins);
     void visitDefVar(MDefVar* ins);
