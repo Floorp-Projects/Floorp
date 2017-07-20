@@ -316,7 +316,9 @@ def target_tasks_nightly_win64(full_task_graph, parameters):
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
         platform = task.attributes.get('build_platform')
-        if platform in ('win32-nightly', 'win64-nightly', ):
+        if not filter_for_project(task, parameters):
+            return False
+        if platform in ('win32-nightly', 'win64-nightly'):
             return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
