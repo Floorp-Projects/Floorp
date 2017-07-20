@@ -22,6 +22,8 @@ android-api-15/debug:
         secrets: true
         custom-build-variant-cfg: api-15-debug
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-x86/opt:
     description: "Android 4.2 x86 Opt"
@@ -47,6 +49,8 @@ android-x86/opt:
         secrets: true
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
@@ -76,6 +80,8 @@ android-x86-nightly/opt:
         secrets: true
         custom-build-variant-cfg: x86
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-api-15/opt:
     description: "Android 4.0 API15+ Opt"
@@ -101,6 +107,8 @@ android-api-15/opt:
         secrets: true
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-api-15-nightly/opt:
     description: "Android 4.0 API15+ Nightly"
@@ -130,6 +138,8 @@ android-api-15-nightly/opt:
         secrets: true
         custom-build-variant-cfg: api-15
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-x86-old-id/opt:
     description: "Android 4.2 x86 Opt OldId"
@@ -156,6 +166,8 @@ android-x86-old-id/opt:
         custom-build-variant-cfg: x86-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
+    toolchains:
+        - linux64-sccache
 
 android-x86-old-id-nightly/opt:
     description: "Android 4.2 x86 OldId Nightly"
@@ -186,6 +198,8 @@ android-x86-old-id-nightly/opt:
         custom-build-variant-cfg: x86-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
+    toolchains:
+        - linux64-sccache
 
 android-api-15-old-id/opt:
     description: "Android 4.0 API15+ Opt OldId"
@@ -212,6 +226,8 @@ android-api-15-old-id/opt:
         custom-build-variant-cfg: api-15-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
+    toolchains:
+        - linux64-sccache
 
 android-api-15-old-id-nightly/opt:
     description: "Android 4.0 API15+ OldId Nightly"
@@ -242,6 +258,8 @@ android-api-15-old-id-nightly/opt:
         custom-build-variant-cfg: api-15-old-id
         tooltool-downloads: internal
     run-on-projects: [ 'mozilla-central' ]
+    toolchains:
+        - linux64-sccache
 
 android-api-15-gradle/opt:
     description: "Android 4.0 API15+ (Gradle) Opt"
@@ -280,6 +298,8 @@ android-api-15-gradle/opt:
         secrets: true
         custom-build-variant-cfg: api-15-gradle
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-aarch64/opt:
     description: "Android 5.0 AArch64 Opt"
@@ -305,6 +325,8 @@ android-aarch64/opt:
         secrets: true
         custom-build-variant-cfg: aarch64
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
@@ -334,3 +356,5 @@ android-aarch64-nightly/opt:
         secrets: true
         custom-build-variant-cfg: aarch64
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache

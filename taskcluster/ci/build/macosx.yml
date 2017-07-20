@@ -21,6 +21,8 @@ macosx64/debug:
         secrets: true
         custom-build-variant-cfg: cross-debug
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 macosx64/opt:
     description: "MacOS X x64 Cross-compile"
@@ -44,6 +46,8 @@ macosx64/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache
 
 macosx64-dmd/opt:
     description: "MacOS X x64 DMD Cross-compile"
@@ -69,6 +73,8 @@ macosx64-dmd/opt:
         secrets: true
         tooltool-downloads: internal
     run-on-projects: [ ]
+    toolchains:
+        - linux64-sccache
 
 macosx64-devedition/opt:
     description: "MacOS X Dev Edition x64"
@@ -93,6 +99,8 @@ macosx64-devedition/opt:
         secrets: true
         tooltool-downloads: internal
     run-on-projects: ['mozilla-beta',]
+    toolchains:
+        - linux64-sccache
 
 macosx64-noopt/debug:
     description: "MacOS X x64 No-optimize Debug"
@@ -121,6 +129,8 @@ macosx64-noopt/debug:
         tooltool-downloads: internal
         keep-artifacts: false
     run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - linux64-sccache
 
 macosx64-add-on-devel/opt:
     description: "MacOS X x64 add-on-devel"
@@ -147,6 +157,8 @@ macosx64-add-on-devel/opt:
        custom-build-variant-cfg: add-on-devel
        tooltool-downloads: internal
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    toolchains:
+        - linux64-sccache
 
 macosx64-nightly/opt:
     description: "MacOS X x64 Cross-compile Nightly"
@@ -175,3 +187,5 @@ macosx64-nightly/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
+    toolchains:
+        - linux64-sccache

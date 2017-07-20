@@ -23,6 +23,8 @@ macosx64-clang:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-sccache
 
 macosx64-clang-tidy:
     description: "Clang-tidy build"
@@ -49,6 +51,8 @@ macosx64-clang-tidy:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
+    toolchains:
+        - linux64-sccache
 
 macosx64-cctools-port:
     description: "cctools-port toolchain build"
@@ -70,3 +74,5 @@ macosx64-cctools-port:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cctools.tar.bz2
+    toolchains:
+        - linux64-sccache

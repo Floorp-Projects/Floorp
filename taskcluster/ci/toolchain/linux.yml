@@ -22,6 +22,8 @@ linux64-clang:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-sccache
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -47,6 +49,8 @@ linux64-clang-tidy:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
+    toolchains:
+        - linux64-sccache
 
 linux64-gcc:
     description: "GCC toolchain build"
@@ -103,6 +107,8 @@ linux64-cctools-port:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cctools.tar.xz
+    toolchains:
+        - linux64-sccache
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
@@ -124,6 +130,8 @@ linux64-hfsplus:
             - 'build/unix/build-hfsplus/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
+    toolchains:
+        - linux64-sccache
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

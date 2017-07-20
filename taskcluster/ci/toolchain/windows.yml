@@ -21,6 +21,8 @@ win32-clang-cl:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang.tar.bz2
+    toolchains:
+        - win64-sccache
 
 win64-clang-cl:
     description: "Clang-cl toolchain build"
@@ -41,6 +43,8 @@ win64-clang-cl:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang.tar.bz2
+    toolchains:
+        - win64-sccache
 
 win32-clang-tidy:
     description: "Clang-tidy toolchain build"
@@ -64,6 +68,8 @@ win32-clang-tidy:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+    toolchains:
+        - win64-sccache
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"
@@ -87,6 +93,8 @@ win64-clang-tidy:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+    toolchains:
+        - win64-sccache
 
 win64-sccache:
     description: "sccache toolchain build"
