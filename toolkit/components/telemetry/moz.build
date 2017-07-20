@@ -50,7 +50,6 @@ EXPORTS.mozilla += [
     'ipc/TelemetryIPC.h',
     'ProcessedStack.h',
     'Telemetry.h',
-    'ThreadHangStats.h',
 ]
 
 SOURCES += [
@@ -65,7 +64,6 @@ SOURCES += [
     'TelemetryHistogram.cpp',
     'TelemetryIOInterposeObserver.cpp',
     'TelemetryScalar.cpp',
-    'ThreadHangStats.cpp',
     'WebrtcTelemetry.cpp',
 ]
 
