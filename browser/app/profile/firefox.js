@@ -268,7 +268,7 @@ pref("browser.defaultbrowser.notificationbar", false);
 pref("browser.startup.page",                1);
 pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
 // Whether we should skip the homepage when opening the first-run page
-pref("browser.startup.firstrunSkipsHomepage", false);
+pref("browser.startup.firstrunSkipsHomepage", true);
 
 pref("browser.slowStartup.notificationDisabled", false);
 pref("browser.slowStartup.timeThreshold", 30000);
