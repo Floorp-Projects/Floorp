@@ -195,27 +195,6 @@ SandboxBrokerClient::Chmod(const char* aPath, int aMode)
 }
 
 int
-SandboxBrokerClient::Link(const char* aOldPath, const char* aNewPath)
-{
-  Request req = {SANDBOX_FILE_LINK, 0, 0};
-  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
-}
-
-int
-SandboxBrokerClient::Symlink(const char* aOldPath, const char* aNewPath)
-{
-  Request req = {SANDBOX_FILE_SYMLINK, 0, 0};
-  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
-}
-
-int
-SandboxBrokerClient::Rename(const char* aOldPath, const char* aNewPath)
-{
-  Request req = {SANDBOX_FILE_RENAME, 0, 0};
-  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
-}
-
-int
 SandboxBrokerClient::Mkdir(const char* aPath, int aMode)
 {
   Request req = {SANDBOX_FILE_MKDIR, aMode, 0};
