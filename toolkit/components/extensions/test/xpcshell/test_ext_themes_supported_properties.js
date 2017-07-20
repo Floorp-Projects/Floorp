@@ -38,7 +38,7 @@ async function getAdditionalInvalidManifestProperties() {
   for (let [name, url] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCHEMAS)) {
     if (name !== "theme") {
       await Schemas.load(url);
-      let types = Schemas.schemaJSON.get(url)[0].types;
+      let types = Schemas.schemaJSON.get(url).deserialize({})[0].types;
       types.forEach(type => {
         if (type.$extend == "WebExtensionManifest") {
           let properties = Object.getOwnPropertyNames(type.properties);
