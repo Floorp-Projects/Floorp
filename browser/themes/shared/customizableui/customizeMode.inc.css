@@ -571,6 +571,10 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   background-clip: padding-box;
   border: 1px solid var(--arrowpanel-border-color);
   box-shadow: 0 0 10px hsla(0,0%,0%,.2);
+%ifdef XP_MACOSX
+  -moz-appearance: none;
+  border-radius: var(--arrowpanel-border-radius);
+%endif
 }
 
 #customization-panelWrapper > .panel-arrowbox {
