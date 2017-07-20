@@ -10257,6 +10257,9 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   ServoRestyleState& aRestyleState,
   const Maybe<nsStyleContext*>& aContinuationStyleContext)
 {
+  MOZ_ASSERT(!aChildFrame->GetAdditionalStyleContext(0),
+             "We don't handle additional style contexts here");
+
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
   //
@@ -10304,6 +10307,7 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   for (nsIFrame* kid = aChildFrame->GetNextContinuation();
        kid;
        kid = kid->GetNextContinuation()) {
+    MOZ_ASSERT(!kid->GetAdditionalStyleContext(0));
     kid->SetStyleContext(continuationStyle);
   }
 
