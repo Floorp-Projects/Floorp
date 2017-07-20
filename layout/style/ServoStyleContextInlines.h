@@ -15,7 +15,7 @@
 namespace mozilla {
 
 void
-ServoStyleContext::ResolveSameStructsAs(const ServoStyleContext* aOther)
+ServoStyleContext::ResolveSameStructsAs(nsPresContext* aPresContext, const ServoStyleContext* aOther)
 {
   // Only resolve structs that are not already resolved in this struct.
   uint64_t ourBits = mBits & NS_STYLE_INHERIT_MASK;
@@ -25,7 +25,7 @@ ServoStyleContext::ResolveSameStructsAs(const ServoStyleContext* aOther)
 #define STYLE_STRUCT(name_, checkdata_cb)                                           \
   if (nsStyle##name_::kHasFinishStyle && newBits & NS_STYLE_INHERIT_BIT(name_)) {   \
     const nsStyle##name_* data = ComputedValues()->GetStyle##name_();               \
-    const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext);                   \
+    const_cast<nsStyle##name_*>(data)->FinishStyle(aPresContext);                   \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
