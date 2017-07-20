@@ -185,13 +185,14 @@ nsStyleContext::MoveTo(nsStyleContext* aNewParent)
   }
 }
 
+template<class StyleContextLike>
 nsChangeHint
-nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
-                                    uint32_t* aEqualStructs,
-                                    uint32_t* aSamePointerStructs,
-                                    uint32_t aRelevantStructs)
+nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
+                                            uint32_t* aEqualStructs,
+                                            uint32_t* aSamePointerStructs,
+                                            uint32_t aRelevantStructs)
 {
-  AUTO_PROFILER_LABEL("nsStyleContext::CalcStyleDifference", CSS);
+  AUTO_PROFILER_LABEL("nsStyleContext::CalcStyleDifferenceInternal", CSS);
 
   static_assert(nsStyleStructID_Length <= 32,
                 "aEqualStructs is not big enough");
@@ -444,6 +445,18 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   MOZ_ASSERT(NS_IsHintSubset(hint, nsChangeHint_AllHints),
              "Added a new hint without bumping AllHints?");
   return hint & ~nsChangeHint_NeutralChange;
+}
+
+nsChangeHint
+nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
+                                    uint32_t* aEqualStructs,
+                                    uint32_t* aSamePointerStructs,
+                                    uint32_t aRelevantStructs)
+{
+  return CalcStyleDifferenceInternal(aNewContext,
+                                     aEqualStructs,
+                                     aSamePointerStructs,
+                                     aRelevantStructs);
 }
 
 namespace mozilla {
