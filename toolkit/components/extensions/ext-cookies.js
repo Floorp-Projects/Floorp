@@ -5,8 +5,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
                                   "resource://gre/modules/ContextualIdentityService.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
 
 /* globals DEFAULT_STORE, PRIVATE_STORE */
 
@@ -181,7 +181,7 @@ const query = function* (detailsIn, props, context) {
   };
   if ("url" in details) {
     try {
-      uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
+      uri = Services.io.newURI(details.url).QueryInterface(Ci.nsIURL);
       enumerator = Services.cookies.getCookiesFromHost(uri.host, originAttributes);
     } catch (ex) {
       // This often happens for about: URLs
@@ -293,7 +293,7 @@ this.cookies = class extends ExtensionAPI {
         },
 
         set: function(details) {
-          let uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
+          let uri = Services.io.newURI(details.url).QueryInterface(Ci.nsIURL);
 
           let path;
           if (details.path !== null) {
