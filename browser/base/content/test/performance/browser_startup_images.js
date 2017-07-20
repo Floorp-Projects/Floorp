@@ -50,6 +50,14 @@ const whitelist = [
 
   // Shared entries
   {
+    file: "chrome://browser/skin/arrow-left.svg",
+    platforms: ["linux", "win", "macosx"],
+  },
+  {
+    file: "chrome://browser/skin/arrow-dropdown.svg",
+    platforms: ["linux", "win", "macosx"],
+  },
+  {
     file: "chrome://browser/skin/fxa/sync-illustration.svg",
     platforms: ["linux", "win", "macosx"],
   },
@@ -143,20 +151,8 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/tabbrowser/newtab.png",
-    hidpi: "chrome://browser/skin/tabbrowser/newtab@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
     file: "chrome://global/skin/icons/chevron.png",
     hidpi: "chrome://global/skin/icons/chevron@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
-    file: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png",
-    hidpi: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon@2x.png",
     platforms: ["macosx"],
   },
 
@@ -179,23 +175,6 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-left-inverted@2x.png",
-    platforms: ["linux", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-right-inverted.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-right-inverted@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
-    file: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted.png",
-    hidpi: "chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png",
-    platforms: ["macosx"],
-  },
-
-  {
     file: "chrome://global/skin/toolbar/chevron.gif",
     platforms: ["win", "linux"],
   },
@@ -207,33 +186,8 @@ const whitelist = [
   },
 
   {
-    file: "chrome://browser/skin/tabbrowser/alltabs.png",
-    platforms: ["linux"],
-  },
-  {
-    file: "chrome://browser/skin/tabbrowser/alltabs-inverted.png",
-    platforms: ["linux"],
-  },
-
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-left.svg",
-    platforms: ["win"],
-  },
-
-  {
     file: "chrome://global/skin/icons/resizer.png",
     platforms: ["win"],
-  },
-
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-left.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-left@2x.png",
-    platforms: ["linux", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/tabbrowser/tab-arrow-right.png",
-    hidpi: "chrome://browser/skin/tabbrowser/tab-arrow-right@2x.png",
-    platforms: ["macosx"],
   },
 ];
 
