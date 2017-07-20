@@ -80,7 +80,7 @@ FormAutofillParent.prototype = {
   async init() {
     Services.obs.addObserver(this, "advanced-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
-    Services.ppmm.addMessageListener("FormAutofill:GetAddresses", this);
+    Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:OpenPreferences", this);
@@ -181,8 +181,8 @@ FormAutofillParent.prototype = {
         this.profileStorage.initialize();
         break;
       }
-      case "FormAutofill:GetAddresses": {
-        this._getAddresses(data, target);
+      case "FormAutofill:GetRecords": {
+        this._getRecords(data, target);
         break;
       }
       case "FormAutofill:SaveAddress": {
@@ -217,7 +217,7 @@ FormAutofillParent.prototype = {
     this.profileStorage._saveImmediately();
 
     Services.ppmm.removeMessageListener("FormAutofill:InitStorage", this);
-    Services.ppmm.removeMessageListener("FormAutofill:GetAddresses", this);
+    Services.ppmm.removeMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.removeMessageListener("FormAutofill:SaveAddress", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
@@ -225,27 +225,32 @@ FormAutofillParent.prototype = {
   },
 
   /**
-   * Get the address data from profile store and return addresses back to content
+   * Get the records from profile store and return results back to content
    * process.
    *
    * @private
+   * @param  {string} data.collectionName
+   *         The name used to specify which collection to retrieve records.
    * @param  {string} data.searchString
-   *         The typed string for filtering out the matched address.
+   *         The typed string for filtering out the matched records.
    * @param  {string} data.info
    *         The input autocomplete property's information.
    * @param  {nsIFrameMessageManager} target
    *         Content's message manager.
    */
-  _getAddresses({searchString, info}, target) {
-    let addresses = [];
+  _getRecords({collectionName, searchString, info}, target) {
+    let records;
+    let collection = this.profileStorage[collectionName];
 
-    if (info && info.fieldName) {
-      addresses = this.profileStorage.addresses.getByFilter({searchString, info});
+    if (!collection) {
+      records = [];
+    } else if (info && info.fieldName) {
+      records = collection.getByFilter({searchString, info});
     } else {
-      addresses = this.profileStorage.addresses.getAll();
+      records = collection.getAll();
     }
 
-    target.sendAsyncMessage("FormAutofill:Addresses", addresses);
+    target.sendAsyncMessage("FormAutofill:Records", records);
   },
 
   _updateSavedFieldNames() {
@@ -256,12 +261,14 @@ FormAutofillParent.prototype = {
       Services.ppmm.initialProcessData.autofillSavedFieldNames.clear();
     }
 
-    this.profileStorage.addresses.getAll().forEach((address) => {
-      Object.keys(address).forEach((fieldName) => {
-        if (!address[fieldName]) {
-          return;
-        }
-        Services.ppmm.initialProcessData.autofillSavedFieldNames.add(fieldName);
+    ["addresses", "creditCards"].forEach(c => {
+      this.profileStorage[c].getAll().forEach((record) => {
+        Object.keys(record).forEach((fieldName) => {
+          if (!record[fieldName]) {
+            return;
+          }
+          Services.ppmm.initialProcessData.autofillSavedFieldNames.add(fieldName);
+        });
       });
     });
 
