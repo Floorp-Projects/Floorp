@@ -131,10 +131,8 @@ parent:
   /**
    * WebExtension-specific remote resource loading
    */
-  async GetExtensionStream(URIParams uri, LoadInfoArgs loadInfo) returns
-                          (OptionalIPCStream stream);
-  async GetExtensionFD(URIParams uri, OptionalLoadInfoArgs loadInfo) returns
-                      (FileDescriptor fd);
+  async GetExtensionStream(URIParams uri) returns (OptionalIPCStream stream);
+  async GetExtensionFD(URIParams uri) returns (FileDescriptor fd);
 
 child:
   /*
