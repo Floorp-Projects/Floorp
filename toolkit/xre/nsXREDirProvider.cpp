@@ -1026,6 +1026,8 @@ nsXREDirProvider::GetDirectory(nsIFile* *aResult)
 NS_IMETHODIMP
 nsXREDirProvider::DoStartup()
 {
+  nsresult rv;
+
   if (!mProfileNotified) {
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
@@ -1038,8 +1040,7 @@ nsXREDirProvider::DoStartup()
        crashes and because we want to begin crash tracking before other code run
        from this notification since they may cause crashes.
     */
-    nsresult rv = mozilla::Preferences::ResetAndReadUserPrefs();
-    if (NS_FAILED(rv)) NS_WARNING("Failed to setup pref service.");
+    mozilla::Preferences::InitializeUserPrefs();
 
     bool safeModeNecessary = false;
     nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
