@@ -163,6 +163,7 @@ var UpdateListener = {
       case "pending":
       case "applied-service":
       case "pending-service":
+      case "pending-elevate":
       case "success":
         this.clearCallbacks();
 
