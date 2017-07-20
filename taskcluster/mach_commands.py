@@ -307,7 +307,7 @@ class MachCommands(MachCommandBase):
 
             return actions.trigger_action_callback(
                     task_group_id=task_group_id,
-                    tsak_id=task_id,
+                    task_id=task_id,
                     task=task,
                     input=input,
                     callback=callback,
