@@ -279,7 +279,7 @@ var UninstallObserver = {
         ExtensionStorage.clear(addon.id));
 
       // Clear any IndexedDB storage created by the extension
-      let baseURI = NetUtil.newURI(`moz-extension://${uuid}/`);
+      let baseURI = Services.io.newURI(`moz-extension://${uuid}/`);
       let principal = Services.scriptSecurityManager.createCodebasePrincipal(
         baseURI, {});
       Services.qms.clearStoragesForPrincipal(principal);
@@ -395,7 +395,7 @@ this.ExtensionData = class {
 
   async readDirectory(path) {
     if (this.rootURI instanceof Ci.nsIFileURL) {
-      let uri = NetUtil.newURI(this.rootURI.resolve("./" + path));
+      let uri = Services.io.newURI(this.rootURI.resolve("./" + path));
       let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
 
       let iter = new OS.File.DirectoryIterator(fullPath);
@@ -792,7 +792,7 @@ this.Extension = class extends ExtensionData {
 
     this.id = addonData.id;
     this.version = addonData.version;
-    this.baseURI = NetUtil.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
+    this.baseURI = Services.io.newURI(this.getURL("")).QueryInterface(Ci.nsIURL);
     this.principal = this.createPrincipal();
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
