@@ -346,7 +346,7 @@ var PingPicker = {
 
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
-    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
+    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
     let pingName = this._getSelectedPingName();
 
     let pingDate = document.getElementById("ping-date");
@@ -373,7 +373,7 @@ var PingPicker = {
     }
     let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
 
-    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingNameHtml], 2);
+    let explanation = bundle.formatStringFromName("pingDetails", [pingLink, pingNameHtml], 2);
     let pingExplanation = document.getElementById("ping-explanation");
 
     // eslint-disable-next-line no-unsanitized/property
