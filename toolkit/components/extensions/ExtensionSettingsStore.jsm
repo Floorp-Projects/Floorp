@@ -23,7 +23,7 @@
  *       precedenceList: [
  *         {
  *           id, // The id of the extension requesting the setting.
- *           installDate, // The install date of the extension.
+ *           installDate, // The install date of the extension, stored as a number.
  *           value, // The value of the setting requested by the extension.
  *           enabled // Whether the setting is currently enabled.
  *         }
@@ -53,15 +53,42 @@ XPCOMUtils.defineLazyModuleGetter(this, "JSONFile",
                                   "resource://gre/modules/JSONFile.jsm");
 
 const JSON_FILE_NAME = "extension-settings.json";
+const JSON_FILE_VERSION = 2;
 const STORE_PATH = OS.Path.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, JSON_FILE_NAME);
 
 let _store;
+
+// Test-only method to force reloading of the JSON file, by removing the
+// cached file from memory.
+function clearFileFromCache() {
+  let finalizePromise = _store.finalize();
+  _store = null;
+  return finalizePromise;
+}
+
+// Processes the JSON data when read from disk to convert string dates into numbers.
+function dataPostProcessor(json) {
+  if (json.version !== JSON_FILE_VERSION) {
+    for (let storeType in json) {
+      for (let setting in json[storeType]) {
+        for (let extData of json[storeType][setting].precedenceList) {
+          if (typeof extData.installDate != "number") {
+            extData.installDate = new Date(extData.installDate).valueOf();
+          }
+        }
+      }
+    }
+    json.version = JSON_FILE_VERSION;
+  }
+  return json;
+}
 
 // Get the internal settings store, which is persisted in a JSON file.
 function getStore(type) {
   if (!_store) {
     let initStore = new JSONFile({
       path: STORE_PATH,
+      dataPostProcessor,
     });
     initStore.ensureDataReady();
     _store = initStore;
@@ -232,7 +259,8 @@ this.ExtensionSettingsStore = {
     if (foundIndex === -1) {
       // No item for this extension, so add a new one.
       let addon = await AddonManager.getAddonByID(id);
-      keyInfo.precedenceList.push({id, installDate: addon.installDate, value, enabled: true});
+      keyInfo.precedenceList.push(
+        {id, installDate: addon.installDate.valueOf(), value, enabled: true});
     } else {
       // Item already exists or this extension, so update it.
       keyInfo.precedenceList[foundIndex].value = value;
@@ -401,8 +429,21 @@ this.ExtensionSettingsStore = {
     }
 
     let addon = await AddonManager.getAddonByID(id);
-    return topItem.installDate > addon.installDate ?
+    return topItem.installDate > addon.installDate.valueOf() ?
       "controlled_by_other_extensions" :
       "controllable_by_this_extension";
+  },
+
+  /**
+   * Test-only method to force reloading of the JSON file.
+   *
+   * Note that this method simply clears the local variable that stores the
+   * file, so the next time the file is accessed it will be reloaded.
+   *
+   * @returns {Promise}
+   *          A promise that resolves once the settings store has been cleared.
+   */
+  _reloadFile() {
+    return clearFileFromCache();
   },
 };
