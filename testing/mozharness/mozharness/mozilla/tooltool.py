@@ -86,6 +86,8 @@ class TooltoolMixin(object):
 
         if self.topsrcdir:
             cmd.extend(['--tooltool-manifest', manifest])
+            cmd.extend(['--artifact-manifest',
+                        os.path.join(self.topsrcdir, 'toolchains.json')])
         else:
             cmd.extend(['fetch', '-m', manifest, '-o'])
 

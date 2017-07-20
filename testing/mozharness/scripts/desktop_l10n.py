@@ -1077,6 +1077,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             '--retry', '4',
             '--tooltool-manifest',
             tooltool_manifest_path,
+            '--artifact-manifest',
+            os.path.join(dirs['abs_mozilla_dir'], 'toolchains.json'),
             '--tooltool-url',
             config['tooltool_url'],
         ]
