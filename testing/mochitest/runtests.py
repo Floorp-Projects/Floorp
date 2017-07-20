@@ -835,6 +835,7 @@ class MochitestDesktop(object):
         self.websocketProcessBridge = None
         self.sslTunnel = None
         self.tests_by_manifest = defaultdict(list)
+        self.prefs_by_manifest = defaultdict(set)
         self._active_tests = None
         self._locations = None
 
@@ -1483,6 +1484,12 @@ toolbar#nav-bar {
 
             manifest_relpath = os.path.relpath(test['manifest'], manifest_root)
             self.tests_by_manifest[manifest_relpath].append(tp)
+            self.prefs_by_manifest[manifest_relpath].add(test.get('prefs'))
+
+            if 'prefs' in test and not options.runByManifest:
+                self.log.error("parsing {}: runByManifest mode must be enabled to "
+                               "set the `prefs` key".format(manifest_relpath))
+                sys.exit(1)
 
             testob = {'path': tp, 'manifest': manifest_relpath}
             if 'disabled' in test:
@@ -1498,6 +1505,17 @@ toolbar#nav-bar {
                 if patterns:
                     testob['expected'] = patterns
             paths.append(testob)
+
+        # The 'prefs' key needs to be set in the DEFAULT section, unfortunately
+        # we can't tell what comes from DEFAULT or not. So to validate this, we
+        # stash all prefs from tests in the same manifest into a set. If the
+        # length of the set > 1, then we know 'prefs' didn't come from DEFAULT.
+        pref_not_default = [m for m, p in self.prefs_by_manifest.iteritems() if len(p) > 1]
+        if pref_not_default:
+            self.log.error("The 'prefs' key must be set in the DEFAULT section of a "
+                           "manifest. Fix the following manifests: {}".format(
+                            '\n'.join(pref_not_default)))
+            sys.exit(1)
 
         def path_sort(ob1, ob2):
             path1 = ob1['path'].split('/')
@@ -2443,13 +2461,22 @@ toolbar#nav-bar {
         # code for --run-by-manifest
         manifests = set(t['manifest'] for t in tests)
         result = 1  # default value, if no tests are run.
+        origPrefs = options.extraPrefs[:]
         for m in sorted(manifests):
             self.log.info("Running manifest: {}".format(m))
-            tests_in_manifest = [t['path'] for t in tests if t['manifest'] == m]
+
+            prefs = self.prefs_by_manifest[m].pop()
+            options.extraPrefs = origPrefs[:]
+            if prefs:
+                prefs = prefs.strip().split()
+                self.log.info("The following extra prefs will be set:\n  {}".format(
+                    '\n  '.join(prefs)))
+                options.extraPrefs.extend(prefs)
 
             # If we are using --run-by-manifest, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face
             # problems if we use the directory provided by the user.
+            tests_in_manifest = [t['path'] for t in tests if t['manifest'] == m]
             result = self.runMochitests(options, tests_in_manifest)
 
             # Dump the logging buffer

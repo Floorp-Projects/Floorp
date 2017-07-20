@@ -181,6 +181,12 @@ def runtests(setup_harness_root, binary, parser, request):
     return inner
 
 
+@pytest.fixture
+def build_obj(setup_harness_root):
+    mochitest_options = pytest.importorskip('mochitest_options')
+    return mochitest_options.build_obj
+
+
 @pytest.fixture(autouse=True)
 def skip_using_mozinfo(request, setup_harness_root):
     """Gives tests the ability to skip based on values from mozinfo.
