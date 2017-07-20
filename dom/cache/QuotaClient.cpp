@@ -67,6 +67,10 @@ GetBodyUsage(nsIFile* aDir, const Atomic<bool>& aCanceled,
 class CacheQuotaClient final : public Client
 {
 public:
+  CacheQuotaClient()
+  : mDirPaddingFileMutex("DOMCacheQuotaClient.mDirPaddingFileMutex")
+  { }
+
   virtual Type
   GetType() override
   {
@@ -234,6 +238,10 @@ private:
   }
 
   NS_INLINE_DECL_REFCOUNTING(CacheQuotaClient, override)
+
+  // Mutex lock to protect directroy padding files. It should only be acquired
+  // in DOM Cache IO threads and Quota IO thread.
+  mozilla::Mutex mDirPaddingFileMutex;
 };
 
 } // namespace
