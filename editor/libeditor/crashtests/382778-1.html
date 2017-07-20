@@ -7,7 +7,7 @@ function init1()
 {
   // Create an html:iframe in HTML mode (so designMode can be used 320092)
   targetIframe = document.createElementNS('http://www.w3.org/1999/xhtml', 'iframe');
-  targetIframe.src = "data:text/html,";
+  targetIframe.srcdoc = "<html></html>";
   targetIframe.setAttribute("style", "width: 700px; height: 500px; border: 1px dotted green;");
   targetIframe.addEventListener("load", init2);
   document.body.appendChild(targetIframe);
