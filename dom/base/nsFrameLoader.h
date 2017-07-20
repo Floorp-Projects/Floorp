@@ -116,6 +116,8 @@ public:
               int32_t scrollbarPrefX, int32_t scrollbarPrefY,
               nsSubDocumentFrame* frame);
 
+  void MaybeShowFrame();
+
   /**
    * Called when the margin properties of the containing frame are changed.
    */
