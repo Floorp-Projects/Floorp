@@ -5772,6 +5772,26 @@ nsDisplayWrapList::SetReferenceFrame(const nsIFrame* aFrame)
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
 }
 
+bool
+nsDisplayWrapList::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                           const StackingContextHelper& aSc,
+                                           nsTArray<WebRenderParentCommand>& aParentCommands,
+                                           mozilla::layers::WebRenderLayerManager* aManager,
+                                           nsDisplayListBuilder* aDisplayListBuilder)
+{
+  // If this function is called in layers mode that means we created a
+  // WebRenderDisplayItemLayer for a display item that is a subclass of
+  // nsDisplayWrapList, but we didn't actually implement the overridden
+  // CreateWebRenderCommandsFromDisplayList on it. That doesn't seem correct.
+  MOZ_ASSERT(aManager->IsLayersFreeTransaction());
+
+  aManager->CreateWebRenderCommandsFromDisplayList(GetChildren(),
+                                                   aDisplayListBuilder,
+                                                   aSc,
+                                                   aBuilder);
+  return true;
+}
+
 static nsresult
 WrapDisplayList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                 nsDisplayList* aList, nsDisplayWrapper* aWrapper) {
