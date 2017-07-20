@@ -39,6 +39,7 @@
 #include "mozilla/Maybe.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocument.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsRFPService.h"
 
@@ -1994,7 +1995,8 @@ public:
                                      bool aCtrl = false,
                                      bool aAlt = false,
                                      bool aShift = false,
-                                     bool aMeta = false);
+                                     bool aMeta = false,
+                                     uint16_t inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN);
 
   static bool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal);
 

@@ -34,7 +34,7 @@ add_task(async function() {
   let chooseItem = list.firstChild.querySelector(".choose-app-item");
   let dialogLoadedPromise = promiseLoadSubDialog("chrome://global/content/appPicker.xul");
   let cmdEvent = win.document.createEvent("xulcommandevent");
-  cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null);
+  cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null, 0);
   chooseItem.dispatchEvent(cmdEvent);
 
   let dialog = await dialogLoadedPromise;
@@ -63,7 +63,7 @@ add_task(async function() {
 
   let manageItem = list.firstChild.querySelector(".manage-app-item");
   cmdEvent = win.document.createEvent("xulcommandevent");
-  cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null);
+  cmdEvent.initCommandEvent("command", true, true, win, 0, false, false, false, false, null, 0);
   manageItem.dispatchEvent(cmdEvent);
 
   dialog = await dialogLoadedPromise;
