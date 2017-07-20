@@ -23,6 +23,7 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::gfx::Feature from "gfxFeature.h";
 using mozilla::gfx::Fallback from "gfxFallback.h";
+using mozilla::HangDetails from "mozilla/HangDetails.h";
 
 namespace mozilla {
 namespace gfx {
@@ -124,6 +125,8 @@ child:
 
   // Notify about:support/Telemetry that a fallback occurred.
   async UsedFallback(Fallback aFallback, nsCString message);
+
+  async BHRThreadHang(HangDetails aDetails);
 };
 
 } // namespace gfx

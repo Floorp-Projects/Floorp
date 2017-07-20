@@ -96,6 +96,7 @@ using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+using mozilla::HangDetails from "mozilla/HangDetails.h";
 
 union ChromeRegistryItem
 {
@@ -1055,6 +1056,8 @@ parent:
     async FinishMemoryReport(uint32_t aGeneration);
 
     async MaybeReloadPlugins();
+
+    async BHRThreadHang(HangDetails aHangDetails);
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
