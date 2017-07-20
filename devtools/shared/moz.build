@@ -46,6 +46,7 @@ DevToolsModules(
     'async-utils.js',
     'builtin-modules.js',
     'content-observer.js',
+    'debounce.js',
     'defer.js',
     'deprecated-sync-thenables.js',
     'DevToolsUtils.js',

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { debounce } = require("sdk/lang/functional");
+const { debounce } = require("devtools/shared/debounce");
 const { lerp } = require("devtools/client/memory/utils");
 const EventEmitter = require("devtools/shared/event-emitter");
 
