@@ -11,6 +11,7 @@
 #include "nsIStreamListener.h"
 #include "nsITraceableChannel.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsProxyRelease.h"
 #include "mozilla/Attributes.h"
 
 class nsWebRequestListener final : public nsIWebRequestListener
@@ -18,7 +19,7 @@ class nsWebRequestListener final : public nsIWebRequestListener
                                  , public nsIThreadRetargetableStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBREQUESTLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
@@ -27,7 +28,10 @@ public:
   nsWebRequestListener() {}
 
 private:
-  ~nsWebRequestListener() {}
+  ~nsWebRequestListener() {
+    NS_ReleaseOnMainThreadSystemGroup("nsWebRequestListener::mTargetStreamListener",
+                                      mTargetStreamListener.forget());
+  }
   nsCOMPtr<nsIStreamListener> mOrigStreamListener;
   nsCOMPtr<nsIStreamListener> mTargetStreamListener;
 };
