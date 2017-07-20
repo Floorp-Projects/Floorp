@@ -8067,14 +8067,6 @@ nsTableFrame::UpdateStyleOfOwnedAnonBoxesForTableWrapper(
     newContext,
     &equalStructs,
     &samePointerStructs);
-
-  // CalcStyleDifference will handle caching structs on the new style context,
-  // but only if we're not on a style worker thread.
-  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(),
-             "if we can get in here from style worker threads, then we need "
-             "a ResolveSameStructsAs call to ensure structs are cached on "
-             "aNewStyleContext");
-
   if (wrapperHint) {
     aRestyleState.ChangeList().AppendChange(
       aWrapperFrame, aWrapperFrame->GetContent(), wrapperHint);
