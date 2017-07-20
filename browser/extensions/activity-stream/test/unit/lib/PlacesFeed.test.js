@@ -28,6 +28,7 @@ describe("PlacesFeed", () => {
       history: {addObserver: sandbox.spy(), removeObserver: sandbox.spy()},
       bookmarks: {TYPE_BOOKMARK, addObserver: sandbox.spy(), removeObserver: sandbox.spy()}
     });
+    globals.set("Pocket", {savePage: sandbox.spy()});
     global.Components.classes["@mozilla.org/browser/nav-history-service;1"] = {
       getService() {
         return global.PlacesUtils.history;
@@ -97,6 +98,10 @@ describe("PlacesFeed", () => {
     it("should delete a history entry on DELETE_HISTORY_URL", () => {
       feed.onAction({type: at.DELETE_HISTORY_URL, data: "guava.com"});
       assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteHistoryEntry, "guava.com");
+    });
+    it("should save to Pocket on SAVE_TO_POCKET", () => {
+      feed.onAction({type: at.SAVE_TO_POCKET, data: {site: {url: "raspberry.com", title: "raspberry"}}, _target: {browser: {}}});
+      assert.calledWith(global.Pocket.savePage, {}, "raspberry.com", "raspberry");
     });
   });
 
