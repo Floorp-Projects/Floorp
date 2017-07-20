@@ -273,10 +273,12 @@ const PanelUI = {
         }
 
         let anchor;
+        let domEvent = null;
         if (!aEvent ||
             aEvent.type == "command") {
           anchor = this.menuButton;
         } else {
+          domEvent = aEvent;
           anchor = aEvent.target;
         }
 
@@ -285,7 +287,7 @@ const PanelUI = {
         }, {once: true});
 
         anchor = this._getPanelAnchor(anchor);
-        this.panel.openPopup(anchor);
+        this.panel.openPopup(anchor, { triggerEvent: domEvent });
       }, (reason) => {
         console.error("Error showing the PanelUI menu", reason);
       });
@@ -475,8 +477,22 @@ const PanelUI = {
    * @param aViewId the ID of the subview to show.
    * @param aAnchor the element that spawned the subview.
    * @param aPlacementArea the CustomizableUI area that aAnchor is in.
+   * @param aEvent the event triggering the view showing.
    */
-  async showSubView(aViewId, aAnchor, aPlacementArea) {
+  async showSubView(aViewId, aAnchor, aPlacementArea, aEvent) {
+
+    let domEvent = null;
+    if (aEvent) {
+      if (aEvent.type == "command" && aEvent.inputSource != null) {
+        // Synthesize a new DOM mouse event to pass on the inputSource.
+        domEvent = document.createEvent("MouseEvent");
+        domEvent.initNSMouseEvent("click", true, true, null, 0, aEvent.screenX, aEvent.screenY,
+                                  0, 0, false, false, false, false, 0, aEvent.target, 0, aEvent.inputSource);
+      } else if (aEvent.mozInputSource != null) {
+        domEvent = aEvent;
+      }
+    }
+
     this._ensureEventListenersAdded();
     let viewNode = document.getElementById(aViewId);
     if (!viewNode) {
@@ -584,7 +600,10 @@ const PanelUI = {
         anchor.setAttribute("consumeanchor", aAnchor.id);
       }
 
-      tempPanel.openPopup(anchor, "bottomcenter topright");
+      tempPanel.openPopup(anchor, {
+        position: "bottomcenter topright",
+        triggerEvent: domEvent,
+      });
     }
   },
 
