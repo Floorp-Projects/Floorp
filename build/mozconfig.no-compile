@@ -1,5 +1,10 @@
 ac_add_options --disable-compile-environment
 
+# In case mozconfig.cache was already included
+unset CCACHE
+# In case it wasn't
+NO_CACHE=1
+
 # Override any toolchain defines we've inherited from other mozconfigs.
 unset CC
 unset CXX

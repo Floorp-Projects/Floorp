@@ -23,3 +23,4 @@ ac_add_options --enable-js-shell
 
 . "$topsrcdir/build/mozconfig.automation"
 . "$topsrcdir/build/mozconfig.rust"
+. "$topsrcdir/build/mozconfig.cache"

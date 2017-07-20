@@ -25,4 +25,3 @@ fi
 ac_add_options --with-branding=browser/branding/aurora
 
 . "$topsrcdir/build/mozconfig.common.override"
-. "$topsrcdir/build/mozconfig.cache"
