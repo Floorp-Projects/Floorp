@@ -1516,7 +1516,7 @@ telemetry-tests-client:
     max-run-time: 5400
     checkout: true
     e10s: true
-    tier: 2
+    tier: 3
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: telemetry/telemetry_client.py
