@@ -7584,6 +7584,9 @@
           }
 
           tabContainer._hoveredTab = this;
+          if (this.linkedPanel && !this.selected) {
+            this.linkedBrowser.unselectedTabHover(true);
+          }
         ]]></body>
       </method>
 
@@ -7600,6 +7603,9 @@
           }
 
           tabContainer._hoveredTab = null;
+          if (this.linkedPanel && !this.selected) {
+            this.linkedBrowser.unselectedTabHover(false);
+          }
         ]]></body>
       </method>
 
