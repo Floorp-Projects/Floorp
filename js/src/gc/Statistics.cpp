@@ -929,6 +929,9 @@ void
 Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                        SliceBudget budget, JS::gcreason::Reason reason)
 {
+    MOZ_ASSERT(phaseStack.empty() ||
+               (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
+
     this->zoneStats = zoneStats;
 
     bool first = !runtime->gc.isIncrementalGCInProgress();
@@ -962,6 +965,9 @@ Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
 void
 Statistics::endSlice()
 {
+    MOZ_ASSERT(phaseStack.empty() ||
+               (phaseStack.length() == 1 && phaseStack[0] == Phase::MUTATOR));
+
     if (!aborted) {
         auto& slice = slices_.back();
         slice.end = TimeStamp::Now();
@@ -980,15 +986,24 @@ Statistics::endSlice()
             if (budget_ms == runtime->gc.defaultSliceBudget())
                 runtime->addTelemetry(JS_TELEMETRY_GC_ANIMATION_MS, t(sliceTime));
 
-            // Record any phase that goes more than 2x over its budget.
-            if (sliceTime.ToMilliseconds() > 2 * budget_ms) {
-                reportLongestPhaseInMajorGC(slice.phaseTimes, JS_TELEMETRY_GC_SLOW_PHASE);
-                // If we spend a significant length of time waiting for parallel
-                // tasks then report the longest task.
-                TimeDuration joinTime = SumPhase(PhaseKind::JOIN_PARALLEL_TASKS, slice.phaseTimes);
-                if (joinTime.ToMilliseconds() > budget_ms)
-                    reportLongestPhaseInMajorGC(slice.parallelTimes, JS_TELEMETRY_GC_SLOW_TASK);
+            // Record any phase that goes 1.5 times or 5ms over its budget.
+            double longSliceThreshold = std::min(1.5 * budget_ms, budget_ms + 5.0);
+            if (sliceTime.ToMilliseconds() > longSliceThreshold) {
+                PhaseKind longest = LongestPhaseSelfTimeInMajorGC(slice.phaseTimes);
+                reportLongestPhaseInMajorGC(longest, JS_TELEMETRY_GC_SLOW_PHASE);
+
+                // If the longest phase was waiting for parallel tasks then
+                // record the longest task.
+                if (longest == PhaseKind::JOIN_PARALLEL_TASKS) {
+                    PhaseKind longestParallel = LongestPhaseSelfTimeInMajorGC(slice.parallelTimes);
+                    reportLongestPhaseInMajorGC(longestParallel, JS_TELEMETRY_GC_SLOW_TASK);
+                }
             }
+
+            // Record how long we went over budget.
+            int64_t overrun = sliceTime.ToMicroseconds() - (1000 * budget_ms);
+            if (overrun > 0)
+                runtime->addTelemetry(JS_TELEMETRY_GC_BUDGET_OVERRUN, uint32_t(overrun));
         }
 
         sliceCount_++;
@@ -1036,14 +1051,12 @@ Statistics::endSlice()
 }
 
 void
-Statistics::reportLongestPhaseInMajorGC(const PhaseTimeTable& times, int telemetryId)
+Statistics::reportLongestPhaseInMajorGC(PhaseKind longest, int telemetryId)
 {
-    PhaseKind longest = LongestPhaseSelfTimeInMajorGC(times);
-    if (longest == PhaseKind::NONE)
-        return;
-
-    uint8_t bucket = phaseKinds[longest].telemetryBucket;
-    runtime->addTelemetry(telemetryId, bucket);
+    if (longest != PhaseKind::NONE) {
+        uint8_t bucket = phaseKinds[longest].telemetryBucket;
+        runtime->addTelemetry(telemetryId, bucket);
+    }
 }
 
 bool
@@ -1210,6 +1223,8 @@ Statistics::endPhase(PhaseKind phaseKind)
 void
 Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
 {
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+
     Phase phase = lookupChildPhase(phaseKind);
 
     // Record the duration for all phases in the tree up to the root. This is
@@ -1221,18 +1236,6 @@ Statistics::recordParallelPhase(PhaseKind phaseKind, TimeDuration duration)
         parallelTimes[phase] += duration;
         phase = phases[phase].parent;
     }
-}
-
-void
-Statistics::endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task)
-{
-    Phase phase = lookupChildPhase(phaseKind);
-    phaseStack.popBack();
-
-    if (!slices_.empty())
-        slices_.back().phaseTimes[phase] += task->duration();
-    phaseTimes[phase] += task->duration();
-    phaseStartTimes[phase] = TimeStamp();
 }
 
 TimeStamp

@@ -632,10 +632,10 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
         MOZ_ASSERT(maybeBytecode, "NameInBytecode requires preserved bytecode");
 
         const NameInBytecode& n = funcNames[funcIndex];
-        MOZ_ASSERT(n.offset + n.length < maybeBytecode->length());
-
-        if (n.length != 0)
+        if (n.length != 0) {
+            MOZ_ASSERT(n.offset + n.length <= maybeBytecode->length());
             return name->append((const char*)maybeBytecode->begin() + n.offset, n.length);
+        }
     }
 
     // For names that are out of range or invalid, synthesize a name.

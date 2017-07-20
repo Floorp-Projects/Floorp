@@ -131,7 +131,6 @@ struct Statistics
 
     void beginPhase(PhaseKind phaseKind);
     void endPhase(PhaseKind phaseKind);
-    void endParallelPhase(PhaseKind phaseKind, const GCParallelTask* task);
     void recordParallelPhase(PhaseKind phaseKind, TimeDuration duration);
 
     // Occasionally, we may be in the middle of something that is tracked by
@@ -371,7 +370,7 @@ FOR_EACH_GC_PROFILE_TIME(DEFINE_TIME_KEY)
     void sccDurations(TimeDuration* total, TimeDuration* maxPause) const;
     void printStats();
 
-    void reportLongestPhaseInMajorGC(const PhaseTimeTable& times, int telemetryId);
+    void reportLongestPhaseInMajorGC(PhaseKind longest, int telemetryId);
 
     UniqueChars formatCompactSlicePhaseTimes(const PhaseTimeTable& phaseTimes) const;
 

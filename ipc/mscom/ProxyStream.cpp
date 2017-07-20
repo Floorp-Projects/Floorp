@@ -189,6 +189,26 @@ ProxyStream::GetBuffer(int& aReturnedBufSize) const
   return mGlobalLockedBuf;
 }
 
+RefPtr<IStream>
+ProxyStream::GetStream() const
+{
+  MOZ_ASSERT(mStream);
+  MOZ_ASSERT(mHGlobal);
+
+  if (!mStream) {
+    return nullptr;
+  }
+
+  // Ensure the stream is rewound. We do this because CoReleaseMarshalData needs
+  // the stream to be pointing to the beginning of the marshal data.
+  LARGE_INTEGER pos;
+  pos.QuadPart = 0LL;
+  DebugOnly<HRESULT> hr = mStream->Seek(pos, STREAM_SEEK_SET, nullptr);
+  MOZ_ASSERT(SUCCEEDED(hr));
+
+  return mStream;
+}
+
 bool
 ProxyStream::GetInterface(void** aOutInterface)
 {

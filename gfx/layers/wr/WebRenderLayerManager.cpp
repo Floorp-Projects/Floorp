@@ -311,7 +311,7 @@ WebRenderLayerManager::PushImage(nsDisplayItem* aItem,
   }
 
   wr::ImageRendering filter = wr::ImageRendering::Auto;
-  auto r = aSc.ToRelativeWrRect(aRect);
+  auto r = aSc.ToRelativeLayoutRect(aRect);
   aBuilder.PushImage(r, r, filter, key.value());
 
   return true;
@@ -438,7 +438,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
 
   MOZ_ASSERT(fallbackData->GetKey());
 
-  WrRect dest = aSc.ToRelativeWrRect(imageRect + offset);
+  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect + offset);
   aBuilder.PushImage(dest,
                      dest,
                      wr::ImageRendering::Auto,
@@ -482,7 +482,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   }
   DiscardCompositorAnimations();
 
-  WrSize contentSize { (float)size.width, (float)size.height };
+  wr::LayoutSize contentSize { (float)size.width, (float)size.height };
   wr::DisplayListBuilder builder(WrBridge()->GetPipeline(), contentSize);
 
   if (mEndTransactionWithoutLayers) {

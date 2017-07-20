@@ -50,15 +50,22 @@ public:
   void Resume() override;
 
 protected:
+  virtual ~IDecodingTask() { }
+
   /// Notify @aImage of @aDecoder's progress.
-  static void NotifyProgress(NotNull<RasterImage*> aImage,
-                             NotNull<Decoder*> aDecoder);
+  void NotifyProgress(NotNull<RasterImage*> aImage,
+                      NotNull<Decoder*> aDecoder);
 
   /// Notify @aImage that @aDecoder has finished.
-  static void NotifyDecodeComplete(NotNull<RasterImage*> aImage,
-                                   NotNull<Decoder*> aDecoder);
+  void NotifyDecodeComplete(NotNull<RasterImage*> aImage,
+                            NotNull<Decoder*> aDecoder);
 
-  virtual ~IDecodingTask() { }
+private:
+  void EnsureHasEventTarget(NotNull<RasterImage*> aImage);
+
+  bool IsOnEventTarget() const;
+
+  nsCOMPtr<nsIEventTarget> mEventTarget;
 };
 
 

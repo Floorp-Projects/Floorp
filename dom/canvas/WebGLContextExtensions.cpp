@@ -10,6 +10,7 @@
 #include "GLContext.h"
 
 #include "nsString.h"
+#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "AccessCheck.h"
@@ -146,7 +147,8 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
                gl->IsExtensionSupported(gl::GLContext::EXT_texture_sRGB);
     case WebGLExtensionID::WEBGL_debug_renderer_info:
         return Preferences::GetBool("webgl.enable-debug-renderer-info", false);
-
+    case WebGLExtensionID::WEBGL_debug_shaders:
+        return !nsContentUtils::ShouldResistFingerprinting();
     case WebGLExtensionID::WEBGL_lose_context:
         // We always support this extension.
         return true;

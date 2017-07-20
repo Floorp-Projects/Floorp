@@ -16,6 +16,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
+#include "mozilla/SystemGroup.h"
 
 using mozilla::WeakPtr;
 
@@ -69,10 +70,20 @@ CheckProgressConsistency(Progress aOldProgress, Progress aNewProgress, bool aIsM
   }
 }
 
+ProgressTracker::ProgressTracker()
+  : mMutex("ProgressTracker::mMutex")
+  , mImage(nullptr)
+  , mEventTarget(WrapNotNull(nsCOMPtr<nsIEventTarget>(SystemGroup::EventTargetFor(TaskCategory::Other))))
+  , mObserversWithTargets(0)
+  , mObservers(new ObserverTable)
+  , mProgress(NoProgress)
+  , mIsMultipart(false)
+{ }
+
 void
 ProgressTracker::SetImage(Image* aImage)
 {
-  MutexAutoLock lock(mImageMutex);
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(aImage, "Setting null image");
   MOZ_ASSERT(!mImage, "Setting image when we already have one");
   mImage = aImage;
@@ -81,7 +92,7 @@ ProgressTracker::SetImage(Image* aImage)
 void
 ProgressTracker::ResetImage()
 {
-  MutexAutoLock lock(mImageMutex);
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mImage, "Resetting image when it's already null!");
   mImage = nullptr;
 }
@@ -193,7 +204,7 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
     runnable->AddObserver(aObserver);
   } else {
     mRunnable = new AsyncNotifyRunnable(this, aObserver);
-    NS_DispatchToCurrentThread(mRunnable);
+    mEventTarget->Dispatch(mRunnable, NS_DISPATCH_NORMAL);
   }
 }
 
@@ -251,7 +262,7 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 
   nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this,
                                                                  aObserver);
-  NS_DispatchToCurrentThread(ev);
+  mEventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
 }
 
 /**
@@ -448,11 +459,37 @@ ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver)
   }
 }
 
+already_AddRefed<nsIEventTarget>
+ProgressTracker::GetEventTarget() const
+{
+  MutexAutoLock lock(mMutex);
+  nsCOMPtr<nsIEventTarget> target = mEventTarget;
+  return target.forget();
+}
+
 void
 ProgressTracker::AddObserver(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<IProgressObserver> observer = aObserver;
+
+  nsCOMPtr<nsIEventTarget> target = observer->GetEventTarget();
+  if (target) {
+    if (mObserversWithTargets == 0) {
+      // On the first observer with a target (i.e. listener), always accept its
+      // event target; this may be for a specific DocGroup, or it may be the
+      // unlabelled main thread target.
+      MutexAutoLock lock(mMutex);
+      mEventTarget = WrapNotNull(target);
+    } else if (mEventTarget.get() != target.get()) {
+      // If a subsequent observer comes in with a different target, we need to
+      // switch to use the unlabelled main thread target, if we haven't already.
+      MutexAutoLock lock(mMutex);
+      nsCOMPtr<nsIEventTarget> mainTarget(do_GetMainThread());
+      mEventTarget = WrapNotNull(mainTarget);
+    }
+    ++mObserversWithTargets;
+  }
 
   mObservers.Write([=](ObserverTable* aTable) {
     MOZ_ASSERT(!aTable->Get(observer, nullptr),
@@ -461,6 +498,8 @@ ProgressTracker::AddObserver(IProgressObserver* aObserver)
     WeakPtr<IProgressObserver> weakPtr = observer.get();
     aTable->Put(observer, weakPtr);
   });
+
+  MOZ_ASSERT(mObserversWithTargets <= ObserverCount());
 }
 
 bool
@@ -470,9 +509,32 @@ ProgressTracker::RemoveObserver(IProgressObserver* aObserver)
   RefPtr<IProgressObserver> observer = aObserver;
 
   // Remove the observer from the list.
-  bool removed = mObservers.Write([=](ObserverTable* aTable) {
+  bool removed = mObservers.Write([observer](ObserverTable* aTable) {
     return aTable->Remove(observer);
   });
+
+  // Sometimes once an image is decoded, and all of its observers removed, a new
+  // document may request the same image. Thus we need to clear our event target
+  // state when the last observer is removed, so that we select the most
+  // appropriate event target when a new observer is added. Since the event
+  // target may have changed (e.g. due to the scheduler group going away before
+  // we were removed), so we should be cautious comparing this target against
+  // anything at this stage.
+  if (removed) {
+    nsCOMPtr<nsIEventTarget> target = observer->GetEventTarget();
+    if (target) {
+      MOZ_ASSERT(mObserversWithTargets > 0);
+      --mObserversWithTargets;
+
+      if (mObserversWithTargets == 0) {
+        MutexAutoLock lock(mMutex);
+        nsCOMPtr<nsIEventTarget> target(SystemGroup::EventTargetFor(TaskCategory::Other));
+        mEventTarget = WrapNotNull(target);
+      }
+    }
+
+    MOZ_ASSERT(mObserversWithTargets <= ObserverCount());
+  }
 
   // Observers can get confused if they don't get all the proper teardown
   // notifications. Part ways on good terms.

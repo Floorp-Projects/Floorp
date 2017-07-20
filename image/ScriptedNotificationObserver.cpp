@@ -7,6 +7,7 @@
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsContentUtils.h"                     // for nsAutoScriptBlocker
 
 namespace mozilla {
 namespace image {
@@ -31,6 +32,13 @@ ScriptedNotificationObserver::Notify(imgIRequest* aRequest,
                                      int32_t aType,
                                      const nsIntRect* /*aUnused*/)
 {
+  // For now, we block (other) scripts from running to preserve the historical
+  // behavior from when ScriptedNotificationObserver::Notify was called as part
+  // of the observers list in nsImageLoadingContent::Notify. Now each
+  // ScriptedNotificationObserver has its own imgRequestProxy and thus gets
+  // Notify called directly by imagelib.
+  nsAutoScriptBlocker scriptBlocker;
+
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     return mInner->SizeAvailable(aRequest);
   }

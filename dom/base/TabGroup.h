@@ -25,6 +25,7 @@ namespace mozilla {
 class AbstractThread;
 class ThrottledEventQueue;
 namespace dom {
+class TabChild;
 
 // Two browsing contexts are considered "related" if they are reachable from one
 // another through window.opener, window.parent, or window.frames. This is the

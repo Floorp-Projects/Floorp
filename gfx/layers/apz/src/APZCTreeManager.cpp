@@ -447,7 +447,7 @@ APZCTreeManager::UpdateHitTestingTree(uint64_t aRootLayerTreeId,
 bool
 APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
                                const TimeStamp& aSampleTime,
-                               nsTArray<WrTransformProperty>& aTransformArray)
+                               nsTArray<wr::WrTransformProperty>& aTransformArray)
 {
   APZThreadUtils::AssertOnCompositorThread();
   MOZ_ASSERT(aWrApi);
@@ -463,7 +463,7 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
 
   bool activeAnimations = false;
   uint64_t lastLayersId = -1;
-  WrPipelineId lastPipelineId;
+  wr::WrPipelineId lastPipelineId;
 
   // We iterate backwards here because the HitTestingTreeNode is optimized
   // for backwards iteration. The equivalent code in AsyncCompositionManager
@@ -507,7 +507,7 @@ APZCTreeManager::PushStateToWR(wr::WebRenderAPI* aWrApi,
         // scroll delta here, we want to negate the translation.
         ParentLayerPoint asyncScrollDelta = -layerTranslation;
         aWrApi->UpdateScrollPosition(lastPipelineId, apzc->GetGuid().mScrollId,
-            wr::ToWrPoint(asyncScrollDelta));
+            wr::ToLayoutPoint(asyncScrollDelta));
 
         apzc->ReportCheckerboard(aSampleTime);
         activeAnimations |= apzc->AdvanceAnimations(aSampleTime);

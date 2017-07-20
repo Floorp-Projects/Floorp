@@ -10,6 +10,9 @@
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for CancelableTask, etc
 #include "base/thread.h"                // for Thread
+#ifdef XP_WIN
+#include "mozilla/gfx/DeviceManagerDx.h"// for DeviceManagerDx
+#endif
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/AnimationHelper.h" // for CompositorAnimationStorage
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
@@ -275,6 +278,29 @@ CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(const uint64_t&
   // ensures proper window ownership of layer trees.
   return IPC_FAIL_NO_REASON(this);
 }
+
+
+mozilla::ipc::IPCResult
+CrossProcessCompositorBridgeParent::RecvCheckContentOnlyTDR(const uint32_t& sequenceNum,
+                                                            bool* isContentOnlyTDR)
+{
+  *isContentOnlyTDR = false;
+#ifdef XP_WIN
+  ContentDeviceData compositor;
+
+  DeviceManagerDx* dm = DeviceManagerDx::Get();
+
+  // Check that the D3D11 device sequence numbers match.
+  D3D11DeviceStatus status;
+  dm->ExportDeviceInfo(&status);
+
+  if (sequenceNum == status.sequenceNumber() && !dm->HasDeviceReset()) {
+    *isContentOnlyTDR = true;
+  }
+
+#endif
+  return IPC_OK();
+};
 
 void
 CrossProcessCompositorBridgeParent::ShadowLayersUpdated(

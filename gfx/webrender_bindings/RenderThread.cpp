@@ -190,12 +190,12 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 
 static void
 NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
-                WrRenderedEpochs* aEpochs,
+                wr::WrRenderedEpochs* aEpochs,
                 TimeStamp aStart,
                 TimeStamp aEnd)
 {
-  WrPipelineId pipeline;
-  WrEpoch epoch;
+  wr::WrPipelineId pipeline;
+  wr::WrEpoch epoch;
   while (wr_rendered_epochs_next(aEpochs, &pipeline, &epoch)) {
     aBridge->NotifyDidCompositeToPipeline(pipeline, epoch, aStart, aEnd);
   }
@@ -352,7 +352,7 @@ RenderThread::DeferredRenderTextureHostDestroy(RefPtr<RenderTextureHost>)
 }
 
 RenderTextureHost*
-RenderThread::GetRenderTexture(WrExternalImageId aExternalImageId)
+RenderThread::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
 {
   MOZ_ASSERT(IsInRenderThread());
 
@@ -376,13 +376,13 @@ WebRenderThreadPool::~WebRenderThreadPool()
 
 extern "C" {
 
-void wr_notifier_new_frame_ready(WrWindowId aWindowId)
+void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId)
 {
   mozilla::wr::RenderThread::Get()->IncPendingFrameCount(aWindowId);
   mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
 }
 
-void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId, bool aCompositeNeeded)
+void wr_notifier_new_scroll_frame_ready(mozilla::wr::WrWindowId aWindowId, bool aCompositeNeeded)
 {
   // It is not necessary to update rendering with new_scroll_frame_ready.
   // WebRenderBridgeParent::CompositeToTarget() is implemented to call
@@ -390,7 +390,7 @@ void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId, bool aCompositeNee
   // See Bug 1377688.
 }
 
-void wr_notifier_external_event(WrWindowId aWindowId, size_t aRawEvent)
+void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId, size_t aRawEvent)
 {
   mozilla::UniquePtr<mozilla::wr::RendererEvent> evt(
     reinterpret_cast<mozilla::wr::RendererEvent*>(aRawEvent));

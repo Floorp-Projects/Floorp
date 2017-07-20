@@ -2174,15 +2174,16 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
     listener->AddCell(aRowIndex, aCol);
     nsCOMPtr<imgINotificationObserver> imgNotificationObserver = listener;
 
+    nsIDocument* doc = mContent->GetComposedDoc();
+    if (!doc)
+      // The page is currently being torn down.  Why bother.
+      return NS_ERROR_FAILURE;
+
     RefPtr<imgRequestProxy> imageRequest;
     if (styleRequest) {
-      styleRequest->Clone(imgNotificationObserver, getter_AddRefs(imageRequest));
+      styleRequest->SyncClone(imgNotificationObserver, doc,
+                              getter_AddRefs(imageRequest));
     } else {
-      nsIDocument* doc = mContent->GetComposedDoc();
-      if (!doc)
-        // The page is currently being torn down.  Why bother.
-        return NS_ERROR_FAILURE;
-
       nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
 
       nsCOMPtr<nsIURI> srcURI;

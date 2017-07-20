@@ -12,10 +12,12 @@ braces = "SameLine"
 line_length = 100
 tab_width = 2
 language = "C++"
+namespaces = ["mozilla", "wr"]
 
 [parse]
 parse_deps = true
 include = ["webrender", "webrender_api"]
+expand = ["euclid"]
 
 [fn]
 prefix = "WR_INLINE"
@@ -25,6 +27,7 @@ rename_args = "GeckoCase"
 
 [struct]
 derive_eq = true
+generic_template_specialization = false
 
 [enum]
 add_sentinel = true

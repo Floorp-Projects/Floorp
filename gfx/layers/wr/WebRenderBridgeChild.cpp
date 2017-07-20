@@ -108,7 +108,7 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   MOZ_ASSERT(mIsInTransaction);
 
   wr::BuiltDisplayList dl;
-  WrSize contentSize;
+  wr::LayoutSize contentSize;
   aBuilder.Finalize(contentSize, dl);
   ByteBuffer dlData(Move(dl.dl));
 
@@ -206,27 +206,27 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
   MOZ_ASSERT(aFont);
   MOZ_ASSERT(!aGlyphs.IsEmpty());
 
-  WrFontKey key = GetFontKeyForScaledFont(aFont);
+  wr::WrFontKey key = GetFontKeyForScaledFont(aFont);
   MOZ_ASSERT(key.mNamespace && key.mHandle);
 
   for (size_t i = 0; i < aGlyphs.Length(); i++) {
     GlyphArray glyph_array = aGlyphs[i];
     nsTArray<gfx::Glyph>& glyphs = glyph_array.glyphs();
 
-    nsTArray<WrGlyphInstance> wr_glyph_instances;
+    nsTArray<wr::GlyphInstance> wr_glyph_instances;
     wr_glyph_instances.SetLength(glyphs.Length());
 
     for (size_t j = 0; j < glyphs.Length(); j++) {
       wr_glyph_instances[j].index = glyphs[j].mIndex;
-      wr_glyph_instances[j].point = aSc.ToRelativeWrPoint(
+      wr_glyph_instances[j].point = aSc.ToRelativeLayoutPoint(
               LayerPoint::FromUnknownPoint(glyphs[j].mPosition));
     }
 
-    aBuilder.PushText(aSc.ToRelativeWrRect(aBounds),
-                      aSc.ToRelativeWrRect(aClip),
+    aBuilder.PushText(aSc.ToRelativeLayoutRect(aBounds),
+                      aSc.ToRelativeLayoutRect(aClip),
                       glyph_array.color().value(),
                       key,
-                      Range<const WrGlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
+                      Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
                       aFont->GetSize());
 
   }

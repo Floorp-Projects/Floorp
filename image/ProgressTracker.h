@@ -8,6 +8,7 @@
 #define mozilla_image_ProgressTracker_h
 
 #include "CopyOnWrite.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
@@ -113,18 +114,12 @@ public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ProgressTracker)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProgressTracker)
 
-  ProgressTracker()
-    : mImageMutex("ProgressTracker::mImage")
-    , mImage(nullptr)
-    , mObservers(new ObserverTable)
-    , mProgress(NoProgress)
-    , mIsMultipart(false)
-  { }
+  ProgressTracker();
 
-  bool HasImage() const { MutexAutoLock lock(mImageMutex); return mImage; }
+  bool HasImage() const { MutexAutoLock lock(mMutex); return mImage; }
   already_AddRefed<Image> GetImage() const
   {
-    MutexAutoLock lock(mImageMutex);
+    MutexAutoLock lock(mMutex);
     RefPtr<Image> image = mImage;
     return image.forget();
   }
@@ -192,6 +187,9 @@ public:
   bool RemoveObserver(IProgressObserver* aObserver);
   uint32_t ObserverCount() const;
 
+  // Get the event target we should currently dispatch events to.
+  already_AddRefed<nsIEventTarget> GetEventTarget() const;
+
   // Resets our weak reference to our image. Image subclasses should call this
   // in their destructor.
   void ResetImage();
@@ -220,10 +218,28 @@ private:
   // The runnable, if any, that we've scheduled to deliver async notifications.
   nsCOMPtr<nsIRunnable> mRunnable;
 
+  // mMutex protects access to mImage and mEventTarget.
+  mutable Mutex mMutex;
+
   // mImage is a weak ref; it should be set to null when the image goes out of
-  // scope. mImageMutex protects mImage.
-  mutable Mutex mImageMutex;
+  // scope.
   Image* mImage;
+
+  // mEventTarget is the current, best effort event target to dispatch
+  // notifications to from the decoder threads. It will change as observers are
+  // added and removed (see mObserversWithTargets).
+  NotNull<nsCOMPtr<nsIEventTarget>> mEventTarget;
+
+  // How many observers have been added that have an explicit event target.
+  // When the first observer is added with an explicit event target, we will
+  // default to that as long as all observers use the same target. If a new
+  // observer is added which has a different event target, we will switch to
+  // using the unlabeled main thread event target which is safe for all
+  // observers. If all observers with explicit event targets are removed, we
+  // will revert back to the initial event target (for SystemGroup). An
+  // observer without an explicit event target does not care what context it
+  // is dispatched in, and thus does not impact the state.
+  uint32_t mObserversWithTargets;
 
   // Hashtable of observers attached to the image. Each observer represents a
   // consumer using the image. Main thread only.
