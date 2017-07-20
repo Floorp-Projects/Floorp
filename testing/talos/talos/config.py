@@ -97,6 +97,7 @@ DEFAULTS = dict(
         'security.turn_off_all_security_so_that_viruses_can_'
         'take_over_this_computer': True,
         'browser.newtabpage.activity-stream.default.sites': '',
+        'browser.newtabpage.activity-stream.telemetry': False,
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
         'browser.newtabpage.introShown': True,
