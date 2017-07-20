@@ -962,18 +962,10 @@ NeckoParent::RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWind
 
 mozilla::ipc::IPCResult
 NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
-                                    const LoadInfoArgs& aLoadInfo,
                                     GetExtensionStreamResolver&& aResolve)
 {
   nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(aURI);
   if (!deserializedURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsILoadInfo> deserializedLoadInfo;
-  nsresult rv;
-  rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(deserializedLoadInfo));
-  if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -991,9 +983,7 @@ NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
   AutoIPCStream autoStream;
   nsCOMPtr<nsIInputStream> inputStream;
   bool terminateSender = true;
-  auto inputStreamOrReason = ph->NewStream(deserializedURI,
-                                           deserializedLoadInfo,
-                                           &terminateSender);
+  auto inputStreamOrReason = ph->NewStream(deserializedURI, &terminateSender);
   if (inputStreamOrReason.isOk()) {
     inputStream = inputStreamOrReason.unwrap();
     ContentParent* contentParent = static_cast<ContentParent*>(Manager());
@@ -1014,18 +1004,10 @@ NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
 
 mozilla::ipc::IPCResult
 NeckoParent::RecvGetExtensionFD(const URIParams& aURI,
-                                const OptionalLoadInfoArgs& aLoadInfo,
                                 GetExtensionFDResolver&& aResolve)
 {
   nsCOMPtr<nsIURI> deserializedURI = DeserializeURI(aURI);
   if (!deserializedURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  nsCOMPtr<nsILoadInfo> deserializedLoadInfo;
-  nsresult rv;
-  rv = LoadInfoArgsToLoadInfo(aLoadInfo, getter_AddRefs(deserializedLoadInfo));
-  if (NS_FAILED(rv)) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -1041,8 +1023,7 @@ NeckoParent::RecvGetExtensionFD(const URIParams& aURI,
   // an extension is allowed to access via moz-extension URI's should be
   // accepted.
   bool terminateSender = true;
-  auto result = ph->NewFD(deserializedURI, deserializedLoadInfo,
-                          &terminateSender, aResolve);
+  auto result = ph->NewFD(deserializedURI, &terminateSender, aResolve);
 
   if (result.isErr() && terminateSender) {
     return IPC_FAIL_NO_REASON(this);
