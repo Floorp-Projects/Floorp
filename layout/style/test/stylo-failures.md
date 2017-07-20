@@ -50,7 +50,7 @@ to mochitest command.
     * test_bug798843_pref.html [3]
 * Incorrect parsing
   * different parsing bug 1364260
-    * test_supports_rules.html [6]
+    * test_supports_rules.html [1]
     * test_condition_text.html [1]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
