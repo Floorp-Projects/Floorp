@@ -29,6 +29,9 @@ document.getElementById("onboarding-overlay")
         }
       });
       break;
+    case "onboarding-tour-library-button":
+      Mozilla.UITour.showHighlight("library");
+      break;
     case "onboarding-tour-private-browsing-button":
       Mozilla.UITour.showHighlight("privateWindow");
       break;

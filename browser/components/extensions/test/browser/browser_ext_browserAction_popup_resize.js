@@ -182,6 +182,12 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   await awaitBrowserLoaded(browser);
 
+  let panelview = browser.closest("panelview");
+  // Need to wait first for the forced panel width and for the panelview's border to be gone,
+  // then for layout to happen again. Otherwise the removal of the border between views in the
+  // panelmultiview trips up our width checking causing it to be off-by-one.
+  await BrowserTestUtils.waitForCondition(() => (!panel.hasAttribute("width") && (!panelview || !panelview.style.borderInlineStart)));
+  await promiseAnimationFrame(browserWin);
   // Wait long enough to make sure the initial resize debouncing timer has
   // expired.
   await delay(100);

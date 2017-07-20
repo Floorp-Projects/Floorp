@@ -293,7 +293,7 @@ var gSync = {
 
   openSendToDevicePromo() {
     let url = Services.prefs.getCharPref("app.productInfo.baseURL");
-    url += "send-tab/?utm_source=" + Services.appinfo.name.toLowerCase();
+    url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
