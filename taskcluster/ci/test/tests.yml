@@ -1058,6 +1058,45 @@ reftest:
             linux64-qr/.*: 1
             default: default
 
+reftest-gpu:
+    description: "Reftest GPU run"
+    suite: reftest/reftest-gpu
+    treeherder-symbol: tc-R(Rg)
+    docker-image: {"in-tree": "desktop1604-test"}
+    run-on-projects:
+        by-test-platform:
+            windows10.*: []
+            windows8-64.*: []
+            default: built-projects
+    instance-size:
+        by-test-platform:
+            default: default
+    virtualization: virtual-with-gpu
+    max-run-time:
+        by-test-platform:
+            default: 3600
+    e10s: true
+    mozharness:
+        by-test-platform:
+            default:
+                script: desktop_unittest.py
+                no-read-buildbot-config: true
+                chunked:
+                  by-test-platform:
+                    default: false
+                config:
+                    by-test-platform:
+                        windows.*:
+                            - unittests/win_taskcluster_unittest.py
+                        macosx.*:
+                            - unittests/mac_unittest.py
+                        linux.*:
+                            - unittests/linux_unittest.py
+                            - remove_executables.py
+                extra-options:
+                    - --reftest-suite=reftest-gpu
+    tier: default
+
 reftest-no-accel:
     description: "Reftest not accelerated run"
     suite: reftest/reftest-no-accel
@@ -1423,6 +1462,33 @@ talos-perf-reftest:
         extra-options:
             - --suite=perf-reftest
 
+talos-quantum-pageload:
+    description: "Talos quantum-pageload"
+    suite: talos
+    try-name: quantum-pageload
+    treeherder-symbol: tc-T(q)
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
+            default: []
+    max-run-time: 3600
+    e10s: true
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=quantum-pageload
+            - --add-option
+            - --webServer,localhost
+
 talos-svgr:
     description: "Talos svgr"
     suite: talos
@@ -1480,6 +1546,33 @@ talos-tp5o:
                     - talos/linux_config.py
         extra-options:
             - --suite=tp5o
+            - --add-option
+            - --webServer,localhost
+
+talos-xperf:
+    description: "Talos xperf"
+    suite: talos
+    try-name: xperf
+    treeherder-symbol: tc-T(x)
+    run-on-projects:
+        by-test-platform:
+            windows7-32.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
+            default: []
+    max-run-time: 3600
+    e10s: true
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=xperf
             - --add-option
             - --webServer,localhost
 
