@@ -357,23 +357,26 @@ var PingPicker = {
     let pingType = document.getElementById("ping-type");
     let older = document.getElementById("older-ping");
     let newer = document.getElementById("newer-ping");
-    if (pingName !== "current") {
+    let explanation;
+    if (!this.viewCurrentPingData) {
+      let pingTypeText = this._getSelectedPingType();
       pingType.hidden = false;
       older.hidden = false;
       newer.hidden = false;
-      pingType.textContent = this._getSelectedPingType();
+      pingType.textContent = pingTypeText;
+      pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
+      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+      let parameters = [pingLink, pingNameHtml, pingTypeText];
+      explanation = bundle.formatStringFromName("pingDetails", parameters, 3);
     } else {
       pingType.hidden = true;
       older.hidden = true;
       newer.hidden = true;
+      pingDate.textContent = bundle.GetStringFromName("currentPingSidebar");
+      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+      explanation = bundle.formatStringFromName("pingDetailsCurrent", [pingLink, pingNameHtml], 2);
     }
 
-    if (pingName !== "current") {
-      pingName += ", " + this._getSelectedPingType();
-    }
-    let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
-
-    let explanation = bundle.formatStringFromName("pingDetails", [pingLink, pingNameHtml], 2);
     let pingExplanation = document.getElementById("ping-explanation");
 
     // eslint-disable-next-line no-unsanitized/property
@@ -543,7 +546,7 @@ var PingPicker = {
   },
 
   _getSelectedPingName() {
-    if (this.viewCurrentPingData) return "current";
+    if (this.viewCurrentPingData) return bundle.GetStringFromName("currentPing");
 
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
