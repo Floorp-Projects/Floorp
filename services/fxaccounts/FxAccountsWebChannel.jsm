@@ -24,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsStorageManagerCanStoreField",
                                   "resource://gre/modules/FxAccountsStorage.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Weave",
                                   "resource://services-sync/main.js");
 
@@ -256,6 +258,7 @@ this.FxAccountsWebChannelHelpers = function(options) {
   options = options || {};
 
   this._fxAccounts = options.fxAccounts || fxAccounts;
+  this._privateBrowsingUtils = options.privateBrowsingUtils || PrivateBrowsingUtils;
 };
 
 this.FxAccountsWebChannelHelpers.prototype = {
@@ -327,15 +330,12 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * Check if `sendingContext` is in private browsing mode.
    */
   isPrivateBrowsingMode(sendingContext) {
-    if (!sendingContext ||
-        !sendingContext.browser ||
-        !sendingContext.browser.docShell ||
-        sendingContext.browser.docShell.usePrivateBrowsing === undefined) {
+    if (!sendingContext) {
       log.error("Unable to check for private browsing mode, assuming true");
       return true;
     }
 
-    const isPrivateBrowsing = sendingContext.browser.docShell.usePrivateBrowsing;
+    const isPrivateBrowsing = this._privateBrowsingUtils.isBrowserPrivate(sendingContext.browser);
     log.debug("is private browsing", isPrivateBrowsing);
     return isPrivateBrowsing;
   },
