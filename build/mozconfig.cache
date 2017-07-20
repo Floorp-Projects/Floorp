@@ -14,7 +14,7 @@ $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.j
 EOF
 
 bucket=
-if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
+if test -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
     case "${branch}" in
     try)
         case "${master}" in
@@ -44,7 +44,7 @@ fi
 fi
 
 # builds where buildprops didn't have the data (eg: taskcluster or non-buildbot) and without sccache disabled:
-if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$no_sccache" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
+if test -z "$bucket" -a -z "$SCCACHE_DISABLE" -a -z "$MOZ_PGO_IS_SET" -a -z "$MOZ_PGO"; then
 
     # prevent rerun if az is set, or wget is not available
     if test -z "$availability_zone" -a -x "$(command -v wget)"; then
@@ -108,7 +108,7 @@ if test -z "$bucket"; then
     case "$platform" in
     win*) : ;;
     *)
-        ac_add_options --with-ccache
+        export CCACHE=ccache
     esac
 else
     mk_add_options "export SCCACHE_BUCKET=$bucket"
@@ -117,7 +117,7 @@ else
         mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
         ;;
     esac
-    ac_add_options "--with-ccache=$topsrcdir/sccache2/sccache${suffix}"
+    export CCACHE="$topsrcdir/sccache2/sccache${suffix}"
     export SCCACHE_VERBOSE_STATS=1
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk

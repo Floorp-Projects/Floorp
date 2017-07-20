@@ -26,7 +26,6 @@ whitelist['nightly']['linux32'] += [
     'CC="ccache $REAL_CC"',
     'mk_add_options PROFILE_GEN_SCRIPT=@TOPSRCDIR@/build/profile_pageloader.pl',
     'ac_add_options --with-ccache=/usr/bin/ccache',
-    '. "$topsrcdir/build/mozconfig.cache"',
     'export MOZILLA_OFFICIAL=1',
     'export MOZ_TELEMETRY_REPORTING=1',
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
@@ -39,7 +38,6 @@ whitelist['nightly']['linux64'] += [
     "mk_add_options PROFILE_GEN_SCRIPT='$(PYTHON) @MOZ_OBJDIR@/_profile/pgo/profileserver.py 10'",
     'STRIP_FLAGS="--strip-debug"',
     'ac_add_options --with-ccache=/usr/bin/ccache',
-    '. "$topsrcdir/build/mozconfig.cache"',
 ]
 
 whitelist['nightly']['macosx64'] += [
@@ -48,7 +46,6 @@ whitelist['nightly']['macosx64'] += [
     'fi',
     'mk_add_options MOZ_MAKE_FLAGS="-j12"',
     'ac_add_options --with-ccache',
-    '. "$topsrcdir/build/mozconfig.cache"',
     'ac_add_options --disable-install-strip',
     'ac_add_options --enable-instruments',
     'ac_add_options --enable-dtrace',
@@ -58,14 +55,12 @@ whitelist['nightly']['macosx64'] += [
 whitelist['nightly']['win32'] += [
     '. $topsrcdir/configs/mozilla2/win32/include/choose-make-flags',
     'mk_add_options MOZ_MAKE_FLAGS=-j1',
-    '. "$topsrcdir/build/mozconfig.cache"',
     'if test "$IS_NIGHTLY" != ""; then',
     'ac_add_options --disable-auto-deps',
     'fi',
 ]
 whitelist['nightly']['win64'] += [
     '. "$topsrcdir/browser/config/mozconfigs/win64/common-win64"',
-    '. "$topsrcdir/build/mozconfig.cache"',
 ]
 
 for platform in all_platforms:
