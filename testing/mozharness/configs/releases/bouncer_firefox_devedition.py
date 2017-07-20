@@ -68,11 +68,11 @@ config = {
             "add-locales": True,
             "paths": {
                 "win32": {
-                    "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
+                    "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
                     "bouncer-platform": "win",
                 },
                 "win64": {
-                    "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
+                    "path": "/devedition/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
                     "bouncer-platform": "win64",
                 },
             },

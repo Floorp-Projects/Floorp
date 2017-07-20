@@ -66,11 +66,11 @@ config = {
             "add-locales": False,
             "paths": {
                 "win32": {
-                    "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
+                    "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
                     "bouncer-platform": "win",
                 },
                 "win64": {
-                    "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Setup%%20Stub%%20%(version)s.exe",
+                    "path": "/firefox/releases/%(version)s/win32/:lang/Firefox%%20Installer.exe",
                     "bouncer-platform": "win64",
                 },
             },
