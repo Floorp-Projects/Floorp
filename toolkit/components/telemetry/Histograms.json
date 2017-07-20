@@ -13645,5 +13645,16 @@
     "n_buckets": 20,
     "keyed": true,
     "description": "Measures the number of milliseconds we spend synchronously notifying observers, keyed by topic. Note: only NotifyObservers calls which take over 500 microseconds are included in this probe."
+  },
+  "HOVER_UNTIL_UNSELECTED_TAB_OPENED": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "60",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "bug_numbers": [1274919],
+    "description": "Measure the time how long the cursor is hovering before opening the unselcted tab. Only record the data if someone requests for sending unselected tab hover msg.",
+    "releaseChannelCollection": "opt-out"
   }
 }
