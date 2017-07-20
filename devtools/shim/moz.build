@@ -11,6 +11,8 @@ if CONFIG['MOZ_DEVTOOLS'] != 'server':
     EXTRA_COMPONENTS += [
         'aboutdebugging-registration.js',
         'aboutdebugging.manifest',
+        'devtools-startup.js',
+        'devtools-startup.manifest',
     ]
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
