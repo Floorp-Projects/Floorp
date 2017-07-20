@@ -279,9 +279,7 @@ def mozconfig_options(mozconfig, automation, help):
             add(key, value)
             os.environ[key] = value
         for key, value in mozconfig['vars']['added'].iteritems():
-            # mozconfig_loader adds _IS_SET variables that are irrelevant
-            if not key.endswith('_IS_SET'):
-                add(key, value)
+            add(key, value)
         for key, (_, value) in mozconfig['vars']['modified'].iteritems():
             add(key, value)
 
