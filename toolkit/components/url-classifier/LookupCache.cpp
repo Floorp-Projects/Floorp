@@ -616,7 +616,10 @@ LookupCacheV2::Build(AddPrefixArray& aAddPrefixes,
                         static_cast<uint32_t>(aAddCompletes.Length()));
 
   mUpdateCompletions.Clear();
-  mUpdateCompletions.SetCapacity(aAddCompletes.Length());
+  if (!mUpdateCompletions.SetCapacity(aAddCompletes.Length(), fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   for (uint32_t i = 0; i < aAddCompletes.Length(); i++) {
     mUpdateCompletions.AppendElement(aAddCompletes[i].CompleteHash());
   }
@@ -683,8 +686,12 @@ LookupCacheV2::ReadCompletions()
   NS_ENSURE_SUCCESS(rv, rv);
 
   mUpdateCompletions.Clear();
-
   const AddCompleteArray& addComplete = store.AddCompletes();
+
+  if (!mUpdateCompletions.SetCapacity(addComplete.Length(), fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   for (uint32_t i = 0; i < addComplete.Length(); i++) {
     mUpdateCompletions.AppendElement(addComplete[i].complete);
   }

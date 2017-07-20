@@ -156,7 +156,7 @@ nsUrlClassifierDBServiceWorker::QueueLookup(const nsACString& spec,
       return NS_ERROR_ABORT;
   }
 
-  PendingLookup* lookup = mPendingLookups.AppendElement();
+  PendingLookup* lookup = mPendingLookups.AppendElement(fallible);
   if (!lookup) return NS_ERROR_OUT_OF_MEMORY;
 
   lookup->mStartTime = TimeStamp::Now();
@@ -234,7 +234,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     clockStart = PR_IntervalNow();
   }
 
-  nsAutoPtr<LookupResultArray> results(new LookupResultArray());
+  nsAutoPtr<LookupResultArray> results(new (fallible) LookupResultArray());
   if (!results) {
     c->LookupComplete(nullptr);
     return NS_ERROR_OUT_OF_MEMORY;
@@ -320,9 +320,10 @@ nsUrlClassifierDBServiceWorker::AddNoise(const Prefix aPrefix,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (uint32_t i = 0; i < noiseEntries.Length(); i++) {
-    LookupResult *result = results.AppendElement();
-    if (!result)
+    LookupResult *result = results.AppendElement(fallible);
+    if (!result) {
       return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     result->hash.fixedLengthPrefix = noiseEntries[i];
     result->mNoise = true;
@@ -456,10 +457,13 @@ nsUrlClassifierDBServiceWorker::BeginStream(const nsACString &table)
     }
   }
 
-  mProtocolParser = (useProtobuf ? static_cast<ProtocolParser*>(new ProtocolParserProtobuf())
-                                 : static_cast<ProtocolParser*>(new ProtocolParserV2()));
-  if (!mProtocolParser)
+  mProtocolParser = (useProtobuf ? static_cast<ProtocolParser*>(new (fallible)
+                                     ProtocolParserProtobuf())
+                                 : static_cast<ProtocolParser*>(new (fallible)
+                                     ProtocolParserV2()));
+  if (!mProtocolParser) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   mProtocolParser->Init(mCryptoHash);
 
@@ -941,7 +945,7 @@ nsUrlClassifierDBServiceWorker::OpenDb()
   mCryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoPtr<Classifier> classifier(new Classifier());
+  nsAutoPtr<Classifier> classifier(new (fallible) Classifier());
   if (!classifier) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1222,14 +1226,14 @@ nsUrlClassifierLookupCallback::ProcessComplete(CacheResult* aCacheResult)
 {
   // Send this completion to the store for caching.
   if (!mCacheResults) {
-    mCacheResults = new CacheResultArray();
+    mCacheResults = new (fallible) CacheResultArray();
     if (!mCacheResults) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
   // OK if this fails, we just won't cache the item.
-  mCacheResults->AppendElement(aCacheResult);
+  mCacheResults->AppendElement(aCacheResult, fallible);
 
   // Check if this matched any of our results.
   for (uint32_t i = 0; i < mResults->Length(); i++) {
@@ -1329,7 +1333,7 @@ nsUrlClassifierLookupCallback::CacheMisses()
     }
 
     if (!mCacheResults) {
-      mCacheResults = new CacheResultArray();
+      mCacheResults = new (fallible) CacheResultArray();
       if (!mCacheResults) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1340,7 +1344,9 @@ nsUrlClassifierLookupCallback::CacheMisses()
     cacheResult->table = result.mTableName;
     cacheResult->prefix = result.hash.fixedLengthPrefix;
     cacheResult->miss = true;
-    mCacheResults->AppendElement(cacheResult);
+    if (!mCacheResults->AppendElement(cacheResult, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   return NS_OK;
 }
@@ -1472,7 +1478,7 @@ nsUrlClassifierDBService::GetInstance(nsresult *result)
 {
   *result = NS_OK;
   if (!sUrlClassifierDBService) {
-    sUrlClassifierDBService = new nsUrlClassifierDBService();
+    sUrlClassifierDBService = new (fallible) nsUrlClassifierDBService();
     if (!sUrlClassifierDBService) {
       *result = NS_ERROR_OUT_OF_MEMORY;
       return nullptr;
@@ -1635,9 +1641,10 @@ nsUrlClassifierDBService::Init()
   if (NS_FAILED(rv))
     return rv;
 
-  mWorker = new nsUrlClassifierDBServiceWorker();
-  if (!mWorker)
+  mWorker = new (fallible) nsUrlClassifierDBServiceWorker();
+  if (!mWorker) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   rv = mWorker->Init(sGethashNoise, cacheDir, this);
   if (NS_FAILED(rv)) {
@@ -1727,7 +1734,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   }
 
   RefPtr<nsUrlClassifierClassifyCallback> callback =
-    new nsUrlClassifierClassifyCallback(c);
+    new (fallible) nsUrlClassifierClassifyCallback(c);
 
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1906,7 +1913,7 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
   rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoPtr<LookupResultArray> results(new LookupResultArray());
+  nsAutoPtr<LookupResultArray> results(new (fallible) LookupResultArray());
   if (!results) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1991,9 +1998,10 @@ nsUrlClassifierDBService::LookupURI(nsIPrincipal* aPrincipal,
   // take care of confirming partial hash matches if necessary before
   // calling the client's callback.
   nsCOMPtr<nsIUrlClassifierLookupCallback> callback =
-    new nsUrlClassifierLookupCallback(this, c);
-  if (!callback)
+    new (fallible) nsUrlClassifierLookupCallback(this, c);
+  if (!callback) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsCOMPtr<nsIUrlClassifierLookupCallback> proxyCallback =
     new UrlClassifierLookupCallbackProxy(callback);

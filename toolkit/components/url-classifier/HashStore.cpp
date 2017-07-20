@@ -198,12 +198,19 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
   mPrefixesMap.Put(aSize, prefix);
 }
 
-void
+nsresult
 TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices)
 {
+  MOZ_ASSERT(mRemovalIndiceArray.IsEmpty(), "mRemovalIndiceArray must be empty");
+
+  if (!mRemovalIndiceArray.SetCapacity(aNumOfIndices, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   for (size_t i = 0; i < aNumOfIndices; i++) {
     mRemovalIndiceArray.AppendElement(aIndices[i]);
   }
+  return NS_OK;
 }
 
 void
@@ -592,8 +599,9 @@ Merge(ChunkSet* aStoreChunks,
     // no match, add
     if (storeIter == storeEnd
         || storeIter->Compare(updatePrefix) != 0) {
-      if (!adds.AppendElement(updatePrefix))
+      if (!adds.AppendElement(updatePrefix, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 
@@ -939,9 +947,11 @@ HashStore::WriteSubPrefixes(nsIOutputStream* aOut)
   nsTArray<uint32_t> subchunks;
   nsTArray<uint32_t> prefixes;
   uint32_t count = mSubPrefixes.Length();
-  addchunks.SetCapacity(count);
-  subchunks.SetCapacity(count);
-  prefixes.SetCapacity(count);
+  if (!addchunks.SetCapacity(count, fallible) ||
+      !subchunks.SetCapacity(count, fallible) ||
+      !prefixes.SetCapacity(count, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   for (uint32_t i = 0; i < count; i++) {
     addchunks.AppendElement(mSubPrefixes[i].AddChunk());
