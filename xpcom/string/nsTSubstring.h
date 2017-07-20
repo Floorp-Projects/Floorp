@@ -993,9 +993,7 @@ public:
   void ForgetSharedBuffer()
   {
     if (mDataFlags & DataFlags::SHARED) {
-      mData = char_traits::sEmptyBuffer;
-      mLength = 0;
-      mDataFlags = DataFlags::TERMINATED;
+      SetToEmptyBuffer();
     }
   }
 
@@ -1082,6 +1080,13 @@ protected:
     MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
   }
 #endif /* DEBUG || FORCE_BUILD_REFCNT_LOGGING */
+
+  void SetToEmptyBuffer()
+  {
+    mData = char_traits::sEmptyBuffer;
+    mLength = 0;
+    mDataFlags = DataFlags::TERMINATED;
+  }
 
   /**
    * this function releases mData and does not change the value of
