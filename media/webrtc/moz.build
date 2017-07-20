@@ -77,7 +77,8 @@ GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     DIRS += [
-        'signaling/src/jsep'
+        'signaling/src/jsep',
+        'signaling/src/sdp'
     ]
     GYP_DIRS += ['signaling']
     GYP_DIRS['signaling'].input = 'signaling/signaling.gyp'
