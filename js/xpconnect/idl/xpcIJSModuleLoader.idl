@@ -5,81 +5,9 @@
 
 #include "nsISupports.idl"
 
-[ptr] native nsAXPCNativeCallContextPtr(nsAXPCNativeCallContext);
-
-%{C++
-#include "js/TypeDecls.h"
-
-class nsAXPCNativeCallContext;
-%}
-
-[ptr] native JSObjectPtr(JSObject);
-
-[scriptable, uuid(4f94b21f-2920-4bd9-8251-5fb60fb054b2)]
+[scriptable, builtinclass, uuid(4f94b21f-2920-4bd9-8251-5fb60fb054b2)]
 interface xpcIJSModuleLoader : nsISupports
 {
-  /**
-   * To be called from JavaScript only.
-   *
-   * Synchronously loads and evaluates the js file located at
-   * aResourceURI with a new, fully privileged global object.
-   *
-   * If 'targetObj' is specified and equal to null, returns the
-   * module's global object. Otherwise (if 'targetObj' is not
-   * specified, or 'targetObj' is != null) looks for a property
-   * 'EXPORTED_SYMBOLS' on the new global object. 'EXPORTED_SYMBOLS'
-   * is expected to be an array of strings identifying properties on
-   * the global object.  These properties will be installed as
-   * properties on 'targetObj', or, if 'targetObj' is not specified,
-   * on the caller's global object. If 'EXPORTED_SYMBOLS' is not
-   * found, an error is thrown.
-   *
-   * @param resourceURI A resource:// URI string to load the module from.
-   * @param targetObj  the object to install the exported properties on.
-   *        If this parameter is a primitive value, this method throws
-   *        an exception.
-   * @returns the module code's global object.
-   *
-   * The implementation maintains a hash of registryLocation->global obj.
-   * Subsequent invocations of importModule with 'registryLocation'
-   * pointing to the same file will not cause the module to be re-evaluated,
-   * but the symbols in EXPORTED_SYMBOLS will be exported into the
-   * specified target object and the global object returned as above.
-   *
-   * (This comment is duplicated to nsIXPCComponents_Utils.)
-   */
-  [implicit_jscontext,optional_argc]
-  jsval import(in AUTF8String aResourceURI, [optional] in jsval targetObj);
-
-  /**
-   * Imports the JS module at aResourceURI to the JS object
-   * 'targetObj' (if != null) as described for importModule() and
-   * returns the module's global object.
-   */
-  [noscript] JSObjectPtr importInto(in AUTF8String aResourceURI,
-                                    in JSObjectPtr targetObj,
-                                    in nsAXPCNativeCallContextPtr cc);
-
-  /**
-   * Unloads the JS module at aResourceURI. Existing references to the module
-   * will continue to work but any subsequent import of the module will
-   * reload it and give new reference. If the JS module hasn't yet been imported
-   * then this method will do nothing.
-   */
-  void unload(in AUTF8String aResourceURI);
-
-  /**
-   * Returns true if the js file located at 'registryLocation' location has
-   * been loaded previously via the import method above. Returns false
-   * otherwise.
-   *
-   * @param resourceURI A resource:// URI string representing the location of
-   *        the js file to be checked if it is already loaded or not.
-   * @returns boolean, true if the js file has been loaded via import. false
-   *          otherwise
-   */
-  boolean isModuleLoaded(in AUTF8String aResourceURI);
-
   // These 2 functions are for startup testing purposes. They are not expected
   // to be used for production code.
   void loadedModules([optional] out unsigned long length,

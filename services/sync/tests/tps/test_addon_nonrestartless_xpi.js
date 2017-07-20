@@ -49,19 +49,23 @@ Phase("phase04", [
 Phase("phase05", [
   [EnsureTracking],
   [Addons.setEnabled, [id], STATE_DISABLED],
-  [Sync]
+  [Sync],
+  [Addons.skipValidation] // Validation disabled due to bug 1380472
 ]);
 Phase("phase06", [
   [Addons.verify, [id], STATE_DISABLED],
-  [Sync]
+  [Sync],
+  [Addons.skipValidation] // Validation disabled due to bug 1380472
 ]);
 Phase("phase07", [
   [Addons.verify, [id], STATE_ENABLED],
-  [Sync]
+  [Sync],
+  [Addons.skipValidation] // Validation disabled due to bug 1380472
 ]);
 Phase("phase08", [
   [Addons.verify, [id], STATE_DISABLED],
-  [Sync]
+  [Sync],
+  [Addons.skipValidation] // Validation disabled due to bug 1380472
 ]);
 
 // Now we re-enable it again.

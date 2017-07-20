@@ -105,6 +105,34 @@ const EXPECTED_APPMENU_SUBVIEW_REFLOWS = [
    */
 ];
 
+const WIN_DEBUG_E10S = Services.appinfo.OS == "WINNT" &&
+                       AppConstants.DEBUG &&
+                       gMultiProcessBrowser;
+
+if (WIN_DEBUG_E10S) {
+  // Bug 1380671 - For some reason, on Windows Debug with e10s disabled in
+  // automation, we fire more popuppositioned events causing reflows.
+  EXPECTED_APPMENU_SUBVIEW_REFLOWS.push(
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+
+    [
+      "get_alignmentPosition@chrome://global/content/bindings/popup.xml",
+      "adjustArrowPosition@chrome://global/content/bindings/popup.xml",
+      "onxblpopuppositioned@chrome://global/content/bindings/popup.xml",
+    ],
+  );
+}
+
 add_task(async function() {
   await ensureNoPreloadedBrowser();
 
@@ -118,7 +146,7 @@ add_task(async function() {
       BrowserTestUtils.waitForEvent(PanelUI.panel, "popuppositioned");
     await PanelUI.show();
     await popupPositioned;
-  }, EXPECTED_APPMENU_OPEN_REFLOWS, window, PanelUI.panel);
+  }, EXPECTED_APPMENU_OPEN_REFLOWS);
 
   // Now open a series of subviews, and then close the appmenu. We
   // should not reflow during any of this.
@@ -160,5 +188,5 @@ add_task(async function() {
     let hidden = BrowserTestUtils.waitForEvent(PanelUI.panel, "popuphidden");
     PanelUI.hide();
     await hidden;
-  }, EXPECTED_APPMENU_SUBVIEW_REFLOWS, window, PanelUI.panel);
+  }, EXPECTED_APPMENU_SUBVIEW_REFLOWS);
 });

@@ -1747,11 +1747,9 @@ public class LocalBrowserDB extends BrowserDB {
     public void unpinSiteForAS(ContentResolver cr, String url) {
         cr.delete(mBookmarksUriWithProfile,
                 Bookmarks.PARENT + " == ? AND " +
-                Bookmarks.POSITION + " == ? AND " +
                 Bookmarks.URL + " = ?",
                 new String[] {
                         String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
-                        String.valueOf(Bookmarks.FIXED_AS_PIN_POSITION),
                         url
                 });
     }
@@ -1760,11 +1758,10 @@ public class LocalBrowserDB extends BrowserDB {
     public boolean isPinnedForAS(ContentResolver cr, String url) {
         final Cursor c = cr.query(bookmarksUriWithLimit(1),
                 new String[] { Bookmarks._ID },
-                Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " = ? AND " + Bookmarks.POSITION + " = ?",
+                Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " = ?",
                 new String[] {
                         url,
                         String.valueOf(Bookmarks.FIXED_PINNED_LIST_ID),
-                        String.valueOf(Bookmarks.FIXED_AS_PIN_POSITION)
                 }, null);
 
         if (c == null) {

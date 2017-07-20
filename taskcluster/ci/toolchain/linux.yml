@@ -18,7 +18,6 @@ linux64-clang:
     run:
         using: toolchain-script
         script: build-clang-linux.sh
-        tooltool-downloads: public
         resources:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
@@ -42,7 +41,6 @@ linux64-clang-tidy:
     run:
         using: toolchain-script
         script: build-clang-tidy-linux.sh
-        tooltool-downloads: public
         resources:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
@@ -98,7 +96,6 @@ linux64-cctools-port:
     run:
         using: toolchain-script
         script: build-cctools-port.sh
-        tooltool-downloads: public
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
 
@@ -118,7 +115,6 @@ linux64-hfsplus:
     run:
         using: toolchain-script
         script: build-hfsplus-linux.sh
-        tooltool-downloads: public
         resources:
             - 'build/unix/build-hfsplus/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'

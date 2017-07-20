@@ -96,3 +96,28 @@ function getPropertyBagValue(bag, key) {
 
   return null;
 }
+
+/**
+ * Sets up the browser to send crash reports to the local crash report
+ * testing server.
+ */
+async function setupLocalCrashReportServer() {
+  const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+
+  // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables crash
+  // reports.  This test needs them enabled.  The test also needs a mock
+  // report server, and fortunately one is already set up by toolkit/
+  // crashreporter/test/Makefile.in.  Assign its URL to MOZ_CRASHREPORTER_URL,
+  // which CrashSubmit.jsm uses as a server override.
+  let env = Cc["@mozilla.org/process/environment;1"]
+              .getService(Components.interfaces.nsIEnvironment);
+  let noReport = env.get("MOZ_CRASHREPORTER_NO_REPORT");
+  let serverUrl = env.get("MOZ_CRASHREPORTER_URL");
+  env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
+  env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
+
+  registerCleanupFunction(function() {
+    env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
+    env.set("MOZ_CRASHREPORTER_URL", serverUrl);
+  });
+}

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto"
+       xmlns:tools="http://schemas.android.com/tools"
+       tools:layout_height="match_parent"
+       tools:layout_width="match_parent"
+       tools:parentTag="RelativeLayout">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/private_tabs_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/private_illustration_android"/>
+
+            <TextView
+                style="@style/TextAppearance.PrivateTab.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:lineSpacingMultiplier="1.2"
+                android:gravity="center_horizontal"
+                android:text="@string/private_tab_panel_title"
+                android:textColor="@color/photon_text_main_private"/>
+
+            <TextView
+                style="@style/TextAppearance.PrivateTab.Description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="38dp"
+                android:gravity="center_horizontal"
+                android:lineSpacingMultiplier="1.4"
+                android:text="@string/private_tab_panel_description"
+                android:textColor="@color/photon_text_secondary"/>
+
+            <TextView
+                style="@style/TextAppearance.PrivateTab.Description"
+                android:id="@+id/learn_more_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:text="@string/private_tab_learn_more"
+                android:textColor="@color/link_blue"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Note: for an unknown reason, scrolling in the TabsLayout
+         does not work unless it is laid out after the empty view. -->
+    <view
+        android:id="@+id/private_tabs_layout"
+        style="@style/TabsLayout"
+        class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        gecko:tabs="tabs_private"/>
+
+</merge>
