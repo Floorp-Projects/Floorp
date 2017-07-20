@@ -681,7 +681,6 @@ pub extern "C" fn wr_api_delete_image(api: &mut RenderApi,
 pub extern "C" fn wr_api_set_root_pipeline(api: &mut RenderApi,
                                            pipeline_id: WrPipelineId) {
     api.set_root_pipeline(pipeline_id);
-    api.generate_frame(None);
 }
 
 #[no_mangle]
