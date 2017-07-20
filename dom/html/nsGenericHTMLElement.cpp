@@ -2091,8 +2091,7 @@ nsGenericHTMLFormElement::PreHandleEvent(EventChainVisitor& aVisitor)
 bool
 nsGenericHTMLFormElement::IsDisabled() const
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled) ||
-         (mFieldSet && mFieldSet->IsDisabled());
+  return State().HasState(NS_EVENT_STATE_DISABLED);
 }
 
 void
@@ -2136,17 +2135,6 @@ nsGenericHTMLFormElement::IntrinsicState() const
   // AfterSetAttr too.  And add them to AfterSetAttr for all subclasses that
   // implement IntrinsicState() and are affected by that attribute.
   EventStates state = nsGenericHTMLElement::IntrinsicState();
-
-  if (CanBeDisabled()) {
-    // :enabled/:disabled
-    if (IsDisabled()) {
-      state |= NS_EVENT_STATE_DISABLED;
-      state &= ~NS_EVENT_STATE_ENABLED;
-    } else {
-      state &= ~NS_EVENT_STATE_DISABLED;
-      state |= NS_EVENT_STATE_ENABLED;
-    }
-  }
 
   if (mForm && mForm->IsDefaultSubmitElement(this)) {
       NS_ASSERTION(IsSubmitControl(),
@@ -2409,10 +2397,37 @@ nsGenericHTMLFormElement::UpdateFieldSet(bool aNotify)
   }
 }
 
+void nsGenericHTMLFormElement::UpdateDisabledState(bool aNotify)
+{
+  if (!CanBeDisabled()) {
+    return;
+  }
+
+  bool isDisabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+
+  if (!isDisabled && mFieldSet) {
+    isDisabled = mFieldSet->IsDisabled();
+  }
+
+  EventStates disabledStates;
+  if (isDisabled) {
+    disabledStates |= NS_EVENT_STATE_DISABLED;
+  } else {
+    disabledStates |= NS_EVENT_STATE_ENABLED;
+  }
+
+  EventStates oldDisabledStates = State() & DISABLED_STATES;
+  EventStates changedStates = disabledStates ^ oldDisabledStates;
+
+  if (!changedStates.IsEmpty()) {
+    ToggleStates(changedStates, aNotify);
+  }
+}
+
 void
 nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify)
 {
-  UpdateState(aNotify);
+  UpdateDisabledState(aNotify);
 }
 
 bool
