@@ -157,7 +157,6 @@ enum ServoKeywordSize {
 // have the same size and alignment as the Rust version.
 // Ensure layout tests get run if touching either side.
 struct ServoFontComputationData {
-private:
   ServoKeywordSize mKeyword;
   float/*32_t*/ mRatio;
 
