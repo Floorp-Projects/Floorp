@@ -312,10 +312,10 @@ def shell(value, mozillabuild):
 # Source checkout and version control integration.
 # ================================================
 
-@depends(check_build_environment, 'MOZ_AUTOMATION')
+@depends(check_build_environment, 'MOZ_AUTOMATION', '--help')
 @checking('for vcs source checkout')
 @imports('os')
-def vcs_checkout_type(build_env, automation):
+def vcs_checkout_type(build_env, automation, _):
     if os.path.exists(os.path.join(build_env.topsrcdir, '.hg')):
         return 'hg'
     elif os.path.exists(os.path.join(build_env.topsrcdir, '.git')):
