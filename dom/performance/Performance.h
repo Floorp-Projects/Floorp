@@ -101,6 +101,11 @@ public:
 
   virtual nsITimedChannel* GetChannel() const = 0;
 
+  void MemoryPressure();
+
+  // This method is currently called only on the main-thread.
+  virtual void Shutdown() {}
+
 protected:
   Performance();
   explicit Performance(nsPIDOMWindowInner* aWindow);
