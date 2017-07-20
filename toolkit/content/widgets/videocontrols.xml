@@ -1680,7 +1680,10 @@
         // should fix the dimensions in order not to recursively trigger reflow afterwards.
         if (this.video instanceof HTMLAudioElement) {
           if (givenHeight) {
-            this.controlBar.style.height = `${Math.max(givenHeight, this.controlBarMinVisibleHeight)}px`;
+            // The height of controlBar should be capped with the bounds between controlBarMinHeight
+            // and controlBarMinVisibleHeight.
+            let controlBarHeight = Math.max(Math.min(givenHeight, this.controlBarMinHeight), this.controlBarMinVisibleHeight);
+            this.controlBar.style.height = `${controlBarHeight}px`;
           }
           this.controlBar.style.width = `${videoWidth - minControlBarPaddingWidth}px`;
           return;
