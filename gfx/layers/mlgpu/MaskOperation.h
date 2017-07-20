@@ -38,6 +38,9 @@ public:
   MLGTexture* GetTexture() const {
     return mTexture;
   }
+  bool IsEmpty() const {
+    return !mTexture;
+  }
 
 protected:
   explicit MaskOperation(FrameBuilder* aBuilder);
