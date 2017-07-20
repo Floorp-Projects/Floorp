@@ -60,6 +60,7 @@ public:
   mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration) override;
   mozilla::ipc::IPCResult RecvUpdateFeature(const Feature& aFeature, const FeatureFailure& aChange) override;
   mozilla::ipc::IPCResult RecvUsedFallback(const Fallback& aFallback, const nsCString& aMessage) override;
+  mozilla::ipc::IPCResult RecvBHRThreadHang(const HangDetails& aDetails) override;
 
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
