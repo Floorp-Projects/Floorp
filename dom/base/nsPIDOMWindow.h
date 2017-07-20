@@ -772,6 +772,8 @@ protected:
 
   // The number of active IndexedDB databases. Inner window only.
   uint32_t mNumOfIndexedDBDatabases;
+
+  bool mCleanedUp;
 };
 
 #define NS_PIDOMWINDOWINNER_IID \
