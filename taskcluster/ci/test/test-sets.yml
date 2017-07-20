@@ -124,6 +124,7 @@ windows-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
+    - reftest-gpu
     - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
@@ -140,6 +141,8 @@ windows-talos:
     - talos-perf-reftest
     - talos-svgr
     - talos-tp5o
+    - talos-xperf
+    - talos-quantum-pageload
 
 macosx64-tests:
     - cppunit
