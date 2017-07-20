@@ -283,7 +283,7 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
   }
 
   RefPtr<PerformanceMark> performanceMark =
-    new PerformanceMark(GetAsISupports(), aName, Now());
+    new PerformanceMark(GetParentObject(), aName, Now());
   InsertUserEntry(performanceMark);
 
   if (profiler_is_active()) {
@@ -369,7 +369,7 @@ Performance::Measure(const nsAString& aName,
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure =
-    new PerformanceMeasure(GetAsISupports(), aName, startTime, endTime);
+    new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
   if (profiler_is_active()) {
