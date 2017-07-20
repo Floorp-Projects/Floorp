@@ -145,7 +145,7 @@ windows7-32/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        - windows-talos
+        #- windows-talos
         - windows-tests
 
 # win64
@@ -160,7 +160,7 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        - windows-talos
+        #- windows-talos
         - windows-tests
 
 windows10-64-asan/opt:
