@@ -36,7 +36,6 @@ common-tests:
     - mochitest-webgl
     - reftest
     - reftest-no-accel
-    - telemetry-tests-client
     - xpcshell
 
 web-platform-tests:
