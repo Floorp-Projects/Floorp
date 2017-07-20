@@ -12,12 +12,14 @@ XPIDL_MODULE = 'bhr'
 
 EXPORTS.mozilla += [
     'BackgroundHangMonitor.h',
-    'ThreadHangStats.h',
+    'HangDetails.h',
+    'HangStack.h',
 ]
 
 UNIFIED_SOURCES += [
     'BackgroundHangMonitor.cpp',
-    'ThreadHangStats.cpp',
+    'HangDetails.cpp',
+    'HangStack.cpp',
     'ThreadStackHelper.cpp',
 ]
 
