@@ -221,7 +221,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitInitElem(LInitElem* lir);
     void visitInitElemGetterSetter(LInitElemGetterSetter* lir);
     void visitMutateProto(LMutateProto* lir);
-    void visitInitProp(LInitProp* lir);
     void visitInitPropGetterSetter(LInitPropGetterSetter* lir);
     void visitCreateThis(LCreateThis* lir);
     void visitCreateThisWithProto(LCreateThisWithProto* lir);

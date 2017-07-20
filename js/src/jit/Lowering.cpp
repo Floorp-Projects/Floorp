@@ -362,15 +362,6 @@ LIRGenerator::visitMutateProto(MMutateProto* ins)
 }
 
 void
-LIRGenerator::visitInitProp(MInitProp* ins)
-{
-    LInitProp* lir = new(alloc()) LInitProp(useRegisterAtStart(ins->getObject()),
-                                            useBoxAtStart(ins->getValue()));
-    add(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter* ins)
 {
     LInitPropGetterSetter* lir =
