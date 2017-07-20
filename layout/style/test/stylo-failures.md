@@ -56,7 +56,6 @@ to mochitest command.
     * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
-* test_css_supports.html: issues around @supports syntax servo/servo#15482 [2]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support bug 1381635
