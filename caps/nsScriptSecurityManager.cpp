@@ -941,10 +941,10 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     if (hasFlags) {
         // Allow domains that were whitelisted in the prefs. In 99.9% of cases,
         // this array is empty.
-        for (nsIURI* uri : EnsureFileURIWhitelist()) {
-            if (EqualOrSubdomain(aSourceURI, uri)) {
-                return NS_OK;
-            }
+        bool isWhitelisted;
+        MOZ_ALWAYS_SUCCEEDS(InFileURIWhitelist(aSourceURI, &isWhitelisted));
+        if (isWhitelisted) {
+            return NS_OK;
         }
 
         // Allow chrome://
@@ -1094,6 +1094,23 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     return rv;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::InFileURIWhitelist(nsIURI* aUri, bool* aResult)
+{
+    MOZ_ASSERT(aUri);
+    MOZ_ASSERT(aResult);
+
+    *aResult = false;
+    for (nsIURI* uri : EnsureFileURIWhitelist()) {
+        if (EqualOrSubdomain(aUri, uri)) {
+            *aResult = true;
+            return NS_OK;
+        }
+    }
+
+    return NS_OK;
 }
 
 ///////////////// Principals ///////////////////////

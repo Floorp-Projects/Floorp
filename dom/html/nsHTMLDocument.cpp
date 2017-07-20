@@ -883,6 +883,15 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
   }
 }
 
+nsIContent*
+nsHTMLDocument::GetUnfocusedKeyEventTarget()
+{
+  if (nsGenericHTMLElement* body = GetBody()) {
+    return body;
+  }
+  return nsDocument::GetUnfocusedKeyEventTarget();
+}
+
 //
 // nsIDOMHTMLDocument interface implementation
 //

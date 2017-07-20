@@ -88,8 +88,8 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
-  aBuilder.PushImage(sc.ToRelativeWrRect(LayerRect(mImageBounds)),
-                     sc.ToRelativeWrRect(rect),
+  aBuilder.PushImage(sc.ToRelativeLayoutRect(LayerRect(mImageBounds)),
+                     sc.ToRelativeLayoutRect(rect),
                      wr::ImageRendering::Auto, mImageKey.value());
 }
 

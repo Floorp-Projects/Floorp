@@ -65,8 +65,8 @@ public:
    * Collect the gradient parameters
    */
   void BuildWebRenderParameters(float aOpacity,
-                                WrGradientExtendMode& aMode,
-                                nsTArray<WrGradientStop>& aStops,
+                                wr::ExtendMode& aMode,
+                                nsTArray<wr::GradientStop>& aStops,
                                 LayoutDevicePoint& aLineStart,
                                 LayoutDevicePoint& aLineEnd,
                                 LayoutDeviceSize& aGradientRadius);

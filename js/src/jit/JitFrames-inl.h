@@ -9,7 +9,6 @@
 
 #include "jit/JitFrames.h"
 
-#include "jit/JitFrameIterator.h"
 #include "jit/LIR.h"
 
 #include "jit/JitFrameIterator-inl.h"
@@ -25,34 +24,6 @@ SafepointIndex::resolve()
 #ifdef DEBUG
     resolved = true;
 #endif
-}
-
-inline uint8_t*
-JitFrameIterator::returnAddress() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->returnAddress();
-}
-
-inline size_t
-JitFrameIterator::prevFrameLocalSize() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->prevFrameLocalSize();
-}
-
-inline FrameType
-JitFrameIterator::prevType() const
-{
-    CommonFrameLayout* current = (CommonFrameLayout*) current_;
-    return current->prevType();
-}
-
-inline ExitFrameLayout*
-JitFrameIterator::exitFrame() const
-{
-    MOZ_ASSERT(isExitFrame());
-    return (ExitFrameLayout*) fp();
 }
 
 inline BaselineFrame*

@@ -9,10 +9,10 @@ include LayersSurfaces;
 include LayersMessages;
 include protocol PTexture;
 
-using WrSize from "mozilla/webrender/webrender_ffi.h";
-using WrImageRendering from "mozilla/webrender/webrender_ffi.h";
-using WrMixBlendMode from "mozilla/webrender/webrender_ffi.h";
-using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::LayoutSize from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::ImageRendering from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::MixBlendMode from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ExternalImageId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
@@ -51,8 +51,8 @@ struct OpUpdateAsyncImagePipeline {
   LayerRect scBounds;
   Matrix4x4 scTransform;
   MaybeIntSize scaleToSize;
-  WrImageRendering filter;
-  WrMixBlendMode mixBlendMode;
+  ImageRendering filter;
+  MixBlendMode mixBlendMode;
 };
 
 union WebRenderParentCommand {

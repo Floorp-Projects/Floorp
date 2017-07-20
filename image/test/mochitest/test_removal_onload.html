@@ -34,6 +34,8 @@ var gIsTestFinished = false;
 var gFiles;
 var gNotifications = 0;
 var gLoads = 0;
+var gRemovals = 0;
+var gExpected = 5;
 
 function* fileToLoad() {
   yield "red.png";
@@ -47,13 +49,15 @@ function onSizeAvailable(aRequest) {
   ok(true, "AfterLoad.onSizeAvailable called for " + gImg.src);
 }
 function onLoadComplete(aRequest) {
-  ok(true, "AfterLoad.onLoadComplete called for " + gImg.src);
+  ok(gExpected > gLoads, "AfterLoad.onLoadComplete called for " + gImg.src);
   gLoads++;
   SimpleTest.executeSoon(function() {
     try {
       gContent.removeChild(gImg);
     } 
-    catch (e) {} 
+    catch (e) {}
+    gRemovals++;
+    maybeAdvance();
   });
 }
 function onDecodeComplete(aRequest) {
@@ -69,6 +73,15 @@ function failTest() {
 function onNotification()
 {
   gNotifications++;
+  maybeAdvance();
+}
+
+function maybeAdvance()
+{
+  if (gRemovals != gNotifications) {
+    return;
+  }
+
   let {done, value} = gFiles.next();
   if (done) {
     cleanUpAndFinish();

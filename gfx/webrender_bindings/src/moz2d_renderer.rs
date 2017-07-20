@@ -1,5 +1,5 @@
 use webrender_api::*;
-use bindings::{WrByteSlice, MutByteSlice, wr_moz2d_render_cb};
+use bindings::{ByteSlice, MutByteSlice, wr_moz2d_render_cb};
 use rayon::ThreadPool;
 
 use std::collections::hash_map::{HashMap, Entry};
@@ -58,7 +58,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
 
             let result = unsafe {
                 if wr_moz2d_render_cb(
-                    WrByteSlice::new(&commands[..]),
+                    ByteSlice::new(&commands[..]),
                     descriptor.width,
                     descriptor.height,
                     descriptor.format,

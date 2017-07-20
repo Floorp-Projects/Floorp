@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace wr {
 
-WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
+wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -44,7 +44,7 @@ WrExternalImage LockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aCh
   }
 }
 
-void UnlockExternalImage(void* aObj, WrExternalImageId aId, uint8_t aChannelIndex)
+void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannelIndex)
 {
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
@@ -56,19 +56,19 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
                          wr::WindowId aWindowId,
-                         WrRenderer* aWrRenderer,
+                         wr::Renderer* aRenderer,
                          layers::CompositorBridgeParentBase* aBridge)
   : mThread(aThread)
   , mGL(aGL)
   , mWidget(aWidget)
-  , mWrRenderer(aWrRenderer)
+  , mRenderer(aRenderer)
   , mBridge(aBridge)
   , mWindowId(aWindowId)
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mGL);
   MOZ_ASSERT(mWidget);
-  MOZ_ASSERT(mWrRenderer);
+  MOZ_ASSERT(mRenderer);
   MOZ_ASSERT(mBridge);
   MOZ_COUNT_CTOR(RendererOGL);
 }
@@ -81,13 +81,13 @@ RendererOGL::~RendererOGL()
     // Leak resources!
     return;
   }
-  wr_renderer_delete(mWrRenderer);
+  wr_renderer_delete(mRenderer);
 }
 
-WrExternalImageHandler
+wr::WrExternalImageHandler
 RendererOGL::GetExternalImageHandler()
 {
-  return WrExternalImageHandler {
+  return wr::WrExternalImageHandler {
     this,
     LockExternalImage,
     UnlockExternalImage,
@@ -97,7 +97,7 @@ RendererOGL::GetExternalImageHandler()
 void
 RendererOGL::Update()
 {
-  wr_renderer_update(mWrRenderer);
+  wr_renderer_update(mRenderer);
 }
 
 bool
@@ -127,7 +127,7 @@ RendererOGL::Render()
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
   auto size = mWidget->GetClientSize();
-  wr_renderer_render(mWrRenderer, size.width, size.height);
+  wr_renderer_render(mRenderer, size.width, size.height);
 
   mGL->SwapBuffers();
   mWidget->PostRender(&widgetContext);
@@ -167,17 +167,17 @@ RendererOGL::Resume()
 void
 RendererOGL::SetProfilerEnabled(bool aEnabled)
 {
-  wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);
+  wr_renderer_set_profiler_enabled(mRenderer, aEnabled);
 }
 
-WrRenderedEpochs*
+wr::WrRenderedEpochs*
 RendererOGL::FlushRenderedEpochs()
 {
-  return wr_renderer_flush_rendered_epochs(mWrRenderer);
+  return wr_renderer_flush_rendered_epochs(mRenderer);
 }
 
 RenderTextureHost*
-RendererOGL::GetRenderTexture(WrExternalImageId aExternalImageId)
+RendererOGL::GetRenderTexture(wr::WrExternalImageId aExternalImageId)
 {
   return mThread->GetRenderTexture(aExternalImageId);
 }

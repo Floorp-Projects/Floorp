@@ -67,8 +67,8 @@ public:
                                          const LayerRect& aSCBounds,
                                          const gfx::Matrix4x4& aSCTransform,
                                          const gfx::MaybeIntSize& aScaleToSize,
-                                         const WrImageRendering& aFilter,
-                                         const WrMixBlendMode& aMixBlendMode);
+                                         const wr::ImageRendering& aFilter,
+                                         const wr::MixBlendMode& aMixBlendMode);
 
   void CreateImageClientIfNeeded();
 

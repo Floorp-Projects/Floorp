@@ -62,7 +62,7 @@ public:
   void RenderLayer(wr::DisplayListBuilder& aBuilder,
                    const StackingContextHelper& aSc) override;
 private:
-  Maybe<WrImageKey> mImageKey;
+  Maybe<wr::WrImageKey> mImageKey;
   LayerIntRect mImageBounds;
 };
 

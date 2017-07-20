@@ -21,6 +21,7 @@
 #include "gc/NurseryAwareHashMap.h"
 #include "gc/Zone.h"
 #include "vm/PIC.h"
+#include "vm/ReceiverGuard.h"
 #include "vm/RegExpShared.h"
 #include "vm/SavedStacks.h"
 #include "vm/TemplateRegistry.h"
@@ -517,6 +518,27 @@ class MOZ_RAII AutoSetNewObjectMetadata : private JS::CustomAutoRooter
     ~AutoSetNewObjectMetadata();
 };
 
+class PropertyIteratorObject;
+
+struct IteratorHashPolicy
+{
+    struct Lookup {
+        ReceiverGuard* guards;
+        size_t numGuards;
+        uint32_t key;
+
+        Lookup(ReceiverGuard* guards, size_t numGuards, uint32_t key)
+          : guards(guards), numGuards(numGuards), key(key)
+        {
+            MOZ_ASSERT(numGuards > 0);
+        }
+    };
+    static HashNumber hash(const Lookup& lookup) {
+        return lookup.key;
+    }
+    static bool match(PropertyIteratorObject* obj, const Lookup& lookup);
+};
+
 } /* namespace js */
 
 namespace js {
@@ -674,9 +696,6 @@ struct JSCompartment
 
     js::WrapperMap               crossCompartmentWrappers;
 
-    using CCKeyVector = mozilla::Vector<js::CrossCompartmentKey, 0, js::SystemAllocPolicy>;
-    CCKeyVector                  nurseryCCKeys;
-
     // The global environment record's [[VarNames]] list that contains all
     // names declared using FunctionDeclaration, GeneratorDeclaration, and
     // VariableDeclaration declarations in global code in this compartment.
@@ -691,6 +710,11 @@ struct JSCompartment
     int64_t                      lastAnimationTime;
 
     js::RegExpCompartment        regExps;
+
+    using IteratorCache = js::HashSet<js::PropertyIteratorObject*,
+                                      js::IteratorHashPolicy,
+                                      js::SystemAllocPolicy>;
+    IteratorCache iteratorCache;
 
     /*
      * For generational GC, record whether a write barrier has added this

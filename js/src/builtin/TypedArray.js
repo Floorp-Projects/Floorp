@@ -1192,11 +1192,10 @@ function TypedArraySort(comparefn) {
         return obj;
 
     if (comparefn === undefined) {
-        // CountingSort doesn't invoke the comparator function.
         if (IsUint8TypedArray(obj)) {
-            return CountingSort(obj, len, false /* signed */);
+            return CountingSort(obj, len, false /* signed */, TypedArrayCompareInt);
         } else if (IsInt8TypedArray(obj)) {
-            return CountingSort(obj, len, true /* signed */);
+            return CountingSort(obj, len, true /* signed */, TypedArrayCompareInt);
         } else if (IsUint16TypedArray(obj)) {
             return RadixSort(obj, len, buffer, 2 /* nbytes */, false /* signed */, false /* floating */, TypedArrayCompareInt);
         } else if (IsInt16TypedArray(obj)) {

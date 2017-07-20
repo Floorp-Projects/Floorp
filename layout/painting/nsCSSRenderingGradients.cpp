@@ -1001,13 +1001,13 @@ nsCSSGradientRenderer::Paint(gfxContext& aContext,
 
 void
 nsCSSGradientRenderer::BuildWebRenderParameters(float aOpacity,
-                                                WrGradientExtendMode& aMode,
-                                                nsTArray<WrGradientStop>& aStops,
+                                                wr::ExtendMode& aMode,
+                                                nsTArray<wr::GradientStop>& aStops,
                                                 LayoutDevicePoint& aLineStart,
                                                 LayoutDevicePoint& aLineEnd,
                                                 LayoutDeviceSize& aGradientRadius)
 {
-  aMode = mGradient->mRepeating ? WrGradientExtendMode::Repeat : WrGradientExtendMode::Clamp;
+  aMode = mGradient->mRepeating ? wr::ExtendMode::Repeat : wr::ExtendMode::Clamp;
 
   aStops.SetLength(mStops.Length());
   for(uint32_t i = 0; i < mStops.Length(); i++) {
@@ -1037,8 +1037,8 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     return;
   }
 
-  WrGradientExtendMode extendMode;
-  nsTArray<WrGradientStop> stops;
+  wr::ExtendMode extendMode;
+  nsTArray<wr::GradientStop> stops;
   LayoutDevicePoint lineStart;
   LayoutDevicePoint lineEnd;
   LayoutDeviceSize gradientRadius;
@@ -1064,10 +1064,10 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
   LayoutDeviceSize tileSpacing = tileRepeat - firstTileBounds.Size();
 
   // Make the rects relative to the parent stacking context
-  WrRect wrClipBounds = aSc.ToRelativeWrRect(clipBounds);
+  wr::LayoutRect wrClipBounds = aSc.ToRelativeLayoutRect(clipBounds);
   LayerSize layerFirstTileSize = ViewAs<LayerPixel>(firstTileBounds.Size(),
       PixelCastJustification::WebRenderHasUnitResolution);
-  WrRect wrGradientBounds = aSc.ToRelativeWrRect(gradientBounds);
+  wr::LayoutRect wrGradientBounds = aSc.ToRelativeLayoutRect(gradientBounds);
 
   // srcTransform is used for scaling the gradient to match aSrc
   LayoutDeviceRect srcTransform = LayoutDeviceRect(mPresContext->CSSPixelsToAppUnits(aSrc.x),
@@ -1085,12 +1085,12 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     aBuilder.PushLinearGradient(
       wrGradientBounds,
       wrClipBounds,
-      mozilla::wr::ToWrPoint(lineStart),
-      mozilla::wr::ToWrPoint(lineEnd),
+      mozilla::wr::ToLayoutPoint(lineStart),
+      mozilla::wr::ToLayoutPoint(lineEnd),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(layerFirstTileSize),
-      mozilla::wr::ToWrSize(tileSpacing));
+      mozilla::wr::ToLayoutSize(layerFirstTileSize),
+      mozilla::wr::ToLayoutSize(tileSpacing));
   } else {
     gradientRadius.width *= srcTransform.width;
     gradientRadius.height *= srcTransform.height;
@@ -1098,12 +1098,12 @@ nsCSSGradientRenderer::BuildWebRenderDisplayItems(wr::DisplayListBuilder& aBuild
     aBuilder.PushRadialGradient(
       wrGradientBounds,
       wrClipBounds,
-      mozilla::wr::ToWrPoint(lineStart),
-      mozilla::wr::ToWrSize(gradientRadius),
+      mozilla::wr::ToLayoutPoint(lineStart),
+      mozilla::wr::ToLayoutSize(gradientRadius),
       stops,
       extendMode,
-      mozilla::wr::ToWrSize(layerFirstTileSize),
-      mozilla::wr::ToWrSize(tileSpacing));
+      mozilla::wr::ToLayoutSize(layerFirstTileSize),
+      mozilla::wr::ToLayoutSize(tileSpacing));
   }
 }
 

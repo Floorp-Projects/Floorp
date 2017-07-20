@@ -10,6 +10,8 @@
 #include "nsISupports.h"
 #include "nsRect.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace image {
 
@@ -46,6 +48,11 @@ public:
   virtual void SetHasImage() = 0;
   virtual bool NotificationsDeferred() const = 0;
   virtual void SetNotificationsDeferred(bool aDeferNotifications) = 0;
+
+  virtual already_AddRefed<nsIEventTarget> GetEventTarget() const
+  {
+    return nullptr;
+  }
 
 protected:
   virtual ~IProgressObserver() { }

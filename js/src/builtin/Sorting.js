@@ -7,38 +7,50 @@
 // algorithms.
 
 // For sorting values with limited range; uint8 and int8.
-function CountingSort(array, len, signed) {
-    var buffer = new List();
-    var min = 0;
+function CountingSort(array, len, signed, comparefn) {
+    // Determined by performance testing.
+    if (len < 128) {
+        QuickSort(array, len, comparefn);
+        return array;
+    }
 
     // Map int8 values onto the uint8 range when storing in buffer.
+    var min = 0;
     if (signed) {
         min = -128;
     }
 
-    for (var i = 0; i < 256; i++) {
-        buffer[i] = 0;
-    }
+    /* eslint-disable comma-spacing */
+    // 32 * 8 = 256 entries.
+    var buffer = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    ];
+    /* eslint-enable comma-spacing */
 
     // Populate the buffer
     for (var i = 0; i < len; i++) {
         var val = array[i];
-        buffer[val - min]++
+        buffer[val - min]++;
     }
 
     // Traverse the buffer in order and write back elements to array
-    var val = 0;
-    for (var i = 0; i < len; i++) {
+    var val = -1;
+    for (var i = 0; i < len;) {
         // Invariant: sum(buffer[val:]) == len-i
-        while (true) {
-            if (buffer[val] > 0) {
-                array[i] = val + min;
-                buffer[val]--;
-                break;
-            } else {
-                val++;
-            }
-        }
+        var j;
+        do {
+            j = buffer[++val];
+        } while (j === 0);
+
+        for (; j > 0; j--)
+            array[i++] = val + min;
     }
     return array;
 }
@@ -48,9 +60,8 @@ function ByteAtCol(x, pos) {
     return (x >> (pos * 8)) & 0xFF;
 }
 
-function SortByColumn(array, len, aux, col) {
+function SortByColumn(array, len, aux, col, counts) {
     const R = 256;
-    let counts = new List();
 
     // |counts| is used to compute the starting index position for each key.
     // Letting counts[0] always be 0, simplifies the transform step below.
@@ -63,9 +74,13 @@ function SortByColumn(array, len, aux, col) {
     // Transforming frequencies to indexes gives:
     //      0 1 2 3 ... (keys)
     //      0 0 2 3     (indexes)
+    assert(counts.length === R + 1, "counts has |R| + 1 entries");
+
+    // Initialize all entries to zero.
     for (let r = 0; r < R + 1; r++) {
         counts[r] = 0;
     }
+
     // Compute frequency counts
     for (let i = 0; i < len; i++) {
         let val = array[i];
@@ -81,7 +96,7 @@ function SortByColumn(array, len, aux, col) {
     // Distribute
     for (let i = 0; i < len; i++) {
         let val = array[i];
-        let b  = ByteAtCol(val, col);
+        let b = ByteAtCol(val, col);
         aux[counts[b]++] = val;
     }
 
@@ -94,30 +109,27 @@ function SortByColumn(array, len, aux, col) {
 // Sorts integers and float32. |signed| is true for int16 and int32, |floating|
 // is true for float32.
 function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
-
     // Determined by performance testing.
-    if (len < 128) {
+    if (len < 512) {
         QuickSort(array, len, comparefn);
         return array;
     }
 
-    let aux = new List();
-    for (let i = 0; i < len; i++) {
-        aux[i] = 0;
-    }
+    let aux = [];
+    for (let i = 0; i < len; i++)
+        _DefineDataProperty(aux, i, 0);
 
     let view = array;
     let signMask = 1 << nbytes * 8 - 1;
 
     // Preprocess
     if (floating) {
-        // This happens if the array object is constructed under JIT
+        // Acquire a buffer if the array was previously using inline storage.
         if (buffer === null) {
             buffer = callFunction(std_TypedArray_buffer, array);
-        }
 
-        // Verify that the buffer is non-null
-        assert(buffer !== null, "Attached data buffer should be reified when array length is >= 128.");
+            assert(buffer !== null, "Attached data buffer should be reified");
+        }
 
         view = new Int32Array(buffer);
 
@@ -137,9 +149,24 @@ function RadixSort(array, len, buffer, nbytes, signed, floating, comparefn) {
         }
     }
 
+    /* eslint-disable comma-spacing */
+    // 32 * 8 + 1 = 256 + 1 entries.
+    let counts = [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,
+    ];
+    /* eslint-enable comma-spacing */
+
     // Sort
     for (let col = 0; col < nbytes; col++) {
-        SortByColumn(view, len, aux, col);
+        SortByColumn(view, len, aux, col, counts);
     }
 
     // Restore original bit representation

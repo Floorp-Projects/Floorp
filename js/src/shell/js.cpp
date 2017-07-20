@@ -4540,7 +4540,7 @@ OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (!JS::CanCompileOffThread(cx, options, loadLength)) {
+    if (!JS::CanDecodeOffThread(cx, options, loadLength)) {
         JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
         return false;
     }

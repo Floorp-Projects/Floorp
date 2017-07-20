@@ -236,7 +236,11 @@ private:
 #if defined(XP_WIN)
   // The handle associated with the emulated window that contains this document
   HWND mEmulatedWindowHandle;
-#endif
+
+#if defined(MOZ_CONTENT_SANDBOX)
+  mscom::PreservedStreamPtr mParentProxyStream;
+#endif // defined(MOZ_CONTENT_SANDBOX)
+#endif // defined(XP_WIN)
 
   /*
    * Conceptually this is a map from IDs to proxies, but we store the ID in the
