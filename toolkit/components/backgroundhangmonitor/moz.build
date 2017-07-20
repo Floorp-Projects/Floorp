@@ -4,6 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# We only want to record and report BHR in nightly builds. We don't need to load
+# the BHRTelemetryService outside of nightly builds.
+if CONFIG['NIGHTLY_BUILD']:
+    EXTRA_COMPONENTS += [
+        'BHRTelemetryService.js',
+        'BHRTelemetryService.manifest',
+    ]
+
 XPIDL_SOURCES += [
     'nsIHangDetails.idl',
 ]
