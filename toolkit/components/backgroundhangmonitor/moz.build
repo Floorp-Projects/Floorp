@@ -12,6 +12,8 @@ if CONFIG['NIGHTLY_BUILD']:
         'BHRTelemetryService.manifest',
     ]
 
+    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
 XPIDL_SOURCES += [
     'nsIHangDetails.idl',
 ]
