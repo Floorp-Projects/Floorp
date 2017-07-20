@@ -32,7 +32,6 @@ job-template:
    dependencies: # see transforms
    expires-after: 7 days
    deadline-after: 24 hours
-   run-on-projects: ['release', 'try']
    worker-type: aws-provisioner-v1/gecko-symbol-upload
    worker:
        implementation: docker-worker
