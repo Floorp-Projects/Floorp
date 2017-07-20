@@ -34,8 +34,6 @@ cppunit:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
             windows10-64-asan/opt: []  # as an exception to windows.*
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
@@ -181,8 +179,6 @@ gtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -266,12 +262,6 @@ jsreftest:
         by-test-platform:
             android.*: 7200
             default: 3600
-    run-on-projects:
-        by-test-platform:
-            windows10-64-asan/opt: built-projects  # exception to windows.*, below
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
-            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -330,11 +320,6 @@ marionette:
         by-test-platform:
             macosx.*: true
             default: both
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
-            default: built-projects
     mozharness:
         by-test-platform:
             android.*:
@@ -477,8 +462,6 @@ mochitest-a11y:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -734,8 +717,6 @@ mochitest-devtools-chrome:
     run-on-projects:
         by-test-platform:
             windows10.*: []
-            windows7.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
             default: built-projects
     e10s:
         by-test-platform:
@@ -827,12 +808,6 @@ mochitest-jetpack:
     e10s: false
     max-run-time: 5400
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows10-64-asan/opt: built-projects  # exception to windows.*, below
-            windows.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
-            default: built-projects
     mozharness:
         mochitest-flavor: jetpack-package
         script: desktop_unittest.py
@@ -1542,12 +1517,6 @@ web-platform-tests:
     max-run-time: 7200
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows10.*: ['mozilla-central', 'try']
-            windows7.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
-            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -1580,12 +1549,6 @@ web-platform-tests-reftests:
             macosx.*: true
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
-    run-on-projects:
-        by-test-platform:
-            windows10.*: ['mozilla-central', 'try']
-            windows7.*: ['mozilla-central', 'try']
-            windows7-32/debug: built-projects
-            default: built-projects
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
