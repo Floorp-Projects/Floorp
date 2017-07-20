@@ -37,6 +37,7 @@ public class InfoFragment extends WebFragment {
     @Override
     public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container,
                               @Nullable Bundle savedInstanceState) {
+
         final View view = inflater.inflate(R.layout.fragment_info, container, false);
         progressView = (ProgressBar) view.findViewById(R.id.progress);
         webView = view.findViewById(R.id.webview);
@@ -49,6 +50,8 @@ public class InfoFragment extends WebFragment {
             // external pages, because they are both light-coloured, and significantly slower loading.
             webView.setVisibility(View.INVISIBLE);
         }
+
+        applyLocale();
 
         return view;
     }

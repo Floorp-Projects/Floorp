@@ -11,6 +11,8 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.support.v4.util.ArrayMap;
+import android.support.v4.view.ViewCompat;
+import android.view.View;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -303,6 +305,20 @@ import java.util.Map;
 
         final String wordmark = HtmlLoader.loadPngAsDataURI(webView.getContext(), R.drawable.wordmark);
         substitutionMap.put("%wordmark%", wordmark);
+
+        ViewCompat.setLayoutDirection(webView, View.LAYOUT_DIRECTION_LOCALE);
+        final int layoutDirection = ViewCompat.getLayoutDirection(webView);
+
+        final String direction;
+
+        if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
+            direction = "ltr";
+        } else if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+            direction = "rtl";
+        } else {
+            direction = "auto";
+        }
+        substitutionMap.put("%dir%", direction);
 
         final String data = HtmlLoader.loadResourceFile(webView.getContext(), R.raw.about, substitutionMap);
         // We use a file:/// base URL so that we have the right origin to load file:/// css and
