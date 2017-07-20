@@ -7,7 +7,6 @@
 var gSearchResultsPane = {
   listSearchTooltips: new Set(),
   listSearchMenuitemIndicators: new Set(),
-  searchResultsCategory: null,
   searchInput: null,
   inited: false,
 
@@ -16,7 +15,6 @@ var gSearchResultsPane = {
       return;
     }
     this.inited = true;
-    this.searchResultsCategory = document.getElementById("category-search-results");
     this.searchInput = document.getElementById("searchInput");
     this.searchInput.hidden = !Services.prefs.getBoolPref("browser.preferences.search");
     if (!this.searchInput.hidden) {
@@ -233,8 +231,6 @@ var gSearchResultsPane = {
       // Showing the Search Results Tag
       gotoPref("paneSearchResults");
 
-      this.searchResultsCategory.hidden = false;
-
       let resultsFound = false;
 
       // Building the range for highlighted areas
@@ -279,7 +275,6 @@ var gSearchResultsPane = {
         this.listSearchTooltips.forEach((anchorNode) => this.createSearchTooltip(anchorNode, this.query));
       }
     } else {
-      this.searchResultsCategory.hidden = true;
       document.getElementById("sorry-message").textContent = "";
       // Going back to General when cleared
       gotoPref("paneGeneral");
