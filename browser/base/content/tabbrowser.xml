@@ -5595,6 +5595,7 @@
         </getter>
       </property>
       <field name="_soundPlayingAttrRemovalTimer">0</field>
+      <field name="_hoverTabTimer">null</field>
     </implementation>
 
     <handlers>
@@ -7441,6 +7442,11 @@
 
           this._setPositionAttributes(val);
 
+          // Tab becomes visible, it's not unselected anymore.
+          if (val) {
+            this.finishUnselectedTabHoverTimer();
+          }
+
           return val;
           ]]>
         </setter>
@@ -7586,6 +7592,7 @@
           tabContainer._hoveredTab = this;
           if (this.linkedPanel && !this.selected) {
             this.linkedBrowser.unselectedTabHover(true);
+            this.startUnselectedTabHoverTimer();
           }
         ]]></body>
       </method>
@@ -7605,6 +7612,52 @@
           tabContainer._hoveredTab = null;
           if (this.linkedPanel && !this.selected) {
             this.linkedBrowser.unselectedTabHover(false);
+            this.cancelUnselectedTabHoverTimer();
+          }
+        ]]></body>
+      </method>
+
+      <method name="startUnselectedTabHoverTimer">
+        <body><![CDATA[
+          // Only record data when we need to.
+          if (!this.linkedBrowser.shouldHandleUnselectedTabHover) {
+            return;
+          }
+
+          if (!TelemetryStopwatch.running("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this)) {
+            TelemetryStopwatch.start("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this);
+          }
+
+          if (this._hoverTabTimer) {
+            clearTimeout(this._hoverTabTimer);
+            this._hoverTabTimer = null;
+          }
+        ]]></body>
+      </method>
+
+      <method name="cancelUnselectedTabHoverTimer">
+        <body><![CDATA[
+          // Since we're listening "mouseout" event, instead of "mouseleave".
+          // Every time the cursor is moving from the tab to its child node (icon),
+          // it would dispatch "mouseout"(for tab) first and then dispatch
+          // "mouseover" (for icon, eg: close button, speaker icon) soon.
+          // It causes we would cancel present TelemetryStopwatch immediately
+          // when cursor is moving on the icon, and then start a new one.
+          // In order to avoid this situation, we could delay cancellation and
+          // remove it if we get "mouseover" within very short period.
+          this._hoverTabTimer = setTimeout(() => {
+            if (TelemetryStopwatch.running("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this)) {
+              TelemetryStopwatch.cancel("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this);
+            }
+          }, 100);
+        ]]></body>
+      </method>
+
+      <method name="finishUnselectedTabHoverTimer">
+        <body><![CDATA[
+          // Stop timer when the tab is opened.
+          if (TelemetryStopwatch.running("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this)) {
+            TelemetryStopwatch.finish("HOVER_UNTIL_UNSELECTED_TAB_OPENED", this);
           }
         ]]></body>
       </method>
