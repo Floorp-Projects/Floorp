@@ -74,6 +74,9 @@ crashtest:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
@@ -422,6 +425,9 @@ mochitest:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -513,6 +519,9 @@ mochitest-browser-chrome:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     mozharness:
         mochitest-flavor: browser
         script: desktop_unittest.py
@@ -593,6 +602,10 @@ mochitest-chrome:
         by-test-platform:
             windows.*: ['try']
             default: built-projects
+    worker-type:
+        by-test-platform:
+            windows7-32.*: buildbot-bridge/buildbot-bridge
+            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -666,6 +679,10 @@ mochitest-clipboard:
         by-test-platform:
             windows.*: ['try']
             default: built-projects
+    worker-type:
+        by-test-platform:
+            windows7-32.*: buildbot-bridge/buildbot-bridge
+            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -718,6 +735,9 @@ mochitest-devtools-chrome:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     e10s:
         by-test-platform:
             linux64-jsdcov/opt: false
@@ -762,6 +782,10 @@ mochitest-gpu:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
+            default: null
     e10s:
         by-test-platform:
             windows.*: both
@@ -851,6 +875,10 @@ mochitest-media:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
+            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -945,6 +973,9 @@ mochitest-webgl:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     chunks:
         by-test-platform:
             android.*: 10
@@ -1006,6 +1037,9 @@ reftest:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -1068,6 +1102,9 @@ reftest-gpu:
             windows10.*: []
             windows8-64.*: []
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     instance-size:
         by-test-platform:
             default: default
@@ -1108,6 +1145,9 @@ reftest-no-accel:
             windows10.*: []
             linux64-qr/.*: ['mozilla-central', 'try']
             default: built-projects
+    worker-type:
+        by-test-platform:
+            default: null
     chunks:
         by-test-platform:
             macosx.*: 1
