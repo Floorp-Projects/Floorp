@@ -59,7 +59,7 @@ public class PublicSuffix {
         final Set<String> exact = PublicSuffixPatterns.getExactSet(context);
 
         for (int i = 0; i < partsSize; i++) {
-            String ancestorName = TextUtils.join(".", parts.subList(i, partsSize));
+            String ancestorName = StringUtils.join(".", parts.subList(i, partsSize));
 
             if (exact.contains(ancestorName)) {
                 return joinIndex(parts, i);

@@ -104,6 +104,23 @@ public class TestStringUtils {
     }
 
     @Test
+    public void testJoin() {
+        assertEquals("", StringUtils.join("", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("-", Collections.<String>emptyList()));
+        assertEquals("", StringUtils.join("", Collections.singletonList("")));
+        assertEquals("", StringUtils.join(".", Collections.singletonList("")));
+
+        assertEquals("192.168.0.1", StringUtils.join(".", Arrays.asList("192", "168", "0", "1")));
+        assertEquals("www.mozilla.org", StringUtils.join(".", Arrays.asList("www", "mozilla", "org")));
+
+        assertEquals("hello", StringUtils.join("", Collections.singletonList("hello")));
+        assertEquals("helloworld", StringUtils.join("", Arrays.asList("hello", "world")));
+        assertEquals("hello world", StringUtils.join(" ", Arrays.asList("hello", "world")));
+
+        assertEquals("m::o::z::i::l::l::a", StringUtils.join("::", Arrays.asList("m", "o", "z", "i", "l", "l", "a")));
+    }
+
+    @Test
     public void testIsSearchQuery(){
         boolean any = true;
         // test trim
