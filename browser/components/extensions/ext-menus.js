@@ -7,9 +7,6 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-
 var {
   ExtensionError,
 } = ExtensionUtils;
@@ -575,7 +572,7 @@ MenuItem.prototype = {
       if (contextData.onLink) {
         targetUrls.push(contextData.linkUrl);
       }
-      if (!targetUrls.some(targetUrl => targetPattern.matches(NetUtil.newURI(targetUrl)))) {
+      if (!targetUrls.some(targetUrl => targetPattern.matches(Services.io.newURI(targetUrl)))) {
         return false;
       }
     }
