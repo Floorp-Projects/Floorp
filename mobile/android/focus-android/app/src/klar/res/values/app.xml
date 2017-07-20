@@ -4,6 +4,4 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="app_name" translatable="false">Firefox Klar</string>
-
-    <string name="useragent_appname" translatable="false">Klar</string>
 </resources>
