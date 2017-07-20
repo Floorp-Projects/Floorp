@@ -123,6 +123,104 @@ public:
   }
 };
 
+class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
+  public nsIObserver
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    explicit BackgroundVideoDecodingPermissionObserver(MediaDecoder* aDecoder)
+      : mDecoder(aDecoder)
+      , mIsRegisteredForEvent(false)
+    {
+      MOZ_ASSERT(mDecoder);
+    }
+
+    NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                       const char16_t* aData) override
+    {
+      if (!MediaPrefs::ResumeVideoDecodingOnTabHover()) {
+        return NS_OK;
+      }
+
+      if (!IsValidEventSender(aSubject)) {
+        return NS_OK;
+      }
+
+      if (strcmp(aTopic, "unselected-tab-hover") == 0) {
+        mDecoder->mIsBackgroundVideoDecodingAllowed = !NS_strcmp(aData, u"true");
+        mDecoder->UpdateVideoDecodeMode();
+      }
+      return NS_OK;
+    }
+
+    void RegisterEvent() {
+      MOZ_ASSERT(!mIsRegisteredForEvent);
+      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+      if (observerService) {
+        observerService->AddObserver(this, "unselected-tab-hover", false);
+        mIsRegisteredForEvent = true;
+      }
+    }
+
+    void UnregisterEvent() {
+      MOZ_ASSERT(mIsRegisteredForEvent);
+      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+      if (observerService) {
+        observerService->RemoveObserver(this, "unselected-tab-hover");
+        mIsRegisteredForEvent = false;
+        mDecoder->mIsBackgroundVideoDecodingAllowed = false;
+        mDecoder->UpdateVideoDecodeMode();
+      }
+    }
+  private:
+    ~BackgroundVideoDecodingPermissionObserver() {
+      MOZ_ASSERT(!mIsRegisteredForEvent);
+    }
+
+    bool IsValidEventSender(nsISupports* aSubject) const
+    {
+      nsCOMPtr<nsPIDOMWindowInner> senderInner(do_QueryInterface(aSubject));
+      if (!senderInner) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> senderOuter = senderInner->GetOuterWindow();
+      if (!senderOuter) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetTop();
+      if (!senderTop) {
+        return false;
+      }
+
+      nsIDocument* doc = mDecoder->GetOwner()->GetDocument();
+      if (!doc) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowInner> ownerInner = doc->GetInnerWindow();
+      if (!ownerInner) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> ownerOuter = ownerInner->GetOuterWindow();
+      if (!ownerOuter) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> ownerTop = ownerOuter->GetTop();
+      return ownerTop == senderTop;
+    }
+    // The life cycle of observer would always be shorter than decoder, so we
+    // use raw pointer here.
+    MediaDecoder* mDecoder;
+    bool mIsRegisteredForEvent;
+};
+
+NS_IMPL_ISUPPORTS(MediaDecoder::BackgroundVideoDecodingPermissionObserver, nsIObserver)
+
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
 LazyLogModule gMediaTimerLog("MediaTimer");
@@ -254,6 +352,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_CANONICAL(mPlaybackBytesPerSecond, 0.0)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
+  , mVideoDecodingOberver(new BackgroundVideoDecodingPermissionObserver(this))
+  , mIsBackgroundVideoDecodingAllowed(false)
   , mTelemetryReported(false)
   , mContainerType(aInit.mContainerType)
 {
@@ -287,6 +387,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
                       &MediaDecoder::NotifyAudibleStateChanged);
 
   MediaShutdownManager::InitStatics();
+  mVideoDecodingOberver->RegisterEvent();
 }
 
 #undef INIT_MIRROR
@@ -346,6 +447,8 @@ MediaDecoder::Shutdown()
   GetOwner()->RemoveMediaTracks();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
+  mVideoDecodingOberver->UnregisterEvent();
+  mVideoDecodingOberver = nullptr;
   mOwner = nullptr;
 }
 
@@ -1141,6 +1244,12 @@ MediaDecoder::UpdateVideoDecodeMode()
   // If mForcedHidden is set, suspend the video decoder anyway.
   if (mForcedHidden) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+    return;
+  }
+
+  // Resume decoding in the advance, even the element is in the background.
+  if (mIsBackgroundVideoDecodingAllowed) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
 
