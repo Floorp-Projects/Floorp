@@ -40,7 +40,6 @@ NS_IMPL_RELEASE_INHERITED(PerformanceMainThread, Performance)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceMainThread)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(Performance)
 
 already_AddRefed<PerformanceMainThread>
