@@ -856,6 +856,9 @@
       -->
       <field name="_shouldSendUnselectedTabHover">false</field>
       <field name="_unselectedTabHoverMessageListenerCount">0</field>
+      <property name="shouldHandleUnselectedTabHover"
+                onget="return this._shouldSendUnselectedTabHover;"
+                readonly="true"/>
 
       <method name="unselectedTabHover">
         <parameter name="hovered"/>
