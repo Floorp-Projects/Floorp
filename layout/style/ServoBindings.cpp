@@ -1892,6 +1892,14 @@ Gecko_GetOrCreateFinalKeyframe(nsTArray<Keyframe>* aKeyframes,
                              KeyframeInsertPosition::LastForOffset);
 }
 
+PropertyValuePair*
+Gecko_AppendPropertyValuePair(nsTArray<PropertyValuePair>* aProperties,
+                              nsCSSPropertyID aProperty)
+{
+  MOZ_ASSERT(aProperties);
+  return aProperties->AppendElement(PropertyValuePair {aProperty});
+}
+
 void
 Gecko_ResetStyleCoord(nsStyleUnit* aUnit, nsStyleUnion* aValue)
 {
