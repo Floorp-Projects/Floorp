@@ -386,6 +386,16 @@
   background-image: url("img/icons_sync-notification.svg");
 }
 
+#onboarding-tour-library {
+  background-image: url("img/icons_search.svg");
+}
+
+#onboarding-tour-library.onboarding-active,
+#onboarding-tour-library:hover,
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-library] #onboarding-notification-tour-icon {
+  background-image: url("img/icons_search-colored.svg");
+}
+
 /* Tour Notifications */
 #onboarding-notification-bar {
   position: fixed;

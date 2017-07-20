@@ -964,19 +964,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         // We have two types of pinned sites, positioned and non-positioned. Positioned pins are used
-        // by regular Top Sites, where position in the grid is of importance. Non-positioned pins are
-        // used by Activity Stream Top Sites, where pins are displayed in front of other top site items.
-        // Non-positioned pins all have the same special position value which is used to identify them.
-        // An alternative to this is creating a separate special folder for non-positioned pins, introducing
-        // a database migration, adjusting sync code, etc. While on some level this might
-        // be a cleaner solution, a "position hack" is simpler to implement and manage over time in light
-        // of A-S being either a likely replacement for regular Top Sites, or being scrapped.
+        // by regular Top Sites, where position in the grid is of importance.
+        // Activity Stream Top Sites pins are displayed in front of other top site items - they inherit
+        // the Top Sites positioned pins, and new pins are created as non-positioned.
+        // Since we will be permanently moving to Activity Stream, if a pin is modified in Activity Stream, it is
+        // lost from (legacy) Top Sites.
         String pinnedSitesFromClause = "FROM " + TABLE_BOOKMARKS + " WHERE " +
                 Bookmarks.PARENT + " = " + Bookmarks.FIXED_PINNED_LIST_ID +
                 " AND " + Bookmarks.IS_DELETED + " IS NOT 1";
-        if (nonPositionedPins != null) {
-            pinnedSitesFromClause += " AND " + Bookmarks.POSITION + " = " + Bookmarks.FIXED_AS_PIN_POSITION;
-        } else {
+        if (nonPositionedPins == null) {
             pinnedSitesFromClause += " AND " + Bookmarks.POSITION + " != " + Bookmarks.FIXED_AS_PIN_POSITION;
         }
 

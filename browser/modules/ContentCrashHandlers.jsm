@@ -41,10 +41,41 @@ const DAY = 24 * 60 * 60 * 1000; // milliseconds
 const DAYS_TO_SUPPRESS = 30;
 const MAX_UNSEEN_CRASHED_CHILD_IDS = 20;
 
+/**
+ * BrowserWeakMap is exactly like a WeakMap, but expects <xul:browser>
+ * objects only.
+ *
+ * Under the hood, BrowserWeakMap keys the map off of the <xul:browser>
+ * permanentKey. If, however, the browser has never gotten a permanentKey,
+ * it falls back to keying on the <xul:browser> element itself.
+ */
+class BrowserWeakMap extends WeakMap {
+  get(browser) {
+    if (browser.permanentKey) {
+      return super.get(browser.permanentKey);
+    }
+    return super.get(browser);
+  }
+
+  set(browser, value) {
+    if (browser.permanentKey) {
+      return super.set(browser.permanentKey, value);
+    }
+    return super.set(browser, value);
+  }
+
+  delete(browser) {
+    if (browser.permanentKey) {
+      return super.delete(browser.permanentKey);
+    }
+    return super.delete(browser);
+  }
+}
+
 this.TabCrashHandler = {
   _crashedTabCount: 0,
   childMap: new Map(),
-  browserMap: new WeakMap(),
+  browserMap: new BrowserWeakMap(),
   unseenCrashedChildIDs: [],
   crashedBrowserQueues: new Map(),
 
@@ -132,7 +163,7 @@ this.TabCrashHandler = {
           return;
         }
 
-        this.browserMap.set(browser.permanentKey, aSubject.childID);
+        this.browserMap.set(browser, aSubject.childID);
         break;
       }
     }
@@ -255,7 +286,7 @@ this.TabCrashHandler = {
    *        page instead.
    */
   willShowCrashedTab(browser) {
-    let childID = this.browserMap.get(browser.permanentKey);
+    let childID = this.browserMap.get(browser);
     // We will only show the tab crash page if:
     // 1) We are aware that this browser crashed
     // 2) We know we've never shown the tab crash page for the
@@ -339,7 +370,7 @@ this.TabCrashHandler = {
       UnsubmittedCrashHandler.autoSubmit = true;
     }
 
-    let childID = this.browserMap.get(browser.permanentKey);
+    let childID = this.browserMap.get(browser);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
       return
@@ -413,8 +444,8 @@ this.TabCrashHandler = {
         if (!doc.documentURI.startsWith("about:tabcrashed"))
           continue;
 
-        if (this.browserMap.get(browser.permanentKey) == childID) {
-          this.browserMap.delete(browser.permanentKey);
+        if (this.browserMap.get(browser) == childID) {
+          this.browserMap.delete(browser);
           let ports = this.pageListener.portsForBrowser(browser);
           if (ports.length) {
             // For about:tabcrashed, we don't expect subframes. We can
@@ -439,7 +470,7 @@ this.TabCrashHandler = {
 
     let browser = message.target.browser;
 
-    let childID = this.browserMap.get(browser.permanentKey);
+    let childID = this.browserMap.get(browser);
     let index = this.unseenCrashedChildIDs.indexOf(childID);
     if (index != -1) {
       this.unseenCrashedChildIDs.splice(index, 1);
@@ -497,7 +528,7 @@ this.TabCrashHandler = {
     });
 
     let browser = message.target.browser;
-    let childID = this.browserMap.get(browser.permanentKey);
+    let childID = this.browserMap.get(browser);
 
     // Make sure to only count once even if there are multiple windows
     // that will all show about:tabcrashed.
@@ -519,7 +550,7 @@ this.TabCrashHandler = {
       return null;
     }
 
-    return this.childMap.get(this.browserMap.get(browser.permanentKey));
+    return this.childMap.get(this.browserMap.get(browser));
   },
 }
 
