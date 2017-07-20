@@ -91,17 +91,6 @@ nsProfiler::CanProfile(bool *aCanProfile)
   return NS_OK;
 }
 
-static bool
-HasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
-{
-  for (size_t i = 0; i < aFeatureCount; i++) {
-    if (strcmp(aFeatures[i], aFeature) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
-
 NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const char** aFeatures, uint32_t aFeatureCount,
@@ -111,19 +100,9 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  #define ADD_FEATURE_BIT(n_, str_, Name_) \
-    if (HasFeature(aFeatures, aFeatureCount, str_)) { \
-      features |= ProfilerFeature::Name_; \
-    }
-
-  // Convert the array of strings to a bitfield.
-  uint32_t features = 0;
-  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE_BIT)
-
-  #undef ADD_FEATURE_BIT
-
   ResetGathering();
 
+  uint32_t features = ParseFeaturesFromStringArray(aFeatures, aFeatureCount);
   profiler_start(aEntries, aInterval, features, aFilters, aFilterCount);
 
   return NS_OK;

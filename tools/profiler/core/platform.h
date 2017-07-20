@@ -127,4 +127,8 @@ class JSONWriter;
 }
 void AppendSharedLibraries(mozilla::JSONWriter& aWriter);
 
+// Convert the array of strings to a bitfield.
+uint32_t ParseFeaturesFromStringArray(const char** aFeatures,
+                                      uint32_t aFeatureCount);
+
 #endif /* ndef TOOLS_PLATFORM_H_ */
