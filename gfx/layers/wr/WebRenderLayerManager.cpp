@@ -191,7 +191,7 @@ PopulateScrollData(WebRenderScrollData& aTarget, Layer* aLayer)
 void
 WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                                               nsDisplayListBuilder* aDisplayListBuilder,
-                                                              StackingContextHelper& aSc,
+                                                              const StackingContextHelper& aSc,
                                                               wr::DisplayListBuilder& aBuilder)
 {
   nsDisplayList savedItems;

@@ -70,7 +70,7 @@ public:
                        nsDisplayListBuilder* aDisplayListBuilder);
   void CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDisplayList,
                                               nsDisplayListBuilder* aDisplayListBuilder,
-                                              StackingContextHelper& aSc,
+                                              const StackingContextHelper& aSc,
                                               wr::DisplayListBuilder& aBuilder);
   void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
                                   nsDisplayListBuilder* aDisplayListBuilder);
