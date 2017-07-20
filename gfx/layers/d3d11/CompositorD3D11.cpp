@@ -1121,6 +1121,9 @@ CompositorD3D11::EndFrame()
 
   if (oldSize == mSize) {
     Present();
+    if (gfxPrefs::CompositorClearState()) {
+      mContext->ClearState();
+    }
   } else {
     mDiagnostics->Cancel();
   }
