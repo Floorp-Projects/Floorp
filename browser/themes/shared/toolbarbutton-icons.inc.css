@@ -17,6 +17,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 %ifdef MOZ_PHOTON_THEME
 #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#library-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 %endif
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -37,6 +38,12 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 %ifdef MOZ_PHOTON_THEME
 %ifdef MOZ_PHOTON_ANIMATIONS
+.toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  list-style-image: none;
+}
+
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-icon,
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-icon {
   fill: transparent;
@@ -104,9 +111,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
 #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
-  animation-fill-mode: forwards;
-  animation-iteration-count: 1;
-  list-style-image: none;
 }
 
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -365,9 +369,6 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 
 #nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: 24px; /* Height of each frame within the SVG sprite */
-  animation-fill-mode: forwards;
-  animation-iteration-count: 1;
-  list-style-image: none;
 }
 
 #nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
