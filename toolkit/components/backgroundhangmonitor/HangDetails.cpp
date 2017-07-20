@@ -200,6 +200,32 @@ nsHangDetails::Submit()
     if (os) {
       os->NotifyObservers(hangDetails, "bhr-thread-hang", nullptr);
     }
+
+    // If we're not in the parent process, we might need to transmit our hang
+    // details to another process, so that they can be reported there.
+    switch (XRE_GetProcessType()) {
+    case GeckoProcessType_Content: {
+      auto cc = dom::ContentChild::GetSingleton();
+      if (cc) {
+        Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
+      }
+      break;
+    }
+    case GeckoProcessType_GPU: {
+      auto gp = gfx::GPUParent::GetSingleton();
+      if (gp) {
+        Unused << gp->SendBHRThreadHang(hangDetails->mDetails);
+      }
+      break;
+    }
+    case GeckoProcessType_Default:
+      break;
+    default:
+      // XXX: Consider handling GeckoProcessType_GMPlugin and
+      // GeckoProcessType_Plugin?
+      NS_WARNING("Unsupported BHR process type - discarding hang.");
+      break;
+    }
   });
 
   nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
@@ -240,21 +266,19 @@ ParamTraits<mozilla::HangDetails>::Write(Message* aMsg, const mozilla::HangDetai
   WriteParam(aMsg, aParam.mPseudoStack);
 
   // Write out the annotation information
-  // If we have no annotations, write out a 0-length annotations.
-  // XXX: Everything about HangAnnotations is awful.
-  if (!aParam.mAnnotations) {
-    WriteParam(aMsg, (size_t) 0);
-  } else {
+  {
+    // If we have no annotations, write out a 0-length annotations.
+    if (!aParam.mAnnotations) {
+      WriteParam(aMsg, 0);
+    }
     size_t length = aParam.mAnnotations->Count();
     WriteParam(aMsg, length);
     auto enumerator = aParam.mAnnotations->GetEnumerator();
-    if (enumerator) {
-      nsAutoString key;
-      nsAutoString value;
-      while (enumerator->Next(key, value)) {
-        WriteParam(aMsg, key);
-        WriteParam(aMsg, value);
-      }
+    nsAutoString key;
+    nsAutoString value;
+    while (enumerator->Next(key, value)) {
+      WriteParam(aMsg, key);
+      WriteParam(aMsg, value);
     }
   }
 
