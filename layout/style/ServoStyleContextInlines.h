@@ -24,7 +24,7 @@ ServoStyleContext::ResolveSameStructsAs(const ServoStyleContext* aOther)
 
 #define STYLE_STRUCT(name_, checkdata_cb)                                           \
   if (nsStyle##name_::kHasFinishStyle && newBits & NS_STYLE_INHERIT_BIT(name_)) {   \
-    const nsStyle##name_* data = ComputedValues()->GetStyle##name_();               \
+    const nsStyle##name_* data = ComputedData()->GetStyle##name_();               \
     const_cast<nsStyle##name_*>(data)->FinishStyle(mPresContext);                   \
   }
 #include "nsStyleStructList.h"

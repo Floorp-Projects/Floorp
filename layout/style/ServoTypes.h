@@ -176,7 +176,7 @@ class ServoStyleContext;
 
 struct ServoVisitedStyle {
   // This is actually a strong reference
-  // but ServoComputedValues' destructor is
+  // but ServoComputedData's destructor is
   // managed by the Rust code so we just use a
   // regular pointer
   ServoStyleContext* mPtr;
@@ -201,14 +201,14 @@ struct ServoComputedValueFlags {
 
 } // namespace mozilla
 
-class ServoComputedValues;
+class ServoComputedData;
 
-struct ServoComputedValuesForgotten
+struct ServoComputedDataForgotten
 {
-  // Make sure you manually mem::forget the backing ServoComputedValues
+  // Make sure you manually mem::forget the backing ServoComputedData
   // after calling this
-  explicit ServoComputedValuesForgotten(const ServoComputedValues* aValue) : mPtr(aValue) {}
-  const ServoComputedValues* mPtr;
+  explicit ServoComputedDataForgotten(const ServoComputedData* aValue) : mPtr(aValue) {}
+  const ServoComputedData* mPtr;
 };
 
 /**
@@ -216,13 +216,13 @@ struct ServoComputedValuesForgotten
  * so we define this type on the C++ side and use the bindgenned version
  * on the Rust side.
  */
-class ServoComputedValues
+class ServoComputedData
 {
   friend class mozilla::ServoStyleContext;
 
 public:
   // Constructs via memcpy.  Will not move out of aValue.
-  explicit ServoComputedValues(const ServoComputedValuesForgotten aValue);
+  explicit ServoComputedData(const ServoComputedDataForgotten aValue);
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                 \
   mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
@@ -261,10 +261,10 @@ private:
   // We remove the move ctor/assignment operator as well, because
   // moves in C++ don't prevent destructors from being called,
   // which will lead to double frees.
-  ServoComputedValues& operator=(const ServoComputedValues&) = delete;
-  ServoComputedValues(const ServoComputedValues&) = delete;
-  ServoComputedValues&& operator=(const ServoComputedValues&&) = delete;
-  ServoComputedValues(const ServoComputedValues&&) = delete;
+  ServoComputedData& operator=(const ServoComputedData&) = delete;
+  ServoComputedData(const ServoComputedData&) = delete;
+  ServoComputedData&& operator=(const ServoComputedData&&) = delete;
+  ServoComputedData(const ServoComputedData&&) = delete;
 };
 
 #endif // mozilla_ServoTypes_h
