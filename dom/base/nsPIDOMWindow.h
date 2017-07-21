@@ -489,7 +489,7 @@ public:
    */
   virtual void DisableDeviceSensor(uint32_t aType) = 0;
 
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_WIDGET_ANDROID)
   virtual void EnableOrientationChangeListener() = 0;
   virtual void DisableOrientationChangeListener() = 0;
 #endif
