@@ -270,9 +270,6 @@ const SNAPSHOT_SCHEMA = {
         windowUsingAdvancedLayers: {
           type: "boolean",
         },
-        currentAudioBackend: {
-          type: "string",
-        },
         numAcceleratedWindowsMessage: {
           type: "array",
         },
@@ -392,6 +389,158 @@ const SNAPSHOT_SCHEMA = {
         },
         direct2DEnabledMessage: {
           type: "array",
+        },
+      },
+    },
+    media: {
+      required: true,
+      type: "object",
+      properties: {
+        currentAudioBackend: {
+          required: true,
+          type: "string",
+        },
+        currentMaxAudioChannels: {
+          required: true,
+          type: "number",
+        },
+        currentPreferredChannelLayout: {
+          required: true,
+          type: "string",
+        },
+        currentPreferredSampleRate: {
+          required: true,
+          type: "number",
+        },
+        audioOutputDevices: {
+          required: true,
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: {
+                required: true,
+                type: "string",
+              },
+              groupId: {
+                required: true,
+                type: "string",
+              },
+              vendor: {
+                required: true,
+                type: "string",
+              },
+              type: {
+                required: true,
+                type: "number",
+              },
+              state: {
+                required: true,
+                type: "number",
+              },
+              preferred: {
+                required: true,
+                type: "number",
+              },
+              supportedFormat: {
+                required: true,
+                type: "number",
+              },
+              defaultFormat: {
+                required: true,
+                type: "number",
+              },
+              maxChannels: {
+                required: true,
+                type: "number",
+              },
+              defaultRate: {
+                required: true,
+                type: "number",
+              },
+              maxRate: {
+                required: true,
+                type: "number",
+              },
+              minRate: {
+                required: true,
+                type: "number",
+              },
+              maxLatency: {
+                required: true,
+                type: "number",
+              },
+              minLatency: {
+                required: true,
+                type: "number",
+              }
+            },
+          },
+        },
+        audioInputDevices: {
+          required: true,
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: {
+                required: true,
+                type: "string",
+              },
+              groupId: {
+                required: true,
+                type: "string",
+              },
+              vendor: {
+                required: true,
+                type: "string",
+              },
+              type: {
+                required: true,
+                type: "number",
+              },
+              state: {
+                required: true,
+                type: "number",
+              },
+              preferred: {
+                required: true,
+                type: "number",
+              },
+              supportedFormat: {
+                required: true,
+                type: "number",
+              },
+              defaultFormat: {
+                required: true,
+                type: "number",
+              },
+              maxChannels: {
+                required: true,
+                type: "number",
+              },
+              defaultRate: {
+                required: true,
+                type: "number",
+              },
+              maxRate: {
+                required: true,
+                type: "number",
+              },
+              minRate: {
+                required: true,
+                type: "number",
+              },
+              maxLatency: {
+                required: true,
+                type: "number",
+              },
+              minLatency: {
+                required: true,
+                type: "number",
+              }
+            },
+          },
         },
       },
     },
