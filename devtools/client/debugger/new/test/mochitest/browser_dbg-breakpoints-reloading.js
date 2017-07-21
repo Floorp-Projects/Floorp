@@ -34,6 +34,7 @@ add_task(function*() {
 
   yield reload(dbg, "simple1");
   yield waitForSelectedSource(dbg);
+  yield waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
   assertEditorBreakpoint(dbg, 4);
   assertEditorBreakpoint(dbg, 5);
 });

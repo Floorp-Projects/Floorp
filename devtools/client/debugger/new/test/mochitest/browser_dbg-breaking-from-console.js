@@ -5,7 +5,11 @@
 // initializes and it properly highlights the right location in the
 // debugger.
 
-add_task(function* () {
+async function waitOnToolbox(toolbox, event) {
+  return new Promise(resolve => toolbox.on(event, resolve));
+}
+
+add_task(function*() {
   const url = EXAMPLE_URL + "doc-script-switching.html";
   const toolbox = yield openNewTabAndToolbox(url, "webconsole");
 
@@ -14,9 +18,7 @@ add_task(function* () {
   jsterm.execute("debugger");
 
   // Wait for the debugger to be selected and make sure it's paused
-  yield new Promise((resolve) => {
-    toolbox.on("jsdebugger-selected", resolve);
-  });
+  yield waitOnToolbox(toolbox, "jsdebugger-selected");
   is(toolbox.threadClient.state, "paused");
 
   // Create a dbg context

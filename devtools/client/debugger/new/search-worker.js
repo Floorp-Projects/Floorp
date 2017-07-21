@@ -472,6 +472,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 900:
 /***/ function(module, exports, __webpack_require__) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	const networkRequest = __webpack_require__(901);
 	const workerUtils = __webpack_require__(902);
 
@@ -485,6 +489,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 901:
 /***/ function(module, exports) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	function networkRequest(url, opts) {
 	  return new Promise((resolve, reject) => {
 	    const req = new XMLHttpRequest();
@@ -494,7 +502,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (req.status === 200) {
 	          resolve({ content: req.responseText });
 	        } else {
-	          resolve(req.statusText);
+	          reject(req.statusText);
 	        }
 	      }
 	    });
@@ -525,7 +533,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerDispatcher() {
 	  this.msgId = 1;
 	  this.worker = null;
-	}
+	} /* This Source Code Form is subject to the terms of the Mozilla Public
+	   * License, v. 2.0. If a copy of the MPL was not distributed with this
+	   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	WorkerDispatcher.prototype = {
 	  start(url) {
@@ -556,7 +566,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this.worker.removeEventListener("message", listener);
-
 	          if (result.error) {
 	            reject(result.error);
 	          } else {
@@ -589,7 +598,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 1116:
+/***/ 1123:
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _getMatches = __webpack_require__(1173);
+
+	var _getMatches2 = _interopRequireDefault(_getMatches);
+
+	var _projectSearch = __webpack_require__(1140);
+
+	var _projectSearch2 = _interopRequireDefault(_projectSearch);
+
+	var _devtoolsUtils = __webpack_require__(900);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
+
+
+	self.onmessage = workerHandler({ getMatches: _getMatches2.default, searchSources: _projectSearch2.default });
+
+/***/ },
+
+/***/ 1138:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -676,7 +709,65 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 
-/***/ 1123:
+/***/ 1140:
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.searchSource = searchSource;
+	exports.default = searchSources;
+
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+	// Maybe reuse file search's functions?
+	function searchSource(source, queryText) {
+	  var _ref;
+
+	  var text = source.text,
+	      loading = source.loading;
+
+	  if (loading || !text || queryText == "") {
+	    return [];
+	  }
+
+	  var lines = text.split("\n");
+	  var result = undefined;
+	  var query = new RegExp(queryText, "g");
+
+	  var matches = lines.map((_text, line) => {
+	    var indices = [];
+
+	    while (result = query.exec(_text)) {
+	      indices.push({
+	        line: line + 1,
+	        column: result.index,
+	        match: result[0],
+	        value: _text,
+	        text: result.input
+	      });
+	    }
+	    return indices;
+	  }).filter(_matches => _matches.length > 0);
+
+	  matches = (_ref = []).concat.apply(_ref, _toConsumableArray(matches));
+	  return matches;
+	}
+
+	function searchSources(query, sources) {
+	  var validSources = sources.valueSeq().filter(s => s.has("text")).toJS();
+	  return validSources.map(source => ({
+	    source,
+	    filepath: source.url,
+	    matches: searchSource(source, query)
+	  }));
+	}
+
+/***/ },
+
+/***/ 1173:
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -684,26 +775,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.countMatches = countMatches;
+	exports.default = getMatches;
 
-	var _buildQuery = __webpack_require__(1116);
+	var _buildQuery = __webpack_require__(1138);
 
 	var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
-	var _devtoolsUtils = __webpack_require__(900);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var workerHandler = _devtoolsUtils.workerUtils.workerHandler;
-	function countMatches(query, text, modifiers) {
+	function getMatches(query, text, modifiers) {
 	  var regexQuery = (0, _buildQuery2.default)(query, modifiers, {
 	    isGlobal: true
 	  });
-	  var match = text.match(regexQuery);
-	  return match ? match.length : 0;
+	  var matchedLocations = [];
+	  var lines = text.split("\n");
+	  for (var i = 0; i < lines.length; i++) {
+	    var singleMatch = void 0;
+	    while ((singleMatch = regexQuery.exec(lines[i])) !== null) {
+	      matchedLocations.push({ line: i, ch: singleMatch.index });
+	    }
+	  }
+	  return matchedLocations;
 	}
-
-	self.onmessage = workerHandler({ countMatches });
 
 /***/ }
 
