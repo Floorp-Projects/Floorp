@@ -222,7 +222,7 @@ constexpr const char* RtpStreamId::kUri;
 
 bool RtpStreamId::Parse(rtc::ArrayView<const uint8_t> data, StreamId* rsid) {
   if (data.empty() || data[0] == 0 ||  // Valid rsid can't be empty.
-      data.size() <= StreamId::kMaxSize) // mozilla
+      data.size() > StreamId::kMaxSize) // mozilla
     return false;
   // If there is a \0 character in the middle of the |data|, it will be treated
   // as the end of the StreamId when StreamId::size() is called.
@@ -240,7 +240,7 @@ bool RtpStreamId::Write(uint8_t* data, const StreamId& rsid) {
 
 bool RtpStreamId::Parse(rtc::ArrayView<const uint8_t> data, std::string* rsid) {
   if (data.empty() || data[0] == 0 ||  // Valid rsid can't be empty.
-      data.size() <= StreamId::kMaxSize) // mozilla
+      data.size() > StreamId::kMaxSize) // mozilla
     return false;
   const char* str = reinterpret_cast<const char*>(data.data());
   // If there is a \0 character in the middle of the |data|, treat it as end of
