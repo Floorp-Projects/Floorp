@@ -10,6 +10,7 @@ import json
 import os
 import inspect
 import re
+from mozbuild.util import memoize
 from types import FunctionType
 from collections import namedtuple
 from taskgraph.util.docker import docker_image
@@ -243,11 +244,11 @@ ln -s /home/worker/artifacts artifacts &&
                     ],
                 },
                 'extra': {
-                      'treeherder': {
+                    'treeherder': {
                         'groupName': 'action-callback',
                         'groupSymbol': 'AC',
                         'symbol': symbol,
-                      },
+                    },
                 },
             }
         mem['registered'] = True
@@ -269,10 +270,9 @@ def render_actions_json(parameters):
     dict
         JSON object representation of the ``public/actions.json`` artifact.
     """
-    global actions
     assert isinstance(parameters, Parameters), 'requires instance of Parameters'
     result = []
-    for action in sorted(actions, key=lambda action: action.order):
+    for action in sorted(get_actions(), key=lambda action: action.order):
         task = action.task_template_builder(parameters)
         if task:
             assert is_json(task), 'task must be a JSON compatible object'
@@ -303,7 +303,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     Trigger action callback with the given inputs. If `test` is true, then run
     the action callback in testing mode, without actually creating tasks.
     """
-    cb = callbacks.get(callback, None)
+    cb = get_callbacks().get(callback, None)
     if not cb:
         raise Exception('Unknown callback: {}'.format(callback))
 
@@ -313,8 +313,19 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     cb(Parameters(**parameters), input, task_group_id, task_id, task)
 
 
-# Load all modules from this folder, relying on the side-effects of register_
-# functions to populate the action registry.
-for f in os.listdir(os.path.dirname(__file__)):
+@memoize
+def _load():
+    # Load all modules from this folder, relying on the side-effects of register_
+    # functions to populate the action registry.
+    for f in os.listdir(os.path.dirname(__file__)):
         if f.endswith('.py') and f not in ('__init__.py', 'registry.py'):
             __import__('actions.' + f[:-3])
+    return callbacks, actions
+
+
+def get_callbacks():
+    return _load()[0]
+
+
+def get_actions():
+    return _load()[1]
