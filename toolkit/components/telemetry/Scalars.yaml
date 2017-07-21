@@ -359,6 +359,22 @@ security:
     release_channel_collection: opt-out
     record_in_processes:
       - main
+  webauthn_used:
+    bug_numbers:
+      - 1265472
+    description: >
+      Counts of how often Web Authentication was used in this session, keyed
+      by authenticator protocol, method and result. Currently: U2FRegisterFinish,
+      U2FRegisterAbort, U2FSignFinish, U2FSignAbort.
+    expires: "70"
+    kind: uint
+    keyed: true
+    notification_emails:
+      - seceng-telemetry@mozilla.com
+      - jjones@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
 
 preferences:
   created_new_user_prefs_file:
