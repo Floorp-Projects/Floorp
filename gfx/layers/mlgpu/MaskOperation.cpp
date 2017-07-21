@@ -123,9 +123,15 @@ MaskCombineOperation::Init(const MaskTextureList& aTextures)
   bounds.RoundOut();
   bounds.ToIntRect(&size);
 
+  if (size.IsEmpty()) {
+    return;
+  }
+
   mTarget = mBuilder->GetDevice()->CreateRenderTarget(size.Size());
+  if (mTarget) {
+    mTexture = mTarget->GetTexture();
+  }
   mArea = area;
-  mTexture = mTarget->GetTexture();
 }
 
 void
@@ -147,6 +153,10 @@ MaskCombineOperation::PrepareForRendering()
 void
 MaskCombineOperation::Render()
 {
+  if (!mTarget) {
+    return;
+  }
+
   RefPtr<MLGDevice> device = mBuilder->GetDevice();
 
   device->SetTopology(MLGPrimitiveTopology::UnitQuad);

@@ -105,13 +105,13 @@ class Firefox(Browser):
                    filename)
 
 
-    def install(self, platform, dest=None):
+    def install(self, dest=None):
         """Install Firefox."""
         if dest is None:
-            dest = os.pwd
+            dest = os.getcwd()
 
-        self.get_from_nightly("<a[^>]*>(firefox-\d+\.\d(?:\w\d)?.en-US.%s\.tar\.bz2)" % self.platform_string())
-        untar(resp.raw, path=dest)
+        resp = self.get_from_nightly("<a[^>]*>(firefox-\d+\.\d(?:\w\d)?.en-US.%s\.tar\.bz2)" % self.platform_string())
+        untar(resp.raw, dest=dest)
         return os.path.join(dest, "firefox")
 
     def find_binary(self):
@@ -119,6 +119,8 @@ class Firefox(Browser):
 
     def find_certutil(self):
         path = find_executable("certutil")
+        if path is None:
+            return None
         if os.path.splitdrive(path)[1].split(os.path.sep) == ["", "Windows", "system32", "certutil.exe"]:
             return None
         return path
@@ -178,7 +180,7 @@ class Firefox(Browser):
     def install_webdriver(self, dest=None):
         """Install latest Geckodriver."""
         if dest is None:
-            dest = os.pwd
+            dest = os.getcwd()
 
         version = self._latest_geckodriver_version()
         format = "zip" if uname[0] == "Windows" else "tar.gz"
@@ -245,6 +247,7 @@ class Chrome(Browser):
         url = "http://chromedriver.storage.googleapis.com/%s/chromedriver_%s.zip" % (latest,
                                                                                      self.platform_string())
         unzip(get(url).raw, dest)
+
         path = find_executable("chromedriver", dest)
         st = os.stat(path)
         os.chmod(path, st.st_mode | stat.S_IEXEC)

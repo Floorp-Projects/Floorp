@@ -7,34 +7,34 @@
 <script src="/resources/testharnessreport.js"></script>
 <script>
 'use strict';
+const basicCard = Object.freeze({ supportedMethods: ["basic-card"] });
+const defaultMethods = Object.freeze([basicCard]);
+const defaultDetails = Object.freeze({
+  total: {
+    label: "Total",
+    amount: {
+      currency: "USD",
+      value: "1.00",
+    },
+  },
+});
 
-promise_test(t => {
-  const request1 = new PaymentRequest([{
-    supportedMethods: ['basic-card'],
-  }], {
-    total: {
-      label: 'request1',
-      amount: {
-        currency: 'USD',
-        value: '1.00',
-      },
-    },
-  });
-  const request2 = new PaymentRequest([{
-    supportedMethods: ['basic-card'],
-  }], {
-    total: {
-      label: 'request2',
-      amount: {
-        currency: 'USD',
-        value: '1.00',
-      },
-    },
-  });
-  const result = promise_rejects(t, null, request1.show());
-  promise_rejects(t, 'AbortError', request2.show())
-    .then(t.step_func(() => request1.abort()));
-  return result;
-}, 'If the user agent\'s "payment request is showing" boolean is true, ' +
-   'then return a promise rejected with an "AbortError" DOMException.');
+promise_test(async t => {
+  const request = new PaymentRequest(defaultMethods, defaultDetails);
+  const acceptPromise = request.show(); // Sets state to "interactive"
+  await promise_rejects(t, "InvalidStateError", request.show());
+  await request.abort();
+  await promise_rejects(t, "AbortError", acceptPromise);
+}, `Throws if the promise [[state]] is not "created"`);
+
+promise_test(async t => {
+  const request1 = new PaymentRequest(defaultMethods, defaultDetails);
+  const request2 = new PaymentRequest(defaultMethods, defaultDetails);
+  const acceptPromise1 = request1.show();
+  const acceptPromise2 = request2.show();
+  await promise_rejects(t, "AbortError", acceptPromise2);
+  await request1.abort();
+  await promise_rejects(t, "AbortError", acceptPromise1);
+}, `If the user agent's "payment request is showing" boolean is true, then return a promise rejected with an "AbortError" DOMException.`);
+
 </script>

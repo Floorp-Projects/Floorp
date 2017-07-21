@@ -7,62 +7,29 @@ const testPageURL = "http://mochi.test:8888/browser/" +
   "dom/indexedDB/test/browser_permissionsPrompt.html";
 const notificationID = "indexedDB-permissions-prompt";
 
-function test()
-{
-  waitForExplicitFinish();
+add_task(async function test1() {
   // Avoids the actual prompt
   setPermission(testPageURL, "indexedDB");
-  executeSoon(test1);
-}
 
-function test1()
-{
+  info("creating tab");
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    if (content.location != testPageURL) {
-      content.location = testPageURL;
-      return;
-    }
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-    setFinishedCallback(function(isIDBDatabase, exception) {
-      ok(isIDBDatabase,
-         "First database creation was successful");
-      ok(!exception, "No exception");
-      gBrowser.removeCurrentTab();
+  info("loading test page: " + testPageURL);
+  gBrowser.selectedBrowser.loadURI(testPageURL);
 
-      executeSoon(test2);
-    });
-  }, true);
-  content.location = testPageURL;
-}
+  await waitForMessage(true, gBrowser);
+  gBrowser.removeCurrentTab();
+});
 
-function test2()
-{
-  var win = OpenBrowserWindow({private: true});
-  win.addEventListener("load", function() {
-    executeSoon(() => test3(win));
-  }, {once: true});
-  registerCleanupFunction(() => win.close());
-}
+add_task(async function test2() {
+  info("creating private window");
+  let win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
 
-function test3(win)
-{
+  info("creating tab");
   win.gBrowser.selectedTab = win.gBrowser.addTab();
-  win.gBrowser.selectedBrowser.addEventListener("load", function() {
-    if (win.content.location != testPageURL) {
-      win.content.location = testPageURL;
-      return;
-    }
-    win.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
-    setFinishedCallback(function(isIDBDatabase, exception) {
-      ok(!isIDBDatabase, "No database");
-      is(exception, "InvalidStateError", "Correct exception");
-      win.gBrowser.removeCurrentTab();
-
-      executeSoon(finish);
-    }, win);
-  }, true);
-  win.content.location = testPageURL;
-}
+  win.gBrowser.selectedBrowser.loadURI(testPageURL);
+  await waitForMessage("InvalidStateError", win.gBrowser);
+  win.gBrowser.removeCurrentTab();
+  await BrowserTestUtils.closeWindow(win);
+  win = null;
+});

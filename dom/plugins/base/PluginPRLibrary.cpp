@@ -57,12 +57,6 @@ PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,
   mNPP_GetSitesWithData = pFuncs->getsiteswithdata;
   return NS_OK;
 }
-#elif defined(MOZ_WIDGET_GONK)
-nsresult
-PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
-{
-  return NS_OK;
-}
 #elif defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginPRLibrary::NP_Initialize(NPNetscapeFuncs* bFuncs,

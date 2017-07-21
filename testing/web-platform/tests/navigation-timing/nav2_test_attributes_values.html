@@ -70,12 +70,13 @@
                         "Expected duration to be equal to loadEventEnd.");
                     assert_equals(entries[0].initiatorType, "navigation",
                         "Expected initiatorType to be: navigation.");
+                    assert_equals(entries[0].nextHopProtocol, "http/1.1");
                     // This test may fail when response is from cach. Disable or clean cach before
                     // running this test.
                     assert_true(entries[0].transferSize > entries[0].encodedBodySize,
                         "Expected transferSize to be greater than encodedBodySize in uncached navigation.");
-                    assert_equals(entries[0].encodedBodySize, 4154);
-                    assert_equals(entries[0].decodedBodySize, 4154);
+                    assert_equals(entries[0].encodedBodySize, 4229);
+                    assert_equals(entries[0].decodedBodySize, 4229);
                     verifyTimingEventOrder(entries[0], navTiming2EventOrder1);
                     // When unloadEvent happens
                     if (entries[0]["unloadEventStart"] != 0) {

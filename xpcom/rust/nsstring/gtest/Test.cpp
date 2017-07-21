@@ -62,13 +62,15 @@ extern "C" void Rust_Test_NsStringFlags(uint16_t* f_terminated,
                                         uint16_t* f_owned,
                                         uint16_t* f_fixed,
                                         uint16_t* f_literal,
-                                        uint16_t* f_class_fixed);
+                                        uint16_t* f_class_fixed,
+                                        uint16_t* f_class_null_terminated);
 TEST(RustNsString, NsStringFlags) {
-  uint16_t f_terminated, f_voided, f_shared, f_owned, f_fixed, f_literal, f_class_fixed;
+  uint16_t f_terminated, f_voided, f_shared, f_owned, f_fixed, f_literal,
+           f_class_fixed, f_class_null_terminated;
   Rust_Test_NsStringFlags(&f_terminated,
                           &f_voided, &f_shared,
                           &f_owned, &f_fixed,
-                          &f_literal, &f_class_fixed);
+                          &f_literal, &f_class_fixed, &f_class_null_terminated);
   EXPECT_EQ(f_terminated, uint16_t(nsAString::DataFlags::TERMINATED));
   EXPECT_EQ(f_terminated, uint16_t(nsACString::DataFlags::TERMINATED));
   EXPECT_EQ(f_voided, uint16_t(nsAString::DataFlags::VOIDED));
@@ -83,6 +85,8 @@ TEST(RustNsString, NsStringFlags) {
   EXPECT_EQ(f_literal, uint16_t(nsACString::DataFlags::LITERAL));
   EXPECT_EQ(f_class_fixed, uint16_t(nsAString::ClassFlags::FIXED));
   EXPECT_EQ(f_class_fixed, uint16_t(nsACString::ClassFlags::FIXED));
+  EXPECT_EQ(f_class_null_terminated, uint16_t(nsAString::ClassFlags::NULL_TERMINATED));
+  EXPECT_EQ(f_class_null_terminated, uint16_t(nsACString::ClassFlags::NULL_TERMINATED));
 }
 
 extern "C" void Rust_StringFromCpp(const nsACString* aCStr, const nsAString* aStr);

@@ -1247,6 +1247,56 @@ nsBaseWidget::GetCompositorVsyncDispatcher()
   return mCompositorVsyncDispatcher;
 }
 
+already_AddRefed<LayerManager>
+nsBaseWidget::CreateCompositorSession(int aWidth,
+                                      int aHeight,
+                                      CompositorOptions* aOptionsOut)
+{
+  MOZ_ASSERT(aOptionsOut);
+
+  do {
+    CreateCompositorVsyncDispatcher();
+
+    bool enableWR = gfx::gfxVars::UseWebRender();
+    if (enableWR && !WidgetTypeSupportsAcceleration()) {
+      // fall back to basic
+      break;
+    }
+    bool enableAPZ = UseAPZ();
+    CompositorOptions options(enableAPZ, enableWR);
+
+    bool enableAL = gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS);
+    options.SetUseAdvancedLayers(enableAL);
+
+    RefPtr<LayerManager> lm;
+    if (options.UseWebRender()) {
+      lm = new WebRenderLayerManager(this);
+    } else {
+      lm = new ClientLayerManager(this);
+    }
+
+    bool retry = false;
+    gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
+    mCompositorSession = gpu->CreateTopLevelCompositor(
+      this,
+      lm,
+      GetDefaultScale(),
+      options,
+      UseExternalCompositingSurface(),
+      gfx::IntSize(aWidth, aHeight),
+      &retry);
+
+    // We need to retry in a loop because the act of failing to create the
+    // compositor can change our state (e.g. disable WebRender).
+    if (mCompositorSession || !retry) {
+      *aOptionsOut = options;
+      return lm.forget();
+    }
+  } while (true);
+
+  return nullptr;
+}
+
 void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 {
   // This makes sure that gfxPlatforms gets initialized if it hasn't by now.
@@ -1271,34 +1321,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     return;
   }
 
-  CreateCompositorVsyncDispatcher();
-
-  bool enableWR = gfx::gfxVars::UseWebRender();
-  if (enableWR && !WidgetTypeSupportsAcceleration()) {
-    // fall back to basic
+  CompositorOptions options;
+  RefPtr<LayerManager> lm =
+    CreateCompositorSession(aWidth, aHeight, &options);
+  if (!lm) {
     return;
   }
-  bool enableAPZ = UseAPZ();
-  CompositorOptions options(enableAPZ, enableWR);
 
-  bool enableAL = gfx::gfxConfig::IsEnabled(gfx::Feature::ADVANCED_LAYERS);
-  options.SetUseAdvancedLayers(enableAL);
-
-  RefPtr<LayerManager> lm;
-  if (options.UseWebRender()) {
-    lm = new WebRenderLayerManager(this);
-  } else {
-    lm = new ClientLayerManager(this);
-  }
-
-  gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
-  mCompositorSession = gpu->CreateTopLevelCompositor(
-    this,
-    lm,
-    GetDefaultScale(),
-    options,
-    UseExternalCompositingSurface(),
-    gfx::IntSize(aWidth, aHeight));
+  MOZ_ASSERT(mCompositorSession);
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
   mCompositorWidgetDelegate = mCompositorSession->GetCompositorWidgetDelegate();
 

@@ -7,6 +7,7 @@
 #include "PerformanceMainThread.h"
 #include "PerformanceNavigation.h"
 #include "nsICacheInfoChannel.h"
+#include "nsISupportsPrimitives.h"
 
 namespace mozilla {
 namespace dom {
@@ -38,8 +39,32 @@ NS_IMPL_RELEASE_INHERITED(PerformanceMainThread, Performance)
 // QueryInterface implementation for PerformanceMainThread
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceMainThread)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(Performance)
+
+already_AddRefed<PerformanceMainThread>
+PerformanceMainThread::Create(nsPIDOMWindowInner* aWindow,
+                              nsDOMNavigationTiming* aDOMTiming,
+                              nsITimedChannel* aChannel)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aWindow, "Parent window object should be provided");
+
+  RefPtr<PerformanceMainThread> performance =
+    new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return nullptr;
+  }
+
+  nsresult rv = obs->AddObserver(performance, "memory-pressure", false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return performance.forget();
+}
 
 PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
                                              nsDOMNavigationTiming* aDOMTiming,
@@ -47,9 +72,7 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
   : Performance(aWindow)
   , mDOMTiming(aDOMTiming)
   , mChannel(aChannel)
-{
-  MOZ_ASSERT(aWindow, "Parent window object should be provided");
-}
+{}
 
 PerformanceMainThread::~PerformanceMainThread()
 {
@@ -335,6 +358,29 @@ DOMHighResTimeStamp
 PerformanceMainThread::CreationTime() const
 {
   return GetDOMTiming()->GetNavigationStart();
+}
+
+NS_IMETHODIMP
+PerformanceMainThread::Observe(nsISupports* aSubject, const char* aTopic,
+                               const char16_t* aData)
+{
+  AssertIsOnMainThread();
+
+  if (!strcmp(aTopic, "memory-pressure")) {
+    MemoryPressure();
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+void
+PerformanceMainThread::Shutdown()
+{
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "memory-pressure");
+  }
 }
 
 } // dom namespace

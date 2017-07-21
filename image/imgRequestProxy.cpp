@@ -290,7 +290,7 @@ imgRequestProxy::Dispatch(already_AddRefed<nsIRunnable> aEvent)
 {
   LOG_FUNC(gImgLog, "imgRequestProxy::Dispatch");
 
-  MOZ_ASSERT(mListener);
+  MOZ_ASSERT(mListener || mTabGroup);
   MOZ_ASSERT(mEventTarget);
 
   mHadDispatch = true;

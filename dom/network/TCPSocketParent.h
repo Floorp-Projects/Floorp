@@ -66,7 +66,6 @@ public:
   virtual mozilla::ipc::IPCResult RecvData(const SendableData& aData,
                                            const uint32_t& aTrackingNumber) override;
   virtual mozilla::ipc::IPCResult RecvRequestDelete() override;
-  bool GetInIsolatedMozBrowser();
 
   void FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState);
   void FireEvent(const nsAString& aType, TCPReadyState aReadyState);
@@ -78,7 +77,6 @@ public:
   nsresult GetPort(uint16_t* aPort);
 
 private:
-  virtual uint32_t GetAppId();
   virtual void ActorDestroy(ActorDestroyReason why) override;
   void SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState);
   nsresult SetFilter(const nsCString& aFilter);
