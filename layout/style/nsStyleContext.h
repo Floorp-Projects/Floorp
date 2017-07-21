@@ -287,13 +287,6 @@ public:
                                    uint32_t aRelevantStructs =
                                      kAllResolvedStructs);
 
-private:
-  template<class StyleContextLike>
-  nsChangeHint CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
-                                           uint32_t* aEqualStructs,
-                                           uint32_t* aSamePointerStructs,
-                                           uint32_t aRelevantStructs);
-
 public:
   /**
    * Get a color that depends on link-visitedness using this and
