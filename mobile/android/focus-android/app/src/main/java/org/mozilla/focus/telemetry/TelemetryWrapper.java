@@ -163,7 +163,7 @@ public final class TelemetryWrapper {
                             resources.getString(R.string.pref_key_locale),
                             resources.getString(R.string.pref_key_secure),
                             resources.getString(R.string.pref_key_default_browser))
-                    .setSettingsProvider(makeSettingsProvider(resources))
+                    .setSettingsProvider(new TelemetrySettingsProvider(context))
                     .setCollectionEnabled(telemetryEnabled)
                     .setUploadEnabled(telemetryEnabled);
 
@@ -179,31 +179,6 @@ public final class TelemetryWrapper {
         } finally {
             StrictMode.setThreadPolicy(threadPolicy);
         }
-    }
-
-    private static SettingsMeasurement.SharedPreferenceSettingsProvider makeSettingsProvider(final Resources resources) {
-        final String prefKeyDefaultBrowser = resources.getString(R.string.pref_key_default_browser);
-        return new SettingsMeasurement.SharedPreferenceSettingsProvider() {
-            @Override
-            public boolean containsKey(String key) {
-                if (key.equals(prefKeyDefaultBrowser)) {
-                    return true;
-                }
-
-                return super.containsKey(key);
-            }
-
-            @Override
-            public java.lang.Object getValue(String key) {
-                if (key.equals(prefKeyDefaultBrowser)) {
-                    final Context context = TelemetryHolder.get().getConfiguration().getContext();
-                    final Browsers browsers = new Browsers(context, Browsers.TRADITIONAL_BROWSER_URL);
-                    return Boolean.toString(browsers.isDefaultBrowser(context));
-                }
-
-                return super.getValue(key);
-            }
-        };
     }
 
     private static DefaultSearchMeasurement.DefaultSearchEngineProvider createDefaultSearchProvider(final Context context) {
