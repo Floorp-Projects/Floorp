@@ -616,7 +616,7 @@ public:
   }
 
   // Enum for AppendToString's aValueSerialization argument.
-  enum Serialization { eNormalized, eAuthorSpecified };
+  enum Serialization { eNormalized };
 
   /**
    * Serialize |this| as a specified value for |aProperty| and append
