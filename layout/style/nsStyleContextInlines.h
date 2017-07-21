@@ -216,20 +216,4 @@ nsStyleContext::StartBackgroundImageLoads()
   StyleBackground();
 }
 
-const void*
-nsStyleContext::StyleStructFromServoComputedValues(nsStyleStructID aSID)
-{
-  switch (aSID) {
-#define STYLE_STRUCT(name_, checkdata_cb_)        \
-    case eStyleStruct_##name_:                    \
-      return ComputedValues()->GetStyle##name_();
-#include "nsStyleStructList.h"
-#undef STYLE_STRUCT
-    default:
-      MOZ_ASSERT_UNREACHABLE("unexpected nsStyleStructID value");
-      return nullptr;
-  }
-}
-
-
 #endif // nsStyleContextInlines_h

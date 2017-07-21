@@ -567,7 +567,7 @@ ServoRestyleManager::ProcessPostTraversal(
   }
 
   // TODO(emilio): We could avoid some refcount traffic here, specially in the
-  // ServoComputedValues case, which uses atomic refcounting.
+  // ServoStyleContext case, which uses atomic refcounting.
   //
   // Hold the old style context alive, because it could become a dangling
   // pointer during the replacement. In practice it's not a huge deal, but

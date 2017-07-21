@@ -343,8 +343,6 @@ protected:
 
   void SetStyleBits();
 
-  inline const void* StyleStructFromServoComputedValues(nsStyleStructID aSID);
-
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \
     template<bool aComputeData>                                         \
