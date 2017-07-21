@@ -68,8 +68,6 @@ var pktUI = (function() {
     var savePanelWidth = 350;
     var savePanelHeights = {collapsed: 153, expanded: 272};
 
-    var _lastAddSucceeded = false;
-
     // -- Event Handling -- //
 
     /**
@@ -90,34 +88,8 @@ var pktUI = (function() {
 
         // clear the panel
         getPanelFrame().setAttribute("src", "about:blank");
-
-        if (_lastAddSucceeded) {
-            var libraryButton = document.getElementById("library-button");
-            if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") ||
-                !libraryButton ||
-                libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
-                libraryButton.getAttribute("overflowedItem") == "true" ||
-                !libraryButton.closest("toolbar") ||
-                libraryButton.closest("toolbar").id != "nav-bar") {
-                return;
-            }
-            libraryButton.removeAttribute("fade");
-            libraryButton.setAttribute("animate", "pocket");
-            libraryButton.addEventListener("animationend", onLibraryButtonAnimationEnd);
-        }
     }
 
-    function onLibraryButtonAnimationEnd(event) {
-        let doc = event.target.ownerDocument;
-        let libraryButton = doc.getElementById("library-button");
-        if (event.animationName.startsWith("library-pocket-animation")) {
-            libraryButton.setAttribute("fade", "true");
-        } else if (event.animationName == "library-pocket-fade") {
-            libraryButton.removeEventListener("animationend", onLibraryButtonAnimationEnd);
-            libraryButton.removeAttribute("animate");
-            libraryButton.removeAttribute("fade");
-        }
-    }
 
     // -- Communication to API -- //
 
@@ -225,7 +197,6 @@ var pktUI = (function() {
         var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0") + "&inoverflowmenu=" + inOverflowMenu + "&locale=" + getUILocale(), {
             onShow() {
                 var saveLinkMessageId = "saveLink";
-                _lastAddSucceeded = false;
 
                 // Send error message for invalid url
                 if (!isValidURL) {
@@ -257,7 +228,6 @@ var pktUI = (function() {
                             item
                         };
                         pktUIMessaging.sendMessageToPanel(panelId, saveLinkMessageId, successResponse);
-                        _lastAddSucceeded = true;
                     },
                     error(error, request) {
                         // If user is not authorized show singup page
