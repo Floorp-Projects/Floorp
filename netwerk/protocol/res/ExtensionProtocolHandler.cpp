@@ -71,6 +71,10 @@ namespace net {
 
 using extensions::URLInfo;
 
+LazyLogModule gExtProtocolLog("ExtProtocol");
+#undef LOG
+#define LOG(...) MOZ_LOG(gExtProtocolLog, LogLevel::Debug, (__VA_ARGS__))
+
 StaticRefPtr<ExtensionProtocolHandler> ExtensionProtocolHandler::sSingleton;
 
 static inline Result<Ok, nsresult>
@@ -769,6 +773,31 @@ ExtensionProtocolHandler::SubstituteRemoteFileChannel(nsIURI* aURI,
   NewSimpleChannel(aURI, aLoadinfo, streamGetter, aRetVal);
 }
 
+static Result<Ok, nsresult>
+LogCacheCheck(const nsIJARChannel* aJarChannel,
+              nsIJARURI* aJarURI,
+              bool aIsCached)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> innerFileURI;
+  NS_TRY(aJarURI->GetJARFile(getter_AddRefs(innerFileURI)));
+
+  nsCOMPtr<nsIFileURL> innerFileURL = do_QueryInterface(innerFileURI, &rv);
+  NS_TRY(rv);
+
+  nsCOMPtr<nsIFile> jarFile;
+  NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
+
+  nsAutoCString uriSpec, jarSpec;
+  Unused << aJarURI->GetSpec(uriSpec);
+  Unused << innerFileURI->GetSpec(jarSpec);
+  LOG("[JARChannel %p] Cache %s: %s (%s)",
+      aJarChannel, aIsCached ? "hit" : "miss", uriSpec.get(), jarSpec.get());
+
+  return Ok();
+}
+
 Result<Ok, nsresult>
 ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadinfo,
@@ -778,15 +807,6 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
   MOZ_ASSERT(IsNeckoChild());
   nsresult rv;
 
-  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
-  NS_TRY(rv);
-
-  bool isCached = false;
-  NS_TRY(jarChannel->EnsureCached(&isCached));
-  if (isCached) {
-    return Ok();
-  }
-
   // Build a JAR URI for this jar:file:// URI and use it to extract the
   // inner file URI.
   nsCOMPtr<nsIURI> uri;
@@ -794,6 +814,18 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
 
   nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri, &rv);
   NS_TRY(rv);
+
+  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
+  NS_TRY(rv);
+
+  bool isCached = false;
+  NS_TRY(jarChannel->EnsureCached(&isCached));
+  if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
+    Unused << LogCacheCheck(jarChannel, jarURI, isCached);
+  }
+  if (isCached) {
+    return Ok();
+  }
 
   nsCOMPtr<nsIURI> innerFileURI;
   NS_TRY(jarURI->GetJARFile(getter_AddRefs(innerFileURI)));
