@@ -61,8 +61,8 @@
                position="topcenter bottomleft"
                flip="none"
                role="menu">
-          <menuitem id="customization-uidensity-menu-button-compact"
-                    class="menuitem-iconic customization-uidensity-menu-button"
+          <menuitem id="customization-uidensity-menuitem-compact"
+                    class="menuitem-iconic customization-uidensity-menuitem"
                     role="menuitemradio"
                     label="&customizeMode.uidensity.menuCompact.label;"
                     accesskey="&customizeMode.uidensity.menuCompact.accessKey;"
@@ -73,8 +73,8 @@
                     onblur="gCustomizeMode.resetUIDensity();"
                     onmouseout="gCustomizeMode.resetUIDensity();"
                     oncommand="gCustomizeMode.setUIDensity(this.mode);" />
-          <menuitem id="customization-uidensity-menu-button-normal"
-                    class="menuitem-iconic customization-uidensity-menu-button"
+          <menuitem id="customization-uidensity-menuitem-normal"
+                    class="menuitem-iconic customization-uidensity-menuitem"
                     role="menuitemradio"
                     label="&customizeMode.uidensity.menuNormal.label;"
                     accesskey="&customizeMode.uidensity.menuNormal.accessKey;"
@@ -86,8 +86,8 @@
                     onmouseout="gCustomizeMode.resetUIDensity();"
                     oncommand="gCustomizeMode.setUIDensity(this.mode);" />
 #ifndef XP_MACOSX
-          <menuitem id="customization-uidensity-menu-button-touch"
-                    class="menuitem-iconic customization-uidensity-menu-button"
+          <menuitem id="customization-uidensity-menuitem-touch"
+                    class="menuitem-iconic customization-uidensity-menuitem"
                     role="menuitemradio"
                     label="&customizeMode.uidensity.menuTouch.label;"
                     accesskey="&customizeMode.uidensity.menuTouch.accessKey;"
