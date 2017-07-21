@@ -19,6 +19,9 @@
 
 namespace TelemetryHistogram {
 
+void CreateStatisticsRecorder();
+void DestroyStatisticsRecorder();
+
 void InitializeGlobalState(bool canRecordBase, bool canRecordExtended);
 void DeInitializeGlobalState();
 #ifdef DEBUG
