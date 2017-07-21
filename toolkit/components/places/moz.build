@@ -32,6 +32,7 @@ if CONFIG['MOZ_PLACES']:
     EXPORTS.mozilla.places = [
         'Database.h',
         'History.h',
+        'Shutdown.h',
     ]
 
     UNIFIED_SOURCES += [
