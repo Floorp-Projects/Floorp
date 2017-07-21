@@ -30,7 +30,7 @@ BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp);
 extern bool
 GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res);
 
-extern bool
+extern void
 GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain, MutableHandleValue res);
 
 /*
