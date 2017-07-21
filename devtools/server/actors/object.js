@@ -256,23 +256,34 @@ ObjectActor.prototype = {
    */
   onPrototypeAndProperties: function () {
     let ownProperties = Object.create(null);
+    let ownSymbols = [];
     let names;
+    let symbols;
     try {
       names = this.obj.getOwnPropertyNames();
+      symbols = this.obj.getOwnPropertySymbols();
     } catch (ex) {
       // The above can throw if this.obj points to a dead object.
       // TODO: we should use Cu.isDeadWrapper() - see bug 885800.
       return { from: this.actorID,
                prototype: this.hooks.createValueGrip(null),
-               ownProperties: ownProperties,
+               ownProperties,
+               ownSymbols,
                safeGetterValues: Object.create(null) };
     }
     for (let name of names) {
       ownProperties[name] = this._propertyDescriptor(name);
     }
+    for (let sym of symbols) {
+      ownSymbols.push({
+        name: sym.toString(),
+        descriptor: this._propertyDescriptor(sym)
+      });
+    }
     return { from: this.actorID,
              prototype: this.hooks.createValueGrip(this.obj.proto),
-             ownProperties: ownProperties,
+             ownProperties,
+             ownSymbols,
              safeGetterValues: this._findSafeGetterValues(names) };
   },
 
