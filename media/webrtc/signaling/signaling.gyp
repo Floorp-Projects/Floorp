@@ -109,13 +109,6 @@
         './src/peerconnection/PeerConnectionImpl.h',
         './src/peerconnection/PeerConnectionMedia.cpp',
         './src/peerconnection/PeerConnectionMedia.h',
-        # Media pipeline
-        './src/mediapipeline/MediaPipeline.h',
-        './src/mediapipeline/MediaPipeline.cpp',
-        './src/mediapipeline/MediaPipelineFilter.h',
-        './src/mediapipeline/MediaPipelineFilter.cpp',
-        './src/mediapipeline/RtpLogger.h',
-        './src/mediapipeline/RtpLogger.cpp',
       ],
 
       #
@@ -149,20 +142,6 @@
       # Conditionals
       #
       'conditions': [
-        # hack so I can change the include flow for SrtpFlow
-        ['build_with_mozilla==1', {
-          'sources': [
-            './src/mediapipeline/SrtpFlow.h',
-            './src/mediapipeline/SrtpFlow.cpp',
-          ],
-          'include_dirs!': [
-            '../trunk/webrtc',
-          ],
-          'include_dirs': [
-            '../../../netwerk/srtp/src/include',
-            '../../../netwerk/srtp/src/crypto/include',
-          ],
-        }],
         ['moz_webrtc_mediacodec==1', {
           'include_dirs': [
             '../../../widget/android',
