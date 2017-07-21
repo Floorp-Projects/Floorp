@@ -44,6 +44,18 @@ function convertSymsMapToExpectedSymFormat(syms, approximateSymLength) {
   return [new Uint32Array(addresses), index, buffer];
 }
 
+function convertSymsMapToDemanglerFormat(syms) {
+  const addresses = Array.from(syms.keys());
+  addresses.sort((a, b) => a - b);
+
+  const symsArray = addresses.map(addr => syms.get(addr));
+  const textEncoder = new TextEncoder();
+  const buffer = textEncoder.encode(symsArray.join("\n"));
+
+  return [new Uint32Array(addresses), buffer];
+}
+
 var ParseSymbols = {
   convertSymsMapToExpectedSymFormat,
+  convertSymsMapToDemanglerFormat,
 };
