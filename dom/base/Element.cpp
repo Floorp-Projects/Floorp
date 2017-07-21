@@ -4204,9 +4204,11 @@ template<typename Traits>
 void
 NoteDirtyContent(nsIContent* aContent)
 {
-  if (nsIPresShell* shell = aContent->OwnerDoc()->GetShell()) {
-    shell->EnsureStyleFlush();
-  }
+  MOZ_ASSERT(aContent->IsInComposedDoc());
+  nsIDocument* doc = aContent->GetComposedDoc();
+  nsIPresShell* shell = doc->GetShell();
+  NS_ENSURE_TRUE_VOID(shell);
+  shell->EnsureStyleFlush();
 
   Element* parent = aContent->GetFlattenedTreeParentElementForStyle();
   if (!parent || !parent->HasServoData()) {
