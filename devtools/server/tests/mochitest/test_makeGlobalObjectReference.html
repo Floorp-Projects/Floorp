@@ -24,8 +24,7 @@ window.onload = function () {
   SimpleTest.waitForExplicitFinish();
 
   let iframe = document.createElement("iframe");
-  iframe.src = "data:text/html,<html>The word 'smorgasbord'," +
-               " spoken by an adorably plump child, symbolizing prosperity</html>";
+  iframe.src = "iframe1_makeGlobalObjectReference.html";
   iframe.onload = iframeOnLoad;
   document.body.appendChild(iframe);
 
@@ -66,8 +65,7 @@ window.onload = function () {
        "hasDebuggee can take a D.O referring to the outer window");
 
     let iframe2 = document.createElement("iframe");
-    iframe2.src = "data:text/html,<html>Her retrospection," +
-                  " in hindsight, was prescient.</html>";
+    iframe2.src = "iframe2_makeGlobalObjectReference.html";
     iframe2.onload = iframe2OnLoad;
     document.body.appendChild(iframe2);
 
