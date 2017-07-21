@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1382786
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1382786</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="s"></style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1382786">Mozilla Bug 1382786</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<input id="test">
+<input id="control">
+<script type="application/javascript">
+
+/** Test for Bug 1382786 **/
+var test = getComputedStyle($("test"), "::placeholder");
+var control = getComputedStyle($("control"), "::placeholder");
+for (let prop in gCSSProperties) {
+  var info = gCSSProperties[prop];
+  if (info.type == CSS_TYPE_TRUE_SHORTHAND) {
+    // Can't get useful info out of getComputedStyle.
+    continue;
+  }
+  let prereqs = "";
+  if (info.prerequisites) {
+    for (let name in info.prerequisites) {
+      prereqs += `${name}: ${info.prerequisites[name]}; `;
+    }
+  }
+  $("s").textContent = `
+    #control::placeholder { ${prop}: ${info.initial_values[0]}; ${prereqs} }
+    #test::placeholder { ${prop}: ${info.other_values[0]}; ${prereqs} }
+  `;
+  if (info.applies_to_placeholder) {
+    isnot(get_computed_value(test, prop),
+          get_computed_value(control, prop),
+          `${prop} should apply to ::placeholder`);
+  } else {
+    is(get_computed_value(test, prop),
+       get_computed_value(control, prop),
+       `${prop} should not apply to ::placeholder`);
+  }
+}
+</script>
+</body>
+</html>
