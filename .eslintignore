@@ -138,8 +138,9 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 
-# Ignore devtools pre-processed files
+# Ignore devtools preferences files
 devtools/client/preferences/**
+devtools/shim/devtools-startup-prefs.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
