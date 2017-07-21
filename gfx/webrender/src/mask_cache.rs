@@ -21,10 +21,10 @@ pub struct ClipRegion {
 }
 
 impl ClipRegion {
-    pub fn for_clip_node(rect: LayerRect,
-                         mut complex_clips: Vec<ComplexClipRegion>,
-                         mut image_mask: Option<ImageMask>)
-                         -> ClipRegion {
+    pub fn create_for_clip_node(rect: LayerRect,
+                                mut complex_clips: Vec<ComplexClipRegion>,
+                                mut image_mask: Option<ImageMask>)
+                                -> ClipRegion {
         // All the coordinates we receive are relative to the stacking context, but we want
         // to convert them to something relative to the origin of the clip.
         let negative_origin = -rect.origin.to_vector();
@@ -49,10 +49,10 @@ impl ClipRegion {
             &LocalClip::Rect(_) => Vec::new(),
             &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
         };
-        ClipRegion::for_clip_node(*local_clip.clip_rect(), complex_clips, None)
+        ClipRegion::create_for_clip_node(*local_clip.clip_rect(), complex_clips, None)
     }
 
-    pub fn for_local_clip(local_clip: &LocalClip) -> ClipRegion {
+    pub fn create_for_local_clip(local_clip: &LocalClip) -> ClipRegion {
         let complex_clips = match local_clip {
             &LocalClip::Rect(_) => Vec::new(),
             &LocalClip::RoundedRect(_, ref region) => vec![region.clone()],
