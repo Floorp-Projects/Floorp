@@ -208,6 +208,15 @@ function debug(aMsg) {
  */
 var gResistFingerprintingEnabled = false;
 
+/**
+ * Return a promise that will be resolved once it receives event
+ * |SSBrowserWindowShowing| which is dispatched in onBrowserWindowShown.
+ */
+function promiseWindowShowing(window) {
+  return new Promise(resolve => window.addEventListener("SSBrowserWindowShowing",
+    () => resolve(window), {once: true}));
+}
+
 this.SessionStore = {
   get promiseInitialized() {
     return SessionStoreInternal.promiseInitialized;
@@ -692,8 +701,9 @@ var SessionStoreInternal = {
           delete state.windows[0].hidden;
           // Since nothing is hidden in the first window, it cannot be a popup
           delete state.windows[0].isPopup;
-          // We don't want to minimize and then open a window at startup.
-          if (state.windows[0].sizemode == "minimized")
+          // We don't want to minimize and then open a window at startup. However,
+          // when we're restoring, we should preserve previous windows sizemode.
+          if (state.windows[0].sizemode == "minimized" && !ss.doRestore())
             state.windows[0].sizemode = "normal";
           // clear any lastSessionWindowID attributes since those don't matter
           // during normal restore
@@ -1179,9 +1189,11 @@ var SessionStoreInternal = {
       }
     // this window was opened by _openWindowWithState
     } else if (!this._isWindowLoaded(aWindow)) {
-      let state = this._statesToRestore[aWindow.__SS_restoreID];
-      let options = {overwriteTabs: true, isFollowUp: state.windows.length == 1};
-      this.restoreWindow(aWindow, state.windows[0], options);
+      // We used to restore window when it is opened. However, we
+      // want to restore windows after all windows are opened
+      // (bug 1034036). So the restoration process has been moved to
+      // function restoreWindowsFeaturesAndTabs.
+
     // The user opened another, non-private window after starting up with
     // a single private one. Let's restore the session we actually wanted to
     // restore at startup.
@@ -1273,6 +1285,10 @@ var SessionStoreInternal = {
     // Register the window.
     this.onLoad(aWindow);
 
+    // Dispatch a custom event to tell that a new window is about to be shown.
+    let evt = new aWindow.CustomEvent("SSBrowserWindowShowing");
+    aWindow.dispatchEvent(evt);
+
     // Just call initializeWindow() directly if we're initialized already.
     if (this._sessionInitialized) {
       this.initializeWindow(aWindow);
@@ -1347,7 +1363,7 @@ var SessionStoreInternal = {
         aWindow.__SSi = this._generateWindowID();
       }
 
-      this._windows[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
+      this._windows[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID].windows[0];
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
     }
@@ -2513,6 +2529,7 @@ var SessionStoreInternal = {
 
     let window = this._openWindowWithState(state);
     this.windowToFocus = window;
+    promiseWindowShowing(window).then(win => this.restoreWindows(win, state, {overwriteTabs: true}));
 
     // Notify of changes to closed objects.
     this._notifyOfClosedObjectsChange();
@@ -2766,6 +2783,9 @@ var SessionStoreInternal = {
     // Restore session cookies.
     SessionCookies.restore(lastSessionState.cookies || []);
 
+    let openedWindows = [];
+    let remainingWindows = [];
+
     // Restore into windows or open new ones as needed.
     for (let i = 0; i < lastSessionState.windows.length; i++) {
       let winState = lastSessionState.windows[i];
@@ -2794,16 +2814,27 @@ var SessionStoreInternal = {
           curWinState._closedTabs.splice(this._max_tabs_undo, curWinState._closedTabs.length);
         }
 
-        // Restore into that window - pretend it's a followup since we'll already
-        // have a focused window.
         // XXXzpao This is going to merge extData together (taking what was in
         //        winState over what is in the window already.
-        let options = {overwriteTabs: canOverwriteTabs, isFollowUp: true};
-        this.restoreWindow(windowToUse, winState, options);
+        // We don't restore window right away, just store its data.
+        // Later, these windows will be restored with newly opened windows.
+        if ("zIndex" in winState) {
+          windowToUse.__SS_zIndex = winState.zIndex;
+        }
+
+        this._updateWindowRestoreState(windowToUse, {windows: [winState]});
+        windowToUse.__SS_restoreOptions = {overwriteTabs: canOverwriteTabs};
+        openedWindows.push(windowToUse);
       } else {
-        this._openWindowWithState({ windows: [winState] });
+        remainingWindows.push(winState);
       }
     }
+
+    // Actually restore windows in reversed z-order.
+    this.openWindows({windows: remainingWindows}).then(wins => {
+      wins = openedWindows.concat(wins);
+      this.restoreWindowsInReversedZOrder(wins, this._statesToRestore, false);
+    });
 
     // Merge closed windows from this session with ones from last session
     if (lastSessionState._closedWindows) {
@@ -3056,6 +3087,19 @@ var SessionStoreInternal = {
   /* ........ Saving Functionality .............. */
 
   /**
+   * Return z-index of a window.
+   * If a window is minimized, its z-index is -1.
+   *
+   * @param aWindow
+   *        Window reference
+   * @return z-index of that window
+   */
+  _getZIndex(window) {
+    let isMinimized = this._getWindowDimension(window, "sizemode") == "minimized";
+    return isMinimized ? -1 : window.__SS_zIndex;
+  },
+
+  /**
    * Store window dimensions, visibility, sidebar
    * @param aWindow
    *        Window reference
@@ -3066,6 +3110,15 @@ var SessionStoreInternal = {
     WINDOW_ATTRIBUTES.forEach(function(aAttr) {
       winData[aAttr] = this._getWindowDimension(aWindow, aAttr);
     }, this);
+
+    // We only update zIndex when a valid zIndex is found in a window.
+    // There will be a case (flushAllWindowsAsync) where this function
+    // is called outside |forEachBrowserWindow|, therefore, no zIndex
+    // is found.
+    let zIndex = this._getZIndex(aWindow);
+    if (zIndex) {
+      winData.zIndex = this._getZIndex(aWindow);
+    }
 
     var hidden = WINDOW_HIDEABLE_FEATURES.filter(function(aItem) {
       return aWindow[aItem] && !aWindow[aItem].visible;
@@ -3261,6 +3314,24 @@ var SessionStoreInternal = {
   /* ........ Restoring Functionality .............. */
 
   /**
+   * Open windows with data
+   *
+   * @param root
+   *        Windows data
+   * @returns a promise resolved when all windows have been opened
+   */
+  openWindows(root) {
+    let openedWindowPromises = [];
+    for (let winData of root.windows) {
+      if (winData && winData.tabs && winData.tabs[0]) {
+        let window = this._openWindowWithState({ windows: [winData] });
+        openedWindowPromises.push(promiseWindowShowing(window));
+      }
+    }
+    return Promise.all(openedWindowPromises);
+  },
+
+  /**
    * restore features to a single window
    * @param aWindow
    *        Window reference to the window to use for restoration
@@ -3268,19 +3339,13 @@ var SessionStoreInternal = {
    *        JS object
    * @param aOptions
    *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
-   *        {isFollowUp: true} if this is not the restoration of the 1st window
    *        {firstWindow: true} if this is the first non-private window we're
    *                            restoring in this session, that might open an
    *                            external link as well
    */
   restoreWindow: function ssi_restoreWindow(aWindow, winData, aOptions = {}) {
     let overwriteTabs = aOptions && aOptions.overwriteTabs;
-    let isFollowUp = aOptions && aOptions.isFollowUp;
     let firstWindow = aOptions && aOptions.firstWindow;
-
-    if (isFollowUp) {
-      this.windowToFocus = aWindow;
-    }
 
     // initialize window if necessary
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
@@ -3418,7 +3483,6 @@ var SessionStoreInternal = {
       aWindow.__SS_lastSessionWindowID = winData.__lastSessionWindowID;
 
     if (overwriteTabs) {
-      this.restoreWindowFeatures(aWindow, winData);
       delete this._windows[aWindow.__SSi].extData;
     }
 
@@ -3517,6 +3581,55 @@ var SessionStoreInternal = {
   },
 
   /**
+   * This function will restore window features and then retore window data.
+   *
+   * @param windows
+   *        array of windows to be restored into
+   * @param statesToRestore
+   *        states of windows to be restored
+   */
+  restoreWindowsFeaturesAndTabs(windows, statesToRestore) {
+    // First, we restore window features, so that when users
+    // interacting with a window, we don't steal the window focus.
+    windows.forEach((window) => {
+      let state = statesToRestore[window.__SS_restoreID];
+      this.restoreWindowFeatures(window, state.windows[0]);
+    });
+
+    // Then we restore data into windows.
+    for (let i = 0; i < windows.length; ++i) {
+      let state = statesToRestore[windows[i].__SS_restoreID];
+      let option = windows[i].__SS_restoreOptions || {overwriteTabs: true};
+      this.restoreWindow(windows[i], state.windows[0], option);
+      delete windows[i].__SS_restoreOptions;
+      delete windows[i].__SS_zIndex;
+    }
+  },
+
+  /**
+   * This function will restore window in reversed z-index, so that users
+   * will be presented with most recently used window first.
+   *
+   * @param windows
+   *        array of windows to be restored into
+   * @param statesToRestore
+   *        states of windows to be restored
+   * @param areFollowUps
+   *        a flag indicate these windows are follow-up windows
+   */
+  restoreWindowsInReversedZOrder(windows, statesToRestore, areFollowUps) {
+    if (windows.some(window => !!window.__SS_zIndex)) {
+      windows.sort((a, b) => b.__SS_zIndex - a.__SS_zIndex);
+    }
+
+    if (!areFollowUps) {
+      this.windowToFocus = windows[0];
+    }
+
+    this.restoreWindowsFeaturesAndTabs(windows, statesToRestore);
+  },
+
+  /**
    * Restore multiple windows using the provided state.
    * @param aWindow
    *        Window reference to the first window to use for restoration.
@@ -3525,18 +3638,11 @@ var SessionStoreInternal = {
    *        JS object or JSON string
    * @param aOptions
    *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
-   *        {isFollowUp: true} if this is not the restoration of the 1st window
    *        {firstWindow: true} if this is the first non-private window we're
    *                            restoring in this session, that might open an
    *                            external link as well
    */
   restoreWindows: function ssi_restoreWindows(aWindow, aState, aOptions = {}) {
-    let isFollowUp = aOptions && aOptions.isFollowUp;
-
-    if (isFollowUp) {
-      this.windowToFocus = aWindow;
-    }
-
     // initialize window if necessary
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
       this.onLoad(aWindow);
@@ -3562,24 +3668,28 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (!root.selectedWindow || root.selectedWindow > root.windows.length) {
-      root.selectedWindow = 0;
+    // Store z-index to current window so that it can be restored in reversed z-order.
+    let firstWindowData = root.windows.splice(0, 1);
+    if ("zIndex" in firstWindowData[0]) {
+      aWindow.__SS_zIndex = firstWindowData[0].zIndex;
     }
 
-    // open new windows for all further window entries of a multi-window session
-    // (unless they don't contain any tab data)
-    let winData;
-    for (var w = 1; w < root.windows.length; w++) {
-      winData = root.windows[w];
-      if (winData && winData.tabs && winData.tabs[0]) {
-        var window = this._openWindowWithState({ windows: [winData] });
-        if (w == root.selectedWindow - 1) {
-          this.windowToFocus = window;
-        }
-      }
-    }
+    // Store the restore state and restore option of the current window,
+    // so that the window can be restored in reversed z-order.
+    this._updateWindowRestoreState(aWindow, {windows: firstWindowData});
+    aWindow.__SS_restoreOptions = aOptions;
 
-    this.restoreWindow(aWindow, root.windows[0], aOptions);
+    // Begin the restoration: First open all windows in creation order.
+    // After all windows are opened, we restore states to windows in
+    // reversed z-order.
+    this.openWindows(root).then(windows => {
+      // We want to add current window to opened window, so that this window will be
+      // restored in reversed z-order. (We add the window to first position, in case
+      // no z-indices are found, that window will be restored first.)
+      windows.unshift(aWindow);
+
+      this.restoreWindowsInReversedZOrder(windows, this._statesToRestore, false);
+    });
 
     DevToolsShim.restoreDevToolsSession(aState);
   },
@@ -4167,18 +4277,42 @@ var SessionStoreInternal = {
   },
 
   /**
-   * call a callback for all currently opened browser windows
+   * A boolean flag indicates whether we can iterate over all windows
+   * in their z order.
+   */
+  get isWMZOrderBroken() {
+    let broken_wm_z_order = AppConstants.platform != "macosx" && AppConstants.platform != "win";
+    delete this.isWMZOrderBroken;
+    return this.isWMZOrderBroken = broken_wm_z_order;
+  },
+
+  /**
+   * Call a callback for all currently opened browser windows.
+   * This will iterate the windows in z-index from front to back,
+   * and assign z-index to the window.
    * (might miss the most recent one)
    * @param aFunc
    *        Callback each window is passed to
    */
   _forEachBrowserWindow: function ssi_forEachBrowserWindow(aFunc) {
-    var windowsEnum = Services.wm.getEnumerator("navigator:browser");
+    let windowsEnum = this.isWMZOrderBroken ?
+                      Services.wm.getEnumerator("navigator:browser") :
+                      Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", false);
+    let mostRecentWindow = this.isWMZOrderBroken ? this._getMostRecentBrowserWindow() : null;
 
+    // We want to start zIndex at 1, so that, in _updateWindowFeatures, if no z-index is found
+    // in a window, we can just check with a simple condition if: `if (zIndex)`.
+    let zIndex = 1;
     while (windowsEnum.hasMoreElements()) {
-      var window = windowsEnum.getNext();
+      let window = windowsEnum.getNext();
       if (window.__SSi && !window.closed) {
+        if (this.isWMZOrderBroken) {
+          window.__SS_zIndex = mostRecentWindow.__SSi === window.__SSi ? 2 : 1;
+        } else {
+          window.__SS_zIndex = zIndex++;
+        }
         aFunc.call(this, window);
+        delete window.__SS_zIndex;
       }
     }
   },
@@ -4210,6 +4344,23 @@ var SessionStoreInternal = {
   },
 
   /**
+   * Store a restore state of a window to this._statesToRestore. The window
+   * will be given an id that can be used to get the restore state from
+   * this._statesToRestore.
+   *
+   * @param window
+   *        a reference to a window that has a state to restore
+   * @param state
+   *        an object containing session data
+   */
+  _updateWindowRestoreState(window, state) {
+    do {
+      var ID = "window" + Math.random();
+    } while (ID in this._statesToRestore);
+    this._statesToRestore[(window.__SS_restoreID = ID)] = state;
+  },
+
+  /**
    * open a new browser window for a given session state
    * called when restoring a multi-window session
    * @param aState
@@ -4237,10 +4388,12 @@ var SessionStoreInternal = {
       Services.ww.openWindow(null, this._prefBranch.getCharPref("chromeURL"),
                              "_blank", features, argString);
 
-    do {
-      var ID = "window" + Math.random();
-    } while (ID in this._statesToRestore);
-    this._statesToRestore[(window.__SS_restoreID = ID)] = aState;
+    // Store z-index, so that windows can be restored in reversed z-order.
+    if ("zIndex" in aState.windows[0]) {
+      window.__SS_zIndex = aState.windows[0].zIndex;
+    }
+
+    this._updateWindowRestoreState(window, aState);
 
     return window;
   },
