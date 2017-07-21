@@ -8810,11 +8810,8 @@ nsDocument::BlockOnload()
   }
 
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
-  // -- it's not ours.  Also, if we're already in the COMPLETE state, that means
-  // we already had our load event, conceptually, so there's no more need to
-  // mess about with the load blocker.
-  if (mOnloadBlockCount == 0 && mScriptGlobalObject &&
-      GetReadyStateEnum() != READYSTATE_COMPLETE) {
+  // -- it's not ours.
+  if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
     if (!nsContentUtils::IsSafeToRunScript()) {
       // Because AddRequest may lead to OnStateChange calls in chrome,
       // block onload only when there are no script blockers.
