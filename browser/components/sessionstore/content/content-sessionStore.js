@@ -451,7 +451,6 @@ var ScrollPositionListener = {
 var FormDataListener = {
   init() {
     addEventListener("input", this, true);
-    addEventListener("change", this, true);
     gFrameTree.addObserver(this);
   },
 
