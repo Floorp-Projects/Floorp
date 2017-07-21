@@ -13,6 +13,7 @@ const INITIAL_WAIT_TIME = 100; // ms
 const MAX_WAIT_TIME = 20000; // ms
 const MAX_PROFILER_ENTRIES = 10000000;
 
+// eslint-disable-next-line no-unused-vars
 function run_test() {
   // Ensure the profiler is not running when the test starts (it could
   // happen if the MOZ_PROFILER_STARTUP environment variable is set).
