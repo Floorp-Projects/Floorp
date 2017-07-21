@@ -944,12 +944,29 @@ bool
 DeviceManagerDx::CanInitializeKeyedMutexTextures()
 {
   MutexAutoLock lock(mDeviceLock);
-  if (!mDeviceStatus) {
+  if (!mDeviceStatus || !gfxPrefs::Direct3D11AllowKeyedMutex()) {
     return false;
   }
-  // Disable this on all Intel devices because of crashes.
-  // See bug 1292923.
-  return (mDeviceStatus->adapter().VendorId != 0x8086 || gfxPrefs::Direct3D11AllowIntelMutex());
+
+  // Check the keyed mutex feature availability only once to avoid
+  // getting GfxInfo service repeatedly.
+  static int sAllowKeyedMutex = -1;
+  if (sAllowKeyedMutex < 0) {
+      // Disable this on blocklisted Intel devices.
+      nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+      nsCString discardFailureId;
+      int32_t status;
+      if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_D3D11_KEYED_MUTEX,
+                                                 discardFailureId, &status))) {
+          sAllowKeyedMutex = (status == nsIGfxInfo::FEATURE_STATUS_OK) ? 1 : 0;
+      } else {
+          // If we couldn't properly evaluate the status, err on the side
+          // of caution and give this functionality to the user.
+          gfxCriticalNote << "Cannot evaluate keyed mutex feature status";
+          sAllowKeyedMutex = 1;
+      }
+  }
+  return sAllowKeyedMutex == 1;
 }
 
 bool
