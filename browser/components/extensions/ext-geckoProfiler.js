@@ -6,7 +6,7 @@
 /* import-globals-from ../../../toolkit/components/extensions/ext-toolkit.js */
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.importGlobalProperties(["fetch", "TextEncoder"]);
+Cu.importGlobalProperties(["fetch", "TextEncoder", "TextDecoder"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ParseSymbols", "resource:///modules/ParseSymbols.jsm");
@@ -23,7 +23,7 @@ var {
 } = ExtensionUtils;
 
 const parseSym = data => {
-  const worker = new ChromeWorker("resource://app/modules/ParseSymbols-worker.js");
+  const worker = new ChromeWorker("resource://app/modules/ParseBreakpadSymbols-worker.js");
   const promise = new Promise((resolve, reject) => {
     worker.onmessage = (e) => {
       if (e.data.error) {
@@ -39,62 +39,40 @@ const parseSym = data => {
 
 class NMParser {
   constructor() {
-    this._addrToSymMap = new Map();
-    this._approximateLength = 0;
+    this._worker = new ChromeWorker("resource://app/modules/ParseNMSymbols-worker.js");
   }
 
-  consume(data) {
-    const lineRegex = /.*\n?/g;
-    const buffer = this._currentLine + data;
-
-    let match;
-    while ((match = lineRegex.exec(buffer))) {
-      let [line] = match;
-      if (line[line.length - 1] === "\n") {
-        this._processLine(line);
-      } else {
-        this._currentLine = line;
-        break;
-      }
-    }
+  consume(buffer) {
+    this._worker.postMessage({buffer}, [buffer]);
   }
 
   finish() {
-    this._processLine(this._currentLine);
-    return {syms: this._addrToSymMap, approximateLength: this._approximateLength};
-  }
-
-  _processLine(line) {
-    // Example lines:
-    // 00000000028c9888 t GrFragmentProcessor::MulOutputByInputUnpremulColor(sk_sp<GrFragmentProcessor>)::PremulFragmentProcessor::onCreateGLSLInstance() const::GLFP::~GLFP()
-    // 00000000028c9874 t GrFragmentProcessor::MulOutputByInputUnpremulColor(sk_sp<GrFragmentProcessor>)::PremulFragmentProcessor::onCreateGLSLInstance() const::GLFP::~GLFP()
-    // 00000000028c9874 t GrFragmentProcessor::MulOutputByInputUnpremulColor(sk_sp<GrFragmentProcessor>)::PremulFragmentProcessor::onCreateGLSLInstance() const::GLFP::~GLFP()
-    // 0000000003a33730 r mozilla::OggDemuxer::~OggDemuxer()::{lambda()#1}::operator()() const::__func__
-    // 0000000003a33930 r mozilla::VPXDecoder::Drain()::{lambda()#1}::operator()() const::__func__
-    //
-    // Some lines have the form
-    // <address> ' ' <letter> ' ' <symbol>
-    // and some have the form
-    // <address> ' ' <symbol>
-    // The letter has a meaning, but we ignore it.
-
-    const regex = /([^ ]+) (?:. )?(.*)/;
-    let match = regex.exec(line);
-    if (match) {
-      const [, address, symbol] = match;
-      this._addrToSymMap.set(parseInt(address, 16), symbol);
-      this._approximateLength += symbol.length;
-    }
+    const promise = new Promise((resolve, reject) => {
+      this._worker.onmessage = (e) => {
+        if (e.data.error) {
+          reject(e.data.error);
+        } else {
+          resolve(e.data.result);
+        }
+      };
+    });
+    this._worker.postMessage({
+      finish: true,
+      isDarwin: Services.appinfo.OS === "Darwin",
+    });
+    return promise;
   }
 }
 
 class CppFiltParser {
   constructor(length) {
+    this._decoder = new TextDecoder();
     this._index = 0;
     this._results = new Array(length);
   }
 
-  consume(data) {
+  consume(arrayBuffer) {
+    const data = this._decoder.decode(arrayBuffer, {stream: true});
     const lineRegex = /.*\n?/g;
     const buffer = this._currentLine + data;
 
@@ -122,7 +100,7 @@ class CppFiltParser {
 
 const readAllData = async function(pipe, processData) {
   let data;
-  while ((data = await pipe.readString())) {
+  while ((data = await pipe.read()) && data.byteLength) {
     processData(data);
   }
 };
@@ -157,19 +135,22 @@ const getSymbolsFromNM = async function(path, arch) {
 
   await spawnProcess("nm", args, data => parser.consume(data));
   await spawnProcess("nm", ["-D", ...args], data => parser.consume(data));
-  let {syms, approximateLength} = parser.finish();
+  let result = await parser.finish();
+  if (Services.appinfo.OS !== "Darwin") {
+    return result;
+  }
 
-  if (Services.appinfo.OS === "Darwin") {
-    const keys = Array.from(syms.keys());
-    const values = keys.map(k => syms.get(k));
-    const demangler = new CppFiltParser(keys.length);
-    await spawnProcess("c++filt", [], data => demangler.consume(data), values.join("\n"));
-    const newSymbols = demangler.finish();
-    approximateLength = 0;
-    for (let [i, symbol] of newSymbols.entries()) {
-      approximateLength += symbol.length;
-      syms.set(keys[i], symbol);
-    }
+  const syms = new Map();
+  const [addresses, symbolsJoinedBuffer] = result;
+  const decoder = new TextDecoder();
+  const symbolsJoined = decoder.decode(symbolsJoinedBuffer);
+  const demangler = new CppFiltParser(addresses.length);
+  await spawnProcess("c++filt", [], data => demangler.consume(data), symbolsJoined);
+  const newSymbols = demangler.finish();
+  let approximateLength = 0;
+  for (let [i, symbol] of newSymbols.entries()) {
+    approximateLength += symbol.length;
+    syms.set(addresses[i], symbol);
   }
 
   return ParseSymbols.convertSymsMapToExpectedSymFormat(syms, approximateLength);
