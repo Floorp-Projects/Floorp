@@ -234,7 +234,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
     }
   } else {
     if (Servo_ComputedValues_EqualCustomProperties(
-          ComputedValues(),
+          AsServo()->ComputedValues(),
           aNewContext->ComputedValues())) {
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     }
