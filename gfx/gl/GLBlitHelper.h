@@ -13,6 +13,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Point.h"
+#include "../layers/ImageTypes.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -43,7 +44,7 @@ GuessDivisors(const gfx::IntSize& ySize, const gfx::IntSize& uvSize,
 
 class DrawBlitProg final
 {
-    GLBlitHelper& mParent;
+    const GLBlitHelper& mParent;
     const GLuint mProg;
     const GLint mLoc_u1ForYFlip;
     const GLint mLoc_uClipRect;
@@ -53,7 +54,18 @@ class DrawBlitProg final
     const GLint mLoc_uColorMatrix;
 
 public:
-    DrawBlitProg(GLBlitHelper* parent, GLuint prog);
+    struct Key final {
+        const char* fragHeader;
+        const char* fragBody;
+
+        bool operator <(const Key& x) const {
+            if (fragHeader != x.fragHeader)
+                return fragHeader < x.fragHeader;
+            return fragBody < x.fragBody;
+        }
+    };
+
+    DrawBlitProg(const GLBlitHelper* parent, GLuint prog);
     ~DrawBlitProg();
 
     struct BaseArgs final {
@@ -92,20 +104,12 @@ class GLBlitHelper final
     friend class DrawBlitProg;
     friend class GLContext;
 
-    enum class DrawBlitType : uint8_t
-    {
-        Tex2DRGBA,
-        Tex2DPlanarYUV,
-        TexRectRGBA,
-        //TexExtYUV,
-        TexExtNV12,
-        TexExtPlanarYUV,
-    };
-
     GLContext* const mGL;
-    std::map<uint8_t, UniquePtr<DrawBlitProg>> mDrawBlitProgs;
+    mutable std::map<DrawBlitProg::Key, const DrawBlitProg*> mDrawBlitProgs;
 
     GLuint mQuadVAO;
+    nsCString mDrawBlitProg_VersionLine;
+    const GLuint mDrawBlitProg_VertShader;
 
     GLuint mYuvUploads[3];
     gfx::IntSize mYuvUploads_YSize;
@@ -117,9 +121,10 @@ class GLBlitHelper final
     ID3D11Device* GetD3D11() const;
 #endif
 
-
-
-    const DrawBlitProg* GetDrawBlitProg(DrawBlitType type) const;
+    const DrawBlitProg* GetDrawBlitProg(const DrawBlitProg::Key& key) const;
+private:
+    const DrawBlitProg* CreateDrawBlitProg(const DrawBlitProg::Key& key) const;
+public:
 
     bool BlitImage(layers::PlanarYCbCrImage* yuvImage, const gfx::IntSize& destSize,
                    OriginPos destOrigin);
@@ -129,7 +134,8 @@ class GLBlitHelper final
     bool BlitImage(layers::EGLImageImage* eglImage);
 #endif
 #ifdef XP_MACOSX
-    bool BlitImage(layers::MacIOSurfaceImage* ioImage);
+    bool BlitImage(layers::MacIOSurfaceImage* srcImage, const gfx::IntSize& destSize,
+                   OriginPos destOrigin) const;
 #endif
 
     explicit GLBlitHelper(GLContext* gl);
