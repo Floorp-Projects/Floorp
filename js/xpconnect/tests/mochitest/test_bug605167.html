@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=505915
 <script type="application/javascript">
 
 /** Test for Bug 505915 **/
-var dataUrl = "data:text/html,<script>parent.f = function() { return this; };<" + "/script>";
+var url = "file_bug605167.html";
 var targetUrl = "http://example.com";
 var f;
 
@@ -26,7 +26,7 @@ var p = 0;
 function go() {
         switch (++p) {
         case 1:
-                frames[0].location = dataUrl;
+                frames[0].location = url;
                 break;
         case 2:
                 frames[0].location = targetUrl;
