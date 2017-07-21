@@ -14,7 +14,7 @@ We encourage you to participate in this open source project. We love Pull Reques
 
 * Issues: [https://github.com/mozilla-mobile/focus-android/issues](https://github.com/mozilla-mobile/focus-android/issues)
 
-* IRC: [#mobile (irc.mozilla.org)](https://wiki.mozilla.org/IRC)
+* IRC: [#focus (irc.mozilla.org)](https://wiki.mozilla.org/IRC)
 
 * Mailing list: [mobile-firefox-dev](https://mail.mozilla.org/listinfo/mobile-firefox-dev)
 
