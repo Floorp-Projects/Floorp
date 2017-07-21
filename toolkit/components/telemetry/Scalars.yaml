@@ -247,6 +247,20 @@ browser.usage:
     record_in_processes:
       - 'all'
 
+  plugin_instantiated:
+    bug_numbers:
+      - 1381591
+    description: >-
+      The number of plugin instances that were created.
+    expires: never # Jan-2021 but we don't have a version number for that
+    kind: uint
+    notification_emails:
+      - bsmedberg@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # This section is for probes used to measure use of the Webextensions storage.sync API.
 storage.sync.api.usage:
   extensions_using:

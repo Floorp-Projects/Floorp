@@ -40,7 +40,6 @@ public:
     void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
     // platform implementations of font functions
-    virtual bool IsFontFormatSupported(uint32_t aFormatFlags) override;
     virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,

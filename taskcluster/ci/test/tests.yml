@@ -1571,6 +1571,11 @@ web-platform-tests-reftests:
     treeherder-symbol: tc-W(Wr)
     max-run-time: 5400
     instance-size: xlarge
+    chunks:
+      by-test-platform:
+        macosx.*: 1
+        windows.*: 1
+        default: 6
     e10s:
         by-test-platform:
             macosx.*: true
@@ -1629,8 +1634,7 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            # TODO Windows: Turn on on the other branches once Bug 1374787 is fixed
-            windows.*: ['mozilla-central', 'try']
+            windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
     docker-image: {"in-tree": "desktop1604-test"}
     chunks:

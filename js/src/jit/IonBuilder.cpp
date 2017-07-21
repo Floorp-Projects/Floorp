@@ -2226,6 +2226,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OBJECT:
         return jsop_object(info().getObject(pc));
 
+      case JSOP_CLASSCONSTRUCTOR:
+        return jsop_classconstructor();
+
       case JSOP_TYPEOF:
       case JSOP_TYPEOFEXPR:
         return jsop_typeof();
@@ -2360,7 +2363,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_OBJWITHPROTO:
       case JSOP_BUILTINPROTO:
       case JSOP_INITHOMEOBJECT:
-      case JSOP_CLASSCONSTRUCTOR:
       case JSOP_DERIVEDCONSTRUCTOR:
       case JSOP_CHECKTHIS:
       case JSOP_CHECKRETURN:
@@ -6433,42 +6435,27 @@ IonBuilder::jsop_mutateproto()
 AbortReasonOr<Ok>
 IonBuilder::jsop_initprop(PropertyName* name)
 {
-    bool useSlowPath = false;
+    bool useFastPath = false;
 
-    MDefinition* value = current->peek(-1);
     MDefinition* obj = current->peek(-2);
-    if (obj->isLambda()) {
-        useSlowPath = true;
-    } else if (obj->isNewObject()) {
+    if (obj->isNewObject()) {
         if (JSObject* templateObject = obj->toNewObject()->templateObject()) {
             if (templateObject->is<PlainObject>()) {
-                if (!templateObject->as<PlainObject>().containsPure(name))
-                    useSlowPath = true;
+                if (templateObject->as<PlainObject>().containsPure(name))
+                    useFastPath = true;
             } else {
                 MOZ_ASSERT(templateObject->as<UnboxedPlainObject>().layout().lookup(name));
+                useFastPath = true;
             }
-        } else {
-            useSlowPath = true;
         }
-    } else {
-        MOZ_ASSERT(obj->isUnbox() && obj->getOperand(0)->isNullarySharedStub());
-        useSlowPath = true;
     }
-
     MInstruction* last = *current->rbegin();
 
-    if (!useSlowPath && !forceInlineCaches()) {
+    if (useFastPath && !forceInlineCaches()) {
         // This is definitely initializing an 'own' property of the object, treat
         // it as an assignment.
         MOZ_TRY(jsop_setprop(name));
     } else {
-        if (*pc != JSOP_INITPROP) {
-            current->pop();
-            MInitProp* init = MInitProp::New(alloc(), obj, name, value);
-            current->add(init);
-            return resumeAfter(init);
-        }
-
         MDefinition* value = current->pop();
         MDefinition* obj = current->pop();
 
@@ -12174,6 +12161,15 @@ IonBuilder::jsop_object(JSObject* obj)
     compartment->setSingletonsAsValues();
     pushConstant(ObjectValue(*obj));
     return Ok();
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_classconstructor()
+{
+    MClassConstructor* constructor = MClassConstructor::New(alloc(), pc);
+    current->add(constructor);
+    current->push(constructor);
+    return resumeAfter(constructor);
 }
 
 AbortReasonOr<Ok>

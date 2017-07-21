@@ -14,10 +14,10 @@
     {
    "steps" : [
       {
-         "type" : "event",
          "element" : "test",
          "event" : "focus",
-         "title": "Put focus on test element"
+         "title" : "step 1",
+         "type" : "event"
       },
       {
          "element" : "test",
@@ -113,23 +113,9 @@
                   "is",
                   "false"
                ]
-            ],
-            "WAIFAKE" : [
-               [
-                  "property",
-                  "role",
-                  "is",
-                  "ROLE_TABLE_CELL"
-               ],
-               [
-                  "property",
-                  "interfaces",
-                  "contains",
-                  "TableCell"
-               ]
             ]
          },
-         "title" : "step 1",
+         "title" : "step 2",
          "type" : "test"
       },
       {
@@ -196,23 +182,9 @@
                   "is",
                   "true"
                ]
-            ],
-            "WAIFAKE" : [
-               [
-                  "property",
-                  "role",
-                  "is",
-                  "ROLE_TABLE_CELL"
-               ],
-               [
-                  "property",
-                  "interfaces",
-                  "contains",
-                  "TableCell"
-               ]
             ]
          },
-         "title" : "step 2",
+         "title" : "step 3",
          "type" : "test"
       }
    ],

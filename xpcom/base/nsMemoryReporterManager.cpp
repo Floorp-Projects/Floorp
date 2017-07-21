@@ -1611,10 +1611,6 @@ nsMemoryReporterManager::~nsMemoryReporterManager()
   NS_ASSERTION(!mSavedWeakReporters, "failed to restore weak reporters");
 }
 
-#ifdef MOZ_WIDGET_GONK
-#define DEBUG_CHILD_PROCESS_MEMORY_REPORTING 1
-#endif
-
 #ifdef DEBUG_CHILD_PROCESS_MEMORY_REPORTING
 #define MEMORY_REPORTING_LOG(format, ...) \
   printf_stderr("++++ MEMORY REPORTING: " format, ##__VA_ARGS__);

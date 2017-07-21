@@ -6754,14 +6754,23 @@ WorkerPrivate::MemoryPressureInternal()
 {
   AssertIsOnWorkerThread();
 
-  RefPtr<Console> console = mScope ? mScope->GetConsoleIfExists() : nullptr;
-  if (console) {
-    console->ClearStorage();
+  if (mScope) {
+    RefPtr<Console> console = mScope->GetConsoleIfExists();
+    if (console) {
+      console->ClearStorage();
+    }
+
+    RefPtr<Performance> performance = mScope->GetPerformanceIfExists();
+    if (performance) {
+      performance->MemoryPressure();
+    }
   }
 
-  console = mDebuggerScope ? mDebuggerScope->GetConsoleIfExists() : nullptr;
-  if (console) {
-    console->ClearStorage();
+  if (mDebuggerScope) {
+    RefPtr<Console> console = mDebuggerScope->GetConsoleIfExists();
+    if (console) {
+      console->ClearStorage();
+    }
   }
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {

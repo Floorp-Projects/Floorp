@@ -1349,31 +1349,6 @@ class LMutateProto : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
     }
 };
 
-// Takes in an Object and a Value.
-class LInitProp : public LCallInstructionHelper<0, 1 + BOX_PIECES, 0>
-{
-  public:
-    LIR_HEADER(InitProp)
-
-    LInitProp(const LAllocation& object, const LBoxAllocation& value) {
-        setOperand(0, object);
-        setBoxOperand(ValueIndex, value);
-    }
-
-    static const size_t ValueIndex = 1;
-
-    const LAllocation* getObject() {
-        return getOperand(0);
-    }
-    const LAllocation* getValue() {
-        return getOperand(1);
-    }
-
-    MInitProp* mir() const {
-        return mir_->toInitProp();
-    }
-};
-
 class LInitPropGetterSetter : public LCallInstructionHelper<0, 2, 0>
 {
   public:
@@ -5012,6 +4987,16 @@ class LNullarySharedStub : public LCallInstructionHelper<BOX_PIECES, 0, 0>
     }
 };
 
+class LClassConstructor : public LCallInstructionHelper<1, 0, 0>
+{
+  public:
+    LIR_HEADER(ClassConstructor)
+
+    const MClassConstructor* mir() const {
+        return mir_->toClassConstructor();
+    }
+};
+
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:
@@ -8044,6 +8029,19 @@ class LIsArrayV : public LInstructionHelper<1, BOX_PIECES, 1>
     }
     MIsArray* mir() const {
         return mir_->toIsArray();
+    }
+};
+
+class LIsTypedArray : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsTypedArray);
+
+    explicit LIsTypedArray(const LAllocation& object) {
+        setOperand(0, object);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
     }
 };
 

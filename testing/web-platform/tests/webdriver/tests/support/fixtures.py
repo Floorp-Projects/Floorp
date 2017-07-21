@@ -1,9 +1,11 @@
 import json
 import os
 import urlparse
+import re
 
 import webdriver
 
+from tests.support.asserts import assert_error
 from tests.support.http_request import HTTPRequest
 from tests.support import merge_dictionaries
 
@@ -40,7 +42,7 @@ def _restore_windows(session):
 
     for window in _windows(session, exclude=[current_window]):
         session.window_handle = window
-        if len(session.window_handles) > 1:
+        if len(session.handles) > 1:
             session.close()
 
     session.window_handle = current_window
@@ -66,14 +68,14 @@ def _windows(session, exclude=None):
 
 def create_frame(session):
     """Create an `iframe` element in the current browsing context and insert it
-    into the document. Return an element reference."""
+    into the document. Return a reference to the newly-created element."""
     def create_frame():
         append = """
             var frame = document.createElement('iframe');
             document.body.appendChild(frame);
             return frame;
         """
-        response = session.execute_script(append)
+        return session.execute_script(append)
 
     return create_frame
 
@@ -178,3 +180,40 @@ def url(server_config):
         return urlparse.urlunsplit((protocol, host, path, query, fragment))
 
     return inner
+
+def create_dialog(session):
+    """Create a dialog (one of "alert", "prompt", or "confirm") and provide a
+    function to validate that the dialog has been "handled" (either accepted or
+    dismissed) by returning some value."""
+
+    def create_dialog(dialog_type, text=None, result_var=None):
+        assert dialog_type in ("alert", "confirm", "prompt"), (
+               "Invalid dialog type: '%s'" % dialog_type)
+
+        if text is None:
+            text = ""
+
+        assert isinstance(text, basestring), "`text` parameter must be a string"
+
+        if result_var is None:
+            result_var = "__WEBDRIVER"
+
+        assert re.search(r"^[_$a-z$][_$a-z0-9]*$", result_var, re.IGNORECASE), (
+            'The `result_var` must be a valid JavaScript identifier')
+
+        # Script completion and modal summoning are scheduled on two separate
+        # turns of the event loop to ensure that both occur regardless of how
+        # the user agent manages script execution.
+        spawn = """
+            var done = arguments[0];
+            setTimeout(done, 0);
+            setTimeout(function() {{
+                window.{0} = window.{1}("{2}");
+            }}, 0);
+        """.format(result_var, dialog_type, text)
+
+        session.send_session_command("POST",
+                                     "execute/async",
+                                     {"script": spawn, "args": []})
+
+    return create_dialog

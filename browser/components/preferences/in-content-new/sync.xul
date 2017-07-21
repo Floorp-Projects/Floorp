@@ -23,6 +23,12 @@
   <preference id="engine.passwords"
               name="services.sync.engine.passwords"
               type="bool"/>
+  <preference id="engine.addresses"
+              name="services.sync.engine.addresses"
+              type="bool"/>
+  <preference id="engine.creditcards"
+              name="services.sync.engine.creditcards"
+              type="bool"/>
 </preferences>
 
 <script type="application/javascript"
@@ -161,17 +167,23 @@
               <checkbox label="&engine.logins.label;"
                         accesskey="&engine.logins.accesskey;"
                         preference="engine.passwords"/>
-            </vbox>
-            <vbox align="start" flex="1">
               <checkbox label="&engine.history.label;"
                         accesskey="&engine.history.accesskey;"
                         preference="engine.history"/>
+            </vbox>
+            <vbox align="start" flex="1">
               <checkbox label="&engine.addons.label;"
                         accesskey="&engine.addons.accesskey;"
                         preference="engine.addons"/>
               <checkbox label="&engine.prefs.label;"
                         accesskey="&engine.prefs.accesskey;"
                         preference="engine.prefs"/>
+              <checkbox label="&engine.addresses.label;"
+                        accesskey="&engine.addresses.accesskey;"
+                        preference="engine.addresses"/>
+              <checkbox label="&engine.creditcards.label;"
+                        accesskey="&engine.creditcards.accesskey;"
+                        preference="engine.creditcards"/>
             </vbox>
             <spacer/>
           </hbox>

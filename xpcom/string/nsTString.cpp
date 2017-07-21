@@ -18,9 +18,7 @@ nsTAdoptingString_CharT::operator=(const self_type& str)
     // non-null.  Should we be able to assert that str is not void here?
     NS_ASSERTION(str.mData, "String with null mData?");
     Finalize();
-    mData = str.mData;
-    mLength = str.mLength;
-    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
+    SetData(str.mData, str.mLength, DataFlags::TERMINATED | DataFlags::OWNED);
 
     // Make str forget the buffer we just took ownership of.
     new (mutable_str) self_type();
@@ -39,9 +37,7 @@ nsTString_CharT::Rebind(const char_type* data, size_type length)
   // If we currently own a buffer, release it.
   Finalize();
 
-  mData = const_cast<char_type*>(data);
-  mLength = length;
-  mDataFlags = DataFlags::TERMINATED;
+  SetData(const_cast<char_type*>(data), length, DataFlags::TERMINATED);
   AssertValidDependentString();
 }
 

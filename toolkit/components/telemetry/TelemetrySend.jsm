@@ -45,13 +45,6 @@ const Utils = TelemetryUtils;
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetrySend::";
 
-const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_SERVER = PREF_BRANCH + "server";
-const PREF_UNIFIED = PREF_BRANCH + "unified";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
-const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_OVERRIDE_OFFICIAL_CHECK = PREF_BRANCH + "send.overrideOfficialCheck";
-
 const TOPIC_IDLE_DAILY = "idle-daily";
 // The following topics are notified when Firefox is closing
 // because the OS is shutting down.
@@ -60,7 +53,7 @@ const TOPIC_QUIT_APPLICATION_FORCED = "quit-application-forced";
 
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
-const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
+const IS_UNIFIED_TELEMETRY = Preferences.get(TelemetryUtils.Preferences.Unified, false);
 
 const PING_FORMAT_VERSION = 4;
 
@@ -606,13 +599,13 @@ var TelemetrySendImpl = {
   ],
 
   OBSERVED_PREFERENCES: [
-    PREF_ENABLED,
-    PREF_FHR_UPLOAD_ENABLED,
+    TelemetryUtils.Preferences.TelemetryEnabled,
+    TelemetryUtils.Preferences.FhrUploadEnabled,
   ],
 
   // Whether sending pings has been overridden.
   get _overrideOfficialCheck() {
-    return Preferences.get(PREF_OVERRIDE_OFFICIAL_CHECK, false);
+    return Preferences.get(TelemetryUtils.Preferences.OverrideOfficialCheck, false);
   },
 
   get _log() {
@@ -656,7 +649,7 @@ var TelemetrySendImpl = {
 
     Services.obs.addObserver(this, TOPIC_IDLE_DAILY);
 
-    this._server = Preferences.get(PREF_SERVER, undefined);
+    this._server = Preferences.get(TelemetryUtils.Preferences.Server, undefined);
 
     // Annotate crash reports so that crash pings are sent correctly and listen
     // to pref changes to adjust the annotations accordingly.
@@ -693,7 +686,7 @@ var TelemetrySendImpl = {
         const crs = cr.getService(Ci.nsICrashReporter);
 
         let clientId = ClientID.getCachedClientID();
-        let server = this._server || Preferences.get(PREF_SERVER, undefined);
+        let server = this._server || Preferences.get(TelemetryUtils.Preferences.Server, undefined);
 
         if (!this.sendingEnabled() || !TelemetryReportingPolicy.canUpload()) {
           // If we cannot send pings then clear the crash annotations
@@ -1237,7 +1230,7 @@ var TelemetrySendImpl = {
       if (ping && isDeletionPing(ping)) {
         return true;
       }
-      return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
+      return Preferences.get(TelemetryUtils.Preferences.FhrUploadEnabled, false);
     }
 
     // Without unified Telemetry, the Telemetry enabled pref controls ping sending.

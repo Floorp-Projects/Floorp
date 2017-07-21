@@ -155,7 +155,14 @@ ATTAcomm.prototype = {
         }.bind(this));
       } else {
         // we don't know this API for this test
-        this.setupManualTest("Unknown AT API: " + API);
+        // but we ARE talking to an ATTA; skip this test
+        this.dumpLog();
+        if (window.opener && window.opener.completion_callback) {
+          window.opener.completion_callback([], { status: 3, message: "No steps for AT API " + API } );
+        } else {
+          done();
+        }
+        // this.setupManualTest("Unknown AT API: " + API);
       }
     }.bind(this))
     .catch(function(res) {
@@ -596,11 +603,11 @@ ATTAcomm.prototype = {
             innerResolve(true);
           })
           .then(function(res) {
-            var theLog = "\nSUBTEST SKIPPED: No assertions for API " + API + "\n";
+            var theLog = "\nSUBTEST NOTRUN: No assertions for API " + API + "\n";
             if (theLog !== "") {
               ANNO.saveLog("runTest", theLog, subtest);
             }
-            assert_false(true, "SKIPPED: No assertion for API " + API);
+            assert_false(true, "NOTRUN: No assertion for API " + API);
           });
         }, subtest.name );
       }
@@ -766,7 +773,7 @@ ATTAcomm.prototype = {
   sendStopListen: function() {
     'use strict';
 
-    return this._fetch("POST", this.ATTAuri + "/stoplisten", null, null)
+    return this._fetch("POST", this.ATTAuri + "/stoplisten", null, null);
   },
 
   // sendTest - send test data to an ATTA and wait for a response

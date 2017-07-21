@@ -853,7 +853,3 @@ is simply hidden from the Activity Stream panel. -->
 
 <!ENTITY activity_stream_welcome_title "Welcome to your Highlights">
 <!ENTITY activity_stream_welcome_content1 "&brandShortName; now creates highlights of things you\'ve discovered on the web so you can find your way back to great articles, videos, bookmarks, and other pages.">
-
-<!ENTITY private_tab_panel_title "Private-Browsing + Tracking Protection">
-<!ENTITY private_tab_panel_description "Firefox will prevent you from being tracked and won\'t remember any history, but download files and new bookmarks will still be saved on your devices." >
-<!ENTITY private_tab_learn_more "Want to learn more?">

@@ -4,7 +4,7 @@ function xhr(url) {
       var request = new XMLHttpRequest();
       request.addEventListener(
         'error',
-        function(event) { reject(event); });
+        function() { reject(new Error()); });
       request.addEventListener(
         'load',
         function(event) { resolve(request.response); });
@@ -21,7 +21,7 @@ function load_image(url, cross_origin) {
         resolve();
       };
       img.onerror = function() {
-        reject();
+        reject(new Error());
       };
       if (cross_origin != '') {
         img.crossOrigin = cross_origin;

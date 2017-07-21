@@ -30,11 +30,6 @@
 #include "nsIPresentationNetworkHelper.h"
 #endif // MOZ_WIDGET_ANDROID
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsINetworkInterface.h"
-#include "nsINetworkManager.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::services;
@@ -650,50 +645,7 @@ PresentationControllingInfo::Shutdown(nsresult aReason)
 nsresult
 PresentationControllingInfo::GetAddress()
 {
-#if defined(MOZ_WIDGET_GONK)
-  nsCOMPtr<nsINetworkManager> networkManager =
-    do_GetService("@mozilla.org/network/manager;1");
-  if (NS_WARN_IF(!networkManager)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsINetworkInfo> activeNetworkInfo;
-  networkManager->GetActiveNetworkInfo(getter_AddRefs(activeNetworkInfo));
-  if (NS_WARN_IF(!activeNetworkInfo)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  char16_t** ips = nullptr;
-  uint32_t* prefixes = nullptr;
-  uint32_t count = 0;
-  activeNetworkInfo->GetAddresses(&ips, &prefixes, &count);
-  if (NS_WARN_IF(!count)) {
-    NS_Free(prefixes);
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, ips);
-    return NS_ERROR_FAILURE;
-  }
-
-  // TODO bug 1228504 Take all IP addresses in PresentationChannelDescription
-  // into account. And at the first stage Presentation API is only exposed on
-  // Firefox OS where the first IP appears enough for most scenarios.
-
-  nsAutoString ip;
-  ip.Assign(ips[0]);
-
-  // On Android platform, the IP address is retrieved from a callback function.
-  // To make consistent code sequence, following function call is dispatched
-  // into main thread instead of calling it directly.
-  NS_DispatchToMainThread(
-    NewRunnableMethod<nsCString>(
-      "dom::PresentationControllingInfo::OnGetAddress",
-      this,
-      &PresentationControllingInfo::OnGetAddress,
-      NS_ConvertUTF16toUTF8(ip)));
-
-  NS_Free(prefixes);
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, ips);
-
-#elif defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
   RefPtr<PresentationNetworkHelper> networkHelper =
     new PresentationNetworkHelper(this,
                                   &PresentationControllingInfo::OnGetAddress);

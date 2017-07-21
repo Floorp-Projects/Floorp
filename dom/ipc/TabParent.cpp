@@ -2506,6 +2506,8 @@ TabParent::SetRenderFrame(PRenderFrameParent* aRFParent)
     return false;
   }
 
+  frameLoader->MaybeShowFrame();
+
   uint64_t layersId = renderFrame->GetLayersId();
   AddTabParentToTable(layersId, this);
 

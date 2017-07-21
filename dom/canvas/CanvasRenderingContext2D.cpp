@@ -145,10 +145,6 @@ using mozilla::gl::GLContextProvider;
 #include "gfxWindowsPlatform.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "mozilla/layers/ShadowLayers.h"
-#endif
-
 // windows.h (included by chromium code) defines this, in its infinite wisdom
 #undef DrawText
 

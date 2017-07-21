@@ -176,6 +176,7 @@ class MarionetteProtocol(Protocol):
         if socket_timeout:
             self.marionette.timeout.script = socket_timeout / 2
 
+        self.marionette.switch_to_window(self.runner_handle)
         while True:
             try:
                 self.marionette.execute_async_script("")

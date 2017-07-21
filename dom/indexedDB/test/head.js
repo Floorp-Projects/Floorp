@@ -76,20 +76,34 @@ function dismissNotification(popup)
   });
 }
 
-function setFinishedCallback(callback, win)
+function waitForMessage(aMessage, browser)
 {
-  if (!win) {
-    win = window;
-  }
-  ContentTask.spawn(win.gBrowser.selectedBrowser, null, async function() {
-    return new Promise(resolve => {
-      content.wrappedJSObject.testFinishedCallback = (result, exception) => {
-        info("got finished callback");
-        resolve({result, exception});
-      };
+  return new Promise((resolve, reject) => {
+    /* eslint-disable no-undef */
+    function contentScript() {
+      addEventListener("message", function(event) {
+        sendAsyncMessage("testLocal:message",
+          {message: event.data});
+      }, {once: true}, true);
+    }
+    /* eslint-enable no-undef */
+
+    let script = "data:,(" + contentScript.toString() + ")();";
+
+    let mm = browser.selectedBrowser.messageManager;
+
+    mm.addMessageListener("testLocal:message", function listener(msg) {
+      mm.removeMessageListener("testLocal:message", listener);
+      mm.removeDelayedFrameScript(script);
+      is(msg.data.message, aMessage, "received " + aMessage);
+      if (msg.data.message == aMessage) {
+        resolve();
+      } else {
+        reject();
+      }
     });
-  }).then(({result, exception}) => {
-    callback(result, exception);
+
+    mm.loadFrameScript(script, true);
   });
 }
 

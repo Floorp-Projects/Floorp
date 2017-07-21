@@ -1,3 +1,22 @@
+Overview of changes leading to 1.4.7
+Tuesday, July 18, 2017
+====================================
+
+- Multiple Indic, Tibetan, and Cham fixes.
+- CoreText: Allow disabling kerning.
+- Adjust Arabic feature order again.
+- Misc build fixes.
+
+
+Overview of changes leading to 1.4.6
+Sunday, April 23, 2017
+====================================
+
+- Graphite2: Fix RTL positioning issue.
+- Backlist GDEF of more versions of Padauk and Tahoma.
+- New, experimental, cmake alternative build system.
+
+
 Overview of changes leading to 1.4.5
 Friday, March 10, 2017
 ====================================

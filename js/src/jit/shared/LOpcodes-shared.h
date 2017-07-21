@@ -80,7 +80,6 @@
     _(InitElem)                     \
     _(InitElemGetterSetter)         \
     _(MutateProto)                  \
-    _(InitProp)                     \
     _(InitPropGetterSetter)         \
     _(CheckOverRecursed)            \
     _(DefVar)                       \
@@ -240,6 +239,7 @@
     _(BinarySharedStub)             \
     _(UnarySharedStub)              \
     _(NullarySharedStub)            \
+    _(ClassConstructor)             \
     _(Lambda)                       \
     _(LambdaArrow)                  \
     _(LambdaForSingleton)           \
@@ -392,6 +392,7 @@
     _(IsConstructor)                \
     _(IsArrayO)                     \
     _(IsArrayV)                     \
+    _(IsTypedArray)                 \
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \

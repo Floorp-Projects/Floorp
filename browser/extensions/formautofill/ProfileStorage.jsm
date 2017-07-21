@@ -84,7 +84,10 @@
  *
  * Records may also have a _sync field, which consists of:
  * {
- *   changeCounter, // integer - the number of changes made since a last sync.
+ *   changeCounter,    // integer - the number of changes made since the last
+ *                     // sync.
+ *   lastSyncedFields, // object - hashes of the original values for fields
+ *                     // changed since the last sync.
  * }
  *
  * Records with such a field have previously been synced. Records without such
@@ -129,6 +132,9 @@ XPCOMUtils.defineLazyGetter(this, "REGION_NAMES", function() {
   }
   return regionNames;
 });
+
+const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
+                                          "nsICryptoHash", "initWithString");
 
 const PROFILE_JSON_FILE_NAME = "autofill-profiles.json";
 
@@ -193,6 +199,17 @@ const INTERNAL_FIELDS = [
   "timesUsed",
 ];
 
+function sha512(string) {
+  if (string == null) {
+    return null;
+  }
+  let encoder = new TextEncoder("utf-8");
+  let bytes = encoder.encode(string);
+  let hash = new CryptoHash("sha512");
+  hash.update(bytes, bytes.length);
+  return hash.finish(/* base64 */ true);
+}
+
 /**
  * Class that manipulates records in a specified collection.
  *
@@ -241,6 +258,16 @@ class AutofillRecords {
     return this._schemaVersion;
   }
 
+  // Ensures that we don't try to apply synced records with newer schema
+  // versions. This is a temporary measure to ensure we don't accidentally
+  // bump the schema version without a syncing strategy in place (bug 1377204).
+  _ensureMatchingVersion(record) {
+    if (record.version != this.version) {
+      throw new Error(`Got unknown record version ${
+        record.version}; want ${this.version}`);
+    }
+  }
+
   /**
    * Adds a new record.
    *
@@ -268,16 +295,12 @@ class AutofillRecords {
           throw new Error(`Record ${record.guid} already exists`);
         }
       }
-      let recordToSave = Object.assign({}, record, {
-        // `timeLastUsed` and `timesUsed` are always local.
-        timeLastUsed: 0,
-        timesUsed: 0,
-      });
+      let recordToSave = this._clone(record);
       return this._saveRecord(recordToSave, {sourceSync});
     }
 
     if (record.deleted) {
-      return this._saveRecord(record, {sourceSync});
+      return this._saveRecord(record);
     }
 
     let recordToSave = this._clone(record);
@@ -312,6 +335,7 @@ class AutofillRecords {
         deleted: true,
       };
     } else {
+      this._ensureMatchingVersion(record);
       recordToSave = record;
     }
 
@@ -357,12 +381,18 @@ class AutofillRecords {
 
     let recordToUpdate = this._clone(record);
     this._normalizeRecord(recordToUpdate);
+
     for (let field of this.VALID_FIELDS) {
-      if (recordToUpdate[field] !== undefined) {
-        recordFound[field] = recordToUpdate[field];
+      let oldValue = recordFound[field];
+      let newValue = recordToUpdate[field];
+
+      if (newValue != null) {
+        recordFound[field] = newValue;
       } else {
         delete recordFound[field];
       }
+
+      this._maybeStoreLastSyncedField(recordFound, field, oldValue);
     }
 
     recordFound.timeLastModified = Date.now();
@@ -380,7 +410,8 @@ class AutofillRecords {
 
   /**
    * Notifies the storage of the use of the specified record, so we can update
-   * the metadata accordingly.
+   * the metadata accordingly. This does not bump the Sync change counter, since
+   * we don't sync `timesUsed` or `timeLastUsed`.
    *
    * @param  {string} guid
    *         Indicates which record to be notified.
@@ -458,13 +489,14 @@ class AutofillRecords {
    */
   get(guid, {rawData = false} = {}) {
     this.log.debug("get:", guid, rawData);
+
     let recordFound = this._findByGUID(guid);
     if (!recordFound) {
       return null;
     }
 
     // The record is cloned to avoid accidental modifications from outside.
-    let clonedRecord = this._clone(recordFound, {rawData});
+    let clonedRecord = this._clone(recordFound);
     if (rawData) {
       this._stripComputedFields(clonedRecord);
     } else {
@@ -488,7 +520,7 @@ class AutofillRecords {
 
     let records = this._store.data[this._collectionName].filter(r => !r.deleted || includeDeleted);
     // Records are cloned to avoid accidental modifications from outside.
-    let clonedRecords = records.map(r => this._clone(r, {rawData}));
+    let clonedRecords = records.map(r => this._clone(r));
     clonedRecords.forEach(record => {
       if (rawData) {
         this._stripComputedFields(record);
@@ -529,6 +561,267 @@ class AutofillRecords {
   /**
    * Functions intended to be used in the support of Sync.
    */
+
+  /**
+   * Stores a hash of the last synced value for a field in a locally updated
+   * record. We use this value to rebuild the shared parent, or base, when
+   * reconciling incoming records that may have changed on another device.
+   *
+   * Storing the hash of the values that we last wrote to the Sync server lets
+   * us determine if a remote change conflicts with a local change. If the
+   * hashes for the base, current local value, and remote value all differ, we
+   * have a conflict.
+   *
+   * These fields are not themselves synced, and will be removed locally as
+   * soon as we have successfully written the record to the Sync server - so
+   * it is expected they will not remain for long, as changes which cause a
+   * last synced field to be written will itself cause a sync.
+   *
+   * We also skip this for updates made by Sync, for internal fields, for
+   * records that haven't been uploaded yet, and for fields which have already
+   * been changed since the last sync.
+   *
+   * @param   {Object} record
+   *          The updated local record.
+   * @param   {string} field
+   *          The field name.
+   * @param   {string} lastSyncedValue
+   *          The last synced field value.
+   */
+  _maybeStoreLastSyncedField(record, field, lastSyncedValue) {
+    let sync = this._getSyncMetaData(record);
+    if (!sync) {
+      // The record hasn't been uploaded yet, so we can't end up with merge
+      // conflicts.
+      return;
+    }
+    let alreadyChanged = field in sync.lastSyncedFields;
+    if (alreadyChanged) {
+      // This field was already changed multiple times since the last sync.
+      return;
+    }
+    let newValue = record[field];
+    if (lastSyncedValue != newValue) {
+      sync.lastSyncedFields[field] = sha512(lastSyncedValue);
+    }
+  }
+
+  /**
+   * Attempts a three-way merge between a changed local record, an incoming
+   * remote record, and the shared parent that we synthesize from the last
+   * synced fields - see _maybeStoreLastSyncedField.
+   *
+   * @param   {Object} localRecord
+   *          The changed local record, currently in storage.
+   * @param   {Object} remoteRecord
+   *          The remote record.
+   * @returns {Object|null}
+   *          The merged record, or `null` if there are conflicts and the
+   *          records can't be merged.
+   */
+  _mergeSyncedRecords(localRecord, remoteRecord) {
+    let sync = this._getSyncMetaData(localRecord, true);
+
+    // Copy all internal fields from the remote record. We'll update their
+    // values in `_replaceRecordAt`.
+    let mergedRecord = {};
+    for (let field of INTERNAL_FIELDS) {
+      if (remoteRecord[field] != null) {
+        mergedRecord[field] = remoteRecord[field];
+      }
+    }
+
+    for (let field of this.VALID_FIELDS) {
+      let isLocalSame = false;
+      let isRemoteSame = false;
+      if (field in sync.lastSyncedFields) {
+        // If the field has changed since the last sync, compare hashes to
+        // determine if the local and remote values are different. Hashing is
+        // expensive, but we don't expect this to happen frequently.
+        let lastSyncedValue = sync.lastSyncedFields[field];
+        isLocalSame = lastSyncedValue == sha512(localRecord[field]);
+        isRemoteSame = lastSyncedValue == sha512(remoteRecord[field]);
+      } else {
+        // Otherwise, if the field hasn't changed since the last sync, we know
+        // it's the same locally.
+        isLocalSame = true;
+        isRemoteSame = localRecord[field] == remoteRecord[field];
+      }
+
+      let value;
+      if (isLocalSame && isRemoteSame) {
+        // Local and remote are the same; doesn't matter which one we pick.
+        value = localRecord[field];
+      } else if (isLocalSame && !isRemoteSame) {
+        value = remoteRecord[field];
+      } else if (!isLocalSame && isRemoteSame) {
+        // We don't need to bump the change counter when taking the local
+        // change, because the counter must already be > 0 if we're attempting
+        // a three-way merge.
+        value = localRecord[field];
+      } else if (localRecord[field] == remoteRecord[field]) {
+        // Shared parent doesn't match either local or remote, but the values
+        // are identical, so there's no conflict.
+        value = localRecord[field];
+      } else {
+        // Both local and remote changed to different values. We'll need to fork
+        // the local record to resolve the conflict.
+        return null;
+      }
+
+      if (value != null) {
+        mergedRecord[field] = value;
+      }
+    }
+
+    return mergedRecord;
+  }
+
+  /**
+   * Replaces a local record with a remote or merged record, copying internal
+   * fields and Sync metadata.
+   *
+   * @param   {number} index
+   * @param   {Object} remoteRecord
+   * @param   {boolean} [options.keepSyncMetadata = false]
+   *          Should we copy Sync metadata? This is true if `remoteRecord` is a
+   *          merged record with local changes that we need to upload. Passing
+   *          `keepSyncMetadata` retains the record's change counter and
+   *          last synced fields, so that we don't clobber the local change if
+   *          the sync is interrupted after the record is merged, but before
+   *          it's uploaded.
+   */
+  _replaceRecordAt(index, remoteRecord, {keepSyncMetadata = false} = {}) {
+    let localRecord = this._store.data[this._collectionName][index];
+    let newRecord = this._clone(remoteRecord);
+
+    this._stripComputedFields(newRecord);
+
+    this._store.data[this._collectionName][index] = newRecord;
+
+    if (keepSyncMetadata) {
+      // It's safe to move the Sync metadata from the old record to the new
+      // record, since we always clone records when we return them, and we
+      // never hand out references to the metadata object via public methods.
+      newRecord._sync = localRecord._sync;
+    } else {
+      // As a side effect, `_getSyncMetaData` marks the record as syncing if the
+      // existing `localRecord` is a dupe of `remoteRecord`, and we're replacing
+      // local with remote.
+      let sync = this._getSyncMetaData(newRecord, true);
+      sync.changeCounter = 0;
+    }
+
+    if (!newRecord.timeCreated ||
+        localRecord.timeCreated < newRecord.timeCreated) {
+      newRecord.timeCreated = localRecord.timeCreated;
+    }
+
+    if (!newRecord.timeLastModified ||
+        localRecord.timeLastModified > newRecord.timeLastModified) {
+      newRecord.timeLastModified = localRecord.timeLastModified;
+    }
+
+    // Copy local-only fields from the existing local record.
+    for (let field of ["timeLastUsed", "timesUsed"]) {
+      if (localRecord[field] != null) {
+        newRecord[field] = localRecord[field];
+      }
+    }
+
+    this._computeFields(newRecord);
+  }
+
+  /**
+   * Clones a local record, giving the clone a new GUID and Sync metadata. The
+   * original record remains unchanged in storage.
+   *
+   * @param   {Object} localRecord
+   *          The local record.
+   * @returns {string}
+   *          A clone of the local record with a new GUID.
+   */
+  _forkLocalRecord(localRecord) {
+    let forkedLocalRecord = this._clone(localRecord);
+
+    this._stripComputedFields(forkedLocalRecord);
+
+    forkedLocalRecord.guid = this._generateGUID();
+    this._store.data[this._collectionName].push(forkedLocalRecord);
+
+    // Give the record fresh Sync metadata and bump its change counter as a
+    // side effect. This also excludes the forked record from de-duping on the
+    // next sync, if the current sync is interrupted before the record can be
+    // uploaded.
+    this._getSyncMetaData(forkedLocalRecord, true);
+
+    this._computeFields(forkedLocalRecord);
+
+    return forkedLocalRecord;
+  }
+
+  /**
+   * Reconciles an incoming remote record into the matching local record. This
+   * method is only used by Sync; other callers should use `merge`.
+   *
+   * @param   {Object} remoteRecord
+   *          The incoming record. `remoteRecord` must not be a tombstone, and
+   *          must have a matching local record with the same GUID. Use
+   *          `add` to insert remote records that don't exist locally, and
+   *          `remove` to apply remote tombstones.
+   * @returns {Object}
+   *          A `{forkedGUID}` tuple. `forkedGUID` is `null` if the merge
+   *          succeeded without conflicts, or a new GUID referencing the
+   *          existing locally modified record if the conflicts could not be
+   *          resolved.
+   */
+  reconcile(remoteRecord) {
+    this._ensureMatchingVersion(remoteRecord);
+    if (remoteRecord.deleted) {
+      throw new Error(`Can't reconcile tombstone ${remoteRecord.guid}`);
+    }
+
+    let localIndex = this._findIndexByGUID(remoteRecord.guid);
+    if (localIndex < 0) {
+      throw new Error(`Record ${remoteRecord.guid} not found`);
+    }
+
+    let localRecord = this._store.data[this._collectionName][localIndex];
+    let sync = this._getSyncMetaData(localRecord, true);
+
+    let forkedGUID = null;
+
+    if (sync.changeCounter === 0) {
+      // Local not modified. Replace local with remote.
+      this._replaceRecordAt(localIndex, remoteRecord, {
+        keepSyncMetadata: false,
+      });
+    } else {
+      let mergedRecord = this._mergeSyncedRecords(localRecord, remoteRecord);
+      if (mergedRecord) {
+        // Local and remote modified, but we were able to merge. Replace the
+        // local record with the merged record.
+        this._replaceRecordAt(localIndex, mergedRecord, {
+          keepSyncMetadata: true,
+        });
+      } else {
+        // Merge conflict. Fork the local record, then replace the original
+        // with the merged record.
+        let forkedLocalRecord = this._forkLocalRecord(localRecord);
+        forkedGUID = forkedLocalRecord.guid;
+        this._replaceRecordAt(localIndex, remoteRecord, {
+          keepSyncMetadata: false,
+        });
+      }
+    }
+
+    this._store.saveSoon();
+    Services.obs.notifyObservers({wrappedJSObject: {
+      sourceSync: true,
+    }}, "formautofill-storage-changed", "reconcile");
+
+    return {forkedGUID};
+  }
 
   _removeSyncedRecord(guid) {
     let index = this._findIndexByGUID(guid, {includeDeleted: true});
@@ -628,6 +921,11 @@ class AutofillRecords {
       }
       let sync = this._getSyncMetaData(recordFound, true);
       sync.changeCounter = Math.max(0, sync.changeCounter - counter);
+      if (sync.changeCounter === 0) {
+        // Clear the shared parent fields once we've uploaded all pending
+        // changes, since the server now matches what we have locally.
+        sync.lastSyncedFields = {};
+      }
     }
     this._store.saveSoon();
   }
@@ -690,6 +988,7 @@ class AutofillRecords {
       // create default metadata and indicate we need to save.
       record._sync = {
         changeCounter: 1,
+        lastSyncedFields: {},
       };
       this._store.saveSoon();
     }
@@ -697,17 +996,86 @@ class AutofillRecords {
   }
 
   /**
+   * Finds a local record with matching common fields and a different GUID.
+   * Sync uses this method to find and update unsynced local records with
+   * fields that match incoming remote records. This avoids creating
+   * duplicate profiles with the same information.
+   *
+   * @param   {Object} record
+   *          The remote record.
+   * @returns {string|null}
+   *          The GUID of the matching local record, or `null` if no records
+   *          match.
+   */
+  findDuplicateGUID(record) {
+    if (!record.guid) {
+      throw new Error("Record missing GUID");
+    }
+    this._ensureMatchingVersion(record);
+    if (record.deleted) {
+      // Tombstones don't carry enough info to de-dupe, and we should have
+      // handled them separately when applying the record.
+      throw new Error("Tombstones can't have duplicates");
+    }
+    let records = this._store.data[this._collectionName];
+    for (let profile of records) {
+      if (profile.deleted) {
+        continue;
+      }
+      if (profile.guid == record.guid) {
+        throw new Error(`Record ${record.guid} already exists`);
+      }
+      if (this._getSyncMetaData(profile)) {
+        // This record has already been uploaded, so it can't be a dupe of
+        // another incoming item.
+        continue;
+      }
+      let keys = new Set(Object.keys(record));
+      for (let key of Object.keys(profile)) {
+        keys.add(key);
+      }
+      // Ignore internal and computed fields when matching records. Internal
+      // fields are synced, but almost certainly have different values than the
+      // local record, and we'll update them in `reconcile`. Computed fields
+      // aren't synced at all.
+      for (let field of INTERNAL_FIELDS) {
+        keys.delete(field);
+      }
+      for (let field of this.VALID_COMPUTED_FIELDS) {
+        keys.delete(field);
+      }
+      if (!keys.size) {
+        // This shouldn't ever happen; a valid record will always have fields
+        // that aren't computed or internal. Sync can't do anything about that,
+        // so we ignore the dubious local record instead of throwing.
+        continue;
+      }
+      let same = true;
+      for (let key of keys) {
+        // For now, we ensure that both (or neither) records have the field
+        // with matching values. This doesn't account for the version yet
+        // (bug 1377204).
+        same = key in profile == key in record && profile[key] == record[key];
+        if (!same) {
+          break;
+        }
+      }
+      if (same) {
+        return profile.guid;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Internal helper functions.
    */
 
-  _clone(record, {rawData = false} = {}) {
-    let result = Object.assign({}, record);
-    if (rawData) {
-      return result;
-    }
-    for (let key of Object.keys(result)) {
-      if (key.startsWith("_")) {
-        delete result[key];
+  _clone(record) {
+    let result = {};
+    for (let key in record) {
+      if (!key.startsWith("_")) {
+        result[key] = record[key];
       }
     }
     return result;
@@ -758,6 +1126,12 @@ class AutofillRecords {
         throw new Error(`"${key}" contains invalid data type.`);
       }
     }
+  }
+
+  // A test-only helper.
+  _nukeAllRecords() {
+    this._store.data[this._collectionName] = [];
+    // test-only, so there's no good reason to request a save!
   }
 
   _stripComputedFields(record) {

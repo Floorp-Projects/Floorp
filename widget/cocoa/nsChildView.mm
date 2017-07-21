@@ -5391,7 +5391,10 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   aOutGeckoEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_PEN;
   aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);
   aOutGeckoEvent->tiltY = lround([aPointerEvent tilt].y * 90);
-
+  aOutGeckoEvent->tangentialPressure = [aPointerEvent tangentialPressure];
+  // Make sure the twist value is in the range of 0-359.
+  int32_t twist = fmod([aPointerEvent rotation], 360);
+  aOutGeckoEvent->twist = twist >= 0 ? twist : twist + 360;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 

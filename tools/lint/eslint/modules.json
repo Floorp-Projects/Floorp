@@ -77,6 +77,7 @@
   "Finder.jsm": ["Finder", "GetClipboardSearchString"],
   "forms.js": ["FormEngine", "FormRec", "FormValidator"],
   "forms.jsm": ["FormData"],
+  "FormAutofillSync.jsm": ["AddressesEngine", "CreditCardsEngine"],
   "frame.js": ["Collector", "Runner", "events", "runTestFile", "log", "timers", "persisted", "shutdownApplication"],
   "FrameScriptManager.jsm": ["getNewLoaderID"],
   "fxa_utils.js": ["initializeIdentityWithTokenServerResponse"],

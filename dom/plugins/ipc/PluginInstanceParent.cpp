@@ -201,12 +201,8 @@ NPError
 PluginInstanceParent::Destroy()
 {
     NPError retval;
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_DESTROY_MS>
-            timer(Module()->GetHistogramKey());
-        if (!CallNPP_Destroy(&retval)) {
-            retval = NPERR_GENERIC_ERROR;
-        }
+    if (!CallNPP_Destroy(&retval)) {
+        retval = NPERR_GENERIC_ERROR;
     }
 
 #if defined(OS_WIN)
@@ -1746,9 +1742,6 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
                                        NullableString(stream->headers))) {
         return NPERR_GENERIC_ERROR;
     }
-
-    Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_STREAM_INIT_MS>
-        timer(Module()->GetHistogramKey());
 
     NPError err = NPERR_NO_ERROR;
     bs->SetAlive();

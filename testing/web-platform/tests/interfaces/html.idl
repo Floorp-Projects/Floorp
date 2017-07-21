@@ -136,7 +136,6 @@ interface HTMLElement : Element {
   [CEReactions] attribute DOMString accessKey;
   readonly attribute DOMString accessKeyLabel;
   [CEReactions] attribute boolean draggable;
-  [CEReactions] attribute HTMLMenuElement? contextMenu;
   [CEReactions] attribute boolean spellcheck;
   void forceSpellCheck();
 
@@ -956,30 +955,7 @@ interface HTMLDetailsElement : HTMLElement {
 };
 
 interface HTMLMenuElement : HTMLElement {
-           attribute DOMString type;
-           attribute DOMString label;
-
   // also has obsolete members
-};
-
-interface HTMLMenuItemElement : HTMLElement {
-           attribute DOMString type;
-           attribute DOMString label;
-           attribute DOMString icon;
-           attribute boolean disabled;
-           attribute boolean checked;
-           attribute DOMString radiogroup;
-           attribute boolean default;
-  readonly attribute HTMLElement? command;
-};
-
-[Constructor(DOMString type, optional RelatedEventInit eventInitDict)]
-interface RelatedEvent : Event {
-  readonly attribute EventTarget? relatedTarget;
-};
-
-dictionary RelatedEventInit : EventInit {
-  EventTarget? relatedTarget;
 };
 
 interface HTMLDialogElement : HTMLElement {
@@ -1548,67 +1524,67 @@ typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
 
 [NoInterfaceObject]
 interface GlobalEventHandlers {
-           attribute EventHandler onabort;
-           attribute EventHandler onauxclick;
-           attribute EventHandler onblur;
-           attribute EventHandler oncancel;
-           attribute EventHandler oncanplay;
-           attribute EventHandler oncanplaythrough;
-           attribute EventHandler onchange;
-           attribute EventHandler onclick;
-           attribute EventHandler onclose;
-           attribute EventHandler oncontextmenu;
-           attribute EventHandler oncuechange;
-           attribute EventHandler ondblclick;
-           attribute EventHandler ondrag;
-           attribute EventHandler ondragend;
-           attribute EventHandler ondragenter;
-           attribute EventHandler ondragexit;
-           attribute EventHandler ondragleave;
-           attribute EventHandler ondragover;
-           attribute EventHandler ondragstart;
-           attribute EventHandler ondrop;
-           attribute EventHandler ondurationchange;
-           attribute EventHandler onemptied;
-           attribute EventHandler onended;
-           attribute OnErrorEventHandler onerror;
-           attribute EventHandler onfocus;
-           attribute EventHandler oninput;
-           attribute EventHandler oninvalid;
-           attribute EventHandler onkeydown;
-           attribute EventHandler onkeypress;
-           attribute EventHandler onkeyup;
-           attribute EventHandler onload;
-           attribute EventHandler onloadeddata;
-           attribute EventHandler onloadedmetadata;
-           attribute EventHandler onloadstart;
-           attribute EventHandler onmousedown;
+  attribute EventHandler onabort;
+  attribute EventHandler onauxclick;
+  attribute EventHandler onblur;
+  attribute EventHandler oncancel;
+  attribute EventHandler oncanplay;
+  attribute EventHandler oncanplaythrough;
+  attribute EventHandler onchange;
+  attribute EventHandler onclick;
+  attribute EventHandler onclose;
+  attribute EventHandler oncontextmenu;
+  attribute EventHandler oncuechange;
+  attribute EventHandler ondblclick;
+  attribute EventHandler ondrag;
+  attribute EventHandler ondragend;
+  attribute EventHandler ondragenter;
+  attribute EventHandler ondragexit;
+  attribute EventHandler ondragleave;
+  attribute EventHandler ondragover;
+  attribute EventHandler ondragstart;
+  attribute EventHandler ondrop;
+  attribute EventHandler ondurationchange;
+  attribute EventHandler onemptied;
+  attribute EventHandler onended;
+  attribute OnErrorEventHandler onerror;
+  attribute EventHandler onfocus;
+  attribute EventHandler oninput;
+  attribute EventHandler oninvalid;
+  attribute EventHandler onkeydown;
+  attribute EventHandler onkeypress;
+  attribute EventHandler onkeyup;
+  attribute EventHandler onload;
+  attribute EventHandler onloadeddata;
+  attribute EventHandler onloadedmetadata;
+  attribute EventHandler onloadend;
+  attribute EventHandler onloadstart;
+  attribute EventHandler onmousedown;
   [LenientThis] attribute EventHandler onmouseenter;
   [LenientThis] attribute EventHandler onmouseleave;
-           attribute EventHandler onmousemove;
-           attribute EventHandler onmouseout;
-           attribute EventHandler onmouseover;
-           attribute EventHandler onmouseup;
-           attribute EventHandler onmousewheel;
-           attribute EventHandler onpause;
-           attribute EventHandler onplay;
-           attribute EventHandler onplaying;
-           attribute EventHandler onprogress;
-           attribute EventHandler onratechange;
-           attribute EventHandler onreset;
-           attribute EventHandler onresize;
-           attribute EventHandler onscroll;
-           attribute EventHandler onseeked;
-           attribute EventHandler onseeking;
-           attribute EventHandler onselect;
-           attribute EventHandler onshow;
-           attribute EventHandler onstalled;
-           attribute EventHandler onsubmit;
-           attribute EventHandler onsuspend;
-           attribute EventHandler ontimeupdate;
-           attribute EventHandler ontoggle;
-           attribute EventHandler onvolumechange;
-           attribute EventHandler onwaiting;
+  attribute EventHandler onmousemove;
+  attribute EventHandler onmouseout;
+  attribute EventHandler onmouseover;
+  attribute EventHandler onmouseup;
+  attribute EventHandler onwheel;
+  attribute EventHandler onpause;
+  attribute EventHandler onplay;
+  attribute EventHandler onplaying;
+  attribute EventHandler onprogress;
+  attribute EventHandler onratechange;
+  attribute EventHandler onreset;
+  attribute EventHandler onresize;
+  attribute EventHandler onscroll;
+  attribute EventHandler onseeked;
+  attribute EventHandler onseeking;
+  attribute EventHandler onselect;
+  attribute EventHandler onstalled;
+  attribute EventHandler onsubmit;
+  attribute EventHandler onsuspend;
+  attribute EventHandler ontimeupdate;
+  attribute EventHandler ontoggle;
+  attribute EventHandler onvolumechange;
+  attribute EventHandler onwaiting;
 };
 
 [NoInterfaceObject]

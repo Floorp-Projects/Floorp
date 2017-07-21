@@ -19,7 +19,6 @@ ANDROID_ASSETS_DIRS += ['assets']
 
 TEST_HARNESS_FILES.testing.mochitest += [
     'robocop.ini',
-    'robocop_autophone.ini',
     'robocop_autophone2.ini',
 ]
 TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
