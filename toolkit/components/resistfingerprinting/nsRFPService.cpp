@@ -138,7 +138,19 @@ nsRFPService::UpdatePref()
     // the time of initialization.
     if (!mInitialTZValue.IsEmpty()) {
       nsAutoCString tzValue = NS_LITERAL_CSTRING("TZ=") + mInitialTZValue;
-      PR_SetEnv(tzValue.get());
+      static char* tz = nullptr;
+
+      // If the tz has been set before, we free it first since it will be allocated
+      // a new value later.
+      if (tz) {
+        free(tz);
+      }
+      // PR_SetEnv() needs the input string been leaked intentionally, so
+      // we copy it here.
+      tz = ToNewCString(tzValue);
+      if (tz) {
+        PR_SetEnv(tz);
+      }
     } else {
 #if defined(XP_LINUX) || defined (XP_MACOSX)
       // For POSIX like system, we reset the TZ to the /etc/localtime, which is the
