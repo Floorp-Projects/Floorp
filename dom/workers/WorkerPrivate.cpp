@@ -1628,7 +1628,7 @@ public:
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerControlEventTarget final : public nsIEventTarget
+class WorkerControlEventTarget final : public nsISerialEventTarget
 {
   mozilla::Mutex mMutex;
   WorkerPrivate* mWorkerPrivate;
@@ -1704,7 +1704,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(WorkerControlEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(WorkerControlEventTarget, nsIEventTarget,
+                                            nsISerialEventTarget)
 
 END_WORKERS_NAMESPACE
 
@@ -5189,7 +5190,7 @@ WorkerPrivate::DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
   return mMainThreadEventTarget->Dispatch(runnable.forget(), aFlags);
 }
 
-nsIEventTarget*
+nsISerialEventTarget*
 WorkerPrivate::ControlEventTarget()
 {
   return mWorkerControlEventTarget;
