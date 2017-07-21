@@ -1449,6 +1449,34 @@ talos-perf-reftest:
         extra-options:
             - --suite=perf-reftest
 
+talos-quantum-pageload-stylo:
+    description: "Talos Quantum Pageload Stylo"
+    suite: talos
+    try-name: q1s
+    treeherder-symbol: tc-T(q1s)
+    virtualization: hardware
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
+            default: []
+    max-run-time: 3600
+    e10s: true
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_taskcluster_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=quantum-pageload-stylo
+            - --add-option
+            - --webServer,localhost
+
 talos-svgr:
     description: "Talos svgr"
     suite: talos
