@@ -241,6 +241,19 @@ private:
   { }
 
   virtual bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Silence bad assertions.
+    return true;
+  }
+
+  virtual void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Silence bad assertions.
+  }
+
+  virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     nsresult rv = mWrappedRunnable->Run();
