@@ -48,7 +48,7 @@ var onboardingTourset = {
     getNotificationStrings(bundle) {
       return {
         title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.title"),
-        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.message"),
+        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.message2"),
         button: bundle.GetStringFromName("onboarding.button.learnMore"),
       };
     },
@@ -57,7 +57,7 @@ var onboardingTourset = {
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-private-browsing.title2"></h1>
-          <p data-l10n-id="onboarding.tour-private-browsing.description2"></p>
+          <p data-l10n-id="onboarding.tour-private-browsing.description3"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_private.svg" role="presentation"/>
