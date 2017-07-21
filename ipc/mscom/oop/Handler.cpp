@@ -141,6 +141,10 @@ Handler::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
   hr = mUnmarshal->GetMarshalSizeMax(marshalAs, unkToMarshal.get(),
                                      dwDestContext, pvDestContext,
                                      mshlflags, pSize);
+
+#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+  return hr;
+#else
   if (FAILED(hr)) {
     return hr;
   }
@@ -157,6 +161,7 @@ Handler::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
 
   *pSize += payloadSize;
   return S_OK;
+#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 }
 
 HRESULT
@@ -235,17 +240,14 @@ Handler::UnmarshalInterface(IStream* pStm, REFIID riid, void** ppv)
     return hr;
   }
 
-  hr = ReadHandlerPayload(pStm, unmarshalAs);
-
   // This method may be called on the same object multiple times (as new
   // interfaces are queried off the proxy). Not all interfaces will necessarily
   // refresh the payload, so we set mHasPayload using OR to reflect that fact.
   // (Otherwise mHasPayload could be cleared and the handler would think that
   // it doesn't have a payload even though it actually does).
-  mHasPayload |= (hr == S_OK);
+  mHasPayload |= (ReadHandlerPayload(pStm, unmarshalAs) == S_OK);
 
-  // hr may be S_FALSE, but we don't want to return that
-  return SUCCEEDED(hr) ? S_OK : hr;
+  return hr;
 }
 
 HRESULT
