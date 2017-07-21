@@ -29,11 +29,18 @@ function enableBreakpoint(dbg, index) {
   });
 }
 
-function toggleBreakpoints(dbg) {
-  return Task.spawn(function*() {
-    clickElement(dbg, "toggleBreakpoints");
-    yield waitForDispatch(dbg, "TOGGLE_BREAKPOINTS");
-  });
+function toggleBreakpoints(dbg, count) {
+  clickElement(dbg, "toggleBreakpoints");
+}
+
+function disableBreakpoints(dbg, count) {
+  toggleBreakpoints(dbg);
+  return waitForDispatch(dbg, "DISABLE_BREAKPOINT", count);
+}
+
+function enableBreakpoints(dbg, count) {
+  toggleBreakpoints(dbg);
+  return waitForDispatch(dbg, "ENABLE_BREAKPOINT", count);
 }
 
 function findBreakpoint(dbg, url, line) {
@@ -79,14 +86,14 @@ add_task(function*() {
   yield addBreakpoint(dbg, "simple2", 5);
 
   // Disable all of the breakpoints
-  yield toggleBreakpoints(dbg);
+  yield disableBreakpoints(dbg, 2);
   let bp1 = findBreakpoint(dbg, "simple2", 3);
   let bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, true, "second breakpoint is disabled");
 
   // Enable all of the breakpoints
-  yield toggleBreakpoints(dbg);
+  yield enableBreakpoints(dbg, 2);
   bp1 = findBreakpoint(dbg, "simple2", 3);
   bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, false, "first breakpoint is enabled");
