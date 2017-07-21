@@ -31,11 +31,11 @@ nsStyleContext::RuleNode()
     return AsGecko()->RuleNode();
 }
 
-const ServoComputedValues*
-nsStyleContext::ComputedValues()
+const ServoComputedData*
+nsStyleContext::ComputedData()
 {
     MOZ_RELEASE_ASSERT(IsServo());
-    return AsServo()->ComputedValues();
+    return AsServo()->ComputedData();
 }
 
 void
@@ -58,7 +58,7 @@ nsStyleContext::Style##name_() {                                \
 const nsStyle##name_ *                                          \
 nsStyleContext::ThreadsafeStyle##name_() {                      \
   if (mozilla::ServoStyleSet::IsInServoTraversal()) {           \
-    return AsServo()->ComputedValues()->GetStyle##name_();      \
+    return AsServo()->ComputedData()->GetStyle##name_();      \
   }                                                             \
   return Style##name_();                                        \
 }                                                               \
@@ -131,7 +131,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
   }                                                                 \
                                                                     \
   const nsStyle##name_* data =                                      \
-    servo->ComputedValues()->GetStyle##name_();                     \
+    servo->ComputedData()->GetStyle##name_();                     \
   /* perform any remaining main thread work on the struct */        \
   if (needToCompute) {                                              \
     MOZ_ASSERT(NS_IsMainThread());                                  \
@@ -164,7 +164,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
     return nullptr;                                                           \
   }                                                                           \
   const nsStyle##name_* data =                                                \
-    servo->ComputedValues()->GetStyle##name_();                               \
+    servo->ComputedData()->GetStyle##name_();                               \
   /* perform any remaining main thread work on the struct */                  \
   if (needToCompute) {                                                        \
     const_cast<nsStyle##name_*>(data)->FinishStyle(PresContext());            \

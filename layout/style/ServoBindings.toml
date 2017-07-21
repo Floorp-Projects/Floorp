@@ -247,8 +247,8 @@ whitelist-types = [
     "Runnable",
     "ServoAttrSnapshot",
     "ServoBundledURI",
-    "ServoComputedValues",
-    "ServoComputedValuesBorrowed",
+    "ServoComputedData",
+    "ServoComputedDataBorrowed",
     "ServoElementSnapshot",
     "ServoStyleContextStrong",
     "ServoStyleContextBorrowed",
@@ -346,7 +346,7 @@ raw-lines = [
     "type nsAString_internal = nsAString;",
     "pub type ServoStyleContextBorrowed<'a> = &'a ::properties::ComputedValues;",
     "pub type ServoStyleContextBorrowedOrNull<'a> = Option<&'a ::properties::ComputedValues>;",
-    "pub type ServoComputedValuesBorrowed<'a> = &'a ServoComputedValues;",
+    "pub type ServoComputedDataBorrowed<'a> = &'a ServoComputedData;",
 ]
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
 structs-types = [
@@ -474,7 +474,7 @@ structs-types = [
     "Loader",
     "LoaderReusableStyleSheets",
     "ServoStyleSheet",
-    "ServoComputedValues",
+    "ServoComputedData",
     "ServoStyleContext",
     "ServoStyleContextStrong",
     "EffectCompositor_CascadeLevel",

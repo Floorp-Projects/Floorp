@@ -116,7 +116,7 @@ nsStyleContext::FinishConstruction()
 
 #ifdef DEBUG
   if (auto servo = GetAsServo()) {
-    MOZ_ASSERT(servo->ComputedValues());
+    MOZ_ASSERT(servo->ComputedData());
   } else {
     MOZ_ASSERT(RuleNode());
   }
@@ -234,8 +234,8 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
     }
   } else {
     if (Servo_ComputedValues_EqualCustomProperties(
-          AsServo()->ComputedValues(),
-          aNewContext->ComputedValues())) {
+          AsServo()->ComputedData(),
+          aNewContext->ComputedData())) {
       *aEqualStructs |= NS_STYLE_INHERIT_BIT(Variables);
     }
   }
@@ -257,7 +257,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   (IsGecko()                                                                  \
    ? PeekStyle##struct_()                                                     \
    : ((aRelevantStructs & NS_STYLE_INHERIT_BIT(struct_))                      \
-      ? AsServo()->ComputedValues()->GetStyle##struct_()                      \
+      ? AsServo()->ComputedData()->GetStyle##struct_()                      \
       : nullptr))
 
 #define EXPAND(...) __VA_ARGS__
@@ -270,7 +270,7 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
       structsFound |= NS_STYLE_INHERIT_BIT(struct_);                          \
     } else if (checkUnrequestedServoStructs) {                                \
       this##struct_ =                                                         \
-        AsServo()->ComputedValues()->GetStyle##struct_();                     \
+        AsServo()->ComputedData()->GetStyle##struct_();                     \
       unrequestedStruct = true;                                               \
     } else {                                                                  \
       unrequestedStruct = false;                                              \
@@ -487,7 +487,7 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
 
   if (IsServo()) {
-    fprintf_stderr(out, "%s{ServoComputedValues}\n", str.get());
+    fprintf_stderr(out, "%s{ServoComputedData}\n", str.get());
   } else if (nsRuleNode* ruleNode = AsGecko()->RuleNode()) {
     fprintf_stderr(out, "%s{\n", str.get());
     str.Truncate();
