@@ -354,6 +354,7 @@ struct Texture {
     format: ImageFormat,
     width: u32,
     height: u32,
+
     filter: TextureFilter,
     mode: RenderTargetMode,
     fbo_ids: Vec<FBOId>,
@@ -1170,9 +1171,11 @@ impl Device {
                         pixels: Option<&[u8]>) {
         debug_assert!(self.inside_frame);
 
+        let resized;
         {
             let texture = self.textures.get_mut(&texture_id).expect("Didn't find texture!");
             texture.format = format;
+            resized = texture.width != width || texture.height != height;
             texture.width = width;
             texture.height = height;
             texture.filter = filter;
@@ -1193,12 +1196,12 @@ impl Device {
                                           gl_format,
                                           type_,
                                           None);
-                self.create_fbo_for_texture_if_necessary(texture_id, None);
+                self.update_texture_storage(texture_id, None, resized);
             }
             RenderTargetMode::LayerRenderTarget(layer_count) => {
                 self.bind_texture(DEFAULT_TEXTURE, texture_id);
                 self.set_texture_parameters(texture_id.target, filter);
-                self.create_fbo_for_texture_if_necessary(texture_id, Some(layer_count));
+                self.update_texture_storage(texture_id, Some(layer_count), resized);
             }
             RenderTargetMode::None => {
                 self.bind_texture(DEFAULT_TEXTURE, texture_id);
@@ -1227,9 +1230,12 @@ impl Device {
         self.textures[&texture_id].fbo_ids.len()
     }
 
-    pub fn create_fbo_for_texture_if_necessary(&mut self,
-                                               texture_id: TextureId,
-                                               layer_count: Option<i32>) {
+    /// Updates the texture storage for the texture, creating
+    /// FBOs as required.
+    pub fn update_texture_storage(&mut self,
+                                  texture_id: TextureId,
+                                  layer_count: Option<i32>,
+                                  resized: bool) {
         let texture = self.textures.get_mut(&texture_id).unwrap();
 
         match layer_count {
@@ -1237,11 +1243,9 @@ impl Device {
                 assert!(layer_count > 0);
                 assert_eq!(texture_id.target, gl::TEXTURE_2D_ARRAY);
 
-                // If we have enough layers allocated already, just use them.
-                // TODO(gw): Probably worth removing some after a while if
-                //           there is a surplus?
                 let current_layer_count = texture.fbo_ids.len() as i32;
-                if current_layer_count >= layer_count {
+                // If the texture is already the required size skip.
+                if current_layer_count == layer_count && !resized {
                     return;
                 }
 
@@ -1260,22 +1264,30 @@ impl Device {
                                      None);
 
                 let needed_layer_count = layer_count - current_layer_count;
-                let new_fbos = self.gl.gen_framebuffers(needed_layer_count);
-                texture.fbo_ids.extend(new_fbos.into_iter().map(|id| FBOId(id)));
+                if needed_layer_count > 0 {
+                    // Create more framebuffers to fill the gap
+                    let new_fbos = self.gl.gen_framebuffers(needed_layer_count);
+                    texture.fbo_ids.extend(new_fbos.into_iter().map(|id| FBOId(id)));
+                } else if needed_layer_count < 0 {
+                    // Remove extra framebuffers
+                    for old in texture.fbo_ids.drain(layer_count as usize ..) {
+                        self.gl.delete_framebuffers(&[old.0]);
+                    }
+                }
 
                 let depth_rb = if let Some(rbo) = texture.depth_rb {
                     rbo.0
                 } else {
                     let renderbuffer_ids = self.gl.gen_renderbuffers(1);
                     let depth_rb = renderbuffer_ids[0];
-                    self.gl.bind_renderbuffer(gl::RENDERBUFFER, depth_rb);
-                    self.gl.renderbuffer_storage(gl::RENDERBUFFER,
-                                                 gl::DEPTH_COMPONENT24,
-                                                 texture.width as gl::GLsizei,
-                                                 texture.height as gl::GLsizei);
                     texture.depth_rb = Some(RBOId(depth_rb));
                     depth_rb
                 };
+                self.gl.bind_renderbuffer(gl::RENDERBUFFER, depth_rb);
+                self.gl.renderbuffer_storage(gl::RENDERBUFFER,
+                                             gl::DEPTH_COMPONENT24,
+                                             texture.width as gl::GLsizei,
+                                             texture.height as gl::GLsizei);
 
                 for (fbo_index, fbo_id) in texture.fbo_ids.iter().enumerate() {
                     self.gl.bind_framebuffer(gl::FRAMEBUFFER, fbo_id.0);
@@ -1355,7 +1367,7 @@ impl Device {
 
         let temp_texture_id = self.create_texture_ids(1, TextureTarget::Default)[0];
         self.init_texture(temp_texture_id, old_size.width, old_size.height, format, filter, mode, None);
-        self.create_fbo_for_texture_if_necessary(temp_texture_id, None);
+        self.update_texture_storage(temp_texture_id, None, true);
 
         self.bind_read_target(Some((texture_id, 0)));
         self.bind_texture(DEFAULT_TEXTURE, temp_texture_id);
@@ -1371,7 +1383,7 @@ impl Device {
 
         self.deinit_texture(texture_id);
         self.init_texture(texture_id, new_width, new_height, format, filter, mode, None);
-        self.create_fbo_for_texture_if_necessary(texture_id, None);
+        self.update_texture_storage(texture_id, None, true);
         self.bind_read_target(Some((temp_texture_id, 0)));
         self.bind_texture(DEFAULT_TEXTURE, texture_id);
 

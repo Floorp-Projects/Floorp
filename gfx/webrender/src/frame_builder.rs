@@ -14,9 +14,9 @@ use gpu_cache::GpuCache;
 use internal_types::HardwareCompositeOp;
 use mask_cache::{ClipMode, ClipRegion, ClipSource, MaskCacheInfo};
 use plane_split::{BspSplitter, Polygon, Splitter};
-use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu};
+use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, PrimitiveKind};
 use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveIndex};
-use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu};
+use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, TextRunMode};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextShadowPrimitiveCpu};
 use prim_store::{BoxShadowPrimitiveCpu, TexelRect, YuvImagePrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
@@ -106,37 +106,6 @@ pub struct FrameBuilderConfig {
     pub cache_expiry_frames: u32,
 }
 
-struct PendingTextShadow {
-    shadow: TextShadow,
-    text_primitives: Vec<TextRunPrimitiveCpu>,
-    clip_and_scroll: ClipAndScrollInfo,
-    local_rect: LayerRect,
-    local_clip: LocalClip,
-}
-
-impl PendingTextShadow {
-    fn new(shadow: TextShadow,
-           clip_and_scroll: ClipAndScrollInfo,
-           local_clip: &LocalClip) -> PendingTextShadow {
-        PendingTextShadow {
-            shadow: shadow,
-            text_primitives: Vec::new(),
-            clip_and_scroll: clip_and_scroll,
-            local_clip: local_clip.clone(),
-            local_rect: LayerRect::zero(),
-        }
-    }
-
-    fn push(&mut self,
-            local_rect: LayerRect,
-            primitive: &TextRunPrimitiveCpu) {
-        self.text_primitives.push(primitive.clone());
-        let shadow_rect = local_rect.inflate(self.shadow.blur_radius,
-                                             self.shadow.blur_radius);
-        self.local_rect = self.local_rect.union(&shadow_rect);
-    }
-}
-
 pub struct FrameBuilder {
     screen_size: DeviceUintSize,
     background_color: Option<ColorF>,
@@ -147,7 +116,9 @@ pub struct FrameBuilder {
     stacking_context_store: Vec<StackingContext>,
     clip_scroll_group_store: Vec<ClipScrollGroup>,
     packed_layers: Vec<PackedLayer>,
-    pending_text_shadows: Vec<PendingTextShadow>,
+
+    // A stack of the current text-shadow primitives.
+    shadow_prim_stack: Vec<PrimitiveIndex>,
 
     scrollbar_prims: Vec<ScrollbarPrimitive>,
 
@@ -176,7 +147,7 @@ impl FrameBuilder {
                     clip_scroll_group_store: recycle_vec(prev.clip_scroll_group_store),
                     cmds: recycle_vec(prev.cmds),
                     packed_layers: recycle_vec(prev.packed_layers),
-                    pending_text_shadows: recycle_vec(prev.pending_text_shadows),
+                    shadow_prim_stack: recycle_vec(prev.shadow_prim_stack),
                     scrollbar_prims: recycle_vec(prev.scrollbar_prims),
                     reference_frame_stack: recycle_vec(prev.reference_frame_stack),
                     stacking_context_stack: recycle_vec(prev.stacking_context_stack),
@@ -193,7 +164,7 @@ impl FrameBuilder {
                     clip_scroll_group_store: Vec::new(),
                     cmds: Vec::new(),
                     packed_layers: Vec::new(),
-                    pending_text_shadows: Vec::new(),
+                    shadow_prim_stack: Vec::new(),
                     scrollbar_prims: Vec::new(),
                     reference_frame_stack: Vec::new(),
                     stacking_context_stack: Vec::new(),
@@ -219,20 +190,22 @@ impl FrameBuilder {
         stacking_context.clip_scroll_groups.push(group_index);
     }
 
-    pub fn add_primitive(&mut self,
-                         clip_and_scroll: ClipAndScrollInfo,
-                         rect: &LayerRect,
-                         local_clip: &LocalClip,
-                         extra_clips: &[ClipSource],
-                         container: PrimitiveContainer)
-                         -> PrimitiveIndex {
+    /// Create a primitive and add it to the prim store. This method doesn't
+    /// add the primitive to the draw list, so can be used for creating
+    /// sub-primitives.
+    fn create_primitive(&mut self,
+                        clip_and_scroll: ClipAndScrollInfo,
+                        rect: &LayerRect,
+                        local_clip: &LocalClip,
+                        extra_clips: &[ClipSource],
+                        container: PrimitiveContainer) -> PrimitiveIndex {
         let stacking_context_index = *self.stacking_context_stack.last().unwrap();
 
         self.create_clip_scroll_group_if_necessary(stacking_context_index, clip_and_scroll);
 
         let mut clip_sources = extra_clips.to_vec();
         if let &LocalClip::RoundedRect(_, _) = local_clip {
-            clip_sources.push(ClipSource::Region(ClipRegion::for_local_clip(local_clip)))
+            clip_sources.push(ClipSource::Region(ClipRegion::create_for_local_clip(local_clip)))
         }
 
         let clip_info = if !clip_sources.is_empty() {
@@ -247,19 +220,44 @@ impl FrameBuilder {
                                                        clip_info,
                                                        container);
 
+        prim_index
+    }
+
+    /// Add an already created primitive to the draw lists.
+    pub fn add_primitive_to_draw_list(&mut self,
+                                      prim_index: PrimitiveIndex,
+                                      clip_and_scroll: ClipAndScrollInfo) {
         match self.cmds.last_mut().unwrap() {
-            &mut PrimitiveRunCmd::PrimitiveRun(_run_prim_index, ref mut count, run_clip_and_scroll)
-                if run_clip_and_scroll == clip_and_scroll => {
-                    debug_assert!(_run_prim_index.0 + *count == prim_index.0);
+            &mut PrimitiveRunCmd::PrimitiveRun(run_prim_index, ref mut count, run_clip_and_scroll) => {
+                if run_clip_and_scroll == clip_and_scroll &&
+                   run_prim_index.0 + *count == prim_index.0 {
                     *count += 1;
-                    return prim_index;
+                    return;
+                }
             }
-            &mut PrimitiveRunCmd::PrimitiveRun(..) |
             &mut PrimitiveRunCmd::PushStackingContext(..) |
             &mut PrimitiveRunCmd::PopStackingContext => {}
         }
 
         self.cmds.push(PrimitiveRunCmd::PrimitiveRun(prim_index, 1, clip_and_scroll));
+    }
+
+    /// Convenience interface that creates a primitive entry and adds it
+    /// to the draw list.
+    pub fn add_primitive(&mut self,
+                         clip_and_scroll: ClipAndScrollInfo,
+                         rect: &LayerRect,
+                         local_clip: &LocalClip,
+                         extra_clips: &[ClipSource],
+                         container: PrimitiveContainer) -> PrimitiveIndex {
+        let prim_index = self.create_primitive(clip_and_scroll,
+                                               rect,
+                                               local_clip,
+                                               extra_clips,
+                                               container);
+
+        self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
+
         prim_index
     }
 
@@ -321,7 +319,7 @@ impl FrameBuilder {
     pub fn pop_stacking_context(&mut self) {
         self.cmds.push(PrimitiveRunCmd::PopStackingContext);
         self.stacking_context_stack.pop();
-        assert!(self.pending_text_shadows.is_empty(),
+        assert!(self.shadow_prim_stack.is_empty(),
             "Found unpopped text shadows when popping stacking context!");
     }
 
@@ -432,31 +430,37 @@ impl FrameBuilder {
                             shadow: TextShadow,
                             clip_and_scroll: ClipAndScrollInfo,
                             local_clip: &LocalClip) {
-        let text_shadow = PendingTextShadow::new(shadow,
-                                                 clip_and_scroll,
-                                                 local_clip);
-        self.pending_text_shadows.push(text_shadow);
+        let prim = TextShadowPrimitiveCpu {
+            shadow,
+            primitives: Vec::new(),
+        };
+
+        // Create an empty text-shadow primitive. Insert it into
+        // the draw lists immediately so that it will be drawn
+        // before any visual text elements that are added as
+        // part of this text-shadow context.
+        let prim_index = self.add_primitive(clip_and_scroll,
+                                            &LayerRect::zero(),
+                                            local_clip,
+                                            &[],
+                                            PrimitiveContainer::TextShadow(prim));
+
+        self.shadow_prim_stack.push(prim_index);
     }
 
     pub fn pop_text_shadow(&mut self) {
-        let mut text_shadow = self.pending_text_shadows
-                                  .pop()
-                                  .expect("Too many PopTextShadows?");
-        if !text_shadow.text_primitives.is_empty() {
-            let prim_cpu = TextShadowPrimitiveCpu {
-                text_primitives: text_shadow.text_primitives,
-                shadow: text_shadow.shadow,
-            };
+        let prim_index = self.shadow_prim_stack
+                             .pop()
+                             .expect("invalid shadow push/pop count");
 
-            text_shadow.local_rect = text_shadow.local_rect
-                                                .translate(&text_shadow.shadow.offset);
+        // By now, the local rect of the text shadow has been calculated. It
+        // is calculated as the items in the shadow are added. It's now
+        // safe to offset the local rect by the offset of the shadow, which
+        // is then used when blitting the shadow to the final location.
+        let metadata = &mut self.prim_store.cpu_metadata[prim_index.0];
+        let prim = &self.prim_store.cpu_text_shadows[metadata.cpu_prim_index.0];
 
-            self.add_primitive(text_shadow.clip_and_scroll,
-                               &text_shadow.local_rect,
-                               &text_shadow.local_clip,
-                               &[],
-                               PrimitiveContainer::TextShadow(prim_cpu));
-        }
+        metadata.local_rect = metadata.local_rect.translate(&prim.shadow.offset);
     }
 
     pub fn add_solid_rectangle(&mut self,
@@ -465,28 +469,52 @@ impl FrameBuilder {
                                local_clip: &LocalClip,
                                color: &ColorF,
                                flags: PrimitiveFlags) {
-        if color.a == 0.0 {
-            return;
+        // TODO(gw): This is here as a temporary measure to allow
+        //           solid rectangles to be drawn into an
+        //           (unblurred) text-shadow. Supporting this allows
+        //           a WR update in Servo, since the tests rely
+        //           on this functionality. Once the complete
+        //           text decoration support is added (via the
+        //           Line display item) this can be removed, so that
+        //           rectangles don't participate in text shadows.
+        let mut trivial_shadows = Vec::new();
+        for shadow_prim_index in &self.shadow_prim_stack {
+            let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
+            let shadow_prim = &self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
+            if shadow_prim.shadow.blur_radius == 0.0 {
+                trivial_shadows.push(shadow_prim.shadow);
+            }
+        }
+        for shadow in trivial_shadows {
+            self.add_primitive(clip_and_scroll,
+                               &rect.translate(&shadow.offset),
+                               local_clip,
+                               &[],
+                               PrimitiveContainer::Rectangle(RectanglePrimitive {
+                                   color: shadow.color,
+                               }));
         }
 
-        let prim = RectanglePrimitive {
-            color: *color,
-        };
+        if color.a > 0.0 {
+            let prim = RectanglePrimitive {
+                color: *color,
+            };
 
-        let prim_index = self.add_primitive(clip_and_scroll,
-                                            rect,
-                                            local_clip,
-                                            &[],
-                                            PrimitiveContainer::Rectangle(prim));
+            let prim_index = self.add_primitive(clip_and_scroll,
+                                                rect,
+                                                local_clip,
+                                                &[],
+                                                PrimitiveContainer::Rectangle(prim));
 
-        match flags {
-            PrimitiveFlags::None => {}
-            PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
-                self.scrollbar_prims.push(ScrollbarPrimitive {
-                    prim_index,
-                    clip_id,
-                    border_radius,
-                });
+            match flags {
+                PrimitiveFlags::None => {}
+                PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
+                    self.scrollbar_prims.push(ScrollbarPrimitive {
+                        prim_index,
+                        clip_id,
+                        border_radius,
+                    });
+                }
             }
         }
     }
@@ -803,12 +831,7 @@ impl FrameBuilder {
                     glyph_range: ItemRange<GlyphInstance>,
                     glyph_count: usize,
                     glyph_options: Option<GlyphOptions>) {
-        let is_text_shadow = !self.pending_text_shadows.is_empty();
-
-        if color.a == 0.0 && !is_text_shadow {
-            return
-        }
-
+        // Trivial early out checks
         if size.0 <= 0 {
             return
         }
@@ -816,18 +839,13 @@ impl FrameBuilder {
         // TODO(gw): Use a proper algorithm to select
         // whether this item should be rendered with
         // subpixel AA!
-        let mut render_mode = self.config.default_font_render_mode;
+        let mut normal_render_mode = self.config.default_font_render_mode;
 
         // There are some conditions under which we can't use
         // subpixel text rendering, even if enabled.
-        if render_mode == FontRenderMode::Subpixel {
-            // text-blur shadow needs to force alpha AA.
-            if is_text_shadow {
-                render_mode = FontRenderMode::Alpha;
-            }
-
+        if normal_render_mode == FontRenderMode::Subpixel {
             if color.a != 1.0 {
-                render_mode = FontRenderMode::Alpha;
+                normal_render_mode = FontRenderMode::Alpha;
             }
 
             // text on a stacking context that has filters
@@ -838,32 +856,90 @@ impl FrameBuilder {
             if let Some(sc_index) = self.stacking_context_stack.last() {
                 let stacking_context = &self.stacking_context_store[sc_index.0];
                 if stacking_context.composite_ops.count() > 0 {
-                    render_mode = FontRenderMode::Alpha;
+                    normal_render_mode = FontRenderMode::Alpha;
                 }
             }
         }
 
-        let prim_cpu = TextRunPrimitiveCpu {
+        // Shadows never use subpixel AA, but need to respect the alpha/mono flag
+        // for reftests.
+        let shadow_render_mode = match self.config.default_font_render_mode {
+            FontRenderMode::Subpixel | FontRenderMode::Alpha => FontRenderMode::Alpha,
+            FontRenderMode::Mono => FontRenderMode::Mono,
+        };
+
+        let prim = TextRunPrimitiveCpu {
             font_key,
             logical_font_size: size,
             glyph_range,
             glyph_count,
             glyph_instances: Vec::new(),
-            color: *color,
-            render_mode,
             glyph_options,
+            normal_render_mode,
+            shadow_render_mode,
+            offset: LayerVector2D::zero(),
+            color: *color,
         };
 
-        if is_text_shadow {
-            for shadow in &mut self.pending_text_shadows {
-                shadow.push(rect, &prim_cpu);
+        // Text shadows that have a blur radius of 0 need to be rendered as normal
+        // text elements to get pixel perfect results for reftests. It's also a big
+        // performance win to avoid blurs and render target allocations where
+        // possible. For any text shadows that have zero blur, create a normal text
+        // primitive with the shadow's color and offset. These need to be added
+        // *before* the visual text primitive in order to get the correct paint
+        // order. Store them in a Vec first to work around borrowck issues.
+        // TODO(gw): Refactor to avoid having to store them in a Vec first.
+        let mut fast_text_shadow_prims = Vec::new();
+        for shadow_prim_index in &self.shadow_prim_stack {
+            let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
+            let shadow_prim = &self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
+            if shadow_prim.shadow.blur_radius == 0.0 {
+                let mut text_prim = prim.clone();
+                text_prim.color = shadow_prim.shadow.color;
+                text_prim.offset = shadow_prim.shadow.offset;
+                fast_text_shadow_prims.push(text_prim);
             }
-        } else {
+        }
+        for text_prim in fast_text_shadow_prims {
             self.add_primitive(clip_and_scroll,
-                               &rect,
+                               &rect.translate(&text_prim.offset),
                                local_clip,
                                &[],
-                               PrimitiveContainer::TextRun(prim_cpu));
+                               PrimitiveContainer::TextRun(text_prim));
+        }
+
+        // Create (and add to primitive store) the primitive that will be
+        // used for both the visual element and also the shadow(s).
+        let prim_index = self.create_primitive(clip_and_scroll,
+                                               &rect,
+                                               local_clip,
+                                               &[],
+                                               PrimitiveContainer::TextRun(prim));
+
+        // Only add a visual element if it can contribute to the scene.
+        if color.a > 0.0 {
+            self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
+        }
+
+        // Now add this primitive index to all the currently active text shadow
+        // primitives. Although we're adding the indices *after* the visual
+        // primitive here, they will still draw before the visual text, since
+        // the text-shadow primitive itself has been added to the draw cmd
+        // list *before* the visual element, during push_text_shadow. We need
+        // the primitive index of the visual element here before we can add
+        // the indices as sub-primitives to the shadow primitives.
+        for shadow_prim_index in &self.shadow_prim_stack {
+            let shadow_metadata = &mut self.prim_store.cpu_metadata[shadow_prim_index.0];
+            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::TextShadow);
+            let shadow_prim = &mut self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
+
+            // Only run real blurs here (fast path zero blurs are handled above).
+            if shadow_prim.shadow.blur_radius > 0.0 {
+                let shadow_rect = rect.inflate(shadow_prim.shadow.blur_radius,
+                                               shadow_prim.shadow.blur_radius);
+                shadow_metadata.local_rect = shadow_metadata.local_rect.union(&shadow_rect);
+                shadow_prim.primitives.push(prim_index);
+            }
         }
     }
 
@@ -1874,7 +1950,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                                                    self.gpu_cache,
                                                                    &packed_layer.transform,
                                                                    self.device_pixel_ratio,
-                                                                   display_list);
+                                                                   display_list,
+                                                                   TextRunMode::Normal);
 
             stacking_context.screen_bounds = stacking_context.screen_bounds.union(&prim_screen_rect);
             stacking_context.isolated_items_bounds = stacking_context.isolated_items_bounds.union(&prim_local_rect);

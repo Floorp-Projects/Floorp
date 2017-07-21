@@ -54,7 +54,8 @@ void main(void) {
             break;
     }
 
-    vUvRect = vec4(src_task.data0.xy, src_task.data0.xy + src_task.data0.zw);
+    vUvRect = vec4(src_task.data0.xy + vec2(0.5),
+                   src_task.data0.xy + src_task.data0.zw - vec2(0.5));
     vUvRect /= texture_size.xyxy;
 
     vec2 uv0 = src_task.data0.xy / texture_size;
