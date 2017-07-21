@@ -174,28 +174,29 @@ const TESTCASES = [
   {
     description: "Three sets of adjacent phone number fields",
     document: `<form>
-                 <input id="shippingAreaCode" autocomplete="shipping tel" maxlength="3">
-                 <input id="shippingPrefix" autocomplete="shipping tel" maxlength="3">
-                 <input id="shippingSuffix" autocomplete="shipping tel" maxlength="4">
-                 <input id="shippingTelExt" autocomplete="shipping tel-extension">
+                 <input id="shippingAC" name="phone" maxlength="3">
+                 <input id="shippingPrefix" name="phone" maxlength="3">
+                 <input id="shippingSuffix" name="phone" maxlength="4">
+                 <input id="shippingTelExt" name="extension">
 
-                 <input id="billingAreaCode" autocomplete="billing tel" maxlength="3">
-                 <input id="billingPrefix" autocomplete="billing tel" maxlength="3">
-                 <input id="billingSuffix" autocomplete="billing tel" maxlength="4">
+                 <input id="billingAC" name="phone" maxlength="3">
+                 <input id="billingPrefix" name="phone" maxlength="3">
+                 <input id="billingSuffix" name="phone" maxlength="4">
 
-                 <input id="otherCountryCode" autocomplete="tel" maxlength="3">
-                 <input id="otherAreaCode" autocomplete="tel" maxlength="3">
-                 <input id="otherPrefix" autocomplete="tel" maxlength="3">
-                 <input id="otherSuffix" autocomplete="tel" maxlength="4">
+                 <input id="otherCC" name="phone" maxlength="3">
+                 <input id="otherAC" name="phone" maxlength="3">
+                 <input id="otherPrefix" name="phone" maxlength="3">
+                 <input id="otherSuffix" name="phone" maxlength="4">
                </form>`,
+    allowDuplicates: true,
     addressFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-extension"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
@@ -203,22 +204,22 @@ const TESTCASES = [
     ],
     creditCardFieldDetails: [],
     validFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-extension"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-area-code"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-prefix"},
-      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
     ],
     ids: [
-      "shippingAreaCode", "shippingPrefix", "shippingSuffix", "shippingTelExt",
-      "billingAreaCode", "billingPrefix", "billingSuffix",
-      "otherCountryCode", "otherAreaCode", "otherPrefix", "otherSuffix",
+      "shippingAC", "shippingPrefix", "shippingSuffix", "shippingTelExt",
+      "billingAC", "billingPrefix", "billingSuffix",
+      "otherCC", "otherAC", "otherPrefix", "otherSuffix",
     ],
   },
   {
@@ -290,6 +291,28 @@ const TESTCASES = [
     ids: ["i1", "i2", "i3", "i4", "singlePhone",
       "shippingAreaCode", "shippingPrefix", "shippingSuffix"],
   },
+  {
+    description: "Always adopt the info from autocomplete attribute.",
+    document: `<form>
+                 <input id="given-name" autocomplete="shipping given-name">
+                 <input id="family-name" autocomplete="shipping family-name">
+                 <input id="dummyAreaCode" autocomplete="shipping tel" maxlength="3">
+                 <input id="dummyPrefix" autocomplete="shipping tel" maxlength="3">
+                 <input id="dummySuffix" autocomplete="shipping tel" maxlength="4">
+               </form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+    ],
+    creditCardFieldDetails: [],
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+    ],
+    ids: ["given-name", "family-name", "dummyAreaCode"],
+  },
 ];
 
 for (let tc of TESTCASES) {
@@ -340,7 +363,7 @@ for (let tc of TESTCASES) {
       ].forEach(details => setElementWeakRef(details));
 
       let handler = new FormAutofillHandler(formLike);
-      let validFieldDetails = handler.collectFormFields();
+      let validFieldDetails = handler.collectFormFields(testcase.allowDuplicates);
 
       verifyDetails(handler.address.fieldDetails, testcase.addressFieldDetails);
       verifyDetails(handler.creditCard.fieldDetails, testcase.creditCardFieldDetails);
