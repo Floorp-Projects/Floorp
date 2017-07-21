@@ -646,6 +646,11 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     // because gcBytes >= gcMaxBytes.
     if (rt->gc.usage.gcBytes() >= rt->gc.tunables.gcMaxBytes())
         disable();
+    // Disable the nursery if the user changed the configuration setting.  The
+    // nursery can only be re-enabled by resetting the configurationa and
+    // restarting firefox.
+    if (maxNurseryChunks_ == 0)
+        disable();
 
     endProfile(ProfileKey::Total);
     minorGcCount_++;
@@ -924,6 +929,7 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRat
 {
     static const double GrowThreshold   = 0.05;
     static const double ShrinkThreshold = 0.01;
+    unsigned newMaxNurseryChunks;
 
     // Shrink the nursery to its minimum size of we ran out of memory or
     // received a memory pressure event.
@@ -932,10 +938,30 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRat
         return;
     }
 
+#ifdef JS_GC_ZEAL
+    // This zeal mode disabled nursery resizing.
+    if (runtime()->hasZealMode(ZealMode::GenerationalGC))
+        return;
+#endif
+
+    newMaxNurseryChunks = runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
+    if (newMaxNurseryChunks != maxNurseryChunks_) {
+        maxNurseryChunks_ = newMaxNurseryChunks;
+        /* The configured maximum nursery size is changing */
+        int extraChunks = numChunks() - newMaxNurseryChunks;
+        if (extraChunks > 0) {
+            /* We need to shrink the nursery */
+            shrinkAllocableSpace(extraChunks);
+
+            previousPromotionRate_ = promotionRate;
+            return;
+        }
+    }
+
     if (promotionRate > GrowThreshold)
         growAllocableSpace();
     else if (promotionRate < ShrinkThreshold && previousPromotionRate_ < ShrinkThreshold)
-        shrinkAllocableSpace();
+        shrinkAllocableSpace(1);
 
     previousPromotionRate_ = promotionRate;
 }
@@ -947,13 +973,13 @@ js::Nursery::growAllocableSpace()
 }
 
 void
-js::Nursery::shrinkAllocableSpace()
+js::Nursery::shrinkAllocableSpace(unsigned removeNumChunks)
 {
 #ifdef JS_GC_ZEAL
     if (runtime()->hasZealMode(ZealMode::GenerationalGC))
         return;
 #endif
-    updateNumChunks(Max(numChunks() - 1, 1u));
+    updateNumChunks(Max(numChunks() - removeNumChunks, 1u));
 }
 
 void
