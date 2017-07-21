@@ -1637,6 +1637,11 @@ PrintUsageThenExit(int aExitCode)
     "  measured in milliseconds, when the profiler is first started.\n"
     "  If unset, the platform default is used.\n"
     "\n"
+    "  MOZ_PROFILER_STARTUP_FEATURES=<Features>\n"
+    "  If MOZ_PROFILER_STARTUP is set, specifies the profiling features, as a\n"
+    "  comma-separated list of strings.\n"
+    "  If unset, the platform default is used.\n"
+    "\n"
     "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
     "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
     "  comma-separated list of strings. A given thread will be sampled if any\n"
@@ -2211,6 +2216,16 @@ profiler_init(void* aStackTop)
       } else {
         PrintUsageThenExit(1);
       }
+    }
+
+    const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
+    if (startupFeatures) {
+      UniquePtr<char[]> featureStringStorage;
+      nsTArray<const char*> featureStringArray =
+        SplitAtCommas(startupFeatures, featureStringStorage);
+      features = ParseFeaturesFromStringArray(featureStringArray.Elements(),
+                                              featureStringArray.Length());
+      LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
     }
 
     const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
