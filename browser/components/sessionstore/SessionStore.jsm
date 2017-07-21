@@ -3279,8 +3279,8 @@ var SessionStoreInternal = {
       }
     }
 
-    let restoreTabsLazily = this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") &&
-      this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
+    let restoreOnDemand = this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
+    let restoreTabsLazily = this._prefBranch.getBoolPref("sessionstore.restore_tabs_lazily") && restoreOnDemand;
 
     for (var t = 0; t < newTabCount; t++) {
       let tabData = winData.tabs[t];
@@ -3332,6 +3332,13 @@ var SessionStoreInternal = {
           let leftoverTab = tabbrowser.selectedTab;
           tabbrowser.selectedTab = tab;
           tabbrowser.removeTab(leftoverTab);
+        }
+
+        // Prepare connection to the host when users hover mouse over this
+        // tab. If we're not restoring on demand, we'll prepare connection
+        // when we're restoring next tab.
+        if (!tabData.pinned && restoreOnDemand) {
+          this.speculativeConnectOnTabHover(tab, url);
         }
       }
 
@@ -3415,6 +3422,42 @@ var SessionStoreInternal = {
     Services.obs.notifyObservers(aWindow, NOTIFY_SINGLE_WINDOW_RESTORED);
 
     this._sendRestoreCompletedNotifications();
+  },
+
+  /**
+   * Prepare connection to host beforehand.
+   *
+   * @param url
+   *        URL of a host.
+   * @returns a flag indicates whether a connection has been made
+   */
+  prepareConnectionToHost(url) {
+    if (!url.startsWith("about:")) {
+      let sc = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
+      let uri = Services.io.newURI(url);
+      sc.speculativeConnect(uri, null, null);
+      return true;
+    }
+    return false;
+  },
+
+  /**
+   * Make a connection to a host when users hover mouse on a tab.
+   *
+   * @param tab
+   *        A tab to set up a hover listener.
+   * @param url
+   *        URL of a host.
+   */
+  speculativeConnectOnTabHover(tab, url) {
+    tab.addEventListener("mouseover", () => {
+      let prepared = this.prepareConnectionToHost(url);
+      // This is used to test if a connection has been made beforehand.
+      if (gDebuggingEnabled) {
+        tab.__test_connection_prepared = prepared;
+        tab.__test_connection_url = url;
+      }
+    }, {once: true});
   },
 
   /**
@@ -3683,6 +3726,19 @@ var SessionStoreInternal = {
         this.restoreTabContent(tab, options);
       } else if (!forceOnDemand) {
         TabRestoreQueue.add(tab);
+        // Check if a tab is in queue and will be restored
+        // after the currently loading tabs. If so, prepare
+        // a connection to host to speed up page loading.
+        if (TabRestoreQueue.willRestoreSoon(tab)) {
+          if (activeIndex in tabData.entries) {
+            let url = tabData.entries[activeIndex].url;
+            let prepared = this.prepareConnectionToHost(url);
+            if (gDebuggingEnabled) {
+              tab.__test_connection_prepared = prepared;
+              tab.__test_connection_url = url;
+            }
+          }
+        }
         this.restoreNextTab();
       }
     } else {

@@ -18,14 +18,12 @@ PageError.displayName = "PageError";
 PageError.propTypes = {
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
-  indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
 };
 
 PageError.defaultProps = {
   open: false,
-  indent: 0,
 };
 
 function PageError(props) {
@@ -34,11 +32,11 @@ function PageError(props) {
     message,
     open,
     serviceContainer,
-    indent,
     timestampsVisible,
   } = props;
   const {
     id: messageId,
+    indent,
     source,
     type,
     level,

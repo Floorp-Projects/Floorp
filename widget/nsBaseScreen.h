@@ -32,6 +32,8 @@ public:
 
   NS_IMETHOD GetDefaultCSSScaleFactor(double* aScaleFactor) override;
 
+  NS_IMETHOD GetDpi(float* aDPI) override;
+
 protected:
   virtual ~nsBaseScreen();
 };

@@ -64,14 +64,18 @@ async function openPopupOn(browser, selector) {
   await expectPopupOpen(browser);
 }
 
-function getAddresses() {
+function getRecords(data) {
   return new Promise(resolve => {
-    Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
-      Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
+    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
       resolve(result.data);
     });
-    Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {});
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", data);
   });
+}
+
+function getAddresses() {
+  return getRecords({collectionName: "addresses"});
 }
 
 function saveAddress(address) {

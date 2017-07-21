@@ -94,14 +94,24 @@ MakeScreen(NSScreen* aScreen)
     nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, contentsScaleFactor.scale);
   NSWindowDepth depth = [aScreen depth];
   uint32_t pixelDepth = NSBitsPerPixelFromDepth(depth);
-
-  MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f]",
-                                        rect.x, rect.y, rect.width, rect.height,
-                                        pixelDepth, contentsScaleFactor.scale));
+  float dpi = 96.0f;
+  CGDirectDisplayID displayID =
+    [[[aScreen deviceDescription] objectForKey:@"NSScreenNumber"] intValue];
+  CGFloat heightMM = ::CGDisplayScreenSize(displayID).height;
+  if (heightMM > 0) {
+    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
+  }
+  MOZ_LOG(sScreenLog, LogLevel::Debug,
+           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
+            rect.x, rect.y, rect.width, rect.height,
+            availRect.x, availRect.y, availRect.width, availRect.height,
+            pixelDepth, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
+            dpi));
 
   RefPtr<Screen> screen = new Screen(rect, availRect,
                                      pixelDepth, pixelDepth,
-                                     contentsScaleFactor, defaultCssScaleFactor);
+                                     contentsScaleFactor, defaultCssScaleFactor,
+                                     dpi);
   return screen.forget();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nullptr);

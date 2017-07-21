@@ -503,11 +503,11 @@ const getHighlighterHelperFor = (type) => Task.async(
       //   mouse.up();         // synthesize "mouseup" at 20,30
       mouse: new Proxy({}, {
         get: (target, name) =>
-          function* (x = prevX, y = prevY) {
+          function* (x = prevX, y = prevY, selector = ":root") {
             prevX = x;
             prevY = y;
             yield testActor.synthesizeMouse({
-              selector: ":root", x, y, options: {type: "mouse" + name}});
+              selector, x, y, options: {type: "mouse" + name}});
           }
       }),
 

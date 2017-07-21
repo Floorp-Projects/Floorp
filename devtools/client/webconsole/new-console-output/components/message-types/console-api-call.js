@@ -25,14 +25,12 @@ ConsoleApiCall.propTypes = {
   message: PropTypes.object.isRequired,
   open: PropTypes.bool,
   serviceContainer: PropTypes.object.isRequired,
-  indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   loadedObjectProperties: PropTypes.object,
 };
 
 ConsoleApiCall.defaultProps = {
   open: false,
-  indent: 0,
 };
 
 function ConsoleApiCall(props) {
@@ -42,13 +40,13 @@ function ConsoleApiCall(props) {
     open,
     tableData,
     serviceContainer,
-    indent,
     timestampsVisible,
     repeat,
     loadedObjectProperties,
   } = props;
   const {
     id: messageId,
+    indent,
     source,
     type,
     level,

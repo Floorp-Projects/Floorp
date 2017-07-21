@@ -360,21 +360,6 @@ parent:
     sync IsParentWindowMainWidgetVisible() returns (bool visible);
 
     /**
-     * Gets the DPI of the screen corresponding to this browser.
-     */
-    sync GetDPI() returns (float value);
-
-    /**
-     * Gets the default scaling factor of the screen corresponding to this browser.
-     */
-    sync GetDefaultScale() returns (double value);
-
-    /**
-     * Gets the rounding of coordinates in the widget.
-     */
-    sync GetWidgetRounding() returns (int32_t value);
-
-    /**
      * Set the native cursor.
      * @param value
      *   The widget cursor to set.

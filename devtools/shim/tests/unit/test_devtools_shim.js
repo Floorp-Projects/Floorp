@@ -4,8 +4,11 @@
 
 "use strict";
 
-const { DevToolsShim } =
+const { DevToolsShim: realDevToolsShim } =
     Components.utils.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+
+// Create a copy of the DevToolsShim for the test.
+const DevToolsShim = Object.assign({}, realDevToolsShim);
 
 // Test the DevToolsShim
 
@@ -41,6 +44,14 @@ function createMockDevTools() {
   return mock;
 }
 
+function mockDevToolsInstalled() {
+  DevToolsShim.isInstalled = () => true;
+}
+
+function mockDevToolsUninstalled() {
+  DevToolsShim.isInstalled = () => false;
+}
+
 /**
  * Check if a given method was called an expected number of times, and finally check the
  * arguments provided to the last call, if appropriate.
@@ -62,17 +73,17 @@ function checkCalls(mock, method, length, lastArgs) {
 }
 
 function test_register_unregister() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   DevToolsShim.register(createMockDevTools());
-  ok(DevToolsShim.isInstalled(), "DevTools are installed");
+  ok(DevToolsShim.isInitialized(), "DevTools are installed");
 
   DevToolsShim.unregister();
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 }
 
 function test_on_is_forwarded_to_devtools() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
   function cb2() {}
@@ -87,7 +98,7 @@ function test_on_is_forwarded_to_devtools() {
 }
 
 function test_off_called_before_registering_devtools() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
   let mock = createMockDevTools();
@@ -100,7 +111,7 @@ function test_off_called_before_registering_devtools() {
 }
 
 function test_off_called_before_with_bad_callback() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
   function cb2() {}
@@ -117,7 +128,7 @@ function test_off_called_before_with_bad_callback() {
 }
 
 function test_registering_tool() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let tool1 = {};
   let tool2 = {};
@@ -146,7 +157,7 @@ function test_registering_tool() {
 }
 
 function test_registering_theme() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let theme1 = {};
   let theme2 = {};
@@ -175,7 +186,7 @@ function test_registering_theme() {
 }
 
 function test_events() {
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
+  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let mock = createMockDevTools();
   // Check emit was not called.
@@ -191,6 +202,8 @@ function test_events() {
 }
 
 function test_scratchpad_apis() {
+  mockDevToolsUninstalled();
+
   ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
 
   // Check that restoreScratchpadSession doesn't crash.
@@ -201,10 +214,13 @@ function test_scratchpad_apis() {
       "getOpenedScratchpads returns [] when DevTools are not installed");
 
   let mock = createMockDevTools();
-  DevToolsShim.register(mock);
 
-  // Check that calls to restoreScratchpadSession are not held.
-  checkCalls(mock, "restoreScratchpadSession", 0);
+  mockDevToolsInstalled();
+  DevToolsShim._initDevTools = () => {
+    // Next call to getOpenedScratchpags is expected to initialize DevTools, which we
+    // simulate here by registering our mock.
+    DevToolsShim.register(mock);
+  };
 
   DevToolsShim.getOpenedScratchpads();
   checkCalls(mock, "getOpenedScratchpads", 1, []);

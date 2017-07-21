@@ -1073,7 +1073,7 @@ HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
       if (content->GetAsText()) {
         if (!isCollapsed && first && firstNodeInRange) {
           firstNodeInRange = false;
-          if (range->StartOffset() == (int32_t)content->Length()) {
+          if (range->StartOffset() == content->Length()) {
             continue;
           }
         } else if (content == endNode && !endOffset) {

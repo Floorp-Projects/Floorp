@@ -7,20 +7,11 @@
 #include "ScreenHelperGTK.h"
 
 #ifdef MOZ_X11
-#include <X11/Xatom.h>
 #include <gdk/gdkx.h>
-// from Xinerama.h
-typedef struct {
-   int   screen_number;
-   short x_org;
-   short y_org;
-   short width;
-   short height;
-} XineramaScreenInfo;
-// prototypes from Xinerama.h
-typedef Bool (*_XnrmIsActive_fn)(Display *dpy);
-typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
-#endif
+#endif /* MOZ_X11 */
+#ifdef MOZ_WAYLAND
+#include <gdk/gdkwayland.h>
+#endif /* MOZ_WAYLAND */
 #include <dlfcn.h>
 #include <gtk/gtk.h>
 
@@ -28,8 +19,6 @@ typedef XineramaScreenInfo* (*_XnrmQueryScreens_fn)(Display *dpy, int *number);
 #include "mozilla/Logging.h"
 #include "nsGtkUtils.h"
 #include "nsTArray.h"
-
-#define SCREEN_MANAGER_LIBRARY_LOAD_FAILED ((PRLibrary*)1)
 
 namespace mozilla {
 namespace widget {
@@ -71,15 +60,16 @@ root_window_event_filter(GdkXEvent* aGdkXEvent, GdkEvent* aGdkEvent,
 }
 
 ScreenHelperGTK::ScreenHelperGTK()
-  : mXineramalib(nullptr)
-  , mRootWindow(nullptr)
+  : mRootWindow(nullptr)
+#ifdef MOZ_X11
   , mNetWorkareaAtom(0)
+#endif
 {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("ScreenHelperGTK created"));
   GdkScreen *defaultScreen = gdk_screen_get_default();
   if (!defaultScreen) {
     // Sometimes we don't initial X (e.g., xpcshell)
-    MOZ_LOG(sScreenLog, LogLevel::Debug, ("mRootWindow is nullptr, running headless"));
+    MOZ_LOG(sScreenLog, LogLevel::Debug, ("defaultScreen is nullptr, running headless"));
     return;
   }
   mRootWindow = gdk_get_default_root_window();
@@ -115,37 +105,21 @@ ScreenHelperGTK::~ScreenHelperGTK()
     g_object_unref(mRootWindow);
     mRootWindow = nullptr;
   }
-
-  /* XineramaIsActive() registers a callback function close_display()
-   * in X, which is to be called in XCloseDisplay(). This is the case
-   * if Xinerama is active, even if only with one screen.
-   *
-   * We can't unload libXinerama.so.1 here because this will make
-   * the address of close_display() registered in X to be invalid and
-   * it will crash when XCloseDisplay() is called later. */
 }
 
 gint
-ScreenHelperGTK::GetGTKMonitorScaleFactor()
+ScreenHelperGTK::GetGTKMonitorScaleFactor(gint aMonitorNum)
 {
 #if (MOZ_WIDGET_GTK >= 3)
   // Since GDK 3.10
   static auto sGdkScreenGetMonitorScaleFactorPtr = (gint (*)(GdkScreen*, gint))
     dlsym(RTLD_DEFAULT, "gdk_screen_get_monitor_scale_factor");
   if (sGdkScreenGetMonitorScaleFactorPtr) {
-    // FIXME: In the future, we'll want to fix this for GTK on Wayland which
-    // supports a variable scale factor per display.
     GdkScreen *screen = gdk_screen_get_default();
-    return sGdkScreenGetMonitorScaleFactorPtr(screen, 0);
+    return sGdkScreenGetMonitorScaleFactorPtr(screen, aMonitorNum);
   }
 #endif
   return 1;
-}
-
-static float
-GetDefaultCssScale()
-{
-  return ScreenHelperGTK::GetGTKMonitorScaleFactor() * gfxPlatformGtk::GetDPIScale();
 }
 
 static uint32_t
@@ -156,113 +130,54 @@ GetGTKPixelDepth()
 }
 
 static already_AddRefed<Screen>
-MakeScreen(GdkWindow* aRootWindow)
+MakeScreen(GdkScreen* aScreen, gint aMonitorNum)
 {
-  RefPtr<Screen> screen;
+  GdkRectangle monitor;
+  GdkRectangle workarea;
+  gdk_screen_get_monitor_geometry(aScreen, aMonitorNum, &monitor);
+  gdk_screen_get_monitor_workarea(aScreen, aMonitorNum, &workarea);
+  gint gdkScaleFactor = ScreenHelperGTK::GetGTKMonitorScaleFactor(aMonitorNum);
 
-  gint scale = ScreenHelperGTK::GetGTKMonitorScaleFactor();
-  gint width = gdk_screen_width() * scale;
-  gint height = gdk_screen_height() * scale;
+  // gdk_screen_get_monitor_geometry / workarea returns application pixels
+  // (desktop pixels), so we need to convert it to device pixels with
+  // gdkScaleFactor.
+  LayoutDeviceIntRect rect(monitor.x * gdkScaleFactor,
+                           monitor.y * gdkScaleFactor,
+                           monitor.width * gdkScaleFactor,
+                           monitor.height * gdkScaleFactor);
+  LayoutDeviceIntRect availRect(workarea.x * gdkScaleFactor,
+                                workarea.y * gdkScaleFactor,
+                                workarea.width * gdkScaleFactor,
+                                workarea.height * gdkScaleFactor);
   uint32_t pixelDepth = GetGTKPixelDepth();
+
+  // Use per-monitor scaling factor in gtk/wayland, or 1.0 otherwise.
   DesktopToLayoutDeviceScale contentsScale(1.0);
-  CSSToLayoutDeviceScale defaultCssScale(GetDefaultCssScale());
-
-  LayoutDeviceIntRect rect;
-  LayoutDeviceIntRect availRect;
-  rect = availRect = LayoutDeviceIntRect(0, 0, width, height);
-
-#ifdef MOZ_X11
-  // We need to account for the taskbar, etc in the available rect.
-  // See http://freedesktop.org/Standards/wm-spec/index.html#id2767771
-
-  // XXX do we care about _NET_WM_STRUT_PARTIAL?  That will
-  // add much more complexity to the code here (our screen
-  // could have a non-rectangular shape), but should
-  // lead to greater accuracy.
-
-  long *workareas;
-  GdkAtom type_returned;
-  int format_returned;
-  int length_returned;
-
-  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
-
-  gdk_error_trap_push();
-
-  // gdk_property_get uses (length + 3) / 4, hence G_MAXLONG - 3 here.
-  if (!gdk_property_get(aRootWindow,
-                        gdk_atom_intern ("_NET_WORKAREA", FALSE),
-                        cardinal_atom,
-                        0, G_MAXLONG - 3, FALSE,
-                        &type_returned,
-                        &format_returned,
-                        &length_returned,
-                        (guchar **) &workareas)) {
-    // This window manager doesn't support the freedesktop standard.
-    // Nothing we can do about it, so assume full screen size.
-    MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f]",
-                                          rect.x, rect.y, rect.width, rect.height,
-                                          pixelDepth, defaultCssScale.scale));
-    screen = new Screen(rect, availRect,
-                        pixelDepth, pixelDepth,
-                        contentsScale, defaultCssScale);
-    return screen.forget();
-  }
-
-  // Flush the X queue to catch errors now.
-  gdk_flush();
-
-  if (!gdk_error_trap_pop() &&
-      type_returned == cardinal_atom &&
-      length_returned && (length_returned % 4) == 0 &&
-      format_returned == 32) {
-    int num_items = length_returned / sizeof(long);
-
-    for (int i = 0; i < num_items; i += 4) {
-      LayoutDeviceIntRect workarea(workareas[i],     workareas[i + 1],
-                                   workareas[i + 2], workareas[i + 3]);
-      if (!rect.Contains(workarea)) {
-        // Note that we hit this when processing screen size changes,
-        // since we'll get the configure event before the toolbars have
-        // been moved.  We'll end up cleaning this up when we get the
-        // change notification to the _NET_WORKAREA property.  However,
-        // we still want to listen to both, so we'll handle changes
-        // properly for desktop environments that don't set the
-        // _NET_WORKAREA property.
-        NS_WARNING("Invalid bounds");
-        continue;
-      }
-
-      availRect.IntersectRect(availRect, workarea);
+#ifdef MOZ_WAYLAND
+    GdkDisplay* gdkDisplay = gdk_display_get_default();
+    if (GDK_IS_WAYLAND_DISPLAY(gdkDisplay)) {
+      contentsScale.scale = gdkScaleFactor;
     }
-  }
-  g_free(workareas);
 #endif
-  MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f]",
-                                        rect.x, rect.y, rect.width, rect.height,
-                                        pixelDepth, defaultCssScale.scale));
-  screen = new Screen(rect, availRect,
-                      pixelDepth, pixelDepth,
-                      contentsScale, defaultCssScale);
-  return screen.forget();
-}
 
-static already_AddRefed<Screen>
-MakeScreen(const XineramaScreenInfo& aScreenInfo)
-{
-  LayoutDeviceIntRect xineRect(aScreenInfo.x_org, aScreenInfo.y_org,
-                               aScreenInfo.width, aScreenInfo.height);
-  uint32_t pixelDepth = GetGTKPixelDepth();
-  DesktopToLayoutDeviceScale contentsScale(1.0);
-  CSSToLayoutDeviceScale defaultCssScale(GetDefaultCssScale());
+  CSSToLayoutDeviceScale defaultCssScale(
+    gdkScaleFactor * gfxPlatformGtk::GetFontScaleFactor());
 
-  MOZ_LOG(sScreenLog, LogLevel::Debug, ("New screen [%d %d %d %d %d %f]",
-                                        xineRect.x, xineRect.y,
-                                        xineRect.width, xineRect.height,
-                                        pixelDepth, defaultCssScale.scale));
-  RefPtr<Screen> screen = new Screen(xineRect, xineRect,
+  float dpi = 96.0f;
+  gint heightMM = gdk_screen_get_monitor_height_mm(aScreen, aMonitorNum);
+  if (heightMM > 0) {
+    dpi = rect.height / (heightMM / MM_PER_INCH_FLOAT);
+  }
+
+  MOZ_LOG(sScreenLog, LogLevel::Debug,
+           ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
+            rect.x, rect.y, rect.width, rect.height,
+            availRect.x, availRect.y, availRect.width, availRect.height,
+            pixelDepth, contentsScale.scale, defaultCssScale.scale, dpi));
+  RefPtr<Screen> screen = new Screen(rect, availRect,
                                      pixelDepth, pixelDepth,
-                                     contentsScale, defaultCssScale);
+                                     contentsScale, defaultCssScale,
+                                     dpi);
   return screen.forget();
 }
 
@@ -271,57 +186,16 @@ ScreenHelperGTK::RefreshScreens()
 {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing screens"));
   AutoTArray<RefPtr<Screen>, 4> screenList;
-#ifdef MOZ_X11
-  XineramaScreenInfo *screenInfo = nullptr;
-  int numScreens;
 
-  bool useXinerama = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  GdkScreen *defaultScreen = gdk_screen_get_default();
+  gint numScreens = gdk_screen_get_n_monitors(defaultScreen);
+  MOZ_LOG(sScreenLog, LogLevel::Debug,
+          ("GDK reports %d screens", numScreens));
 
-  if (useXinerama && !mXineramalib) {
-    mXineramalib = PR_LoadLibrary("libXinerama.so.1");
-    if (!mXineramalib) {
-      mXineramalib = SCREEN_MANAGER_LIBRARY_LOAD_FAILED;
-    }
-  }
-  if (mXineramalib && mXineramalib != SCREEN_MANAGER_LIBRARY_LOAD_FAILED) {
-    _XnrmIsActive_fn _XnrmIsActive = (_XnrmIsActive_fn)
-        PR_FindFunctionSymbol(mXineramalib, "XineramaIsActive");
-
-    _XnrmQueryScreens_fn _XnrmQueryScreens = (_XnrmQueryScreens_fn)
-        PR_FindFunctionSymbol(mXineramalib, "XineramaQueryScreens");
-
-    // get the number of screens via xinerama
-    Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
-    if (_XnrmIsActive && _XnrmQueryScreens && _XnrmIsActive(display)) {
-      screenInfo = _XnrmQueryScreens(display, &numScreens);
-    }
+  for (gint i = 0; i < numScreens; i++) {
+    screenList.AppendElement(MakeScreen(defaultScreen, i));
   }
 
-  // screenInfo == nullptr if either Xinerama couldn't be loaded or
-  // isn't running on the current display
-  if (!screenInfo || numScreens == 1) {
-    numScreens = 1;
-#endif
-    MOZ_LOG(sScreenLog, LogLevel::Debug, ("Find only one screen available"));
-    // Get primary screen
-    screenList.AppendElement(MakeScreen(mRootWindow));
-#ifdef MOZ_X11
-  }
-  // If Xinerama is enabled and there's more than one screen, fill
-  // in the info for all of the screens.  If that's not the case
-  // then defaults to the screen width + height
-  else {
-    MOZ_LOG(sScreenLog, LogLevel::Debug,
-            ("Xinerama enabled for %d screens", numScreens));
-    for (int i = 0; i < numScreens; ++i) {
-      screenList.AppendElement(MakeScreen(screenInfo[i]));
-    }
-  }
-
-  if (screenInfo) {
-    XFree(screenInfo);
-  }
-#endif
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.Refresh(Move(screenList));
 }

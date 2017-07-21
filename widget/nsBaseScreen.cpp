@@ -44,3 +44,10 @@ nsBaseScreen::GetDefaultCSSScaleFactor(double* aScaleFactor)
   *aScaleFactor = 1.0;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBaseScreen::GetDpi(float* aDPI)
+{
+  *aDPI = 96;
+  return NS_OK;
+}

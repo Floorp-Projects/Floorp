@@ -516,7 +516,7 @@ nsWebBrowserFind::GetSearchLimits(nsIDOMRange* aSearchRange,
 
   nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsIDOMNode> node;
-  int32_t offset;
+  uint32_t offset;
 
   // Forward, not wrapping: SelEnd to DocEnd
   if (!mFindBackwards && !aWrap) {

@@ -884,6 +884,25 @@ const transformListType = {
         [{ time: 500, expected: rotate3dToMatrix(1, 1, 0, Math.PI * 2 / 4) }]);
     }, property + ': matrix3d');
 
+    // This test aims for forcing the two mismatched transforms to be
+    // decomposed into matrix3d before interpolation. Therefore, we not only
+    // test the interpolation, but also test the 3D matrix decomposition.
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =
+        target.animate({ [idlName]: ['scale(0.3)',
+                                     // scale(0.5) translateZ(1px)
+                                     'matrix3d(0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1)'] },
+                       1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 500,  expected: [ 0.4, 0,   0,   0,
+                                   0,   0.4, 0,   0,
+                                   0,   0,   1,   0,
+                                   0,   0,   0.5, 1] }]);
+    }, property + ': mismatched 3D transforms');
+
   },
 
   testAddition: function(property, setup) {

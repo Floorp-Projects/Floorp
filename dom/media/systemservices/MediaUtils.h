@@ -324,11 +324,28 @@ private:
  * a constructor. Please add below (UniquePtr covers a lot of ground though).
  */
 
-template<typename T>
-class Refcountable : public T
+class RefcountableBase
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefcountableBase)
+protected:
+  virtual ~RefcountableBase() {}
+};
+
+template<typename T>
+class Refcountable : public T, public RefcountableBase
+{
+public:
+  NS_METHOD_(MozExternalRefCountType) AddRef()
+  {
+    return RefcountableBase::AddRef();
+  }
+
+  NS_METHOD_(MozExternalRefCountType) Release()
+  {
+    return RefcountableBase::Release();
+  }
+
 private:
   ~Refcountable<T>() {}
 };
