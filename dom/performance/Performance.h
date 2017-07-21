@@ -11,7 +11,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsIMemoryReporter.h"
 
 class nsITimedChannel;
 class nsIHttpChannel;
@@ -34,13 +33,9 @@ class WorkerPrivate;
 
 // Base class for main-thread and worker Performance API
 class Performance : public DOMEventTargetHelper
-                  , public nsIMemoryReporter
 {
-  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIMEMORYREPORTER
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Performance,
                                            DOMEventTargetHelper)
 
