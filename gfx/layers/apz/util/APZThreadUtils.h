@@ -97,12 +97,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD SetName(const char * aName) override
-  {
-    mName.Assign(aName);
-    return NS_OK;
-  }
-
 private:
   Function mFunction;
   nsCString mName;

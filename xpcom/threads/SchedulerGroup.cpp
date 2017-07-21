@@ -173,16 +173,10 @@ SchedulerGroup::UnlabeledDispatch(const char* aName,
                                   TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
   if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
+    return NS_DispatchToCurrentThread(Move(aRunnable));
   } else {
-    return NS_DispatchToMainThread(runnable.forget());
+    return NS_DispatchToMainThread(Move(aRunnable));
   }
 }
 

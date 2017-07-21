@@ -3954,12 +3954,6 @@ XMLHttpRequestMainThread::GetName(nsACString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-XMLHttpRequestMainThread::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // nsXMLHttpRequestXPCOMifier implementation
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXMLHttpRequestXPCOMifier)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
