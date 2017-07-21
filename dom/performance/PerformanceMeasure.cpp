@@ -31,9 +31,3 @@ PerformanceMeasure::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
 {
   return PerformanceMeasureBinding::Wrap(aCx, this, aGivenProto);
 }
-
-size_t
-PerformanceMeasure::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-{
-  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-}
