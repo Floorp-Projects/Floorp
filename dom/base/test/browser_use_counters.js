@@ -108,25 +108,15 @@ function waitForPageLoad(browser) {
 
 function grabHistogramsFromContent(use_counter_middlefix, page_before = null) {
   let telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
-  let gather = () => {
-    let snapshots;
-    if (Services.appinfo.browserTabsRemoteAutostart) {
-      snapshots = telemetry.histogramSnapshots.content;
-    } else {
-      snapshots = telemetry.histogramSnapshots.parent;
-    }
-    let checkGet = (probe) => {
-      return snapshots[probe] ? snapshots[probe].sum : 0;
-    };
-    return [
-      checkGet("USE_COUNTER2_" + use_counter_middlefix + "_PAGE"),
-      checkGet("USE_COUNTER2_" + use_counter_middlefix + "_DOCUMENT"),
-      checkGet("CONTENT_DOCUMENTS_DESTROYED"),
-      checkGet("TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED"),
-    ];
-  };
+  let suffix = Services.appinfo.browserTabsRemoteAutostart ? "#content" : "";
+  let gather = () => [
+    telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_PAGE" + suffix).snapshot().sum,
+    telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_DOCUMENT" + suffix).snapshot().sum,
+    telemetry.getHistogramById("CONTENT_DOCUMENTS_DESTROYED" + suffix).snapshot().sum,
+    telemetry.getHistogramById("TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED" + suffix).snapshot().sum,
+  ];
   return BrowserTestUtils.waitForCondition(() => {
-    return page_before != gather()[0];
+    return page_before != telemetry.getHistogramById("USE_COUNTER2_" + use_counter_middlefix + "_PAGE" + suffix).snapshot().sum;
   }).then(gather, gather);
 }
 
