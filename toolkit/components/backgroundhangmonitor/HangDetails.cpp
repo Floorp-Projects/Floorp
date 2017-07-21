@@ -8,30 +8,6 @@
 
 namespace mozilla {
 
-HangDetails::HangDetails(const HangDetails& aOther)
-  : mDuration(aOther.mDuration)
-  , mThreadName(aOther.mThreadName)
-  , mRunnableName(aOther.mRunnableName)
-  , mPseudoStack(aOther.mPseudoStack)
-  , mAnnotations(nullptr)
-  , mStack(aOther.mStack)
-{
-  // XXX: The current implementation of mAnnotations is really suboptimal here.
-  if (!aOther.mAnnotations) {
-    return;
-  }
-
-  mAnnotations = mozilla::HangMonitor::CreateEmptyHangAnnotations();
-  auto enumerator = aOther.mAnnotations->GetEnumerator();
-  if (enumerator) {
-    nsAutoString key;
-    nsAutoString value;
-    while (enumerator->Next(key, value)) {
-      mAnnotations->AddAnnotation(key, value);
-    }
-  }
-}
-
 NS_IMETHODIMP
 nsHangDetails::GetDuration(uint32_t* aDuration)
 {
@@ -140,23 +116,16 @@ nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!mDetails.mAnnotations) {
-    aVal.setObject(*jsAnnotation);
-    return NS_OK;
-  }
-
-  // Loop over all of the annotations in the enumerator and add them.
-  auto enumerator = mDetails.mAnnotations->GetEnumerator();
-  if (enumerator) {
-    nsAutoString key;
-    nsAutoString value;
-    while (enumerator->Next(key, value)) {
-      JS::RootedValue jsValue(aCx);
-      jsValue.setString(JS_NewUCStringCopyN(aCx, value.get(), value.Length()));
-      if (!JS_DefineUCProperty(aCx, jsAnnotation, key.get(), key.Length(),
-                               jsValue, JSPROP_ENUMERATE)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+  for (auto& annot : mDetails.mAnnotations) {
+    JSString* jsString = JS_NewUCStringCopyN(aCx, annot.mValue.get(), annot.mValue.Length());
+    if (!jsString) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    JS::RootedValue jsValue(aCx);
+    jsValue.setString(jsString);
+    if (!JS_DefineUCProperty(aCx, jsAnnotation, annot.mName.get(), annot.mName.Length(),
+                             jsValue, JSPROP_ENUMERATE)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 
@@ -172,7 +141,11 @@ nsHangDetails::GetPseudoStack(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   for (size_t i = 0; i < mDetails.mPseudoStack.length(); ++i) {
-    JS::RootedString string(aCx, JS_NewStringCopyZ(aCx, mDetails.mPseudoStack[i]));
+    JSString* jsString = JS_NewStringCopyZ(aCx, mDetails.mPseudoStack[i]);
+    if (!jsString) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    JS::RootedString string(aCx, jsString);
     if (!string) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -265,22 +238,7 @@ ParamTraits<mozilla::HangDetails>::Write(Message* aMsg, const mozilla::HangDetai
   WriteParam(aMsg, aParam.mRunnableName);
   WriteParam(aMsg, aParam.mPseudoStack);
 
-  // Write out the annotation information
-  {
-    // If we have no annotations, write out a 0-length annotations.
-    if (!aParam.mAnnotations) {
-      WriteParam(aMsg, 0);
-    }
-    size_t length = aParam.mAnnotations->Count();
-    WriteParam(aMsg, length);
-    auto enumerator = aParam.mAnnotations->GetEnumerator();
-    nsAutoString key;
-    nsAutoString value;
-    while (enumerator->Next(key, value)) {
-      WriteParam(aMsg, key);
-      WriteParam(aMsg, value);
-    }
-  }
+  WriteParam(aMsg, aParam.mAnnotations);
 
   // NOTE: ProcessedStack will stop being used for BHR in bug 1367406, so this
   // inline serialization will survive until then.
@@ -330,26 +288,8 @@ ParamTraits<mozilla::HangDetails>::Read(const Message* aMsg,
   }
 
   // Annotation information
-  {
-    aResult->mAnnotations =
-      mozilla::HangMonitor::CreateEmptyHangAnnotations();
-
-    size_t length;
-    if (!ReadParam(aMsg, aIter, &length)) {
-      return false;
-    }
-
-    for (size_t i = 0; i < length; ++i) {
-      nsAutoString key;
-      if (!ReadParam(aMsg, aIter, &key)) {
-        return false;
-      }
-      nsAutoString value;
-      if (!ReadParam(aMsg, aIter, &value)) {
-        return false;
-      }
-      aResult->mAnnotations->AddAnnotation(key, value);
-    }
+  if (!ReadParam(aMsg, aIter, &aResult->mAnnotations)) {
+    return false;
   }
 
   // NOTE: ProcessedStack will stop being used for BHR in bug 1367406, so this
