@@ -24,7 +24,7 @@ add_task(function*() {
   yield addBreakpoint(dbg, mainSrc, 4);
   is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
   ok(
-    getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4 }),
+    getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4, column: 2 }),
     "Breakpoint has correct line"
   );
 
