@@ -160,8 +160,7 @@ void ReadAheadFile(pathstr_t aFilePath, const size_t aOffset = 0,
 void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                const size_t aCount = SIZE_MAX);
 
-
-#if defined(MOZ_WIDGET_GONK) || defined(XP_UNIX)
+#if defined(XP_UNIX)
 #define MOZ_TEMP_FAILURE_RETRY(exp) (__extension__({ \
   typeof (exp) _rc; \
   do { \
@@ -170,50 +169,6 @@ void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
   _rc; \
 }))
 #endif
-
-/* Define ReadSysFile() and WriteSysFile() only on GONK to avoid unnecessary
- * libxul bloat. Also define it in debug builds, so that unit tests for it can
- * be written and run in non-GONK builds. */
-#if (defined(MOZ_WIDGET_GONK) || defined(DEBUG)) && defined(XP_UNIX)
-
-#ifndef ReadSysFile_PRESENT
-#define ReadSysFile_PRESENT
-#endif /* ReadSysFile_PRESENT */
-
-#ifndef WriteSysFile_PRESENT
-#define WriteSysFile_PRESENT
-#endif /* WriteSysFile_PRESENT */
-
-/**
- * Read the contents of a file.
- * This function is intended for reading a single-lined text files from
- * /sys/. If the file ends with a newline ('\n') then it will be discarded.
- * The output buffer will always be '\0'-terminated on successful completion.
- * If aBufSize == 0, then this function will return true if the file exists
- * and is readable (it will not attempt to read anything from it).
- * On failure the contents of aBuf after this call will be undefined and the
- * value of the global variable errno will be set accordingly.
- * @return true on success, notice that less than requested bytes could have
- * been read if the file was smaller
- */
-bool ReadSysFile(const char* aFilename, char* aBuf, size_t aBufSize);
-
-/**
- * Parse the contents of a file, assuming it contains a decimal integer.
- * @return true on success
- */
-bool ReadSysFile(const char* aFilename, int* aVal);
-
-/**
- * Parse the contents of a file, assuming it contains a boolean value
- * (either 0 or 1).
- * @return true on success
- */
-bool ReadSysFile(const char* aFilename, bool* aVal);
-
-bool WriteSysFile(const char* aFilename, const char* aBuf);
-
-#endif /* (MOZ_WIDGET_GONK || DEBUG) && XP_UNIX */
 
 } // namespace mozilla
 

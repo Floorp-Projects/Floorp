@@ -9,7 +9,6 @@
 var testGenerator = testSteps();
 
 var testResult;
-var testException;
 
 function runTest()
 {
@@ -28,16 +27,7 @@ function finishTest()
 {
   setTimeout(finishTestNow, 0);
   setTimeout(() => {
-    if (window.testFinishedCallback)
-      window.testFinishedCallback(testResult, testException);
-    else {
-      let message;
-      if (testResult)
-        message = "ok";
-      else
-        message = testException;
-      window.parent.postMessage(message, "*");
-    }
+    window.parent.postMessage(testResult, "*");
   }, 0);
 }
 

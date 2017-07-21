@@ -309,7 +309,7 @@ ScreenOrientation::LockInternal(ScreenOrientationInternal aOrientation, ErrorRes
     return nullptr;
   }
 
-#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if !defined(MOZ_WIDGET_ANDROID)
   // User agent does not support locking the screen orientation.
   p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   return p.forget();

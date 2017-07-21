@@ -559,7 +559,7 @@ WINDOW_EVENT(online,
              eOnline,
              EventNameType_XUL | EventNameType_HTMLBodyOrFramesetOnly,
              eBasicEventClass)
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_WIDGET_ANDROID)
 WINDOW_EVENT(orientationchange,
              eOrientationChange,
              EventNameType_HTMLBodyOrFramesetOnly,

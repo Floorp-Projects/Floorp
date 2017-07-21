@@ -388,7 +388,7 @@ class TraceLoggerThreadState
 
     typedef HashMap<const void*,
                     TraceLoggerEventPayload*,
-                    PointerHasher<const void*, 3>,
+                    PointerHasher<const void*>,
                     SystemAllocPolicy> PointerHashMap;
     typedef HashMap<uint32_t,
                     TraceLoggerEventPayload*,

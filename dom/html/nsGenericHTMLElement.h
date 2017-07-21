@@ -1097,6 +1097,12 @@ public:
    */
   virtual void FieldSetDisabledChanged(bool aNotify);
 
+  /**
+   * Check our disabled content attribute and fieldset's (if it exists) disabled
+   * state to decide whether our disabled flag should be toggled.
+   */
+  void UpdateDisabledState(bool aNotify);
+
   void FieldSetFirstLegendChanged(bool aNotify) {
     UpdateFieldSet(aNotify);
   }

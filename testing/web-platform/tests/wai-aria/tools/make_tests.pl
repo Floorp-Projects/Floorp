@@ -275,12 +275,22 @@ while (<$io>) {
             value => $3
           };
           $theStep = undef;
+          push(@steps, $obj);
         } else {
           print STDERR "Malformed attribute instruction at line $lineCounter: " . $_ . "\n";
         }
-        push(@steps, $obj);
       } elsif ($type eq "event") {
-        print STDERR "Event support from wikis is not yet implemnted at line #lineCounter\n";
+        if ($params =~ m/([^:]+):([^ ]+).*$/) {
+          $obj = {
+            type => $type,
+            element => $1,
+            value => $2
+          };
+          $theStep = undef;
+          push(@steps, $obj);
+        } else {
+          print STDERR "Malformed event instruction at line $lineCounter: " . $_ . "\n";
+        }
       } elsif ($type eq "element") {
         $obj = {
           type => "test",
@@ -488,6 +498,10 @@ sub build_test() {
       $step->{element} = $asserts->{"element"};
       $step->{attribute} = $asserts->{"attribute"};
       $step->{value} = $asserts->{value};
+    } elsif ($asserts->{type} eq "event") {
+      $step->{type} = "event";
+      $step->{element} = $asserts->{"element"};
+      $step->{event} = $asserts->{value};
     } else {
       print STDERR "Invalid step type: " . $asserts->{type} . "\n";
       next;

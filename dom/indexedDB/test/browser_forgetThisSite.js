@@ -18,85 +18,46 @@ const testPageURL2 = "http://" + domains[1] + addPath;
 const testPageURL3 = "http://" + domains[0] + getPath;
 const testPageURL4 = "http://" + domains[1] + getPath;
 
-function test()
-{
+add_task(async function test1() {
   requestLongerTimeout(2);
-  waitForExplicitFinish();
   // Avoids the prompt
   setPermission(testPageURL1, "indexedDB");
   setPermission(testPageURL2, "indexedDB");
-  executeSoon(test1);
-}
 
-function test1()
-{
   // Set database version for domain 1
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    setFinishedCallback(function(result, exception) {
-      ok(result == 11, "Set version on database in " + testPageURL1);
-      ok(!exception, "No exception");
-      gBrowser.removeCurrentTab();
+  gBrowser.selectedBrowser.loadURI(testPageURL1);
+  await waitForMessage(11, gBrowser);
+  gBrowser.removeCurrentTab();
+});
 
-      executeSoon(test2);
-    });
-  }, {capture: true, once: true});
-  content.location = testPageURL1;
-}
-
-function test2()
-{
+add_task(async function test2() {
   // Set database version for domain 2
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    setFinishedCallback(function(result, exception) {
-      ok(result == 11, "Set version on database in " + testPageURL2);
-      ok(!exception, "No exception");
-      gBrowser.removeCurrentTab();
+  gBrowser.selectedBrowser.loadURI(testPageURL2);
+  await waitForMessage(11, gBrowser);
+  gBrowser.removeCurrentTab();
+});
 
-      executeSoon(test3);
-    });
-  }, {capture: true, once: true});
-  content.location = testPageURL2;
-}
-
-function test3()
-{
+add_task(async function test3() {
   // Remove database from domain 2
   ForgetAboutSite.removeDataFromDomain(domains[1]).then(() => {
     setPermission(testPageURL4, "indexedDB");
-    executeSoon(test4);
   });
-}
+});
 
-function test4()
-{
+add_task(async function test4() {
   // Get database version for domain 1
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    setFinishedCallback(function(result, exception) {
-      ok(result == 11, "Got correct version on database in " + testPageURL3);
-      ok(!exception, "No exception");
-      gBrowser.removeCurrentTab();
+  gBrowser.selectedBrowser.loadURI(testPageURL3);
+  await waitForMessage(11, gBrowser);
+  gBrowser.removeCurrentTab();
+});
 
-      executeSoon(test5);
-    });
-  }, {capture: true, once: true});
-  content.location = testPageURL3;
-}
-
-function test5()
-{
+add_task(async function test5() {
   // Get database version for domain 2
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    setFinishedCallback(function(result, exception) {
-      ok(result == 1, "Got correct version on database in " + testPageURL4);
-      ok(!exception, "No exception");
-      gBrowser.removeCurrentTab();
-
-      executeSoon(finish);
-    });
-  }, {capture: true, once: true});
-  content.location = testPageURL4;
-}
+  gBrowser.selectedBrowser.loadURI(testPageURL4);
+  await waitForMessage(1, gBrowser);
+  gBrowser.removeCurrentTab();
+});

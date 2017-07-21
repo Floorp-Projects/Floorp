@@ -5015,6 +5015,13 @@ nsHttpChannel::ReadFromCache(bool alreadyMarkedValid)
     LOG(("nsHttpChannel::ReadFromCache [this=%p] "
          "Using cached copy of: %s\n", this, mSpec.get()));
 
+    // When racing the cache with the network with a timer, and we get data from
+    // the cache, we should prevent the timer from triggering a network request.
+    if (mNetworkTriggerTimer) {
+        mNetworkTriggerTimer->Cancel();
+        mNetworkTriggerTimer = nullptr;
+    }
+
     if (mRaceCacheWithNetwork) {
         MOZ_ASSERT(mFirstResponseSource != RESPONSE_FROM_CACHE);
         if (mFirstResponseSource == RESPONSE_PENDING) {
@@ -9076,7 +9083,7 @@ nsHttpChannel::ReportRcwnStats(bool isFromNet)
             AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::NetworkNoRace);
         }
     } else {
-        if (mRaceCacheWithNetwork) {
+        if (mRaceCacheWithNetwork || mRaceDelay) {
             gIOService->IncrementCacheWonRequestNumber();
             Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN, mTransferSize);
             if (mRaceDelay) {

@@ -11,6 +11,7 @@ EXTRA_DIST = \
 	harfbuzz.doap \
 	README.python \
 	BUILD.md \
+	CMakeLists.txt \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \

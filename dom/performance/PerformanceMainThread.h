@@ -13,15 +13,17 @@ namespace mozilla {
 namespace dom {
 
 class PerformanceMainThread final : public Performance
+                                  , public nsIObserver
 {
 public:
-  PerformanceMainThread(nsPIDOMWindowInner* aWindow,
-                        nsDOMNavigationTiming* aDOMTiming,
-                        nsITimedChannel* aChannel);
-
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIOBSERVER
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(PerformanceMainThread,
                                                          Performance)
+
+  static already_AddRefed<PerformanceMainThread>
+  Create(nsPIDOMWindowInner* aWindow, nsDOMNavigationTiming* aDOMTiming,
+         nsITimedChannel* aChannel);
 
   virtual PerformanceTiming* Timing() override;
 
@@ -47,13 +49,14 @@ public:
     return mChannel;
   }
 
-protected:
-  ~PerformanceMainThread();
+  void Shutdown() override;
 
-  nsISupports* GetAsISupports() override
-  {
-    return this;
-  }
+protected:
+  PerformanceMainThread(nsPIDOMWindowInner* aWindow,
+                        nsDOMNavigationTiming* aDOMTiming,
+                        nsITimedChannel* aChannel);
+
+  ~PerformanceMainThread();
 
   void InsertUserEntry(PerformanceEntry* aEntry) override;
 

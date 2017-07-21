@@ -28,6 +28,16 @@
     assert_equals(evt.reason, reason, 'The reason for closing the presentation connection is "' + reason + '".');
   };
 
+  const watchEvent = (obj, watcher, type) => {
+    const watchHandler = new Promise(resolve => {
+      obj['on' + type] = evt => { resolve(evt); };
+    });
+    return Promise.all([ watchHandler, watcher.wait_for(type) ]).then(results => {
+      assert_equals(results[0], results[1], 'Both on' + type + ' and addEventListener pass the same event object.');
+      return results[0];
+    });
+  };
+
   promise_test(t => {
     return navigator.presentation.receiver.connectionList.then(list => {
       let connection = list.connections[0];
@@ -37,16 +47,16 @@
       connection.close();
       let watchClose = new EventWatcher(t, connection, 'close');
       const watchNewConnection = new EventWatcher(t, list, 'connectionavailable');
-      return watchClose.wait_for('close').then(evt => {
+      return watchEvent(connection, watchClose, 'close').then(evt => {
         checkCloseEvent(evt, connection, 'closed');
 
         // Step 2: check a connection closed by the controlling user agent
         stash.send(JSON.stringify({ type: 'ok' }));
-        return watchNewConnection.wait_for('connectionavailable')
+        return watchNewConnection.wait_for('connectionavailable');
       }).then(evt => {
         connection = evt.connection;
         watchClose = new EventWatcher(t, connection, 'close');
-        return watchClose.wait_for('close');
+        return watchEvent(connection, watchClose, 'close');
       }).then(evt => {
         checkCloseEvent(evt, connection, 'closed');
 
@@ -54,7 +64,7 @@
         connection.close();
         return Promise.race([
           new Promise(resolve => { t.step_timeout(resolve, 1000); }),
-          watchClose.wait_for('close').then(() => {
+          watchEvent(connection, watchClose, 'close').then(() => {
             assert_unreached('Invoking PresentationConnection.close() in the "closed" state causes nothing.'); })
         ]);
       }).then(() => {
@@ -67,7 +77,7 @@
         stash.send(JSON.stringify({ type: 'ok' }));
         watchClose = new EventWatcher(t, connection, 'close');
         return Promise.race([
-          watchClose.wait_for('close'),
+          watchEvent(connection, watchClose, 'close'),
           new Promise(resolve => { t.step_timeout(() => { resolve(null); }, 3000); })
         ]);
       }).then(evt => {

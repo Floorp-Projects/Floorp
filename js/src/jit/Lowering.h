@@ -91,7 +91,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInitElem(MInitElem* ins);
     void visitInitElemGetterSetter(MInitElemGetterSetter* ins);
     void visitMutateProto(MMutateProto* ins);
-    void visitInitProp(MInitProp* ins);
     void visitInitPropGetterSetter(MInitPropGetterSetter* ins);
     void visitCheckOverRecursed(MCheckOverRecursed* ins);
     void visitDefVar(MDefVar* ins);
@@ -186,6 +185,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitBinarySharedStub(MBinarySharedStub* ins);
     void visitUnarySharedStub(MUnarySharedStub* ins);
     void visitNullarySharedStub(MNullarySharedStub* ins);
+    void visitClassConstructor(MClassConstructor* ins);
     void visitLambda(MLambda* ins);
     void visitLambdaArrow(MLambdaArrow* ins);
     void visitSetFunName(MSetFunName* ins);
@@ -295,6 +295,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitIsCallable(MIsCallable* ins);
     void visitIsConstructor(MIsConstructor* ins);
     void visitIsArray(MIsArray* ins);
+    void visitIsTypedArray(MIsTypedArray* ins);
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
     void visitWasmAddOffset(MWasmAddOffset* ins);

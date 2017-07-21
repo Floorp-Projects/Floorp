@@ -103,11 +103,6 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
         return true;
     }
     PluginModuleChromeParent* chromeParent = static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
-    /*
-     *  We can't accumulate BLOCKED_ON_PLUGIN_MODULE_INIT_MS until here because
-     *  its histogram key is not available until *after* NP_Initialize.
-     */
-    chromeParent->AccumulateModuleInitBlockedTime();
     *rv = chromeParent->GetRunID(runID);
     if (NS_FAILED(*rv)) {
         return true;
@@ -418,17 +413,14 @@ PluginModuleContentParent::LoadModule(uint32_t aPluginId,
     nsresult rv;
     uint32_t runID;
     Endpoint<PPluginModuleParent> endpoint;
-    TimeStamp sendLoadPluginStart = TimeStamp::Now();
     if (!cp->SendLoadPlugin(aPluginId, &rv, &runID, &endpoint) ||
         NS_FAILED(rv)) {
         return nullptr;
     }
     Initialize(Move(endpoint));
-    TimeStamp sendLoadPluginEnd = TimeStamp::Now();
 
     PluginModuleContentParent* parent = mapping->GetModule();
     MOZ_ASSERT(parent);
-    parent->mTimeBlocked += (sendLoadPluginEnd - sendLoadPluginStart);
 
     if (!mapping->IsChannelOpened()) {
         // mapping is linked into PluginModuleMapping::sModuleListHead and is
@@ -481,7 +473,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
             new PluginModuleChromeParent(aFilePath, aPluginId,
                                          aPluginTag->mSandboxLevel));
     UniquePtr<LaunchCompleteTask> onLaunchedRunnable(new LaunchedTask(parent));
-    TimeStamp launchStart = TimeStamp::Now();
     bool launched = parent->mSubprocess->Launch(Move(onLaunchedRunnable),
                                                 aPluginTag->mSandboxLevel);
     if (!launched) {
@@ -498,8 +489,6 @@ PluginModuleChromeParent::LoadModule(const char* aFilePath, uint32_t aPluginId,
         parent->mShutdown = true;
         return nullptr;
     }
-    TimeStamp launchEnd = TimeStamp::Now();
-    parent->mTimeBlocked = (launchEnd - launchStart);
     return parent.forget();
 }
 
@@ -2107,7 +2096,7 @@ PluginModuleChromeParent::CachedSettingChanged(const char* aPref, void* aModule)
     module->CachedSettingChanged();
 }
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
 {
@@ -2145,7 +2134,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
     PluginSettings settings;
     GetSettings(&settings);
 
-    TimeStamp callNpInitStart = TimeStamp::Now();
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
@@ -2154,8 +2142,6 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* 
         Close();
         return NS_ERROR_FAILURE;
     }
-    TimeStamp callNpInitEnd = TimeStamp::Now();
-    mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
     if (*error != NPERR_NO_ERROR) {
         OnInitFailure();
@@ -2206,13 +2192,10 @@ PluginModuleChromeParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error)
     PluginSettings settings;
     GetSettings(&settings);
 
-    TimeStamp callNpInitStart = TimeStamp::Now();
     if (!CallNP_Initialize(settings, error)) {
         Close();
         return NS_ERROR_FAILURE;
     }
-    TimeStamp callNpInitEnd = TimeStamp::Now();
-    mTimeBlocked += (callNpInitEnd - callNpInitStart);
 
     bool ok = true;
     if (*error == NPERR_NO_ERROR) {
@@ -2390,18 +2373,6 @@ public:
   }
 };
 
-void
-PluginModuleParent::AccumulateModuleInitBlockedTime()
-{
-    if (mPluginName.IsEmpty()) {
-        GetPluginDetails();
-    }
-    Telemetry::Accumulate(Telemetry::BLOCKED_ON_PLUGIN_MODULE_INIT_MS,
-                          GetHistogramKey(),
-                          static_cast<uint32_t>(mTimeBlocked.ToMilliseconds()));
-    mTimeBlocked = TimeDuration();
-}
-
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 static void
 ForceWindowless(InfallibleTArray<nsCString>& names,
@@ -2453,13 +2424,6 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     if (mPluginName.IsEmpty()) {
         GetPluginDetails();
         InitQuirksModes(nsDependentCString(pluginType));
-        /** mTimeBlocked measures the time that the main thread has been blocked
-         *  on plugin module initialization. As implemented, this is the sum of
-         *  plugin-container launch + toolhelp32 snapshot + NP_Initialize.
-         *  We don't accumulate its value until here because the plugin info
-         *  for its histogram key is not available until *after* NP_Initialize.
-         */
-        AccumulateModuleInitBlockedTime();
     }
 
     nsCaseInsensitiveUTF8StringArrayComparator comparator;
@@ -2536,24 +2500,22 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
         return NS_ERROR_FAILURE;
     }
 
-    {   // Scope for timer
-        Telemetry::AutoTimer<Telemetry::BLOCKED_ON_PLUGIN_INSTANCE_INIT_MS>
-            timer(GetHistogramKey());
-        if (!CallSyncNPP_New(parentInstance, error)) {
-            // if IPC is down, we'll get an immediate "failed" return, but
-            // without *error being set.  So make sure that the error
-            // condition is signaled to nsNPAPIPluginInstance
-            if (NPERR_NO_ERROR == *error) {
-                *error = NPERR_GENERIC_ERROR;
-            }
-            return NS_ERROR_FAILURE;
+    if (!CallSyncNPP_New(parentInstance, error)) {
+        // if IPC is down, we'll get an immediate "failed" return, but
+        // without *error being set.  So make sure that the error
+        // condition is signaled to nsNPAPIPluginInstance
+        if (NPERR_NO_ERROR == *error) {
+            *error = NPERR_GENERIC_ERROR;
         }
+        return NS_ERROR_FAILURE;
     }
 
     if (*error != NPERR_NO_ERROR) {
         NPP_Destroy(instance, 0);
         return NS_ERROR_FAILURE;
     }
+
+    Telemetry::ScalarAdd(Telemetry::ScalarID::BROWSER_USAGE_PLUGIN_INSTANTIATED, 1);
 
     UpdatePluginTimeout();
 
@@ -2911,7 +2873,6 @@ PluginModuleChromeParent::InitializeInjector()
                           NS_LITERAL_CSTRING(FLASH_PLUGIN_PREFIX)))
         return;
 
-    TimeStamp th32Start = TimeStamp::Now();
     mFinishInitTask = mChromeTaskFactory.NewTask<FinishInjectorInitTask>();
     mFinishInitTask->Init(this);
     if (!::QueueUserWorkItem(&PluginModuleChromeParent::GetToolhelpSnapshot,
@@ -2919,8 +2880,6 @@ PluginModuleChromeParent::InitializeInjector()
         mFinishInitTask = nullptr;
         return;
     }
-    TimeStamp th32End = TimeStamp::Now();
-    mTimeBlocked += (th32End - th32Start);
 }
 
 void

@@ -148,7 +148,6 @@ namespace jit {
     _(InitElem)                                                             \
     _(InitElemGetterSetter)                                                 \
     _(MutateProto)                                                          \
-    _(InitProp)                                                             \
     _(InitPropGetterSetter)                                                 \
     _(Start)                                                                \
     _(OsrEntry)                                                             \
@@ -162,6 +161,7 @@ namespace jit {
     _(RegExpInstanceOptimizable)                                            \
     _(GetFirstDollarIndex)                                                  \
     _(StringReplace)                                                        \
+    _(ClassConstructor)                                                     \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
     _(SetFunName)                                                           \
@@ -279,6 +279,7 @@ namespace jit {
     _(IsConstructor)                                                        \
     _(IsCallable)                                                           \
     _(IsArray)                                                              \
+    _(IsTypedArray)                                                         \
     _(IsObject)                                                             \
     _(HasClass)                                                             \
     _(CopySign)                                                             \

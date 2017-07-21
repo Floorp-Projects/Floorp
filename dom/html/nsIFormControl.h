@@ -275,7 +275,7 @@ nsIFormControl::IsSingleLineTextControl(bool aExcludePassword, uint32_t aType)
          aType == NS_FORM_INPUT_TEL ||
          aType == NS_FORM_INPUT_URL ||
          // TODO: those are temporary until bug 773205 is fixed.
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_WIDGET_ANDROID)
          // On Android/B2G, date/time input appears as a normal text box.
          aType == NS_FORM_INPUT_TIME ||
          aType == NS_FORM_INPUT_DATE ||

@@ -40,6 +40,9 @@ class WebPlatformTestsRunnerSetup(object):
                 kwargs["host_cert_path"] = os.path.join(self.context.package_root, "web-platform", "certs", "web-platform.test.pem")
         kwargs["capture_stdio"] = True
 
+        if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):
+            kwargs["exclude"] = ["css"]
+
         if kwargs["webdriver_binary"] is None:
             kwargs["webdriver_binary"] = os.path.join(self.context.bin_dir, "geckodriver")
 

@@ -681,7 +681,6 @@ pub extern "C" fn wr_api_delete_image(api: &mut RenderApi,
 pub extern "C" fn wr_api_set_root_pipeline(api: &mut RenderApi,
                                            pipeline_id: WrPipelineId) {
     api.set_root_pipeline(pipeline_id);
-    api.generate_frame(None);
 }
 
 #[no_mangle]
@@ -1423,6 +1422,19 @@ pub extern "C" fn wr_dp_push_built_display_list(state: &mut WrState,
     state.frame_builder.dl_builder.push_nested_display_list(&dl);
     let (data, _) = dl.into_data();
     mem::replace(dl_data, WrVecU8::from_vec(data));
+}
+
+pub type VecU8 = Vec<u8>;
+pub type ArcVecU8 = Arc<VecU8>;
+
+#[no_mangle]
+pub extern "C" fn wr_add_ref_arc(arc: &ArcVecU8) -> *const VecU8 {
+    Arc::into_raw(arc.clone())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_dec_ref_arc(arc: *const VecU8) {
+    Arc::from_raw(arc);
 }
 
 // TODO: nical

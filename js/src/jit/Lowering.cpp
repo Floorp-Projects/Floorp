@@ -362,15 +362,6 @@ LIRGenerator::visitMutateProto(MMutateProto* ins)
 }
 
 void
-LIRGenerator::visitInitProp(MInitProp* ins)
-{
-    LInitProp* lir = new(alloc()) LInitProp(useRegisterAtStart(ins->getObject()),
-                                            useBoxAtStart(ins->getValue()));
-    add(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter* ins)
 {
     LInitPropGetterSetter* lir =
@@ -2515,6 +2506,14 @@ LIRGenerator::visitNullarySharedStub(MNullarySharedStub* ins)
 }
 
 void
+LIRGenerator::visitClassConstructor(MClassConstructor* ins)
+{
+    LClassConstructor* lir = new(alloc()) LClassConstructor();
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitLambda(MLambda* ins)
 {
     if (ins->info().singletonType || ins->info().useSingletonForClone) {
@@ -4320,6 +4319,16 @@ LIRGenerator::visitIsArray(MIsArray* ins)
         define(lir, ins);
         assignSafepoint(lir, ins);
     }
+}
+
+void
+LIRGenerator::visitIsTypedArray(MIsTypedArray* ins)
+{
+    MOZ_ASSERT(ins->value()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::Boolean);
+
+    auto* lir = new(alloc()) LIsTypedArray(useRegister(ins->value()));
+    define(lir, ins);
 }
 
 void
