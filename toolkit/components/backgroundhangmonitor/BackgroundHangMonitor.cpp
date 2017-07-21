@@ -190,7 +190,7 @@ public:
   // Native stack of current hang
   NativeHangStack mNativeHangStack;
   // Annotations for the current hang
-  UniquePtr<HangMonitor::HangAnnotations> mAnnotations;
+  HangMonitor::HangAnnotations mAnnotations;
   // Annotators registered for this thread
   HangMonitor::Observer::Annotators mAnnotators;
   // The name of the runnable which is hanging the current process

@@ -326,8 +326,7 @@ void RecordChromeHang(uint32_t aDuration,
                       ProcessedStack &aStack,
                       int32_t aSystemUptime,
                       int32_t aFirefoxUptime,
-                      mozilla::UniquePtr<mozilla::HangMonitor::HangAnnotations>
-                              aAnnotations);
+                      mozilla::HangMonitor::HangAnnotations&& aAnnotations);
 
 /**
  * Record the current thread's call stack on demand. Note that, the stack is
