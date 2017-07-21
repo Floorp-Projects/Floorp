@@ -88,6 +88,7 @@ private:
 } // anonymous namespace
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Performance)
+  NS_INTERFACE_MAP_ENTRY(nsIMemoryReporter)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(Performance,
@@ -107,6 +108,7 @@ Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
 
   RefPtr<Performance> performance =
     PerformanceMainThread::Create(aWindow, aDOMTiming, aChannel);
+  RegisterWeakMemoryReporter(performance);
   return performance.forget();
 }
 
@@ -117,6 +119,7 @@ Performance::CreateForWorker(workers::WorkerPrivate* aWorkerPrivate)
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   RefPtr<Performance> performance = new PerformanceWorker(aWorkerPrivate);
+  RegisterWeakMemoryReporter(performance);
   return performance.forget();
 }
 
@@ -136,7 +139,9 @@ Performance::Performance(nsPIDOMWindowInner* aWindow)
 }
 
 Performance::~Performance()
-{}
+{
+  UnregisterWeakMemoryReporter(this);
+}
 
 DOMHighResTimeStamp
 Performance::Now() const
@@ -571,6 +576,30 @@ void
 Performance::MemoryPressure()
 {
   mUserEntries.Clear();
+}
+
+NS_IMETHODIMP
+Performance::CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize)
+{
+  size_t userEntries = 0;
+  for (const PerformanceEntry* entry : mUserEntries) {
+    userEntries += entry->SizeOfIncludingThis(MallocSizeOf);
+  }
+
+  MOZ_COLLECT_REPORT(
+    "explicit/dom/performance/userEntries", KIND_HEAP, UNITS_BYTES,
+    userEntries, "Memory used for performance user entries.");
+
+  size_t resourceEntries = 0;
+  for (const PerformanceEntry* entry : mResourceEntries) {
+    resourceEntries += entry->SizeOfIncludingThis(MallocSizeOf);
+  }
+
+  MOZ_COLLECT_REPORT(
+    "explicit/dom/performance/userEntries", KIND_HEAP, UNITS_BYTES,
+    resourceEntries, "Memory used for performance resource entries.");
+  return NS_OK;
 }
 
 } // dom namespace

@@ -41,3 +41,16 @@ PerformanceEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return mozilla::dom::PerformanceEntryBinding::Wrap(aCx, this, aGivenProto);
 }
+
+size_t
+PerformanceEntry::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return mName.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
+         mEntryType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
+size_t
+PerformanceEntry::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}

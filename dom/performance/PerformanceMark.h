@@ -27,6 +27,8 @@ public:
     return mStartTime;
   }
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 protected:
   virtual ~PerformanceMark();
   DOMHighResTimeStamp mStartTime;
