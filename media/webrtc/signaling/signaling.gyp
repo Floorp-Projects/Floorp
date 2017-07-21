@@ -84,12 +84,6 @@
       # SOURCES
       #
       'sources': [
-        # Media Conduit
-        './src/media-conduit/AudioConduit.h',
-        './src/media-conduit/AudioConduit.cpp',
-        './src/media-conduit/VideoConduit.h',
-        './src/media-conduit/VideoConduit.cpp',
-        './src/media-conduit/RunningStat.h',
         # Common
         './src/common/CommonTypes.h',
         './src/common/csf_common.h',
@@ -198,14 +192,6 @@
           'defines' : [
             'NO_CHROMIUM_LOGGING',
             'USE_FAKE_PCOBSERVER',
-          ],
-        }],
-        ['build_for_standalone==0', {
-          'sources': [
-            './src/media-conduit/GmpVideoCodec.cpp',
-            './src/media-conduit/MediaDataDecoderCodec.cpp',
-            './src/media-conduit/WebrtcGmpVideoCodec.cpp',
-            './src/media-conduit/WebrtcMediaDataDecoderCodec.cpp',
           ],
         }],
         ['build_for_standalone!=0', {
