@@ -171,6 +171,7 @@ LCovSource::writeScript(JSScript* script)
     size_t branchId = 0;
     size_t tableswitchExitOffset = 0;
     for (jsbytecode* pc = script->code(); pc != end; pc = GetNextPc(pc)) {
+        MOZ_ASSERT(script->code() <= pc && pc < end);
         JSOp op = JSOp(*pc);
         bool jump = IsJumpOpcode(op) || op == JSOP_TABLESWITCH;
         bool fallsthrough = BytecodeFallsThrough(op) && op != JSOP_GOSUB;
@@ -257,6 +258,8 @@ LCovSource::writeScript(JSScript* script)
             // Get the default and exit pc
             jsbytecode* exitpc = pc + tableswitchExitOffset;
             jsbytecode* defaultpc = pc + GET_JUMP_OFFSET(pc);
+            MOZ_ASSERT(script->code() <= exitpc && exitpc <= end);
+            MOZ_ASSERT(script->code() <= defaultpc && defaultpc < end);
             MOZ_ASSERT(defaultpc > pc && defaultpc <= exitpc);
 
             // Get the low and high from the tableswitch
@@ -269,6 +272,7 @@ LCovSource::writeScript(JSScript* script)
             jsbytecode* firstcasepc = exitpc;
             for (size_t j = 0; j < numCases; j++) {
                 jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
+                MOZ_ASSERT(script->code() <= testpc && testpc < end);
                 if (testpc < firstcasepc)
                     firstcasepc = testpc;
             }
@@ -284,19 +288,26 @@ LCovSource::writeScript(JSScript* script)
             size_t caseId = 0;
             for (size_t i = 0; i < numCases; i++) {
                 jsbytecode* casepc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * i);
+                MOZ_ASSERT(script->code() <= casepc && casepc < end);
                 // The case is not present, and jumps to the default pc if used.
                 if (casepc == pc)
                     continue;
 
                 // PCs might not be in increasing order of case indexes.
                 jsbytecode* lastcasepc = firstcasepc - 1;
+                bool foundLastCase = false;
                 for (size_t j = 0; j < numCases; j++) {
                     jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
-                    if (lastcasepc < testpc && (testpc < casepc || (j < i && testpc == casepc)))
+                    MOZ_ASSERT(script->code() <= testpc && testpc < end);
+                    if (lastcasepc < testpc && (testpc < casepc || (j < i && testpc == casepc))) {
                         lastcasepc = testpc;
+                        foundLastCase = true;
+                    }
                 }
 
-                if (casepc != lastcasepc) {
+                // If multiple case instruction have the same code block, only
+                // register the code coverage the first time we hit this case.
+                if (!foundLastCase || casepc != lastcasepc) {
                     // Case (i + low)
                     uint64_t caseHits = 0;
                     if (sc) {
@@ -306,10 +317,15 @@ LCovSource::writeScript(JSScript* script)
 
                         // Remove fallthrough.
                         fallsThroughHits = 0;
-                        if (casepc != firstcasepc) {
+                        if (foundLastCase) {
+                            // Walk from the previous case to the current one to
+                            // check if it fallthrough into the current block.
+                            MOZ_ASSERT(lastcasepc != firstcasepc - 1);
                             jsbytecode* endpc = lastcasepc;
-                            while (GetNextPc(endpc) < casepc)
+                            while (GetNextPc(endpc) < casepc) {
                                 endpc = GetNextPc(endpc);
+                                MOZ_ASSERT(script->code() <= endpc && endpc < end);
+                            }
 
                             if (BytecodeFallsThrough(JSOp(*endpc)))
                                 fallsThroughHits = script->getHitCount(endpc);
@@ -340,22 +356,35 @@ LCovSource::writeScript(JSScript* script)
 
                 // Look for the last case entry before the default pc.
                 jsbytecode* lastcasepc = firstcasepc - 1;
+                bool foundLastCase = false;
                 for (size_t j = 0; j < numCases; j++) {
                     jsbytecode* testpc = pc + GET_JUMP_OFFSET(jumpTable + JUMP_OFFSET_LEN * j);
-                    if (lastcasepc < testpc && testpc <= defaultpc)
+                    MOZ_ASSERT(script->code() <= testpc && testpc < end);
+                    if (lastcasepc < testpc && testpc <= defaultpc) {
                         lastcasepc = testpc;
+                        foundLastCase = true;
+                    }
                 }
 
-                if (lastcasepc == defaultpc)
+                // Set defaultHasOwnClause to false, if one of the case
+                // statement has the same pc as the default block. Which implies
+                // that the previous loop already encoded the coverage
+                // information for the current block.
+                if (foundLastCase && lastcasepc == defaultpc)
                     defaultHasOwnClause = false;
 
                 // Look if the last case entry fallthrough to the default case,
                 // in which case we have to remove the number of fallthrough
                 // hits out of the default case hits.
-                if (sc && lastcasepc != pc) {
+                if (sc && foundLastCase) {
+                    // Walk from the previous case to the current one to check
+                    // if it fallthrough into the default block.
+                    MOZ_ASSERT(lastcasepc != firstcasepc - 1);
                     jsbytecode* endpc = lastcasepc;
-                    while (GetNextPc(endpc) < defaultpc)
+                    while (GetNextPc(endpc) < defaultpc) {
                         endpc = GetNextPc(endpc);
+                        MOZ_ASSERT(script->code() <= endpc && endpc < end);
+                    }
 
                     if (BytecodeFallsThrough(JSOp(*endpc)))
                         fallsThroughHits = script->getHitCount(endpc);

@@ -49,6 +49,7 @@
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
 #include "vm/TraceLogging.h"
+#include "vm/TypedArrayObject.h"
 #include "vm/Unicode.h"
 #include "vtune/VTuneWrapper.h"
 
@@ -2582,6 +2583,21 @@ CodeGenerator::visitNullarySharedStub(LNullarySharedStub* lir)
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
     }
+}
+
+typedef JSFunction* (*MakeDefaultConstructorFn)(JSContext*, HandleScript,
+                                                jsbytecode*, HandleObject);
+static const VMFunction MakeDefaultConstructorInfo =
+    FunctionInfo<MakeDefaultConstructorFn>(js::MakeDefaultConstructor,
+                                           "MakeDefaultConstructor");
+
+void
+CodeGenerator::visitClassConstructor(LClassConstructor* lir)
+{
+    pushArg(ImmPtr(nullptr));
+    pushArg(ImmPtr(lir->mir()->pc()));
+    pushArg(ImmGCPtr(current->mir()->info().script()));
+    callVM(MakeDefaultConstructorInfo, lir);
 }
 
 typedef JSObject* (*LambdaFn)(JSContext*, HandleFunction, HandleObject);
@@ -6261,22 +6277,6 @@ CodeGenerator::visitMutateProto(LMutateProto* lir)
     pushArg(objReg);
 
     callVM(MutatePrototypeInfo, lir);
-}
-
-typedef bool(*InitPropFn)(JSContext*, HandleObject, HandlePropertyName, HandleValue, jsbytecode* pc);
-static const VMFunction InitPropInfo = FunctionInfo<InitPropFn>(InitProp, "InitProp");
-
-void
-CodeGenerator::visitInitProp(LInitProp* lir)
-{
-    Register objReg = ToRegister(lir->getObject());
-
-    pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
-    pushArg(ToValue(lir, LInitProp::ValueIndex));
-    pushArg(ImmGCPtr(lir->mir()->propertyName()));
-    pushArg(objReg);
-
-    callVM(InitPropInfo, lir);
 }
 
 typedef bool(*InitPropGetterSetterFn)(JSContext*, jsbytecode*, HandleObject, HandlePropertyName,
@@ -12025,6 +12025,32 @@ CodeGenerator::visitIsArrayV(LIsArrayV* lir)
     OutOfLineCode* ool = oolCallVM(IsArrayInfo, lir, ArgList(temp),
                                    StoreRegisterTo(output));
     EmitObjectIsArray(masm, ool, temp, output, &notArray);
+}
+
+void
+CodeGenerator::visitIsTypedArray(LIsTypedArray* lir)
+{
+    Register object = ToRegister(lir->object());
+    Register output = ToRegister(lir->output());
+
+    Label notTypedArray;
+    Label done;
+
+    static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
+    static_assert((Scalar::Uint8Clamped - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
+                  "Uint8Clamped is the last typed array class");
+    const Class* firstTypedArrayClass = TypedArrayObject::classForType(Scalar::Int8);
+    const Class* lastTypedArrayClass = TypedArrayObject::classForType(Scalar::Uint8Clamped);
+
+    masm.loadObjClass(object, output);
+    masm.branchPtr(Assembler::Below, output, ImmPtr(firstTypedArrayClass), &notTypedArray);
+    masm.branchPtr(Assembler::Above, output, ImmPtr(lastTypedArrayClass), &notTypedArray);
+
+    masm.move32(Imm32(1), output);
+    masm.jump(&done);
+    masm.bind(&notTypedArray);
+    masm.move32(Imm32(0), output);
+    masm.bind(&done);
 }
 
 void

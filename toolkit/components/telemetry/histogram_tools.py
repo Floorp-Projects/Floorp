@@ -78,6 +78,7 @@ whitelists = None
 
 
 def load_whitelist():
+    global whitelists
     try:
         whitelist_path = os.path.join(os.path.abspath(os.path.realpath(os.path.dirname(__file__))),
                                       'histogram-whitelists.json')

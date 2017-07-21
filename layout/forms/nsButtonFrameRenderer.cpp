@@ -121,6 +121,8 @@ public:
     MOZ_COUNT_DTOR(nsDisplayButtonBorder);
   }
 #endif
+  virtual bool MustPaintOnContentSide() const override { return true; }
+
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override {

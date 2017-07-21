@@ -48,11 +48,7 @@ PlatformThreadId PlatformThread::CurrentId() {
   mach_port_deallocate(mach_task_self(), port);
   return port;
 #elif defined(OS_LINUX)
-#ifdef MOZ_WIDGET_GONK
-  return (intptr_t) (pthread_self());
-#else
   return syscall(__NR_gettid);
-#endif
 #elif defined(OS_OPENBSD) || defined(OS_SOLARIS) || defined(__GLIBC__)
   return (intptr_t) (pthread_self());
 #elif defined(OS_NETBSD)

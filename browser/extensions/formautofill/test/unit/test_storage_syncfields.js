@@ -45,13 +45,12 @@ add_task(async function test_changeCounter() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1]);
 
-  let address = profileStorage.addresses.getAll({rawData: true})[0];
+  let [address] = profileStorage.addresses.getAll();
   // new records don't get the sync metadata.
-  ok(!address._sync);
+  equal(getSyncChangeCounter(profileStorage.addresses, address.guid), -1);
   // But we can force one.
   profileStorage.addresses.pullSyncChanges();
-  address = profileStorage.addresses.getAll({rawData: true})[0];
-  equal(address._sync.changeCounter, 1);
+  equal(getSyncChangeCounter(profileStorage.addresses, address.guid), 1);
 });
 
 add_task(async function test_pushChanges() {
@@ -60,14 +59,15 @@ add_task(async function test_pushChanges() {
 
   profileStorage.addresses.pullSyncChanges(); // force sync metadata for all items
 
-  let [, address] = profileStorage.addresses.getAll({rawData: true});
+  let [, address] = profileStorage.addresses.getAll();
   let guid = address.guid;
+  let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
 
   // Pretend we're doing a sync now, and an update occured mid-sync.
   let changes = {
     [guid]: {
       profile: address,
-      counter: address._sync.changeCounter,
+      counter: changeCounter,
       modified: address.timeLastModified,
       synced: true,
     },
@@ -78,27 +78,28 @@ add_task(async function test_pushChanges() {
   profileStorage.addresses.update(guid, TEST_ADDRESS_3);
   await onChanged;
 
-  address = profileStorage.addresses.get(guid, {rawData: true});
-  do_check_eq(address._sync.changeCounter, 2);
+  changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+  do_check_eq(changeCounter, 2);
 
   profileStorage.addresses.pushSyncChanges(changes);
-  address = profileStorage.addresses.get(guid, {rawData: true});
+  address = profileStorage.addresses.get(guid);
+  changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
 
   // Counter should still be 1, since our sync didn't record the mid-sync change
-  do_check_eq(address._sync.changeCounter, 1, "Counter shouldn't be zero because it didn't record update");
+  do_check_eq(changeCounter, 1, "Counter shouldn't be zero because it didn't record update");
 
   // now, push a new set of changes, which should make the changeCounter 0
   profileStorage.addresses.pushSyncChanges({
     [guid]: {
       profile: address,
-      counter: address._sync.changeCounter,
+      counter: changeCounter,
       modified: address.timeLastModified,
       synced: true,
     },
   });
-  address = profileStorage.addresses.get(guid, {rawData: true});
 
-  do_check_eq(address._sync.changeCounter, 0);
+  changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+  do_check_eq(changeCounter, 0);
 });
 
 async function checkingSyncChange(action, callback) {
@@ -114,13 +115,13 @@ add_task(async function test_add_sourceSync() {
 
   // Hardcode a guid so that we don't need to generate a dynamic regex
   let guid = "aaaaaaaaaaaa";
-  let testAddr = Object.assign({guid}, TEST_ADDRESS_1);
+  let testAddr = Object.assign({guid, version: 1}, TEST_ADDRESS_1);
 
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
 
-  let added = profileStorage.addresses.get(guid, {rawData: true});
-  equal(added._sync.changeCounter, 0);
+  let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+  equal(changeCounter, 0);
 
   Assert.throws(() =>
     profileStorage.addresses.add({guid, deleted: true}, {sourceSync: true}),
@@ -137,9 +138,9 @@ add_task(async function test_add_tombstone_sourceSync() {
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
 
   let added = findGUID(profileStorage.addresses, guid,
-    {rawData: true, includeDeleted: true});
+    {includeDeleted: true});
   ok(added);
-  equal(added._sync.changeCounter, 0);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 0);
   ok(added.deleted);
 
   // Adding same record again shouldn't throw (or change anything)
@@ -147,8 +148,8 @@ add_task(async function test_add_tombstone_sourceSync() {
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
 
   added = findGUID(profileStorage.addresses, guid,
-    {rawData: true, includeDeleted: true});
-  equal(added._sync.changeCounter, 0);
+    {includeDeleted: true});
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 0);
   ok(added.deleted);
 });
 
@@ -161,9 +162,9 @@ add_task(async function test_add_resurrects_tombstones() {
   profileStorage.addresses.add({guid, deleted: true});
 
   // You can't re-add an item with an explicit GUID.
-  let resurrected = Object.assign({}, TEST_ADDRESS_1, {guid});
+  let resurrected = Object.assign({}, TEST_ADDRESS_1, {guid, version: 1});
   Assert.throws(() => profileStorage.addresses.add(resurrected),
-                /"guid" is not a valid field/);
+                /"(guid|version)" is not a valid field/);
 
   // But Sync can!
   let guid3 = profileStorage.addresses.add(resurrected, {sourceSync: true});
@@ -177,18 +178,16 @@ add_task(async function test_remove_sourceSync_localChanges() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, [TEST_ADDRESS_1]);
   profileStorage.addresses.pullSyncChanges(); // force sync metadata
 
-  let [{guid, _sync}] = profileStorage.addresses.getAll({rawData: true});
+  let [{guid}] = profileStorage.addresses.getAll();
 
-  equal(_sync.changeCounter, 1);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
   // try and remove a record stored locally with local changes
   await checkingSyncChange("remove", () =>
     profileStorage.addresses.remove(guid, {sourceSync: true}));
 
-  let record = profileStorage.addresses.get(guid, {
-    rawData: true,
-  });
+  let record = profileStorage.addresses.get(guid);
   ok(record);
-  equal(record._sync.changeCounter, 1);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 });
 
 add_task(async function test_remove_sourceSync_unknown() {
@@ -200,11 +199,10 @@ add_task(async function test_remove_sourceSync_unknown() {
     profileStorage.addresses.remove(guid, {sourceSync: true}));
 
   let tombstone = findGUID(profileStorage.addresses, guid, {
-    rawData: true,
     includeDeleted: true,
   });
   ok(tombstone.deleted);
-  equal(tombstone._sync.changeCounter, 0);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 0);
 });
 
 add_task(async function test_remove_sourceSync_unchanged() {
@@ -212,23 +210,21 @@ add_task(async function test_remove_sourceSync_unchanged() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME, []);
 
   let guid = profileStorage.addresses._generateGUID();
-  let addr = Object.assign({guid}, TEST_ADDRESS_1);
+  let addr = Object.assign({guid, version: 1}, TEST_ADDRESS_1);
   // add a record with sourceSync to guarantee changeCounter == 0
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(addr, {sourceSync: true}));
 
-  let added = profileStorage.addresses.get(guid, {rawData: true});
-  equal(added._sync.changeCounter, 0);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 0);
 
   await checkingSyncChange("remove", () =>
     profileStorage.addresses.remove(guid, {sourceSync: true}));
 
   let tombstone = findGUID(profileStorage.addresses, guid, {
-    rawData: true,
     includeDeleted: true,
   });
   ok(tombstone.deleted);
-  equal(tombstone._sync.changeCounter, 0);
+  equal(getSyncChangeCounter(profileStorage.addresses, guid), 0);
 });
 
 add_task(async function test_pullSyncChanges() {
@@ -238,13 +234,15 @@ add_task(async function test_pullSyncChanges() {
   let startAddresses = profileStorage.addresses.getAll();
   equal(startAddresses.length, 2);
   // All should start without sync metadata
-  for (let addr of profileStorage.addresses._store.data.addresses) {
-    ok(!addr._sync);
+  for (let {guid} of profileStorage.addresses._store.data.addresses) {
+    let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+    equal(changeCounter, -1);
   }
   profileStorage.addresses.pullSyncChanges(); // force sync metadata
 
   let addedDirectGUID = profileStorage.addresses._generateGUID();
-  let testAddr = Object.assign({guid: addedDirectGUID}, TEST_ADDRESS_3);
+  let testAddr = Object.assign({guid: addedDirectGUID, version: 1},
+                               TEST_ADDRESS_1, TEST_ADDRESS_3);
 
   await checkingSyncChange("add", () =>
     profileStorage.addresses.add(testAddr, {sourceSync: true}));
@@ -263,7 +261,6 @@ add_task(async function test_pullSyncChanges() {
 
   let addresses = profileStorage.addresses.getAll({
     includeDeleted: true,
-    rawData: true,
   });
 
   // Should contain changes with a change counter
@@ -285,7 +282,9 @@ add_task(async function test_pullSyncChanges() {
       continue;
     }
     equal(change.profile.guid, address.guid);
-    equal(change.counter, address._sync.changeCounter);
+    let changeCounter = getSyncChangeCounter(profileStorage.addresses,
+      change.profile.guid);
+    equal(change.counter, changeCounter);
     ok(!change.synced);
   }
 });
@@ -301,13 +300,13 @@ add_task(async function test_pullPushChanges() {
 
   let changes = psa.pullSyncChanges();
 
-  equal(psa.get(guid1, {rawData: true})._sync.changeCounter, 1);
-  equal(psa.get(guid2, {rawData: true})._sync.changeCounter, 1);
-  equal(psa.get(guid3, {rawData: true})._sync.changeCounter, 1);
+  equal(getSyncChangeCounter(psa, guid1), 1);
+  equal(getSyncChangeCounter(psa, guid2), 1);
+  equal(getSyncChangeCounter(psa, guid3), 1);
 
   // between the pull and the push we change the second.
   psa.update(guid2, Object.assign({}, TEST_ADDRESS_2, {country: "AU"}));
-  equal(psa.get(guid2, {rawData: true})._sync.changeCounter, 2);
+  equal(getSyncChangeCounter(psa, guid2), 2);
   // and update the changeset to indicated we did update the first 2, but failed
   // to update the 3rd for some reason.
   changes[guid1].synced = true;
@@ -316,11 +315,11 @@ add_task(async function test_pullPushChanges() {
   psa.pushSyncChanges(changes);
 
   // first was synced correctly.
-  equal(psa.get(guid1, {rawData: true})._sync.changeCounter, 0);
+  equal(getSyncChangeCounter(psa, guid1), 0);
   // second was synced correctly, but it had a change while syncing.
-  equal(psa.get(guid2, {rawData: true})._sync.changeCounter, 1);
+  equal(getSyncChangeCounter(psa, guid2), 1);
   // 3rd wasn't marked as having synced.
-  equal(psa.get(guid3, {rawData: true})._sync.changeCounter, 1);
+  equal(getSyncChangeCounter(psa, guid3), 1);
 });
 
 add_task(async function test_changeGUID() {
@@ -363,25 +362,57 @@ add_task(async function test_changeGUID() {
   ok(!profileStorage.addresses.get(guid_u1), "old guid no longer exists.");
 });
 
+add_task(async function test_findDuplicateGUID() {
+  let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
+                                                [TEST_ADDRESS_1]);
+
+  let [record] = profileStorage.addresses.getAll({rawData: true});
+  Assert.throws(() => profileStorage.addresses.findDuplicateGUID(record),
+                /Record \w+ already exists/,
+                "Should throw if the GUID already exists");
+
+  // Add a malformed record, passing `sourceSync` to work around the record
+  // normalization logic that would prevent this.
+  let timeLastModified = Date.now();
+  let timeCreated = timeLastModified - 60 * 1000;
+
+  profileStorage.addresses.add({
+    guid: profileStorage.addresses._generateGUID(),
+    version: 1,
+    timeCreated,
+    timeLastModified,
+  }, {sourceSync: true});
+
+  strictEqual(profileStorage.addresses.findDuplicateGUID({
+    guid: profileStorage.addresses._generateGUID(),
+    version: 1,
+    timeCreated,
+    timeLastModified,
+  }), null, "Should ignore internal fields and malformed records");
+});
+
 add_task(async function test_reset() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                 [TEST_ADDRESS_1, TEST_ADDRESS_2]);
 
-  let addresses = profileStorage.addresses.getAll({rawData: true});
+  let addresses = profileStorage.addresses.getAll();
   // All should start without sync metadata
-  for (let addr of addresses) {
-    ok(!addr._sync);
+  for (let {guid} of addresses) {
+    let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+    equal(changeCounter, -1);
   }
   // pullSyncChanges should create the metadata.
   profileStorage.addresses.pullSyncChanges();
-  addresses = profileStorage.addresses.getAll({rawData: true});
-  for (let addr of addresses) {
-    ok(addr._sync);
+  addresses = profileStorage.addresses.getAll();
+  for (let {guid} of addresses) {
+    let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+    equal(changeCounter, 1);
   }
   // and resetSync should wipe it.
   profileStorage.addresses.resetSync();
-  addresses = profileStorage.addresses.getAll({rawData: true});
-  for (let addr of addresses) {
-    ok(!addr._sync);
+  addresses = profileStorage.addresses.getAll();
+  for (let {guid} of addresses) {
+    let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+    equal(changeCounter, -1);
   }
 });

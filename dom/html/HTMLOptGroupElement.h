@@ -38,8 +38,6 @@ public:
   virtual nsresult GetEventTargetParent(
                      EventChainPreVisitor& aVisitor) override;
 
-  virtual EventStates IntrinsicState() const override;
-
   virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult,
                          bool aPreallocateChildren) const override;
 
@@ -51,7 +49,7 @@ public:
   virtual nsIDOMNode* AsDOMNode() override { return this; }
 
   virtual bool IsDisabled() const override {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    return State().HasState(NS_EVENT_STATE_DISABLED);
   }
 
   bool Disabled() const

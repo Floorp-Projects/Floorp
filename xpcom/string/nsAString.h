@@ -70,7 +70,8 @@ enum class StringDataFlags : uint16_t
 // bits for mClassFlags
 enum class StringClassFlags : uint16_t
 {
-  FIXED  = 1 << 0   // indicates that |this| is of type nsTFixedString
+  FIXED           = 1 << 0, // |this| is of type nsTFixedString
+  NULL_TERMINATED = 1 << 1  // |this| requires its buffer is null-terminated
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StringDataFlags)

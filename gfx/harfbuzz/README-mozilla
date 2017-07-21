@@ -1,9 +1,9 @@
-gfx/harfbuzz status as of 2017-04-24:
+gfx/harfbuzz status as of 2017-07-19:
 
 This directory contains the harfbuzz source from the 'master' branch of
 https://github.com/behdad/harfbuzz.
 
-Current version: 1.4.6
+Current version: 1.4.7
 
 UPDATING:
 

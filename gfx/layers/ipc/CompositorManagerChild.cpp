@@ -47,7 +47,6 @@ CompositorManagerChild::Init(Endpoint<PCompositorManagerChild>&& aEndpoint,
   MOZ_ASSERT(NS_IsMainThread());
   if (sInstance) {
     MOZ_ASSERT(sInstance->mNamespace != aNamespace);
-    MOZ_RELEASE_ASSERT(!sInstance->CanSend());
   }
 
   sInstance = new CompositorManagerChild(Move(aEndpoint), aNamespace);

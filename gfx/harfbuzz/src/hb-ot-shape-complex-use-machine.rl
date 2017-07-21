@@ -89,7 +89,8 @@ SMBlw	= 42; # SYM_MOD_BELOW
 
 
 consonant_modifiers = CMAbv* CMBlw* ((H B | SUB) VS? CMAbv? CMBlw*)*;
-medial_consonants = MPre? MAbv? MBlw? MPst?;
+# Override: Allow two MBlw. https://github.com/behdad/harfbuzz/issues/376
+medial_consonants = MPre? MAbv? MBlw?.MBlw? MPst?;
 dependent_vowels = VPre* VAbv* VBlw* VPst*;
 vowel_modifiers = VMPre* VMAbv* VMBlw* VMPst*;
 final_consonants = FAbv* FBlw* FPst* FM?;

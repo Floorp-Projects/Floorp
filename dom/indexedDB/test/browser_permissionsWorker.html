@@ -7,21 +7,16 @@
     <title>Indexed Database Test</title>
 
     <script type="text/javascript">
-    // testFinishedCallback is expected to be set in the scope by head.js.
-    /* global testFinishedCallback */
-    let testIsIDBDatabase;
-    let testException;
-
     function runTest() {
       let w = new Worker("browser_permissionsWorker.js");
       w.onmessage = function(e) {
+        let message;
         if (e.data.status == "success") {
-          testIsIDBDatabase = e.data.isIDBDatabase;
+          message = "ok";
         } else {
-          testException = e.data.error;
+          message = e.data.error;
         }
-
-        setTimeout(testFinishedCallback, 0, testIsIDBDatabase, testException);
+        postMessage(message, "*");
       }
 
       const name = window.location.pathname;

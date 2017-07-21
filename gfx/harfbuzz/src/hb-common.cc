@@ -221,9 +221,18 @@ struct hb_language_item_t {
   }
 
   inline hb_language_item_t & operator = (const char *s) {
-    lang = (hb_language_t) strdup (s);
-    for (unsigned char *p = (unsigned char *) lang; *p; p++)
-      *p = canon_map[*p];
+    /* If a custom allocated is used calling strdup() pairs
+    badly with a call to the custom free() in finish() below.
+    Therefore don't call strdup(), implement its behavior.
+    */
+    size_t len = strlen(s) + 1;
+    lang = (hb_language_t) malloc(len);
+    if (likely (lang))
+    {
+      memcpy((unsigned char *) lang, s, len);
+      for (unsigned char *p = (unsigned char *) lang; *p; p++)
+	*p = canon_map[*p];
+    }
 
     return *this;
   }
@@ -265,6 +274,11 @@ retry:
     return NULL;
   lang->next = first_lang;
   *lang = key;
+  if (unlikely (!lang->lang))
+  {
+    free (lang);
+    return NULL;
+  }
 
   if (!hb_atomic_ptr_cmpexch (&langs, first_lang, lang)) {
     lang->finish ();
@@ -657,6 +671,30 @@ parse_uint (const char **pp, const char *end, unsigned int *pv)
 }
 
 static bool
+parse_uint32 (const char **pp, const char *end, uint32_t *pv)
+{
+  char buf[32];
+  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  strncpy (buf, *pp, len);
+  buf[len] = '\0';
+
+  char *p = buf;
+  char *pend = p;
+  unsigned int v;
+
+  /* Intentionally use strtol instead of strtoul, such that
+   * -1 turns into "big number"... */
+  errno = 0;
+  v = strtol (p, &pend, 0);
+  if (errno || p == pend)
+    return false;
+
+  *pv = v;
+  *pp += pend - p;
+  return true;
+}
+
+static bool
 parse_float (const char **pp, const char *end, float *pv)
 {
   char buf[32];
@@ -679,7 +717,7 @@ parse_float (const char **pp, const char *end, float *pv)
 }
 
 static bool
-parse_bool (const char **pp, const char *end, unsigned int *pv)
+parse_bool (const char **pp, const char *end, uint32_t *pv)
 {
   parse_space (pp, end);
 
@@ -778,7 +816,7 @@ static bool
 parse_feature_value_postfix (const char **pp, const char *end, hb_feature_t *feature)
 {
   bool had_equal = parse_char (pp, end, '=');
-  bool had_value = parse_uint (pp, end, &feature->value) ||
+  bool had_value = parse_uint32 (pp, end, &feature->value) ||
                    parse_bool (pp, end, &feature->value);
   /* CSS doesn't use equal-sign between tag and value.
    * If there was an equal-sign, then there *must* be a value.

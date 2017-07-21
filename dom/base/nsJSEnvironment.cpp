@@ -284,24 +284,12 @@ public:
 
   void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override
   {
-    if (mTimerActive) {
-      return;
-    }
-
-    mTarget = aTarget;
-    if (!mTimer) {
-      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-    } else {
-      mTimer->Cancel();
-    }
-
-    if (mTimer) {
-      mTimer->SetTarget(mTarget);
-      mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
-                                        nsITimer::TYPE_ONE_SHOT,
-                                        "CollectorRunner");
-      mTimerActive = true;
-    }
+    MOZ_ASSERT(NS_IsMainThread());
+    // aTarget is always the main thread event target provided from
+    // NS_IdleDispatchToCurrentThread(). We ignore aTarget here to ensure that
+    // CollectorRunner a(ways run specifically on SystemGroup::EventTargetFor(
+    // TaskCategory::GarbageCollection) of the main thread.
+    SetTimerInternal(aDelay);
   }
 
   nsresult Cancel() override
@@ -338,19 +326,20 @@ public:
       // RefreshDriver is ticking, let it schedule the idle dispatch.
       nsRefreshDriver::DispatchIdleRunnableAfterTick(this, mDelay);
       // Ensure we get called at some point, even if RefreshDriver is stopped.
-      SetTimer(mDelay, mTarget);
+      SetTimerInternal(mDelay);
     } else {
       // RefreshDriver doesn't seem to be running.
       if (aAllowIdleDispatch) {
         nsCOMPtr<nsIRunnable> runnable = this;
-        NS_IdleDispatchToCurrentThread(runnable.forget(), mDelay);
-        SetTimer(mDelay, mTarget);
+        SetTimerInternal(mDelay);
+        NS_IdleDispatchToCurrentThread(runnable.forget());
       } else {
         if (!mScheduleTimer) {
           mScheduleTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
           if (!mScheduleTimer) {
             return;
           }
+          mScheduleTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
         } else {
           mScheduleTimer->Cancel();
         }
@@ -391,9 +380,29 @@ private:
     mTimerActive = false;
   }
 
+  void SetTimerInternal(uint32_t aDelay)
+  {
+    if (mTimerActive) {
+      return;
+    }
+
+    if (!mTimer) {
+      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
+    } else {
+      mTimer->Cancel();
+    }
+
+    if (mTimer) {
+      mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::GarbageCollection));
+      mTimer->InitWithNamedFuncCallback(TimedOut, this, aDelay,
+                                        nsITimer::TYPE_ONE_SHOT,
+                                        "CollectorRunner");
+      mTimerActive = true;
+    }
+  }
+
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimer> mScheduleTimer;
-  nsCOMPtr<nsIEventTarget> mTarget;
   CollectorRunnerCallback mCallback;
   uint32_t mDelay;
   TimeStamp mDeadline;
