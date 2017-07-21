@@ -218,11 +218,12 @@ struct Zone : public JS::shadow::Zone,
 
     void notifyObservingDebuggers();
 
-    void setGCState(GCState state) {
+    void changeGCState(GCState prev, GCState next) {
         MOZ_ASSERT(CurrentThreadIsHeapBusy());
-        MOZ_ASSERT_IF(state != NoGC, canCollect());
-        gcState_ = state;
-        if (state == Finished)
+        MOZ_ASSERT(gcState() == prev);
+        MOZ_ASSERT_IF(next != NoGC, canCollect());
+        gcState_ = next;
+        if (isGCFinished())
             notifyObservingDebuggers();
     }
 
