@@ -591,6 +591,12 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   display: none;
 }
 
+/* Never show a scrollbar for the Location Bar popup.  This overrides the
+   richlistbox inline overflow: auto style.*/
+#PopupAutoCompleteRichResult > richlistbox > scrollbox {
+  overflow: hidden !important;
+}
+
 /* For action items in a noactions popup, show the URL text and hide the action
    text and type icon. */
 #PopupAutoCompleteRichResult[noactions] > richlistbox > richlistitem.overridable-action > .ac-url {

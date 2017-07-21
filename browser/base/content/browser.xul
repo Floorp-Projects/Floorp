@@ -808,7 +808,6 @@
                      showcommentcolumn="true"
                      showimagecolumn="true"
                      enablehistory="true"
-                     maxrows="10"
                      newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
                      ontextreverted="return this.handleRevert();"
