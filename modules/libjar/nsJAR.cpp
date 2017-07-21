@@ -1120,8 +1120,9 @@ nsZipReaderCache::IsCached(nsIFile* zipFile, bool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
+nsresult
+nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result,
+                         bool failOnMiss)
 {
   NS_ENSURE_ARG_POINTER(zipFile);
   nsresult rv;
@@ -1145,6 +1146,10 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
 #endif
     zip->ClearReleaseTime();
   } else {
+    if (failOnMiss) {
+      return NS_ERROR_CACHE_KEY_NOT_FOUND;
+    }
+
     zip = new nsJAR();
     zip->SetZipReaderCache(this);
     rv = zip->Open(zipFile);
@@ -1157,6 +1162,18 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   }
   zip.forget(result);
   return rv;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::GetZipIfCached(nsIFile* zipFile, nsIZipReader* *result)
+{
+  return GetZip(zipFile, result, true);
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
+{
+  return GetZip(zipFile, result, false);
 }
 
 NS_IMETHODIMP

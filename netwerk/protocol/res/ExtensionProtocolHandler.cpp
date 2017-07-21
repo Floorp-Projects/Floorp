@@ -778,6 +778,15 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
   MOZ_ASSERT(IsNeckoChild());
   nsresult rv;
 
+  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
+  NS_TRY(rv);
+
+  bool isCached = false;
+  NS_TRY(jarChannel->EnsureCached(&isCached));
+  if (isCached) {
+    return Ok();
+  }
+
   // Build a JAR URI for this jar:file:// URI and use it to extract the
   // inner file URI.
   nsCOMPtr<nsIURI> uri;
@@ -794,9 +803,6 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
 
   nsCOMPtr<nsIFile> jarFile;
   NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
-
-  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
-  NS_TRY(rv);
 
   RefPtr<ExtensionStreamGetter> streamGetter =
     new ExtensionStreamGetter(aURI, aLoadinfo, jarChannel.forget(), jarFile);
