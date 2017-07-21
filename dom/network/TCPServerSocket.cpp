@@ -148,10 +148,6 @@ TCPServerSocket::OnSocketAccepted(nsIServerSocket* aServer, nsISocketTransport* 
 {
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   RefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aTransport, mUseArrayBuffers);
-  if (mServerBridgeParent) {
-    socket->SetAppIdAndBrowser(mServerBridgeParent->GetAppId(),
-                               mServerBridgeParent->GetInIsolatedMozBrowser());
-  }
   FireEvent(NS_LITERAL_STRING("connect"), socket);
   return NS_OK;
 }

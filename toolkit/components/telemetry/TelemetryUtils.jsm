@@ -34,6 +34,12 @@ this.TelemetryUtils = {
     ShutdownPingSender: "toolkit.telemetry.shutdownPingSender.enabled",
     TelemetryEnabled: "toolkit.telemetry.enabled",
     Unified: "toolkit.telemetry.unified",
+    NewProfilePingEnabled: "toolkit.telemetry.newProfilePing.enabled",
+    NewProfilePingDelay: "toolkit.telemetry.newProfilePing.delay",
+
+    // Log Preferences
+    LogLevel: "toolkit.telemetry.log.level",
+    LogDump: "toolkit.telemetry.log.dump",
 
     // Data reporting Preferences
     AcceptedPolicyDate: "datareporting.policy.dataSubmissionPolicyNotifiedTime",

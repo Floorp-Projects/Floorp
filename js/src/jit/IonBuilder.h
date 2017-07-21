@@ -563,6 +563,7 @@ class IonBuilder
     AbortReasonOr<Ok> jsop_initprop_getter_setter(PropertyName* name);
     AbortReasonOr<Ok> jsop_regexp(RegExpObject* reobj);
     AbortReasonOr<Ok> jsop_object(JSObject* obj);
+    AbortReasonOr<Ok> jsop_classconstructor();
     AbortReasonOr<Ok> jsop_lambda(JSFunction* fun);
     AbortReasonOr<Ok> jsop_lambda_arrow(JSFunction* fun);
     AbortReasonOr<Ok> jsop_setfunname(uint8_t prefixKind);

@@ -189,16 +189,6 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
   // Return false to skip getting the stack and return an empty stack
   aStack.clear();
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  /* Normally, provided the profiler is enabled, it would be an error if we
-     don't have a pseudostack here (the thread probably forgot to call
-     profiler_register_thread). However, on B2G, profiling secondary threads
-     may be disabled despite profiler being enabled. This is by-design and
-     is not an error. */
-#ifdef MOZ_WIDGET_GONK
-  if (!mPseudoStack) {
-    return false;
-  }
-#endif
   MOZ_ASSERT(mPseudoStack);
   if (!aStack.reserve(mMaxStackSize) ||
       !aStack.reserve(aStack.capacity()) || // reserve up to the capacity

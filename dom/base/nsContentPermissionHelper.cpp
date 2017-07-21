@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <map>
-#ifdef MOZ_WIDGET_GONK
-#include "GonkPermission.h"
-#endif // MOZ_WIDGET_GONK
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIPrincipal.h"

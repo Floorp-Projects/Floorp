@@ -154,13 +154,6 @@ add_task(async function test_getAll() {
   // Modifying output shouldn't affect the storage.
   addresses[0].organization = "test";
   do_check_record_matches(profileStorage.addresses.getAll()[0], TEST_ADDRESS_1);
-
-  // Test with rawData.
-  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which is what we are checking.
-  addresses = profileStorage.addresses.getAll({rawData: true});
-  Assert.ok(addresses[0]._sync && addresses[1]._sync);
-  Assert.equal(addresses[0]._sync.changeCounter, 1);
-  Assert.equal(addresses[1]._sync.changeCounter, 1);
 });
 
 add_task(async function test_get() {
@@ -184,11 +177,6 @@ add_task(async function test_get() {
   do_check_record_matches(profileStorage.addresses.get(guid), TEST_ADDRESS_1);
 
   do_check_eq(profileStorage.addresses.get("INVALID_GUID"), null);
-
-  // rawData should include _sync, which should have a value of 1
-  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which is what we are checking.
-  let {_sync} = profileStorage.addresses.get(guid, {rawData: true});
-  do_check_eq(_sync.changeCounter, 1);
 });
 
 add_task(async function test_getByFilter() {
@@ -271,7 +259,7 @@ add_task(async function test_update() {
   do_check_eq(address.country, undefined);
   do_check_neq(address.timeLastModified, timeLastModified);
   do_check_record_matches(address, TEST_ADDRESS_3);
-  do_check_eq(address._sync.changeCounter, 1);
+  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   Assert.throws(
     () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
@@ -293,6 +281,9 @@ add_task(async function test_notifyUsed() {
   let timeLastUsed = addresses[1].timeLastUsed;
   let timesUsed = addresses[1].timesUsed;
 
+  profileStorage.addresses.pullSyncChanges(); // force sync metadata, which we check below.
+  let changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
+
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "notifyUsed");
 
@@ -303,6 +294,10 @@ add_task(async function test_notifyUsed() {
 
   do_check_eq(address.timesUsed, timesUsed + 1);
   do_check_neq(address.timeLastUsed, timeLastUsed);
+
+  // Using a record should not bump its change counter.
+  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid),
+    changeCounter);
 
   Assert.throws(() => profileStorage.addresses.notifyUsed("INVALID_GUID"),
     /No matching record\./);

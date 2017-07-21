@@ -633,9 +633,7 @@ ActionNode::FillInBMInfo(int offset,
     if (!bm->CheckOverRecursed())
         return false;
 
-    if (action_type_ == BEGIN_SUBMATCH) {
-        bm->SetRest(offset);
-    } else if (action_type_ != POSITIVE_SUBMATCH_SUCCESS) {
+    if (action_type_ != POSITIVE_SUBMATCH_SUCCESS) {
         if (!on_success()->FillInBMInfo(offset, budget - 1, bm, not_at_start))
             return false;
     }

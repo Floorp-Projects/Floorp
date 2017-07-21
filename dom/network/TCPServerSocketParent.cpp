@@ -61,24 +61,6 @@ TCPServerSocketParent::Init()
   NS_ENSURE_SUCCESS_VOID(mServerSocket->Init());
 }
 
-uint32_t
-TCPServerSocketParent::GetAppId()
-{
-  return nsIScriptSecurityManager::UNKNOWN_APP_ID;
-}
-
-bool
-TCPServerSocketParent::GetInIsolatedMozBrowser()
-{
-  const PContentParent *content = Manager()->Manager();
-  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
-    TabParent *tab = TabParent::GetFrom(browser);
-    return tab->IsIsolatedMozBrowserElement();
-  } else {
-    return false;
-  }
-}
-
 nsresult
 TCPServerSocketParent::SendCallbackAccept(TCPSocketParent *socket)
 {
@@ -143,7 +125,6 @@ void
 TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event)
 {
   RefPtr<TCPSocket> socket = event->Socket();
-  socket->SetAppIdAndBrowser(GetAppId(), GetInIsolatedMozBrowser());
 
   RefPtr<TCPSocketParent> socketParent = new TCPSocketParent();
   socketParent->SetSocket(socket);

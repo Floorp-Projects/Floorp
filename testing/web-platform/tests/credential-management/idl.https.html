@@ -26,6 +26,8 @@
       required USVString password;
     };
 
+    typedef (PasswordCredentialData or HTMLFormElement) PasswordCredentialInit;
+
     typedef (FormData or URLSearchParams) CredentialBodyType;
 
 
@@ -36,11 +38,22 @@
       DOMString protocol;
     };
 
+    dictionary CredentialCreationOptions {
+      PasswordCredentialInit? password;
+      FederatedCredentialInit? federated;
+    };
+
+    enum CredentialMediationRequirement {
+      "silent",
+      "optional",
+      "required"
+    };
+
     dictionary CredentialRequestOptions {
       boolean password = false;
       FederatedCredentialRequestOptions federated;
 
-      boolean unmediated = false;
+      CredentialMediationRequirement mediation = "optional";
     };
 
     dictionary FederatedCredentialRequestOptions {
@@ -50,10 +63,12 @@
 
 </script>
 <script type="text/plain" id="tested">
+    [Exposed=Window, SecureContext]
     interface CredentialsContainer {
       Promise<Credential> get(optional CredentialRequestOptions options);
       Promise<Credential> store(Credential credential);
-      Promise<void> requireUserMediation();
+      Promise<Credential?> create(optional CredentialCreationOptions options);
+      Promise<void> preventSilentAccess();
     };
 
     [Constructor(PasswordCredentialData data),
@@ -61,10 +76,7 @@
      Exposed=Window,
      SecureContext]
     interface PasswordCredential : Credential {
-      attribute USVString idName;
-      attribute USVString passwordName;
-
-      attribute CredentialBodyType? additionalData;
+      readonly attribute DOMString password;
     };
     PasswordCredential implements CredentialUserData;
 
@@ -89,4 +101,3 @@
     });
     idl_array.test();
 </script>
-

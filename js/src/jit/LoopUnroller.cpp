@@ -18,7 +18,7 @@ namespace {
 struct LoopUnroller
 {
     typedef HashMap<MDefinition*, MDefinition*,
-                    PointerHasher<MDefinition*, 2>, SystemAllocPolicy> DefinitionMap;
+                    PointerHasher<MDefinition*>, SystemAllocPolicy> DefinitionMap;
 
     explicit LoopUnroller(MIRGraph& graph)
       : graph(graph), alloc(graph.alloc()),

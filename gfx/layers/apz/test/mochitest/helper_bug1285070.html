@@ -9,29 +9,29 @@
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript">
     function test() {
-      let pointerEventsList = ["pointerover", "pointerenter", "pointerdown",
-                               "pointerup", "pointerleave", "pointerout"];
-      let pointerEventsCount = {};
+      let eventsList = ["pointerover", "pointerenter", "pointerdown",
+                        "pointerup", "pointerleave", "pointerout",
+                        "mousedown", "mouseup",
+                        "touchstart", "touchend", "click"];
+      let eventsCount = {};
 
-      pointerEventsList.forEach((eventName) => {
-        pointerEventsCount[eventName] = 0;
+      eventsList.forEach((eventName) => {
+        eventsCount[eventName] = 0;
         document.getElementById('div1').addEventListener(eventName, (event) => {
-          dump("Received event " + event.type + "\n");
-          ++pointerEventsCount[event.type];
+          ++eventsCount[event.type];
+          ok(true, "Received event " + event.type);
         });
       });
 
       document.addEventListener("click", (event) => {
         is(event.target, document.getElementById('div1'), "Clicked on div (at " + event.clientX + "," + event.clientY + ")");
-        for (var key in pointerEventsCount) {
-          is(pointerEventsCount[key], 1, "Event " + key + " should be generated once");
+        for (var key in eventsCount) {
+          is(eventsCount[key], 1, "Event " + key + " should be generated once");
         }
         subtestDone();
       });
 
-      synthesizeNativeTap(document.getElementById('div1'), 100, 100, () => {
-        dump("Finished synthesizing tap, waiting for div to be clicked...\n");
-      });
+      synthesizeNativeTap(document.getElementById('div1'), 100, 100);
     }
 
     waitUntilApzStable().then(test);

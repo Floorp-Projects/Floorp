@@ -1074,17 +1074,6 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
 
   NS_LogTerm();
 
-#if defined(MOZ_WIDGET_GONK)
-  // This _exit(0) call is intended to be temporary, to get shutdown leak
-  // checking working on non-B2G platforms.
-  // On debug B2G, the child process crashes very late.  Instead, just
-  // give up so at least we exit cleanly. See bug 1071866.
-  if (XRE_IsContentProcess()) {
-      NS_WARNING("Exiting child process early!");
-      _exit(0);
-  }
-#endif
-
   return NS_OK;
 }
 

@@ -8,6 +8,7 @@
 #define vm_Stack_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
@@ -1106,7 +1107,7 @@ struct DefaultHasher<AbstractFramePtr> {
     typedef AbstractFramePtr Lookup;
 
     static js::HashNumber hash(const Lookup& key) {
-        return size_t(key.raw());
+        return mozilla::HashGeneric(key.raw());
     }
 
     static bool match(const AbstractFramePtr& k, const Lookup& l) {

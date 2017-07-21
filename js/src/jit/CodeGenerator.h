@@ -137,6 +137,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitBinarySharedStub(LBinarySharedStub* lir);
     void visitUnarySharedStub(LUnarySharedStub* lir);
     void visitNullarySharedStub(LNullarySharedStub* lir);
+    void visitClassConstructor(LClassConstructor* lir);
     void visitLambda(LLambda* lir);
     void visitOutOfLineLambdaArrow(OutOfLineLambdaArrow* ool);
     void visitLambdaArrow(LLambdaArrow* lir);
@@ -221,7 +222,6 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitInitElem(LInitElem* lir);
     void visitInitElemGetterSetter(LInitElemGetterSetter* lir);
     void visitMutateProto(LMutateProto* lir);
-    void visitInitProp(LInitProp* lir);
     void visitInitPropGetterSetter(LInitPropGetterSetter* lir);
     void visitCreateThis(LCreateThis* lir);
     void visitCreateThisWithProto(LCreateThisWithProto* lir);
@@ -389,6 +389,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);
     void visitIsArrayO(LIsArrayO* lir);
     void visitIsArrayV(LIsArrayV* lir);
+    void visitIsTypedArray(LIsTypedArray* lir);
     void visitIsObject(LIsObject* lir);
     void visitIsObjectAndBranch(LIsObjectAndBranch* lir);
     void visitHasClass(LHasClass* lir);

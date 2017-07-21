@@ -81,7 +81,7 @@ public:
         return true;
     }
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* aNetscapeFuncs,
                                    NPPluginFuncs* aFuncs, NPError* aError) override;
 #else

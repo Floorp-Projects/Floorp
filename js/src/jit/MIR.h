@@ -4015,40 +4015,6 @@ class MMutateProto
     }
 };
 
-// Slow path for adding a property to an object without a known base.
-class MInitProp
-  : public MAryInstruction<2>,
-    public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >::Data
-{
-    CompilerPropertyName name_;
-
-  protected:
-    MInitProp(MDefinition* obj, PropertyName* name, MDefinition* value)
-      : name_(name)
-    {
-        initOperand(0, obj);
-        initOperand(1, value);
-        setResultType(MIRType::None);
-    }
-
-  public:
-    INSTRUCTION_HEADER(InitProp)
-    TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getObject), (1, getValue))
-
-    PropertyName* propertyName() const {
-        return name_;
-    }
-
-    bool possiblyCalls() const override {
-        return true;
-    }
-
-    bool appendRoots(MRootList& roots) const override {
-        return roots.append(name_);
-    }
-};
-
 class MInitPropGetterSetter
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
@@ -8515,6 +8481,29 @@ class MSubstr
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
+class MClassConstructor : public MNullaryInstruction
+{
+    jsbytecode* pc_;
+
+    explicit MClassConstructor(jsbytecode* pc)
+      : pc_(pc)
+    {
+        setResultType(MIRType::Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ClassConstructor)
+    TRIVIAL_NEW_WRAPPERS
+
+    jsbytecode* pc() const {
+      return pc_;
+    }
+
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -13493,6 +13482,27 @@ class MIsArray
     INSTRUCTION_HEADER(IsArray)
     TRIVIAL_NEW_WRAPPERS
     NAMED_OPERANDS((0, value))
+};
+
+class MIsTypedArray
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    explicit MIsTypedArray(MDefinition* value)
+      : MUnaryInstruction(value)
+    {
+        setResultType(MIRType::Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsTypedArray)
+    TRIVIAL_NEW_WRAPPERS
+    NAMED_OPERANDS((0, value))
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
 };
 
 class MCheckReturn

@@ -1095,6 +1095,18 @@ ParentWindowIsActive(nsIDocument* aDoc)
   return false;
 }
 
+void
+nsFrameLoader::MaybeShowFrame()
+{
+  nsIFrame* frame = GetPrimaryFrameOfOwningContent();
+  if (frame) {
+    nsSubDocumentFrame* subDocFrame = do_QueryFrame(frame);
+    if (subDocFrame) {
+      subDocFrame->MaybeShowViewer();
+    }
+  }
+}
+
 bool
 nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
                     int32_t scrollbarPrefX, int32_t scrollbarPrefY,

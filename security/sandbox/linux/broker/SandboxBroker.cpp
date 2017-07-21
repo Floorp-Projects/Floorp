@@ -21,11 +21,6 @@
 #include <sys/prctl.h>
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include <private/android_filesystem_config.h>
-#include <sys/syscall.h>
-#endif
-
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
@@ -450,20 +445,6 @@ SandboxBroker::ThreadMain(void)
   // therefore it is sufficient to fetch the value once
   // before the main thread loop starts
   bool permissive = SandboxInfo::Get().Test(SandboxInfo::kPermissive);
-
-#ifdef MOZ_WIDGET_GONK
-#ifdef __NR_setreuid32
-  static const long nr_setreuid = __NR_setreuid32;
-  static const long nr_setregid = __NR_setregid32;
-#else
-  static const long nr_setreuid = __NR_setreuid;
-  static const long nr_setregid = __NR_setregid;
-#endif
-  if (syscall(nr_setregid, getgid(), AID_APP + mChildPid) != 0 ||
-      syscall(nr_setreuid, getuid(), AID_APP + mChildPid) != 0) {
-    MOZ_CRASH("SandboxBroker: failed to drop privileges");
-  }
-#endif
 
   while (true) {
     struct iovec ios[2];

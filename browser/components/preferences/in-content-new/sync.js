@@ -26,9 +26,6 @@ const FXA_LOGIN_UNVERIFIED = 1;
 const FXA_LOGIN_FAILED = 2;
 
 var gSyncPane = {
-  prefArray: ["engine.bookmarks", "engine.passwords", "engine.prefs",
-              "engine.tabs", "engine.history"],
-
   get page() {
     return document.getElementById("weavePrefsDeck").selectedIndex;
   },
@@ -39,6 +36,7 @@ var gSyncPane = {
 
   init() {
     this._setupEventListeners();
+    this._adjustForPrefs();
 
     // If the Service hasn't finished initializing, wait for it.
     let xps = Components.classes["@mozilla.org/weave/service;1"]
@@ -71,6 +69,32 @@ var gSyncPane = {
     window.addEventListener("unload", onUnload);
 
     xps.ensureLoaded();
+  },
+
+  // make whatever tweaks we need based on preferences.
+  _adjustForPrefs() {
+    // These 2 engines are unique in that there are prefs that make the
+    // entire engine unavailable (which is distinct from "disabled").
+    let enginePrefs = [
+      ["services.sync.engine.addresses.available", "engine.addresses"],
+      ["services.sync.engine.creditcards.available", "engine.creditcards"],
+    ];
+    let numHidden = 0;
+    for (let [availablePref, prefName] of enginePrefs) {
+      if (!Services.prefs.getBoolPref(availablePref)) {
+        let checkbox = document.querySelector("[preference=\"" + prefName + "\"]");
+        checkbox.hidden = true;
+        numHidden += 1;
+      }
+    }
+    // If we hid both, the list of prefs is unbalanced, so move "history" to
+    // the second column. (If we only moved one, it's still unbalanced, but
+    // there's an odd number of engines so that can't be avoided)
+    if (numHidden == 2) {
+      let history = document.querySelector("[preference=\"engine.history\"]");
+      let addons = document.querySelector("[preference=\"engine.addons\"]");
+      addons.parentNode.insertBefore(history, addons);
+    }
   },
 
   _showLoadPage(xps) {

@@ -582,24 +582,16 @@ class HashSet
 //     h.add(p, k);
 //   }
 
-// Pointer hashing policy that strips the lowest zeroBits when calculating the
-// hash to improve key distribution.
-template <typename Key, size_t zeroBits>
+// Pointer hashing policy that uses HashGeneric() to create good hashes for
+// pointers.  Note that we don't shift out the lowest k bits to generate a
+// good distribution for arena allocated pointers.
+template <typename Key>
 struct PointerHasher
 {
     typedef Key Lookup;
     static HashNumber hash(const Lookup& l) {
-        size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
-        static_assert(sizeof(HashNumber) == 4,
-                      "subsequent code assumes a four-byte hash");
-#if JS_BITS_PER_WORD == 32
-        return HashNumber(word);
-#else
-        static_assert(sizeof(word) == 8,
-                      "unexpected word size, new hashing strategy required to "
-                      "properly incorporate all bits");
-        return HashNumber((word >> 32) ^ word);
-#endif
+        size_t word = reinterpret_cast<size_t>(l);
+        return mozilla::HashGeneric(word);
     }
     static bool match(const Key& k, const Lookup& l) {
         return k == l;
@@ -633,7 +625,7 @@ struct DefaultHasher
 // Specialize hashing policy for pointer types. It assumes that the type is
 // at least word-aligned. For types with smaller size use PointerHasher.
 template <class T>
-struct DefaultHasher<T*> : PointerHasher<T*, mozilla::tl::FloorLog2<sizeof(void*)>::value>
+struct DefaultHasher<T*> : PointerHasher<T*>
 {};
 
 // Specialize hashing policy for mozilla::UniquePtr to proxy the UniquePtr's
@@ -642,7 +634,7 @@ template <class T, class D>
 struct DefaultHasher<mozilla::UniquePtr<T, D>>
 {
     using Lookup = mozilla::UniquePtr<T, D>;
-    using PtrHasher = PointerHasher<T*, mozilla::tl::FloorLog2<sizeof(void*)>::value>;
+    using PtrHasher = PointerHasher<T*>;
 
     static HashNumber hash(const Lookup& l) {
         return PtrHasher::hash(l.get());

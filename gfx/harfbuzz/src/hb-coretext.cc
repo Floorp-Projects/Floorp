@@ -641,22 +641,23 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	  /* active_features.qsort (); */
 	  for (unsigned int j = 0; j < active_features.len; j++)
 	  {
-	    CFStringRef keys[2] = {
+	    CFStringRef keys[] = {
 	      kCTFontFeatureTypeIdentifierKey,
 	      kCTFontFeatureSelectorIdentifierKey
 	    };
-	    CFNumberRef values[2] = {
+	    CFNumberRef values[] = {
 	      CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &active_features[j].rec.feature),
 	      CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &active_features[j].rec.setting)
 	    };
+	    ASSERT_STATIC (ARRAY_LENGTH (keys) == ARRAY_LENGTH (values));
 	    CFDictionaryRef dict = CFDictionaryCreate (kCFAllocatorDefault,
 						       (const void **) keys,
 						       (const void **) values,
-						       2,
+						       ARRAY_LENGTH (keys),
 						       &kCFTypeDictionaryKeyCallBacks,
 						       &kCFTypeDictionaryValueCallBacks);
-	    CFRelease (values[0]);
-	    CFRelease (values[1]);
+	    for (unsigned int i = 0; i < ARRAY_LENGTH (values); i++)
+	      CFRelease (values[i]);
 
 	    CFArrayAppendValue (features_array, dict);
 	    CFRelease (dict);
@@ -699,9 +700,6 @@ _hb_coretext_shape (hb_shape_plan_t    *shape_plan,
 	  active_features.remove (feature - active_features.array);
       }
     }
-
-    if (!range_records.len) /* No active feature found. */
-      goto fail_features;
   }
   else
   {
@@ -833,7 +831,7 @@ resize_and_retry:
       CFAttributedStringSetAttribute (attr_string, CFRangeMake (0, chars_len),
 				      kCTFontAttributeName, face_data->ct_font);
 
-      if (num_features)
+      if (num_features && range_records.len)
       {
 	unsigned int start = 0;
 	range_record_t *last_range = &range_records[0];
@@ -859,6 +857,30 @@ resize_and_retry:
 	  CFAttributedStringSetAttribute (attr_string, CFRangeMake (start, chars_len - start),
 					  kCTFontAttributeName, last_range->font);
       }
+      /* Enable/disable kern if requested.
+       *
+       * Note: once kern is disabled, reenabling it doesn't currently seem to work in CoreText.
+       */
+      if (num_features)
+      {
+	unsigned int zeroint = 0;
+	CFNumberRef zero = CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &zeroint);
+	for (unsigned int i = 0; i < num_features; i++)
+	{
+	  const hb_feature_t &feature = features[i];
+	  if (feature.tag == HB_TAG('k','e','r','n') &&
+	      feature.start < chars_len && feature.start < feature.end)
+	  {
+	    CFRange feature_range = CFRangeMake (feature.start,
+	                                         MIN (feature.end, chars_len) - feature.start);
+	    if (feature.value)
+	      CFAttributedStringRemoveAttribute (attr_string, feature_range, kCTKernAttributeName);
+	    else
+	      CFAttributedStringSetAttribute (attr_string, feature_range, kCTKernAttributeName, zero);
+	  }
+	}
+	CFRelease (zero);
+      }
 
       int level = HB_DIRECTION_IS_FORWARD (buffer->props.direction) ? 0 : 1;
       CFNumberRef level_number = CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &level);
@@ -868,6 +890,7 @@ resize_and_retry:
 						    1,
 						    &kCFTypeDictionaryKeyCallBacks,
 						    &kCFTypeDictionaryValueCallBacks);
+      CFRelease (level_number);
       if (unlikely (!options))
         FAIL ("CFDictionaryCreate failed");
 

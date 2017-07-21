@@ -95,7 +95,7 @@ promise_frame_test(function(t, frame, worker) {
 promise_frame_test(function(t, frame, worker) {
     return promise_rejects(
         t,
-        null,
+        new Error(),
         frame.contentWindow.xhr(OTHER_BASE_URL),
         'SW fallbacked CORS-unsupported other origin XHR should fail.')
       .then(function() {
@@ -130,7 +130,7 @@ promise_frame_test(function(t, frame, worker) {
 promise_frame_test(function(t, frame, worker) {
     return promise_rejects(
         t,
-        null,
+        new Error(),
         frame.contentWindow.xhr(
           REDIRECT_URL + encodeURIComponent(OTHER_BASE_URL)),
         'SW fallbacked XHR which is redirected to CORS-unsupported ' +
@@ -183,7 +183,7 @@ promise_frame_test(function(t, frame, worker) {
 promise_frame_test(function(t, frame, worker) {
   return promise_rejects(
         t,
-        null,
+        new Error(),
         frame.contentWindow.load_image(OTHER_BASE_PNG_URL, 'anonymous'),
         'SW fallbacked CORS-unsupported other origin image request ' +
           'should fail.')
@@ -246,7 +246,7 @@ promise_frame_test(function(t, frame, worker) {
 promise_frame_test(function(t, frame, worker) {
   return promise_rejects(
         t,
-        null,
+        new Error(),
         frame.contentWindow.load_image(
             REDIRECT_URL + encodeURIComponent(OTHER_BASE_PNG_URL),
             'anonymous'),

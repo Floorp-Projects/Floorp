@@ -210,11 +210,13 @@ def is_SYM_MOD(U, UISC, UGC):
 def is_VARIATION_SELECTOR(U, UISC, UGC):
 	return 0xFE00 <= U <= 0xFE0F
 def is_VOWEL(U, UISC, UGC):
+	# https://github.com/roozbehp/unicode-data/issues/6
 	return (UISC == Pure_Killer or
-		(UGC != Lo and UISC in [Vowel, Vowel_Dependent]))
+		(UGC != Lo and UISC in [Vowel, Vowel_Dependent] and U not in [0xAA29]))
 def is_VOWEL_MOD(U, UISC, UGC):
+	# https://github.com/roozbehp/unicode-data/issues/6
 	return (UISC in [Tone_Mark, Cantillation_Mark, Register_Shifter, Visarga] or
-		(UGC != Lo and UISC == Bindu))
+		(UGC != Lo and (UISC == Bindu or U in [0xAA29])))
 
 use_mapping = {
 	'B':	is_BASE,
@@ -449,7 +451,7 @@ for p in sorted(pages):
 	for (start,end) in zip (starts, ends):
 		if p not in [start>>page_bits, end>>page_bits]: continue
 		offset = "use_offset_0x%04xu" % start
-		print "      if (hb_in_range (u, 0x%04Xu, 0x%04Xu)) return use_table[u - 0x%04Xu + %s];" % (start, end-1, start, offset)
+		print "      if (hb_in_range<hb_codepoint_t> (u, 0x%04Xu, 0x%04Xu)) return use_table[u - 0x%04Xu + %s];" % (start, end-1, start, offset)
 	for u,d in singles.items ():
 		if p != u>>page_bits: continue
 		print "      if (unlikely (u == 0x%04Xu)) return %s;" % (u, d[0])

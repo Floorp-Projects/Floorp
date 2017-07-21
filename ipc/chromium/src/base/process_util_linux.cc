@@ -23,24 +23,12 @@
 
 #include "prenv.h"
 
-#ifdef MOZ_WIDGET_GONK
 /*
- * AID_APP is the first application UID used by Android. We're using
- * it as our unprivilegied UID.  This ensure the UID used is not
- * shared with any other processes than our own childs.
- */
-# include <private/android_filesystem_config.h>
-# define CHILD_UNPRIVILEGED_UID AID_APP
-# define CHILD_UNPRIVILEGED_GID AID_APP
-#else
-/*
- * On platforms that are not gonk based, we fall back to an arbitrary
- * UID. This is generally the UID for user `nobody', albeit it is not
- * always the case.
+ * We fall back to an arbitrary UID. This is generally the UID for user
+ * `nobody', albeit it is not always the case.
  */
 # define CHILD_UNPRIVILEGED_UID 65534
 # define CHILD_UNPRIVILEGED_GID 65534
-#endif
 
 namespace {
 
@@ -228,36 +216,6 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs) {
 
   gid_t gid = CHILD_UNPRIVILEGED_GID;
   uid_t uid = CHILD_UNPRIVILEGED_UID;
-#ifdef MOZ_WIDGET_GONK
-  {
-    static bool checked_pix_max, pix_max_ok;
-    if (!checked_pix_max) {
-      checked_pix_max = true;
-      int fd = open("/proc/sys/kernel/pid_max", O_CLOEXEC | O_RDONLY);
-      if (fd < 0) {
-        DLOG(ERROR) << "Failed to open pid_max";
-        _exit(127);
-      }
-      char buf[PATH_MAX];
-      ssize_t len = read(fd, buf, sizeof(buf) - 1);
-      close(fd);
-      if (len < 0) {
-        DLOG(ERROR) << "Failed to read pid_max";
-        _exit(127);
-      }
-      buf[len] = '\0';
-      int pid_max = atoi(buf);
-      pix_max_ok =
-        (pid_max + CHILD_UNPRIVILEGED_UID > CHILD_UNPRIVILEGED_UID);
-    }
-    if (!pix_max_ok) {
-      DLOG(ERROR) << "Can't safely get unique uid/gid";
-      _exit(127);
-    }
-    gid += getpid();
-    uid += getpid();
-  }
-#endif
   if (setgid(gid) != 0) {
     DLOG(ERROR) << "FAILED TO setgid() CHILD PROCESS";
     _exit(127);

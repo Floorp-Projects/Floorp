@@ -838,27 +838,6 @@ gfxWindowsPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
 }
 
 bool
-gfxWindowsPlatform::IsFontFormatSupported(uint32_t aFormatFlags)
-{
-    // check for strange format flags
-    NS_ASSERTION(!(aFormatFlags & gfxUserFontSet::FLAG_FORMAT_NOT_USED),
-                 "strange font format hint set");
-
-    // accept supported formats
-    if (aFormatFlags & gfxUserFontSet::FLAG_FORMATS_COMMON) {
-        return true;
-    }
-
-    // reject all other formats, known and unknown
-    if (aFormatFlags != 0) {
-        return false;
-    }
-
-    // no format hint set, need to look at data
-    return true;
-}
-
-bool
 gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
 {
   DeviceManagerDx* dm = DeviceManagerDx::Get();

@@ -21,7 +21,7 @@ function Context(indented, column, type, info, align, prev) {
 }
 function pushContext(state, col, type, info) {
   var indent = state.indented;
-  if (state.context && state.context.type != "statement" && type != "statement")
+  if (state.context && state.context.type == "statement" && type != "statement")
     indent = state.context.indented;
   return state.context = new Context(indent, col, type, info, null, state.context);
 }
@@ -33,7 +33,7 @@ function popContext(state) {
 }
 
 function typeBefore(stream, state, pos) {
-  if (state.prevToken == "variable" || state.prevToken == "variable-3") return true;
+  if (state.prevToken == "variable" || state.prevToken == "type") return true;
   if (/\S(?:[^- ]>|[*\]])\s*$|\*$/.test(stream.string.slice(0, pos))) return true;
   if (state.typeAtEndOfLine && stream.column() == stream.indentation()) return true;
 }
@@ -65,7 +65,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       numberStart = parserConfig.numberStart || /[\d\.]/,
       number = parserConfig.number || /^(?:0x[a-f\d]+|0b[01]+|(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?)(u|ll?|l|f)?/i,
       isOperatorChar = parserConfig.isOperatorChar || /[+\-*&%=<>!?|\/]/,
-      endStatement = parserConfig.endStatement || /^[;:,]$/;
+      isIdentifierChar = parserConfig.isIdentifierChar || /[\w\$_\xa1-\uffff]/;
 
   var curPunc, isDefKeyword;
 
@@ -102,9 +102,9 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       while (!stream.match(/^\/[\/*]/, false) && stream.eat(isOperatorChar)) {}
       return "operator";
     }
-    stream.eatWhile(/[\w\$_\xa1-\uffff]/);
+    stream.eatWhile(isIdentifierChar);
     if (namespaceSeparator) while (stream.match(namespaceSeparator))
-      stream.eatWhile(/[\w\$_\xa1-\uffff]/);
+      stream.eatWhile(isIdentifierChar);
 
     var cur = stream.current();
     if (contains(keywords, cur)) {
@@ -112,7 +112,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       if (contains(defKeywords, cur)) isDefKeyword = true;
       return "keyword";
     }
-    if (contains(types, cur)) return "variable-3";
+    if (contains(types, cur)) return "type";
     if (contains(builtin, cur)) {
       if (contains(blockKeywords, cur)) curPunc = "newstatement";
       return "builtin";
@@ -177,7 +177,8 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       if (style == "comment" || style == "meta") return style;
       if (ctx.align == null) ctx.align = true;
 
-      if (endStatement.test(curPunc)) while (state.context.type == "statement") popContext(state);
+      if (curPunc == ";" || curPunc == ":" || (curPunc == "," && stream.match(/^\s*(?:\/\/.*)?$/, false)))
+        while (state.context.type == "statement") popContext(state);
       else if (curPunc == "{") pushContext(state, stream.column(), "}");
       else if (curPunc == "[") pushContext(state, stream.column(), "]");
       else if (curPunc == "(") pushContext(state, stream.column(), ")");
@@ -280,7 +281,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
   }
 
   function pointerHook(_stream, state) {
-    if (state.prevToken == "variable-3") return "variable-3";
+    if (state.prevToken == "type") return "type";
     return false;
   }
 
@@ -314,7 +315,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
   }
 
   function cppLooksLikeConstructor(word) {
-    var lastTwo = /(\w+)::(\w+)$/.exec(word);
+    var lastTwo = /(\w+)::~?(\w+)$/.exec(word);
     return lastTwo && lastTwo[1] == lastTwo[2];
   }
 
@@ -390,6 +391,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     typeFirstDefinitions: true,
     atoms: words("true false null"),
     dontIndentStatements: /^template$/,
+    isIdentifierChar: /[\w\$_~\xa1-\uffff]/,
     hooks: {
       "#": cppHook,
       "*": pointerHook,
@@ -425,17 +427,19 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
                     "do else enum extends final finally float for goto if implements import " +
                     "instanceof interface native new package private protected public " +
                     "return static strictfp super switch synchronized this throw throws transient " +
-                    "try volatile while"),
+                    "try volatile while @interface"),
     types: words("byte short int long float double boolean char void Boolean Byte Character Double Float " +
                  "Integer Long Number Object Short String StringBuffer StringBuilder Void"),
     blockKeywords: words("catch class do else finally for if switch try while"),
-    defKeywords: words("class interface package enum"),
+    defKeywords: words("class interface package enum @interface"),
     typeFirstDefinitions: true,
     atoms: words("true false null"),
-    endStatement: /^[;:]$/,
     number: /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+\.?\d*|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
     hooks: {
       "@": function(stream) {
+        // Don't match the @interface keyword.
+        if (stream.match('interface', false)) return false;
+
         stream.eatWhile(/[\w\$_]/);
         return "meta";
       }
@@ -491,14 +495,11 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       /* scala */
       "abstract case catch class def do else extends final finally for forSome if " +
       "implicit import lazy match new null object override package private protected return " +
-      "sealed super this throw trait try type val var while with yield _ : = => <- <: " +
-      "<% >: # @ " +
+      "sealed super this throw trait try type val var while with yield _ " +
 
       /* package scala */
       "assert assume require print println printf readLine readBoolean readByte readShort " +
-      "readChar readInt readLong readFloat readDouble " +
-
-      ":: #:: "
+      "readChar readInt readLong readFloat readDouble"
     ),
     types: words(
       "AnyVal App Application Array BufferedIterator BigDecimal BigInt Char Console Either " +
@@ -514,11 +515,12 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       "StringBuffer System Thread ThreadGroup ThreadLocal Throwable Triple Void"
     ),
     multiLineStrings: true,
-    blockKeywords: words("catch class do else finally for forSome if match switch try while"),
-    defKeywords: words("class def object package trait type val var"),
+    blockKeywords: words("catch class enum do else finally for forSome if match switch try while"),
+    defKeywords: words("class enum def object package trait type val var"),
     atoms: words("true false null"),
     indentStatements: false,
     indentSwitch: false,
+    isOperatorChar: /[+\-*&%=<>!?|\/#:@]/,
     hooks: {
       "@": function(stream) {
         stream.eatWhile(/[\w\$_]/);
@@ -575,7 +577,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
       "file import where by get set abstract enum open inner override private public internal " +
       "protected catch finally out final vararg reified dynamic companion constructor init " +
       "sealed field property receiver param sparam lateinit data inline noinline tailrec " +
-      "external annotation crossinline const operator infix"
+      "external annotation crossinline const operator infix suspend"
     ),
     types: words(
       /* package java.lang */
@@ -587,6 +589,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
     intendSwitch: false,
     indentStatements: false,
     multiLineStrings: true,
+    number: /^(?:0x[a-f\d_]+|0b[01_]+|(?:[\d_]+\.?\d*|\.\d+)(?:e[-+]?[\d_]+)?)(u|ll?|l|f)?/i,
     blockKeywords: words("catch class do else finally for if where try while enum"),
     defKeywords: words("class val var object package interface fun"),
     atoms: words("true false null this"),
@@ -771,7 +774,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
         return "atom";
       },
       token: function(_stream, state, style) {
-          if ((style == "variable" || style == "variable-3") &&
+          if ((style == "variable" || style == "type") &&
               state.prevToken == ".") {
             return "variable-2";
           }

@@ -153,6 +153,16 @@ DrawTargetCaptureImpl::FillGlyphs(ScaledFont* aFont,
   AppendCommand(FillGlyphsCommand)(aFont, aBuffer, aPattern, aOptions, aRenderingOptions);
 }
 
+void DrawTargetCaptureImpl::StrokeGlyphs(ScaledFont* aFont,
+                                         const GlyphBuffer& aBuffer,
+                                         const Pattern& aPattern,
+                                         const StrokeOptions& aStrokeOptions,
+                                         const DrawOptions& aOptions,
+                                         const GlyphRenderingOptions* aRenderingOptions)
+{
+  AppendCommand(StrokeGlyphsCommand)(aFont, aBuffer, aPattern, aStrokeOptions, aOptions, aRenderingOptions);
+}
+
 void
 DrawTargetCaptureImpl::Mask(const Pattern &aSource,
                             const Pattern &aMask,

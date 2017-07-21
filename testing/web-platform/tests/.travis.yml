@@ -72,7 +72,7 @@ matrix:
       env: TOXENV=py35 HYPOTHESIS_PROFILE=ci SCRIPT=ci_unittest.sh
     - python: 3.6
       env: TOXENV=py36 HYPOTHESIS_PROFILE=ci SCRIPT=ci_unittest.sh
-    - python: pypy
+    - python: pypy-5.4
       env: TOXENV=pypy HYPOTHESIS_PROFILE=ci SCRIPT=ci_unittest.sh
   exclude:
     - env:  # exclude empty env from the top-level above

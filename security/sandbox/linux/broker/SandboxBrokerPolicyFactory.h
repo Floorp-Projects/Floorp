@@ -21,10 +21,6 @@ public:
 
 private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
-  // B2G devices tend to have hardware-specific paths used by device
-  // drivers, so rollout of filesystem isolation will need per-device
-  // testing.  This predicate allows that to happen gradually.
-  static bool IsSystemSupported();
 };
 
 } // namespace mozilla

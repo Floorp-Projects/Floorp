@@ -23,6 +23,7 @@ nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
                                        ClassFlags aClassFlags)
   : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
 {
+  AssertValid();
   MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
 
   if (aDataFlags & DataFlags::OWNED) {
@@ -169,10 +170,8 @@ nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
   *aOldData = mData;
   *aOldDataFlags = mDataFlags;
 
-  mData = newData;
-  mDataFlags = newDataFlags;
-
   // mLength does not change
+  SetData(newData, mLength, newDataFlags);
 
   // though we are not necessarily terminated at the moment, now is probably
   // still the best time to set DataFlags::TERMINATED.
@@ -411,9 +410,8 @@ void
 nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 {
   ::ReleaseData(mData, mDataFlags);
-  mData = const_cast<char_type*>(aData);
-  mLength = aLength;
-  mDataFlags = DataFlags::TERMINATED | DataFlags::LITERAL;
+  SetData(const_cast<char_type*>(aData), aLength,
+          DataFlags::TERMINATED | DataFlags::LITERAL);
 }
 
 void
@@ -448,9 +446,8 @@ nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
 
     ::ReleaseData(mData, mDataFlags);
 
-    mData = aStr.mData;
-    mLength = aStr.mLength;
-    mDataFlags = DataFlags::TERMINATED | DataFlags::SHARED;
+    SetData(aStr.mData, aStr.mLength,
+            DataFlags::TERMINATED | DataFlags::SHARED);
 
     // get an owning reference to the mData
     nsStringBuffer::FromData(mData)->AddRef();
@@ -514,9 +511,7 @@ nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 
     MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "adopting a too-long string");
 
-    mData = aData;
-    mLength = aLength;
-    mDataFlags = DataFlags::TERMINATED | DataFlags::OWNED;
+    SetData(aData, aLength, DataFlags::TERMINATED | DataFlags::OWNED);
 
     STRING_STAT_INCREMENT(Adopt);
     // Treat this as construction of a "StringAdopt" object for leak
@@ -688,9 +683,7 @@ nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
   // if our capacity is reduced to zero, then free our buffer.
   if (aCapacity == 0) {
     ::ReleaseData(mData, mDataFlags);
-    mData = char_traits::sEmptyBuffer;
-    mLength = 0;
-    mDataFlags = DataFlags::TERMINATED;
+    SetToEmptyBuffer();
     return true;
   }
 

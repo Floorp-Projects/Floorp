@@ -51,6 +51,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         here = os.path.split(__file__)[0]
 
+        if kwargs["exclude"] is None and kwargs["include"] is None and not sys.platform.startswith("linux"):
+            kwargs["exclude"] = ["css"]
+
         if kwargs["ssl_type"] in (None, "pregenerated"):
             if kwargs["ca_cert_path"] is None:
                 kwargs["ca_cert_path"] = os.path.join(here, "certs", "cacert.pem")
@@ -138,11 +141,6 @@ class WebPlatformTestsUpdater(MozbuildObject):
         if kwargs["product"] is None:
             kwargs["product"] = "firefox"
 
-        if kwargs["sync"]:
-            if not kwargs["exclude"]:
-                kwargs["exclude"] = ["css/*"]
-            if not kwargs["include"]:
-                kwargs["include"] = ["css/css-timing-1/*", "css/css-animations-1/*", "css/css-transitions-1/*"]
 
 
         kwargs = updatecommandline.check_args(kwargs)

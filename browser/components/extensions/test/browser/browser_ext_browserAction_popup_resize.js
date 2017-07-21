@@ -29,12 +29,14 @@ add_task(async function testBrowserActionPopupResize() {
   async function checkSize(expected) {
     let dims = await promiseContentDimensions(browser);
 
-    is(dims.window.innerHeight, expected, `Panel window should be ${expected}px tall`);
+    Assert.lessOrEqual(Math.abs(dims.window.innerHeight - expected), 1,
+                       `Panel window should be ${expected}px tall (was ${dims.window.innerHeight})`);
     is(dims.body.clientHeight, dims.body.scrollHeight,
       "Panel body should be tall enough to fit its contents");
 
     // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
-    ok(Math.abs(dims.window.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
+    Assert.lessOrEqual(Math.abs(dims.window.innerWidth - expected), 1,
+                       `Panel window should be ${expected}px wide`);
     is(dims.body.clientWidth, dims.body.scrollWidth,
       "Panel body should be wide enough to fit its contents");
   }
@@ -170,7 +172,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
       let screenBottom = browserWin.screen.availTop + browserWin.screen.availHeight;
       let panelBottom = browserWin.mozInnerScreenY + panelRect.bottom;
-      ok(panelBottom <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
+      ok(Math.round(panelBottom) <= screenBottom, `Bottom of popup should be on-screen. (${panelBottom} <= ${screenBottom})`);
     } else {
       ok(panelRect.bottom, origPanelRect.bottom, "Panel has not moved upwards");
       ok(panelRect.top <= origPanelRect.top, `Panel has not shrunk from original size (${panelRect.top} <= ${origPanelRect.top})`);
@@ -220,7 +222,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   is(win.innerWidth, innerWidth, "Window width should not change");
   ok(win.innerHeight >= innerHeight, `Window height should increase (${win.innerHeight} >= ${innerHeight})`);
-  is(win.scrollMaxY, 0, "Document should not be vertically scrollable");
+  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
 
   checkPanelPosition();
 
@@ -235,7 +237,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   is(win.innerWidth, innerWidth, "Window width should not change");
   ok(win.innerHeight >= innerHeight, `Window height should increase (${win.innerHeight} >= ${innerHeight})`);
-  is(win.scrollMaxY, 0, "Document should not be vertically scrollable");
+  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
 
   checkPanelPosition();
 
@@ -264,7 +266,7 @@ async function testPopupSize(standardsMode, browserWin = window, arrowSide = "to
 
   is(win.innerWidth, innerWidth, "Window width should not change");
   is(win.innerHeight, innerHeight, "Window height should return to its original value");
-  is(win.scrollMaxY, 0, "Document should not be vertically scrollable");
+  Assert.lessOrEqual(win.scrollMaxY, 1, "Document should not be vertically scrollable");
 
   checkPanelPosition();
 
