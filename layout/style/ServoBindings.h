@@ -476,6 +476,13 @@ mozilla::Keyframe* Gecko_GetOrCreateFinalKeyframe(
   RawGeckoKeyframeListBorrowedMut keyframes,
   const nsTimingFunction* timingFunction);
 
+// Appends and returns a new PropertyValuePair to |aProperties| initialized with
+// its mProperty member set to |aProperty| and all other members initialized to
+// their default values.
+mozilla::PropertyValuePair* Gecko_AppendPropertyValuePair(
+  RawGeckoPropertyValuePairListBorrowedMut aProperties,
+  nsCSSPropertyID aProperty);
+
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 

@@ -78,39 +78,27 @@ function testAllGetReadableDates() {
   const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
   const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
 
-  let cDtf = typeof Intl === "undefined" ? null : Services.intl.createDateTimeFormat;
+  let cDtf = Services.intl.createDateTimeFormat;
 
   testGetReadableDates(today_11_30,
-                       typeof Intl === "undefined"
-                       ? today_11_30.toLocaleFormat("%X")
-                       : cDtf(undefined, {timeStyle: "short"}).format(today_11_30));
+                       cDtf(undefined, {timeStyle: "short"}).format(today_11_30));
   testGetReadableDates(today_12_30,
-                       typeof Intl === "undefined"
-                       ? today_12_30.toLocaleFormat("%X")
-                       : cDtf(undefined, {timeStyle: "short"}).format(today_12_30));
+                       cDtf(undefined, {timeStyle: "short"}).format(today_12_30));
 
   testGetReadableDates(yesterday_11_30, "Yesterday");
   testGetReadableDates(yesterday_12_30, "Yesterday");
   testGetReadableDates(twodaysago,
-                       typeof Intl === "undefined"
-                       ? twodaysago.toLocaleFormat("%A")
-                       : twodaysago.toLocaleDateString(undefined, { weekday: "long" }));
+                       twodaysago.toLocaleDateString(undefined, { weekday: "long" }));
   testGetReadableDates(sixdaysago,
-                       typeof Intl === "undefined"
-                       ? sixdaysago.toLocaleFormat("%A")
-                       : sixdaysago.toLocaleDateString(undefined, { weekday: "long" }));
+                       sixdaysago.toLocaleDateString(undefined, { weekday: "long" }));
   testGetReadableDates(sevendaysago,
-                       (typeof Intl === "undefined"
-                        ? sevendaysago.toLocaleFormat("%B")
-                        : sevendaysago.toLocaleDateString(undefined, { month: "long" })) + " " +
+                       sevendaysago.toLocaleDateString(undefined, { month: "long" }) + " " +
                        sevendaysago.getDate().toString().padStart(2, "0"));
 
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
 
   const dtOptions = { dateStyle: "long", timeStyle: "short" };
-  do_check_eq(dateTimeFull, typeof Intl === "undefined"
-                            ? today_11_30.toLocaleFormat("%x %X")
-                            : cDtf(undefined, dtOptions).format(today_11_30));
+  do_check_eq(dateTimeFull, cDtf(undefined, dtOptions).format(today_11_30));
 }
 
 function run_test() {

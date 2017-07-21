@@ -16,7 +16,8 @@ NS_IMPL_ISUPPORTS(Screen, nsIScreen)
 Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aPixelDepth, uint32_t aColorDepth,
                DesktopToLayoutDeviceScale aContentsScale,
-               CSSToLayoutDeviceScale aDefaultCssScale)
+               CSSToLayoutDeviceScale aDefaultCssScale,
+               float aDPI)
   : mRect(aRect)
   , mAvailRect(aAvailRect)
   , mRectDisplayPix(RoundedToInt(aRect / aContentsScale))
@@ -25,6 +26,7 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
   , mColorDepth(aColorDepth)
   , mContentsScale(aContentsScale)
   , mDefaultCssScale(aDefaultCssScale)
+  , mDPI(aDPI)
 {
 }
 
@@ -37,6 +39,7 @@ Screen::Screen(const mozilla::dom::ScreenDetails& aScreen)
   , mColorDepth(aScreen.colorDepth())
   , mContentsScale(aScreen.contentsScaleFactor())
   , mDefaultCssScale(aScreen.defaultCSSScaleFactor())
+  , mDPI(aScreen.dpi())
 {
 }
 
@@ -49,6 +52,7 @@ Screen::Screen(const Screen& aOther)
   , mColorDepth(aOther.mColorDepth)
   , mContentsScale(aOther.mContentsScale)
   , mDefaultCssScale(aOther.mDefaultCssScale)
+  , mDPI(aOther.mDPI)
 {
 }
 
@@ -57,7 +61,7 @@ Screen::ToScreenDetails()
 {
   return mozilla::dom::ScreenDetails(
     mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix,
-    mPixelDepth, mColorDepth, mContentsScale, mDefaultCssScale);
+    mPixelDepth, mColorDepth, mContentsScale, mDefaultCssScale, mDPI);
 }
 
 NS_IMETHODIMP
@@ -142,6 +146,13 @@ Screen::GetDefaultCSSScaleFactor(double *aOutScale)
   } else {
     *aOutScale = mDefaultCssScale.scale;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Screen::GetDpi(float* aDPI)
+{
+  *aDPI = mDPI;
   return NS_OK;
 }
 

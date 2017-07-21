@@ -455,12 +455,7 @@ impl AnimatedProperty {
                             let value: longhands::${prop.ident}::computed_value::T =
                                 ToAnimatedValue::from_animated_value(value);
                         % endif
-                        <% method = "style.mutate_" + prop.style_struct.ident.strip("_") + "().set_" + prop.ident %>
-                        % if prop.has_uncacheable_values is "True":
-                            ${method}(value, &mut false);
-                        % else:
-                            ${method}(value);
-                        % endif
+                        style.mutate_${prop.style_struct.name_lower}().set_${prop.ident}(value);
                     }
                 % endif
             % endfor
@@ -562,9 +557,12 @@ impl AnimationValue {
         }
     }
 
-    /// Construct an AnimationValue from a property declaration
-    pub fn from_declaration(decl: &PropertyDeclaration, context: &mut Context,
-                            initial: &ComputedValues) -> Option<Self> {
+    /// Construct an AnimationValue from a property declaration.
+    pub fn from_declaration(
+        decl: &PropertyDeclaration,
+        context: &mut Context,
+        initial: &ComputedValues
+    ) -> Option<Self> {
         use properties::LonghandId;
 
         match *decl {
@@ -606,7 +604,7 @@ impl AnimationValue {
                                 CSSWideKeyword::Unset |
                             % endif
                             CSSWideKeyword::Inherit => {
-                                let inherit_struct = context.inherited_style
+                                let inherit_struct = context.inherited_style()
                                                             .get_${prop.style_struct.name_lower}();
                                 inherit_struct.clone_${prop.ident}()
                             },
@@ -2146,7 +2144,7 @@ fn decompose_3d_matrix(mut matrix: ComputedMatrix) -> Result<MatrixDecomposed3D,
     row[1] = combine(row[1], row[0], 1.0, -skew.0);
 
     // Now, compute Y scale and normalize 2nd row.
-    let row1len = (row[0][0] * row[0][0] + row[0][1] * row[0][1] + row[0][2] * row[0][2]).sqrt();
+    let row1len = (row[1][0] * row[1][0] + row[1][1] * row[1][1] + row[1][2] * row[1][2]).sqrt();
     scale.1 = row1len;
     row[1] = [row[1][0] / row1len, row[1][1] / row1len, row[1][2] / row1len];
     skew.0 /= scale.1;

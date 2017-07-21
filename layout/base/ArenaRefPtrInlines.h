@@ -22,27 +22,13 @@ template<typename T>
 void
 ArenaRefPtr<T>::AssertValidType()
 {
-#ifdef DEBUG
-  bool ok =
-#define PRES_ARENA_OBJECT_WITH_ARENAREFPTR_SUPPORT(name_) \
-    T::ArenaObjectID() == eArenaObjectID_##name_ ||
-#include "nsPresArenaObjectList.h"
-#undef PRES_ARENA_OBJECT_WITH_ARENAREFPTR_SUPPORT
-    false;
-  MOZ_ASSERT(ok, "ArenaRefPtr<T> template parameter T must be declared in "
-                 "nsPresArenaObjectList with "
-                 "PRES_ARENA_OBJECT_WITH_ARENAREFPTR_SUPPORT");
-#endif
+  // If adding new types, please update nsPresArena::ClearArenaRefPtrWithoutDeregistering
+  // as well
+  static_assert(IsSame<T, GeckoStyleContext>::value || IsSame<T, nsStyleContext>::value,
+                 "ArenaRefPtr<T> template parameter T must be declared in "
+                 "nsPresArenaObjectList and explicitly handled in"
+                 "nsPresArena.cpp");
 }
-
-template<>
-struct ArenaRefPtrTraits<nsStyleContext>
-{
-  static bool UsesArena(nsStyleContext* aPtr) {
-    MOZ_ASSERT(aPtr);
-    return aPtr->IsGecko();
-  }
-};
 
 } // namespace mozilla
 

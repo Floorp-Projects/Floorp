@@ -795,6 +795,17 @@ body,
   margin: 1px 3px;
 }
 
+.devtools-checkbox {
+  position: relative;
+  vertical-align: middle;
+  bottom: 1px;
+}
+
+.devtools-checkbox-label {
+  margin-inline-start: 10px;
+  margin-inline-end: 3px;
+}
+
 /* Empty notices in tab panels */
 
 .empty-notice {

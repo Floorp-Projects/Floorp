@@ -2418,22 +2418,20 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   NS_ENSURE_STATE(range);
 
   nsCOMPtr<nsIDOMNode> startContainer;
-  int32_t startOffset, endOffset;
   nsresult rv = range->GetStartContainer(getter_AddRefs(startContainer));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t startOffset = range->StartOffset();
 
   nsCOMPtr<nsIDOMNode> endContainer;
   rv = range->GetEndContainer(getter_AddRefs(endContainer));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t endOffset = range->EndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
       endOffset - startOffset == 1) {
-    nsCOMPtr<nsIDOMNode> selectedNode = GetChildAt(startContainer, startOffset);
+    nsCOMPtr<nsIDOMNode> selectedNode =
+      GetChildAt(startContainer, static_cast<int32_t>(startOffset));
     NS_ENSURE_SUCCESS(rv, NS_OK);
     if (selectedNode) {
       selectedNode->GetNodeName(domTagName);

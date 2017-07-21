@@ -209,6 +209,12 @@ public:
 
   static bool IsPerMonitorDPIAware();
   /**
+   * Get the DPI of the given monitor if it's per-monitor DPI aware, otherwise
+   * return the system DPI.
+   */
+  static float MonitorDPI(HMONITOR aMonitor);
+  static float SystemDPI();
+  /**
    * Functions to convert between logical pixels as used by most Windows APIs
    * and physical (device) pixels.
    */

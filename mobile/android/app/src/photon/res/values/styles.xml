@@ -434,17 +434,6 @@
 
     <style name="TextAppearance.SearchSuggestion" parent="TextAppearance.Small"/>
 
-    <style name="TextAppearance.PrivateTab.Title" parent="TextAppearance.Large">
-        <item name="android:textSize">20sp</item>
-        <item name="android:maxWidth">200dp</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:layout_marginBottom">8dp</item>
-    </style>
-
-    <style name="TextAppearance.PrivateTab.Description" parent="TextAppearance.Small">
-        <item name="android:maxWidth">265dp</item>
-    </style>
-
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
         <item name="android:layout_width">match_parent</item>

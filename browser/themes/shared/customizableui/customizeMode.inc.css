@@ -580,9 +580,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #customization-panelWrapper > .panel-arrowbox {
   position: relative;
   height: 10px;
-%ifndef XP_MACOSX
-  margin-bottom: 2px;
-%endif
+  margin-bottom: -1px;
 }
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
@@ -614,6 +612,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
    * 10px.
    */
   margin-inline-end: calc(4px + 3 * var(--toolbarbutton-inner-padding));
+  vertical-align: top;
 }
 
 %ifdef XP_MACOSX

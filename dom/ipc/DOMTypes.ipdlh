@@ -87,6 +87,7 @@ struct ScreenDetails {
   int32_t colorDepth;
   DesktopToLayoutDeviceScale contentsScaleFactor;
   CSSToLayoutDeviceScale defaultCSSScaleFactor;
+  float dpi;
 };
 
 struct DimensionInfo

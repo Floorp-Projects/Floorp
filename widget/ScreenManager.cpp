@@ -129,7 +129,8 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
     RefPtr<Screen> ret = new Screen(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
                                     0, 0,
                                     DesktopToLayoutDeviceScale(),
-                                    CSSToLayoutDeviceScale());
+                                    CSSToLayoutDeviceScale(),
+                                    96 /* dpi */);
     ret.forget(aOutScreen);
     return NS_OK;
   }
@@ -218,7 +219,8 @@ ScreenManager::GetPrimaryScreen(nsIScreen** aPrimaryScreen)
     RefPtr<Screen> ret = new Screen(LayoutDeviceIntRect(), LayoutDeviceIntRect(),
                                     0, 0,
                                     DesktopToLayoutDeviceScale(),
-                                    CSSToLayoutDeviceScale());
+                                    CSSToLayoutDeviceScale(),
+                                    96 /* dpi */);
     ret.forget(aPrimaryScreen);
     return NS_OK;
   }
