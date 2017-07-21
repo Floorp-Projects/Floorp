@@ -54,7 +54,7 @@ HTTP(..) == font-features-order-5.html font-features-hlig.html
 fails-if(styloVsGecko||stylo) HTTP(..) == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-HTTP(..) == annotations.html annotations-ref.html
+fails-if((stylo||styloVsGecko)&&cocoaWidget) skip-if((stylo||styloVsGecko)&&winWidget) HTTP(..) == annotations.html annotations-ref.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
@@ -89,10 +89,10 @@ HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
 random-if(!winWidget&&!cocoaWidget) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
-random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if((winWidget||cocoaWidget)&&!styloVsGecko) HTTP(..) != kerning-spaces-arial-nokern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if((winWidget||cocoaWidget)&&!styloVsGecko) HTTP(..) == kerning-spaces-arial-kern.html kerning-spaces-arial-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if((winWidget||cocoaWidget)&&!styloVsGecko) HTTP(..) != kerning-spaces-tnr-nokern.html kerning-spaces-tnr-default.html
+random-if(!winWidget&&!cocoaWidget) fails-if((winWidget||cocoaWidget)&&!styloVsGecko) HTTP(..) == kerning-spaces-tnr-kern.html kerning-spaces-tnr-default.html
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
