@@ -1,128 +1,104 @@
----
-version: 0
-metadata:
-  name: 'Taskcluster tasks for Gecko'
-  description: "The taskcluster task graph for Gecko trees"
-  owner: mozilla-taskcluster-maintenance@mozilla.com
-  source: {{{source}}}
-
-scopes:
-  # Note the below scopes are insecure however these get overriden on the server
-  # side to whatever scopes are set by mozilla-taskcluster.
-  - queue:*
-  - docker-worker:*
-  - scheduler:*
-
-# This file undergoes substitution to create tasks.  For on-push tasks, that
-# substitution is done by mozilla-taskcluster.  For cron tasks, that substitution
-# is done by `taskcluster/taskgraph/cron/decision.py`.  If you change any of the
-# template parameters, please do so in all three places!
-#
-# Available template parameters:
-#
-# - now:            current time
-# - owner:          push user (email address)
-# - source:         URL of this YAML file
-# - url:            repository URL
-# - project:        alias for the destination repository (basename of
-#                   the repo url)
-# - level:          SCM level of the destination repository
-#                   (1 = try, 3 = core)
-# - revision:       hg revision of the head of the push
-# - comment:        comment of the push
-# - pushlog_id:     id in the pushlog table of the repository
-#
-# and functions:
-# - as_slugid:      convert a label into a slugId
-# - from_now:       generate a timestamp at a fixed offset from now
-# - shellquote:     quote the contents for injection into shell
-
-# The resulting tasks' taskGroupId will be equal to the taskId of the first
-# task listed here, which should be the decision task.  This gives other tools
-# an easy way to determine the ID of the decision task that created a
-# particular group.
-
+# This file is handled by mozilla-taskcluster; see
+# https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
+version: 1
 tasks:
-  - taskId: '{{#as_slugid}}decision task{{/as_slugid}}'
-    task:
-      created: '{{now}}'
-      deadline: '{{#from_now}}1 day{{/from_now}}'
-      expires: '{{#from_now}}365 day{{/from_now}}'
-      metadata:
-        owner: mozilla-taskcluster-maintenance@mozilla.com
-        source: {{{source}}}
-        name: "Gecko Decision Task"
-        description: |
-            The task that creates all of the other tasks in the task graph
+  $let:
+    # sometimes the push user is just `ffxbld` or the like, but we want an email-like field..
+    ownerEmail: {$if: '"@" in push.owner', then: '${push.owner}', else: '${push.owner}@noreply.mozilla.org'}
+  in:
+  - taskId: '${as_slugid("decision")}'
+    taskGroupId: '${as_slugid("decision")}' # same as tsakId; this is how automation identifies a decision tsak
+    schedulerId: 'gecko-level-${repository.level}'
 
-      workerType: "gecko-decision"
-      provisionerId: "aws-provisioner-v1"
+    created: {$fromNow: ''}
+    deadline: {$fromNow: '1 day'}
+    expires: {$fromNow: '1 year 1 second'} # 1 second so artifacts expire first, despite rounding errors
+    metadata:
+      owner: "${ownerEmail}"
+      source: "${repository.url}/raw-file/${push.revision}/.taskcluster.yml"
+      name: "Gecko Decision Task"
+      description: |
+          The task that creates all of the other tasks in the task graph
 
-      tags:
-        createdForUser: {{owner}}
+    provisionerId: "aws-provisioner-v1"
+    workerType: "gecko-decision"
 
-      routes:
-        - "index.gecko.v2.{{project}}.latest.firefox.decision"
-        - "index.gecko.v2.{{project}}.pushlog-id.{{pushlog_id}}.decision"
-        - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
-        - "tc-treeherder-stage.v2.{{project}}.{{revision}}.{{pushlog_id}}"
-        - "notify.email.{{owner}}.on-failed"
-        - "notify.email.{{owner}}.on-exception"
+    tags:
+      createdForUser: "${ownerEmail}"
 
-      payload:
-        env:
-          # checkout-gecko uses these to check out the source; the inputs
-          # to `mach taskgraph decision` are all on the command line.
-          GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
-          GECKO_HEAD_REPOSITORY: '{{{url}}}'
-          GECKO_HEAD_REF: '{{revision}}'
-          GECKO_HEAD_REV: '{{revision}}'
-          HG_STORE_PATH: /home/worker/checkouts/hg-store
+    routes:
+      - "index.gecko.v2.${repository.project}.latest.firefox.decision"
+      - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
+      - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+      - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+      - "notify.email.${ownerEmail}.on-failed"
+      - "notify.email.${ownerEmail}.on-exception"
 
-        cache:
-          level-{{level}}-checkouts: /home/worker/checkouts
+    scopes:
+      - 'assume:repo:${repository.url[8:-1]}:*'
+      - 'queue:route:notify.email.${ownerEmail}.*'
 
-        features:
-          taskclusterProxy: true
-          chainOfTrust: true
+    dependencies: []
+    requires: all-completed
 
-        # Note: This task is built server side without the context or tooling that
-        # exist in tree so we must hard code the hash
-        # XXX Changing this will break Chain of Trust without an associated puppet and
-        # scriptworker patch!
-        image: 'taskcluster/decision:0.1.8@sha256:195d8439c8e90d59311d877bd2a8964849b2e43bfc6c234092618518d8b2891b'
+    priority: lowest
+    retries: 5
 
-        maxRunTime: 1800
+    payload:
+      env:
+        # checkout-gecko uses these to check out the source; the inputs
+        # to `mach taskgraph decision` are all on the command line.
+        GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
+        GECKO_HEAD_REPOSITORY: '${repository.url}'
+        GECKO_HEAD_REF: '${push.revision}'
+        GECKO_HEAD_REV: '${push.revision}'
+        GECKO_COMMIT_MSG: '${push.comment}'
+        HG_STORE_PATH: /home/worker/checkouts/hg-store
 
-        # TODO use mozilla-unified for the base repository once the tc-vcs
-        # tar.gz archives are created or tc-vcs isn't being used.
-        command:
-          - /home/worker/bin/run-task
-          - '--vcs-checkout=/home/worker/checkouts/gecko'
-          - '--'
-          - bash
-          - -cx
-          - >
-              cd /home/worker/checkouts/gecko &&
-              ln -s /home/worker/artifacts artifacts &&
-              ./mach --log-no-times taskgraph decision
-              --pushlog-id='{{pushlog_id}}'
-              --pushdate='{{pushdate}}'
-              --project='{{project}}'
-              --message={{#shellquote}}{{{comment}}}{{/shellquote}}
-              --owner='{{owner}}'
-              --level='{{level}}'
-              --base-repository='https://hg.mozilla.org/mozilla-central'
-              --head-repository='{{{url}}}'
-              --head-ref='{{revision}}'
-              --head-rev='{{revision}}'
+      cache:
+        level-${repository.level}-checkouts: /home/worker/checkouts
 
-        artifacts:
-          'public':
-            type: 'directory'
-            path: '/home/worker/artifacts'
-            expires: '{{#from_now}}364 days{{/from_now}}'
+      features:
+        taskclusterProxy: true
+        chainOfTrust: true
 
-      extra:
-        treeherder:
-          symbol: D
+      # Note: This task is built server side without the context or tooling that
+      # exist in tree so we must hard code the hash
+      # XXX Changing this will break Chain of Trust without an associated puppet and
+      # scriptworker patch!
+      image: 'taskcluster/decision:0.1.8@sha256:195d8439c8e90d59311d877bd2a8964849b2e43bfc6c234092618518d8b2891b'
+
+      maxRunTime: 1800
+
+      # TODO use mozilla-unified for the base repository once the tc-vcs
+      # tar.gz archives are created or tc-vcs isn't being used.
+      command:
+        - /home/worker/bin/run-task
+        - '--vcs-checkout=/home/worker/checkouts/gecko'
+        - '--'
+        - bash
+        - -cx
+        - >
+            cd /home/worker/checkouts/gecko &&
+            ln -s /home/worker/artifacts artifacts &&
+            ./mach --log-no-times taskgraph decision
+            --pushlog-id='${push.pushlog_id}'
+            --pushdate='${push.pushdate}'
+            --project='${repository.project}'
+            --message="$GECKO_COMMIT_MSG"
+            --owner='${ownerEmail}'
+            --level='${repository.level}'
+            --base-repository="$GECKO_BASE_REPOSITORY"
+            --head-repository="$GECKO_HEAD_REPOSITORY"
+            --head-ref="$GECKO_HEAD_REF"
+            --head-rev="$GECKO_HEAD_REV"
+
+      artifacts:
+        'public':
+          type: 'directory'
+          path: '/home/worker/artifacts'
+          expires: {$fromNow: '1 year'}
+
+    extra:
+      treeherder:
+        symbol: D
