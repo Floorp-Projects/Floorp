@@ -6064,16 +6064,35 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(visibleRect, appUnitsPerDevPixel),
                                         PixelCastJustification::WebRenderHasUnitResolution);
   LayerPoint origin = bounds.TopLeft();
+  float* opacityForSC = &mOpacity;
 
-  // TODO: generate animationsId for OMTA.
+  RefPtr<WebRenderAnimationData> animationData = aManager->CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(this);
+  AnimationInfo& animationInfo = animationData->GetAnimationInfo();
+  AddAnimationsForProperty(Frame(), aDisplayListBuilder,
+                           this, eCSSProperty_opacity,
+                           animationInfo, false);
+  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
   uint64_t animationsId = 0;
-  nsTArray<WrFilterOp> filters;
+
+  if (gfxPrefs::WebRenderOMTAEnabled() &&
+      !animationInfo.GetAnimations().IsEmpty()) {
+    animationsId = animationInfo.GetCompositorAnimationsId();
+    opacityForSC = nullptr;
+    OptionalOpacity opacityForCompositor = mOpacity;
+
+    OpAddCompositorAnimations
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
+           void_t(), opacityForCompositor);
+    aManager->WrBridge()->AddWebRenderParentCommand(anim);
+  }
+
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
                            aBuilder,
                            bounds,
                            origin,
                            animationsId,
-                           &mOpacity,
+                           opacityForSC,
                            nullptr,
                            filters);
 
@@ -7614,9 +7633,35 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
     bounds.MoveTo(boundTransform.TransformPoint(bounds.TopLeft()));
   }
 
-  // TODO: generate animationsId for OMTA.
+  RefPtr<WebRenderAnimationData> animationData = aManager->CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(this);
+
+  AnimationInfo& animationInfo = animationData->GetAnimationInfo();
+  AddAnimationsForProperty(Frame(), aDisplayListBuilder,
+                           this, eCSSProperty_transform,
+                           animationInfo, false);
+  animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
   uint64_t animationsId = 0;
-  nsTArray<wr::WrFilterOp> filters;
+
+  if (gfxPrefs::WebRenderOMTAEnabled() &&
+      !animationInfo.GetAnimations().IsEmpty()) {
+    animationsId = animationInfo.GetCompositorAnimationsId();
+
+    // Update transfrom as nullptr in stacking context if there exists
+    // transform animation, the transform value will be resolved
+    // after animation sampling on the compositor
+    transformForSC = nullptr;
+
+    // Pass default transform to compositor in case gecko fails to
+    // get animated value after animation sampling.
+    OptionalTransform transformForCompositor = newTransformMatrix;
+
+    OpAddCompositorAnimations
+      anim(CompositorAnimations(animationInfo.GetAnimations(), animationsId),
+           transformForCompositor, void_t());
+    aManager->WrBridge()->AddWebRenderParentCommand(anim);
+  }
+
+  nsTArray<mozilla::wr::WrFilterOp> filters;
   StackingContextHelper sc(aSc,
                            aBuilder,
                            bounds,
