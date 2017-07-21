@@ -380,7 +380,7 @@ protected:
   // |aCachedBaseStyleContext|.
   void EnsureBaseStyle(nsCSSPropertyID aProperty,
                        GeckoStyleContext* aStyleContext,
-                       RefPtr<nsStyleContext>& aCachedBaseStyleContext);
+                       RefPtr<GeckoStyleContext>& aCachedBaseStyleContext);
   // Stylo version of the above function that also first checks for an additive
   // value in |aProperty|'s list of segments.
   void EnsureBaseStyle(const AnimationProperty& aProperty,

@@ -138,53 +138,6 @@ nsStyleContext::FinishConstruction()
   #undef eStyleStruct_LastItem
 }
 
-void
-nsStyleContext::MoveTo(nsStyleContext* aNewParent)
-{
-  MOZ_ASSERT(aNewParent != mParent);
-
-  // This function shouldn't be getting called if the parents have different
-  // values for some flags in mBits (unless the flag is also set on this style
-  // context) because if that were the case we would need to recompute those
-  // bits for |this|.
-
-#define CHECK_FLAG(bit_) \
-  MOZ_ASSERT((mParent->mBits & (bit_)) == (aNewParent->mBits & (bit_)) ||     \
-             (mBits & (bit_)),                                                \
-             "MoveTo cannot be called if " #bit_ " value on old and new "     \
-             "style context parents do not match, unless the flag is set "    \
-             "on this style context");
-
-  CHECK_FLAG(NS_STYLE_HAS_PSEUDO_ELEMENT_DATA)
-  CHECK_FLAG(NS_STYLE_IN_DISPLAY_NONE_SUBTREE)
-  CHECK_FLAG(NS_STYLE_HAS_TEXT_DECORATION_LINES)
-  CHECK_FLAG(NS_STYLE_RELEVANT_LINK_VISITED)
-
-#undef CHECK_FLAG
-
-  // Assertions checking for visited style are just to avoid some tricky
-  // cases we can't be bothered handling at the moment.
-  MOZ_ASSERT(!IsStyleIfVisited());
-  MOZ_ASSERT(!mParent->IsStyleIfVisited());
-  MOZ_ASSERT(!aNewParent->IsStyleIfVisited());
-  auto styleIfVisited = GetStyleIfVisited();
-  MOZ_ASSERT(!styleIfVisited || styleIfVisited->mParent == mParent);
-
-  if (mParent->HasChildThatUsesResetStyle()) {
-    aNewParent->AddStyleBit(NS_STYLE_HAS_CHILD_THAT_USES_RESET_STYLE);
-  }
-
-  mParent->RemoveChild(this);
-  mParent = aNewParent;
-  mParent->AddChild(this);
-
-  if (styleIfVisited) {
-    styleIfVisited->mParent->RemoveChild(styleIfVisited);
-    styleIfVisited->mParent = aNewParent;
-    styleIfVisited->mParent->AddChild(styleIfVisited);
-  }
-}
-
 nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
                                     uint32_t* aEqualStructs,
@@ -535,7 +488,7 @@ nsStyleContext::Destroy()
 }
 
 already_AddRefed<GeckoStyleContext>
-NS_NewStyleContext(nsStyleContext* aParentContext,
+NS_NewStyleContext(GeckoStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,
