@@ -33,6 +33,7 @@
 #include "mozilla/gfx/TiledRegion.h"    // for TiledIntRegion
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/gfx/UserData.h"       // for UserData, etc
+#include "mozilla/layers/AnimationInfo.h" // for AnimationInfo
 #include "mozilla/layers/BSPTree.h"     // for LayerPolygon
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -75,7 +76,6 @@ class DrawTarget;
 namespace layers {
 
 class Animation;
-class AnimationData;
 class AsyncCanvasRenderer;
 class AsyncPanZoomController;
 class BasicLayerManager;
@@ -1245,16 +1245,6 @@ public:
       MutatedSimple();
     }
   }
-
-  // Ensure that this layer has a valid (non-zero) animations id. This value is
-  // unique across layers.
-  void EnsureAnimationsId();
-  // Call AddAnimation to add a new animation to this layer from layout code.
-  // Caller must fill in all the properties of the returned animation.
-  // A later animation overrides an earlier one.
-  Animation* AddAnimation();
-  // ClearAnimations clears animations on this layer.
-  virtual void ClearAnimations();
   // This is only called when the layer tree is updated. Do not call this from
   // layout code.  To add an animation to this layer, use AddAnimation.
   void SetCompositorAnimations(const CompositorAnimations& aCompositorAnimations);
@@ -1263,13 +1253,6 @@ public:
   // that at |aReadyTime| the animation's current time corresponds to its
   // 'initial current time' value.
   void StartPendingAnimations(const TimeStamp& aReadyTime);
-
-  // These are a parallel to AddAnimation and clearAnimations, except
-  // they add pending animations that apply only when the next
-  // transaction is begun.  (See also
-  // SetBaseTransformForNextTransaction.)
-  Animation* AddAnimationForNextTransaction();
-  void ClearAnimationsForNextTransaction();
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1447,19 +1430,18 @@ public:
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
-  AnimationArray& GetAnimations() { return mAnimations; }
-  uint64_t GetCompositorAnimationsId() { return mCompositorAnimationsId; }
-  InfallibleTArray<AnimData>& GetAnimationData() { return mAnimationData; }
+  AnimationArray& GetAnimations() { return mAnimationInfo.GetAnimations(); }
+  uint64_t GetCompositorAnimationsId() { return mAnimationInfo.GetCompositorAnimationsId(); }
+  InfallibleTArray<AnimData>& GetAnimationData();
 
-  uint64_t GetAnimationGeneration() { return mAnimationGeneration; }
-  void SetAnimationGeneration(uint64_t aCount) { mAnimationGeneration = aCount; }
+  uint64_t GetAnimationGeneration() { return mAnimationInfo.GetAnimationGeneration(); }
 
   bool HasTransformAnimation() const;
   bool HasOpacityAnimation() const;
 
   StyleAnimationValue GetBaseAnimationStyle() const
   {
-    return mBaseAnimationStyle;
+    return mAnimationInfo.GetBaseAnimationStyle();
   }
 
   /**
@@ -1888,6 +1870,8 @@ public:
 #endif
   }
 
+  AnimationInfo& GetAnimationInfo() { return mAnimationInfo; }
+
 protected:
   Layer(LayerManager* aManager, void* aImplData);
 
@@ -1957,11 +1941,7 @@ protected:
   // meantime).
   nsAutoPtr<gfx::Matrix4x4> mPendingTransform;
   gfx::Matrix4x4 mEffectiveTransform;
-  AnimationArray mAnimations;
-  uint64_t mCompositorAnimationsId;
-  // See mPendingTransform above.
-  nsAutoPtr<AnimationArray> mPendingAnimations;
-  InfallibleTArray<AnimData> mAnimationData;
+  AnimationInfo mAnimationInfo;
   Maybe<ParentLayerIntRect> mClipRect;
   gfx::IntRect mTileSourceRect;
   gfx::TiledIntRegion mInvalidRegion;
@@ -1970,16 +1950,11 @@ protected:
 #ifdef DEBUG
   uint32_t mDebugColorIndex;
 #endif
-  // If this layer is used for OMTA, then this counter is used to ensure we
-  // stay in sync with the animation manager
-  uint64_t mAnimationGeneration;
 #ifdef MOZ_DUMP_PAINTING
   nsTArray<nsCString> mExtraDumpInfo;
 #endif
   // Store display list log.
   nsCString mDisplayListLog;
-
-  StyleAnimationValue mBaseAnimationStyle;
 };
 
 /**
