@@ -102,10 +102,10 @@ testPrincipals({ name:"pixel_aspect_ratio.mp4", type:"video/mp4", duration:28 })
 .then(() => SimpleTest.finish())
 .catch(e => throwOutside(e));
 
-var stop = stream => stream.getTracks().forEach(track => track.stop());
-var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-var waitUntil = f => new Promise(resolve => {
-  var ival = setInterval(() => f() && resolve(clearInterval(ival)), 100);
+let stop = stream => stream.getTracks().forEach(track => track.stop());
+let wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+let waitUntil = f => new Promise(resolve => {
+  let ival = setInterval(() => f() && resolve(clearInterval(ival)), 100);
 });
 
 </script>
