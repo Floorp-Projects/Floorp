@@ -380,15 +380,21 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
 
   if (geometry) {
-    nsPoint shift = itemBounds.TopLeft() - geometry->mBounds.TopLeft();
-    geometry->MoveBy(shift);
-    aItem->ComputeInvalidationRegion(aDisplayListBuilder, geometry, &invalidRegion);
-    nsRect lastBounds = fallbackData->GetBounds();
-    lastBounds.MoveBy(shift);
-
-    if (!lastBounds.IsEqualInterior(clippedBounds)) {
-      invalidRegion.OrWith(lastBounds);
+    nsRect invalid;
+    if (aItem->IsInvalid(invalid)) {
       invalidRegion.OrWith(clippedBounds);
+    } else {
+      nsPoint shift = itemBounds.TopLeft() - geometry->mBounds.TopLeft();
+      geometry->MoveBy(shift);
+      aItem->ComputeInvalidationRegion(aDisplayListBuilder, geometry, &invalidRegion);
+
+      nsRect lastBounds = fallbackData->GetBounds();
+      lastBounds.MoveBy(shift);
+
+      if (!lastBounds.IsEqualInterior(clippedBounds)) {
+        invalidRegion.OrWith(lastBounds);
+        invalidRegion.OrWith(clippedBounds);
+      }
     }
   }
 
