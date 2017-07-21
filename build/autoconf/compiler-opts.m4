@@ -201,11 +201,7 @@ fi
 # bionic in Android < 4.1 doesn't support PIE
 # On OSX, the linker defaults to building PIE programs when targeting OSX 10.7.
 # On other Unix systems, some file managers (Nautilus) can't start PIE programs
-if test -n "$gonkdir" && test "$ANDROID_VERSION" -ge 16; then
-    MOZ_PIE=1
-else
-    MOZ_PIE=
-fi
+MOZ_PIE=
 
 MOZ_ARG_ENABLE_BOOL(pie,
 [  --enable-pie           Enable Position Independent Executables],
