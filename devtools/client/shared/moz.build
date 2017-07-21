@@ -10,7 +10,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 DIRS += [
     'components',
     'redux',
-    'shim',
     'source-map',
     'vendor',
     'widgets',
