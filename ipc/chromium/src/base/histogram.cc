@@ -1000,4 +1000,177 @@ double CustomHistogram::GetBucketSize(Count current, size_t i) const {
   return 1;
 }
 
+//------------------------------------------------------------------------------
+// The next section handles global (central) support for all histograms, as well
+// as startup/teardown of this service.
+//------------------------------------------------------------------------------
+
+// This singleton instance should be started during the single threaded portion
+// of main(), and hence it is not thread safe.  It initializes globals to
+// provide support for all future calls.
+StatisticsRecorder::StatisticsRecorder() {
+  DCHECK(!histograms_);
+  if (lock_ == NULL) {
+    // This will leak on purpose. It's the only way to make sure we won't race
+    // against the static uninitialization of the module while one of our
+    // static methods relying on the lock get called at an inappropriate time
+    // during the termination phase. Since it's a static data member, we will
+    // leak one per process, which would be similar to the instance allocated
+    // during static initialization and released only on  process termination.
+    lock_ = new base::Lock;
+  }
+  base::AutoLock auto_lock(*lock_);
+  histograms_ = new HistogramMap;
+}
+
+StatisticsRecorder::~StatisticsRecorder() {
+  DCHECK(histograms_ && lock_);
+
+  if (dump_on_exit_) {
+    std::string output;
+    WriteGraph("", &output);
+    CHROMIUM_LOG(INFO) << output;
+  }
+  // Clean up.
+  HistogramMap* histograms = NULL;
+  {
+    base::AutoLock auto_lock(*lock_);
+    histograms = histograms_;
+    histograms_ = NULL;
+    for (HistogramMap::iterator it = histograms->begin();
+         histograms->end() != it;
+         ++it) {
+      // No other clients permanently hold Histogram references, so we
+      // have the only one and it is safe to delete it.
+      delete it->second;
+    }
+  }
+  delete histograms;
+  // We don't delete lock_ on purpose to avoid having to properly protect
+  // against it going away after we checked for NULL in the static methods.
+}
+
+// static
+bool StatisticsRecorder::IsActive() {
+  if (lock_ == NULL)
+    return false;
+  base::AutoLock auto_lock(*lock_);
+  return NULL != histograms_;
+}
+
+Histogram* StatisticsRecorder::RegisterOrDeleteDuplicate(Histogram* histogram) {
+  DCHECK(histogram->HasValidRangeChecksum());
+  if (lock_ == NULL)
+    return histogram;
+  base::AutoLock auto_lock(*lock_);
+  if (!histograms_)
+    return histogram;
+  const std::string name = histogram->histogram_name();
+  HistogramMap::iterator it = histograms_->find(name);
+  // Avoid overwriting a previous registration.
+  if (histograms_->end() == it) {
+    (*histograms_)[name] = histogram;
+  } else {
+    delete histogram;  // We already have one by this name.
+    histogram = it->second;
+  }
+  return histogram;
+}
+
+// static
+void StatisticsRecorder::WriteHTMLGraph(const std::string& query,
+                                        std::string* output) {
+  if (!IsActive())
+    return;
+  output->append("<html><head><title>About Histograms");
+  if (!query.empty())
+    output->append(" - " + query);
+  output->append("</title>"
+                 // We'd like the following no-cache... but it doesn't work.
+                 // "<META HTTP-EQUIV=\"Pragma\" CONTENT=\"no-cache\">"
+                 "</head><body>");
+
+  Histograms snapshot;
+  GetSnapshot(query, &snapshot);
+  for (Histograms::iterator it = snapshot.begin();
+       it != snapshot.end();
+       ++it) {
+    (*it)->WriteHTMLGraph(output);
+    output->append("<br><hr><br>");
+  }
+  output->append("</body></html>");
+}
+
+// static
+void StatisticsRecorder::WriteGraph(const std::string& query,
+                                    std::string* output) {
+  if (!IsActive())
+    return;
+  if (query.length())
+    StringAppendF(output, "Collections of histograms for %s\n", query.c_str());
+  else
+    output->append("Collections of all histograms\n");
+
+  Histograms snapshot;
+  GetSnapshot(query, &snapshot);
+  for (Histograms::iterator it = snapshot.begin();
+       it != snapshot.end();
+       ++it) {
+    (*it)->WriteAscii(true, "\n", output);
+    output->append("\n");
+  }
+}
+
+// static
+void StatisticsRecorder::GetHistograms(Histograms* output) {
+  if (lock_ == NULL)
+    return;
+  base::AutoLock auto_lock(*lock_);
+  if (!histograms_)
+    return;
+  for (HistogramMap::iterator it = histograms_->begin();
+       histograms_->end() != it;
+       ++it) {
+    DCHECK_EQ(it->first, it->second->histogram_name());
+    output->push_back(it->second);
+  }
+}
+
+bool StatisticsRecorder::FindHistogram(const std::string& name,
+                                       Histogram** histogram) {
+  if (lock_ == NULL)
+    return false;
+  base::AutoLock auto_lock(*lock_);
+  if (!histograms_)
+    return false;
+  HistogramMap::iterator it = histograms_->find(name);
+  if (histograms_->end() == it)
+    return false;
+  *histogram = it->second;
+  return true;
+}
+
+// private static
+void StatisticsRecorder::GetSnapshot(const std::string& query,
+                                     Histograms* snapshot) {
+  if (lock_ == NULL)
+    return;
+  base::AutoLock auto_lock(*lock_);
+  if (!histograms_)
+    return;
+  for (HistogramMap::iterator it = histograms_->begin();
+       histograms_->end() != it;
+       ++it) {
+    if (it->first.find(query) != std::string::npos)
+      snapshot->push_back(it->second);
+  }
+}
+
+// static
+StatisticsRecorder::HistogramMap* StatisticsRecorder::histograms_ = NULL;
+// static
+base::Lock* StatisticsRecorder::lock_ = NULL;
+// static
+bool StatisticsRecorder::dump_on_exit_ = false;
+
 }  // namespace base
