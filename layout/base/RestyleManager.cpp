@@ -1009,32 +1009,6 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
   return false;
 }
 
-/* static */ nsIFrame*
-RestyleManager::GetNearestAncestorFrame(nsIContent* aContent)
-{
-  nsIFrame* ancestorFrame = nullptr;
-  for (nsIContent* ancestor = aContent->GetParent();
-       ancestor && !ancestorFrame;
-       ancestor = ancestor->GetParent()) {
-    ancestorFrame = ancestor->GetPrimaryFrame();
-  }
-  return ancestorFrame;
-}
-
-/* static */ nsIFrame*
-RestyleManager::GetNextBlockInInlineSibling(nsIFrame* aFrame)
-{
-  NS_ASSERTION(!aFrame->GetPrevContinuation(),
-               "must start with the first continuation");
-  // Might we have ib-split siblings?
-  if (!(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
-    // nothing more to do here
-    return nullptr;
-  }
-
-  return aFrame->GetProperty(nsIFrame::IBSplitSibling());
-}
-
 static void
 DoApplyRenderingChangeToTree(nsIFrame* aFrame,
                              nsChangeHint aChange)
@@ -1290,47 +1264,6 @@ StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
       aFrame, dirtyType, dirtyBits, rootHandling);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);
-}
-
-/* static */ nsIFrame*
-RestyleManager::GetNextContinuationWithSameStyle(
-  nsIFrame* aFrame, nsStyleContext* aOldStyleContext,
-  bool* aHaveMoreContinuations)
-{
-  // See GetPrevContinuationWithSameStyle about {ib} splits.
-
-  nsIFrame* nextContinuation = aFrame->GetNextContinuation();
-  if (!nextContinuation &&
-      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
-    // We're the last continuation, so we have to hop back to the first
-    // before getting the frame property
-    nextContinuation =
-      aFrame->FirstContinuation()->GetProperty(nsIFrame::IBSplitSibling());
-    if (nextContinuation) {
-      nextContinuation =
-        nextContinuation->GetProperty(nsIFrame::IBSplitSibling());
-    }
-  }
-
-  if (!nextContinuation) {
-    return nullptr;
-  }
-
-  NS_ASSERTION(nextContinuation->GetContent() == aFrame->GetContent(),
-               "unexpected content mismatch");
-
-  nsStyleContext* nextStyle = nextContinuation->StyleContext();
-  if (nextStyle != aOldStyleContext) {
-    NS_ASSERTION(aOldStyleContext->GetPseudo() != nextStyle->GetPseudo() ||
-                 aOldStyleContext->GetParentAllowServo() !=
-                   nextStyle->GetParentAllowServo(),
-                 "continuations should have the same style context");
-    nextContinuation = nullptr;
-    if (aHaveMoreContinuations) {
-      *aHaveMoreContinuations = true;
-    }
-  }
-  return nextContinuation;
 }
 
 void

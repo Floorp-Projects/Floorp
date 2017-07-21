@@ -13,7 +13,16 @@ namespace mozilla {
 
 class GeckoStyleContext final : public nsStyleContext {
 public:
-  GeckoStyleContext(nsStyleContext* aParent,
+  static already_AddRefed<GeckoStyleContext>
+  TakeRef(already_AddRefed<nsStyleContext> aStyleContext)
+  {
+    auto* context = aStyleContext.take();
+    MOZ_ASSERT(context);
+
+    return already_AddRefed<GeckoStyleContext>(context->AsGecko());
+  }
+
+  GeckoStyleContext(GeckoStyleContext* aParent,
                     nsIAtom* aPseudoTag,
                     CSSPseudoElementType aPseudoType,
                     already_AddRefed<nsRuleNode> aRuleNode,
@@ -28,12 +37,21 @@ public:
   void AddChild(GeckoStyleContext* aChild);
   void RemoveChild(GeckoStyleContext* aChild);
 
+  /**
+   * Moves this style context to a new parent.
+   *
+   * This function violates style context tree immutability, and
+   * is a very low-level function and should only be used after verifying
+   * many conditions that make it safe to call.
+   */
+  void MoveTo(GeckoStyleContext* aNewParent);
+
   void* GetUniqueStyleData(const nsStyleStructID& aSID);
   void* CreateEmptyStyleData(const nsStyleStructID& aSID);
 
   // To be called only from nsStyleSet / ServoStyleSet.
-  void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited);
-  nsStyleContext* GetStyleIfVisited() const { return mStyleIfVisited; };
+  void SetStyleIfVisited(already_AddRefed<GeckoStyleContext> aStyleIfVisited);
+  GeckoStyleContext* GetStyleIfVisited() const { return mStyleIfVisited; };
 #ifdef DEBUG
   /**
    * Initializes a cached pref, which is only used in DEBUG code.
@@ -226,7 +244,7 @@ private:
   // Style to be used instead for the R, G, and B components of color,
   // background-color, and border-*-color if the nearest ancestor link
   // element is visited (see RelevantLinkVisited()).
-  RefPtr<nsStyleContext> mStyleIfVisited;
+  RefPtr<GeckoStyleContext> mStyleIfVisited;
 
 #ifdef DEBUG
 public:

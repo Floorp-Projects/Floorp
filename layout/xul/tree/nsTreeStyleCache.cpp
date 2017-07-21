@@ -89,7 +89,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
     } else {
       newResult = aPresContext->StyleSet()->AsGecko()->
         ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
-                                  aContext, aComparator);
+                                  aContext->AsGecko(), aComparator);
     }
 
     // Put the style context in our table, transferring the owning reference to the table.

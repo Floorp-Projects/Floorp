@@ -1926,33 +1926,32 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   // We don't do this for pseudos that may trigger animations or transitions,
   // since those need to be kicked off by the traversal machinery.
   bool hasServoAnimations = false;
-  ServoStyleContext* servoStyle = pseudoStyleContext->GetAsServo();
+  auto* servoStyle = pseudoStyleContext->GetAsServo();
   if (servoStyle) {
     hasServoAnimations =
       Servo_ComputedValues_SpecifiesAnimationsOrTransitions(servoStyle);
     if (!hasServoAnimations) {
       Servo_SetExplicitStyle(container, servoStyle);
     }
-  }
-
-  // stylo: ServoRestyleManager does not handle transitions yet, and when it
-  // does it probably won't need to track reframed style contexts to start
-  // transitions correctly.
-  if (mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->GetAsGecko()) {
+  } else {
+    mozilla::GeckoRestyleManager* geckoRM = RestyleManager()->AsGecko();
     GeckoRestyleManager::ReframingStyleContexts* rsc =
       geckoRM->GetReframingStyleContexts();
+
     if (rsc) {
-      nsStyleContext* oldStyleContext = rsc->Get(container, aPseudoElement);
-      if (oldStyleContext) {
+      RefPtr<GeckoStyleContext> newContext =
+        GeckoStyleContext::TakeRef(pseudoStyleContext.forget());
+      if (auto* oldStyleContext = rsc->Get(container, aPseudoElement)) {
         GeckoRestyleManager::TryInitiatingTransition(aState.mPresContext,
                                                      container,
                                                      oldStyleContext,
-                                                     &pseudoStyleContext);
+                                                     &newContext);
       } else {
         aState.mPresContext->TransitionManager()->
           PruneCompletedTransitions(aParentContent->AsElement(),
-                                    aPseudoElement, pseudoStyleContext);
+                                    aPseudoElement, newContext);
       }
+      pseudoStyleContext = newContext.forget();
     }
   }
 
@@ -5208,16 +5207,19 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
     GeckoRestyleManager::ReframingStyleContexts* rsc =
       geckoRM->GetReframingStyleContexts();
     if (rsc) {
-      nsStyleContext* oldStyleContext =
+      GeckoStyleContext* oldStyleContext =
         rsc->Get(aContent, CSSPseudoElementType::NotPseudo);
       nsPresContext* presContext = mPresShell->GetPresContext();
       if (oldStyleContext) {
+        RefPtr<GeckoStyleContext> newContext =
+          GeckoStyleContext::TakeRef(result.forget());
         GeckoRestyleManager::TryInitiatingTransition(presContext, aContent,
-                                                     oldStyleContext, &result);
+                                                     oldStyleContext, &newContext);
+        result = newContext.forget();
       } else if (aContent->IsElement()) {
         presContext->TransitionManager()->
           PruneCompletedTransitions(aContent->AsElement(),
-            CSSPseudoElementType::NotPseudo, result);
+            CSSPseudoElementType::NotPseudo, result->AsGecko());
       }
     }
   }
