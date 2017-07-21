@@ -999,7 +999,7 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
  * It is important that SpiderMonkey be initialized, and the first context
  * be created, in a single-threaded fashion.  Otherwise the behavior of the
  * library is undefined.
- * See: http://developer.mozilla.org/en/docs/Category:JSAPI_Reference
+ * See: https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/JSAPI_reference
  */
 
 // Create a new runtime, with a single cooperative context for this thread.
