@@ -122,13 +122,13 @@ function nextTest() {
 
   if (gVideo) {
     gVideo.remove();
-    gVideo.preload = "none"; // Don't trigger load algorithm.
-    gVideo.src = null;
+    gVideo.removeAttribute("src");
+    gVideo.load();
   }
 
   gVideo = null;
-  SpecialPowers.forceGC();  
-  
+  SpecialPowers.forceGC();
+
   gVideo = createVideo();
   gVideo.expectedResult = gTests[gTestNum].result;
   gVideo.testDescription = gTests[gTestNum].description;
@@ -141,7 +141,7 @@ function nextTest() {
   gVideo.src = url;
   //dump("Starting test " + gTestNum + " at " + gVideo.src + " expecting:" + gVideo.expectedResult + "\n");
   if (!gTestedRemoved) {
-    document.body.appendChild(gVideo); 
+    document.body.appendChild(gVideo);
     // Will cause load() to be invoked.
   } else {
     gVideo.load();
