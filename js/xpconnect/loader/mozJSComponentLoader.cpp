@@ -246,8 +246,8 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
 
     nsIURI* ResolvedURI() { MOZ_ASSERT(mResolvedURI); return mResolvedURI; }
     nsresult EnsureResolvedURI() {
-        BEGIN_ENSURE(ResolvedURI, ScriptChannel);
-        return mScriptChannel->GetURI(getter_AddRefs(mResolvedURI));
+        BEGIN_ENSURE(ResolvedURI, URI);
+        return ResolveURI(mURI, getter_AddRefs(mResolvedURI));
     }
 
     nsAutoCString& Key() { return *mKey; }
@@ -613,8 +613,10 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     bool writeToCache = false;
     StartupCache* cache = StartupCache::GetSingleton();
 
+    aInfo.EnsureResolvedURI();
+
     nsAutoCString cachePath(kJSCachePrefix);
-    rv = PathifyURI(aInfo.URI(), cachePath);
+    rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
