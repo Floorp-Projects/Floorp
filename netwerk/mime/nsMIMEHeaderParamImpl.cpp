@@ -824,8 +824,8 @@ nsMIMEHeaderParamImpl::DecodeRFC5987Param(const nsACString& aParamVal,
   nsAutoCString value;
 
   uint32_t delimiters = 0;
-  const char *encoded = PromiseFlatCString(aParamVal).get();
-  const char *c = encoded;
+  const nsCString& encoded = PromiseFlatCString(aParamVal);
+  const char *c = encoded.get();
 
   while (*c) {
     char tc = *c++;
