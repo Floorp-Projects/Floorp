@@ -814,6 +814,18 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       RefPtr<TextComposition> composition =
         IMEStateManager::GetTextCompositionFor(aPresContext);
       aEvent->AsKeyboardEvent()->mIsComposing = !!composition;
+
+      // Widget may need to perform default action for specific keyboard
+      // event if it's not consumed.  In this case, widget has already marked
+      // the event as "waiting reply from remote process".  However, we need
+      // to reset it if the target (focused content) isn't in a remote process
+      // because PresShell needs to check if it's marked as so before
+      // dispatching events into the DOM tree.
+      if (aEvent->IsWaitingReplyFromRemoteProcess() &&
+          !aEvent->PropagationStopped() &&
+          !IsRemoteTarget(content)) {
+        aEvent->ResetWaitingReplyFromRemoteProcessState();
+      }
     }
     break;
   case eWheel:
