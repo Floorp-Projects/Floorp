@@ -50,8 +50,6 @@ to mochitest command.
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
-  * system font serialization with subprop specified bug 1382080
-    * test_system_font_serialization.html [3]
   * radial gradients are not serialized using modern unprefixed style bug 1380259
     * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
