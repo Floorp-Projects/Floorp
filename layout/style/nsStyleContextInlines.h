@@ -88,7 +88,7 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {        \
     AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);             \
     const nsStyle##name_ * newData =                                \
       gecko->RuleNode()->                                           \
-        GetStyle##name_<aComputeData>(this->AsGecko(), mBits);      \
+        GetStyle##name_<aComputeData>(gecko, mBits);                \
     /* always cache inherited data on the style context; the rule */\
     /* node set the bit in mBits for us if needed. */               \
     gecko->mCachedInheritedData                                     \
@@ -155,8 +155,8 @@ const nsStyle##name_ * nsStyleContext::DoGetStyle##name_() {                  \
         return cachedData;                                                    \
     }                                                                         \
     /* Have the rulenode deal */                                              \
-    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                              \
-    return gecko->RuleNode()->GetStyle##name_<aComputeData>(this->AsGecko()); \
+    AUTO_CHECK_DEPENDENCY(gecko, eStyleStruct_##name_);                       \
+    return gecko->RuleNode()->GetStyle##name_<aComputeData>(gecko);           \
   }                                                                           \
   auto servo = AsServo();                                                     \
   const bool needToCompute = !(mBits & NS_STYLE_INHERIT_BIT(name_));          \
