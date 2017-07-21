@@ -111,8 +111,9 @@ this.XPCOMUtils = {
     if (interfaces) {
       for (let i = 0; i < interfaces.length; i++) {
         let iface = interfaces[i];
-        if (Ci[iface]) {
-          a.push(Ci[iface].name);
+        let name = (iface && iface.name) || String(iface);
+        if (name in Ci) {
+          a.push(name);
         }
       }
     }
