@@ -181,11 +181,7 @@ RilConnector::CreateStreamSocket(struct sockaddr* aAddress,
                                  socklen_t* aAddressLength,
                                  int& aStreamFd)
 {
-#ifdef MOZ_WIDGET_GONK
-  static const int sDomain = AF_UNIX;
-#else
   static const int sDomain = AF_INET;
-#endif
 
   ScopedClose fd;
 

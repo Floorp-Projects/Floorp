@@ -139,28 +139,28 @@ joining_type (hb_codepoint_t u)
   switch (u >> 12)
   {
     case 0x0u:
-      if (hb_in_range (u, 0x0600u, 0x08E2u)) return joining_table[u - 0x0600u + joining_offset_0x0600u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x0600u, 0x08E2u)) return joining_table[u - 0x0600u + joining_offset_0x0600u];
       break;
 
     case 0x1u:
-      if (hb_in_range (u, 0x1806u, 0x18AAu)) return joining_table[u - 0x1806u + joining_offset_0x1806u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1806u, 0x18AAu)) return joining_table[u - 0x1806u + joining_offset_0x1806u];
       break;
 
     case 0x2u:
-      if (hb_in_range (u, 0x200Cu, 0x2069u)) return joining_table[u - 0x200Cu + joining_offset_0x200cu];
+      if (hb_in_range<hb_codepoint_t> (u, 0x200Cu, 0x2069u)) return joining_table[u - 0x200Cu + joining_offset_0x200cu];
       break;
 
     case 0xAu:
-      if (hb_in_range (u, 0xA840u, 0xA873u)) return joining_table[u - 0xA840u + joining_offset_0xa840u];
+      if (hb_in_range<hb_codepoint_t> (u, 0xA840u, 0xA873u)) return joining_table[u - 0xA840u + joining_offset_0xa840u];
       break;
 
     case 0x10u:
-      if (hb_in_range (u, 0x10AC0u, 0x10AEFu)) return joining_table[u - 0x10AC0u + joining_offset_0x10ac0u];
-      if (hb_in_range (u, 0x10B80u, 0x10BAFu)) return joining_table[u - 0x10B80u + joining_offset_0x10b80u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x10AC0u, 0x10AEFu)) return joining_table[u - 0x10AC0u + joining_offset_0x10ac0u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x10B80u, 0x10BAFu)) return joining_table[u - 0x10B80u + joining_offset_0x10b80u];
       break;
 
     case 0x1Eu:
-      if (hb_in_range (u, 0x1E900u, 0x1E943u)) return joining_table[u - 0x1E900u + joining_offset_0x1e900u];
+      if (hb_in_range<hb_codepoint_t> (u, 0x1E900u, 0x1E943u)) return joining_table[u - 0x1E900u + joining_offset_0x1e900u];
       break;
 
     default:

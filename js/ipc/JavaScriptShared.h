@@ -8,6 +8,7 @@
 #ifndef mozilla_jsipc_JavaScriptShared_h__
 #define mozilla_jsipc_JavaScriptShared_h__
 
+#include "mozilla/HashFunctions.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/jsipc/PJavaScript.h"
@@ -72,7 +73,7 @@ struct ObjectIdHasher
 {
     typedef ObjectId Lookup;
     static js::HashNumber hash(const Lookup& l) {
-        return l.serialize();
+        return mozilla::HashGeneric(l.serialize());
     }
     static bool match(const ObjectId& k, const ObjectId& l) {
         return k == l;

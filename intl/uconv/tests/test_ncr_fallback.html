@@ -38,7 +38,7 @@ var i = 0;
 function step() {
   var f = document.getElementsByTagName("iframe")[i];
   f.onload = function() {
-    var href = f.contentWindow.location.href;
+    var href = SpecialPowers.wrap(f).contentWindow.location.href;
     var index = href.indexOf("?foo=");
     var actual = href.substring(index + 5);
     var expected = expectations[i];
@@ -50,7 +50,7 @@ function step() {
       step();
     }    
   }
-  f.contentDocument.forms[0].submit();
+  SpecialPowers.wrap(f).contentDocument.forms[0].submit();
 }
 </script>
 </pre>

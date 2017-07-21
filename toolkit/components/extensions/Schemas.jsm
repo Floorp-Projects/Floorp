@@ -67,6 +67,12 @@ function readJSON(url) {
   });
 }
 
+async function readJSONAndBlobbify(url) {
+  let json = await readJSON(url);
+
+  return new StructuredCloneHolder(json);
+}
+
 /**
  * Defines a lazy getter for the given property on the given object. Any
  * security wrappers are waived on the object before the property is
@@ -2630,9 +2636,9 @@ this.Schemas = {
       value: new Namespace("", []),
     });
 
-    for (let json of this.schemaJSON.values()) {
+    for (let blob of this.schemaJSON.values()) {
       try {
-        this.loadSchema(json);
+        this.loadSchema(blob.deserialize(global));
       } catch (e) {
         Cu.reportError(e);
       }
@@ -2659,13 +2665,13 @@ this.Schemas = {
     return this._loadCachedSchemasPromise;
   },
 
-  addSchema(url, json) {
-    this.schemaJSON.set(url, json);
+  addSchema(url, schema) {
+    this.schemaJSON.set(url, schema);
 
     let data = Services.ppmm.initialProcessData;
     data["Extension:Schemas"] = this.schemaJSON;
 
-    Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema: json});
+    Services.ppmm.broadcastAsyncMessage("Schema:Add", {url, schema});
 
     this.flushSchemas();
   },
@@ -2677,11 +2683,11 @@ this.Schemas = {
 
     let schemaCache = await this.loadCachedSchemas();
 
-    let json = (schemaCache.get(url) ||
-                await StartupCache.schemas.get(url, readJSON));
+    let blob = (schemaCache.get(url) ||
+                await StartupCache.schemas.get(url, readJSONAndBlobbify));
 
     if (!this.schemaJSON.has(url)) {
-      this.addSchema(url, json);
+      this.addSchema(url, blob);
     }
   },
 

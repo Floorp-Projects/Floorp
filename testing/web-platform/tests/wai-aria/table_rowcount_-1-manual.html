@@ -46,7 +46,7 @@
                [
                   "property",
                   "AXARIARowCount",
-                  "is",
+                  "contains",
                   "-1"
                ]
             ],
@@ -59,23 +59,28 @@
                ],
                [
                   "property",
-                  "rowcount",
-                  "is",
-                  "-1"
-               ]
-            ],
-            "MSAA" : [
+                  "interfaces",
+                  "contains",
+                  "IAccessibleTable2"
+               ],
                [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "xml-roles:table"
+               ],
+               [
+                  "property",
+                  "objectAttributes",
+                  "contains",
+                  "rowcount:-1"
+               ],
+               [
+                  "MSAA",
                   "property",
                   "role",
                   "is",
                   "ROLE_SYSTEM_TABLE"
-               ],
-               [
-                  "property",
-                  "rowcount",
-                  "is",
-                  "-1"
                ]
             ],
             "UIA" : [
