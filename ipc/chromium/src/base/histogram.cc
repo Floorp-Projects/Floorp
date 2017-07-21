@@ -258,7 +258,8 @@ Histogram::Histogram(Sample minimum, Sample maximum, size_t bucket_count)
     bucket_count_(bucket_count),
     flags_(kNoFlags),
     ranges_(bucket_count + 1, 0),
-    range_checksum_(0) {
+    range_checksum_(0),
+    recording_enabled_(true) {
   Initialize();
 }
 
@@ -269,7 +270,8 @@ Histogram::Histogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count)
     bucket_count_(bucket_count),
     flags_(kNoFlags),
     ranges_(bucket_count + 1, 0),
-    range_checksum_(0) {
+    range_checksum_(0),
+    recording_enabled_(true) {
   Initialize();
 }
 
