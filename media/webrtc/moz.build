@@ -80,6 +80,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/jsep',
         'signaling/src/media-conduit',
         'signaling/src/mediapipeline',
+        'signaling/src/peerconnection',
         'signaling/src/sdp'
     ]
     GYP_DIRS += ['signaling']

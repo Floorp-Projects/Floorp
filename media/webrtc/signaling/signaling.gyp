@@ -100,15 +100,6 @@
         # Browser Logging
         './src/common/time_profiling/timecard.c',
         './src/common/time_profiling/timecard.h',
-        # PeerConnection
-        './src/peerconnection/MediaPipelineFactory.cpp',
-        './src/peerconnection/MediaPipelineFactory.h',
-        './src/peerconnection/PeerConnectionCtx.cpp',
-        './src/peerconnection/PeerConnectionCtx.h',
-        './src/peerconnection/PeerConnectionImpl.cpp',
-        './src/peerconnection/PeerConnectionImpl.h',
-        './src/peerconnection/PeerConnectionMedia.cpp',
-        './src/peerconnection/PeerConnectionMedia.h',
       ],
 
       #
@@ -154,14 +145,6 @@
           ],
           'defines' : [
             'MOZ_WEBRTC_MEDIACODEC',
-          ],
-        }],
-        ['(build_for_test==0) and (build_for_standalone==0)', {
-          'sources': [
-            './src/peerconnection/MediaStreamList.cpp',
-            './src/peerconnection/MediaStreamList.h',
-            './src/peerconnection/WebrtcGlobalInformation.cpp',
-            './src/peerconnection/WebrtcGlobalInformation.h',
           ],
         }],
         ['build_for_test!=0', {
