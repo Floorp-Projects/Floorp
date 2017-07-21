@@ -5150,11 +5150,16 @@ GetMaxWebProcessCount()
 
   const char* optInPref = "dom.ipc.processCount";
   uint32_t optInPrefValue = Preferences::GetInt(optInPref, 1);
+  const char* useDefaultPerformanceSettings =
+    "browser.preferences.defaultPerformanceSettings.enabled";
+  bool useDefaultPerformanceSettingsValue =
+    Preferences::GetBool(useDefaultPerformanceSettings, true);
 
-  // If the user has set dom.ipc.processCount, respect their decision
-  // regardless of add-ons that might affect their experience or experiment
-  // cohort.
-  if (Preferences::HasUserValue(optInPref)) {
+  // If the user has set dom.ipc.processCount, or if they have opt out of
+  // default performances settings from about:preferences, respect their
+  // decision regardless of add-ons that might affect their experience or
+  // experiment cohort.
+  if (Preferences::HasUserValue(optInPref) || !useDefaultPerformanceSettingsValue) {
     return std::max(1u, optInPrefValue);
   }
 
