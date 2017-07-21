@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
-  "resource:///modules/sessionstore/PageStyle.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
   "resource://gre/modules/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
@@ -83,7 +81,7 @@ function ContentRestoreInternal(chromeGlobal) {
   // restoreTabContent.
   this._tabData = null;
 
-  // Contains {entry, pageStyle, scrollPositions, formdata}, where entry is a
+  // Contains {entry, scrollPositions, formdata}, where entry is a
   // single entry from the tabData.entries array. Set in
   // restoreTabContent and removed in restoreDocument.
   this._restoringDocument = null;
@@ -230,7 +228,6 @@ ContentRestoreInternal.prototype = {
         let activeIndex = tabData.index - 1;
         this._restoringDocument = {entry: tabData.entries[activeIndex] || {},
                                    formdata: tabData.formdata || {},
-                                   pageStyle: tabData.pageStyle || {},
                                    scrollPositions: tabData.scroll || {}};
 
         // In order to work around certain issues in session history, we need to
@@ -291,13 +288,12 @@ ContentRestoreInternal.prototype = {
     if (!this._restoringDocument) {
       return;
     }
-    let {pageStyle, formdata, scrollPositions} = this._restoringDocument;
+    let {formdata, scrollPositions} = this._restoringDocument;
     this._restoringDocument = null;
 
     let window = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIDOMWindow);
 
-    PageStyle.restoreTree(this.docShell, pageStyle);
     FormData.restoreTree(window, formdata);
     ScrollPosition.restoreTree(window, scrollPositions);
   },
