@@ -1703,9 +1703,9 @@ fails-if(styloVsGecko) == 670467-2.html 670467-2-ref.html
 == 691571-1.html 691571-1-ref.html
 fuzzy-if(skiaContent,1,200) == 696307-1.html 696307-1-ref.html
 fuzzy-if(skiaContent,1,550) == 696739-1.html 696739-1-ref.html
-needs-focus fails-if(styloVsGecko) == 703186-1.html 703186-1-ref.html
+needs-focus == 703186-1.html 703186-1-ref.html
 needs-focus == 703186-2.html 703186-2-ref.html
-needs-focus fails-if(styloVsGecko||stylo) != 703186-1.html 703186-2.html
+needs-focus != 703186-1.html 703186-2.html
 == 711359-1.html 711359-1-ref.html
 == 712849-1.html 712849-1-ref.html
 == 713856-static.html  713856-ref.html
