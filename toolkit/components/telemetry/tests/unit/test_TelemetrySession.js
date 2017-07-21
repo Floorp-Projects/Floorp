@@ -780,12 +780,12 @@ add_task(async function test_checkSubsessionHistograms() {
   // between us collecting the different payloads, so we only
   // check for deep equality on known stable histograms.
   let checkHistograms = (classic, subsession, message) => {
-    for (let id of Object.keys(subsession)) {
+    for (let id of Object.keys(classic)) {
       if (!registeredIds.has(id)) {
         continue;
       }
 
-      Assert.ok(id in classic, message + ` (${id})`);
+      Assert.ok(id in subsession, message + ` (${id})`);
       if (stableHistograms.has(id)) {
         Assert.deepEqual(classic[id],
                          subsession[id], message);
@@ -798,12 +798,12 @@ add_task(async function test_checkSubsessionHistograms() {
 
   // Same as above, except for keyed histograms.
   let checkKeyedHistograms = (classic, subsession, message) => {
-    for (let id of Object.keys(subsession)) {
+    for (let id of Object.keys(classic)) {
       if (!registeredIds.has(id)) {
         continue;
       }
 
-      Assert.ok(id in classic, message);
+      Assert.ok(id in subsession, message);
       if (stableKeyedHistograms.has(id)) {
         Assert.deepEqual(classic[id],
                          subsession[id], message);
@@ -896,8 +896,9 @@ add_task(async function test_checkSubsessionHistograms() {
   subsession = TelemetrySession.getPayload("environment-change");
 
   Assert.ok(COUNT_ID in classic.histograms);
-  Assert.ok(!(COUNT_ID in subsession.histograms));
+  Assert.ok(COUNT_ID in subsession.histograms);
   Assert.equal(classic.histograms[COUNT_ID].sum, 1);
+  Assert.equal(subsession.histograms[COUNT_ID].sum, 0);
 
   Assert.ok(KEYED_ID in classic.keyedHistograms);
   Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
@@ -1056,7 +1057,7 @@ add_task(async function test_dailyCollection() {
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
-  Assert.ok(!(COUNT_ID in ping.payload.histograms));
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
   Assert.ok(!(KEYED_ID in ping.payload.keyedHistograms));
 
   // Trigger and collect another daily ping, with the histograms being set again.
@@ -1260,7 +1261,7 @@ add_task(async function test_environmentChange() {
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
   Assert.equal(subsessionStartDate.toISOString(), startHour.toISOString());
 
-  Assert.ok(!(COUNT_ID in ping.payload.histograms));
+  Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
   Assert.ok(!(KEYED_ID in ping.payload.keyedHistograms));
 
   await TelemetryController.testShutdown();
