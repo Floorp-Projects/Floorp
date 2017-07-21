@@ -549,27 +549,31 @@ WinUtils::Log(const char *fmt, ...)
 }
 
 // static
-double
-WinUtils::SystemScaleFactor()
+float
+WinUtils::SystemDPI()
 {
   // The result of GetDeviceCaps won't change dynamically, as it predates
   // per-monitor DPI and support for on-the-fly resolution changes.
   // Therefore, we only need to look it up once.
-  static double systemScale = 0;
-  if (systemScale == 0) {
+  static float dpi = 0;
+  if (dpi <= 0) {
     HDC screenDC = GetDC(nullptr);
-    systemScale = GetDeviceCaps(screenDC, LOGPIXELSY) / 96.0;
+    dpi = GetDeviceCaps(screenDC, LOGPIXELSY);
     ReleaseDC(nullptr, screenDC);
-
-    if (systemScale == 0) {
-      // Bug 1012487 - This can occur when the Screen DC is used off the
-      // main thread on windows. For now just assume a 100% DPI for this
-      // drawing call.
-      // XXX - fixme!
-      return 1.0;
-    }
   }
-  return systemScale;
+
+  // Bug 1012487 - dpi can be 0 when the Screen DC is used off the
+  // main thread on windows. For now just assume a 100% DPI for this
+  // drawing call.
+  // XXX - fixme!
+  return dpi > 0 ? dpi : 96;
+}
+
+// static
+double
+WinUtils::SystemScaleFactor()
+{
+  return SystemDPI() / 96.0;
 }
 
 #if WINVER < 0x603
@@ -622,17 +626,25 @@ WinUtils::IsPerMonitorDPIAware()
 }
 
 /* static */
-double
-WinUtils::LogToPhysFactor(HMONITOR aMonitor)
+float
+WinUtils::MonitorDPI(HMONITOR aMonitor)
 {
   if (IsPerMonitorDPIAware()) {
     UINT dpiX, dpiY = 96;
     sGetDpiForMonitor(aMonitor ? aMonitor : GetPrimaryMonitor(),
                       MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
-    return dpiY / 96.0;
+    return dpiY;
   }
 
-  return SystemScaleFactor();
+  // We're not per-monitor aware, use system DPI instead.
+  return SystemDPI();
+}
+
+/* static */
+double
+WinUtils::LogToPhysFactor(HMONITOR aMonitor)
+{
+  return MonitorDPI(aMonitor) / 96.0;
 }
 
 /* static */

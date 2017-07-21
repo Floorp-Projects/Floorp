@@ -510,7 +510,6 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   nsCOMPtr<nsIContentIterator> iter;
   RefPtr<nsRange> range;
   nsCOMPtr<nsIDOMNode>         parent;
-  int32_t rangeCount, offset;
 
   if (isCollapsed) {
     // We have a caret. Check if the caret is in a text node.
@@ -537,6 +536,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       return NS_ERROR_FAILURE;
     }
 
+    uint32_t offset;
     rv = range->GetStartOffset(&offset);
 
     if (NS_FAILED(rv)) {
@@ -596,8 +596,9 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       // position to the end of the document, then walk forwards
       // till you find a text node, then find the beginning of it's block.
 
-      rv = CreateDocumentContentRootToNodeOffsetRange(parent, offset, false,
-                                                      getter_AddRefs(range));
+      rv = CreateDocumentContentRootToNodeOffsetRange(
+             parent, static_cast<int32_t>(offset), false,
+             getter_AddRefs(range));
 
       if (NS_FAILED(rv)) {
         UNLOCK_DOC(this);
@@ -690,6 +691,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   // beginning of its text block, and make it the current
   // block.
 
+  int32_t rangeCount;
   rv = selection->GetRangeCount(&rangeCount);
 
   if (NS_FAILED(rv)) {
@@ -797,6 +799,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return NS_ERROR_FAILURE;
   }
 
+  uint32_t offset;
   rv = range->GetEndOffset(&offset);
 
   if (NS_FAILED(rv)) {
@@ -804,8 +807,8 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return rv;
   }
 
-  rv = CreateDocumentContentRootToNodeOffsetRange(parent, offset, false,
-                                                  getter_AddRefs(range));
+  rv = CreateDocumentContentRootToNodeOffsetRange(
+         parent, static_cast<int32_t>(offset), false, getter_AddRefs(range));
 
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
@@ -2377,14 +2380,16 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   nsCOMPtr<nsINode> parent = do_QueryInterface(domParent);
   MOZ_ASSERT(parent);
 
-  int32_t offset;
+  uint32_t offset;
   rv = range->GetStartOffset(&offset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   int32_t e1s1 = nsContentUtils::ComparePoints(eStart->mNode, eStartOffset,
-                                               domParent, offset);
+                                               domParent,
+                                               static_cast<int32_t>(offset));
   int32_t e2s1 = nsContentUtils::ComparePoints(eEnd->mNode, eEndOffset,
-                                               domParent, offset);
+                                               domParent,
+                                               static_cast<int32_t>(offset));
 
   if (e1s1 > 0 || e2s1 < 0) {
     // We're done if the caret is outside the current text block.
@@ -2401,8 +2406,8 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
       if (entry->mNode == domParent.get() &&
-          entry->mNodeOffset <= offset &&
-          offset <= entry->mNodeOffset + entry->mLength) {
+          entry->mNodeOffset <= static_cast<int32_t>(offset) &&
+          static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
         *aSelStatus = nsITextServicesDocument::eBlockContains;
         *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
         *aSelLength = 0;
@@ -2440,7 +2445,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     // If the parent has children, position the iterator
     // on the child that is to the left of the offset.
 
-    uint32_t childIndex = (uint32_t)offset;
+    uint32_t childIndex = offset;
 
     if (childIndex > 0) {
       uint32_t numChildren = parent->GetChildCount();
@@ -2526,8 +2531,8 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
     NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
     if (entry->mNode == node->AsDOMNode() &&
-        entry->mNodeOffset <= offset &&
-        offset <= entry->mNodeOffset + entry->mLength) {
+        entry->mNodeOffset <= static_cast<int32_t>(offset) &&
+        static_cast<int32_t>(offset) <= entry->mNodeOffset + entry->mLength) {
       *aSelStatus = nsITextServicesDocument::eBlockContains;
       *aSelOffset = entry->mStrOffset + (offset - entry->mNodeOffset);
       *aSelLength = 0;
@@ -2820,9 +2825,12 @@ nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 
   NS_ENSURE_TRUE(aStartContainer, NS_ERROR_FAILURE);
 
-  rv = aRange->GetStartOffset(aStartOffset);
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t offset;
+  rv = aRange->GetStartOffset(&offset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  *aStartOffset = static_cast<int32_t>(offset);
 
   rv = aRange->GetEndContainer(aEndContainer);
 
@@ -2830,7 +2838,12 @@ nsTextServicesDocument::GetRangeEndPoints(nsRange* aRange,
 
   NS_ENSURE_TRUE(aEndContainer, NS_ERROR_FAILURE);
 
-  return aRange->GetEndOffset(aEndOffset);
+  rv = aRange->GetEndOffset(&offset);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  *aEndOffset = static_cast<int32_t>(offset);
+  return NS_OK;
 }
 
 nsresult

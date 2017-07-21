@@ -9,6 +9,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import json
 import logging
+import os
 import sys
 import traceback
 import re
@@ -296,7 +297,83 @@ class MachCommands(MachCommandBase):
         import actions
         try:
             self.setup_logging()
-            return actions.trigger_action_callback()
+
+            task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
+            task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
+            task = json.loads(os.environ.get('ACTION_TASK', 'null'))
+            input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
+            callback = os.environ.get('ACTION_CALLBACK', None)
+            parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
+
+            return actions.trigger_action_callback(
+                    task_group_id=task_group_id,
+                    tsak_id=task_id,
+                    task=task,
+                    input=input,
+                    callback=callback,
+                    parameters=parameters,
+                    test=False)
+        except Exception:
+            traceback.print_exc()
+            sys.exit(1)
+
+    @SubCommand('taskgraph', 'test-action-callback',
+                description='Run an action callback in a testing mode')
+    @CommandArgument('--parameters', '-p', default='project=mozilla-central',
+                     help='parameters file (.yml or .json; see '
+                          '`taskcluster/docs/parameters.rst`)`')
+    @CommandArgument('--task-id', default=None,
+                     help='TaskId to which the action applies')
+    @CommandArgument('--task-group-id', default=None,
+                     help='TaskGroupId to which the action applies')
+    @CommandArgument('--input', default=None,
+                     help='Action input (.yml or .json)')
+    @CommandArgument('--task', default=None,
+                     help='Task definition (.yml or .json; if omitted, the task will be'
+                          'fetched from the queue)')
+    @CommandArgument('callback', default=None,
+                     help='Action callback name (Python function name)')
+    def test_action_callback(self, **options):
+        import taskgraph.parameters
+        from taskgraph.util.taskcluster import get_task_definition
+        import actions
+        import yaml
+
+        def load_data(filename):
+            with open(filename) as f:
+                if filename.endswith('.yml'):
+                    return yaml.safe_load(f)
+                elif filename.endswith('.json'):
+                    return json.load(f)
+                else:
+                    raise Exception("unknown filename {}".format(filename))
+
+        try:
+            self.setup_logging()
+            task_id = options['task_id']
+            if options['task']:
+                task = load_data(options['task'])
+            elif task_id:
+                task = get_task_definition(task_id)
+            else:
+                task = None
+
+            if options['input']:
+                input = load_data(options['input'])
+            else:
+                input = None
+
+            parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
+            parameters.check()
+
+            return actions.trigger_action_callback(
+                    task_group_id=options['task_group_id'],
+                    task_id=task_id,
+                    task=task,
+                    input=input,
+                    callback=options['callback'],
+                    parameters=parameters,
+                    test=True)
         except Exception:
             traceback.print_exc()
             sys.exit(1)

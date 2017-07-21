@@ -1402,13 +1402,14 @@ static inline bool
 RangeMatchesBeginPoint(nsRange* aRange, nsINode* aNode, int32_t aOffset)
 {
   return aRange->GetStartContainer() == aNode &&
-         aRange->StartOffset() == aOffset;
+         static_cast<int32_t>(aRange->StartOffset()) == aOffset;
 }
 
 static inline bool
 RangeMatchesEndPoint(nsRange* aRange, nsINode* aNode, int32_t aOffset)
 {
-  return aRange->GetEndContainer() == aNode && aRange->EndOffset() == aOffset;
+  return aRange->GetEndContainer() == aNode &&
+         static_cast<int32_t>(aRange->EndOffset()) == aOffset;
 }
 
 // Selection::EqualsRangeAtPoint

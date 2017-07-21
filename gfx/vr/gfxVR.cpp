@@ -69,69 +69,63 @@ void
 VRSystemManager::AddGamepad(const VRControllerInfo& controllerInfo)
 {
   dom::GamepadAdded a(NS_ConvertUTF8toUTF16(controllerInfo.GetControllerName()),
-                      mControllerCount,
                       controllerInfo.GetMappingType(),
                       controllerInfo.GetHand(),
-                      dom::GamepadServiceType::VR,
                       controllerInfo.GetDisplayID(),
                       controllerInfo.GetNumButtons(),
                       controllerInfo.GetNumAxes(),
                       controllerInfo.GetNumHaptics());
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadAdded>(a);
+  vm->NotifyGamepadChange<dom::GamepadAdded>(mControllerCount, a);
 }
 
 void
 VRSystemManager::RemoveGamepad(uint32_t aIndex)
 {
-  dom::GamepadRemoved a(aIndex, dom::GamepadServiceType::VR);
+  dom::GamepadRemoved a;
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadRemoved>(a);
+  vm->NotifyGamepadChange<dom::GamepadRemoved>(aIndex, a);
 }
 
 void
 VRSystemManager::NewButtonEvent(uint32_t aIndex, uint32_t aButton,
                                 bool aPressed, bool aTouched, double aValue)
 {
-  dom::GamepadButtonInformation a(aIndex, dom::GamepadServiceType::VR,
-                                  aButton, aValue, aPressed, aTouched);
+  dom::GamepadButtonInformation a(aButton, aValue, aPressed, aTouched);
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadButtonInformation>(a);
+  vm->NotifyGamepadChange<dom::GamepadButtonInformation>(aIndex, a);
 }
 
 void
 VRSystemManager::NewAxisMove(uint32_t aIndex, uint32_t aAxis,
                              double aValue)
 {
-  dom::GamepadAxisInformation a(aIndex, dom::GamepadServiceType::VR,
-                                aAxis, aValue);
+  dom::GamepadAxisInformation a(aAxis, aValue);
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadAxisInformation>(a);
+  vm->NotifyGamepadChange<dom::GamepadAxisInformation>(aIndex, a);
 }
 
 void
 VRSystemManager::NewPoseState(uint32_t aIndex,
                               const dom::GamepadPoseState& aPose)
 {
-  dom::GamepadPoseInformation a(aIndex, dom::GamepadServiceType::VR,
-                                aPose);
+  dom::GamepadPoseInformation a(aPose);
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadPoseInformation>(a);
+  vm->NotifyGamepadChange<dom::GamepadPoseInformation>(aIndex, a);
 }
 
 void
 VRSystemManager::NewHandChangeEvent(uint32_t aIndex,
                                     const dom::GamepadHand aHand)
 {
-  dom::GamepadHandInformation a(aIndex, dom::GamepadServiceType::VR,
-                                aHand);
+  dom::GamepadHandInformation a(aHand);
 
   VRManager* vm = VRManager::Get();
-  vm->NotifyGamepadChange<dom::GamepadHandInformation>(a);
+  vm->NotifyGamepadChange<dom::GamepadHandInformation>(aIndex, a);
 }
 

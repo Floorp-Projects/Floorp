@@ -5319,7 +5319,7 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
     return -1;
   }
 
-  int32_t minOffset = INT32_MAX;
+  uint32_t minOffset = UINT32_MAX;
   static const SelectionType kIMESelectionTypes[] = {
     SelectionType::eIMERawClause,
     SelectionType::eIMESelectedRawClause,
@@ -5339,15 +5339,11 @@ EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
       if (NS_WARN_IF(range->GetStartContainer() != aTextNode)) {
         // ignore the start offset...
       } else {
-        MOZ_ASSERT(range->StartOffset() >= 0,
-                   "start offset shouldn't be negative");
         minOffset = std::min(minOffset, range->StartOffset());
       }
       if (NS_WARN_IF(range->GetEndContainer() != aTextNode)) {
         // ignore the end offset...
       } else {
-        MOZ_ASSERT(range->EndOffset() >= 0,
-                   "start offset shouldn't be negative");
         minOffset = std::min(minOffset, range->EndOffset());
       }
     }

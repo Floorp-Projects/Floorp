@@ -116,19 +116,21 @@ public:
     if (!doc)
       return;
 
-    // Destroy the frames for mBoundElement.
+    // Get the binding.
+    bool ready = false;
+    nsXBLService::GetInstance()->BindingReady(mBoundElement, mBindingURI, &ready);
+    if (!ready)
+      return;
+
+    // Destroy the frames for mBoundElement. Do this after getting the binding,
+    // since if the binding fetch fails then we don't want to destroy the
+    // frames.
     nsIContent* destroyedFramesFor = nullptr;
     nsIPresShell* shell = doc->GetShell();
     if (shell) {
       shell->DestroyFramesFor(mBoundElement, &destroyedFramesFor);
     }
     MOZ_ASSERT(!mBoundElement->GetPrimaryFrame());
-
-    // Get the binding.
-    bool ready = false;
-    nsXBLService::GetInstance()->BindingReady(mBoundElement, mBindingURI, &ready);
-    if (!ready)
-      return;
 
     // If |mBoundElement| is (in addition to having binding |mBinding|)
     // also a descendant of another element with binding |mBinding|,

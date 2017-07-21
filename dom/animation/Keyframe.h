@@ -25,6 +25,8 @@ enum class CompositeOperation : uint8_t;
  */
 struct PropertyValuePair
 {
+  explicit PropertyValuePair(nsCSSPropertyID aProperty)
+    : mProperty(aProperty) { }
   PropertyValuePair(nsCSSPropertyID aProperty, nsCSSValue&& aValue)
     : mProperty(aProperty), mValue(Move(aValue)) { }
   PropertyValuePair(nsCSSPropertyID aProperty,

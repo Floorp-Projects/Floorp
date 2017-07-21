@@ -24,17 +24,19 @@ const TEST_THRESHOLD = {
 const MULTI_EXPERIMENT = {
   "beta": { buckets: { 1: .5, 4: 1, }, // 1 process: 50%, 4 processes: 50%
 
-            // See below for an explanation, this only allows webextensions.
-            get addonsDisableExperiment() { return getAddonsDisqualifyForMulti(); } },
+            // When on the "beta" channel, getAddonsDisqualifyForMulti
+            // will return true if any addon installed is not a web extension.
+            // Therefore, this returns true if and only if all addons
+            // installed are web extensions or if no addons are installed
+            // at all.
+            addonsDisableExperiment(prefix) { return getAddonsDisqualifyForMulti(); } },
 
-  "release": { buckets: { 1: .2, 4: 1 }, // 1 process: 20%, 4 processes: 80%
+  "release": { buckets: { 1: .99, 4: 1 }, // 1 process: 99%, 4 processes: 1%
 
-               // When on the "release" channel, getAddonsDisqualifyForMulti
-               // will return true if any addon installed is not a web extension.
-               // Therefore, this returns true if and only if all addons
-               // installed are web extensions or if no addons are installed
-               // at all.
-               get addonsDisableExperiment() { return getAddonsDisqualifyForMulti(); } }
+               // We don't want to allow users with any extension
+               // (webextension or otherwise in the experiment). prefix will
+               // be non-empty if there is any addon.
+               addonsDisableExperiment(prefix) { return !!prefix; } }
 };
 
 const ADDON_ROLLOUT_POLICY = {
@@ -183,7 +185,7 @@ function defineCohort() {
   //   the default number of content processes (1 on beta) but still in the
   //   test cohort.
   if (!(updateChannel in MULTI_EXPERIMENT) ||
-      MULTI_EXPERIMENT[updateChannel].addonsDisableExperiment ||
+      MULTI_EXPERIMENT[updateChannel].addonsDisableExperiment(cohortPrefix) ||
       !eligibleForMulti ||
       userOptedIn.multi ||
       disqualified) {

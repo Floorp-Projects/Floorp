@@ -173,7 +173,9 @@ module.exports = createClass({
           role: "presentation",
           src: target.icon
         }),
-        dom.span({ className: "target-name", title: target.name }, target.name)
+        dom.span(
+          { className: "target-name addon-target-name", title: target.name },
+          target.name)
       ),
       showMessages(target),
       dom.dl(

@@ -29,7 +29,8 @@ public:
   Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
          uint32_t aPixelDepth, uint32_t aColorDepth,
          DesktopToLayoutDeviceScale aContentsScale,
-         CSSToLayoutDeviceScale aDefaultCssScale);
+         CSSToLayoutDeviceScale aDefaultCssScale,
+         float dpi);
   explicit Screen(const mozilla::dom::ScreenDetails& aScreenDetails);
   Screen(const Screen& aOther);
 
@@ -46,6 +47,7 @@ private:
   uint32_t mColorDepth;
   DesktopToLayoutDeviceScale mContentsScale;
   CSSToLayoutDeviceScale mDefaultCssScale;
+  float mDPI;
 };
 
 } // namespace widget
