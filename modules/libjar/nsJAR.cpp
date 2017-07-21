@@ -325,10 +325,10 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
 
   // Watch out for the jar:foo.zip!/ (aDir is empty) top-level special case!
   nsZipItem *item = nullptr;
-  const char *entry = PromiseFlatCString(aEntryName).get();
-  if (*entry) {
+  const nsCString& entry = PromiseFlatCString(aEntryName);
+  if (*entry.get()) {
     // First check if item exists in jar
-    item = mZip->GetItem(entry);
+    item = mZip->GetItem(entry.get());
     if (!item) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST;
   }
   nsJARInputStream* jis = new nsJARInputStream();
@@ -337,7 +337,7 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
 
   nsresult rv = NS_OK;
   if (!item || item->IsDirectory()) {
-    rv = jis->InitDirectory(this, aJarDirSpec, entry);
+    rv = jis->InitDirectory(this, aJarDirSpec, entry.get());
   } else {
     rv = jis->InitFile(this, item);
   }
