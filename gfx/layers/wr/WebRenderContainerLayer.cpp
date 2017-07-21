@@ -18,21 +18,9 @@ namespace mozilla {
 namespace layers {
 
 void
-WebRenderContainerLayer::ClearAnimations()
-{
-
-  if (!GetAnimations().IsEmpty()) {
-    mManager->AsWebRenderLayerManager()->
-      AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
-  }
-
-  Layer::ClearAnimations();
-}
-
-void
 WebRenderContainerLayer::UpdateTransformDataForAnimation()
 {
-  for (Animation& animation : mAnimations) {
+  for (Animation& animation : mAnimationInfo.GetAnimations()) {
     if (animation.property() == eCSSProperty_transform) {
       TransformData& transformData = animation.data().get_TransformData();
       transformData.inheritedXScale() = GetInheritedXScale();
@@ -100,7 +88,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // going to end up clobbering it with APZ animating it too.
     MOZ_ASSERT(transformForSC);
 
-    EnsureAnimationsId();
+    mAnimationInfo.EnsureAnimationsId();
     animationsId = GetCompositorAnimationsId();
     // We need to set the transform in the stacking context to null for it to
     // pick up and install the animation id.

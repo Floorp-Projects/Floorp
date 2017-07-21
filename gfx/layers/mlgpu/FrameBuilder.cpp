@@ -9,6 +9,7 @@
 #include "LayerMLGPU.h"
 #include "LayerManagerMLGPU.h"
 #include "MaskOperation.h"
+#include "MLGDevice.h"                  // for MLGSwapChain
 #include "RenderPassMLGPU.h"
 #include "RenderViewMLGPU.h"
 #include "mozilla/gfx/Polygon.h"
