@@ -65,36 +65,28 @@ class NMParser {
 }
 
 class CppFiltParser {
-  constructor(length) {
-    this._decoder = new TextDecoder();
-    this._index = 0;
-    this._results = new Array(length);
+  constructor() {
+    this._worker = new ChromeWorker("resource://app/modules/ParseCppFiltSymbols-worker.js");
   }
 
-  consume(arrayBuffer) {
-    const data = this._decoder.decode(arrayBuffer, {stream: true});
-    const lineRegex = /.*\n?/g;
-    const buffer = this._currentLine + data;
-
-    let match;
-    while ((match = lineRegex.exec(buffer))) {
-      let [line] = match;
-      if (line[line.length - 1] === "\n") {
-        this._processLine(line);
-      } else {
-        this._currentLine = line;
-        break;
-      }
-    }
+  consume(buffer) {
+    this._worker.postMessage({buffer}, [buffer]);
   }
 
   finish() {
-    this._processLine(this._currentLine);
-    return this._results;
-  }
-
-  _processLine(line) {
-    this._results[this._index++] = line.trimRight();
+    const promise = new Promise((resolve, reject) => {
+      this._worker.onmessage = (e) => {
+        if (e.data.error) {
+          reject(e.data.error);
+        } else {
+          resolve(e.data.result);
+        }
+      };
+    });
+    this._worker.postMessage({
+      finish: true,
+    });
+    return promise;
   }
 }
 
@@ -140,20 +132,13 @@ const getSymbolsFromNM = async function(path, arch) {
     return result;
   }
 
-  const syms = new Map();
   const [addresses, symbolsJoinedBuffer] = result;
   const decoder = new TextDecoder();
   const symbolsJoined = decoder.decode(symbolsJoinedBuffer);
   const demangler = new CppFiltParser(addresses.length);
   await spawnProcess("c++filt", [], data => demangler.consume(data), symbolsJoined);
-  const newSymbols = demangler.finish();
-  let approximateLength = 0;
-  for (let [i, symbol] of newSymbols.entries()) {
-    approximateLength += symbol.length;
-    syms.set(addresses[i], symbol);
-  }
-
-  return ParseSymbols.convertSymsMapToExpectedSymFormat(syms, approximateLength);
+  const [newIndex, newBuffer] = await demangler.finish();
+  return [addresses, newIndex, newBuffer];
 };
 
 const pathComponentsForSymbolFile = (debugName, breakpadId) => {
