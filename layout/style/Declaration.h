@@ -125,8 +125,6 @@ public:
 
   void GetPropertyValue(const nsAString& aProperty, nsAString& aValue) const;
   void GetPropertyValueByID(nsCSSPropertyID aPropID, nsAString& aValue) const;
-  void GetAuthoredPropertyValue(const nsAString& aProperty,
-                                nsAString& aValue) const;
   bool GetPropertyIsImportant(const nsAString& aProperty) const;
   void RemoveProperty(const nsAString& aProperty);
   void RemovePropertyByID(nsCSSPropertyID aProperty);

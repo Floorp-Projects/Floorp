@@ -195,16 +195,6 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
-                                              nsAString& aReturn)
-{
-  if (DeclarationBlock* decl = GetCSSDeclaration(eOperation_Read)) {
-    decl->GetAuthoredPropertyValue(aPropertyName, aReturn);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
                                          nsAString& aReturn)
 {

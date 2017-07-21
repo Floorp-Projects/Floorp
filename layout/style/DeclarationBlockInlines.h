@@ -84,13 +84,6 @@ DeclarationBlock::GetPropertyValueByID(nsCSSPropertyID aPropID,
   MOZ_STYLO_FORWARD(GetPropertyValueByID, (aPropID, aValue))
 }
 
-void
-DeclarationBlock::GetAuthoredPropertyValue(const nsAString& aProperty,
-                                           nsAString& aValue) const
-{
-  MOZ_STYLO_FORWARD(GetAuthoredPropertyValue, (aProperty, aValue))
-}
-
 bool
 DeclarationBlock::GetPropertyIsImportant(const nsAString& aProperty) const
 {
