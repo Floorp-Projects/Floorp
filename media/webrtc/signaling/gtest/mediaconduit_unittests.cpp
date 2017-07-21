@@ -377,12 +377,14 @@ class TransportConduitTest : public ::testing::Test
     //get pointer to AudioSessionConduit
     int err=0;
     mAudioSession = mozilla::AudioSessionConduit::Create();
-    if( !mAudioSession )
+    if( !mAudioSession ) {
       ASSERT_NE(mAudioSession, (void*)nullptr);
+    }
 
     mAudioSession2 = mozilla::AudioSessionConduit::Create();
-    if( !mAudioSession2 )
+    if( !mAudioSession2 ) {
       ASSERT_NE(mAudioSession2, (void*)nullptr);
+    }
 
     WebrtcMediaTransport* xport = new WebrtcMediaTransport();
     ASSERT_NE(xport, (void*)nullptr);
@@ -436,8 +438,9 @@ class TransportConduitTest : public ::testing::Test
     RefPtr<mozilla::VideoSessionConduit> videoSession;
     //get pointer to VideoSessionConduit
     videoSession = VideoSessionConduit::Create(WebRtcCallWrapper::Create());
-    if( !videoSession )
+    if( !videoSession ) {
       ASSERT_NE(videoSession, (void*)nullptr);
+    }
 
     std::vector<unsigned int> ssrcs = {SSRC};
     videoSession->SetLocalSSRCs(ssrcs);
@@ -557,8 +560,9 @@ class TransportConduitTest : public ::testing::Test
 
     // Get pointer to VideoSessionConduit.
     mVideoSession = VideoSessionConduit::Create(WebRtcCallWrapper::Create());
-    if( !mVideoSession )
+    if( !mVideoSession ) {
       ASSERT_NE(mVideoSession, (void*)nullptr);
+    }
 
     std::vector<unsigned int> ssrcs = {SSRC};
     mVideoSession->SetLocalSSRCs(ssrcs);
