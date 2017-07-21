@@ -858,20 +858,7 @@ TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
 NS_IMETHODIMP
 TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, false, false);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotSubsessionKeyedHistograms(bool clearSubsession,
-                                                 JSContext *cx,
-                                                 JS::MutableHandle<JS::Value> ret)
-{
-#if !defined(MOZ_WIDGET_ANDROID)
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, true,
-                                                        clearSubsession);
-#else
-  return NS_OK;
-#endif
+  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret);
 }
 
 bool

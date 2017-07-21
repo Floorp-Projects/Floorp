@@ -40,6 +40,13 @@ const REASON_TEST_PING = "test-ping";
 const REASON_ENVIRONMENT_CHANGE = "environment-change";
 const REASON_SHUTDOWN = "shutdown";
 
+const HISTOGRAM_SUFFIXES = {
+  PARENT: "",
+  CONTENT: "#content",
+  GPU: "#gpu",
+  EXTENSION: "#extension",
+};
+
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
@@ -948,24 +955,31 @@ var Impl = {
       // Omit telemetry test histograms outside of tests.
       registered = registered.filter(id => !id.startsWith("TELEMETRY_TEST_"));
     }
-
-    let khs = subsession ? Telemetry.snapshotSubsessionKeyedHistograms(clearSubsession)
-                         : Telemetry.keyedHistogramSnapshots;
     let ret = {};
 
-    for (let [process, histograms] of Object.entries(khs)) {
-      ret[process] = {};
-      for (let [name, value] of Object.entries(histograms)) {
-        if (registered.includes(name)) {
-          let keys = Object.keys(value);
-          if (keys.length == 0) {
-            // Skip empty keyed histogram
-            continue;
-          }
-          ret[process][name] = {};
-          for (let [key, hgram] of Object.entries(value)) {
-            ret[process][name][key] = this.packHistogram(hgram);
-          }
+    for (let id of registered) {
+      for (let suffix of Object.values(HISTOGRAM_SUFFIXES)) {
+        let keyed = Telemetry.getKeyedHistogramById(id + suffix);
+        let snapshot = null;
+        if (subsession) {
+          snapshot = clearSubsession ? keyed.snapshotSubsessionAndClear()
+                                     : keyed.subsessionSnapshot();
+        } else {
+          snapshot = keyed.snapshot();
+        }
+
+        let keys = Object.keys(snapshot);
+        if (keys.length == 0) {
+          // Skip empty keyed histogram.
+          continue;
+        }
+
+        if (!(suffix in ret)) {
+          ret[suffix] = {};
+        }
+        ret[suffix][id] = {};
+        for (let key of keys) {
+          ret[suffix][id][key] = this.packHistogram(snapshot[key]);
         }
       }
     }

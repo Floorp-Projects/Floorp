@@ -257,19 +257,11 @@ interface nsITelemetry : nsISupports
 
   /*
    * An object containing a snapshot from all of the currently registered keyed histograms.
-   * { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
+   * { name1: {histogramData1}, name2:{histogramData2}...}
    * where the histogramData is as described in histogramSnapshots.
    */
   [implicit_jscontext]
   readonly attribute jsval keyedHistogramSnapshots;
-
-  /**
-   * Get a snapshot of the internally duplicated subsession keyed histograms.
-   * @param clear Whether to clear out the subsession histograms after snapshotting.
-   * @return An object as histogramSnapshots, except this contains the internally duplicated keyed histograms for subsession telemetry.
-   */
-  [implicit_jscontext]
-  jsval snapshotSubsessionKeyedHistograms([optional] in boolean clear);
 
   /**
    * Returns an array whose values are the names of histograms defined
