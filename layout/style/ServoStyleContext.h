@@ -43,8 +43,7 @@ public:
    * Makes this context match |aOther| in terms of which style structs have
    * been resolved.
    */
-  inline void ResolveSameStructsAs(nsPresContext* aPresContext,
-                                   const ServoStyleContext* aOther);
+  inline void ResolveSameStructsAs(const ServoStyleContext* aOther);
 
 private:
   nsPresContext* mPresContext;
