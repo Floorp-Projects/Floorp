@@ -574,8 +574,8 @@ public:
     case SEMGET:
     case SEMCTL:
     case SEMOP:
-#endif
       return Some(Allow());
+#endif
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     }
