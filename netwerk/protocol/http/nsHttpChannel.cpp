@@ -9083,7 +9083,7 @@ nsHttpChannel::ReportRcwnStats(bool isFromNet)
             AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_WITH_NETWORK_USAGE_2::NetworkNoRace);
         }
     } else {
-        if (mRaceCacheWithNetwork) {
+        if (mRaceCacheWithNetwork || mRaceDelay) {
             gIOService->IncrementCacheWonRequestNumber();
             Telemetry::Accumulate(Telemetry::NETWORK_RACE_CACHE_BANDWIDTH_RACE_CACHE_WIN, mTransferSize);
             if (mRaceDelay) {
