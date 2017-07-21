@@ -166,7 +166,7 @@ public:
                         size_t len) override;
 
   virtual uint64_t CodecPluginID() override { return 0; }
-  virtual void SetPCHandle(const std::string& aPCHandle) {}
+  virtual void SetPCHandle(const std::string& aPCHandle) override {}
 
   explicit WebrtcAudioConduit():
                       mVoiceEngine(nullptr),
