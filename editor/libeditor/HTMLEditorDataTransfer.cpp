@@ -370,7 +370,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
     WSRunObject wsObj(this, parentNode, offsetOfNewNode);
     if (wsObj.mEndReasonNode &&
         TextEditUtils::IsBreak(wsObj.mEndReasonNode) &&
-        !IsVisBreak(wsObj.mEndReasonNode)) {
+        !IsVisibleBRElement(wsObj.mEndReasonNode)) {
       rv = DeleteNode(wsObj.mEndReasonNode);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -621,7 +621,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
         // PriorVisibleNode does not make that determination for breaks.
         // It also may not return the break in visNode.  We have to pull it
         // out of the WSRunObject's state.
-        if (!IsVisBreak(wsRunObj.mStartReasonNode)) {
+        if (!IsVisibleBRElement(wsRunObj.mStartReasonNode)) {
           // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
           selNode = GetNodeLocation(GetAsDOMNode(wsRunObj.mStartReasonNode), &selOffset);

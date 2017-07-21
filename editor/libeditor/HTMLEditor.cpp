@@ -928,7 +928,7 @@ HTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
 }
 
 bool
-HTMLEditor::IsVisBreak(nsINode* aNode)
+HTMLEditor::IsVisibleBRElement(nsINode* aNode)
 {
   MOZ_ASSERT(aNode);
   if (!TextEditUtils::IsBreak(aNode)) {

@@ -2090,7 +2090,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
         visNode->IsHTMLElement(nsGkAtoms::hr)) {
       // Short circuit for invisible breaks.  delete them and recurse.
       if (visNode->IsHTMLElement(nsGkAtoms::br) &&
-          (!mHTMLEditor || !mHTMLEditor->IsVisBreak(visNode))) {
+          (!mHTMLEditor || !mHTMLEditor->IsVisibleBRElement(visNode))) {
         NS_ENSURE_STATE(mHTMLEditor);
         rv = mHTMLEditor->DeleteNode(visNode);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -2493,7 +2493,7 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
               } else {
                 NS_ENSURE_STATE(mHTMLEditor);
                 join = content->IsHTMLElement(nsGkAtoms::br) &&
-                       !mHTMLEditor->IsVisBreak(somenode);
+                       !mHTMLEditor->IsVisibleBRElement(somenode);
               }
             }
           }
@@ -2671,7 +2671,7 @@ HTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
   ret.offset = ret.node ? ret.node->IndexOf(&aNode) : -1;
   NS_ENSURE_TRUE(mHTMLEditor, EditorDOMPoint());
   if ((!aNode.IsHTMLElement(nsGkAtoms::br) ||
-       mHTMLEditor->IsVisBreak(&aNode)) && isPreviousAction) {
+       mHTMLEditor->IsVisibleBRElement(&aNode)) && isPreviousAction) {
     ret.offset++;
   }
   return ret;
@@ -5222,7 +5222,7 @@ HTMLEditRules::ExpandSelectionForDeletion(Selection& aSelection)
       wsObj.NextVisibleNode(selEndNode, selEndOffset, address_of(unused),
                             &visOffset, &wsType);
       if (wsType == WSType::br) {
-        if (mHTMLEditor->IsVisBreak(wsObj.mEndReasonNode)) {
+        if (mHTMLEditor->IsVisibleBRElement(wsObj.mEndReasonNode)) {
           break;
         }
         if (!firstBRParent) {
@@ -5531,7 +5531,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
       htmlEditor->GetPriorHTMLNode(node, offset, true);
 
     while (priorNode && priorNode->GetParentNode() &&
-           !htmlEditor->IsVisBreak(priorNode) &&
+           !htmlEditor->IsVisibleBRElement(priorNode) &&
            !IsBlockNode(*priorNode)) {
       offset = priorNode->GetParentNode()->IndexOf(priorNode);
       node = priorNode->GetParentNode();
@@ -5598,7 +5598,7 @@ HTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere,
   while (nextNode && !IsBlockNode(*nextNode) && nextNode->GetParentNode()) {
     offset = 1 + nextNode->GetParentNode()->IndexOf(nextNode);
     node = nextNode->GetParentNode();
-    if (htmlEditor->IsVisBreak(nextNode)) {
+    if (htmlEditor->IsVisibleBRElement(nextNode)) {
       break;
     }
 
@@ -6490,7 +6490,8 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
       // is there a BR prior to it?
       NS_ENSURE_STATE(mHTMLEditor);
       sibling = mHTMLEditor->GetPriorHTMLSibling(node);
-      if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
+      if (!sibling || !mHTMLEditor ||
+          !mHTMLEditor->IsVisibleBRElement(sibling) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
@@ -6500,7 +6501,8 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
       // is there a BR after to it?
       NS_ENSURE_STATE(mHTMLEditor);
       sibling = mHTMLEditor->GetNextHTMLSibling(node);
-      if (!sibling || !mHTMLEditor || !mHTMLEditor->IsVisBreak(sibling) ||
+      if (!sibling || !mHTMLEditor ||
+          !mHTMLEditor->IsVisibleBRElement(sibling) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(sibling))) {
         NS_ENSURE_STATE(mHTMLEditor);
         newBRneeded = true;
@@ -6528,13 +6530,13 @@ HTMLEditRules::ReturnInParagraph(Selection* aSelection,
     NS_ENSURE_STATE(mHTMLEditor);
     nearNode = mHTMLEditor->GetPriorHTMLNode(node, aOffset);
     NS_ENSURE_STATE(mHTMLEditor);
-    if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
+    if (!nearNode || !mHTMLEditor->IsVisibleBRElement(nearNode) ||
         TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
       // is there a BR after it?
       NS_ENSURE_STATE(mHTMLEditor);
       nearNode = mHTMLEditor->GetNextHTMLNode(node, aOffset);
       NS_ENSURE_STATE(mHTMLEditor);
-      if (!nearNode || !mHTMLEditor->IsVisBreak(nearNode) ||
+      if (!nearNode || !mHTMLEditor->IsVisibleBRElement(nearNode) ||
           TextEditUtils::HasMozAttr(GetAsDOMNode(nearNode))) {
         newBRneeded = true;
         parent = node;
@@ -6602,7 +6604,7 @@ HTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   }
   // get rid of the break, if it is visible (otherwise it may be needed to prevent an empty p)
   NS_ENSURE_STATE(mHTMLEditor);
-  if (mHTMLEditor->IsVisBreak(aBRNode)) {
+  if (mHTMLEditor->IsVisibleBRElement(aBRNode)) {
     NS_ENSURE_STATE(mHTMLEditor);
     rv = mHTMLEditor->DeleteNode(aBRNode);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -7597,7 +7599,7 @@ HTMLEditRules::AdjustSelection(Selection* aSelection,
     if (block && block == nearBlock) {
       if (nearNode && TextEditUtils::IsBreak(nearNode)) {
         NS_ENSURE_STATE(mHTMLEditor);
-        if (!mHTMLEditor->IsVisBreak(nearNode)) {
+        if (!mHTMLEditor->IsVisibleBRElement(nearNode)) {
           // need to insert special moz BR. Why?  Because if we don't
           // the user will see no new line for the break.  Also, things
           // like table cells won't grow in height.
