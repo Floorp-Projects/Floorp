@@ -262,8 +262,11 @@ struct VMFunction
         expectTailCall(o.expectTailCall)
     {
         // Check for valid failure/return type.
-        MOZ_ASSERT_IF(outParam != Type_Void, returnType == Type_Bool);
-        MOZ_ASSERT(returnType == Type_Bool ||
+        MOZ_ASSERT_IF(outParam != Type_Void,
+                      returnType == Type_Void ||
+                      returnType == Type_Bool);
+        MOZ_ASSERT(returnType == Type_Void ||
+                   returnType == Type_Bool ||
                    returnType == Type_Object);
         addToFunctions();
     }
@@ -274,6 +277,7 @@ struct VMFunction
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
+template <> struct TypeToDataType<void> { static const DataType result = Type_Void; };
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSFunction*> { static const DataType result = Type_Object; };
