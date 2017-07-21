@@ -23,7 +23,7 @@ load 148245-1.html
 load 149014-1.html
 load 150431-1.html
 load 176915-1.html
-asserts-if(stylo,13) load 191272-1.html # bug 1324636
+load 191272-1.html
 load 199696-1.html
 load 217903-1.html
 load 223064-1.html
