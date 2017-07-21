@@ -449,7 +449,6 @@ var snapshotFormatters = {
     addRowFromKey("features", "webgl2DriverExtensions");
     addRowFromKey("features", "webgl2Extensions");
     addRowFromKey("features", "supportsHardwareH264", "hardwareH264");
-    addRowFromKey("features", "currentAudioBackend", "audioBackend");
     addRowFromKey("features", "direct2DEnabled", "#Direct2D");
 
     if ("directWriteEnabled" in data) {
@@ -596,6 +595,111 @@ var snapshotFormatters = {
       }
       addRow("diagnostics", key, value);
     }
+  },
+
+  media: function media(data) {
+    let strings = stringBundle();
+
+    function insertBasicInfo(key, value) {
+      function createRow(key, value) {
+        let th = $.new("th", strings.GetStringFromName(key), "column");
+        let td = $.new("td", value);
+        td.style["white-space"] = "pre-wrap";
+        return $.new("tr", [th, td]);
+      }
+      $.append($("media-info-tbody"), [createRow(key, value)]);
+    }
+
+    function createDeviceInfoRow(device) {
+      let deviceInfo = Ci.nsIAudioDeviceInfo;
+
+      let states = {};
+      states[deviceInfo.STATE_DISABLED] = "Disabled";
+      states[deviceInfo.STATE_UNPLUGGED] = "Unplugged";
+      states[deviceInfo.STATE_ENABLED] = "Enabled";
+
+      let preferreds = {};
+      preferreds[deviceInfo.PREF_NONE] = "None";
+      preferreds[deviceInfo.PREF_MULTIMEDIA] = "Multimedia";
+      preferreds[deviceInfo.PREF_VOICE] = "Voice";
+      preferreds[deviceInfo.PREF_NOTIFICATION] = "Notification";
+      preferreds[deviceInfo.PREF_ALL] = "All";
+
+      let formats = {};
+      formats[deviceInfo.FMT_S16LE] = "S16LE";
+      formats[deviceInfo.FMT_S16BE] = "S16BE";
+      formats[deviceInfo.FMT_F32LE] = "F32LE";
+      formats[deviceInfo.FMT_F32BE] = "F32BE";
+
+      function toPreferredString(preferred) {
+        if (preferred == deviceInfo.PREF_NONE) {
+          return preferreds[deviceInfo.PREF_NONE];
+        } else if (preferred & deviceInfo.PREF_ALL) {
+          return preferreds[deviceInfo.PREF_ALL];
+        }
+        let str = "";
+        for (let pref of [deviceInfo.PREF_MULTIMEDIA,
+                          deviceInfo.PREF_VOICE,
+                          deviceInfo.PREF_NOTIFICATION]) {
+          if (preferred & pref) {
+            str += " " + preferreds[pref];
+          }
+        }
+        return str;
+      }
+
+      function toFromatString(dev) {
+        let str = "default: " + formats[dev.defaultFormat] + ", support:";
+        for (let fmt of [deviceInfo.FMT_S16LE,
+                         deviceInfo.FMT_S16BE,
+                         deviceInfo.FMT_F32LE,
+                         deviceInfo.FMT_F32BE]) {
+          if (dev.supportedFormat & fmt) {
+            str += " " + formats[fmt];
+          }
+        }
+        return str;
+      }
+
+      function toRateString(dev) {
+        return "default: " + dev.defaultRate +
+               ", support: " + dev.minRate + " - " + dev.maxRate;
+      }
+
+      function toLatencyString(dev) {
+        return dev.minLatency + " - " + dev.maxLatency;
+      }
+
+      return $.new("tr", [$.new("td", device.name),
+                          $.new("td", device.groupId),
+                          $.new("td", device.vendor),
+                          $.new("td", states[device.state]),
+                          $.new("td", toPreferredString(device.preferred)),
+                          $.new("td", toFromatString(device)),
+                          $.new("td", device.maxChannels),
+                          $.new("td", toRateString(device)),
+                          $.new("td", toLatencyString(device))]);
+    }
+
+    function insertDeviceInfo(side, devices) {
+      let rows = [];
+      for (let dev of devices) {
+        rows.push(createDeviceInfoRow(dev));
+      }
+      $.append($("media-" + side + "-devices-tbody"), rows);
+    }
+
+    // Basic information
+    insertBasicInfo("audioBackend", data.currentAudioBackend);
+    insertBasicInfo("maxAudioChannels", data.currentMaxAudioChannels);
+    insertBasicInfo("channelLayout", data.currentPreferredChannelLayout);
+    insertBasicInfo("sampleRate", data.currentPreferredSampleRate);
+
+    // Output devices information
+    insertDeviceInfo("output", data.audioOutputDevices);
+
+    // Input devices information
+    insertDeviceInfo("input", data.audioInputDevices);
   },
 
   javaScript: function javaScript(data) {
