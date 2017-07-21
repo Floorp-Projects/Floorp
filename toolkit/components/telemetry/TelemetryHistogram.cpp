@@ -42,7 +42,6 @@ using mozilla::Telemetry::HistogramCount;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
 using mozilla::Telemetry::Common::RecordedProcessType;
 using mozilla::Telemetry::Common::AutoHashtable;
-using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsExpiredVersion;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::IsInDataset;
@@ -1944,53 +1943,55 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     }
   }
 
-  for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-    JS::Rooted<JSObject*> processObject(cx, JS_NewPlainObject(cx));
-    if (!processObject) {
+  // TODO: This won't get us data from different processes.
+  // We'll have to refactor this function to return {"parent": {...}, "content": {...}}.
+
+  // OK, now we can actually reflect things.
+  JS::Rooted<JSObject*> hobj(cx);
+  for (size_t i = 0; i < HistogramCount; ++i) {
+    const HistogramInfo& info = gHistogramInfos[i];
+    if (info.keyed) {
+      continue;
+    }
+
+    HistogramID id = HistogramID(i);
+
+    // TODO: support multiple processes.
+    //for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+
+    uint32_t process = uint32_t(ProcessID::Parent);
+    if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
+      ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
+      continue;
+    }
+
+    Histogram* h = internal_GetHistogramById(id, ProcessID(process), sessionType, /* instantiate = */ false);
+    if (!h || internal_IsExpired(h) || !internal_ShouldReflectHistogram(h, id)) {
+      continue;
+    }
+
+    hobj = JS_NewPlainObject(cx);
+    if (!hobj) {
       return NS_ERROR_FAILURE;
     }
-    if (!JS_DefineProperty(cx, root_obj, GetNameForProcessID(ProcessID(process)),
-                           processObject, JSPROP_ENUMERATE)) {
+    switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
+    case REFLECT_FAILURE:
       return NS_ERROR_FAILURE;
+    case REFLECT_OK:
+      if (!JS_DefineProperty(cx, root_obj, gHistogramInfos[id].name(),
+                             hobj, JSPROP_ENUMERATE)) {
+        return NS_ERROR_FAILURE;
+      }
     }
-    for (size_t i = 0; i < HistogramCount; ++i) {
-      const HistogramInfo& info = gHistogramInfos[i];
-      if (info.keyed) {
-        continue;
-      }
-
-      HistogramID id = HistogramID(i);
-
-      if (!CanRecordInProcess(info.record_in_processes, ProcessID(process)) ||
-        ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess)) {
-        continue;
-      }
-
-      Histogram* h = internal_GetHistogramById(id, ProcessID(process), sessionType, /* instantiate = */ false);
-      if (!h || internal_IsExpired(h) || !internal_ShouldReflectHistogram(h, id)) {
-        continue;
-      }
-
-      JS::Rooted<JSObject*> hobj(cx, JS_NewPlainObject(cx));
-      if (!hobj) {
-        return NS_ERROR_FAILURE;
-      }
-      switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
-      case REFLECT_FAILURE:
-        return NS_ERROR_FAILURE;
-      case REFLECT_OK:
-        if (!JS_DefineProperty(cx, processObject, gHistogramInfos[id].name(),
-                               hobj, JSPROP_ENUMERATE)) {
-          return NS_ERROR_FAILURE;
-        }
-      }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-      if ((sessionType == SessionType::Subsession) && clearSubsession) {
-        h->Clear();
-      }
-#endif
+    if ((sessionType == SessionType::Subsession) && clearSubsession) {
+      h->Clear();
     }
+#endif
+
+    // TODO: support multiple processes.
+    // }
   }
   return NS_OK;
 }

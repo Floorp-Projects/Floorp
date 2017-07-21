@@ -936,11 +936,13 @@ var Impl = {
                          : Telemetry.histogramSnapshots;
     let ret = {};
 
-    for (let [process, histograms] of Object.entries(hls)) {
-      ret[process] = {};
-      for (let [name, value] of Object.entries(histograms)) {
-        if (registered.includes(name)) {
-          ret[process][name] = this.packHistogram(value);
+    for (let name of registered) {
+      for (let suffix of Object.values(HISTOGRAM_SUFFIXES)) {
+        if (name + suffix in hls) {
+          if (!(suffix in ret)) {
+            ret[suffix] = {};
+          }
+          ret[suffix][name] = this.packHistogram(hls[name + suffix]);
         }
       }
     }
@@ -1324,8 +1326,8 @@ var Impl = {
     let keyedScalars = protect(() => this.getScalars(isSubsession, clearSubsession, true), {});
     let events = protect(() => this.getEvents(isSubsession, clearSubsession))
 
-    payloadObj.histograms = histograms.parent || {};
-    payloadObj.keyedHistograms = keyedHistograms.parent || {};
+    payloadObj.histograms = histograms[HISTOGRAM_SUFFIXES.PARENT] || {};
+    payloadObj.keyedHistograms = keyedHistograms[HISTOGRAM_SUFFIXES.PARENT] || {};
     payloadObj.processes = {
       parent: {
         scalars: scalars["parent"] || {},
@@ -1335,29 +1337,29 @@ var Impl = {
       content: {
         scalars: scalars["content"],
         keyedScalars: keyedScalars["content"],
-        histograms: histograms["content"],
-        keyedHistograms: keyedHistograms["content"],
+        histograms: histograms[HISTOGRAM_SUFFIXES.CONTENT],
+        keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.CONTENT],
         events: events["content"] || [],
       },
       extension: {
         scalars: scalars["extension"],
         keyedScalars: keyedScalars["extension"],
-        histograms: histograms["extension"],
-        keyedHistograms: keyedHistograms["extension"],
+        histograms: histograms[HISTOGRAM_SUFFIXES.EXTENSION],
+        keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.EXTENSION],
         events: events["extension"] || [],
       },
     };
 
     // Only include the GPU process if we've accumulated data for it.
-    if ("gpu" in histograms ||
-        "gpu" in keyedHistograms ||
+    if (HISTOGRAM_SUFFIXES.GPU in histograms ||
+        HISTOGRAM_SUFFIXES.GPU in keyedHistograms ||
         "gpu" in scalars ||
         "gpu" in keyedScalars) {
       payloadObj.processes.gpu = {
         scalars: scalars["gpu"],
         keyedScalars: keyedScalars["gpu"],
-        histograms: histograms["gpu"],
-        keyedHistograms: keyedHistograms["gpu"],
+        histograms: histograms[HISTOGRAM_SUFFIXES.GPU],
+        keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.GPU],
         events: events["gpu"] || [],
       };
     }
