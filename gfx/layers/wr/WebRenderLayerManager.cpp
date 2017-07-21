@@ -256,6 +256,21 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
           mScrollMetadata[id] = *metadata;
         }
       }
+      if (itemType == nsDisplayItem::TYPE_SCROLL_INFO_LAYER) {
+        // we should only really get one scroll info layer per scroll id, so
+        // it's not worth trying to get the ViewID and checking to see if we
+        // already have it in mScrollMetadata before doing the work of computing
+        // the metadata.
+        nsDisplayScrollInfoLayer* info = static_cast<nsDisplayScrollInfoLayer*>(item);
+        UniquePtr<ScrollMetadata> metadata = info->ComputeScrollMetadata(
+            nullptr, ContainerLayerParameters());
+        MOZ_ASSERT(metadata);
+        MOZ_ASSERT(metadata->GetMetrics().IsScrollInfoLayer());
+        FrameMetrics::ViewID id = metadata->GetMetrics().GetScrollId();
+        if (mScrollMetadata.find(id) == mScrollMetadata.end()) {
+          mScrollMetadata[id] = *metadata;
+        }
+      }
     }
 
     if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
