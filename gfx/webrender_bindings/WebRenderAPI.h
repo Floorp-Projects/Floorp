@@ -59,7 +59,7 @@ public:
   void SetWindowParameters(LayoutDeviceIntSize size);
   void SetRootDisplayList(gfx::Color aBgColor,
                           Epoch aEpoch,
-                          LayerSize aViewportSize,
+                          mozilla::LayerSize aViewportSize,
                           wr::WrPipelineId pipeline_id,
                           const wr::LayoutSize& content_size,
                           wr::BuiltDisplayListDescriptor dl_descriptor,
@@ -143,7 +143,7 @@ public:
 
   ~DisplayListBuilder();
 
-  void Begin(const LayerIntSize& aSize);
+  void Begin(const mozilla::LayerIntSize& aSize);
 
   void End();
   void Finalize(wr::LayoutSize& aOutContentSize,

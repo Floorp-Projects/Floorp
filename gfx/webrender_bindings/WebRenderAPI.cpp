@@ -209,7 +209,7 @@ WebRenderAPI::GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray
 void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  Epoch aEpoch,
-                                 LayerSize aViewportSize,
+                                 mozilla::LayerSize aViewportSize,
                                  wr::WrPipelineId pipeline_id,
                                  const LayoutSize& content_size,
                                  wr::BuiltDisplayListDescriptor dl_descriptor,
