@@ -643,8 +643,8 @@ nsNSSComponent::MaybeImportFamilySafetyRoot(PCCERT_CONTEXT certificate,
       0,
       0
     };
-    if (CERT_ChangeCertTrust(nullptr, nssCertificate.get(), &trust)
-          != SECSuccess) {
+    if (ChangeCertTrustWithPossibleAuthentication(nssCertificate, trust,
+                                                  nullptr) != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("couldn't trust certificate for TLS server auth"));
       return NS_ERROR_FAILURE;
@@ -731,8 +731,8 @@ nsNSSComponent::UnloadFamilySafetyRoot()
   // they're the same. To work around this, we set a non-zero flag to ensure
   // that the trust will get updated.
   CERTCertTrust trust = { CERTDB_USER, 0, 0 };
-  if (CERT_ChangeCertTrust(nullptr, mFamilySafetyRoot.get(), &trust)
-        != SECSuccess) {
+  if (ChangeCertTrustWithPossibleAuthentication(mFamilySafetyRoot, trust,
+                                                nullptr) != SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
             ("couldn't untrust certificate for TLS server auth"));
   }
@@ -874,7 +874,9 @@ nsNSSComponent::UnloadEnterpriseRoots(const MutexAutoLock& /*proof of lock*/)
               ("library failure: CERTCertListNode null or lacks cert"));
       continue;
     }
-    if (CERT_ChangeCertTrust(nullptr, n->cert, &trust) != SECSuccess) {
+    UniqueCERTCertificate cert(CERT_DupCertificate(n->cert));
+    if (ChangeCertTrustWithPossibleAuthentication(cert, trust, nullptr)
+          != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("couldn't untrust certificate for TLS server auth"));
     }
@@ -1035,8 +1037,8 @@ nsNSSComponent::ImportEnterpriseRootsForLocation(
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't add cert to list"));
       continue;
     }
-    if (CERT_ChangeCertTrust(nullptr, nssCertificate.get(), &trust)
-          != SECSuccess) {
+    if (ChangeCertTrustWithPossibleAuthentication(nssCertificate, trust,
+                                                  nullptr) != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
               ("couldn't trust certificate for TLS server auth"));
     }
