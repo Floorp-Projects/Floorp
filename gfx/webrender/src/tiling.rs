@@ -50,7 +50,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
         match metadata.prim_kind {
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
-                match text_run_cpu.render_mode {
+                match text_run_cpu.normal_render_mode {
                     FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.color),
                     FontRenderMode::Alpha | FontRenderMode::Mono => BlendMode::Alpha,
                 }
@@ -279,7 +279,7 @@ impl AlphaRenderItem {
                 let stacking_context = &ctx.stacking_context_store[stacking_context_index.0];
                 let key = AlphaBatchKey::new(AlphaBatchKind::Blend,
                                              AlphaBatchKeyFlags::empty(),
-                                             BlendMode::Alpha,
+                                             BlendMode::PremultipliedAlpha,
                                              BatchTextures::no_texture());
                 let src_task_index = render_tasks.get_static_task_index(&src_id);
 
@@ -487,10 +487,12 @@ impl AlphaRenderItem {
                                                                        font_size_dp,
                                                                        text_cpu.color,
                                                                        &text_cpu.glyph_instances,
-                                                                       text_cpu.render_mode,
+                                                                       text_cpu.normal_render_mode,
                                                                        text_cpu.glyph_options, |index, handle| {
                             let uv_address = handle.as_int(gpu_cache);
-                            instances.push(base_instance.build(index as i32, 0, uv_address));
+                            instances.push(base_instance.build(index as i32,
+                                                               text_cpu.normal_render_mode as i32,
+                                                               uv_address));
                         });
 
                         if texture_id != SourceTexture::Invalid {
@@ -1033,42 +1035,56 @@ impl RenderTarget for ColorRenderTarget {
 
                         // todo(gw): avoid / recycle this allocation...
                         let mut instances = Vec::new();
-                        let mut base_index = 0;
 
                         let task_index = render_tasks.get_task_index(&task.id, pass_index);
 
-                        let instance = SimplePrimitiveInstance::new(prim_address,
-                                                                    task_index,
-                                                                    RenderTaskIndex(0),
-                                                                    PackedLayerIndex(0),
-                                                                    0);     // z is disabled for rendering cache primitives
+                        for sub_prim_index in &prim.primitives {
+                            let sub_metadata = ctx.prim_store.get_metadata(*sub_prim_index);
+                            match sub_metadata.prim_kind {
+                                PrimitiveKind::TextRun => {
+                                    // Add instances that reference the text run GPU location. Also supply
+                                    // the parent text-shadow prim address as a user data field, allowing
+                                    // the shader to fetch the text-shadow parameters.
+                                    let sub_prim_address = sub_metadata.gpu_location.as_int(gpu_cache);
+                                    let text = &ctx.prim_store.cpu_text_runs[sub_metadata.cpu_prim_index.0];
 
-                        for text in &prim.text_primitives {
-                            let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
+                                    let instance = SimplePrimitiveInstance::new(sub_prim_address,
+                                                                                task_index,
+                                                                                RenderTaskIndex(0),
+                                                                                PackedLayerIndex(0),
+                                                                                0);     // z is disabled for rendering cache primitives
 
-                            let texture_id = ctx.resource_cache.get_glyphs(text.font_key,
-                                                                           font_size_dp,
-                                                                           text.color,
-                                                                           &text.glyph_instances,
-                                                                           text.render_mode,
-                                                                           text.glyph_options, |index, handle| {
-                                let uv_address = handle.as_int(gpu_cache);
-                                instances.push(instance.build(base_index + index as i32, 0, uv_address));
-                            });
+                                    let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
-                            if texture_id != SourceTexture::Invalid {
-                                let textures = BatchTextures {
-                                    colors: [texture_id, SourceTexture::Invalid, SourceTexture::Invalid],
-                                };
+                                    let texture_id = ctx.resource_cache.get_glyphs(text.font_key,
+                                                                                   font_size_dp,
+                                                                                   text.color,
+                                                                                   &text.glyph_instances,
+                                                                                   text.shadow_render_mode,
+                                                                                   text.glyph_options, |index, handle| {
+                                        let uv_address = handle.as_int(gpu_cache);
+                                        instances.push(instance.build(index as i32,
+                                                                      uv_address,
+                                                                      prim_address));
+                                    });
 
-                                self.text_run_cache_prims.extend_from_slice(&instances);
-                                base_index += text.glyph_instances.len() as i32;
-                                instances.clear();
+                                    if texture_id != SourceTexture::Invalid {
+                                        let textures = BatchTextures {
+                                            colors: [texture_id, SourceTexture::Invalid, SourceTexture::Invalid],
+                                        };
 
-                                debug_assert!(textures.colors[0] != SourceTexture::Invalid);
-                                debug_assert!(self.text_run_textures.colors[0] == SourceTexture::Invalid ||
-                                              self.text_run_textures.colors[0] == textures.colors[0]);
-                                self.text_run_textures = textures;
+                                        self.text_run_cache_prims.extend_from_slice(&instances);
+                                        instances.clear();
+
+                                        debug_assert!(textures.colors[0] != SourceTexture::Invalid);
+                                        debug_assert!(self.text_run_textures.colors[0] == SourceTexture::Invalid ||
+                                                      self.text_run_textures.colors[0] == textures.colors[0]);
+                                        self.text_run_textures = textures;
+                                    }
+                                }
+                                _ => {
+                                    unreachable!("Unexpected sub primitive type");
+                                }
                             }
                         }
                     }
@@ -1654,7 +1670,7 @@ impl PackedLayer {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CompositeOps {
     // Requires only a single texture as input (e.g. most filters)
     pub filters: Vec<LowLevelFilterOp>,
@@ -1682,15 +1698,6 @@ impl CompositeOps {
             }
         }
         false
-    }
-}
-
-impl Default for CompositeOps {
-    fn default() -> CompositeOps {
-        CompositeOps {
-            filters: Vec::new(),
-            mix_blend_mode: None,
-        }
     }
 }
 

@@ -690,9 +690,10 @@ impl Frame {
             }
             SpecificDisplayItem::Clip(ref info) => {
                 let complex_clips = context.get_complex_clips(pipeline_id, item.complex_clip().0);
-                let mut clip_region = ClipRegion::for_clip_node(*item.local_clip().clip_rect(),
-                                                                complex_clips,
-                                                                info.image_mask);
+                let mut clip_region =
+                    ClipRegion::create_for_clip_node(*item.local_clip().clip_rect(),
+                                                     complex_clips,
+                                                     info.image_mask);
                 clip_region.origin += reference_frame_relative_offset;
 
                 self.flatten_clip(context,
@@ -703,9 +704,10 @@ impl Frame {
             }
             SpecificDisplayItem::ScrollFrame(ref info) => {
                 let complex_clips = context.get_complex_clips(pipeline_id, item.complex_clip().0);
-                let mut clip_region = ClipRegion::for_clip_node(*item.local_clip().clip_rect(),
-                                                                complex_clips,
-                                                                info.image_mask);
+                let mut clip_region =
+                    ClipRegion::create_for_clip_node(*item.local_clip().clip_rect(),
+                                                     complex_clips,
+                                                     info.image_mask);
                 clip_region.origin += reference_frame_relative_offset;
 
                 // Just use clip rectangle as the frame rect for this scroll frame.

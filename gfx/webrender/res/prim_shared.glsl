@@ -133,7 +133,7 @@ vec4[2] fetch_from_resource_cache_2(int address) {
 #define VECS_PER_LAYER              9
 #define VECS_PER_RENDER_TASK        3
 #define VECS_PER_PRIM_HEADER        2
-#define VECS_PER_TEXT_RUN           1
+#define VECS_PER_TEXT_RUN           2
 #define VECS_PER_GRADIENT           3
 #define VECS_PER_GRADIENT_STOP      2
 
@@ -494,6 +494,17 @@ struct Primitive {
     float z;
 };
 
+struct PrimitiveGeometry {
+    RectWithSize local_rect;
+    RectWithSize local_clip_rect;
+};
+
+PrimitiveGeometry fetch_primitive_geometry(int address) {
+    vec4 geom[2] = fetch_from_resource_cache_2(address);
+    return PrimitiveGeometry(RectWithSize(geom[0].xy, geom[0].zw),
+                             RectWithSize(geom[1].xy, geom[1].zw));
+}
+
 Primitive load_primitive() {
     PrimitiveInstance pi = fetch_prim_instance();
 
@@ -503,9 +514,9 @@ Primitive load_primitive() {
     prim.clip_area = fetch_clip_area(pi.clip_task_index);
     prim.task = fetch_alpha_batch_task(pi.render_task_index);
 
-    vec4 geom[2] = fetch_from_resource_cache_2(pi.prim_address);
-    prim.local_rect = RectWithSize(geom[0].xy, geom[0].zw);
-    prim.local_clip_rect = RectWithSize(geom[1].xy, geom[1].zw);
+    PrimitiveGeometry geom = fetch_primitive_geometry(pi.prim_address);
+    prim.local_rect = geom.local_rect;
+    prim.local_clip_rect = geom.local_clip_rect;
 
     prim.specific_prim_address = pi.specific_prim_address;
     prim.user_data0 = pi.user_data0;
@@ -761,13 +772,25 @@ Rectangle fetch_rectangle(int address) {
     return Rectangle(data);
 }
 
+struct TextShadow {
+    vec4 color;
+    vec2 offset;
+    float blur_radius;
+};
+
+TextShadow fetch_text_shadow(int address) {
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return TextShadow(data[0], data[1].xy, data[1].z);
+}
+
 struct TextRun {
     vec4 color;
+    vec2 offset;
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data = fetch_from_resource_cache_1(address);
-    return TextRun(data);
+    vec4 data[2] = fetch_from_resource_cache_2(address);
+    return TextRun(data[0], data[1].xy);
 }
 
 struct Image {
