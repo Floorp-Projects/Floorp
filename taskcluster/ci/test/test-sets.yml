@@ -139,6 +139,7 @@ windows-talos:
     - talos-perf-reftest
     - talos-svgr
     - talos-tp5o
+    - talos-quantum-pageload-stylo
 
 macosx64-tests:
     - cppunit
