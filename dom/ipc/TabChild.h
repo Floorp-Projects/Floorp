@@ -502,13 +502,6 @@ public:
 
   virtual PuppetWidget* WebWidget() override { return mPuppetWidget; }
 
-  /** Return the DPI of the widget this TabChild draws to. */
-  void GetDPI(float* aDPI);
-
-  void GetDefaultScale(double *aScale);
-
-  void GetWidgetRounding(int32_t* aRounding);
-
   bool IsTransparent() const { return mIsTransparent; }
 
   void GetMaxTouchPoints(uint32_t* aTouchPoints)
@@ -855,9 +848,6 @@ private:
   Maybe<mozilla::layers::CompositorOptions> mCompositorOptions;
 
   friend class ContentChild;
-  float mDPI;
-  int32_t mRounding;
-  double mDefaultScale;
 
   bool mIsTransparent;
 

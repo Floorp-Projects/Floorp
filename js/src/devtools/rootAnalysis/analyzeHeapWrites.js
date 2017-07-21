@@ -195,6 +195,7 @@ function treatAsSafeArgument(entry, varName, csuName)
         ["Gecko_GetOrCreateKeyframeAtStart", "aKeyframes", null],
         ["Gecko_GetOrCreateInitialKeyframe", "aKeyframes", null],
         ["Gecko_GetOrCreateFinalKeyframe", "aKeyframes", null],
+        ["Gecko_AppendPropertyValuePair", "aProperties", null],
         ["Gecko_SetStyleCoordCalcValue", null, null],
         ["Gecko_StyleClipPath_SetURLValue", "aClip", null],
         ["Gecko_nsStyleFilter_SetURLValue", "aEffects", null],

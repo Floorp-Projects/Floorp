@@ -198,10 +198,10 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
   mDeviceUUID.Assign(uuid);
   mListener = new mozilla::WebRTCAudioDataListener(this);
-  mSettings.mEchoCancellation.Construct(0);
-  mSettings.mAutoGainControl.Construct(0);
-  mSettings.mNoiseSuppression.Construct(0);
-  mSettings.mChannelCount.Construct(0);
+  mSettings->mEchoCancellation.Construct(0);
+  mSettings->mAutoGainControl.Construct(0);
+  mSettings->mNoiseSuppression.Construct(0);
+  mSettings->mChannelCount.Construct(0);
   // We'll init lazily as needed
 }
 
@@ -417,10 +417,10 @@ MediaEngineWebRTCMicrophoneSource::SetLastPrefs(
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
 
   NS_DispatchToMainThread(media::NewRunnableFrom([that, aPrefs]() mutable {
-    that->mSettings.mEchoCancellation.Value() = aPrefs.mAecOn;
-    that->mSettings.mAutoGainControl.Value() = aPrefs.mAgcOn;
-    that->mSettings.mNoiseSuppression.Value() = aPrefs.mNoiseOn;
-    that->mSettings.mChannelCount.Value() = aPrefs.mChannels;
+    that->mSettings->mEchoCancellation.Value() = aPrefs.mAecOn;
+    that->mSettings->mAutoGainControl.Value() = aPrefs.mAgcOn;
+    that->mSettings->mNoiseSuppression.Value() = aPrefs.mNoiseOn;
+    that->mSettings->mChannelCount.Value() = aPrefs.mChannels;
     return NS_OK;
   }));
 }

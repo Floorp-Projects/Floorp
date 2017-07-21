@@ -4795,9 +4795,11 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
         frame->GetOffsets(frameStartOffset, frameEndOffset);
 
         int32_t hilightStart =
-          atStart ? std::max(aRange->StartOffset(), frameStartOffset) : frameStartOffset;
+          atStart ? std::max(static_cast<int32_t>(aRange->StartOffset()),
+                             frameStartOffset) : frameStartOffset;
         int32_t hilightEnd =
-          atEnd ? std::min(aRange->EndOffset(), frameEndOffset) : frameEndOffset;
+          atEnd ? std::min(static_cast<int32_t>(aRange->EndOffset()),
+                           frameEndOffset) : frameEndOffset;
         if (hilightStart < hilightEnd) {
           // determine the location of the start and end edges of the range.
           nsPoint startPoint, endPoint;

@@ -11,6 +11,7 @@ DevToolsModules(
     'css-grid-utils.js',
     'make-debugger.js',
     'map-uri-to-addon-id.js',
+    'shapes-geometry-utils.js',
     'stack.js',
     'TabSources.js',
     'walker-search.js',

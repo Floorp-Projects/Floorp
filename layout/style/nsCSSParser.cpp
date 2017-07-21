@@ -4480,7 +4480,7 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 }
 
 // supports_condition_negation
-//   : 'not' S+ supports_condition_in_parens
+//   : 'not' supports_condition_in_parens
 //   ;
 bool
 CSSParserImpl::ParseSupportsConditionNegation(bool& aConditionMet)
@@ -4493,11 +4493,6 @@ CSSParserImpl::ParseSupportsConditionNegation(bool& aConditionMet)
   if (mToken.mType != eCSSToken_Ident ||
       !mToken.mIdent.LowerCaseEqualsLiteral("not")) {
     REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedNot);
-    return false;
-  }
-
-  if (!RequireWhitespace()) {
-    REPORT_UNEXPECTED(PESupportsWhitespaceRequired);
     return false;
   }
 
@@ -4662,14 +4657,14 @@ CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
 }
 
 // supports_condition_terms
-//   : S+ 'and' supports_condition_terms_after_operator('and')
-//   | S+ 'or' supports_condition_terms_after_operator('or')
+//   : 'and' supports_condition_terms_after_operator('and')
+//   | 'or' supports_condition_terms_after_operator('or')
 //   |
 //   ;
 bool
 CSSParserImpl::ParseSupportsConditionTerms(bool& aConditionMet)
 {
-  if (!RequireWhitespace() || !GetToken(false)) {
+  if (!GetToken(true)) {
     return true;
   }
 
@@ -4691,18 +4686,13 @@ CSSParserImpl::ParseSupportsConditionTerms(bool& aConditionMet)
 }
 
 // supports_condition_terms_after_operator(operator)
-//   : S+ supports_condition_in_parens ( <operator> supports_condition_in_parens )*
+//   : supports_condition_in_parens ( <operator> supports_condition_in_parens )*
 //   ;
 bool
 CSSParserImpl::ParseSupportsConditionTermsAfterOperator(
                          bool& aConditionMet,
                          CSSParserImpl::SupportsConditionTermOperator aOperator)
 {
-  if (!RequireWhitespace()) {
-    REPORT_UNEXPECTED(PESupportsWhitespaceRequired);
-    return false;
-  }
-
   const char* token = aOperator == eAnd ? "and" : "or";
   for (;;) {
     bool termConditionMet = false;

@@ -693,20 +693,22 @@ add_task(async function test_subprocess_environment() {
 
 
 add_task(async function test_subprocess_environmentAppend() {
+  env.set("VALUE_FROM_BASE_ENV", "untouched");
+
   let proc = await Subprocess.call({
     command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "env", "PATH", "FOO"],
+    arguments: ["-u", TEST_SCRIPT, "env", "VALUE_FROM_BASE_ENV", "VALUE_APPENDED_ONCE"],
     environmentAppend: true,
     environment: {
-      FOO: "BAR",
+      VALUE_APPENDED_ONCE: "soon empty",
     },
   });
 
-  let path = await read(proc.stdout);
-  let foo = await read(proc.stdout);
+  let valueFromBaseEnv = await read(proc.stdout);
+  let valueAppendedOnce = await read(proc.stdout);
 
-  equal(path, env.get("PATH"), "Got expected $PATH value");
-  equal(foo, "BAR", "Got expected $FOO value");
+  equal(valueFromBaseEnv, "untouched", "Got expected $VALUE_FROM_BASE_ENV value");
+  equal(valueAppendedOnce, "soon empty", "Got expected $VALUE_APPENDED_ONCE value");
 
   let {exitCode} = await proc.wait();
 
@@ -714,15 +716,15 @@ add_task(async function test_subprocess_environmentAppend() {
 
   proc = await Subprocess.call({
     command: PYTHON,
-    arguments: ["-u", TEST_SCRIPT, "env", "PATH", "FOO"],
+    arguments: ["-u", TEST_SCRIPT, "env", "VALUE_FROM_BASE_ENV", "VALUE_APPENDED_ONCE"],
     environmentAppend: true,
   });
 
-  path = await read(proc.stdout);
-  foo = await read(proc.stdout);
+  valueFromBaseEnv = await read(proc.stdout);
+  valueAppendedOnce = await read(proc.stdout);
 
-  equal(path, env.get("PATH"), "Got expected $PATH value");
-  equal(foo, "", "Got expected $FOO value");
+  equal(valueFromBaseEnv, "untouched", "Got expected $VALUE_FROM_BASE_ENV value");
+  equal(valueAppendedOnce, "", "Got expected $VALUE_APPENDED_ONCE value");
 
   ({exitCode} = await proc.wait());
 

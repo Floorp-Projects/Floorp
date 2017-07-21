@@ -49,15 +49,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-Object.defineProperty(this, "gDecimalSymbol", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    delete this.gDecimalSymbol;
-      return this.gDecimalSymbol = Number(5.4).toLocaleString().match(/\D/);
-  },
-});
-
 var localeNumberFormatCache = new Map();
 function getLocaleNumberFormat(fractionDigits) {
   // Backward compatibility: don't use localized digits
@@ -359,53 +350,28 @@ this.DownloadUtils = {
     let dateTimeCompact;
     let dateTimeFull;
 
-    // For Android, we have to keep the non Intl API version which uses
-    // deprecated toLocaleFormat until we get Intl API.
-    //
-    // For the rest of the platform, we'll use a combination of mozIntl,
-    // Intl API and localization.
-    if (typeof Intl === "undefined") {
-      // Figure out if the time is from today, yesterday, this week, etc.
-      if (aDate >= today) {
-        dateTimeCompact = aDate.toLocaleFormat("%X");
-      } else if (today - aDate < (MS_PER_DAY)) {
-        // After yesterday started, show yesterday
-        dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
-      } else if (today - aDate < (6 * MS_PER_DAY)) {
-        // After last week started, show day of week
-        dateTimeCompact = aDate.toLocaleFormat("%A");
-      } else {
-        // Show month/day
-        let month = aDate.toLocaleFormat("%B");
-        let date = aDate.getDate();
-        dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
-      }
-
-      dateTimeFull = aDate.toLocaleFormat("%x %X");
+    // Figure out if the time is from today, yesterday, this week, etc.
+    if (aDate >= today) {
+      let dts = Services.intl.createDateTimeFormat(undefined, {
+        timeStyle: "short"
+      });
+      dateTimeCompact = dts.format(aDate);
+    } else if (today - aDate < (MS_PER_DAY)) {
+      // After yesterday started, show yesterday
+      dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
+    } else if (today - aDate < (6 * MS_PER_DAY)) {
+      // After last week started, show day of week
+      dateTimeCompact = aDate.toLocaleDateString(undefined, { weekday: "long" });
     } else {
-      // Figure out if the time is from today, yesterday, this week, etc.
-      if (aDate >= today) {
-        let dts = Services.intl.createDateTimeFormat(undefined, {
-          timeStyle: "short"
-        });
-        dateTimeCompact = dts.format(aDate);
-      } else if (today - aDate < (MS_PER_DAY)) {
-        // After yesterday started, show yesterday
-        dateTimeCompact = gBundle.GetStringFromName(gStr.yesterday);
-      } else if (today - aDate < (6 * MS_PER_DAY)) {
-        // After last week started, show day of week
-        dateTimeCompact = aDate.toLocaleDateString(undefined, { weekday: "long" });
-      } else {
-        // Show month/day
-        let month = aDate.toLocaleDateString(undefined, { month: "long" });
-        let date = aDate.getDate();
-        dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
-      }
-
-      const dtOptions = { dateStyle: "long", timeStyle: "short" };
-      dateTimeFull =
-        Services.intl.createDateTimeFormat(undefined, dtOptions).format(aDate);
+      // Show month/day
+      let month = aDate.toLocaleDateString(undefined, { month: "long" });
+      let date = aDate.getDate();
+      dateTimeCompact = gBundle.formatStringFromName(gStr.monthDate, [month, date], 2);
     }
+
+    const dtOptions = { dateStyle: "long", timeStyle: "short" };
+    dateTimeFull =
+      Services.intl.createDateTimeFormat(undefined, dtOptions).format(aDate);
 
     return [dateTimeCompact, dateTimeFull];
   },
@@ -504,15 +470,8 @@ this.DownloadUtils = {
     // Don't try to format Infinity values using NumberFormat.
     if (aBytes === Infinity) {
       aBytes = "Infinity";
-    } else if (typeof Intl != "undefined") {
-      aBytes = getLocaleNumberFormat(fractionDigits)
-                 .format(aBytes);
     } else {
-      // FIXME: Fall back to the old hack, will be fixed in bug 1344543.
-      aBytes = aBytes.toFixed(fractionDigits);
-      if (gDecimalSymbol != ".") {
-        aBytes = aBytes.replace(".", gDecimalSymbol);
-      }
+      aBytes = getLocaleNumberFormat(fractionDigits).format(aBytes);
     }
 
     return [aBytes, gBundle.GetStringFromName(gStr.units[unitIndex])];

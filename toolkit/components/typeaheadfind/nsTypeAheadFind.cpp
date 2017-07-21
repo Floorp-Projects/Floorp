@@ -848,7 +848,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
                    getter_AddRefs(mStartPointRange), nullptr);
   }
   else {
-    int32_t startOffset;
+    uint32_t startOffset;
     nsCOMPtr<nsIDOMNode> startNode;
     if (aFindPrev) {
       currentSelectionRange->GetStartContainer(getter_AddRefs(startNode));
@@ -886,7 +886,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIContent> startContent, origContent;
   aRange->GetStartContainer(getter_AddRefs(startNode));
-  int32_t startOffset;
+  uint32_t startOffset;
   aRange->GetStartOffset(&startOffset);
 
   startContent = do_QueryInterface(startNode);
@@ -906,9 +906,10 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
     const nsTextFragment *textFrag = startContent->GetText();
     if (textFrag) {
       // look for non whitespace character before start offset
-      for (int32_t index = 0; index < startOffset; index++) {
+      for (uint32_t index = 0; index < startOffset; index++) {
         // FIXME: take content language into account when deciding whitespace.
-        if (!mozilla::dom::IsSpaceCharacter(textFrag->CharAt(index))) {
+        if (!mozilla::dom::IsSpaceCharacter(
+                             textFrag->CharAt(static_cast<int32_t>(index)))) {
           *aIsStartingLink = false;  // not at start of a node
 
           break;
@@ -1235,12 +1236,14 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
     return true; //  Don't need it to be on screen, just in rendering tree
 
   // Get the next in flow frame that contains the range start
-  int32_t startRangeOffset, startFrameOffset, endFrameOffset;
+  int32_t startFrameOffset, endFrameOffset;
+  uint32_t startRangeOffset;
   aRange->GetStartOffset(&startRangeOffset);
   while (true) {
     frame->GetOffsets(startFrameOffset, endFrameOffset);
-    if (startRangeOffset < endFrameOffset)
+    if (static_cast<int32_t>(startRangeOffset) < endFrameOffset) {
       break;
+    }
 
     nsIFrame *nextContinuationFrame = frame->GetNextContinuation();
     if (nextContinuationFrame)

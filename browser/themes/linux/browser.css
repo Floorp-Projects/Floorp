@@ -17,7 +17,7 @@
 
 :root {
 %ifdef MOZ_PHOTON_THEME
-  --toolbarbutton-border-radius: 2px;
+  --toolbarbutton-border-radius: 4px;
 %else
   --toolbarbutton-border-radius: 1px;
 

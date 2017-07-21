@@ -36,7 +36,8 @@ HeadlessScreenHelper::HeadlessScreenHelper()
   RefPtr<Screen> ret = new Screen(rect, rect,
                                   24, 24,
                                   DesktopToLayoutDeviceScale(),
-                                  CSSToLayoutDeviceScale());
+                                  CSSToLayoutDeviceScale(),
+                                  96.0f);
   screenList.AppendElement(ret.forget());
   ScreenManager& screenManager = ScreenManager::GetSingleton();
   screenManager.Refresh(Move(screenList));

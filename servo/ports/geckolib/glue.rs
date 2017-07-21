@@ -45,6 +45,7 @@ use style::gecko_bindings::bindings::{RawServoSupportsRule, RawServoSupportsRule
 use style::gecko_bindings::bindings::{ServoCssRulesBorrowed, ServoCssRulesStrong};
 use style::gecko_bindings::bindings::{nsACString, nsAString, nsCSSPropertyIDSetBorrowedMut};
 use style::gecko_bindings::bindings::Gecko_AddPropertyToSet;
+use style::gecko_bindings::bindings::Gecko_AppendPropertyValuePair;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
@@ -1688,7 +1689,6 @@ fn get_pseudo_style(
         StyleBuilder::for_inheritance(
             doc_data.stylist.device(),
             styles.primary(),
-            doc_data.default_computed_values(),
             Some(pseudo),
         ).build()
     }))
@@ -1711,7 +1711,6 @@ pub extern "C" fn Servo_ComputedValues_Inherit(
         let mut style = StyleBuilder::for_inheritance(
             data.stylist.device(),
             reference,
-            data.default_computed_values(),
             Some(&pseudo)
         );
 
@@ -1726,6 +1725,7 @@ pub extern "C" fn Servo_ComputedValues_Inherit(
         StyleBuilder::for_derived_style(
             data.stylist.device(),
             data.default_computed_values(),
+            /* parent_style = */ None,
             Some(&pseudo),
         ).build()
     };
@@ -2885,20 +2885,21 @@ fn simulate_compute_values_failure(_: &PropertyValuePair) -> bool {
     false
 }
 
-fn create_context<'a>(per_doc_data: &'a PerDocumentStyleDataImpl,
-                      font_metrics_provider: &'a FontMetricsProvider,
-                      style: &'a ComputedValues,
-                      parent_style: Option<&'a ComputedValues>,
-                      pseudo: Option<&'a PseudoElement>)
-                      -> Context<'a> {
-    let default_values = per_doc_data.default_computed_values();
-    let inherited_style = parent_style.unwrap_or(default_values);
-
+fn create_context<'a>(
+    per_doc_data: &'a PerDocumentStyleDataImpl,
+    font_metrics_provider: &'a FontMetricsProvider,
+    style: &'a ComputedValues,
+    parent_style: Option<&'a ComputedValues>,
+    pseudo: Option<&'a PseudoElement>,
+) -> Context<'a> {
     Context {
         is_root_element: false,
-        device: per_doc_data.stylist.device(),
-        inherited_style: inherited_style,
-        style: StyleBuilder::for_derived_style(per_doc_data.stylist.device(), style, pseudo),
+        builder: StyleBuilder::for_derived_style(
+            per_doc_data.stylist.device(),
+            style,
+            parent_style,
+            pseudo,
+        ),
         font_metrics_provider: font_metrics_provider,
         cached_system_font: None,
         in_media_query: false,
@@ -3077,16 +3078,6 @@ pub extern "C" fn Servo_AssertTreeIsClean(root: RawGeckoElementBorrowed) {
     assert_subtree_is_clean(root);
 }
 
-fn append_computed_property_value(keyframe: *mut structs::Keyframe,
-                                  property: &AnimatableLonghand) {
-    unsafe {
-        let index = (*keyframe).mPropertyValues.len();
-        (*keyframe).mPropertyValues.set_len((index + 1) as u32);
-        (*keyframe).mPropertyValues[index].mProperty = property.into();
-        (*keyframe).mPropertyValues[index].mServoDeclarationBlock.mRawPtr = ptr::null_mut();
-    }
-}
-
 enum Offset {
     Zero,
     One
@@ -3118,7 +3109,8 @@ fn fill_in_missing_keyframe_values(all_properties:  &[AnimatableLonghand],
     // Append properties that have not been set at this offset.
     for ref property in all_properties.iter() {
         if !properties_set_at_offset.has_animatable_longhand_bit(property) {
-            append_computed_property_value(keyframe, property);
+            unsafe { Gecko_AppendPropertyValuePair(&mut (*keyframe).mPropertyValues,
+                                                   (*property).into()); }
         }
     }
 }
@@ -3181,7 +3173,10 @@ pub extern "C" fn Servo_StyleSet_GetKeyframesForName(raw_data: RawServoStyleSetB
                 // animation should be set to the underlying computed value for
                 // that keyframe.
                 for property in animation.properties_changed.iter() {
-                    append_computed_property_value(keyframe, property);
+                    unsafe {
+                        Gecko_AppendPropertyValuePair(&mut (*keyframe).mPropertyValues,
+                                                      property.into());
+                    }
                 }
                 if current_offset == 0.0 {
                     has_complete_initial_keyframe = true;
@@ -3199,7 +3194,6 @@ pub extern "C" fn Servo_StyleSet_GetKeyframesForName(raw_data: RawServoStyleSetB
                              declaration.is_animatable()
                          });
 
-                let mut index = unsafe { (*keyframe).mPropertyValues.len() };
                 for &(ref declaration, _) in animatable {
                     let property = AnimatableLonghand::from_declaration(declaration).unwrap();
                     // Skip the 'display' property because although it is animatable from SMIL,
@@ -3213,17 +3207,17 @@ pub extern "C" fn Servo_StyleSet_GetKeyframesForName(raw_data: RawServoStyleSetB
                             properties_set_at_end.set_animatable_longhand_bit(&property);
                         }
 
+                        let property = AnimatableLonghand::from_declaration(declaration).unwrap();
                         unsafe {
-                            let property = AnimatableLonghand::from_declaration(declaration).unwrap();
-                            (*keyframe).mPropertyValues.set_len((index + 1) as u32);
-                            (*keyframe).mPropertyValues[index].mProperty = (&property).into();
-                            (*keyframe).mPropertyValues[index].mServoDeclarationBlock.set_arc_leaky(
+                            let pair =
+                                Gecko_AppendPropertyValuePair(&mut (*keyframe).mPropertyValues,
+                                                              (&property).into());
+                            (*pair).mServoDeclarationBlock.set_arc_leaky(
                                 Arc::new(global_style_data.shared_lock.wrap(
-                                  PropertyDeclarationBlock::with_one(
-                                      declaration.clone(), Importance::Normal
+                                    PropertyDeclarationBlock::with_one(
+                                        declaration.clone(), Importance::Normal
                                 ))));
                         }
-                        index += 1;
                     }
                 }
             },

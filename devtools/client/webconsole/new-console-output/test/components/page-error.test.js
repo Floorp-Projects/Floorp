@@ -142,7 +142,10 @@ describe("PageError component:", () => {
   it("has the expected indent", () => {
     const message = stubPreparedMessages.get("ReferenceError: asdf is not defined");
     const indent = 10;
-    let wrapper = render(PageError({ message, serviceContainer, indent}));
+    let wrapper = render(PageError({
+      message: Object.assign({}, message, {indent}),
+      serviceContainer
+    }));
     expect(wrapper.find(".indent").prop("style").width)
         .toBe(`${indent * INDENT_WIDTH}px`);
 

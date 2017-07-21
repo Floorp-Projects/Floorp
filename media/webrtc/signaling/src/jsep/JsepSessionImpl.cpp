@@ -428,13 +428,10 @@ JsepSessionImpl::SetupOfferMSections(const JsepOfferOptions& options, Sdp* sdp)
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!(options.mDontOfferDataChannel.isSome() &&
-        *options.mDontOfferDataChannel)) {
-    rv = SetupOfferMSectionsByType(
-        SdpMediaSection::kApplication, Maybe<size_t>(), sdp);
+  rv = SetupOfferMSectionsByType(
+      SdpMediaSection::kApplication, Maybe<size_t>(), sdp);
 
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (!sdp->GetMediaSectionCount()) {
     JSEP_SET_ERROR("Cannot create an offer with no local tracks, "

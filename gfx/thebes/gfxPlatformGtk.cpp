@@ -313,7 +313,7 @@ gfxPlatformGtk::GetFTLibrary()
 static int32_t sDPI = 0;
 
 int32_t
-gfxPlatformGtk::GetDPI()
+gfxPlatformGtk::GetFontScaleDPI()
 {
     if (!sDPI) {
         // Make sure init is run so we have a resolution
@@ -329,14 +329,14 @@ gfxPlatformGtk::GetDPI()
 }
 
 double
-gfxPlatformGtk::GetDPIScale()
+gfxPlatformGtk::GetFontScaleFactor()
 {
     // Integer scale factors work well with GTK window scaling, image scaling,
     // and pixel alignment, but there is a range where 1 is too small and 2 is
     // too big.  An additional step of 1.5 is added because this is common
     // scale on WINNT and at this ratio the advantages of larger rendering
     // outweigh the disadvantages from scaling and pixel mis-alignment.
-    int32_t dpi = GetDPI();
+    int32_t dpi = GetFontScaleDPI();
     if (dpi < 132) {
         return 1.0;
     }

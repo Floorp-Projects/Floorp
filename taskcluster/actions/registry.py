@@ -6,6 +6,7 @@ from types import FunctionType
 from collections import namedtuple
 from taskgraph.util.docker import docker_image
 from taskgraph.parameters import Parameters
+from actions import util
 
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
@@ -285,20 +286,19 @@ def render_actions_json(parameters):
     }
 
 
-def trigger_action_callback():
+def trigger_action_callback(task_group_id, task_id, task, input, callback, parameters,
+                            test=False):
     """
-    Trigger action callback using arguments from environment variables.
+    Trigger action callback with the given inputs. If `test` is true, then run
+    the action callback in testing mode, without actually creating tasks.
     """
-    global callbacks
-    task_group_id = os.environ.get('ACTION_TASK_GROUP_ID', None)
-    task_id = json.loads(os.environ.get('ACTION_TASK_ID', 'null'))
-    task = json.loads(os.environ.get('ACTION_TASK', 'null'))
-    input = json.loads(os.environ.get('ACTION_INPUT', 'null'))
-    callback = os.environ.get('ACTION_CALLBACK', None)
-    parameters = json.loads(os.environ.get('ACTION_PARAMETERS', 'null'))
     cb = callbacks.get(callback, None)
     if not cb:
         raise Exception('Unknown callback: {}'.format(callback))
+
+    if test:
+        util.testing = True
+
     cb(Parameters(**parameters), input, task_group_id, task_id, task)
 
 

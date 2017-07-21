@@ -5190,10 +5190,16 @@ GetMaxWebProcessCount()
     return std::max(1u, optInPrefValue);
   }
 
+#ifdef RELEASE_OR_BETA
+  // For our rollout on Release and Beta, we set this pref from the
+  // e10srollout extension. On Nightly, we don't touch the pref at all,
+  // allowing stale values to disable e10s-multi for certain users.
   if (Preferences::HasUserValue("dom.ipc.processCount.web")) {
     // The user didn't opt in or out so read the .web version of the pref.
     return std::max(1, Preferences::GetInt("dom.ipc.processCount.web", 1));
   }
+#endif
+
   return optInPrefValue;
 }
 
