@@ -1005,6 +1005,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
   RefPtr<WorkerEventTarget> mWorkerControlEventTarget;
+  RefPtr<WorkerEventTarget> mWorkerHybridEventTarget;
 
   struct SyncLoopInfo
   {
@@ -1463,6 +1464,11 @@ public:
   // action on cancelation.
   nsISerialEventTarget*
   ControlEventTarget();
+
+  // Get an event target that will attempt to dispatch a normal WorkerRunnable,
+  // but if that fails will then fall back to a control runnable.
+  nsISerialEventTarget*
+  HybridEventTarget();
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
