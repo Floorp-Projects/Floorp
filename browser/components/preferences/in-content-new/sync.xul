@@ -157,7 +157,7 @@
           <caption><label>&signedIn.settings.label;</label></caption>
           <description>&signedIn.settings.description;</description>
           <hbox id="fxaSyncEngines">
-            <vbox align="start" flex="1">
+            <vbox flex="1">
               <checkbox label="&engine.tabs.label2;"
                         accesskey="&engine.tabs.accesskey;"
                         preference="engine.tabs"/>
@@ -171,7 +171,7 @@
                         accesskey="&engine.history.accesskey;"
                         preference="engine.history"/>
             </vbox>
-            <vbox align="start" flex="1">
+            <vbox flex="1">
               <checkbox label="&engine.addons.label;"
                         accesskey="&engine.addons.accesskey;"
                         preference="engine.addons"/>

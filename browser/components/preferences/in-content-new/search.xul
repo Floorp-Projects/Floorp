@@ -27,7 +27,7 @@
     </hbox>
 
     <!-- Default Search Engine -->
-    <groupbox id="defaultEngineGroup" align="start" data-category="paneSearch">
+    <groupbox id="defaultEngineGroup" data-category="paneSearch">
       <caption label="&defaultSearchEngine.label;"/>
       <label>&chooseYourDefaultSearchEngine2.label;</label>
       <menulist id="defaultEngine">
