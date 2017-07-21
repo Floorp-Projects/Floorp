@@ -43,11 +43,11 @@ fuzzy-if(cocoaWidget,1,2) random-if(winWidget||gtkWidget) skip-if(Android) == fl
 # inserted adjacent to that existing content.)
 fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundDiv-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundDiv-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) fails-if(styloVsGecko) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,3,10) fails-if(gtkWidget&&styloVsGecko) == flexbox-dyn-insertAroundDiv-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-1.xhtml flexbox-dyn-insertAroundDiv-1-ref.xhtml
 == flexbox-dyn-insertAroundSpan-2.xhtml flexbox-dyn-insertAroundDiv-2-ref.xhtml
-fuzzy-if(skiaContent,3,10) fails-if(styloVsGecko) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
+fuzzy-if(skiaContent,3,10) fails-if(gtkWidget&&styloVsGecko) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-insertAroundDiv-3-ref.xhtml
 
 == flexbox-dyn-insertAroundText-1.xhtml flexbox-dyn-insertAroundText-1-ref.xhtml
 == flexbox-dyn-insertAroundText-2.xhtml flexbox-dyn-insertAroundText-2-ref.xhtml

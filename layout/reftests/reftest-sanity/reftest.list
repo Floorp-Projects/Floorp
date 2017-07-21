@@ -44,7 +44,7 @@ HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
 == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
-fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
+fails-if(xulRuntime.OS!="Linux"&&!Android&&!styloVsGecko) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
 fails-if(xulRuntime.OS!="WINNT"&&!styloVsGecko) == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 fails-if(xulRuntime.OS!="Darwin"&&!styloVsGecko) == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 

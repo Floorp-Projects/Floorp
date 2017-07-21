@@ -96,7 +96,7 @@ fails-if(!styloVsGecko) == shape-outside-border-box-border-radius-004.html shape
 == shape-outside-inset-024.html shape-outside-inset-024-ref.html
 == shape-outside-inset-025.html shape-outside-inset-025-ref.html
 == shape-outside-inset-026.html shape-outside-inset-026-ref.html
-== shape-outside-inset-027.html shape-outside-inset-027-ref.html
+skip-if(stylo&&winWidget) == shape-outside-inset-027.html shape-outside-inset-027-ref.html
 
 # Basic shape: polygon()
 == shape-outside-polygon-018.html shape-outside-polygon-018-ref.html
