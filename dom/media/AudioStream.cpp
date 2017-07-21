@@ -478,6 +478,11 @@ void
 AudioStream::ResetDefaultDevice()
 {
   MonitorAutoLock mon(mMonitor);
+  if (mState != STARTED && mState != STOPPED) {
+    return;
+  }
+
+  MOZ_ASSERT(mCubebStream);
   auto r = InvokeCubeb(cubeb_stream_reset_default_device);
   if (!(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED)) {
     mState = ERRORED;
