@@ -714,6 +714,8 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
       break;
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_CHARSET_CHANGE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
@@ -1141,6 +1143,12 @@ nsDocShell::ConvertDocShellLoadInfoToLoadType(
     case nsIDocShellLoadInfo::loadReloadCharsetChange:
       loadType = LOAD_RELOAD_CHARSET_CHANGE;
       break;
+    case nsIDocShellLoadInfo::loadReloadCharsetChangeBypassCache:
+      loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE;
+      break;
+    case nsIDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache:
+      break;
+      loadType = LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE;
     case nsIDocShellLoadInfo::loadReloadBypassCache:
       loadType = LOAD_RELOAD_BYPASS_CACHE;
       break;
@@ -1215,6 +1223,12 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType)
       break;
     case LOAD_RELOAD_CHARSET_CHANGE:
       docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChange;
+      break;
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
+      docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChangeBypassCache;
+      break;
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
+      docShellLoadType = nsIDocShellLoadInfo::loadReloadCharsetChangeBypassProxyAndCache;
       break;
     case LOAD_RELOAD_BYPASS_CACHE:
       docShellLoadType = nsIDocShellLoadInfo::loadReloadBypassCache;
@@ -1397,7 +1411,9 @@ nsDocShell::LoadURI(nsIURI* aURI,
                    (shEntry &&
                     ((parentLoadType & LOAD_CMD_HISTORY) ||
                      (parentLoadType == LOAD_RELOAD_NORMAL) ||
-                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE)))) {
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE) ||
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE) ||
+                     (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE)))) {
           // If the parent url, bypassed history or was loaded from
           // history, pass on the parent's loadType to the new child
           // frame too, so that the child frame will also
@@ -7325,7 +7341,9 @@ nsDocShell::Embed(nsIContentViewer* aContentViewer,
   if (mCurrentURI &&
       (mLoadType & LOAD_CMD_HISTORY ||
        mLoadType == LOAD_RELOAD_NORMAL ||
-       mLoadType == LOAD_RELOAD_CHARSET_CHANGE)) {
+       mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
+       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
+       mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE)) {
     bool isWyciwyg = false;
     // Check if the url is wyciwyg
     rv = mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);
@@ -11320,7 +11338,9 @@ nsDocShell::DoURILoad(nsIURI* aURI,
      */
     if (mLoadType == LOAD_HISTORY ||
         mLoadType == LOAD_RELOAD_NORMAL ||
-        mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
+        mLoadType == LOAD_RELOAD_CHARSET_CHANGE ||
+        mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE ||
+        mLoadType == LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE) {
       if (cacheChannel && cacheKey) {
         cacheChannel->SetCacheKey(cacheKey);
       }
@@ -11498,6 +11518,12 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
       }
       break;
     }
+
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
+      loadFlags |= nsIRequest::LOAD_BYPASS_CACHE |
+        nsIRequest::LOAD_FRESH_CONNECTION;
+      MOZ_FALLTHROUGH;
 
     case LOAD_RELOAD_CHARSET_CHANGE: {
       // Use SetAllowStaleCacheContent (not LOAD_FROM_CACHE flag) since we only want
@@ -14407,7 +14433,17 @@ nsDocShell::ReloadDocument(const char* aCharset, int32_t aSource)
       cv->SetHintCharacterSetSource(aSource);
       if (eCharsetReloadRequested != mCharsetReloadState) {
         mCharsetReloadState = eCharsetReloadRequested;
-        return Reload(LOAD_FLAGS_CHARSET_CHANGE);
+        switch (mLoadType) {
+        case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+          return Reload(LOAD_FLAGS_CHARSET_CHANGE |
+                        LOAD_FLAGS_BYPASS_CACHE |
+                        LOAD_FLAGS_BYPASS_PROXY);
+        case LOAD_RELOAD_BYPASS_CACHE:
+          return Reload(LOAD_FLAGS_CHARSET_CHANGE |
+                        LOAD_FLAGS_BYPASS_CACHE);
+        default:
+          return Reload(LOAD_FLAGS_CHARSET_CHANGE);
+        }
       }
     }
   }
