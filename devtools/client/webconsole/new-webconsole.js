@@ -18,10 +18,14 @@ const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const system = require("devtools/shared/system");
 const { ZoomKeys } = require("devtools/client/shared/zoom-keys");
+
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
+const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
+
 // XXX: This file is incomplete (see bug 1326937).
 // It's used when loading the webconsole with devtools-launchpad, but will ultimately be
 // the entry point for the new frontend
+
 /**
  * A WebConsoleFrame instance is an interactive console initialized *per target*
  * that displays console log data as well as provides an interactive terminal to
@@ -52,6 +56,19 @@ NewWebConsoleFrame.prototype = {
    */
   get webConsoleClient() {
     return this.proxy ? this.proxy.webConsoleClient : null;
+  },
+
+  /**
+   * Getter for the persistent logging preference.
+   * @type boolean
+   */
+  get persistLog() {
+    // For the browser console, we receive tab navigation
+    // when the original top level window we attached to is closed,
+    // but we don't want to reset console history and just switch to
+    // the next available window.
+    return this.isBrowserConsole ||
+           Services.prefs.getBoolPref(PREF_PERSISTLOG);
   },
 
   /**
