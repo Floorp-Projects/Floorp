@@ -6051,6 +6051,40 @@ nsDisplayOpacity::WriteDebugInfo(std::stringstream& aStream)
   aStream << " (opacity " << mOpacity << ")";
 }
 
+bool
+nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                          const StackingContextHelper& aSc,
+                                          nsTArray<WebRenderParentCommand>& aParentCommands,
+                                          mozilla::layers::WebRenderLayerManager* aManager,
+                                          nsDisplayListBuilder* aDisplayListBuilder)
+{
+  nsRect itemBounds = mList.GetClippedBoundsWithRespectToASR(aDisplayListBuilder, mActiveScrolledRoot);
+  nsRect childrenVisible = GetVisibleRectForChildren();
+  nsRect visibleRect = itemBounds.Intersect(childrenVisible);
+  float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(visibleRect, appUnitsPerDevPixel),
+                                        PixelCastJustification::WebRenderHasUnitResolution);
+  LayerPoint origin = bounds.TopLeft();
+
+  // TODO: generate animationsId for OMTA.
+  uint64_t animationsId = 0;
+  nsTArray<WrFilterOp> filters;
+  StackingContextHelper sc(aSc,
+                           aBuilder,
+                           bounds,
+                           origin,
+                           animationsId,
+                           &mOpacity,
+                           nullptr,
+                           filters);
+
+  aManager->CreateWebRenderCommandsFromDisplayList(&mList,
+                                                   aDisplayListBuilder,
+                                                   sc,
+                                                   aBuilder);
+  return true;
+}
+
 nsDisplayBlendMode::nsDisplayBlendMode(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame, nsDisplayList* aList,
                                              uint8_t aBlendMode,
