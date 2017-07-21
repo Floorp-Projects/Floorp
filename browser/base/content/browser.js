@@ -5063,6 +5063,7 @@ var CombinedStopReload = {
                         aWebProgress.isTopLevel &&
                         aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
+                        this.stopReloadContainer.closest("#nav-bar-customization-target") &&
                         this.animate;
 
     this._cancelTransition();
@@ -5087,6 +5088,7 @@ var CombinedStopReload = {
                         !aWebProgress.isLoadingDocument &&
                         !gBrowser.tabAnimationsInProgress &&
                         this._loadTimeExceedsMinimumForAnimation() &&
+                        this.stopReloadContainer.closest("#nav-bar-customization-target") &&
                         this.animate;
 
     if (shouldAnimate) {
