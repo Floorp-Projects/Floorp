@@ -1214,9 +1214,6 @@ nsCSPContext::AsyncReportViolation(nsISupports* aBlockedContentSource,
 
   if (XRE_IsContentProcess()) {
     if (mEventTarget) {
-      if (nsCOMPtr<nsINamed> named = do_QueryInterface(task)) {
-        named->SetName("CSPReportSenderRunnable");
-      }
       mEventTarget->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
       return NS_OK;
     }

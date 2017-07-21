@@ -694,12 +694,6 @@ IdleRequestExecutor::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-IdleRequestExecutor::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 IdleRequestExecutor::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());

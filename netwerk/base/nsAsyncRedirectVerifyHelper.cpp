@@ -241,12 +241,6 @@ nsAsyncRedirectVerifyHelper::GetName(nsACString& aName)
 }
 
 NS_IMETHODIMP
-nsAsyncRedirectVerifyHelper::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsAsyncRedirectVerifyHelper::Run()
 {
     /* If the channel got canceled after it fired AsyncOnChannelRedirect

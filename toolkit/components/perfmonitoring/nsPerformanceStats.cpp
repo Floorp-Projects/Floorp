@@ -595,12 +595,6 @@ PendingAlertsCollector::GetName(nsACString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PendingAlertsCollector::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 PendingAlertsCollector::Start(uint32_t timerDelayMS) {
   if (mPending) {
