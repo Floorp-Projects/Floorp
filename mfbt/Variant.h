@@ -18,6 +18,10 @@
 #ifndef mozilla_Variant_h
 #define mozilla_Variant_h
 
+namespace IPC {
+template <typename T> struct ParamTraits;
+} // namespace IPC
+
 namespace mozilla {
 
 template<typename... Ts>
@@ -484,6 +488,8 @@ template<size_t N> struct VariantIndex { static constexpr size_t index = N; };
 template<typename... Ts>
 class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS MOZ_NON_PARAM Variant
 {
+  friend struct IPC::ParamTraits<mozilla::Variant<Ts...>>;
+
   using Tag = typename detail::VariantTag<Ts...>::Type;
   using Impl = detail::VariantImplementation<Tag, 0, Ts...>;
 
