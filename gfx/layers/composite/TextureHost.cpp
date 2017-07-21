@@ -98,7 +98,7 @@ WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
                              LayersBackend aBackend,
                              TextureFlags aFlags)
 {
-  if (!gfxVars::UseWebRender() ||
+  if (!gfx::gfxVars::UseWebRender() ||
       (aFlags & TextureFlags::SNAPSHOT) ||
       (aBackend != LayersBackend::LAYERS_WR) ||
       (!aDeallocator->UsesImageBridge() && !aDeallocator->AsCompositorBridgeParentBase())) {

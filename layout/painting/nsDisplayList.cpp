@@ -485,10 +485,9 @@ SetAnimatable(nsCSSPropertyID aProperty,
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
-                        dom::Animation* aAnimation, Layer* aLayer,
+                        dom::Animation* aAnimation, AnimationInfo& aAnimationInfo,
                         AnimationData& aData, bool aPending)
 {
-  MOZ_ASSERT(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
   MOZ_ASSERT(!aAnimation->GetCurrentOrPendingStartTime().IsNull() ||
@@ -502,8 +501,8 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 
   layers::Animation* animation =
     aPending ?
-    aLayer->AddAnimationForNextTransaction() :
-    aLayer->AddAnimation();
+    aAnimationInfo.AddAnimationForNextTransaction() :
+    aAnimationInfo.AddAnimation();
 
   const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
 
@@ -601,11 +600,87 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
 }
 
 static void
-AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
-                         nsTArray<RefPtr<dom::Animation>>& aAnimations,
-                         Layer* aLayer, AnimationData& aData,
-                         bool aPending)
+AddAnimationsForProperty(nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
+                         nsDisplayItem* aItem, nsCSSPropertyID aProperty,
+                         AnimationInfo& aAnimationInfo, bool aPending)
 {
+  if (aPending) {
+    aAnimationInfo.ClearAnimationsForNextTransaction();
+  } else {
+    aAnimationInfo.ClearAnimations();
+  }
+
+  // Update the animation generation on the layer. We need to do this before
+  // any early returns since even if we don't add any animations to the
+  // layer, we still need to mark it as up-to-date with regards to animations.
+  // Otherwise, in RestyleManager we'll notice the discrepancy between the
+  // animation generation numbers and update the layer indefinitely.
+  uint64_t animationGeneration =
+    RestyleManager::GetAnimationGenerationForFrame(aFrame);
+  aAnimationInfo.SetAnimationGeneration(animationGeneration);
+
+  EffectCompositor::ClearIsRunningOnCompositor(aFrame, aProperty);
+  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
+    EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
+  if (compositorAnimations.IsEmpty()) {
+    return;
+  }
+
+  // If the frame is not prerendered, bail out.
+  // Do this check only during layer construction; during updating the
+  // caller is required to check it appropriately.
+  if (aItem && !aItem->CanUseAsyncAnimations(aBuilder)) {
+    // EffectCompositor needs to know that we refused to run this animation
+    // asynchronously so that it will not throttle the main thread
+    // animation.
+    aFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), true);
+
+    // We need to schedule another refresh driver run so that EffectCompositor
+    // gets a chance to unthrottle the animation.
+    aFrame->SchedulePaint();
+    return;
+  }
+
+  AnimationData data;
+  if (aProperty == eCSSProperty_transform) {
+    // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
+    // the dimensions of refBox. That said, we only get here if there are CSS
+    // animations or transitions on this element, and that is likely to be a
+    // lot rarer than transforms on SVG (the frequency of which drives the need
+    // for TransformReferenceBox).
+    TransformReferenceBox refBox(aFrame);
+    nsRect bounds(0, 0, refBox.Width(), refBox.Height());
+    // all data passed directly to the compositor should be in dev pixels
+    int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
+    float scale = devPixelsToAppUnits;
+    Point3D offsetToTransformOrigin =
+      nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, scale, &bounds);
+    nsPoint origin;
+    float scaleX = 1.0f;
+    float scaleY = 1.0f;
+    bool hasPerspectiveParent = false;
+    if (aItem) {
+      // This branch is for display items to leverage the cache of
+      // nsDisplayListBuilder.
+      origin = aItem->ToReferenceFrame();
+    } else {
+      // This branch is running for restyling.
+      // Animations are animated at the coordination of the reference
+      // frame outside, not the given frame itself.  The given frame
+      // is also reference frame too, so the parent's reference frame
+      // are used.
+      nsIFrame* referenceFrame =
+        nsLayoutUtils::GetReferenceFrame(nsLayoutUtils::GetCrossDocParentFrame(aFrame));
+      origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
+    }
+
+    data = TransformData(origin, offsetToTransformOrigin,
+                         bounds, devPixelsToAppUnits,
+                         scaleX, scaleY, hasPerspectiveParent);
+  } else if (aProperty == eCSSProperty_opacity) {
+    data = null_t();
+  }
+
   MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "inconsistent property flags");
@@ -615,8 +690,8 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
 
   bool sentAnimations = false;
   // Add from first to last (since last overrides)
-  for (size_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    dom::Animation* anim = aAnimations[animIdx];
+  for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
+    dom::Animation* anim = compositorAnimations[animIdx];
     if (!anim->IsRelevant()) {
       continue;
     }
@@ -658,7 +733,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSPropertyID aProperty,
       continue;
     }
 
-    AddAnimationForProperty(aFrame, *property, anim, aLayer, aData, aPending);
+    AddAnimationForProperty(aFrame, *property, anim, aAnimationInfo, data, aPending);
     keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
     sentAnimations = true;
   }
@@ -777,86 +852,10 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   bool pending = !aBuilder;
-
-  if (pending) {
-    aLayer->ClearAnimationsForNextTransaction();
-  } else {
-    aLayer->ClearAnimations();
-  }
-
-  // Update the animation generation on the layer. We need to do this before
-  // any early returns since even if we don't add any animations to the
-  // layer, we still need to mark it as up-to-date with regards to animations.
-  // Otherwise, in RestyleManager we'll notice the discrepancy between the
-  // animation generation numbers and update the layer indefinitely.
-  uint64_t animationGeneration =
-    RestyleManager::GetAnimationGenerationForFrame(aFrame);
-  aLayer->SetAnimationGeneration(animationGeneration);
-
-  EffectCompositor::ClearIsRunningOnCompositor(aFrame, aProperty);
-  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
-    EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
-  if (compositorAnimations.IsEmpty()) {
-    return;
-  }
-
-  // If the frame is not prerendered, bail out.
-  // Do this check only during layer construction; during updating the
-  // caller is required to check it appropriately.
-  if (aItem && !aItem->CanUseAsyncAnimations(aBuilder)) {
-    // EffectCompositor needs to know that we refused to run this animation
-    // asynchronously so that it will not throttle the main thread
-    // animation.
-    aFrame->SetProperty(nsIFrame::RefusedAsyncAnimationProperty(), true);
-
-    // We need to schedule another refresh driver run so that EffectCompositor
-    // gets a chance to unthrottle the animation.
-    aFrame->SchedulePaint();
-    return;
-  }
-
-  AnimationData data;
-  if (aProperty == eCSSProperty_transform) {
-    // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
-    // the dimensions of refBox. That said, we only get here if there are CSS
-    // animations or transitions on this element, and that is likely to be a
-    // lot rarer than transforms on SVG (the frequency of which drives the need
-    // for TransformReferenceBox).
-    TransformReferenceBox refBox(aFrame);
-    nsRect bounds(0, 0, refBox.Width(), refBox.Height());
-    // all data passed directly to the compositor should be in dev pixels
-    int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
-    float scale = devPixelsToAppUnits;
-    Point3D offsetToTransformOrigin =
-      nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, scale, &bounds);
-    nsPoint origin;
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
-    bool hasPerspectiveParent = false;
-    if (aItem) {
-      // This branch is for display items to leverage the cache of
-      // nsDisplayListBuilder.
-      origin = aItem->ToReferenceFrame();
-    } else {
-      // This branch is running for restyling.
-      // Animations are animated at the coordination of the reference
-      // frame outside, not the given frame itself.  The given frame
-      // is also reference frame too, so the parent's reference frame
-      // are used.
-      nsIFrame* referenceFrame =
-        nsLayoutUtils::GetReferenceFrame(nsLayoutUtils::GetCrossDocParentFrame(aFrame));
-      origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
-    }
-
-    data = TransformData(origin, offsetToTransformOrigin,
-                         bounds, devPixelsToAppUnits,
-                         scaleX, scaleY, hasPerspectiveParent);
-  } else if (aProperty == eCSSProperty_opacity) {
-    data = null_t();
-  }
-
-  AddAnimationsForProperty(aFrame, aProperty, compositorAnimations,
-                           aLayer, data, pending);
+  AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
+  AddAnimationsForProperty(aFrame, aBuilder, aItem, aProperty,
+                           animationInfo, pending);
+  animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 
 void
