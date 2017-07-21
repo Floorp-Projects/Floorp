@@ -6,8 +6,11 @@ async function check_keyword(aURI, aKeyword) {
   if (aKeyword)
     aKeyword = aKeyword.toLowerCase();
 
-  for (let bm of PlacesUtils.getBookmarksForURI(aURI)) {
-    let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(bm);
+  let bms = [];
+  await PlacesUtils.bookmarks.fetch({ url: aURI }, bm => bms.push(bm));
+  for (let bm of bms) {
+    let itemId = await PlacesUtils.promiseItemId(bm.guid);
+    let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
     if (keyword && !aKeyword) {
       throw (`${aURI.spec} should not have a keyword`);
     } else if (aKeyword && keyword == aKeyword) {
