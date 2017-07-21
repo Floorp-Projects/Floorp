@@ -2096,7 +2096,7 @@ PluginModuleChromeParent::CachedSettingChanged(const char* aPref, void* aModule)
     module->CachedSettingChanged();
 }
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error)
 {
