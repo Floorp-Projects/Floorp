@@ -32,4 +32,15 @@ interface nsIJARChannel : nsIChannel
      * This will work even without opening the channel.
      */
     readonly attribute nsIZipEntry zipEntry;
+
+    /**
+     * If the JAR file is cached in the JAR cache, returns true and
+     * holds a reference to the cached zip reader to be used when
+     * the channel is read from, ensuring the cached reader will be used.
+     * For a successful read from the cached reader, close() should not
+     * be called on the reader--per nsIZipReader::getZip() documentation.
+     * Returns false if the JAR file is not cached. Calling this method
+     * after the channel has been opened is not permitted.
+     */
+    boolean ensureCached();
 };

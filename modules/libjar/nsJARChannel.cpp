@@ -272,7 +272,9 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
     }
 
     nsCOMPtr<nsIZipReader> reader;
-    if (jarCache) {
+    if (mPreCachedJarReader) {
+      reader = mPreCachedJarReader;
+    } else if (jarCache) {
         MOZ_ASSERT(mJarFile);
         if (mInnerJarEntry.IsEmpty())
             rv = jarCache->GetZip(clonedFile, getter_AddRefs(reader));
@@ -901,6 +903,56 @@ nsJARChannel::SetJarFile(nsIFile *aFile)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsJARChannel::EnsureCached(bool *aIsCached)
+{
+    nsresult rv;
+    *aIsCached = false;
+
+    if (mOpened) {
+        return NS_ERROR_ALREADY_OPENED;
+    }
+
+    if (mPreCachedJarReader) {
+        // We've already been called and found the JAR is cached
+        *aIsCached = true;
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> innerFileURI;
+    rv = mJarURI->GetJARFile(getter_AddRefs(innerFileURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFileURL> innerFileURL = do_QueryInterface(innerFileURI, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> jarFile;
+    rv = innerFileURL->GetFile(getter_AddRefs(jarFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = ioService->GetProtocolHandler("jar", getter_AddRefs(handler));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIJARProtocolHandler> jarHandler = do_QueryInterface(handler);
+    MOZ_ASSERT(jarHandler);
+
+    nsCOMPtr<nsIZipReaderCache> jarCache;
+    rv = jarHandler->GetJARCache(getter_AddRefs(jarCache));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = jarCache->GetZipIfCached(jarFile, getter_AddRefs(mPreCachedJarReader));
+    if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aIsCached = true;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry)
