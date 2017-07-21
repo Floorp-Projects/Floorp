@@ -142,7 +142,6 @@ enum class SessionType {
 class KeyedHistogram {
 public:
   KeyedHistogram(HistogramID id, const HistogramInfo& info);
-  ~KeyedHistogram();
   nsresult GetHistogram(const nsCString& name, Histogram** histogram, bool subsession);
   Histogram* GetHistogram(const nsCString& name, bool subsession);
   uint32_t GetHistogramType() const { return mHistogramInfo.histogramType; }
@@ -643,21 +642,6 @@ KeyedHistogram::KeyedHistogram(HistogramID id, const HistogramInfo& info)
 {
 }
 
-KeyedHistogram::~KeyedHistogram()
-{
-  for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    delete iter.Get()->mData;
-  }
-  mHistogramMap.Clear();
-
-#if !defined(MOZ_WIDGET_ANDROID)
-  for (auto iter = mSubsessionMap.Iter(); !iter.Done(); iter.Next()) {
-    delete iter.Get()->mData;
-  }
-  mSubsessionMap.Clear();
-#endif
-}
-
 nsresult
 KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
                              bool subsession)
@@ -743,7 +727,7 @@ KeyedHistogram::Clear(bool onlySubsession)
   }
 #if !defined(MOZ_WIDGET_ANDROID)
   for (auto iter = mSubsessionMap.Iter(); !iter.Done(); iter.Next()) {
-    delete iter.Get()->mData;
+    iter.Get()->mData->Clear();
   }
   mSubsessionMap.Clear();
   if (onlySubsession) {
@@ -752,7 +736,7 @@ KeyedHistogram::Clear(bool onlySubsession)
 #endif
 
   for (auto iter = mHistogramMap.Iter(); !iter.Done(); iter.Next()) {
-    delete iter.Get()->mData;
+    iter.Get()->mData->Clear();
   }
   mHistogramMap.Clear();
 }
@@ -1646,24 +1630,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gCanRecordExtended = false;
   gNameToHistogramIDMap.Clear();
   gInitDone = false;
-
-  // FactoryGet `new`s Histograms for us, but requires us to manually delete.
-  for (size_t i = 0; i < HistogramCount; ++i) {
-    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-      delete gKeyedHistogramStorage[i][process];
-      gKeyedHistogramStorage[i][process] = nullptr;
-      for (uint32_t session = 0; session <
-        static_cast<uint32_t>(SessionType::Count); ++session) {
-        if (gHistogramStorage[i][process][session] == gExpiredHistogram) {
-          continue;
-        }
-        delete gHistogramStorage[i][process][session];
-        gHistogramStorage[i][process][session] = nullptr;
-      }
-    }
-  }
-  delete gExpiredHistogram;
-  gExpiredHistogram = nullptr;
 }
 
 #ifdef DEBUG
