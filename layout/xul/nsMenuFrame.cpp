@@ -1532,14 +1532,3 @@ nsMenuTimerMediator::GetName(nsACString& aName)
   aName.AssignLiteral("nsMenuTimerMediator");
   return NS_OK;
 }
-
-/**
- * Set the name to this timer callback.
- * @param aName the name to set
- */
-NS_IMETHODIMP
-nsMenuTimerMediator::SetName(const char* aName)
-{
-  // We don't need to change the name for nsMenuTimerMediator.
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

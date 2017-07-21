@@ -617,12 +617,6 @@ private:
     return NS_OK;
   }
 
-  NS_IMETHOD
-  SetName(const char* aName) override
-  {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   void
   LoadingFinished(uint32_t aIndex, nsresult aRv)
   {
