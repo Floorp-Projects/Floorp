@@ -11,20 +11,20 @@
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface PublicKeyCredential : Credential {
-    readonly attribute ArrayBuffer           rawId;
-    readonly attribute AuthenticatorResponse response;
+    [SameObject] readonly attribute ArrayBuffer           rawId;
+    [SameObject] readonly attribute AuthenticatorResponse response;
     // Extensions are not supported yet.
-    // readonly attribute AuthenticationExtensions clientExtensionResults;
+    // [SameObject] readonly attribute AuthenticationExtensions clientExtensionResults;
 };
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface AuthenticatorResponse {
-    readonly attribute ArrayBuffer clientDataJSON;
+    [SameObject] readonly attribute ArrayBuffer clientDataJSON;
 };
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface AuthenticatorAttestationResponse : AuthenticatorResponse {
-    readonly attribute ArrayBuffer attestationObject;
+    [SameObject] readonly attribute ArrayBuffer attestationObject;
 };
 
 dictionary PublicKeyCredentialParameters {
@@ -99,8 +99,8 @@ typedef (boolean or DOMString) WebAuthnAlgorithmID; // Fix when upstream there's
 
 [SecureContext, Pref="security.webauth.webauthn"]
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
-    readonly attribute ArrayBuffer      authenticatorData;
-    readonly attribute ArrayBuffer      signature;
+    [SameObject] readonly attribute ArrayBuffer      authenticatorData;
+    [SameObject] readonly attribute ArrayBuffer      signature;
 };
 
 // Renamed from "Transport" to avoid a collision with U2F
