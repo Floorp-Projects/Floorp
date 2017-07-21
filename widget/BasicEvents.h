@@ -240,15 +240,17 @@ public:
   }
   /**
    * Mark the event as waiting reply from remote process.
+   * If the caller needs to win other keyboard event handlers in chrome,
+   * the caller should call StopPropagation() too.
+   * Otherwise, if the caller just needs to know if the event is consumed by
+   * either content or chrome, it should just call this because the event
+   * may be reserved by chrome and it needs to be dispatched into the DOM
+   * tree in chrome for checking if it's reserved before being sent to any
+   * remote processes.
    */
   inline void MarkAsWaitingReplyFromRemoteProcess()
   {
     MOZ_ASSERT(!mPostedToRemoteProcess);
-    // When this is called, it means that event handlers in this process need
-    // a reply from content in a remote process.  So, callers should stop
-    // propagation in this process first.
-    NS_ASSERTION(PropagationStopped(),
-                 "Why didn't you stop propagation in this process?");
     mNoRemoteProcessDispatch = false;
     mWantReplyFromContentProcess = true;
   }
