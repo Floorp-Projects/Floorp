@@ -236,6 +236,10 @@ private:
   wr::BuiltDisplayList mBuiltDisplayList;
   nsTArray<WebRenderParentCommand> mParentCommands;
 
+  // We need this for building scroll data for the compositor in
+  // layers-free mode
+  std::unordered_map<FrameMetrics::ViewID, ScrollMetadata> mScrollMetadata;
+
   // Layers that have been mutated. If we have an empty transaction
   // then a display item layer will no longer be valid
   // if it was a mutated layers.
