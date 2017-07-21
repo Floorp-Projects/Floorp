@@ -194,6 +194,9 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
                                                               const StackingContextHelper& aSc,
                                                               wr::DisplayListBuilder& aBuilder)
 {
+  bool apzEnabled = AsyncPanZoomEnabled();
+  const ActiveScrolledRoot* lastAsr = nullptr;
+
   nsDisplayList savedItems;
   nsDisplayItem* item;
   while ((item = aDisplayList->RemoveBottom()) != nullptr) {
@@ -233,6 +236,27 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     }
 
     savedItems.AppendToTop(item);
+
+    if (apzEnabled) {
+      const ActiveScrolledRoot* asr = item->GetActiveScrolledRoot();
+      // The ASR check here is just an optimization to avoid doing any unnecessary
+      // work in a common case, where adjacent items in the display list have
+      // the same ASR.
+      if (asr && asr != lastAsr) {
+        lastAsr = asr;
+        FrameMetrics::ViewID id = nsLayoutUtils::ViewIDForASR(asr);
+        if (mScrollMetadata.find(id) == mScrollMetadata.end()) {
+          // We pass null here for the display item clip because we don't need
+          // the clip to be in the ScrollMetadata here; we will push the clip
+          // information into the WR display list directly.
+          Maybe<ScrollMetadata> metadata = asr->mScrollableFrame->ComputeScrollMetadata(
+              nullptr, item->ReferenceFrame(),
+              ContainerLayerParameters(), nullptr);
+          MOZ_ASSERT(metadata);
+          mScrollMetadata[id] = *metadata;
+        }
+      }
+    }
 
     if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
                                        aDisplayListBuilder)) {
@@ -487,11 +511,15 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
 
   if (mEndTransactionWithoutLayers) {
     // aDisplayList being null here means this is an empty transaction following a layers-free
-    // transaction, so we reuse the previously built displaylist.
+    // transaction, so we reuse the previously built displaylist and scroll
+    // metadata information
     if (aDisplayList && aDisplayListBuilder) {
       StackingContextHelper sc;
       mParentCommands.Clear();
+      mScrollMetadata.clear();
+
       CreateWebRenderCommandsFromDisplayList(aDisplayList, aDisplayListBuilder, sc, builder);
+
       builder.Finalize(contentSize, mBuiltDisplayList);
     }
 
