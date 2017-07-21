@@ -72,7 +72,7 @@ using mozilla::dom::cache::CacheStorage;
 using mozilla::ipc::PrincipalInfo;
 
 WorkerGlobalScope::WorkerGlobalScope(WorkerPrivate* aWorkerPrivate)
-: mSerialEventTarget(aWorkerPrivate->GetEventTarget())
+: mSerialEventTarget(aWorkerPrivate->HybridEventTarget())
 , mWindowInteractionsAllowed(0)
 , mWorkerPrivate(aWorkerPrivate)
 {
@@ -860,7 +860,7 @@ ServiceWorkerGlobalScope::OpenWindowEnabled(JSContext* aCx, JSObject* aObj)
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
                                                   WorkerPrivate* aWorkerPrivate)
 : mWorkerPrivate(aWorkerPrivate)
-, mSerialEventTarget(aWorkerPrivate->GetEventTarget())
+, mSerialEventTarget(aWorkerPrivate->HybridEventTarget())
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
