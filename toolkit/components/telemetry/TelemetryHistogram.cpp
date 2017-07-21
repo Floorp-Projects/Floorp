@@ -611,12 +611,12 @@ internal_ReflectHistogramSnapshot(JSContext *cx,
 bool
 internal_ShouldReflectHistogram(Histogram* h, HistogramID id)
 {
-  // Only flag histograms are serialized when they are empty.
+  // Only count & flag histograms are serialized when they are empty.
   // This has historical reasons, changing this will require downstream changes.
   // The cheaper path here is to just deprecate flag histograms in favor
   // of scalars.
   uint32_t type = gHistogramInfos[id].histogramType;
-  if (internal_IsEmpty(h) && type != nsITelemetry::HISTOGRAM_FLAG) {
+  if (internal_IsEmpty(h) && (type != nsITelemetry::HISTOGRAM_FLAG)) {
     return false;
   }
 
@@ -955,12 +955,17 @@ internal_ClearHistogram(HistogramID id, bool onlySubsession)
   sessionTypes.AppendElement(SessionType::Subsession);
 #endif
 
+  if (sessionTypes.Length() == 0) {
+    // Nothing to do here.
+    return;
+  }
+
   // Now reset the histograms instances for all processes.
-  for (SessionType sessionType : sessionTypes) {
+  for (uint32_t sessionIdx = 0; sessionIdx < sessionTypes.Length(); ++sessionIdx) {
     for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
       internal_ClearHistogramById(id,
                                   static_cast<ProcessID>(process),
-                                  sessionType);
+                                  sessionTypes[sessionIdx]);
     }
   }
 }
@@ -1917,6 +1922,28 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
   SessionType sessionType = SessionType::Session;
 #endif
 
+  // Ensure that all the HISTOGRAM_FLAG histograms have
+  // been created, so that their values are snapshotted.
+  auto processType = XRE_GetProcessType();
+  for (uint32_t histogramId = 0; histogramId < HistogramCount; ++histogramId) {
+    const HistogramInfo& info = gHistogramInfos[histogramId];
+    if (info.keyed ||
+      info.histogramType != nsITelemetry::HISTOGRAM_FLAG ||
+      !CanRecordInProcess(info.record_in_processes, processType)) {
+      continue;
+    }
+
+    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
+      if ((ProcessID(process) == ProcessID::Gpu) && !includeGPUProcess) {
+        continue;
+      }
+
+      mozilla::DebugOnly<Histogram*> h = nullptr;
+      h = internal_GetHistogramById(HistogramID(histogramId), ProcessID(process), sessionType);
+      MOZ_ASSERT(h);
+    }
+  }
+
   for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
     JS::Rooted<JSObject*> processObject(cx, JS_NewPlainObject(cx));
     if (!processObject) {
@@ -1939,11 +1966,7 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
         continue;
       }
 
-      bool shouldInstantiate =
-        info.histogramType == nsITelemetry::HISTOGRAM_FLAG;
-      Histogram* h = internal_GetHistogramById(id, ProcessID(process),
-                                               sessionType,
-                                               shouldInstantiate);
+      Histogram* h = internal_GetHistogramById(id, ProcessID(process), sessionType, /* instantiate = */ false);
       if (!h || internal_IsExpired(h) || !internal_ShouldReflectHistogram(h, id)) {
         continue;
       }
