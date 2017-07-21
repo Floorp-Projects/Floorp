@@ -57,6 +57,22 @@ The recommended process for changing task graphs is this:
 5. When you are satisfied with the changes, push them to try to ensure that the
    modified tasks work as expected.
 
+Hacking Actions
+...............
+
+If you are working on an action task and wish to test it out locally, use the
+``./mach taskgraph test-action-callback`` command:
+
+   .. code-block:: none
+
+        ./mach taskgraph test-action-task \
+            --task-id I4gu9KDmSZWu3KHx6ba6tw --task-group-id sMO4ybV9Qb2tmcI1sDHClQ \
+            -p parameters.yml --input input.yml \
+            hello_world_action
+
+This invocation will run the hello world callback with the given inputs and
+print any created tasks to stdout, rather than actually creating them.
+
 Common Changes
 --------------
 

@@ -34,6 +34,7 @@ class StyleChildrenIterator;
 struct AnimationPropertySegment;
 struct ComputedTiming;
 struct Keyframe;
+struct PropertyValuePair;
 struct PropertyStyleAnimationValuePair;
 using ComputedKeyframeValues = nsTArray<PropertyStyleAnimationValuePair>;
 } // namespace mozilla
@@ -61,6 +62,7 @@ typedef nsXBLBinding RawGeckoXBLBinding;
 typedef mozilla::URLExtraData RawGeckoURLExtraData;
 typedef nsTArray<RefPtr<RawServoAnimationValue>> RawGeckoServoAnimationValueList;
 typedef nsTArray<mozilla::Keyframe> RawGeckoKeyframeList;
+typedef nsTArray<mozilla::PropertyValuePair> RawGeckoPropertyValuePairList;
 typedef nsTArray<mozilla::ComputedKeyframeValues> RawGeckoComputedKeyframeValuesList;
 typedef nsStyleAutoArray<mozilla::StyleAnimation> RawGeckoStyleAnimationList;
 typedef nsTArray<nsFontFaceRuleContainer> RawGeckoFontFaceRuleList;
@@ -158,6 +160,8 @@ DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoServoAnimationValueList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoServoAnimationValueList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoKeyframeList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoKeyframeList)
+DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoPropertyValuePairList)
+DECL_BORROWED_REF_TYPE_FOR(RawGeckoPropertyValuePairList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(RawGeckoComputedKeyframeValuesList)
 DECL_BORROWED_REF_TYPE_FOR(RawGeckoStyleAnimationList)
 DECL_BORROWED_MUT_REF_TYPE_FOR(nsTimingFunction)

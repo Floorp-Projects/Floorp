@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo"><content><span xmlns="http://www.w3.org/1999/xhtml"/></content></binding>
+</bindings>
+
+<script type="text/javascript">
+// <![CDATA[
+
+function boom()
+{
+  // Apply an invalid binding, and wait two ticks of the refresh driver for the async load.
+  var d = document.getElementById("d");
+  d.style.MozBinding = "url(#bar)";
+  requestAnimationFrame(function() {
+  requestAnimationFrame(function() {
+    // Trigger the InnerText getter.
+    document.getElementById("s").innerText;
+    document.documentElement.removeAttribute("class");
+  });
+  });
+}
+
+]]>
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="d">
+    <span id="s">SpanText</span>
+</div>
+
+</body>
+</html>

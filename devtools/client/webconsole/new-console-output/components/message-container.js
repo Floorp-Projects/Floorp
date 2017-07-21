@@ -70,7 +70,7 @@ const MessageContainer = createClass({
     const message = this.props.getMessage();
 
     let MessageComponent = getMessageComponent(message);
-    return MessageComponent(Object.assign({message, indent: message.indent}, this.props));
+    return MessageComponent(Object.assign({message}, this.props));
   }
 });
 

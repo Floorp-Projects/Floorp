@@ -105,21 +105,24 @@ AutofillProfileAutoCompleteSearch.prototype = {
       return;
     }
 
-    this._getAddresses({info, searchString}).then((addresses) => {
+    let collectionName = FormAutofillUtils.isAddressField(info.fieldName) ?
+      "addresses" : "creditCards";
+
+    this._getRecords({collectionName, info, searchString}).then((records) => {
       if (this.forceStop) {
         return;
       }
       // Sort addresses by timeLastUsed for showing the lastest used address at top.
-      addresses.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
+      records.sort((a, b) => b.timeLastUsed - a.timeLastUsed);
 
       let handler = FormAutofillContent.getFormHandler(focusedInput);
-      let adaptedAddresses = handler.getAdaptedProfiles(addresses);
+      let adaptedRecords = handler.getAdaptedProfiles(records);
 
       let allFieldNames = FormAutofillContent.getAllFieldNames(focusedInput);
       let result = new ProfileAutoCompleteResult(searchString,
                                                  info.fieldName,
                                                  allFieldNames,
-                                                 adaptedAddresses,
+                                                 adaptedRecords,
                                                  {});
 
       listener.onSearchResult(this, result);
@@ -136,27 +139,29 @@ AutofillProfileAutoCompleteSearch.prototype = {
   },
 
   /**
-   * Get the address data from parent process for AutoComplete result.
+   * Get the records from parent process for AutoComplete result.
    *
    * @private
    * @param  {Object} data
    *         Parameters for querying the corresponding result.
+   * @param  {string} data.collectionName
+   *         The name used to specify which collection to retrieve records.
    * @param  {string} data.searchString
-   *         The typed string for filtering out the matched address.
+   *         The typed string for filtering out the matched records.
    * @param  {string} data.info
    *         The input autocomplete property's information.
    * @returns {Promise}
    *          Promise that resolves when addresses returned from parent process.
    */
-  _getAddresses(data) {
-    this.log.debug("_getAddresses with data:", data);
+  _getRecords(data) {
+    this.log.debug("_getRecords with data:", data);
     return new Promise((resolve) => {
-      Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
-        Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
+      Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+        Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
         resolve(result.data);
       });
 
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", data);
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", data);
     });
   },
 };

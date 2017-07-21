@@ -445,9 +445,10 @@ VRManager::CreateVRTestSystem()
 
 template<class T>
 void
-VRManager::NotifyGamepadChange(const T& aInfo)
+VRManager::NotifyGamepadChange(uint32_t aIndex, const T& aInfo)
 {
-  dom::GamepadChangeEvent e(aInfo);
+  dom::GamepadChangeEventBody body(aInfo);
+  dom::GamepadChangeEvent e(aIndex, dom::GamepadServiceType::VR, body);
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     Unused << iter.Get()->GetKey()->SendGamepadUpdate(e);

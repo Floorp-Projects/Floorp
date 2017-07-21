@@ -39,18 +39,13 @@ to mochitest command.
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
 * test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [107]
-* Grid support bug 1341802
-  * test_grid_computed_values.html [4]
-  * test_grid_container_shorthands.html [65]
-  * test_grid_item_shorthands.html [23]
-  * test_grid_shorthand_serialization.html [28]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1338764
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [3]
 * Incorrect parsing
   * different parsing bug 1364260
-    * test_supports_rules.html [6]
+    * test_supports_rules.html [1]
     * test_condition_text.html [1]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
@@ -65,8 +60,7 @@ to mochitest command.
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
 * :visited support bug 1381635
-  * test_visited_reftests.html `inherit-keyword-1.xhtml` [2]
-  * ... `mathml-links.html` [2]
+  * test_visited_reftests.html `mathml-links.html`: bug 1371030 [2]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child bug 1382102 [1]
 
 ## Assertions

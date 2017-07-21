@@ -47,7 +47,7 @@ toolbar[brighttext] .toolbarbutton-1 {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-738px);
+    transform: translateX(-450px);
   }
 }
 
@@ -56,7 +56,7 @@ toolbar[brighttext] .toolbarbutton-1 {
     transform: scaleX(-1) translateX(0);
   }
   to {
-    transform: scaleX(-1) translateX(-738px);
+    transform: scaleX(-1) translateX(-450px);
   }
 }
 
@@ -65,7 +65,7 @@ toolbar[brighttext] .toolbarbutton-1 {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-612px);
+    transform: translateX(-450px);
   }
 }
 
@@ -74,15 +74,20 @@ toolbar[brighttext] .toolbarbutton-1 {
     transform: scaleX(-1) translateX(0);
   }
   to {
-    transform: scaleX(-1) translateX(-612px);
+    transform: scaleX(-1) translateX(-450px);
   }
+}
+
+#stop-reload-button[animate] > #reload-button,
+#stop-reload-button[animate] > #stop-button {
+  position: relative;
 }
 
 #reload-button > .toolbarbutton-animatable-box,
 #stop-button > .toolbarbutton-animatable-box {
-  position: fixed;
+  position: absolute;
   overflow: hidden;
-  margin-top: -10px; /* Vertically center the 20px tall animatable image */
+  top: calc(50% - 10px); /* Vertically center the 20px tall animatable image */
   /* Since .toolbarbutton-icon uses a different width than the animatable-box,
      we need to set a padding relative to the difference in widths. */
   margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
@@ -98,7 +103,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
 #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  height: 20px; /* Height of each frame within the SVG sprite */
+  height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */
   animation-fill-mode: forwards;
   animation-iteration-count: 1;
   list-style-image: none;
@@ -106,7 +111,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 #stop-reload-button[animate] > #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/reload-to-stop.svg");
-  width: 756px;
+  width: 468px;
 }
 
 #stop-reload-button[animate] > #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -118,13 +123,13 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 
 #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-timing-function: steps(41);
-  animation-duration: 684ms;
+  animation-timing-function: steps(25);
+  animation-duration: 400ms;
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/stop-to-reload.svg");
-  width: 630px;
+  width: 468px;
 }
 
 #stop-reload-button[animate] > #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
@@ -136,24 +141,24 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-timing-function: steps(34);
-  animation-duration: 600ms;
+  animation-timing-function: steps(25);
+  animation-duration: 400ms;
 }
 
 #reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: translateX(-738px);
+  transform: translateX(-450px);
 }
 
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: scaleX(-1) translateX(-738px);
+  transform: scaleX(-1) translateX(-450px);
 }
 
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: translateX(-612px);
+  transform: translateX(-450px);
 }
 
 #reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: scaleX(-1) translateX(-612px);
+  transform: scaleX(-1) translateX(-450px);
 }
 %endif
 #reload-button {
