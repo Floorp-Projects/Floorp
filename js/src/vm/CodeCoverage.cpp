@@ -189,7 +189,7 @@ LCovSource::writeScript(JSScript* script)
         if (snpc <= pc) {
             size_t oldLine = lineno;
             while (!SN_IS_TERMINATOR(sn) && snpc <= pc) {
-                SrcNoteType type = (SrcNoteType) SN_TYPE(sn);
+                SrcNoteType type = SN_TYPE(sn);
                 if (type == SRC_SETLINE)
                     lineno = size_t(GetSrcNoteOffset(sn, 0));
                 else if (type == SRC_NEWLINE)
