@@ -127,7 +127,9 @@ void CALLBACK ObjectWatcher::DoneWaiting(void* param, BOOLEAN timed_out) {
   // We rely on the locking in PostTask() to ensure that a memory barrier is
   // provided, which in turn ensures our change to did_signal can be observed
   // on the target thread.
-  watch->origin_loop->PostTask(addrefedWatch.forget());
+  if (watch->origin_loop->IsAcceptingTasks()) {
+    watch->origin_loop->PostTask(addrefedWatch.forget());
+  }
 }
 
 void ObjectWatcher::WillDestroyCurrentMessageLoop() {
