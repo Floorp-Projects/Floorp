@@ -795,17 +795,16 @@ or run without that action (ie: --no-{action})"
             return self.buildid
 
         buildid = None
-        if c.get("is_automation"):
-            if self.buildbot_config['properties'].get('buildid'):
-                self.info("Determining buildid from buildbot properties")
-                buildid = self.buildbot_config['properties']['buildid'].encode(
-                    'ascii', 'replace'
-                )
-            else:
-                # for taskcluster, there are no buildbot properties, and we pass
-                # MOZ_BUILD_DATE into mozharness as an environment variable, only
-                # to have it pass the same value out with the same name.
-                buildid = os.environ.get('MOZ_BUILD_DATE')
+        if c.get("is_automation") and self.buildbot_config['properties'].get('buildid'):
+            self.info("Determining buildid from buildbot properties")
+            buildid = self.buildbot_config['properties']['buildid'].encode(
+                'ascii', 'replace'
+            )
+        else:
+            # for taskcluster, there are no buildbot properties, and we pass
+            # MOZ_BUILD_DATE into mozharness as an environment variable, only
+            # to have it pass the same value out with the same name.
+            buildid = os.environ.get('MOZ_BUILD_DATE')
 
         if not buildid:
             self.info("Creating buildid through current time")
