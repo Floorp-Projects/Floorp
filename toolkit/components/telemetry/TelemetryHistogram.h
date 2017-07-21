@@ -72,8 +72,7 @@ RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
                           char*** aHistograms);
 
 nsresult
-GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,
-                           bool subsession, bool clearSubsession);
+GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret);
 
 size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
