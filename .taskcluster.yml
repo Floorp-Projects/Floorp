@@ -1,10 +1,13 @@
-# This file is handled by mozilla-taskcluster; see
-# https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
+# This file is rendered via JSON-e by
+# - mozilla-taskcluster - https://docs.taskcluster.net/reference/integrations/mozilla-taskcluster/docs/taskcluster-yml
+# - cron tasks - taskcluster/taskgraph/cron/decision.py
 version: 1
 tasks:
   $let:
     # sometimes the push user is just `ffxbld` or the like, but we want an email-like field..
     ownerEmail: {$if: '"@" in push.owner', then: '${push.owner}', else: '${push.owner}@noreply.mozilla.org'}
+    # ensure there's no trailing `/` on the repo URL
+    repoUrl: {$if: 'repository.url[-1] == "/"', then: {$eval: 'repository.url[:-1]'}, else: {$eval: 'repository.url'}}
   in:
   - taskId: '${as_slugid("decision")}'
     taskGroupId: '${as_slugid("decision")}' # same as tsakId; this is how automation identifies a decision tsak
@@ -14,29 +17,45 @@ tasks:
     deadline: {$fromNow: '1 day'}
     expires: {$fromNow: '1 year 1 second'} # 1 second so artifacts expire first, despite rounding errors
     metadata:
-      owner: "${ownerEmail}"
-      source: "${repository.url}/raw-file/${push.revision}/.taskcluster.yml"
-      name: "Gecko Decision Task"
-      description: |
-          The task that creates all of the other tasks in the task graph
+      $merge:
+        - owner: "${ownerEmail}"
+          source: "${repoUrl}/raw-file/${push.revision}/.taskcluster.yml"
+        - $if: 'tasks_for == "hg-push"'
+          then:
+            name: "Gecko Decision Task"
+            description: 'The task that creates all of the other tasks in the task graph'
+          else:
+            name: "Decision Task for cron job ${cron.job_name}"
+            description: 'Created by a [cron task](https://tools.taskcluster.net/tasks/${cron.task_id})'
 
     provisionerId: "aws-provisioner-v1"
     workerType: "gecko-decision"
 
     tags:
-      createdForUser: "${ownerEmail}"
+      $if: 'tasks_for == "hg-push"'
+      then: {createdForUser: "${ownerEmail}"}
 
     routes:
-      - "index.gecko.v2.${repository.project}.latest.firefox.decision"
-      - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
-      - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-      - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
-      - "notify.email.${ownerEmail}.on-failed"
-      - "notify.email.${ownerEmail}.on-exception"
+      $if: 'tasks_for == "hg-push"'
+      then:
+        - "index.gecko.v2.${repository.project}.latest.firefox.decision"
+        - "index.gecko.v2.${repository.project}.pushlog-id.${push.pushlog_id}.decision"
+        - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+        - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+        - "notify.email.${ownerEmail}.on-failed"
+        - "notify.email.${ownerEmail}.on-exception"
+      else:
+        - "index.gecko.v2.${repository.project}.latest.firefox.decision-${cron.job_name}"
+        - "tc-treeherder.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
+        - "tc-treeherder-stage.v2.${repository.project}.${push.revision}.${push.pushlog_id}"
 
     scopes:
-      - 'assume:repo:${repository.url[8:-1]}:*'
-      - 'queue:route:notify.email.${ownerEmail}.*'
+      $if: 'tasks_for == "hg-push"'
+      then:
+        - 'assume:repo:${repoUrl[8:]}:*'
+        - 'queue:route:notify.email.${ownerEmail}.*'
+      else:
+        - 'assume:repo:${repoUrl[8:]}:cron:${cron.job_name}'
 
     dependencies: []
     requires: all-completed
@@ -49,7 +68,7 @@ tasks:
         # checkout-gecko uses these to check out the source; the inputs
         # to `mach taskgraph decision` are all on the command line.
         GECKO_BASE_REPOSITORY: 'https://hg.mozilla.org/mozilla-unified'
-        GECKO_HEAD_REPOSITORY: '${repository.url}'
+        GECKO_HEAD_REPOSITORY: '${repoUrl}'
         GECKO_HEAD_REF: '${push.revision}'
         GECKO_HEAD_REV: '${push.revision}'
         GECKO_COMMIT_MSG: '${push.comment}'
@@ -78,7 +97,9 @@ tasks:
         - '--'
         - bash
         - -cx
-        - >
+        - $let:
+            extraArgs: {$if: 'tasks_for == "hg-push"', then: '', else: '${cron.quoted_args}'}
+          in: >
             cd /home/worker/checkouts/gecko &&
             ln -s /home/worker/artifacts artifacts &&
             ./mach --log-no-times taskgraph decision
@@ -92,6 +113,7 @@ tasks:
             --head-repository="$GECKO_HEAD_REPOSITORY"
             --head-ref="$GECKO_HEAD_REF"
             --head-rev="$GECKO_HEAD_REV"
+            ${extraArgs}
 
       artifacts:
         'public':
@@ -101,4 +123,9 @@ tasks:
 
     extra:
       treeherder:
-        symbol: D
+        $if: 'tasks_for == "hg-push"'
+        then:
+          symbol: D
+        else:
+          groupSymbol: cron
+          symbol: "${cron.job_symbol}"
