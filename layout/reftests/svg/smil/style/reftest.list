@@ -97,7 +97,7 @@ fails-if(styloVsGecko||stylo) == anim-css-font-1.svg  anim-css-font-1-ref.svg
 == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
-== anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
+skip-if(!styloVsGecko) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
 
 # 'stroke-width' property, from/by/to with pixel values only
 == anim-css-strokewidth-1-by-px-px.svg        anim-css-strokewidth-1-ref.svg
