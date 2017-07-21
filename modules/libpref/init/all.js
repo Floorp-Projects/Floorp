@@ -597,7 +597,7 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediasource.mp4.enabled", true);
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
 pref("media.mediasource.webm.enabled", false);
 #else
 pref("media.mediasource.webm.enabled", true);
@@ -744,7 +744,7 @@ pref("apz.y_stationary_size_multiplier", "3.5");
 pref("apz.zoom_animation_duration_ms", 250);
 pref("apz.scale_repaint_delay_ms", 500);
 
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
 // Mobile prefs
 pref("apz.allow_zooming", true);
 pref("apz.enlarge_displayport_when_clipped", true);
@@ -760,7 +760,7 @@ pref("apz.y_stationary_size_multiplier", "1.5");
 pref("gfx.hidpi.enabled", 2);
 #endif
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 // Use containerless scrolling for now on desktop.
 pref("layout.scroll.root-frame-containers", false);
 #endif
@@ -1204,7 +1204,7 @@ pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
 // Print via the parent process. This is only used when e10s is enabled.
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 pref("print.print_via_parent", true);
 #else
 pref("print.print_via_parent", false);
@@ -4716,10 +4716,6 @@ pref("webgl.dxgl.needs-finish", false);
 
 pref("gfx.offscreencanvas.enabled", false);
 
-#ifdef MOZ_WIDGET_GONK
-pref("gfx.gralloc.fence-with-readpixels", false);
-#endif
-
 // Stagefright prefs
 pref("stagefright.force-enabled", false);
 pref("stagefright.disabled", false);
@@ -4779,7 +4775,7 @@ pref("layers.acceleration.force-enabled", false);
 pref("layers.acceleration.draw-fps", false);
 
 // Enable DEAA antialiasing for transformed layers in the compositor
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 // Desktop prefs
 pref("layers.deaa.enabled", true);
 #else
@@ -5111,7 +5107,7 @@ pref("layout.css.expensive-style-struct-assertions.enabled", false);
 // enable JS dump() function.
 pref("browser.dom.window.dump.enabled", false);
 
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
+#if defined(MOZ_WIDGET_ANDROID)
 // Network Information API
 pref("dom.netinfo.enabled", true);
 #else
@@ -5479,15 +5475,6 @@ pref("camera.control.face_detection.enabled", true);
 // SW Cache API
 pref("dom.caches.enabled", true);
 
-#ifdef MOZ_WIDGET_GONK
-// Empirically, this is the value returned by hal::GetTotalSystemMemory()
-// when Flame's memory is limited to 512MiB. If the camera stack determines
-// it is running on a low memory platform, features that can be reliably
-// supported will be disabled. This threshold can be adjusted to suit other
-// platforms; and set to 0 to disable the low-memory check altogether.
-pref("camera.control.low_memory_thresholdMB", 404);
-#endif
-
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
@@ -5534,7 +5521,6 @@ pref("browser.search.geoip.timeout", 3000);
 pref("browser.search.official", true);
 #endif
 
-#ifndef MOZ_WIDGET_GONK
 // GMPInstallManager prefs
 
 // User-settable override to media.gmp-manager.url for testing purposes.
@@ -5570,7 +5556,6 @@ pref("media.gmp-manager.certs.1.issuerName", "CN=DigiCert SHA2 Secure Server CA,
 pref("media.gmp-manager.certs.1.commonName", "aus5.mozilla.org");
 pref("media.gmp-manager.certs.2.issuerName", "CN=thawte SSL CA - G2,O=\"thawte, Inc.\",C=US");
 pref("media.gmp-manager.certs.2.commonName", "aus5.mozilla.org");
-#endif
 
 // Whether or not to perform reader mode article parsing on page load.
 // If this pref is disabled, we will never show a reader mode icon in the toolbar.
@@ -5649,15 +5634,7 @@ pref("dom.secureelement.enabled", false);
 // and compositionend events.
 pref("dom.compositionevent.allow_control_characters", false);
 
-#ifdef MOZ_WIDGET_GONK
-// Bug 1154053: Serialize B2G memory reports; smaller devices are
-// usually overcommitted on memory by using zRAM, so memory reporting
-// causes memory pressure from uncompressing cold heap memory.
-pref("memory.report_concurrency", 1);
-#else
-// Desktop probably doesn't have swapped-out children like that.
 pref("memory.report_concurrency", 10);
-#endif
 
 // Add Mozilla AudioChannel APIs.
 pref("media.useAudioChannelAPI", false);
@@ -5705,7 +5682,7 @@ pref("dom.maxHardwareConcurrency", 16);
 pref("osfile.reset_worker_delay", 30000);
 #endif
 
-#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 pref("dom.webkitBlink.dirPicker.enabled", true);
 pref("dom.webkitBlink.filesystem.enabled", true);
 #endif
