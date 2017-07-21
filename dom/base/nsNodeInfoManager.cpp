@@ -44,9 +44,14 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 {
   MOZ_ASSERT(key, "Null key passed to NodeInfo::GetHashValue!");
 
-  auto *node = reinterpret_cast<const NodeInfo::NodeInfoInner*>(key);
+  auto *node = const_cast<NodeInfo::NodeInfoInner*>
+    (reinterpret_cast<const NodeInfo::NodeInfoInner*>(key));
+  if (!node->mHashInitialized) {
+    node->mHash = node->mName ? node->mName->hash() : HashString(*(node->mNameString));
+    node->mHashInitialized = true;
+  }
 
-  return node->mName ? node->mName->hash() : HashString(*(node->mNameString));
+  return node->mHash;
 }
 
 
