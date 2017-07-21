@@ -33,10 +33,6 @@
 #include "nsStringStream.h"
 #include "secerr.h"
 #include "sslerr.h"
-#ifdef MOZ_WIDGET_GONK
-#include "nsINetworkManager.h"
-#include "nsINetworkInterface.h"
-#endif
 
 #define BUFFER_SIZE 65536
 #define NETWORK_STATS_THRESHOLD 65536
@@ -162,10 +158,6 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mTrackingNumber(0)
   , mWaitingForStartTLS(false)
   , mObserversActive(false)
-#ifdef MOZ_WIDGET_GONK
-  , mAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID)
-  , mInIsolatedMozBrowser(false)
-#endif
 {
   if (aGlobal) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
@@ -321,13 +313,6 @@ TCPSocket::InitWithTransport(nsISocketTransport* aTransport)
   int32_t port;
   mTransport->GetPort(&port);
   mPort = port;
-
-#ifdef MOZ_WIDGET_GONK
-  nsCOMPtr<nsINetworkManager> networkManager = do_GetService("@mozilla.org/network/manager;1");
-  if (networkManager) {
-    networkManager->GetActiveNetworkInfo(getter_AddRefs(mActiveNetworkInfo));
-  }
-#endif
 
   return NS_OK;
 }
@@ -1136,15 +1121,6 @@ void
 TCPSocket::SetSocketBridgeParent(TCPSocketParent* aBridgeParent)
 {
   mSocketBridgeParent = aBridgeParent;
-}
-
-void
-TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInIsolatedMozBrowser)
-{
-#ifdef MOZ_WIDGET_GONK
-  mAppId = aAppId;
-  mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-#endif
 }
 
 NS_IMETHODIMP

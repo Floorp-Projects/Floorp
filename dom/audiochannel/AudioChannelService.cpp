@@ -22,10 +22,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 
-#ifdef MOZ_WIDGET_GONK
-#include "nsJSUtils.h"
-#endif
-
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
