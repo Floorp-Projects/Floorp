@@ -2282,10 +2282,11 @@ nsHttpChannel::ProcessResponse()
                                                     lci);
     }
 
-    if (mTransaction->ProxyConnectFailed()) {
+    if (mTransaction && mTransaction->ProxyConnectFailed()) {
         // Only allow 407 (authentication required) to continue
-        if (httpStatus != 407)
+        if (httpStatus != 407) {
             return ProcessFailedProxyConnect(httpStatus);
+        }
         // If proxy CONNECT response needs to complete, wait to process connection
         // for Strict-Transport-Security.
     } else {
@@ -2343,7 +2344,7 @@ nsHttpChannel::ContinueProcessResponse1()
     // Cookies and Alt-Service should not be handled on proxy failure either.
     // This would be consolidated with ProcessSecurityHeaders but it should
     // happen after OnExamineResponse.
-    if (!mTransaction->ProxyConnectFailed() && (httpStatus != 407)) {
+    if (!(mTransaction && mTransaction->ProxyConnectFailed()) && (httpStatus != 407)) {
         nsAutoCString cookie;
         if (NS_SUCCEEDED(mResponseHead->GetHeader(nsHttp::Set_Cookie, cookie))) {
             SetCookie(cookie.get());
@@ -2526,13 +2527,15 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
         } else {
             rv = mAuthProvider->ProcessAuthentication(
                 httpStatus,
-                mConnectionInfo->EndToEndSSL() && mTransaction->ProxyConnectFailed());
+                mConnectionInfo->EndToEndSSL() &&
+                mTransaction && mTransaction->ProxyConnectFailed());
         }
         if (rv == NS_ERROR_IN_PROGRESS)  {
             // authentication prompt has been invoked and result
             // is expected asynchronously
             mAuthRetryPending = true;
-            if (httpStatus == 407 || mTransaction->ProxyConnectFailed())
+            if (httpStatus == 407 ||
+                (mTransaction && mTransaction->ProxyConnectFailed()))
                 mProxyAuthPending = true;
 
             // suspend the transaction pump to stop receiving the
@@ -2545,8 +2548,9 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
         } else if (NS_FAILED(rv)) {
             LOG(("ProcessAuthentication failed [rv=%" PRIx32 "]\n",
                  static_cast<uint32_t>(rv)));
-            if (mTransaction->ProxyConnectFailed())
+            if (mTransaction && mTransaction->ProxyConnectFailed()) {
                 return ProcessFailedProxyConnect(httpStatus);
+            }
             if (!mAuthRetryPending) {
                 rv = mAuthProvider->CheckForSuperfluousAuth();
                 if (NS_FAILED(rv)) {
