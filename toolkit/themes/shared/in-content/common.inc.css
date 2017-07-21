@@ -22,9 +22,9 @@
   --in-content-border-highlight: #ff9500;
   --in-content-border-focus: #0a84ff;
   --in-content-border-color: #c1c1c1;
-  --in-content-category-text: #c1c1c1;
+  --in-content-category-text: #0c0c0d;
   --in-content-category-border-focus: 1px dotted #fff;
-  --in-content-category-text-selected: #f2f2f2;
+  --in-content-category-text-selected: #0a84ff;
   --in-content-category-background: #424f5a;
   --in-content-category-background-hover: #5e6972;
   --in-content-category-background-active: #343f48;
@@ -682,6 +682,9 @@ xul|*.radio-label-box {
 *|*.category-icon {
   width: 24px;
   height: 24px;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
 }
 
 /* header */
