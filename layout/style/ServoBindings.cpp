@@ -416,12 +416,6 @@ Gecko_CalcStyleDifference(const ServoStyleContext* aOldStyle,
       &equalStructs,
       &samePointerStructs,
       relevantStructs);
-
-  uint32_t equalStructs, samePointerStructs;
-  nsChangeHint result =
-    aOldStyleContext->CalcStyleDifference(aComputedValues,
-                                          &equalStructs,
-                                          &samePointerStructs);
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
   return result;
 }

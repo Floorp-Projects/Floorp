@@ -249,7 +249,6 @@ whitelist-types = [
     "ServoBundledURI",
     "ServoComputedValues",
     "ServoComputedValuesBorrowed",
-    "ServoComputedValuesBorrowedOrNull",
     "ServoElementSnapshot",
     "ServoStyleContextStrong",
     "ServoStyleContextBorrowed",
@@ -348,7 +347,6 @@ raw-lines = [
     "pub type ServoStyleContextBorrowed<'a> = &'a ::properties::ComputedValues;",
     "pub type ServoStyleContextBorrowedOrNull<'a> = Option<&'a ::properties::ComputedValues>;",
     "pub type ServoComputedValuesBorrowed<'a> = &'a ServoComputedValues;",
-    "pub type ServoComputedValuesBorrowedOrNull<'a> = Option<&'a ServoComputedValues>;",
 ]
 whitelist-functions = ["Servo_.*", "Gecko_.*"]
 structs-types = [
