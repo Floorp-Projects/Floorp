@@ -17,13 +17,8 @@ ConsoleCommand.displayName = "ConsoleCommand";
 
 ConsoleCommand.propTypes = {
   message: PropTypes.object.isRequired,
-  indent: PropTypes.number.isRequired,
   timestampsVisible: PropTypes.bool.isRequired,
   serviceContainer: PropTypes.object,
-};
-
-ConsoleCommand.defaultProps = {
-  indent: 0,
 };
 
 /**
@@ -31,13 +26,13 @@ ConsoleCommand.defaultProps = {
  */
 function ConsoleCommand(props) {
   const {
-    indent,
     message,
     timestampsVisible,
     serviceContainer,
   } = props;
 
   const {
+    indent,
     source,
     type,
     level,

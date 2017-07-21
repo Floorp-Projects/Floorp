@@ -1498,9 +1498,6 @@ var gBrowserInit = {
       }
     }
 
-    // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
-    setTimeout(function() { SafeBrowsing.init(); }, 2000);
-
     Services.obs.addObserver(gIdentityHandler, "perm-changed");
     Services.obs.addObserver(gRemoteControl, "remote-active");
     Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history");
@@ -4991,6 +4988,16 @@ var CombinedStopReload = {
     });
   },
 
+  /* This function is necessary to correctly vertically center the animation
+     within the toolbar, which uses -moz-pack-align:stretch; and thus a height
+     which is dependant on the font-size. */
+  setAnimationImageHeightRelativeToToolbarButtonHeight() {
+    let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+    let toolbarItem = this.stopReloadContainer.closest(".customization-target > toolbaritem");
+    let bounds = dwu.getBoundsWithoutFlushing(toolbarItem);
+    toolbarItem.style.setProperty("--toolbarbutton-height", bounds.height + "px");
+  },
+
   switchToStop(aRequest, aWebProgress) {
     if (!this._initialized)
       return;
@@ -5002,10 +5009,12 @@ var CombinedStopReload = {
                         this.animate;
 
     this._cancelTransition();
-    if (shouldAnimate)
+    if (shouldAnimate) {
+      this.setAnimationImageHeightRelativeToToolbarButtonHeight();
       this.stopReloadContainer.setAttribute("animate", "true");
-    else
+    } else {
       this.stopReloadContainer.removeAttribute("animate");
+    }
     this.reload.setAttribute("displaystop", "true");
   },
 
@@ -5019,10 +5028,12 @@ var CombinedStopReload = {
                         !aWebProgress.isLoadingDocument &&
                         this.animate;
 
-    if (shouldAnimate)
+    if (shouldAnimate) {
+      this.setAnimationImageHeightRelativeToToolbarButtonHeight();
       this.stopReloadContainer.setAttribute("animate", "true");
-    else
+    } else {
       this.stopReloadContainer.removeAttribute("animate");
+    }
 
     this.reload.removeAttribute("displaystop");
 

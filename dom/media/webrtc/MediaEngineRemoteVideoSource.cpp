@@ -36,9 +36,9 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     mScary(aScary)
 {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other);
-  mSettings.mWidth.Construct(0);
-  mSettings.mHeight.Construct(0);
-  mSettings.mFrameRate.Construct(0);
+  mSettings->mWidth.Construct(0);
+  mSettings->mHeight.Construct(0);
+  mSettings->mFrameRate.Construct(0);
   Init();
 }
 
@@ -328,12 +328,12 @@ MediaEngineRemoteVideoSource::SetLastCapability(
     default:
       break;
   }
-  RefPtr<MediaEngineRemoteVideoSource> that = this;
+  auto settings = mSettings;
 
-  NS_DispatchToMainThread(media::NewRunnableFrom([that, cap]() mutable {
-    that->mSettings.mWidth.Value() = cap.width;
-    that->mSettings.mHeight.Value() = cap.height;
-    that->mSettings.mFrameRate.Value() = cap.maxFPS;
+  NS_DispatchToMainThread(media::NewRunnableFrom([settings, cap]() mutable {
+    settings->mWidth.Value() = cap.width;
+    settings->mHeight.Value() = cap.height;
+    settings->mFrameRate.Value() = cap.maxFPS;
     return NS_OK;
   }));
 }
@@ -371,10 +371,10 @@ MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h)
     mWidth = w;
     mHeight = h;
 
-    RefPtr<MediaEngineRemoteVideoSource> that = this;
-    NS_DispatchToMainThread(media::NewRunnableFrom([that, w, h]() mutable {
-      that->mSettings.mWidth.Value() = w;
-      that->mSettings.mHeight.Value() = h;
+    auto settings = mSettings;
+    NS_DispatchToMainThread(media::NewRunnableFrom([settings, w, h]() mutable {
+      settings->mWidth.Value() = w;
+      settings->mHeight.Value() = h;
       return NS_OK;
     }));
   }

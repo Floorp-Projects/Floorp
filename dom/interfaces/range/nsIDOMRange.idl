@@ -16,14 +16,14 @@
 interface nsIDOMRange : nsISupports
 {
   readonly attribute nsIDOMNode       startContainer;
-  readonly attribute long             startOffset;
+  readonly attribute unsigned long    startOffset;
   readonly attribute nsIDOMNode       endContainer;
-  readonly attribute long             endOffset;
+  readonly attribute unsigned long    endOffset;
   readonly attribute boolean          collapsed;
   readonly attribute nsIDOMNode       commonAncestorContainer;
 
-  void               setStart(in nsIDOMNode refNode, in long offset);
-  void               setEnd(in nsIDOMNode refNode, in long offset);
+  void               setStart(in nsIDOMNode refNode, in unsigned long offset);
+  void               setEnd(in nsIDOMNode refNode, in unsigned long offset);
   void               setStartBefore(in nsIDOMNode refNode);
   void               setStartAfter(in nsIDOMNode refNode);
   void               setEndBefore(in nsIDOMNode refNode);
@@ -56,14 +56,14 @@ interface nsIDOMRange : nsISupports
   // This returns true if parent+offset equals either
   // of the boundary points or is between them.
   boolean                   isPointInRange(in nsIDOMNode parent,
-                                           in long offset);
+                                           in unsigned long offset);
 
   // comparePoint returns
   //   -1 if point is before the start boundary point,
   //    0 if point is either of the boundary points or between them,
   //    1 if point is after the end boundary point.
   // Sort of a strcmp for ranges.
-  short                     comparePoint(in nsIDOMNode parent, in long offset);
+  short comparePoint(in nsIDOMNode parent, in unsigned long offset);
 
   /**
    * Returns whether the range intersects node.

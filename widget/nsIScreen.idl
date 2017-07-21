@@ -46,8 +46,9 @@ interface nsIScreen : nsISupports
    * worth the disruption of changing it.
    *
    * Returns 1.0 if HiDPI mode is disabled or unsupported, or if the
-   * host OS uses device pixels as its desktop pixel units (as in Win8.1
-   * per-monitor dpi support).
+   * host OS uses device pixels as its desktop pixel units (e.g. Windows 7 or
+   * GTK/X11). Per-monitor DPI is available in Windows 8.1+, GTK/Wayland or
+   * macOS.
    */
   readonly attribute double contentsScaleFactor;
 
@@ -57,4 +58,9 @@ interface nsIScreen : nsISupports
    * to be, prior to confusion between CSS pixels and desktop pixel units.
    */
   readonly attribute double defaultCSSScaleFactor;
+
+  /**
+   * The DPI of the screen.
+   */
+  readonly attribute float dpi;
 };

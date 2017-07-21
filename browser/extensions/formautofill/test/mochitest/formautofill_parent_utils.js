@@ -11,15 +11,15 @@ let {profileStorage} = Cu.import("resource://formautofill/ProfileStorage.jsm", {
 
 var ParentUtils = {
   cleanUpAddress() {
-    Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
-      Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
+    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
 
       let addresses = result.data;
       Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses",
                                      {guids: addresses.map(address => address.guid)});
     });
 
-    Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {searchString: ""});
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName: "addresses"});
   },
 
   updateAddress(type, chromeMsg, msgData, contentMsg) {
@@ -60,8 +60,8 @@ var ParentUtils = {
   },
 
   checkAddresses({expectedAddresses}) {
-    Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
-      Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
+    Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+      Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
       let addresses = result.data;
       if (addresses.length !== expectedAddresses.length) {
         sendAsyncMessage("FormAutofillTest:areAddressesMatching", false);
@@ -82,7 +82,7 @@ var ParentUtils = {
       sendAsyncMessage("FormAutofillTest:areAddressesMatching", true);
     });
 
-    Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {searchString: ""});
+    Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName: "addresses"});
   },
 };
 

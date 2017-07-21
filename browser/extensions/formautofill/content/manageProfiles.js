@@ -63,7 +63,7 @@ ManageProfileDialog.prototype = {
    * @returns {promise}
    */
   loadAddresses() {
-    return this.getAddresses().then(addresses => {
+    return this.getRecords({collectionName: "addresses"}).then(addresses => {
       log.debug("addresses:", addresses);
       // Sort by last modified time starting with most recent
       addresses.sort((a, b) => b.timeLastModified - a.timeLastModified);
@@ -73,17 +73,27 @@ ManageProfileDialog.prototype = {
   },
 
   /**
-   * Get addresses from storage.
+   * Get records from storage.
    *
-   * @returns {promise}
+   * @private
+   * @param  {Object} data
+   *         Parameters for querying the corresponding result.
+   * @param  {string} data.collectionName
+   *         The name used to specify which collection to retrieve records.
+   * @param  {string} data.searchString
+   *         The typed string for filtering out the matched records.
+   * @param  {string} data.info
+   *         The input autocomplete property's information.
+   * @returns {Promise}
+   *          Promise that resolves when addresses returned from parent process.
    */
-  getAddresses() {
+  getRecords(data) {
     return new Promise(resolve => {
-      Services.cpmm.addMessageListener("FormAutofill:Addresses", function getResult(result) {
-        Services.cpmm.removeMessageListener("FormAutofill:Addresses", getResult);
+      Services.cpmm.addMessageListener("FormAutofill:Records", function getResult(result) {
+        Services.cpmm.removeMessageListener("FormAutofill:Records", getResult);
         resolve(result.data);
       });
-      Services.cpmm.sendAsyncMessage("FormAutofill:GetAddresses", {});
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", data);
     });
   },
 

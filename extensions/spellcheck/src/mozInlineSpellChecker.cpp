@@ -352,19 +352,18 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 
   NS_ASSERTION(mAnchorRange, "No anchor for navigation!");
   nsCOMPtr<nsIDOMNode> newAnchorNode, oldAnchorNode;
-  int32_t newAnchorOffset, oldAnchorOffset;
 
   // get the DOM position of the old caret, the range should be collapsed
   nsresult rv = mOldNavigationAnchorRange->GetStartContainer(
       getter_AddRefs(oldAnchorNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mOldNavigationAnchorRange->GetStartOffset(&oldAnchorOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t oldAnchorOffset = mOldNavigationAnchorRange->StartOffset();
 
   // find the word on the old caret position, this is the one that we MAY need
   // to check
   RefPtr<nsRange> oldWord;
-  rv = aWordUtil.GetRangeForWord(oldAnchorNode, oldAnchorOffset,
+  rv = aWordUtil.GetRangeForWord(oldAnchorNode,
+                                 static_cast<int32_t>(oldAnchorOffset),
                                  getter_AddRefs(oldWord));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -376,15 +375,16 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
   // get the DOM position of the new caret, the range should be collapsed
   rv = mAnchorRange->GetStartContainer(getter_AddRefs(newAnchorNode));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mAnchorRange->GetStartOffset(&newAnchorOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t newAnchorOffset = mAnchorRange->StartOffset();
 
   // see if the new cursor position is in the word of the old cursor position
   bool isInRange = false;
   if (! mForceNavigationWordCheck) {
-    rv = oldWord->IsPointInRange(newAnchorNode,
-                                 newAnchorOffset + mNewNavigationPositionOffset,
-                                 &isInRange);
+    rv = oldWord->IsPointInRange(
+                    newAnchorNode,
+                    static_cast<int32_t>(
+                      newAnchorOffset + mNewNavigationPositionOffset),
+                    &isInRange);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -417,11 +417,9 @@ mozInlineSpellStatus::FillNoCheckRangeFromAnchor(
   nsresult rv = mAnchorRange->GetStartContainer(getter_AddRefs(anchorNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t anchorOffset;
-  rv = mAnchorRange->GetStartOffset(&anchorOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return aWordUtil.GetRangeForWord(anchorNode, anchorOffset,
+  uint32_t anchorOffset = mAnchorRange->StartOffset();
+  return aWordUtil.GetRangeForWord(anchorNode,
+                                   static_cast<int32_t>(anchorOffset),
                                    getter_AddRefs(mNoCheckRange));
 }
 
@@ -1216,7 +1214,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
       return rv;
     }
   } else {
-    int32_t endOffset = -1;
+    uint32_t endOffset;
     endNode = nsRange::GetContainerAndOffsetAfter(endNode, &endOffset);
     rv = range->SetStartAndEnd(startNode, aStartOffset, endNode, endOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {

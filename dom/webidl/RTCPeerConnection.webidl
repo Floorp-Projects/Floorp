@@ -59,10 +59,6 @@ dictionary RTCOfferOptions : RTCOfferAnswerOptions {
   long    offerToReceiveVideo;
   long    offerToReceiveAudio;
   boolean iceRestart = false;
-
-  // Mozilla proprietary options (at risk: Bug 1196974)
-  boolean mozDontOfferDataChannel;
-  boolean mozBundleOnly;
 };
 
 interface RTCDataChannel;

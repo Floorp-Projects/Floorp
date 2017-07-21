@@ -10,7 +10,7 @@ add_task(async function test_onboarding_default_new_tourset() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
@@ -48,7 +48,7 @@ add_task(async function test_onboarding_custom_new_tourset() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
@@ -85,7 +85,7 @@ add_task(async function test_onboarding_custom_update_tourset() {
     let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
     await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
     await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-icon", {}, tab.linkedBrowser);
+    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
     await promiseOnboardingOverlayOpened(tab.linkedBrowser);
     tabs.push(tab);
   }
