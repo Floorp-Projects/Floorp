@@ -2196,14 +2196,15 @@ profiler_init(void* aStackTop)
     // startup, even if no profiling is actually to be done. So, instead, it is
     // created on demand at the first call to PlatformStart().
 
-    if (!getenv("MOZ_PROFILER_STARTUP")) {
+    const char* startupEnv = getenv("MOZ_PROFILER_STARTUP");
+    if (!startupEnv || startupEnv[0] == '\0') {
       return;
     }
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
-    if (startupEntries) {
+    if (startupEntries && startupEntries[0] != '\0') {
       errno = 0;
       entries = strtol(startupEntries, nullptr, 10);
       if (errno == 0 && entries > 0) {
@@ -2214,7 +2215,7 @@ profiler_init(void* aStackTop)
     }
 
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
-    if (startupInterval) {
+    if (startupInterval && startupInterval[0] != '\0') {
       errno = 0;
       interval = PR_strtod(startupInterval, nullptr);
       if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
@@ -2226,7 +2227,7 @@ profiler_init(void* aStackTop)
 
     const char* startupFeaturesBitfield =
       getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
-    if (startupFeaturesBitfield) {
+    if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
       errno = 0;
       features = strtol(startupFeaturesBitfield, nullptr, 10);
       if (errno == 0 && features != 0) {
@@ -2236,7 +2237,7 @@ profiler_init(void* aStackTop)
       }
     } else {
       const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
-      if (startupFeatures) {
+      if (startupFeatures && startupFeatures[0] != '\0') {
         // Interpret startupFeatures as a list of feature strings, separated by
         // commas.
         UniquePtr<char[]> featureStringStorage;
@@ -2249,7 +2250,7 @@ profiler_init(void* aStackTop)
     }
 
     const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
-    if (startupFilters) {
+    if (startupFilters && startupFilters[0] != '\0') {
       filters = SplitAtCommas(startupFilters, filterStorage);
       LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
