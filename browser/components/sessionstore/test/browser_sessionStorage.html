@@ -5,17 +5,18 @@
     <title>browser_sessionStorage.html</title>
   </head>
   <body>
+    <iframe id="iframe"></iframe>
+
     <script type="text/javascript">
       let isOuter = window == window.top;
       let args = window.location.search.slice(1).split("&");
       let rand = args[0];
 
       if (isOuter) {
-        let iframe = document.createElement("iframe");
+        let iframe = document.getElementById("iframe");
         let isSecure = args.indexOf("secure") > -1;
         let scheme = isSecure ? "https" : "http";
         iframe.setAttribute("src", scheme + "://example.com" + location.pathname + "?" + rand);
-        document.body.appendChild(iframe);
       }
 
       if (sessionStorage.length === 0) {
