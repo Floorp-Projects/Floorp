@@ -212,7 +212,6 @@ protected:
   mozilla::CondVar mCondVar;
 
   // Protected by mMutex.
-  RefPtr<EventTarget> mEventTarget;
   nsTArray<RefPtr<WorkerRunnable>> mPreStartRunnables;
 
 private:
@@ -335,9 +334,6 @@ public:
 
   already_AddRefed<WorkerRunnable>
   MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunnable> aRunnable);
-
-  already_AddRefed<nsISerialEventTarget>
-  GetEventTarget();
 
   // May be called on any thread...
   bool
