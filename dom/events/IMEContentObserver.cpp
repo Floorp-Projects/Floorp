@@ -16,6 +16,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Selection.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -333,10 +334,9 @@ IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  nsCOMPtr<nsIDOMRange> selDomRange;
-  if (NS_SUCCEEDED(mSelection->GetRangeAt(0, getter_AddRefs(selDomRange)))) {
-    nsRange* selRange = static_cast<nsRange*>(selDomRange.get());
-    if (NS_WARN_IF(!selRange) || NS_WARN_IF(!selRange->GetStartContainer())) {
+  auto selection = static_cast<mozilla::dom::Selection*>(mSelection.get());
+  if (nsRange* selRange = selection->GetRangeAt(0)) {
+    if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
 
