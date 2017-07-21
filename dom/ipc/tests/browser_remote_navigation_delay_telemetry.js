@@ -13,7 +13,10 @@ add_task(async function test_memory_distribution() {
   Services.telemetry.canRecordExtended = true;
   registerCleanupFunction(() => Services.telemetry.canRecordExtended = canRecordExtended);
 
-  Services.telemetry.snapshotSubsessionKeyedHistograms(true /*clear*/);
+  // Note the #content suffix after the id. This is the only way this API lets us fetch the
+  // histogram entries reported by a content process.
+  let histogram = Services.telemetry.getKeyedHistogramById("FX_TAB_REMOTE_NAVIGATION_DELAY_MS#content");
+  histogram.clear();
 
   // Open a remote page in a new tab to trigger the WebNavigation:LoadURI.
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
@@ -29,11 +32,11 @@ add_task(async function test_memory_distribution() {
   // There is no good way to make sure that the parent received the histogram entries from the child processes.
   // Let's stick to the ugly, spinning the event loop until we have a good approach (Bug 1357509).
   await BrowserTestUtils.waitForCondition(() => {
-    let s = Services.telemetry.snapshotSubsessionKeyedHistograms().content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
-    return s && "WebNavigation:LoadURI" in s && "SessionStore:restoreTabContent" in s;
+    let s = histogram.snapshot();
+    return "WebNavigation:LoadURI" in s && "SessionStore:restoreTabContent" in s;
   });
 
-  let s = Services.telemetry.snapshotSubsessionKeyedHistograms().content["FX_TAB_REMOTE_NAVIGATION_DELAY_MS"];
+  let s = histogram.snapshot();
   let restoreTabSnapshot = s["SessionStore:restoreTabContent"];
   ok(restoreTabSnapshot.sum > 0, "Zero delay for the restoreTabContent case is unlikely.");
   ok(restoreTabSnapshot.sum < 10000, "More than 10 seconds delay for the restoreTabContent case is unlikely.");
@@ -42,7 +45,7 @@ add_task(async function test_memory_distribution() {
   ok(loadURISnapshot.sum > 0, "Zero delay for the LoadURI case is unlikely.");
   ok(loadURISnapshot.sum < 10000, "More than 10 seconds delay for the LoadURI case is unlikely.");
 
-  Services.telemetry.snapshotSubsessionKeyedHistograms(true /*clear*/);
+  histogram.clear();
 
   await BrowserTestUtils.removeTab(tab2);
   await BrowserTestUtils.removeTab(tab1);
