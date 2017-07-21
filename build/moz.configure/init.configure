@@ -326,7 +326,9 @@ def vcs_checkout_type(build_env, automation, _):
                               'is set')
 
 # Resolve VCS binary for detected repository type.
-hg = check_prog('HG', ('hg',), allow_missing=True,
+
+# TODO remove hg.exe once bug 1382940 addresses ambiguous executables case.
+hg = check_prog('HG', ('hg.exe', 'hg',), allow_missing=True,
                 when=depends(vcs_checkout_type)(lambda x: x == 'hg'))
 git = check_prog('GIT', ('git',), allow_missing=True,
                  when=depends(vcs_checkout_type)(lambda x: x == 'git'))
