@@ -106,7 +106,7 @@ struct DeferredFinalizeFunctionHolder
   void* data;
 };
 
-class IncrementalFinalizeRunnable : public Runnable
+class IncrementalFinalizeRunnable : public CancelableRunnable
 {
   typedef AutoTArray<DeferredFinalizeFunctionHolder, 16> DeferredFinalizeArray;
   typedef CycleCollectedJSRuntime::DeferredFinalizerTable DeferredFinalizerTable;
@@ -1268,7 +1268,7 @@ CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile)
 
 IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(CycleCollectedJSRuntime* aRt,
                                                          DeferredFinalizerTable& aFinalizers)
-  : Runnable("IncrementalFinalizeRunnable")
+  : CancelableRunnable("IncrementalFinalizeRunnable")
   , mRuntime(aRt)
   , mFinalizeFunctionToRun(0)
   , mReleasing(false)
