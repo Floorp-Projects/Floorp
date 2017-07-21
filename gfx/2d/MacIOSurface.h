@@ -97,7 +97,7 @@ public:
                                                            double aContentsScaleFactor = 1.0,
                                                            bool aHasAlpha = true);
 
-  explicit MacIOSurface(const void *aIOSurfacePtr,
+  explicit MacIOSurface(IOSurfacePtr aIOSurfacePtr,
                         double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true);
   ~MacIOSurface();
@@ -130,6 +130,11 @@ public:
                                   CGLContextObj ctxt,
                                   size_t plane,
                                   mozilla::gfx::SurfaceFormat* aOutReadFormat = nullptr);
+  CGLError CGLTexImageIOSurface2D(CGLContextObj ctxt,
+                                  GLenum target, GLenum internalFormat,
+                                  GLsizei width, GLsizei height,
+                                  GLenum format, GLenum type,
+                                  GLuint plane) const;
   already_AddRefed<SourceSurface> GetAsSurface();
   CGContextRef CreateIOSurfaceContext();
 
@@ -144,7 +149,7 @@ public:
 
 private:
   friend class nsCARenderer;
-  const void* mIOSurfacePtr;
+  const IOSurfacePtr mIOSurfacePtr;
   double mContentsScaleFactor;
   bool mHasAlpha;
 };

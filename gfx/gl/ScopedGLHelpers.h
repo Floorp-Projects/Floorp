@@ -122,7 +122,9 @@ protected:
 
 public:
     explicit ScopedTexture(GLContext* aGL);
+
     GLuint Texture() const { return mTexture; }
+    operator GLuint() const { return mTexture; }
 
 protected:
     void UnwrapImpl();
