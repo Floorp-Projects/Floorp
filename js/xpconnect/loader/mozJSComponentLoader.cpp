@@ -904,33 +904,6 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
     }
 
     ComponentLoaderInfo info(aLocation);
-    rv = info.EnsureResolvedURI();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // get the JAR if there is one
-    nsCOMPtr<nsIJARURI> jarURI;
-    jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
-    nsCOMPtr<nsIFileURL> baseFileURL;
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> baseURI;
-        while (jarURI) {
-            jarURI->GetJARFile(getter_AddRefs(baseURI));
-            jarURI = do_QueryInterface(baseURI, &rv);
-        }
-        baseFileURL = do_QueryInterface(baseURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> sourceFile;
-    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> sourceLocalFile;
-    sourceLocalFile = do_QueryInterface(sourceFile, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = info.EnsureKey();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -941,12 +914,37 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
         newEntry = new ModuleEntry(RootingContext::get(callercx));
         if (!newEntry)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = info.EnsureResolvedURI();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // get the JAR if there is one
+        nsCOMPtr<nsIJARURI> jarURI;
+        jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
+        nsCOMPtr<nsIFileURL> baseFileURL;
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIURI> baseURI;
+            while (jarURI) {
+                jarURI->GetJARFile(getter_AddRefs(baseURI));
+                jarURI = do_QueryInterface(baseURI, &rv);
+            }
+            baseFileURL = do_QueryInterface(baseURI, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+            baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        nsCOMPtr<nsIFile> sourceFile;
+        rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         mInProgressImports.Put(info.Key(), newEntry);
 
         rv = info.EnsureURI();
         NS_ENSURE_SUCCESS(rv, rv);
         RootedValue exception(callercx);
-        rv = ObjectForLocation(info, sourceLocalFile, &newEntry->obj,
+        rv = ObjectForLocation(info, sourceFile, &newEntry->obj,
                                &newEntry->thisObjectKey,
                                &newEntry->location, true, &exception);
 
