@@ -630,6 +630,7 @@
 ; [DevTools Shim Files]
 @RESPATH@/browser/chrome/devtools-shim@JAREXT@
 @RESPATH@/browser/chrome/devtools-shim.manifest
+@RESPATH@/browser/@PREF_DIR@/devtools-startup-prefs.js
 
 ; shell icons
 #ifdef XP_UNIX
