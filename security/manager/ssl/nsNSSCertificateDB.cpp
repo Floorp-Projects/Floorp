@@ -229,6 +229,38 @@ nsNSSCertificateDB::getCertsFromPackage(const UniquePLArenaPool& arena,
   return collectArgs;
 }
 
+// When using the sql-backed softoken, trust settings are authenticated using a
+// key in the secret database. Thus, if the user has a password, we need to
+// authenticate to the token in order to be able to change trust settings.
+SECStatus
+ChangeCertTrustWithPossibleAuthentication(const UniqueCERTCertificate& cert,
+                                          CERTCertTrust& trust, void* ctx)
+{
+  MOZ_ASSERT(cert, "cert must be non-null");
+  if (!cert) {
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
+  }
+  // NSS ignores the first argument to CERT_ChangeCertTrust
+  SECStatus srv = CERT_ChangeCertTrust(nullptr, cert.get(), &trust);
+  if (srv == SECSuccess || PR_GetError() != SEC_ERROR_TOKEN_NOT_LOGGED_IN) {
+    return srv;
+  }
+  if (cert->slot) {
+    // If this certificate is on an external PKCS#11 token, we have to
+    // authenticate to that token.
+    srv = PK11_Authenticate(cert->slot, PR_TRUE, ctx);
+  } else {
+    // Otherwise, the certificate is on the internal module.
+    UniquePK11SlotInfo internalSlot(PK11_GetInternalKeySlot());
+    srv = PK11_Authenticate(internalSlot.get(), PR_TRUE, ctx);
+  }
+  if (srv != SECSuccess) {
+    return srv;
+  }
+  return CERT_ChangeCertTrust(nullptr, cert.get(), &trust);
+}
+
 nsresult
 nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
                                          nsIInterfaceRequestor *ctx,
@@ -353,8 +385,8 @@ nsNSSCertificateDB::handleCACertDownload(NotNull<nsIArray*> x509Certs,
   if (srv != SECSuccess) {
     return MapSECStatus(srv);
   }
-  // NSS ignores the first argument to CERT_ChangeCertTrust
-  srv = CERT_ChangeCertTrust(nullptr, tmpCert.get(), trust.GetTrust());
+  srv = ChangeCertTrustWithPossibleAuthentication(tmpCert, trust.GetTrust(),
+                                                  ctx);
   if (srv != SECSuccess) {
     return MapSECStatus(srv);
   }
@@ -795,8 +827,8 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
     // the cert onto the card again at which point we *will* want to
     // trust that cert if it chains up properly.
     nsNSSCertTrust trust(0, 0, 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
-                               cert.get(), trust.GetTrust());
+    srv = ChangeCertTrustWithPossibleAuthentication(cert, trust.GetTrust(),
+                                                    nullptr);
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("cert deleted: %d", srv));
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
@@ -812,43 +844,38 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  nsNSSCertTrust trust;
-  nsresult rv;
-  UniqueCERTCertificate nsscert(cert->GetCert());
 
-  rv = attemptToLogInWithDefaultPassword();
+  nsresult rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
     return rv;
   }
 
-  SECStatus srv;
-  if (type == nsIX509Cert::CA_CERT) {
-    // always start with untrusted and move up
-    trust.SetValidCA();
-    trust.AddCATrust(!!(trusted & nsIX509CertDB::TRUSTED_SSL),
-                     !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
-                     !!(trusted & nsIX509CertDB::TRUSTED_OBJSIGN));
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
-                               nsscert.get(),
-                               trust.GetTrust());
-  } else if (type == nsIX509Cert::SERVER_CERT) {
-    // always start with untrusted and move up
-    trust.SetValidPeer();
-    trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, 0, 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
-                               nsscert.get(),
-                               trust.GetTrust());
-  } else if (type == nsIX509Cert::EMAIL_CERT) {
-    // always start with untrusted and move up
-    trust.SetValidPeer();
-    trust.AddPeerTrust(0, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL), 0);
-    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(),
-                               nsscert.get(),
-                               trust.GetTrust());
-  } else {
-    // ignore user certs
-    return NS_OK;
+  nsNSSCertTrust trust;
+  switch (type) {
+    case nsIX509Cert::CA_CERT:
+      trust.SetValidCA();
+      trust.AddCATrust(!!(trusted & nsIX509CertDB::TRUSTED_SSL),
+                       !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
+                       !!(trusted & nsIX509CertDB::TRUSTED_OBJSIGN));
+      break;
+    case nsIX509Cert::SERVER_CERT:
+      trust.SetValidPeer();
+      trust.AddPeerTrust(trusted & nsIX509CertDB::TRUSTED_SSL, false, false);
+      break;
+    case nsIX509Cert::EMAIL_CERT:
+      trust.SetValidPeer();
+      trust.AddPeerTrust(false, !!(trusted & nsIX509CertDB::TRUSTED_EMAIL),
+                         false);
+      break;
+    default:
+      // Ignore any other type of certificate (including invalid types).
+      return NS_OK;
   }
+
+  UniqueCERTCertificate nsscert(cert->GetCert());
+  SECStatus srv = ChangeCertTrustWithPossibleAuthentication(nsscert,
+                                                            trust.GetTrust(),
+                                                            nullptr);
   return MapSECStatus(srv);
 }
 
@@ -1236,7 +1263,7 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   }
 
   nsNSSCertTrust trust;
-  if (CERT_DecodeTrustString(trust.GetTrust(), PromiseFlatCString(aTrust).get())
+  if (CERT_DecodeTrustString(&trust.GetTrust(), PromiseFlatCString(aTrust).get())
         != SECSuccess) {
     return NS_ERROR_FAILURE;
   }
@@ -1279,8 +1306,8 @@ nsNSSCertificateDB::AddCertFromBase64(const nsACString& aBase64,
   if (srv != SECSuccess) {
     return MapSECStatus(srv);
   }
-  // NSS ignores the first argument to CERT_ChangeCertTrust
-  srv = CERT_ChangeCertTrust(nullptr, tmpCert.get(), trust.GetTrust());
+  srv = ChangeCertTrustWithPossibleAuthentication(tmpCert, trust.GetTrust(),
+                                                  nullptr);
   if (srv != SECSuccess) {
     return MapSECStatus(srv);
   }
@@ -1318,7 +1345,7 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert* cert,
     return rv;
   }
 
-  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), nssCert.get(), &trust);
+  srv = ChangeCertTrustWithPossibleAuthentication(nssCert, trust, nullptr);
   return MapSECStatus(srv);
 }
 

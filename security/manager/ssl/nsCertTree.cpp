@@ -16,6 +16,7 @@
 #include "nsIX509CertValidity.h"
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
+#include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
@@ -800,8 +801,8 @@ nsCertTree::DeleteEntryObject(uint32_t index)
 
               SECStatus srv = CERT_DecodeTrustString(&trust, ""); // no override
               if (srv == SECSuccess) {
-                CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), nsscert.get(),
-                                     &trust);
+                ChangeCertTrustWithPossibleAuthentication(nsscert, trust,
+                                                          nullptr);
               }
             }
           }

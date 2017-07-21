@@ -57,8 +57,7 @@ public:
   /* set p <--> P */
   void AddPeerTrust(bool ssl, bool email, bool objSign);
 
-  /* get it (const?) (shallow?) */
-  CERTCertTrust * GetTrust() { return &mTrust; }
+  CERTCertTrust& GetTrust() { return mTrust; }
 
 private:
   void addTrust(unsigned int *t, unsigned int v);
