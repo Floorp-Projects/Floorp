@@ -640,7 +640,7 @@ static bool
 ValueFromStringHelper(nsCSSPropertyID aPropID,
                       Element* aTargetElement,
                       nsPresContext* aPresContext,
-                      nsStyleContext* aStyleContext,
+                      mozilla::GeckoStyleContext* aStyleContext,
                       const nsAString& aString,
                       StyleAnimationValue& aStyleAnimValue,
                       bool* aIsContextSensitive)
@@ -751,7 +751,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
     return;
   }
 
-  if (aTargetElement->IsStyledByServo()) {
+  if (styleContext->IsServo()) {
     ServoAnimationValues parsedValues =
       ValueFromStringHelper(aPropID, aTargetElement, presContext,
                             styleContext, aString);
@@ -769,8 +769,9 @@ nsSMILCSSValueType::ValueFromString(nsCSSPropertyID aPropID,
   }
 
   StyleAnimationValue parsedValue;
-  if (ValueFromStringHelper(aPropID, aTargetElement, presContext, styleContext,
-                            aString, parsedValue, aIsContextSensitive)) {
+  if (ValueFromStringHelper(aPropID, aTargetElement, presContext,
+                            styleContext->AsGecko(), aString, parsedValue,
+                            aIsContextSensitive)) {
     sSingleton.Init(aValue);
     aValue.mU.mPtr = new ValueWrapper(aPropID, parsedValue);
   }

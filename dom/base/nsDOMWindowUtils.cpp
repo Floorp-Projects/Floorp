@@ -2933,7 +2933,8 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
 
   StyleAnimationValue computedValue;
   if (!StyleAnimationValue::ExtractComputedValue(propertyID,
-                                                 styleContext, computedValue)) {
+                                                 styleContext->AsGecko(),
+                                                 computedValue)) {
     return NS_ERROR_FAILURE;
   }
 
