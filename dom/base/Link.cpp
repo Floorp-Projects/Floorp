@@ -9,7 +9,6 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/places/History.h"
 #include "nsIURL.h"
 #include "nsISizeOf.h"
 #include "nsIDocShell.h"
@@ -29,28 +28,26 @@
 namespace mozilla {
 namespace dom {
 
-using places::History;
-
 Link::Link(Element *aElement)
   : mElement(aElement)
+  , mHistory(services::GetHistoryService())
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
   , mHasPendingLinkUpdate(false)
   , mInDNSPrefetch(false)
-  , mHistory(true)
 {
   MOZ_ASSERT(mElement, "Must have an element");
 }
 
 Link::Link()
   : mElement(nullptr)
+  , mHistory(nullptr)
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
   , mHasPendingLinkUpdate(false)
   , mInDNSPrefetch(false)
-  , mHistory(false)
 {
 }
 
@@ -383,7 +380,7 @@ Link::LinkState() const
     // Make sure the href attribute has a valid link (bug 23209).
     // If we have a good href, register with History if available.
     if (mHistory && hrefURI) {
-      nsresult rv = History::GetService()->RegisterVisitedCallback(hrefURI, self);
+      nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
       if (NS_SUCCEEDED(rv)) {
         self->mRegistered = true;
 
@@ -798,7 +795,7 @@ Link::UnregisterFromHistory()
 
   // And tell History to stop tracking us.
   if (mHistory) {
-    nsresult rv = History::GetService()->UnregisterVisitedCallback(mCachedURI, this);
+    nsresult rv = mHistory->UnregisterVisitedCallback(mCachedURI, this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
     if (NS_SUCCEEDED(rv)) {
       mRegistered = false;
@@ -846,6 +843,7 @@ Link::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
   // The following members don't need to be measured:
   // - mElement, because it is a pointer-to-self used to avoid QIs
+  // - mHistory, because it is non-owning
 
   return n;
 }
