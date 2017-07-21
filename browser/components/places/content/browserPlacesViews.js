@@ -232,6 +232,13 @@ PlacesViewBase.prototype = {
     this._contextMenuShown = null;
   },
 
+  clearAllContents(aPopup) {
+    while (aPopup.firstChild) {
+      aPopup.firstChild.remove();
+    }
+    aPopup._emptyMenuitem = aPopup._startMarker = aPopup._endMarker = null;
+  },
+
   _cleanPopup: function PVB_cleanPopup(aPopup, aDelay) {
     // Ensure markers are here when `invalidateContainer` is called before the
     // popup is shown, which may the case for panelviews, for example.
@@ -1973,7 +1980,7 @@ PlacesPanelMenuView.prototype = {
   }
 };
 
-class PlacesPanelview extends PlacesViewBase {
+var PlacesPanelview = class extends PlacesViewBase {
   constructor(container, panelview, place, options = {}) {
     options.rootElt = container;
     options.viewElt = panelview;
@@ -2111,9 +2118,12 @@ class PlacesPanelview extends PlacesViewBase {
     if (empty) {
       panelview.setAttribute("emptyplacesresult", "true");
       // Don't add the menuitem if there is static content.
-      if (!panelview._startMarker.previousSibling &&
-          !panelview._endMarker.nextSibling)
+      // We also support external usage for custom crafted panels - which'll have
+      // no markers present.
+      if (!panelview._startMarker ||
+          (!panelview._startMarker.previousSibling && !panelview._endMarker.nextSibling)) {
         panelview.insertBefore(panelview._emptyMenuitem, panelview._endMarker);
+      }
     } else {
       panelview.removeAttribute("emptyplacesresult");
       try {

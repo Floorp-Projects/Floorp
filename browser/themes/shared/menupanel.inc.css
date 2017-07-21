@@ -183,7 +183,7 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   -moz-image-region: rect(0px, 96px, 16px, 80px);
 }
 
-
+#appMenuRecentlyClosedWindows,
 #appMenu-new-window-button {
   list-style-image: url(chrome://browser/skin/new-window.svg);
 }
@@ -257,6 +257,7 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
   list-style-image: url(chrome://browser/skin/history.svg);
 }
 
+#appMenuRecentlyClosedTabs,
 #appMenu-library-remotetabs-button {
   list-style-image: url("chrome://browser/skin/synced-tabs.svg");
 }
@@ -288,5 +289,13 @@ toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button {
 #bookmarks-menu-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
   list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
+}
+
+#appMenuClearRecentHistory {
+  list-style-image: url("chrome://browser/skin/forget.svg");
+}
+
+#appMenuRestoreLastSession {
+  list-style-image: url("chrome://browser/skin/reload.svg");
 }
 %endif
