@@ -73,6 +73,7 @@ const PREF_E10S_ADDON_BLOCKLIST = "extensions.e10s.rollout.blocklist";
 const PREF_E10S_HAS_NONEXEMPT_ADDON = "extensions.e10s.rollout.hasAddon";
 const PREF_E10S_MULTI_OPTOUT   = "dom.ipc.multiOptOut";
 const PREF_E10S_PROCESSCOUNT   = "dom.ipc.processCount";
+const PREF_USE_DEFAULT_PERF_SETTINGS = "browser.preferences.defaultPerformanceSettings.enabled";
 const PREF_E10S_MULTI_ADDON_BLOCKS = "extensions.e10sMultiBlocksEnabling";
 const PREF_E10S_MULTI_BLOCKED_BY_ADDONS = "extensions.e10sMultiBlockedByAddons";
 
@@ -255,7 +256,8 @@ function setCohort(cohortName) {
 function optedIn() {
   let e10s = Preferences.get(PREF_E10S_OPTED_IN, false) ||
              Preferences.get(PREF_E10S_FORCE_ENABLED, false);
-  let multi = Preferences.isSet(PREF_E10S_PROCESSCOUNT);
+  let multi = Preferences.isSet(PREF_E10S_PROCESSCOUNT) ||
+             !Preferences.get(PREF_USE_DEFAULT_PERF_SETTINGS, true);
   return { e10s, multi };
 }
 
