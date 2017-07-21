@@ -34,10 +34,6 @@ class nsIPrincipal;
 #include "AndroidLocationProvider.h"
 #endif
 
-#ifdef MOZ_WIDGET_GONK
-#include "GonkGPSGeolocationProvider.h"
-#endif
-
 #ifdef MOZ_GPSD
 #include "GpsdLocationProvider.h"
 #endif
