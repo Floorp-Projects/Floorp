@@ -23,7 +23,6 @@ const {
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
-const { Class } = require("sdk/core/heritage");
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const nodeConstants = require("devtools/shared/dom-node-constants.js");
@@ -36,42 +35,42 @@ const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
  * Convenience API for building a list of attribute modifications
  * for the `modifyAttributes` request.
  */
-const AttributeModificationList = Class({
-  initialize: function (node) {
+class AttributeModificationList {
+  constructor(node) {
     this.node = node;
     this.modifications = [];
-  },
+  }
 
-  apply: function () {
+  apply() {
     let ret = this.node.modifyAttributes(this.modifications);
     return ret;
-  },
+  }
 
-  destroy: function () {
+  destroy() {
     this.node = null;
     this.modification = null;
-  },
+  }
 
-  setAttributeNS: function (ns, name, value) {
+  setAttributeNS(ns, name, value) {
     this.modifications.push({
       attributeNamespace: ns,
       attributeName: name,
       newValue: value
     });
-  },
+  }
 
-  setAttribute: function (name, value) {
+  setAttribute(name, value) {
     this.setAttributeNS(undefined, name, value);
-  },
+  }
 
-  removeAttributeNS: function (ns, name) {
+  removeAttributeNS(ns, name) {
     this.setAttributeNS(ns, name, undefined);
-  },
+  }
 
-  removeAttribute: function (name) {
+  removeAttribute(name) {
     this.setAttributeNS(undefined, name, undefined);
   }
-});
+}
 
 /**
  * Client side of the node actor.
@@ -348,7 +347,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
    * Return a new AttributeModificationList for this node.
    */
   startModifyingAttributes: function () {
-    return AttributeModificationList(this);
+    return new AttributeModificationList(this);
   },
 
   _cacheAttributes: function () {
