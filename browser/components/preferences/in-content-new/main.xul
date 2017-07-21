@@ -197,6 +197,10 @@
               name="dom.ipc.processCount"
               type="int"/>
 
+  <preference id="dom.ipc.processCount.web"
+              name="dom.ipc.processCount.web"
+              type="int"/>
+
   <preference id="layers.acceleration.disabled"
               name="layers.acceleration.disabled"
               type="bool"
