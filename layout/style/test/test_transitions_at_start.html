@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1380133
+-->
+<head>
+  <meta charset=utf-8>
+  <title>Test for transition value at start (Bug 1380133)</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel="stylesheet" href="/resources/testharness.css">
+  <style>
+    a {
+      color: red;
+      transition: 100s color;
+    }
+    a.active {
+      color: blue;
+    }
+  </style>
+</head>
+<body>
+<a id=anchor><span id=span>Test</span></a>
+</body>
+<script>
+'use strict';
+
+const anchor = document.getElementById('anchor');
+const span   = document.getElementById('span');
+
+test(() => {
+  anchor.classList.add('active');
+  assert_equals(getComputedStyle(span).color, 'rgb(255, 0, 0)',
+                'The child of a transitioning element should inherit its'
+                + ' parent\'s transition start value');
+}, 'Transition start value should be inherited');
+</script>
+</html>
