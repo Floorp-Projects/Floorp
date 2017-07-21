@@ -455,7 +455,7 @@ class CustomHistogram : public Histogram {
   virtual ClassType histogram_type() const;
 
  protected:
-  explicit CustomHistogram(const std::vector<Sample>& custom_ranges);
+  CustomHistogram(const std::vector<Sample>& custom_ranges);
 
   // Initialize ranges_ mapping.
   void InitializedCustomBucketRange(const std::vector<Sample>& custom_ranges);
