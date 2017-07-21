@@ -517,10 +517,11 @@ module.exports = {
    *         Test type: xpcshell, browser, chrome, mochitest
    */
   getTestType(scope) {
+    let testTypes = ["browser", "xpcshell", "chrome", "mochitest", "a11y"];
     let manifest = this.getTestManifest(scope);
     if (manifest) {
       let name = path.basename(manifest);
-      for (let testType of ["browser", "xpcshell", "chrome", "mochitest"]) {
+      for (let testType of testTypes) {
         if (name.startsWith(testType)) {
           return testType;
         }
@@ -535,9 +536,18 @@ module.exports = {
     }
 
     if (filename.startsWith("test_")) {
-      return "xpcshell";
+      let parent = path.basename(path.dirname(filepath));
+      for (let testType of testTypes) {
+        if (parent.startsWith(testType)) {
+          return testType;
+        }
+      }
+
+      // It likely is a test, we're just not sure what kind.
+      return "unknown";
     }
 
+    // Likely not a test
     return null;
   },
 
