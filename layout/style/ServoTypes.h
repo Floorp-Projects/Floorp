@@ -201,9 +201,10 @@ struct ServoComputedValueFlags {
 
 } // namespace mozilla
 
+class ServoComputedValues;
 
-struct ServoComputedValues;
-struct ServoComputedValuesForgotten {
+struct ServoComputedValuesForgotten
+{
   // Make sure you manually mem::forget the backing ServoComputedValues
   // after calling this
   explicit ServoComputedValuesForgotten(const ServoComputedValues* aValue) : mPtr(aValue) {}
@@ -211,12 +212,18 @@ struct ServoComputedValuesForgotten {
 };
 
 /**
- * We want C++ to be abe to read the style struct fields of ComputedValues
+ * We want C++ to be able to read the style struct fields of ComputedValues
  * so we define this type on the C++ side and use the bindgenned version
  * on the Rust side.
- *
  */
-struct ServoComputedValues {
+class ServoComputedValues
+{
+  friend class mozilla::ServoStyleContext;
+
+public:
+  // Constructs via memcpy.  Will not move out of aValue.
+  explicit ServoComputedValues(const ServoComputedValuesForgotten aValue);
+
 #define STYLE_STRUCT(name_, checkdata_cb_)                 \
   mozilla::ServoRawOffsetArc<mozilla::Gecko##name_> name_; \
   inline const nsStyle##name_* GetStyle##name_() const;
@@ -225,6 +232,8 @@ struct ServoComputedValues {
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
   const nsStyleVariables* GetStyleVariables() const;
+
+private:
   mozilla::ServoCustomPropertiesMap custom_properties;
   mozilla::ServoWritingMode writing_mode;
   mozilla::ServoComputedValueFlags flags;
@@ -256,11 +265,6 @@ struct ServoComputedValues {
   ServoComputedValues(const ServoComputedValues&) = delete;
   ServoComputedValues&& operator=(const ServoComputedValues&&) = delete;
   ServoComputedValues(const ServoComputedValues&&) = delete;
-
-  // Constructs via memcpy. Will not invalidate old struct
-  explicit ServoComputedValues(const ServoComputedValuesForgotten aValue);
 };
-
-
 
 #endif // mozilla_ServoTypes_h

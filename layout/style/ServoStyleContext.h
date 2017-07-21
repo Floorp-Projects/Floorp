@@ -12,10 +12,11 @@
 namespace mozilla {
 
 namespace dom {
-  class Element;
-}
+class Element;
+} // namespace dom
 
-class ServoStyleContext final : public nsStyleContext {
+class ServoStyleContext final : public nsStyleContext
+{
 public:
   ServoStyleContext(nsStyleContext* aParent,
                     nsPresContext* aPresContext,
@@ -23,23 +24,16 @@ public:
                     CSSPseudoElementType aPseudoType,
                     ServoComputedValuesForgotten aComputedValues);
 
-  nsPresContext* PresContext() const {
-    return mPresContext;
-  }
+  nsPresContext* PresContext() const { return mPresContext; }
+  const ServoComputedValues* ComputedValues() const { return &mSource; }
 
-  const ServoComputedValues* ComputedValues() const {
-    return &mSource;
-  }
+  void AddRef() { Servo_StyleContext_AddRef(this); }
+  void Release() { Servo_StyleContext_Release(this); }
 
-  void AddRef() {
-    Servo_StyleContext_AddRef(this);
+  ServoStyleContext* GetStyleIfVisited() const
+  {
+    return ComputedValues()->visited_style.mPtr;
   }
-
-  void Release() {
-    Servo_StyleContext_Release(this);
-  }
-
-  ServoStyleContext* GetStyleIfVisited() const { return ComputedValues()->visited_style.mPtr; }
 
   // Update visited state for a given element, and set the prescontext's
   // body text color if applicable.
@@ -49,13 +43,14 @@ public:
    * Makes this context match |aOther| in terms of which style structs have
    * been resolved.
    */
-  inline void ResolveSameStructsAs(nsPresContext* aPresContext, const ServoStyleContext* aOther);
+  inline void ResolveSameStructsAs(nsPresContext* aPresContext,
+                                   const ServoStyleContext* aOther);
 
 private:
   nsPresContext* mPresContext;
   ServoComputedValues mSource;
 };
 
-}
+} // namespace mozilla
 
 #endif // mozilla_ServoStyleContext_h
