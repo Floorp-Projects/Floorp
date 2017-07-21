@@ -779,34 +779,34 @@ add_task(async function test_checkSubsessionHistograms() {
   // "classic" histograms. However, histograms can change
   // between us collecting the different payloads, so we only
   // check for deep equality on known stable histograms.
-  let checkHistograms = (classic, subsession, message) => {
+  let checkHistograms = (classic, subsession) => {
     for (let id of Object.keys(classic)) {
       if (!registeredIds.has(id)) {
         continue;
       }
 
-      Assert.ok(id in subsession, message + ` (${id})`);
+      Assert.ok(id in subsession);
       if (stableHistograms.has(id)) {
         Assert.deepEqual(classic[id],
-                         subsession[id], message);
+                         subsession[id]);
       } else {
         Assert.equal(classic[id].histogram_type,
-                     subsession[id].histogram_type, message);
+                     subsession[id].histogram_type);
       }
     }
   };
 
   // Same as above, except for keyed histograms.
-  let checkKeyedHistograms = (classic, subsession, message) => {
+  let checkKeyedHistograms = (classic, subsession) => {
     for (let id of Object.keys(classic)) {
       if (!registeredIds.has(id)) {
         continue;
       }
 
-      Assert.ok(id in subsession, message);
+      Assert.ok(id in subsession);
       if (stableKeyedHistograms.has(id)) {
         Assert.deepEqual(classic[id],
-                         subsession[id], message);
+                         subsession[id]);
       }
     }
   };
@@ -825,8 +825,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.ok(!(KEYED_ID in classic.keyedHistograms));
   Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
 
-  checkHistograms(classic.histograms, subsession.histograms, "Should start the same");
-  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Keyed should start the same");
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // Adding values should get picked up in both.
   count.add(1);
@@ -843,8 +843,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
-  checkHistograms(classic.histograms, subsession.histograms, "Added values should be picked up");
-  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Added values should be picked up by keyed");
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // Values should still reset properly.
   count.clear();
@@ -857,8 +857,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.ok(!(KEYED_ID in classic.keyedHistograms));
   Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
 
-  checkHistograms(classic.histograms, subsession.histograms, "Values should reset");
-  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Keyed values should reset");
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // Adding values should get picked up in both.
   count.add(1);
@@ -875,8 +875,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
-  checkHistograms(classic.histograms, subsession.histograms, "Adding values should be picked up again");
-  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Adding values should be picked up by keyed again");
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // We should be able to reset only the subsession histograms.
   // First check that "snapshot and clear" still returns the old state...
@@ -887,8 +887,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
   subsessionStartDate = new Date(subsession.info.subsessionStartDate);
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
-  checkHistograms(classic.histograms, subsession.histograms, "Should be able to reset subsession");
-  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Should be able to reset subsession keyed");
+  checkHistograms(classic.histograms, subsession.histograms);
+  checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms);
 
   // ... then check that the next snapshot shows the subsession
   // histograms got reset.
