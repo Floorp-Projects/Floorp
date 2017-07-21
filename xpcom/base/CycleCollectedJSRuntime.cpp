@@ -108,7 +108,7 @@ struct DeferredFinalizeFunctionHolder
   void* data;
 };
 
-class IncrementalFinalizeRunnable : public Runnable
+class IncrementalFinalizeRunnable : public CancelableRunnable
 {
   typedef AutoTArray<DeferredFinalizeFunctionHolder, 16> DeferredFinalizeArray;
   typedef CycleCollectedJSRuntime::DeferredFinalizerTable DeferredFinalizerTable;
