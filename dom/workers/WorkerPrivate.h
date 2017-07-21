@@ -1461,7 +1461,7 @@ public:
   // Get an event target that will dispatch runnables as control runnables on
   // the worker thread.  Implement nsICancelableRunnable if you wish to take
   // action on cancelation.
-  nsIEventTarget*
+  nsISerialEventTarget*
   ControlEventTarget();
 
 private:
