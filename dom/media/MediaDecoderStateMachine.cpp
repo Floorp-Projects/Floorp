@@ -45,7 +45,6 @@
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
 #include "MediaDecoderReaderWrapper.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
@@ -92,18 +91,10 @@ namespace detail {
 // time premium for compensating the seeking delay.
 static constexpr auto RESUME_VIDEO_PREMIUM = TimeUnit::FromMicroseconds(125000);
 
-// If audio queue has less than this much decoded audio, we won't risk
-// trying to decode the video, we'll skip decoding video up to the next
-// keyframe. We may increase this value for an individual decoder if we
-// encounter video frames which take a long time to decode.
-static constexpr auto LOW_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(300000);
-
 static const int64_t AMPLE_AUDIO_USECS = 2000000;
 
 // If more than this much decoded audio is queued, we'll hold off
-// decoding more audio. If we increase the low audio threshold (see
-// LOW_AUDIO_THRESHOLD above) we'll also increase this value to ensure it's not
-// less than the low audio threshold.
+// decoding more audio.
 static constexpr auto AMPLE_AUDIO_THRESHOLD = TimeUnit::FromMicroseconds(AMPLE_AUDIO_USECS);
 
 } // namespace detail
@@ -121,12 +112,6 @@ static constexpr auto LOW_VIDEO_THRESHOLD = TimeUnit::FromMicroseconds(60000);
 
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
-
-// If we increase our "low audio threshold" (see LOW_AUDIO_THRESHOLD above), we
-// use this as a factor in all our calculations. Increasing this will cause
-// us to be more likely to increase our low audio threshold, and to
-// increase it by more.
-static const int THRESHOLD_FACTOR = 2;
 
 namespace detail {
 
@@ -404,7 +389,7 @@ private:
     mMaster->DecodeError(aError);
   }
 
-  MozPromiseRequestHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
+  MozPromiseRequestHolder<MediaFormatReader::MetadataPromise> mMetadataRequest;
 };
 
 /**
@@ -731,7 +716,6 @@ public:
     mMaster->PushVideo(aVideo);
     DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
-    CheckSlowDecoding(aDecodeStart);
   }
 
   void HandleAudioCanceled() override
@@ -814,37 +798,6 @@ private:
   void EnsureAudioDecodeTaskQueued();
   void EnsureVideoDecodeTaskQueued();
   void MaybeStartBuffering();
-
-  void CheckSlowDecoding(TimeStamp aDecodeStart)
-  {
-    // For non async readers, if the requested video sample was slow to
-    // arrive, increase the amount of audio we buffer to ensure that we
-    // don't run out of audio. This is unnecessary for async readers,
-    // since they decode audio and video on different threads so they
-    // are unlikely to run out of decoded audio.
-    if (Reader()->IsAsync()) {
-      return;
-    }
-
-    TimeDuration decodeTime = TimeStamp::Now() - aDecodeStart;
-    auto adjusted = TimeUnit::FromTimeDuration(decodeTime * THRESHOLD_FACTOR);
-    if (adjusted > mMaster->mLowAudioThreshold
-        && !mMaster->HasLowBufferedData())
-    {
-      mMaster->mLowAudioThreshold = std::min(
-        adjusted, mMaster->mAmpleAudioThreshold);
-
-      mMaster->mAmpleAudioThreshold = std::max(
-        mMaster->mLowAudioThreshold * THRESHOLD_FACTOR,
-        mMaster->mAmpleAudioThreshold);
-
-      SLOG("Slow video decode, set "
-           "mLowAudioThreshold=%" PRId64
-           " mAmpleAudioThreshold=%" PRId64,
-           mMaster->mLowAudioThreshold.ToMicroseconds(),
-           mMaster->mAmpleAudioThreshold.ToMicroseconds());
-    }
-  }
 
   // At the start of decoding we want to "preroll" the decode until we've
   // got a few frames decoded before we consider whether decode is falling
@@ -1441,7 +1394,7 @@ protected:
   /*
    * Track the current seek promise made by the reader.
    */
-  MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
+  MozPromiseRequestHolder<MediaFormatReader::SeekPromise> mSeekRequest;
 
   /*
    * Internal state.
@@ -2301,8 +2254,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
   }
 
   if (mMaster->HasVideo()) {
-    SLOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
-         Reader()->IsAsync(),
+    SLOG("Video decode HWAccel=%d videoQueueSize=%d",
          Reader()->VideoIsHardwareAccelerated(),
          mMaster->GetAmpleVideoFrames());
   }
@@ -2755,7 +2707,7 @@ ShutdownState::Enter()
   name(mTaskQueue, val, "MediaDecoderStateMachine::" #name " (Canonical)")
 
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
-                                                   MediaDecoderReader* aReader) :
+                                                   MediaFormatReader* aReader) :
   mDecoderID(aDecoder),
   mAbstractMainThread(aDecoder->AbstractMainThread()),
   mFrameStats(&aDecoder->GetFrameStatistics()),
@@ -2771,7 +2723,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   INIT_WATCHABLE(mObservedDuration, TimeUnit()),
   mReader(new MediaDecoderReaderWrapper(mTaskQueue, aReader)),
   mPlaybackRate(1.0),
-  mLowAudioThreshold(detail::LOW_AUDIO_THRESHOLD),
   mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
   mAudioCaptured(false),
   mMinimizePreroll(aDecoder->GetMinimizePreroll()),
@@ -3965,7 +3916,7 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
 uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return (mReader->IsAsync() && mReader->VideoIsHardwareAccelerated())
+  return mReader->VideoIsHardwareAccelerated()
          ? std::max<uint32_t>(sVideoQueueHWAccelSize, MIN_VIDEO_QUEUE_SIZE)
          : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
@@ -4036,16 +3987,60 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
   }
 }
 
+class VideoQueueMemoryFunctor : public nsDequeFunctor
+{
+public:
+  VideoQueueMemoryFunctor()
+    : mSize(0)
+  {
+  }
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject)
+  {
+    const VideoData* v = static_cast<const VideoData*>(aObject);
+    mSize += v->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
+  }
+
+  size_t mSize;
+};
+
+class AudioQueueMemoryFunctor : public nsDequeFunctor
+{
+public:
+  AudioQueueMemoryFunctor()
+    : mSize(0)
+  {
+  }
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject)
+  {
+    const AudioData* audioData = static_cast<const AudioData*>(aObject);
+    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
+  }
+
+  size_t mSize;
+};
+
 size_t
 MediaDecoderStateMachine::SizeOfVideoQueue() const
 {
-  return mReader->SizeOfVideoQueueInBytes();
+  VideoQueueMemoryFunctor functor;
+  mVideoQueue.LockedForEach(functor);
+  return functor.mSize;
 }
 
 size_t
 MediaDecoderStateMachine::SizeOfAudioQueue() const
 {
-  return mReader->SizeOfAudioQueueInBytes();
+  AudioQueueMemoryFunctor functor;
+  mAudioQueue.LockedForEach(functor);
+  return functor.mSize;
 }
 
 AbstractCanonical<media::TimeIntervals>*

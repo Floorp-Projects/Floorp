@@ -380,7 +380,7 @@ const gClickAndHoldListenersOnElement = {
       let cmdEvent = document.createEvent("xulcommandevent");
       cmdEvent.initCommandEvent("command", true, true, window, 0,
                                 aEvent.ctrlKey, aEvent.altKey, aEvent.shiftKey,
-                                aEvent.metaKey, null);
+                                aEvent.metaKey, null, aEvent.mozInputSource);
       aEvent.currentTarget.dispatchEvent(cmdEvent);
 
       // This is here to cancel the XUL default event
@@ -1631,7 +1631,7 @@ var gBrowserInit = {
     PointerLock.init();
 
     if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-      ContextMenuTouchModeObserver.init();
+      MenuTouchModeObserver.init();
     }
 
     // initialize the sync UI
@@ -1846,7 +1846,7 @@ var gBrowserInit = {
       }
 
       if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-        ContextMenuTouchModeObserver.uninit();
+        MenuTouchModeObserver.uninit();
       }
       BrowserOffline.uninit();
       IndexedDBPromptHelper.uninit();
@@ -7960,7 +7960,10 @@ var gPageActionButton = {
 
     this._preparePanelToBeShown();
     this.panel.hidden = false;
-    this.panel.openPopup(this.button, "bottomcenter topright");
+    this.panel.openPopup(this.button, {
+      position: "bottomcenter topright",
+      triggerEvent: event,
+    });
   },
 
   _preparePanelToBeShown() {
@@ -8328,16 +8331,17 @@ function restoreLastSession() {
   SessionStore.restoreLastSession();
 }
 
-/* Observes context menus and adjusts their size for better
+/* Observes menus and adjusts their size for better
  * usability when opened via a touch screen. */
-var ContextMenuTouchModeObserver = {
+var MenuTouchModeObserver = {
   init() {
     window.addEventListener("popupshowing", this, true);
   },
 
   handleEvent(event) {
     let target = event.originalTarget;
-    if (target.localName != "menupopup") {
+    // Only resize non-context menus in Photon.
+    if (target.localName != "menupopup" && !gPhotonStructure) {
       return;
     }
 

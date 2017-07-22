@@ -164,4 +164,8 @@ Signals that the output of this task contains signed artifacts.
 repackage_type
 ==============
 This is the type of repackage. Can be ``repackage`` or 
-``repacakge_signing``.
+``repackage_signing``.
+
+toolchain-artifact
+==================
+For toolchain jobs, this is the path to the artifact for that toolchain.

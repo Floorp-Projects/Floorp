@@ -14,7 +14,8 @@
 #include <speex/speex_resampler.h>
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
-#include "MediaDecoderReader.h"
+#include "MediaFormatReader.h"
+#include "MediaQueue.h"
 #include "BufferMediaResource.h"
 #include "DecoderTraits.h"
 #include "AudioContext.h"
@@ -97,7 +98,11 @@ public:
 
   NS_IMETHOD Run();
   bool CreateReader();
-  MediaDecoderReader* Reader() { MOZ_ASSERT(mDecoderReader); return mDecoderReader; }
+  MediaFormatReader* Reader()
+  {
+    MOZ_ASSERT(mDecoderReader);
+    return mDecoderReader;
+  }
 
 private:
   void ReportFailureOnMainThread(WebAudioDecodeJob::ErrorCode aErrorCode) {
@@ -128,8 +133,8 @@ private:
   void Cleanup()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    // MediaDecoderReader expects that BufferDecoder is alive.
-    // Destruct MediaDecoderReader first.
+    // MediaFormatReader expects that BufferDecoder is alive.
+    // Destruct MediaFormatReader first.
     mDecoderReader = nullptr;
     mBufferDecoder = nullptr;
     JS_free(nullptr, mBuffer);
@@ -142,7 +147,7 @@ private:
   WebAudioDecodeJob& mDecodeJob;
   PhaseEnum mPhase;
   RefPtr<BufferDecoder> mBufferDecoder;
-  RefPtr<MediaDecoderReader> mDecoderReader;
+  RefPtr<MediaFormatReader> mDecoderReader;
   MediaInfo mMediaInfo;
   MediaQueue<AudioData> mAudioQueue;
   RefPtr<AbstractThread> mMainThread;
@@ -193,7 +198,7 @@ MediaDecodeTask::CreateReader()
   // If you change this list to add support for new decoders, please consider
   // updating HTMLMediaElement::CreateDecoder as well.
 
-  MediaDecoderReaderInit init(mBufferDecoder);
+  MediaFormatReaderInit init(mBufferDecoder);
   init.mResource = resource;
   mDecoderReader = DecoderTraits::CreateReader(mContainerType, init);
 
@@ -241,11 +246,6 @@ MediaDecodeTask::Decode()
   MOZ_ASSERT(!NS_IsMainThread());
 
   mBufferDecoder->BeginDecoding(mDecoderReader->OwnerThread());
-
-  // Tell the decoder reader that we are not going to play the data directly,
-  // and that we should not reject files with more channels than the audio
-  // backend support.
-  mDecoderReader->SetIgnoreAudioOutputFormat();
 
   mDecoderReader->AsyncReadMetadata()->Then(mDecoderReader->OwnerThread(), __func__, this,
                                        &MediaDecodeTask::OnMetadataRead,

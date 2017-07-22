@@ -363,7 +363,7 @@ function mouseOver(win, element) {
 
 function command(button) {
   let ev = button.ownerDocument.createEvent("XULCommandEvent");
-  ev.initCommandEvent("command", true, true, button.ownerDocument.defaultView, 0, false, false, false, false, null);
+  ev.initCommandEvent("command", true, true, button.ownerDocument.defaultView, 0, false, false, false, false, null, 0);
   button.dispatchEvent(ev);
 }
 

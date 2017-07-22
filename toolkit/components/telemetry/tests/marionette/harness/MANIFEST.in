@@ -1,0 +1,2 @@
+exclude MANIFEST.in
+include requirements.txt

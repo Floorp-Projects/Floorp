@@ -19,7 +19,7 @@ class MessagePortChild final : public PMessagePortChild
 public:
   NS_INLINE_DECL_REFCOUNTING(MessagePortChild)
 
-  MessagePortChild() : mPort(nullptr) {}
+  MessagePortChild();
 
   void SetPort(MessagePort* aPort)
   {

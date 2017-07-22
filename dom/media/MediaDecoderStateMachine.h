@@ -89,10 +89,11 @@ hardware (via AudioStream).
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
+#include "MediaFormatReader.h"
 #include "MediaMetadataManager.h"
+#include "MediaQueue.h"
 #include "MediaStatistics.h"
 #include "MediaTimer.h"
 #include "ImageContainer.h"
@@ -149,13 +150,12 @@ class MediaDecoderStateMachine
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 
-  using TrackSet = MediaDecoderReader::TrackSet;
+  using TrackSet = MediaFormatReader::TrackSet;
 
 public:
   typedef MediaDecoderOwner::NextFrameStatus NextFrameStatus;
   typedef mozilla::layers::ImageContainer::FrameID FrameID;
-  MediaDecoderStateMachine(MediaDecoder* aDecoder,
-                           MediaDecoderReader* aReader);
+  MediaDecoderStateMachine(MediaDecoder* aDecoder, MediaFormatReader* aReader);
 
   nsresult Init(MediaDecoder* aDecoder);
 
@@ -576,28 +576,15 @@ private:
   // Must hold monitor.
   uint32_t GetAmpleVideoFrames() const;
 
-  // Low audio threshold. If we've decoded less than this much audio we
-  // consider our audio decode "behind", and we may skip video decoding
-  // in order to allow our audio decoding to catch up. We favour audio
-  // decoding over video. We increase this threshold if we're slow to
-  // decode video frames, in order to reduce the chance of audio underruns.
-  // Note that we don't ever reset this threshold, it only ever grows as
-  // we detect that the decode can't keep up with rendering.
-  media::TimeUnit mLowAudioThreshold;
-
   // Our "ample" audio threshold. Once we've this much audio decoded, we
-  // pause decoding. If we increase mLowAudioThreshold, we'll also
-  // increase this too appropriately (we don't want mLowAudioThreshold
-  // to be greater than mAmpleAudioThreshold, else we'd stop decoding!).
-  // Note that we don't ever reset this threshold, it only ever grows as
-  // we detect that the decode can't keep up with rendering.
+  // pause decoding.
   media::TimeUnit mAmpleAudioThreshold;
 
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
-  using AudioDataPromise = MediaDecoderReader::AudioDataPromise;
-  using VideoDataPromise = MediaDecoderReader::VideoDataPromise;
-  using WaitForDataPromise = MediaDecoderReader::WaitForDataPromise;
+  using AudioDataPromise = MediaFormatReader::AudioDataPromise;
+  using VideoDataPromise = MediaFormatReader::VideoDataPromise;
+  using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
   MozPromiseRequestHolder<AudioDataPromise> mAudioDataRequest;
   MozPromiseRequestHolder<VideoDataPromise> mVideoDataRequest;
   MozPromiseRequestHolder<WaitForDataPromise> mAudioWaitRequest;

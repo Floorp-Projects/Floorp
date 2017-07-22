@@ -28,6 +28,7 @@ use rayon::ThreadPool;
 use glyph_rasterizer::{GlyphRasterizer, GlyphCache, GlyphRequest};
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
+const BLACK: ColorF = ColorF { r: 0.0, b: 0.0, g: 0.0, a: 1.0 };
 
 // These coordinates are always in texels.
 // They are converted to normalized ST
@@ -312,9 +313,6 @@ impl ResourceCache {
                                  mut data: ImageData,
                                  dirty_rect: Option<DeviceUintRect>) {
         let resource = if let Some(image) = self.resources.image_templates.get(image_key) {
-            assert_eq!(image.descriptor.width, descriptor.width);
-            assert_eq!(image.descriptor.height, descriptor.height);
-            assert_eq!(image.descriptor.format, descriptor.format);
 
             let next_epoch = Epoch(image.epoch.0 + 1);
 
@@ -450,11 +448,18 @@ impl ResourceCache {
     pub fn request_glyphs(&mut self,
                           key: FontKey,
                           size: Au,
-                          color: ColorF,
+                          mut color: ColorF,
                           glyph_instances: &[GlyphInstance],
                           render_mode: FontRenderMode,
                           glyph_options: Option<GlyphOptions>) {
         debug_assert_eq!(self.state, State::AddResources);
+
+        // In alpha/mono mode, the color of the font is irrelevant.
+        // Forcing it to black in those cases saves rasterizing glyphs
+        // of different colors when not needed.
+        if render_mode != FontRenderMode::Subpixel {
+            color = BLACK;
+        }
 
         self.glyph_rasterizer.request_glyphs(
             &mut self.cached_glyphs,
@@ -476,11 +481,17 @@ impl ResourceCache {
     pub fn get_glyphs<F>(&self,
                          font_key: FontKey,
                          size: Au,
-                         color: ColorF,
+                         mut color: ColorF,
                          glyph_instances: &[GlyphInstance],
                          render_mode: FontRenderMode,
                          glyph_options: Option<GlyphOptions>,
                          mut f: F) -> SourceTexture where F: FnMut(usize, &GpuCacheHandle) {
+        // Color when retrieving glyphs must match that of the request,
+        // otherwise the hash keys won't match.
+        if render_mode != FontRenderMode::Subpixel {
+            color = BLACK;
+        }
+
         debug_assert_eq!(self.state, State::QueryResources);
         let mut glyph_request = GlyphRequest::new(
             font_key,
@@ -659,6 +670,11 @@ impl ResourceCache {
             image_template.data.clone()
         });
 
+        let filter = match request.rendering {
+            ImageRendering::Pixelated => TextureFilter::Nearest,
+            ImageRendering::Auto | ImageRendering::CrispEdges => TextureFilter::Linear,
+        };
+
         let descriptor = if let Some(tile) = request.tile {
             let tile_size = image_template.tiling.unwrap();
             let image_descriptor = &image_template.descriptor;
@@ -699,6 +715,7 @@ impl ResourceCache {
                 if entry.get().epoch != image_template.epoch {
                     self.texture_cache.update(image_id,
                                               descriptor,
+                                              filter,
                                               image_data,
                                               image_template.dirty_rect);
 

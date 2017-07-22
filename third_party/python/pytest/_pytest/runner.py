@@ -1,20 +1,14 @@
 """ basic collect and runtest protocol implementations """
+from __future__ import absolute_import, division, print_function
+
 import bdb
 import sys
 from time import time
 
 import py
-import pytest
 from _pytest._code.code import TerminalRepr, ExceptionInfo
 
 
-def pytest_namespace():
-    return {
-        'fail'         : fail,
-        'skip'         : skip,
-        'importorskip' : importorskip,
-        'exit'         : exit,
-    }
 
 #
 # pytest plugin hooks
@@ -73,7 +67,10 @@ def runtestprotocol(item, log=True, nextitem=None):
     rep = call_and_report(item, "setup", log)
     reports = [rep]
     if rep.passed:
-        reports.append(call_and_report(item, "call", log))
+        if item.config.option.setupshow:
+            show_test_item(item)
+        if not item.config.option.setuponly:
+            reports.append(call_and_report(item, "call", log))
     reports.append(call_and_report(item, "teardown", log,
         nextitem=nextitem))
     # after all teardown hooks have been called
@@ -82,6 +79,16 @@ def runtestprotocol(item, log=True, nextitem=None):
         item._request = False
         item.funcargs = None
     return reports
+
+def show_test_item(item):
+    """Show test function, parameters and the fixtures of the test item."""
+    tw = item.config.get_terminal_writer()
+    tw.line()
+    tw.write(' ' * 8)
+    tw.write(item._nodeid)
+    used_fixtures = sorted(item._fixtureinfo.name2fixturedefs.keys())
+    if used_fixtures:
+        tw.write(' (fixtures used: {0})'.format(', '.join(used_fixtures)))
 
 def pytest_runtest_setup(item):
     item.session._setupstate.prepare(item)
@@ -198,6 +205,36 @@ class BaseReport(object):
             if name.startswith(prefix):
                 yield prefix, content
 
+    @property
+    def longreprtext(self):
+        """
+        Read-only property that returns the full string representation
+        of ``longrepr``.
+
+        .. versionadded:: 3.0
+        """
+        tw = py.io.TerminalWriter(stringio=True)
+        tw.hasmarkup = False
+        self.toterminal(tw)
+        exc = tw.stringio.getvalue()
+        return exc.strip()
+
+    @property
+    def capstdout(self):
+        """Return captured text from stdout, if capturing is enabled
+
+        .. versionadded:: 3.0
+        """
+        return ''.join(content for (prefix, content) in self.get_sections('Captured stdout'))
+
+    @property
+    def capstderr(self):
+        """Return captured text from stderr, if capturing is enabled
+
+        .. versionadded:: 3.0
+        """
+        return ''.join(content for (prefix, content) in self.get_sections('Captured stderr'))
+
     passed = property(lambda x: x.outcome == "passed")
     failed = property(lambda x: x.outcome == "failed")
     skipped = property(lambda x: x.outcome == "skipped")
@@ -219,7 +256,7 @@ def pytest_runtest_makereport(item, call):
         if not isinstance(excinfo, ExceptionInfo):
             outcome = "failed"
             longrepr = excinfo
-        elif excinfo.errisinstance(pytest.skip.Exception):
+        elif excinfo.errisinstance(skip.Exception):
             outcome = "skipped"
             r = excinfo._getreprcrash()
             longrepr = (str(r.path), r.lineno, r.message)
@@ -263,8 +300,10 @@ class TestReport(BaseReport):
         #: one of 'setup', 'call', 'teardown' to indicate runtest phase.
         self.when = when
 
-        #: list of (secname, data) extra information which needs to
-        #: marshallable
+        #: list of pairs ``(str, str)`` of extra information which needs to
+        #: marshallable. Used by pytest to add captured text
+        #: from ``stdout`` and ``stderr``, but may be used by other plugins
+        #: to add arbitrary information to reports.
         self.sections = list(sections)
 
         #: time it took to run just the test
@@ -285,7 +324,9 @@ class TeardownErrorReport(BaseReport):
         self.__dict__.update(extra)
 
 def pytest_make_collect_report(collector):
-    call = CallInfo(collector._memocollect, "memocollect")
+    call = CallInfo(
+        lambda: list(collector.collect()),
+        'collect')
     longrepr = None
     if not call.excinfo:
         outcome = "passed"
@@ -447,9 +488,15 @@ class Skipped(OutcomeException):
     # in order to have Skipped exception printing shorter/nicer
     __module__ = 'builtins'
 
+    def __init__(self, msg=None, pytrace=True, allow_module_level=False):
+        OutcomeException.__init__(self, msg=msg, pytrace=pytrace)
+        self.allow_module_level = allow_module_level
+
+
 class Failed(OutcomeException):
     """ raised from an explicit call to pytest.fail() """
     __module__ = 'builtins'
+
 
 class Exit(KeyboardInterrupt):
     """ raised for immediate program exits (no tracebacks/summaries)"""
@@ -464,7 +511,9 @@ def exit(msg):
     __tracebackhide__ = True
     raise Exit(msg)
 
+
 exit.Exception = Exit
+
 
 def skip(msg=""):
     """ skip an executing test with the given message.  Note: it's usually
@@ -474,7 +523,10 @@ def skip(msg=""):
     """
     __tracebackhide__ = True
     raise Skipped(msg=msg)
+
+
 skip.Exception = Skipped
+
 
 def fail(msg="", pytrace=True):
     """ explicitly fail an currently-executing test with the given Message.
@@ -484,6 +536,8 @@ def fail(msg="", pytrace=True):
     """
     __tracebackhide__ = True
     raise Failed(msg=msg, pytrace=pytrace)
+
+
 fail.Exception = Failed
 
 
@@ -492,12 +546,23 @@ def importorskip(modname, minversion=None):
     __version__ attribute.  If no minversion is specified the a skip
     is only triggered if the module can not be imported.
     """
+    import warnings
     __tracebackhide__ = True
     compile(modname, '', 'eval') # to catch syntaxerrors
-    try:
-        __import__(modname)
-    except ImportError:
-        skip("could not import %r" %(modname,))
+    should_skip = False
+
+    with warnings.catch_warnings():
+        # make sure to ignore ImportWarnings that might happen because
+        # of existing directories with the same name we're trying to
+        # import but without a __init__.py file
+        warnings.simplefilter('ignore')
+        try:
+            __import__(modname)
+        except ImportError:
+            # Do not raise chained exception here(#1485)
+            should_skip = True
+    if should_skip:
+        raise Skipped("could not import %r" %(modname,), allow_module_level=True)
     mod = sys.modules[modname]
     if minversion is None:
         return mod
@@ -506,10 +571,10 @@ def importorskip(modname, minversion=None):
         try:
             from pkg_resources import parse_version as pv
         except ImportError:
-            skip("we have a required version for %r but can not import "
-                 "no pkg_resources to parse version strings." %(modname,))
+            raise Skipped("we have a required version for %r but can not import "
+                          "pkg_resources to parse version strings." % (modname,),
+                          allow_module_level=True)
         if verattr is None or pv(verattr) < pv(minversion):
-            skip("module %r has __version__ %r, required is: %r" %(
-                 modname, verattr, minversion))
+            raise Skipped("module %r has __version__ %r, required is: %r" %(
+                          modname, verattr, minversion), allow_module_level=True)
     return mod
-

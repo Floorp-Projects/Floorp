@@ -2,16 +2,19 @@
 per-test stdout/stderr capturing mechanism.
 
 """
-from __future__ import with_statement
+from __future__ import absolute_import, division, print_function
 
+import contextlib
 import sys
 import os
+import io
+from io import UnsupportedOperation
 from tempfile import TemporaryFile
 
 import py
 import pytest
+from _pytest.compat import CaptureIO
 
-from py.io import TextIO
 unicode = py.builtin.text
 
 patchsysdict = {0: 'stdin', 1: 'stdout', 2: 'stderr'}
@@ -31,8 +34,10 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_load_initial_conftests(early_config, parser, args):
-    _readline_workaround()
     ns = early_config.known_args_namespace
+    if ns.capture == "fd":
+        _py36_windowsconsoleio_workaround()
+    _readline_workaround()
     pluginmanager = early_config.pluginmanager
     capman = CaptureManager(ns.capture)
     pluginmanager.register(capman, "capturemanager")
@@ -146,46 +151,48 @@ class CaptureManager:
     def pytest_internalerror(self, excinfo):
         self.reset_capturings()
 
-    def suspendcapture_item(self, item, when):
-        out, err = self.suspendcapture()
+    def suspendcapture_item(self, item, when, in_=False):
+        out, err = self.suspendcapture(in_=in_)
         item.add_report_section(when, "stdout", out)
         item.add_report_section(when, "stderr", err)
+
 
 error_capsysfderror = "cannot use capsys and capfd at the same time"
 
 
 @pytest.fixture
 def capsys(request):
-    """enables capturing of writes to sys.stdout/sys.stderr and makes
+    """Enable capturing of writes to sys.stdout/sys.stderr and make
     captured output available via ``capsys.readouterr()`` method calls
     which return a ``(out, err)`` tuple.
     """
-    if "capfd" in request._funcargs:
+    if "capfd" in request.fixturenames:
         raise request.raiseerror(error_capsysfderror)
-    request.node._capfuncarg = c = CaptureFixture(SysCapture)
+    request.node._capfuncarg = c = CaptureFixture(SysCapture, request)
     return c
 
 @pytest.fixture
 def capfd(request):
-    """enables capturing of writes to file descriptors 1 and 2 and makes
+    """Enable capturing of writes to file descriptors 1 and 2 and make
     captured output available via ``capfd.readouterr()`` method calls
     which return a ``(out, err)`` tuple.
     """
-    if "capsys" in request._funcargs:
+    if "capsys" in request.fixturenames:
         request.raiseerror(error_capsysfderror)
     if not hasattr(os, 'dup'):
         pytest.skip("capfd funcarg needs os.dup")
-    request.node._capfuncarg = c = CaptureFixture(FDCapture)
+    request.node._capfuncarg = c = CaptureFixture(FDCapture, request)
     return c
 
 
 class CaptureFixture:
-    def __init__(self, captureclass):
+    def __init__(self, captureclass, request):
         self.captureclass = captureclass
+        self.request = request
 
     def _start(self):
         self._capture = MultiCapture(out=True, err=True, in_=False,
-                                       Capture=self.captureclass)
+                                     Capture=self.captureclass)
         self._capture.start_capturing()
 
     def close(self):
@@ -199,6 +206,15 @@ class CaptureFixture:
             return self._capture.readouterr()
         except AttributeError:
             return self._outerr
+
+    @contextlib.contextmanager
+    def disabled(self):
+        capmanager = self.request.config.pluginmanager.getplugin('capturemanager')
+        capmanager.suspendcapture_item(self.request.node, "call", in_=True)
+        try:
+            yield
+        finally:
+            capmanager.resumecapture()
 
 
 def safe_text_dupfile(f, mode, default_encoding="UTF8"):
@@ -390,7 +406,7 @@ class SysCapture:
             if name == "stdin":
                 tmpfile = DontReadFromInput()
             else:
-                tmpfile = TextIO()
+                tmpfile = CaptureIO()
         self.tmpfile = tmpfile
 
     def start(self):
@@ -436,13 +452,21 @@ class DontReadFromInput:
     __iter__ = read
 
     def fileno(self):
-        raise ValueError("redirected Stdin is pseudofile, has no fileno()")
+        raise UnsupportedOperation("redirected stdin is pseudofile, "
+                                   "has no fileno()")
 
     def isatty(self):
         return False
 
     def close(self):
         pass
+
+    @property
+    def buffer(self):
+        if sys.version_info >= (3,0):
+            return self
+        else:
+            raise AttributeError('redirected stdin has no attribute buffer')
 
 
 def _readline_workaround():
@@ -452,7 +476,7 @@ def _readline_workaround():
 
     Pdb uses readline support where available--when not running from the Python
     prompt, the readline module is not imported until running the pdb REPL.  If
-    running py.test with the --pdb option this means the readline module is not
+    running pytest with the --pdb option this means the readline module is not
     imported until after I/O capture has been started.
 
     This is a problem for pyreadline, which is often used to implement readline
@@ -470,3 +494,49 @@ def _readline_workaround():
         import readline  # noqa
     except ImportError:
         pass
+
+
+def _py36_windowsconsoleio_workaround():
+    """
+    Python 3.6 implemented unicode console handling for Windows. This works
+    by reading/writing to the raw console handle using
+    ``{Read,Write}ConsoleW``.
+
+    The problem is that we are going to ``dup2`` over the stdio file
+    descriptors when doing ``FDCapture`` and this will ``CloseHandle`` the
+    handles used by Python to write to the console. Though there is still some
+    weirdness and the console handle seems to only be closed randomly and not
+    on the first call to ``CloseHandle``, or maybe it gets reopened with the
+    same handle value when we suspend capturing.
+
+    The workaround in this case will reopen stdio with a different fd which
+    also means a different handle by replicating the logic in
+    "Py_lifecycle.c:initstdio/create_stdio".
+
+    See https://github.com/pytest-dev/py/issues/103
+    """
+    if not sys.platform.startswith('win32') or sys.version_info[:2] < (3, 6):
+        return
+
+    buffered = hasattr(sys.stdout.buffer, 'raw')
+    raw_stdout = sys.stdout.buffer.raw if buffered else sys.stdout.buffer
+
+    if not isinstance(raw_stdout, io._WindowsConsoleIO):
+        return
+
+    def _reopen_stdio(f, mode):
+        if not buffered and mode[0] == 'w':
+            buffering = 0
+        else:
+            buffering = -1
+
+        return io.TextIOWrapper(
+            open(os.dup(f.fileno()), mode, buffering),
+            f.encoding,
+            f.errors,
+            f.newlines,
+            f.line_buffering)
+
+    sys.__stdin__ = sys.stdin = _reopen_stdio(sys.stdin, 'rb')
+    sys.__stdout__ = sys.stdout = _reopen_stdio(sys.stdout, 'wb')
+    sys.__stderr__ = sys.stderr = _reopen_stdio(sys.stderr, 'wb')

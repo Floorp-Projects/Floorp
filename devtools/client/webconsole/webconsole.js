@@ -490,14 +490,8 @@ WebConsoleFrame.prototype = {
       Services.obs.notifyObservers(id, "web-console-created");
     };
     allReady.then(notifyObservers, notifyObservers);
-
-    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-      allReady.then(this.newConsoleOutput.init);
-    }
-
     return allReady;
   },
-
   /**
    * Connect to the server using the remote debugging protocol.
    *
@@ -527,7 +521,6 @@ WebConsoleFrame.prototype = {
 
     return this._initDefer.promise;
   },
-
   /**
    * Find the Web Console UI elements and setup event listeners as needed.
    * @private
@@ -535,74 +528,37 @@ WebConsoleFrame.prototype = {
   _initUI: function () {
     this.document = this.window.document;
     this.rootElement = this.document.documentElement;
-    this.NEW_CONSOLE_OUTPUT_ENABLED = !this.isBrowserConsole
-      && !this.owner.target.chrome
-      && Services.prefs.getBoolPref(PREF_NEW_FRONTEND_ENABLED);
-
     this.outputNode = this.document.getElementById("output-container");
     this.outputWrapper = this.document.getElementById("output-wrapper");
     this.completeNode = this.document.querySelector(".jsterm-complete-node");
     this.inputNode = this.document.querySelector(".jsterm-input-node");
-
     // In the old frontend, the area that scrolls is outputWrapper, but in the new
     // frontend this will be reassigned.
     this.outputScroller = this.outputWrapper;
-
-    // Update the character width and height needed for the popup offset
-    // calculations.
-    this._updateCharSize();
-
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
-
     let toolbox = gDevTools.getToolbox(this.owner.target);
+    // Register the controller to handle "select all" properly.
+    this._commandController = new CommandController(this);
+    this.window.controllers.insertControllerAt(0, this._commandController);
 
-    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-      // @TODO Remove this once JSTerm is handled with React/Redux.
-      this.window.jsterm = this.jsterm;
+    this._contextMenuHandler = new ConsoleContextMenu(this);
 
-      // Remove context menu for now (see Bug 1307239).
-      this.outputWrapper.removeAttribute("context");
+    this._initDefaultFilterPrefs();
+    this.filterBox = this.document.querySelector(".hud-filter-box");
+    this._setFilterTextBoxEvents();
+    this._initFilterButtons();
 
-      // XXX: We should actually stop output from happening on old output
-      // panel, but for now let's just hide it.
-      this.experimentalOutputNode = this.outputNode.cloneNode();
-      this.experimentalOutputNode.removeAttribute("tabindex");
-      this.outputNode.hidden = true;
-      this.outputNode.parentNode.appendChild(this.experimentalOutputNode);
-      // @TODO Once the toolbox has been converted to React, see if passing
-      // in JSTerm is still necessary.
-
-      this.newConsoleOutput = new this.window.NewConsoleOutput(
-        this.experimentalOutputNode, this.jsterm, toolbox, this.owner, this.document);
-
-      let filterToolbar = this.document.querySelector(".hud-console-filter-toolbar");
-      filterToolbar.hidden = true;
-    } else {
-      // Register the controller to handle "select all" properly.
-      this._commandController = new CommandController(this);
-      this.window.controllers.insertControllerAt(0, this._commandController);
-
-      this._contextMenuHandler = new ConsoleContextMenu(this);
-
-      this._initDefaultFilterPrefs();
-      this.filterBox = this.document.querySelector(".hud-filter-box");
-      this._setFilterTextBoxEvents();
-      this._initFilterButtons();
-      let clearButton =
-        this.document.getElementsByClassName("webconsole-clear-console-button")[0];
-      clearButton.addEventListener("command", () => {
-        this.owner._onClearButton();
-        this.jsterm.clearOutput(true);
-      });
-
-    }
-
+    let clearButton =
+      this.document.getElementsByClassName("webconsole-clear-console-button")[0];
+    clearButton.addEventListener("command", () => {
+      this.owner._onClearButton();
+      this.jsterm.clearOutput(true);
+    });
     this.resize();
     this.window.addEventListener("resize", this.resize, true);
     this.jsterm.on("sidebar-opened", this.resize);
     this.jsterm.on("sidebar-closed", this.resize);
-
     if (toolbox) {
       toolbox.on("webconsole-selected", this._onPanelSelected);
     }
@@ -621,48 +577,30 @@ WebConsoleFrame.prototype = {
       if (selection && !selection.isCollapsed) {
         return;
       }
-
       // Do not focus if a link was clicked
       if (event.target.nodeName.toLowerCase() === "a" ||
           event.target.parentNode.nodeName.toLowerCase() === "a") {
         return;
       }
-
-      // Do not focus if a search input was clicked on the new frontend
-      if (this.NEW_CONSOLE_OUTPUT_ENABLED &&
-          event.target.nodeName.toLowerCase() === "input" &&
-          event.target.getAttribute("type").toLowerCase() === "search") {
-        return;
-      }
-
       this.jsterm.focus();
     });
-
     // Toggle the timestamp on preference change
     this._prefObserver = new PrefObserver("");
     this._prefObserver.on(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();
-
     this._initShortcuts();
 
     // focus input node
     this.jsterm.focus();
   },
-
   /**
    * Resizes the output node to fit the output wrapped.
    * We need this because it makes the layout a lot faster than
    * using -moz-box-flex and 100% width.  See Bug 1237368.
    */
   resize: function () {
-    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-      this.experimentalOutputNode.style.width =
-        this.outputWrapper.clientWidth + "px";
-    } else {
-      this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
-    }
+    this.outputNode.style.width = this.outputWrapper.clientWidth + "px";
   },
-
   /**
    * Sets the focus to JavaScript input field when the web console tab is
    * selected or when there is a split console present.
@@ -837,39 +775,11 @@ WebConsoleFrame.prototype = {
       let logging =
         this.document.querySelector("toolbarbutton[category=logging]");
       logging.removeAttribute("accesskey");
-
       let serverLogging =
         this.document.querySelector("toolbarbutton[category=server]");
       serverLogging.removeAttribute("accesskey");
     }
   },
-
-  /**
-   * Calculates the width and height of a single character of the input box.
-   * This will be used in opening the popup at the correct offset.
-   *
-   * @private
-   */
-  _updateCharSize: function () {
-    let doc = this.document;
-    let tempLabel = doc.createElementNS(XHTML_NS, "span");
-    let style = tempLabel.style;
-    style.position = "fixed";
-    style.padding = "0";
-    style.margin = "0";
-    style.width = "auto";
-    style.color = "transparent";
-    WebConsoleUtils.copyTextStyles(this.inputNode, tempLabel);
-    tempLabel.textContent = "x";
-    doc.documentElement.appendChild(tempLabel);
-    this._inputCharWidth = tempLabel.offsetWidth;
-    tempLabel.remove();
-    // Calculate the width of the chevron placed at the beginning of the input
-    // box. Remove 4 more pixels to accomodate the padding of the popup.
-    this._chevronWidth = +doc.defaultView.getComputedStyle(this.inputNode)
-                             .paddingLeft.replace(/[^0-9.]/g, "") - 4;
-  },
-
   /**
    * The event handler that is called whenever a user switches a filter on or
    * off.
@@ -1974,19 +1884,12 @@ WebConsoleFrame.prototype = {
   handleTabNavigated: function (event, packet) {
     if (event == "will-navigate") {
       if (this.persistLog) {
-        if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-          // Add a _type to hit convertCachedPacket.
-          packet._type = true;
-          this.newConsoleOutput.dispatchMessageAdd(packet);
-        } else {
-          let marker = new Messages.NavigationMarker(packet, Date.now());
-          this.output.addMessage(marker);
-        }
+        let marker = new Messages.NavigationMarker(packet, Date.now());
+        this.output.addMessage(marker);
       } else {
         this.jsterm.clearOutput();
       }
     }
-
     if (packet.url) {
       this.onLocationChange(packet.url, packet.title);
     }
@@ -2698,21 +2601,17 @@ WebConsoleFrame.prototype = {
       callback.call(this, event);
     });
   },
-
   /**
    * Called when the message timestamp pref changes.
    */
   _onToolboxPrefChanged: function () {
     let newValue = Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP);
-    if (this.NEW_CONSOLE_OUTPUT_ENABLED) {
-      this.newConsoleOutput.dispatchTimestampsToggle(newValue);
-    } else if (newValue) {
+    if (newValue) {
       this.outputNode.classList.remove("hideTimestamps");
     } else {
       this.outputNode.classList.add("hideTimestamps");
     }
   },
-
   /**
    * Copies the selected items to the system clipboard.
    *
