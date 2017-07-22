@@ -216,6 +216,23 @@ public:
   Maybe<gfx::IntSize> ExplicitOutputSize() const;
 
   /**
+   * Sets the expected image size of this decoder. Decoding will fail if this
+   * does not match.
+   */
+  void SetExpectedSize(const gfx::IntSize& aSize)
+  {
+    mExpectedSize.emplace(aSize);
+  }
+
+  /**
+   * Is the image size what was expected, if specified?
+   */
+  bool IsExpectedSize() const
+  {
+    return mExpectedSize.isNothing() || *mExpectedSize == Size();
+  }
+
+  /**
    * Set an iterator to the SourceBuffer which will feed data to this decoder.
    * This must always be called before calling Init(). (And only before Init().)
    *
@@ -527,6 +544,7 @@ private:
   ImageMetadata mImageMetadata;
   gfx::IntRect mInvalidRect; // Tracks an invalidation region in the current frame.
   Maybe<gfx::IntSize> mOutputSize;  // The size of our output surface.
+  Maybe<gfx::IntSize> mExpectedSize; // The expected size of the image.
   Progress mProgress;
 
   uint32_t mFrameCount; // Number of frames, including anything in-progress
