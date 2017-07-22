@@ -414,6 +414,8 @@ ImageTestCase DownscaledTransparentICOWithANDMaskTestCase();
 
 ImageTestCase TruncatedSmallGIFTestCase();
 
+ImageTestCase LargeICOWithBMPTestCase();
+ImageTestCase LargeICOWithPNGTestCase();
 ImageTestCase GreenMultipleSizesICOTestCase();
 
 } // namespace image
