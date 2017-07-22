@@ -212,17 +212,17 @@ LoopUnroller::go(LoopIterationBound* bound)
     const CompileInfo& info = oldPreheader->info();
     if (header->trackedPc()) {
         unrolledHeader =
-            MBasicBlock::New(graph, nullptr, info,
+            MBasicBlock::New(graph, oldPreheader->stackDepth(), info,
                              oldPreheader, header->trackedSite(), MBasicBlock::LOOP_HEADER);
         if (!unrolledHeader)
             return false;
         unrolledBackedge =
-            MBasicBlock::New(graph, nullptr, info,
+            MBasicBlock::New(graph, unrolledHeader->stackDepth(), info,
                              unrolledHeader, backedge->trackedSite(), MBasicBlock::NORMAL);
         if (!unrolledBackedge)
             return false;
         newPreheader =
-            MBasicBlock::New(graph, nullptr, info,
+            MBasicBlock::New(graph, unrolledHeader->stackDepth(), info,
                              unrolledHeader, oldPreheader->trackedSite(), MBasicBlock::NORMAL);
         if (!newPreheader)
             return false;
