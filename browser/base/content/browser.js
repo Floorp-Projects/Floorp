@@ -103,6 +103,11 @@ if (AppConstants.MOZ_CRASHREPORTER) {
 
 XPCOMUtils.defineLazyScriptGetter(this, "PrintUtils",
                                   "chrome://global/content/printUtils.js");
+XPCOMUtils.defineLazyScriptGetter(this, "ZoomManager",
+                                  "chrome://global/content/viewZoomOverlay.js");
+XPCOMUtils.defineLazyScriptGetter(this, "FullZoom",
+                                  "chrome://browser/content/browser-fullZoom.js");
+
 
 
 // lazy service getters
