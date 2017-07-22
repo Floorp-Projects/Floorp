@@ -40,7 +40,7 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
                                                true, true,
                                                doc->GetInnerWindow(), 0,
                                                false, false, false,
-                                               false, nullptr))) {
+                                               false, nullptr, 0))) {
       event->SetTrusted(true);
       bool dummy;
       aTargetContent->DispatchEvent(event, &dummy);

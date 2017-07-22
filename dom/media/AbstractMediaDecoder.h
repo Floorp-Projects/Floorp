@@ -32,8 +32,6 @@ class MediaDecoderOwner;
 class CDMProxy;
 class GMPCrashHelper;
 
-typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
-
 /**
  * The AbstractMediaDecoder class describes the public interface for a media decoder
  * and is used by the MediaReader classes.

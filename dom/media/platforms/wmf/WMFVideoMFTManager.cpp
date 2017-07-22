@@ -12,7 +12,6 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "MP4Decoder.h"
-#include "MediaDecoderReader.h"
 #include "MediaInfo.h"
 #include "MediaTelemetryConstants.h"
 #include "VPXDecoder.h"

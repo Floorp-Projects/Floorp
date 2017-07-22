@@ -327,7 +327,7 @@ def fixlocale():
     return ''
 
 # some nasty chunk of code to solve path and url conversion and quoting issues
-ILLEGAL_CHARS = '* | \ / : < > ? \t \n \x0b \x0c \r'.split(' ')
+ILLEGAL_CHARS = '* | \\ / : < > ? \t \n \x0b \x0c \r'.split(' ')
 if os.sep in ILLEGAL_CHARS:
     ILLEGAL_CHARS.remove(os.sep)
 ISWINDOWS = sys.platform == 'win32'

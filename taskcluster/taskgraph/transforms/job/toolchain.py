@@ -39,6 +39,9 @@ toolchain_run_schema = Schema({
     # Paths/patterns pointing to files that influence the outcome of a
     # toolchain build.
     Optional('resources'): [basestring],
+
+    # Path to the artifact produced by the toolchain job
+    Required('toolchain-artifact'): basestring,
 })
 
 
@@ -51,7 +54,7 @@ def add_optimizations(config, run, taskdesc):
 
     label = taskdesc['label']
     subs = {
-        'name': label.replace('toolchain-', '').split('/')[0],
+        'name': label.replace('%s-' % config.kind, ''),
         'digest': hash_paths(GECKO, files),
     }
 
@@ -130,6 +133,9 @@ def docker_worker_toolchain(config, job, taskdesc):
             run['script'])
     ]
 
+    attributes = taskdesc.setdefault('attributes', {})
+    attributes['toolchain-artifact'] = run['toolchain-artifact']
+
     add_optimizations(config, run, taskdesc)
 
 
@@ -180,5 +186,8 @@ def windows_toolchain(config, job, taskdesc):
         # do something intelligent.
         r'{} -c ./build/src/taskcluster/scripts/misc/{}'.format(bash, run['script'])
     ]
+
+    attributes = taskdesc.setdefault('attributes', {})
+    attributes['toolchain-artifact'] = run['toolchain-artifact']
 
     add_optimizations(config, run, taskdesc)

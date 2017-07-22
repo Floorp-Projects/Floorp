@@ -24,6 +24,11 @@ interface nsIDOMXULCommandEvent : nsIDOMUIEvent
   readonly attribute boolean metaKey;
 
   /**
+   * The input source, if this event was triggered by a mouse event.
+  */
+  readonly attribute unsigned short inputSource;
+
+  /**
    * If the command event was redispatched because of a command= attribute
    * on the original target, sourceEvent will be set to the original DOM Event.
    * Otherwise, sourceEvent is null.
@@ -42,5 +47,6 @@ interface nsIDOMXULCommandEvent : nsIDOMUIEvent
                         in boolean altKeyArg,
                         in boolean shiftKeyArg,
                         in boolean metaKeyArg,
-                        in nsIDOMEvent sourceEvent);
+                        in nsIDOMEvent sourceEvent,
+                        in unsigned short inputSource);
 };

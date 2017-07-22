@@ -13,15 +13,16 @@
 
 #include "mozilla/ServoBindings.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-ServoStyleContext::ServoStyleContext(nsStyleContext* aParent,
-                               nsPresContext* aPresContext,
-                               nsIAtom* aPseudoTag,
-                               CSSPseudoElementType aPseudoType,
-                              ServoComputedValuesForgotten aComputedValues)
-  : nsStyleContext(aParent, aPseudoTag, aPseudoType),
-    mSource(aComputedValues)
+ServoStyleContext::ServoStyleContext(
+    nsStyleContext* aParent,
+    nsPresContext* aPresContext,
+    nsIAtom* aPseudoTag,
+    CSSPseudoElementType aPseudoType,
+    ServoComputedValuesForgotten aComputedValues)
+  : nsStyleContext(aParent, aPseudoTag, aPseudoType)
+  , mSource(aComputedValues)
 {
   mPresContext = aPresContext;
   AddStyleBit(Servo_ComputedValues_GetStyleBits(&mSource));
@@ -69,3 +70,5 @@ ServoStyleContext::UpdateWithElementState(Element* aElementForAnimation)
     }
   }
 }
+
+} // namespace mozilla

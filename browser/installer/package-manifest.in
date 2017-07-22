@@ -47,8 +47,6 @@
 [@AB_CD@]
 @RESPATH@/browser/chrome/@AB_CD@@JAREXT@
 @RESPATH@/browser/chrome/@AB_CD@.manifest
-@RESPATH@/chrome/@AB_CD@@JAREXT@
-@RESPATH@/chrome/@AB_CD@.manifest
 @RESPATH@/dictionaries/*
 #if defined(XP_WIN) || defined(XP_LINUX)
 @RESPATH@/fonts/*
@@ -836,4 +834,8 @@ bin/libfreebl_32int64_3.so
 #ifdef XP_LINUX
 @RESPATH@/fix_linux_stack.py
 #endif
+#endif
+
+#ifdef PKG_LOCALE_MANIFEST
+#include @PKG_LOCALE_MANIFEST@
 #endif

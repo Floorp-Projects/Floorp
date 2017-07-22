@@ -37,7 +37,7 @@ namespace mozilla {
 
 class AbstractThread;
 class VideoFrameContainer;
-class MediaDecoderReader;
+class MediaFormatReader;
 class MediaDecoderStateMachine;
 
 enum class MediaEventType : int8_t;
@@ -514,7 +514,7 @@ protected:
   // Media data resource.
   RefPtr<MediaResource> mResource;
 
-  RefPtr<MediaDecoderReader> mReader;
+  RefPtr<MediaFormatReader> mReader;
 
   // Amount of buffered data ahead of current time required to consider that
   // the next frame is available.
@@ -768,6 +768,16 @@ protected:
   // seek operations, but it's updated at the end when we start playing
   // back again.
   Canonical<int64_t> mDecoderPosition;
+
+  // We can allow video decoding in background when we match some special
+  // conditions, eg. when the cursor is hovering over the tab. This observer is
+  // used to listen the related events.
+  class BackgroundVideoDecodingPermissionObserver;
+  RefPtr<BackgroundVideoDecodingPermissionObserver> mVideoDecodingOberver;
+
+  // True if we want to resume video decoding even the media element is in the
+  // background.
+  bool mIsBackgroundVideoDecodingAllowed;
 
 public:
   AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }

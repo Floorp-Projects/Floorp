@@ -8,6 +8,7 @@ ac_add_options --disable-gtest-in-build
 # Rust code gives false positives that we have not entirely suppressed yet.
 # Bug 1365915 tracks fixing these.
 ac_add_options --disable-stylo
+unset LLVM_CONFIG
 
 # Include the override mozconfig again (even though the above includes it)
 # since it's supposed to override everything.

@@ -225,6 +225,7 @@ pub struct BoxShadowDisplayItem {
     pub clip_mode: BoxShadowClipMode,
 }
 
+#[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct TextShadow {
     pub offset: LayoutVector2D,

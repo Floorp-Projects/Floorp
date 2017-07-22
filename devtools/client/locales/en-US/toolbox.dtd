@@ -82,12 +82,6 @@
 <!ENTITY options.enableRemote.label3    "Enable remote debugging">
 <!ENTITY options.enableRemote.tooltip2  "Turning this option on will allow the developer tools to debug a remote instance like Firefox OS">
 
-<!-- LOCALIZATION NOTE (options.enableWorkers.label): This is the label for the
-  -  checkbox that toggles worker debugging, i.e. devtools.debugger.workers
-  -  boolean preference in about:config, in the options panel. -->
-<!ENTITY options.enableWorkers.label    "Enable worker debugging (in development)">
-<!ENTITY options.enableWorkers.tooltip  "Turning this option on will allow the developer tools to debug workers">
-
 <!-- LOCALIZATION NOTE (options.disableJavaScript.label,
   -  options.disableJavaScript.tooltip): This is the options panel label and
   -  tooltip for the checkbox that toggles JavaScript on or off. -->

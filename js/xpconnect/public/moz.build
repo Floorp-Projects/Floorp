@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'nsAXPCNativeCallContext.h',
     'nsTArrayHelpers.h',
     'xpc_make_class.h',
     'xpc_map_end.h',

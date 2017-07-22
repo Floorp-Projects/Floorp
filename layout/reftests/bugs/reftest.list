@@ -1703,9 +1703,9 @@ fails-if(styloVsGecko) == 670467-2.html 670467-2-ref.html
 == 691571-1.html 691571-1-ref.html
 fuzzy-if(skiaContent,1,200) == 696307-1.html 696307-1-ref.html
 fuzzy-if(skiaContent,1,550) == 696739-1.html 696739-1-ref.html
-needs-focus fails-if(styloVsGecko) == 703186-1.html 703186-1-ref.html
+needs-focus == 703186-1.html 703186-1-ref.html
 needs-focus == 703186-2.html 703186-2-ref.html
-needs-focus fails-if(styloVsGecko||stylo) != 703186-1.html 703186-2.html
+needs-focus != 703186-1.html 703186-2.html
 == 711359-1.html 711359-1-ref.html
 == 712849-1.html 712849-1-ref.html
 == 713856-static.html  713856-ref.html
@@ -1722,8 +1722,8 @@ fuzzy(2,40000) == 722923-1.html 722923-1-ref.html
 random-if(Android) == 728983-1.html 728983-1-ref.html
 == 729143-1.html 729143-1-ref.html
 fails-if(styloVsGecko||stylo) == 731521-1.html 731521-1-ref.html
-needs-focus fails-if(styloVsGecko) == 731726-1.html 731726-1-ref.html
-fails-if(styloVsGecko||stylo) == 735481-1.html 735481-1-ref.html
+needs-focus == 731726-1.html 731726-1-ref.html
+== 735481-1.html 735481-1-ref.html
 fuzzy-if(cocoaWidget,1,300000) fuzzy-if(skiaContent,2,300000) == 745934-1.html 745934-1-ref.html
 == 748692-1a.html 748692-1-ref.html
 == 748692-1b.html 748692-1-ref.html
@@ -1780,11 +1780,11 @@ fuzzy-if(OSX,1,364) fuzzy-if(skiaContent,1,320) == 846144-1.html 846144-1-ref.ht
 != 860370.html 860370-notref.html
 == 871338-1.html 871338-1-ref.html
 == 875060-1.html 875060-1-ref.html
-fails-if(styloVsGecko||stylo) == 883987-1a.html 883987-1-ref.html
+== 883987-1a.html 883987-1-ref.html
 fails-if(styloVsGecko||stylo) == 883987-1b.html 883987-1-ref.html
 fails-if(styloVsGecko||stylo) == 883987-1c.html 883987-1-ref.html
-fails-if(styloVsGecko||stylo) == 883987-1d.html 883987-1-ref.html
-fails-if(styloVsGecko||stylo) == 883987-1e.html 883987-1-ref.html
+== 883987-1d.html 883987-1-ref.html
+== 883987-1e.html 883987-1-ref.html
 == 883987-1f.html 883987-1-ref.html
 == 890495-1.html 890495-1-ref.html
 == 894931-1.html 894931-1-ref.html

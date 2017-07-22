@@ -444,7 +444,8 @@ public:
   }
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+    Layer* aLayer,
+    const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const;
 
@@ -937,7 +938,8 @@ public:
     return mHelper.WantAsyncScroll();
   }
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+    Layer* aLayer,
+    const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {
@@ -1371,7 +1373,8 @@ public:
     return mHelper.WantAsyncScroll();
   }
   virtual mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
-    Layer* aLayer, nsIFrame* aContainerReferenceFrame,
+    Layer* aLayer,
+    const nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
     const mozilla::DisplayItemClip* aClip) const override
   {

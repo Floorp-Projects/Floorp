@@ -215,7 +215,6 @@ task_description_schema = Schema({
 
         # the exit status code that indicates the task should be retried
         Optional('retry-exit-status'): int,
-
     }, {
         Required('implementation'): 'generic-worker',
         Required('os'): Any('windows', 'macosx'),
@@ -444,6 +443,8 @@ GROUP_NAMES = {
     'tc-R-e10s': 'Reftests executed by TaskCluster with e10s',
     'tc-T': 'Talos performance tests executed by TaskCluster',
     'tc-T-e10s': 'Talos performance tests executed by TaskCluster with e10s',
+    'tc-tt-c': 'Telemetry client marionette tests',
+    'tc-tt-c-e10s': 'Telemetry client marionette tests with e10s',
     'tc-SY-e10s': 'Are we slim yet tests by TaskCluster with e10s',
     'tc-VP': 'VideoPuppeteer tests executed by TaskCluster',
     'tc-W': 'Web platform tests executed by TaskCluster',

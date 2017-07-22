@@ -536,6 +536,7 @@
   padding: 10px 20px;
   font-size: 14px;
   color: #fff;
+  min-width: 130px;
 }
 
 @media all and (max-width: 960px) {

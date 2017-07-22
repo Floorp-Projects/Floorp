@@ -6617,7 +6617,8 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                    bool aCtrl,
                                    bool aAlt,
                                    bool aShift,
-                                   bool aMeta)
+                                   bool aMeta,
+                                   uint16_t aInputSource)
 {
   NS_ENSURE_STATE(aTarget);
   nsIDocument* doc = aTarget->OwnerDoc();
@@ -6630,7 +6631,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
                                                            nullptr);
   xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"), true, true,
                                doc->GetInnerWindow(), 0, aCtrl, aAlt, aShift,
-                               aMeta, aSourceEvent);
+                               aMeta, aSourceEvent, aInputSource);
 
   if (aShell) {
     nsEventStatus status = nsEventStatus_eIgnore;

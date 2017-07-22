@@ -9,7 +9,6 @@ from marionette_driver import By, errors
 from marionette_harness import (
     MarionetteTestCase,
     run_if_e10s,
-    skip_if_e10s,
     skip_if_mobile,
     WindowManagerMixin,
 )
@@ -84,7 +83,6 @@ class TestLegacyClick(MarionetteTestCase):
         self.marionette.delete_session()
         self.marionette.start_session()
 
-    @skip_if_e10s("bug 1360446")
     def test_click(self):
         self.marionette.navigate(inline("""
             <button>click me</button>

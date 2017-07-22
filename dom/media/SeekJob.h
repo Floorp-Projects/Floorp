@@ -9,7 +9,6 @@
 
 #include "mozilla/MozPromise.h"
 #include "MediaDecoder.h"
-#include "MediaDecoderReader.h"
 #include "SeekTarget.h"
 
 namespace mozilla {
