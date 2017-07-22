@@ -25,12 +25,12 @@ load stress-7.html # assertion/crash test
 load stress-10.html # crash test
 == stress-11.xhtml stress-11-ref.xhtml
 
-fails-if(styloVsGecko||stylo) == border-not-apply.html border-not-apply-ref.html
+== border-not-apply.html border-not-apply-ref.html
 fails-if(styloVsGecko||stylo) == 287088-1.html 287088-1-ref.html
 fails-if(styloVsGecko||stylo) == 287088-2.html 287088-2-ref.html
 fails-if(styloVsGecko) == 403177-1.html 403177-1-ref.html
-fails-if(styloVsGecko||stylo) == 469227-2.html 469227-2-ref.html
-fails-if(styloVsGecko||stylo) == 469227-3.html 469227-3-ref.html
+== 469227-2.html 469227-2-ref.html
+== 469227-3.html 469227-3-ref.html
 
 fails-if(styloVsGecko||stylo) == restyle-inside-first-line.html restyle-inside-first-line-ref.html
 fails-if(styloVsGecko||stylo) == font-styles.html font-styles-ref.html

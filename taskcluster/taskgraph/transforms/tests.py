@@ -51,12 +51,48 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
       'hardware': 'releng-hardware/gecko-t-win7-32-hw',
     },
+    'windows7-32-pgo': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
+      'hardware': 'releng-hardware/gecko-t-win7-32-hw',
+    },
+    'windows7-32-nightly': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
+      'hardware': 'releng-hardware/gecko-t-win7-32-hw',
+    },
     'windows10-64': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
+    'windows10-64-pgo': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows10-64-nightly': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
     'windows10-64-asan': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    # These values don't really matter since BBB will be executing them
+    'windows8-64': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows8-64-pgo': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows8-64-nightly': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
@@ -310,6 +346,11 @@ test_description_schema = Schema({
         Optional('files-changed'): [basestring],
     }),
 
+    Optional('worker-type'): optionally_keyed_by(
+        'test-platform',
+        Any(basestring, None),
+    ),
+
 }, required=True)
 
 
@@ -426,6 +467,8 @@ def set_treeherder_machine_platform(config, tests):
         'macosx64/debug': 'osx-10-10/debug',
         'macosx64/opt': 'osx-10-10/opt',
         'win64-asan/opt': 'windows10-64/asan',
+        'win32-pgo/opt': 'windows7-32/pgo',
+        'win64-pgo/opt': 'windows10-64/pgo',
         # The build names for Android platforms have partially evolved over the
         # years and need to be translated.
         'android-api-15/debug': 'android-4-3-armv7-api15/debug',
@@ -518,6 +561,7 @@ def handle_keyed_by(config, tests):
         'mozharness.config',
         'mozharness.extra-options',
         'mozharness.requires-signed-builds',
+        'worker-type',
     ]
     for test in tests:
         for field in fields:
@@ -751,8 +795,10 @@ def set_worker_type(config, tests):
         # during the taskcluster migration, this is a bit tortured, but it
         # will get simpler eventually!
         test_platform = test['test-platform']
-        if test_platform.startswith('macosx'):
-            # note that some portion of these will be allocated to BBB below
+        if test.get('worker-type'):
+            # This test already has its worker type defined, so just use that (yields below)
+            pass
+        elif test_platform.startswith('macosx'):
             test['worker-type'] = MACOSX_WORKER_TYPES['macosx64']
         elif test_platform.startswith('win'):
             if test.get('suite', '') == 'talos' and \

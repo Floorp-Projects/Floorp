@@ -43,8 +43,9 @@ class Repackage(BaseScript):
 
     def setup(self):
         self._run_tooltool()
-        self._get_mozconfig()
-        self._run_configure()
+        if self.config.get("run_configure", True):
+            self._get_mozconfig()
+            self._run_configure()
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -54,10 +55,14 @@ class Repackage(BaseScript):
         for directory in abs_dirs:
             value = abs_dirs[directory]
             abs_dirs[directory] = value
+
         dirs = {}
         dirs['abs_tools_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tools')
         dirs['abs_mozilla_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'src')
-        dirs['output_home'] = config['output_home'].format(**abs_dirs)
+        locale_dir = ''
+        if config.get('locale'):
+            locale_dir = "{}{}".format(os.path.sep, config['locale'])
+        dirs['output_home'] = config['output_home'].format(locale=locale_dir, **abs_dirs)
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
@@ -89,6 +94,7 @@ class Repackage(BaseScript):
             manifest_src = config.get('tooltool_manifest_src')
         if not manifest_src:
             return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
+
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               manifest_src)
         cmd = [

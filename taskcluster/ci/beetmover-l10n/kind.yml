@@ -17,3 +17,5 @@ only-for-attributes:
 
 not-for-build-platforms:
    - macosx64-nightly/opt
+   - win32-nightly/opt
+   - win64-nightly/opt

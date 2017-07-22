@@ -43,10 +43,6 @@ to mochitest command.
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1338764
     * test_value_storage.html `context-` [7]
     * test_bug798843_pref.html [3]
-* Incorrect parsing
-  * different parsing bug 1364260
-    * test_supports_rules.html [1]
-    * test_condition_text.html [1]
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]

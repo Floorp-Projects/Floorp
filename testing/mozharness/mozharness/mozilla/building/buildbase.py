@@ -795,23 +795,22 @@ or run without that action (ie: --no-{action})"
             return self.buildid
 
         buildid = None
-        if c.get("is_automation"):
-            if self.buildbot_config['properties'].get('buildid'):
-                self.info("Determining buildid from buildbot properties")
-                buildid = self.buildbot_config['properties']['buildid'].encode(
-                    'ascii', 'replace'
-                )
-            else:
-                # for taskcluster, there are no buildbot properties, and we pass
-                # MOZ_BUILD_DATE into mozharness as an environment variable, only
-                # to have it pass the same value out with the same name.
-                buildid = os.environ.get('MOZ_BUILD_DATE')
+        if c.get("is_automation") and self.buildbot_config['properties'].get('buildid'):
+            self.info("Determining buildid from buildbot properties")
+            buildid = self.buildbot_config['properties']['buildid'].encode(
+                'ascii', 'replace'
+            )
+        else:
+            # for taskcluster, there are no buildbot properties, and we pass
+            # MOZ_BUILD_DATE into mozharness as an environment variable, only
+            # to have it pass the same value out with the same name.
+            buildid = os.environ.get('MOZ_BUILD_DATE')
 
         if not buildid:
             self.info("Creating buildid through current time")
             buildid = generate_build_ID()
 
-        if c.get('is_automation'):
+        if c.get('is_automation') or os.environ.get("TASK_ID"):
             self.set_buildbot_property('buildid',
                                        buildid,
                                        write_to_file=True)
@@ -1141,6 +1140,9 @@ or run without that action (ie: --no-{action})"
         cache = c['env'].get('TOOLTOOL_CACHE')
         if cache:
             cmd.extend(['--cache-dir', cache])
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
+        if toolchains:
+            cmd.extend(toolchains.split())
         self.info(str(cmd))
         self.run_command_m(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
                            env=env)

@@ -31,15 +31,33 @@ def make_signing_description(config, jobs):
             ]
         elif 'macosx' in dep_platform:
             job_specs = [
-                 {
+                {
                     'artifacts': ['public/build/{locale}/target.dmg'],
                     'format': 'macapp',
-                 }, {
-                    'artifacts': ['public/build/{locale}/target.complete.mar'],
-                    'format': 'mar',
-                 }
+                }
             ]
-        else:
+        elif 'win32' in dep_platform:
+            job_specs = [
+                {
+                    'artifacts': [
+                        'public/build/{locale}/target.zip',
+                        'public/build/{locale}/setup.exe',
+                        'public/build/{locale}/setup-stub.exe'
+                    ],
+                    'format': 'sha2signcode',
+                }
+            ]
+        elif 'win64' in dep_platform:
+            job_specs = [
+                {
+                    'artifacts': [
+                        'public/build/{locale}/target.zip',
+                        'public/build/{locale}/setup.exe',
+                    ],
+                    'format': 'sha2signcode',
+                }
+            ]
+        elif 'linux' in dep_platform:
             job_specs = [
                 {
                     'artifacts': ['public/build/{locale}/target.tar.bz2'],
@@ -49,6 +67,9 @@ def make_signing_description(config, jobs):
                     'format': 'mar',
                 }
             ]
+        else:
+            raise Exception("Platform not implemented for signing")
+
         upstream_artifacts = []
         for spec in job_specs:
             fmt = spec['format']
@@ -75,9 +96,5 @@ def make_signing_description(config, jobs):
         job['treeherder'] = {
             'symbol': join_symbol(group, symbol),
         }
-
-        # Announce job status on funsize specific routes, so that it can
-        # start the partial generation for nightlies only.
-        job['use-funsize-route'] = True
 
         yield job

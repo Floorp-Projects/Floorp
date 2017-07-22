@@ -78,6 +78,28 @@ def make_repackage_signing_description(config, jobs):
             ],
             "formats": ["mar"]
         }]
+        if 'win' in dep_job.attributes.get('build_platform'):
+            upstream_artifacts.append({
+                "taskId": {"task-reference": "<repackage>"},
+                "taskType": "repackage",
+                "paths": [
+                    "public/build/{}target.installer.exe".format(locale_str),
+                ],
+                "formats": ["sha2signcode"]
+            })
+            scopes.append("project:releng:signing:format:sha2signcode")
+
+            # Stub installer is only generated on win32
+            if '32' in dep_job.attributes.get('build_platform'):
+                upstream_artifacts.append({
+                    "taskId": {"task-reference": "<repackage>"},
+                    "taskType": "repackage",
+                    "paths": [
+                        "public/build/{}target.stub-installer.exe".format(locale_str),
+                    ],
+                    "formats": ["sha2signcodestub"]
+                })
+                scopes.append("project:releng:signing:format:sha2signcodestub")
 
         task = {
             'label': label,
@@ -93,7 +115,14 @@ def make_repackage_signing_description(config, jobs):
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
         }
-        if 'macosx' in dep_job.attributes.get('build_platform'):
+
+        funsize_platforms = [
+            'macosx64-nightly',
+            'win32-nightly',
+            'win64-nightly'
+        ]
+        if dep_job.attributes.get('build_platform') in funsize_platforms and \
+                dep_job.attributes.get('nightly'):
             route_template = "project.releng.funsize.level-{level}.{project}"
             task['routes'] = [
                 route_template.format(project=config.params['project'],

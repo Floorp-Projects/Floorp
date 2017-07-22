@@ -451,7 +451,7 @@ Statistics::formatDetailedSliceDescription(unsigned i, const SliceData& slice) c
     Reason: %s\n\
     Reset: %s%s\n\
     State: %s -> %s\n\
-    Page Faults: %ld\n\
+    Page Faults: %" PRIu64 "\n\
     Pause: %.3fms of %s budget (@ %.3fms)\n\
 ";
     char buffer[1024];

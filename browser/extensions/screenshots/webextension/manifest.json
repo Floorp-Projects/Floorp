@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "10.7.0",
+  "version": "10.8.0",
   "description": "__MSG_addonDescription__",
   "author": "__MSG_addonAuthorsList__",
   "homepage_url": "https://github.com/mozilla-services/screenshots",

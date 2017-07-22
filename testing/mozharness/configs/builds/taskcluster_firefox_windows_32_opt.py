@@ -20,6 +20,7 @@ config = {
         'clone-tools',
         'build',
         'check-test',
+        'update',
     ],
     'exes': {
         'virtualenv': [

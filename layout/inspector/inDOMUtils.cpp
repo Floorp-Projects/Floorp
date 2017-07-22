@@ -272,8 +272,7 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
     ServoStyleContext* servo = styleContext->AsServo();
     nsTArray<const RawServoStyleRule*> rawRuleList;
-    Servo_ComputedValues_GetStyleRuleList(servo->ComputedValues(),
-                                          &rawRuleList);
+    Servo_ComputedValues_GetStyleRuleList(servo, &rawRuleList);
 
     ServoStyleSet* styleSet = shell->StyleSet()->AsServo();
     ServoStyleRuleMap* map = styleSet->StyleRuleMap();

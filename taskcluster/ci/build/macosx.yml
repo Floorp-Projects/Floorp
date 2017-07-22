@@ -175,4 +175,3 @@ macosx64-nightly/opt:
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
-    run-on-projects: []

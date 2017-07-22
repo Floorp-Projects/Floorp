@@ -75,7 +75,7 @@ namespace mozilla {
 }
 
 #define STYLE_STRUCT(name_, checkdata_cb_) \
-  const nsStyle##name_* ServoComputedValues::GetStyle##name_() const { return &name_.mPtr->gecko; }
+  const nsStyle##name_* ServoComputedData::GetStyle##name_() const { return &name_.mPtr->gecko; }
 #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -150,7 +150,7 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* anon_content);
 
 void Gecko_ServoStyleContext_Init(mozilla::ServoStyleContext* context,
                                   ServoStyleContextBorrowedOrNull parent_context,
-                                  RawGeckoPresContextBorrowed pres_context, ServoComputedValuesBorrowed values,
+                                  RawGeckoPresContextBorrowed pres_context, ServoComputedDataBorrowed values,
                                   mozilla::CSSPseudoElementType pseudo_type, nsIAtom* pseudo_tag);
 void Gecko_ServoStyleContext_Destroy(mozilla::ServoStyleContext* context);
 
@@ -378,8 +378,8 @@ void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
 nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
-nsChangeHint Gecko_CalcStyleDifference(const mozilla::ServoStyleContext* old_style,
-                                       const mozilla::ServoStyleContext* new_style,
+nsChangeHint Gecko_CalcStyleDifference(ServoStyleContextBorrowed old_style,
+                                       ServoStyleContextBorrowed new_style,
                                        uint64_t old_style_bits,
                                        bool* any_style_changed);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);

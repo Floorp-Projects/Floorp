@@ -45,12 +45,22 @@ def docker_worker_add_tc_vcs_cache(config, job, taskdesc):
     })
 
 
-def docker_worker_add_public_artifacts(config, job, taskdesc):
+def add_public_artifacts(config, job, taskdesc, path):
     taskdesc['worker'].setdefault('artifacts', []).append({
         'name': 'public/build',
-        'path': '/home/worker/artifacts/',
+        'path': path,
         'type': 'directory',
     })
+
+
+def docker_worker_add_public_artifacts(config, job, taskdesc):
+    """ Adds a public artifact directory to the task """
+    add_public_artifacts(config, job, taskdesc, path='/home/worker/artifacts/')
+
+
+def generic_worker_add_public_artifacts(config, job, taskdesc):
+    """ Adds a public artifact directory to the task """
+    add_public_artifacts(config, job, taskdesc, path=r'public/build')
 
 
 def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):

@@ -32,6 +32,11 @@ nsresult
 ReadToCryptoBuffer(pkix::Reader& aSrc, /* out */ CryptoBuffer& aDest,
                    uint32_t aLen);
 
+nsresult
+U2FDecomposeECKey(const CryptoBuffer& aPubKeyBuf,
+                  /* out */ CryptoBuffer& aXcoord,
+                  /* out */ CryptoBuffer& aYcoord);
+
 } // namespace dom
 } // namespace mozilla
 

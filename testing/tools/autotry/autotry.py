@@ -411,6 +411,11 @@ class AutoTry(object):
         if intersection and not suites:
             raise ValueError("No tests found matching filters")
 
+        if extras.get('artifact') and any([p.endswith("-nightly") for p in platforms]):
+            print('You asked for |--artifact| but "-nightly" platforms don\'t have artifacts. '
+                  'Running without |--artifact| instead.')
+            del extras['artifact'];
+
         if extras.get('artifact'):
             rejected = []
             for suite in suites.keys():

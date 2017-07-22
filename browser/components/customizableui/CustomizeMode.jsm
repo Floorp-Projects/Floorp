@@ -1449,29 +1449,29 @@ CustomizeMode.prototype = {
     let gUIDensity = win.gUIDensity;
     let currentDensity = gUIDensity.getCurrentDensity();
 
-    let normalButton = doc.getElementById("customization-uidensity-menu-button-normal");
-    normalButton.mode = gUIDensity.MODE_NORMAL;
+    let normalItem = doc.getElementById("customization-uidensity-menuitem-normal");
+    normalItem.mode = gUIDensity.MODE_NORMAL;
 
-    let compactButton = doc.getElementById("customization-uidensity-menu-button-compact");
-    compactButton.mode = gUIDensity.MODE_COMPACT;
+    let compactItem = doc.getElementById("customization-uidensity-menuitem-compact");
+    compactItem.mode = gUIDensity.MODE_COMPACT;
 
-    let buttons = [normalButton, compactButton];
+    let items = [normalItem, compactItem];
 
-    let touchButton = doc.getElementById("customization-uidensity-menu-button-touch");
+    let touchItem = doc.getElementById("customization-uidensity-menuitem-touch");
     // Touch mode can not be enabled in OSX right now.
-    if (touchButton) {
-      touchButton.mode = gUIDensity.MODE_TOUCH;
-      buttons.push(touchButton);
+    if (touchItem) {
+      touchItem.mode = gUIDensity.MODE_TOUCH;
+      items.push(touchItem);
     }
 
-    // Mark the active mode button.
-    for (let button of buttons) {
-      if (button.mode == currentDensity.mode) {
-        button.setAttribute("aria-checked", "true");
-        button.setAttribute("active", "true");
+    // Mark the active mode menuitem.
+    for (let item of items) {
+      if (item.mode == currentDensity.mode) {
+        item.setAttribute("aria-checked", "true");
+        item.setAttribute("active", "true");
       } else {
-        button.removeAttribute("aria-checked");
-        button.removeAttribute("active");
+        item.removeAttribute("aria-checked");
+        item.removeAttribute("active");
       }
     }
 
@@ -1486,10 +1486,10 @@ CustomizeMode.prototype = {
       // Show a hint that the UI density was overridden automatically.
       if (currentDensity.overridden) {
         let sb = Services.strings.createBundle("chrome://browser/locale/uiDensity.properties");
-        touchButton.setAttribute("acceltext",
-                                 sb.GetStringFromName("uiDensity.menu-button-touch.acceltext"));
+        touchItem.setAttribute("acceltext",
+                                 sb.GetStringFromName("uiDensity.menuitem-touch.acceltext"));
       } else {
-        touchButton.removeAttribute("acceltext");
+        touchItem.removeAttribute("acceltext");
       }
 
       let autoTouchMode = Services.prefs.getBoolPref(win.gUIDensity.autoTouchModePref);

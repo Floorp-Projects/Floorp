@@ -21,26 +21,30 @@ EXPORTS.mozilla.dom += [
     'U2FSoftTokenManager.h',
     'U2FTokenManager.h',
     'U2FTokenTransport.h',
+    'WebAuthnCBORUtil.h',
     'WebAuthnManager.h',
     'WebAuthnRequest.h',
     'WebAuthnTransactionChild.h',
     'WebAuthnTransactionParent.h',
-    'WebAuthnUtil.h'
+    'WebAuthnUtil.h',
 ]
 
 UNIFIED_SOURCES += [
     'AuthenticatorAssertionResponse.cpp',
     'AuthenticatorAttestationResponse.cpp',
     'AuthenticatorResponse.cpp',
+    'cbor-cpp/src/encoder.cpp',
+    'cbor-cpp/src/output_dynamic.cpp',
     'NSSU2FTokenRemote.cpp',
     'PublicKeyCredential.cpp',
     'U2FHIDTokenManager.cpp',
     'U2FSoftTokenManager.cpp',
     'U2FTokenManager.cpp',
+    'WebAuthnCBORUtil.cpp',
     'WebAuthnManager.cpp',
     'WebAuthnTransactionChild.cpp',
     'WebAuthnTransactionParent.cpp',
-    'WebAuthnUtil.cpp'
+    'WebAuthnUtil.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
