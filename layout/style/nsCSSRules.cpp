@@ -862,18 +862,15 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    val.AppendToString(eCSSProperty_font_style, aResult,
-                        nsCSSValue::eNormalized);
+    val.AppendToString(eCSSProperty_font_style, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    val.AppendToString(eCSSProperty_font_weight, aResult,
-                       nsCSSValue::eNormalized);
+    val.AppendToString(eCSSProperty_font_weight, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Stretch:
-    val.AppendToString(eCSSProperty_font_stretch, aResult,
-                       nsCSSValue::eNormalized);
+    val.AppendToString(eCSSProperty_font_stretch, aResult);
     return NS_OK;
 
   case eCSSFontDesc_FontFeatureSettings:
@@ -881,8 +878,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_FontLanguageOverride:
-    val.AppendToString(eCSSProperty_font_language_override, aResult,
-                       nsCSSValue::eNormalized);
+    val.AppendToString(eCSSProperty_font_language_override, aResult);
     return NS_OK;
 
   case eCSSFontDesc_Display:
@@ -2363,8 +2359,7 @@ nsCSSCounterStyleRule::GetSystem(nsAString& aSystem)
           GetSystem(), nsCSSProps::kCounterSystemKTable));
   if (value.GetUnit() == eCSSUnit_Pair) {
     aSystem.Append(' ');
-    GetSystemArgument().AppendToString(
-        eCSSProperty_UNKNOWN, aSystem, nsCSSValue::eNormalized);
+    GetSystemArgument().AppendToString(eCSSProperty_UNKNOWN, aSystem);
   }
   return NS_OK;
 }
@@ -2378,9 +2373,7 @@ nsCSSCounterStyleRule::GetSymbols(nsAString& aSymbols)
   if (value.GetUnit() == eCSSUnit_List) {
     for (const nsCSSValueList* item = value.GetListValue();
          item; item = item->mNext) {
-      item->mValue.AppendToString(eCSSProperty_UNKNOWN,
-                                  aSymbols,
-                                  nsCSSValue::eNormalized);
+      item->mValue.AppendToString(eCSSProperty_UNKNOWN, aSymbols);
       if (item->mNext) {
         aSymbols.Append(' ');
       }
@@ -2398,11 +2391,9 @@ nsCSSCounterStyleRule::GetAdditiveSymbols(nsAString& aSymbols)
   if (value.GetUnit() == eCSSUnit_PairList) {
     for (const nsCSSValuePairList* item = value.GetPairListValue();
          item; item = item->mNext) {
-      item->mXValue.AppendToString(eCSSProperty_UNKNOWN,
-                                   aSymbols, nsCSSValue::eNormalized);
+      item->mXValue.AppendToString(eCSSProperty_UNKNOWN, aSymbols);
       aSymbols.Append(' ');
-      item->mYValue.AppendToString(eCSSProperty_UNKNOWN,
-                                   aSymbols, nsCSSValue::eNormalized);
+      item->mYValue.AppendToString(eCSSProperty_UNKNOWN, aSymbols);
       if (item->mNext) {
         aSymbols.AppendLiteral(", ");
       }
@@ -2484,8 +2475,7 @@ nsCSSCounterStyleRule::GetSpeakAs(nsAString& aSpeakAs)
     case eCSSUnit_Auto:
     case eCSSUnit_AtomIdent:
       aSpeakAs.Truncate();
-      value.AppendToString(eCSSProperty_UNKNOWN,
-                           aSpeakAs, nsCSSValue::eNormalized);
+      value.AppendToString(eCSSProperty_UNKNOWN, aSpeakAs);
       break;
 
     case eCSSUnit_Null:
@@ -2512,8 +2502,7 @@ nsCSSCounterStyleRule::GetDescriptor(nsCSSCounterDesc aDescID,
   const nsCSSValue& value = GetDesc(aDescID);
   aValue.Truncate();
   if (value.GetUnit() != eCSSUnit_Null) {
-    value.AppendToString(
-        eCSSProperty_UNKNOWN, aValue, nsCSSValue::eNormalized);
+    value.AppendToString(eCSSProperty_UNKNOWN, aValue);
   }
   return NS_OK;
 }
