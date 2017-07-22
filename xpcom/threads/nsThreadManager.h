@@ -53,6 +53,7 @@ public:
   ~nsThreadManager()
   {
   }
+  void EnableMainThreadEventPrioritization();
 
 private:
   nsThreadManager()

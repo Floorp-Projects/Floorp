@@ -27,7 +27,6 @@ EXTRA_JS_MODULES.sessionstore = [
     'DocShellCapabilities.jsm',
     'FrameTree.jsm',
     'GlobalState.jsm',
-    'PageStyle.jsm',
     'PrivacyFilter.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
     'RunState.jsm',

@@ -1639,11 +1639,8 @@ pref("browser.laterrun.enabled", false);
 
 // Disable prelaunch in the same way activity-stream is enabled addressing
 // bug 1381804 memory usage until bug 1376895 is fixed.
-#ifdef NIGHTLY_BUILD
+// Because of frequent crashes on Beta, it is turned off on all channels, see: bug 1363601.
 pref("dom.ipc.processPrelaunch.enabled", false);
-#else
-pref("dom.ipc.processPrelaunch.enabled", true);
-#endif
 
 pref("browser.migrate.automigrate.enabled", false);
 // 4 here means the suggestion notification will be automatically

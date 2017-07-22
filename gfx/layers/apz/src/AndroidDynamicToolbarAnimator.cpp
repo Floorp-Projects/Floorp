@@ -13,7 +13,9 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -509,10 +511,10 @@ AndroidDynamicToolbarAnimator::UpdateToolbarSnapshotTexture(CompositorOGL* gl)
   }
 
   if (mCompositorToolbarPixels) {
-    RefPtr<DataSourceSurface> surface = Factory::CreateWrappingDataSourceSurface(
+    RefPtr<gfx::DataSourceSurface> surface = gfx::Factory::CreateWrappingDataSourceSurface(
         mCompositorToolbarPixels.ref().get<uint8_t>(),
         mCompositorToolbarPixelsSize.width * 4,
-        IntSize(mCompositorToolbarPixelsSize.width, mCompositorToolbarPixelsSize.height),
+        gfx::IntSize(mCompositorToolbarPixelsSize.width, mCompositorToolbarPixelsSize.height),
         gfx::SurfaceFormat::B8G8R8A8);
 
     if (!mCompositorToolbarTexture) {
@@ -548,7 +550,7 @@ AndroidDynamicToolbarAnimator::GetToolbarEffect()
 
   if (mCompositorToolbarTexture) {
     if (!mCompositorToolbarEffect) {
-      mCompositorToolbarEffect = new EffectRGB(mCompositorToolbarTexture, true, SamplingFilter::LINEAR);
+      mCompositorToolbarEffect = new EffectRGB(mCompositorToolbarTexture, true, gfx::SamplingFilter::LINEAR);
     }
 
     float ratioVisible = (float)mCompositorToolbarHeight / (float)mCompositorMaxToolbarHeight;

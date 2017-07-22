@@ -513,6 +513,18 @@ LazyIdleThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
 }
 
 NS_IMETHODIMP
+LazyIdleThread::EnableEventPrioritization()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+LazyIdleThread::IsEventPrioritizationEnabled(bool* aResult)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::RegisterIdlePeriod(already_AddRefed<nsIIdlePeriod> aIdlePeriod)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

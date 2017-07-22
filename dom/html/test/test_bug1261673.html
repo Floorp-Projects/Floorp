@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1261673
   <title>Test for Bug 1261673</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -54,21 +55,15 @@ function runTests() {
     (p["focus"]) ? input.focus() : input.blur();
     expectChange = p["valueChanged"] == 0 ? expectChange : expectChange + 1;
     result += parseInt(p["valueChanged"]);
-    synthesizeWheel(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] });
-    window.postMessage("finished", "http://mochi.test:8888");
-    testIdx++;
-  }
-
-  window.addEventListener("message", event => {
-    if (event.data == "finished") {
+    sendWheelAndPaint(input, 1, 1, { deltaY: p["deltaY"], deltaMode: p["deltaMode"] }, () => {
       ok(input.value == result,
         "Handle wheel in number input test-" + testIdx + " expect " + result +
         " get " + input.value);
       ok(numberChange == expectChange,
          "UA should fire change event when input's value changed, expect " + expectChange + " get " + numberChange);
-      (testIdx >= params.length) ? SimpleTest.finish() : runNext();
-    }
-  });
+      (++testIdx >= params.length) ? SimpleTest.finish() : runNext();
+    });
+  }
   runNext();
 }
 

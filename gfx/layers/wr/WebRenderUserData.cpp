@@ -169,5 +169,11 @@ WebRenderFallbackData::SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry)
   mGeometry = aGeometry;
 }
 
+WebRenderAnimationData::WebRenderAnimationData(WebRenderLayerManager* aWRManager)
+  : WebRenderUserData(aWRManager),
+    mAnimationInfo(aWRManager)
+{
+}
+
 } // namespace layers
 } // namespace mozilla

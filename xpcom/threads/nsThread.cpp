@@ -41,6 +41,7 @@
 #include "nsThreadSyncDispatch.h"
 #include "LeakRefPtr.h"
 #include "GeckoProfiler.h"
+#include "InputEventStatistics.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
@@ -815,45 +816,156 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags
   return PutEvent(event.take(), aTarget);
 }
 
+NS_IMPL_ISUPPORTS(nsThread::nsChainedEventQueue::EnablePrioritizationRunnable,
+                  nsIRunnable)
+
+void
+nsThread::nsChainedEventQueue::EnablePrioritization(MutexAutoLock& aProofOfLock)
+{
+  MOZ_ASSERT(!mIsInputPrioritizationEnabled);
+  // When enabling event prioritization, there may be some pending events with
+  // different priorities in the normal queue. Create an event in the normal
+  // queue to consume all pending events in the time order to make sure we won't
+  // preempt a pending event (e.g. input) in the normal queue by another newly
+  // created event with the same priority.
+  mNormalQueue->PutEvent(new EnablePrioritizationRunnable(this), aProofOfLock);
+  mInputHandlingStartTime = TimeStamp();
+  mIsInputPrioritizationEnabled = true;
+}
+
 bool
-nsThread::nsChainedEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent,
-                                        unsigned short* aPriority,
-                                        mozilla::MutexAutoLock& aProofOfLock)
+nsThread::nsChainedEventQueue::
+GetNormalOrInputOrHighPriorityEvent(bool aMayWait, nsIRunnable** aEvent,
+                                    unsigned short* aPriority,
+                                    MutexAutoLock& aProofOfLock)
 {
   bool retVal = false;
   do {
-    if (mProcessSecondaryQueueRunnable) {
-      MOZ_ASSERT(mSecondaryQueue->HasPendingEvent(aProofOfLock));
-      retVal = mSecondaryQueue->GetEvent(aMayWait, aEvent, aProofOfLock);
+    // Use mProcessHighPriorityQueueRunnable to prevent the high priority events
+    // from consuming all cpu time and causing starvation.
+    if (mProcessHighPriorityQueueRunnable) {
+      MOZ_ASSERT(mHighQueue->HasPendingEvent(aProofOfLock));
+      retVal = mHighQueue->GetEvent(false, aEvent, aProofOfLock);
       MOZ_ASSERT(*aEvent);
-      if (aPriority) {
-        *aPriority = nsIRunnablePriority::PRIORITY_HIGH;
-      }
-      mProcessSecondaryQueueRunnable = false;
+      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_HIGH);
+      mInputHandlingStartTime = TimeStamp();
+      mProcessHighPriorityQueueRunnable = false;
       return retVal;
     }
+    mProcessHighPriorityQueueRunnable =
+      mHighQueue->HasPendingEvent(aProofOfLock);
 
-    // We don't want to wait if mSecondaryQueue has some events.
-    bool reallyMayWait =
-      aMayWait && !mSecondaryQueue->HasPendingEvent(aProofOfLock);
-    retVal =
-      mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
-    if (aPriority) {
-      *aPriority = nsIRunnablePriority::PRIORITY_NORMAL;
+    uint32_t pendingInputCount = mInputQueue->Count(aProofOfLock);
+    if (pendingInputCount > 0) {
+      if (mInputHandlingStartTime.IsNull()) {
+        mInputHandlingStartTime =
+          InputEventStatistics::Get()
+            .GetInputHandlingStartTime(mInputQueue->Count(aProofOfLock));
+      }
+      if (TimeStamp::Now() > mInputHandlingStartTime) {
+        retVal = mInputQueue->GetEvent(false, aEvent, aProofOfLock);
+        MOZ_ASSERT(*aEvent);
+        SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_INPUT);
+        return retVal;
+      }
     }
 
-    // Let's see if we should next time process an event from the secondary
-    // queue.
-    mProcessSecondaryQueueRunnable =
-      mSecondaryQueue->HasPendingEvent(aProofOfLock);
+    // We don't want to wait if there are some high priority events or input
+    // events in the queues.
+    bool reallyMayWait = aMayWait && !mProcessHighPriorityQueueRunnable &&
+                         pendingInputCount == 0;
 
+    retVal = mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
     if (*aEvent) {
       // We got an event, return early.
+      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_NORMAL);
       return retVal;
     }
-  } while(aMayWait || mProcessSecondaryQueueRunnable);
-
+    if (pendingInputCount > 0 && !mProcessHighPriorityQueueRunnable) {
+      // Handle input events if we have time for them.
+      MOZ_ASSERT(mInputQueue->HasPendingEvent(aProofOfLock));
+      retVal = mInputQueue->GetEvent(false, aEvent, aProofOfLock);
+      MOZ_ASSERT(*aEvent);
+      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_INPUT);
+      return retVal;
+    }
+  } while (aMayWait || mProcessHighPriorityQueueRunnable);
   return retVal;
+}
+
+bool
+nsThread::nsChainedEventQueue::
+GetNormalOrHighPriorityEvent(bool aMayWait, nsIRunnable** aEvent,
+                             unsigned short* aPriority,
+                             MutexAutoLock& aProofOfLock)
+{
+  bool retVal = false;
+  do {
+    // Use mProcessHighPriorityQueueRunnable to prevent the high priority events
+    // from consuming all cpu time and causing starvation.
+    if (mProcessHighPriorityQueueRunnable) {
+      MOZ_ASSERT(mHighQueue->HasPendingEvent(aProofOfLock));
+      retVal = mHighQueue->GetEvent(false, aEvent, aProofOfLock);
+      MOZ_ASSERT(*aEvent);
+      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_HIGH);
+      mProcessHighPriorityQueueRunnable = false;
+      return retVal;
+    }
+    mProcessHighPriorityQueueRunnable =
+      mHighQueue->HasPendingEvent(aProofOfLock);
+
+    // We don't want to wait if there are some events in the high priority
+    // queue.
+    bool reallyMayWait = aMayWait && !mProcessHighPriorityQueueRunnable;
+
+    retVal = mNormalQueue->GetEvent(reallyMayWait, aEvent, aProofOfLock);
+    if (*aEvent) {
+      // We got an event, return early.
+      SetPriorityIfNotNull(aPriority, nsIRunnablePriority::PRIORITY_NORMAL);
+      return retVal;
+    }
+  } while (aMayWait || mProcessHighPriorityQueueRunnable);
+  return retVal;
+}
+
+void
+nsThread::nsChainedEventQueue::PutEvent(already_AddRefed<nsIRunnable> aEvent,
+                                        MutexAutoLock& aProofOfLock)
+{
+  RefPtr<nsIRunnable> event(aEvent);
+  nsCOMPtr<nsIRunnablePriority> runnablePrio(do_QueryInterface(event));
+  uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
+  if (runnablePrio) {
+    runnablePrio->GetPriority(&prio);
+  }
+  switch (prio) {
+  case nsIRunnablePriority::PRIORITY_NORMAL:
+    mNormalQueue->PutEvent(event.forget(), aProofOfLock);
+    break;
+  case nsIRunnablePriority::PRIORITY_INPUT:
+    if (mIsInputPrioritizationEnabled) {
+      mInputQueue->PutEvent(event.forget(), aProofOfLock);
+    } else {
+      mNormalQueue->PutEvent(event.forget(), aProofOfLock);
+    }
+    break;
+  case nsIRunnablePriority::PRIORITY_HIGH:
+    if (mIsInputPrioritizationEnabled) {
+      mHighQueue->PutEvent(event.forget(), aProofOfLock);
+    } else {
+      // During startup, ContentParent sends SetXPCOMProcessAttributes to
+      // initialize ContentChild and enable input event prioritization. After
+      // that, ContentParent sends PBrowserConstructor to create PBrowserChild.
+      // To prevent PBrowserConstructor preempt SetXPCOMProcessAttributes and
+      // cause problems, we have to put high priority events in mNormalQueue to
+      // keep the correct order of initialization.
+      mNormalQueue->PutEvent(event.forget(), aProofOfLock);
+    }
+    break;
+  default:
+    MOZ_ASSERT(false);
+    break;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -1165,6 +1277,24 @@ nsThread::IdleDispatch(already_AddRefed<nsIRunnable> aEvent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsThread::EnableEventPrioritization()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mLock);
+  // Only support event prioritization for main event queue.
+  mEventsRoot.EnablePrioritization(lock);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::IsEventPrioritizationEnabled(bool* aResult)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  *aResult = mEventsRoot.IsPrioritizationEnabled();
+  return NS_OK;
+}
+
 #ifdef MOZ_CANARY
 void canary_alarm_handler(int signum);
 
@@ -1442,7 +1572,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
         sMainThreadRunnableName[length] = '\0';
       }
 #endif
-
+      Maybe<AutoTimeDurationHelper> timeDurationHelper;
+      if (priority == nsIRunnablePriority::PRIORITY_INPUT) {
+        timeDurationHelper.emplace();
+      }
       event->Run();
     } else if (aMayWait) {
       MOZ_ASSERT(ShuttingDown(),
