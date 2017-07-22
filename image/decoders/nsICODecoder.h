@@ -79,9 +79,9 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsICODecoder(RasterImage* aImage);
 
-  // Writes to the contained decoder and sets the appropriate errors
-  // Returns true if there are no errors.
-  bool WriteToContainedDecoder(const char* aBuffer, uint32_t aCount);
+  // Flushes the contained decoder to read all available data and sets the
+  // appropriate errors. Returns true if there are no errors.
+  bool FlushContainedDecoder();
 
   // Gets decoder state from the contained decoder so it's visible externally.
   nsresult GetFinalStateFromContainedDecoder();
@@ -92,7 +92,7 @@ private:
   LexerTransition<ICOState> ReadHeader(const char* aData);
   LexerTransition<ICOState> ReadDirEntry(const char* aData);
   LexerTransition<ICOState> SniffResource(const char* aData);
-  LexerTransition<ICOState> ReadResource(const char* aData, uint32_t aLen);
+  LexerTransition<ICOState> ReadResource();
   LexerTransition<ICOState> ReadBIH(const char* aData);
   LexerTransition<ICOState> PrepareForMask();
   LexerTransition<ICOState> ReadMaskRow(const char* aData);
@@ -101,7 +101,7 @@ private:
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
-  RefPtr<SourceBuffer> mContainedSourceBuffer;  // SourceBuffer for mContainedDecoder.
+  Maybe<SourceBufferIterator> mContainedIterator; // Iterator for the subdecoder.
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
   char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
