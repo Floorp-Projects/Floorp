@@ -642,7 +642,6 @@ public:
     void PolygonOffset(GLfloat factor, GLfloat units);
 
     already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
-    bool StartVRPresentation();
 
     ////
 

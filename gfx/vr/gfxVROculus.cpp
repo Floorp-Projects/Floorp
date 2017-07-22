@@ -1032,10 +1032,10 @@ VRDisplayOculus::UpdateConstantBuffers()
 }
 
 bool
-VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
-  const IntSize& aSize,
-  const gfx::Rect& aLeftEyeRect,
-  const gfx::Rect& aRightEyeRect)
+VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
+                             const IntSize& aSize,
+                             const gfx::Rect& aLeftEyeRect,
+                             const gfx::Rect& aRightEyeRect)
 {
   if (!CreateD3DObjects()) {
     return false;
@@ -1105,12 +1105,15 @@ VRDisplayOculus::SubmitFrame(TextureSourceD3D11* aSource,
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
   mContext->VSSetShader(mQuadVS, nullptr, 0);
   mContext->PSSetShader(mQuadPS, nullptr, 0);
-  ID3D11ShaderResourceView* srView = aSource->GetShaderResourceView();
-  if (!srView) {
-    NS_WARNING("Failed to get SRV for Oculus");
-    return false;
+
+  RefPtr<ID3D11ShaderResourceView> srView;
+  HRESULT hr = mDevice->CreateShaderResourceView(aSource, nullptr, getter_AddRefs(srView));
+  if (FAILED(hr)) {
+    gfxWarning() << "Could not create shader resource view for Oculus: " << hexa(hr);
+    return nullptr;
   }
-  mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &srView);
+  ID3D11ShaderResourceView* viewPtr = srView.get();
+  mContext->PSSetShaderResources(0 /* 0 == TexSlot::RGB */, 1, &viewPtr);
   // XXX Use Constant from TexSlot in CompositorD3D11.cpp?
 
   ID3D11SamplerState *sampler = mLinearSamplerState;
