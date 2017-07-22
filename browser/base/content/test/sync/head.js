@@ -1,6 +1,8 @@
 /* global sinon */
 Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
 
+Cu.import("resource://services-sync/UIState.jsm", this);
+
 registerCleanupFunction(function() {
   delete window.sinon;
 });
