@@ -17,10 +17,12 @@ var gAppManagerDialog = {
     // Remove this once we use the in-content-new preferences page.
     var pane;
     if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
-      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/applications.js");
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/applications.js",
+                                          window);
       pane = gApplicationsPane;
     } else {
-      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content-new/main.js");
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content-new/main.js",
+                                          window);
       pane = gMainPane;
     }
     var bundle = document.getElementById("appManagerBundle");
