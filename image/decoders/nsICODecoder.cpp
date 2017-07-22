@@ -249,28 +249,38 @@ nsICODecoder::ReadDirEntry(const char* aData)
 LexerTransition<ICOState>
 nsICODecoder::SniffResource(const char* aData)
 {
-  // Prepare a new iterator for the contained decoder to advance as it wills.
-  // Cloning at the point ensures it will begin at the resource offset.
-  mContainedIterator.emplace(mLexer.Clone(*mIterator, mDirEntry.mBytesInRes));
+  // We have BITMAPINFOSIZE bytes buffered at this point. We know an embedded
+  // BMP will have at least that many bytes by definition. We can also infer
+  // that any valid embedded PNG will contain that many bytes as well because:
+  //    BITMAPINFOSIZE
+  //      <
+  //    signature (8 bytes) +
+  //    IHDR (12 bytes header + 13 bytes data)
+  //    IDAT (12 bytes header)
 
   // We use the first PNGSIGNATURESIZE bytes to determine whether this resource
   // is a PNG or a BMP.
   bool isPNG = !memcmp(aData, nsPNGDecoder::pngSignatureBytes,
                        PNGSIGNATURESIZE);
   if (isPNG) {
-    if (mDirEntry.mBytesInRes <= PNGSIGNATURESIZE) {
+    if (mDirEntry.mBytesInRes <= BITMAPINFOSIZE) {
       return Transition::TerminateFailure();
     }
+
+    // Prepare a new iterator for the contained decoder to advance as it wills.
+    // Cloning at the point ensures it will begin at the resource offset.
+    SourceBufferIterator containedIterator
+      = mLexer.Clone(*mIterator, mDirEntry.mBytesInRes);
 
     // Create a PNG decoder which will do the rest of the work for us.
     mContainedDecoder =
       DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
-                                                  Move(*mContainedIterator),
+                                                  Move(containedIterator),
                                                   WrapNotNull(this),
                                                   Some(GetRealSize()));
 
     // Read in the rest of the PNG unbuffered.
-    size_t toRead = mDirEntry.mBytesInRes - PNGSIGNATURESIZE;
+    size_t toRead = mDirEntry.mBytesInRes - BITMAPINFOSIZE;
     return Transition::ToUnbuffered(ICOState::FINISHED_RESOURCE,
                                     ICOState::READ_RESOURCE,
                                     toRead);
@@ -281,12 +291,8 @@ nsICODecoder::SniffResource(const char* aData)
       return Transition::TerminateFailure();
     }
 
-    // Buffer the first part of the bitmap information header.
-    memcpy(mBIHraw, aData, PNGSIGNATURESIZE);
-
     // Read in the rest of the bitmap information header.
-    return Transition::To(ICOState::READ_BIH,
-                          BITMAPINFOSIZE - PNGSIGNATURESIZE);
+    return ReadBIH(aData);
   }
 }
 
@@ -303,32 +309,35 @@ nsICODecoder::ReadResource()
 LexerTransition<ICOState>
 nsICODecoder::ReadBIH(const char* aData)
 {
-  // Buffer the rest of the bitmap information header.
-  memcpy(mBIHraw + PNGSIGNATURESIZE, aData, BITMAPINFOSIZE - PNGSIGNATURESIZE);
-
   // Extract the BPP from the BIH header; it should be trusted over the one
   // we have from the ICO header which is usually set to 0.
-  mBPP = LittleEndian::readUint16(mBIHraw + 14);
+  mBPP = LittleEndian::readUint16(aData + 14);
+
+  // Check to make sure we have valid color settings.
+  uint16_t numColors = GetNumColors();
+  if (numColors == uint16_t(-1)) {
+    return Transition::TerminateFailure();
+  }
+
+  // The color table is present only if BPP is <= 8.
+  MOZ_ASSERT_IF(mBPP > 8, numColors == 0);
 
   // The ICO format when containing a BMP does not include the 14 byte
   // bitmap file header. So we create the BMP decoder via the constructor that
   // tells it to skip this, and pass in the required data (dataOffset) that
   // would have been present in the header.
-  uint32_t dataOffset = bmp::FILE_HEADER_LENGTH + BITMAPINFOSIZE;
-  if (mBPP <= 8) {
-    // The color table is present only if BPP is <= 8.
-    uint16_t numColors = GetNumColors();
-    if (numColors == (uint16_t)-1) {
-      return Transition::TerminateFailure();
-    }
-    dataOffset += 4 * numColors;
-  }
+  uint32_t dataOffset = bmp::FILE_HEADER_LENGTH + BITMAPINFOSIZE + 4 * numColors;
+
+  // Prepare a new iterator for the contained decoder to advance as it wills.
+  // Cloning at the point ensures it will begin at the resource offset.
+  SourceBufferIterator containedIterator
+    = mLexer.Clone(*mIterator, mDirEntry.mBytesInRes);
 
   // Create a BMP decoder which will do most of the work for us; the exception
   // is the AND mask, which isn't present in standalone BMPs.
   mContainedDecoder =
     DecoderFactory::CreateDecoderForICOResource(DecoderType::BMP,
-                                                Move(*mContainedIterator),
+                                                Move(containedIterator),
                                                 WrapNotNull(this),
                                                 Some(GetRealSize()),
                                                 Some(dataOffset));
@@ -338,12 +347,6 @@ nsICODecoder::ReadBIH(const char* aData)
 
   // Ensure the decoder has parsed at least the BMP's bitmap info header.
   if (!FlushContainedDecoder()) {
-    return Transition::TerminateFailure();
-  }
-
-  // Check to make sure we have valid color settings.
-  uint16_t numColors = GetNumColors();
-  if (numColors == uint16_t(-1)) {
     return Transition::TerminateFailure();
   }
 
@@ -562,13 +565,11 @@ nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
       case ICOState::SKIP_TO_RESOURCE:
         return Transition::ContinueUnbuffered(ICOState::SKIP_TO_RESOURCE);
       case ICOState::FOUND_RESOURCE:
-        return Transition::To(ICOState::SNIFF_RESOURCE, PNGSIGNATURESIZE);
+        return Transition::To(ICOState::SNIFF_RESOURCE, BITMAPINFOSIZE);
       case ICOState::SNIFF_RESOURCE:
         return SniffResource(aData);
       case ICOState::READ_RESOURCE:
         return ReadResource();
-      case ICOState::READ_BIH:
-        return ReadBIH(aData);
       case ICOState::PREPARE_FOR_MASK:
         return PrepareForMask();
       case ICOState::READ_MASK_ROW:
