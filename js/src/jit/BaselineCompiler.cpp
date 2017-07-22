@@ -256,6 +256,8 @@ BaselineCompiler::compile()
 
     if (modifiesArguments_)
         baselineScript->setModifiesArguments();
+    if (analysis_.usesEnvironmentChain())
+        baselineScript->setUsesEnvironmentChain();
 
 #ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
