@@ -7,7 +7,6 @@
 # file so that ESLint works correctly:
 # tools/lint/eslint/eslint-plugin-mozilla/lib/environments/browser-window.js
 
-<script type="application/javascript" src="chrome://browser/content/places/browserPlacesViews.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser.js"/>
 <script type="application/javascript" src="chrome://browser/content/customizableui/panelUI.js"/>
 <script type="application/javascript" src="chrome://global/content/viewSourceUtils.js"/>
