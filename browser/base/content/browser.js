@@ -150,6 +150,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsPanel",
 XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsButton",
                                          "DownloadsIndicatorView"],
                                   "chrome://browser/content/downloads/indicator.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gEditItemOverlay",
+                                  "chrome://browser/content/places/editBookmarkOverlay.js");
 
 
 // lazy service getters
