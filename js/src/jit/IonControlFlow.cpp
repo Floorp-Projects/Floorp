@@ -574,21 +574,11 @@ ControlFlowGenerator::processTry()
     //
     // To handle this, we create two blocks: one for the try block and one
     // for the code following the try-catch statement.
-    //
-    // If the code after the try block is unreachable (control flow in both the
-    // try and catch blocks is terminated), only create the try block, to avoid
-    // parsing unreachable code.
 
     CFGBlock* tryBlock = CFGBlock::New(alloc(), GetNextPc(pc));
 
-    CFGBlock* successor;
-    if (analysis_.maybeInfo(afterTry)) {
-        successor = CFGBlock::New(alloc(), afterTry);
-        current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc, successor));
-    } else {
-        successor = nullptr;
-        current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc));
-    }
+    CFGBlock* successor = CFGBlock::New(alloc(), afterTry);
+    current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc, successor));
     current->setStopPc(pc);
 
     if (!cfgStack_.append(CFGState::Try(endpc, successor)))
@@ -607,11 +597,7 @@ ControlFlowGenerator::ControlStatus
 ControlFlowGenerator::processTryEnd(CFGState& state)
 {
     MOZ_ASSERT(state.state == CFGState::TRY);
-
-    if (!state.try_.successor) {
-        MOZ_ASSERT(!current);
-        return ControlStatus::Ended;
-    }
+    MOZ_ASSERT(state.try_.successor);
 
     if (current) {
         current->setStopIns(CFGGoto::New(alloc(), state.try_.successor));
