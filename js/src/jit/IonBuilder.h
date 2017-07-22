@@ -135,6 +135,8 @@ class IonBuilder
 
     void insertRecompileCheck();
 
+    bool usesEnvironmentChain();
+
     AbortReasonOr<Ok> initParameters();
     void initLocals();
     void rewriteParameter(uint32_t slotIdx, MDefinition* param, int32_t argIndex);
