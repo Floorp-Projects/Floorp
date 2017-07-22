@@ -11,17 +11,15 @@ var {Tools} = require("devtools/client/definitions");
 const { Task } = require("devtools/shared/task");
 var promise = require("promise");
 var Services = require("Services");
-
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WebConsoleFrame", "devtools/client/webconsole/webconsole", true);
+loader.lazyRequireGetter(this, "NewWebConsoleFrame", "devtools/client/webconsole/new-webconsole", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "showDoorhanger", "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
-
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
-
 const BROWSER_CONSOLE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
 // The preference prefix for all of the Browser Console filters.
@@ -201,26 +199,21 @@ HUD_SERVICE.prototype =
     {
       return TargetFactory.forRemoteTab(aConnection);
     }
-
     function openWindow(aTarget)
     {
       target = aTarget;
-
       let deferred = promise.defer();
-
-      let win = Services.ww.openWindow(null, Tools.webConsole.url, "_blank",
+      // Using the old frontend for now in the browser console.  This can be switched to
+      // Tools.webConsole.url to use whatever is preffed on.
+      let url = Tools.webConsole.oldWebConsoleURL;
+      let win = Services.ww.openWindow(null, url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
       win.addEventListener("DOMContentLoaded", function () {
-        // Set the correct Browser Console title.
-        let root = win.document.documentElement;
-        root.setAttribute("title", root.getAttribute("browserConsoleTitle"));
-
+          win.document.title = l10n.getStr("browserConsole.title");
         deferred.resolve(win);
       }, {once: true});
-
       return deferred.promise;
     }
-
     connect().then(getTarget).then(openWindow).then((aWindow) => {
       return this.openBrowserConsole(target, aWindow, aWindow)
         .then((aBrowserConsole) => {
@@ -284,17 +277,17 @@ function WebConsole(aTarget, aIframeWindow, aChromeWindow)
   this.chromeWindow = aChromeWindow;
   this.hudId = "hud_" + ++gHudId;
   this.target = aTarget;
-
   this.browserWindow = this.chromeWindow.top;
-
   let element = this.browserWindow.document.documentElement;
   if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
     this.browserWindow = HUDService.currentContext();
   }
-
-  this.ui = new WebConsoleFrame(this);
+  if (aIframeWindow.location.href === Tools.webConsole.newWebConsoleURL) {
+    this.ui = new NewWebConsoleFrame(this);
+  } else {
+    this.ui = new WebConsoleFrame(this);
+  }
 }
-
 WebConsole.prototype = {
   iframeWindow: null,
   chromeWindow: null,

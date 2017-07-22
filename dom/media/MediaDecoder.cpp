@@ -10,6 +10,7 @@
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "MediaDecoderStateMachine.h"
+#include "MediaFormatReader.h"
 #include "MediaResource.h"
 #include "MediaShutdownManager.h"
 #include "VideoFrameContainer.h"
@@ -121,6 +122,153 @@ public:
     }
   }
 };
+
+class MediaDecoder::BackgroundVideoDecodingPermissionObserver final :
+  public nsIObserver
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    explicit BackgroundVideoDecodingPermissionObserver(MediaDecoder* aDecoder)
+      : mDecoder(aDecoder)
+      , mIsRegisteredForEvent(false)
+    {
+      MOZ_ASSERT(mDecoder);
+    }
+
+    NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
+                       const char16_t* aData) override
+    {
+      if (!MediaPrefs::ResumeVideoDecodingOnTabHover()) {
+        return NS_OK;
+      }
+
+      if (!IsValidEventSender(aSubject)) {
+        return NS_OK;
+      }
+
+      if (strcmp(aTopic, "unselected-tab-hover") == 0) {
+        mDecoder->mIsBackgroundVideoDecodingAllowed = !NS_strcmp(aData, u"true");
+        mDecoder->UpdateVideoDecodeMode();
+      }
+      return NS_OK;
+    }
+
+    void RegisterEvent() {
+      MOZ_ASSERT(!mIsRegisteredForEvent);
+      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+      if (observerService) {
+        observerService->AddObserver(this, "unselected-tab-hover", false);
+        mIsRegisteredForEvent = true;
+        EnableEvent();
+      }
+    }
+
+    void UnregisterEvent() {
+      MOZ_ASSERT(mIsRegisteredForEvent);
+      nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+      if (observerService) {
+        observerService->RemoveObserver(this, "unselected-tab-hover");
+        mIsRegisteredForEvent = false;
+        mDecoder->mIsBackgroundVideoDecodingAllowed = false;
+        mDecoder->UpdateVideoDecodeMode();
+        DisableEvent();
+      }
+    }
+  private:
+    ~BackgroundVideoDecodingPermissionObserver() {
+      MOZ_ASSERT(!mIsRegisteredForEvent);
+    }
+
+    void EnableEvent() const
+    {
+      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
+      if (!win) {
+        return;
+      }
+      nsContentUtils::DispatchEventOnlyToChrome(
+        GetOwnerDoc(), ToSupports(win),
+        NS_LITERAL_STRING("UnselectedTabHover:Enable"),
+        /* Bubbles */ true,
+        /* Cancelable */ false,
+        /* DefaultAction */ nullptr);
+    }
+
+    void DisableEvent() const
+    {
+      nsCOMPtr<nsPIDOMWindowOuter> win = GetOwnerWindow();
+      if (!win) {
+        return;
+      }
+      nsContentUtils::DispatchEventOnlyToChrome(
+        GetOwnerDoc(), ToSupports(win),
+        NS_LITERAL_STRING("UnselectedTabHover:Disable"),
+        /* Bubbles */ true,
+        /* Cancelable */ false,
+        /* DefaultAction */ nullptr);
+    }
+
+    already_AddRefed<nsPIDOMWindowOuter> GetOwnerWindow() const
+    {
+      nsIDocument* doc = GetOwnerDoc();
+      if (!doc) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowInner> innerWin = doc->GetInnerWindow();
+      if (!innerWin) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> outerWin = innerWin->GetOuterWindow();
+      if (!outerWin) {
+        return nullptr;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetTop();
+      return topWin.forget();
+    }
+
+    nsIDocument* GetOwnerDoc() const
+    {
+      if (!mDecoder->mOwner) {
+        return nullptr;
+      }
+
+      return mDecoder->mOwner->GetDocument();
+    }
+
+    bool IsValidEventSender(nsISupports* aSubject) const
+    {
+      nsCOMPtr<nsPIDOMWindowInner> senderInner(do_QueryInterface(aSubject));
+      if (!senderInner) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> senderOuter = senderInner->GetOuterWindow();
+      if (!senderOuter) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetTop();
+      if (!senderTop) {
+        return false;
+      }
+
+      nsCOMPtr<nsPIDOMWindowOuter> ownerTop = GetOwnerWindow();
+      if (!ownerTop) {
+        return false;
+      }
+
+      return ownerTop == senderTop;
+    }
+    // The life cycle of observer would always be shorter than decoder, so we
+    // use raw pointer here.
+    MediaDecoder* mDecoder;
+    bool mIsRegisteredForEvent;
+};
+
+NS_IMPL_ISUPPORTS(MediaDecoder::BackgroundVideoDecodingPermissionObserver, nsIObserver)
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
@@ -253,6 +401,8 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , INIT_CANONICAL(mPlaybackBytesPerSecond, 0.0)
   , INIT_CANONICAL(mPlaybackRateReliable, true)
   , INIT_CANONICAL(mDecoderPosition, 0)
+  , mVideoDecodingOberver(new BackgroundVideoDecodingPermissionObserver(this))
+  , mIsBackgroundVideoDecodingAllowed(false)
   , mTelemetryReported(false)
   , mContainerType(aInit.mContainerType)
 {
@@ -286,6 +436,7 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
                       &MediaDecoder::NotifyAudibleStateChanged);
 
   MediaShutdownManager::InitStatics();
+  mVideoDecodingOberver->RegisterEvent();
 }
 
 #undef INIT_MIRROR
@@ -345,6 +496,8 @@ MediaDecoder::Shutdown()
   GetOwner()->RemoveMediaTracks();
 
   ChangeState(PLAY_STATE_SHUTDOWN);
+  mVideoDecodingOberver->UnregisterEvent();
+  mVideoDecodingOberver = nullptr;
   mOwner = nullptr;
 }
 
@@ -1074,9 +1227,9 @@ MediaDecoder::NotifyCompositor()
   if (knowsCompositor) {
     nsCOMPtr<nsIRunnable> r =
       NewRunnableMethod<already_AddRefed<KnowsCompositor>&&>(
-        "MediaDecoderReader::UpdateCompositor",
+        "MediaFormatReader::UpdateCompositor",
         mReader,
-        &MediaDecoderReader::UpdateCompositor,
+        &MediaFormatReader::UpdateCompositor,
         knowsCompositor.forget());
     mReader->OwnerThread()->Dispatch(r.forget(),
                                      AbstractThread::DontAssertDispatchSuccess);
@@ -1140,6 +1293,12 @@ MediaDecoder::UpdateVideoDecodeMode()
   // If mForcedHidden is set, suspend the video decoder anyway.
   if (mForcedHidden) {
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
+    return;
+  }
+
+  // Resume decoding in the advance, even the element is in the background.
+  if (mIsBackgroundVideoDecodingAllowed) {
+    mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
 
@@ -1385,9 +1544,9 @@ MediaDecoder::NotifyDataArrivedInternal()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   mReader->OwnerThread()->Dispatch(
-    NewRunnableMethod("MediaDecoderReader::NotifyDataArrived",
+    NewRunnableMethod("MediaFormatReader::NotifyDataArrived",
                       mReader.get(),
-                      &MediaDecoderReader::NotifyDataArrived));
+                      &MediaFormatReader::NotifyDataArrived));
 }
 
 void

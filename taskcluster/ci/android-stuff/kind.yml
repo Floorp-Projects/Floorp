@@ -8,7 +8,11 @@
 
 loader: taskgraph.loader.transform:loader
 
+kind-dependencies:
+   - toolchain
+
 transforms:
+   - taskgraph.transforms.toolchain:transforms
    - taskgraph.transforms.try_job:transforms
    - taskgraph.transforms.android_stuff:transforms
    - taskgraph.transforms.task:transforms

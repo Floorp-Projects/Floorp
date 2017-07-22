@@ -258,7 +258,7 @@ function altClickButton(node) {
 function chooseMenuItem(node) {
   let event = document.createEvent("XULCommandEvent");
   event.initCommandEvent("command", true, true, window, 0, false, false, false,
-                         false, null);
+                         false, null, 0);
   node.dispatchEvent(event);
 }
 

@@ -12,29 +12,29 @@
 #include "mozilla/Variant.h"
 #include "nsISupportsImpl.h"
 
-#include "MediaDecoderReader.h"
 #include "MediaEventSource.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
 /**
- * A wrapper around MediaDecoderReader to offset the timestamps of Audio/Video
+ * A wrapper around MediaFormatReader to offset the timestamps of Audio/Video
  * samples by the start time to ensure MDSM can always assume zero start time.
  * It also adjusts the seek target passed to Seek() to ensure correct seek time
  * is passed to the underlying reader.
  */
 class MediaDecoderReaderWrapper {
-  typedef MediaDecoderReader::MetadataPromise MetadataPromise;
-  typedef MediaDecoderReader::AudioDataPromise AudioDataPromise;
-  typedef MediaDecoderReader::VideoDataPromise VideoDataPromise;
-  typedef MediaDecoderReader::SeekPromise SeekPromise;
-  typedef MediaDecoderReader::WaitForDataPromise WaitForDataPromise;
-  typedef MediaDecoderReader::TrackSet TrackSet;
+  using MetadataPromise = MediaFormatReader::MetadataPromise;
+  using AudioDataPromise = MediaFormatReader::AudioDataPromise;
+  using VideoDataPromise = MediaFormatReader::VideoDataPromise;
+  using SeekPromise = MediaFormatReader::SeekPromise;
+  using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
+  using TrackSet = MediaFormatReader::TrackSet;
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
 
 public:
   MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
-                            MediaDecoderReader* aReader);
+                            MediaFormatReader* aReader);
 
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
@@ -53,7 +53,6 @@ public:
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
-  bool IsAsync() const { return mReader->IsAsync(); }
   bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
 
   bool VideoIsHardwareAccelerated() const {
@@ -64,12 +63,6 @@ public:
   }
   MediaEventSource<void>& OnMediaNotSeekable() {
     return mReader->OnMediaNotSeekable();
-  }
-  size_t SizeOfVideoQueueInBytes() const {
-    return mReader->SizeOfVideoQueueInBytes();
-  }
-  size_t SizeOfAudioQueueInBytes() const {
-    return mReader->SizeOfAudioQueueInBytes();
   }
   size_t SizeOfAudioQueueInFrames() const {
     return mReader->SizeOfAudioQueueInFrames();
@@ -98,7 +91,7 @@ private:
   void UpdateDuration();
 
   const RefPtr<AbstractThread> mOwnerThread;
-  const RefPtr<MediaDecoderReader> mReader;
+  const RefPtr<MediaFormatReader> mReader;
 
   bool mShutdown = false;
   Maybe<media::TimeUnit> mStartTime;

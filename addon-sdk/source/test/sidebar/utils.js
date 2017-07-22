@@ -51,7 +51,7 @@ function simulateCommand(ele) {
   let { document } = window;
   var evt = document.createEvent('XULCommandEvent');
   evt.initCommandEvent('command', true, true, window,
-    0, false, false, false, false, null);
+    0, false, false, false, false, null, 0);
   ele.dispatchEvent(evt);
 }
 exports.simulateCommand = simulateCommand;

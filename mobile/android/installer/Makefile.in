@@ -19,11 +19,7 @@ MOZ_PKG_REMOVALS = $(srcdir)/removed-files.in
 MOZ_PKG_MANIFEST = $(srcdir)/package-manifest.in
 MOZ_PKG_DUPEFLAGS = -f $(srcdir)/allowed-dupes.mn
 
-ifdef MOZ_CHROME_MULTILOCALE
-MOZ_PKG_MANIFEST_DEPS = locale-manifest.in
-
-DEFINES += -DPKG_LOCALE_MANIFEST=$(CURDIR)/locale-manifest.in
-endif
+DEFINES += -DPKG_LOCALE_MANIFEST=$(topobjdir)/toolkit/locales/locale-manifest.in
 
 DEFINES += \
   -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
@@ -83,23 +79,4 @@ DEFINES += -DBINPATH=$(BINPATH)
 
 ifdef ENABLE_MARIONETTE
 DEFINES += -DENABLE_MARIONETTE=1
-endif
-
-
-ifdef MOZ_CHROME_MULTILOCALE
-# When MOZ_CHROME_MULTILOCALE is defined, we write multilocale.json like:
-# {"locales": ["en-US", "de", "ar", ...]}
-locale-manifest.in: $(GLOBAL_DEPS) FORCE
-	printf '\n[multilocale]\n' > $@
-	printf '@BINPATH@/res/multilocale.json\n' >> $@
-	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
-	do \
-	  printf '$(BINPATH)/chrome/'"$$LOCALE"'$(JAREXT)\n' >> $@; \
-	  printf '$(BINPATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
-	done
-	COMMA=,
-	echo '{"locales": [$(foreach l,$(MOZ_CHROME_MULTILOCALE),"$(l)"$(COMMA)) "en-US"]}' \
-	  > $(FINAL_TARGET)/res/multilocale.json
-
-GARBAGE += locale-manifest.in
 endif

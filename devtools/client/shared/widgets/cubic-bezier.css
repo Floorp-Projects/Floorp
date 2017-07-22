@@ -15,7 +15,7 @@
   box-sizing: border-box;
 }
 
-.display-wrap {
+.cubic-bezier-container .display-wrap {
   width: 50%;
   height: 100%;
   text-align: center;
@@ -24,14 +24,14 @@
 
 /* Coordinate Plane */
 
-.coordinate-plane {
+.cubic-bezier-container .coordinate-plane {
   width: 150px;
   height: 370px;
   margin: 0 auto;
   position: relative;
 }
 
-.control-point {
+.cubic-bezier-container .control-point {
   position: absolute;
   z-index: 1;
   height: 10px;
@@ -46,7 +46,7 @@
   cursor: pointer;
 }
 
-.display-wrap {
+.cubic-bezier-container .display-wrap {
   background:
   repeating-linear-gradient(0deg,
     transparent,
@@ -66,7 +66,7 @@
   -moz-user-select: none;
 }
 
-canvas.curve {
+.cubic-bezier-container canvas.curve {
   background:
     linear-gradient(-45deg,
       transparent 49.7%,
@@ -79,14 +79,14 @@ canvas.curve {
 
 /* Timing Function Preview Widget */
 
-.timing-function-preview {
+.cubic-bezier-container .timing-function-preview {
   position: absolute;
   bottom: 20px;
   right: 45px;
   width: 150px;
 }
 
-.timing-function-preview .scale {
+.cubic-bezier-container .timing-function-preview .scale {
   position: absolute;
   top: 6px;
   left: 0;
@@ -98,7 +98,7 @@ canvas.curve {
   background: #ccc;
 }
 
-.timing-function-preview .dot {
+.cubic-bezier-container .timing-function-preview .dot {
   position: absolute;
   top: 0;
   left: -7px;
@@ -114,7 +114,7 @@ canvas.curve {
 
 /* Preset Widget */
 
-.preset-pane {
+.cubic-bezier-container .preset-pane {
   width: 50%;
   height: 100%;
   border-right: 1px solid var(--theme-splitter-color);
@@ -134,7 +134,7 @@ canvas.curve {
   border-right: none;
 }
 
-.category {
+.cubic-bezier-container .category {
   padding: 5px 0px;
   width: 33.33%;
   text-align: center;
@@ -146,16 +146,16 @@ canvas.curve {
   overflow: hidden;
 }
 
-.category:hover {
+.cubic-bezier-container .category:hover {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.active-category {
+.cubic-bezier-container .active-category {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
 }
 
-.active-category:hover {
+.cubic-bezier-container .active-category:hover {
   background-color: var(--theme-selection-background);
 }
 
@@ -166,25 +166,25 @@ canvas.curve {
   overflow-y: auto;
 }
 
-.preset-list {
+.cubic-bezier-container .preset-list {
   display: none;
   padding-top: 6px;
 }
 
-.active-preset-list {
+.cubic-bezier-container .active-preset-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-start;
 }
 
-.preset {
+.cubic-bezier-container .preset {
   cursor: pointer;
   width: 33.33%;
   margin: 5px 0px;
   text-align: center;
 }
 
-.preset canvas {
+.cubic-bezier-container .preset canvas {
   display: block;
   border: 1px solid var(--theme-splitter-color);
   border-radius: 3px;
@@ -192,7 +192,7 @@ canvas.curve {
   margin: 0 auto;
 }
 
-.preset p {
+.cubic-bezier-container .preset p {
   font-size: 80%;
   margin: 2px auto 0px auto;
   color: var(--theme-body-color-alt);
@@ -201,16 +201,17 @@ canvas.curve {
   overflow: hidden;
 }
 
-.active-preset p, .active-preset:hover p {
+.cubic-bezier-container .active-preset p,
+.cubic-bezier-container .active-preset:hover p {
   color: var(--theme-body-color);
 }
 
-.preset:hover canvas {
+.cubic-bezier-container .preset:hover canvas {
   border-color: var(--theme-selection-background);
 }
 
-.active-preset canvas,
-.active-preset:hover canvas {
+.cubic-bezier-container .active-preset canvas,
+.cubic-bezier-container .active-preset:hover canvas {
   background-color: var(--theme-selection-background-semitransparent);
   border-color: var(--theme-selection-background);
 }

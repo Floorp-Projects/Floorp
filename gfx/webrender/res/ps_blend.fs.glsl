@@ -95,7 +95,7 @@ vec4 Brightness(vec4 Cs, float amount) {
 }
 
 vec4 Opacity(vec4 Cs, float amount) {
-    return vec4(Cs.rgb, Cs.a * amount);
+    return Cs * amount;
 }
 
 void main(void) {

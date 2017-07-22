@@ -334,7 +334,8 @@ var gGestureSupport = {
         let cmdEvent = document.createEvent("xulcommandevent");
         cmdEvent.initCommandEvent("command", true, true, window, 0,
                                   aEvent.ctrlKey, aEvent.altKey,
-                                  aEvent.shiftKey, aEvent.metaKey, aEvent);
+                                  aEvent.shiftKey, aEvent.metaKey,
+                                  aEvent, aEvent.mozInputSource);
         node.dispatchEvent(cmdEvent);
       }
 

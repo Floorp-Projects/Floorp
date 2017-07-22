@@ -103,6 +103,10 @@ SharedPreferencesImpl.prototype = Object.freeze({
     this._setOne(prefName, value, "string");
   },
 
+  setSetPref: function setCharPref(prefName, value) {
+    this._setOne(prefName, value, "set");
+  },
+
   setIntPref: function setIntPref(prefName, value) {
     this._setOne(prefName, value, "int");
   },
@@ -144,6 +148,10 @@ SharedPreferencesImpl.prototype = Object.freeze({
 
   getCharPref: function getCharPref(prefName) {
     return this._getOne(prefName, "string");
+  },
+
+  getSetPref: function getSetPref(prefName) {
+    return this._getOne(prefName, "set");
   },
 
   getIntPref: function getIntPref(prefName) {

@@ -1681,6 +1681,7 @@ nsComboboxControlFrame::SaveState(nsPresState** aState)
   MOZ_ASSERT(!(*aState));
   (*aState) = new nsPresState();
   (*aState)->SetDroppedDown(mDroppedDown);
+  (*aState)->SetPreviewText(mPreviewText);
   return NS_OK;
 }
 
@@ -1690,6 +1691,7 @@ nsComboboxControlFrame::RestoreState(nsPresState* aState)
   if (!aState) {
     return NS_ERROR_FAILURE;
   }
+  aState->GetPreviewText(mPreviewText);
   ShowList(aState->GetDroppedDown()); // might destroy us
   return NS_OK;
 }

@@ -34,12 +34,32 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
 
   store = configureStore(this.jsterm.hud);
 }
-
 NewConsoleOutputWrapper.prototype = {
   init: function () {
     const attachRefToHud = (id, node) => {
       this.jsterm.hud[id] = node;
     };
+    // Focus the input line whenever the output area is clicked.
+    this.parentNode.addEventListener("click", (event) => {
+      // Do not focus on middle/right-click or 2+ clicks.
+      if (event.detail !== 1 || event.button !== 0) {
+        return;
+      }
+
+      // Do not focus if something is selected
+      let selection = this.document.defaultView.getSelection();
+      if (selection && !selection.isCollapsed) {
+        return;
+      }
+
+      // Do not focus if a link was clicked
+      if (event.target.nodeName.toLowerCase() === "a" ||
+          event.target.parentNode.nodeName.toLowerCase() === "a") {
+        return;
+      }
+
+      this.jsterm.focus();
+    });
 
     const serviceContainer = {
       attachRefToHud,
@@ -140,14 +160,13 @@ NewConsoleOutputWrapper.prototype = {
         filterBar,
         childComponent
     ));
-
     this.body = ReactDOM.render(provider, this.parentNode);
-  },
 
+    this.jsterm.focus();
+  },
   dispatchMessageAdd: function (message, waitForResponse) {
     let action = actions.messageAdd(message);
     batchedMessageAdd(action);
-
     // Wait for the message to render to resolve with the DOM node.
     // This is just for backwards compatibility with old tests, and should
     // be removed once it's not needed anymore.

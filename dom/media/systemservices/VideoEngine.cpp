@@ -6,6 +6,7 @@
 
 #include "VideoEngine.h"
 #include "webrtc/video_engine/browser_capture_impl.h"
+#include "webrtc/system_wrappers/include/clock.h"
 #ifdef WEBRTC_ANDROID
 #include "webrtc/modules/video_capture/video_capture.h"
 #endif
@@ -21,7 +22,6 @@ mozilla::LazyLogModule gVideoEngineLog("VideoEngine");
 #define LOG_ENABLED() MOZ_LOG_TEST(gVideoEngineLog, mozilla::LogLevel::Debug)
 
 int VideoEngine::sId = 0;
-
 #if defined(ANDROID)
 int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
   LOG((__PRETTY_FUNCTION__));
@@ -59,7 +59,7 @@ VideoEngine::CreateVideoCapture(int32_t& id, const char* deviceUniqueIdUTF8) {
     MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" == nullptr);
 #endif
   }
-  mCaps.emplace(id,std::move(entry));
+  mCaps.emplace(id, std::move(entry));
 }
 
 int
@@ -74,9 +74,32 @@ VideoEngine::ReleaseVideoCapture(const int32_t id) {
 
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
 VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
+  LOG((__PRETTY_FUNCTION__));
+  int64_t currentTime = 0;
+
+  const char * capDevTypeName =
+    webrtc::CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
+
   if (mDeviceInfo) {
-    return mDeviceInfo;
+    // Camera cache is invalidated by HW change detection elsewhere
+    if (mCaptureDevInfo.type == webrtc::CaptureDeviceType::Camera) {
+      LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
+      return mDeviceInfo;
+    }
+    // Screen sharing cache is invalidated after the expiration time
+    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+    if (currentTime <= mExpiryTimeInMs) {
+      LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
+      return mDeviceInfo;
+    }
   }
+
+  if (currentTime == 0) {
+   currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+  }
+  mExpiryTimeInMs = currentTime + kCacheExpiryPeriodMs;
+  LOG(("creating a new VideoCaptureDeviceInfo of type %s", capDevTypeName));
+
   switch (mCaptureDevInfo.type) {
     case webrtc::CaptureDeviceType::Camera: {
       mDeviceInfo.reset(webrtc::VideoCaptureFactory::CreateDeviceInfo());

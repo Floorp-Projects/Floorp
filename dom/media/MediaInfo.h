@@ -9,6 +9,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
 #include "mozilla/RefPtr.h"
+#include "nsDataHashtable.h"
 #include "nsSize.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -35,6 +36,8 @@ public:
   nsCString mKey;
   nsCString mValue;
 };
+
+typedef nsDataHashtable<nsCStringHashKey, nsCString> MetadataTags;
 
   // Maximum channel number we can currently handle (7.1)
 #define MAX_AUDIO_CHANNELS 8

@@ -20,13 +20,25 @@ import android.util.Log;
     private static final boolean DEBUG = false;
 
     private Listener mListener;
+    private final boolean mAlwaysListen;
     private final String mModuleName;
     private final String[] mEvents;
 
+
     GeckoViewHandler(final String module, final GeckoView view,
                      final String[] events) {
+        this(module, view, events, /* alwaysListen */ false);
+    }
+
+    GeckoViewHandler(final String module, final GeckoView view,
+                     final String[] events, final boolean alwaysListen) {
+        mAlwaysListen = alwaysListen;
         mModuleName = module;
         mEvents = events;
+
+        if (alwaysListen) {
+            register(view.getEventDispatcher());
+        }
     }
 
     public Listener getListener() {
@@ -35,20 +47,29 @@ import android.util.Log;
 
     public void setListener(final Listener listener, final GeckoView view) {
         final EventDispatcher eventDispatcher = view.getEventDispatcher();
+        if (mListener == listener) {
+            return;
+        }
 
-        if (mListener != null && mListener != listener) {
-            final GeckoBundle msg = new GeckoBundle(1);
-            msg.putString("module", mModuleName);
-            eventDispatcher.dispatch("GeckoView:Unregister", msg);
-            eventDispatcher.unregisterUiThreadListener(this, mEvents);
+        if (!mAlwaysListen && mListener != null) {
+            unregister(eventDispatcher);
         }
 
         mListener = listener;
 
-        if (mListener == null) {
-            return;
+        if (!mAlwaysListen && mListener != null) {
+            register(eventDispatcher);
         }
+    }
 
+    private void unregister(final EventDispatcher eventDispatcher) {
+        final GeckoBundle msg = new GeckoBundle(1);
+        msg.putString("module", mModuleName);
+        eventDispatcher.dispatch("GeckoView:Unregister", msg);
+        eventDispatcher.unregisterUiThreadListener(this, mEvents);
+    }
+
+    private void register(final EventDispatcher eventDispatcher) {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putString("module", mModuleName);
         eventDispatcher.dispatch("GeckoView:Register", msg);

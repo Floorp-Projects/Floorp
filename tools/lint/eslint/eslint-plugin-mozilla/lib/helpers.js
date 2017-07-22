@@ -6,17 +6,17 @@
  */
 "use strict";
 
-var espree = require("espree");
-var estraverse = require("estraverse");
-var path = require("path");
-var fs = require("fs");
-var ini = require("ini-parser");
+const espree = require("espree");
+const estraverse = require("estraverse");
+const path = require("path");
+const fs = require("fs");
+const ini = require("ini-parser");
 
 var gModules = null;
 var gRootDir = null;
 var directoryManifests = new Map();
 
-var definitions = [
+const callExpressionDefinitions = [
   /^loader\.lazyGetter\(this, "(\w+)"/,
   /^loader\.lazyImporter\(this, "(\w+)"/,
   /^loader\.lazyServiceGetter\(this, "(\w+)"/,
@@ -30,15 +30,14 @@ var definitions = [
   /^DevToolsUtils\.defineLazyGetter\(this, "(\w+)"/,
   /^Object\.defineProperty\(this, "(\w+)"/,
   /^Reflect\.defineProperty\(this, "(\w+)"/,
-  /^this\.__defineGetter__\("(\w+)"/,
-  /^this\.(\w+) =/
+  /^this\.__defineGetter__\("(\w+)"/
 ];
 
-var imports = [
+const imports = [
   /^(?:Cu|Components\.utils)\.import\(".*\/((.*?)\.jsm?)"(?:, this)?\)/
 ];
 
-var workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
+const workerImportFilenameMatch = /(.*\/)*(.*?\.jsm?)/;
 
 module.exports = {
   get modulesGlobalData() {
@@ -196,28 +195,59 @@ module.exports = {
     return results;
   },
 
-  convertExpressionToGlobals(node, isGlobal) {
+  /**
+   * Attempts to convert an AssignmentExpression into a global variable
+   * definition if it applies to `this` in the global scope.
+   *
+   * @param  {Object} node
+   *         The AST node to convert.
+   * @param  {boolean} isGlobal
+   *         True if the current node is in the global scope.
+   *
+   * @return {Array}
+   *         An array of objects that contain details about the globals:
+   *         - {String} name
+   *                    The name of the global.
+   *         - {Boolean} writable
+   *                     If the global is writeable or not.
+   */
+  convertThisAssignmentExpressionToGlobals(node, isGlobal) {
+    if (isGlobal &&
+        node.expression.left &&
+        node.expression.left.object &&
+        node.expression.left.object.type === "ThisExpression" &&
+        node.expression.left.property &&
+        node.expression.left.property.type === "Identifier") {
+      return [{ name: node.expression.left.property.name, writable: true }];
+    }
+    return [];
+  },
+
+  /**
+   * Attempts to convert an CallExpressions that look like module imports
+   * into global variable definitions, using modules.json data if appropriate.
+   *
+   * @param  {Object} node
+   *         The AST node to convert.
+   * @param  {boolean} isGlobal
+   *         True if the current node is in the global scope.
+   *
+   * @return {Array}
+   *         An array of objects that contain details about the globals:
+   *         - {String} name
+   *                    The name of the global.
+   *         - {Boolean} writable
+   *                     If the global is writeable or not.
+   */
+  convertCallExpressionToGlobals(node, isGlobal) {
+    let source;
     try {
-      var source = this.getASTSource(node);
+      source = this.getASTSource(node);
     } catch (e) {
       return [];
     }
 
-    for (var reg of definitions) {
-      let match = source.match(reg);
-      if (match) {
-        // Must be in the global scope
-        if (!isGlobal) {
-          return [];
-        }
-
-        return [match[1]];
-      }
-    }
-
-    let globalModules = this.modulesGlobalData;
-
-    for (reg of imports) {
+    for (let reg of imports) {
       let match = source.match(reg);
       if (match) {
         // The two argument form is only acceptable in the global scope
@@ -225,11 +255,26 @@ module.exports = {
           return [];
         }
 
+        let globalModules = this.modulesGlobalData;
+
         if (match[1] in globalModules) {
-          return globalModules[match[1]];
+          return globalModules[match[1]].map(name => ({ name, writable: true }));
         }
 
-        return [match[2]];
+        return [{ name: match[2], writable: true }];
+      }
+    }
+
+    // The definition matches below must be in the global scope for us to define
+    // a global, so bail out early if we're not a global.
+    if (!isGlobal) {
+      return [];
+    }
+
+    for (let reg of callExpressionDefinitions) {
+      let match = source.match(reg);
+      if (match) {
+        return [{ name: match[1], writable: true }];
       }
     }
 

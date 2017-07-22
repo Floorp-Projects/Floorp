@@ -834,12 +834,12 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                                           aStyleBorder, aDirtyRect, aSkipSides,
                                                           irFlags, &result);
     if (aStyleBorder.IsBorderImageLoaded()) {
-      if (!renderer) {
-        return result;
+      if (renderer) {
+        result &= renderer->DrawBorderImage(aPresContext, aRenderingContext,
+                                            aForFrame, aDirtyRect);
       }
 
-      return renderer->DrawBorderImage(aPresContext, aRenderingContext,
-                                       aForFrame, aDirtyRect);
+      return result;
     }
   }
 

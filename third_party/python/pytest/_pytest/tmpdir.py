@@ -1,9 +1,11 @@
 """ support for providing temporary directories to test functions.  """
+from __future__ import absolute_import, division, print_function
+
 import re
 
 import pytest
 import py
-from _pytest.monkeypatch import monkeypatch
+from _pytest.monkeypatch import MonkeyPatch
 
 
 class TempdirFactory:
@@ -81,6 +83,7 @@ def get_user():
     except (ImportError, KeyError):
         return None
 
+
 # backward compatibility
 TempdirHandler = TempdirFactory
 
@@ -92,7 +95,7 @@ def pytest_configure(config):
     available at pytest_configure time, but ideally should be moved entirely
     to the tmpdir_factory session fixture.
     """
-    mp = monkeypatch()
+    mp = MonkeyPatch()
     t = TempdirFactory(config)
     config._cleanup.extend([mp.undo, t.finish])
     mp.setattr(config, '_tmpdirhandler', t, raising=False)
@@ -108,14 +111,14 @@ def tmpdir_factory(request):
 
 @pytest.fixture
 def tmpdir(request, tmpdir_factory):
-    """return a temporary directory path object
+    """Return a temporary directory path object
     which is unique to each test function invocation,
     created as a sub directory of the base temporary
     directory.  The returned object is a `py.path.local`_
     path object.
     """
     name = request.node.name
-    name = re.sub("[\W]", "_", name)
+    name = re.sub(r"[\W]", "_", name)
     MAXVAL = 30
     if len(name) > MAXVAL:
         name = name[:MAXVAL]

@@ -133,7 +133,7 @@ function fillSubviewFromMenuItems(aMenuItems, aSubview) {
           newEvent.initCommandEvent(
             event.type, event.bubbles, event.cancelable, event.view,
             event.detail, event.ctrlKey, event.altKey, event.shiftKey,
-            event.metaKey, event.sourceEvent);
+            event.metaKey, event.sourceEvent, 0);
           item.dispatchEvent(newEvent);
         });
       }

@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Crashtests for style system with content policy</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<iframe id="iframe"></iframe>
+<script>
+const TESTS = [
+  "file_bug1381233.html",
+];
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+var policyName = "@mozilla.org/testpolicy;1";
+var policy = {
+  // nsISupports implementation
+  QueryInterface: function(iid) {
+
+    iid = SpecialPowers.wrap(iid);
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
+
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+    info(`shouldLoad is invoked for ${SpecialPowers.wrap(contentLocation).spec}`);
+    return Ci.nsIContentPolicy.ACCEPT;
+  },
+  shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
+}
+policy = SpecialPowers.wrapCallbackObject(policy);
+
+// Register content policy
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
+                                    .QueryInterface(Ci.nsIComponentRegistrar);
+componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
+var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
+
+
+SimpleTest.waitForExplicitFinish();
+
+async function runTests() {
+  let iframe = document.getElementById("iframe");
+  for (let test of TESTS) {
+    iframe.src = test;
+    await new Promise(resolve => {
+      iframe.onload = resolve;
+    });
+    ok(true, `${test} doesn't crash`);
+  }
+  SimpleTest.finish();
+}
+runTests();
+</script>
+</body>
+</html>
