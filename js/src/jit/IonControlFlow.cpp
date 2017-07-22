@@ -22,16 +22,9 @@ ControlFlowGenerator::ControlFlowGenerator(TempAllocator& temp, JSScript* script
     loops_(temp),
     switches_(temp),
     labels_(temp),
-    analysis_(temp, script),
     aborted_(false),
     checkedTryFinally_(false)
 { }
-
-bool
-ControlFlowGenerator::init()
-{
-    return analysis_.init(alloc(), gsn);
-}
 
 static inline int32_t
 GetJumpOffset(jsbytecode* pc)
