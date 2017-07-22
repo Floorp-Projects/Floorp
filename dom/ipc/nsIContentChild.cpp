@@ -102,7 +102,8 @@ nsIContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
   if (os) {
     os->NotifyObservers(static_cast<nsITabChild*>(tabChild), "tab-child-created", nullptr);
   }
-
+  // Notify parent that we are ready to handle input events.
+  tabChild->SendRemoteIsReadyToHandleInputEvents();
   return IPC_OK();
 }
 

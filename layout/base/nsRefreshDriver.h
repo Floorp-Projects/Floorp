@@ -345,6 +345,12 @@ public:
    */
   static mozilla::TimeStamp GetIdleDeadlineHint(mozilla::TimeStamp aDefault);
 
+  /**
+   * It returns the expected timestamp of the next tick or nothing if the next
+   * tick is missed.
+   */
+  static mozilla::Maybe<mozilla::TimeStamp> GetNextTickHint();
+
   static void DispatchIdleRunnableAfterTick(nsIRunnable* aRunnable,
                                             uint32_t aDelay);
   static void CancelIdleRunnable(nsIRunnable* aRunnable);
