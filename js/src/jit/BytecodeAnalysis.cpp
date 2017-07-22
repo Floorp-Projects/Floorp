@@ -137,6 +137,12 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
             jsbytecode* afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
             MOZ_ASSERT(afterTry > endOfTry);
 
+            // Ensure the code following the try-block is always marked as
+            // reachable, to simplify Ion's ControlFlowGenerator.
+            uint32_t afterTryOffset = script_->pcToOffset(afterTry);
+            infos_[afterTryOffset].init(stackDepth);
+            infos_[afterTryOffset].jumpTarget = true;
+
             // Pop CatchFinallyRanges that are no longer needed.
             while (!catchFinallyRanges.empty() && catchFinallyRanges.back().end <= offset)
                 catchFinallyRanges.popBack();
