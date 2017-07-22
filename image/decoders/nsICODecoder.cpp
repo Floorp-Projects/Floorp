@@ -281,10 +281,6 @@ nsICODecoder::ReadDirEntry(const char* aData)
     // is necessary for downscale-during-decode to work since we won't even
     // attempt to *upscale* while decoding.
     PostSize(mBiggestResourceSize.width, mBiggestResourceSize.height);
-    if (HasError()) {
-      return Transition::TerminateFailure();
-    }
-
     if (IsMetadataDecode()) {
       return Transition::TerminateSuccess();
     }
@@ -320,8 +316,7 @@ nsICODecoder::SniffResource(const char* aData)
     mContainedDecoder =
       DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
                                                   WrapNotNull(mContainedSourceBuffer),
-                                                  WrapNotNull(this),
-                                                  Some(GetRealSize()));
+                                                  WrapNotNull(this));
 
     if (!WriteToContainedDecoder(aData, PNGSIGNATURESIZE)) {
       return Transition::TerminateFailure();
@@ -400,7 +395,6 @@ nsICODecoder::ReadBIH(const char* aData)
     DecoderFactory::CreateDecoderForICOResource(DecoderType::BMP,
                                                 WrapNotNull(mContainedSourceBuffer),
                                                 WrapNotNull(this),
-                                                Some(GetRealSize()),
                                                 Some(dataOffset));
   RefPtr<nsBMPDecoder> bmpDecoder =
     static_cast<nsBMPDecoder*>(mContainedDecoder.get());
