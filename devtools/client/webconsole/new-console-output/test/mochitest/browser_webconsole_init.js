@@ -15,21 +15,22 @@ add_task(function* () {
   ok(ui.jsterm, "jsterm exists");
   ok(ui.newConsoleOutput, "newConsoleOutput exists");
 
-  // @TODO: fix proptype errors
   let receievedMessages = waitForMessages({
     hud,
-    messages: [{
-      text: "0",
-    }, {
-      text: "1",
-    }, {
-      text: "2",
-    }],
+    messages: [
+      { text: "19" },
+    ]
   });
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
-    content.wrappedJSObject.doLogs(3);
+    content.wrappedJSObject.doLogs(20);
   });
 
   yield receievedMessages;
+
+  const outputContainer = ui.outputNode.querySelector(".webconsole-output");
+  is(outputContainer.querySelectorAll(".message.console-api").length, 20,
+    "Correct number of messages appear");
+  is(outputContainer.scrollWidth, outputContainer.clientWidth,
+    "No horizontal overflow");
 });
