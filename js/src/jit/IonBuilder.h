@@ -76,22 +76,21 @@ class IonBuilder
 
     AbortReasonOr<Ok> analyzeNewLoopTypes(const CFGBlock* loopEntryBlock);
 
-    AbortReasonOr<MBasicBlock*> newBlock(MBasicBlock* predecessor, jsbytecode* pc);
+    AbortReasonOr<MBasicBlock*> newBlock(size_t stackDepth, jsbytecode* pc,
+                                         MBasicBlock* maybePredecessor = nullptr);
     AbortReasonOr<MBasicBlock*> newBlock(MBasicBlock* predecessor, jsbytecode* pc,
                                          MResumePoint* priorResumePoint);
     AbortReasonOr<MBasicBlock*> newBlockPopN(MBasicBlock* predecessor, jsbytecode* pc,
                                              uint32_t popped);
-    AbortReasonOr<MBasicBlock*> newBlockAfter(MBasicBlock* at, MBasicBlock* predecessor,
-                                              jsbytecode* pc);
+    AbortReasonOr<MBasicBlock*> newBlockAfter(MBasicBlock* at, size_t stackDepth,
+                                              jsbytecode* pc, MBasicBlock* maybePredecessor = nullptr);
     AbortReasonOr<MBasicBlock*> newOsrPreheader(MBasicBlock* header, jsbytecode* loopEntry,
                                                 jsbytecode* beforeLoopEntry);
     AbortReasonOr<MBasicBlock*> newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc,
                                                      bool osr, bool canOsr, unsigned stackPhiCount);
-    AbortReasonOr<MBasicBlock*> newBlock(jsbytecode* pc) {
-        return newBlock(nullptr, pc);
-    }
-    AbortReasonOr<MBasicBlock*> newBlockAfter(MBasicBlock* at, jsbytecode* pc) {
-        return newBlockAfter(at, nullptr, pc);
+
+    AbortReasonOr<MBasicBlock*> newBlock(MBasicBlock* predecessor, jsbytecode* pc) {
+        return newBlock(predecessor->stackDepth(), pc, predecessor);
     }
 
     AbortReasonOr<Ok> visitBlock(const CFGBlock* hblock, MBasicBlock* mblock);

@@ -49,8 +49,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind);
     MOZ_MUST_USE bool init();
     void copySlots(MBasicBlock* from);
-    MOZ_MUST_USE bool inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlock* pred,
-                                        uint32_t popped, unsigned stackPhiCount = 0);
+    MOZ_MUST_USE bool inherit(TempAllocator& alloc, size_t stackDepth, MBasicBlock* maybePred,
+                              uint32_t popped, unsigned stackPhiCount = 0);
     MOZ_MUST_USE bool inheritResumePoint(MBasicBlock* pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
@@ -109,8 +109,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Creates a new basic block for a MIR generator. If |pred| is not nullptr,
     // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock* New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo& info,
-                            MBasicBlock* pred, BytecodeSite* site, Kind kind);
+    static MBasicBlock* New(MIRGraph& graph, size_t stackDepth, const CompileInfo& info,
+                            MBasicBlock* maybePred, BytecodeSite* site, Kind kind);
     static MBasicBlock* New(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Kind kind);
     static MBasicBlock* NewPopN(MIRGraph& graph, const CompileInfo& info,
                                 MBasicBlock* pred, BytecodeSite* site, Kind kind, uint32_t popn);
