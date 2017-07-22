@@ -90,12 +90,7 @@ CheckMetadata(const ImageTestCase& aTestCase,
 
   IntSize metadataSize = decoder->Size();
   EXPECT_EQ(aTestCase.mSize.width, metadataSize.width);
-  if (aBMPWithinICO == BMPWithinICO::YES) {
-    // Half the data is considered to be part of the AND mask if embedded
-    EXPECT_EQ(aTestCase.mSize.height / 2, metadataSize.height);
-  } else {
-    EXPECT_EQ(aTestCase.mSize.height, metadataSize.height);
-  }
+  EXPECT_EQ(aTestCase.mSize.height, metadataSize.height);
 
   bool expectTransparency = aBMPWithinICO == BMPWithinICO::YES
                           ? true
