@@ -1124,7 +1124,11 @@ IonBuilder::initLocals()
 bool
 IonBuilder::usesEnvironmentChain()
 {
-    return analysis_.usesEnvironmentChain();
+    // We don't have a BaselineScript if we're running the arguments analysis,
+    // but it's fine to assume we always use the environment chain in this case.
+    if (info().analysisMode() == Analysis_ArgumentsUsage)
+        return true;
+    return script()->baselineScript()->usesEnvironmentChain();
 }
 
 AbortReasonOr<Ok>
