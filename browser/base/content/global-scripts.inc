@@ -10,7 +10,6 @@
 <script type="application/javascript" src="chrome://browser/content/browser.js"/>
 
 <script type="application/javascript" src="chrome://browser/content/browser-captivePortal.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-customization.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-compacttheme.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-feeds.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-fullScreenAndPointerLock.js"/>
