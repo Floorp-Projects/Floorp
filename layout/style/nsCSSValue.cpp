@@ -1709,63 +1709,36 @@ nsCSSValue::AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
     }
   }
   else if (IsNumericColorUnit(unit)) {
-    if (aSerialization == eNormalized ||
-        unit == eCSSUnit_RGBColor ||
-        unit == eCSSUnit_RGBAColor) {
-      nscolor color = GetColorValue();
-      // For brevity, we omit the alpha component if it's equal to 255 (full
-      // opaque). Also, we use "rgba" rather than "rgb" when the color includes
-      // the non-opaque alpha value, for backwards-compat (even though they're
-      // aliases as of css-color-4).
-      // e.g.:
-      //   rgba(1, 2, 3, 1.0) => rgb(1, 2, 3)
-      //   rgba(1, 2, 3, 0.5) => rgba(1, 2, 3, 0.5)
+    nscolor color = GetColorValue();
+    // For brevity, we omit the alpha component if it's equal to 255 (full
+    // opaque). Also, we use "rgba" rather than "rgb" when the color includes
+    // the non-opaque alpha value, for backwards-compat (even though they're
+    // aliases as of css-color-4).
+    // e.g.:
+    //   rgba(1, 2, 3, 1.0) => rgb(1, 2, 3)
+    //   rgba(1, 2, 3, 0.5) => rgba(1, 2, 3, 0.5)
 
-      uint8_t a = NS_GET_A(color);
-      bool showAlpha = (a != 255);
+    uint8_t a = NS_GET_A(color);
+    bool showAlpha = (a != 255);
 
-      if (showAlpha) {
-        aResult.AppendLiteral("rgba(");
-      } else {
-        aResult.AppendLiteral("rgb(");
-      }
-
-      NS_NAMED_LITERAL_STRING(comma, ", ");
-
-      aResult.AppendInt(NS_GET_R(color), 10);
-      aResult.Append(comma);
-      aResult.AppendInt(NS_GET_G(color), 10);
-      aResult.Append(comma);
-      aResult.AppendInt(NS_GET_B(color), 10);
-      if (showAlpha) {
-        aResult.Append(comma);
-        aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
-      }
-      aResult.Append(char16_t(')'));
-    } else if (eCSSUnit_HexColor == unit ||
-               eCSSUnit_HexColorAlpha == unit) {
-      nscolor color = GetColorValue();
-      aResult.Append('#');
-      aResult.AppendPrintf("%02x", NS_GET_R(color));
-      aResult.AppendPrintf("%02x", NS_GET_G(color));
-      aResult.AppendPrintf("%02x", NS_GET_B(color));
-      if (eCSSUnit_HexColorAlpha == unit) {
-        aResult.AppendPrintf("%02x", NS_GET_A(color));
-      }
-    } else if (eCSSUnit_ShortHexColor == unit ||
-               eCSSUnit_ShortHexColorAlpha == unit) {
-      nscolor color = GetColorValue();
-      aResult.Append('#');
-      aResult.AppendInt(NS_GET_R(color) / 0x11, 16);
-      aResult.AppendInt(NS_GET_G(color) / 0x11, 16);
-      aResult.AppendInt(NS_GET_B(color) / 0x11, 16);
-      if (eCSSUnit_ShortHexColorAlpha == unit) {
-        aResult.AppendInt(NS_GET_A(color) / 0x11, 16);
-      }
+    if (showAlpha) {
+      aResult.AppendLiteral("rgba(");
     } else {
-      MOZ_ASSERT(IsFloatColorUnit());
-      mValue.mFloatColor->AppendToString(unit, aResult);
+      aResult.AppendLiteral("rgb(");
     }
+
+    NS_NAMED_LITERAL_STRING(comma, ", ");
+
+    aResult.AppendInt(NS_GET_R(color), 10);
+    aResult.Append(comma);
+    aResult.AppendInt(NS_GET_G(color), 10);
+    aResult.Append(comma);
+    aResult.AppendInt(NS_GET_B(color), 10);
+    if (showAlpha) {
+      aResult.Append(comma);
+      aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
+    }
+    aResult.Append(char16_t(')'));
   }
   else if (eCSSUnit_ComplexColor == unit) {
     StyleComplexColor color = GetStyleComplexColorValue();
