@@ -805,14 +805,11 @@ class ControlFlowGenerator
     Vector<ControlFlowInfo, 4, JitAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, JitAllocPolicy> switches_;
     Vector<ControlFlowInfo, 2, JitAllocPolicy> labels_;
-    BytecodeAnalysis analysis_;
     bool aborted_;
     bool checkedTryFinally_;
 
   public:
     ControlFlowGenerator(TempAllocator& alloc, JSScript* script);
-
-    MOZ_MUST_USE bool init();
 
     MOZ_MUST_USE bool traverseBytecode();
     MOZ_MUST_USE bool addBlock(CFGBlock* block);

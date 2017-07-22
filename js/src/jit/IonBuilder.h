@@ -986,19 +986,12 @@ class IonBuilder
     // Constraints for recording dependencies on type information.
     CompilerConstraintList* constraints_;
 
-    // Basic analysis information about the script.
-    BytecodeAnalysis analysis_;
-    BytecodeAnalysis& analysis() {
-        return analysis_;
-    }
-
     TemporaryTypeSet* thisTypes;
     TemporaryTypeSet* argTypes;
     TemporaryTypeSet* typeArray;
     uint32_t typeArrayHint;
     uint32_t* bytecodeTypeMap;
 
-    GSNCache gsn;
     EnvironmentCoordinateNameCache envCoordinateNameCache;
 
     jsbytecode* pc;
