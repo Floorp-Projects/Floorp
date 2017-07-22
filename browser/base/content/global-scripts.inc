@@ -17,7 +17,6 @@
 <script type="application/javascript" src="chrome://browser/content/browser-plugins.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-sidebar.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-tabsintitlebar.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-thumbnails.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-trackingprotection.js"/>
 
 #ifdef MOZ_DATA_REPORTING
