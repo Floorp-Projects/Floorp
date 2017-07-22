@@ -20,7 +20,7 @@ add_task(async function test_show_abort_dialog() {
 
     // get a reference to the UI dialog and the requestId
     let win = await getDialogWindow();
-    let requestId = requestIdForWindow(win);
+    let requestId = paymentUISrv.requestIdForWindow(win);
     ok(requestId, "requestId should be defined");
     ok(!win.closed, "dialog should not be closed");
 
