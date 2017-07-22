@@ -1121,6 +1121,12 @@ IonBuilder::initLocals()
         current->initSlot(info().localSlot(i), undef);
 }
 
+bool
+IonBuilder::usesEnvironmentChain()
+{
+    return analysis_.usesEnvironmentChain();
+}
+
 AbortReasonOr<Ok>
 IonBuilder::initEnvironmentChain(MDefinition* callee)
 {
@@ -1130,7 +1136,7 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
     // from earlier.  However, always make a env chain when |needsArgsObj| is true
     // for the script, since arguments object construction requires the env chain
     // to be passed in.
-    if (!info().needsArgsObj() && !analysis().usesEnvironmentChain())
+    if (!info().needsArgsObj() && !usesEnvironmentChain())
         return Ok();
 
     // The env chain is only tracked in scripts that have NAME opcodes which
@@ -6591,7 +6597,7 @@ IonBuilder::newOsrPreheader(MBasicBlock* predecessor, jsbytecode* loopEntry,
         uint32_t slot = info().environmentChainSlot();
 
         MInstruction* envv;
-        if (analysis().usesEnvironmentChain()) {
+        if (usesEnvironmentChain()) {
             envv = MOsrEnvironmentChain::New(alloc(), entry);
         } else {
             // Use an undefined value if the script does not need its env
@@ -7661,7 +7667,7 @@ IonBuilder::jsop_bindname(PropertyName* name)
 AbortReasonOr<Ok>
 IonBuilder::jsop_bindvar()
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MCallBindVar* ins = MCallBindVar::New(alloc(), current->environmentChain());
     current->add(ins);
     current->push(ins);
@@ -12179,7 +12185,7 @@ IonBuilder::jsop_classconstructor()
 AbortReasonOr<Ok>
 IonBuilder::jsop_lambda(JSFunction* fun)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MOZ_ASSERT(!fun->isArrow());
 
     if (IsAsmJSModule(fun))
@@ -12197,7 +12203,7 @@ IonBuilder::jsop_lambda(JSFunction* fun)
 AbortReasonOr<Ok>
 IonBuilder::jsop_lambda_arrow(JSFunction* fun)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MOZ_ASSERT(fun->isArrow());
     MOZ_ASSERT(!fun->isNative());
 
@@ -12230,7 +12236,7 @@ IonBuilder::jsop_setfunname(uint8_t prefixKind)
 AbortReasonOr<Ok>
 IonBuilder::jsop_pushlexicalenv(uint32_t index)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     LexicalScope* scope = &script()->getScope(index)->as<LexicalScope>();
     MNewLexicalEnvironmentObject* ins =
@@ -12245,7 +12251,7 @@ IonBuilder::jsop_pushlexicalenv(uint32_t index)
 AbortReasonOr<Ok>
 IonBuilder::jsop_copylexicalenv(bool copySlots)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     MCopyLexicalEnvironmentObject* ins =
         MCopyLexicalEnvironmentObject::New(alloc(), current->environmentChain(), copySlots);
@@ -12350,7 +12356,7 @@ IonBuilder::jsop_defvar(uint32_t index)
     MOZ_ASSERT(!script()->isForEval());
 
     // Pass the EnvironmentChain.
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     // Bake the name pointer into the MDefVar.
     MDefVar* defvar = MDefVar::New(alloc(), name, attrs, current->environmentChain());
@@ -12379,7 +12385,7 @@ IonBuilder::jsop_deflexical(uint32_t index)
 AbortReasonOr<Ok>
 IonBuilder::jsop_deffun(uint32_t index)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     MDefFun* deffun = MDefFun::New(alloc(), current->pop(), current->environmentChain());
     current->add(deffun);
