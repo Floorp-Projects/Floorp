@@ -8161,7 +8161,11 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       if (aEvent->mClass == eKeyboardEventClass) {
         nsContentUtils::SetIsHandlingKeyBoardEvent(true);
       }
-      if (aEvent->IsAllowedToDispatchDOMEvent()) {
+      // If EventStateManager or something wants reply from remote process,
+      // PresShell shouldn't dispatch the event into the DOM tree because they
+      // don't have a chance to stop propagation in the system event group.
+      if (aEvent->IsAllowedToDispatchDOMEvent() &&
+          !aEvent->IsWaitingReplyFromRemoteProcess()) {
         MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
           "Somebody changed aEvent to cause a DOM event!");
         nsPresShellEventCB eventCB(this);

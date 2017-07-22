@@ -271,8 +271,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // the mozaccesskeynotfound event before handling accesskeys.
     WidgetKeyboardEvent* nativeKeyEvent =
       aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
-    if (!nativeKeyEvent ||
-        (nativeKeyEvent && nativeKeyEvent->mAccessKeyForwardedToChild)) {
+    if (!nativeKeyEvent) {
       return NS_OK;
     }
 
@@ -301,6 +300,9 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       // so, we'll know the menu got activated.
       nsMenuFrame* result = mMenuBarFrame->FindMenuWithShortcut(keyEvent);
       if (result) {
+        // TODO: If the event target is a remote process and not stopped
+        //       sending the event to it, we need to mark the event as
+        //       waiting reply from remote process and stop handling the event.
         mMenuBarFrame->SetActiveByKeyboard();
         mMenuBarFrame->SetActive(true);
         result->OpenMenu(true);
