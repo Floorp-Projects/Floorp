@@ -280,7 +280,7 @@ nsICODecoder::SniffResource(const char* aData)
     // Read in the rest of the PNG unbuffered.
     size_t toRead = mDirEntry.mBytesInRes - PNGSIGNATURESIZE;
     return Transition::ToUnbuffered(ICOState::FINISHED_RESOURCE,
-                                    ICOState::READ_PNG,
+                                    ICOState::READ_RESOURCE,
                                     toRead);
   } else {
     // Make sure we have a sane size for the bitmap information header.
@@ -299,13 +299,13 @@ nsICODecoder::SniffResource(const char* aData)
 }
 
 LexerTransition<ICOState>
-nsICODecoder::ReadPNG(const char* aData, uint32_t aLen)
+nsICODecoder::ReadResource(const char* aData, uint32_t aLen)
 {
   if (!WriteToContainedDecoder(aData, aLen)) {
     return Transition::TerminateFailure();
   }
 
-  return Transition::ContinueUnbuffered(ICOState::READ_PNG);
+  return Transition::ContinueUnbuffered(ICOState::READ_RESOURCE);
 }
 
 LexerTransition<ICOState>
@@ -365,18 +365,8 @@ nsICODecoder::ReadBIH(const char* aData)
 
   // Read in the rest of the BMP unbuffered.
   return Transition::ToUnbuffered(afterBMPState,
-                                  ICOState::READ_BMP,
+                                  ICOState::READ_RESOURCE,
                                   bmpDataLength);
-}
-
-LexerTransition<ICOState>
-nsICODecoder::ReadBMP(const char* aData, uint32_t aLen)
-{
-  if (!WriteToContainedDecoder(aData, aLen)) {
-    return Transition::TerminateFailure();
-  }
-
-  return Transition::ContinueUnbuffered(ICOState::READ_BMP);
 }
 
 LexerTransition<ICOState>
@@ -568,12 +558,10 @@ nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
         return Transition::To(ICOState::SNIFF_RESOURCE, PNGSIGNATURESIZE);
       case ICOState::SNIFF_RESOURCE:
         return SniffResource(aData);
-      case ICOState::READ_PNG:
-        return ReadPNG(aData, aLength);
+      case ICOState::READ_RESOURCE:
+        return ReadResource(aData, aLength);
       case ICOState::READ_BIH:
         return ReadBIH(aData);
-      case ICOState::READ_BMP:
-        return ReadBMP(aData, aLength);
       case ICOState::PREPARE_FOR_MASK:
         return PrepareForMask();
       case ICOState::READ_MASK_ROW:
