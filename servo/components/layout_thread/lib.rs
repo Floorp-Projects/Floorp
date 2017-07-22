@@ -27,6 +27,7 @@ extern crate layout_traits;
 extern crate lazy_static;
 #[macro_use]
 extern crate log;
+extern crate metrics;
 extern crate msg;
 extern crate net_traits;
 extern crate parking_lot;
@@ -83,6 +84,7 @@ use layout::traversal::{ComputeAbsolutePositions, RecalcStyleAndConstructFlows};
 use layout::webrender_helpers::WebRenderDisplayListConverter;
 use layout::wrapper::LayoutNodeLayoutData;
 use layout_traits::LayoutThreadFactory;
+use metrics::{PaintTimeMetrics, ProfilerMetadataFactory};
 use msg::constellation_msg::PipelineId;
 use msg::constellation_msg::TopLevelBrowsingContextId;
 use net_traits::image_cache::{ImageCache, UsePlaceholder};
@@ -248,7 +250,10 @@ pub struct LayoutThread {
     layout_threads: usize,
 
     /// Which quirks mode are we rendering the document in?
-    quirks_mode: Option<QuirksMode>
+    quirks_mode: Option<QuirksMode>,
+
+    /// Paint time metrics.
+    paint_time_metrics: PaintTimeMetrics,
 }
 
 impl LayoutThreadFactory for LayoutThread {
@@ -269,7 +274,8 @@ impl LayoutThreadFactory for LayoutThread {
               mem_profiler_chan: mem::ProfilerChan,
               content_process_shutdown_chan: Option<IpcSender<()>>,
               webrender_api_sender: webrender_api::RenderApiSender,
-              layout_threads: usize) {
+              layout_threads: usize,
+              paint_time_metrics: PaintTimeMetrics) {
         thread::Builder::new().name(format!("LayoutThread {:?}", id)).spawn(move || {
             thread_state::initialize(thread_state::LAYOUT);
 
@@ -291,7 +297,8 @@ impl LayoutThreadFactory for LayoutThread {
                                                time_profiler_chan,
                                                mem_profiler_chan.clone(),
                                                webrender_api_sender,
-                                               layout_threads);
+                                               layout_threads,
+                                               paint_time_metrics);
 
                 let reporter_name = format!("layout-reporter-{}", id);
                 mem_profiler_chan.run_with_memory_reporting(|| {
@@ -452,11 +459,15 @@ impl LayoutThread {
            time_profiler_chan: time::ProfilerChan,
            mem_profiler_chan: mem::ProfilerChan,
            webrender_api_sender: webrender_api::RenderApiSender,
-           layout_threads: usize)
+           layout_threads: usize,
+           paint_time_metrics: PaintTimeMetrics)
            -> LayoutThread {
+        // The device pixel ratio is incorrect (it does not have the hidpi value),
+        // but it will be set correctly when the initial reflow takes place.
         let device = Device::new(
             MediaType::Screen,
-            opts::get().initial_window_size.to_f32() * ScaleFactor::new(1.0));
+            opts::get().initial_window_size.to_f32() * ScaleFactor::new(1.0),
+            ScaleFactor::new(opts::get().device_pixels_per_px.unwrap_or(1.0)));
 
         let configuration =
             rayon::Configuration::new().num_threads(layout_threads);
@@ -551,6 +562,7 @@ impl LayoutThread {
                 },
             layout_threads: layout_threads,
             quirks_mode: None,
+            paint_time_metrics: paint_time_metrics,
         }
     }
 
@@ -733,7 +745,10 @@ impl LayoutThread {
                 debug!("layout: ExitNow received");
                 self.exit_now();
                 return false
-            }
+            },
+            Msg::SetNavigationStart(time) => {
+                self.paint_time_metrics.set_navigation_start(time);
+            },
         }
 
         true
@@ -785,7 +800,8 @@ impl LayoutThread {
                              self.mem_profiler_chan.clone(),
                              info.content_process_shutdown_chan,
                              self.webrender_api.clone_sender(),
-                             info.layout_threads);
+                             info.layout_threads,
+                             info.paint_time_metrics);
     }
 
     /// Enters a quiescent state in which no new messages will be processed until an `ExitNow` is
@@ -1020,6 +1036,12 @@ impl LayoutThread {
             self.epoch.set(epoch);
 
             let viewport_size = webrender_api::LayoutSize::from_untyped(&viewport_size);
+
+            // Set paint metrics if needed right before sending the display list to WebRender.
+            // XXX At some point, we may want to set this metric from WebRender itself.
+            self.paint_time_metrics.maybe_set_first_paint(self);
+            self.paint_time_metrics.maybe_set_first_contentful_paint(self, &display_list);
+
             self.webrender_api.set_display_list(
                 Some(get_root_flow_background_color(layout_root)),
                 webrender_api::Epoch(epoch.0),
@@ -1106,6 +1128,7 @@ impl LayoutThread {
         trace!("{:?}", ShowSubtree(element.as_node()));
 
         let initial_viewport = data.window_size.initial_viewport;
+        let device_pixel_ratio = data.window_size.device_pixel_ratio;
         let old_viewport_size = self.viewport_size;
         let current_screen_size = Size2D::new(Au::from_f32_px(initial_viewport.width),
                                               Au::from_f32_px(initial_viewport.height));
@@ -1115,7 +1138,7 @@ impl LayoutThread {
         let document_shared_lock = document.style_shared_lock();
         self.document_shared_lock = Some(document_shared_lock.clone());
         let author_guard = document_shared_lock.read();
-        let device = Device::new(MediaType::Screen, initial_viewport);
+        let device = Device::new(MediaType::Screen, initial_viewport, device_pixel_ratio);
         self.stylist.set_device(device, &author_guard, &data.document_stylesheets);
 
         self.viewport_size =
@@ -1655,6 +1678,11 @@ impl LayoutThread {
     }
 }
 
+impl ProfilerMetadataFactory for LayoutThread {
+    fn new_metadata(&self) -> Option<TimerMetadata> {
+        self.profiler_metadata()
+    }
+}
 
 // The default computed value for background-color is transparent (see
 // http://dev.w3.org/csswg/css-backgrounds/#background-color). However, we

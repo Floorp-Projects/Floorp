@@ -39,7 +39,7 @@ MediaSourceDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
   mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
-  MediaDecoderReaderInit init(this);
+  MediaFormatReaderInit init(this);
   init.mVideoFrameContainer = GetVideoFrameContainer();
   init.mKnowsCompositor = GetCompositor();
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
@@ -249,9 +249,7 @@ void
 MediaSourceDecoder::GetMozDebugReaderData(nsACString& aString)
 {
   if (mReader && mDemuxer) {
-    // This is definitely a MediaFormatReader. See CreateStateMachine() above.
-    auto reader = static_cast<MediaFormatReader*>(mReader.get());
-    reader->GetMozDebugReaderData(aString);
+    mReader->GetMozDebugReaderData(aString);
     mDemuxer->GetMozDebugReaderData(aString);
   }
 }

@@ -213,15 +213,12 @@ const getRelativeRect = function (node, relativeTo) {
  *        - {Boolean} useXulWrapper
  *          Defaults to false. If the tooltip is hosted in a XUL document, use a XUL panel
  *          in order to use all the screen viewport available.
- *        - {String} stylesheet
- *          Style sheet URL to apply to the tooltip content.
  */
 function HTMLTooltip(toolboxDoc, {
     type = "normal",
     autofocus = false,
     consumeOutsideClicks = true,
     useXulWrapper = false,
-    stylesheet = "",
   } = {}) {
   EventEmitter.decorate(this);
 
@@ -246,9 +243,6 @@ function HTMLTooltip(toolboxDoc, {
 
   this.container = this._createContainer();
 
-  if (stylesheet) {
-    this._applyStylesheet(stylesheet);
-  }
   if (this.useXulWrapper) {
     // When using a XUL panel as the wrapper, the actual markup for the tooltip is as
     // follows :
@@ -634,16 +628,4 @@ HTMLTooltip.prototype = {
     top += this.doc.defaultView.mozInnerScreenY;
     return {top, right: left + width, bottom: top + height, left, width, height};
   },
-
-  /**
-   * Apply a scoped stylesheet to the container so that this css file only
-   * applies to it.
-   */
-  _applyStylesheet: function (url) {
-    let style = this.doc.createElementNS(XHTML_NS, "style");
-    style.setAttribute("scoped", "true");
-    url = url.replace(/"/g, "\\\"");
-    style.textContent = `@import url("${url}");`;
-    this.container.appendChild(style);
-  }
 };

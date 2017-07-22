@@ -1025,6 +1025,7 @@
     "header_stories": "Top Stories",
     "header_visit_again": "Visit Again",
     "header_bookmarks": "Recent Bookmarks",
+    "header_recommended_by": "Recommended by {provider}",
     "header_bookmarks_placeholder": "You don’t have any bookmarks yet.",
     "header_stories_from": "from",
     "type_label_visited": "Visited",
@@ -1051,6 +1052,7 @@
     "search_header": "{search_engine_name} Search",
     "search_web_placeholder": "Search the Web",
     "search_settings": "Change Search Settings",
+    "section_info_option": "Info",
     "welcome_title": "Welcome to new tab",
     "welcome_body": "Firefox will use this space to show your most relevant bookmarks, articles, videos, and pages you’ve recently visited, so you can get back to them easily.",
     "welcome_label": "Identifying your Highlights",
@@ -1095,7 +1097,8 @@
     "pocket_read_even_more": "View More Stories",
     "pocket_feedback_header": "The best of the web, curated by over 25 million people.",
     "pocket_feedback_body": "Pocket, a part of the Mozilla family, will help connect you to high-quality content that you may not have found otherwise.",
-    "pocket_send_feedback": "Send Feedback"
+    "pocket_send_feedback": "Send Feedback",
+    "empty_state_topstories": "You’ve caught up. Check back later for more top stories from Pocket. Can’t wait? Select a popular topic to find more great stories from around the web."
   },
   "en-ZA": {},
   "eo": {

@@ -25,21 +25,16 @@ add_task(function* () {
   });
   let msg = yield waitFor(() => findMessage(hud, "console message 2"));
   let outputItem = msg.querySelector(".message-body");
-
   inputNode = hud.jsterm.inputNode;
   ok(inputNode.getAttribute("focused"), "input node is focused, first");
-
   yield waitForBlurredInput(inputNode);
-
   EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
+
   ok(inputNode.getAttribute("focused"), "input node is focused, second time");
-
   yield waitForBlurredInput(inputNode);
-
   info("Setting a text selection and making sure a click does not re-focus");
   let selection = hud.iframeWindow.getSelection();
   selection.selectAllChildren(outputItem);
-
   EventUtils.sendMouseEvent({type: "click"}, hud.outputNode);
   ok(!inputNode.getAttribute("focused"),
     "input node focused after text is selected");

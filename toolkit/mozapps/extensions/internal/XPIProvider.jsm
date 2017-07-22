@@ -262,7 +262,12 @@ const SIGNED_TYPES = new Set([
   "webextension-theme",
 ]);
 
-const ALL_TYPES = new Set([
+const LEGACY_TYPES = new Set([
+  "apiextension",
+  "extension",
+]);
+
+const ALL_EXTERNAL_TYPES = new Set([
   "dictionary",
   "extension",
   "experiment",
@@ -835,8 +840,8 @@ function isUsableAddon(aAddon) {
       return false;
   }
 
-  if (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
-      aAddon.type == "extension" && !aAddon._installLocation.isSystem &&
+  if (!AddonSettings.ALLOW_LEGACY_EXTENSIONS && LEGACY_TYPES.has(aAddon.type) &&
+      !aAddon._installLocation.isSystem &&
       aAddon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED) {
     logger.warn(`disabling legacy extension ${aAddon.id}`);
     return false;
@@ -3588,7 +3593,7 @@ this.XPIProvider = {
    */
   getAddonsByTypes(aTypes, aCallback) {
     let typesToGet = getAllAliasesForTypes(aTypes);
-    if (typesToGet && !typesToGet.some(type => ALL_TYPES.has(type))) {
+    if (typesToGet && !typesToGet.some(type => ALL_EXTERNAL_TYPES.has(type))) {
       aCallback([]);
       return;
     }

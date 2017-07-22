@@ -8,12 +8,13 @@
 #define PlatformDecoderModule_h_
 
 #include "GMPCrashHelper.h"
-#include "MediaDecoderReader.h"
+#include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaResult.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TaskQueue.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsTArray.h"

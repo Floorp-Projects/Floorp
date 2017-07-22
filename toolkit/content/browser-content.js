@@ -1061,6 +1061,23 @@ var AudioPlaybackListener = {
 };
 AudioPlaybackListener.init();
 
+var UnselectedTabHoverObserver = {
+  init() {
+    addMessageListener("Browser:UnselectedTabHover", this);
+    addEventListener("UnselectedTabHover:Enable", this);
+    addEventListener("UnselectedTabHover:Disable", this);
+  },
+  receiveMessage(message) {
+    Services.obs.notifyObservers(content.window, "unselected-tab-hover",
+                                 message.data.hovered);
+  },
+  handleEvent(event) {
+    sendAsyncMessage("UnselectedTabHover:Toggle",
+                     { enable: event.type == "UnselectedTabHover:Enable" });
+  }
+};
+UnselectedTabHoverObserver.init();
+
 addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory() {
   let sessionHistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
   if (!sessionHistory) {

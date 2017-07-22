@@ -71,9 +71,10 @@ pub enum FontTemplate {
     Native(NativeFontHandle),
 }
 
+#[repr(C)]
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Serialize, Deserialize, Ord, PartialOrd)]
 pub enum FontRenderMode {
-    Mono,
+    Mono = 0,
     Alpha,
     Subpixel,
 }

@@ -10,18 +10,17 @@ DIRS += [
     'net',
     'new-console-output',
 ]
-
 DevToolsModules(
     'console-commands.js',
     'console-output.js',
     'hudservice.js',
     'jsterm.js',
+    'new-webconsole.js',
     'panel.js',
     'utils.js',
     'webconsole-connection-proxy.js',
     'webconsole-l10n.js',
     'webconsole.js',
 )
-
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')

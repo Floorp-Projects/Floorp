@@ -19,11 +19,9 @@
         macanimationtype="document"
         fullscreenbutton="true"
         title="&window.title;"
-        browserConsoleTitle="&browserConsole.title;"
         windowtype="devtools:webconsole"
         width="900" height="350"
         persist="screenX screenY width height sizemode">
-
   <script type="application/javascript"
           src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="application/javascript"

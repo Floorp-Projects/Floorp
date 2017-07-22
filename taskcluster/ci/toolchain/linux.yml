@@ -21,6 +21,7 @@ linux64-clang:
         resources:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/clang.tar.xz
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -45,6 +46,7 @@ linux64-clang-tidy:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/clang-tidy.tar.xz
 
 linux64-gcc:
     description: "GCC toolchain build"
@@ -62,6 +64,7 @@ linux64-gcc:
         script: build-gcc-linux.sh
         resources:
             - 'build/unix/build-gcc/**'
+        toolchain-artifact: public/gcc.tar.xz
 
 linux64-binutils:
     description: "Binutils toolchain build"
@@ -79,6 +82,7 @@ linux64-binutils:
         script: build-binutils-linux.sh
         resources:
             - 'build/unix/build-binutils/**'
+        toolchain-artifact: public/binutils.tar.xz
 
 linux64-cctools-port:
     description: "cctools-port toolchain build"
@@ -98,6 +102,7 @@ linux64-cctools-port:
         script: build-cctools-port.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/cctools.tar.xz
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
@@ -118,6 +123,7 @@ linux64-hfsplus:
         resources:
             - 'build/unix/build-hfsplus/**'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/hfsplus-tools.tar.xz
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
@@ -133,3 +139,4 @@ linux64-libdmg:
     run:
         using: toolchain-script
         script: build-libdmg-hfsplus.sh
+        toolchain-artifact: public/dmg.tar.xz

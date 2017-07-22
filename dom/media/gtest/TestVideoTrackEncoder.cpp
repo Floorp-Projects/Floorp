@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 #include <algorithm>
 
+#include "prtime.h"
 #include "mozilla/ArrayUtils.h"
 #include "VP8TrackEncoder.h"
 #include "ImageContainer.h"

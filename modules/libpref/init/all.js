@@ -448,6 +448,9 @@ pref("media.suspend-bkgnd-video.enabled", true);
 // Delay, in ms, from time window goes to background to suspending
 // video decoders. Defaults to 10 seconds.
 pref("media.suspend-bkgnd-video.delay-ms", 10000);
+// Resume video decoding when the cursor is hovering on a background tab to
+// reduce the resume latency and improve the user experience.
+pref("media.resume-bkgnd-video-on-tabhover", true);;
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);

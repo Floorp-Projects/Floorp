@@ -170,7 +170,7 @@ ServoStyleSet::EndUpdate()
   return NS_OK;
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleFor(Element* aElement,
                                ServoStyleContext* aParentContext,
                                LazyComputeBehavior aMayCompute)
@@ -367,7 +367,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   return postTraversalRequired;
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                                    ServoStyleContext* aParentContext)
 {
@@ -388,7 +388,7 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   return computedValues.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext)
 {
   RefPtr<ServoStyleContext> computedValues =
@@ -403,13 +403,13 @@ ServoStyleSet::ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParent
   return computedValues.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveStyleForPlaceholder()
 {
-  RefPtr<nsStyleContext>& cache =
+  RefPtr<ServoStyleContext>& cache =
     mNonInheritingStyleContexts[nsCSSAnonBoxes::NonInheriting::oofPlaceholder];
   if (cache) {
-    RefPtr<nsStyleContext> retval = cache;
+    RefPtr<ServoStyleContext> retval = cache;
     return retval.forget();
   }
 
@@ -426,7 +426,7 @@ ServoStyleSet::ResolveStyleForPlaceholder()
   return computedValues.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                                          CSSPseudoElementType aType,
                                          ServoStyleContext* aParentContext,
@@ -461,7 +461,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   return computedValues.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveTransientStyle(Element* aElement,
                                      CSSPseudoElementType aPseudoType,
                                      nsIAtom* aPseudoTag,
@@ -511,7 +511,7 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   return computedValues.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
@@ -524,9 +524,9 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 
   nsCSSAnonBoxes::NonInheriting type =
     nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(aPseudoTag);
-  RefPtr<nsStyleContext>& cache = mNonInheritingStyleContexts[type];
+  RefPtr<ServoStyleContext>& cache = mNonInheritingStyleContexts[type];
   if (cache) {
-    RefPtr<nsStyleContext> retval = cache;
+    RefPtr<ServoStyleContext> retval = cache;
     return retval.forget();
   }
 
@@ -754,7 +754,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
   return NS_OK;
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<ServoStyleContext>
 ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
                                        CSSPseudoElementType aType,
                                        ServoStyleContext* aParentContext)
@@ -1101,7 +1101,7 @@ ServoStyleSet::ResolveServoStyle(Element* aElement,
 void
 ServoStyleSet::ClearNonInheritingStyleContexts()
 {
-  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+  for (RefPtr<ServoStyleContext>& ptr : mNonInheritingStyleContexts) {
     ptr = nullptr;
   }
 }

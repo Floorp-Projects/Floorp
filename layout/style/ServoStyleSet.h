@@ -39,7 +39,6 @@ class ServoStyleRuleMap;
 class nsCSSCounterStyleRule;
 class nsIContent;
 class nsIDocument;
-class nsStyleContext;
 class nsPresContext;
 struct nsTimingFunction;
 struct RawServoRuleNode;
@@ -131,7 +130,7 @@ public:
   void BeginUpdate();
   nsresult EndUpdate();
 
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   ServoStyleContext* aParentContext,
                   LazyComputeBehavior aMayCompute);
@@ -143,7 +142,7 @@ public:
   // (Perhaps mozText should go away and we shouldn't even create style
   // contexts for such content nodes, when text-combine-upright is not
   // present.  However, not doing any rule matching for them is a first step.)
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveStyleForText(nsIContent* aTextNode,
                       ServoStyleContext* aParentContext);
 
@@ -157,7 +156,7 @@ public:
   // shouldn't even create style contexts for such frames.  However, not doing
   // any rule matching for them is a first step.  And right now we do use this
   // style context for some things)
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParentContext);
 
   // Get a style context for a placeholder frame (which no rules will match).
@@ -168,7 +167,7 @@ public:
   // (Perhaps nsCSSAnonBoxes::oofPaceholder should go away and we shouldn't even
   // create style contexts for placeholders.  However, not doing any rule
   // matching for them is a first step.)
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveStyleForPlaceholder();
 
   // Get a style context for a pseudo-element.  aParentElement must be
@@ -176,7 +175,7 @@ public:
   // pseudo-element.  aPseudoElement must be non-null if the pseudo-element
   // type is one that allows user action pseudo-classes after it or allows
   // style attributes; otherwise, it is ignored.
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolvePseudoElementStyle(dom::Element* aOriginatingElement,
                             CSSPseudoElementType aType,
                             ServoStyleContext* aParentContext,
@@ -186,7 +185,7 @@ public:
   // style has been resolved, and without worrying about setting the style
   // context up to live in the style context tree (a null parent is used).
   // |aPeudoTag| and |aPseudoType| must match.
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveTransientStyle(dom::Element* aElement,
                         CSSPseudoElementType aPseudoType,
                         nsIAtom* aPseudoTag,
@@ -212,7 +211,7 @@ public:
   // Get a style context for an anonymous box that does not inherit style from
   // anything.  aPseudoTag is the pseudo-tag to use and must be non-null.  It
   // must be an anon box, and must be a non-inheriting one.
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag);
 
   // manage the set of style sheets in the style set
@@ -246,7 +245,7 @@ public:
   nsresult AddDocStyleSheet(ServoStyleSheet* aSheet, nsIDocument* aDocument);
 
   // check whether there is ::before/::after style for an element
-  already_AddRefed<nsStyleContext>
+  already_AddRefed<ServoStyleContext>
   ProbePseudoElementStyle(dom::Element* aOriginatingElement,
                           mozilla::CSSPseudoElementType aType,
                           ServoStyleContext* aParentContext);
@@ -360,7 +359,9 @@ public:
 
   /**
    * Resolve style for the given element, and return it as a
-   * ServoComputedValues, not an nsStyleContext.
+   * ServoStyleContext.
+   *
+   * FIXME(emilio): Is there a point in this after bug 1367904?
    */
   already_AddRefed<ServoStyleContext>
   ResolveServoStyle(dom::Element* aElement,
@@ -594,7 +595,7 @@ private:
   // boxes.
   EnumeratedArray<nsCSSAnonBoxes::NonInheriting,
                   nsCSSAnonBoxes::NonInheriting::_Count,
-                  RefPtr<nsStyleContext>> mNonInheritingStyleContexts;
+                  RefPtr<ServoStyleContext>> mNonInheritingStyleContexts;
 
   // Tasks to perform after a traversal, back on the main thread.
   //

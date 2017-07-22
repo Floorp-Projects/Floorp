@@ -12,7 +12,18 @@ void main(void) {
     TextRun text = fetch_text_run(prim.specific_prim_address);
 
     int glyph_index = prim.user_data0;
-    int resource_address = prim.user_data2;
+    int resource_address = prim.user_data1;
+    int text_shadow_address = prim.user_data2;
+
+    // Fetch the parent text-shadow for this primitive. This allows the code
+    // below to normalize the glyph offsets relative to the original text
+    // shadow rect, which is the union of all elements that make up this
+    // text shadow. This allows the text shadow to be rendered at an
+    // arbitrary location in a render target (provided by the render
+    // task render_target_origin field).
+    PrimitiveGeometry shadow_geom = fetch_primitive_geometry(text_shadow_address);
+    TextShadow shadow = fetch_text_shadow(text_shadow_address + VECS_PER_PRIM_HEADER);
+
     Glyph glyph = fetch_glyph(prim.specific_prim_address, glyph_index);
     GlyphResource res = fetch_glyph_resource(resource_address);
 
@@ -21,7 +32,8 @@ void main(void) {
     // the glyph offset, relative to its primitive bounding rect.
     vec2 size = res.uv_rect.zw - res.uv_rect.xy;
     vec2 local_pos = glyph.offset + vec2(res.offset.x, -res.offset.y) / uDevicePixelRatio;
-    vec2 origin = prim.task.render_target_origin + uDevicePixelRatio * (local_pos - prim.local_rect.p0);
+    vec2 origin = prim.task.render_target_origin +
+                  uDevicePixelRatio * (local_pos + shadow.offset - shadow_geom.local_rect.p0);
     vec4 local_rect = vec4(origin, size);
 
     vec2 texture_size = vec2(textureSize(sColor0, 0));
@@ -33,7 +45,7 @@ void main(void) {
                    aPosition.xy);
 
     vUv = mix(st0, st1, aPosition.xy);
-    vColor = text.color;
+    vColor = shadow.color;
 
     gl_Position = uTransform * vec4(pos, 0.0, 1.0);
 }
