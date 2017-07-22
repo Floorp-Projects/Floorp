@@ -4,7 +4,7 @@
 
 const {interfaces: Ci, classes: Cc, utils: Cu, manager: Cm, results: Cr} = Components;
 
-Cu.import("resource:///modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function getConsoleMessages() {
   let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
