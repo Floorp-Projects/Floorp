@@ -395,7 +395,7 @@
 @RESPATH@/components/nsSearchService.js
 @RESPATH@/components/nsSearchSuggestions.js
 @RESPATH@/components/nsSidebar.js
-#if define(NIGHTLY_BUILD) && defined(MOZ_BUILD_APP_IS_BROWSER)
+#if defined(NIGHTLY_BUILD) && defined(MOZ_BUILD_APP_IS_BROWSER)
 @RESPATH@/components/payments.manifest
 #endif
 @RESPATH@/components/passwordmgr.manifest
