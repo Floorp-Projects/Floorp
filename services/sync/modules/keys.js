@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = [
   "BulkKeyBundle",
-  "SyncKeyBundle"
 ];
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -167,49 +166,3 @@ BulkKeyBundle.prototype = {
     this.hmacKey        = Utils.safeAtoB(value[1]);
   },
 };
-
-/**
- * Represents a key pair derived from a Sync Key via HKDF.
- *
- * Instances of this type should be considered immutable. You create an
- * instance by specifying the username and 26 character "friendly" Base32
- * encoded Sync Key. The Sync Key is derived at instance creation time.
- *
- * If the username or Sync Key is invalid, an Error will be thrown.
- */
-this.SyncKeyBundle = function SyncKeyBundle(username, syncKey) {
-  let log = Log.repository.getLogger("Sync.SyncKeyBundle");
-  log.info("SyncKeyBundle being created.");
-  KeyBundle.call(this);
-
-  this.generateFromKey(username, syncKey);
-}
-SyncKeyBundle.prototype = {
-  __proto__: KeyBundle.prototype,
-
-  /*
-   * If we've got a string, hash it into keys and store them.
-   */
-  generateFromKey: function generateFromKey(username, syncKey) {
-    if (!username || (typeof username != "string")) {
-      throw new Error("Sync Key cannot be generated from non-string username.");
-    }
-
-    if (!syncKey || (typeof syncKey != "string")) {
-      throw new Error("Sync Key cannot be generated from non-string key.");
-    }
-
-    if (!Utils.isPassphrase(syncKey)) {
-      throw new Error("Provided key is not a passphrase, cannot derive Sync " +
-                      "Key Bundle.");
-    }
-
-    // Expand the base32 Sync Key to an AES 256 and 256 bit HMAC key.
-    let prk = Utils.decodeKeyBase32(syncKey);
-    let info = HMAC_INPUT + username;
-    let okm = Utils.hkdfExpand(prk, info, 32 * 2);
-    this.encryptionKey = okm.slice(0, 32);
-    this.hmacKey = okm.slice(32, 64);
-  },
-};
-

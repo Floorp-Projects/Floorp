@@ -97,7 +97,8 @@ const EHTestsCommon = {
   generateCredentialsChangedFailure() {
     // Make sync fail due to changed credentials. We simply re-encrypt
     // the keys with a different Sync Key, without changing the local one.
-    let newSyncKeyBundle = new SyncKeyBundle("johndoe", "23456234562345623456234562");
+    let newSyncKeyBundle = new BulkKeyBundle("crypto");
+    newSyncKeyBundle.generateRandom();
     let keys = Service.collectionKeys.asWBO();
     keys.encrypt(newSyncKeyBundle);
     return keys.upload(Service.resource(Service.cryptoKeysURL));
