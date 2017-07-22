@@ -101,6 +101,10 @@ if (AppConstants.MOZ_CRASHREPORTER) {
     "resource:///modules/ContentCrashHandlers.jsm");
 }
 
+XPCOMUtils.defineLazyScriptGetter(this, "PrintUtils",
+                                  "chrome://global/content/printUtils.js");
+
+
 // lazy service getters
 
 /* global Favicons:false, WindowsUIUtils:false, gAboutNewTabService:false,
