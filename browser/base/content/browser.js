@@ -91,7 +91,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
   ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
   ["Utils", "resource://gre/modules/sessionstore/Utils.jsm"],
   ["Weave", "resource://services-sync/main.js"],
-  ["WebNavigationFrames", "resource://gre/modules/WebNavigationFrames.js"],
+  ["WebNavigationFrames", "resource://gre/modules/WebNavigationFrames.jsm"],
   ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
   ["gDevTools", "resource://devtools/client/framework/gDevTools.jsm"],
   ["gDevToolsBrowser", "resource://devtools/client/framework/gDevTools.jsm"],
@@ -136,6 +136,9 @@ XPCOMUtils.defineLazyScriptGetter(this, "gSync",
                                   "chrome://browser/content/browser-sync.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
                                   "chrome://browser/content/browser-thumbnails.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["setContextMenuContentData",
+                                         "openContextMenu", "nsContextMenu"],
+                                  "chrome://browser/content/nsContextMenu.js");
 
 
 // lazy service getters
