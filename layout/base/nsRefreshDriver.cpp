@@ -255,6 +255,13 @@ public:
     return idleEnd < aDefault ? idleEnd : aDefault;
   }
 
+  Maybe<TimeStamp> GetNextTickHint()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    TimeStamp nextTick = MostRecentRefresh() + GetTimerRate();
+    return nextTick < TimeStamp::Now() ? Nothing() : Some(nextTick);
+  }
+
 protected:
   virtual void StartTimer() = 0;
   virtual void StopTimer() = 0;
@@ -2401,6 +2408,17 @@ nsRefreshDriver::GetIdleDeadlineHint(TimeStamp aDefault)
   // busy but tasks resulting from a tick on sThrottledRateTimer
   // counts as being idle.
   return sRegularRateTimer->GetIdleDeadlineHint(aDefault);
+}
+
+/* static */ Maybe<TimeStamp>
+nsRefreshDriver::GetNextTickHint()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sRegularRateTimer) {
+    return Nothing();
+  }
+  return sRegularRateTimer->GetNextTickHint();
 }
 
 void

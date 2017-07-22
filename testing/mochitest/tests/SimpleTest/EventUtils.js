@@ -678,6 +678,44 @@ function synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, aCallback, aWind
   utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
 }
 
+/**
+ * This is a wrapper around synthesizeNativeMouseMove that waits for the mouse
+ * event to be dispatched to the target content.
+ *
+ * This API is supposed to be used in those test cases that synthesize some
+ * input events to chrome process and have some checks in content.
+ */
+function synthesizeAndWaitNativeMouseMove(aTarget, aOffsetX, aOffsetY,
+                                          aCallback, aWindow = window) {
+  let browser = gBrowser.selectedTab.linkedBrowser;
+  let mm = browser.messageManager;
+  let ContentTask =
+    _EU_Cu.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
+
+  let eventRegisteredPromise = new Promise(resolve => {
+    mm.addMessageListener("Test:MouseMoveRegistered", function processed(message) {
+      mm.removeMessageListener("Test:MouseMoveRegistered", processed);
+      resolve();
+    });
+  });
+  let eventReceivedPromise = ContentTask.spawn(browser, [aOffsetX, aOffsetY],
+                                               ([clientX, clientY]) => {
+    return new Promise(resolve => {
+      addEventListener("mousemove", function onMouseMoveEvent(e) {
+        if (e.clientX == clientX && e.clientY == clientY) {
+          removeEventListener("mousemove", onMouseMoveEvent);
+          resolve();
+        }
+      });
+      sendAsyncMessage("Test:MouseMoveRegistered");
+    });
+  });
+  eventRegisteredPromise.then(() => {
+    synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, null, aWindow);
+  });
+  return eventReceivedPromise;
+}
+
 function _computeKeyCodeFromChar(aChar)
 {
   if (aChar.length != 1) {
@@ -827,6 +865,51 @@ function synthesizeKey(aKey, aEvent, aWindow = window, aCallback)
   } finally {
     _emulateToInactivateModifiers(TIP, modifiers, aWindow);
   }
+}
+
+/**
+ * This is a wrapper around synthesizeKey that waits for the key event to be
+ * dispatched to the target content. It returns a promise which is resolved
+ * when the content receives the key event.
+ *
+ * This API is supposed to be used in those test cases that synthesize some
+ * input events to chrome process and have some checks in content.
+ */
+function synthesizeAndWaitKey(aKey, aEvent, aWindow = window,
+                              checkBeforeSynthesize, checkAfterSynthesize)
+{
+  let browser = gBrowser.selectedTab.linkedBrowser;
+  let mm = browser.messageManager;
+  let keyCode = _createKeyboardEventDictionary(aKey, aEvent, aWindow).dictionary.keyCode;
+  let ContentTask = _EU_Cu.import("resource://testing-common/ContentTask.jsm", null).ContentTask;
+
+  let keyRegisteredPromise = new Promise(resolve => {
+    mm.addMessageListener("Test:KeyRegistered", function processed(message) {
+      mm.removeMessageListener("Test:KeyRegistered", processed);
+      resolve();
+    });
+  });
+  let keyReceivedPromise = ContentTask.spawn(browser, keyCode, (keyCode) => {
+    return new Promise(resolve => {
+      addEventListener("keyup", function onKeyEvent(e) {
+        if (e.keyCode == keyCode) {
+          removeEventListener("keyup", onKeyEvent);
+          resolve();
+        }
+      });
+      sendAsyncMessage("Test:KeyRegistered");
+    });
+  });
+  keyRegisteredPromise.then(() => {
+    if (checkBeforeSynthesize) {
+      checkBeforeSynthesize();
+    }
+    synthesizeKey(aKey, aEvent, aWindow);
+    if (checkAfterSynthesize) {
+      checkAfterSynthesize();
+    }
+  });
+  return keyReceivedPromise;
 }
 
 function _parseNativeModifiers(aModifiers, aWindow = window)

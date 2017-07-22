@@ -67,8 +67,7 @@ Message::Message(int32_t routing_id,
   header()->routing = routing_id;
   header()->type = type;
   header()->flags = nestedLevel;
-  if (priority == HIGH_PRIORITY)
-    header()->flags |= PRIO_BIT;
+  set_priority(priority);
   if (compression == COMPRESSION_ENABLED)
     header()->flags |= COMPRESS_BIT;
   else if (compression == COMPRESSION_ALL)
