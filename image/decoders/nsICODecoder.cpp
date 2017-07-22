@@ -91,8 +91,14 @@ nsICODecoder::GetFinalStateFromContainedDecoder()
     return NS_OK;
   }
 
+  MOZ_ASSERT(mContainedSourceBuffer,
+             "Should have a SourceBuffer if we have a decoder");
+
   // Let the contained decoder finish up if necessary.
-  FlushContainedDecoder();
+  if (!mContainedSourceBuffer->IsComplete()) {
+    mContainedSourceBuffer->Complete(NS_OK);
+    mContainedDecoder->Decode();
+  }
 
   // Make our state the same as the state of the contained decoder.
   mDecodeDone = mContainedDecoder->GetDecodeDone();
@@ -249,25 +255,27 @@ nsICODecoder::ReadDirEntry(const char* aData)
 LexerTransition<ICOState>
 nsICODecoder::SniffResource(const char* aData)
 {
-  // Prepare a new iterator for the contained decoder to advance as it wills.
-  // Cloning at the point ensures it will begin at the resource offset.
-  mContainedIterator.emplace(mLexer.Clone(*mIterator, mDirEntry.mBytesInRes));
-
   // We use the first PNGSIGNATURESIZE bytes to determine whether this resource
   // is a PNG or a BMP.
   bool isPNG = !memcmp(aData, nsPNGDecoder::pngSignatureBytes,
                        PNGSIGNATURESIZE);
   if (isPNG) {
-    if (mDirEntry.mBytesInRes <= PNGSIGNATURESIZE) {
+    // Create a PNG decoder which will do the rest of the work for us.
+    mContainedSourceBuffer = new SourceBuffer();
+    mContainedSourceBuffer->ExpectLength(mDirEntry.mBytesInRes);
+    mContainedDecoder =
+      DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
+                                                  WrapNotNull(mContainedSourceBuffer),
+                                                  WrapNotNull(this),
+                                                  Some(GetRealSize()));
+
+    if (!WriteToContainedDecoder(aData, PNGSIGNATURESIZE)) {
       return Transition::TerminateFailure();
     }
 
-    // Create a PNG decoder which will do the rest of the work for us.
-    mContainedDecoder =
-      DecoderFactory::CreateDecoderForICOResource(DecoderType::PNG,
-                                                  Move(*mContainedIterator),
-                                                  WrapNotNull(this),
-                                                  Some(GetRealSize()));
+    if (mDirEntry.mBytesInRes <= PNGSIGNATURESIZE) {
+      return Transition::TerminateFailure();
+    }
 
     // Read in the rest of the PNG unbuffered.
     size_t toRead = mDirEntry.mBytesInRes - PNGSIGNATURESIZE;
@@ -291,9 +299,9 @@ nsICODecoder::SniffResource(const char* aData)
 }
 
 LexerTransition<ICOState>
-nsICODecoder::ReadResource()
+nsICODecoder::ReadResource(const char* aData, uint32_t aLen)
 {
-  if (!FlushContainedDecoder()) {
+  if (!WriteToContainedDecoder(aData, aLen)) {
     return Transition::TerminateFailure();
   }
 
@@ -326,18 +334,19 @@ nsICODecoder::ReadBIH(const char* aData)
 
   // Create a BMP decoder which will do most of the work for us; the exception
   // is the AND mask, which isn't present in standalone BMPs.
+  mContainedSourceBuffer = new SourceBuffer();
+  mContainedSourceBuffer->ExpectLength(mDirEntry.mBytesInRes);
   mContainedDecoder =
     DecoderFactory::CreateDecoderForICOResource(DecoderType::BMP,
-                                                Move(*mContainedIterator),
+                                                WrapNotNull(mContainedSourceBuffer),
                                                 WrapNotNull(this),
                                                 Some(GetRealSize()),
                                                 Some(dataOffset));
-
   RefPtr<nsBMPDecoder> bmpDecoder =
     static_cast<nsBMPDecoder*>(mContainedDecoder.get());
 
-  // Ensure the decoder has parsed at least the BMP's bitmap info header.
-  if (!FlushContainedDecoder()) {
+  // Write out the BMP's bitmap info header.
+  if (!WriteToContainedDecoder(mBIHraw, sizeof(mBIHraw))) {
     return Transition::TerminateFailure();
   }
 
@@ -363,14 +372,6 @@ nsICODecoder::ReadBIH(const char* aData)
 LexerTransition<ICOState>
 nsICODecoder::PrepareForMask()
 {
-  // We have received all of the data required by the BMP decoder so flushing
-  // here guarantees the decode has finished.
-  if (!FlushContainedDecoder()) {
-    return Transition::TerminateFailure();
-  }
-
-  MOZ_ASSERT(mContainedDecoder->GetDecodeDone());
-
   RefPtr<nsBMPDecoder> bmpDecoder =
     static_cast<nsBMPDecoder*>(mContainedDecoder.get());
 
@@ -516,14 +517,6 @@ nsICODecoder::FinishMask()
 LexerTransition<ICOState>
 nsICODecoder::FinishResource()
 {
-  // We have received all of the data required by the PNG/BMP decoder so
-  // flushing here guarantees the decode has finished.
-  if (!FlushContainedDecoder()) {
-    return Transition::TerminateFailure();
-  }
-
-  MOZ_ASSERT(mContainedDecoder->GetDecodeDone());
-
   // Make sure the actual size of the resource matches the size in the directory
   // entry. If not, we consider the image corrupt.
   if (mContainedDecoder->HasSize() &&
@@ -566,7 +559,7 @@ nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
       case ICOState::SNIFF_RESOURCE:
         return SniffResource(aData);
       case ICOState::READ_RESOURCE:
-        return ReadResource();
+        return ReadResource(aData, aLength);
       case ICOState::READ_BIH:
         return ReadBIH(aData);
       case ICOState::PREPARE_FOR_MASK:
@@ -586,16 +579,21 @@ nsICODecoder::DoDecode(SourceBufferIterator& aIterator, IResumable* aOnResume)
 }
 
 bool
-nsICODecoder::FlushContainedDecoder()
+nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(mContainedDecoder);
+  MOZ_ASSERT(mContainedSourceBuffer);
+
+  // Append the provided data to the SourceBuffer that the contained decoder is
+  // reading from.
+  mContainedSourceBuffer->Append(aBuffer, aCount);
 
   bool succeeded = true;
 
-  // If we run out of data, the ICO decoder will get resumed when there's more
-  // data available, as usual, so we don't need the contained decoder to get
-  // resumed too. To avoid that, we provide an IResumable which just does
-  // nothing. All the caller needs to do is flush when there is new data.
+  // Write to the contained decoder. If we run out of data, the ICO decoder will
+  // get resumed when there's more data available, as usual, so we don't need
+  // the contained decoder to get resumed too. To avoid that, we provide an
+  // IResumable which just does nothing.
   LexerResult result = mContainedDecoder->Decode();
   if (result == LexerResult(TerminalState::FAILURE)) {
     succeeded = false;

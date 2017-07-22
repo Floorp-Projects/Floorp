@@ -23,7 +23,6 @@ class IDecodingTask;
 class nsICODecoder;
 class RasterImage;
 class SourceBuffer;
-class SourceBufferIterator;
 
 /**
  * The type of decoder; this is usually determined from a MIME type using
@@ -120,8 +119,8 @@ public:
    *
    * @param aType Which type of decoder to create. This must be either BMP or
    *              PNG.
-   * @param aIterator The SourceBufferIterator which the decoder will read its
-   *                  data from.
+   * @param aSourceBuffer The SourceBuffer which the decoder will read its data
+   *                      from.
    * @param aICODecoder The ICO decoder which is controlling this resource
    *                    decoder. @aICODecoder's settings will be copied to the
    *                    resource decoder, so the two decoders will have the
@@ -134,7 +133,7 @@ public:
    */
   static already_AddRefed<Decoder>
   CreateDecoderForICOResource(DecoderType aType,
-                              SourceBufferIterator&& aIterator,
+                              NotNull<SourceBuffer*> aSourceBuffer,
                               NotNull<nsICODecoder*> aICODecoder,
                               const Maybe<gfx::IntSize>& aExpectedSize,
                               const Maybe<uint32_t>& aDataOffset = Nothing());
