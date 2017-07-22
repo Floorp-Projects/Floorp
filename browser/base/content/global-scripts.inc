@@ -7,7 +7,6 @@
 # file so that ESLint works correctly:
 # tools/lint/eslint/eslint-plugin-mozilla/lib/environments/browser-window.js
 
-<script type="application/javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 <script type="application/javascript" src="chrome://browser/content/places/browserPlacesViews.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser.js"/>
 <script type="application/javascript" src="chrome://browser/content/customizableui/panelUI.js"/>
@@ -20,7 +19,6 @@
 <script type="application/javascript" src="chrome://browser/content/browser-compacttheme.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-feeds.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-fullScreenAndPointerLock.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-fullZoom.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-gestureSupport.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-media.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
