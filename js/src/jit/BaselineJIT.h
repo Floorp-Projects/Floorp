@@ -379,6 +379,10 @@ struct BaselineScript
         return method()->raw() <= addr && addr <= method()->raw() + method()->instructionsSize();
     }
 
+    BaselineICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
+    BaselineICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
+                                              BaselineICEntry* prevLookedUpEntry);
+
     BaselineICEntry& icEntry(size_t index);
     BaselineICEntry& icEntryFromReturnOffset(CodeOffset returnOffset);
     BaselineICEntry& icEntryFromPCOffset(uint32_t pcOffset);
