@@ -219,7 +219,6 @@ class WebGLImageConverter
         }
 
         mSuccess = true;
-        return;
     }
 
     template<WebGLTexelFormat SrcFormat,

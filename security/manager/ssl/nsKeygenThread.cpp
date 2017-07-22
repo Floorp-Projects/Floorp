@@ -253,6 +253,4 @@ void nsKeygenThread::Join()
 
   PR_JoinThread(threadHandle);
   threadHandle = nullptr;
-
-  return;
 }

@@ -1418,9 +1418,7 @@ MediaRecorder::NotifyError(nsresult aRv)
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
   if (NS_FAILED(rv)) {
     NS_ERROR("Failed to dispatch the error event!!!");
-    return;
   }
-  return;
 }
 
 void

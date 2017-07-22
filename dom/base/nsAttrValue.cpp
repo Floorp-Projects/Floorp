@@ -1303,7 +1303,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
   AtomArray* array = GetAtomArrayValue();
 
-  if (!array->AppendElement(classAtom)) {
+  if (!array->AppendElement(Move(classAtom))) {
     Reset();
     return;
   }
@@ -1318,7 +1318,7 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
 
     classAtom = NS_AtomizeMainThread(Substring(start, iter));
 
-    if (!array->AppendElement(classAtom)) {
+    if (!array->AppendElement(Move(classAtom))) {
       Reset();
       return;
     }
@@ -1330,7 +1330,6 @@ nsAttrValue::ParseAtomArray(const nsAString& aValue)
   }
 
   SetMiscAtomOrString(&aValue);
-  return;
 }
 
 void

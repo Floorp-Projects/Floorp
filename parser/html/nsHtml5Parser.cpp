@@ -713,7 +713,6 @@ nsHtml5Parser::ParseUntilBlocked()
         return NS_OK;
       }
     }
-    continue;
   }
 }
 

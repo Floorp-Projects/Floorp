@@ -246,28 +246,33 @@ protected:
   public:
     NodeInfoInner()
       : mName(nullptr), mPrefix(nullptr), mNamespaceID(kNameSpaceID_Unknown),
-        mNodeType(0), mNameString(nullptr), mExtraName(nullptr)
+        mNodeType(0), mNameString(nullptr), mExtraName(nullptr),
+        mHash(0), mHashInitialized(false)
     {
     }
     NodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
                     uint16_t aNodeType, nsIAtom* aExtraName)
       : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
-        mNodeType(aNodeType), mNameString(nullptr), mExtraName(aExtraName)
+        mNodeType(aNodeType), mNameString(nullptr), mExtraName(aExtraName),
+        mHash(aName->hash()), mHashInitialized(true)
     {
     }
     NodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix,
                     int32_t aNamespaceID, uint16_t aNodeType)
       : mName(nullptr), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
-        mNodeType(aNodeType), mNameString(&aTmpName), mExtraName(nullptr)
+        mNodeType(aNodeType), mNameString(&aTmpName), mExtraName(nullptr),
+        mHash(0), mHashInitialized(false)
     {
     }
 
-    nsCOMPtr<nsIAtom> mName;
+    const nsCOMPtr<nsIAtom> mName;
     nsCOMPtr<nsIAtom> mPrefix;
     int32_t             mNamespaceID;
     uint16_t            mNodeType; // As defined by nsIDOMNode.nodeType
-    const nsAString*    mNameString;
+    const nsAString* const mNameString;
     nsCOMPtr<nsIAtom> mExtraName; // Only used by PIs and DocTypes
+    PLHashNumber      mHash;
+    bool              mHashInitialized;
   };
 
   // nsNodeInfoManager needs to pass mInner to the hash table.

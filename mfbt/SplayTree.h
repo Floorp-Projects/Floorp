@@ -88,7 +88,6 @@ public:
     int cmp = Comparator::compare(*aValue, *last);
 
     finishInsertion(last, cmp, aValue);
-    return;
   }
 
   T* findOrInsert(const T& aValue);

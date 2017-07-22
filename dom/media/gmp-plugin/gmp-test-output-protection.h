@@ -123,7 +123,6 @@ TestOuputProtectionAPIs()
 {
   RunOutputProtectionAPITests();
   FakeDecryptor::Message("OP tests completed");
-  return;
 }
 
 } // namespace gmptest

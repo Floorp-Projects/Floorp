@@ -4684,8 +4684,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery
                 return;
             }
         }
-
-        return;
     }
 
     /*

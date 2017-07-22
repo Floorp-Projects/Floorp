@@ -758,7 +758,6 @@ FTPChannelParent::DivertTo(nsIStreamListener *aListener)
     NewRunnableMethod("net::FTPChannelParent::StartDiversion",
                       this,
                       &FTPChannelParent::StartDiversion));
-  return;
 }
 
 void

@@ -900,7 +900,6 @@ class BackReferenceNode : public SeqRegExpNode
                                       RegExpCompiler* compiler,
                                       int characters_filled_in,
                                       bool not_at_start) {
-        return;
     }
     virtual bool FillInBMInfo(int offset,
                               int budget,
