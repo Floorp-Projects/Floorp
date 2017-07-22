@@ -854,7 +854,5 @@ xt_add_focus_listener_tree ( Widget treeroot, XtPointer user_data)
       xt_add_focus_listener_tree( child, user_data);
   }
   XFree((void*)children);
-
-  return;
 }
 

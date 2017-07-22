@@ -134,8 +134,6 @@ void JapaneseContextAnalysis::HandleData(const char* aBuf, uint32_t aLen)
       mLastCharOrder = order;
     }
   }
-
-  return;
 }
 
 void JapaneseContextAnalysis::Reset()

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+  function setup() {
+    // Set up targets for sandbox expandos.
+    window.targetDOM = [document.getElementById("hello"), document.getElementById("there")];
+  }
+</script>
+</head>
+<body onload="setup();">
+<span id="hello" class="iamaspan">Hello</span>
+<span id="there" class="iamaspan">There</span>
+</body>
+</html>

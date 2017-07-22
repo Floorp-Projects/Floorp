@@ -942,7 +942,6 @@ GPUProcessManager::CreateContentVideoDecoderManager(base::ProcessId aOtherProces
   mGPUChild->SendNewContentVideoDecoderManager(Move(parentPipe));
 
   *aOutEndpoint = Move(childPipe);
-  return;
 }
 
 already_AddRefed<IAPZCTreeManager>

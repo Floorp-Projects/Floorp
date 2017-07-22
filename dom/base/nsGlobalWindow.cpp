@@ -4895,7 +4895,6 @@ nsGlobalWindow::GetContentOuter(JSContext* aCx,
   }
 
   aRetval.set(nullptr);
-  return;
 }
 
 void

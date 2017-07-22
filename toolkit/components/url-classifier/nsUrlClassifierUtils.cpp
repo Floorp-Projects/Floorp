@@ -722,7 +722,6 @@ nsUrlClassifierUtils::ParseIPAddress(const nsACString & host,
       _retval.Append(canonical);
     }
   }
-  return;
 }
 
 void

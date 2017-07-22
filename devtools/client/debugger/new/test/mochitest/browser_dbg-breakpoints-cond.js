@@ -46,6 +46,8 @@ add_task(function*() {
   clickElement(dbg, "gutter", 5);
   yield waitForDispatch(dbg, "ADD_BREAKPOINT");
   yield setConditionalBreakpoint(dbg, 5, "1");
+  yield waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
+
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
 });

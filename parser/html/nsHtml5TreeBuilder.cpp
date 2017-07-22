@@ -204,7 +204,6 @@ nsHtml5TreeBuilder::doctype(nsIAtom* name,
     return;
   }
   errStrayDoctype();
-  return;
 }
 
 void 
@@ -232,7 +231,6 @@ nsHtml5TreeBuilder::comment(char16_t* buf, int32_t start, int32_t length)
   }
   flushCharacters();
   appendComment(stack[currentPtr]->node, buf, start, length);
-  return;
 }
 
 void 
@@ -3343,7 +3341,6 @@ nsHtml5TreeBuilder::closeTheCell(int32_t eltPos)
   }
   clearTheListOfActiveFormattingElementsUpToTheLastMarker();
   mode = IN_ROW;
-  return;
 }
 
 int32_t 
