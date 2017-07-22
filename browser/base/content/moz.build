@@ -130,9 +130,6 @@ with Files("browser-places.js"):
 with Files("browser-plugins.js"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
-with Files("browser-refreshblocker.js"):
-    BUG_COMPONENT = ("Firefox", "Disability Access")
-
 with Files("browser-safebrowsing.js"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
