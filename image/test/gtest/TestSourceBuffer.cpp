@@ -808,3 +808,55 @@ TEST_F(ImageSourceBuffer, ExpectLengthDoesNotTriggerResume)
   // ensure that the test fails.
   mSourceBuffer->ExpectLength(1000);
 }
+
+TEST_F(ImageSourceBuffer, CompleteSuccessWithSameReadLength)
+{
+  SourceBufferIterator iterator = mSourceBuffer->Iterator(1);
+
+  // Write a single byte to the buffer and complete the buffer. (We have to
+  // write at least one byte because completing a zero length buffer always
+  // fails; see the ZeroLengthBufferAlwaysFails test.)
+  CheckedAppendToBuffer(mData, 1);
+  CheckedCompleteBuffer(iterator, 1);
+
+  // We should be able to advance once (to read the single byte) and then should
+  // reach the COMPLETE state with a successful status.
+  CheckedAdvanceIterator(iterator, 1);
+  CheckIteratorIsComplete(iterator, 1);
+}
+
+TEST_F(ImageSourceBuffer, CompleteSuccessWithSmallerReadLength)
+{
+  // Create an iterator limited to one byte.
+  SourceBufferIterator iterator = mSourceBuffer->Iterator(1);
+
+  // Write two bytes to the buffer and complete the buffer. (We have to
+  // write at least one byte because completing a zero length buffer always
+  // fails; see the ZeroLengthBufferAlwaysFails test.)
+  CheckedAppendToBuffer(mData, 2);
+  CheckedCompleteBuffer(iterator, 2);
+
+  // We should be able to advance once (to read the single byte) and then should
+  // reach the COMPLETE state with a successful status, because our iterator is
+  // limited to a single byte, rather than the full length.
+  CheckedAdvanceIterator(iterator, 1);
+  CheckIteratorIsComplete(iterator, 1);
+}
+
+TEST_F(ImageSourceBuffer, CompleteSuccessWithGreaterReadLength)
+{
+  // Create an iterator limited to one byte.
+  SourceBufferIterator iterator = mSourceBuffer->Iterator(2);
+
+  // Write a single byte to the buffer and complete the buffer. (We have to
+  // write at least one byte because completing a zero length buffer always
+  // fails; see the ZeroLengthBufferAlwaysFails test.)
+  CheckedAppendToBuffer(mData, 1);
+  CheckedCompleteBuffer(iterator, 1);
+
+  // We should be able to advance once (to read the single byte) and then should
+  // reach the COMPLETE state with a successful status. Our iterator lets us
+  // read more but the underlying buffer has been completed.
+  CheckedAdvanceIterator(iterator, 1);
+  CheckIteratorIsComplete(iterator, 1);
+}
