@@ -39,11 +39,8 @@ function run_test() {
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
   var scope3 = {};
-  Components.utils.import(filePath, scope3);
-  do_check_eq(typeof(scope3.XPCOMUtils), "object");
-  do_check_eq(typeof(scope3.XPCOMUtils.generateNSGetFactory), "function");
-  
-  do_check_true(scope3.XPCOMUtils == scope.XPCOMUtils);
+  Assert.throws(() => Components.utils.import(filePath, scope3),
+                /NS_ERROR_UNEXPECTED/);
 
   // make sure we throw when the second arg is bogus
   var didThrow = false;
