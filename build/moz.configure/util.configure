@@ -224,6 +224,10 @@ def unique_list(l):
 # match. Each of these tuples contains the key name matching wildcards
 # followed by the value.
 #
+# The `get_32_and_64_bit` argument is a boolean, if True then it will return the
+# values from the 32-bit and 64-bit registry views. This defaults to False,
+# which will return the view depending on the bitness of python.
+#
 # Examples:
 #   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
 #                       r'Windows Kits\Installed Roots\KitsRoot*')
@@ -235,6 +239,13 @@ def unique_list(l):
 #                       r'Windows Kits\Installed Roots\KitsRoot8.1')
 #   yields e.g.:
 #     (r'C:\Program Files (x86)\Windows Kits\8.1\',)
+#
+#   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
+#                       r'Windows Kits\Installed Roots\KitsRoot8.1',
+#                       get_32_and_64_bit=True)
+#   yields e.g.:
+#     (r'C:\Program Files (x86)\Windows Kits\8.1\',)
+#     (r'C:\Program Files\Windows Kits\8.1\',)
 #
 #   get_registry_values(r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\'
 #                       r'Windows Kits\*\KitsRoot*')
@@ -253,7 +264,7 @@ def unique_list(l):
 @imports(_import='_winreg', _as='winreg')
 @imports(_from='__builtin__', _import='WindowsError')
 @imports(_from='fnmatch', _import='fnmatch')
-def get_registry_values(pattern):
+def get_registry_values(pattern, get_32_and_64_bit=False):
     def enum_helper(func, key):
         i = 0
         while True:
@@ -263,21 +274,21 @@ def get_registry_values(pattern):
                 break
             i += 1
 
-    def get_keys(key, pattern):
+    def get_keys(key, pattern, access_mask):
         try:
-            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]))
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]), 0, access_mask)
         except WindowsError:
             return
         for k in enum_helper(winreg.EnumKey, s):
             if fnmatch(k, pattern[-1]):
                 try:
-                    yield k, winreg.OpenKey(s, k)
+                    yield k, winreg.OpenKey(s, k, 0, access_mask)
                 except WindowsError:
                     pass
 
-    def get_values(key, pattern):
+    def get_values(key, pattern, access_mask):
         try:
-            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]))
+            s = winreg.OpenKey(key, '\\'.join(pattern[:-1]), 0, access_mask)
         except WindowsError:
             return
         for k, v, t in enum_helper(winreg.EnumValue, s):
@@ -294,23 +305,33 @@ def get_registry_values(pattern):
         if subpattern:
             yield subpattern
 
+    def get_all_values(keys, pattern, access_mask):
+        for i, p in enumerate(pattern):
+            next_keys = []
+            for base_key in keys:
+                matches = base_key[:-1]
+                base_key = base_key[-1]
+                if i == len(pattern) - 1:
+                    want_name = '*' in p[-1]
+                    for name, value in get_values(base_key, p, access_mask):
+                        yield matches + ((name, value) if want_name else (value,))
+                else:
+                    for name, k in get_keys(base_key, p, access_mask):
+                        next_keys.append(matches + (name, k))
+            keys = next_keys
+
     pattern = pattern.split('\\')
     assert pattern[0].startswith('HKEY_')
     keys = [(getattr(winreg, pattern[0]),)]
     pattern = list(split_pattern(pattern[1:]))
-    for i, p in enumerate(pattern):
-        next_keys = []
-        for base_key in keys:
-            matches = base_key[:-1]
-            base_key = base_key[-1]
-            if i == len(pattern) - 1:
-                want_name = '*' in p[-1]
-                for name, value in get_values(base_key, p):
-                    yield matches + ((name, value) if want_name else (value,))
-            else:
-                for name, k in get_keys(base_key, p):
-                    next_keys.append(matches + (name, k))
-        keys = next_keys
+    if get_32_and_64_bit:
+        for match in get_all_values(keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_32KEY):
+            yield match
+        for match in get_all_values(keys, pattern, winreg.KEY_READ | winreg.KEY_WOW64_64KEY):
+            yield match
+    else:
+        for match in get_all_values(keys, pattern, winreg.KEY_READ):
+            yield match
 
 
 @imports(_from='mozbuild.configure.util', _import='Version', _as='_Version')
