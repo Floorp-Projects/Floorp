@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
 /* global AboutHome:false,
           BrowserUITelemetry:false, BrowserUsageTelemetry:false, BrowserUtils:false,
           CastingApps:false, CharsetMenu:false, Color:false, ContentSearch:false,
-          CustomizableUI: false,
+          CustomizableUI: false, DownloadsCommon: false,
           Deprecated:false, E10SUtils:false, ExtensionsUI: false, FormValidationHandler:false,
           GMPInstallManager:false, LightweightThemeManager:false, Log:false,
           LoginManagerParent:false, NewTabUtils:false, PageThumbs:false,
@@ -60,6 +60,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
   ["ContextualIdentityService", "resource://gre/modules/ContextualIdentityService.jsm"],
   ["CustomizableUI", "resource:///modules/CustomizableUI.jsm"],
   ["Deprecated", "resource://gre/modules/Deprecated.jsm"],
+  ["DownloadsCommon", "resource:///modules/DownloadsCommon.jsm"],
   ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
   ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
@@ -139,6 +140,16 @@ XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
 XPCOMUtils.defineLazyScriptGetter(this, ["setContextMenuContentData",
                                          "openContextMenu", "nsContextMenu"],
                                   "chrome://browser/content/nsContextMenu.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsPanel",
+                                         "DownloadsOverlayLoader",
+                                         "DownloadsView", "DownloadsViewUI",
+                                         "DownloadsViewController",
+                                         "DownloadsSummary", "DownloadsFooter",
+                                         "DownloadsBlockedSubview"],
+                                  "chrome://browser/content/downloads/downloads.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsButton",
+                                         "DownloadsIndicatorView"],
+                                  "chrome://browser/content/downloads/indicator.js");
 
 
 // lazy service getters
@@ -1622,8 +1633,7 @@ var gBrowserInit = {
     // downloads will start right away, and initializing again won't hurt.
     setTimeout(function() {
       try {
-        Cu.import("resource:///modules/DownloadsCommon.jsm", {})
-          .DownloadsCommon.initializeAllDataLinks();
+        DownloadsCommon.initializeAllDataLinks();
         Cu.import("resource:///modules/DownloadsTaskbar.jsm", {})
           .DownloadsTaskbar.registerIndicator(window);
       } catch (ex) {
