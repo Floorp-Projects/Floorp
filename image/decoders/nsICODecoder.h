@@ -24,8 +24,6 @@ enum class ICOState
 {
   HEADER,
   DIR_ENTRY,
-  FINISHED_DIR_ENTRY,
-  ITERATE_UNSIZED_DIR_ENTRY,
   SKIP_TO_RESOURCE,
   FOUND_RESOURCE,
   SNIFF_RESOURCE,
@@ -41,6 +39,30 @@ class nsICODecoder : public Decoder
 {
 public:
   virtual ~nsICODecoder() { }
+
+  /// @return the width of the icon directory entry @aEntry.
+  static uint32_t GetRealWidth(const IconDirEntry& aEntry)
+  {
+    return aEntry.mWidth == 0 ? 256 : aEntry.mWidth;
+  }
+
+  /// @return the width of the selected directory entry (mDirEntry).
+  uint32_t GetRealWidth() const { return GetRealWidth(mDirEntry); }
+
+  /// @return the height of the icon directory entry @aEntry.
+  static uint32_t GetRealHeight(const IconDirEntry& aEntry)
+  {
+    return aEntry.mHeight == 0 ? 256 : aEntry.mHeight;
+  }
+
+  /// @return the height of the selected directory entry (mDirEntry).
+  uint32_t GetRealHeight() const { return GetRealHeight(mDirEntry); }
+
+  /// @return the size of the selected directory entry (mDirEntry).
+  gfx::IntSize GetRealSize() const
+  {
+    return gfx::IntSize(GetRealWidth(), GetRealHeight());
+  }
 
   /// @return The offset from the beginning of the ICO to the first resource.
   size_t FirstResourceOffset() const;
@@ -68,8 +90,6 @@ private:
 
   LexerTransition<ICOState> ReadHeader(const char* aData);
   LexerTransition<ICOState> ReadDirEntry(const char* aData);
-  LexerTransition<ICOState> IterateUnsizedDirEntry();
-  LexerTransition<ICOState> FinishDirEntry();
   LexerTransition<ICOState> SniffResource(const char* aData);
   LexerTransition<ICOState> ReadResource();
   LexerTransition<ICOState> ReadBIH(const char* aData);
@@ -78,20 +98,18 @@ private:
   LexerTransition<ICOState> FinishMask();
   LexerTransition<ICOState> FinishResource();
 
-  struct IconDirEntryEx : public IconDirEntry {
-    gfx::IntSize mSize;
-  };
-
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
-  Maybe<SourceBufferIterator> mReturnIterator; // Iterator to save return point.
-  UniquePtr<uint8_t[]> mMaskBuffer; // A temporary buffer for the alpha mask.
-  nsTArray<IconDirEntryEx> mDirEntries; // Valid dir entries with a size.
-  nsTArray<IconDirEntryEx> mUnsizedDirEntries; // Dir entries without a size.
-  IconDirEntryEx* mDirEntry; // The dir entry for the selected resource.
-  uint16_t mNumIcons;     // Stores the number of icons in the ICO file.
-  uint16_t mCurrIcon;     // Stores the current dir entry index we are processing.
-  uint16_t mBPP;          // The BPP of the resource we're decoding.
+  UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
+  IconDirEntry mDirEntry;              // The dir entry for the selected resource.
+  gfx::IntSize mBiggestResourceSize;   // Used to select the intrinsic size.
+  gfx::IntSize mBiggestResourceHotSpot; // Used to select the intrinsic size.
+  uint16_t mBiggestResourceColorDepth; // Used to select the intrinsic size.
+  int32_t mBestResourceDelta;          // Used to select the best resource.
+  uint16_t mBestResourceColorDepth;    // Used to select the best resource.
+  uint16_t mNumIcons; // Stores the number of icons in the ICO file.
+  uint16_t mCurrIcon; // Stores the current dir entry index we are processing.
+  uint16_t mBPP;      // The BPP of the resource we're decoding.
   uint32_t mMaskRowSize;  // The size in bytes of each row in the BMP alpha mask.
   uint32_t mCurrMaskLine; // The line of the BMP alpha mask we're processing.
   bool mIsCursor;         // Is this ICO a cursor?
