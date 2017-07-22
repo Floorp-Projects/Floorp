@@ -253,6 +253,20 @@ public:
     mWantReplyFromContentProcess = true;
   }
   /**
+   * Reset "waiting reply from remote process" state.  This is useful when
+   * you dispatch a copy of an event coming from different process.
+   */
+  inline void ResetWaitingReplyFromRemoteProcessState()
+  {
+    if (IsWaitingReplyFromRemoteProcess()) {
+      // FYI: mWantReplyFromContentProcess is also used for indicating
+      //      "handled in remote process" state.  Therefore, only when
+      //      IsWaitingReplyFromRemoteProcess() returns true, this should
+      //      reset the flag.
+      mWantReplyFromContentProcess = false;
+    }
+  }
+  /**
    * Return true if the event handler should wait reply event.  I.e., if this
    * returns true, any event handler should do nothing with the event.
    */
@@ -301,6 +315,12 @@ public:
   {
     MOZ_ASSERT(!IsCrossProcessForwardingStopped());
     mPostedToRemoteProcess = false;
+    // Ignore propagation state in the different process if it's marked as
+    // "waiting reply from remote process" because the process needs to
+    // stop propagation in the process until receiving a reply event.
+    if (IsWaitingReplyFromRemoteProcess()) {
+      mPropagationStopped = mImmediatePropagationStopped = false;
+    }
   }
   /**
    * Return true if the event has been posted to a remote process.
@@ -628,6 +648,14 @@ public:
   inline void MarkAsWaitingReplyFromRemoteProcess()
   {
     mFlags.MarkAsWaitingReplyFromRemoteProcess();
+  }
+  /**
+   * Reset "waiting reply from remote process" state.  This is useful when
+   * you dispatch a copy of an event coming from different process.
+   */
+  inline void ResetWaitingReplyFromRemoteProcessState()
+  {
+    mFlags.ResetWaitingReplyFromRemoteProcessState();
   }
   /**
    * Return true if the event handler should wait reply event.  I.e., if this

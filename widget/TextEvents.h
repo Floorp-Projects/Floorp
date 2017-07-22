@@ -154,7 +154,6 @@ protected:
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(eKeyLocationStandard)
-    , mAccessKeyForwardedToChild(false)
     , mUniqueId(0)
 #ifdef XP_MACOSX
     , mNativeModifierFlags(0)
@@ -183,7 +182,6 @@ public:
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(eKeyLocationStandard)
-    , mAccessKeyForwardedToChild(false)
     , mUniqueId(0)
 #ifdef XP_MACOSX
     , mNativeModifierFlags(0)
@@ -279,11 +277,6 @@ public:
   uint32_t mPseudoCharCode;
   // One of eKeyLocation*
   uint32_t mLocation;
-  // True if accesskey handling was forwarded to the child via
-  // TabParent::HandleAccessKey. In this case, parent process menu access key
-  // handling should be delayed until it is determined that there exists no
-  // overriding access key in the content process.
-  bool mAccessKeyForwardedToChild;
   // Unique id associated with a keydown / keypress event. It's ok if this wraps
   // over long periods.
   uint32_t mUniqueId;
@@ -509,7 +502,6 @@ public:
     mAlternativeCharCodes = aEvent.mAlternativeCharCodes;
     mIsRepeat = aEvent.mIsRepeat;
     mIsComposing = aEvent.mIsComposing;
-    mAccessKeyForwardedToChild = aEvent.mAccessKeyForwardedToChild;
     mKeyNameIndex = aEvent.mKeyNameIndex;
     mCodeNameIndex = aEvent.mCodeNameIndex;
     mKeyValue = aEvent.mKeyValue;

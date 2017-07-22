@@ -763,11 +763,34 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eChrome) ||
           keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent)) {
-        AutoTArray<uint32_t, 10> accessCharCodes;
-        keyEvent->GetAccessKeyCandidates(accessCharCodes);
+        // If the eKeyPress event will be sent to a remote process, this
+        // process needs to wait reply from the remote process for checking if
+        // preceding eKeyDown event is consumed.  If preceding eKeyDown event
+        // is consumed in the remote process, TabChild won't send the event
+        // back to this process.  So, only when this process receives a reply
+        // eKeyPress event in TabParent, we should handle accesskey in this
+        // process.
+        if (IsRemoteTarget(GetFocusedContent())) {
+          // However, if there is no accesskey target for the key combination,
+          // we don't need to wait reply from the remote process.  Otherwise,
+          // Mark the event as waiting reply from remote process and stop
+          // propagation in this process.
+          if (CheckIfEventMatchesAccessKey(keyEvent, aPresContext)) {
+            keyEvent->StopPropagation();
+            keyEvent->MarkAsWaitingReplyFromRemoteProcess();
+          }
+        }
+        // If the event target is in this process, we can handle accesskey now
+        // since if preceding eKeyDown event was consumed, eKeyPress event
+        // won't be dispatched by widget.  So, coming eKeyPress event means
+        // that the preceding eKeyDown event wasn't consumed in this case.
+        else {
+          AutoTArray<uint32_t, 10> accessCharCodes;
+          keyEvent->GetAccessKeyCandidates(accessCharCodes);
 
-        if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes)) {
-          *aStatus = nsEventStatus_eConsumeNoDefault;
+          if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes)) {
+            *aStatus = nsEventStatus_eConsumeNoDefault;
+          }
         }
       }
     }
@@ -1102,7 +1125,13 @@ HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
   bool active;
   aTabParent->GetDocShellIsActive(&active);
   if (active) {
-    accessKeyInfo->event->mAccessKeyForwardedToChild = true;
+    // Even if there is no target for the accesskey in this process,
+    // the event may match with a content accesskey.  If so, the keyboard
+    // event should be handled with reply event for preventing double action.
+    // (e.g., Alt+Shift+F on Windows may focus a content in remote and open
+    // "File" menu.)
+    accessKeyInfo->event->StopPropagation();
+    accessKeyInfo->event->MarkAsWaitingReplyFromRemoteProcess();
     aTabParent->HandleAccessKey(*accessKeyInfo->event,
                                 accessKeyInfo->charCodes);
     return true;
@@ -1202,16 +1231,22 @@ EventStateManager::WalkESMTreeToHandleAccessKey(
   if (aExecute &&
       aEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent) &&
       mDocument && mDocument->GetWindow()) {
-    // If the focus is currently on a node with a TabParent, the key event will
-    // get forwarded to the child process and HandleAccessKey called from there.
+    // If the focus is currently on a node with a TabParent, the key event
+    // should've gotten forwarded to the child process and HandleAccessKey
+    // called from there.
+    if (TabParent::GetFrom(GetFocusedContent())) {
+      // If access key may be only in remote contents, this method won't handle
+      // access key synchronously.  In this case, only reply event should reach
+      // here.
+      MOZ_ASSERT(aEvent->IsHandledInRemoteProcess() ||
+                 !aEvent->IsWaitingReplyFromRemoteProcess());
+    }
     // If focus is somewhere else, then we need to check the remote children.
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
-    if (TabParent::GetFrom(focusedContent)) {
-      // A remote child process is focused. The key event should get sent to
-      // the child process.
-      aEvent->mAccessKeyForwardedToChild = true;
-    } else {
+    // However, if the event has already been handled in a remote process,
+    // then, focus is moved from the remote process after posting the event.
+    // In such case, we shouldn't retry to handle access keys in remote
+    // processes.
+    else if (!aEvent->IsHandledInRemoteProcess()) {
       AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes);
       nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
                                               HandleAccessKeyInRemoteChild,
