@@ -24,6 +24,7 @@ const callExpressionDefinitions = [
   /^XPCOMUtils\.defineLazyGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyPreferenceGetter\(this, "(\w+)"/,
+  /^XPCOMUtils\.defineLazyScriptGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineLazyServiceGetter\(this, "(\w+)"/,
   /^XPCOMUtils\.defineConstant\(this, "(\w+)"/,
   /^DevToolsUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
