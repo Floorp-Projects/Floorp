@@ -216,14 +216,11 @@ struct Zone : public JS::shadow::Zone,
 
     bool canCollect();
 
-    void notifyObservingDebuggers();
-
-    void setGCState(GCState state) {
+    void changeGCState(GCState prev, GCState next) {
         MOZ_ASSERT(CurrentThreadIsHeapBusy());
-        MOZ_ASSERT_IF(state != NoGC, canCollect());
-        gcState_ = state;
-        if (state == Finished)
-            notifyObservingDebuggers();
+        MOZ_ASSERT(gcState() == prev);
+        MOZ_ASSERT_IF(next != NoGC, canCollect());
+        gcState_ = next;
     }
 
     bool isCollecting() const {
@@ -301,6 +298,8 @@ struct Zone : public JS::shadow::Zone,
     bool hasDebuggers() const { return debuggers && debuggers->length(); }
     DebuggerVector* getDebuggers() const { return debuggers; }
     DebuggerVector* getOrCreateDebuggers(JSContext* cx);
+
+    void notifyObservingDebuggers();
 
     void clearTables();
 

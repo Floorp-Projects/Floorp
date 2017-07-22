@@ -92,7 +92,7 @@ interface nsIThreadManager : nsISupports
    *   .currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
    * C++ callers should instead use NS_DispatchToMainThread.
    */
-  void dispatchToMainThread(in nsIRunnable event);
+  void dispatchToMainThread(in nsIRunnable event, [optional] in uint32_t priority);
 
   /**
    * This queues a runnable to the main thread's idle queue.

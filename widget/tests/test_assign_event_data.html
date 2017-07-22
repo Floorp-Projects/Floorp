@@ -100,6 +100,16 @@ function onEvent(aEvent)
   setTimeout(gCallback, 0);
 }
 
+function observeKeyUpOnContent(aKeyCode, aCallback)
+{
+  document.addEventListener("keyup", function keyUp(ev) {
+    if (ev.keyCode == aKeyCode) {
+      document.removeEventListener("keyup", keyUp);
+      SimpleTest.executeSoon(aCallback);
+    }
+  });
+}
+
 const kTests = [
   { description: "InternalScrollPortEvent (overflow, vertical)",
     targetID: "scrollable-div", eventType: "overflow",
@@ -150,6 +160,8 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_A : MAC_VK_ANSI_A,
                           {}, "a", "a");
+      observeKeyUpOnContent(KeyboardEvent.DOM_VK_A, runNextTest);
+      return true;
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -163,6 +175,8 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_A : MAC_VK_ANSI_A,
                           {}, "a", "a");
+      observeKeyUpOnContent(KeyboardEvent.DOM_VK_A, runNextTest);
+      return true;
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -176,6 +190,8 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_B : MAC_VK_ANSI_B,
                           { shiftKey: true }, "B", "B");
+      observeKeyUpOnContent(KeyboardEvent.DOM_VK_B, runNextTest);
+      return true;
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -189,6 +205,14 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_C : MAC_VK_ANSI_C,
                           { accelKey: true }, kIsWin ? "\u0003" : "c", "c");
+
+      // On Windows, synthesizeNativeKey will also fire keyup for accelKey
+      // (control key on Windows). We have to wait for it to prevent the key
+      // event break the next test case.
+      let waitKeyCode = _EU_isWin(window) ? KeyboardEvent.DOM_VK_CONTROL :
+                                            KeyboardEvent.DOM_VK_C;
+      observeKeyUpOnContent(waitKeyCode, runNextTest);
+      return true;
     },
     canRun: function () {
       return (kIsMac || kIsWin);
@@ -325,6 +349,8 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, kIsWin ? WIN_VK_B : MAC_VK_ANSI_B,
                           { shiftKey: true }, "B", "B");
+      observeKeyUpOnContent(KeyboardEvent.DOM_VK_B, runNextTest);
+      return true;
     },
     canRun: function () {
       return (kIsMac || kIsWin);

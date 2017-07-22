@@ -21,10 +21,16 @@ add_task(async function test_record_activeTicks() {
   await TelemetryController.testSetup();
 
   let checkActiveTicks = (expected) => {
-    let payload = TelemetrySession.getPayload();
+    // Scalars are only present in subsession payloads.
+    let payload = TelemetrySession.getPayload("main");
     Assert.equal(payload.simpleMeasurements.activeTicks, expected,
-                 "TelemetrySession must record the expected number of active ticks.");
-  };
+                 "TelemetrySession must record the expected number of active ticks (in simpleMeasurements).");
+    // Subsessions are not yet supported on Android.
+    if (!gIsAndroid) {
+      Assert.equal(payload.processes.parent.scalars["browser.engagement.active_ticks"], expected,
+                   "TelemetrySession must record the expected number of active ticks (in scalars).");
+    }
+  }
 
   for (let i = 0; i < 3; i++) {
     Services.obs.notifyObservers(null, "user-interaction-active");

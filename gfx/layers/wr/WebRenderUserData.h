@@ -8,6 +8,7 @@
 
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "mozilla/layers/AnimationInfo.h"
 
 class nsDisplayItemGeometry;
 
@@ -33,6 +34,7 @@ public:
   enum class UserDataType {
     eImage,
     eFallback,
+    eAnimation,
   };
 
   virtual UserDataType GetType() = 0;
@@ -98,6 +100,20 @@ public:
 protected:
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;
+};
+
+class WebRenderAnimationData : public WebRenderUserData
+{
+public:
+  explicit WebRenderAnimationData(WebRenderLayerManager* aWRManager);
+  virtual ~WebRenderAnimationData() {}
+
+  virtual UserDataType GetType() override { return UserDataType::eAnimation; }
+  static UserDataType Type() { return UserDataType::eAnimation; }
+  AnimationInfo& GetAnimationInfo() { return mAnimationInfo; }
+
+protected:
+  AnimationInfo mAnimationInfo;
 };
 
 } // namespace layers

@@ -29,8 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
 
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
-  "resource:///modules/sessionstore/PageStyle.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
   "resource://gre/modules/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
@@ -453,7 +451,6 @@ var ScrollPositionListener = {
 var FormDataListener = {
   init() {
     addEventListener("input", this, true);
-    addEventListener("change", this, true);
     gFrameTree.addObserver(this);
   },
 
@@ -473,50 +470,6 @@ var FormDataListener = {
 
   collect() {
     return gFrameTree.map(FormData.collect);
-  }
-};
-
-/**
- * Listens for changes to the page style. Whenever a different page style is
- * selected or author styles are enabled/disabled we send a message with the
- * currently applied style to the chrome process.
- *
- * Causes a SessionStore:update message to be sent that contains the currently
- * selected pageStyle for all reachable frames.
- *
- * Example:
- *   {pageStyle: "Dusk", children: [null, {pageStyle: "Mozilla"}]}
- */
-var PageStyleListener = {
-  init() {
-    Services.obs.addObserver(this, "author-style-disabled-changed");
-    Services.obs.addObserver(this, "style-sheet-applicable-state-changed");
-    gFrameTree.addObserver(this);
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, "author-style-disabled-changed");
-    Services.obs.removeObserver(this, "style-sheet-applicable-state-changed");
-  },
-
-  observe(subject, topic) {
-    let frame = subject.defaultView;
-
-    if (frame && gFrameTree.contains(frame)) {
-      MessageQueue.push("pageStyle", () => this.collect());
-    }
-  },
-
-  collect() {
-    return PageStyle.collect(docShell, gFrameTree);
-  },
-
-  onFrameTreeCollected() {
-    MessageQueue.push("pageStyle", () => this.collect());
-  },
-
-  onFrameTreeReset() {
-    MessageQueue.push("pageStyle", () => null);
   }
 };
 
@@ -847,7 +800,6 @@ var MessageQueue = {
 EventListener.init();
 MessageListener.init();
 FormDataListener.init();
-PageStyleListener.init();
 SessionHistoryListener.init();
 SessionStorageListener.init();
 ScrollPositionListener.init();
@@ -892,7 +844,6 @@ addEventListener("unload", () => {
   handleRevivedTab();
 
   // Remove all registered nsIObservers.
-  PageStyleListener.uninit();
   SessionStorageListener.uninit();
   SessionHistoryListener.uninit();
   MessageQueue.uninit();

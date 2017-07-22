@@ -92,7 +92,7 @@ defineListener("getInputChecked", function(data) {
 defineListener("setInputChecked", function(data) {
   let input = queryElement(data);
   input.checked = data.checked;
-  dispatchUIEvent(input, "change");
+  dispatchUIEvent(input, "input");
 });
 
 defineListener("getSelectedIndex", function(data) {
@@ -102,7 +102,7 @@ defineListener("getSelectedIndex", function(data) {
 defineListener("setSelectedIndex", function(data) {
   let input = queryElement(data);
   input.selectedIndex = data.index;
-  dispatchUIEvent(input, "change");
+  dispatchUIEvent(input, "input");
 });
 
 defineListener("getMultipleSelected", function(data) {
@@ -114,7 +114,7 @@ defineListener("getMultipleSelected", function(data) {
 defineListener("setMultipleSelected", function(data) {
   let input = queryElement(data);
   Array.forEach(input.options, (opt, idx) => opt.selected = data.indices.indexOf(idx) > -1);
-  dispatchUIEvent(input, "change");
+  dispatchUIEvent(input, "input");
 });
 
 defineListener("getFileNameArray", function(data) {

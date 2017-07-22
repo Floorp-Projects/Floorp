@@ -90,6 +90,7 @@
 #include "nsPIWindowRoot.h"
 #include "nsLayoutUtils.h"
 #include "nsPrintfCString.h"
+#include "nsThreadManager.h"
 #include "nsThreadUtils.h"
 #include "nsViewManager.h"
 #include "nsWeakReference.h"
@@ -321,7 +322,19 @@ private:
     {
         MOZ_ASSERT(NS_IsMainThread());
         MOZ_ASSERT(mTabChild);
-
+        // When enabling input event prioritization, we reserve limited time
+        // to process input events. We may handle the rest in the next frame
+        // when running out of time of the current frame. In that case, input
+        // events may be dispatched after ActorDestroy. Delay
+        // DelayedDeleteRunnable to avoid it to happen.
+        nsThread* thread = nsThreadManager::get().GetCurrentThread();
+        MOZ_ASSERT(thread);
+        bool eventPrioritizationEnabled = false;
+        thread->IsEventPrioritizationEnabled(&eventPrioritizationEnabled);
+        if (eventPrioritizationEnabled && thread->HasPendingInputEvents()) {
+          MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(this));
+          return NS_OK;
+        }
         // Check in case ActorDestroy was called after RecvDestroy message.
         if (mTabChild->IPCOpen()) {
             Unused << PBrowserChild::Send__delete__(mTabChild);
