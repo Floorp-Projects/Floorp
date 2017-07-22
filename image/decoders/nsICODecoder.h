@@ -27,8 +27,9 @@ enum class ICOState
   SKIP_TO_RESOURCE,
   FOUND_RESOURCE,
   SNIFF_RESOURCE,
-  READ_RESOURCE,
+  READ_PNG,
   READ_BIH,
+  READ_BMP,
   PREPARE_FOR_MASK,
   READ_MASK_ROW,
   FINISH_MASK,
@@ -92,8 +93,9 @@ private:
   LexerTransition<ICOState> ReadHeader(const char* aData);
   LexerTransition<ICOState> ReadDirEntry(const char* aData);
   LexerTransition<ICOState> SniffResource(const char* aData);
-  LexerTransition<ICOState> ReadResource(const char* aData, uint32_t aLen);
+  LexerTransition<ICOState> ReadPNG(const char* aData, uint32_t aLen);
   LexerTransition<ICOState> ReadBIH(const char* aData);
+  LexerTransition<ICOState> ReadBMP(const char* aData, uint32_t aLen);
   LexerTransition<ICOState> PrepareForMask();
   LexerTransition<ICOState> ReadMaskRow(const char* aData);
   LexerTransition<ICOState> FinishMask();
