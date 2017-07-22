@@ -112,6 +112,10 @@ XPCOMUtils.defineLazyScriptGetter(this, "PanelUI",
                                   "chrome://browser/content/customizableui/panelUI.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gViewSourceUtils",
                                   "chrome://global/content/viewSourceUtils.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["LightWeightThemeWebInstaller",
+                                         "gExtensionsNotifications",
+                                         "gXPInstallObserver"],
+                                  "chrome://browser/content/browser-addons.js");
 
 
 // lazy service getters
