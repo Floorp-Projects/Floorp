@@ -132,6 +132,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["SocialUI",
                                          "SocialShare",
                                          "SocialActivationListener"],
                                   "chrome://browser/content/browser-social.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gSync",
+                                  "chrome://browser/content/browser-sync.js");
 
 
 // lazy service getters
@@ -1966,7 +1968,9 @@ if (AppConstants.platform == "macosx") {
     gPrivateBrowsingUI.init();
 
     // initialize the sync UI
-    gSync.init();
+    requestIdleCallback(() => {
+      gSync.init();
+    }, {timeout: 1000 * 5});
 
     if (AppConstants.E10S_TESTING_ONLY) {
       gRemoteTabsUI.init();
