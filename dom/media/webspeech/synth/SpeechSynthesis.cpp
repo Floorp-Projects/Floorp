@@ -182,8 +182,6 @@ SpeechSynthesis::AdvanceQueue()
   if (mCurrentTask) {
     mCurrentTask->SetSpeechSynthesis(this);
   }
-
-  return;
 }
 
 void

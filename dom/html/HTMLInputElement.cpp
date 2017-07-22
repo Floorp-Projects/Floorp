@@ -3418,7 +3418,6 @@ HTMLInputElement::Focus(ErrorResult& aError)
     }
   }
 
-  return;
 }
 
 #if !defined(ANDROID) && !defined(XP_MACOSX)

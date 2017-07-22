@@ -41,19 +41,11 @@ NodeInfo::~NodeInfo()
 NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
                    uint16_t aNodeType, nsIAtom* aExtraName,
                    nsNodeInfoManager *aOwnerManager)
+  : mDocument(aOwnerManager->GetDocument()),
+    mInner(aName, aPrefix, aNamespaceID, aNodeType, aExtraName),
+    mOwnerManager(aOwnerManager)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
-  MOZ_ASSERT(aOwnerManager, "Invalid aOwnerManager");
-
-  // Initialize mInner
-  mInner.mName = aName;
-  mInner.mPrefix = aPrefix;
-  mInner.mNamespaceID = aNamespaceID;
-  mInner.mNodeType = aNodeType;
-  mOwnerManager = aOwnerManager;
-  mInner.mExtraName = aExtraName;
-
-  mDocument = aOwnerManager->GetDocument();
 
   // Now compute our cached members.
 

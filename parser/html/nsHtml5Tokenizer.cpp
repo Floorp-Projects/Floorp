@@ -1806,7 +1806,6 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             NS_HTML5_BREAK(outer);
           }
           appendCharRefBuf(c);
-          continue;
         }
         outer_end: ;
         if (candidate == -1) {
@@ -4355,7 +4354,6 @@ nsHtml5Tokenizer::eof()
           if (hi < lo) {
             NS_HTML5_BREAK(outer);
           }
-          continue;
         }
         outer_end: ;
         if (candidate == -1) {
@@ -4435,7 +4433,6 @@ nsHtml5Tokenizer::eof()
   }
   eofloop_end: ;
   tokenHandler->eof();
-  return;
 }
 
 void 

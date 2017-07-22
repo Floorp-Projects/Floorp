@@ -2844,8 +2844,6 @@ nsHttpChannel::HandleAsyncAPIRedirect()
                  static_cast<uint32_t>(rv), this));
         }
     }
-
-    return;
 }
 
 nsresult

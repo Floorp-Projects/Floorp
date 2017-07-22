@@ -47,6 +47,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829872
 </pre>
 <iframe id="ifr" onload="loaded();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
 <object id="obj" onload="loaded();" data="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></object>
-<iframe id="framesetholder" src="data:text/html,<html><head></head><frameset cols='100%'><frame id='fr' onload='parent.loaded();' src='http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html' /></frameset></html>"></iframe>
+<iframe id="framesetholder" srcdoc="<html><head></head><frameset cols='100%'><frame id='fr' onload='parent.loaded();' src='http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html' /></frameset></html>"></iframe>
 </body>
 </html>

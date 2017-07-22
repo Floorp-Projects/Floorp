@@ -67,7 +67,6 @@ linux64-devedition/opt:
         - opt-only-tests
         - desktop-screenshot-capture
         - headless
-        - talos
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:
@@ -245,7 +244,6 @@ macosx64-nightly/opt:
 macosx64-devedition/opt:
     build-platform: macosx64-devedition/opt
     test-sets:
-        - macosx64-tests-talos
         - macosx64-tests
 
 ##

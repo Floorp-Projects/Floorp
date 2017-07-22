@@ -53,14 +53,12 @@ void
 SpeechGrammar::GetSrc(nsString& aRetVal, ErrorResult& aRv) const
 {
   aRetVal = mSrc;
-  return;
 }
 
 void
 SpeechGrammar::SetSrc(const nsAString& aArg, ErrorResult& aRv)
 {
   mSrc = aArg;
-  return;
 }
 
 float
@@ -74,7 +72,6 @@ void
 SpeechGrammar::SetWeight(float aArg, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return;
 }
 
 } // namespace dom

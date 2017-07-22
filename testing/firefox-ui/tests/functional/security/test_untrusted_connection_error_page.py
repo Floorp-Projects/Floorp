@@ -17,6 +17,15 @@ class TestUntrustedConnectionErrorPage(PuppeteerMixin, MarionetteTestCase):
 
         self.url = 'https://ssl-selfsigned.mozqa.com'
 
+        # Disable rcwn to make cache behavior deterministic
+        self.marionette.set_pref('network.http.rcwn.enabled', False)
+
+    def tearDown(self):
+        try:
+            self.marionette.clear_pref('network.http.rcwn.enabled')
+        finally:
+            super(TestUntrustedConnectionErrorPage, self).tearDown()
+
     def test_untrusted_connection_error_page(self):
         self.marionette.set_context('content')
 

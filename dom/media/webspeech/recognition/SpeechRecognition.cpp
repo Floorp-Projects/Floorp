@@ -147,7 +147,6 @@ SpeechRecognition::SetState(FSMState state)
 {
   mCurrentState = state;
   SR_LOG("Transitioned to state %s", GetName(mCurrentState));
-  return;
 }
 
 JSObject*
@@ -375,8 +374,6 @@ SpeechRecognition::Transition(SpeechEvent* aEvent)
     case STATE_COUNT:
       MOZ_CRASH("Invalid state STATE_COUNT");
   }
-
-  return;
 }
 
 /*
@@ -559,8 +556,6 @@ SpeechRecognition::NotifyError(SpeechEvent* aEvent)
 
   bool defaultActionEnabled;
   this->DispatchEvent(aEvent->mError, &defaultActionEnabled);
-
-  return;
 }
 
 /**************************************
@@ -641,8 +636,6 @@ SpeechRecognition::ProcessTestEventRequest(nsISupports* aSubject, const nsAStrin
 
     // let the fake recognition service handle the request
   }
-
-  return;
 }
 
 already_AddRefed<SpeechGrammarList>
@@ -681,7 +674,6 @@ void
 SpeechRecognition::SetContinuous(bool aArg, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return;
 }
 
 bool
@@ -694,7 +686,6 @@ void
 SpeechRecognition::SetInterimResults(bool aArg)
 {
   mInterimResults = aArg;
-  return;
 }
 
 uint32_t
@@ -707,21 +698,18 @@ void
 SpeechRecognition::SetMaxAlternatives(uint32_t aArg)
 {
   mMaxAlternatives = aArg;
-  return;
 }
 
 void
 SpeechRecognition::GetServiceURI(nsString& aRetVal, ErrorResult& aRv) const
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return;
 }
 
 void
 SpeechRecognition::SetServiceURI(const nsAString& aArg, ErrorResult& aRv)
 {
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return;
 }
 
 void
@@ -997,8 +985,6 @@ SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
   event->mProvider = aProvider;
   event->mTrackRate = aTrackRate;
   NS_DispatchToMainThread(event);
-
-  return;
 }
 
 const char*

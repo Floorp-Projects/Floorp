@@ -17,10 +17,13 @@ class TestSubmitUnencryptedInfoWarning(PuppeteerMixin, MarionetteTestCase):
         self.url = 'https://ssl-dv.mozqa.com/data/firefox/security/unencryptedsearch.html'
         self.test_string = 'mozilla'
 
+        # Disable rcwn to make cache behavior deterministic
+        self.marionette.set_pref('network.http.rcwn.enabled', False)
         self.marionette.set_pref('security.warn_submit_insecure', True)
 
     def tearDown(self):
         try:
+            self.marionette.clear_pref('network.http.rcwn.enabled')
             self.marionette.clear_pref('security.warn_submit_insecure')
         finally:
             super(TestSubmitUnencryptedInfoWarning, self).tearDown()

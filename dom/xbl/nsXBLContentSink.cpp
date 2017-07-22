@@ -82,7 +82,6 @@ nsXBLContentSink::Init(nsIDocument* aDoc,
 void
 nsXBLContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 {
-  return;
 }
 
 nsresult

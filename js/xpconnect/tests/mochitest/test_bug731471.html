@@ -24,7 +24,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 function boom()
 {
-    w = window.open("data:text/html,1");
+    w = window.open("file_bug731471.html");
     setTimeout(function() {
         w.document.write("2");
         w.document.close();

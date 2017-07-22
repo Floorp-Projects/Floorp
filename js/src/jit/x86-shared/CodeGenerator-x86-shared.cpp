@@ -363,7 +363,6 @@ CodeGeneratorX86Shared::visitWasmSelect(LWasmSelect* ins)
     }
 
     masm.bind(&done);
-    return;
 }
 
 void

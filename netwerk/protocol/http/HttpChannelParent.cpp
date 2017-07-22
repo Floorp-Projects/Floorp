@@ -1341,7 +1341,6 @@ HttpChannelParent::MaybeFlushPendingDiversion()
     DivertTo(mDivertListener);
   }
 
-  return;
 }
 
 void
@@ -1976,7 +1975,6 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
     NewRunnableMethod("net::HttpChannelParent::StartDiversion",
                       this,
                       &HttpChannelParent::StartDiversion));
-  return;
 }
 
 void

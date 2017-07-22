@@ -5838,6 +5838,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 900:
 /***/ function(module, exports, __webpack_require__) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	const networkRequest = __webpack_require__(901);
 	const workerUtils = __webpack_require__(902);
 
@@ -5851,6 +5855,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ 901:
 /***/ function(module, exports) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	function networkRequest(url, opts) {
 	  return new Promise((resolve, reject) => {
 	    const req = new XMLHttpRequest();
@@ -5860,7 +5868,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (req.status === 200) {
 	          resolve({ content: req.responseText });
 	        } else {
-	          resolve(req.statusText);
+	          reject(req.statusText);
 	        }
 	      }
 	    });
@@ -5891,7 +5899,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerDispatcher() {
 	  this.msgId = 1;
 	  this.worker = null;
-	}
+	} /* This Source Code Form is subject to the terms of the Mozilla Public
+	   * License, v. 2.0. If a copy of the MPL was not distributed with this
+	   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	WorkerDispatcher.prototype = {
 	  start(url) {
@@ -5922,7 +5932,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this.worker.removeEventListener("message", listener);
-
 	          if (result.error) {
 	            reject(result.error);
 	          } else {

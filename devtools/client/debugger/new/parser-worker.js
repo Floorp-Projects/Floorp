@@ -29870,6 +29870,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 900 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	const networkRequest = __webpack_require__(901);
 	const workerUtils = __webpack_require__(902);
 
@@ -29882,6 +29886,10 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 901 */
 /***/ function(module, exports) {
 
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 	function networkRequest(url, opts) {
 	  return new Promise((resolve, reject) => {
 	    const req = new XMLHttpRequest();
@@ -29891,7 +29899,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (req.status === 200) {
 	          resolve({ content: req.responseText });
 	        } else {
-	          resolve(req.statusText);
+	          reject(req.statusText);
 	        }
 	      }
 	    });
@@ -29921,7 +29929,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function WorkerDispatcher() {
 	  this.msgId = 1;
 	  this.worker = null;
-	}
+	} /* This Source Code Form is subject to the terms of the Mozilla Public
+	   * License, v. 2.0. If a copy of the MPL was not distributed with this
+	   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	WorkerDispatcher.prototype = {
 	  start(url) {
@@ -29952,7 +29962,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          this.worker.removeEventListener("message", listener);
-
 	          if (result.error) {
 	            reject(result.error);
 	          } else {
@@ -30070,6 +30079,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getClosestExpression: _closest.getClosestExpression,
 	  getOutOfScopeLocations: _getOutOfScopeLocations2.default,
 	  getSymbols: _getSymbols2.default,
+	  clearSymbols: _getSymbols.clearSymbols,
 	  getVariablesInScope: _scopes.getVariablesInScope
 	});
 
@@ -30473,6 +30483,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 	exports.default = getSymbols;
+	exports.formatSymbols = formatSymbols;
+	exports.clearSymbols = clearSymbols;
 
 	var _ast = __webpack_require__(1051);
 
@@ -30519,26 +30531,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }));
 	}
 
-	function getSymbols(source) {
-	  if (symbolDeclarations.has(source.id)) {
-	    var _symbols = symbolDeclarations.get(source.id);
-	    if (_symbols) {
-	      return _symbols;
-	    }
+	function getComments(ast) {
+	  if (!ast || !ast.comments) {
+	    return [];
 	  }
+	  return ast.comments.map(comment => ({
+	    name: comment.location,
+	    location: comment.loc
+	  }));
+	}
 
-	  var symbols = { functions: [], variables: [] };
+	function extractSymbols(source) {
+	  var functions = [];
+	  var variables = [];
+	  var memberExpressions = [];
+	  var callExpressions = [];
+	  var objectProperties = [];
+	  var identifiers = [];
 
-	  (0, _ast.traverseAst)(source, {
+	  var ast = (0, _ast.traverseAst)(source, {
 	    enter(path) {
 	      if ((0, _helpers.isVariable)(path)) {
-	        var _symbols$variables;
-
-	        (_symbols$variables = symbols.variables).push.apply(_symbols$variables, _toConsumableArray(getVariableNames(path)));
+	        variables.push.apply(variables, _toConsumableArray(getVariableNames(path)));
 	      }
 
 	      if ((0, _helpers.isFunction)(path)) {
-	        symbols.functions.push({
+	        functions.push({
 	          name: (0, _getFunctionName2.default)(path),
 	          location: path.node.loc,
 	          parameterNames: getFunctionParameterNames(path),
@@ -30547,16 +30565,289 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      if (t.isClassDeclaration(path)) {
-	        symbols.variables.push({
+	        variables.push({
 	          name: path.node.id.name,
 	          location: path.node.loc
+	        });
+	      }
+
+	      if (t.isObjectProperty(path)) {
+	        var _path$node$key$loc = path.node.key.loc,
+	            start = _path$node$key$loc.start,
+	            end = _path$node$key$loc.end,
+	            identifierName = _path$node$key$loc.identifierName;
+
+	        objectProperties.push({
+	          name: identifierName,
+	          location: { start, end },
+	          expression: getSnippet(path)
+	        });
+	      }
+
+	      if (t.isMemberExpression(path)) {
+	        var _path$node$property$l = path.node.property.loc,
+	            _start = _path$node$property$l.start,
+	            _end = _path$node$property$l.end;
+
+	        memberExpressions.push({
+	          name: path.node.property.name,
+	          location: { start: _start, end: _end },
+	          expressionLocation: path.node.loc,
+	          expression: getSnippet(path)
+	        });
+	      }
+
+	      if (t.isCallExpression(path)) {
+	        var callee = path.node.callee;
+	        if (!t.isMemberExpression(callee)) {
+	          var _callee$loc = callee.loc,
+	              _start2 = _callee$loc.start,
+	              _end2 = _callee$loc.end,
+	              _identifierName = _callee$loc.identifierName;
+
+	          callExpressions.push({
+	            name: _identifierName,
+	            location: { start: _start2, end: _end2 }
+	          });
+	        }
+	      }
+
+	      if (t.isIdentifier(path)) {
+	        var _path$node$loc = path.node.loc,
+	            _start3 = _path$node$loc.start,
+	            _end3 = _path$node$loc.end;
+
+
+	        identifiers.push({
+	          name: path.node.name,
+	          expression: path.node.name,
+	          location: { start: _start3, end: _end3 }
+	        });
+	      }
+
+	      if (t.isThisExpression(path.node)) {
+	        var _path$node$loc2 = path.node.loc,
+	            _start4 = _path$node$loc2.start,
+	            _end4 = _path$node$loc2.end;
+
+	        identifiers.push({
+	          name: "this",
+	          location: { start: _start4, end: _end4 },
+	          expressionLocation: path.node.loc,
+	          expression: "this"
+	        });
+	      }
+
+	      if (t.isVariableDeclarator(path)) {
+	        var node = path.node.id;
+	        var _path$node$loc3 = path.node.loc,
+	            _start5 = _path$node$loc3.start,
+	            _end5 = _path$node$loc3.end;
+
+
+	        identifiers.push({
+	          name: node.name,
+	          expression: node.name,
+	          location: { start: _start5, end: _end5 }
 	        });
 	      }
 	    }
 	  });
 
+	  // comments are extracted separately from the AST
+	  var comments = getComments(ast);
+
+	  return {
+	    functions,
+	    variables,
+	    callExpressions,
+	    memberExpressions,
+	    objectProperties,
+	    comments,
+	    identifiers
+	  };
+	}
+
+	function getSymbols(source) {
+	  if (symbolDeclarations.has(source.id)) {
+	    var _symbols = symbolDeclarations.get(source.id);
+	    if (_symbols) {
+	      return _symbols;
+	    }
+	  }
+
+	  var symbols = extractSymbols(source);
 	  symbolDeclarations.set(source.id, symbols);
 	  return symbols;
+	}
+
+	function extendSnippet(name, expression, path, prevPath) {
+	  var computed = path && path.node.computed;
+	  var prevComputed = prevPath && prevPath.node.computed;
+	  var prevArray = t.isArrayExpression(prevPath);
+	  var array = t.isArrayExpression(path);
+
+	  if (expression === "") {
+	    if (computed) {
+	      return `[${name}]`;
+	    }
+	    return name;
+	  }
+
+	  if (computed || array) {
+	    if (prevComputed || prevArray) {
+	      return `[${name}]${expression}`;
+	    }
+	    return `[${name}].${expression}`;
+	  }
+
+	  if (prevComputed || prevArray) {
+	    return `${name}${expression}`;
+	  }
+
+	  return `${name}.${expression}`;
+	}
+
+	function getMemberSnippet(node) {
+	  var expression = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "";
+
+	  if (t.isMemberExpression(node)) {
+	    var _name = node.property.name;
+
+	    return getMemberSnippet(node.object, extendSnippet(_name, expression));
+	  }
+
+	  if (t.isCallExpression(node)) {
+	    return "";
+	  }
+
+	  if (t.isThisExpression(node)) {
+	    return `this.${expression}`;
+	  }
+
+	  if (t.isIdentifier(node)) {
+	    return `${node.name}.${expression}`;
+	  }
+
+	  return expression;
+	}
+
+	function getObjectSnippet(path, prevPath) {
+	  var expression = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
+
+	  if (!path) {
+	    return expression;
+	  }
+
+	  var name = path.node.key.name;
+
+	  var extendedExpression = extendSnippet(name, expression, path, prevPath);
+
+	  var nextPrevPath = path;
+	  var nextPath = path.parentPath && path.parentPath.parentPath;
+
+	  return getSnippet(nextPath, nextPrevPath, extendedExpression);
+	}
+
+	function getArraySnippet(path, prevPath, expression) {
+	  var index = prevPath.parentPath.key;
+	  var extendedExpression = extendSnippet(index, expression, path, prevPath);
+
+	  var nextPrevPath = path;
+	  var nextPath = path.parentPath && path.parentPath.parentPath;
+
+	  return getSnippet(nextPath, nextPrevPath, extendedExpression);
+	}
+
+	function getSnippet(path, prevPath) {
+	  var expression = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
+
+	  if (t.isVariableDeclaration(path)) {
+	    var node = path.node.declarations[0];
+	    var _name2 = node.id.name;
+	    return extendSnippet(_name2, expression, path, prevPath);
+	  }
+
+	  if (t.isVariableDeclarator(path)) {
+	    var _node = path.node.id;
+	    if (t.isObjectPattern(_node)) {
+	      return expression;
+	    }
+
+	    var _name3 = _node.name;
+	    var prop = extendSnippet(_name3, expression, path, prevPath);
+	    return prop;
+	  }
+
+	  if (t.isAssignmentExpression(path)) {
+	    var _node2 = path.node.left;
+	    var _name4 = t.isMemberExpression(_node2) ? getMemberSnippet(_node2) : _node2.name;
+
+	    var _prop = extendSnippet(_name4, expression, path, prevPath);
+	    return _prop;
+	  }
+
+	  if ((0, _helpers.isFunction)(path)) {
+	    return expression;
+	  }
+
+	  if (t.isIdentifier(path)) {
+	    var _node3 = path.node;
+	    return `${_node3.name}.${expression}`;
+	  }
+
+	  if (t.isObjectProperty(path)) {
+	    return getObjectSnippet(path, prevPath, expression);
+	  }
+
+	  if (t.isObjectExpression(path)) {
+	    var parentPath = prevPath && prevPath.parentPath;
+	    return getObjectSnippet(parentPath, prevPath, expression);
+	  }
+
+	  if (t.isMemberExpression(path)) {
+	    return getMemberSnippet(path.node, expression);
+	  }
+
+	  if (t.isArrayExpression(path)) {
+	    return getArraySnippet(path, prevPath, expression);
+	  }
+	}
+
+	function formatSymbols(source) {
+	  var _getSymbols = getSymbols(source),
+	      objectProperties = _getSymbols.objectProperties,
+	      memberExpressions = _getSymbols.memberExpressions,
+	      callExpressions = _getSymbols.callExpressions,
+	      identifiers = _getSymbols.identifiers,
+	      variables = _getSymbols.variables;
+
+	  function formatLocation(loc) {
+	    if (!loc) {
+	      return "";
+	    }
+	    var start = loc.start,
+	        end = loc.end;
+
+
+	    var startLoc = `(${start.line}, ${start.column})`;
+	    var endLoc = `(${end.line}, ${end.column})`;
+	    return `[${startLoc}, ${endLoc}]`;
+	  }
+
+	  function summarize(symbol) {
+	    var loc = formatLocation(symbol.location);
+	    var exprLoc = formatLocation(symbol.expressionLocation);
+	    var params = symbol.parameterNames ? symbol.parameterNames.join(", ") : "";
+	    var expression = symbol.expression || "";
+	    return `${loc} ${exprLoc} ${expression} ${symbol.name} ${params}`;
+	  }
+
+	  return ["properties", objectProperties.map(summarize).join("\n"), "member expressions", memberExpressions.map(summarize).join("\n"), "call expressions", callExpressions.map(summarize).join("\n"), "identifiers", identifiers.map(summarize).join("\n"), "variables", variables.map(summarize).join("\n")].join("\n");
+	}
+
+	function clearSymbols() {
+	  symbolDeclarations = new Map();
 	}
 
 /***/ },
@@ -30621,39 +30912,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return ast;
 	}
 
-	function getAst(sourceText) {
-	  if (ASTs.has(sourceText.id)) {
-	    return ASTs.get(sourceText.id);
+	// Custom parser for parse-script-tags that adapts its input structure to
+	// our parser's signature
+	function htmlParser(_ref) {
+	  var source = _ref.source,
+	      line = _ref.line;
+
+	  return parse(source, {
+	    startLine: line
+	  });
+	}
+
+	function getAst(source) {
+	  if (!source || !source.text) {
+	    return {};
+	  }
+
+	  if (ASTs.has(source.id)) {
+	    return ASTs.get(source.id);
 	  }
 
 	  var ast = {};
-	  if (sourceText.contentType == "text/html") {
-	    // Custom parser for parse-script-tags that adapts its input structure to
-	    // our parser's signature
-	    var parser = (_ref) => {
-	      var source = _ref.source,
-	          line = _ref.line;
-
-	      return parse(source, {
-	        startLine: line
-	      });
-	    };
-	    ast = (0, _parseScriptTags2.default)(sourceText.text, parser) || {};
-	  } else if (sourceText.contentType == "text/javascript") {
-	    ast = parse(sourceText.text);
+	  if (source.contentType == "text/html") {
+	    ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
+	  } else if (source.contentType == "text/javascript") {
+	    ast = parse(source.text);
 	  }
 
-	  ASTs.set(sourceText.id, ast);
+	  ASTs.set(source.id, ast);
 	  return ast;
 	}
 
-	function traverseAst(sourceText, visitor) {
-	  var ast = getAst(sourceText);
+	function traverseAst(source, visitor) {
+	  var ast = getAst(source);
 	  if ((0, _isEmpty2.default)(ast)) {
 	    return null;
 	  }
 
 	  (0, _babelTraverse2.default)(ast, visitor);
+	  return ast;
 	}
 
 /***/ },
@@ -30980,15 +31277,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _helpers = __webpack_require__(1052);
 
-	var _getSymbols = __webpack_require__(1050);
+	var _getSymbols2 = __webpack_require__(1050);
 
-	var _getSymbols2 = _interopRequireDefault(_getSymbols);
+	var _getSymbols3 = _interopRequireDefault(_getSymbols2);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function findFunctions(source) {
-	  var symbols = (0, _getSymbols2.default)(source);
-	  return symbols.functions;
+	function findSymbols(source) {
+	  var _getSymbols = (0, _getSymbols3.default)(source),
+	      functions = _getSymbols.functions,
+	      comments = _getSymbols.comments;
+
+	  return { functions, comments };
 	}
 
 	/**
@@ -31047,7 +31347,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * location.
 	 */
 	function getOutOfScopeLocations(source, position) {
-	  return findFunctions(source).map(getLocation).filter(loc => !(0, _helpers.containsPosition)(loc, position)).reduce(removeOverlaps, []).sort(sortByStart);
+	  var _findSymbols = findSymbols(source),
+	      functions = _findSymbols.functions,
+	      comments = _findSymbols.comments;
+
+	  var commentLocations = comments.map(c => c.location);
+
+	  return functions.map(getLocation).concat(commentLocations).filter(loc => !(0, _helpers.containsPosition)(loc, position)).reduce(removeOverlaps, []).sort(sortByStart);
 	}
 
 	exports.default = getOutOfScopeLocations;

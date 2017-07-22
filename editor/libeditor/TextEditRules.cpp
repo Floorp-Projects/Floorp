@@ -1258,7 +1258,7 @@ TextEditRules::WillOutputText(Selection* aSelection,
     return NS_OK;
   }
 
-  RefPtr<Element> root = mTextEditor->GetRoot();
+  Element* root = mTextEditor->GetRoot();
   if (!root) { // Don't warn it, this is possible, e.g., 997805.html
     aOutString->Truncate();
     *aHandled = true;

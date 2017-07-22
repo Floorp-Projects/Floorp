@@ -596,7 +596,6 @@ nsComponentManagerImpl::ManifestBinaryComponent(ManifestProcessingContext& aCx,
 {
   LogMessageWithContext(aCx.mFile, aLineNo,
                         "Binary XPCOM components are no longer supported.");
-  return;
 }
 
 static void
