@@ -116,6 +116,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["LightWeightThemeWebInstaller",
                                          "gExtensionsNotifications",
                                          "gXPInstallObserver"],
                                   "chrome://browser/content/browser-addons.js");
+XPCOMUtils.defineLazyScriptGetter(this, "ctrlTab",
+                                  "chrome://browser/content/browser-ctrlTab.js");
 
 
 // lazy service getters
