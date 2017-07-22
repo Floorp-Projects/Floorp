@@ -236,6 +236,7 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
 DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
                                             SourceBufferIterator&& aIterator,
                                             NotNull<nsICODecoder*> aICODecoder,
+                                            bool aIsMetadataDecode,
                                             const Maybe<IntSize>& aExpectedSize,
                                             const Maybe<uint32_t>& aDataOffset
                                               /* = Nothing() */)
@@ -261,10 +262,11 @@ DecoderFactory::CreateDecoderForICOResource(DecoderType aType,
   MOZ_ASSERT(decoder);
 
   // Initialize the decoder, copying settings from @aICODecoder.
-  MOZ_ASSERT(!aICODecoder->IsMetadataDecode());
-  decoder->SetMetadataDecode(aICODecoder->IsMetadataDecode());
+  decoder->SetMetadataDecode(aIsMetadataDecode);
   decoder->SetIterator(Forward<SourceBufferIterator>(aIterator));
-  decoder->SetOutputSize(aICODecoder->OutputSize());
+  if (!aIsMetadataDecode) {
+    decoder->SetOutputSize(aICODecoder->OutputSize());
+  }
   if (aExpectedSize) {
     decoder->SetExpectedSize(*aExpectedSize);
   }
