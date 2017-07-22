@@ -393,6 +393,52 @@ public:
     SetTransition(aStartState);
   }
 
+  /**
+   * From the given SourceBufferIterator, aIterator, create a new iterator at
+   * the same position, with the given read limit, aReadLimit. The read limit
+   * applies after adjusting for the position. If the given iterator has been
+   * advanced, but required buffering inside StreamingLexer, the position
+   * of the cloned iterator will be at the beginning of buffered data; this
+   * should match the perspective of the caller.
+   */
+  SourceBufferIterator Clone(SourceBufferIterator& aIterator,
+                             size_t aReadLimit) const
+  {
+    // In order to advance to the current position of the iterator from the
+    // perspective of the caller, we need to take into account if we are
+    // buffering data.
+    size_t pos = aIterator.Position();
+    if (!mBuffer.empty()) {
+      pos += aIterator.Length();
+      MOZ_ASSERT(pos > mBuffer.length());
+      pos -= mBuffer.length();
+    }
+
+    size_t readLimit = aReadLimit;
+    if (aReadLimit != SIZE_MAX) {
+      readLimit += pos;
+    }
+
+    SourceBufferIterator other = aIterator.Owner()->Iterator(readLimit);
+
+    // Since the current iterator has already advanced to this point, we
+    // know that the state can only be READY or COMPLETE. That does not mean
+    // everything is stored in a single chunk, and may require multiple Advance
+    // calls to get where we want to be.
+    DebugOnly<SourceBufferIterator::State> state;
+    do {
+      state = other.Advance(pos);
+      MOZ_ASSERT(state != SourceBufferIterator::WAITING);
+      MOZ_ASSERT(pos >= other.Length());
+      pos -= other.Length();
+    } while (pos > 0);
+
+    // Force the data pointer to be where we expect it to be.
+    state = other.Advance(0);
+    MOZ_ASSERT(state != SourceBufferIterator::WAITING);
+    return other;
+  }
+
   template <typename Func>
   LexerResult Lex(SourceBufferIterator& aIterator,
                   IResumable* aOnResume,
