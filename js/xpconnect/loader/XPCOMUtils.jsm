@@ -216,23 +216,33 @@ this.XPCOMUtils = {
    *
    * @param aObject
    *        The object to define the lazy getter on.
-   * @param aName
+   * @param aNames
    *        The name of the getter to define on aObject for the script.
+   *        This can be a string if the script exports only one symbol,
+   *        or an array of strings if the script can be first accessed
+   *        from several different symbols.
    * @param aResource
    *        The URL used to obtain the script.
    */
-  defineLazyScriptGetter: function XPCU_defineLazyScriptGetter(aObject, aName,
+  defineLazyScriptGetter: function XPCU_defineLazyScriptGetter(aObject, aNames,
                                                                aResource)
   {
-    Object.defineProperty(aObject, aName, {
-      get: function () {
-        delete aObject[aName];
-        Services.scriptloader.loadSubScript(aResource, aObject);
-        return aObject[aName];
-      },
-      configurable: true,
-      enumerable: true
-    });
+    if (!Array.isArray(aNames)) {
+      aNames = [aNames];
+    }
+    for (let name of aNames) {
+      Object.defineProperty(aObject, name, {
+        get: function() {
+          for (let n of aNames) {
+            delete aObject[n];
+          }
+          Services.scriptloader.loadSubScript(aResource, aObject);
+          return aObject[name];
+        },
+        configurable: true,
+        enumerable: true
+      });
+    }
   },
 
   /**
