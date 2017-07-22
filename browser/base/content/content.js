@@ -203,7 +203,7 @@ var handleContentContextMenu = function(event) {
     // Break out to the parent window and pass the add-on info along
     let browser = docShell.chromeEventHandler;
     let mainWin = browser.ownerGlobal;
-    mainWin.gContextMenuContentData = {
+    mainWin.setContextMenuContentData({
       isRemote: false,
       event,
       popupNode: event.target,
@@ -222,7 +222,7 @@ var handleContentContextMenu = function(event) {
       loginFillInfo,
       parentAllowsMixedContent,
       userContextId,
-    };
+    });
   }
 }
 
