@@ -107,8 +107,7 @@ typedef mozilla::dom::StyleChildrenIterator RawGeckoStyleChildrenIterator;
 
 typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowed;
 typedef mozilla::ServoStyleContext const* ServoStyleContextBorrowedOrNull;
-typedef ServoComputedValues const* ServoComputedValuesBorrowed;
-typedef ServoComputedValues const* ServoComputedValuesBorrowedOrNull;
+typedef ServoComputedData const* ServoComputedDataBorrowed;
 
 struct MOZ_MUST_USE_TYPE ServoStyleContextStrong
 {

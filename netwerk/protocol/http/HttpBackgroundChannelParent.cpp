@@ -68,10 +68,15 @@ private:
 
 HttpBackgroundChannelParent::HttpBackgroundChannelParent()
   : mIPCOpened(true)
-  , mBackgroundThread(NS_GetCurrentThread())
+  , mBgThreadMutex("HttpBackgroundChannelParent::BgThreadMutex")
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
+
+  {
+    MutexAutoLock lock(mBgThreadMutex);
+    mBackgroundThread = NS_GetCurrentThread();
+  }
 }
 
 HttpBackgroundChannelParent::~HttpBackgroundChannelParent()
@@ -122,22 +127,25 @@ HttpBackgroundChannelParent::OnChannelClosed()
 
   nsresult rv;
 
-  RefPtr<HttpBackgroundChannelParent> self = this;
-  rv = mBackgroundThread->Dispatch(
-    NS_NewRunnableFunction(
-      "net::HttpBackgroundChannelParent::OnChannelClosed",
-      [self]() {
-        LOG(("HttpBackgroundChannelParent::DeleteRunnable [this=%p]\n",
-             self.get()));
-        AssertIsOnBackgroundThread();
+  {
+    MutexAutoLock lock(mBgThreadMutex);
+    RefPtr<HttpBackgroundChannelParent> self = this;
+    rv = mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction(
+        "net::HttpBackgroundChannelParent::OnChannelClosed",
+        [self]() {
+          LOG(("HttpBackgroundChannelParent::DeleteRunnable [this=%p]\n",
+               self.get()));
+          AssertIsOnBackgroundThread();
 
-        if (!self->mIPCOpened.compareExchange(true, false)) {
-          return;
-        }
+          if (!self->mIPCOpened.compareExchange(true, false)) {
+            return;
+          }
 
-        Unused << self->Send__delete__(self);
-      }),
-    NS_DISPATCH_NORMAL);
+          Unused << self->Send__delete__(self);
+        }),
+      NS_DISPATCH_NORMAL);
+  }
 
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
@@ -153,6 +161,7 @@ HttpBackgroundChannelParent::OnStartRequestSent()
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod("net::HttpBackgroundChannelParent::OnStartRequestSent",
                         this,
@@ -183,6 +192,7 @@ HttpBackgroundChannelParent::OnTransportAndData(
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod<const nsresult,
                         const nsresult,
@@ -221,6 +231,7 @@ HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod<const nsresult, const ResourceTimingStruct>(
         "net::HttpBackgroundChannelParent::OnStopRequest",
@@ -251,6 +262,7 @@ HttpBackgroundChannelParent::OnProgress(const int64_t& aProgress,
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod<const int64_t, const int64_t>(
         "net::HttpBackgroundChannelParent::OnProgress",
@@ -280,6 +292,7 @@ HttpBackgroundChannelParent::OnStatus(const nsresult& aStatus)
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod<const nsresult>(
         "net::HttpBackgroundChannelParent::OnStatus",
@@ -307,6 +320,7 @@ HttpBackgroundChannelParent::OnDiversion()
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod("net::HttpBackgroundChannelParent::OnDiversion",
                         this,
@@ -342,6 +356,7 @@ HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled()
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod(
         "net::HttpBackgroundChannelParent::OnNotifyTrackingProtectionDisabled",
@@ -368,6 +383,7 @@ HttpBackgroundChannelParent::OnNotifyTrackingResource()
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod(
         "net::HttpBackgroundChannelParent::OnNotifyTrackingResource",
@@ -397,6 +413,7 @@ HttpBackgroundChannelParent::OnSetClassifierMatchedInfo(
   }
 
   if (!IsOnBackgroundThread()) {
+    MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
       NewRunnableMethod<const nsCString, const nsCString, const nsCString>(
         "net::HttpBackgroundChannelParent::OnSetClassifierMatchedInfo",

@@ -9,6 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -92,6 +93,13 @@ function CreatePocketWidget(reason) {
     label: gPocketBundle.GetStringFromName("pocket-button.label"),
     tooltiptext: gPocketBundle.GetStringFromName("pocket-button.tooltiptext"),
     // Use forwarding functions here to avoid loading Pocket.jsm on startup:
+    onBeforeCommand() {
+      // We need to use onBeforeCommand to calculate the height
+      // of the pocket-button before it is opened since we need
+      // the height of the button to perform the animation that is
+      // triggered off of [open="true"].
+      return Pocket.onBeforeCommand.apply(this, arguments);
+    },
     onViewShowing() {
       return Pocket.onPanelViewShowing.apply(this, arguments);
     },
@@ -108,7 +116,20 @@ function CreatePocketWidget(reason) {
       panel.setAttribute("class", "panel-subview-body");
       view.appendChild(panel);
       doc.getElementById("PanelUI-multiView").appendChild(view);
-    }
+    },
+    onCreated(node) {
+      if (Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
+          AppConstants.MOZ_PHOTON_ANIMATIONS) {
+        let doc = node.ownerDocument;
+        let box = doc.createElement("box");
+        box.classList.add("toolbarbutton-animatable-box");
+        let image = doc.createElement("image");
+        image.classList.add("toolbarbutton-animatable-image");
+        box.appendChild(image);
+        node.appendChild(box);
+        node.setAttribute("animationsenabled", "true");
+      }
+    },
   };
 
   CustomizableUI.createWidget(pocketButton);

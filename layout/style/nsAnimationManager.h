@@ -17,7 +17,7 @@
 
 class nsIGlobalObject;
 class nsStyleContext;
-class ServoComputedValues;
+class ServoComputedData;
 struct nsStyleDisplay;
 
 namespace mozilla {
