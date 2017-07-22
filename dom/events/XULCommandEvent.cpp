@@ -92,6 +92,20 @@ XULCommandEvent::GetMetaKey(bool* aIsDown)
   return NS_OK;
 }
 
+uint16_t
+XULCommandEvent::InputSource()
+{
+  return mInputSource;
+}
+
+NS_IMETHODIMP
+XULCommandEvent::GetInputSource(uint16_t* aInputSource)
+{
+  NS_ENSURE_ARG_POINTER(aInputSource);
+  *aInputSource = InputSource();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 XULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 {
@@ -111,7 +125,8 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
                                   bool aAltKey,
                                   bool aShiftKey,
                                   bool aMetaKey,
-                                  nsIDOMEvent* aSourceEvent)
+                                  nsIDOMEvent* aSourceEvent,
+                                  uint16_t aInputSource)
 {
   NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
 
@@ -121,6 +136,7 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
   mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
                                              aShiftKey, aMetaKey);
   mSourceEvent = aSourceEvent;
+  mInputSource = aInputSource;
 
   return NS_OK;
 }

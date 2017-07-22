@@ -38,3 +38,30 @@ else
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 endif
+
+libs:: locale-manifest.in
+
+MOZ_CHROME_MULTILOCALE?=en-US
+
+# Firefox uses @RESPATH@.
+# Fennec uses @BINPATH@ and doesn't have the @RESPATH@ variable defined.
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+BASE_PATH:=@BINPATH@
+else
+BASE_PATH:=@RESPATH@
+endif
+
+locale-manifest.in: $(GLOBAL_DEPS) FORCE
+	printf '\n[multilocale]\n' > $@
+	printf '$(BASE_PATH)/res/multilocale.json\n' >> $@
+	for LOCALE in $(MOZ_CHROME_MULTILOCALE) ;\
+	do \
+	  printf '$(BASE_PATH)/chrome/'"$$LOCALE"'@JAREXT@\n' >> $@; \
+	  printf '$(BASE_PATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
+	done
+	COMMA=,
+	#XXX: It would be nice to not duplicate en-US here, but makefile makes it hard.
+	echo '{"locales": [$(foreach l,$(MOZ_CHROME_MULTILOCALE),"$(l)"$(COMMA)) "en-US"]}' \
+	  > $(DIST)/bin/res/multilocale.json
+
+GARBAGE += locale-manifest.in

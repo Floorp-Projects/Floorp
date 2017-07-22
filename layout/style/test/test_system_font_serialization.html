@@ -42,15 +42,29 @@ e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font");
 is(e.style.cssText, "font: menu;", "serialize system font alone");
 is(e.style.font, "menu", "font getter returns value");
 
-e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font !important");
-is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font !important;", "serialize system font and subproperty that is important");
-is(e.style.font, "", "font getter returns nothing");
+// Servo doesn't support parsing -moz-use-system-font
+if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
+  e.setAttribute("style", "font: menu; font-weight: -moz-use-system-font !important");
+  is(e.style.cssText, "font: menu; font-weight: -moz-use-system-font !important;", "serialize system font and subproperty that is important");
+  is(e.style.font, "", "font getter returns nothing");
+}
 
 e.setAttribute("style", "font: inherit; font-family: Helvetica;");
-
-var cssTextStr = "font-style: inherit; font-weight: inherit; font-size: inherit; line-height: inherit; font-size-adjust: inherit; font-stretch: inherit; font-feature-settings: inherit; font-language-override: inherit; font-kerning: inherit; font-variant: inherit;";
-
-is(e.style.cssText, cssTextStr + " font-family: Helvetica;", "don't serialize system font for font:inherit");
+const EXPECTED_DECLS = [
+  "font-family: Helvetica;",
+  "font-feature-settings: inherit;",
+  "font-kerning: inherit;",
+  "font-language-override: inherit;",
+  "font-size-adjust: inherit;",
+  "font-size: inherit;",
+  "font-stretch: inherit;",
+  "font-style: inherit;",
+  "font-variant: inherit;",
+  "font-weight: inherit;",
+  "line-height: inherit;",
+].join(" ");
+let sortedDecls = e.style.cssText.split(/ (?=font-|line-)/).sort().join(" ");
+is(sortedDecls, EXPECTED_DECLS, "don't serialize system font for font:inherit");
 is(e.style.font, "", "font getter returns nothing");
 
 </script>

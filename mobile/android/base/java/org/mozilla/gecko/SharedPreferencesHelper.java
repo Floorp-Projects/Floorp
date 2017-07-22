@@ -17,6 +17,8 @@ import android.util.Log;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * Helper class to get, set, and observe Android Shared Preferences.
@@ -123,7 +125,7 @@ public final class SharedPreferencesHelper
      * message.branch must exist, and should be a String SharedPreferences
      * branch name, or null for the default branch.
      * message.preferences should be an array of preferences.  Each preference
-     * must include a String name, a String type in ["bool", "int", "string"],
+     * must include a String name, a String type in ["bool", "int", "string", "set"],
      * and an Object value.
      */
     private void handleSet(final GeckoBundle message) {
@@ -141,6 +143,9 @@ public final class SharedPreferencesHelper
                 editor.putInt(name, pref.getInt("value"));
             } else if ("string".equals(type)) {
                 editor.putString(name, pref.getString("value"));
+            } else if ("set".equals(type)) {
+                HashSet<String> mySet = new HashSet<String>(Arrays.asList(pref.getStringArray("value")));
+                editor.putStringSet(name, mySet);
             } else {
                 Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
             }
@@ -155,7 +160,7 @@ public final class SharedPreferencesHelper
      * branch name, or null for the default branch.
      * message.preferences should be an array of preferences.  Each preference
      * must include a String name, and a String type in ["bool", "int",
-     * "string"].
+     * "string", "set"].
      */
     private GeckoBundle[] handleGet(final GeckoBundle message) {
         final SharedPreferences prefs = getSharedPreferences(message);
@@ -176,6 +181,8 @@ public final class SharedPreferencesHelper
                     bundleValue.putInt("value", prefs.getInt(name, 0));
                 } else if ("string".equals(type)) {
                     bundleValue.putString("value", prefs.getString(name, ""));
+                } else if ("set".equals(type)) {
+                    bundleValue.putStringArray("value", prefs.getStringSet(name, new HashSet<String>()));
                 } else {
                     Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
                 }

@@ -674,7 +674,7 @@ protected:
   /**
    * Small utility routine to test if a break node is visible to user.
    */
-  bool IsVisBreak(nsINode* aNode);
+  bool IsVisibleBRElement(nsINode* aNode);
 
   /**
    * Utility routine to possibly adjust the insertion position when

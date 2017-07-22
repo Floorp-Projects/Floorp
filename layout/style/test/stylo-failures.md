@@ -50,17 +50,12 @@ to mochitest command.
 * Incorrect serialization
   * place-{content,items,self} shorthands bug 1363971
     * test_align_shorthand_serialization.html [6]
-  * system font serialization with subprop specified bug 1382080
-    * test_system_font_serialization.html [3]
   * radial gradients are not serialized using modern unprefixed style bug 1380259
     * test_computed_style.html `gradient` [1]
 * Unit should be preserved after parsing servo/servo#15346
   * test_units_time.html [1]
-* test_css_supports.html: issues around @supports syntax servo/servo#15482 [2]
 * test_author_specified_style.html: support serializing color as author specified bug 1348165 [27]
 * browser_newtab_share_rule_processors.js: agent style sheet sharing [1]
-* :visited support bug 1381635
-  * test_visited_reftests.html `mathml-links.html`: bug 1371030 [2]
 * test_selectors_on_anonymous_content.html: xbl and :nth-child bug 1382102 [1]
 
 ## Assertions

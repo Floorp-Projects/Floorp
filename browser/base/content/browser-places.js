@@ -1860,16 +1860,16 @@ var BookmarkingUI = {
   },
 
   showSubView(anchor) {
-    this._showSubView(anchor);
+    this._showSubView(null, anchor);
   },
 
-  _showSubView(anchor = document.getElementById(this.BOOKMARK_BUTTON_ID)) {
+  _showSubView(event, anchor = document.getElementById(this.BOOKMARK_BUTTON_ID)) {
     let view = document.getElementById("PanelUI-bookmarks");
     view.addEventListener("ViewShowing", this);
     view.addEventListener("ViewHiding", this);
     anchor.setAttribute("closemenu", "none");
     PanelUI.showSubView("PanelUI-bookmarks", anchor,
-                        CustomizableUI.AREA_PANEL);
+                        CustomizableUI.AREA_PANEL, event);
   },
 
   onCommand: function BUI_onCommand(aEvent) {
@@ -1879,7 +1879,7 @@ var BookmarkingUI = {
 
     // Handle special case when the button is in the panel.
     if (this.button.getAttribute("cui-areatype") == CustomizableUI.TYPE_MENU_PANEL) {
-      this._showSubView();
+      this._showSubView(aEvent);
       return;
     }
     let widget = CustomizableUI.getWidget(this.BOOKMARK_BUTTON_ID)

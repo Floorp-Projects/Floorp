@@ -15,8 +15,6 @@
 #filter substitution
 
 [@AB_CD@]
-@BINPATH@/chrome/@AB_CD@@JAREXT@
-@BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/mobile-l10n.js
 @BINPATH@/update.locale
 #ifdef MOZ_UPDATER
@@ -529,6 +527,7 @@
 #ifdef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/GeckoView.manifest
 @BINPATH@/components/GeckoViewPrompt.js
+@BINPATH@/components/GeckoViewPermission.js
 #else
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest

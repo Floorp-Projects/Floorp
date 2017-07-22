@@ -209,21 +209,27 @@ Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent)
 }
 
 void
-Gecko_ServoStyleContext_Init(ServoStyleContext* aContext,
-                             const ServoStyleContext* aParentContext,
-                             RawGeckoPresContextBorrowed aPresContext, const ServoComputedValues* aValues,
-                             mozilla::CSSPseudoElementType aPseudoType, nsIAtom* aPseudoTag)
+Gecko_ServoStyleContext_Init(
+    ServoStyleContext* aContext,
+    const ServoStyleContext* aParentContext,
+    RawGeckoPresContextBorrowed aPresContext,
+    const ServoComputedValues* aValues,
+    mozilla::CSSPseudoElementType aPseudoType,
+    nsIAtom* aPseudoTag)
 {
   // because it is within an Arc it is unsafe for the Rust side to ever
   // carry around a mutable non opaque reference to the context, so we
   // cast it here.
-  ServoStyleContext* parent = const_cast<ServoStyleContext*>(aParentContext);
-  nsPresContext* pres = const_cast<nsPresContext*>(aPresContext);
-  new (KnownNotNull, aContext) ServoStyleContext(parent, pres, aPseudoTag,
-                                                 aPseudoType, ServoComputedValuesForgotten(aValues));
+  auto parent = const_cast<ServoStyleContext*>(aParentContext);
+  auto presContext = const_cast<nsPresContext*>(aPresContext);
+  new (KnownNotNull, aContext) ServoStyleContext(
+      parent, presContext, aPseudoTag, aPseudoType,
+      ServoComputedValuesForgotten(aValues));
 }
 
-ServoComputedValues::ServoComputedValues(const ServoComputedValuesForgotten aValue) {
+ServoComputedValues::ServoComputedValues(
+    const ServoComputedValuesForgotten aValue)
+{
   PodAssign(this, aValue.mPtr);
 }
 
@@ -392,18 +398,25 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 }
 
 nsChangeHint
-Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
-                          ServoComputedValuesBorrowed aComputedValues,
+Gecko_CalcStyleDifference(const ServoStyleContext* aOldStyle,
+                          const ServoStyleContext* aNewStyle,
+                          uint64_t aOldStyleBits,
                           bool* aAnyStyleChanged)
 {
-  MOZ_ASSERT(aOldStyleContext);
-  MOZ_ASSERT(aComputedValues);
+  MOZ_ASSERT(aOldStyle);
+  MOZ_ASSERT(aNewStyle);
 
-  uint32_t equalStructs, samePointerStructs;
-  nsChangeHint result =
-    aOldStyleContext->CalcStyleDifference(aComputedValues,
-                                          &equalStructs,
-                                          &samePointerStructs);
+  uint32_t relevantStructs = aOldStyleBits & NS_STYLE_INHERIT_MASK;
+
+  uint32_t equalStructs;
+  uint32_t samePointerStructs;  // unused
+  nsChangeHint result = const_cast<ServoStyleContext*>(aOldStyle)->
+    CalcStyleDifference(
+      const_cast<ServoStyleContext*>(aNewStyle),
+      &equalStructs,
+      &samePointerStructs,
+      relevantStructs);
+
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
   return result;
 }

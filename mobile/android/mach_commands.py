@@ -294,9 +294,12 @@ class MachCommands(MachCommandBase):
             'geckoview_example:assembleWithoutGeckoBinaries',
             'geckoview_example:assembleWithoutGeckoBinariesAndroidTest',
         ]
+        # We don't want to gate producing dependency archives on clean
+        # lint or checkstyle, particularly because toolchain versions
+        # can change the outputs for those processes.
         ret = self.gradle(gradle_targets + ["--continue"] + args, verbose=True)
 
-        return ret
+        return 0
 
 
     @Command('gradle', category='devenv',

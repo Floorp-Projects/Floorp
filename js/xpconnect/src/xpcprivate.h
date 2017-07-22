@@ -151,7 +151,6 @@
 
 #include "SandboxPrivate.h"
 #include "BackstagePass.h"
-#include "nsAXPCNativeCallContext.h"
 
 #ifdef XP_WIN
 // Nasty MS defines
@@ -704,18 +703,9 @@ XPCJSContext::GetStringName(unsigned index) const
 //
 // Note that most accessors are inlined.
 
-class MOZ_STACK_CLASS XPCCallContext final : public nsAXPCNativeCallContext
+class MOZ_STACK_CLASS XPCCallContext final
 {
 public:
-    NS_IMETHOD GetCallee(nsISupports** aResult);
-    NS_IMETHOD GetCalleeMethodIndex(uint16_t* aResult);
-    NS_IMETHOD GetJSContext(JSContext** aResult);
-    NS_IMETHOD GetArgc(uint32_t* aResult);
-    NS_IMETHOD GetArgvPtr(JS::Value** aResult);
-    NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo** aResult);
-    NS_IMETHOD GetCalleeClassInfo(nsIClassInfo** aResult);
-    NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext** aResult);
-
     enum {NO_ARGS = (unsigned) -1};
 
     explicit XPCCallContext(JSContext* cx,

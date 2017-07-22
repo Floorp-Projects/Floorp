@@ -850,6 +850,29 @@
         </body>
       </method>
 
+      <!--
+        Only send the message "Browser:UnselectedTabHover" when someone requests
+        for the message, which can reduce non-necessary communication.
+      -->
+      <field name="_shouldSendUnselectedTabHover">false</field>
+      <field name="_unselectedTabHoverMessageListenerCount">0</field>
+      <property name="shouldHandleUnselectedTabHover"
+                onget="return this._shouldSendUnselectedTabHover;"
+                readonly="true"/>
+
+      <method name="unselectedTabHover">
+        <parameter name="hovered"/>
+        <body>
+          <![CDATA[
+            if (!this._shouldSendUnselectedTabHover) {
+              return;
+            }
+            this.messageManager.sendAsyncMessage("Browser:UnselectedTabHover",
+              { hovered });
+          ]]>
+        </body>
+      </method>
+
       <property name="securityUI">
         <getter>
           <![CDATA[
@@ -981,6 +1004,7 @@
             this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStart", this);
             this.messageManager.addMessageListener("AudioPlayback:ActiveMediaBlockStop", this);
             this.messageManager.addMessageListener("AudioPlayback:MediaBlockStop", this);
+            this.messageManager.addMessageListener("UnselectedTabHover:Toggle", this);
 
             if (this.hasAttribute("selectmenulist")) {
               this.messageManager.addMessageListener("Forms:ShowDropDown", this);
@@ -1086,6 +1110,11 @@
               break;
             case "AudioPlayback:MediaBlockStop":
               this.mediaBlockStopped();
+              break;
+            case "UnselectedTabHover:Toggle":
+              this._shouldSendUnselectedTabHover = data.enable ?
+                ++this._unselectedTabHoverMessageListenerCount > 0 :
+                --this._unselectedTabHoverMessageListenerCount == 0;
               break;
             case "Forms:ShowDropDown": {
               if (!this._selectParentHelper) {

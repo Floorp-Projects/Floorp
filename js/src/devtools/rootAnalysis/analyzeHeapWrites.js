@@ -413,6 +413,10 @@ function ignoreContents(entry)
         "Gecko_CopyMozBorderColors",
         "Gecko_SetNullImageValue",
 
+        // The analysis thinks we'll write to mBits in the DoGetStyleFoo<false>
+        // call.  Maybe the template parameter confuses it?
+        /nsStyleContext::PeekStyle/,
+
         // Needs main thread assertions or other fixes.
         /UndisplayedMap::GetEntryFor/,
         /nsStyleContext::CalcStyleDifferenceInternal/,

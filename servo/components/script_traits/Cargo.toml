@@ -10,7 +10,6 @@ name = "script_traits"
 path = "lib.rs"
 
 [dependencies]
-app_units = "0.5"
 bluetooth_traits = {path = "../bluetooth_traits"}
 canvas_traits = {path = "../canvas_traits"}
 cookie = "0.6"
@@ -23,6 +22,7 @@ hyper = "0.10"
 hyper_serde = "0.7"
 ipc-channel = "0.8"
 libc = "0.2"
+metrics = {path = "../metrics"}
 msg = {path = "../msg"}
 net_traits = {path = "../net_traits"}
 offscreen_gl_context = { version = "0.11", features = ["serde"] }

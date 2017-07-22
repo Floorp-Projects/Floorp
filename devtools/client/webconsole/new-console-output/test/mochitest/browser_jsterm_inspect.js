@@ -21,7 +21,7 @@ add_task(async function () {
   await jsterm.execute("inspect(window)");
 
   const inspectWindowNode = await waitFor(() =>
-    findInspectResultMessage(hud.ui.experimentalOutputNode, 1));
+    findInspectResultMessage(hud.ui.outputNode, 1));
 
   let objectInspectors = [...inspectWindowNode.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There is the expected number of object inspectors");
@@ -53,7 +53,7 @@ add_task(async function () {
   await jsterm.execute("inspect(1)");
 
   const inspectPrimitiveNode = await waitFor(() =>
-    findInspectResultMessage(hud.ui.experimentalOutputNode, 2));
+    findInspectResultMessage(hud.ui.outputNode, 2));
   is(inspectPrimitiveNode.textContent, 1, "The primitive is displayed as expected");
 });
 

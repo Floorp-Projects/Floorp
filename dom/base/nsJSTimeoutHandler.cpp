@@ -10,7 +10,6 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FunctionBinding.h"
-#include "nsAXPCNativeCallContext.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsError.h"

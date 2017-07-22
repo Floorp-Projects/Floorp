@@ -28,7 +28,7 @@
   margin-top: 1em;
 }
 
-.devtools-throbber {
+.mdn-container .devtools-throbber {
   align-self: center;
   opacity: 0;
 }

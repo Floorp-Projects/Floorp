@@ -378,8 +378,9 @@ void Gecko_SetOwnerDocumentNeedsStyleFlush(RawGeckoElementBorrowed element);
 nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
                                       nsIAtom* aPseudoTagOrNull);
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
-nsChangeHint Gecko_CalcStyleDifference(nsStyleContext* oldstyle,
-                                       ServoComputedValuesBorrowed newstyle,
+nsChangeHint Gecko_CalcStyleDifference(const mozilla::ServoStyleContext* old_style,
+                                       const mozilla::ServoStyleContext* new_style,
+                                       uint64_t old_style_bits,
                                        bool* any_style_changed);
 nsChangeHint Gecko_HintsHandledForDescendants(nsChangeHint aHint);
 

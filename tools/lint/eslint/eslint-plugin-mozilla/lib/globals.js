@@ -122,11 +122,15 @@ GlobalsForNode.prototype = {
 
   ExpressionStatement(node, parents, globalScope) {
     let isGlobal = helpers.getIsGlobalScope(parents);
-    let globals = helpers.convertExpressionToGlobals(node, isGlobal);
-    // Map these globals now, as getGlobalsForFile is pre-mapped.
-    globals = globals.map(name => {
-      return { name, writable: true };
-    });
+    let globals = [];
+
+    // Note: We check the expression types here and only call the necessary
+    // functions to aid performance.
+    if (node.expression.type === "AssignmentExpression") {
+      globals = helpers.convertThisAssignmentExpressionToGlobals(node, isGlobal);
+    } else if (node.expression.type === "CallExpression") {
+      globals = helpers.convertCallExpressionToGlobals(node, isGlobal);
+    }
 
     // Here we assume that if importScripts is set in the global scope, then
     // this is a worker. It would be nice if eslint gave us a way of getting

@@ -154,6 +154,10 @@ ifdef MOZ_ANDROID_HLS_SUPPORT
 GECKOVIEW_JARS += exoplayer2.jar
 endif
 
+ifdef MOZ_WEBRTC
+GECKOVIEW_JARS += webrtc.jar
+endif
+
 ifdef MOZ_INSTALL_TRACKING
 GECKOVIEW_JARS += gecko-thirdparty-adjust_sdk.jar
 endif
@@ -169,10 +173,6 @@ FENNEC_JARS = \
   gecko-thirdparty.jar \
   services.jar \
   $(NULL)
-
-ifdef MOZ_WEBRTC
-FENNEC_JARS += webrtc.jar
-endif
 
 ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 FENNEC_JARS += search-activity.jar

@@ -1,10 +1,10 @@
 """
 merged implementation of the cache provider
 
-the name cache was not choosen to ensure pluggy automatically
+the name cache was not chosen to ensure pluggy automatically
 ignores the external pytest-cache
 """
-
+from __future__ import absolute_import, division, print_function
 import py
 import pytest
 import json
@@ -139,11 +139,11 @@ class LFPlugin:
                 # running a subset of all tests with recorded failures outside
                 # of the set of tests currently executing
                 pass
-            elif self.config.getvalue("failedfirst"):
-                items[:] = previously_failed + previously_passed
-            else:
+            elif self.config.getvalue("lf"):
                 items[:] = previously_failed
                 config.hook.pytest_deselected(items=previously_passed)
+            else:
+                items[:] = previously_failed + previously_passed
 
     def pytest_sessionfinish(self, session):
         config = self.config
@@ -219,7 +219,7 @@ def cacheshow(config, session):
     basedir = config.cache._cachedir
     vdir = basedir.join("v")
     tw.sep("-", "cache values")
-    for valpath in vdir.visit(lambda x: x.isfile()):
+    for valpath in sorted(vdir.visit(lambda x: x.isfile())):
         key = valpath.relto(vdir).replace(valpath.sep, "/")
         val = config.cache.get(key, dummy)
         if val is dummy:
@@ -235,7 +235,7 @@ def cacheshow(config, session):
     ddir = basedir.join("d")
     if ddir.isdir() and ddir.listdir():
         tw.sep("-", "cache directories")
-        for p in basedir.join("d").visit():
+        for p in sorted(basedir.join("d").visit()):
             #if p.check(dir=1):
             #    print("%s/" % p.relto(basedir))
             if p.isfile():

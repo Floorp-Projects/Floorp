@@ -59,6 +59,15 @@ extensions.registerModules({
       ["browserAction"],
     ],
   },
+  browsingData: {
+    url: "chrome://browser/content/ext-browsingData.js",
+    schema: "chrome://browser/content/schemas/browsing_data.json",
+    scopes: ["addon_parent"],
+    manifest: ["browsing_data"],
+    paths: [
+      ["browsingData"],
+    ],
+  },
   pageAction: {
     url: "chrome://browser/content/ext-pageAction.js",
     schema: "chrome://browser/content/schemas/page_action.json",

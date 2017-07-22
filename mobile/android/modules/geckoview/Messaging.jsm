@@ -6,14 +6,18 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["sendMessageToJava", "Messaging", "EventDispatcher"];
 
-XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
+
+const IS_PARENT_PROCESS = (Services.appinfo.processType ==
+                           Services.appinfo.PROCESS_TYPE_DEFAULT);
 
 function sendMessageToJava(aMessage, aCallback) {
   Cu.reportError("sendMessageToJava is deprecated. Use EventDispatcher instead.");
@@ -39,6 +43,9 @@ DispatcherDelegate.prototype = {
    * @param events   String or array of strings of events to listen to.
    */
   registerListener: function (listener, events) {
+    if (!IS_PARENT_PROCESS) {
+      throw new Error("Can only listen in parent process");
+    }
     this._dispatcher.registerListener(listener, events);
   },
 
@@ -49,6 +56,9 @@ DispatcherDelegate.prototype = {
    * @param events   String or array of strings of events to stop listening to.
    */
   unregisterListener: function (listener, events) {
+    if (!IS_PARENT_PROCESS) {
+      throw new Error("Can only listen in parent process");
+    }
     this._dispatcher.unregisterListener(listener, events);
   },
 
@@ -62,6 +72,33 @@ DispatcherDelegate.prototype = {
    * @param callback Optional callback implementing nsIAndroidEventCallback.
    */
   dispatch: function (event, data, callback) {
+    if (!IS_PARENT_PROCESS) {
+      let mm = this._dispatcher || Services.cpmm;
+      let data = {
+        global: !this._dispatcher,
+        event: event,
+        data: data,
+      };
+
+      if (callback) {
+        data.uuid = UUIDGen.generateUUID().toString();
+        mm.addMessageListener("GeckoView:MessagingReply", function listener(msg) {
+          if (msg.data.uuid === data.uuid) {
+            mm.removeMessageListener(msg.name, listener);
+            if (msg.data.type === "success") {
+              callback.onSuccess(msg.data.response);
+            } else if (msg.data.type === "error") {
+              callback.onError(msg.data.response);
+            } else {
+              throw new Error("invalid reply type");
+            }
+          }
+        });
+      }
+
+      mm.sendAsyncMessage("GeckoView:Messaging", data);
+      return;
+    }
     this._dispatcher.dispatch(event, data, callback);
   },
 
@@ -92,8 +129,8 @@ DispatcherDelegate.prototype = {
       msg.type = undefined;
 
       this.dispatch(type, msg, {
-        onSuccess: response => resolve(response),
-        onError: response => reject(response)
+        onSuccess: resolve,
+        onError: reject,
       });
     });
   },
@@ -175,9 +212,15 @@ DispatcherDelegate.prototype = {
 };
 
 var EventDispatcher = {
-  instance: new DispatcherDelegate(Services.androidBridge),
+  instance: new DispatcherDelegate(IS_PARENT_PROCESS ? Services.androidBridge : undefined),
 
   for: function (window) {
+    if (!IS_PARENT_PROCESS) {
+      if (!window.messageManager) {
+        throw new Error("window does not have message manager");
+      }
+      return new DispatcherDelegate(window.messageManager);
+    }
     let view = window && window.arguments && window.arguments[0] &&
         window.arguments[0].QueryInterface(Ci.nsIAndroidView);
     if (!view) {
@@ -185,7 +228,40 @@ var EventDispatcher = {
     }
     return new DispatcherDelegate(view);
   },
+
+  receiveMessage: function (aMsg) {
+    // aMsg.data includes keys: global, event, data, uuid
+    let callback;
+    if (aMsg.data.uuid) {
+      let reply = (type, response) => {
+        let mm = aMsg.data.global ? aMsg.target : aMsg.target.messageManager;
+        mm.sendAsyncMessage("GeckoView:MessagingReply", {
+          type: type,
+          response: response,
+          uuid: aMsg.data.uuid,
+        });
+      };
+      callback = {
+        onSuccess: response => reply("success", response),
+        onError: error => reply("error", error),
+      };
+    }
+
+    if (aMsg.data.global) {
+      this.instance.dispatch(aMsg.data.event, aMsg.data.data. callback);
+      return;
+    }
+
+    let win = aMsg.target.contentWindow || aMsg.target.ownerGlobal;
+    let dispatcher = win.WindowEventDispatcher || this.for(win);
+    dispatcher.dispatch(aMsg.data.event, aMsg.data.data, callback);
+  },
 };
+
+if (IS_PARENT_PROCESS) {
+  Services.mm.addMessageListener("GeckoView:Messaging", EventDispatcher);
+  Services.ppmm.addMessageListener("GeckoView:Messaging", EventDispatcher);
+}
 
 // For backwards compatibility.
 var Messaging = {};
