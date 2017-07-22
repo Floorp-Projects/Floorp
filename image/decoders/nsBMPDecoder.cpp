@@ -650,6 +650,9 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
 
   // Post our size to the superclass.
   PostSize(mH.mWidth, AbsoluteHeight());
+  if (HasError()) {
+    return Transition::TerminateFailure();
+  }
 
   // We've now read all the headers. If we're doing a metadata decode, we're
   // done.
