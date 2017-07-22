@@ -125,6 +125,7 @@ windows-tests:
     - mochitest-media
     - mochitest-webgl
     - reftest
+    - reftest-gpu
     - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
@@ -142,6 +143,8 @@ windows-talos:
     - talos-perf-reftest-singletons
     - talos-svgr
     - talos-tp5o
+    - talos-xperf
+    - talos-quantum-pageload
     - talos-quantum-pageload-stylo
 
 macosx64-tests:
@@ -239,3 +242,16 @@ android-gradle-tests:
 android-x86-tests:
     - mochitest-chrome
     - xpcshell
+
+windows8-tests:
+    - crashtest
+    - mochitest
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - mochitest-media
+    - reftest
+    - reftest-no-accel
+    - mochitest-gpu
+    - mochitest-webgl
+    - mochitest-clipboard
+    - mochitest-chrome

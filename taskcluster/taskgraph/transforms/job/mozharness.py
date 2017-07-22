@@ -22,6 +22,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_public_artifacts,
+    generic_worker_add_public_artifacts,
     support_vcs_checkout,
 )
 
@@ -83,6 +84,14 @@ mozharness_run_schema = Schema({
     Optional('job-script'): basestring,
 
     Required('requires-signed-builds', default=False): bool,
+
+    # If false, don't set MOZ_SIMPLE_PACKAGE_NAME
+    # Only disableable on windows
+    Required('use-simple-package', default=True): bool,
+
+    # If false don't pass --branch or --skip-buildbot-actions to mozharness script
+    # Only disableable on windows
+    Required('use-magic-mh-args', default=True): bool,
 })
 
 
@@ -92,6 +101,13 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     worker = taskdesc['worker']
     worker['implementation'] = job['worker']['implementation']
+
+    if not run['use-simple-package']:
+        raise NotImplementedError("Simple packaging cannot be disabled via"
+                                  "'use-simple-package' on docker-workers")
+    if not run['use-magic-mh-args']:
+        raise NotImplementedError("Cannot disabled mh magic arg passing via"
+                                  "'use-magic-mh-args' on docker-workers")
 
     # running via mozharness assumes desktop-build (which contains build.sh)
     taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
@@ -185,9 +201,8 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     # fail if invalid run options are included
     invalid = []
-    for prop in ['actions',
-                 'tooltool-downloads', 'secrets', 'taskcluster-proxy',
-                 'need-xvfb']:
+    for prop in ['tooltool-downloads',
+                 'secrets', 'taskcluster-proxy', 'need-xvfb']:
         if prop in run and run[prop]:
             invalid.append(prop)
     if not run.get('keep-artifacts', True):
@@ -198,10 +213,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
 
     worker = taskdesc['worker']
 
-    worker['artifacts'] = [{
-        'path': r'public/build',
-        'type': 'directory',
-    }]
+    generic_worker_add_public_artifacts(config, job, taskdesc)
 
     docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc)
 
@@ -209,9 +221,10 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_SIMPLE_PACKAGE_NAME': 'target',
         'MOZ_AUTOMATION': '1',
     })
+    if run['use-simple-package']:
+        env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
 
     if not job['attributes']['build_platform'].startswith('win'):
         raise Exception(
@@ -222,9 +235,16 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     mh_command.append('\\'.join([r'.\build\src\testing', run['script'].replace('/', '\\')]))
     for cfg in run['config']:
         mh_command.append('--config ' + cfg.replace('/', '\\'))
-    mh_command.append('--branch ' + config.params['project'])
-    mh_command.append(r'--skip-buildbot-actions --work-dir %cd:Z:=z:%\build')
+    if run['use-magic-mh-args']:
+        mh_command.append('--branch ' + config.params['project'])
+        mh_command.append(r'--skip-buildbot-actions')
+    mh_command.append(r'--work-dir %cd:Z:=z:%\build')
+    for action in run.get('actions', []):
+        assert ' ' not in action
+        mh_command.append('--' + action)
+
     for option in run.get('options', []):
+        assert ' ' not in option
         mh_command.append('--' + option)
     if run.get('custom-build-variant-cfg'):
         mh_command.append('--custom-build-variant')

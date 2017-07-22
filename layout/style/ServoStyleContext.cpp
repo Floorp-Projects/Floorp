@@ -20,17 +20,17 @@ ServoStyleContext::ServoStyleContext(
     nsPresContext* aPresContext,
     nsIAtom* aPseudoTag,
     CSSPseudoElementType aPseudoType,
-    ServoComputedValuesForgotten aComputedValues)
+    ServoComputedDataForgotten aComputedValues)
   : nsStyleContext(aParent, aPseudoTag, aPseudoType)
   , mSource(aComputedValues)
 {
   mPresContext = aPresContext;
-  AddStyleBit(Servo_ComputedValues_GetStyleBits(&mSource));
+  AddStyleBit(Servo_ComputedValues_GetStyleBits(this));
 
   FinishConstruction();
 
   // No need to call ApplyStyleFixups here, since fixups are handled by Servo when
-  // producing the ServoComputedValues.
+  // producing the ServoComputedData.
 }
 
 void

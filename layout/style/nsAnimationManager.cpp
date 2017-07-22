@@ -1035,7 +1035,7 @@ nsAnimationManager::UpdateAnimations(
   ServoCSSAnimationBuilder builder(aStyleContext);
 
   const nsStyleDisplay *disp =
-      aStyleContext->ComputedValues()->GetStyleDisplay();
+      aStyleContext->ComputedData()->GetStyleDisplay();
   DoUpdateAnimations(target, *disp, builder);
 }
 

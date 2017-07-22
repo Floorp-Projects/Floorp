@@ -17,6 +17,8 @@ only-for-build-platforms:
    - linux-nightly/opt
    - android-api-15-nightly/opt
    - macosx64-nightly/opt
+   - win32-nightly/opt
+   - win64-nightly/opt
 
 job-template:
    description:
@@ -30,6 +32,7 @@ job-template:
    chunks:
       by-build-platform:
          macosx64-nightly: 8
+         win.*: 10
          default: 6
    run-on-projects: ['mozilla-central', 'mozilla-beta']
    ignore-locales:
@@ -46,6 +49,8 @@ job-template:
          default: public
          android-api-15-nightly: internal
          macosx64-nightly: internal
+         win32-nightly: internal
+         win64-nightly: internal
    index:
       type: l10n
       product:
@@ -57,23 +62,24 @@ job-template:
             linux-nightly: linux-opt
             linux64-nightly: linux64-opt
             macosx64-nightly: macosx64-opt
+            win32-nightly: win32-opt
+            win64-nightly: win64-opt
             android-api-15-nightly: android-api-15-opt
    worker-type:
       by-build-platform:
          default: aws-provisioner-v1/gecko-{level}-b-linux
          android-api-15-nightly: aws-provisioner-v1/gecko-{level}-b-android
+         win.*: aws-provisioner-v1/gecko-{level}-b-win2012
    treeherder:
       symbol: tc-L10n(N)
-      tier:
-         by-build-platform:
-            linux.*: 1
-            android.*: 1
-            default: 2
+      tier: 1
       platform:
          by-build-platform:
             linux64-nightly: linux64/opt
             linux-nightly: linux32/opt
             macosx64-nightly: osx-cross/opt
+            win32-nightly: windows2012-32/opt
+            win64-nightly: windows2012-64/opt
             android-api-15-nightly: android-4-0-armv7-api15/opt
    env:
       by-build-platform:
@@ -87,6 +93,14 @@ job-template:
             EN_US_PACKAGE_NAME: target.dmg
             EN_US_BINARY_URL:
                task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build
+            MAR_TOOLS_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build/host/bin
+         win.*:
+            EN_US_PACKAGE_NAME: target.zip
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/public/build
+            EN_US_INSTALLER_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<repackage-signed>/artifacts/public/build
             MAR_TOOLS_URL:
                task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build/host/bin
          android-api-15-nightly:
@@ -105,6 +119,8 @@ job-template:
             macosx64-nightly:
                - single_locale/tc_macosx64.py
                - taskcluster_nightly.py
+            win32-nightly: []
+            win64-nightly: []
             android-api-15-nightly:
                - taskcluster_nightly.py
                - single_locale/{project}_android-api-15.py
@@ -124,13 +140,25 @@ job-template:
                - environment-config=single_locale/production.py
                - branch-config=single_locale/{project}.py
                - platform-config=single_locale/macosx64.py
+            win32-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/win32.py
+               - config=single_locale/tc_win32.py
+               - config=taskcluster_nightly.py
+            win64-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/win64.py
+               - config=single_locale/tc_win64.py
+               - config=taskcluster_nightly.py
             default: [ ]
       actions:
          by-build-platform:
-            default: [clone-locales list-locales setup repack
-                      submit-to-balrog summary]
-            android-api-15-nightly: [clone-locales list-locales setup repack
-                                     upload-repacks submit-to-balrog summary]
+            default: ['clone-locales', 'list-locales', 'setup', 'repack',
+                      'submit-to-balrog', 'summary']
+            android-api-15-nightly: ['clone-locales', 'list-locales', 'setup', 'repack',
+                                     'upload-repacks', 'submit-to-balrog', 'summary']
       script:
          by-build-platform:
             default: mozharness/scripts/desktop_l10n.py

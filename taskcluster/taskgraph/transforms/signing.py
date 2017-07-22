@@ -59,10 +59,6 @@ signing_description_schema = Schema({
 
     # Routes specific to this task, if defined
     Optional('routes'): [basestring],
-
-    # If True, adds a route which funsize uses to schedule generation of partial mar
-    # files for updates. Expected to be added on nightly builds only.
-    Optional('use-funsize-route'): bool,
 })
 
 
@@ -141,8 +137,8 @@ def make_task_description(config, jobs):
             'routes': job.get('routes', []),
         }
 
-        if 'macosx' not in dep_job.attributes.get('build_platform') and \
-                job.get('use-funsize-route', False):
+        if 'linux' in dep_job.attributes.get('build_platform') and \
+                dep_job.attributes.get('nightly'):
             task['routes'].append("project.releng.funsize.level-{level}.{project}".format(
                 project=config.params['project'], level=config.params['level']))
 

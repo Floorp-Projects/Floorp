@@ -9,8 +9,8 @@ from taskgraph.loader.single_dep import loader as base_loader
 # XXX: This logic should rely in kind.yml. This hasn't been done in the original
 # patch because it required some heavy changes in single_dep.
 LABELS_WHICH_SHOULD_SIGN_CI_BUILDS = (
-    'build-win32/debug', 'build-win32/opt', 'build-win32-pgo/opt',
-    'build-win64/debug', 'build-win64/opt', 'build-win64-pgo/opt',
+    'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
+    'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
 )
 
 

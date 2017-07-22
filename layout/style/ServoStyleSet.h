@@ -192,7 +192,7 @@ public:
                         StyleRuleInclusion aRules =
                           StyleRuleInclusion::All);
 
-  // Similar to ResolveTransientStyle() but returns ServoComputedValues.
+  // Similar to ResolveTransientStyle() but doesn't update the context state
   // Unlike ResolveServoStyle() this function calls PreTraverseSync().
   already_AddRefed<ServoStyleContext>
   ResolveTransientServoStyle(dom::Element* aElement,

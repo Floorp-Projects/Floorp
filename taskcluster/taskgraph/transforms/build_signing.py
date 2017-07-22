@@ -42,13 +42,8 @@ def make_signing_description(config, jobs):
             dep_job.attributes.get('build_platform'),
             dep_job.attributes.get('nightly')
         )
-
         label = dep_job.label.replace("build-", "signing-")
         job['label'] = label
-
-        # Announce job status on funsize specific routes, so that it can
-        # start the partial generation for nightlies only.
-        job['use-funsize-route'] = True
 
         yield job
 
@@ -69,12 +64,25 @@ def _generate_upstream_artifacts(build_platform, is_nightly=False):
             'artifacts': ['public/build/target.dmg'],
             'format': 'macapp',
         }]
-    elif 'win' in build_platform:
+    elif 'win64' in build_platform:
         artifacts_specificities = [{
-            'artifacts': ['public/build/target.zip'],
+            'artifacts': [
+                'public/build/target.zip',
+                'public/build/setup.exe'
+            ],
             'format': 'sha2signcode',
         }]
-    else:
+    elif 'win32' in build_platform:
+        artifacts_specificities = [{
+            'artifacts': [
+                'public/build/target.zip',
+                'public/build/setup.exe',
+                ],
+            'format': 'sha2signcode',
+        }]
+        if is_nightly:
+            artifacts_specificities[0]['artifacts'] += ['public/build/setup-stub.exe']
+    elif 'linux' in build_platform:
         artifacts_specificities = [{
             'artifacts': ['public/build/target.tar.bz2'],
             'format': 'gpg',
@@ -82,6 +90,8 @@ def _generate_upstream_artifacts(build_platform, is_nightly=False):
             'artifacts': ['public/build/update/target.complete.mar'],
             'format': 'mar',
         }]
+    else:
+        raise Exception("Platform not implemented for signing")
 
     return [{
         'taskId': {'task-reference': '<build>'},

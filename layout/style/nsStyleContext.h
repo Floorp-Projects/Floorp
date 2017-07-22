@@ -212,7 +212,7 @@ public:
   }
 
   inline nsRuleNode* RuleNode();
-  inline const ServoComputedValues* ComputedValues();
+  inline const ServoComputedData* ComputedData();
 
   void AddStyleBit(const uint64_t& aBit) { mBits |= aBit; }
 
@@ -342,8 +342,6 @@ protected:
   void FinishConstruction();
 
   void SetStyleBits();
-
-  inline const void* StyleStructFromServoComputedValues(nsStyleStructID aSID);
 
   // Helper functions for GetStyle* and PeekStyle*
   #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                  \

@@ -92,6 +92,9 @@ class TooltoolMixin(object):
         if cache:
             cmd.extend(['--cache-dir' if self.topsrcdir else '-c', cache])
 
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
+        if toolchains:
+            cmd.extend(toolchains.split())
         # when mock is enabled run tooltool in mock. We can't use
         # run_command_m in all cases because it won't exist unless
         # MockMixin is used on the parent class

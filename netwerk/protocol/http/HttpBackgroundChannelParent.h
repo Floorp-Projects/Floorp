@@ -10,6 +10,7 @@
 
 #include "mozilla/net/PHttpBackgroundChannelParent.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 #include "nsID.h"
 #include "nsISupportsImpl.h"
 
@@ -82,6 +83,9 @@ private:
   virtual ~HttpBackgroundChannelParent();
 
   Atomic<bool> mIPCOpened;
+
+  // Used to ensure atomicity of mBackgroundThread
+  Mutex mBgThreadMutex;
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
