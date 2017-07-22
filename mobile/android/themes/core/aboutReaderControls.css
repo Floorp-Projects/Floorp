@@ -63,6 +63,7 @@
   bottom: 0;
   list-style: none;
   pointer-events: none;
+  transition: opacity 420ms linear;
 }
 
 .toolbar > * {
@@ -93,7 +94,8 @@
   border: 0;
 }
 
-.button[hidden] {
+.button[hidden],
+.toolbar[hidden] {
   display: none;
 }
 

@@ -246,8 +246,11 @@ AboutReader.prototype = {
         break;
       case "scroll":
         this._closeDropdowns(true);
-        let isScrollingUp = this._scrollOffset > aEvent.pageY;
-        this._setSystemUIVisibility(isScrollingUp);
+        if (!gIsFirefoxDesktop && this._scrollOffset != aEvent.pageY) {
+          let isScrollingUp = this._scrollOffset > aEvent.pageY;
+          this._setSystemUIVisibility(isScrollingUp);
+          this._setToolbarVisibility(isScrollingUp);
+        }
         this._scrollOffset = aEvent.pageY;
         break;
       case "resize":
@@ -615,6 +618,24 @@ AboutReader.prototype = {
 
   _setSystemUIVisibility(visible) {
     this._mm.sendAsyncMessage("Reader:SystemUIVisibility", { visible });
+  },
+
+  _setToolbarVisibility(visible) {
+    let tb = this._toolbarElement;
+
+    if (visible) {
+      if (tb.style.opacity != "1") {
+        tb.removeAttribute("hidden");
+        tb.style.opacity = "1";
+      }
+    } else if (tb.style.opacity != "0") {
+      tb.addEventListener("transitionend", evt => {
+        if (tb.style.opacity == "0") {
+          tb.setAttribute("hidden", "");
+        }
+      }, { once: true });
+      tb.style.opacity = "0";
+    }
   },
 
   async _loadArticle() {
