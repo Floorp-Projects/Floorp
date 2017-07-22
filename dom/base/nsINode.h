@@ -23,6 +23,7 @@
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsTHashtable.h"
 #include <iosfwd>
 
 // Including 'windows.h' will #define GetClassInfo to something else.
@@ -51,6 +52,7 @@ class nsIURI;
 class nsNodeSupportsWeakRefTearoff;
 class nsNodeWeakReference;
 class nsDOMMutationObserver;
+class nsRange;
 
 namespace mozilla {
 class EventListenerManager;
@@ -1109,6 +1111,12 @@ public:
     nsNodeWeakReference* MOZ_NON_OWNING_REF mWeakReference;
 
     /**
+     * A set of ranges in the common ancestor for the selection to which
+     * this node belongs to.
+     */
+    mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>> mCommonAncestorRanges;
+
+    /**
      * Number of descendant nodes in the uncomposed document that have been
      * explicitly set as editable.
      */
@@ -1897,6 +1905,27 @@ public:
                                                   const ConvertCoordinateOptions& aOptions,
                                                   CallerType aCallerType,
                                                   ErrorResult& aRv);
+
+  const nsTHashtable<nsPtrHashKey<nsRange>>* GetExitingCommonAncestorRanges() const
+  {
+    if (!HasSlots()) {
+      return nullptr;
+    }
+    mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& ranges =
+      GetExistingSlots()->mCommonAncestorRanges;
+    return ranges.get();
+  }
+
+  nsTHashtable<nsPtrHashKey<nsRange>>* GetExistingCommonAncestorRanges()
+  {
+    nsINode::nsSlots* slots = GetExistingSlots();
+    return slots ? slots->mCommonAncestorRanges.get() : nullptr;
+  }
+
+  mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& GetCommonAncestorRangesPtr()
+  {
+    return Slots()->mCommonAncestorRanges;
+  }
 
 protected:
 

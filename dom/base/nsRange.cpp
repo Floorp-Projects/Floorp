@@ -205,8 +205,11 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   uint32_t maxRangeCount = 0;
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
-    RangeHashTable* ranges =
-      static_cast<RangeHashTable*>(n->GetProperty(nsGkAtoms::range));
+    nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
+      n->GetExistingCommonAncestorRanges();
+    if (!ranges) {
+      continue;
+    }
     for (auto iter = ranges->ConstIter(); !iter.Done(); iter.Next()) {
       nsRange* range = iter.Get()->GetKey();
       if (range->IsInSelection() && !range->Collapsed()) {
@@ -408,12 +411,10 @@ nsRange::RegisterCommonAncestor(nsINode* aNode)
 
   MarkDescendants(aNode);
 
-  RangeHashTable* ranges =
-    static_cast<RangeHashTable*>(aNode->GetProperty(nsGkAtoms::range));
+  UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& ranges =
+    aNode->GetCommonAncestorRangesPtr();
   if (!ranges) {
-    ranges = new RangeHashTable;
-    aNode->SetProperty(nsGkAtoms::range, ranges,
-                       nsINode::DeleteProperty<nsRange::RangeHashTable>, true);
+    ranges = MakeUnique<nsRange::RangeHashTable>();
   }
   ranges->PutEntry(this);
   aNode->SetCommonAncestorForRangeInSelection();
@@ -424,13 +425,14 @@ nsRange::UnregisterCommonAncestor(nsINode* aNode)
 {
   NS_PRECONDITION(aNode, "bad arg");
   NS_ASSERTION(aNode->IsCommonAncestorForRangeInSelection(), "wrong node");
-  RangeHashTable* ranges =
-    static_cast<RangeHashTable*>(aNode->GetProperty(nsGkAtoms::range));
+  nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
+    aNode->GetExistingCommonAncestorRanges();
+  MOZ_ASSERT(ranges);
   NS_ASSERTION(ranges->GetEntry(this), "unknown range");
 
   if (ranges->Count() == 1) {
     aNode->ClearCommonAncestorForRangeInSelection();
-    aNode->DeleteProperty(nsGkAtoms::range);
+    aNode->GetCommonAncestorRangesPtr().reset();
     UnmarkDescendants(aNode);
   } else {
     ranges->RemoveEntry(this);
@@ -3396,8 +3398,8 @@ nsRange::GetRegisteredCommonAncestor()
                "GetRegisteredCommonAncestor only valid for range in selection");
   nsINode* ancestor = GetNextRangeCommonAncestor(mStartContainer);
   while (ancestor) {
-    RangeHashTable* ranges =
-      static_cast<RangeHashTable*>(ancestor->GetProperty(nsGkAtoms::range));
+    nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
+      ancestor->GetExistingCommonAncestorRanges();
     if (ranges->GetEntry(this)) {
       break;
     }

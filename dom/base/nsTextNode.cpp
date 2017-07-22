@@ -165,9 +165,8 @@ nsTextNode::List(FILE* out, int32_t aIndent) const
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   if (IsCommonAncestorForRangeInSelection()) {
-    typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
-    RangeHashTable* ranges =
-      static_cast<RangeHashTable*>(GetProperty(nsGkAtoms::range));
+    const nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
+      GetExistingCommonAncestorRanges();
     fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);
   }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
