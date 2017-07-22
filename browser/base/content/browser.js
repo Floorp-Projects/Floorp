@@ -1296,7 +1296,6 @@ var gBrowserInit = {
     CompactTheme.init();
     AboutPrivateBrowsingListener.init();
     TrackingProtection.init();
-    RefreshBlocker.init();
     CaptivePortalWatcher.init();
     ZoomUI.init(window);
 
@@ -1827,8 +1826,6 @@ var gBrowserInit = {
     CompactTheme.uninit();
 
     TrackingProtection.uninit();
-
-    RefreshBlocker.uninit();
 
     CaptivePortalWatcher.uninit();
 

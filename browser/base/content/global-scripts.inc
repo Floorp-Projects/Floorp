@@ -15,7 +15,6 @@
 <script type="application/javascript" src="chrome://browser/content/browser-media.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-plugins.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-refreshblocker.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-safebrowsing.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-sidebar.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
