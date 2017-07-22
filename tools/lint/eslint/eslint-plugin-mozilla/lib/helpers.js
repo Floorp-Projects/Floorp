@@ -104,6 +104,8 @@ module.exports = {
         return this.getASTSource(node.expression) + ";";
       case "FunctionExpression":
         return "function() {}";
+      case "ArrayExpression":
+        return "[" + node.elements.map(this.getASTSource, this).join(",") + "]";
       case "ArrowFunctionExpression":
         return "() => {}";
       case "AssignmentExpression":
@@ -277,6 +279,14 @@ module.exports = {
       if (match) {
         return [{ name: match[1], writable: true }];
       }
+    }
+
+    if (node.expression.callee.type == "MemberExpression" &&
+        node.expression.callee.property.type == "Identifier" &&
+        node.expression.callee.property.name == "defineLazyScriptGetter") {
+      // The case where we have a single symbol as a string has already been
+      // handled by the regexp, so we have an array of symbols here.
+      return node.expression.arguments[1].elements.map(n => ({ name: n.value, writable: true }));
     }
 
     return [];
