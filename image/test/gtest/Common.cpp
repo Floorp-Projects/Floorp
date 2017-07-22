@@ -679,18 +679,6 @@ ImageTestCase TruncatedSmallGIFTestCase()
   return ImageTestCase("green-1x1-truncated.gif", "image/gif", IntSize(1, 1));
 }
 
-ImageTestCase LargeICOWithBMPTestCase()
-{
-  return ImageTestCase("green-large-bmp.ico", "image/x-icon", IntSize(256, 256),
-                       TEST_CASE_IS_TRANSPARENT);
-}
-
-ImageTestCase LargeICOWithPNGTestCase()
-{
-  return ImageTestCase("green-large-png.ico", "image/x-icon", IntSize(512, 512),
-                       TEST_CASE_IS_TRANSPARENT);
-}
-
 ImageTestCase GreenMultipleSizesICOTestCase()
 {
   return ImageTestCase("green-multiple-sizes.ico", "image/x-icon",
