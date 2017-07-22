@@ -364,12 +364,12 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
 #if defined(XP_WIN)
 
 bool
-VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
+VRDisplayOpenVR::SubmitFrame(ID3D11Texture2D* aSource,
                              const IntSize& aSize,
                              const gfx::Rect& aLeftEyeRect,
                              const gfx::Rect& aRightEyeRect)
 {
-  return SubmitFrame((void *)aSource->GetD3D11Texture(),
+  return SubmitFrame((void *)aSource,
                      ::vr::ETextureType::TextureType_DirectX,
                      aSize, aLeftEyeRect, aRightEyeRect);
 }

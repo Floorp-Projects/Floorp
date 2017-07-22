@@ -321,7 +321,7 @@ VRDisplayOSVR::GetSensorState()
 #if defined(XP_WIN)
 
 bool
-VRDisplayOSVR::SubmitFrame(TextureSourceD3D11* aSource,
+VRDisplayOSVR::SubmitFrame(ID3D11Texture2D* aSource,
   const IntSize& aSize,
   const gfx::Rect& aLeftEyeRect,
   const gfx::Rect& aRightEyeRect)
