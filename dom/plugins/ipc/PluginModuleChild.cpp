@@ -2403,7 +2403,6 @@ PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
         if (doe)
             doe->mDeleted = true;
     }
-    return;
 }
 
 void

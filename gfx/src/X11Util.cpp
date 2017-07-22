@@ -32,7 +32,6 @@ FindVisualAndDepth(Display* aDisplay, VisualID aVisualID,
     NS_ASSERTION(aVisualID == X11None, "VisualID not on Screen.");
     *aVisual = nullptr;
     *aDepth = 0;
-    return;
 }
 
 void

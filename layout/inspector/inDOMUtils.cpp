@@ -583,7 +583,6 @@ static void GetColorsForProperty(const uint32_t aParserVariant,
     }
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("currentColor"));
   }
-  return;
 }
 
 static void GetOtherValuesForProperty(const uint32_t aParserVariant,

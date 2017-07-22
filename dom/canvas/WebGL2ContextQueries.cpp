@@ -208,7 +208,6 @@ WebGLContext::GetQuery(JSContext* cx, GLenum target, GLenum pname,
     }
 
     ErrorInvalidEnum("%s: Bad pname.", funcName);
-    return;
 }
 
 void

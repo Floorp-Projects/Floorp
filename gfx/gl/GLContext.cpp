@@ -2503,7 +2503,6 @@ SplitByChar(const nsACString& str, const char delim, std::vector<nsCString>* con
         out->push_back(nsCString(substr));
 
         start = end + 1;
-        continue;
     }
 
     nsDependentCSubstring substr(str, start);

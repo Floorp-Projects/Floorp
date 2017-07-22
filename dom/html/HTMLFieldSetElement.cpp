@@ -345,8 +345,6 @@ HTMLFieldSetElement::UpdateValidity(bool aElementValidity)
   if (mFieldSet) {
     mFieldSet->UpdateValidity(aElementValidity);
   }
-
-  return;
 }
 
 EventStates

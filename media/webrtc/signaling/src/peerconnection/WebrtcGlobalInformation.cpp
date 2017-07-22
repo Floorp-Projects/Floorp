@@ -530,7 +530,6 @@ WebrtcGlobalInformation::GetAllStats(
   }
 
   aRv = rv;
-  return;
 }
 
 static nsresult
@@ -659,7 +658,6 @@ WebrtcGlobalInformation::GetLogging(
   }
 
   aRv = rv;
-  return;
 }
 
 static int32_t sLastSetLevel = 0;
@@ -806,7 +804,6 @@ void
 WebrtcGlobalParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   mShutdown = true;
-  return;
 }
 
 mozilla::ipc::IPCResult

@@ -59,7 +59,6 @@ GetUnitString(nsAString& unit, uint16_t unitType)
   }
 
   NS_NOTREACHED("Unknown unit type");
-  return;
 }
 
 static uint16_t

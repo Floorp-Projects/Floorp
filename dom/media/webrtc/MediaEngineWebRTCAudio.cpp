@@ -209,14 +209,12 @@ void
 MediaEngineWebRTCMicrophoneSource::GetName(nsAString& aName) const
 {
   aName.Assign(mDeviceName);
-  return;
 }
 
 void
 MediaEngineWebRTCMicrophoneSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.Assign(mDeviceUUID);
-  return;
 }
 
 // GetBestFitnessDistance returns the best distance the capture device can offer
@@ -942,7 +940,6 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
 
   uint32_t channels = isStereo ? 2 : 1;
   InsertInGraph<int16_t>(audio10ms, length, channels);
-  return;
 }
 
 void

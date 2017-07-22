@@ -80,7 +80,6 @@ void
 WebRenderTextureHost::Unlock()
 {
   MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-  return;
 }
 
 bool

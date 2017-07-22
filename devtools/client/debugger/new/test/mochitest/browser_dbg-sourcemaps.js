@@ -4,6 +4,35 @@
 // Tests loading sourcemapped sources, setting breakpoints, and
 // stepping in them.
 
+function assertBreakpointExists(dbg, source, line) {
+  const { selectors: { getBreakpoint }, getState } = dbg;
+
+  ok(
+    getBreakpoint(getState(), { sourceId: source.id, line }),
+    "Breakpoint has correct line"
+  );
+}
+
+function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const exists = !!getLineEl(dbg, line).querySelector(".new-breakpoint");
+  ok(
+    exists === shouldExist,
+    "Breakpoint " +
+      (shouldExist ? "exists" : "does not exist") +
+      " on line " +
+      line
+  );
+}
+
+function getLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
+}
+
+function clickGutter(dbg, line) {
+  clickElement(dbg, "gutter", line);
+}
+
 add_task(function*() {
   // NOTE: the CORS call makes the test run times inconsistent
   requestLongerTimeout(2);
@@ -13,6 +42,18 @@ add_task(function*() {
 
   yield waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
   ok(true, "Original sources exist");
+  const bundleSrc = findSource(dbg, "bundle.js");
+
+  yield selectSource(dbg, bundleSrc);
+
+  yield clickGutter(dbg, 13);
+  yield waitForDispatch(dbg, "ADD_BREAKPOINT");
+  assertEditorBreakpoint(dbg, 13, true);
+
+  yield clickGutter(dbg, 13);
+  yield waitForDispatch(dbg, "REMOVE_BREAKPOINT");
+  is(getBreakpoints(getState()).size, 0, "No breakpoints exists");
+
   const entrySrc = findSource(dbg, "entry.js");
 
   yield selectSource(dbg, entrySrc);
@@ -25,18 +66,12 @@ add_task(function*() {
   // should not move anywhere.
   yield addBreakpoint(dbg, entrySrc, 13);
   is(getBreakpoints(getState()).size, 1, "One breakpoint exists");
-  ok(
-    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
-    "Breakpoint has correct line"
-  );
+  assertBreakpointExists(dbg, entrySrc, 13);
 
   // Test breaking on a breakpoint
   yield addBreakpoint(dbg, "entry.js", 15);
   is(getBreakpoints(getState()).size, 2, "Two breakpoints exist");
-  ok(
-    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 15 }),
-    "Breakpoint has correct line"
-  );
+  assertBreakpointExists(dbg, entrySrc, 15);
 
   invokeInTab("keepMeAlive");
   yield waitForPaused(dbg);

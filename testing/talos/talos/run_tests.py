@@ -188,6 +188,10 @@ def run_tests(config, browser_config):
     if config['e10s']:
         talos_results.add_extra_option('e10s')
 
+    # stylo is another option for testing
+    if config['stylo']:
+        talos_results.add_extra_option('stylo')
+
     if config['gecko_profile']:
         talos_results.add_extra_option('geckoProfile')
 

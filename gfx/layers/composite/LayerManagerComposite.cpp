@@ -1472,7 +1472,6 @@ LayerComposite::AddBlendModeEffect(EffectChain& aEffectChain)
   }
 
   aEffectChain.mSecondaryEffects[EffectTypes::BLEND_MODE] = new EffectBlendMode(blendMode);
-  return;
 }
 
 bool
