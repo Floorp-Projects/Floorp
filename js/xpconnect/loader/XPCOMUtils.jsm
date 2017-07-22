@@ -211,6 +211,31 @@ this.XPCOMUtils = {
   },
 
   /**
+   * Defines a getter on a specified object for a script.  The script will not
+   * be loaded until first use.
+   *
+   * @param aObject
+   *        The object to define the lazy getter on.
+   * @param aName
+   *        The name of the getter to define on aObject for the script.
+   * @param aResource
+   *        The URL used to obtain the script.
+   */
+  defineLazyScriptGetter: function XPCU_defineLazyScriptGetter(aObject, aName,
+                                                               aResource)
+  {
+    Object.defineProperty(aObject, aName, {
+      get: function () {
+        delete aObject[aName];
+        Services.scriptloader.loadSubScript(aResource, aObject);
+        return aObject[aName];
+      },
+      configurable: true,
+      enumerable: true
+    });
+  },
+
+  /**
    * Defines a getter on a specified object for a service.  The service will not
    * be obtained until first use.
    *
