@@ -33,9 +33,9 @@ def windows_sdk_dir(value, host):
     if host.kernel != 'WINNT':
         return ()
 
-    return tuple(x[1] for x in get_registry_values(
+    return set(x[1] for x in get_registry_values(
         r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots'
-        r'\KitsRoot*'))
+        r'\KitsRoot*', get_32_and_64_bit=True))
 
 # The Windows SDK 8.1 and 10 have different layouts. The former has
 # $SDK/include/$subdir, while the latter has $SDK/include/$version/$subdir.
