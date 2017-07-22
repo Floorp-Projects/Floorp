@@ -9,7 +9,8 @@ INSIDE_SYNC_NESTED = 2
 INSIDE_CPOW_NESTED = 3
 
 NORMAL_PRIORITY = 1
-HIGH_PRIORITY = 2
+INPUT_PRIORITY = 2
+HIGH_PRIORITY = 3
 
 class Visitor:
     def defaultVisit(self, node):

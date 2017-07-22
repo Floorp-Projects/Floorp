@@ -3,11 +3,14 @@ namespace _ipdltest {
 
 sync protocol PTestPriority {
 parent:
-    prio(high) async Msg1();
-    prio(high) sync Msg2();
+    prio(input) async PMsg1();
+    prio(input) sync PMsg2();
+    prio(high) async PMsg3();
+    prio(high) sync PMsg4();
 
 child:
-    prio(high) async Msg3();
+    prio(input) async CMsg1();
+    prio(high) async CMsg2();
 };
 
 } // namespace _ipdltest

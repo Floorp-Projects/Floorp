@@ -486,6 +486,26 @@ private:
   IdleRunnable& operator=(const IdleRunnable&&) = delete;
 };
 
+// This class is designed to be a wrapper of a real runnable to support event
+// prioritizable.
+class PrioritizableRunnable : public Runnable, public nsIRunnablePriority
+{
+public:
+  PrioritizableRunnable(already_AddRefed<nsIRunnable>&& aRunnable,
+                        uint32_t aPriority);
+
+  NS_IMETHOD GetName(nsACString& aName) override;
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIRUNNABLEPRIORITY
+
+protected:
+  virtual ~PrioritizableRunnable() {};
+  nsCOMPtr<nsIRunnable> mRunnable;
+  uint32_t mPriority;
+};
+
 namespace detail {
 
 // An event that can be used to call a C++11 functions or function objects,

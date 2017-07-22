@@ -310,7 +310,7 @@ var FormDataInternal = {
       if (doc.body && doc.designMode == "on") {
       // eslint-disable-next-line no-unsanitized/property
         doc.body.innerHTML = data.innerHTML;
-        this.fireEvent(doc.body, "input");
+        this.fireInputEvent(doc.body);
       }
     }
   },
@@ -345,7 +345,7 @@ var FormDataInternal = {
    *         Value to set form element to.
    */
   restoreSingleInputValue(aNode, aValue) {
-    let eventType;
+    let fireEvent = false;
 
     if (typeof aValue == "string" && aNode.type != "file") {
       // Don't dispatch an input event if there is no change.
@@ -354,7 +354,7 @@ var FormDataInternal = {
       }
 
       aNode.value = aValue;
-      eventType = "input";
+      fireEvent = true;
     } else if (typeof aValue == "boolean") {
       // Don't dispatch a change event for no change.
       if (aNode.checked == aValue) {
@@ -362,7 +362,7 @@ var FormDataInternal = {
       }
 
       aNode.checked = aValue;
-      eventType = "change";
+      fireEvent = true;
     } else if (aValue && aValue.selectedIndex >= 0 && aValue.value) {
       // Don't dispatch a change event for no change
       if (aNode.options[aNode.selectedIndex].value == aValue.value) {
@@ -373,7 +373,7 @@ var FormDataInternal = {
       for (let i = 0; i < aNode.options.length; i++) {
         if (aNode.options[i].value == aValue.value) {
           aNode.selectedIndex = i;
-          eventType = "change";
+          fireEvent = true;
           break;
         }
       }
@@ -385,7 +385,7 @@ var FormDataInternal = {
       } catch (e) {
         Cu.reportError("mozSetFileNameArray: " + e);
       }
-      eventType = "input";
+      fireEvent = true;
     } else if (Array.isArray(aValue) && aNode.options) {
       Array.forEach(aNode.options, function(opt, index) {
         // don't worry about malformed options with same values
@@ -393,27 +393,26 @@ var FormDataInternal = {
 
         // Only fire the event here if this wasn't selected by default
         if (!opt.defaultSelected) {
-          eventType = "change";
+          fireEvent = true;
         }
       });
     }
 
     // Fire events for this node if applicable
-    if (eventType) {
-      this.fireEvent(aNode, eventType);
+    if (fireEvent) {
+      this.fireInputEvent(aNode);
     }
   },
 
   /**
-   * Dispatches an event of type |type| to the given |node|.
+   * Dispatches an event of type "input" to the given |node|.
    *
    * @param node (DOMNode)
-   * @param type (string)
    */
-  fireEvent(node, type) {
+  fireInputEvent(node) {
     let doc = node.ownerDocument;
     let event = doc.createEvent("UIEvents");
-    event.initUIEvent(type, true, true, doc.defaultView, 0);
+    event.initUIEvent("input", true, true, doc.defaultView, 0);
     node.dispatchEvent(event);
   },
 

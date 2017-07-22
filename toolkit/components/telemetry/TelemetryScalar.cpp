@@ -180,7 +180,7 @@ ScalarInfo::expiration() const
 }
 
 /**
- * The base scalar object, that servers as a common ancestor for storage
+ * The base scalar object, that serves as a common ancestor for storage
  * purposes.
  */
 class ScalarBase

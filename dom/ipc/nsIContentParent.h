@@ -117,6 +117,15 @@ protected: // IPDL methods
                                               const bool& aIsForBrowser);
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);
 
+  virtual mozilla::ipc::IPCResult
+  RecvPBrowserConstructor(PBrowserParent* actor,
+                          const TabId& tabId,
+                          const TabId& sameTabGroupAs,
+                          const IPCTabContext& context,
+                          const uint32_t& chromeFlags,
+                          const ContentParentId& cpId,
+                          const bool& isForBrowser);
+
   virtual mozilla::ipc::PIPCBlobInputStreamParent*
   AllocPIPCBlobInputStreamParent(const nsID& aID, const uint64_t& aSize);
 

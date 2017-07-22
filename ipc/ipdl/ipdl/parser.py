@@ -503,7 +503,8 @@ def p_Nested(p):
 def p_Priority(p):
     """Priority : ID"""
     kinds = {'normal': 1,
-             'high': 2}
+             'input': 2,
+             'high': 3}
     if p[1] not in kinds:
         _error(locFromTok(p, 1), "Expected normal or high for prio()")
 

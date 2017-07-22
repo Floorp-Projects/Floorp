@@ -3690,7 +3690,6 @@ var SessionStoreInternal = {
       storage: tabData.storage || null,
       formdata: tabData.formdata || null,
       disallow: tabData.disallow || null,
-      pageStyle: tabData.pageStyle || null,
       userContextId: tabData.userContextId || 0,
 
       // This information is only needed until the tab has finished restoring.
