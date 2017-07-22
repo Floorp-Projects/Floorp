@@ -126,7 +126,6 @@ public:
    *                    resource decoder, so the two decoders will have the
    *                    same decoder flags, surface flags, target size, and
    *                    other parameters.
-   * @param aExpectedSize The expected size of the resource from the ICO header.
    * @param aDataOffset If @aType is BMP, specifies the offset at which data
    *                    begins in the BMP resource. Must be Some() if and only
    *                    if @aType is BMP.
@@ -135,7 +134,6 @@ public:
   CreateDecoderForICOResource(DecoderType aType,
                               NotNull<SourceBuffer*> aSourceBuffer,
                               NotNull<nsICODecoder*> aICODecoder,
-                              const Maybe<gfx::IntSize>& aExpectedSize,
                               const Maybe<uint32_t>& aDataOffset = Nothing());
 
   /**
