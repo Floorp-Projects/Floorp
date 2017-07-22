@@ -28,7 +28,6 @@ enum class ICOState
   FOUND_RESOURCE,
   SNIFF_RESOURCE,
   READ_RESOURCE,
-  READ_BIH,
   PREPARE_FOR_MASK,
   READ_MASK_ROW,
   FINISH_MASK,
@@ -101,9 +100,7 @@ private:
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   RefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
-  Maybe<SourceBufferIterator> mContainedIterator; // Iterator for the subdecoder.
   UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
-  char mBIHraw[bmp::InfoHeaderLength::WIN_ICO]; // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
   gfx::IntSize mBiggestResourceSize;   // Used to select the intrinsic size.
   gfx::IntSize mBiggestResourceHotSpot; // Used to select the intrinsic size.
