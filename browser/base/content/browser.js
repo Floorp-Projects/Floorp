@@ -15,26 +15,26 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
-                                  "resource://gre/modules/ContextualIdentityService.jsm");
-
 XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   return Cu.import("resource://gre/modules/ExtensionParent.jsm", {}).extensionNameFromURI;
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
+  "browser.photon.structure.enabled", false);
 
 // lazy module getters
 
 /* global AboutHome:false,
           BrowserUITelemetry:false, BrowserUsageTelemetry:false, BrowserUtils:false,
           CastingApps:false, CharsetMenu:false, Color:false, ContentSearch:false,
+          CustomizableUI: false,
           Deprecated:false, E10SUtils:false, ExtensionsUI: false, FormValidationHandler:false,
           GMPInstallManager:false, LightweightThemeManager:false, Log:false,
           LoginManagerParent:false, NewTabUtils:false, PageThumbs:false,
           PluralForm:false, Preferences:false, PrivateBrowsingUtils:false,
           ProcessHangMonitor:false, PromiseUtils:false, ReaderMode:false,
-          ReaderParent:false, RecentWindow:false, SessionStore:false,
+          ReaderParent:false, RecentWindow:false, SafeBrowsing: false,
+          SessionStore:false,
           ShortcutUtils:false, SimpleServiceDiscovery:false, SitePermissions:false,
           Social:false, TabCrashHandler:false, Task:false, TelemetryStopwatch:false,
           Translation:false, UITour:false, UpdateUtils:false, Weave:false,
@@ -56,6 +56,8 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   ["CharsetMenu", "resource://gre/modules/CharsetMenu.jsm"],
   ["Color", "resource://gre/modules/Color.jsm"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
+  ["ContextualIdentityService", "resource://gre/modules/ContextualIdentityService.jsm"],
+  ["CustomizableUI", "resource:///modules/CustomizableUI.jsm"],
   ["Deprecated", "resource://gre/modules/Deprecated.jsm"],
   ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
   ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
@@ -74,6 +76,7 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   ["ReaderMode", "resource://gre/modules/ReaderMode.jsm"],
   ["ReaderParent", "resource:///modules/ReaderParent.jsm"],
   ["RecentWindow", "resource:///modules/RecentWindow.jsm"],
+  ["SafeBrowsing", "resource://gre/modules/SafeBrowsing.jsm"],
   ["SessionStore", "resource:///modules/sessionstore/SessionStore.jsm"],
   ["ShortcutUtils", "resource://gre/modules/ShortcutUtils.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
@@ -94,9 +97,6 @@ XPCOMUtils.defineLazyGetter(this, "extensionNameFromURI", () => {
   ["ZoomUI", "resource:///modules/ZoomUI.jsm"],
 ].forEach(([name, resource]) => XPCOMUtils.defineLazyModuleGetter(this, name, resource));
 
-XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
-  "resource://gre/modules/SafeBrowsing.jsm");
-
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
     "resource:///modules/ContentCrashHandlers.jsm");
@@ -108,7 +108,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "ZoomManager",
                                   "chrome://global/content/viewZoomOverlay.js");
 XPCOMUtils.defineLazyScriptGetter(this, "FullZoom",
                                   "chrome://browser/content/browser-fullZoom.js");
-
+XPCOMUtils.defineLazyScriptGetter(this, "PanelUI",
+                                  "chrome://browser/content/customizableui/panelUI.js");
 
 
 // lazy service getters
