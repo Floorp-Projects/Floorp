@@ -37,7 +37,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
           SessionStore:false,
           ShortcutUtils:false, SimpleServiceDiscovery:false, SitePermissions:false,
           Social:false, TabCrashHandler:false, Task:false, TelemetryStopwatch:false,
-          Translation:false, UITour:false, UpdateUtils:false, Weave:false,
+          Translation:false, UITour:false, Utils:false, UpdateUtils:false,
+          Weave:false,
           WebNavigationFrames: false, fxAccounts:false, gDevTools:false,
           gDevToolsBrowser:false, webrtcUI:false, ZoomUI:false,
           Marionette:false,
@@ -88,6 +89,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
   ["Translation", "resource:///modules/translation/Translation.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
   ["UpdateUtils", "resource://gre/modules/UpdateUtils.jsm"],
+  ["Utils", "resource://gre/modules/sessionstore/Utils.jsm"],
   ["Weave", "resource://services-sync/main.js"],
   ["WebNavigationFrames", "resource://gre/modules/WebNavigationFrames.js"],
   ["fxAccounts", "resource://gre/modules/FxAccounts.jsm"],
@@ -126,6 +128,10 @@ XPCOMUtils.defineLazyScriptGetter(this, ["gGestureSupport", "gHistorySwipeAnimat
                                   "chrome://browser/content/browser-gestureSupport.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSafeBrowsing",
                                   "chrome://browser/content/browser-safebrowsing.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["SocialUI",
+                                         "SocialShare",
+                                         "SocialActivationListener"],
+                                  "chrome://browser/content/browser-social.js");
 
 
 // lazy service getters
