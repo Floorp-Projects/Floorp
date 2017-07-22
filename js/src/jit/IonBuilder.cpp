@@ -3022,9 +3022,8 @@ IonBuilder::visitCompare(CFGCompare* compare)
 AbortReasonOr<Ok>
 IonBuilder::visitTry(CFGTry* try_)
 {
-    // Try-finally is not yet supported.
-    if (analysis().hasTryFinally())
-        return abort(AbortReason::Disable, "Has try-finally");
+    // We don't support try-finally. The ControlFlowGenerator should have
+    // aborted compilation in this case.
 
     // Try-catch within inline frames is not yet supported.
     MOZ_ASSERT(!isInlineBuilder());

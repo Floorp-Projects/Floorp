@@ -23,7 +23,8 @@ ControlFlowGenerator::ControlFlowGenerator(TempAllocator& temp, JSScript* script
     switches_(temp),
     labels_(temp),
     analysis_(temp, script),
-    aborted_(false)
+    aborted_(false),
+    checkedTryFinally_(false)
 { }
 
 bool
@@ -539,8 +540,15 @@ ControlFlowGenerator::processTry()
     MOZ_ASSERT(JSOp(*pc) == JSOP_TRY);
 
     // Try-finally is not yet supported.
-    if (analysis_.hasTryFinally())
-        return ControlStatus::Abort;
+    if (!checkedTryFinally_) {
+        JSTryNote* tn = script->trynotes()->vector;
+        JSTryNote* tnlimit = tn + script->trynotes()->length;
+        for (; tn < tnlimit; tn++) {
+            if (tn->kind == JSTRY_FINALLY)
+                return ControlStatus::Abort;
+        }
+        checkedTryFinally_ = true;
+    }
 
     jssrcnote* sn = GetSrcNote(gsn, script, pc);
     MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);

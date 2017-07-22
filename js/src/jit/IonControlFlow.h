@@ -811,6 +811,7 @@ class ControlFlowGenerator
     Vector<ControlFlowInfo, 2, JitAllocPolicy> labels_;
     BytecodeAnalysis analysis_;
     bool aborted_;
+    bool checkedTryFinally_;
 
   public:
     ControlFlowGenerator(TempAllocator& alloc, JSScript* script);
