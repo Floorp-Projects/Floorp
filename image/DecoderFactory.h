@@ -127,9 +127,6 @@ public:
    *                    resource decoder, so the two decoders will have the
    *                    same decoder flags, surface flags, target size, and
    *                    other parameters.
-   * @param aIsMetadataDecode Indicates whether or not this decoder is for
-   *                          metadata or not. Independent of the state of the
-   *                          parent decoder.
    * @param aExpectedSize The expected size of the resource from the ICO header.
    * @param aDataOffset If @aType is BMP, specifies the offset at which data
    *                    begins in the BMP resource. Must be Some() if and only
@@ -139,7 +136,6 @@ public:
   CreateDecoderForICOResource(DecoderType aType,
                               SourceBufferIterator&& aIterator,
                               NotNull<nsICODecoder*> aICODecoder,
-                              bool aIsMetadataDecode,
                               const Maybe<gfx::IntSize>& aExpectedSize,
                               const Maybe<uint32_t>& aDataOffset = Nothing());
 
