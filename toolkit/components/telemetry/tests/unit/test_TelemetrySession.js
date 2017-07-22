@@ -950,9 +950,11 @@ add_task(async function test_checkSubsessionData() {
   let classic = TelemetrySession.getPayload();
   let subsession = TelemetrySession.getPayload("environment-change");
   Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
-               "Classic pings must count active ticks since the beginning of the session.");
+    "Classic pings must count active ticks (in simpleMeasurements) since the beginning of the session.");
   Assert.equal(subsession.simpleMeasurements.activeTicks, expectedActiveTicks,
-               "Subsessions must count active ticks as classic pings on the first subsession.");
+    "Subsessions must count active ticks (in simpleMeasurements) as classic pings on the first subsession.");
+  Assert.equal(subsession.processes.parent.scalars["browser.engagement.active_ticks"], expectedActiveTicks,
+    "Subsessions must count active ticks (in scalars) as classic pings on the first subsession.");
 
   // Start a new subsession and check that the active ticks are correctly reported.
   incrementActiveTicks();
@@ -960,19 +962,24 @@ add_task(async function test_checkSubsessionData() {
   classic = TelemetrySession.getPayload();
   subsession = TelemetrySession.getPayload("environment-change", true);
   Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
-               "Classic pings must count active ticks since the beginning of the session.");
+    "Classic pings must count active ticks (in simpleMeasurements) since the beginning of the session.");
   Assert.equal(subsession.simpleMeasurements.activeTicks, expectedActiveTicks,
-               "Pings must not loose the tick count when starting a new subsession.");
+    "Pings must not lose the tick count when starting a new subsession.");
+  Assert.equal(subsession.processes.parent.scalars["browser.engagement.active_ticks"], expectedActiveTicks,
+    "Active ticks (in scalars) must not lose count for a previous subsession when starting a new subsession.");
 
   // Get a new subsession payload without clearing the subsession.
   incrementActiveTicks();
   classic = TelemetrySession.getPayload();
   subsession = TelemetrySession.getPayload("environment-change");
   Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
-               "Classic pings must count active ticks since the beginning of the session.");
+    "Classic pings must count active ticks (in simpleMeasurements) since the beginning of the session.");
   Assert.equal(subsession.simpleMeasurements.activeTicks,
-               expectedActiveTicks - activeTicksAtSubsessionStart,
-               "Subsessions must count active ticks since the last new subsession.");
+    expectedActiveTicks - activeTicksAtSubsessionStart,
+    "Subsessions must count active ticks (in simpleMeasurements) since the last new subsession.");
+  Assert.equal(subsession.processes.parent.scalars["browser.engagement.active_ticks"],
+    expectedActiveTicks - activeTicksAtSubsessionStart,
+    "Subsessions must count active ticks (in scalars) since the last new subsession.");
 
   await TelemetryController.testShutdown();
 });

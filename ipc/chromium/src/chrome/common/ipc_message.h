@@ -46,8 +46,9 @@ class Message : public Pickle {
   };
 
   enum PriorityValue {
-    NORMAL_PRIORITY,
-    HIGH_PRIORITY,
+    NORMAL_PRIORITY = 0,
+    INPUT_PRIORITY = 1,
+    HIGH_PRIORITY = 2,
   };
 
   enum MessageCompression {
@@ -91,17 +92,12 @@ class Message : public Pickle {
   }
 
   PriorityValue priority() const {
-    if (header()->flags & PRIO_BIT) {
-      return HIGH_PRIORITY;
-    }
-    return NORMAL_PRIORITY;
+    return static_cast<PriorityValue>((header()->flags & PRIO_MASK) >> 2);
   }
 
   void set_priority(PriorityValue prio) {
-    header()->flags &= ~PRIO_BIT;
-    if (prio == HIGH_PRIORITY) {
-      header()->flags |= PRIO_BIT;
-    }
+    DCHECK(((prio << 2) & ~PRIO_MASK) == 0);
+    header()->flags = (header()->flags & ~PRIO_MASK) | (prio << 2);
   }
 
   bool is_constructor() const {
@@ -315,16 +311,16 @@ class Message : public Pickle {
   // flags
   enum {
     NESTED_MASK     = 0x0003,
-    PRIO_BIT        = 0x0004,
-    SYNC_BIT        = 0x0008,
-    REPLY_BIT       = 0x0010,
-    REPLY_ERROR_BIT = 0x0020,
-    INTERRUPT_BIT   = 0x0040,
-    COMPRESS_BIT    = 0x0080,
-    COMPRESSALL_BIT = 0x0100,
-    CONSTRUCTOR_BIT = 0x0200,
+    PRIO_MASK       = 0x000C,
+    SYNC_BIT        = 0x0010,
+    REPLY_BIT       = 0x0020,
+    REPLY_ERROR_BIT = 0x0040,
+    INTERRUPT_BIT   = 0x0080,
+    COMPRESS_BIT    = 0x0100,
+    COMPRESSALL_BIT = 0x0200,
+    CONSTRUCTOR_BIT = 0x0400,
 #ifdef MOZ_TASK_TRACER
-    TASKTRACER_BIT  = 0x0400,
+    TASKTRACER_BIT  = 0x0800,
 #endif
   };
 

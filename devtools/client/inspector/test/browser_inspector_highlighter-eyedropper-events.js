@@ -113,7 +113,7 @@ function* respondsToMoveEvents(helper, testActor) {
       yield mouse.move(x, y);
     } else if (type === "keyboard") {
       let options = shift ? {shiftKey: true} : {};
-      yield EventUtils.synthesizeKey(key, options);
+      yield EventUtils.synthesizeAndWaitKey(key, options);
     }
     yield checkPosition(expected, helper);
   }
@@ -128,14 +128,14 @@ function* checkPosition({x, y}, {getElementAttribute}) {
 function* respondsToReturnAndEscape({isElementHidden, show}) {
   info("Simulating return to select the color and hide the eyedropper");
 
-  yield EventUtils.synthesizeKey("VK_RETURN", {});
+  yield EventUtils.synthesizeAndWaitKey("VK_RETURN", {});
   let hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden");
 
   info("Showing the eyedropper again and simulating escape to hide it");
 
   yield show("html");
-  yield EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield EventUtils.synthesizeAndWaitKey("VK_ESCAPE", {});
   hidden = yield isElementHidden("root");
   ok(hidden, "The eyedropper has been hidden again");
 }

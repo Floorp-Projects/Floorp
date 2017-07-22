@@ -97,6 +97,16 @@ public:
   static const uint32_t kRunnableNameBufSize = 1000;
   static mozilla::Array<char, kRunnableNameBufSize> sMainThreadRunnableName;
 
+  // Query whether there are some pending input events in the queue. This method
+  // is supposed to be called on main thread with input event prioritization
+  // enabled.
+  bool HasPendingInputEvents()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mozilla::MutexAutoLock lock(mLock);
+    return mEventsRoot.HasPendingEventsInInputQueue(lock);
+  }
+
 private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
@@ -142,27 +152,43 @@ protected:
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
-  // Wrapper for nsEventQueue that supports chaining.
+  // Wrapper for nsEventQueue that supports chaining and prioritization.
   class nsChainedEventQueue
   {
   public:
     explicit nsChainedEventQueue(mozilla::Mutex& aLock)
       : mNext(nullptr)
       , mEventsAvailable(aLock, "[nsChainedEventQueue.mEventsAvailable]")
-      , mProcessSecondaryQueueRunnable(false)
+      , mIsInputPrioritizationEnabled(false)
+      , mIsReadyToPrioritizeEvents(false)
+      , mProcessHighPriorityQueueRunnable(false)
     {
       mNormalQueue =
         mozilla::MakeUnique<nsEventQueue>(mEventsAvailable,
                                           nsEventQueue::eSharedCondVarQueue);
-      // Both queues need to use the same CondVar!
-      mSecondaryQueue =
+      // All queues need to use the same CondVar!
+      mInputQueue =
+        mozilla::MakeUnique<nsEventQueue>(mEventsAvailable,
+                                          nsEventQueue::eSharedCondVarQueue);
+      mHighQueue =
         mozilla::MakeUnique<nsEventQueue>(mEventsAvailable,
                                           nsEventQueue::eSharedCondVarQueue);
     }
 
+    void EnablePrioritization(mozilla::MutexAutoLock& aProofOfLock);
+
+    bool IsPrioritizationEnabled()
+    {
+      return mIsInputPrioritizationEnabled;
+    }
+
     bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
                   unsigned short* aPriority,
-                  mozilla::MutexAutoLock& aProofOfLock);
+                  mozilla::MutexAutoLock& aProofOfLock) {
+      return mIsReadyToPrioritizeEvents
+        ? GetNormalOrInputOrHighPriorityEvent(aMayWait, aEvent, aPriority, aProofOfLock)
+        : GetNormalOrHighPriorityEvent(aMayWait, aEvent, aPriority, aProofOfLock);
+    }
 
     void PutEvent(nsIRunnable* aEvent, mozilla::MutexAutoLock& aProofOfLock)
     {
@@ -171,43 +197,82 @@ protected:
     }
 
     void PutEvent(already_AddRefed<nsIRunnable> aEvent,
-                  mozilla::MutexAutoLock& aProofOfLock)
-    {
-      RefPtr<nsIRunnable> event(aEvent);
-      nsCOMPtr<nsIRunnablePriority> runnablePrio =
-        do_QueryInterface(event);
-      uint32_t prio = nsIRunnablePriority::PRIORITY_NORMAL;
-      if (runnablePrio) {
-        runnablePrio->GetPriority(&prio);
-      }
-      MOZ_ASSERT(prio == nsIRunnablePriority::PRIORITY_NORMAL ||
-                 prio == nsIRunnablePriority::PRIORITY_HIGH);
-      if (prio == nsIRunnablePriority::PRIORITY_NORMAL) {
-        mNormalQueue->PutEvent(event.forget(), aProofOfLock);
-      } else {
-        mSecondaryQueue->PutEvent(event.forget(), aProofOfLock);
-      }
-    }
+                  mozilla::MutexAutoLock& aProofOfLock);
 
     bool HasPendingEvent(mozilla::MutexAutoLock& aProofOfLock)
     {
       return mNormalQueue->HasPendingEvent(aProofOfLock) ||
-             mSecondaryQueue->HasPendingEvent(aProofOfLock);
+             mInputQueue->HasPendingEvent(aProofOfLock) ||
+             mHighQueue->HasPendingEvent(aProofOfLock);
+    }
+
+    bool HasPendingEventsInInputQueue(mozilla::MutexAutoLock& aProofOfLock)
+    {
+      MOZ_ASSERT(mIsInputPrioritizationEnabled);
+      return mInputQueue->HasPendingEvent(aProofOfLock);
     }
 
     nsChainedEventQueue* mNext;
     RefPtr<nsNestedEventTarget> mEventTarget;
 
   private:
-    mozilla::CondVar mEventsAvailable;
-    mozilla::UniquePtr<nsEventQueue> mNormalQueue;
-    mozilla::UniquePtr<nsEventQueue> mSecondaryQueue;
+    bool GetNormalOrInputOrHighPriorityEvent(bool aMayWait,
+                                             nsIRunnable** aEvent,
+                                             unsigned short* aPriority,
+                                             mozilla::MutexAutoLock& aProofOfLock);
 
+    bool GetNormalOrHighPriorityEvent(bool aMayWait, nsIRunnable** aEvent,
+                                      unsigned short* aPriority,
+                                      mozilla::MutexAutoLock& aProofOfLock);
+
+    // This is used to flush pending events in nsChainedEventQueue::mNormalQueue
+    // before starting event prioritization.
+    class EnablePrioritizationRunnable final : public nsIRunnable
+    {
+      nsChainedEventQueue* mEventQueue;
+
+    public:
+      NS_DECL_ISUPPORTS
+
+      explicit EnablePrioritizationRunnable(nsChainedEventQueue* aQueue)
+        : mEventQueue(aQueue)
+      {
+      }
+
+      NS_IMETHOD Run() override
+      {
+        mEventQueue->mIsReadyToPrioritizeEvents = true;
+        return NS_OK;
+      }
+    private:
+      ~EnablePrioritizationRunnable()
+      {
+      }
+    };
+
+    static void SetPriorityIfNotNull(unsigned short* aPriority, short aValue)
+    {
+      if (aPriority) {
+        *aPriority = aValue;
+      }
+    }
+    mozilla::CondVar mEventsAvailable;
+    mozilla::TimeStamp mInputHandlingStartTime;
+    mozilla::UniquePtr<nsEventQueue> mNormalQueue;
+    mozilla::UniquePtr<nsEventQueue> mInputQueue;
+    mozilla::UniquePtr<nsEventQueue> mHighQueue;
+    bool mIsInputPrioritizationEnabled;
+
+    // When enabling input event prioritization, there may be some events in the
+    // queue. We have to process all of them before the new coming events to
+    // prevent the queued events are preempted by the newly ones with the same
+    // priority.
+    bool mIsReadyToPrioritizeEvents;
     // Try to process one high priority runnable after each normal
     // priority runnable. This gives the processing model HTML spec has for
     // 'Update the rendering' in the case only vsync messages are in the
     // secondary queue and prevents starving the normal queue.
-    bool mProcessSecondaryQueueRunnable;
+    bool mProcessHighPriorityQueueRunnable;
   };
 
   class nsNestedEventTarget final : public nsIEventTarget
