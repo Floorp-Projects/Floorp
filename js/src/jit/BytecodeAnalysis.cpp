@@ -18,8 +18,7 @@ BytecodeAnalysis::BytecodeAnalysis(TempAllocator& alloc, JSScript* script)
   : script_(script),
     infos_(alloc),
     usesEnvironmentChain_(false),
-    hasTryFinally_(false),
-    hasSetArg_(false)
+    hasTryFinally_(false)
 {
 }
 
@@ -182,10 +181,6 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
 
           case JSOP_FINALLY:
             hasTryFinally_ = true;
-            break;
-
-          case JSOP_SETARG:
-            hasSetArg_ = true;
             break;
 
           default:
