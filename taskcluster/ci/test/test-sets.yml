@@ -59,6 +59,7 @@ talos:
     - talos-svgr
     - talos-tp5o
     - talos-perf-reftest
+    - talos-perf-reftest-singletons
 
 awsy:
     - awsy
@@ -139,10 +140,12 @@ windows-talos:
     - talos-g5
     - talos-other
     - talos-perf-reftest
+    - talos-perf-reftest-singletons
     - talos-svgr
     - talos-tp5o
     - talos-xperf
     - talos-quantum-pageload
+    - talos-quantum-pageload-stylo
 
 macosx64-tests:
     - cppunit
@@ -179,6 +182,7 @@ macosx64-tests-talos:
     - talos-svgr
     - talos-tp5o
     - talos-perf-reftest
+    - talos-perf-reftest-singletons
 
 linux32-tests:
     - cppunit

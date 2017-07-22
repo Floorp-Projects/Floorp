@@ -247,8 +247,6 @@ CustomElementRegistry::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTy
   nsWeakPtr* elem = unresolved->AppendElement();
   *elem = do_GetWeakReference(aElement);
   aElement->AddStates(NS_EVENT_STATE_UNRESOLVED);
-
-  return;
 }
 
 void
@@ -773,7 +771,6 @@ CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
   }
 
   aRetVal.setObject(*data->mConstructor);
-  return;
 }
 
 already_AddRefed<Promise>

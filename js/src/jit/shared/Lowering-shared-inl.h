@@ -319,8 +319,6 @@ LIRGeneratorShared::defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefini
     lir->setMir(mir);
     mir->setVirtualRegister(vreg);
     add(lir);
-
-    return;
 }
 
 // In LIR, we treat booleans and integers as the same low-level type (INTEGER).

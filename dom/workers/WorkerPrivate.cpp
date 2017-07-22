@@ -241,6 +241,19 @@ private:
   { }
 
   virtual bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Silence bad assertions.
+    return true;
+  }
+
+  virtual void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Silence bad assertions.
+  }
+
+  virtual bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     nsresult rv = mWrappedRunnable->Run();
@@ -884,7 +897,6 @@ private:
           override
   {
     aWorkerPrivate->ModifyBusyCountFromWorker(false);
-    return;
   }
 
   virtual bool
@@ -1612,15 +1624,21 @@ public:
   nsresult
   Cancel() override
   {
-    // First run the default cancelation code
-    WorkerControlRunnable::Cancel();
-
-    // Attempt to cancel the inner runnable as well
     nsCOMPtr<nsICancelableRunnable> cr = do_QueryInterface(mInner);
-    if (cr) {
-      return cr->Cancel();
+
+    // If the inner runnable is not cancellable, then just do the normal
+    // WorkerControlRunnable thing.  This will end up calling Run().
+    if (!cr) {
+      WorkerControlRunnable::Cancel();
+      return NS_OK;
     }
-    return NS_OK;
+
+    // Otherwise call the inner runnable's Cancel() and treat this like
+    // a WorkerRunnable cancel.  We can't call WorkerControlRunnable::Cancel()
+    // in this case since that would result in both Run() and the inner
+    // Cancel() being called.
+    Unused << cr->Cancel();
+    return WorkerRunnable::Cancel();
   }
 };
 
@@ -1628,17 +1646,36 @@ public:
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerControlEventTarget final : public nsIEventTarget
+class WorkerEventTarget final : public nsISerialEventTarget
 {
+public:
+  // The WorkerEventTarget supports different dispatch behaviors:
+  //
+  // * Hybrid targets will attempt to dispatch as a normal runnable,
+  //   but fallback to a control runnable if that fails.  This is
+  //   often necessary for code that wants normal dispatch order, but
+  //   also needs to execute while the worker is shutting down (possibly
+  //   with a holder in place.)
+  //
+  // * ControlOnly targets will simply dispatch a control runnable.
+  enum class Behavior : uint8_t {
+    Hybrid,
+    ControlOnly
+  };
+
+private:
   mozilla::Mutex mMutex;
   WorkerPrivate* mWorkerPrivate;
+  const Behavior mBehavior;
 
-  ~WorkerControlEventTarget() = default;
+  ~WorkerEventTarget() = default;
 
 public:
-  explicit WorkerControlEventTarget(WorkerPrivate* aWorkerPrivate)
-    : mMutex("WorkerControlEventTarget")
+  WorkerEventTarget(WorkerPrivate* aWorkerPrivate,
+                           Behavior aBehavior)
+    : mMutex("WorkerEventTarget")
     , mWorkerPrivate(aWorkerPrivate)
+    , mBehavior(aBehavior)
   {
     MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
   }
@@ -1647,7 +1684,7 @@ public:
   ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate)
   {
     MutexAutoLock lock(mMutex);
-    MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate == aWorkerPrivate);
+    MOZ_DIAGNOSTIC_ASSERT(!mWorkerPrivate || mWorkerPrivate == aWorkerPrivate);
     mWorkerPrivate = nullptr;
   }
 
@@ -1667,8 +1704,20 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
+    if (mBehavior == Behavior::Hybrid) {
+      RefPtr<WorkerRunnable> r =
+        mWorkerPrivate->MaybeWrapAsWorkerRunnable(runnable.forget());
+      if (r->Dispatch()) {
+        return NS_OK;
+      }
+
+      runnable = r.forget();
+    }
+
     RefPtr<WorkerControlRunnable> r = new WrappedControlRunnable(mWorkerPrivate,
-                                                                 Move(aRunnable));
+                                                                 runnable.forget());
     if (!r->Dispatch()) {
       return NS_ERROR_FAILURE;
     }
@@ -1704,7 +1753,8 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(WorkerControlEventTarget, nsIEventTarget)
+NS_IMPL_ISUPPORTS(WorkerEventTarget, nsIEventTarget,
+                                            nsISerialEventTarget)
 
 END_WORKERS_NAMESPACE
 
@@ -2971,45 +3021,6 @@ WorkerPrivateParent<Derived>::MaybeWrapAsWorkerRunnable(already_AddRefed<nsIRunn
   workerRunnable =
     new ExternalRunnableWrapper(ParentAsWorkerPrivate(), runnable);
   return workerRunnable.forget();
-}
-
-template <class Derived>
-already_AddRefed<nsISerialEventTarget>
-WorkerPrivateParent<Derived>::GetEventTarget()
-{
-  WorkerPrivate* self = ParentAsWorkerPrivate();
-
-  nsCOMPtr<nsISerialEventTarget> target;
-
-  bool needAutoDisable = false;
-
-  {
-    MutexAutoLock lock(mMutex);
-
-    if (!mEventTarget) {
-      mEventTarget = new EventTarget(self);
-
-      // If the worker is already shutting down then we want to
-      // immediately disable the event target.  This will cause
-      // the Dispatch() method to fail, but the event target
-      // will still exist.
-      if (self->mStatus > Running) {
-        needAutoDisable = true;
-      }
-    }
-
-    target = mEventTarget;
-  }
-
-  // Make sure to call Disable() outside of the mutex since it
-  // also internally locks a mutex.
-  if (needAutoDisable) {
-    mEventTarget->Disable();
-  }
-
-
-  MOZ_DIAGNOSTIC_ASSERT(target);
-  return target.forget();
 }
 
 template <class Derived>
@@ -4425,7 +4436,10 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mNumHoldersPreventingShutdownStart(0)
   , mDebuggerEventLoopLevel(0)
   , mMainThreadEventTarget(GetMainThreadEventTarget())
-  , mWorkerControlEventTarget(new WorkerControlEventTarget(this))
+  , mWorkerControlEventTarget(new WorkerEventTarget(this,
+                                                    WorkerEventTarget::Behavior::ControlOnly))
+  , mWorkerHybridEventTarget(new WorkerEventTarget(this,
+                                                   WorkerEventTarget::Behavior::Hybrid))
   , mErrorHandlerRecursionCount(0)
   , mNextTimeoutId(1)
   , mStatus(Pending)
@@ -4488,6 +4502,12 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 WorkerPrivate::~WorkerPrivate()
 {
   mWorkerControlEventTarget->ForgetWorkerPrivate(this);
+
+  // We force the hybrid event target to forget the thread when we
+  // enter the Killing state, but we do it again here to be safe.
+  // Its possible that we may be created and destroyed without progressing
+  // to Killing via some obscure code path.
+  mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
 }
 
 // static
@@ -5050,7 +5070,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
         // After mStatus is set to Dead there can be no more
         // WorkerControlRunnables so no need to lock here.
         if (!mControlQueue.IsEmpty()) {
-          WorkerControlRunnable* runnable;
+          WorkerControlRunnable* runnable = nullptr;
           while (mControlQueue.Pop(runnable)) {
             runnable->Cancel();
             runnable->Release();
@@ -5071,7 +5091,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
     }
 
     if (debuggerRunnablesPending) {
-      WorkerRunnable* runnable;
+      WorkerRunnable* runnable = nullptr;
 
       {
         MutexAutoLock lock(mMutex);
@@ -5189,10 +5209,16 @@ WorkerPrivate::DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
   return mMainThreadEventTarget->Dispatch(runnable.forget(), aFlags);
 }
 
-nsIEventTarget*
+nsISerialEventTarget*
 WorkerPrivate::ControlEventTarget()
 {
   return mWorkerControlEventTarget;
+}
+
+nsISerialEventTarget*
+WorkerPrivate::HybridEventTarget()
+{
+  return mWorkerHybridEventTarget;
 }
 
 void
@@ -5520,7 +5546,7 @@ void
 WorkerPrivate::ClearDebuggerEventQueue()
 {
   while (!mDebuggerQueue.IsEmpty()) {
-    WorkerRunnable* runnable;
+    WorkerRunnable* runnable = nullptr;
     mDebuggerQueue.Pop(runnable);
     // It should be ok to simply release the runnable, without running it.
     runnable->Release();
@@ -6070,7 +6096,7 @@ WorkerPrivate::EnterDebuggerEventLoop()
       // Start the periodic GC timer if it is not already running.
       SetGCTimerMode(PeriodicTimer);
 
-      WorkerRunnable* runnable;
+      WorkerRunnable* runnable = nullptr;
 
       {
         MutexAutoLock lock(mMutex);
@@ -6158,16 +6184,11 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
       Close();
     }
 
-    eventTarget = mEventTarget;
-  }
-
-  // Disable the event target, if it exists.
-  if (eventTarget) {
-    // Since we'll no longer process events, make sure we no longer allow anyone
-    // to post them. We have to do this without mMutex held, since our mutex
-    // must be acquired *after* the WorkerEventTarget's mutex when they're both
-    // held.
-    eventTarget->Disable();
+    // Make sure the hybrid event target stops dispatching runnables
+    // once we reaching the killing state.
+    if (aStatus == Killing) {
+      mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
+    }
   }
 
   if (mCrossThreadDispatcher) {

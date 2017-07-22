@@ -1240,7 +1240,6 @@ ReflowInput::CalculateBorderPaddingMargin(
   outside -= inside;
   *aInsideBoxSizing = inside;
   *aOutsideBoxSizing = outside;
-  return;
 }
 
 /**

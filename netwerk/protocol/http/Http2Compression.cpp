@@ -1458,7 +1458,6 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool noLocalIndex,
 
   LOG(("Compressor state after index"));
   DumpState();
-  return;
 }
 
 void

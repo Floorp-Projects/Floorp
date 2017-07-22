@@ -240,7 +240,6 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
 void
 nsXMLFragmentContentSink::MaybeStartLayout(bool aIgnorePendingSheets)
 {
-  return;
 }
 
 ////////////////////////////////////////////////////////////////////////

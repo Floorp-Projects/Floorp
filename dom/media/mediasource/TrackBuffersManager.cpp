@@ -840,7 +840,6 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
   }
 #endif
   NS_WARNING("Not supported (yet)");
-  return;
 }
 
 // We reset the demuxer by creating a new one and initializing it.

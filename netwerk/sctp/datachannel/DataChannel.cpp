@@ -605,7 +605,6 @@ DataChannelConnection::CompleteConnect(TransportFlow *flow, TransportLayer::Stat
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
              DataChannelOnMessageAvailable::ON_CONNECTION,
              this)));
-  return;
 }
 
 // Process any pending Opens

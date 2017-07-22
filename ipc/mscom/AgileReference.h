@@ -56,7 +56,7 @@ private:
   IGlobalInterfaceTable* ObtainGit();
 
 private:
-  REFIID                  mIid;
+  IID                     mIid;
   RefPtr<IAgileReference> mAgileRef;
   DWORD                   mGitCookie;
 };

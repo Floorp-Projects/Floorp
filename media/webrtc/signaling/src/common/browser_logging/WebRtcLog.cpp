@@ -196,7 +196,6 @@ void ConfigWebRtcLog(mozilla::LogLevel level, uint32_t trace_mask,
     // Capture the final choice for the trace setting.
     mozilla::Preferences::SetCString("media.webrtc.debug.log_file", aLogFile);
   }
-  return;
 }
 
 void StartWebRtcLog(uint32_t log_level)
@@ -226,7 +225,6 @@ void StartWebRtcLog(uint32_t log_level)
   }
 
   ConfigWebRtcLog(level, trace_mask, log_file, aec_log_dir, multi_log);
-  return;
 
 }
 
@@ -244,7 +242,6 @@ void EnableWebRtcLog()
   GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
   mozilla::LogLevel level = CheckOverrides(&trace_mask, &log_file, &multi_log);
   ConfigWebRtcLog(level, trace_mask, log_file, aec_log_dir, multi_log);
-  return;
 }
 
 // Called when we destroy the singletons from PeerConnectionCtx or if the

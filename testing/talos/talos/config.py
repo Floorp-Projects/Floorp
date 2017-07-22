@@ -432,6 +432,7 @@ def get_browser_config(config):
                 'xperf_path': None,
                 'error_filename': None,
                 'no_upload_results': False,
+                'stylo': False,
                 }
     browser_config = dict(title=config['title'])
     browser_config.update(dict([(i, config[i]) for i in required]))

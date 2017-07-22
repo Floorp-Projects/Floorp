@@ -57,8 +57,6 @@ mozTXTToHTMLConv::EscapeChar(const char16_t ch, nsString& aStringToAppendTo,
     default:
       aStringToAppendTo += ch;
     }
-
-    return;
 }
 
 // EscapeStr takes the passed in string and
@@ -387,7 +385,6 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const char16_t * aInString, int32_t aIn
   nsAutoString temp2;
   ScanTXT(&aInString[descstart], pos - descstart, ~kURLs /*prevents loop*/ & whathasbeendone, temp2);
   replaceBefore = temp2.Length();
-  return;
 }
 
 bool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)

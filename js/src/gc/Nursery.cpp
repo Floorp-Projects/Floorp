@@ -194,7 +194,6 @@ js::Nursery::enable()
 #endif
 
     MOZ_ALWAYS_TRUE(runtime()->gc.storeBuffer().enable());
-    return;
 }
 
 void
