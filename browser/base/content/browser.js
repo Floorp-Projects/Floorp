@@ -134,6 +134,8 @@ XPCOMUtils.defineLazyScriptGetter(this, ["SocialUI",
                                   "chrome://browser/content/browser-social.js");
 XPCOMUtils.defineLazyScriptGetter(this, "gSync",
                                   "chrome://browser/content/browser-sync.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gBrowserThumbnails",
+                                  "chrome://browser/content/browser-thumbnails.js");
 
 
 // lazy service getters
@@ -1678,7 +1680,7 @@ var gBrowserInit = {
       gHistorySwipeAnimation.init();
     });
 
-    gBrowserThumbnails.init();
+    requestIdleCallback(() => { gBrowserThumbnails.init(); });
 
     gExtensionsNotifications.init();
 
