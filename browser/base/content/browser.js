@@ -110,6 +110,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "FullZoom",
                                   "chrome://browser/content/browser-fullZoom.js");
 XPCOMUtils.defineLazyScriptGetter(this, "PanelUI",
                                   "chrome://browser/content/customizableui/panelUI.js");
+XPCOMUtils.defineLazyScriptGetter(this, "gViewSourceUtils",
+                                  "chrome://global/content/viewSourceUtils.js");
 
 
 // lazy service getters
