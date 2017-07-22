@@ -657,7 +657,7 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
                                                   nsCSSProps::kFontDisplayKTable),
                        aResult);
   } else {
-    value.AppendToString(aPropID, aResult, nsCSSValue::eNormalized);
+    value.AppendToString(aPropID, aResult);
   }
 }
 

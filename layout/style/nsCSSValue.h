@@ -615,15 +615,11 @@ public:
     return !(*this == aOther);
   }
 
-  // Enum for AppendToString's aValueSerialization argument.
-  enum Serialization { eNormalized };
-
   /**
    * Serialize |this| as a specified value for |aProperty| and append
    * it to |aResult|.
    */
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
@@ -975,13 +971,11 @@ public:
   static void
   AppendSidesShorthandToString(const nsCSSPropertyID aProperties[],
                                const nsCSSValue* aValues[],
-                               nsAString& aString,
-                               Serialization aSerialization);
+                               nsAString& aString);
   static void
   AppendBasicShapeRadiusToString(const nsCSSPropertyID aProperties[],
                                  const nsCSSValue* aValues[],
-                                 nsAString& aResult,
-                                 Serialization aValueSerialization);
+                                 nsAString& aResult);
   static void
   AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult);
 
@@ -990,21 +984,16 @@ private:
     return static_cast<char16_t*>(aBuffer->Data());
   }
 
-  void AppendPolygonToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                             Serialization aValueSerialization) const;
+  void AppendPolygonToString(nsCSSPropertyID aProperty,
+                             nsAString& aResult) const;
   void AppendPositionCoordinateToString(const nsCSSValue& aValue,
                                         nsCSSPropertyID aProperty,
-                                        nsAString& aResult,
-                                        Serialization aSerialization) const;
+                                        nsAString& aResult) const;
   void AppendCircleOrEllipseToString(
            nsCSSKeyword aFunctionId,
-           nsCSSPropertyID aProperty, nsAString& aResult,
-           Serialization aValueSerialization) const;
-  void AppendBasicShapePositionToString(
-           nsAString& aResult,
-           Serialization aValueSerialization) const;
-  void AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                           Serialization aValueSerialization) const;
+           nsCSSPropertyID aProperty, nsAString& aResult) const;
+  void AppendBasicShapePositionToString(nsAString& aResult) const;
+  void AppendInsetToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 protected:
   nsCSSUnit mUnit;
   union {
@@ -1128,8 +1117,7 @@ struct nsCSSValueList {
 
   nsCSSValueList* Clone() const;  // makes a deep copy. Infallible.
   void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      nsCSSValue::Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   static bool Equal(const nsCSSValueList* aList1,
                     const nsCSSValueList* aList2);
@@ -1191,8 +1179,7 @@ private:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsCSSValueSharedList)
 
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      nsCSSValue::Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   bool operator==(nsCSSValueSharedList const& aOther) const;
   bool operator!=(const nsCSSValueSharedList& aOther) const
@@ -1232,8 +1219,7 @@ struct nsCSSRect {
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
 
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      nsCSSValue::Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   bool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -1374,8 +1360,7 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      nsCSSValue::Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -1466,8 +1451,7 @@ struct nsCSSValueTriplet {
                mZValue.GetUnit() != eCSSUnit_Null;
     }
 
-    void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                        nsCSSValue::Serialization aValueSerialization) const;
+    void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
     nsCSSValue mXValue;
     nsCSSValue mYValue;
@@ -1530,8 +1514,7 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy. Infallible.
-  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                      nsCSSValue::Serialization aValueSerialization) const;
+  void AppendToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
 
   static bool Equal(const nsCSSValuePairList* aList1,
                     const nsCSSValuePairList* aList2);
