@@ -3040,30 +3040,20 @@ IonBuilder::visitTry(CFGTry* try_)
 
     blockWorklist[try_->tryBlock()->id()] = tryBlock;
 
-    // If the code after the try catch is reachable we connected it to the
-    // graph with an MGotoWithFake instruction that always jumps to the try
-    // block. This ensures the successor block always has a predecessor.
-    if (try_->codeAfterTryCatchReachable()) {
-        MBasicBlock* successor;
-        MOZ_TRY_VAR(successor, newBlock(current, try_->getSuccessor(1)->startPc()));
+    // Connect the code after the try-catch to the graph with an MGotoWithFake
+    // instruction that always jumps to the try block. This ensures the
+    // successor block always has a predecessor.
+    MBasicBlock* successor;
+    MOZ_TRY_VAR(successor, newBlock(current, try_->getSuccessor(1)->startPc()));
 
-        blockWorklist[try_->afterTryCatchBlock()->id()] = successor;
+    blockWorklist[try_->afterTryCatchBlock()->id()] = successor;
 
-        current->end(MGotoWithFake::New(alloc(), tryBlock, successor));
+    current->end(MGotoWithFake::New(alloc(), tryBlock, successor));
 
-        // The baseline compiler should not attempt to enter the catch block
-        // via OSR.
-        MOZ_ASSERT(info().osrPc() < try_->catchStartPc() ||
-                   info().osrPc() >= try_->afterTryCatchBlock()->startPc());
-
-    } else {
-        current->end(MGoto::New(alloc(), tryBlock));
-
-        // The baseline compiler should not attempt to enter the catch block
-        // via OSR or the code after the catch block.
-        // TODO: pre-existing bug. OSR after the catch block. Shouldn't happen.
-        //MOZ_ASSERT(info().osrPc() < try_->catchStartPc());
-    }
+    // The baseline compiler should not attempt to enter the catch block
+    // via OSR.
+    MOZ_ASSERT(info().osrPc() < try_->catchStartPc() ||
+               info().osrPc() >= try_->afterTryCatchBlock()->startPc());
 
     return Ok();
 }
