@@ -199,6 +199,11 @@ gtest:
                     - remove_executables.py
         extra-options:
             - --gtest-suite=gtest
+    tier:
+        by-test-platform:
+            windows7-32-pgo.*: 3
+            windows10-64-pgo.*: 3
+            default: default
 
 jittest:
     description: "JIT Test run"
@@ -297,6 +302,7 @@ jsreftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            windows10-64/.*: 3
             default: default
 
 marionette:
@@ -315,6 +321,7 @@ marionette:
     tier:
         by-test-platform:
             android.*: 2
+            windows10.*: 3
             default: default
     chunks:
         by-test-platform:
