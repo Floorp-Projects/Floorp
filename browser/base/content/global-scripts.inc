@@ -12,7 +12,6 @@
 <script type="application/javascript" src="chrome://browser/content/browser-captivePortal.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-compacttheme.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-feeds.js"/>
-<script type="application/javascript" src="chrome://browser/content/browser-fullScreenAndPointerLock.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-gestureSupport.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-media.js"/>
 <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
