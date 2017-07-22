@@ -188,6 +188,109 @@ public class GeckoView extends LayerView {
             }
         };
 
+    private final GeckoViewHandler<PermissionDelegate> mPermissionHandler =
+        new GeckoViewHandler<PermissionDelegate>(
+            "GeckoViewPermission", this,
+            new String[] {
+                "GeckoView:AndroidPermission",
+                "GeckoView:ContentPermission",
+                "GeckoView:MediaPermission"
+            }, /* alwaysListen */ true
+        ) {
+            @Override
+            public void handleMessage(final PermissionDelegate listener,
+                                      final String event,
+                                      final GeckoBundle message,
+                                      final EventCallback callback) {
+
+                if (listener == null) {
+                    callback.sendSuccess(/* granted */ false);
+                    return;
+                }
+                if ("GeckoView:AndroidPermission".equals(event)) {
+                    listener.requestAndroidPermissions(
+                            GeckoView.this, message.getStringArray("perms"),
+                            new PermissionCallback("android", callback));
+                } else if ("GeckoView:ContentPermission".equals(event)) {
+                    final String type = message.getString("perm");
+                    listener.requestContentPermission(
+                            GeckoView.this, message.getString("uri"),
+                            type, message.getString("access"),
+                            new PermissionCallback(type, callback));
+                } else if ("GeckoView:MediaPermission".equals(event)) {
+                    listener.requestMediaPermission(
+                            GeckoView.this, message.getString("uri"),
+                            message.getBundleArray("video"), message.getBundleArray("audio"),
+                            new PermissionCallback("media", callback));
+                }
+            }
+        };
+
+    private static class PermissionCallback implements
+        PermissionDelegate.Callback, PermissionDelegate.MediaCallback {
+
+        private final String mType;
+        private EventCallback mCallback;
+
+        public PermissionCallback(final String type, final EventCallback callback) {
+            mType = type;
+            mCallback = callback;
+        }
+
+        private void submit(final Object response) {
+            if (mCallback != null) {
+                mCallback.sendSuccess(response);
+                mCallback = null;
+            }
+        }
+
+        @Override // PermissionDelegate.Callback
+        public void grant() {
+            if ("media".equals(mType)) {
+                throw new UnsupportedOperationException();
+            }
+            submit(/* response */ true);
+        }
+
+        @Override // PermissionDelegate.Callback, PermissionDelegate.MediaCallback
+        public void reject() {
+            submit(/* response */ false);
+        }
+
+        @Override // PermissionDelegate.MediaCallback
+        public void grant(final String video, final String audio) {
+            if (!"media".equals(mType)) {
+                throw new UnsupportedOperationException();
+            }
+            final GeckoBundle response = new GeckoBundle(2);
+            response.putString("video", video);
+            response.putString("audio", audio);
+            submit(response);
+        }
+
+        @Override // PermissionDelegate.MediaCallback
+        public void grant(final GeckoBundle video, final GeckoBundle audio) {
+            grant(video != null ? video.getString("id") : null,
+                  audio != null ? audio.getString("id") : null);
+        }
+    }
+
+    /**
+     * Get the current prompt delegate for this GeckoView.
+     * @return PromptDelegate instance or null if using default delegate.
+     */
+    public PermissionDelegate getPermissionDelegate() {
+        return mPermissionHandler.getListener();
+    }
+
+    /**
+     * Set the current permission delegate for this GeckoView.
+     * @param delegate PermissionDelegate instance or null to use the default delegate.
+     */
+    public void setPermissionDelegate(final PermissionDelegate delegate) {
+        mPermissionHandler.setListener(delegate, this);
+    }
+
     private PromptDelegate mPromptDelegate;
     private InputConnectionListener mInputConnectionListener;
 
@@ -1576,5 +1679,124 @@ public class GeckoView extends LayerView {
         * @param scrollY The new vertical scroll position in pixels.
         */
         public void onScrollChanged(GeckoView view, int scrollX, int scrollY);
+    }
+
+    /**
+     * GeckoView applications implement this interface to handle requests for permissions
+     * from content, such as geolocation and notifications. For each permission, usually
+     * two requests are generated: one request for the Android app permission through
+     * requestAppPermissions, which is typically handled by a system permission dialog;
+     * and another request for the content permission (e.g. through
+     * requestContentPermission), which is typically handled by an app-specific
+     * permission dialog.
+     **/
+    public interface PermissionDelegate {
+        /**
+         * Callback interface for notifying the result of a permission request.
+         */
+        interface Callback {
+            /**
+             * Called by the implementation after permissions are granted; the
+             * implementation must call either grant() or reject() for every request.
+             */
+            void grant();
+
+            /**
+             * Called by the implementation when permissions are not granted; the
+             * implementation must call either grant() or reject() for every request.
+             */
+            void reject();
+        }
+
+        /**
+         * Request Android app permissions.
+         *
+         * @param view GeckoView instance requesting the permissions.
+         * @param permissions List of permissions to request; possible values are,
+         *                    android.Manifest.permission.ACCESS_FINE_LOCATION
+         *                    android.Manifest.permission.CAMERA
+         *                    android.Manifest.permission.RECORD_AUDIO
+         * @param callback Callback interface.
+         */
+        void requestAndroidPermissions(GeckoView view, String[] permissions,
+                                       Callback callback);
+
+        /**
+         * Request content permission.
+         *
+         * @param view GeckoView instance requesting the permission.
+         * @param uri The URI of the content requesting the permission.
+         * @param type The type of the requested permission; possible values are,
+         *             "geolocation": permission for using the geolocation API
+         *             "desktop-notification": permission for using the notifications API
+         * @param access Not used.
+         * @param callback Callback interface.
+         */
+        void requestContentPermission(GeckoView view, String uri, String type,
+                                      String access, Callback callback);
+
+        /**
+         * Callback interface for notifying the result of a media permission request,
+         * including which media source(s) to use.
+         */
+        interface MediaCallback {
+            /**
+             * Called by the implementation after permissions are granted; the
+             * implementation must call one of grant() or reject() for every request.
+             *
+             * @param video "id" value from the bundle for the video source to use,
+             *              or null when video is not requested.
+             * @param audio "id" value from the bundle for the audio source to use,
+             *              or null when audio is not requested.
+             */
+            void grant(final String video, final String audio);
+
+            /**
+             * Called by the implementation after permissions are granted; the
+             * implementation must call one of grant() or reject() for every request.
+             *
+             * @param video Bundle for the video source to use (must be an original
+             *              GeckoBundle object that was passed to the implementation);
+             *              or null when video is not requested.
+             * @param audio Bundle for the audio source to use (must be an original
+             *              GeckoBundle object that was passed to the implementation);
+             *              or null when audio is not requested.
+             */
+            void grant(final GeckoBundle video, final GeckoBundle audio);
+
+            /**
+             * Called by the implementation when permissions are not granted; the
+             * implementation must call one of grant() or reject() for every request.
+             */
+            void reject();
+        }
+
+        /**
+         * Request content media permissions, including request for which video and/or
+         * audio source to use.
+         *
+         * @param view GeckoView instance requesting the permission.
+         * @param uri The URI of the content requesting the permission.
+         * @param video List of video sources, or null if not requesting video.
+         *              Each bundle represents a video source, with keys,
+         *              "id": String, the origin-specific source identifier;
+         *              "rawId": String, the non-origin-specific source identifier;
+         *              "name": String, the name of the video source from the system
+         *                      (for example, "Camera 0, Facing back, Orientation 90");
+         *                      may be empty;
+         *              "mediaSource": String, the media source type; possible values are,
+         *                             "camera", "screen", "application", "window",
+         *                             "browser", and "other";
+         *              "type": String, always "video";
+         * @param audio List of audio sources, or null if not requesting audio.
+         *              Each bundle represents an audio source with same keys and possible
+         *              values as video source bundles above, except for:
+         *              "mediaSource", String; possible values are "microphone",
+         *                             "audioCapture", and "other";
+         *              "type", String, always "audio";
+         * @param callback Callback interface.
+         */
+        void requestMediaPermission(GeckoView view, String uri, GeckoBundle[] video,
+                                    GeckoBundle[] audio, MediaCallback callback);
     }
 }

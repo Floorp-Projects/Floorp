@@ -193,7 +193,7 @@ class SharedThreadPool;
 // made async supported by MozPromise, making this unnecessary and
 // permitting unifying the pool.
 enum class MediaThreadType {
-  PLAYBACK, // MediaDecoderStateMachine and MediaDecoderReader
+  PLAYBACK, // MediaDecoderStateMachine and MediaFormatReader
   PLATFORM_DECODER
 };
 // Returns the thread pool that is shared amongst all decoder state machines

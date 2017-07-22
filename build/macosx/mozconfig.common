@@ -4,6 +4,4 @@ else
   . $topsrcdir/build/macosx/local-mozconfig.common
 fi
 
-# Enable stylo in automation builds.
-# Can be removed after bug 1375774 is resolved.
-ac_add_options --enable-stylo=build
+. $topsrcdir/build/mozconfig.stylo

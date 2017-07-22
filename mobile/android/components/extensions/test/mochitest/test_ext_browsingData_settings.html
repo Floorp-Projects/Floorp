@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>BrowsingData Settings test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+var {SharedPreferences} = Cu.import("resource://gre/modules/SharedPreferences.jsm", {});
+
+const PREF_DOMAIN = "android.not_a_preference.privacy.clear";
+const PREF_KEY_PREFIX = "private.data.";
+const SETTINGS_LIST = ["cache", "cookies", "history", "formData", "downloads"];
+
+function checkPrefs(key, actualValue, prefs, prefSuffix) {
+  let prefValue = prefs.includes(`${PREF_KEY_PREFIX}${prefSuffix}`);
+  is(actualValue, prefValue, `${key} property of dataToRemove matches the expected pref.`);
+}
+
+function testSettingsPreferences(dataToRemove){
+  let prefs = SharedPreferences.forProfile().getSetPref(PREF_DOMAIN);
+
+  for (let key of Object.keys(dataToRemove)) {
+    switch(key){
+      case "formData":
+        checkPrefs(key, dataToRemove[key], prefs, "formdata");
+        break;
+      case "cookies":
+        checkPrefs(key, dataToRemove[key], prefs, "cookies_sessions");
+        break;
+      case "downloads":
+        checkPrefs(key, dataToRemove[key], prefs, "downloadFiles");
+        break;
+      default:
+        checkPrefs(key, dataToRemove[key], prefs, key);
+    }
+  }
+}
+
+add_task(async function testSettings() {
+  function background() {
+    browser.test.onMessage.addListener(async (msg) => {
+      if (msg == "retrieve-settings") {
+        let settings = await browser.browsingData.settings();
+        browser.test.sendMessage("settings", settings);
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "permissions": ["browsingData"],
+    },
+  });
+
+  await extension.startup();
+
+  extension.sendMessage("retrieve-settings");
+  let {options, dataToRemove, dataRemovalPermitted} = await extension.awaitMessage("settings");
+
+  // Verify that we get the keys we expect.
+  is(SETTINGS_LIST.length, Object.keys(dataToRemove).length, `dataToRemove contains expected no of keys`);
+  is(SETTINGS_LIST.length, Object.keys(dataRemovalPermitted).length, `dataRemovalPermitted contains expected no of keys`);
+  for (let key of SETTINGS_LIST) {
+    is(true, dataRemovalPermitted[key],
+      `${key} property of dataRemovalPermitted matches the expected value.`);
+  }
+
+  // Verify values of dataToRemove keys are as expected.
+  testSettingsPreferences(dataToRemove);
+
+  // Verify object options returned as expected.
+  // For now, We do not provide option to delete history by time, so,
+  // since value is given 0, which means Everything.
+  is(options.since, 0, `options contains expected value.`);
+
+  // Explicitly set some prefs to true
+  const NEW_PREFS = ["private.data.cache", "private.data.cookies_sessions"];
+
+  SharedPreferences.forProfile().setSetPref(PREF_DOMAIN, NEW_PREFS);
+
+  extension.sendMessage("retrieve-settings");
+  let settings = await extension.awaitMessage("settings");
+  testSettingsPreferences(settings.dataToRemove);
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>

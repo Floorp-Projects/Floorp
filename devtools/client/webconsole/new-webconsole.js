@@ -14,8 +14,13 @@ const Services = require("Services");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { JSTerm } = require("devtools/client/webconsole/jsterm");
 const { WebConsoleConnectionProxy } = require("devtools/client/webconsole/webconsole-connection-proxy");
+const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const system = require("devtools/shared/system");
+const { ZoomKeys } = require("devtools/client/shared/zoom-keys");
 
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
+const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
 
 // XXX: This file is incomplete (see bug 1326937).
 // It's used when loading the webconsole with devtools-launchpad, but will ultimately be
@@ -54,6 +59,19 @@ NewWebConsoleFrame.prototype = {
   },
 
   /**
+   * Getter for the persistent logging preference.
+   * @type boolean
+   */
+  get persistLog() {
+    // For the browser console, we receive tab navigation
+    // when the original top level window we attached to is closed,
+    // but we don't want to reset console history and just switch to
+    // the next available window.
+    return this.isBrowserConsole ||
+           Services.prefs.getBoolPref(PREF_PERSISTLOG);
+  },
+
+  /**
    * Initialize the WebConsoleFrame instance.
    * @return object
    *         A promise object that resolves once the frame is ready to use.
@@ -82,16 +100,26 @@ NewWebConsoleFrame.prototype = {
 
     return allReady;
   },
-
   destroy() {
     if (this._destroyer) {
       return this._destroyer.promise;
     }
-
     this._destroyer = defer();
-
-    Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
+    Services.prefs.removeObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this.React = this.ReactDOM = this.FrameView = null;
+    if (this.jsterm) {
+      this.jsterm.off("sidebar-opened", this.resize);
+      this.jsterm.off("sidebar-closed", this.resize);
+      this.jsterm.destroy();
+      this.jsterm = null;
+    }
+
+    let toolbox = gDevTools.getToolbox(this.owner.target);
+    if (toolbox) {
+      toolbox.off("webconsole-selected", this._onPanelSelected);
+    }
+
+    this.window = this.owner = this.newConsoleOutput = null;
 
     let onDestroy = () => {
       this._destroyer.resolve(null);
@@ -199,12 +227,40 @@ NewWebConsoleFrame.prototype = {
     let Wrapper = this.owner.NewConsoleOutputWrapper || this.window.NewConsoleOutput;
     this.newConsoleOutput = new Wrapper(
       this.outputNode, this.jsterm, toolbox, this.owner, this.document);
-
     // Toggle the timestamp on preference change
     Services.prefs.addObserver(PREF_MESSAGE_TIMESTAMP, this._onToolboxPrefChanged);
     this._onToolboxPrefChanged();
+
+    this._initShortcuts();
   },
 
+  _initShortcuts: function () {
+    let shortcuts = new KeyShortcuts({
+      window: this.window
+    });
+
+    shortcuts.on(l10n.getStr("webconsole.find.key"),
+                 (name, event) => {
+                   this.filterBox.focus();
+                   event.preventDefault();
+                 });
+
+    let clearShortcut;
+    if (system.constants.platform === "macosx") {
+      clearShortcut = l10n.getStr("webconsole.clear.keyOSX");
+    } else {
+      clearShortcut = l10n.getStr("webconsole.clear.key");
+    }
+
+    shortcuts.on(clearShortcut, () => this.jsterm.clearOutput(true));
+
+    if (this.isBrowserConsole) {
+      shortcuts.on(l10n.getStr("webconsole.close.key"),
+                   this.window.close.bind(this.window));
+
+      ZoomKeys.register(this.window);
+    }
+  },
   /**
    * Handler for page location changes.
    *

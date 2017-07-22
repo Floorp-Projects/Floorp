@@ -9,7 +9,8 @@ class TransformConfig(object):
     """A container for configuration affecting transforms.  The `config`
     argument to transforms is an instance of this class, possibly with
     additional kind-specific attributes beyond those set here."""
-    def __init__(self, kind, path, config, params):
+    def __init__(self, kind, path, config, params,
+                 kind_dependencies_tasks=None):
         # the name of the current kind
         self.kind = kind
 
@@ -21,6 +22,10 @@ class TransformConfig(object):
 
         # the parameters for this task-graph generation run
         self.params = params
+
+        # a list of all the tasks associated with the kind dependencies of the
+        # current kind
+        self.kind_dependencies_tasks = kind_dependencies_tasks
 
 
 class TransformSequence(object):

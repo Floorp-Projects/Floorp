@@ -136,14 +136,13 @@ function findMessage(hud, text, selector = ".message") {
  *        The selector to use in finding the message.
  */
 function findMessages(hud, text, selector = ".message") {
-  const messages = hud.ui.experimentalOutputNode.querySelectorAll(selector);
+  const messages = hud.ui.outputNode.querySelectorAll(selector);
   const elements = Array.prototype.filter.call(
     messages,
     (el) => el.textContent.includes(text)
   );
   return elements;
 }
-
 /**
  * Simulate a context menu event on the provided element, and wait for the console context
  * menu to open. Returns a promise that resolves the menu popup element.

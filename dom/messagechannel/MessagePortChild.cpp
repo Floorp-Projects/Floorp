@@ -11,6 +11,11 @@
 namespace mozilla {
 namespace dom {
 
+MessagePortChild::MessagePortChild()
+  : mPort(nullptr)
+{
+}
+
 mozilla::ipc::IPCResult
 MessagePortChild::RecvStopSendingDataConfirmed()
 {

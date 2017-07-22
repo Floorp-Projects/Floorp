@@ -13,7 +13,7 @@ pushd ${WORKSPACE}
 # cp -R /root/.android-sdk android-sdk-linux
 # tar cJf android-sdk-linux.tar.xz android-sdk-linux
 
-cp -R /workspace/nexus/storage/central jcentral
+cp -R /workspace/nexus/storage/jcenter jcentral
 tar cJf jcentral.tar.xz jcentral
 
 # The Gradle wrapper will have downloaded and verified the hash of exactly one

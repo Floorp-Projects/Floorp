@@ -10257,6 +10257,9 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   ServoRestyleState& aRestyleState,
   const Maybe<nsStyleContext*>& aContinuationStyleContext)
 {
+  MOZ_ASSERT(!aChildFrame->GetAdditionalStyleContext(0),
+             "We don't handle additional style contexts here");
+
   // Figure out whether we have an actual change.  It's important that we do
   // this, for several reasons:
   //
@@ -10272,6 +10275,14 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
     aNewStyleContext,
     &equalStructs,
     &samePointerStructs);
+
+  // CalcStyleDifference will handle caching structs on the new style context,
+  // but only if we're not on a style worker thread.
+  MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal(),
+             "if we can get in here from style worker threads, then we need "
+             "a ResolveSameStructsAs call to ensure structs are cached on "
+             "aNewStyleContext");
+
   // If aChildFrame is out of flow, then aRestyleState's "changes handled by the
   // parent" doesn't apply to it, because it may have some other parent in the
   // frame tree.
@@ -10296,6 +10307,7 @@ nsIFrame::UpdateStyleOfOwnedChildFrame(
   for (nsIFrame* kid = aChildFrame->GetNextContinuation();
        kid;
        kid = kid->GetNextContinuation()) {
+    MOZ_ASSERT(!kid->GetAdditionalStyleContext(0));
     kid->SetStyleContext(continuationStyle);
   }
 

@@ -28,8 +28,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *        This can be obtained from "shared/fronts/css-properties.js".
  */
 function SwatchFilterTooltip(document, cssIsValid) {
-  let stylesheet = "chrome://devtools/content/shared/widgets/filter-widget.css";
-  SwatchBasedEditorTooltip.call(this, document, stylesheet);
+  SwatchBasedEditorTooltip.call(this, document);
   this._cssIsValid = cssIsValid;
 
   // Creating a filter editor instance.

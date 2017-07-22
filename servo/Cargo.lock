@@ -522,6 +522,7 @@ dependencies = [
  "itertools 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "layout_traits 0.0.1",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "msg 0.0.1",
  "net 0.0.1",
  "net_traits 0.0.1",
@@ -1501,6 +1502,7 @@ dependencies = [
  "layout_traits 0.0.1",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "msg 0.0.1",
  "net_traits 0.0.1",
  "parking_lot 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1527,6 +1529,7 @@ version = "0.0.1"
 dependencies = [
  "gfx 0.0.1",
  "ipc-channel 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "msg 0.0.1",
  "net_traits 0.0.1",
  "profile_traits 0.0.1",
@@ -1692,6 +1695,31 @@ dependencies = [
  "error-chain 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "metrics"
+version = "0.0.1"
+dependencies = [
+ "gfx 0.0.1",
+ "profile_traits 0.0.1",
+ "servo_config 0.0.1",
+ "time 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "metrics_tests"
+version = "0.0.1"
+dependencies = [
+ "euclid 0.15.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gfx 0.0.1",
+ "ipc-channel 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
+ "msg 0.0.1",
+ "net_traits 0.0.1",
+ "profile_traits 0.0.1",
+ "style 0.0.1",
+ "time 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1877,7 +1905,6 @@ dependencies = [
  "hyper 0.10.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper_serde 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "image 0.12.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "immeta 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ipc-channel 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2453,6 +2480,7 @@ dependencies = [
  "lazy_static 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "mime 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "mime_guess 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "msg 0.0.1",
@@ -2512,6 +2540,7 @@ dependencies = [
  "ipc-channel 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "msg 0.0.1",
  "net_traits 0.0.1",
  "profile_traits 0.0.1",
@@ -2543,7 +2572,6 @@ dependencies = [
 name = "script_traits"
 version = "0.0.1"
 dependencies = [
- "app_units 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bluetooth_traits 0.0.1",
  "canvas_traits 0.0.1",
  "cookie 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2556,6 +2584,7 @@ dependencies = [
  "hyper_serde 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ipc-channel 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.23 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics 0.0.1",
  "msg 0.0.1",
  "net_traits 0.0.1",
  "offscreen_gl_context 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2652,6 +2681,7 @@ dependencies = [
  "layout_tests 0.0.1",
  "libservo 0.0.1",
  "log 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "metrics_tests 0.0.1",
  "net_tests 0.0.1",
  "net_traits_tests 0.0.1",
  "plugin_compiletest 0.0.1",

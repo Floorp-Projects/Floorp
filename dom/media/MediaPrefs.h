@@ -208,6 +208,8 @@ private:
   DECL_MEDIA_PREF("media.playback.warnings-as-errors.stagefright-vs-rust",
                                                               MediaWarningsAsErrorsStageFrightVsRust, bool, false);
 
+  // resume background video decoding when the cursor is hovering over the tab.
+  DECL_MEDIA_PREF("media.resume-bkgnd-video-on-tabhover",     ResumeVideoDecodingOnTabHover, bool, false);
 public:
   // Manage the singleton:
   static MediaPrefs& GetSingleton();
