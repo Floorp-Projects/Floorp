@@ -305,12 +305,6 @@ nsICODecoder::ReadPNG(const char* aData, uint32_t aLen)
     return Transition::TerminateFailure();
   }
 
-  // Raymond Chen says that 32bpp only are valid PNG ICOs
-  // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
-  if (!static_cast<nsPNGDecoder*>(mContainedDecoder.get())->IsValidICO()) {
-    return Transition::TerminateFailure();
-  }
-
   return Transition::ContinueUnbuffered(ICOState::READ_PNG);
 }
 
@@ -537,6 +531,12 @@ nsICODecoder::FinishResource()
   // entry. If not, we consider the image corrupt.
   if (mContainedDecoder->HasSize() &&
       mContainedDecoder->Size() != GetRealSize()) {
+    return Transition::TerminateFailure();
+  }
+
+  // Raymond Chen says that 32bpp only are valid PNG ICOs
+  // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
+  if (!mContainedDecoder->IsValidICOResource()) {
     return Transition::TerminateFailure();
   }
 

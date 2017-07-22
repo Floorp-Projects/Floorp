@@ -125,6 +125,9 @@ class nsBMPDecoder : public Decoder
 public:
   ~nsBMPDecoder();
 
+  /// @return true if this BMP is a valid ICO resource.
+  bool IsValidICOResource() const override { return true; }
+
   /// Obtains the internal output image buffer.
   uint32_t* GetImageData() { return reinterpret_cast<uint32_t*>(mImageData); }
 

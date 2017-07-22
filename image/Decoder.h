@@ -293,6 +293,12 @@ public:
   /// Are we in the middle of a frame right now? Used for assertions only.
   bool InFrame() const { return mInFrame; }
 
+  /// Is the image valid if embedded inside an ICO.
+  virtual bool IsValidICOResource() const
+  {
+    return false;
+  }
+
   enum DecodeStyle {
       PROGRESSIVE, // produce intermediate frames representing the partial
                    // state of the image
