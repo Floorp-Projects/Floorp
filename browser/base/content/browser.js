@@ -120,6 +120,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "ctrlTab",
                                   "chrome://browser/content/browser-ctrlTab.js");
 XPCOMUtils.defineLazyScriptGetter(this, "CustomizationHandler",
                                   "chrome://browser/content/browser-customization.js");
+XPCOMUtils.defineLazyScriptGetter(this, ["PointerLock", "FullScreen"],
+                                  "chrome://browser/content/browser-fullScreenAndPointerLock.js");
 
 
 // lazy service getters
