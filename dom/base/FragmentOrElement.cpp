@@ -658,6 +658,19 @@ nsNodeSupportsWeakRefTearoff::GetWeakReference(nsIWeakReference** aInstancePtr)
 }
 
 //----------------------------------------------------------------------
+
+static const size_t MaxDOMSlotSizeAllowed =
+#ifdef HAVE_64BIT_BUILD
+128;
+#else
+64;
+#endif
+
+static_assert(sizeof(nsINode::nsSlots) <= MaxDOMSlotSizeAllowed,
+              "DOM slots cannot be grown without consideration");
+static_assert(sizeof(FragmentOrElement::nsDOMSlots) <= MaxDOMSlotSizeAllowed,
+              "DOM slots cannot be grown without consideration");
+
 FragmentOrElement::nsDOMSlots::nsDOMSlots()
   : nsINode::nsSlots(),
     mDataset(nullptr)
