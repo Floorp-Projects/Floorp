@@ -343,20 +343,6 @@ VRManager::GetDisplay(const uint32_t& aDisplayID)
   return nullptr;
 }
 
-void
-VRManager::SubmitFrame(VRLayerParent* aLayer, layers::PTextureParent* aTexture,
-                       uint64_t aFrameId,
-                       const gfx::Rect& aLeftEyeRect,
-                       const gfx::Rect& aRightEyeRect)
-{
-  TextureHost* th = TextureHost::AsTextureHost(aTexture);
-  mLastFrame = th;
-  RefPtr<VRDisplayHost> display = GetDisplay(aLayer->GetDisplayID());
-  if (display) {
-    display->SubmitFrame(aLayer, aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
-  }
-}
-
 RefPtr<gfx::VRControllerHost>
 VRManager::GetController(const uint32_t& aControllerID)
 {

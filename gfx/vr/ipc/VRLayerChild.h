@@ -47,8 +47,6 @@ private:
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<dom::HTMLCanvasElement> mCanvasElement;
-  RefPtr<layers::SharedSurfaceTextureClient> mShSurfClient;
-  RefPtr<layers::TextureClient> mFront;
   bool mIPCOpen;
 
   // AddIPDLReference and ReleaseIPDLReference are only to be called by CreateIPDLActor
@@ -60,6 +58,11 @@ private:
 
   gfx::Rect mLeftEyeRect;
   gfx::Rect mRightEyeRect;
+
+  RefPtr<layers::SharedSurfaceTextureClient> mThisFrameTexture;
+  RefPtr<layers::SharedSurfaceTextureClient> mLastFrameTexture;
+
+  uint64_t mLastSubmittedFrameId;
 };
 
 } // namespace gfx
