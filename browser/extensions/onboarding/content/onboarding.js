@@ -683,8 +683,6 @@ class Onboarding {
     // Show the target tour notification
     this._notificationBar = this._renderNotificationBar();
     this._notificationBar.addEventListener("click", this);
-    this._window.document.body.appendChild(this._notificationBar);
-
     this._notificationBar.dataset.targetTourId = targetTour.id;
     let notificationStrings = targetTour.getNotificationStrings(this._bundle);
     let actionBtn = this._notificationBar.querySelector("#onboarding-notification-action-btn");
@@ -694,6 +692,7 @@ class Onboarding {
     let tourMessage = this._notificationBar.querySelector("#onboarding-notification-tour-message");
     tourMessage.textContent = notificationStrings.message;
     this._notificationBar.classList.add("onboarding-opened");
+    this._window.document.body.appendChild(this._notificationBar);
 
     let params = [];
     if (startQueueLength != queue.length) {
@@ -889,6 +888,12 @@ if (Services.prefs.getBoolPref("browser.onboarding.enabled", false) &&
     let window = evt.target.defaultView;
     let location = window.location.href;
     if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
+      // We just want to run tests as quick as possible
+      // so in the automation test, we don't do `requestIdleCallback`.
+      if (Cu.isInAutomation) {
+        new Onboarding(window);
+        return;
+      }
       window.requestIdleCallback(() => {
         new Onboarding(window);
       });
