@@ -24,6 +24,5 @@
 
 void nothing()
 {
-  return;
 }
 

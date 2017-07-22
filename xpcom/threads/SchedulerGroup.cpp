@@ -125,8 +125,6 @@ AutoCollectVsyncTelemetry::CollectTelemetry()
   }
 
   Telemetry::Accumulate(Telemetry::CONTENT_JS_KNOWN_TICK_DELAY_MS, duration);
-
-  return;
 }
 
 } // namespace

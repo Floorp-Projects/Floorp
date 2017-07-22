@@ -192,8 +192,6 @@ TimeStamp::Startup()
        sResolutionSigDigs *= 10);
 
   gInitialized = true;
-
-  return;
 }
 
 void

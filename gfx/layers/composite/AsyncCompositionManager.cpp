@@ -572,8 +572,6 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
           aPreviousTransformForRoot, newTransform, aFixedLayerMargins, aClipPartsCache);
     }
   }
-
-  return;
 }
 
 static void

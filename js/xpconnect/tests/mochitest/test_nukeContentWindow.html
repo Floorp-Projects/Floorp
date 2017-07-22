@@ -34,7 +34,7 @@ function waitForWindowDestroyed(winID, callback) {
 
 add_task(async function() {
   let frame = $('subframe');
-  frame.src = "data:text/html,";
+  frame.srcdoc = "foo";
   await new Promise(resolve => frame.addEventListener("load", resolve, {once: true}));
 
   let win = frame.contentWindow;

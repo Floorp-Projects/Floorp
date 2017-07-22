@@ -75,7 +75,6 @@ EnsureSurfaceStored(DrawEventRecorderPrivate *aRecorder, SourceSurface *aSurface
   userData->recorder = aRecorder;
   aSurface->AddUserData(reinterpret_cast<UserDataKey*>(aRecorder),
                         userData, &WrapAndRecordSourceSurfaceUserDataFunc);
-  return;
 }
 
 class SourceSurfaceWrapAndRecord : public SourceSurface

@@ -32,6 +32,8 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
 
         # Set browser to restore previous session
         self.marionette.set_pref('browser.startup.page', 3)
+        # Disable rcwn to make cache behavior deterministic
+        self.marionette.set_pref('network.http.rcwn.enable', False)
 
         self.locationbar = self.browser.navbar.locationbar
         self.identity_popup = self.locationbar.identity_popup
@@ -43,6 +45,7 @@ class TestSSLStatusAfterRestart(PuppeteerMixin, MarionetteTestCase):
             self.browser.switch_to()
             self.identity_popup.close(force=True)
             self.marionette.clear_pref('browser.startup.page')
+            self.marionette.clear_pref('network.http.rcwn.enable')
         finally:
             super(TestSSLStatusAfterRestart, self).tearDown()
 

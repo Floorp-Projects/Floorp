@@ -65,7 +65,6 @@ void ShouldAbort()
 
     fputs("TEST-FAIL | TestSTLWrappers.cpp | didn't abort()?\n",
           stderr);
-    return;
 }
 
 #ifdef XP_WIN

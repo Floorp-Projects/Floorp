@@ -58,14 +58,12 @@ void
 MediaEngineDefaultVideoSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(u"Default Video Device");
-  return;
 }
 
 void
 MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
-  return;
 }
 
 uint32_t
@@ -382,14 +380,12 @@ void
 MediaEngineDefaultAudioSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(u"Default Audio Device");
-  return;
 }
 
 void
 MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
-  return;
 }
 
 uint32_t
@@ -533,8 +529,6 @@ MediaEngineDefault::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
   RefPtr<MediaEngineVideoSource> newSource = new MediaEngineDefaultVideoSource();
   mVSources.AppendElement(newSource);
   aVSources->AppendElement(newSource);
-
-  return;
 }
 
 void
@@ -559,7 +553,6 @@ MediaEngineDefault::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
     mASources.AppendElement(newSource);
     aASources->AppendElement(newSource);
   }
-  return;
 }
 
 } // namespace mozilla

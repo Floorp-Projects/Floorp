@@ -213,7 +213,6 @@ GetUnitString(nsAString& unit, uint16_t unitType)
     return;
   }
   NS_NOTREACHED("Unknown unit type"); // Someone's using an SVGLength with an invalid unit?
-  return;
 }
 
 static uint16_t

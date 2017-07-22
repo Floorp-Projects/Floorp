@@ -168,6 +168,10 @@ def create_parser(mach_interface=False):
     add_arg('--no-upload-results', action="store_true",
             dest='no_upload_results',
             help="If given, it disables uploading of talos results.")
+    add_arg('--stylo', action="store_true",
+            dest='stylo',
+            help='If given, enable Stylo via Environment variables and '
+                 'upload results with Stylo options.')
 
     add_logging_group(parser)
     return parser
