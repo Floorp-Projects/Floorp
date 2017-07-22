@@ -17,8 +17,7 @@ using namespace js::jit;
 BytecodeAnalysis::BytecodeAnalysis(TempAllocator& alloc, JSScript* script)
   : script_(script),
     infos_(alloc),
-    usesEnvironmentChain_(false),
-    hasTryFinally_(false)
+    usesEnvironmentChain_(false)
 {
 }
 
@@ -177,10 +176,6 @@ BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
           case JSOP_STRICTSETGNAME:
             if (script_->hasNonSyntacticScope())
                 usesEnvironmentChain_ = true;
-            break;
-
-          case JSOP_FINALLY:
-            hasTryFinally_ = true;
             break;
 
           default:
