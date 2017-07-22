@@ -758,10 +758,6 @@ a.learn-more-link.webconsole-learn-more-link {
   flex: 1 1 100%;
 }
 
-.webconsole-output-wrapper .message {
-  width: 100vw;
-}
-
 .webconsole-output-wrapper .message-flex-body > .message-body {
   display: flex;
   flex-wrap: wrap;
