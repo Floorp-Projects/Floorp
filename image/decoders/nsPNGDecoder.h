@@ -23,7 +23,7 @@ public:
   virtual ~nsPNGDecoder();
 
   /// @return true if this PNG is a valid ICO resource.
-  bool IsValidICOResource() const override;
+  bool IsValidICO() const;
 
 protected:
   nsresult InitInternal() override;

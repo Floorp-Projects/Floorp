@@ -1090,7 +1090,7 @@ nsPNGDecoder::SpeedHistogram() const
 }
 
 bool
-nsPNGDecoder::IsValidICOResource() const
+nsPNGDecoder::IsValidICO() const
 {
   // Only 32-bit RGBA PNGs are valid ICO resources; see here:
   //   http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
