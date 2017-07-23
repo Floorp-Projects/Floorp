@@ -545,6 +545,14 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     // of the color bitfields (see below).
   }
 
+  // The height for BMPs embedded inside an ICO includes spaces for the AND
+  // mask even if it is not present, thus we need to adjust for that here.
+  if (mIsWithinICO) {
+    // XXX(seth): Should we really be writing the absolute value from
+    // the BIH below? Seems like this could be problematic for inverted BMPs.
+    mH.mHeight = abs(mH.mHeight) / 2;
+  }
+
   // Run with MOZ_LOG=BMPDecoder:5 set to see this output.
   MOZ_LOG(sBMPLog, LogLevel::Debug,
           ("BMP: bihsize=%u, %d x %d, bpp=%u, compression=%u, colors=%u\n",
@@ -650,6 +658,9 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
 
   // Post our size to the superclass.
   PostSize(mH.mWidth, AbsoluteHeight());
+  if (HasError()) {
+    return Transition::TerminateFailure();
+  }
 
   // We've now read all the headers. If we're doing a metadata decode, we're
   // done.

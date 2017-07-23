@@ -2,19 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-                                  "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
                                   "resource:///modules/ScrollbarSampler.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
-                                  "resource://gre/modules/ShortcutUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
                                   "resource://gre/modules/AppMenuNotifications.jsm");
-
-XPCOMUtils.defineLazyPreferenceGetter(this, "gPhotonStructure",
-  "browser.photon.structure.enabled", false);
 
 /**
  * Maintains the state and dispatches events for the main menu panel.

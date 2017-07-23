@@ -23,9 +23,6 @@
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript" src="chrome://browser/content/browser-places.js"/>
-  <script type="application/javascript" src="chrome://browser/content/browser-social.js"/>
-  <script type="application/javascript" src="chrome://browser/content/browser-sync.js"/>
-  <script type="application/javascript" src="chrome://browser/content/nsContextMenu.js"/>
   <script type="application/javascript" src="chrome://browser/content/web-panels.js"/>
 
   <stringbundleset id="stringbundleset"> 

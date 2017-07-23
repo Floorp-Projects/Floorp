@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file is loaded into the browser window scope.
+/* eslint-env mozilla/browser-window */
+
 /**
  * Customization handler prepares this browser window for entering and exiting
  * customization mode by handling customizationstarting and customizationending

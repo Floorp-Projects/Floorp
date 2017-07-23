@@ -286,8 +286,8 @@ MIRGraph::unmarkBlocks()
 }
 
 MBasicBlock*
-MBasicBlock::New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo& info,
-                 MBasicBlock* pred, BytecodeSite* site, Kind kind)
+MBasicBlock::New(MIRGraph& graph, size_t stackDepth, const CompileInfo& info,
+                 MBasicBlock* maybePred, BytecodeSite* site, Kind kind)
 {
     MOZ_ASSERT(site->pc() != nullptr);
 
@@ -295,7 +295,7 @@ MBasicBlock::New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo&
     if (!block->init())
         return nullptr;
 
-    if (!block->inherit(graph.alloc(), analysis, pred, 0))
+    if (!block->inherit(graph.alloc(), stackDepth, maybePred, 0))
         return nullptr;
 
     return block;
@@ -309,7 +309,7 @@ MBasicBlock::NewPopN(MIRGraph& graph, const CompileInfo& info,
     if (!block->init())
         return nullptr;
 
-    if (!block->inherit(graph.alloc(), nullptr, pred, popped))
+    if (!block->inherit(graph.alloc(), pred->stackDepth(), pred, popped))
         return nullptr;
 
     return block;
@@ -348,7 +348,7 @@ MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
     if (!block->init())
         return nullptr;
 
-    if (!block->inherit(graph.alloc(), nullptr, pred, 0, stackPhiCount))
+    if (!block->inherit(graph.alloc(), pred->stackDepth(), pred, 0, stackPhiCount))
         return nullptr;
 
     return block;
@@ -546,35 +546,31 @@ MBasicBlock::copySlots(MBasicBlock* from)
 }
 
 bool
-MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlock* pred,
+MBasicBlock::inherit(TempAllocator& alloc, size_t stackDepth, MBasicBlock* maybePred,
                      uint32_t popped, unsigned stackPhiCount)
 {
-    if (pred) {
-        stackPosition_ = pred->stackPosition_;
-        MOZ_ASSERT(stackPosition_ >= popped);
-        stackPosition_ -= popped;
-        if (kind_ != PENDING_LOOP_HEADER)
-            copySlots(pred);
-    } else {
-        uint32_t stackDepth = analysis->info(pc()).stackDepth;
-        stackPosition_ = info().firstStackSlot() + stackDepth;
-        MOZ_ASSERT(stackPosition_ >= popped);
-        stackPosition_ -= popped;
-    }
+    MOZ_ASSERT_IF(maybePred, maybePred->stackDepth() == stackDepth);
+
+    MOZ_ASSERT(stackDepth >= popped);
+    stackDepth -= popped;
+    stackPosition_ = stackDepth;
+
+    if (maybePred && kind_ != PENDING_LOOP_HEADER)
+        copySlots(maybePred);
 
     MOZ_ASSERT(info_.nslots() >= stackPosition_);
     MOZ_ASSERT(!entryResumePoint_);
 
     // Propagate the caller resume point from the inherited block.
-    callerResumePoint_ = pred ? pred->callerResumePoint() : nullptr;
+    callerResumePoint_ = maybePred ? maybePred->callerResumePoint() : nullptr;
 
     // Create a resume point using our initial stack state.
     entryResumePoint_ = new(alloc) MResumePoint(this, pc(), MResumePoint::ResumeAt);
     if (!entryResumePoint_->init(alloc))
         return false;
 
-    if (pred) {
-        if (!predecessors_.append(pred))
+    if (maybePred) {
+        if (!predecessors_.append(maybePred))
             return false;
 
         if (kind_ == PENDING_LOOP_HEADER) {
@@ -583,35 +579,35 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
                 MPhi* phi = MPhi::New(alloc.fallible());
                 if (!phi)
                     return false;
-                phi->addInlineInput(pred->getSlot(i));
+                phi->addInlineInput(maybePred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
             }
 
-            MOZ_ASSERT(stackPhiCount <= stackDepth());
-            MOZ_ASSERT(info().firstStackSlot() <= stackDepth() - stackPhiCount);
+            MOZ_ASSERT(stackPhiCount <= stackDepth);
+            MOZ_ASSERT(info().firstStackSlot() <= stackDepth - stackPhiCount);
 
             // Avoid creating new phis for stack values that aren't part of the
             // loop.  Note that for loop headers that can OSR, all values on the
             // stack are part of the loop.
-            for (; i < stackDepth() - stackPhiCount; i++) {
-                MDefinition* val = pred->getSlot(i);
+            for (; i < stackDepth - stackPhiCount; i++) {
+                MDefinition* val = maybePred->getSlot(i);
                 setSlot(i, val);
                 entryResumePoint()->initOperand(i, val);
             }
 
-            for (; i < stackDepth(); i++) {
+            for (; i < stackDepth; i++) {
                 MPhi* phi = MPhi::New(alloc.fallible());
                 if (!phi)
                     return false;
-                phi->addInlineInput(pred->getSlot(i));
+                phi->addInlineInput(maybePred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
                 entryResumePoint()->initOperand(i, phi);
             }
         } else {
-            for (size_t i = 0; i < stackDepth(); i++)
+            for (size_t i = 0; i < stackDepth; i++)
                 entryResumePoint()->initOperand(i, getSlot(i));
         }
     } else {
@@ -619,7 +615,7 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
          * Don't leave the operands uninitialized for the caller, as it may not
          * initialize them later on.
          */
-        for (size_t i = 0; i < stackDepth(); i++)
+        for (size_t i = 0; i < stackDepth; i++)
             entryResumePoint()->clearOperand(i);
     }
 

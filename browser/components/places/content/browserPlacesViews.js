@@ -4,10 +4,6 @@
 
 /* eslint-env mozilla/browser-window */
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-
 /**
  * The base view implements everything that's common to the toolbar and
  * menu views.

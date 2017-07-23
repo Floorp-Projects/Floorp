@@ -281,9 +281,14 @@ BaselineInspector::monomorphicStub(jsbytecode* pc)
     if (!hasBaselineScript())
         return nullptr;
 
-    const ICEntry& entry = icEntryFromPC(pc);
+    // IonBuilder::analyzeNewLoopTypes may call this (via expectedResultType
+    // below) on code that's unreachable, according to BytecodeAnalysis. Use
+    // maybeICEntryFromPC to handle this.
+    const ICEntry* entry = maybeICEntryFromPC(pc);
+    if (!entry)
+        return nullptr;
 
-    ICStub* stub = entry.firstStub();
+    ICStub* stub = entry->firstStub();
     ICStub* next = stub->next();
 
     if (!next || !next->isFallback())
@@ -316,7 +321,9 @@ MIRType
 BaselineInspector::expectedResultType(jsbytecode* pc)
 {
     // Look at the IC entries for this op to guess what type it will produce,
-    // returning MIRType::None otherwise.
+    // returning MIRType::None otherwise. Note that IonBuilder may call this
+    // for bytecode ops that are unreachable and don't have a Baseline IC, see
+    // comment in monomorphicStub.
 
     ICStub* stub = monomorphicStub(pc);
     if (!stub)
