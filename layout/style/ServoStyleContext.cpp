@@ -32,42 +32,4 @@ ServoStyleContext::ServoStyleContext(
   // producing the ServoComputedData.
 }
 
-void
-ServoStyleContext::UpdateWithElementState(Element* aElementForAnimation)
-{
-  bool isLink = false;
-  bool isVisitedLink = false;
-  // If we need visited styles for callers where `aElementForAnimation` is null,
-  // we can precompute these and pass them as flags, similar to nsStyleSet.cpp.
-  if (aElementForAnimation) {
-    isLink = nsCSSRuleProcessor::IsLink(aElementForAnimation);
-    isVisitedLink = nsCSSRuleProcessor::GetContentState(aElementForAnimation)
-                                       .HasState(NS_EVENT_STATE_VISITED);
-  }
-
-
-  auto parent = GetParentAllowServo();
-
-  // The true visited state of the relevant link is used to decided whether
-  // visited styles should be consulted for all visited dependent properties.
-  bool relevantLinkVisited = isLink ? isVisitedLink :
-    (parent && parent->RelevantLinkVisited());
-
-  if (relevantLinkVisited && GetStyleIfVisited()) {
-    AddStyleBit(NS_STYLE_RELEVANT_LINK_VISITED);
-  }
-
-  // Set the body color on the pres context. See nsStyleSet::GetContext
-  if (aElementForAnimation &&
-      aElementForAnimation->IsHTMLElement(nsGkAtoms::body) &&
-      GetPseudoType() == CSSPseudoElementType::NotPseudo &&
-      mPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
-    nsIDocument* doc = aElementForAnimation->GetUncomposedDoc();
-    if (doc && doc->GetBodyElement() == aElementForAnimation) {
-      // Update the prescontext's body color
-      mPresContext->SetBodyTextColor(StyleColor()->mColor);
-    }
-  }
-}
-
 } // namespace mozilla
