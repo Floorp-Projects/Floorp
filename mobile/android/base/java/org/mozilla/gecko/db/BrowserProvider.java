@@ -2245,6 +2245,9 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         values.putNull(Bookmarks.TAGS);
         values.putNull(Bookmarks.FAVICON_ID);
 
+        // Bump the lastModified timestamp for sync to know to update bookmark records.
+        values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
+
         // Leave space for variables in values.
         final int maxVariableNumber = DBUtils.SQLITE_MAX_VARIABLE_NUMBER - values.size();
 
