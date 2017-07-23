@@ -77,11 +77,12 @@ public:
     COMPLETE  // The iterator is pointing to the end of the buffer.
   };
 
-  explicit SourceBufferIterator(SourceBuffer* aOwner)
+  explicit SourceBufferIterator(SourceBuffer* aOwner, size_t aReadLimit)
     : mOwner(aOwner)
     , mState(START)
     , mChunkCount(0)
     , mByteCount(0)
+    , mRemainderToRead(aReadLimit)
   {
     MOZ_ASSERT(aOwner);
     mData.mIterating.mChunk = 0;
@@ -97,6 +98,7 @@ public:
     , mData(aOther.mData)
     , mChunkCount(aOther.mChunkCount)
     , mByteCount(aOther.mByteCount)
+    , mRemainderToRead(aOther.mRemainderToRead)
   { }
 
   ~SourceBufferIterator();
@@ -179,6 +181,19 @@ public:
   /// @return a count of the bytes in all chunks we've advanced through.
   size_t ByteCount() const { return mByteCount; }
 
+  /// @return the source buffer which owns the iterator.
+  SourceBuffer* Owner() const
+  {
+    MOZ_ASSERT(mOwner);
+    return mOwner;
+  }
+
+  /// @return the current offset from the beginning of the buffer.
+  size_t Position() const
+  {
+    return mByteCount - mData.mIterating.mAvailableLength;
+  }
+
 private:
   friend class SourceBuffer;
 
@@ -207,6 +222,11 @@ private:
   {
     MOZ_ASSERT(mState != COMPLETE);
     mState = READY;
+
+    // Prevent the iterator from reporting more data than it is allowed to read.
+    if (aAvailableLength > mRemainderToRead) {
+      aAvailableLength = mRemainderToRead;
+    }
 
     // Update state.
     mData.mIterating.mChunk = aChunk;
@@ -246,19 +266,27 @@ private:
    */
   union {
     struct {
-      uint32_t mChunk;
-      const char* mData;
-      size_t mOffset;
-      size_t mAvailableLength;
-      size_t mNextReadLength;
-    } mIterating;
+      uint32_t mChunk;   // Index of the chunk in SourceBuffer.
+      const char* mData; // Pointer to the start of the chunk.
+      size_t mOffset;    // Current read position of the iterator relative to
+                         // mData.
+      size_t mAvailableLength; // How many bytes remain unread in the chunk,
+                               // relative to mOffset.
+      size_t mNextReadLength; // How many bytes the last iterator advance
+                              // requested to be read, so that we know much
+                              // to increase mOffset and reduce mAvailableLength
+                              // by when the next advance is requested.
+    } mIterating;        // Cached info of the chunk currently iterating over.
     struct {
-      nsresult mStatus;
-    } mAtEnd;
+      nsresult mStatus;  // Status code indicating if we read all the data.
+    } mAtEnd;            // State info after iterator is complete.
   } mData;
 
-  uint32_t mChunkCount;  // Count of chunks we've advanced through.
-  size_t mByteCount;     // Count of bytes in all chunks we've advanced through.
+  uint32_t mChunkCount;  // Count of chunks observed, including current chunk.
+  size_t mByteCount;     // Count of readable bytes observed, including unread
+                         // bytes from the current chunk.
+  size_t mRemainderToRead; // Count of bytes left to read if there is a maximum
+                           // imposed by the caller. SIZE_MAX if unlimited.
 };
 
 /**
@@ -319,8 +347,11 @@ public:
   // Consumer methods.
   //////////////////////////////////////////////////////////////////////////////
 
-  /// Returns an iterator to this SourceBuffer.
-  SourceBufferIterator Iterator();
+  /**
+   * Returns an iterator to this SourceBuffer, which cannot read more than the
+   * given length.
+   */
+  SourceBufferIterator Iterator(size_t aReadLength = SIZE_MAX);
 
 
   //////////////////////////////////////////////////////////////////////////////

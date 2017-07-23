@@ -90,7 +90,7 @@ nsSessionRestoreTalosTest.prototype = {
     // onReady might fire before the browser window has finished initializing
     // or sometimes soon after. We handle both cases here.
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win || !win.gBrowser) {
+    if (!win || !win.gBrowserInit || !win.gBrowserInit.delayedStartupFinished) {
       // We didn't have a window around yet, so we'll wait until one becomes
       // available before opening the result tab.
       Services.obs.addObserver(this, WINDOW_READY_TOPIC);

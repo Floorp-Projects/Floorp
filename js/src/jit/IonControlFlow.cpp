@@ -22,15 +22,9 @@ ControlFlowGenerator::ControlFlowGenerator(TempAllocator& temp, JSScript* script
     loops_(temp),
     switches_(temp),
     labels_(temp),
-    analysis_(temp, script),
-    aborted_(false)
+    aborted_(false),
+    checkedTryFinally_(false)
 { }
-
-bool
-ControlFlowGenerator::init()
-{
-    return analysis_.init(alloc(), gsn);
-}
 
 static inline int32_t
 GetJumpOffset(jsbytecode* pc)
@@ -539,8 +533,15 @@ ControlFlowGenerator::processTry()
     MOZ_ASSERT(JSOp(*pc) == JSOP_TRY);
 
     // Try-finally is not yet supported.
-    if (analysis_.hasTryFinally())
-        return ControlStatus::Abort;
+    if (!checkedTryFinally_) {
+        JSTryNote* tn = script->trynotes()->vector;
+        JSTryNote* tnlimit = tn + script->trynotes()->length;
+        for (; tn < tnlimit; tn++) {
+            if (tn->kind == JSTRY_FINALLY)
+                return ControlStatus::Abort;
+        }
+        checkedTryFinally_ = true;
+    }
 
     jssrcnote* sn = GetSrcNote(gsn, script, pc);
     MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
@@ -566,21 +567,11 @@ ControlFlowGenerator::processTry()
     //
     // To handle this, we create two blocks: one for the try block and one
     // for the code following the try-catch statement.
-    //
-    // If the code after the try block is unreachable (control flow in both the
-    // try and catch blocks is terminated), only create the try block, to avoid
-    // parsing unreachable code.
 
     CFGBlock* tryBlock = CFGBlock::New(alloc(), GetNextPc(pc));
 
-    CFGBlock* successor;
-    if (analysis_.maybeInfo(afterTry)) {
-        successor = CFGBlock::New(alloc(), afterTry);
-        current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc, successor));
-    } else {
-        successor = nullptr;
-        current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc));
-    }
+    CFGBlock* successor = CFGBlock::New(alloc(), afterTry);
+    current->setStopIns(CFGTry::New(alloc(), tryBlock, endpc, successor));
     current->setStopPc(pc);
 
     if (!cfgStack_.append(CFGState::Try(endpc, successor)))
@@ -599,11 +590,7 @@ ControlFlowGenerator::ControlStatus
 ControlFlowGenerator::processTryEnd(CFGState& state)
 {
     MOZ_ASSERT(state.state == CFGState::TRY);
-
-    if (!state.try_.successor) {
-        MOZ_ASSERT(!current);
-        return ControlStatus::Ended;
-    }
+    MOZ_ASSERT(state.try_.successor);
 
     if (current) {
         current->setStopIns(CFGGoto::New(alloc(), state.try_.successor));

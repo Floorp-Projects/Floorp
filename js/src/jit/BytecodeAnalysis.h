@@ -40,7 +40,6 @@ class BytecodeAnalysis
 
     bool usesEnvironmentChain_;
     bool hasTryFinally_;
-    bool hasSetArg_;
 
   public:
     explicit BytecodeAnalysis(TempAllocator& alloc, JSScript* script);
@@ -64,10 +63,6 @@ class BytecodeAnalysis
 
     bool hasTryFinally() const {
         return hasTryFinally_;
-    }
-
-    bool hasSetArg() const {
-        return hasSetArg_;
     }
 };
 
