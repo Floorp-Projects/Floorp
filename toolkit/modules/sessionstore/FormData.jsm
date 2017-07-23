@@ -76,6 +76,22 @@ function isValidCCNumber(value) {
   return total % 10 == 0;
 }
 
+// For a comprehensive list of all available <INPUT> types see
+// https://dxr.mozilla.org/mozilla-central/search?q=kInputTypeTable&redirect=false
+const IGNORE_ATTRIBUTES = [
+  ["type", new Set(["password", "hidden", "button", "image", "submit", "reset"])],
+  ["autocomplete", new Set(["off"])]
+];
+function shouldIgnoreNode(node) {
+  for (let i = 0; i < IGNORE_ATTRIBUTES.length; ++i) {
+    let [attrName, attrValues] = IGNORE_ATTRIBUTES[i];
+    if (node.hasAttribute(attrName) && attrValues.has(node.getAttribute(attrName).toLowerCase())) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * The public API exported by this module that allows to collect
  * and restore form data for a document and its subframes.
@@ -118,27 +134,11 @@ var FormDataInternal = {
    * @returns an XPath query to all savable form field nodes
    */
   get restorableFormNodesXPath() {
-    // for a comprehensive list of all available <INPUT> types see
-    // https://dxr.mozilla.org/mozilla-central/search?q=kInputTypeTable&redirect=false
-    let ignoreInputs = new Map([
-      ["type", ["password", "hidden", "button", "image", "submit", "reset"]],
-      ["autocomplete", ["off"]]
-    ]);
-    // XXXzeniko work-around until lower-case has been implemented (bug 398389)
-    let toLowerCase = '"ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"';
-    let ignores = [];
-    for (let [attrName, attrValues] of ignoreInputs) {
-      for (let attrValue of attrValues)
-        ignores.push(`translate(@${attrName}, ${toLowerCase})='${attrValue}'`);
-    }
-    let ignore = `not(${ignores.join(" or ")})`;
-
-    let formNodesXPath = `//textarea[${ignore}]|//xhtml:textarea[${ignore}]|` +
-      `//select[${ignore}]|//xhtml:select[${ignore}]|` +
-      `//input[${ignore}]|//xhtml:input[${ignore}]`;
-
-    // Special case for about:config's search field.
-    formNodesXPath += '|/xul:window[@id="config"]//xul:textbox[@id="textbox"]';
+    let formNodesXPath = "//textarea|//xhtml:textarea|" +
+      "//select|//xhtml:select|" +
+      "//input|//xhtml:input" +
+      // Special case for about:config's search field.
+      "|/xul:window[@id='config']//xul:textbox[@id='textbox']";
 
     delete this.restorableFormNodesXPath;
     return (this.restorableFormNodesXPath = formNodesXPath);
@@ -184,6 +184,9 @@ var FormDataInternal = {
     let generatedCount = 0;
 
     while ((node = formNodes.iterateNext())) {
+      if (shouldIgnoreNode(node)) {
+        continue;
+      }
       let hasDefaultValue = true;
       let value;
 
