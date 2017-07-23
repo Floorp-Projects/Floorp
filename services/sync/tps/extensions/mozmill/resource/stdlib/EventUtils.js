@@ -482,7 +482,7 @@ function isKeypressFiredKey(aDOMKeyCode)
     if (aDOMKeyCode.indexOf("VK_") == 0) {
       aDOMKeyCode = KeyEvent["DOM_" + aDOMKeyCode];
       if (!aDOMKeyCode) {
-        throw "Unknown key: " + aDOMKeyCode;
+        throw new Error(`Unknown key: ${aDOMKeyCode}`);
       }
     } else {
       // If the key generates a character, it must cause a keypress event.
@@ -529,7 +529,7 @@ function synthesizeKey(aKey, aEvent, aWindow)
     if (aKey.indexOf("VK_") == 0) {
       keyCode = KeyEvent["DOM_" + aKey];
       if (!keyCode) {
-        throw "Unknown key: " + aKey;
+        throw new Error(`Unknown key: ${aKey}`);
       }
     } else {
       charCode = aKey.charCodeAt(0);

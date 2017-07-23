@@ -51,7 +51,7 @@ function goQuitApplication() {
   try {
     appService.quit(forceQuit);
   } catch (ex) {
-    throw new Error("goQuitApplication: " + ex);
+    throw new Error(`goQuitApplication: ${ex.message}`);
   }
 
   return true;

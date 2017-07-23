@@ -281,7 +281,7 @@ RESTRequest.prototype = {
    */
   abort: function abort() {
     if (this.status != this.SENT && this.status != this.IN_PROGRESS) {
-      throw "Can only abort a request that has been sent.";
+      throw new Error("Can only abort a request that has been sent.");
     }
 
     this.status = this.ABORTED;
@@ -297,7 +297,7 @@ RESTRequest.prototype = {
 
   dispatch: function dispatch(method, data, onComplete, onProgress) {
     if (this.status != this.NOT_SENT) {
-      throw "Request has already been sent!";
+      throw new Error("Request has already been sent!");
     }
 
     this.method = method;

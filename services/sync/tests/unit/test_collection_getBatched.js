@@ -39,7 +39,7 @@ function get_test_collection_info({ totalRecords, batchSize, lastModified,
       headers: Object.assign({}, this.headers)
     });
     if (--throwAfter === 0) {
-      throw "Some Network Error";
+      throw new Error("Some Network Error");
     }
     let body = recordRange(limit, offset, totalRecords);
     let response = {

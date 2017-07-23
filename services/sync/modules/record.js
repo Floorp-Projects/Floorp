@@ -120,7 +120,7 @@ CryptoWrapper.prototype = {
   ciphertextHMAC: function ciphertextHMAC(keyBundle) {
     let hasher = keyBundle.sha256HMACHasher;
     if (!hasher) {
-      throw "Cannot compute HMAC without an HMAC key.";
+      throw new Error("Cannot compute HMAC without an HMAC key.");
     }
 
     return Utils.bytesAsHex(Utils.digestUTF8(this.ciphertext, hasher));
@@ -150,7 +150,7 @@ CryptoWrapper.prototype = {
   // Optional key bundle.
   decrypt: function decrypt(keyBundle) {
     if (!this.ciphertext) {
-      throw "No ciphertext: nothing to decrypt?";
+      throw new Error("No ciphertext: nothing to decrypt?");
     }
 
     if (!keyBundle) {
@@ -173,12 +173,14 @@ CryptoWrapper.prototype = {
       this.cleartext = json_result;
       this.ciphertext = null;
     } else {
-      throw "Decryption failed: result is <" + json_result + ">, not an object.";
+      throw new Error(
+          `Decryption failed: result is <${json_result}>, not an object.`);
     }
 
     // Verify that the encrypted id matches the requested record's id.
     if (this.cleartext.id != this.id)
-      throw "Record id mismatch: " + this.cleartext.id + " != " + this.id;
+      throw new Error(
+          `Record id mismatch: ${this.cleartext.id} != ${this.id}`);
 
     return this.cleartext;
   },
@@ -498,12 +500,12 @@ CollectionKeyManager.prototype = {
                    this.lastModified + ", input modified: " + modified + ".");
 
     if (!payload)
-      throw "No payload in CollectionKeyManager.setContents().";
+      throw new Error("No payload in CollectionKeyManager.setContents().");
 
     if (!payload.default) {
       this._log.warn("No downloaded default key: this should not occur.");
       this._log.warn("Not clearing local keys.");
-      throw "No default key in CollectionKeyManager.setContents(). Cannot proceed.";
+      throw new Error("No default key in CollectionKeyManager.setContents(). Cannot proceed.");
     }
 
     // Process the incoming default key.
@@ -568,7 +570,7 @@ CollectionKeyManager.prototype = {
     try {
       payload = storage_keys.decrypt(syncKeyBundle);
     } catch (ex) {
-      log.warn("Got exception \"" + ex + "\" decrypting storage keys with sync key.");
+      log.warn("Got exception decrypting storage keys with sync key.", ex);
       log.info("Aborting updateContents. Rethrowing.");
       throw ex;
     }

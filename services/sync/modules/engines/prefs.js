@@ -153,7 +153,7 @@ PrefStore.prototype = {
             try {
               this._prefs.set(pref, value);
             } catch (ex) {
-              this._log.trace("Failed to set pref: " + pref + ": " + ex);
+              this._log.trace(`Failed to set pref: ${pref}`, ex);
             }
           }
       }

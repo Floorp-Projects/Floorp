@@ -257,8 +257,8 @@ Sync11Service.prototype = {
       return false;            // Don't try again: same keys.
 
     } catch (ex) {
-      this._log.warn("Got exception \"" + ex + "\" fetching and handling " +
-                     "crypto keys. Will try again later.");
+      this._log.warn("Got exception fetching and handling crypto keys. " +
+                     "Will try again later.", ex);
       return false;
     }
   },
@@ -575,7 +575,7 @@ Sync11Service.prototype = {
               return false;
             }
           } catch (ex) {
-            this._log.warn("Got exception \"" + ex + "\" fetching cryptoKeys.");
+            this._log.warn("Got exception fetching cryptoKeys.", ex);
             // TODO: Um, what exceptions might we get here? Should we re-throw any?
 
             // One kind of exception: HMAC failure.
@@ -826,7 +826,7 @@ Sync11Service.prototype = {
       this._loggedIn = false;
       if (Services.io.offline) {
         this.status.login = LOGIN_FAILED_NETWORK_ERROR;
-        throw "Application is offline, login should not be called";
+        throw new Error("Application is offline, login should not be called");
       }
 
       this._log.info("Logging in the user.");
@@ -842,7 +842,7 @@ Sync11Service.prototype = {
       this._log.info("User logged in successfully - verifying login.");
       if (!(await this.verifyLogin())) {
         // verifyLogin sets the failure states here.
-        throw "Login failed: " + this.status.login;
+        throw new Error(`Login failed: ${this.status.login}`);
       }
 
       this._loggedIn = true;
@@ -1374,7 +1374,7 @@ Sync11Service.prototype = {
    */
   getStorageInfo: function getStorageInfo(type, callback) {
     if (STORAGE_INFO_TYPES.indexOf(type) == -1) {
-      throw "Invalid value for 'type': " + type;
+      throw new Error(`Invalid value for 'type': ${type}`);
     }
 
     let info_type = "info/" + type;
