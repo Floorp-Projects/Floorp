@@ -327,17 +327,6 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // Also need to handle F10 specially on Non-Mac platform.
     else if (nativeKeyEvent->mMessage == eKeyPress && keyCode == NS_VK_F10) {
       if ((GetModifiersForAccessKey(keyEvent) & ~MODIFIER_CONTROL) == 0) {
-        // If the keyboard event should activate the menubar and will be
-        // sent to a remote process, it should be executed with reply
-        // event from the focused remote process.  Note that if the menubar
-        // is active, the event is already marked as "stop cross
-        // process dispatching".  So, in that case, this won't wait
-        // reply from the remote content.
-        if (nativeKeyEvent->MaybePostedToRemoteProcessLater()) {
-          nativeKeyEvent->StopImmediatePropagation();
-          nativeKeyEvent->MarkAsWaitingReplyFromRemoteProcess();
-          return NS_OK;
-        }
         // The F10 key just went down by itself or with ctrl pressed.
         // In Windows, both of these activate the menu bar.
         mMenuBarFrame->SetActiveByKeyboard();
