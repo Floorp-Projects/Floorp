@@ -2102,6 +2102,15 @@ class CallEntry extends Entry {
 // Represents a "function" defined in a schema namespace.
 FunctionEntry = class FunctionEntry extends CallEntry {
   static parseSchema(schema, path) {
+    // When not in DEBUG mode, we just need to know *if* this returns.
+    let returns = !!schema.returns;
+    if (DEBUG && "returns" in schema) {
+      returns = {
+        type: Schemas.parseSchema(schema.returns, path, ["optional", "name"]),
+        optional: schema.returns.optional || false,
+      };
+    }
+
     return new this(schema, path, schema.name,
                     Schemas.parseSchema(schema, path,
                       ["name", "unsupported", "returns",
@@ -2109,7 +2118,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
                        "allowAmbiguousOptionalArguments"]),
                     schema.unsupported || false,
                     schema.allowAmbiguousOptionalArguments || false,
-                    schema.returns || null,
+                    returns,
                     schema.permissions || null);
   }
 
@@ -2121,6 +2130,21 @@ FunctionEntry = class FunctionEntry extends CallEntry {
 
     this.isAsync = type.isAsync;
     this.hasAsyncCallback = type.hasAsyncCallback;
+  }
+
+  checkValue({type, optional}, value, context) {
+    if (optional && value == null) {
+      return;
+    }
+    if (type.reference === "ExtensionPanel" || type.reference === "Port") {
+      // TODO: We currently treat objects with functions as SubModuleType,
+      // which is just wrong, and a bigger yak.  Skipping for now.
+      return;
+    }
+    const {error} = type.normalize(value, context);
+    if (error) {
+      this.throwError(context, `Type error for result value (${error})`);
+    }
   }
 
   getDescriptor(path, context) {
@@ -2153,7 +2177,11 @@ FunctionEntry = class FunctionEntry extends CallEntry {
       stub = (...args) => {
         this.checkDeprecated(context);
         let actuals = this.checkParameters(args, context);
-        return apiImpl.callFunction(actuals);
+        let result = apiImpl.callFunction(actuals);
+        if (DEBUG && this.returns) {
+          this.checkValue(this.returns, result, context);
+        }
+        return result;
       };
     }
 
