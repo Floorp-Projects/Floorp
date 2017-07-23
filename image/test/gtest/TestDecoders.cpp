@@ -673,6 +673,26 @@ TEST_F(ImageDecoders, TruncatedSmallGIFSingleChunk)
   CheckDecoderSingleChunk(TruncatedSmallGIFTestCase());
 }
 
+TEST_F(ImageDecoders, LargeICOWithBMPSingleChunk)
+{
+  CheckDecoderSingleChunk(LargeICOWithBMPTestCase());
+}
+
+TEST_F(ImageDecoders, LargeICOWithBMPMultiChunk)
+{
+  CheckDecoderMultiChunk(LargeICOWithBMPTestCase());
+}
+
+TEST_F(ImageDecoders, LargeICOWithPNGSingleChunk)
+{
+  CheckDecoderSingleChunk(LargeICOWithPNGTestCase());
+}
+
+TEST_F(ImageDecoders, LargeICOWithPNGMultiChunk)
+{
+  CheckDecoderMultiChunk(LargeICOWithPNGTestCase());
+}
+
 TEST_F(ImageDecoders, MultipleSizesICOSingleChunk)
 {
   ImageTestCase testCase = GreenMultipleSizesICOTestCase();
