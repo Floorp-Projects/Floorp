@@ -265,6 +265,7 @@ const SIGNED_TYPES = new Set([
 const LEGACY_TYPES = new Set([
   "apiextension",
   "extension",
+  "theme",
 ]);
 
 const ALL_EXTERNAL_TYPES = new Set([
