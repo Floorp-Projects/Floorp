@@ -645,21 +645,19 @@ BaselineScript::icEntryFromReturnOffset(CodeOffset returnOffset)
     return icEntry(loc);
 }
 
-static inline size_t
-ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset)
+static inline bool
+ComputeBinarySearchMid(BaselineScript* baseline, uint32_t pcOffset, size_t* loc)
 {
-    size_t loc;
-    BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
-                   [pcOffset](BaselineICEntry& entry) {
-                       uint32_t entryOffset = entry.pcOffset();
-                       if (pcOffset < entryOffset)
-                           return -1;
-                       if (entryOffset < pcOffset)
-                           return 1;
-                       return 0;
-                   },
-                   &loc);
-    return loc;
+    return BinarySearchIf(ICEntries(baseline), 0, baseline->numICEntries(),
+                          [pcOffset](BaselineICEntry& entry) {
+                              uint32_t entryOffset = entry.pcOffset();
+                              if (pcOffset < entryOffset)
+                                  return -1;
+                              if (entryOffset < pcOffset)
+                                  return 1;
+                              return 0;
+                          },
+                          loc);
 }
 
 uint8_t*
@@ -668,29 +666,39 @@ BaselineScript::returnAddressForIC(const BaselineICEntry& ent)
     return method()->raw() + ent.returnOffset().offset();
 }
 
-BaselineICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
+BaselineICEntry*
+BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset)
 {
     // Multiple IC entries can have the same PC offset, but this method only looks for
     // those which have isForOp() set.
-    size_t mid = ComputeBinarySearchMid(this, pcOffset);
+    size_t mid;
+    if (!ComputeBinarySearchMid(this, pcOffset, &mid))
+        return nullptr;
 
     // Found an IC entry with a matching PC offset.  Search backward, and then
     // forward from this IC entry, looking for one with the same PC offset which
     // has isForOp() set.
     for (size_t i = mid; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i--) {
         if (icEntry(i).isForOp())
-            return icEntry(i);
+            return &icEntry(i);
     }
     for (size_t i = mid+1; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i++) {
         if (icEntry(i).isForOp())
-            return icEntry(i);
+            return &icEntry(i);
     }
-    MOZ_CRASH("Invalid PC offset for IC entry.");
+    return nullptr;
 }
 
 BaselineICEntry&
-BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
+{
+    BaselineICEntry* entry = maybeICEntryFromPCOffset(pcOffset);
+    MOZ_RELEASE_ASSERT(entry);
+    return *entry;
+}
+
+BaselineICEntry*
+BaselineScript::maybeICEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
 {
     // Do a linear forward search from the last queried PC offset, or fallback to a
     // binary search if the last offset is too far away.
@@ -702,14 +710,21 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLook
         BaselineICEntry* curEntry = prevLookedUpEntry;
         while (curEntry >= firstEntry && curEntry <= lastEntry) {
             if (curEntry->pcOffset() == pcOffset && curEntry->isForOp())
-                break;
+                return curEntry;
             curEntry++;
         }
-        MOZ_ASSERT(curEntry->pcOffset() == pcOffset && curEntry->isForOp());
-        return *curEntry;
+        return nullptr;
     }
 
-    return icEntryFromPCOffset(pcOffset);
+    return maybeICEntryFromPCOffset(pcOffset);
+}
+
+BaselineICEntry&
+BaselineScript::icEntryFromPCOffset(uint32_t pcOffset, BaselineICEntry* prevLookedUpEntry)
+{
+    BaselineICEntry* entry = maybeICEntryFromPCOffset(pcOffset, prevLookedUpEntry);
+    MOZ_RELEASE_ASSERT(entry);
+    return *entry;
 }
 
 BaselineICEntry&
@@ -717,7 +732,8 @@ BaselineScript::callVMEntryFromPCOffset(uint32_t pcOffset)
 {
     // Like icEntryFromPCOffset, but only looks for the fake ICEntries
     // inserted by VM calls.
-    size_t mid = ComputeBinarySearchMid(this, pcOffset);
+    size_t mid;
+    MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(this, pcOffset, &mid));
 
     for (size_t i = mid; i < numICEntries() && icEntry(i).pcOffset() == pcOffset; i--) {
         if (icEntry(i).kind() == ICEntry::Kind_CallVM)

@@ -7,6 +7,8 @@ registerCleanupFunction(function() {
   delete window.sinon;
 });
 
+Cu.import("resource://services-sync/UIState.jsm");
+
 const mockRemoteClients = [
   { id: "0", name: "foo", type: "mobile" },
   { id: "1", name: "bar", type: "desktop" },
