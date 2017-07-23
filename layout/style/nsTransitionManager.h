@@ -24,6 +24,7 @@ class nsCSSPropertyIDSet;
 
 namespace mozilla {
 enum class CSSPseudoElementType : uint8_t;
+class GeckoStyleContext;
 struct Keyframe;
 struct StyleTransition;
 class ServoStyleContext;
@@ -369,8 +370,8 @@ public:
    * take care of causing the necessary restyle afterwards.
    */
   void StyleContextChanged(mozilla::dom::Element *aElement,
-                           nsStyleContext *aOldStyleContext,
-                           RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+                           mozilla::GeckoStyleContext* aOldStyleContext,
+                           RefPtr<mozilla::GeckoStyleContext>* aNewStyleContext /* inout */);
 
   /**
    * Update transitions for stylo.
@@ -391,7 +392,7 @@ public:
    */
   void PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                  mozilla::CSSPseudoElementType aPseudoType,
-                                 nsStyleContext* aNewStyleContext);
+                                 mozilla::GeckoStyleContext* aNewStyleContext);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;

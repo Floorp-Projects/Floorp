@@ -20,10 +20,10 @@
 
 #define FORWARD_WITH_PARENT(method_, parent_, args_) \
   if (IsGecko()) { \
-    nsStyleContext* parent = parent_; \
+    auto* parent = parent_ ? parent_->AsGecko() : nullptr; \
     return AsGecko()->method_ args_; \
   } else { \
-    ServoStyleContext* parent = parent_ ? parent_->AsServo() : nullptr; \
+    auto* parent = parent_ ? parent_->AsServo() : nullptr; \
     return AsServo()->method_ args_; \
   }
 
@@ -103,9 +103,10 @@ StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
 {
   if (IsGecko()) {
     MOZ_ASSERT(aTreeMatchContext);
-    return AsGecko()->ResolveStyleFor(aElement, aParentContext, aMayCompute, *aTreeMatchContext);
+    auto* parent = aParentContext ? aParentContext->AsGecko() : nullptr;
+    return AsGecko()->ResolveStyleFor(aElement, parent, aMayCompute, *aTreeMatchContext);
   } else {
-    ServoStyleContext* parent = aParentContext ? aParentContext->AsServo() : nullptr;
+    auto* parent = aParentContext ? aParentContext->AsServo() : nullptr;
     return AsServo()->ResolveStyleFor(aElement, parent, aMayCompute);
   }
 }
@@ -283,10 +284,11 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
 {
   if (IsGecko()) {
     MOZ_ASSERT(aTreeMatchContext);
-    return AsGecko()->ProbePseudoElementStyle(aParentElement, aType, aParentContext,
+    auto* parent = aParentContext ? aParentContext->AsGecko() : nullptr;
+    return AsGecko()->ProbePseudoElementStyle(aParentElement, aType, parent,
                                               *aTreeMatchContext);
   }
-  ServoStyleContext* parent = aParentContext ? aParentContext->AsServo() : nullptr;
+  auto* parent = aParentContext ? aParentContext->AsServo() : nullptr;
   return AsServo()->ProbePseudoElementStyle(aParentElement, aType, parent);
 }
 
