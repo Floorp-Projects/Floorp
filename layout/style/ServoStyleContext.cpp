@@ -22,11 +22,10 @@ ServoStyleContext::ServoStyleContext(
     CSSPseudoElementType aPseudoType,
     ServoComputedDataForgotten aComputedValues)
   : nsStyleContext(aParent, aPseudoTag, aPseudoType)
+  , mPresContext(aPresContext)
   , mSource(aComputedValues)
 {
-  mPresContext = aPresContext;
   AddStyleBit(Servo_ComputedValues_GetStyleBits(this));
-
   FinishConstruction();
 
   // No need to call ApplyStyleFixups here, since fixups are handled by Servo when
