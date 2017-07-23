@@ -599,6 +599,7 @@ this.FxAccountsClient.prototype = {
       return JSON.parse(response.body);
     } catch (error) {
       log.error("json parse error on response: " + response.body);
+      // eslint-disable-next-line no-throw-literal
       throw {error};
     }
   },

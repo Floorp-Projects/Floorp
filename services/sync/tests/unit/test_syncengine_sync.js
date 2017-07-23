@@ -973,14 +973,14 @@ add_task(async function test_processIncoming_failed_records() {
   engine.__reconcile = engine._reconcile;
   engine._reconcile = async function _reconcile(record) {
     if (BOGUS_RECORDS.indexOf(record.id) % 2 == 0) {
-      throw "I don't like this record! Baaaaaah!";
+      throw new Error("I don't like this record! Baaaaaah!");
     }
     return this.__reconcile.apply(this, arguments);
   };
   engine._store._applyIncoming = engine._store.applyIncoming;
   engine._store.applyIncoming = async function(record) {
     if (BOGUS_RECORDS.indexOf(record.id) % 2 == 1) {
-      throw "I don't like this record! Baaaaaah!";
+      throw new Error("I don't like this record! Baaaaaah!");
     }
     return this._applyIncoming.apply(this, arguments);
   };
@@ -1089,7 +1089,8 @@ add_task(async function test_processIncoming_decrypt_failed() {
   Weave.Crypto._decrypt = Weave.Crypto.decrypt;
   Weave.Crypto.decrypt = function(ciphertext) {
     if (ciphertext == "Decrypt this!") {
-      throw "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz.";
+      throw new Error(
+          "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz.");
     }
     return this._decrypt.apply(this, arguments);
   };
@@ -1680,7 +1681,7 @@ add_task(async function test_sync_partialUpload() {
   collection.post = (function(orig) {
     return function() {
       if (noOfUploads == 2)
-        throw "FAIL!";
+        throw new Error("FAIL!");
       noOfUploads++;
       return orig.apply(this, arguments);
     };

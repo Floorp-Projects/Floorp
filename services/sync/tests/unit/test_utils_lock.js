@@ -65,7 +65,7 @@ add_task(async function run_test() {
     do_throw("throwy internal call should have thrown!");
   } catch (ex) {
     // Should throw an Error, not a string.
-    do_check_begins(ex, "Could not acquire lock");
+    do_check_begins(ex.message, "Could not acquire lock");
   }
   do_check_eq(ret, null);
   do_check_true(rightThis);

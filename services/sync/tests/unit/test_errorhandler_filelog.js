@@ -122,7 +122,7 @@ add_test(function test_logOnSuccess_true() {
       try {
         logfile.remove(false);
       } catch (ex) {
-        dump("Couldn't delete file: " + ex + "\n");
+        dump("Couldn't delete file: " + ex.message + "\n");
         // Stupid Windows box.
       }
 
@@ -189,7 +189,7 @@ add_test(function test_sync_error_logOnError_true() {
       try {
         logfile.remove(false);
       } catch (ex) {
-        dump("Couldn't delete file: " + ex + "\n");
+        dump("Couldn't delete file: " + ex.message + "\n");
         // Stupid Windows box.
       }
 
@@ -256,7 +256,7 @@ add_test(function test_login_error_logOnError_true() {
       try {
         logfile.remove(false);
       } catch (ex) {
-        dump("Couldn't delete file: " + ex + "\n");
+        dump("Couldn't delete file: " + ex.message + "\n");
         // Stupid Windows box.
       }
 
@@ -328,7 +328,7 @@ add_test(function test_newFailed_errorLog() {
       try {
         logfile.remove(false);
       } catch (ex) {
-        dump("Couldn't delete file: " + ex + "\n");
+        dump("Couldn't delete file: " + ex.message + "\n");
         // Stupid Windows box.
       }
 
@@ -378,7 +378,7 @@ add_test(function test_errorLog_dumpAddons() {
       try {
         logfile.remove(false);
       } catch (ex) {
-        dump("Couldn't delete file: " + ex + "\n");
+        dump("Couldn't delete file: " + ex.message + "\n");
         // Stupid Windows box.
       }
 
@@ -430,7 +430,7 @@ add_test(function test_logErrorCleanup_age() {
     try {
       logfile.remove(false);
     } catch (ex) {
-      dump("Couldn't delete file: " + ex + "\n");
+      dump("Couldn't delete file: " + ex.message + "\n");
       // Stupid Windows box.
     }
 
