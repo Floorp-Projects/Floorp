@@ -193,7 +193,7 @@
           }
         ],
         "returns": {
-          "string": "path"
+          "type": "string"
         }
       }
     ],

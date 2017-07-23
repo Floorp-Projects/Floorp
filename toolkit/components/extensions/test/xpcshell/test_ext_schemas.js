@@ -76,7 +76,7 @@ let json = [
            name: "sub_foo",
            type: "function",
            parameters: [],
-           returns: "integer",
+           returns: {type: "integer"},
          },
        ],
      },
@@ -404,6 +404,9 @@ class TallyingAPIImplementation extends SchemaAPIInterface {
 
   callFunction(args) {
     tally("call", this.namespace, this.name, args);
+    if (this.name === "sub_foo") {
+      return 13;
+    }
   }
 
   callFunctionNoReturn(args) {
@@ -1500,6 +1503,7 @@ let defaultsJson = [
        ],
        returns: {
          type: "object",
+         additionalProperties: true,
        },
      },
    ]},
@@ -1535,4 +1539,81 @@ add_task(async function testDefaults() {
   deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
   deepEqual(root.defaultsJson.defaultFoo({prop1: 2}), {prop1: 2, newProp: 1});
   deepEqual(root.defaultsJson.defaultFoo(), {prop1: 1, newProp: 1});
+});
+
+let returnsJson = [{
+  namespace: "returns",
+  types: [
+    {
+      id: "Widget",
+      type: "object",
+      properties: {
+        size: {type: "integer"},
+        colour: {type: "string", optional: true},
+      },
+    },
+  ],
+  functions: [
+    {
+      name: "complete",
+      type: "function",
+      returns: {$ref: "Widget"},
+      parameters: [],
+    },
+    {
+      name: "optional",
+      type: "function",
+      returns: {$ref: "Widget"},
+      parameters: [],
+    },
+    {
+      name: "invalid",
+      type: "function",
+      returns: {$ref: "Widget"},
+      parameters: [],
+    },
+  ],
+}];
+
+add_task(async function testReturns() {
+  const url = "data:," + JSON.stringify(returnsJson);
+  await Schemas.load(url);
+
+  const apiObject = {
+    complete() {
+      return {size: 3, colour: "orange"};
+    },
+    optional() {
+      return {size: 4};
+    },
+    invalid() {
+      return {};
+    },
+  };
+
+  const localWrapper = {
+    cloneScope: global,
+    shouldInject(ns) {
+      return true;
+    },
+    getImplementation(ns, name) {
+      return new LocalAPIImplementation(apiObject, name, null);
+    },
+  };
+
+  const root = {};
+  Schemas.inject(root, localWrapper);
+
+  deepEqual(root.returns.complete(), {size: 3, colour: "orange"});
+  deepEqual(root.returns.optional(), {size: 4},
+            "Missing optional properties is allowed");
+
+  if (AppConstants.DEBUG) {
+    Assert.throws(() => root.returns.invalid(),
+                  `Type error for result value (Property "size" is required)`,
+                  "Should throw for invalid result in DEBUG builds");
+  } else {
+    deepEqual(root.returns.invalid(), {},
+              "Doesn't throw for invalid result value in release builds");
+  }
 });
