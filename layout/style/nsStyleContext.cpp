@@ -172,6 +172,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aNewContext,
   DebugOnly<uint32_t> structsFound = 0;
 
   if (IsGecko()) {
+    // CalcStyleDifference is always called on the main thread for Gecko
+    // style contexts.  This assertion helps the heap write static analysis.
+    MOZ_ASSERT(NS_IsMainThread());
+
     // FIXME(heycam): We should just do the comparison in
     // nsStyleVariables::CalcDifference, returning NeutralChange if there are
     // any Variables differences.
