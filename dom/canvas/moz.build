@@ -66,6 +66,7 @@ EXPORTS.mozilla.dom += [
     'ImageBitmapRenderingContext.h',
     'ImageBitmapSource.h',
     'ImageData.h',
+    'ImageUtils.h',
     'OffscreenCanvas.h',
     'TextMetrics.h',
     'WebGLVertexArrayObject.h',
