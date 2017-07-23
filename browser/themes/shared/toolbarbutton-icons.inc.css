@@ -369,21 +369,21 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
 }
 
 #nav-bar-overflow-button > .toolbarbutton-animatable-box {
-  position: fixed;
+  position: absolute;
   overflow: hidden;
-  /* The height of the sprite is 24px, which is 8px taller than
-     the height of the icon. We need to move the sprite up 8px
-     higher to counter for this. */
-  margin-top: -8px;
+  top: calc(50% - 18px); /* Vertically center the 36px tall animatable image */
   /* Since .toolbarbutton-icon uses a different width than the animatable box,
      we need to set a padding relative to the difference in widths. */
   margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 18px) / 2);
   width: 18px; /* Width of each frame within the SVG sprite */
-  height: 24px; /* Height of each frame within the SVG sprite */
+  height: 36px; /* Height of each frame within the SVG sprite */
 }
 
 #nav-bar-overflow-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  height: 24px; /* Height of each frame within the SVG sprite */
+  /* Height must be equal to height of toolbarbutton padding-box. --toolbarbutton-height
+     is calculated and set during runtime by BrowserUtils.setToolbarButtonHeightProperty()
+     before the animation begins. */
+  height: var(--toolbarbutton-height);
 }
 
 #nav-bar-overflow-button[animate] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {

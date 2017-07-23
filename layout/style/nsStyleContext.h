@@ -314,15 +314,6 @@ public:
    */
   inline void StartBackgroundImageLoads();
 
-  /**
-   * Moves this style context to a new parent.
-   *
-   * This function violates style context tree immutability, and
-   * is a very low-level function and should only be used after verifying
-   * many conditions that make it safe to call.
-   */
-  void MoveTo(nsStyleContext* aNewParent);
-
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent, bool aListDescendants = true);
   static const char* StructName(nsStyleStructID aSID);
@@ -387,7 +378,7 @@ protected:
 };
 
 already_AddRefed<mozilla::GeckoStyleContext>
-NS_NewStyleContext(nsStyleContext* aParentContext,
+NS_NewStyleContext(mozilla::GeckoStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    mozilla::CSSPseudoElementType aPseudoType,
                    nsRuleNode* aRuleNode,

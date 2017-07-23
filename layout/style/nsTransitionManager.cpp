@@ -434,7 +434,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
 
 static inline bool
 ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
-                                nsStyleContext* aStyleContext,
+                                GeckoStyleContext* aStyleContext,
                                 AnimationValue& aAnimationValue)
 {
   return (nsCSSProps::kAnimTypeTable[aProperty] != eStyleAnimType_Discrete ||
@@ -461,10 +461,10 @@ ExtractNonDiscreteComputedValue(nsCSSPropertyID aProperty,
 
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
-                                         nsStyleContext *aOldStyleContext,
-                                         RefPtr<nsStyleContext>* aNewStyleContext /* inout */)
+                                         GeckoStyleContext* aOldStyleContext,
+                                         RefPtr<GeckoStyleContext>* aNewStyleContext /* inout */)
 {
-  nsStyleContext* newStyleContext = *aNewStyleContext;
+  GeckoStyleContext* newStyleContext = *aNewStyleContext;
 
   NS_PRECONDITION(aOldStyleContext->GetPseudo() == newStyleContext->GetPseudo(),
                   "pseudo type mismatch");
@@ -566,7 +566,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   // style", which is the new style without any data from transitions,
   // but still inheriting from data that contains transitions that are
   // not stopping or starting right now.
-  RefPtr<nsStyleContext> afterChangeStyle;
+  RefPtr<GeckoStyleContext> afterChangeStyle;
   if (collection) {
     MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
                "ServoStyleSets should not use nsTransitionManager "
@@ -1112,7 +1112,7 @@ nsTransitionManager::ConsiderInitiatingTransition(
 void
 nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                                CSSPseudoElementType aPseudoType,
-                                               nsStyleContext* aNewStyleContext)
+                                               GeckoStyleContext* aNewStyleContext)
 {
   MOZ_ASSERT(!aElement->IsGeneratedContentContainerForBefore() &&
              !aElement->IsGeneratedContentContainerForAfter());

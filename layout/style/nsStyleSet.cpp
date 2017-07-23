@@ -863,8 +863,8 @@ ReplaceAnimationRule(nsRuleNode *aOldRuleNode,
  * generation.  (It works for cousins of the same generation since
  * |aParentContext| could itself be a shared context.)
  */
-already_AddRefed<nsStyleContext>
-nsStyleSet::GetContext(nsStyleContext* aParentContext,
+already_AddRefed<GeckoStyleContext>
+nsStyleSet::GetContext(GeckoStyleContext* aParentContext,
                        nsRuleNode* aRuleNode,
                        // aVisitedRuleNode may be null; if it is null
                        // it means that we don't need to force creation
@@ -894,7 +894,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
   // Ensure |aVisitedRuleNode != nullptr| corresponds to the need to
   // create an if-visited style context, and that in that case, we have
   // parentIfVisited set correctly.
-  nsStyleContext *parentIfVisited =
+  GeckoStyleContext *parentIfVisited =
     aParentContext ? aParentContext->GetStyleIfVisited() : nullptr;
   if (parentIfVisited) {
     if (!aVisitedRuleNode) {
@@ -917,7 +917,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     (aFlags & eIsVisitedLink) :
     (aParentContext && aParentContext->RelevantLinkVisited());
 
-  RefPtr<nsStyleContext> result;
+  RefPtr<GeckoStyleContext> result;
   if (aParentContext)
     result = aParentContext->AsGecko()->FindChildWithRules(aPseudoTag, aRuleNode,
                                                 aVisitedRuleNode,
@@ -935,7 +935,7 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                                 aRuleNode,
                                 aFlags & eSkipParentDisplayBasedStyleFixup);
     if (aVisitedRuleNode) {
-      RefPtr<nsStyleContext> resultIfVisited =
+      RefPtr<GeckoStyleContext> resultIfVisited =
         NS_NewStyleContext(parentIfVisited, aPseudoTag, aPseudoType,
                            aVisitedRuleNode,
                            aFlags & eSkipParentDisplayBasedStyleFixup);
@@ -1326,9 +1326,9 @@ InitStyleScopes(TreeMatchContext& aTreeContext, Element* aElement)
   }
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleFor(Element* aElement,
-                            nsStyleContext* aParentContext)
+                            GeckoStyleContext* aParentContext)
 {
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aElement->OwnerDoc());
@@ -1336,9 +1336,9 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   return ResolveStyleFor(aElement, aParentContext, treeContext);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleForInternal(Element* aElement,
-                                    nsStyleContext* aParentContext,
+                                    GeckoStyleContext* aParentContext,
                                     TreeMatchContext& aTreeMatchContext,
                                     AnimationFlag aAnimationFlag)
 {
@@ -1381,9 +1381,9 @@ nsStyleSet::ResolveStyleForInternal(Element* aElement,
                     aElement, flags);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleFor(Element* aElement,
-                            nsStyleContext* aParentContext,
+                            GeckoStyleContext* aParentContext,
                             TreeMatchContext& aTreeMatchContext)
 {
   return ResolveStyleForInternal(aElement,
@@ -1392,8 +1392,8 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
                                  eWithAnimation);
 }
 
-already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
+already_AddRefed<GeckoStyleContext>
+nsStyleSet::ResolveStyleForRules(GeckoStyleContext* aParentContext,
                                  const nsTArray< nsCOMPtr<nsIStyleRule> > &aRules)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
@@ -1411,8 +1411,8 @@ nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext,
                     nullptr, eNoFlags);
 }
 
-already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
+already_AddRefed<GeckoStyleContext>
+nsStyleSet::ResolveStyleByAddingRules(GeckoStyleContext* aBaseContext,
                                       const nsCOMArray<nsIStyleRule> &aRules)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
@@ -1700,7 +1700,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 }
 
 static bool
-SkipsParentDisplayBasedStyleFixup(nsStyleContext* aStyleContext)
+SkipsParentDisplayBasedStyleFixup(GeckoStyleContext* aStyleContext)
 {
   CSSPseudoElementType type = aStyleContext->GetPseudoType();
   switch (type) {
@@ -1714,11 +1714,11 @@ SkipsParentDisplayBasedStyleFixup(nsStyleContext* aStyleContext)
   }
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                                         Element* aPseudoElement,
-                                        nsStyleContext* aNewParentContext,
-                                        nsStyleContext* aOldStyleContext,
+                                        GeckoStyleContext* aNewParentContext,
+                                        GeckoStyleContext* aOldStyleContext,
                                         nsRestyleHint aReplacements,
                                         uint32_t aFlags)
 {
@@ -1728,7 +1728,7 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                             aOldStyleContext->GetPseudoType(), aReplacements);
 
   nsRuleNode* visitedRuleNode = nullptr;
-  nsStyleContext* oldStyleIfVisited = aOldStyleContext->GetStyleIfVisited();
+  GeckoStyleContext* oldStyleIfVisited = aOldStyleContext->GetStyleIfVisited();
   if (oldStyleIfVisited) {
     if (oldStyleIfVisited->RuleNode() == aOldStyleContext->RuleNode()) {
       visitedRuleNode = ruleNode;
@@ -1799,9 +1799,9 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
                     elementForAnimation, flags);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleByRemovingAnimation(dom::Element* aTarget,
-                                            nsStyleContext* aStyleContext,
+                                            GeckoStyleContext* aStyleContext,
                                             nsRestyleHint aWhichToRemove)
 {
 #ifdef DEBUG
@@ -1820,7 +1820,7 @@ nsStyleSet::ResolveStyleByRemovingAnimation(dom::Element* aTarget,
   bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
   restyleManager->SetSkipAnimationRules(true);
 
-  RefPtr<nsStyleContext> result =
+  RefPtr<GeckoStyleContext> result =
     ResolveStyleWithReplacement(aTarget, nullptr, aStyleContext->GetParent(),
                                 aStyleContext, aWhichToRemove,
                                 eSkipStartingAnimations);
@@ -1830,9 +1830,9 @@ nsStyleSet::ResolveStyleByRemovingAnimation(dom::Element* aTarget,
   return result.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleWithoutAnimation(Element* aTarget,
-                                         nsStyleContext* aParentContext)
+                                         GeckoStyleContext* aParentContext)
 {
   GeckoRestyleManager* restyleManager =
     PresContext()->RestyleManager()->AsGecko();
@@ -1849,19 +1849,20 @@ nsStyleSet::ResolveStyleWithoutAnimation(Element* aTarget,
   // (CSS Animations, Transitions and script animations). That's because
   // EffectCompositor::GetAnimationRule() skips all of animations rules if
   // SkipAnimationRules flag is true.
-  RefPtr<nsStyleContext> result = ResolveStyleForInternal(aTarget,
-                                                          aParentContext,
-                                                          treeContext,
-                                                          eWithoutAnimation);
+  RefPtr<GeckoStyleContext> result =
+    ResolveStyleForInternal(aTarget,
+                            aParentContext,
+                            treeContext,
+                            eWithoutAnimation);
 
   restyleManager->SetSkipAnimationRules(oldSkipAnimationRules);
 
   return result.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
-                                nsStyleContext* aParentContext)
+                                GeckoStyleContext* aParentContext)
 {
   MOZ_ASSERT(aTextNode && aTextNode->IsNodeOfType(nsINode::eTEXT));
   return GetContext(aParentContext, mRuleTree, nullptr,
@@ -1869,25 +1870,25 @@ nsStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                     CSSPseudoElementType::InheritingAnonBox, nullptr, eNoFlags);
 }
 
-already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleForFirstLetterContinuation(nsStyleContext* aParentContext)
+already_AddRefed<GeckoStyleContext>
+nsStyleSet::ResolveStyleForFirstLetterContinuation(GeckoStyleContext* aParentContext)
 {
   return GetContext(aParentContext, mRuleTree, nullptr,
                     nsCSSAnonBoxes::firstLetterContinuation,
                     CSSPseudoElementType::InheritingAnonBox, nullptr, eNoFlags);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveStyleForPlaceholder()
 {
-  RefPtr<nsStyleContext>& cache =
+  RefPtr<GeckoStyleContext>& cache =
     mNonInheritingStyleContexts[nsCSSAnonBoxes::NonInheriting::oofPlaceholder];
   if (cache) {
-    RefPtr<nsStyleContext> retval = cache;
+    RefPtr<GeckoStyleContext> retval = cache;
     return retval.forget();
   }
 
-  RefPtr<nsStyleContext> retval =
+  RefPtr<GeckoStyleContext> retval =
     GetContext(nullptr, mRuleTree, nullptr,
                nsCSSAnonBoxes::oofPlaceholder,
                CSSPseudoElementType::NonInheritingAnonBox, nullptr, eNoFlags);
@@ -1917,11 +1918,11 @@ nsStyleSet::WalkDisableTextZoomRule(Element* aElement, nsRuleWalker* aRuleWalker
     aRuleWalker->Forward(mDisableTextZoomStyleRule);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolvePseudoElementStyleInternal(
   Element* aParentElement,
   CSSPseudoElementType aType,
-  nsStyleContext* aParentContext,
+  GeckoStyleContext* aParentContext,
   Element* aPseudoElement,
   AnimationFlag aAnimationFlag)
 {
@@ -1975,10 +1976,10 @@ nsStyleSet::ResolvePseudoElementStyleInternal(
                     aParentElement, flags);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
                                       CSSPseudoElementType aType,
-                                      nsStyleContext* aParentContext,
+                                      GeckoStyleContext* aParentContext,
                                       Element* aPseudoElement)
 {
   return ResolvePseudoElementStyleInternal(aParentElement,
@@ -1988,11 +1989,11 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
                                            eWithAnimation);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolvePseudoElementStyleWithoutAnimation(
   Element* aParentElement,
   CSSPseudoElementType aType,
-  nsStyleContext* aParentContext,
+  GeckoStyleContext* aParentContext,
   Element* aPseudoElement)
 {
   return ResolvePseudoElementStyleInternal(aParentElement,
@@ -2002,10 +2003,10 @@ nsStyleSet::ResolvePseudoElementStyleWithoutAnimation(
                                            eWithoutAnimation);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                     CSSPseudoElementType aType,
-                                    nsStyleContext* aParentContext)
+                                    GeckoStyleContext* aParentContext)
 {
   TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
                                aParentElement->OwnerDoc());
@@ -2014,10 +2015,10 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                  treeContext);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
                                     CSSPseudoElementType aType,
-                                    nsStyleContext* aParentContext,
+                                    GeckoStyleContext* aParentContext,
                                     TreeMatchContext& aTreeMatchContext)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
@@ -2068,7 +2069,7 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
     flags |= eSkipParentDisplayBasedStyleFixup;
   }
 
-  RefPtr<nsStyleContext> result =
+  RefPtr<GeckoStyleContext> result =
     GetContext(aParentContext, ruleNode, visitedRuleNode,
                pseudoTag, aType,
                aParentElement, flags);
@@ -2091,9 +2092,9 @@ nsStyleSet::ProbePseudoElementStyle(Element* aParentElement,
   return result.forget();
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
-                                               nsStyleContext* aParentContext)
+                                               GeckoStyleContext* aParentContext)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -2137,7 +2138,7 @@ nsStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
                     nullptr, eSkipParentDisplayBasedStyleFixup);
 }
 
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
@@ -2154,9 +2155,9 @@ nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 
   nsCSSAnonBoxes::NonInheriting type =
     nsCSSAnonBoxes::NonInheritingTypeForPseudoTag(aPseudoTag);
-  RefPtr<nsStyleContext>& cache = mNonInheritingStyleContexts[type];
+  RefPtr<GeckoStyleContext>& cache = mNonInheritingStyleContexts[type];
   if (cache) {
-    RefPtr<nsStyleContext> retval = cache;
+    RefPtr<GeckoStyleContext> retval = cache;
     return retval.forget();
   }
 
@@ -2170,7 +2171,7 @@ nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
              "@page handling from ResolveInheritingAnonymousBoxStyle to "
              "ResolveNonInheritingAnonymousBoxStyle");
 
-  RefPtr<nsStyleContext> retval =
+  RefPtr<GeckoStyleContext> retval =
     GetContext(nullptr, ruleWalker.CurrentNode(), nullptr,
                aPseudoTag, CSSPseudoElementType::NonInheritingAnonBox,
                nullptr, eNoFlags);
@@ -2179,10 +2180,10 @@ nsStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
 }
 
 #ifdef MOZ_XUL
-already_AddRefed<nsStyleContext>
+already_AddRefed<GeckoStyleContext>
 nsStyleSet::ResolveXULTreePseudoStyle(Element* aParentElement,
                                       nsICSSAnonBoxPseudo* aPseudoTag,
-                                      nsStyleContext* aParentContext,
+                                      GeckoStyleContext* aParentContext,
                                       nsICSSPseudoComparator* aComparator)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
@@ -2461,9 +2462,9 @@ nsStyleSet::GCRuleTrees()
   mInGC = false;
 }
 
-already_AddRefed<nsStyleContext>
-nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
-                                 nsStyleContext* aNewParentContext,
+already_AddRefed<GeckoStyleContext>
+nsStyleSet::ReparentStyleContext(GeckoStyleContext* aStyleContext,
+                                 GeckoStyleContext* aNewParentContext,
                                  Element* aElement)
 {
   MOZ_ASSERT(aStyleContext, "aStyleContext must not be null");
@@ -2471,7 +2472,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
   // This short-circuit is OK because we don't call TryInitatingTransition
   // during style reresolution if the style context pointer hasn't changed.
   if (aStyleContext->GetParent() == aNewParentContext) {
-    RefPtr<nsStyleContext> ret = aStyleContext;
+    RefPtr<GeckoStyleContext> ret = aStyleContext;
     return ret.forget();
   }
 
@@ -2486,7 +2487,7 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
                "we no longer handle SkipAnimationRules()");
 
   nsRuleNode* visitedRuleNode = nullptr;
-  nsStyleContext* visitedContext = aStyleContext->GetStyleIfVisited();
+  GeckoStyleContext* visitedContext = aStyleContext->GetStyleIfVisited();
   // Reparenting a style context just changes where we inherit from,
   // not what rules we match or what our DOM looks like.  In
   // particular, it doesn't change whether this is a style context for
@@ -2778,7 +2779,7 @@ nsStyleSet::ClearSelectors()
 void
 nsStyleSet::ClearNonInheritingStyleContexts()
 {
-  for (RefPtr<nsStyleContext>& ptr : mNonInheritingStyleContexts) {
+  for (RefPtr<GeckoStyleContext>& ptr : mNonInheritingStyleContexts) {
     ptr = nullptr;
   }
 }

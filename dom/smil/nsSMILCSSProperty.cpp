@@ -75,7 +75,7 @@ nsSMILCSSProperty::GetBaseValue() const
       return baseValue;
     }
   } else if (!StyleAnimationValue::ExtractComputedValue(mPropID,
-                                                        mBaseStyleContext,
+                                                        mBaseStyleContext->AsGecko(),
                                                         computedValue.mGecko)) {
     return baseValue;
   }
