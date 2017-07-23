@@ -15,6 +15,8 @@
 #include "vpx/vpx_encoder.h"
 #include "WebMWriter.h"
 #include "mozilla/media/MediaUtils.h"
+#include "mozilla/dom/ImageUtils.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 
 namespace mozilla {
 
@@ -28,6 +30,7 @@ LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::media;
+using namespace mozilla::dom;
 
 static already_AddRefed<SourceSurface>
 GetSourceSurface(already_AddRefed<Image> aImg)
@@ -315,31 +318,6 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-static bool isYUV420(const PlanarYCbCrImage::Data *aData)
-{
-  if (aData->mYSize == aData->mCbCrSize * 2) {
-    return true;
-  }
-  return false;
-}
-
-static bool isYUV422(const PlanarYCbCrImage::Data *aData)
-{
-  if ((aData->mYSize.width == aData->mCbCrSize.width * 2) &&
-      (aData->mYSize.height == aData->mCbCrSize.height)) {
-    return true;
-  }
-  return false;
-}
-
-static bool isYUV444(const PlanarYCbCrImage::Data *aData)
-{
-  if (aData->mYSize == aData->mCbCrSize) {
-    return true;
-  }
-  return false;
-}
-
 nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
 {
   RefPtr<Image> img;
@@ -394,10 +372,16 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
       NS_WARNING("PlanarYCbCrImage is not valid");
       return NS_ERROR_FAILURE;
     }
-    const PlanarYCbCrImage::Data *data = yuv->GetData();
 
-    if (isYUV420(data) && !data->mCbSkip) {
+    // The ImageUtils API may change depending on our support for ImageBitmap
+    // extensions. Should this happen in a breaking way we should abstract out
+    // the format detection for use here.
+    const ImageUtils imageUtils(img);
+    const ImageBitmapFormat imageBitmapFormat = imageUtils.GetFormat();
+
+    if (imageBitmapFormat == ImageBitmapFormat::YUV420P) {
       // 420 planar, no need for conversions
+      const PlanarYCbCrImage::Data* data = yuv->GetData();
       mVPXImageWrapper->planes[VPX_PLANE_Y] = data->mYChannel;
       mVPXImageWrapper->planes[VPX_PLANE_U] = data->mCbChannel;
       mVPXImageWrapper->planes[VPX_PLANE_V] = data->mCrChannel;
@@ -431,46 +415,72 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
       NS_WARNING("PlanarYCbCrImage is not valid");
       return NS_ERROR_FAILURE;
     }
+
+    const ImageUtils imageUtils(img);
+    const ImageBitmapFormat imageBitmapFormat = imageUtils.GetFormat();
     const PlanarYCbCrImage::Data *data = yuv->GetData();
 
     int rv;
     std::string yuvFormat;
-    if (isYUV420(data) && data->mCbSkip) {
-      // If mCbSkip is set, we assume it's nv12 or nv21.
-      if (data->mCbChannel < data->mCrChannel) { // nv12
-        rv = libyuv::NV12ToI420(data->mYChannel, data->mYStride,
-                                data->mCbChannel, data->mCbCrStride,
-                                y, mFrameWidth,
-                                cb, halfWidth,
-                                cr, halfWidth,
-                                mFrameWidth, mFrameHeight);
-        yuvFormat = "NV12";
-      } else { // nv21
-        rv = libyuv::NV21ToI420(data->mYChannel, data->mYStride,
-                                data->mCrChannel, data->mCbCrStride,
-                                y, mFrameWidth,
-                                cb, halfWidth,
-                                cr, halfWidth,
-                                mFrameWidth, mFrameHeight);
-        yuvFormat = "NV21";
-      }
-    } else if (isYUV444(data) && !data->mCbSkip) {
-      rv = libyuv::I444ToI420(data->mYChannel, data->mYStride,
-                              data->mCbChannel, data->mCbCrStride,
-                              data->mCrChannel, data->mCbCrStride,
-                              y, mFrameWidth,
-                              cb, halfWidth,
-                              cr, halfWidth,
-                              mFrameWidth, mFrameHeight);
+    if (imageBitmapFormat == ImageBitmapFormat::YUV420SP_NV12) {
+      rv = libyuv::NV12ToI420(data->mYChannel,
+                              data->mYStride,
+                              data->mCbChannel,
+                              data->mCbCrStride,
+                              y,
+                              mFrameWidth,
+                              cb,
+                              halfWidth,
+                              cr,
+                              halfWidth,
+                              mFrameWidth,
+                              mFrameHeight);
+      yuvFormat = "NV12";
+    } else if (imageBitmapFormat == ImageBitmapFormat::YUV420SP_NV21) {
+      rv = libyuv::NV21ToI420(data->mYChannel,
+                              data->mYStride,
+                              data->mCrChannel,
+                              data->mCbCrStride,
+                              y,
+                              mFrameWidth,
+                              cb,
+                              halfWidth,
+                              cr,
+                              halfWidth,
+                              mFrameWidth,
+                              mFrameHeight);
+      yuvFormat = "NV21";
+    } else if (imageBitmapFormat == ImageBitmapFormat::YUV444P) {
+      rv = libyuv::I444ToI420(data->mYChannel,
+                              data->mYStride,
+                              data->mCbChannel,
+                              data->mCbCrStride,
+                              data->mCrChannel,
+                              data->mCbCrStride,
+                              y,
+                              mFrameWidth,
+                              cb,
+                              halfWidth,
+                              cr,
+                              halfWidth,
+                              mFrameWidth,
+                              mFrameHeight);
       yuvFormat = "I444";
-    } else if (isYUV422(data) && !data->mCbSkip) {
-      rv = libyuv::I422ToI420(data->mYChannel, data->mYStride,
-                              data->mCbChannel, data->mCbCrStride,
-                              data->mCrChannel, data->mCbCrStride,
-                              y, mFrameWidth,
-                              cb, halfWidth,
-                              cr, halfWidth,
-                              mFrameWidth, mFrameHeight);
+    } else if (imageBitmapFormat == ImageBitmapFormat::YUV422P) {
+      rv = libyuv::I422ToI420(data->mYChannel,
+                              data->mYStride,
+                              data->mCbChannel,
+                              data->mCbCrStride,
+                              data->mCrChannel,
+                              data->mCbCrStride,
+                              y,
+                              mFrameWidth,
+                              cb,
+                              halfWidth,
+                              cr,
+                              halfWidth,
+                              mFrameWidth,
+                              mFrameHeight);
       yuvFormat = "I422";
     } else {
       VP8LOG(LogLevel::Error, "Unsupported planar format");
