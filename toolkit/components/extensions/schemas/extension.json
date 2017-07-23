@@ -85,7 +85,6 @@
           "type": "array",
           "description": "Array of global objects",
           "items": {
-            "name": "viewGlobals",
             "type": "object",
             "isInstanceOf": "Window",
             "additionalProperties": { "type": "any" }
@@ -100,7 +99,6 @@
         "returns": {
             "type": "object",
             "optional": true,
-            "name": "backgroundPageGlobal",
             "isInstanceOf": "Window",
             "additionalProperties": { "type": "any" }
          }
