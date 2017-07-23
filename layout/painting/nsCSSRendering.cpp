@@ -2640,11 +2640,6 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
     DrawBackgroundColor(clipState, &aRenderingCtx, appUnitsPerPixel);
   }
 
-  if (!drawBackgroundImage) {
-    return DrawResult::SUCCESS; // No need to draw layer image, we can early
-                                // return now.
-  }
-
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aParams.borderArea & aParams.bgClipRect.
   Sides skipSides = aParams.frame->GetSkipSides();
