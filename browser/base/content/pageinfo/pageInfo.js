@@ -1024,9 +1024,10 @@ function formatDate(datestr, unknown) {
   if (!date.valueOf())
     return unknown;
 
-  const dtOptions = { year: "numeric", month: "long", day: "numeric",
-                      hour: "numeric", minute: "numeric", second: "numeric" };
-  return date.toLocaleString(undefined, dtOptions);
+  const dateTimeFormatter = Services.intl.createDateTimeFormat(undefined, {
+    dateStyle: "long", timeStyle: "long"
+  });
+  return dateTimeFormatter.format(date);
 }
 
 function doCopy() {
