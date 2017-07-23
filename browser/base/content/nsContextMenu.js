@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
 
 var gContextMenuContentData = null;
 
+function setContextMenuContentData(data) {
+  gContextMenuContentData = data;
+}
+
 function openContextMenu(aMessage) {
   let data = aMessage.data;
   let browser = aMessage.target;

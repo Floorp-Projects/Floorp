@@ -209,7 +209,7 @@ class CFGTry : public CFGControlInstruction
     jsbytecode* catchStartPc_;
     CFGBlock* mergePoint_;
 
-    CFGTry(CFGBlock* successor, jsbytecode* catchStartPc, CFGBlock* mergePoint = nullptr)
+    CFGTry(CFGBlock* successor, jsbytecode* catchStartPc, CFGBlock* mergePoint)
       : tryBlock_(successor),
         catchStartPc_(catchStartPc),
         mergePoint_(mergePoint)
@@ -226,7 +226,7 @@ class CFGTry : public CFGControlInstruction
     }
 
     size_t numSuccessors() const final override {
-        return mergePoint_ ? 2 : 1;
+        return 2;
     }
     CFGBlock* getSuccessor(size_t i) const final override {
         MOZ_ASSERT(i < numSuccessors());
@@ -250,10 +250,6 @@ class CFGTry : public CFGControlInstruction
 
     CFGBlock* afterTryCatchBlock() const {
         return getSuccessor(1);
-    }
-
-    bool codeAfterTryCatchReachable() const {
-        return !!mergePoint_;
     }
 };
 
@@ -809,13 +805,11 @@ class ControlFlowGenerator
     Vector<ControlFlowInfo, 4, JitAllocPolicy> loops_;
     Vector<ControlFlowInfo, 0, JitAllocPolicy> switches_;
     Vector<ControlFlowInfo, 2, JitAllocPolicy> labels_;
-    BytecodeAnalysis analysis_;
     bool aborted_;
+    bool checkedTryFinally_;
 
   public:
     ControlFlowGenerator(TempAllocator& alloc, JSScript* script);
-
-    MOZ_MUST_USE bool init();
 
     MOZ_MUST_USE bool traverseBytecode();
     MOZ_MUST_USE bool addBlock(CFGBlock* block);
