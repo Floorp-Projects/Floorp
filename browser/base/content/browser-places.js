@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file is loaded into the browser window scope.
+/* eslint-env mozilla/browser-window */
+
+XPCOMUtils.defineLazyScriptGetter(this, ["PlacesToolbar", "PlacesMenu",
+                                         "PlacesPanelview", "PlacesPanelMenuView"],
+                                  "chrome://browser/content/places/browserPlacesViews.js");
+
 var StarUI = {
   _itemId: -1,
   uri: null,
@@ -1939,6 +1946,11 @@ var BookmarkingUI = {
       let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
         "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
         "&maxResults=42&excludeQueries=1";
+
+      // XPCOMUtils.defineLazyScriptGetter can't return class constructors, so
+      // trigger the getter once without using the result before calling
+      // PlacesPanelview as a constructor.
+      PlacesPanelview;
       this._panelMenuView = new PlacesPanelview(document.getElementById("panelMenu_bookmarksMenu"),
         panelview, query);
     } else {

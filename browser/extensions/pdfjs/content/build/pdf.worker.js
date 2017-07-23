@@ -13915,7 +13915,9 @@ var CFFParser = function CFFParserClosure() {
         default:
           throw new _util.FormatError(`parseFDSelect: Unknown format "${format}".`);
       }
-      (0, _util.assert)(fdSelect.length === length, 'parseFDSelect: Invalid font data.');
+      if (fdSelect.length !== length) {
+        throw new _util.FormatError('parseFDSelect: Invalid font data.');
+      }
       return new CFFFDSelect(fdSelect, rawBytes);
     }
   };
@@ -14344,8 +14346,10 @@ var CFFCompiler = function CFFCompilerClosure() {
     compilePrivateDicts: function CFFCompiler_compilePrivateDicts(dicts, trackers, output) {
       for (var i = 0, ii = dicts.length; i < ii; ++i) {
         var fontDict = dicts[i];
-        (0, _util.assert)(fontDict.privateDict && fontDict.hasName('Private'), 'There must be an private dictionary.');
         var privateDict = fontDict.privateDict;
+        if (!privateDict || !fontDict.hasName('Private')) {
+          throw new _util.FormatError('There must be a private dictionary.');
+        }
         var privateDictTracker = new CFFOffsetTracker();
         var privateDictData = this.compileDict(privateDict, privateDictTracker);
         var outputLength = output.length;
@@ -14550,9 +14554,13 @@ var ChunkedStream = function ChunkedStreamClosure() {
     },
     onReceiveData: function ChunkedStream_onReceiveData(begin, chunk) {
       var end = begin + chunk.byteLength;
-      (0, _util.assert)(begin % this.chunkSize === 0, 'Bad begin offset: ' + begin);
+      if (begin % this.chunkSize !== 0) {
+        throw new Error(`Bad begin offset: ${begin}`);
+      }
       var length = this.bytes.length;
-      (0, _util.assert)(end % this.chunkSize === 0 || end === length, 'Bad end offset: ' + end);
+      if (end % this.chunkSize !== 0 && end !== length) {
+        throw new Error(`Bad end offset: ${end}`);
+      }
       this.bytes.set(new Uint8Array(chunk), begin);
       var chunkSize = this.chunkSize;
       var beginChunk = Math.floor(begin / chunkSize);
@@ -16506,7 +16514,9 @@ var CipherTransformFactory = function CipherTransformFactoryClosure() {
     return hash.subarray(0, Math.min(encryptionKey.length + 5, 16));
   }
   function buildCipherConstructor(cf, name, num, gen, key) {
-    (0, _util.assert)((0, _primitives.isName)(name), 'Invalid crypt filter name.');
+    if (!(0, _primitives.isName)(name)) {
+      throw new _util.FormatError('Invalid crypt filter name.');
+    }
     var cryptFilter = cf.get(name.name);
     var cfm;
     if (cryptFilter !== null && cryptFilter !== undefined) {
@@ -17088,7 +17098,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var fontRef,
           xref = this.xref;
       if (font) {
-        (0, _util.assert)((0, _primitives.isRef)(font));
+        if (!(0, _primitives.isRef)(font)) {
+          throw new Error('The "font" object should be a reference.');
+        }
         fontRef = font;
       } else {
         var fontRes = resources.get('Font');
@@ -17215,7 +17227,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     getOperatorList({ stream, task, resources, operatorList, initialState = null }) {
       resources = resources || _primitives.Dict.empty;
       initialState = initialState || new EvalState();
-      (0, _util.assert)(operatorList, 'getOperatorList: missing "operatorList" parameter');
+      if (!operatorList) {
+        throw new Error('getOperatorList: missing "operatorList" parameter');
+      }
       var self = this;
       var xref = this.xref;
       var imageCache = Object.create(null);
@@ -17270,9 +17284,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               }
               var xobj = xobjs.get(name);
               if (xobj) {
-                (0, _util.assert)((0, _primitives.isStream)(xobj), 'XObject should be a stream');
+                if (!(0, _primitives.isStream)(xobj)) {
+                  throw new _util.FormatError('XObject should be a stream');
+                }
                 var type = xobj.dict.get('Subtype');
-                (0, _util.assert)((0, _primitives.isName)(type), 'XObject should have a Name subtype');
+                if (!(0, _primitives.isName)(type)) {
+                  throw new _util.FormatError('XObject should have a Name subtype');
+                }
                 if (type.name === 'Form') {
                   stateManager.save();
                   next(self.buildFormXObject(resources, xobj, null, operatorList, task, stateManager.state.clone()).then(function () {
@@ -17409,9 +17427,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               break;
             case _util.OPS.shadingFill:
               var shadingRes = resources.get('Shading');
-              (0, _util.assert)(shadingRes, 'No shading resource found');
+              if (!shadingRes) {
+                throw new _util.FormatError('No shading resource found');
+              }
               var shading = shadingRes.get(args[0].name);
-              (0, _util.assert)(shading, 'No shading object found');
+              if (!shading) {
+                throw new _util.FormatError('No shading object found');
+              }
               var shadingFill = _pattern.Pattern.parseShading(shading, null, xref, resources, self.handler);
               var patternIR = shadingFill.getIR();
               args = [patternIR];
@@ -17845,9 +17867,13 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               if (!xobj) {
                 break;
               }
-              (0, _util.assert)((0, _primitives.isStream)(xobj), 'XObject should be a stream');
+              if (!(0, _primitives.isStream)(xobj)) {
+                throw new _util.FormatError('XObject should be a stream');
+              }
               var type = xobj.dict.get('Subtype');
-              (0, _util.assert)((0, _primitives.isName)(type), 'XObject should have a Name subtype');
+              if (!(0, _primitives.isName)(type)) {
+                throw new _util.FormatError('XObject should have a Name subtype');
+              }
               if (type.name !== 'Form') {
                 skipEmptyXObjs[name] = true;
                 break;
@@ -18087,7 +18113,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           var cMap = properties.cMap;
           toUnicode = [];
           cMap.forEach(function (charcode, cid) {
-            (0, _util.assert)(cid <= 0xffff, 'Max size of CID is 65,535');
+            if (cid > 0xffff) {
+              throw new _util.FormatError('Max size of CID is 65,535');
+            }
             var ucs2 = ucs2CMap.lookup(cid);
             if (ucs2) {
               toUnicode[charcode] = String.fromCharCode((ucs2.charCodeAt(0) << 8) + ucs2.charCodeAt(1));
@@ -18292,15 +18320,21 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     preEvaluateFont: function PartialEvaluator_preEvaluateFont(dict) {
       var baseDict = dict;
       var type = dict.get('Subtype');
-      (0, _util.assert)((0, _primitives.isName)(type), 'invalid font Subtype');
+      if (!(0, _primitives.isName)(type)) {
+        throw new _util.FormatError('invalid font Subtype');
+      }
       var composite = false;
       var uint8array;
       if (type.name === 'Type0') {
         var df = dict.get('DescendantFonts');
-        (0, _util.assert)(df, 'Descendant fonts are not specified');
+        if (!df) {
+          throw new _util.FormatError('Descendant fonts are not specified');
+        }
         dict = (0, _util.isArray)(df) ? this.xref.fetchIfRef(df[0]) : df;
         type = dict.get('Subtype');
-        (0, _util.assert)((0, _primitives.isName)(type), 'invalid font Subtype');
+        if (!(0, _primitives.isName)(type)) {
+          throw new _util.FormatError('invalid font Subtype');
+        }
         composite = true;
       }
       var descriptor = dict.get('FontDescriptor');
@@ -18372,7 +18406,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
           descriptor.set('FontBBox', dict.getArray('FontBBox'));
         } else {
           var baseFontName = dict.get('BaseFont');
-          (0, _util.assert)((0, _primitives.isName)(baseFontName), 'Base font is not specified');
+          if (!(0, _primitives.isName)(baseFontName)) {
+            throw new _util.FormatError('Base font is not specified');
+          }
           baseFontName = baseFontName.name.replace(/[,_]/g, '-');
           var metrics = this.getBaseFontMetrics(baseFontName);
           var fontNameWoStyle = baseFontName.split('-')[0];
@@ -18413,7 +18449,9 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         }
       }
       fontName = fontName || baseFont;
-      (0, _util.assert)((0, _primitives.isName)(fontName), 'invalid font name');
+      if (!(0, _primitives.isName)(fontName)) {
+        throw new _util.FormatError('invalid font name');
+      }
       var fontFile = descriptor.get('FontFile', 'FontFile2', 'FontFile3');
       if (fontFile) {
         if (fontFile.dict) {
@@ -18498,7 +18536,9 @@ var TranslatedFont = function TranslatedFontClosure() {
       this.sent = true;
     },
     loadType3Data(evaluator, resources, parentOperatorList, task) {
-      (0, _util.assert)(this.font.isType3Font);
+      if (!this.font.isType3Font) {
+        throw new Error('Must be a Type3 font.');
+      }
       if (this.type3Loaded) {
         return this.type3Loaded;
       }
@@ -19206,7 +19246,9 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
             args = [];
           }
           args.push(obj);
-          (0, _util.assert)(args.length <= 33, 'Too many arguments');
+          if (args.length > 33) {
+            throw new _util.FormatError('Too many arguments');
+          }
         }
       }
     },
@@ -21499,7 +21541,9 @@ var Catalog = function CatalogClosure() {
     this.pdfManager = pdfManager;
     this.xref = xref;
     this.catDict = xref.getCatalogObj();
-    (0, _util.assert)((0, _primitives.isDict)(this.catDict), 'catalog object is not a dictionary');
+    if (!(0, _primitives.isDict)(this.catDict)) {
+      throw new _util.FormatError('catalog object is not a dictionary');
+    }
     this.fontCache = new _primitives.RefSetCache();
     this.builtInCMapCache = Object.create(null);
     this.pageKidsCountCache = new _primitives.RefSetCache();
@@ -21533,7 +21577,9 @@ var Catalog = function CatalogClosure() {
     },
     get toplevelPagesDict() {
       var pagesObj = this.catDict.get('Pages');
-      (0, _util.assert)((0, _primitives.isDict)(pagesObj), 'invalid top-level pages dictionary');
+      if (!(0, _primitives.isDict)(pagesObj)) {
+        throw new _util.FormatError('invalid top-level pages dictionary');
+      }
       return (0, _util.shadow)(this, 'toplevelPagesDict', pagesObj);
     },
     get documentOutline() {
@@ -21572,7 +21618,9 @@ var Catalog = function CatalogClosure() {
         if (outlineDict === null) {
           continue;
         }
-        (0, _util.assert)(outlineDict.has('Title'), 'Invalid outline item');
+        if (!outlineDict.has('Title')) {
+          throw new _util.FormatError('Invalid outline item');
+        }
         var data = {
           url: null,
           dest: null
@@ -21623,8 +21671,10 @@ var Catalog = function CatalogClosure() {
     },
     get numPages() {
       var obj = this.toplevelPagesDict.get('Count');
-      (0, _util.assert)((0, _util.isInt)(obj), 'page count in top level pages object is not an integer');
-      return (0, _util.shadow)(this, 'num', obj);
+      if (!(0, _util.isInt)(obj)) {
+        throw new _util.FormatError('page count in top level pages object is not an integer');
+      }
+      return (0, _util.shadow)(this, 'numPages', obj);
     },
     get destinations() {
       function fetchDestination(dest) {
@@ -21711,17 +21761,27 @@ var Catalog = function CatalogClosure() {
       for (var i = 0, ii = this.numPages; i < ii; i++) {
         if (i in nums) {
           var labelDict = nums[i];
-          (0, _util.assert)((0, _primitives.isDict)(labelDict), 'The PageLabel is not a dictionary.');
+          if (!(0, _primitives.isDict)(labelDict)) {
+            throw new _util.FormatError('The PageLabel is not a dictionary.');
+          }
           var type = labelDict.get('Type');
-          (0, _util.assert)(!type || (0, _primitives.isName)(type, 'PageLabel'), 'Invalid type in PageLabel dictionary.');
+          if (type && !(0, _primitives.isName)(type, 'PageLabel')) {
+            throw new _util.FormatError('Invalid type in PageLabel dictionary.');
+          }
           var s = labelDict.get('S');
-          (0, _util.assert)(!s || (0, _primitives.isName)(s), 'Invalid style in PageLabel dictionary.');
+          if (s && !(0, _primitives.isName)(s)) {
+            throw new _util.FormatError('Invalid style in PageLabel dictionary.');
+          }
           style = s ? s.name : null;
           var p = labelDict.get('P');
-          (0, _util.assert)(!p || (0, _util.isString)(p), 'Invalid prefix in PageLabel dictionary.');
+          if (p && !(0, _util.isString)(p)) {
+            throw new _util.FormatError('Invalid prefix in PageLabel dictionary.');
+          }
           prefix = p ? (0, _util.stringToPDFString)(p) : '';
           var st = labelDict.get('St');
-          (0, _util.assert)(!st || (0, _util.isInt)(st) && st >= 1, 'Invalid start in PageLabel dictionary.');
+          if (st && !((0, _util.isInt)(st) && st >= 1)) {
+            throw new _util.FormatError('Invalid start in PageLabel dictionary.');
+          }
           currentIndex = st || 1;
         }
         switch (style) {
@@ -21747,7 +21807,9 @@ var Catalog = function CatalogClosure() {
             currentLabel = charBuf.join('');
             break;
           default:
-            (0, _util.assert)(!style, 'Invalid style "' + style + '" in PageLabel dictionary.');
+            if (style) {
+              throw new _util.FormatError(`Invalid style "${style}" in PageLabel dictionary.`);
+            }
         }
         pageLabels[i] = prefix + currentLabel;
         currentLabel = '';
@@ -21874,7 +21936,10 @@ var Catalog = function CatalogClosure() {
             }, capability.reject);
             return;
           }
-          (0, _util.assert)((0, _primitives.isDict)(currentNode), 'page dictionary kid reference points to wrong type of object');
+          if (!(0, _primitives.isDict)(currentNode)) {
+            capability.reject(new _util.FormatError('page dictionary kid reference points to wrong type of object'));
+            return;
+          }
           count = currentNode.get('Count');
           var objId = currentNode.objId;
           if (objId && !pageKidsCountCache.has(objId)) {
@@ -21885,12 +21950,15 @@ var Catalog = function CatalogClosure() {
             continue;
           }
           var kids = currentNode.get('Kids');
-          (0, _util.assert)((0, _util.isArray)(kids), 'page dictionary kids object is not an array');
+          if (!(0, _util.isArray)(kids)) {
+            capability.reject(new _util.FormatError('page dictionary kids object is not an array'));
+            return;
+          }
           for (var last = kids.length - 1; last >= 0; last--) {
             nodesToVisit.push(kids[last]);
           }
         }
-        capability.reject('Page index ' + pageIndex + ' not found.');
+        capability.reject(new Error('Page index ' + pageIndex + ' not found.'));
       }
       next();
       return capability.promise;
@@ -21902,19 +21970,23 @@ var Catalog = function CatalogClosure() {
         var parentRef;
         return xref.fetchAsync(kidRef).then(function (node) {
           if ((0, _primitives.isRefsEqual)(kidRef, pageRef) && !(0, _primitives.isDict)(node, 'Page') && !((0, _primitives.isDict)(node) && !node.has('Type') && node.has('Contents'))) {
-            throw new Error('The reference does not point to a /Page Dict.');
+            throw new _util.FormatError('The reference does not point to a /Page Dict.');
           }
           if (!node) {
             return null;
           }
-          (0, _util.assert)((0, _primitives.isDict)(node), 'node must be a Dict.');
+          if (!(0, _primitives.isDict)(node)) {
+            throw new _util.FormatError('node must be a Dict.');
+          }
           parentRef = node.getRaw('Parent');
           return node.getAsync('Parent');
         }).then(function (parent) {
           if (!parent) {
             return null;
           }
-          (0, _util.assert)((0, _primitives.isDict)(parent), 'parent must be a Dict.');
+          if (!(0, _primitives.isDict)(parent)) {
+            throw new _util.FormatError('parent must be a Dict.');
+          }
           return parent.getAsync('Kids');
         }).then(function (kids) {
           if (!kids) {
@@ -21924,7 +21996,9 @@ var Catalog = function CatalogClosure() {
           var found = false;
           for (var i = 0; i < kids.length; i++) {
             var kid = kids[i];
-            (0, _util.assert)((0, _primitives.isRef)(kid), 'kid must be a Ref.');
+            if (!(0, _primitives.isRef)(kid)) {
+              throw new _util.FormatError('kid must be a Ref.');
+            }
             if (kid.num === kidRef.num) {
               found = true;
               break;
@@ -22467,7 +22541,9 @@ var XRef = function XRefClosure() {
       return this.fetch(obj, suppressEncryption);
     },
     fetch: function XRef_fetch(ref, suppressEncryption) {
-      (0, _util.assert)((0, _primitives.isRef)(ref), 'ref object is not a reference');
+      if (!(0, _primitives.isRef)(ref)) {
+        throw new Error('ref object is not a reference');
+      }
       var num = ref.num;
       if (num in this.cache) {
         var cacheEntry = this.cache[num];
@@ -22623,7 +22699,9 @@ var NameOrNumberTree = function NameOrNumberTreeClosure() {
           var kids = obj.get('Kids');
           for (i = 0, n = kids.length; i < n; i++) {
             var kid = kids[i];
-            (0, _util.assert)(!processed.has(kid), 'Duplicate entry in "' + this._type + '" tree.');
+            if (processed.has(kid)) {
+              throw new _util.FormatError(`Duplicate entry in "${this._type}" tree.`);
+            }
             queue.push(kid);
             processed.put(kid);
           }
@@ -23906,7 +23984,9 @@ var WorkerMessageHandler = {
         if (source.chunkedViewerLoading) {
           pdfStream = new PDFWorkerStream(source, handler);
         } else {
-          (0, _util.assert)(PDFNetworkStream, './network module is not loaded');
+          if (!PDFNetworkStream) {
+            throw new Error('./network module is not loaded');
+          }
           pdfStream = new PDFNetworkStream(data);
         }
       } catch (ex) {
@@ -28488,7 +28568,9 @@ var BinaryCMapReader = function BinaryCMapReaderClosure() {
         }
         var sequence = !!(b & 0x10);
         var dataSize = b & 15;
-        (0, _util.assert)(dataSize + 1 <= MAX_NUM_SIZE);
+        if (dataSize + 1 > MAX_NUM_SIZE) {
+          throw new Error('processBinaryCMap: Invalid dataSize.');
+        }
         var ucs2DataSize = 1;
         var subitemsCount = stream.readNumber();
         var i;
@@ -28829,7 +28911,9 @@ var CMapFactory = function CMapFactoryClosure() {
     if (BUILT_IN_CMAPS.indexOf(name) === -1) {
       return Promise.reject(new Error('Unknown CMap name: ' + name));
     }
-    (0, _util.assert)(fetchBuiltInCMap, 'Built-in CMap parameters are not provided.');
+    if (!fetchBuiltInCMap) {
+      return Promise.reject(new Error('Built-in CMap parameters are not provided.'));
+    }
     return fetchBuiltInCMap(name).then(function (data) {
       var cMapData = data.cMapData,
           compressionType = data.compressionType;
@@ -28839,9 +28923,11 @@ var CMapFactory = function CMapFactoryClosure() {
           return extendCMap(cMap, fetchBuiltInCMap, useCMap);
         });
       }
-      (0, _util.assert)(compressionType === _util.CMapCompressionType.NONE, 'TODO: Only BINARY/NONE CMap compression is currently supported.');
-      var lexer = new _parser.Lexer(new _stream.Stream(cMapData));
-      return parseCMap(cMap, lexer, fetchBuiltInCMap, null);
+      if (compressionType === _util.CMapCompressionType.NONE) {
+        var lexer = new _parser.Lexer(new _stream.Stream(cMapData));
+        return parseCMap(cMap, lexer, fetchBuiltInCMap, null);
+      }
+      return Promise.reject(new Error('TODO: Only BINARY/NONE CMap compression is currently supported.'));
     });
   }
   return {
@@ -28881,11 +28967,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PDFDocument = exports.Page = undefined;
 
-var _util = __w_pdfjs_require__(0);
-
 var _obj = __w_pdfjs_require__(15);
 
 var _primitives = __w_pdfjs_require__(1);
+
+var _util = __w_pdfjs_require__(0);
 
 var _stream = __w_pdfjs_require__(2);
 
@@ -29146,7 +29232,9 @@ var PDFDocument = function PDFDocumentClosure() {
     } else {
       throw new Error('PDFDocument: Unknown argument type');
     }
-    (0, _util.assert)(stream.length > 0, 'stream must have data');
+    if (stream.length <= 0) {
+      throw new Error('PDFDocument: stream must have data');
+    }
     this.pdfManager = pdfManager;
     this.stream = stream;
     this.xref = new _obj.XRef(stream, pdfManager);
@@ -31790,7 +31878,9 @@ var Font = function FontClosure() {
         var cidToGidMap = properties.cidToGidMap || [];
         var isCidToGidMapEmpty = cidToGidMap.length === 0;
         properties.cMap.forEach(function (charCode, cid) {
-          (0, _util.assert)(cid <= 0xffff, 'Max size of CID is 65,535');
+          if (cid > 0xffff) {
+            throw new _util.FormatError('Max size of CID is 65,535');
+          }
           var glyphId = -1;
           if (isCidToGidMapEmpty) {
             glyphId = cid;
@@ -34897,16 +34987,17 @@ var JpegImage = function JpegImageClosure() {
       }
       return data;
     },
-    _isColorConversionNeeded: function isColorConversionNeeded() {
-      if (this.adobe && this.adobe.transformCode) {
-        return true;
-      } else if (this.numComponents === 3) {
-        if (!this.adobe && this.colorTransform === 0) {
+    _isColorConversionNeeded() {
+      if (this.adobe) {
+        return !!this.adobe.transformCode;
+      }
+      if (this.numComponents === 3) {
+        if (this.colorTransform === 0) {
           return false;
         }
         return true;
       }
-      if (!this.adobe && this.colorTransform === 1) {
+      if (this.colorTransform === 1) {
         return true;
       }
       return false;
@@ -38341,7 +38432,9 @@ Shadings.Mesh = function MeshClosure() {
       var coord = reader.readCoordinate();
       var color = reader.readComponents();
       if (verticesLeft === 0) {
-        (0, _util.assert)(0 <= f && f <= 2, 'Unknown type4 flag');
+        if (!(0 <= f && f <= 2)) {
+          throw new _util.FormatError('Unknown type4 flag');
+        }
         switch (f) {
           case 0:
             verticesLeft = 3;
@@ -38488,7 +38581,9 @@ Shadings.Mesh = function MeshClosure() {
     var cs = new Int32Array(4);
     while (reader.hasData) {
       var f = reader.readFlag();
-      (0, _util.assert)(0 <= f && f <= 3, 'Unknown type6 flag');
+      if (!(0 <= f && f <= 3)) {
+        throw new _util.FormatError('Unknown type6 flag');
+      }
       var i, ii;
       var pi = coords.length;
       for (i = 0, ii = f !== 0 ? 8 : 12; i < ii; i++) {
@@ -38604,7 +38699,9 @@ Shadings.Mesh = function MeshClosure() {
     var cs = new Int32Array(4);
     while (reader.hasData) {
       var f = reader.readFlag();
-      (0, _util.assert)(0 <= f && f <= 3, 'Unknown type7 flag');
+      if (!(0 <= f && f <= 3)) {
+        throw new _util.FormatError('Unknown type7 flag');
+      }
       var i, ii;
       var pi = coords.length;
       for (i = 0, ii = f !== 0 ? 12 : 16; i < ii; i++) {
@@ -38767,7 +38864,9 @@ Shadings.Mesh = function MeshClosure() {
     }
   }
   function Mesh(stream, matrix, xref, res) {
-    (0, _util.assert)((0, _primitives.isStream)(stream), 'Mesh data is not a stream');
+    if (!(0, _primitives.isStream)(stream)) {
+      throw new _util.FormatError('Mesh data is not a stream');
+    }
     var dict = stream.dict;
     this.matrix = matrix;
     this.shadingType = dict.get('ShadingType');
@@ -38799,7 +38898,9 @@ Shadings.Mesh = function MeshClosure() {
         break;
       case ShadingType.LATTICE_FORM_MESH:
         var verticesPerRow = dict.get('VerticesPerRow') | 0;
-        (0, _util.assert)(verticesPerRow >= 2, 'Invalid VerticesPerRow');
+        if (verticesPerRow < 2) {
+          throw new _util.FormatError('Invalid VerticesPerRow');
+        }
         decodeType5Shading(this, reader, verticesPerRow);
         break;
       case ShadingType.COONS_PATCH_MESH:
@@ -39804,8 +39905,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.8.557';
-var pdfjsBuild = '4a74cc41';
+var pdfjsVersion = '1.8.564';
+var pdfjsBuild = 'e7cddcce';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 ;
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;

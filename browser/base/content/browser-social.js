@@ -25,12 +25,6 @@ XPCOMUtils.defineLazyGetter(this, "DynamicResizeWatcher", function() {
   return tmp.DynamicResizeWatcher;
 });
 
-XPCOMUtils.defineLazyGetter(this, "Utils", function() {
-  let tmp = {};
-  Cu.import("resource://gre/modules/sessionstore/Utils.jsm", tmp);
-  return tmp.Utils;
-});
-
 let messageManager = window.messageManager;
 let openUILinkIn = window.openUILinkIn;
 

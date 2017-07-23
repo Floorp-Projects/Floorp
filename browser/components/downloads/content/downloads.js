@@ -66,8 +66,6 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
-                                  "resource:///modules/DownloadsCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsViewUI",
                                   "resource:///modules/DownloadsViewUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -84,7 +82,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 /**
  * Main entry point for the downloads panel interface.
  */
-const DownloadsPanel = {
+var DownloadsPanel = {
   // Initialization and termination
 
   /**
@@ -577,7 +575,7 @@ XPCOMUtils.defineConstant(this, "DownloadsPanel", DownloadsPanel);
  * Allows loading the downloads panel and the status indicator interfaces on
  * demand, to improve startup performance.
  */
-const DownloadsOverlayLoader = {
+var DownloadsOverlayLoader = {
   /**
    * We cannot load two overlays at the same time, thus we use a queue of
    * pending load requests.
@@ -657,7 +655,7 @@ XPCOMUtils.defineConstant(this, "DownloadsOverlayLoader", DownloadsOverlayLoader
  * download state and real-time data.  In addition, handles part of the user
  * interaction events raised by the downloads list widget.
  */
-const DownloadsView = {
+var DownloadsView = {
   // Functions handling download items in the list
 
   /**
@@ -1189,7 +1187,7 @@ DownloadsViewItem.prototype = {
  * widget, in particular the "commands" that apply to multiple items, and
  * dispatches the commands that apply to individual items.
  */
-const DownloadsViewController = {
+var DownloadsViewController = {
   // Initialization and termination
 
   initialize() {
@@ -1292,7 +1290,7 @@ XPCOMUtils.defineConstant(this, "DownloadsViewController", DownloadsViewControll
  * Manages the summary at the bottom of the downloads panel list if the number
  * of items in the list exceeds the panels limit.
  */
-const DownloadsSummary = {
+var DownloadsSummary = {
 
   /**
    * Sets the active state of the summary. When active, the summary subscribes
@@ -1476,7 +1474,7 @@ XPCOMUtils.defineConstant(this, "DownloadsSummary", DownloadsSummary);
  * Manages events sent to to the footer vbox, which contains both the
  * DownloadsSummary as well as the "Show All Downloads" button.
  */
-const DownloadsFooter = {
+var DownloadsFooter = {
 
   /**
    * Focuses the appropriate element within the footer. If the summary
@@ -1530,7 +1528,7 @@ XPCOMUtils.defineConstant(this, "DownloadsFooter", DownloadsFooter);
 /**
  * Manages the blocked subview that slides in when you click a blocked download.
  */
-const DownloadsBlockedSubview = {
+var DownloadsBlockedSubview = {
 
   get subview() {
     let subview = document.getElementById("downloadsPanel-blockedSubview");

@@ -130,7 +130,6 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     analysisContext(analysisContext),
     baselineFrame_(baselineFrame),
     constraints_(constraints),
-    analysis_(*temp, info->script()),
     thisTypes(nullptr),
     argTypes(nullptr),
     typeArray(nullptr),
@@ -186,7 +185,6 @@ IonBuilder::clearForBackEnd()
     // later phases of compilation to avoid leaks, as the top level IonBuilder
     // is not explicitly destroyed. Note that builders for inner scripts are
     // constructed on the stack and will release this memory on destruction.
-    gsn.purge();
     envCoordinateNameCache.purge();
 }
 
@@ -583,8 +581,6 @@ IonBuilder::analyzeNewLoopTypes(const CFGBlock* loopEntryBlock)
             continue;
         if (slot >= info().firstStackSlot())
             continue;
-        if (!analysis().maybeInfo(pc))
-            continue;
         if (!last)
             continue;
 
@@ -708,9 +704,6 @@ IonBuilder::init()
         argTypes = nullptr;
     }
 
-    if (!analysis().init(alloc(), gsn))
-        return abort(AbortReason::Alloc);
-
     // The baseline script normally has the bytecode type map, but compute
     // it ourselves if we do not have a baseline script.
     if (script()->hasBaselineScript()) {
@@ -734,7 +727,7 @@ IonBuilder::build()
         script()->baselineScript()->resetMaxInliningDepth();
 
     MBasicBlock* entry;
-    MOZ_TRY_VAR(entry, newBlock(pc));
+    MOZ_TRY_VAR(entry, newBlock(info().firstStackSlot(), pc));
     MOZ_TRY(setCurrentAndSpecializePhis(entry));
 
 #ifdef JS_JITSPEW
@@ -930,7 +923,7 @@ IonBuilder::buildInline(IonBuilder* callerBuilder, MResumePoint* callerResumePoi
 
     // Generate single entrance block.
     MBasicBlock* entry;
-    MOZ_TRY_VAR(entry, newBlock(pc));
+    MOZ_TRY_VAR(entry, newBlock(info().firstStackSlot(), pc));
     MOZ_TRY(setCurrentAndSpecializePhis(entry));
 
     current->setCallerResumePoint(callerResumePoint);
@@ -1123,6 +1116,16 @@ IonBuilder::initLocals()
         current->initSlot(info().localSlot(i), undef);
 }
 
+bool
+IonBuilder::usesEnvironmentChain()
+{
+    // We don't have a BaselineScript if we're running the arguments analysis,
+    // but it's fine to assume we always use the environment chain in this case.
+    if (info().analysisMode() == Analysis_ArgumentsUsage)
+        return true;
+    return script()->baselineScript()->usesEnvironmentChain();
+}
+
 AbortReasonOr<Ok>
 IonBuilder::initEnvironmentChain(MDefinition* callee)
 {
@@ -1132,7 +1135,7 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
     // from earlier.  However, always make a env chain when |needsArgsObj| is true
     // for the script, since arguments object construction requires the env chain
     // to be passed in.
-    if (!info().needsArgsObj() && !analysis().usesEnvironmentChain())
+    if (!info().needsArgsObj() && !usesEnvironmentChain())
         return Ok();
 
     // The env chain is only tracked in scripts that have NAME opcodes which
@@ -1371,9 +1374,6 @@ GetOrCreateControlFlowGraph(TempAllocator& tempAlloc, JSScript* script,
     }
 
     ControlFlowGenerator cfgenerator(tempAlloc, script);
-    if (!cfgenerator.init())
-        return CFGState::Alloc;
-
     if (!cfgenerator.traverseBytecode()) {
         if (cfgenerator.aborted())
             return CFGState::Abort;
@@ -1760,8 +1760,6 @@ IonBuilder::visitControlInstruction(CFGControlInstruction* ins, bool* restarted)
 AbortReasonOr<Ok>
 IonBuilder::inspectOpcode(JSOp op)
 {
-    MOZ_ASSERT(analysis_.maybeInfo(pc), "Compiling unreachable op");
-
     // Add not yet implemented opcodes at the bottom of the switch!
     switch (op) {
       case JSOP_NOP:
@@ -3016,9 +3014,8 @@ IonBuilder::visitCompare(CFGCompare* compare)
 AbortReasonOr<Ok>
 IonBuilder::visitTry(CFGTry* try_)
 {
-    // Try-finally is not yet supported.
-    if (analysis().hasTryFinally())
-        return abort(AbortReason::Disable, "Has try-finally");
+    // We don't support try-finally. The ControlFlowGenerator should have
+    // aborted compilation in this case.
 
     // Try-catch within inline frames is not yet supported.
     MOZ_ASSERT(!isInlineBuilder());
@@ -3035,30 +3032,20 @@ IonBuilder::visitTry(CFGTry* try_)
 
     blockWorklist[try_->tryBlock()->id()] = tryBlock;
 
-    // If the code after the try catch is reachable we connected it to the
-    // graph with an MGotoWithFake instruction that always jumps to the try
-    // block. This ensures the successor block always has a predecessor.
-    if (try_->codeAfterTryCatchReachable()) {
-        MBasicBlock* successor;
-        MOZ_TRY_VAR(successor, newBlock(current, try_->getSuccessor(1)->startPc()));
+    // Connect the code after the try-catch to the graph with an MGotoWithFake
+    // instruction that always jumps to the try block. This ensures the
+    // successor block always has a predecessor.
+    MBasicBlock* successor;
+    MOZ_TRY_VAR(successor, newBlock(current, try_->getSuccessor(1)->startPc()));
 
-        blockWorklist[try_->afterTryCatchBlock()->id()] = successor;
+    blockWorklist[try_->afterTryCatchBlock()->id()] = successor;
 
-        current->end(MGotoWithFake::New(alloc(), tryBlock, successor));
+    current->end(MGotoWithFake::New(alloc(), tryBlock, successor));
 
-        // The baseline compiler should not attempt to enter the catch block
-        // via OSR.
-        MOZ_ASSERT(info().osrPc() < try_->catchStartPc() ||
-                   info().osrPc() >= try_->afterTryCatchBlock()->startPc());
-
-    } else {
-        current->end(MGoto::New(alloc(), tryBlock));
-
-        // The baseline compiler should not attempt to enter the catch block
-        // via OSR or the code after the catch block.
-        // TODO: pre-existing bug. OSR after the catch block. Shouldn't happen.
-        //MOZ_ASSERT(info().osrPc() < try_->catchStartPc());
-    }
+    // The baseline compiler should not attempt to enter the catch block
+    // via OSR.
+    MOZ_ASSERT(info().osrPc() < try_->catchStartPc() ||
+               info().osrPc() >= try_->afterTryCatchBlock()->startPc());
 
     return Ok();
 }
@@ -3845,7 +3832,7 @@ IonBuilder::inlineScriptedCall(CallInfo& callInfo, JSFunction* target)
     // Create return block.
     jsbytecode* postCall = GetNextPc(pc);
     MBasicBlock* returnBlock;
-    MOZ_TRY_VAR(returnBlock, newBlock(nullptr, postCall));
+    MOZ_TRY_VAR(returnBlock, newBlock(current->stackDepth(), postCall));
     graph().addBlock(returnBlock);
     returnBlock->setCallerResumePoint(callerResumePoint_);
 
@@ -4541,10 +4528,13 @@ IonBuilder::inlineCalls(CallInfo& callInfo, const InliningTargets& targets, Bool
         dispatch = MFunctionDispatch::New(alloc(), callInfo.fun());
     }
 
+    MOZ_ASSERT(dispatchBlock->stackDepth() >= callInfo.numFormals());
+    uint32_t stackDepth = dispatchBlock->stackDepth() - callInfo.numFormals() + 1;
+
     // Generate a return block to host the rval-collecting MPhi.
     jsbytecode* postCall = GetNextPc(pc);
     MBasicBlock* returnBlock;
-    MOZ_TRY_VAR(returnBlock, newBlock(nullptr, postCall));
+    MOZ_TRY_VAR(returnBlock, newBlock(stackDepth, postCall));
     graph().addBlock(returnBlock);
     returnBlock->setCallerResumePoint(callerResumePoint_);
 
@@ -6510,9 +6500,11 @@ IonBuilder::jsop_initelem_getter_setter()
 }
 
 AbortReasonOr<MBasicBlock*>
-IonBuilder::newBlock(MBasicBlock* predecessor, jsbytecode* pc)
+IonBuilder::newBlock(size_t stackDepth, jsbytecode* pc, MBasicBlock* maybePredecessor)
 {
-    MBasicBlock* block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
+    MOZ_ASSERT_IF(maybePredecessor, maybePredecessor->stackDepth() == stackDepth);
+
+    MBasicBlock* block = MBasicBlock::New(graph(), stackDepth, info(), maybePredecessor,
                                           bytecodeSite(pc), MBasicBlock::NORMAL);
     if (!block)
         return abort(AbortReason::Alloc);
@@ -6546,9 +6538,12 @@ IonBuilder::newBlockPopN(MBasicBlock* predecessor, jsbytecode* pc, uint32_t popp
 }
 
 AbortReasonOr<MBasicBlock*>
-IonBuilder::newBlockAfter(MBasicBlock* at, MBasicBlock* predecessor, jsbytecode* pc)
+IonBuilder::newBlockAfter(MBasicBlock* at, size_t stackDepth, jsbytecode* pc,
+                          MBasicBlock* maybePredecessor)
 {
-    MBasicBlock* block = MBasicBlock::New(graph(), &analysis(), info(), predecessor,
+    MOZ_ASSERT_IF(maybePredecessor, maybePredecessor->stackDepth() == stackDepth);
+
+    MBasicBlock* block = MBasicBlock::New(graph(), stackDepth, info(), maybePredecessor,
                                           bytecodeSite(pc), MBasicBlock::NORMAL);
     if (!block)
         return abort(AbortReason::Alloc);
@@ -6569,7 +6564,7 @@ IonBuilder::newOsrPreheader(MBasicBlock* predecessor, jsbytecode* loopEntry,
     // the preheader, which has the OSR entry block as a predecessor. The
     // OSR block is always the second block (with id 1).
     MBasicBlock* osrBlock;
-    MOZ_TRY_VAR(osrBlock, newBlockAfter(*graph().begin(), loopEntry));
+    MOZ_TRY_VAR(osrBlock, newBlockAfter(*graph().begin(), predecessor->stackDepth(), loopEntry));
     MBasicBlock* preheader;
     MOZ_TRY_VAR(preheader, newBlock(predecessor, loopEntry));
 
@@ -6587,7 +6582,7 @@ IonBuilder::newOsrPreheader(MBasicBlock* predecessor, jsbytecode* loopEntry,
         uint32_t slot = info().environmentChainSlot();
 
         MInstruction* envv;
-        if (analysis().usesEnvironmentChain()) {
+        if (usesEnvironmentChain()) {
             envv = MOsrEnvironmentChain::New(alloc(), entry);
         } else {
             // Use an undefined value if the script does not need its env
@@ -7657,7 +7652,7 @@ IonBuilder::jsop_bindname(PropertyName* name)
 AbortReasonOr<Ok>
 IonBuilder::jsop_bindvar()
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MCallBindVar* ins = MCallBindVar::New(alloc(), current->environmentChain());
     current->add(ins);
     current->push(ins);
@@ -8374,7 +8369,8 @@ IonBuilder::getElemTryArguments(bool* emitted, MDefinition* obj, MDefinition* in
     index = addBoundsCheck(index, length);
 
     // Load the argument from the actual arguments.
-    MGetFrameArgument* load = MGetFrameArgument::New(alloc(), index, analysis_.hasSetArg());
+    bool modifiesArgs = script()->baselineScript()->modifiesArguments();
+    MGetFrameArgument* load = MGetFrameArgument::New(alloc(), index, modifiesArgs);
     current->add(load);
     current->push(load);
 
@@ -12175,7 +12171,7 @@ IonBuilder::jsop_classconstructor()
 AbortReasonOr<Ok>
 IonBuilder::jsop_lambda(JSFunction* fun)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MOZ_ASSERT(!fun->isArrow());
 
     if (IsAsmJSModule(fun))
@@ -12193,7 +12189,7 @@ IonBuilder::jsop_lambda(JSFunction* fun)
 AbortReasonOr<Ok>
 IonBuilder::jsop_lambda_arrow(JSFunction* fun)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
     MOZ_ASSERT(fun->isArrow());
     MOZ_ASSERT(!fun->isNative());
 
@@ -12226,7 +12222,7 @@ IonBuilder::jsop_setfunname(uint8_t prefixKind)
 AbortReasonOr<Ok>
 IonBuilder::jsop_pushlexicalenv(uint32_t index)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     LexicalScope* scope = &script()->getScope(index)->as<LexicalScope>();
     MNewLexicalEnvironmentObject* ins =
@@ -12241,7 +12237,7 @@ IonBuilder::jsop_pushlexicalenv(uint32_t index)
 AbortReasonOr<Ok>
 IonBuilder::jsop_copylexicalenv(bool copySlots)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     MCopyLexicalEnvironmentObject* ins =
         MCopyLexicalEnvironmentObject::New(alloc(), current->environmentChain(), copySlots);
@@ -12260,7 +12256,8 @@ IonBuilder::jsop_setarg(uint32_t arg)
     // to wrap the spilling action, we don't want the spilling to be
     // captured by the GETARG and by the resume point, only by
     // MGetFrameArgument.
-    MOZ_ASSERT(analysis_.hasSetArg());
+    MOZ_ASSERT_IF(script()->hasBaselineScript(),
+                  script()->baselineScript()->modifiesArguments());
     MDefinition* val = current->peek(-1);
 
     // If an arguments object is in use, and it aliases formals, then all SETARGs
@@ -12346,7 +12343,7 @@ IonBuilder::jsop_defvar(uint32_t index)
     MOZ_ASSERT(!script()->isForEval());
 
     // Pass the EnvironmentChain.
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     // Bake the name pointer into the MDefVar.
     MDefVar* defvar = MDefVar::New(alloc(), name, attrs, current->environmentChain());
@@ -12375,7 +12372,7 @@ IonBuilder::jsop_deflexical(uint32_t index)
 AbortReasonOr<Ok>
 IonBuilder::jsop_deffun(uint32_t index)
 {
-    MOZ_ASSERT(analysis().usesEnvironmentChain());
+    MOZ_ASSERT(usesEnvironmentChain());
 
     MDefFun* deffun = MDefFun::New(alloc(), current->pop(), current->environmentChain());
     current->add(deffun);
