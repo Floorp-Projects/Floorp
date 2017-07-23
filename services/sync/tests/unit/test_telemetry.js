@@ -118,7 +118,7 @@ add_task(async function test_processIncoming_error() {
     const BOGUS_GUID = "zzzzzzzzzzzz";
     let bogus_record = collection.insert(BOGUS_GUID, "I'm a bogus record!");
     bogus_record.get = function get() {
-      throw "Sync this!";
+      throw new Error("Sync this!");
     };
     // Make the 10 minutes old so it will only be synced in the toFetch phase.
     bogus_record.modified = Date.now() / 1000 - 60 * 10;
@@ -294,7 +294,7 @@ add_task(async function test_sync_partialUpload() {
     ok(!ping.engines[0].failureReason);
     deepEqual(ping.engines[0].outgoing, [{ sent: 234, failed: 2 }]);
 
-    collection.post = function() { throw "Failure"; }
+    collection.post = function() { throw new Error("Failure"); }
 
     engine._store.items["record-no-1000"] = "Record No. 1000";
     engine._tracker.addChangedID("record-no-1000", 1000);

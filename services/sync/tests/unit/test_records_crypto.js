@@ -68,7 +68,7 @@ add_task(async function test_records_crypto() {
     } catch (ex) {
       error = ex;
     }
-    do_check_eq(error, "No ciphertext: nothing to decrypt?");
+    do_check_eq(error.message, "No ciphertext: nothing to decrypt?");
 
     log.info("Re-encrypting the record with alternate payload");
 
@@ -90,7 +90,7 @@ add_task(async function test_records_crypto() {
     } catch (ex) {
       error = ex;
     }
-    do_check_eq(error, "Record id mismatch: resource != other");
+    do_check_eq(error.message, "Record id mismatch: resource != other");
 
     log.info("Make sure wrong hmacs cause failures");
     cryptoWrap.encrypt(keyBundle);
@@ -101,7 +101,7 @@ add_task(async function test_records_crypto() {
     } catch (ex) {
       error = ex;
     }
-    do_check_eq(error.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
+    do_check_eq(error.message.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
 
     // Checking per-collection keys and default key handling.
 
@@ -133,7 +133,7 @@ add_task(async function test_records_crypto() {
     } catch (ex) {
       err = ex;
     }
-    do_check_eq("Record SHA256 HMAC mismatch", err.substr(0, 27));
+    do_check_eq("Record SHA256 HMAC mismatch", err.message.substr(0, 27));
 
     // Explicitly check that it's using the bookmarks key.
     // This should succeed.
