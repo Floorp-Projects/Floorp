@@ -756,7 +756,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       GeckoRestyleManager::ReframingStyleContexts* rsc =
         presContext->RestyleManager()->AsGecko()->GetReframingStyleContexts();
       if (rsc) {
-        rsc->Put(mContent, mStyleContext);
+        rsc->Put(mContent, mStyleContext->AsGecko());
       }
     }
   }

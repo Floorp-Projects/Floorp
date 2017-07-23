@@ -1445,7 +1445,7 @@ ComputeTransformListDistance(const nsCSSValueList* aList1,
 static double
 ComputeMismatchedTransfromListDistance(const nsCSSValueList* aList1,
                                        const nsCSSValueList* aList2,
-                                       nsStyleContext* aStyleContext)
+                                       GeckoStyleContext* aStyleContext)
 {
   // We need nsStyleContext and nsPresContext to compute calc() values while
   // processing the translate part of transforms.
@@ -1480,7 +1480,7 @@ bool
 StyleAnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
                                      const StyleAnimationValue& aStartValue,
                                      const StyleAnimationValue& aEndValue,
-                                     nsStyleContext* aStyleContext,
+                                     GeckoStyleContext* aStyleContext,
                                      double& aDistance)
 {
   Unit commonUnit =
@@ -3475,7 +3475,7 @@ static bool
 ComputeValuesFromStyleContext(
   nsCSSPropertyID aProperty,
   CSSEnabledState aEnabledState,
-  nsStyleContext* aStyleContext,
+  GeckoStyleContext* aStyleContext,
   nsTArray<PropertyStyleAnimationValuePair>& aValues)
 {
   // Extract computed value of our property (or all longhand components, if
@@ -3505,7 +3505,7 @@ ComputeValuesFromStyleContext(
 static bool
 ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
                            CSSEnabledState aEnabledState,
-                           nsStyleContext* aStyleContext,
+                           GeckoStyleContext* aStyleContext,
                            css::StyleRule* aStyleRule,
                            nsTArray<PropertyStyleAnimationValuePair>& aValues,
                            bool* aIsContextSensitive)
@@ -3519,7 +3519,7 @@ ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
              "ServoStyleSet should not use StyleAnimationValue for animations");
   nsStyleSet* styleSet = aStyleContext->PresContext()->StyleSet()->AsGecko();
 
-  RefPtr<nsStyleContext> tmpStyleContext;
+  RefPtr<GeckoStyleContext> tmpStyleContext;
   if (aIsContextSensitive) {
     MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty),
                "to correctly set aIsContextSensitive for shorthand properties, "
@@ -3538,7 +3538,7 @@ ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
 
     // Force walk of rule tree
     nsStyleStructID sid = nsCSSProps::kSIDTable[aProperty];
-    tmpStyleContext->AsGecko()->StyleData(sid);
+    tmpStyleContext->StyleData(sid);
 
     // The rule node will have unconditional cached style data if the value is
     // not context-sensitive.  So if there's nothing cached, it's not context
@@ -3572,7 +3572,7 @@ ComputeValuesFromStyleRule(nsCSSPropertyID aProperty,
 /* static */ bool
 StyleAnimationValue::ComputeValue(nsCSSPropertyID aProperty,
                                   dom::Element* aTargetElement,
-                                  nsStyleContext* aStyleContext,
+                                  GeckoStyleContext* aStyleContext,
                                   const nsAString& aSpecifiedValue,
                                   bool aUseSVGMode,
                                   StyleAnimationValue& aComputedValue,
@@ -3624,7 +3624,7 @@ ComputeValuesFromSpecifiedValue(
     nsCSSPropertyID aProperty,
     CSSEnabledState aEnabledState,
     dom::Element* aTargetElement,
-    nsStyleContext* aStyleContext,
+    GeckoStyleContext* aStyleContext,
     T& aSpecifiedValue,
     bool aUseSVGMode,
     nsTArray<PropertyStyleAnimationValuePair>& aResult)
@@ -3652,7 +3652,7 @@ StyleAnimationValue::ComputeValues(
     nsCSSPropertyID aProperty,
     CSSEnabledState aEnabledState,
     dom::Element* aTargetElement,
-    nsStyleContext* aStyleContext,
+    GeckoStyleContext* aStyleContext,
     const nsAString& aSpecifiedValue,
     bool aUseSVGMode,
     nsTArray<PropertyStyleAnimationValuePair>& aResult)
@@ -3668,7 +3668,7 @@ StyleAnimationValue::ComputeValues(
     nsCSSPropertyID aProperty,
     CSSEnabledState aEnabledState,
     dom::Element* aTargetElement,
-    nsStyleContext* aStyleContext,
+    GeckoStyleContext* aStyleContext,
     const nsCSSValue& aSpecifiedValue,
     bool aUseSVGMode,
     nsTArray<PropertyStyleAnimationValuePair>& aResult)
@@ -3983,13 +3983,13 @@ SetPositionCoordValue(const Position::Coord& aPosCoord,
  * expressions replaced with canonical ones.
  */
 static void
-SubstitutePixelValues(nsStyleContext* aStyleContext,
+SubstitutePixelValues(GeckoStyleContext* aStyleContext,
                       const nsCSSValue& aInput, nsCSSValue& aOutput)
 {
   if (aInput.IsCalcUnit()) {
     RuleNodeCacheConditions conditions;
     nsRuleNode::ComputedCalc c =
-      nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext->AsGecko(),
+      nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
                                               aStyleContext->PresContext(),
                                               conditions);
     nsStyleCoord::CalcValue c2;
@@ -4009,7 +4009,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
   } else if (aInput.IsLengthUnit() &&
              aInput.GetUnit() != eCSSUnit_Pixel) {
     RuleNodeCacheConditions conditions;
-    nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext->AsGecko(),
+    nscoord len = nsRuleNode::CalcLength(aInput, aStyleContext,
                                          aStyleContext->PresContext(),
                                          conditions);
     aOutput.SetFloatValue(nsPresContext::AppUnitsToFloatCSSPixels(len),
@@ -4233,13 +4233,13 @@ SetFallbackValue(nsCSSValuePair* aPair, const nsStyleSVGPaint& aPaint)
 
 bool
 StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
-                                          nsStyleContext* aStyleContext,
+                                          GeckoStyleContext* aStyleContext,
                                           StyleAnimationValue& aComputedValue)
 {
   MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
              "bad property");
   const void* styleStruct =
-    aStyleContext->AsGecko()->StyleData(nsCSSProps::kSIDTable[aProperty]);
+    aStyleContext->StyleData(nsCSSProps::kSIDTable[aProperty]);
   ptrdiff_t ssOffset = nsCSSProps::kStyleStructOffsetTable[aProperty];
   nsStyleAnimType animType = nsCSSProps::kAnimTypeTable[aProperty];
   MOZ_ASSERT(0 <= ssOffset ||
@@ -5389,7 +5389,7 @@ AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
   return StyleAnimationValue::ComputeDistance(aProperty,
                                               mGecko,
                                               aOther.mGecko,
-                                              aStyleContext,
+                                              aStyleContext->AsGecko(),
                                               distance)
          ? distance
          : 0.0;
@@ -5440,7 +5440,8 @@ AnimationValue::FromString(nsCSSPropertyID aProperty,
     return result;
   }
 
-  if (!StyleAnimationValue::ComputeValue(aProperty, aElement, styleContext,
+  if (!StyleAnimationValue::ComputeValue(aProperty, aElement,
+                                         styleContext->AsGecko(),
                                          aValue, false /* |aUseSVGMode| */,
                                          result.mGecko)) {
     MOZ_ASSERT(result.IsNull());

@@ -361,17 +361,17 @@ PopExistingAnimation(const nsAString& aName,
 class ResolvedStyleCache {
 public:
   ResolvedStyleCache() : mCache() {}
-  nsStyleContext* Get(nsPresContext *aPresContext,
-                      nsStyleContext *aParentStyleContext,
-                      Declaration* aKeyframeDeclaration);
+  GeckoStyleContext* Get(nsPresContext* aPresContext,
+                         GeckoStyleContext* aParentStyleContext,
+                         Declaration* aKeyframeDeclaration);
 
 private:
-  nsRefPtrHashtable<nsPtrHashKey<Declaration>, nsStyleContext> mCache;
+  nsRefPtrHashtable<nsPtrHashKey<Declaration>, GeckoStyleContext> mCache;
 };
 
-nsStyleContext*
-ResolvedStyleCache::Get(nsPresContext *aPresContext,
-                        nsStyleContext *aParentStyleContext,
+GeckoStyleContext*
+ResolvedStyleCache::Get(nsPresContext* aPresContext,
+                        GeckoStyleContext* aParentStyleContext,
                         Declaration* aKeyframeDeclaration)
 {
   // FIXME (spec):  The css3-animations spec isn't very clear about how
@@ -382,7 +382,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   // that they're not, since that would prevent us from caching a lot of
   // data that we'd really like to cache (in particular, the
   // StyleAnimationValue values in AnimationPropertySegment).
-  nsStyleContext *result = mCache.GetWeak(aKeyframeDeclaration);
+  GeckoStyleContext* result = mCache.GetWeak(aKeyframeDeclaration);
   if (!result) {
     aKeyframeDeclaration->SetImmutable();
     // The spec says that !important declarations should just be ignored
@@ -394,8 +394,9 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
     MOZ_ASSERT(aPresContext->StyleSet()->IsGecko(),
                "ServoStyleSet should not use nsAnimationManager for "
                "animations");
-    RefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->AsGecko()->
-      ResolveStyleByAddingRules(aParentStyleContext, rules);
+    RefPtr<GeckoStyleContext> resultStrong =
+      aPresContext->StyleSet()->AsGecko()->
+        ResolveStyleByAddingRules(aParentStyleContext, rules);
     mCache.Put(aKeyframeDeclaration, resultStrong);
     result = resultStrong;
   }
@@ -433,7 +434,7 @@ private:
 
 class MOZ_STACK_CLASS GeckoCSSAnimationBuilder final {
 public:
-  GeckoCSSAnimationBuilder(nsStyleContext* aStyleContext,
+  GeckoCSSAnimationBuilder(GeckoStyleContext* aStyleContext,
                            const NonOwningAnimationTarget& aTarget)
     : mStyleContext(aStyleContext)
     , mTarget(aTarget)
@@ -448,7 +449,7 @@ public:
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
   {
-    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext->AsGecko());
+    aEffect.SetKeyframes(Move(aKeyframes), mStyleContext);
   }
 
 private:
@@ -470,7 +471,7 @@ private:
     const Maybe<ComputedTimingFunction>& aInheritedTimingFunction,
     nsTArray<Keyframe>& aKeyframes);
 
-  RefPtr<nsStyleContext> mStyleContext;
+  RefPtr<GeckoStyleContext> mStyleContext;
   NonOwningAnimationTarget mTarget;
 
   ResolvedStyleCache mResolvedStyles;
@@ -843,7 +844,7 @@ GeckoCSSAnimationBuilder::GetKeyframePropertyValues(
     nsCSSPropertyIDSet& aAnimatedProperties)
 {
   nsTArray<PropertyValuePair> result;
-  RefPtr<nsStyleContext> styleContext =
+  RefPtr<GeckoStyleContext> styleContext =
     mResolvedStyles.Get(aPresContext, mStyleContext,
                         aKeyframeRule->Declaration());
 

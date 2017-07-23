@@ -2690,7 +2690,7 @@ CreateFontDeclaration(const nsAString& aFont,
     eCSSProperty_line_height, NS_LITERAL_STRING("normal"), &lineHeightChanged);
 }
 
-static already_AddRefed<nsStyleContext>
+static already_AddRefed<GeckoStyleContext>
 GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
                           ErrorResult& aError)
 {
@@ -2702,7 +2702,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
-    return result.forget();
+    return already_AddRefed<GeckoStyleContext>(result.forget().take()->AsGecko());
   }
 
   // otherwise inherit from default (10px sans-serif)
@@ -2718,7 +2718,7 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* aPresShell,
   nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
   MOZ_RELEASE_ASSERT(styleSet);
 
-  RefPtr<nsStyleContext> result =
+  RefPtr<GeckoStyleContext> result =
     styleSet->ResolveStyleForRules(nullptr, parentRules);
 
   if (!result) {
@@ -2740,7 +2740,7 @@ PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSPropertyID aPro
                          filterVal->GetUnit() == eCSSUnit_Initial));
 }
 
-static already_AddRefed<nsStyleContext>
+static already_AddRefed<GeckoStyleContext>
 GetFontStyleContext(Element* aElement, const nsAString& aFont,
                     nsIPresShell* aPresShell,
                     nsAString& aOutUsedFont,
@@ -2766,7 +2766,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
 
   // have to get a parent style context for inherit-like relative
   // values (2em, bolder, etc.)
-  RefPtr<nsStyleContext> parentContext =
+  RefPtr<GeckoStyleContext> parentContext =
     GetFontParentStyleContext(aElement, aPresShell, aError);
 
   if (aError.Failed()) {
@@ -2788,7 +2788,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
   MOZ_RELEASE_ASSERT(styleSet);
 
-  RefPtr<nsStyleContext> sc =
+  RefPtr<GeckoStyleContext> sc =
     styleSet->ResolveStyleForRules(parentContext, rules);
 
   // The font getter is required to be reserialized based on what we
@@ -2925,10 +2925,10 @@ CreateFilterDeclaration(const nsAString& aFilter,
     eCSSProperty_UNKNOWN, EmptyString(), &dummy);
 }
 
-static already_AddRefed<nsStyleContext>
+static already_AddRefed<GeckoStyleContext>
 ResolveFilterStyle(const nsAString& aFilterString,
                    nsIPresShell* aPresShell,
-                   nsStyleContext* aParentContext,
+                   GeckoStyleContext* aParentContext,
                    ErrorResult& aError)
 {
   nsIDocument* document = aPresShell->GetDocument();
@@ -2953,7 +2953,7 @@ ResolveFilterStyle(const nsAString& aFilterString,
   nsStyleSet* styleSet = aPresShell->StyleSet()->GetAsGecko();
   MOZ_RELEASE_ASSERT(styleSet);
 
-  RefPtr<nsStyleContext> sc =
+  RefPtr<GeckoStyleContext> sc =
     styleSet->ResolveStyleForRules(aParentContext, rules);
 
   return sc.forget();
@@ -3014,14 +3014,14 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
 
   nsString usedFont;
   if (presShell->StyleSet()->IsGecko()) {
-    RefPtr<nsStyleContext> parentContext =
+    RefPtr<GeckoStyleContext> parentContext =
       GetFontStyleContext(mCanvasElement, GetFont(),
                           presShell, usedFont, aError);
     if (!parentContext) {
       aError.Throw(NS_ERROR_FAILURE);
       return false;
     }
-    RefPtr<nsStyleContext> sc =
+    RefPtr<GeckoStyleContext> sc =
       ResolveFilterStyle(aString, presShell, parentContext, aError);
 
     if (!sc) {
@@ -3961,31 +3961,19 @@ CanvasRenderingContext2D::SetFontInternal(const nsAString& aFont,
   }
 
   RefPtr<nsStyleContext> sc;
-  RefPtr<ServoStyleContext> computedValues;
   nsString usedFont;
-  const nsStyleFont* fontStyle;
   if (presShell->StyleSet()->IsServo()) {
-    computedValues = GetFontStyleForServo(mCanvasElement,
-                                          aFont,
-                                          presShell,
-                                          usedFont,
-                                          aError);
-    if (!computedValues) {
-      return false;
-    }
-    fontStyle = computedValues->ComputedData()->GetStyleFont();
+    sc =
+      GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
   } else {
-    sc = GetFontStyleContext(mCanvasElement,
-                             aFont,
-                             presShell,
-                             usedFont,
-                             aError);
-    if (!sc) {
-      return false;
-    }
-    fontStyle = sc->StyleFont();
+    sc =
+      GetFontStyleContext(mCanvasElement, aFont, presShell, usedFont, aError);
+  }
+  if (!sc) {
+    return false;
   }
 
+  const nsStyleFont* fontStyle = sc->StyleFont();
   nsPresContext* c = presShell->GetPresContext();
 
   // Purposely ignore the font size that respects the user's minimum

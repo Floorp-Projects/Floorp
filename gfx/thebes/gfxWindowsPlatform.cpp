@@ -19,6 +19,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsIGfxInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -1339,6 +1340,25 @@ gfxWindowsPlatform::InitializeD3D11Config()
     d3d11.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled",
                            NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_NEED_HWCOMP"));
     return;
+  }
+
+  if (!IsWin8OrLater() &&
+      !DeviceManagerDx::Get()->CheckRemotePresentSupport()) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo;
+    gfxInfo = services::GetGfxInfo();
+    nsAutoString adaptorId;
+    gfxInfo->GetAdapterDeviceID(adaptorId);
+    // Blacklist Intel HD Graphics 510/520/530 on Windows 7 without platform
+    // update due to the crashes in Bug 1351349.
+    if (adaptorId.EqualsLiteral("0x1912") || adaptorId.EqualsLiteral("0x1916") ||
+        adaptorId.EqualsLiteral("0x1902")) {
+#ifdef RELEASE_OR_BETA
+      d3d11.Disable(FeatureStatus::Blacklisted, "Blacklisted, see bug 1351349",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_BUG_1351349"));
+#else
+      gfxPrefs::SetCompositorClearState(true);
+#endif
+    }
   }
 
   d3d11.EnableByDefault();
