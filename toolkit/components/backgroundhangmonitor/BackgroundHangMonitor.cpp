@@ -6,6 +6,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/CPUUsageWatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
@@ -14,6 +15,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/Unused.h"
 
 #include "prinrval.h"
 #include "prthread.h"
@@ -38,6 +40,10 @@
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
 static const size_t kMaxThreadHangStackDepth = 30;
+
+// Interval at which we check the global and per-process CPU usage in order to determine
+// if there is high external CPU usage.
+static const int32_t kCheckCPUIntervalMilliseconds = 2000;
 
 // An utility comparator function used by std::unique to collapse "(* script)" entries in
 // a vector representing a call stack.
@@ -95,6 +101,9 @@ public:
   // thread, and carried around, as nsStreamTransportService::Init is
   // non-threadsafe.
   nsCOMPtr<nsIEventTarget> mSTS;
+  // Allows us to watch CPU usage and annotate hangs when the system is
+  // under high external load.
+  CPUUsageWatcher mCPUUsageWatcher;
 
   void Shutdown()
   {
@@ -283,6 +292,9 @@ BackgroundHangManager::RunMonitorThread()
   // Default values for the first iteration of thread loop
   PRIntervalTime waitTime = PR_INTERVAL_NO_WAIT;
   PRIntervalTime recheckTimeout = PR_INTERVAL_NO_WAIT;
+  PRIntervalTime lastCheckedCPUUsage = systemTime;
+  PRIntervalTime checkCPUUsageInterval =
+    PR_MillisecondsToInterval(kCheckCPUIntervalMilliseconds);
 
   while (!mShutdown) {
     nsresult rv = autoLock.Wait(waitTime);
@@ -290,6 +302,11 @@ BackgroundHangManager::RunMonitorThread()
     PRIntervalTime newTime = PR_IntervalNow();
     PRIntervalTime systemInterval = newTime - systemTime;
     systemTime = newTime;
+
+    if (systemTime - lastCheckedCPUUsage > checkCPUUsageInterval) {
+      Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
+      lastCheckedCPUUsage = systemTime;
+    }
 
     /* waitTime is a quarter of the shortest timeout value; If our timing
        latency is low enough (less than half the shortest timeout value),
@@ -347,6 +364,16 @@ BackgroundHangManager::RunMonitorThread()
             currentThread->mHangStack,
             currentThread->mRunnableName,
             true);
+
+          // If we hang immediately on waking, then the most recently collected
+          // CPU usage is going to be an average across the whole time we were
+          // sleeping. Accordingly, we want to make sure that when we hang, we
+          // collect a fresh value.
+          if (systemTime != lastCheckedCPUUsage) {
+            Unused << NS_WARN_IF(mCPUUsageWatcher.CollectCPUUsage().isErr());
+            lastCheckedCPUUsage = systemTime;
+          }
+
           currentThread->mHangStart = interval;
           currentThread->mHanging = true;
           currentThread->mAnnotations =
@@ -572,6 +599,7 @@ BackgroundHangMonitor::Startup()
     if (XRE_IsParentProcess()) { // cached ClientID hasn't been read yet
       BackgroundHangThread::Startup();
       BackgroundHangManager::sInstance = new BackgroundHangManager();
+      Unused << NS_WARN_IF(BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
 
       nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
       MOZ_ASSERT(observerService);
@@ -585,6 +613,7 @@ BackgroundHangMonitor::Startup()
 
   BackgroundHangThread::Startup();
   BackgroundHangManager::sInstance = new BackgroundHangManager();
+  Unused << NS_WARN_IF(BackgroundHangManager::sInstance->mCPUUsageWatcher.Init().isErr());
 #endif
 }
 
@@ -598,6 +627,7 @@ BackgroundHangMonitor::Shutdown()
   }
 
   MOZ_ASSERT(BackgroundHangManager::sInstance, "Not initialized");
+  BackgroundHangManager::sInstance->mCPUUsageWatcher.Uninit();
   /* Scope our lock inside Shutdown() because the sInstance object can
      be destroyed as soon as we set sInstance to nullptr below, and
      we don't want to hold the lock when it's being destroyed. */
