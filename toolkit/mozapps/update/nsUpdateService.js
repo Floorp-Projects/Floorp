@@ -3879,7 +3879,6 @@ UpdatePrompt.prototype = {
    */
   showUpdateElevationRequired: function UP_showUpdateElevationRequired() {
     if (getPref("getBoolPref", PREF_APP_UPDATE_SILENT, false) ||
-        getPref("getBoolPref", PREF_APP_UPDATE_DOORHANGER, false) ||
         this._getAltUpdateWindow()) {
       return;
     }
