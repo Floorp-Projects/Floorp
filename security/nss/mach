@@ -66,7 +66,7 @@ class cfAction(argparse.Action):
             for file in files:
                 with open(os.path.join(dirname, file), "rb") as f:
                     hash.update(f.read())
-        chk_file = cwd + "/out/.chk"
+        chk_file = cwd + "/.chk"
         old_chk = ""
         new_chk = hash.hexdigest()
         if os.path.exists(chk_file):

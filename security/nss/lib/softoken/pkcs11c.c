@@ -2639,6 +2639,11 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
 
 #define INIT_HMAC_MECH(mmm)                                               \
     case CKM_##mmm##_HMAC_GENERAL:                                        \
+        PORT_Assert(pMechanism->pParameter);                              \
+        if (!pMechanism->pParameter) {                                    \
+            crv = CKR_MECHANISM_PARAM_INVALID;                            \
+            break;                                                        \
+        }                                                                 \
         crv = sftk_doHMACInit(context, HASH_Alg##mmm, key,                \
                               *(CK_ULONG *)pMechanism->pParameter);       \
         break;                                                            \
@@ -2654,6 +2659,11 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
             INIT_HMAC_MECH(SHA512)
 
         case CKM_SHA_1_HMAC_GENERAL:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doHMACInit(context, HASH_AlgSHA1, key,
                                   *(CK_ULONG *)pMechanism->pParameter);
             break;
@@ -2662,10 +2672,20 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
             break;
 
         case CKM_SSL3_MD5_MAC:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doSSLMACInit(context, SEC_OID_MD5, key,
                                     *(CK_ULONG *)pMechanism->pParameter);
             break;
         case CKM_SSL3_SHA1_MAC:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doSSLMACInit(context, SEC_OID_SHA1, key,
                                     *(CK_ULONG *)pMechanism->pParameter);
             break;
@@ -3314,6 +3334,11 @@ NSC_VerifyInit(CK_SESSION_HANDLE hSession,
             INIT_HMAC_MECH(SHA512)
 
         case CKM_SHA_1_HMAC_GENERAL:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doHMACInit(context, HASH_AlgSHA1, key,
                                   *(CK_ULONG *)pMechanism->pParameter);
             break;
@@ -3322,10 +3347,20 @@ NSC_VerifyInit(CK_SESSION_HANDLE hSession,
             break;
 
         case CKM_SSL3_MD5_MAC:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doSSLMACInit(context, SEC_OID_MD5, key,
                                     *(CK_ULONG *)pMechanism->pParameter);
             break;
         case CKM_SSL3_SHA1_MAC:
+            PORT_Assert(pMechanism->pParameter);
+            if (!pMechanism->pParameter) {
+                crv = CKR_MECHANISM_PARAM_INVALID;
+                break;
+            }
             crv = sftk_doSSLMACInit(context, SEC_OID_SHA1, key,
                                     *(CK_ULONG *)pMechanism->pParameter);
             break;
