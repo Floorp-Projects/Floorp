@@ -201,7 +201,6 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.cache_delete")
       (global-name "com.apple.pluginkit.pkd")
       (global-name "com.apple.bird")
-      (global-name "com.apple.ocspd")
       (global-name "com.apple.cmio.AppleCameraAssistant")
       (global-name "com.apple.DesktopServicesHelper"))
 
