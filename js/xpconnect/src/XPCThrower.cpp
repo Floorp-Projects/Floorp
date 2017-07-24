@@ -85,7 +85,7 @@ XPCThrower::Throw(nsresult rv, XPCCallContext& ccx)
     dom::Throw(ccx, rv, nsDependentCString(sz));
 
     if (sz && sz != format)
-        JS_smprintf_free(sz);
+        js_free(sz);
 }
 
 
@@ -127,7 +127,7 @@ XPCThrower::ThrowBadResult(nsresult rv, nsresult result, XPCCallContext& ccx)
     dom::Throw(ccx, result, nsDependentCString(sz));
 
     if (sz)
-        JS_smprintf_free(sz);
+        js_free(sz);
 }
 
 // static
@@ -149,7 +149,7 @@ XPCThrower::ThrowBadParam(nsresult rv, unsigned paramNum, XPCCallContext& ccx)
     dom::Throw(ccx, rv, nsDependentCString(sz));
 
     if (sz)
-        JS_smprintf_free(sz);
+        js_free(sz);
 }
 
 
@@ -173,7 +173,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
 
     if (sz) {
         if (own)
-            JS_smprintf_free(*psz);
+            js_free(*psz);
         *psz = sz;
     }
 }
