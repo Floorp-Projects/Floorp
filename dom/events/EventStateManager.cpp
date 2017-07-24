@@ -186,13 +186,6 @@ PrintDocTreeAll(nsIDocShellTreeItem* aItem)
 }
 #endif
 
-// mask values for ui.key.chromeAccess and ui.key.contentAccess
-#define NS_MODIFIER_SHIFT    1
-#define NS_MODIFIER_CONTROL  2
-#define NS_MODIFIER_ALT      4
-#define NS_MODIFIER_META     8
-#define NS_MODIFIER_OS       16
-
 /******************************************************************/
 /* mozilla::UITimerCallback                                       */
 /******************************************************************/
@@ -768,30 +761,34 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case eKeyPress:
     {
       WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-
-      int32_t modifierMask = 0;
-      if (keyEvent->IsShift())
-        modifierMask |= NS_MODIFIER_SHIFT;
-      if (keyEvent->IsControl())
-        modifierMask |= NS_MODIFIER_CONTROL;
-      if (keyEvent->IsAlt())
-        modifierMask |= NS_MODIFIER_ALT;
-      if (keyEvent->IsMeta())
-        modifierMask |= NS_MODIFIER_META;
-      if (keyEvent->IsOS())
-        modifierMask |= NS_MODIFIER_OS;
-
-      // Prevent keyboard scrolling while an accesskey modifier is in use.
-      if (modifierMask) {
-        bool matchesContentAccessKey = (modifierMask == Prefs::ContentAccessModifierMask());
-
-        if (modifierMask == Prefs::ChromeAccessModifierMask() ||
-            matchesContentAccessKey) {
+      if (keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eChrome) ||
+          keyEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent)) {
+        // If the eKeyPress event will be sent to a remote process, this
+        // process needs to wait reply from the remote process for checking if
+        // preceding eKeyDown event is consumed.  If preceding eKeyDown event
+        // is consumed in the remote process, TabChild won't send the event
+        // back to this process.  So, only when this process receives a reply
+        // eKeyPress event in TabParent, we should handle accesskey in this
+        // process.
+        if (IsRemoteTarget(GetFocusedContent())) {
+          // However, if there is no accesskey target for the key combination,
+          // we don't need to wait reply from the remote process.  Otherwise,
+          // Mark the event as waiting reply from remote process and stop
+          // propagation in this process.
+          if (CheckIfEventMatchesAccessKey(keyEvent, aPresContext)) {
+            keyEvent->StopPropagation();
+            keyEvent->MarkAsWaitingReplyFromRemoteProcess();
+          }
+        }
+        // If the event target is in this process, we can handle accesskey now
+        // since if preceding eKeyDown event was consumed, eKeyPress event
+        // won't be dispatched by widget.  So, coming eKeyPress event means
+        // that the preceding eKeyDown event wasn't consumed in this case.
+        else {
           AutoTArray<uint32_t, 10> accessCharCodes;
           keyEvent->GetAccessKeyCandidates(accessCharCodes);
 
-          if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes,
-                              modifierMask, matchesContentAccessKey)) {
+          if (HandleAccessKey(keyEvent, aPresContext, accessCharCodes)) {
             *aStatus = nsEventStatus_eConsumeNoDefault;
           }
         }
@@ -817,6 +814,18 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       RefPtr<TextComposition> composition =
         IMEStateManager::GetTextCompositionFor(aPresContext);
       aEvent->AsKeyboardEvent()->mIsComposing = !!composition;
+
+      // Widget may need to perform default action for specific keyboard
+      // event if it's not consumed.  In this case, widget has already marked
+      // the event as "waiting reply from remote process".  However, we need
+      // to reset it if the target (focused content) isn't in a remote process
+      // because PresShell needs to check if it's marked as so before
+      // dispatching events into the DOM tree.
+      if (aEvent->IsWaitingReplyFromRemoteProcess() &&
+          !aEvent->PropagationStopped() &&
+          !IsRemoteTarget(content)) {
+        aEvent->ResetWaitingReplyFromRemoteProcessState();
+      }
     }
     break;
   case eWheel:
@@ -924,23 +933,21 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
   handler.HandleQueryContentEvent(aEvent);
 }
 
-// static
-int32_t
-EventStateManager::GetAccessModifierMaskFor(nsISupports* aDocShell)
+static AccessKeyType
+GetAccessKeyTypeFor(nsISupports* aDocShell)
 {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(aDocShell));
-  if (!treeItem)
-    return -1; // invalid modifier
+  if (!treeItem) {
+    return AccessKeyType::eNone;
+  }
 
   switch (treeItem->ItemType()) {
-  case nsIDocShellTreeItem::typeChrome:
-    return Prefs::ChromeAccessModifierMask();
-
-  case nsIDocShellTreeItem::typeContent:
-    return Prefs::ContentAccessModifierMask();
-
-  default:
-    return -1; // invalid modifier
+    case nsIDocShellTreeItem::typeChrome:
+      return AccessKeyType::eChrome;
+    case nsIDocShellTreeItem::typeContent:
+      return AccessKeyType::eContent;
+    default:
+      return AccessKeyType::eNone;
   }
 }
 
@@ -992,8 +999,22 @@ IsAccessKeyTarget(nsIContent* aContent, nsIFrame* aFrame, nsAString& aKey)
 }
 
 bool
-EventStateManager::ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
-                                    bool aIsTrustedEvent)
+EventStateManager::CheckIfEventMatchesAccessKey(WidgetKeyboardEvent* aEvent,
+                                                nsPresContext* aPresContext)
+{
+  AutoTArray<uint32_t, 10> accessCharCodes;
+  aEvent->GetAccessKeyCandidates(accessCharCodes);
+  return WalkESMTreeToHandleAccessKey(const_cast<WidgetKeyboardEvent*>(aEvent),
+                                      aPresContext, accessCharCodes,
+                                      nullptr, eAccessKeyProcessingNormal,
+                                      false);
+}
+
+bool
+EventStateManager::LookForAccessKeyAndExecute(
+                     nsTArray<uint32_t>& aAccessCharCodes,
+                     bool aIsTrustedEvent,
+                     bool aExecute)
 {
   int32_t count, start = -1;
   nsIContent* focusedContent = GetFocusedContent();
@@ -1013,6 +1034,9 @@ EventStateManager::ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
       content = mAccessKeys[(start + count) % length];
       frame = content->GetPrimaryFrame();
       if (IsAccessKeyTarget(content, frame, accessKey)) {
+        if (!aExecute) {
+          return true;
+        }
         bool shouldActivate = Prefs::KeyCausesActivation();
         while (shouldActivate && ++count <= length) {
           nsIContent *oc = mAccessKeys[(start + count) % length];
@@ -1059,30 +1083,33 @@ EventStateManager::GetAccessKeyLabelPrefix(Element* aElement, nsAString& aPrefix
   nsAutoString separator, modifierText;
   nsContentUtils::GetModifierSeparatorText(separator);
 
-  nsCOMPtr<nsISupports> container = aElement->OwnerDoc()->GetDocShell();
-  int32_t modifierMask = GetAccessModifierMaskFor(container);
-
-  if (modifierMask == -1) {
+  AccessKeyType accessKeyType =
+    GetAccessKeyTypeFor(aElement->OwnerDoc()->GetDocShell());
+  if (accessKeyType == AccessKeyType::eNone) {
+    return;
+  }
+  Modifiers modifiers = WidgetKeyboardEvent::AccessKeyModifiers(accessKeyType);
+  if (modifiers == MODIFIER_NONE) {
     return;
   }
 
-  if (modifierMask & NS_MODIFIER_CONTROL) {
+  if (modifiers & MODIFIER_CONTROL) {
     nsContentUtils::GetControlText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_META) {
+  if (modifiers & MODIFIER_META) {
     nsContentUtils::GetMetaText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_OS) {
+  if (modifiers & MODIFIER_OS) {
     nsContentUtils::GetOSText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_ALT) {
+  if (modifiers & MODIFIER_ALT) {
     nsContentUtils::GetAltText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
-  if (modifierMask & NS_MODIFIER_SHIFT) {
+  if (modifiers & MODIFIER_SHIFT) {
     nsContentUtils::GetShiftText(modifierText);
     aPrefix.Append(modifierText + separator);
   }
@@ -1092,12 +1119,11 @@ struct MOZ_STACK_CLASS AccessKeyInfo
 {
   WidgetKeyboardEvent* event;
   nsTArray<uint32_t>& charCodes;
-  int32_t modifierMask;
 
-  AccessKeyInfo(WidgetKeyboardEvent* aEvent, nsTArray<uint32_t>& aCharCodes, int32_t aModifierMask)
+  AccessKeyInfo(WidgetKeyboardEvent* aEvent,
+                nsTArray<uint32_t>& aCharCodes)
     : event(aEvent)
     , charCodes(aCharCodes)
-    , modifierMask(aModifierMask)
   {
   }
 };
@@ -1111,10 +1137,15 @@ HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
   bool active;
   aTabParent->GetDocShellIsActive(&active);
   if (active) {
-    accessKeyInfo->event->mAccessKeyForwardedToChild = true;
+    // Even if there is no target for the accesskey in this process,
+    // the event may match with a content accesskey.  If so, the keyboard
+    // event should be handled with reply event for preventing double action.
+    // (e.g., Alt+Shift+F on Windows may focus a content in remote and open
+    // "File" menu.)
+    accessKeyInfo->event->StopPropagation();
+    accessKeyInfo->event->MarkAsWaitingReplyFromRemoteProcess();
     aTabParent->HandleAccessKey(*accessKeyInfo->event,
-                                accessKeyInfo->charCodes,
-                                accessKeyInfo->modifierMask);
+                                accessKeyInfo->charCodes);
     return true;
   }
 
@@ -1122,25 +1153,29 @@ HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
 }
 
 bool
-EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
-                                   nsPresContext* aPresContext,
-                                   nsTArray<uint32_t>& aAccessCharCodes,
-                                   bool aMatchesContentAccessKey,
-                                   nsIDocShellTreeItem* aBubbledFrom,
-                                   ProcessingAccessKeyState aAccessKeyState,
-                                   int32_t aModifierMask)
+EventStateManager::WalkESMTreeToHandleAccessKey(
+                     WidgetKeyboardEvent* aEvent,
+                     nsPresContext* aPresContext,
+                     nsTArray<uint32_t>& aAccessCharCodes,
+                     nsIDocShellTreeItem* aBubbledFrom,
+                     ProcessingAccessKeyState aAccessKeyState,
+                     bool aExecute)
 {
   EnsureDocument(mPresContext);
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
   if (NS_WARN_IF(!docShell) || NS_WARN_IF(!mDocument)) {
     return false;
   }
-
+  AccessKeyType accessKeyType = GetAccessKeyTypeFor(docShell);
+  if (accessKeyType == AccessKeyType::eNone) {
+    return false;
+  }
   // Alt or other accesskey modifier is down, we may need to do an accesskey.
   if (mAccessKeys.Count() > 0 &&
-      aModifierMask == GetAccessModifierMaskFor(docShell)) {
+      aEvent->ModifiersMatchWithAccessKey(accessKeyType)) {
     // Someone registered an accesskey.  Find and activate it.
-    if (ExecuteAccessKey(aAccessCharCodes, aEvent->IsTrusted())) {
+    if (LookForAccessKeyAndExecute(aAccessCharCodes,
+                                   aEvent->IsTrusted(), aExecute)) {
       return true;
     }
   }
@@ -1173,9 +1208,9 @@ EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
         static_cast<EventStateManager*>(subPC->EventStateManager());
 
       if (esm &&
-          esm->HandleAccessKey(aEvent, subPC, aAccessCharCodes,
-                               aMatchesContentAccessKey, nullptr,
-                               eAccessKeyProcessingDown, aModifierMask)) {
+          esm->WalkESMTreeToHandleAccessKey(aEvent, subPC, aAccessCharCodes,
+                                            nullptr, eAccessKeyProcessingDown,
+                                            aExecute)) {
         return true;
       }
     }
@@ -1196,29 +1231,38 @@ EventStateManager::HandleAccessKey(WidgetKeyboardEvent* aEvent,
       EventStateManager* esm =
         static_cast<EventStateManager*>(parentPC->EventStateManager());
       if (esm &&
-          esm->HandleAccessKey(aEvent, parentPC, aAccessCharCodes,
-                               aMatchesContentAccessKey, docShell,
-                               eAccessKeyProcessingDown, aModifierMask)) {
+          esm->WalkESMTreeToHandleAccessKey(aEvent, parentPC, aAccessCharCodes,
+                                            docShell, eAccessKeyProcessingDown,
+                                            aExecute)) {
         return true;
       }
     }
   }// if end. bubble up process
 
   // If the content access key modifier is pressed, try remote children
-  if (aMatchesContentAccessKey && mDocument && mDocument->GetWindow()) {
-    // If the focus is currently on a node with a TabParent, the key event will
-    // get forwarded to the child process and HandleAccessKey called from there.
+  if (aExecute &&
+      aEvent->ModifiersMatchWithAccessKey(AccessKeyType::eContent) &&
+      mDocument && mDocument->GetWindow()) {
+    // If the focus is currently on a node with a TabParent, the key event
+    // should've gotten forwarded to the child process and HandleAccessKey
+    // called from there.
+    if (TabParent::GetFrom(GetFocusedContent())) {
+      // If access key may be only in remote contents, this method won't handle
+      // access key synchronously.  In this case, only reply event should reach
+      // here.
+      MOZ_ASSERT(aEvent->IsHandledInRemoteProcess() ||
+                 !aEvent->IsWaitingReplyFromRemoteProcess());
+    }
     // If focus is somewhere else, then we need to check the remote children.
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
-    if (TabParent::GetFrom(focusedContent)) {
-      // A remote child process is focused. The key event should get sent to
-      // the child process.
-      aEvent->mAccessKeyForwardedToChild = true;
-    } else {
-      AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes, aModifierMask);
+    // However, if the event has already been handled in a remote process,
+    // then, focus is moved from the remote process after posting the event.
+    // In such case, we shouldn't retry to handle access keys in remote
+    // processes.
+    else if (!aEvent->IsHandledInRemoteProcess()) {
+      AccessKeyInfo accessKeyInfo(aEvent, aAccessCharCodes);
       nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
-                                              HandleAccessKeyInRemoteChild, &accessKeyInfo);
+                                              HandleAccessKeyInRemoteChild,
+                                              &accessKeyInfo);
     }
   }
 
@@ -5819,9 +5863,6 @@ EventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
 
 bool EventStateManager::Prefs::sKeyCausesActivation = true;
 bool EventStateManager::Prefs::sClickHoldContextMenu = false;
-int32_t EventStateManager::Prefs::sGenericAccessModifierKey = -1;
-int32_t EventStateManager::Prefs::sChromeAccessModifierMask = 0;
-int32_t EventStateManager::Prefs::sContentAccessModifierMask = 0;
 
 // static
 void
@@ -5846,21 +5887,6 @@ EventStateManager::Prefs::Init()
                                     sClickHoldContextMenu);
   MOZ_ASSERT(NS_SUCCEEDED(rv),
              "Failed to observe \"ui.click_hold_context_menus\"");
-  rv = Preferences::AddIntVarCache(&sGenericAccessModifierKey,
-                                   "ui.key.generalAccessKey",
-                                   sGenericAccessModifierKey);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.generalAccessKey\"");
-  rv = Preferences::AddIntVarCache(&sChromeAccessModifierMask,
-                                   "ui.key.chromeAccess",
-                                   sChromeAccessModifierMask);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.chromeAccess\"");
-  rv = Preferences::AddIntVarCache(&sContentAccessModifierMask,
-                                   "ui.key.contentAccess",
-                                   sContentAccessModifierMask);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.key.contentAccess\"");
   sPrefsAlreadyCached = true;
 }
 
@@ -5879,44 +5905,6 @@ void
 EventStateManager::Prefs::Shutdown()
 {
   Preferences::UnregisterCallback(OnChange, "dom.popup_allowed_events");
-}
-
-// static
-int32_t
-EventStateManager::Prefs::ChromeAccessModifierMask()
-{
-  return GetAccessModifierMask(nsIDocShellTreeItem::typeChrome);
-}
-
-// static
-int32_t
-EventStateManager::Prefs::ContentAccessModifierMask()
-{
-  return GetAccessModifierMask(nsIDocShellTreeItem::typeContent);
-}
-
-// static
-int32_t
-EventStateManager::Prefs::GetAccessModifierMask(int32_t aItemType)
-{
-  switch (sGenericAccessModifierKey) {
-    case -1:                             break; // use the individual prefs
-    case nsIDOMKeyEvent::DOM_VK_SHIFT:   return NS_MODIFIER_SHIFT;
-    case nsIDOMKeyEvent::DOM_VK_CONTROL: return NS_MODIFIER_CONTROL;
-    case nsIDOMKeyEvent::DOM_VK_ALT:     return NS_MODIFIER_ALT;
-    case nsIDOMKeyEvent::DOM_VK_META:    return NS_MODIFIER_META;
-    case nsIDOMKeyEvent::DOM_VK_WIN:     return NS_MODIFIER_OS;
-    default:                             return 0;
-  }
-
-  switch (aItemType) {
-    case nsIDocShellTreeItem::typeChrome:
-      return sChromeAccessModifierMask;
-    case nsIDocShellTreeItem::typeContent:
-      return sContentAccessModifierMask;
-    default:
-      return 0;
-  }
 }
 
 /******************************************************************/

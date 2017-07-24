@@ -461,6 +461,8 @@ class Onboarding {
       // Let's toggle the overlay.
       case "onboarding-overlay":
         this.toggleOverlay();
+        let selectedTour = this._tours.find(tour => !this.isTourCompleted(tour.id)) || this._tours[0];
+        this.gotoPage(selectedTour.id);
         break;
       case "onboarding-notification-close-btn":
         this.hideNotification();
@@ -833,15 +835,15 @@ class Onboarding {
       // Cache elements in arrays for later use to avoid cost of querying elements
       this._tourItems.push(li);
       this._tourPages.push(div);
+
+      this.markTourCompletionState(tour.id);
     }
-    tours.forEach(tour => this.markTourCompletionState(tour.id));
 
     let dialog = this._window.document.getElementById("onboarding-overlay-dialog");
     let ul = this._window.document.getElementById("onboarding-tour-list");
     ul.appendChild(itemsFrag);
     let footer = this._window.document.getElementById("onboarding-footer");
     dialog.insertBefore(pagesFrag, footer);
-    this.gotoPage(tours[0].id);
   }
 
   _loadCSS() {

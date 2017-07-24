@@ -8161,7 +8161,19 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       if (aEvent->mClass == eKeyboardEventClass) {
         nsContentUtils::SetIsHandlingKeyBoardEvent(true);
       }
-      if (aEvent->IsAllowedToDispatchDOMEvent()) {
+      // If EventStateManager or something wants reply from remote process and
+      // needs to win any other event listeners in chrome, the event is both
+      // stopped its propagation and marked as "waiting reply from remote
+      // process".  In this case, PresShell shouldn't dispatch the event into
+      // the DOM tree because they don't have a chance to stop propagation in
+      // the system event group.  On the other hand, if its propagation is not
+      // stopped, that means that the event may be reserved by chrome.  If it's
+      // reserved by chrome, the event shouldn't be sent to any remote
+      // processes.  In this case, PresShell needs to dispatch the event to
+      // the DOM tree for checking if it's reserved.
+      if (aEvent->IsAllowedToDispatchDOMEvent() &&
+          !(aEvent->PropagationStopped() &&
+            aEvent->IsWaitingReplyFromRemoteProcess())) {
         MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
           "Somebody changed aEvent to cause a DOM event!");
         nsPresShellEventCB eventCB(this);

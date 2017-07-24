@@ -255,3 +255,59 @@ add_task(async function test_multiple_contexts_init() {
   await BrowserTestUtils.removeTab(tab);
   await extension.unload();
 });
+
+add_task(async function test_tools_menu() {
+  const first = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["menus"],
+    },
+    async background() {
+      await browser.menus.create({title: "alpha", contexts: ["tools_menu"]});
+      await browser.menus.create({title: "beta", contexts: ["tools_menu"]});
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  const second = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["menus"],
+    },
+    async background() {
+      await browser.menus.create({title: "gamma", contexts: ["tools_menu"]});
+      browser.menus.onClicked.addListener((info, tab) => {
+        browser.test.sendMessage("click", {info, tab});
+      });
+
+      const [tab] = await browser.tabs.query({active: true});
+      browser.test.sendMessage("ready", tab.id);
+    },
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+  await first.startup();
+  await second.startup();
+
+  await first.awaitMessage("ready");
+  const tabId = await second.awaitMessage("ready");
+  const menu = await openToolsMenu();
+
+  const [separator, submenu, gamma] = Array.from(menu.children).slice(-3);
+  is(separator.tagName, "menuseparator", "Separator before first extension item");
+
+  is(submenu.tagName, "menu", "Correct submenu type");
+  is(submenu.getAttribute("label"), "Generated extension", "Correct submenu title");
+  is(submenu.firstChild.children.length, 2, "Correct number of submenu items");
+
+  is(gamma.tagName, "menuitem", "Third menu item type is correct");
+  is(gamma.getAttribute("label"), "gamma", "Third menu item label is correct");
+
+  closeToolsMenu(gamma);
+
+  const click = await second.awaitMessage("click");
+  is(click.info.pageUrl, "http://example.com/", "Click info pageUrl is correct");
+  is(click.tab.id, tabId, "Click event tab ID is correct");
+
+  await BrowserTestUtils.removeTab(tab);
+  await first.unload();
+  await second.unload();
+});

@@ -7,6 +7,7 @@
 var WebConsoleUtils = require("devtools/client/webconsole/utils").Utils;
 const {extend} = require("devtools/shared/extend");
 var {TargetFactory} = require("devtools/client/framework/target");
+var {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 var {Tools} = require("devtools/client/definitions");
 const { Task } = require("devtools/shared/task");
 var promise = require("promise");
@@ -389,7 +390,8 @@ WebConsole.prototype = {
   _onClearButton: function WC__onClearButton()
   {
     if (this.target.isLocalTab) {
-      this.browserWindow.DeveloperToolbar.resetErrorsCount(this.target.tab);
+      gDevToolsBrowser.getDeveloperToolbar(this.browserWindow)
+        .resetErrorsCount(this.target.tab);
     }
   },
 

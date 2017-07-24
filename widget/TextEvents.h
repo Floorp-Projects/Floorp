@@ -59,6 +59,16 @@ namespace plugins {
   class PPluginInstanceChild;
 } // namespace plugins
 
+enum class AccessKeyType
+{
+  // Handle access key for chrome.
+  eChrome,
+  // Handle access key for content.
+  eContent,
+  // Don't handle access key.
+  eNone
+};
+
 /******************************************************************************
  * mozilla::AlternativeCharCode
  *
@@ -144,7 +154,6 @@ protected:
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(eKeyLocationStandard)
-    , mAccessKeyForwardedToChild(false)
     , mUniqueId(0)
 #ifdef XP_MACOSX
     , mNativeModifierFlags(0)
@@ -173,7 +182,6 @@ public:
     , mCharCode(0)
     , mPseudoCharCode(0)
     , mLocation(eKeyLocationStandard)
-    , mAccessKeyForwardedToChild(false)
     , mUniqueId(0)
 #ifdef XP_MACOSX
     , mNativeModifierFlags(0)
@@ -269,11 +277,6 @@ public:
   uint32_t mPseudoCharCode;
   // One of eKeyLocation*
   uint32_t mLocation;
-  // True if accesskey handling was forwarded to the child via
-  // TabParent::HandleAccessKey. In this case, parent process menu access key
-  // handling should be delayed until it is determined that there exists no
-  // overriding access key in the content process.
-  bool mAccessKeyForwardedToChild;
   // Unique id associated with a keydown / keypress event. It's ok if this wraps
   // over long periods.
   uint32_t mUniqueId;
@@ -431,6 +434,24 @@ public:
    */
   void GetAccessKeyCandidates(nsTArray<uint32_t>& aCandidates) const;
 
+  /**
+   * Check whether the modifiers match with chrome access key or
+   * content access key.
+   */
+  bool ModifiersMatchWithAccessKey(AccessKeyType aType) const;
+
+  /**
+   * Return active modifiers which may match with access key.
+   * For example, even if Alt is access key modifier, then, when Control,
+   * CapseLock and NumLock are active, this returns only MODIFIER_CONTROL.
+   */
+  Modifiers ModifiersForAccessKeyMatching() const;
+
+  /**
+   * Return access key modifiers.
+   */
+  static Modifiers AccessKeyModifiers(AccessKeyType aType);
+
   static void Shutdown();
 
   /**
@@ -481,7 +502,6 @@ public:
     mAlternativeCharCodes = aEvent.mAlternativeCharCodes;
     mIsRepeat = aEvent.mIsRepeat;
     mIsComposing = aEvent.mIsComposing;
-    mAccessKeyForwardedToChild = aEvent.mAccessKeyForwardedToChild;
     mKeyNameIndex = aEvent.mKeyNameIndex;
     mCodeNameIndex = aEvent.mCodeNameIndex;
     mKeyValue = aEvent.mKeyValue;
@@ -565,6 +585,10 @@ private:
           "Invalid native key binding type");
     }
   }
+
+  static int32_t GenericAccessModifierKeyPref();
+  static int32_t ChromeAccessModifierMaskPref();
+  static int32_t ContentAccessModifierMaskPref();
 };
 
 /******************************************************************************

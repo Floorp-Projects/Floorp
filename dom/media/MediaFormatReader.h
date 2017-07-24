@@ -9,9 +9,11 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StateMirroring.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Mutex.h"
 
+#include "FrameStatistics.h"
 #include "MediaEventSource.h"
 #include "MediaDataDemuxer.h"
 #include "MediaMetadataManager.h"
@@ -22,7 +24,6 @@
 
 namespace mozilla {
 
-class AbstractMediaDecoder;
 class CDMProxy;
 class GMPCrashHelper;
 class MediaResource;
@@ -74,16 +75,11 @@ struct MetadataHolder
 
 struct MOZ_STACK_CLASS MediaFormatReaderInit
 {
-  AbstractMediaDecoder* const mDecoder;
   MediaResource* mResource = nullptr;
   VideoFrameContainer* mVideoFrameContainer = nullptr;
+  FrameStatistics* mFrameStats = nullptr;
   already_AddRefed<layers::KnowsCompositor> mKnowsCompositor;
   already_AddRefed<GMPCrashHelper> mCrashHelper;
-
-  explicit MediaFormatReaderInit(AbstractMediaDecoder* aDecoder)
-    : mDecoder(aDecoder)
-  {
-  }
 };
 
 class MediaFormatReader final
@@ -280,7 +276,7 @@ private:
   void RequestDemuxSamples(TrackType aTrack);
   // Handle demuxed samples by the input behavior.
   void HandleDemuxedSamples(TrackType aTrack,
-                            AbstractMediaDecoder::AutoNotifyDecoded& aA);
+                            FrameStatistics::AutoNotifyDecoded& aA);
   // Decode any pending already demuxed samples.
   void DecodeDemuxedSamples(TrackType aTrack,
                             MediaRawData* aSample);
@@ -745,9 +741,6 @@ private:
   void ShutdownDecoder(TrackType aTrack);
   RefPtr<ShutdownPromise> TearDownDecoders();
 
-  // Reference to the owning decoder object.
-  AbstractMediaDecoder* mDecoder;
-
   bool mShutdown = false;
 
   // Buffered range.
@@ -767,6 +760,8 @@ private:
   MediaEventProducer<void> mOnWaitingForKey;
 
   MediaEventProducer<MediaResult> mOnDecodeWarning;
+
+  RefPtr<FrameStatistics> mFrameStats;
 };
 
 } // namespace mozilla

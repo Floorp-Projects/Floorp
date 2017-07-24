@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
 public class BrowserProviderBookmarksTest {
 
     private static final long INVALID_ID = -1;
+    private static final long INVALID_TIMESTAMP = -1;
 
     private ContentProviderClient bookmarksClient;
     private Uri bookmarksTestUri;
@@ -142,6 +143,50 @@ public class BrowserProviderBookmarksTest {
     }
 
     @Test
+    public void testBookmarkFolderLastModifiedOnDeletion() throws RemoteException {
+        final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+
+        // root
+        // -> sibling
+        // -> parent -- timestamp must change
+        // ---> child-1
+        // ---> child-2 -- delete this one
+
+        final Uri parentUri = insertBookmark("parent", null, "parent", rootId,
+                                             BrowserContract.Bookmarks.TYPE_FOLDER);
+        final Uri siblingUri = insertBookmark("sibling", null, "sibling", rootId,
+                                              BrowserContract.Bookmarks.TYPE_FOLDER);
+
+        final long parentId = Long.parseLong(parentUri.getLastPathSegment());
+        final Uri child1Uri = insertBookmark("child-1", null, "child-1", parentId,
+                                             BrowserContract.Bookmarks.TYPE_FOLDER);
+        final Uri child2Uri = insertBookmark("child-2", null, "child-2", parentId,
+                                             BrowserContract.Bookmarks.TYPE_FOLDER);
+
+        final long parentLastModifiedBeforeDeletion = getLastModified(parentUri);
+        final long siblingLastModifiedBeforeDeletion = getLastModified(siblingUri);
+
+        final long child1LastModifiedBeforeDeletion = getLastModified(child1Uri);
+        final long child2LastModifiedBeforeDeletion = getLastModified(child2Uri);
+
+        bookmarksClient.delete(child2Uri, null, null);
+
+        final long parentLastModifiedAfterDeletion = getLastModified(parentUri);
+        final long siblingLastModifiedAfterDeletion = getLastModified(siblingUri);
+
+        final long child1LastModifiedAfterDeletion = getLastModified(child1Uri);
+        final long child2LastModifiedAfterDeletion = getLastModified(withDeleted(child2Uri));
+
+        // Check last modified timestamp of parent and child-2 is increased.
+        assertTrue(parentLastModifiedAfterDeletion > parentLastModifiedBeforeDeletion);
+        assertTrue(child2LastModifiedAfterDeletion > child2LastModifiedBeforeDeletion);
+
+        // Check last modified timestamp of sibling and child-1 is not changed.
+        assertTrue(siblingLastModifiedBeforeDeletion == siblingLastModifiedAfterDeletion);
+        assertTrue(child1LastModifiedBeforeDeletion == child1LastModifiedAfterDeletion);
+    }
+
+    @Test
     public void testDeleteBookmarkFolder() throws RemoteException {
         final long rootId = getBookmarkIdFromGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
 
@@ -238,6 +283,26 @@ public class BrowserProviderBookmarksTest {
 
     private Uri withDeleted(Uri baseUri) {
         return baseUri.buildUpon().appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "true").build();
+    }
+
+    private long getLastModified(final Uri uri) throws RemoteException {
+        final Cursor cursor = bookmarksClient.query(uri,
+                                                    new String[] { BrowserContract.Bookmarks.DATE_MODIFIED },
+                                                    null,
+                                                    null,
+                                                    null);
+        assertNotNull(cursor);
+
+        long lastModified = INVALID_TIMESTAMP;
+        try {
+            assertTrue(cursor.moveToFirst());
+            assertEquals(1, cursor.getCount());
+            lastModified = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.DATE_MODIFIED));
+        } finally {
+            cursor.close();
+        }
+        assertNotEquals(lastModified, INVALID_TIMESTAMP);
+        return lastModified;
     }
 
     private long getBookmarkIdFromGuid(String guid) throws RemoteException {
