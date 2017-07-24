@@ -2053,7 +2053,7 @@ XrayToString(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
     result.AppendASCII(wrapperStr);
-    JS_smprintf_free(wrapperStr);
+    js_free(wrapperStr);
 
     result.AppendASCII(end);
 
