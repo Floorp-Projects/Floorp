@@ -106,6 +106,8 @@ parent:
   async DrainComplete();
 
   async Shutdown();
+
+  async IncreaseShmemPoolSize();
 };
 
 } // namespace gmp
