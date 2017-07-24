@@ -487,6 +487,7 @@ var pktUI = (function() {
                 success(data, response) {
                     var successResponse = {status: "success"};
                     pktUIMessaging.sendResponseMessageToPanel(panelId, _deleteItemMessageId, successResponse);
+                    _lastAddSucceeded = false;
                 },
                 error(error, response) {
                     pktUIMessaging.sendErrorResponseMessageToPanel(panelId, _deleteItemMessageId, error);
