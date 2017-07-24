@@ -752,7 +752,6 @@ InitCharGlobals()
 nsMathMLChar::~nsMathMLChar()
 {
   MOZ_COUNT_DTOR(nsMathMLChar);
-  mStyleContext->Release();
 }
 
 nsStyleContext*
@@ -765,15 +764,8 @@ nsMathMLChar::GetStyleContext() const
 void
 nsMathMLChar::SetStyleContext(nsStyleContext* aStyleContext)
 {
-  NS_PRECONDITION(aStyleContext, "null ptr");
-  if (aStyleContext != mStyleContext) {
-    if (mStyleContext)
-      mStyleContext->Release();
-    if (aStyleContext) {
-      mStyleContext = aStyleContext;
-      aStyleContext->AddRef();
-    }
-  }
+  MOZ_ASSERT(aStyleContext);
+  mStyleContext = aStyleContext;
 }
 
 void
@@ -1504,7 +1496,7 @@ InsertMathFallbacks(FontFamilyList& aFamilyList,
 }
 
 nsresult
-nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
+nsMathMLChar::StretchInternal(nsIFrame*                aForFrame,
                               DrawTarget*              aDrawTarget,
                               float                    aFontSizeInflation,
                               nsStretchDirection&      aStretchDirection,
@@ -1516,6 +1508,8 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
                               float                    aMaxSize,
                               bool                     aMaxSizeIsAbsolute)
 {
+  nsPresContext* presContext = aForFrame->PresContext();
+
   // if we have been called before, and we didn't actually stretch, our
   // direction may have been set to NS_STRETCH_DIRECTION_UNSUPPORTED.
   // So first set our direction back to its instrinsic value
@@ -1524,23 +1518,23 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // Set default font and get the default bounding metrics
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
-  nsFont font = mStyleContext->GetParentAllowServo()->StyleFont()->mFont;
+  nsFont font = aForFrame->StyleFont()->mFont;
   NormalizeDefaultFont(font, aFontSizeInflation);
 
   const nsStyleFont* styleFont = mStyleContext->StyleFont();
   nsFontMetrics::Params params;
   params.language = styleFont->mLanguage;
   params.explicitLanguage = styleFont->mExplicitLanguage;
-  params.userFontSet = aPresContext->GetUserFontSet();
-  params.textPerf = aPresContext->GetTextPerfMetrics();
+  params.userFontSet = presContext->GetUserFontSet();
+  params.textPerf = presContext->GetTextPerfMetrics();
   RefPtr<nsFontMetrics> fm =
-    aPresContext->DeviceContext()->GetMetricsFor(font, params);
+    presContext->DeviceContext()->GetMetricsFor(font, params);
   uint32_t len = uint32_t(mData.Length());
   mGlyphs[0] = fm->GetThebesFontGroup()->
     MakeTextRun(static_cast<const char16_t*>(mData.get()), len, aDrawTarget,
-                aPresContext->AppUnitsPerDevPixel(),
+                presContext->AppUnitsPerDevPixel(),
                 gfx::ShapedTextFlags(), nsTextFrameUtils::Flags(),
-                aPresContext->MissingFontRecorder());
+                presContext->MissingFontRecorder());
   aDesiredStretchSize = MeasureTextRun(aDrawTarget, mGlyphs[0].get());
 
   bool maxWidth = (NS_STRETCH_MAXWIDTH & aStretchHint) != 0;
@@ -1656,7 +1650,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     printf("Searching in "%s" for a glyph of appropriate size for: 0x%04X:%c\n",
            NS_ConvertUTF16toUTF8(fontlistStr).get(), mData[0], mData[0]&0x00FF);
 #endif
-    StretchEnumContext enumData(this, aPresContext, aDrawTarget,
+    StretchEnumContext enumData(this, presContext, aDrawTarget,
                                 aFontSizeInflation,
                                 aStretchDirection, targetSize, aStretchHint,
                                 aDesiredStretchSize, font.fontlist, glyphFound);
@@ -1684,7 +1678,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // We did not find a size variant or a glyph assembly to stretch this
   // operator. Verify whether a font with an OpenType MATH table is available
   // and record missing math script otherwise.
-  gfxMissingFontRecorder* MFR = aPresContext->MissingFontRecorder();
+  gfxMissingFontRecorder* MFR = presContext->MissingFontRecorder();
   if (MFR && !fm->GetThebesFontGroup()->GetFirstMathFont()) {
     MFR->RecordScript(unicode::Script::MATHEMATICAL_NOTATION);
   }
@@ -1768,7 +1762,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 }
 
 nsresult
-nsMathMLChar::Stretch(nsPresContext*           aPresContext,
+nsMathMLChar::Stretch(nsIFrame*                aForFrame,
                       DrawTarget*              aDrawTarget,
                       float                    aFontSizeInflation,
                       nsStretchDirection       aStretchDirection,
@@ -1787,7 +1781,7 @@ nsMathMLChar::Stretch(nsPresContext*           aPresContext,
   mScaleY = mScaleX = 1.0;
   mDirection = aStretchDirection;
   nsresult rv =
-    StretchInternal(aPresContext, aDrawTarget, aFontSizeInflation, mDirection,
+    StretchInternal(aForFrame, aDrawTarget, aFontSizeInflation, mDirection,
                     aContainerSize, aDesiredStretchSize, aStretchHint);
 
   // Record the metrics
@@ -1809,15 +1803,17 @@ nsMathMLChar::Stretch(nsPresContext*           aPresContext,
 // minimum size, so that only widths of smaller subsequent characters are
 // considered.
 nscoord
-nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
-                          float aFontSizeInflation, uint32_t aStretchHint)
+nsMathMLChar::GetMaxWidth(nsIFrame* aForFrame,
+                          DrawTarget* aDrawTarget,
+                          float aFontSizeInflation,
+                          uint32_t aStretchHint)
 {
   nsBoundingMetrics bm;
   nsStretchDirection direction = NS_STRETCH_DIRECTION_VERTICAL;
   const nsBoundingMetrics container; // zero target size
 
-  StretchInternal(aPresContext, aDrawTarget, aFontSizeInflation, direction,
-                  container, bm, aStretchHint | NS_STRETCH_MAXWIDTH);
+  StretchInternal(aForFrame, aDrawTarget, aFontSizeInflation,
+                  direction, container, bm, aStretchHint | NS_STRETCH_MAXWIDTH);
 
   return std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
 }
@@ -1888,8 +1884,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override
   {
-    mChar->PaintForeground(mFrame->PresContext(), *aCtx,
-                           ToReferenceFrame(), mIsSelected);
+    mChar->PaintForeground(mFrame, *aCtx, ToReferenceFrame(), mIsSelected);
   }
 
   NS_DISPLAY_DECL_NAME("MathMLCharForeground", TYPE_MATHML_CHAR_FOREGROUND)
@@ -1965,7 +1960,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
                       uint32_t                aIndex,
                       const nsRect*           aSelectedRect)
 {
-  nsStyleContext* parentContext = mStyleContext->GetParentAllowServo();
+  nsStyleContext* parentContext = aForFrame->StyleContext();
   nsStyleContext* styleContext = mStyleContext;
 
   if (mDraw == DRAW_NORMAL) {
@@ -2038,13 +2033,14 @@ nsMathMLChar::ApplyTransforms(gfxContext* aThebesContext,
 }
 
 void
-nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
+nsMathMLChar::PaintForeground(nsIFrame* aForFrame,
                               gfxContext& aRenderingContext,
                               nsPoint aPt,
                               bool aIsSelected)
 {
-  nsStyleContext* parentContext = mStyleContext->GetParentAllowServo();
+  nsStyleContext* parentContext = aForFrame->StyleContext();
   nsStyleContext* styleContext = mStyleContext;
+  nsPresContext* presContext = aForFrame->PresContext();
 
   if (mDraw == DRAW_NORMAL) {
     // normal drawing if there is nothing special about this char
@@ -2063,7 +2059,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   aRenderingContext.SetColor(Color::FromABGR(fgColor));
   aRenderingContext.Save();
   nsRect r = mRect + aPt;
-  ApplyTransforms(&aRenderingContext, aPresContext->AppUnitsPerDevPixel(), r);
+  ApplyTransforms(&aRenderingContext, aForFrame->PresContext()->AppUnitsPerDevPixel(), r);
 
   switch(mDraw)
   {
@@ -2079,9 +2075,9 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     case DRAW_PARTS: {
       // paint by parts
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-        PaintVertically(aPresContext, &aRenderingContext, r, fgColor);
+        PaintVertically(presContext, &aRenderingContext, r, fgColor);
       else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-        PaintHorizontally(aPresContext, &aRenderingContext, r, fgColor);
+        PaintHorizontally(presContext, &aRenderingContext, r, fgColor);
       break;
     }
     default:
