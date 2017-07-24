@@ -323,8 +323,8 @@ function do_test(testcases, testFn) {
         let handler = new FormAutofillHandler(formLike);
         let promises = [];
 
-        handler.addressFieldDetails = testcase.addressFieldDetails;
-        handler.addressFieldDetails.forEach((field, index) => {
+        handler.address.fieldDetails = testcase.addressFieldDetails;
+        handler.address.fieldDetails.forEach((field, index) => {
           let element = doc.querySelectorAll("input, select")[index];
           field.elementWeakRef = Cu.getWeakReference(element);
           if (!testcase.profileData[field.fieldName]) {
@@ -336,8 +336,8 @@ function do_test(testcases, testFn) {
         });
 
         handler.autofillFormFields(testcase.profileData);
-        Assert.equal(handler.filledProfileGUID, testcase.profileData.guid,
-                     "Check if filledProfileGUID is set correctly");
+        Assert.equal(handler.address.filledRecordGUID, testcase.profileData.guid,
+                     "Check if filledRecordGUID is set correctly");
         await Promise.all(promises);
       });
     })();
