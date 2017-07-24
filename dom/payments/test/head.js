@@ -8,7 +8,7 @@ function checkSimplePayment(aSimplePayment) {
   const methodData = aSimplePayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
   is(methodData.supportedMethods, "MyPay", "supported method should be 'MyPay'.");
-  is(methodData.data, "", "method data should be empty");
+  ok(!methodData.data, "methodData.data should not exist.");
 
   // checking the passed PaymentDetails parameter
   const details = aSimplePayment.paymentDetails;
@@ -37,7 +37,7 @@ function checkComplexPayment(aPayment) {
   const methodData = aPayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
   is(methodData.supportedMethods, "MyPay", "supported method should be 'MyPay'.");
-  is(methodData.data, "", "method data should be empty");
+  ok(!methodData.data, "methodData.data should not exist.");
 
   // checking the passed PaymentDetails parameter
   const details = aPayment.paymentDetails;
@@ -72,8 +72,9 @@ function checkComplexPayment(aPayment) {
   is(additionalItem.label, "MyPay discount", "additional item's label should be 'MyPay discount'.");
   is(additionalItem.amount.currency, "USD", "additional item's currency should be 'USD'.");
   is(additionalItem.amount.value, "-10.00", "additional item's value should be '-10.00'.");
-  is(modifier.data, "{\"discountProgramParticipantId\":\"86328764873265\"}",
-     "modifier's data should be '{\"discountProgramParticipantId\":\"86328764873265\"}'.");
+  ok(modifier.data, "moidifer.data should exist.");
+  is(modifier.data.discountProgramParticipantId, "86328764873265",
+     "modifier.data.discountProgramParticipantId should be '86328764873265'.");
 
   const shippingOptions = details.shippingOptions;
   is(shippingOptions.length, 2, "shippingOptions' length should be 2.");
@@ -107,8 +108,8 @@ function checkDupShippingOptionsPayment(aPayment) {
 
   const methodData = aPayment.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
   ok(methodData, "Fail to get payment methodData.");
-  is(methodData.supportedMethods, "MyPay", "modifier's supported method name should be 'MyPay'.");
-  is(methodData.data, "", "method data should be empty");
+  is(methodData.supportedMethods, "MyPay", "methodData.supportedMethod name should be 'MyPay'.");
+  ok(!methodData.data, "methodData.data should not exist.");
 
   // checking the passed PaymentDetails parameter
   const details = aPayment.paymentDetails;
