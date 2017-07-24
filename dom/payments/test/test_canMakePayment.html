@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
-  var gUrl = SimpleTest.getTestFileURL('CanMakePaymentChromeScript.js');
+  var gUrl = SimpleTest.getTestFileURL('GeneralChromeScript.js');
   var gScript = SpecialPowers.loadChromeScript(gUrl);
 
   const defaultMethods = [{
@@ -29,11 +29,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
     },
   };
 
+  const nonsupportedMethods = [{
+    supportedMethods: "testing-payment-method",
+  }];
+
+  function testDefaultAction() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(nonsupportedMethods, defaultDetails);
+      payRequest.canMakePayment().then((result) => {
+        ok(!result, "Should be resolved with false, but got " + result + ".");
+        resolve();
+      }).catch((err) => {
+        ok(false, "Expected no error, but got '" + err.name +"'.");
+        resolve();
+      });
+    });
+  }
+
   function testSimple() {
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(defaultMethods, defaultDetails);
       payRequest.canMakePayment().then((result) => {
-        ok(result, "Should be resolved with true, but got false.");
+        ok(result, "Should be resolved with true, but got " + result + ".");
         resolve();
       }).catch((err) => {
         ok(false, "Expected no error, but got '" + err.name +"'.");
@@ -118,7 +135,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345365
   }
 
   function runTests() {
-    testSimple()
+    testDefaultAction()
+    .then(testSimple)
     .then(testAfterShow)
     .then(testAfterAbort)
     .then(testNotAllowed)
