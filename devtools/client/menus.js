@@ -16,10 +16,15 @@
  *   prefix used to locale localization strings from menus.properties
  * - oncommand:
  *   function called when the menu item or key shortcut are fired
- * - keyId:
- *   Identifier used in devtools/client/devtools-startup.js
- *   Helps figuring out the DOM id for the related <xul:key>
- *   in order to have the key text displayed in menus.
+ * - key:
+ *    - id:
+ *      prefixed by 'key_' to compute <xul:key> id attribute
+ *    - modifiers:
+ *      optional modifiers for the key shortcut
+ *    - keytext:
+ *      boolean, to set to true for key shortcut using regular character
+ * - additionalKeys:
+ *   Array of additional keys, see `key` definition.
  * - disabled:
  *   If true, the menuitem and key shortcut are going to be hidden and disabled
  *   on startup, until some runtime code eventually enable them.
@@ -27,6 +32,9 @@
  *   If true, the menuitem is prefixed by a checkbox and runtime code can
  *   toggle it.
  */
+
+const Services = require("Services");
+const isMac = Services.appinfo.OS === "Darwin";
 
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
 loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
@@ -43,7 +51,17 @@ exports.menuitems = [
       let window = event.target.ownerDocument.defaultView;
       gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
     },
-    keyId: "toggleToolbox",
+    key: {
+      id: "devToolboxMenuItem",
+      modifiers: isMac ? "accel,alt" : "accel,shift",
+      // This is the only one with a letter key
+      // and needs to be translated differently
+      keytext: true,
+    },
+    additionalKeys: [{
+      id: "devToolboxMenuItemF12",
+      l10nKey: "devToolsCmd",
+    }],
     checkbox: true
   },
   { id: "menu_devtools_separator",
@@ -62,7 +80,10 @@ exports.menuitems = [
         gDevToolsBrowser.getDeveloperToolbar(window).focusToggle();
       }
     },
-    keyId: "toggleToolbar",
+    key: {
+      id: "devToolbar",
+      modifiers: "shift"
+    },
     checkbox: true
   },
   { id: "menu_webide",
@@ -71,7 +92,10 @@ exports.menuitems = [
     oncommand() {
       gDevToolsBrowser.openWebIDE();
     },
-    keyId: "webide",
+    key: {
+      id: "webide",
+      modifiers: "shift"
+    }
   },
   { id: "menu_browserToolbox",
     l10nKey: "browserToolboxMenu",
@@ -79,7 +103,11 @@ exports.menuitems = [
     oncommand() {
       BrowserToolboxProcess.init();
     },
-    keyId: "browserToolbox",
+    key: {
+      id: "browserToolbox",
+      modifiers: "accel,alt,shift",
+      keytext: true
+    }
   },
   { id: "menu_browserContentToolbox",
     l10nKey: "browserContentToolboxMenu",
@@ -95,7 +123,11 @@ exports.menuitems = [
       let HUDService = require("devtools/client/webconsole/hudservice");
       HUDService.openBrowserConsoleOrFocus();
     },
-    keyId: "browserConsole",
+    key: {
+      id: "browserConsole",
+      modifiers: "accel,shift",
+      keytext: true
+    }
   },
   { id: "menu_responsiveUI",
     l10nKey: "responsiveDesignMode",
@@ -103,7 +135,11 @@ exports.menuitems = [
       let window = event.target.ownerDocument.defaultView;
       ResponsiveUIManager.toggle(window, window.gBrowser.selectedTab);
     },
-    keyId: "responsiveDesignMode",
+    key: {
+      id: "responsiveUI",
+      modifiers: isMac ? "accel,alt" : "accel,shift",
+      keytext: true
+    },
     checkbox: true
   },
   { id: "menu_eyedropper",
@@ -121,7 +157,10 @@ exports.menuitems = [
     oncommand() {
       ScratchpadManager.openScratchpad();
     },
-    keyId: "scratchpad",
+    key: {
+      id: "scratchpad",
+      modifiers: "shift"
+    }
   },
   { id: "menu_devtools_serviceworkers",
     l10nKey: "devtoolsServiceWorkers",
