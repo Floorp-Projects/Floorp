@@ -1155,6 +1155,11 @@ public:
   static void GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback);
 
   /**
+   * Like GetAllInFlowBoxes, but doesn't include continuations.
+   */
+  static void AddBoxesForFrame(nsIFrame* aFrame, BoxCallback* aCallback);
+
+  /**
    * Find the first frame descendant of aFrame (including aFrame) which is
    * not an anonymous frame that getBoxQuads/getClientRects should ignore.
    */
