@@ -171,6 +171,79 @@ TEST(GeckoProfiler, FeaturesAndParams)
   }
 }
 
+TEST(GeckoProfiler, EnsureStarted)
+{
+  InactiveFeaturesAndParamsCheck();
+
+  uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+  const char* filters[] = { "GeckoMain", "Compositor" };
+  {
+    // Inactive -> Active
+    profiler_ensure_started(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                            features, filters, MOZ_ARRAY_LENGTH(filters));
+
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                      features, filters, MOZ_ARRAY_LENGTH(filters));
+  }
+
+  {
+    // Active -> Active with same settings
+
+    // First, write some samples into the buffer.
+    PR_Sleep(PR_MillisecondsToInterval(500));
+
+    uint32_t currPos1, entries1, generation1;
+    profiler_get_buffer_info(&currPos1, &entries1, &generation1);
+    ASSERT_TRUE(generation1 > 0 || currPos1 > 0);
+
+    // Call profiler_ensure_started with the same settings as before.
+    // This operation must not clear our buffer!
+    profiler_ensure_started(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                            features, filters, MOZ_ARRAY_LENGTH(filters));
+
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                      features, filters, MOZ_ARRAY_LENGTH(filters));
+
+    // Check that our position in the buffer stayed the same or advanced.
+    // In particular, it shouldn't have reverted to the start.
+    uint32_t currPos2, entries2, generation2;
+    profiler_get_buffer_info(&currPos2, &entries2, &generation2);
+    ASSERT_TRUE(generation2 >= generation1);
+    ASSERT_TRUE(generation2 > generation1 || currPos2 >= currPos1);
+  }
+
+  {
+    // Active -> Active with *different* settings
+
+    uint32_t currPos1, entries1, generation1;
+    profiler_get_buffer_info(&currPos1, &entries1, &generation1);
+
+    // Call profiler_ensure_started with a different feature set than the one it's
+    // currently running with. This is supposed to stop and restart the
+    // profiler, thereby discarding the buffer contents.
+    uint32_t differentFeatures = features | ProfilerFeature::Leaf;
+    profiler_ensure_started(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                            differentFeatures,
+                            filters, MOZ_ARRAY_LENGTH(filters));
+
+    ActiveParamsCheck(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                      differentFeatures, filters, MOZ_ARRAY_LENGTH(filters));
+
+    uint32_t currPos2, entries2, generation2;
+    profiler_get_buffer_info(&currPos2, &entries2, &generation2);
+    ASSERT_TRUE(generation2 <= generation1);
+    ASSERT_TRUE(generation2 < generation1 || currPos2 < currPos1);
+  }
+
+  {
+    // Active -> Inactive
+
+    profiler_stop();
+
+    InactiveFeaturesAndParamsCheck();
+  }
+}
+
 TEST(GeckoProfiler, DifferentThreads)
 {
   InactiveFeaturesAndParamsCheck();
