@@ -2674,8 +2674,8 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
   return data.mHint;
 }
 
-bool
-nsStyleSet::MediumFeaturesChanged()
+nsRestyleHint
+nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
@@ -2700,7 +2700,10 @@ nsStyleSet::MediumFeaturesChanged()
     stylesChanged = stylesChanged || thisChanged;
   }
 
-  return stylesChanged;
+  if (stylesChanged) {
+    return eRestyle_Subtree;
+  }
+  return nsRestyleHint(0);
 }
 
 bool
