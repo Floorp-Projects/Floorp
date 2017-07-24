@@ -1637,6 +1637,12 @@ PrintUsageThenExit(int aExitCode)
     "  measured in milliseconds, when the profiler is first started.\n"
     "  If unset, the platform default is used.\n"
     "\n"
+    "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
+    "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
+    "  comma-separated list of strings. A given thread will be sampled if any\n"
+    "  of the filters is a case-insensitive substring of the thread name.\n"
+    "  If unset, a default is used.\n"
+    "\n"
     "  MOZ_PROFILER_SHUTDOWN\n"
     "  If set, the profiler saves a profile to the named file on shutdown.\n"
     "\n"
@@ -2063,12 +2069,39 @@ MozGlueLabelExit(PseudoStack* aPseudoStack)
   }
 }
 
+static nsTArray<const char*>
+SplitAtCommas(const char* aString, UniquePtr<char[]>& aStorage)
+{
+  size_t len = strlen(aString);
+  aStorage = MakeUnique<char[]>(len + 1);
+  PodCopy(aStorage.get(), aString, len + 1);
+
+  // Iterate over all characters in aStorage and split at commas, by
+  // overwriting commas with the null char.
+  nsTArray<const char*> array;
+  size_t currentElementStart = 0;
+  for (size_t i = 0; i <= len; i++) {
+    if (aStorage[i] == ',') {
+      aStorage[i] = '\0';
+    }
+    if (aStorage[i] == '\0') {
+      array.AppendElement(&aStorage[currentElementStart]);
+      currentElementStart = i + 1;
+    }
+  }
+  return array;
+}
+
 void
 profiler_init(void* aStackTop)
 {
   LOG("profiler_init");
 
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
+
+  if (getenv("MOZ_PROFILER_HELP")) {
+    PrintUsageThenExit(0); // terminates execution
+  }
 
   SharedLibraryInfo::Initialize();
 
@@ -2084,11 +2117,12 @@ profiler_init(void* aStackTop)
                       ProfilerFeature::Threads |
                       0;
 
-  const char* filters[] = { "GeckoMain", "Compositor", "DOM Worker" };
+  UniquePtr<char[]> filterStorage;
 
-  if (getenv("MOZ_PROFILER_HELP")) {
-    PrintUsageThenExit(0); // terminates execution
-  }
+  nsTArray<const char*> filters;
+  filters.AppendElement("GeckoMain");
+  filters.AppendElement("Compositor");
+  filters.AppendElement("DOM Worker");
 
   int entries = PROFILER_DEFAULT_ENTRIES;
   double interval = PROFILER_DEFAULT_INTERVAL;
@@ -2152,14 +2186,20 @@ profiler_init(void* aStackTop)
       }
     }
 
+    const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
+    if (startupFilters) {
+      filters = SplitAtCommas(startupFilters, filterStorage);
+      LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+    }
+
     locked_profiler_start(lock, entries, interval, features,
-                          filters, MOZ_ARRAY_LENGTH(filters));
+                          filters.Elements(), filters.Length());
   }
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(entries, interval, features, filters,
-                        MOZ_ARRAY_LENGTH(filters));
+  NotifyProfilerStarted(entries, interval, features,
+                        filters.Elements(), filters.Length());
 }
 
 static void
