@@ -39,6 +39,7 @@ DEFAULTS = dict(
         tpchrome=True,
         tpcycles=10,
         tpmozafterpaint=False,
+        fnbpaint=False,
         firstpaint=False,
         userready=False,
         testeventmap=[],
@@ -207,6 +208,7 @@ GLOBAL_OVERRIDES = (
     'tpmanifest',
     'tptimeout',
     'tpmozafterpaint',
+    'fnbpaint',
     'firstpaint',
     'userready',
 )
@@ -361,6 +363,7 @@ def get_test(config, global_overrides, counters, test_instance):
     mozAfterPaint = getattr(test_instance, 'tpmozafterpaint', None)
     firstPaint = getattr(test_instance, 'firstpaint', None)
     userReady = getattr(test_instance, 'userready', None)
+    firstNonBlankPaint = getattr(test_instance, 'fnbpaint', None)
 
     test_instance.update(**global_overrides)
 
@@ -368,6 +371,8 @@ def get_test(config, global_overrides, counters, test_instance):
     # so check for None
     if mozAfterPaint is not None:
         test_instance.tpmozafterpaint = mozAfterPaint
+    if firstNonBlankPaint is not None:
+        test_instance.fnbpaint = firstNonBlankPaint
     if firstPaint is not None:
         test_instance.firstpaint = firstPaint
     if userReady is not None:
