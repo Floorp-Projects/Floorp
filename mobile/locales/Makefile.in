@@ -22,14 +22,6 @@ tgt-gendir = .deps/generated_$(AB_CD)
 
 GENERATED_DIRS += .deps
 
-ifdef LOCALE_MERGEDIR
-vpath book%.inc $(LOCALE_MERGEDIR)/mobile/profile
-endif
-vpath book%.inc $(LOCALE_SRCDIR)/profile
-ifdef LOCALE_MERGEDIR
-vpath book%.inc @srcdir@/en-US/profile
-endif
-
 $(call errorIfEmpty,MOZ_BRANDING_DIRECTORY)
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
