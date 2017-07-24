@@ -804,9 +804,16 @@ class GCRuntime
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
     bool triggerGCForTooMuchMalloc() {
+        if (!triggerGC(JS::gcreason::TOO_MUCH_MALLOC))
+            return false;
+
+        // Even though this method may be called off the main thread it is safe
+        // to access mallocCounter here since triggerGC() will return false in
+        // that case.
         stats().recordTrigger(mallocCounter.bytes(), mallocCounter.maxBytes());
-        return triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
+        return true;
     }
+
     int32_t getMallocBytes() const { return mallocCounter.bytes(); }
     size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
     bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }
