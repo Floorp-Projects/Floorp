@@ -27,7 +27,6 @@
 namespace mozilla {
 
 class AbstractThread;
-class DOMHwMediaStream;
 class DOMLocalMediaStream;
 class DOMMediaStream;
 class MediaStream;
@@ -455,9 +454,6 @@ public:
   bool AddDirectListener(DirectMediaStreamListener *aListener);
   void RemoveDirectListener(DirectMediaStreamListener *aListener);
 
-  virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
-  virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }
-
   /**
    * Legacy method that returns true when the playback stream has finished.
    */
@@ -826,40 +822,6 @@ private:
   // If this object wraps a stream owned by an AudioNode, we need to ensure that
   // the node isn't cycle-collected too early.
   RefPtr<AudioNode> mStreamNode;
-};
-
-class DOMHwMediaStream : public DOMLocalMediaStream
-{
-  typedef mozilla::gfx::IntSize IntSize;
-  typedef layers::OverlayImage OverlayImage;
-#ifdef MOZ_WIDGET_GONK
-  typedef layers::OverlayImage::Data Data;
-#endif
-
-public:
-  explicit DOMHwMediaStream(nsPIDOMWindowInner* aWindow);
-
-  static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsPIDOMWindowInner* aWindow,
-                                                           OverlayImage* aImage = nullptr);
-  virtual DOMHwMediaStream* AsDOMHwMediaStream() override { return this; }
-  int32_t RequestOverlayId();
-  void SetOverlayId(int32_t aOverlayId);
-  void SetImageSize(uint32_t width, uint32_t height);
-  void SetOverlayImage(OverlayImage* aImage);
-
-protected:
-  ~DOMHwMediaStream();
-
-private:
-  void Init(MediaStream* aStream, OverlayImage* aImage);
-
-#ifdef MOZ_WIDGET_GONK
-  const int DEFAULT_IMAGE_ID = 0x01;
-  const int DEFAULT_IMAGE_WIDTH = 400;
-  const int DEFAULT_IMAGE_HEIGHT = 300;
-  RefPtr<OverlayImage> mOverlayImage;
-  PrincipalHandle mPrincipalHandle;
-#endif
 };
 
 } // namespace mozilla
