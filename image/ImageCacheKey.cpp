@@ -62,7 +62,9 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI,
     mBlobSerial = BlobSerial(mURI);
   }
 
-  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument);
+  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument,
+                      aDocument ? aDocument->GetStyleBackendType()
+                                : StyleBackendType::None);
 }
 
 ImageCacheKey::ImageCacheKey(ImageURL* aURI,
@@ -79,7 +81,9 @@ ImageCacheKey::ImageCacheKey(ImageURL* aURI,
     mBlobSerial = BlobSerial(mURI);
   }
 
-  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument);
+  mHash = ComputeHash(mURI, mBlobSerial, mOriginAttributes, mControlledDocument,
+                      aDocument ? aDocument->GetStyleBackendType()
+                                : StyleBackendType::None);
 }
 
 ImageCacheKey::ImageCacheKey(const ImageCacheKey& aOther)
@@ -132,7 +136,8 @@ ImageCacheKey::Spec() const
 ImageCacheKey::ComputeHash(ImageURL* aURI,
                            const Maybe<uint64_t>& aBlobSerial,
                            const OriginAttributes& aAttrs,
-                           void* aControlledDocument)
+                           void* aControlledDocument,
+                           StyleBackendType aStyleBackendType)
 {
   // Since we frequently call Hash() several times in a row on the same
   // ImageCacheKey, as an optimization we compute our hash once and store it.
@@ -142,7 +147,7 @@ ImageCacheKey::ComputeHash(ImageURL* aURI,
   aAttrs.CreateSuffix(suffix);
 
   return AddToHash(0, aURI->ComputeHash(aBlobSerial),
-                   HashString(suffix), HashString(ptr));
+                   HashString(suffix), HashString(ptr), (uint8_t)aStyleBackendType);
 }
 
 /* static */ void*
