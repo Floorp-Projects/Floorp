@@ -1124,6 +1124,7 @@ reftest-gpu:
             default: built-projects
     worker-type:
         by-test-platform:
+            windows7-32.*/debug: buildbot-bridge/buildbot-bridge
             default: null
     instance-size:
         by-test-platform:
