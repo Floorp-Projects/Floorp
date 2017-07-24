@@ -12,6 +12,7 @@ var runningPromise = new Promise(resolve => {
 var osc = ac.createOscillator();
 osc.connect(ac.destination);
 osc.start(0);
+osc.stop(osc.context.currentTime + 2.0);
 
 var suspendPromise;
 function suspendAC() {
