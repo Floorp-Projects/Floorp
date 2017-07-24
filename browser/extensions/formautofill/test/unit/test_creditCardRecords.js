@@ -73,13 +73,11 @@ let reCCNumber = /^(\*+)(.{4})$/;
 let do_check_credit_card_matches = (creditCardWithMeta, creditCard) => {
   for (let key in creditCard) {
     if (key == "cc-number") {
-      do_check_eq(creditCardWithMeta["cc-number"], undefined);
-
       // check "cc-number-encrypted" after encryption lands (bug 1337314).
 
-      let matches = reCCNumber.exec(creditCardWithMeta["cc-number-masked"]);
+      let matches = reCCNumber.exec(creditCardWithMeta["cc-number"]);
       do_check_neq(matches, null);
-      do_check_eq(creditCardWithMeta["cc-number-masked"].length, creditCard["cc-number"].length);
+      do_check_eq(creditCardWithMeta["cc-number"].length, creditCard["cc-number"].length);
       do_check_eq(creditCard["cc-number"].endsWith(matches[2]), true);
     } else {
       do_check_eq(creditCardWithMeta[key], creditCard[key]);
@@ -256,7 +254,7 @@ add_task(async function test_validate() {
   do_check_eq(creditCards[1]["cc-exp-year"],
     parseInt(TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR["cc-exp-year"], 10) + 2000);
 
-  do_check_eq(creditCards[2]["cc-number-masked"].length, 16);
+  do_check_eq(creditCards[2]["cc-number"].length, 16);
   // TODO: Check the decrypted numbers should not contain spaces after
   //       decryption lands (bug 1337314).
 
