@@ -86,6 +86,28 @@
   color: inherit;
 }
 
+@keyframes bookmark-animation {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-627px);
+  }
+}
+
+@keyframes bookmark-animation-rtl {
+  from {
+    transform: scaleX(-1) translateX(0);
+  }
+  to {
+    transform: scaleX(-1) translateX(-627px);
+  }
+}
+
+#star-button-box[animationsenabled] {
+  position: relative;
+}
+
 #star-button {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
@@ -94,6 +116,51 @@
   list-style-image: url("chrome://browser/skin/bookmark.svg");
   fill-opacity: 1;
   fill: var(--toolbarbutton-icon-fill-attention);
+}
+
+/* Preload the bookmark animations to prevent a flicker during the first playing
+   of the animations. */
+#star-button[preloadanimations] + #star-button-animatable-box > #star-button-animatable-image {
+  background-image: url("chrome://browser/skin/bookmark-animation.svg"),
+                    url("chrome://browser/skin/library-bookmark-animation.svg");
+  background-size: 0, 0;
+}
+
+#star-button-box[animationsenabled] > #star-button[starred][animate] {
+  fill: transparent;
+  position: relative;
+}
+
+#star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
+  position: absolute;
+  overflow: hidden;
+  top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
+  /* .urlbar-icon has width 22px. Each frame is 33px wide. Set margin-inline-start
+     to be half the difference. */
+  margin-inline-start: -5.5px;
+  /* Set the height to equal the height of each frame of the SVG. Must use
+     min- and max- width and height due to bug 1379332. */
+  min-width: 33px;
+  max-width: 33px;
+  min-height: 33px;
+  max-height: 33px;
+}
+
+#star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box > #star-button-animatable-image {
+  background-image: url("chrome://browser/skin/bookmark-animation.svg");
+  background-size: auto;
+  list-style-image: none;
+  height: var(--toolbarbutton-height);
+  animation-name: bookmark-animation;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+  animation-timing-function: steps(19);
+  animation-duration: 304ms;
+  width: 660px;
+}
+
+#star-button-box[animationsenabled] > #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {
+  animation-name: bookmark-animation-rtl;
 }
 
 /* Page action popup */
