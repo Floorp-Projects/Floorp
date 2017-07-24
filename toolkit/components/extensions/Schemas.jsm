@@ -2185,7 +2185,9 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     if (optional && value == null) {
       return;
     }
-    if (type.reference === "ExtensionPanel" || type.reference === "Port") {
+    if (type.reference === "ExtensionPanel" ||
+        type.reference === "ExtensionSidebarPane" ||
+        type.reference === "Port") {
       // TODO: We currently treat objects with functions as SubModuleType,
       // which is just wrong, and a bigger yak.  Skipping for now.
       return;
