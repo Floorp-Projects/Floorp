@@ -13,12 +13,11 @@ const Subprocess = require("sdk/system/child_process/subprocess");
 const Services = require("Services");
 
 loader.lazyGetter(this, "OS", () => {
-  const Runtime = require("sdk/system/runtime");
-  switch (Runtime.OS) {
+  switch (Services.appinfo.OS) {
     case "Darwin":
       return "mac64";
     case "Linux":
-      if (Runtime.XPCOMABI.indexOf("x86_64") === 0) {
+      if (Services.appinfo.XPCOMABI.indexOf("x86_64") === 0) {
         return "linux64";
       } else {
         return "linux32";
