@@ -8,11 +8,6 @@
 
 #include "OMX_VideoExt.h" // For VP8.
 
-#if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 20 || ANDROID_VERSION == 19)
-#define OMX_PLATFORM_GONK
-#include "GonkOmxPlatformLayer.h"
-#endif
-
 #include "VPXDecoder.h"
 
 #ifdef LOG

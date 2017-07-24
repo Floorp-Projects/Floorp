@@ -1095,10 +1095,10 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
-  const uint32_t maxPendingFrameCount = 2;
+  const uint32_t maxPendingFrameCount = 1;
 
   if (!mForceRendering &&
-      wr::RenderThread::Get()->GetPendingFrameCount(mApi->GetId()) > maxPendingFrameCount) {
+      wr::RenderThread::Get()->GetPendingFrameCount(mApi->GetId()) >= maxPendingFrameCount) {
     // Render thread is busy, try next time.
     ScheduleComposition();
     return;
@@ -1122,6 +1122,8 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   if (PushAPZStateToWR(transformArray)) {
     scheduleComposite = true;
   }
+
+  wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId());
 
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
     mApi->GenerateFrame(opacityArray, transformArray);

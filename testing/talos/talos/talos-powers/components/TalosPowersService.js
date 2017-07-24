@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { interfaces: Ci, utils: Cu } = Components;
+const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -294,6 +294,20 @@ TalosPowersService.prototype = {
                   .getInterface(Ci.nsIDOMWindowUtils)
                   .stopFrameTimeRecording(arg);
       callback(rv);
+    },
+
+    requestDumpCoverageCounters(arg, callback, win) {
+      let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
+                         getService(Ci.nsICodeCoverage);
+      codeCoverage.dumpCounters();
+      callback();
+    },
+
+    requestResetCoverageCounters(arg, callback, win) {
+      let codeCoverage = Cc["@mozilla.org/tools/code-coverage;1"].
+                         getService(Ci.nsICodeCoverage);
+      codeCoverage.resetCounters();
+      callback();
     },
   },
 

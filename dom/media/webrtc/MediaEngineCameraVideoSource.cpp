@@ -337,7 +337,7 @@ MediaEngineCameraVideoSource::SetName(nsString aName)
   VideoFacingModeEnum facingMode = VideoFacingModeEnum::User;
 
   // Set facing mode based on device name.
-#if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if defined(ANDROID)
   // Names are generated. Example: "Camera 0, Facing back, Orientation 90"
   //
   // See media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/

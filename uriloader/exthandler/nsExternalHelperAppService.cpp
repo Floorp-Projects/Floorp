@@ -562,16 +562,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] =
   { APPLICATION_OGG, "ogg", "Ogg Video"},
   { AUDIO_OGG, "oga", "Ogg Audio" },
   { AUDIO_OGG, "opus", "Opus Audio" },
-#ifdef MOZ_WIDGET_GONK
-  { AUDIO_AMR, "amr", "Adaptive Multi-Rate Audio" },
-  { AUDIO_FLAC, "flac", "FLAC Audio" },
-  { VIDEO_AVI, "avi", "Audio Video Interleave" },
-  { VIDEO_AVI, "divx", "Audio Video Interleave" },
-  { VIDEO_MPEG_TS, "ts", "MPEG Transport Stream" },
-  { VIDEO_MPEG_TS, "m2ts", "MPEG-2 Transport Stream" },
-  { VIDEO_MATROSKA, "mkv", "MATROSKA VIDEO" },
-  { AUDIO_MATROSKA, "mka", "MATROSKA AUDIO" },
-#endif
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
   { AUDIO_MP3, "mp3", "MPEG Audio" },
@@ -581,13 +571,6 @@ static const nsExtraMimeTypeEntry extraMimeEntries[] =
   { AUDIO_WAV, "wav", "Waveform Audio" },
   { VIDEO_3GPP, "3gpp,3gp", "3GPP Video" },
   { VIDEO_3GPP2,"3g2", "3GPP2 Video" },
-#ifdef MOZ_WIDGET_GONK
-  // The AUDIO_3GPP has to come after the VIDEO_3GPP entry because the Gallery
-  // app on Firefox OS depends on the "3gp" extension mapping to the
-  // "video/3gpp" MIME type.
-  { AUDIO_3GPP, "3gpp,3gp", "3GPP Audio" },
-  { AUDIO_3GPP2, "3g2", "3GPP2 Audio" },
-#endif
   { AUDIO_MIDI, "mid", "Standard MIDI Audio" }
 };
 

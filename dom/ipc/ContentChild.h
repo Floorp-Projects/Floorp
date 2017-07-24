@@ -606,6 +606,12 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvShareCodeCoverageMutex(const CrossProcessMutexHandle& aHandle) override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvDumpCodeCoverageCounters() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvResetCodeCoverageCounters() override;
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
   SendGetA11yContentId();
