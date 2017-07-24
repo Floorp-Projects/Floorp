@@ -56,15 +56,8 @@ const JSON_FILE_NAME = "extension-settings.json";
 const JSON_FILE_VERSION = 2;
 const STORE_PATH = OS.Path.join(Services.dirsvc.get("ProfD", Ci.nsIFile).path, JSON_FILE_NAME);
 
-let _store;
-
-// Test-only method to force reloading of the JSON file, by removing the
-// cached file from memory.
-function clearFileFromCache() {
-  let finalizePromise = _store.finalize();
-  _store = null;
-  return finalizePromise;
-}
+let _initializePromise;
+let _store = {};
 
 // Processes the JSON data when read from disk to convert string dates into numbers.
 function dataPostProcessor(json) {
@@ -83,31 +76,44 @@ function dataPostProcessor(json) {
   return json;
 }
 
-// Get the internal settings store, which is persisted in a JSON file.
-function getStore(type) {
-  if (!_store) {
-    let initStore = new JSONFile({
+// Loads the data from the JSON file into memory.
+function initialize() {
+  if (!_initializePromise) {
+    _store = new JSONFile({
       path: STORE_PATH,
       dataPostProcessor,
     });
-    initStore.ensureDataReady();
-    _store = initStore;
+    _initializePromise = _store.load();
+  }
+  return _initializePromise;
+}
+
+// Test-only method to force reloading of the JSON file.
+async function reloadFile() {
+  await _store.finalize();
+  _initializePromise = null;
+  return initialize();
+}
+
+// Checks that the store is ready and that the requested type exists.
+function ensureType(type) {
+  if (!_store.dataReady) {
+    throw new Error(
+      "The ExtensionSettingsStore was accessed before the initialize promise resolved.");
   }
 
   // Ensure a property exists for the given type.
   if (!_store.data[type]) {
     _store.data[type] = {};
   }
-
-  return _store;
 }
 
 // Return an object with properties for key and value|initialValue, or null
 // if no setting has been stored for that key.
 function getTopItem(type, key) {
-  let store = getStore(type);
+  ensureType(type);
 
-  let keyInfo = store.data[type][key];
+  let keyInfo = _store.data[type][key];
   if (!keyInfo) {
     return null;
   }
@@ -155,9 +161,9 @@ function precedenceComparator(a, b) {
  */
 function alterSetting(extension, type, key, action) {
   let returnItem;
-  let store = getStore(type);
+  ensureType(type);
 
-  let keyInfo = store.data[type][key];
+  let keyInfo = _store.data[type][key];
   if (!keyInfo) {
     if (action === "remove") {
       return null;
@@ -202,15 +208,27 @@ function alterSetting(extension, type, key, action) {
   }
 
   if (action === "remove" && keyInfo.precedenceList.length === 0) {
-    delete store.data[type][key];
+    delete _store.data[type][key];
   }
 
-  store.saveSoon();
+  _store.saveSoon();
 
   return returnItem;
 }
 
 this.ExtensionSettingsStore = {
+  /**
+   * Loads the JSON file for the SettingsStore into memory.
+   * The promise this returns must be resolved before asking the SettingsStore
+   * to perform any other operations.
+   *
+   * @returns {Promise}
+   *          A promise that resolves when the Store is ready to be accessed.
+   */
+  initialize() {
+    return initialize();
+  },
+
   /**
    * Adds a setting to the store, possibly returning the current top precedent
    * setting.
@@ -243,17 +261,17 @@ this.ExtensionSettingsStore = {
     }
 
     let id = extension.id;
-    let store = getStore(type);
+    ensureType(type);
 
-    if (!store.data[type][key]) {
+    if (!_store.data[type][key]) {
       // The setting for this key does not exist. Set the initial value.
       let initialValue = await initialValueCallback(callbackArgument);
-      store.data[type][key] = {
+      _store.data[type][key] = {
         initialValue,
         precedenceList: [],
       };
     }
-    let keyInfo = store.data[type][key];
+    let keyInfo = _store.data[type][key];
     // Check for this item in the precedenceList.
     let foundIndex = keyInfo.precedenceList.findIndex(item => item.id == id);
     if (foundIndex === -1) {
@@ -269,7 +287,7 @@ this.ExtensionSettingsStore = {
     // Sort the list.
     keyInfo.precedenceList.sort(precedenceComparator);
 
-    store.saveSoon();
+    _store.saveSoon();
 
     // Check whether this is currently the top item.
     if (keyInfo.precedenceList[0].id == id) {
@@ -347,9 +365,9 @@ this.ExtensionSettingsStore = {
    * @returns {array} A list of settings which have been stored for the extension.
    */
   getAllForExtension(extension, type) {
-    let store = getStore(type);
+    ensureType(type);
 
-    let keysObj = store.data[type];
+    let keysObj = _store.data[type];
     let items = [];
     for (let key in keysObj) {
       if (keysObj[key].precedenceList.find(item => item.id == extension.id)) {
@@ -410,9 +428,9 @@ this.ExtensionSettingsStore = {
    *          The level of control of the extension over the key.
    */
   async getLevelOfControl(extension, type, key) {
-    let store = getStore(type);
+    ensureType(type);
 
-    let keyInfo = store.data[type][key];
+    let keyInfo = _store.data[type][key];
     if (!keyInfo || !keyInfo.precedenceList.length) {
       return "controllable_by_this_extension";
     }
@@ -444,6 +462,6 @@ this.ExtensionSettingsStore = {
    *          A promise that resolves once the settings store has been cleared.
    */
   _reloadFile() {
-    return clearFileFromCache();
+    return reloadFile();
   },
 };
