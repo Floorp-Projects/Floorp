@@ -69,7 +69,7 @@ FormAutofillHandler.prototype = {
   creditCardFieldDetails: null,
 
   get isValidAddressForm() {
-    return this.addressFieldDetails.length > FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+    return this.addressFieldDetails.length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
   },
 
   get isValidCreditCardForm() {
