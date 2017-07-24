@@ -134,8 +134,9 @@ function run() {
         }
         var docurl = "data:text/html," + escape(html_doc);
         defer_clonedoc_tests(docurl, function() {
-            var clonedoc = cloneiframe.contentDocument;
-            var clonewin = cloneiframe.contentWindow;
+            var wrappedCloneFrame = SpecialPowers.wrap(cloneiframe);
+            var clonedoc = wrappedCloneFrame.contentDocument;
+            var clonewin = wrappedCloneFrame.contentWindow;
 
             if (typeof(body_contents) != "string") {
                 body_contents(clonedoc.body);
@@ -221,8 +222,9 @@ function run() {
         var docurl = "data:text/html," + escape(html_doc);
 
         defer_clonedoc_tests(docurl, function() {
-            var clonedoc = cloneiframe.contentDocument;
-            var clonewin = cloneiframe.contentWindow;
+            var wrappedCloneFrame = SpecialPowers.wrap(cloneiframe);
+            var clonedoc = wrappedCloneFrame.contentDocument;
+            var clonewin = wrappedCloneFrame.contentWindow;
             var links = clonedoc.getElementsByTagName("link");
             // cause a clone
             links[1].sheet.insertRule("#nonexistent { color: purple}", 0);
