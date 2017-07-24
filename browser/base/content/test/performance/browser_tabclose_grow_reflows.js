@@ -15,13 +15,6 @@ const EXPECTED_REFLOWS = [
    */
 ];
 
-// run these tests with notification animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
-});
-
 /*
  * This test ensures that there are no unexpected
  * uninterruptible reflows when closing a tab that will

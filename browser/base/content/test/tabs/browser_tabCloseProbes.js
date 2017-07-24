@@ -27,12 +27,8 @@ function assertCount(snapshot, expectedCount) {
 add_task(async function setup() {
   // These probes are opt-in, meaning we only capture them if extended
   // Telemetry recording is enabled.
-  // Run these tests with animations enabled
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["toolkit.telemetry.enabled", true],
-      ["toolkit.cosmeticAnimations.enabled", true]
-    ]
+    set: [["toolkit.telemetry.enabled", true]]
   });
 
   let oldCanRecord = Services.telemetry.canRecordExtended;
