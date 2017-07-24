@@ -255,9 +255,9 @@ static HWND CreateRadioBtn(HINSTANCE        aHInst,
                            const char*      aStr,
                            const nsIntRect& aRect)
 {
-  nsString cStr;
-  cStr.AssignWithConversion(aStr);
-  return CreateControl("BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, cStr, aRect);
+  nsString str;
+  CopyASCIItoUTF16(aStr, str);
+  return CreateControl("BUTTON", BS_RADIOBUTTON, aHInst, aHdlg, aId, str, aRect);
 }
 
 //--------------------------------------------------------

@@ -1013,7 +1013,7 @@ nsXULTemplateQueryProcessorRDF::Log(const char* aOperation,
             return rv;
 
         nsAutoCString targetstrC;
-        targetstrC.AssignWithConversion(targetStr);
+        LossyCopyUTF16toASCII(targetStr, targetstrC);
         MOZ_LOG(gXULTemplateLog, LogLevel::Debug,
                ("                        --[%s]-->[%s]",
                 propertyStr,
@@ -1239,7 +1239,7 @@ nsXULTemplateQueryProcessorRDF::CompileQueryChild(nsIAtom* aTag,
         aTag->ToString(tagstr);
 
         nsAutoCString tagstrC;
-        tagstrC.AssignWithConversion(tagstr);
+        LossyCopyUTF16toASCII(tagstr, tagstrC);
         MOZ_LOG(gXULTemplateLog, LogLevel::Info,
                ("xultemplate[%p] unrecognized condition test <%s>",
                 this, tagstrC.get()));
