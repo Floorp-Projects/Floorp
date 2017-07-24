@@ -8009,7 +8009,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": ["fqueze@mozilla.com"],
     "bug_numbers": [1203168],
-    "expires_in_version": "57",
+    "expires_in_version": "60",
     "kind": "enumerated",
     "n_values": 5,
     "releaseChannelCollection": "opt-out",
