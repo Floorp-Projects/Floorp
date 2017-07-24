@@ -125,22 +125,6 @@ public abstract class AndroidBrowserRepositoryDataAccessor {
   }
 
   /**
-   * Fetch GUIDs for records modified since the provided timestamp.
-   * <p>
-   * The caller is responsible for closing the cursor.
-   *
-   * @param timestamp A timestamp in milliseconds.
-   * @return A cursor. You <b>must</b> close this when you're done with it.
-   * @throws NullCursorException
-   */
-  public Cursor getGUIDsSince(long timestamp) throws NullCursorException {
-    return queryHelper.safeQuery(".getGUIDsSince",
-                                 GUID_COLUMNS,
-                                 dateModifiedWhere(timestamp),
-                                 null, null);
-  }
-
-  /**
    * Fetch records modified since the provided timestamp.
    * <p>
    * The caller is responsible for closing the cursor.

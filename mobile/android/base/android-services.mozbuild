@@ -982,7 +982,6 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'sync/repositories/delegates/RepositorySessionCreationDelegate.java',
     'sync/repositories/delegates/RepositorySessionFetchRecordsDelegate.java',
     'sync/repositories/delegates/RepositorySessionFinishDelegate.java',
-    'sync/repositories/delegates/RepositorySessionGuidsSinceDelegate.java',
     'sync/repositories/delegates/RepositorySessionStoreDelegate.java',
     'sync/repositories/delegates/RepositorySessionWipeDelegate.java',
     'sync/repositories/domain/BookmarkRecord.java',

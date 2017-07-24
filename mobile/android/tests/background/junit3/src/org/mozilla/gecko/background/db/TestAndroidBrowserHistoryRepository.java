@@ -88,18 +88,6 @@ public class TestAndroidBrowserHistoryRepository extends AndroidBrowserRepositor
   }
 
   @Override
-  public void testGuidsSinceReturnMultipleRecords() {
-    HistoryRecord record0 = HistoryHelpers.createHistory1();
-    HistoryRecord record1 = HistoryHelpers.createHistory2();
-    guidsSinceReturnMultipleRecords(record0, record1);
-  }
-
-  @Override
-  public void testGuidsSinceReturnNoRecords() {
-    guidsSinceReturnNoRecords(HistoryHelpers.createHistory3());
-  }
-
-  @Override
   public void testFetchSinceOneRecord() {
     fetchSinceOneRecord(HistoryHelpers.createHistory1(),
         HistoryHelpers.createHistory2());

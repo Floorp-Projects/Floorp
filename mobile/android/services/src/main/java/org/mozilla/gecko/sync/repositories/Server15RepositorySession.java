@@ -8,7 +8,6 @@ import android.net.Uri;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -45,13 +44,6 @@ public class Server15RepositorySession extends RepositorySession {
             this, storeWorkQueue, storeDelegate, Uri.parse(serverRepository.collectionURI.toString()),
             serverRepository.getCollectionLastModified(), serverRepository.getInfoConfiguration(),
             serverRepository.authHeaderProvider);
-  }
-
-  @Override
-  public void guidsSince(long timestamp,
-                         RepositorySessionGuidsSinceDelegate delegate) {
-    // TODO Auto-generated method stub
-
   }
 
   @Override

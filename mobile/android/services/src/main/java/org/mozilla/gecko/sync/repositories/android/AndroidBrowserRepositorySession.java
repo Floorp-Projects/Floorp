@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.util.ArrayList;
-
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.InvalidRequestException;
@@ -22,7 +20,6 @@ import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -186,60 +183,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       Logger.debug(LOG_TAG, "END: checking database.");
     } catch (NullPointerException e) {
       throw new ProfileDatabaseException(e);
-    }
-  }
-
-  @Override
-  public void guidsSince(long timestamp, RepositorySessionGuidsSinceDelegate delegate) {
-    GuidsSinceRunnable command = new GuidsSinceRunnable(timestamp, delegate);
-    delegateQueue.execute(command);
-  }
-
-  class GuidsSinceRunnable implements Runnable {
-
-    private final RepositorySessionGuidsSinceDelegate delegate;
-    private final long                                timestamp;
-
-    public GuidsSinceRunnable(long timestamp,
-                              RepositorySessionGuidsSinceDelegate delegate) {
-      this.timestamp = timestamp;
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void run() {
-      if (!isActive()) {
-        delegate.onGuidsSinceFailed(new InactiveSessionException());
-        return;
-      }
-
-      Cursor cur;
-      try {
-        cur = dbHelper.getGUIDsSince(timestamp);
-      } catch (Exception e) {
-        delegate.onGuidsSinceFailed(e);
-        return;
-      }
-
-      ArrayList<String> guids;
-      try {
-        if (!cur.moveToFirst()) {
-          delegate.onGuidsSinceSucceeded(new String[] {});
-          return;
-        }
-        guids = new ArrayList<String>();
-        while (!cur.isAfterLast()) {
-          guids.add(RepoUtils.getStringFromCursor(cur, "guid"));
-          cur.moveToNext();
-        }
-      } finally {
-        Logger.debug(LOG_TAG, "Closing cursor after guidsSince.");
-        cur.close();
-      }
-
-      String guidsArray[] = new String[guids.size()];
-      guids.toArray(guidsArray);
-      delegate.onGuidsSinceSucceeded(guidsArray);
     }
   }
 

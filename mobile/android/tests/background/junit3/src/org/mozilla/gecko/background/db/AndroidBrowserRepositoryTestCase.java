@@ -19,7 +19,6 @@ import org.mozilla.gecko.background.sync.helpers.ExpectFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFetchSinceDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFinishDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectFinishFailDelegate;
-import org.mozilla.gecko.background.sync.helpers.ExpectGuidsSinceDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectInvalidRequestFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectManyStoredDelegate;
 import org.mozilla.gecko.background.sync.helpers.ExpectStoreCompletedDelegate;
@@ -34,7 +33,6 @@ import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserRepositoryDataAccessor;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -95,20 +93,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
    */
   public ExpectFetchDelegate preparedExpectFetchDelegate(Record[] expected) {
     return new ExpectFetchDelegate(expected);
-  }
-
-  /**
-   * Hook to return an ExpectGuidsSinceDelegate, possibly with special GUIDs ignored.
-   */
-  public ExpectGuidsSinceDelegate preparedExpectGuidsSinceDelegate(String[] expected) {
-    return new ExpectGuidsSinceDelegate(expected);
-  }
-
-  /**
-   * Hook to return an ExpectGuidsSinceDelegate expecting only special GUIDs (if there are any).
-   */
-  public ExpectGuidsSinceDelegate preparedExpectOnlySpecialGuidsSinceDelegate() {
-    return new ExpectGuidsSinceDelegate(new String[] {});
   }
 
   /**
@@ -208,15 +192,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
     return fetchAllRunnable(session, preparedExpectFetchDelegate(expectedRecords));
   }
 
-  public Runnable guidsSinceRunnable(final RepositorySession session, final long timestamp, final String[] expected) {
-    return new Runnable() {
-      @Override
-      public void run() {
-        session.guidsSince(timestamp, preparedExpectGuidsSinceDelegate(expected));
-      }
-    };
-  }
-
   public Runnable fetchSinceRunnable(final RepositorySession session, final long timestamp, final String[] expected) {
     return new Runnable() {
       @Override
@@ -260,8 +235,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
 
   // Tests to implement
   public abstract void testFetchAll();
-  public abstract void testGuidsSinceReturnMultipleRecords();
-  public abstract void testGuidsSinceReturnNoRecords();
   public abstract void testFetchSinceOneRecord();
   public abstract void testFetchSinceReturnNoRecords();
   public abstract void testFetchOneRecordByGuid();
@@ -334,35 +307,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
     performWait(cleanRunnable);
     performWait(fetchAllRunnable(session, preparedExpectFetchDelegate(new Record[] { keep0, keep1, keep2})));
     closeDataAccessor(db);
-    dispose(session);
-  }
-
-  /*
-   * Tests for guidsSince
-   */
-  protected void guidsSinceReturnMultipleRecords(Record record0, Record record1) {
-    RepositorySession session = createAndBeginSession();
-    long timestamp = System.currentTimeMillis();
-
-    String[] expected = new String[2];
-    expected[0] = record0.guid;
-    expected[1] = record1.guid;
-
-    Logger.debug(getName(), "Storing two records...");
-    performWait(storeManyRunnable(session, new Record[] { record0, record1 }));
-    Logger.debug(getName(), "Getting guids since " + timestamp + "; expecting " + expected.length);
-    performWait(guidsSinceRunnable(session, timestamp, expected));
-    dispose(session);
-  }
-
-  protected void guidsSinceReturnNoRecords(Record record0) {
-    RepositorySession session = createAndBeginSession();
-
-    //  Store 1 record in the past.
-    performWait(storeRunnable(session, record0));
-
-    String[] expected = {};
-    performWait(guidsSinceRunnable(session, System.currentTimeMillis() + 1000, expected));
     dispose(session);
   }
 
@@ -782,29 +726,6 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
        return;
      };
      fail("Should have caught InactiveSessionException.");
-   }
-
-   public void testGuidsSinceOnUnstartedSession() {
-     final RepositorySession session = createSession();
-     Runnable run = new Runnable() {
-       @Override
-       public void run() {
-         session.guidsSince(System.currentTimeMillis(),
-             new RepositorySessionGuidsSinceDelegate() {
-           public void onGuidsSinceSucceeded(String[] guids) {
-             fail("Session inactive, should fail");
-             performNotify();
-           }
-
-           public void onGuidsSinceFailed(Exception ex) {
-             verifyInactiveException(ex);
-             performNotify();
-           }
-         });
-       }
-     };
-     performWait(run);
-     dispose(session);
    }
 
    private static void verifyInactiveException(Exception ex) {

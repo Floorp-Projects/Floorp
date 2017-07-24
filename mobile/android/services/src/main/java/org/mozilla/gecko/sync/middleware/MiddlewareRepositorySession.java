@@ -13,7 +13,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 
 public abstract class MiddlewareRepositorySession extends RepositorySession {
@@ -145,12 +144,6 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   @Override
   public void abort(RepositorySessionFinishDelegate delegate) {
     inner.abort(new MiddlewareRepositorySessionFinishDelegate(this, delegate));
-  }
-
-  @Override
-  public void guidsSince(long timestamp, RepositorySessionGuidsSinceDelegate delegate) {
-    // TODO: need to do anything here?
-    inner.guidsSince(timestamp, delegate);
   }
 
   @Override
