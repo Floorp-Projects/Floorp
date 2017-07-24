@@ -237,17 +237,11 @@ body {
 
 .histogram {
   float: left;
+  border: 1px solid gray;
   white-space: nowrap;
   padding: 10px;
   position: relative; /* required for position:absolute of the contained .copy-node */
-  padding: 12px 20px 12px 20px;
-  border: 1px solid var(--in-content-box-border-color);
-  border-radius: 2px;
-  margin-bottom: 24px;
-  margin-right: 24px;
-  min-height: 284px;
 }
-
 
 body[dir="rtl"] .histogram {
   float: right;
@@ -289,13 +283,8 @@ body[dir="rtl"] .bar {
 }
 
 .bar-inner {
-  background-color: #0095DD;
-  border: 1px solid #00539F;
-  border-radius: 2px;
-}
-
-.bar:nth-child(even) .long-label  {
-  margin-bottom: 1em;
+  background-color: DeepSkyBlue;
+  border: 1px solid #0000b0;
 }
 
 th, td, table {
