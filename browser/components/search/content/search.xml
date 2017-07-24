@@ -102,8 +102,10 @@
           // use the popup binding below, so null-check oneOffButtons.
           if (oneOffButtons) {
             oneOffButtons.telemetryOrigin = "searchbar";
-            oneOffButtons.popup = this.textbox.popup;
+            // Set .textbox first, since the popup setter will cause
+            // a _rebuild call that uses it.
             oneOffButtons.textbox = this.textbox;
+            oneOffButtons.popup = this.textbox.popup;
           }
         }, {capturing: true, once: true});
       ]]></constructor>
