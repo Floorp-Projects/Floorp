@@ -1849,16 +1849,7 @@ nsPresContext::ThemeChangedInternal()
     image::SurfaceCacheUtils::DiscardAll();
   }
 
-  // This will force the system metrics to be generated the next time they're used
-  nsCSSRuleProcessor::FreeSystemMetrics();
-
-  // Changes to system metrics can change media queries on them, or
-  // :-moz-system-metric selectors (which requires eRestyle_Subtree).
-  // Changes in theme can change system colors (whose changes are
-  // properly reflected in computed style data), system fonts (whose
-  // changes are not), and -moz-appearance (whose changes likewise are
-  // not), so we need to reflow.
-  MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
+  RefreshSystemMetrics();
 
   // Recursively notify all remote leaf descendants that the
   // system theme has changed.
@@ -1895,7 +1886,7 @@ nsPresContext::SysColorChangedInternal()
   }
 
   // Invalidate cached '-moz-windows-accent-color-applies' media query:
-  nsCSSRuleProcessor::FreeSystemMetrics();
+  RefreshSystemMetrics();
 
   // Reset default background and foreground colors for the document since
   // they may be using system colors
@@ -1904,6 +1895,21 @@ nsPresContext::SysColorChangedInternal()
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
   RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
+}
+
+void
+nsPresContext::RefreshSystemMetrics()
+{
+  // This will force the system metrics to be generated the next time they're used
+  nsCSSRuleProcessor::FreeSystemMetrics();
+
+  // Changes to system metrics can change media queries on them, or
+  // :-moz-system-metric selectors (which requires eRestyle_Subtree).
+  // Changes in theme can change system colors (whose changes are
+  // properly reflected in computed style data), system fonts (whose
+  // changes are not), and -moz-appearance (whose changes likewise are
+  // not), so we need to reflow.
+  MediaFeatureValuesChanged(eRestyle_Subtree, NS_STYLE_HINT_REFLOW);
 }
 
 void
