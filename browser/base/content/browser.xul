@@ -904,12 +904,18 @@
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
 #ifdef MOZ_PHOTON_THEME
-                <image id="star-button"
-                       class="urlbar-icon"
-                       onclick="BookmarkingUI.onStarCommand(event);">
-                  <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
-                  <observes element="bookmarkThisPageBroadcaster" attribute="tooltiptext"/>
-                </image>
+                <hbox id="star-button-box">
+                  <image id="star-button"
+                         class="urlbar-icon"
+                         onclick="BookmarkingUI.onStarCommand(event);">
+                    <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
+                    <observes element="bookmarkThisPageBroadcaster" attribute="tooltiptext"/>
+                  </image>
+                  <hbox id="star-button-animatable-box">
+                    <image id="star-button-animatable-image"
+                           onclick="BookmarkingUI.onStarCommand(event);"/>
+                  </hbox>
+                </hbox>
 #endif
                 <toolbarbutton id="urlbar-zoom-button"
                        onclick="FullZoom.reset();"
