@@ -27,8 +27,6 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/AppConstants.jsm");
-
 // DownloadsButton
 
 /**
@@ -343,12 +341,8 @@ const DownloadsIndicatorView = {
     // be able to anchor the notification elsewhere if required, and to ensure
     // the notification isn't clipped by overflow properties of the anchor's
     // container.
-    // Note: no notifier animation for download finished in Photon
     let notifier = this.notifier;
-
-    if (aType == "start" || !AppConstants.MOZ_PHOTON_ANIMATIONS) {
-      // the anchor height may vary if font-size is changed or
-      // compact/tablet mode is selected so recalculate this each time
+    if (notifier.style.transform == "") {
       let anchorRect = anchor.getBoundingClientRect();
       let notifierRect = notifier.getBoundingClientRect();
       let topDiff = anchorRect.top - notifierRect.top;
@@ -358,23 +352,15 @@ const DownloadsIndicatorView = {
       let translateX = (leftDiff + .5 * widthDiff) + "px";
       let translateY = (topDiff + .5 * heightDiff) + "px";
       notifier.style.transform = "translate(" + translateX + ", " + translateY + ")";
-      notifier.setAttribute("notification", aType);
     }
+    notifier.setAttribute("notification", aType);
     anchor.setAttribute("notification", aType);
-
-    let animationDuration;
-    // This value is determined by the overall duration of animation in CSS.
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-      animationDuration = aType == "start" ? 760 : 570;
-    } else {
-      animationDuration = 2000;
-    }
-
     this._notificationTimeout = setTimeout(() => {
       anchor.removeAttribute("notification");
       notifier.removeAttribute("notification");
       notifier.style.transform = "";
-    }, animationDuration);
+      // This value is determined by the overall duration of animation in CSS.
+    }, 2000);
   },
 
   // Callback functions from DownloadsIndicatorData
