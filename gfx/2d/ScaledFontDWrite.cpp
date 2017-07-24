@@ -156,7 +156,19 @@ ScaledFontDWrite::GetSkTypeface()
       return nullptr;
     }
 
-    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode, mGamma, mContrast);
+    Float gamma = mGamma;
+    // Skia doesn't support a gamma value outside of 0-4, so default to 2.2
+    if (gamma < 0.0f || gamma > 4.0f) {
+      gamma = 2.2f;
+    }
+
+    Float contrast = mContrast;
+    // Skia doesn't support a contrast value outside of 0-1, so default to 1.0
+    if (contrast < 0.0f || contrast > 1.0f) {
+      contrast = 1.0f;
+    }
+
+    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle, mForceGDIMode, gamma, contrast);
   }
   return mTypeface;
 }
