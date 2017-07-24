@@ -18,6 +18,7 @@
 #include "mozilla/SheetType.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/URLMatchingFunction.h"
+#include "mozilla/dom/CSSFontFeatureValuesRule.h"
 #include "mozilla/dom/CSSKeyframeRule.h"
 #include "mozilla/dom/CSSKeyframesRule.h"
 #include "mozilla/dom/CSSMediaRule.h"
@@ -160,43 +161,34 @@ protected:
 
 } // namespace mozilla
 
-class nsCSSFontFeatureValuesRule final : public mozilla::css::Rule,
-                                         public nsIDOMCSSFontFeatureValuesRule
+class nsCSSFontFeatureValuesRule final : public mozilla::dom::CSSFontFeatureValuesRule
 {
 public:
   nsCSSFontFeatureValuesRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-    : mozilla::css::Rule(aLineNumber, aColumnNumber)
+    : mozilla::dom::CSSFontFeatureValuesRule(aLineNumber, aColumnNumber)
   {
   }
 
   nsCSSFontFeatureValuesRule(const nsCSSFontFeatureValuesRule& aCopy)
     // copy everything except our reference count
-    : mozilla::css::Rule(aCopy),
+    : mozilla::dom::CSSFontFeatureValuesRule(aCopy),
       mFamilyList(aCopy.mFamilyList),
       mFeatureValues(aCopy.mFeatureValues)
   {
   }
 
   NS_DECL_ISUPPORTS_INHERITED
-  virtual bool IsCCLeaf() const override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
-  // nsIDOMCSSFontFaceRule interface
+  // nsIDOMCSSFontFeatureValuesRule interface
   NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
 
   // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetFontFamily is fine
-  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv);
-  // The XPCOM GetValueText is fine
-  void SetValueText(const nsAString& aFamily, mozilla::ErrorResult& aRv);
+  void GetCssTextImpl(nsAString& aCssText) const final;
 
   const mozilla::FontFamilyList& GetFamilyList() { return mFamilyList; }
   void SetFamilyList(const mozilla::FontFamilyList& aFamilyList);
@@ -210,9 +202,6 @@ public:
   }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
   ~nsCSSFontFeatureValuesRule() {}
