@@ -175,33 +175,14 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
                                ServoStyleContext* aParentContext,
                                LazyComputeBehavior aMayCompute)
 {
-  return GetContext(aElement, aParentContext, nullptr,
-                    CSSPseudoElementType::NotPseudo, aMayCompute);
-}
-
-already_AddRefed<ServoStyleContext>
-ServoStyleSet::GetContext(nsIContent* aContent,
-                          ServoStyleContext* aParentContext,
-                          nsIAtom* aPseudoTag,
-                          CSSPseudoElementType aPseudoType,
-                          LazyComputeBehavior aMayCompute)
-{
-  MOZ_ASSERT(aContent->IsElement());
-  Element* element = aContent->AsElement();
-
   RefPtr<ServoStyleContext> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
     PreTraverseSync();
-    computedValues =
-      ResolveStyleLazily(element, CSSPseudoElementType::NotPseudo, aPseudoTag, aParentContext);
-      computedValues->UpdateWithElementState(element);
-  } else {
-    computedValues = ResolveServoStyle(element,
-                                       TraversalRestyleBehavior::Normal);
+    return ResolveStyleLazily(
+        aElement, CSSPseudoElementType::NotPseudo, nullptr, aParentContext);
   }
 
-  MOZ_ASSERT(computedValues);
-  return computedValues.forget();
+  return ResolveServoStyle(aElement, TraversalRestyleBehavior::Normal);
 }
 
 
@@ -384,7 +365,6 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
                                  nsCSSAnonBoxes::mozText,
                                  aParentContext,
                                  InheritTarget::Text).Consume();
-  computedValues->UpdateWithElementState(nullptr);
   return computedValues.forget();
 }
 
@@ -398,8 +378,6 @@ ServoStyleSet::ResolveStyleForFirstLetterContinuation(ServoStyleContext* aParent
                                  InheritTarget::FirstLetterContinuation)
                                  .Consume();
   MOZ_ASSERT(computedValues);
-
-  computedValues->UpdateWithElementState(nullptr);
   return computedValues.forget();
 }
 
@@ -421,7 +399,6 @@ ServoStyleSet::ResolveStyleForPlaceholder()
                                  .Consume();
   MOZ_ASSERT(computedValues);
 
-  computedValues->UpdateWithElementState(nullptr);
   cache = computedValues;
   return computedValues.forget();
 }
@@ -454,10 +431,6 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   }
 
   MOZ_ASSERT(computedValues);
-
-  bool isBeforeOrAfter = aType == CSSPseudoElementType::before ||
-                         aType == CSSPseudoElementType::after;
-  computedValues->UpdateWithElementState(isBeforeOrAfter ? aOriginatingElement : nullptr);
   return computedValues.forget();
 }
 
@@ -469,7 +442,6 @@ ServoStyleSet::ResolveTransientStyle(Element* aElement,
 {
   RefPtr<ServoStyleContext> result =
     ResolveTransientServoStyle(aElement, aPseudoType, aPseudoTag, aRuleInclusion);
-  result->UpdateWithElementState(nullptr);
   return result.forget();
 }
 
@@ -507,7 +479,6 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 #endif
 
-  computedValues->UpdateWithElementState(nullptr);
   return computedValues.forget();
 }
 
@@ -552,7 +523,6 @@ ServoStyleSet::ResolveNonInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag)
   }
 #endif
 
-  computedValues->UpdateWithElementState(nullptr);
   cache = computedValues;
   return computedValues.forget();
 }
@@ -784,14 +754,12 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   if (isBeforeOrAfter) {
     const nsStyleDisplay* display = computedValues->ComputedData()->GetStyleDisplay();
     const nsStyleContent* content = computedValues->ComputedData()->GetStyleContent();
-    // XXXldb What is contentCount for |content: ""|?
     if (display->mDisplay == StyleDisplay::None ||
         content->ContentCount() == 0) {
       return nullptr;
     }
   }
 
-  computedValues->UpdateWithElementState(isBeforeOrAfter ? aOriginatingElement : nullptr);
   return computedValues.forget();
 }
 
@@ -806,8 +774,8 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 nsRestyleHint
 ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
                                       CSSPseudoElementType aPseudoType,
-                                     dom::Element* aPseudoElement,
-                                     EventStates aStateMask)
+                                      dom::Element* aPseudoElement,
+                                      EventStates aStateMask)
 {
   NS_WARNING("stylo: HasStateDependentStyle always returns zero!");
   return nsRestyleHint(0);
@@ -1088,14 +1056,45 @@ ServoStyleSet::CompatibilityModeChanged()
   Servo_StyleSet_CompatModeChanged(mRawSet.get());
 }
 
+inline static void
+UpdateBodyTextColorIfNeeded(
+    const Element& aElement,
+    ServoStyleContext& aStyleContext,
+    nsPresContext& aPresContext)
+{
+  if (aPresContext.CompatibilityMode() != eCompatibility_NavQuirks) {
+    return;
+  }
+
+  if (!aElement.IsHTMLElement(nsGkAtoms::body)) {
+    return;
+  }
+
+  nsIDocument* doc = aElement.GetUncomposedDoc();
+  if (!doc || doc->GetBodyElement() != &aElement) {
+    return;
+  }
+
+  MOZ_ASSERT(!aStyleContext.GetPseudo());
+
+  // NOTE(emilio): We do the ComputedData() dance to avoid triggering the
+  // IsInServoTraversal() assertion in StyleColor(), which seems useful enough
+  // in the general case, I guess...
+  aPresContext.SetBodyTextColor(
+      aStyleContext.ComputedData()->GetStyleColor()->mColor);
+}
+
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveServoStyle(Element* aElement,
                                  TraversalRestyleBehavior aRestyleBehavior)
 {
   UpdateStylistIfNeeded();
-  return Servo_ResolveStyle(aElement,
-                            mRawSet.get(),
-                            aRestyleBehavior).Consume();
+  RefPtr<ServoStyleContext> result =
+    Servo_ResolveStyle(aElement,
+                       mRawSet.get(),
+                       aRestyleBehavior).Consume();
+  UpdateBodyTextColorIfNeeded(*aElement, *result, *mPresContext);
+  return result.forget();
 }
 
 void
@@ -1157,6 +1156,10 @@ ServoStyleSet::ResolveStyleLazily(Element* aElement,
                                aRuleInclusion,
                                &Snapshots(),
                                mRawSet.get()).Consume();
+  }
+
+  if (aPseudoType == CSSPseudoElementType::NotPseudo) {
+    UpdateBodyTextColorIfNeeded(*aElement, *computedValues, *mPresContext);
   }
 
   return computedValues.forget();

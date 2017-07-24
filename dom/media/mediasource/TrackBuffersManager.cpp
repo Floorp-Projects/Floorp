@@ -62,7 +62,7 @@ static Atomic<uint32_t> sStreamSourceID(0u);
 
 class DispatchKeyNeededEvent : public Runnable {
 public:
-  DispatchKeyNeededEvent(AbstractMediaDecoder* aDecoder,
+  DispatchKeyNeededEvent(MediaSourceDecoder* aDecoder,
                          const nsTArray<uint8_t>& aInitData,
                          const nsString& aInitDataType)
     : Runnable("DispatchKeyNeededEvent")
@@ -82,7 +82,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<AbstractMediaDecoder> mDecoder;
+  RefPtr<MediaSourceDecoder> mDecoder;
   nsTArray<uint8_t> mInitData;
   nsString mInitDataType;
 };

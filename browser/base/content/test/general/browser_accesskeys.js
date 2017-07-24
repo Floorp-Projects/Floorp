@@ -47,18 +47,88 @@ add_task(async function() {
   focusedId = await performAccessKeyForChrome("z");
   is(focusedId, "chromebutton", "chromebutton accesskey");
 
-  newButton.remove();
-
   gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);
+
+  // Test whether access key for the newButton isn't available when content
+  // consumes the key event.
+
+  // When content in the tab3 consumes all keydown events.
+  const gPageURL3 = "data:text/html,<body id='tab3body'>" +
+                    "<button id='tab3button' accesskey='y'>Button in Tab 3</button>" +
+                    "<script>" +
+                    "document.body.addEventListener('keydown', (event)=>{ event.preventDefault(); });" +
+                    "</script></body>";
+  let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL3);
+  tab3.linkedBrowser.messageManager.loadFrameScript("data:,(" + childHandleFocus.toString() + ")();", false);
+
+  Services.focus.clearFocus(window);
+
+  focusedId = await performAccessKey("y");
+  is(focusedId, "tab3button", "button accesskey in tab3 should be focused");
+
+  newButton.onfocus = () => {
+    ok(false, "chromebutton shouldn't get focus during testing with tab3");
+  }
+
+  // Press the accesskey for the chrome element while the content document is focused.
+  focusedId = await performAccessKey("z");
+  is(focusedId, "tab3body", "button accesskey in tab3 should keep having focus");
+
+  newButton.onfocus = null;
+
+  gBrowser.removeTab(tab3);
+
+  // When content in the tab4 consumes all keypress events.
+  const gPageURL4 = "data:text/html,<body id='tab4body'>" +
+                    "<button id='tab4button' accesskey='y'>Button in Tab 4</button>" +
+                    "<script>" +
+                    "document.body.addEventListener('keypress', (event)=>{ event.preventDefault(); });" +
+                    "</script></body>";
+  let tab4 = await BrowserTestUtils.openNewForegroundTab(gBrowser, gPageURL4);
+  tab4.linkedBrowser.messageManager.loadFrameScript("data:,(" + childHandleFocus.toString() + ")();", false);
+
+  Services.focus.clearFocus(window);
+
+  focusedId = await performAccessKey("y");
+  is(focusedId, "tab4button", "button accesskey in tab4 should be focused");
+
+  newButton.onfocus = () => {
+    // EventStateManager handles accesskey before dispatching keypress event
+    // into the DOM tree, therefore, chrome accesskey always wins focus from
+    // content. However, this is different from shortcut keys.
+    todo(false, "chromebutton shouldn't get focus during testing with tab4");
+  }
+
+  // Press the accesskey for the chrome element while the content document is focused.
+  focusedId = await performAccessKey("z");
+  is(focusedId, "tab4body", "button accesskey in tab4 should keep having focus");
+
+  newButton.onfocus = null;
+
+  gBrowser.removeTab(tab4);
+
+  newButton.remove();
 });
 
 function childHandleFocus() {
+  var sent = false;
   content.document.body.firstChild.addEventListener("focus", function focused(event) {
+    sent = true;
     let focusedElement = content.document.activeElement;
     focusedElement.blur();
     sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id })
   }, true);
+  content.document.body.addEventListener("keydown", function keydown(event) {
+    sent = false;
+  }, true);
+  content.document.body.addEventListener("keyup", function keyup(event) {
+    if (!sent) {
+      sent = true;
+      let focusedElement = content.document.activeElement;
+      sendAsyncMessage("Test:FocusFromAccessKey", { focus: focusedElement.id });
+    }
+  });
 }
 
 function performAccessKey(key) {

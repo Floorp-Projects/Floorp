@@ -6,7 +6,6 @@
 
 #include "nsError.h"
 #include "MediaDecoderStateMachine.h"
-#include "AbstractMediaDecoder.h"
 #include "MediaResource.h"
 #ifdef MOZ_AV1
 #include "AOMDecoder.h"

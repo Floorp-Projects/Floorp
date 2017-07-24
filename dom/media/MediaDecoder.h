@@ -7,7 +7,6 @@
 #if !defined(MediaDecoder_h_)
 #define MediaDecoder_h_
 
-#include "AbstractMediaDecoder.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "MediaDecoderOwner.h"
 #include "MediaEventSource.h"
@@ -36,6 +35,7 @@ class nsIPrincipal;
 namespace mozilla {
 
 class AbstractThread;
+class FrameStatistics;
 class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
@@ -83,14 +83,14 @@ struct MOZ_STACK_CLASS MediaDecoderInit
   }
 };
 
-class MediaDecoder : public AbstractMediaDecoder
+class MediaDecoder
 {
 public:
   typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */,
                      /* IsExclusive = */ true>
     SeekPromise;
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoder)
 
   // Enumeration for the valid play states (see mPlayState)
   enum PlayState
@@ -295,11 +295,12 @@ private:
 
   virtual void AddSizeOfResources(ResourceSizes* aSizes);
 
-  VideoFrameContainer* GetVideoFrameContainer() final override
+  VideoFrameContainer* GetVideoFrameContainer()
   {
     return mVideoFrameContainer;
   }
-  layers::ImageContainer* GetImageContainer() override;
+
+  layers::ImageContainer* GetImageContainer();
 
   // Fire timeupdate events if needed according to the time constraints
   // outlined in the specification.
@@ -385,9 +386,9 @@ private:
   // Indicate whether the media is same-origin with the element.
   void UpdateSameOriginStatus(bool aSameOrigin);
 
-  MediaDecoderOwner* GetOwner() const override;
+  MediaDecoderOwner* GetOwner() const;
 
-  AbstractThread* AbstractMainThread() const final override
+  AbstractThread* AbstractMainThread() const
   {
     return mAbstractMainThread;
   }
@@ -421,13 +422,6 @@ private:
 
   // Return the frame decode/paint related statistics.
   FrameStatistics& GetFrameStatistics() { return *mFrameStats; }
-
-  // Increments the parsed and decoded frame counters by the passed in counts.
-  // Can be called on any thread.
-  virtual void NotifyDecodedFrames(const FrameStatisticsData& aStats) override
-  {
-    GetFrameStatistics().NotifyDecodedFrames(aStats);
-  }
 
   void UpdateReadyState()
   {

@@ -2815,7 +2815,12 @@ IMEInputHandler::WillDispatchKeyboardEvent(
       (!insertString || insertString->IsEmpty())) {
     // Inform the child process that this is an event that we want a reply
     // from.
-    aKeyboardEvent.mFlags.mWantReplyFromContentProcess = true;
+    // XXX This should be called only when the target is a remote process.
+    //     However, it's difficult to check it under widget/.
+    //     So, let's do this here for now, then,
+    //     EventStateManager::PreHandleEvent() will reset the flags if
+    //     the event target isn't in remote process.
+    aKeyboardEvent.MarkAsWaitingReplyFromRemoteProcess();
   }
   if (KeyboardLayoutOverrideRef().mOverrideEnabled) {
     TISInputSourceWrapper tis;
