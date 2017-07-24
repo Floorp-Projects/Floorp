@@ -7,6 +7,9 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "General")
 
+with Files("code-coverage/**"):
+    BUG_COMPONENT = ("Testing", "Code Coverage")
+
 with Files("compare-locales/docs/**"):
     BUG_COMPONENT = ('Mozilla Localizations', 'Documentation')
 

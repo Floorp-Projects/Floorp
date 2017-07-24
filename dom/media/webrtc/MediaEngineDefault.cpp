@@ -187,7 +187,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID,
   mTrackID = aID;
 
   // Start timer for subsequent frames
-#if (defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)) && defined(DEBUG)
+#if defined(MOZ_WIDGET_ANDROID) && defined(DEBUG)
 // emulator debug is very, very slow and has problems dealing with realtime audio inputs
   mTimer->InitWithCallback(this, (1000 / mOpts.mFPS)*10, nsITimer::TYPE_REPEATING_SLACK);
 #else

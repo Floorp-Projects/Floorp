@@ -20,6 +20,8 @@ public:
   static CodeCoverageHandler* Get();
   CrossProcessMutex* GetMutex();
   CrossProcessMutexHandle GetMutexHandle(int aProcId);
+  static void DumpCounters(int);
+  static void ResetCounters(int);
 
 private:
   CodeCoverageHandler();
@@ -31,8 +33,6 @@ private:
   DISALLOW_COPY_AND_ASSIGN(CodeCoverageHandler);
 
   void SetSignalHandlers();
-  static void DumpCounters(int);
-  static void ResetCounters(int);
 };
 
 }

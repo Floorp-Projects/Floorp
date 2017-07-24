@@ -95,9 +95,7 @@ AudioManager::AudioManager()
 }
 
 AudioManager::~AudioManager() {
-#if !defined(MOZ_WIDGET_GONK)
   ALOGD("~dtor%s", GetThreadInfo().c_str());
-#endif
   RTC_DCHECK(thread_checker_.CalledOnValidThread());
   Close();
 }
