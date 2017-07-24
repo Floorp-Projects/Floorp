@@ -117,14 +117,12 @@ const TESTCASES = [
                <input id="given-name" autocomplete="shipping given-name">
                <input id="family-name" autocomplete="shipping family-name">
                <input id="street-addr" autocomplete="shipping street-address">
-               <input id="city" autocomplete="shipping address-level2">
                <input id="cc-number" autocomplete="shipping cc-number">
                </form>`,
     addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
     ],
     creditCardFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "cc-number"},
@@ -139,7 +137,6 @@ const TESTCASES = [
     document: `<form>
                <input id="given-name" autocomplete="shipping given-name">
                <input autocomplete="shipping address-level2">
-               <select autocomplete="shipping country"></select>
                <input id="cc-name" autocomplete="cc-name">
                <input id="cc-exp-month" autocomplete="cc-exp-month">
                <input id="cc-exp-year" autocomplete="cc-exp-year">
@@ -147,7 +144,6 @@ const TESTCASES = [
     addressFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
     ],
     creditCardFieldDetails: [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
