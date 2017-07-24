@@ -97,6 +97,7 @@ PageLoaderCmdLineHandler.prototype =
       args.delay = cmdLine.handleFlagWithParam("tpdelay", false);
       args.noForceCC = cmdLine.handleFlag("tpnoforcecc", false);
       args.mozafterpaint = cmdLine.handleFlag("tpmozafterpaint", false);
+      args.fnbpaint = cmdLine.handleFlag("fnbpaint", false);
       args.loadnocache = cmdLine.handleFlag("tploadnocache", false);
       args.scrolltest = cmdLine.handleFlag("tpscrolltest", false);
       args.disableE10s = cmdLine.handleFlag("tpdisable_e10s", false);
@@ -116,26 +117,27 @@ PageLoaderCmdLineHandler.prototype =
   },
 
   helpInfo:
-  "  -tp <file>         Run pageload perf tests on given manifest\n" +
-  "  -tpfilter str      Only include pages from manifest that contain str (regexp)\n" +
-  "  -tpcycles n        Loop through pages n times\n" +
-  "  -tppagecycles n    Loop through each page n times before going onto the next page\n" +
-  "  -tpstart n         Start at index n in the manifest\n" +
-  "  -tpend n           End with index n in the manifest\n" +
-  "  -tpchrome          Test with normal browser chrome\n" +
-  "  -tprender          Run render-only benchmark for each page\n" +
-  "  -tpwidth width     Width of window\n" +
-  "  -tpheight height   Height of window\n" +
-  "  -tbprofilinginfo   A JSON object describing profiler settings\n" +
-  "  -tpoffline         Force offline mode\n" +
-  "  -tpnoisy           Dump the name of the last loaded page to console\n" +
-  "  -tptimeout         Max amount of time given for a page to load, quit if exceeded\n" +
-  "  -tpdelay           Amount of time to wait between each pageload\n" +
-  "  -tpnoforcecc       Don't force cycle collection between each pageload\n" +
-  "  -tpmozafterpaint   Measure Time after recieving MozAfterPaint event instead of load event\n" +
-  "  -tpscrolltest      Unknown\n" +
-  "  -tpdisable_e10s    disable pageloader e10s code path\n" +
-  "  -rss               Dump RSS after each page is loaded\n"
+  "  -tp <file>             Run pageload perf tests on given manifest\n" +
+  "  -tpfilter str          Only include pages from manifest that contain str (regexp)\n" +
+  "  -tpcycles n            Loop through pages n times\n" +
+  "  -tppagecycles n        Loop through each page n times before going onto the next page\n" +
+  "  -tpstart n             Start at index n in the manifest\n" +
+  "  -tpend n               End with index n in the manifest\n" +
+  "  -tpchrome              Test with normal browser chrome\n" +
+  "  -tprender              Run render-only benchmark for each page\n" +
+  "  -tpwidth width         Width of window\n" +
+  "  -tpheight height       Height of window\n" +
+  "  -tbprofilinginfo       A JSON object describing profiler settings\n" +
+  "  -tpoffline             Force offline mode\n" +
+  "  -tpnoisy               Dump the name of the last loaded page to console\n" +
+  "  -tptimeout             Max amount of time given for a page to load, quit if exceeded\n" +
+  "  -tpdelay               Amount of time to wait between each pageload\n" +
+  "  -tpnoforcecc           Don't force cycle collection between each pageload\n" +
+  "  -tpmozafterpaint       Measure Time after recieving MozAfterPaint event instead of load event\n" +
+  "  -fnbpaint  Measure time after a first non-blank paint has occurred\n" +
+  "  -tpscrolltest          Unknown\n" +
+  "  -tpdisable_e10s        disable pageloader e10s code path\n" +
+  "  -rss                   Dump RSS after each page is loaded\n"
 
 };
 
