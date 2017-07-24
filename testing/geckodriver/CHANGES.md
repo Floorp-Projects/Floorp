@@ -2,6 +2,11 @@
 
 All notable changes to this program is documented in this file.
 
+## Unreleased
+
+### Changed
+- `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an add-on as a base64 string.
+
 ## 0.18.0 (2017-07-10)
 
 ### Changed
