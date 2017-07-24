@@ -5,18 +5,21 @@
 
 // Tests that the developer toolbar works properly
 
+const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+
 const TEST_URI = TEST_URI_ROOT + "doc_toolbar_basic.html";
 
 add_task(function* () {
   info("Starting browser_toolbar_basic.js");
   yield addTab(TEST_URI);
 
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in to start");
+  let toolbar = gDevToolsBrowser.getDeveloperToolbar(window);
+  ok(!toolbar.visible, "DeveloperToolbar is not visible in to start");
 
-  let shown = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW);
+  let shown = oneTimeObserve(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
   yield shown;
-  ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkOpen");
+  ok(toolbar.visible, "DeveloperToolbar is visible in checkOpen");
 
   let close = document.getElementById("developer-toolbar-closebutton");
   ok(close, "Close button exists");
@@ -36,23 +39,23 @@ add_task(function* () {
 
   gBrowser.removeCurrentTab();
 
-  let hidden = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE);
+  let hidden = oneTimeObserve(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("menu_devToolbar").doCommand();
   yield hidden;
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in hidden");
+  ok(!toolbar.visible, "DeveloperToolbar is not visible in hidden");
 
-  shown = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW);
+  shown = oneTimeObserve(toolbar.NOTIFICATIONS.SHOW);
   document.getElementById("menu_devToolbar").doCommand();
   yield shown;
-  ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in after open");
+  ok(toolbar.visible, "DeveloperToolbar is visible in after open");
 
   ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
-  hidden = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE);
+  hidden = oneTimeObserve(toolbar.NOTIFICATIONS.HIDE);
   document.getElementById("developer-toolbar-closebutton").doCommand();
   yield hidden;
 
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible after re-close");
+  ok(!toolbar.visible, "DeveloperToolbar is not visible after re-close");
 });
 
 function isChecked(b) {

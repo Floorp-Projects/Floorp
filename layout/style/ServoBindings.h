@@ -229,6 +229,13 @@ Gecko_GetVisitedLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetActiveLinkAttrDeclarationBlock(RawGeckoElementBorrowed element);
 
+// Visited handling.
+
+// Returns whether private browsing is enabled for a given element.
+bool Gecko_IsPrivateBrowsingEnabled(const nsIDocument* aDoc);
+// Returns whether visited links are enabled.
+bool Gecko_AreVisitedLinksEnabled();
+
 // Animations
 bool
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElementOrPseudo,

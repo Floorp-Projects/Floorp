@@ -88,7 +88,6 @@ UNIFIED_SOURCES += [
     'AudioProcessingEvent.cpp',
     'AudioScheduledSourceNode.cpp',
     'BiquadFilterNode.cpp',
-    'BufferDecoder.cpp',
     'ChannelMergerNode.cpp',
     'ChannelSplitterNode.cpp',
     'ConstantSourceNode.cpp',

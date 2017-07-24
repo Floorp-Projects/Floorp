@@ -5,7 +5,7 @@
 @import url("chrome://global/skin/in-content/info-pages.css");
 
 :root {
-  --color-grey: #b1b1b1;
+  --color-grey: #505473;
 }
 
 html.private {
@@ -122,18 +122,18 @@ a.button {
 .toggle + .toggle-btn {
   box-sizing: border-box;
   cursor: pointer;
-  min-width: 42px;
-  height: 26px;
+  min-width: 48px;
+  height: 27px;
   border-radius: 13px;
   background-color: var(--color-grey);
-  padding: 1px;
+  border: 1px solid #202340;
 }
 
 .toggle + .toggle-btn::after {
   position: relative;
   display: block;
   content: "";
-  width: 24px;
+  width: 25px;
   height: 100%;
   left: 0;
   border-radius: 50%;
@@ -149,10 +149,11 @@ a.button {
 
 .toggle:checked + .toggle-btn {
   background: #16da00;
+  border-color: #0CA700;
 }
 
 .toggle:checked + .toggle-btn::after {
-  left: 16px;
+  left: 21px;
 }
 
 .toggle:checked + .toggle-btn:dir(rtl)::after {

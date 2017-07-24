@@ -1814,8 +1814,18 @@ RestyleManager::AnimationsWithDestroyedFrame
   nsTransitionManager* transitionManager =
     mRestyleManager->PresContext()->TransitionManager();
   for (nsIContent* content : aArray) {
-    if (content->GetPrimaryFrame()) {
-      continue;
+    if (aPseudoType == CSSPseudoElementType::NotPseudo) {
+      if (content->GetPrimaryFrame()) {
+        continue;
+      }
+    } else if (aPseudoType == CSSPseudoElementType::before) {
+      if (nsLayoutUtils::GetBeforeFrame(content)) {
+        continue;
+      }
+    } else if (aPseudoType == CSSPseudoElementType::after) {
+      if (nsLayoutUtils::GetAfterFrame(content)) {
+        continue;
+      }
     }
     dom::Element* element = content->AsElement();
 

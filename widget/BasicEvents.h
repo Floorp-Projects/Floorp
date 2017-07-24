@@ -240,17 +240,33 @@ public:
   }
   /**
    * Mark the event as waiting reply from remote process.
+   * If the caller needs to win other keyboard event handlers in chrome,
+   * the caller should call StopPropagation() too.
+   * Otherwise, if the caller just needs to know if the event is consumed by
+   * either content or chrome, it should just call this because the event
+   * may be reserved by chrome and it needs to be dispatched into the DOM
+   * tree in chrome for checking if it's reserved before being sent to any
+   * remote processes.
    */
   inline void MarkAsWaitingReplyFromRemoteProcess()
   {
     MOZ_ASSERT(!mPostedToRemoteProcess);
-    // When this is called, it means that event handlers in this process need
-    // a reply from content in a remote process.  So, callers should stop
-    // propagation in this process first.
-    NS_ASSERTION(PropagationStopped(),
-                 "Why didn't you stop propagation in this process?");
     mNoRemoteProcessDispatch = false;
     mWantReplyFromContentProcess = true;
+  }
+  /**
+   * Reset "waiting reply from remote process" state.  This is useful when
+   * you dispatch a copy of an event coming from different process.
+   */
+  inline void ResetWaitingReplyFromRemoteProcessState()
+  {
+    if (IsWaitingReplyFromRemoteProcess()) {
+      // FYI: mWantReplyFromContentProcess is also used for indicating
+      //      "handled in remote process" state.  Therefore, only when
+      //      IsWaitingReplyFromRemoteProcess() returns true, this should
+      //      reset the flag.
+      mWantReplyFromContentProcess = false;
+    }
   }
   /**
    * Return true if the event handler should wait reply event.  I.e., if this
@@ -301,6 +317,12 @@ public:
   {
     MOZ_ASSERT(!IsCrossProcessForwardingStopped());
     mPostedToRemoteProcess = false;
+    // Ignore propagation state in the different process if it's marked as
+    // "waiting reply from remote process" because the process needs to
+    // stop propagation in the process until receiving a reply event.
+    if (IsWaitingReplyFromRemoteProcess()) {
+      mPropagationStopped = mImmediatePropagationStopped = false;
+    }
   }
   /**
    * Return true if the event has been posted to a remote process.
@@ -630,6 +652,14 @@ public:
     mFlags.MarkAsWaitingReplyFromRemoteProcess();
   }
   /**
+   * Reset "waiting reply from remote process" state.  This is useful when
+   * you dispatch a copy of an event coming from different process.
+   */
+  inline void ResetWaitingReplyFromRemoteProcessState()
+  {
+    mFlags.ResetWaitingReplyFromRemoteProcessState();
+  }
+  /**
    * Return true if the event handler should wait reply event.  I.e., if this
    * returns true, any event handler should do nothing with the event.
    */
@@ -760,6 +790,11 @@ public:
    * Returns true if the event can be sent to remote process.
    */
   bool CanBeSentToRemoteProcess() const;
+  /**
+   * Returns true if the original target is a remote process and the event
+   * will be posted to the remote process later.
+   */
+  bool WillBeSentToRemoteProcess() const;
   /**
    * Returns true if the event is native event deliverer event for plugin and
    * it should be retarted to focused document.
