@@ -36,6 +36,7 @@ this.TelemetryUtils = {
     Unified: "toolkit.telemetry.unified",
     NewProfilePingEnabled: "toolkit.telemetry.newProfilePing.enabled",
     NewProfilePingDelay: "toolkit.telemetry.newProfilePing.delay",
+    PreviousBuildID: "toolkit.telemetry.previousBuildID",
 
     // Log Preferences
     LogLevel: "toolkit.telemetry.log.level",
