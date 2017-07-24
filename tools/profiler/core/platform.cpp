@@ -406,6 +406,25 @@ public:
 
   static bool Exists(PSLockRef) { return !!sInstance; }
 
+  static bool Equals(PSLockRef,
+                     int aEntries, double aInterval, uint32_t aFeatures,
+                     const char** aFilters, uint32_t aFilterCount)
+  {
+    if (sInstance->mEntries != aEntries ||
+        sInstance->mInterval != aInterval ||
+        sInstance->mFeatures != aFeatures ||
+        sInstance->mFilters.length() != aFilterCount) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < sInstance->mFilters.length(); ++i) {
+      if (strcmp(sInstance->mFilters[i].c_str(), aFilters[i]) != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static size_t SizeOf(PSLockRef, MallocSizeOf aMallocSizeOf)
   {
     size_t n = aMallocSizeOf(sInstance);
@@ -2631,6 +2650,53 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures,
                         aFilters, aFilterCount);
+}
+
+void
+profiler_ensure_started(int aEntries, double aInterval, uint32_t aFeatures,
+                        const char** aFilters, uint32_t aFilterCount)
+{
+  LOG("profiler_ensure_started");
+
+  bool startedProfiler = false;
+  SamplerThread* samplerThread = nullptr;
+  {
+    PSAutoLock lock(gPSMutex);
+
+    // Initialize if necessary.
+    if (!CorePS::Exists()) {
+      profiler_init(nullptr);
+    }
+
+    if (ActivePS::Exists(lock)) {
+      // The profiler is active.
+      if (!ActivePS::Equals(lock, aEntries, aInterval, aFeatures,
+                            aFilters, aFilterCount)) {
+        // Stop and restart with different settings.
+        samplerThread = locked_profiler_stop(lock);
+        locked_profiler_start(lock, aEntries, aInterval, aFeatures,
+                              aFilters, aFilterCount);
+        startedProfiler = true;
+      }
+    } else {
+      // The profiler is stopped.
+      locked_profiler_start(lock, aEntries, aInterval, aFeatures,
+                            aFilters, aFilterCount);
+      startedProfiler = true;
+    }
+  }
+
+  // We do these operations with gPSMutex unlocked. The comments in
+  // profiler_stop() explain why.
+  if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
+    NotifyObservers("profiler-stopped");
+    delete samplerThread;
+  }
+  if (startedProfiler) {
+    NotifyProfilerStarted(aEntries, aInterval, aFeatures,
+                          aFilters, aFilterCount);
+  }
 }
 
 static MOZ_MUST_USE SamplerThread*
