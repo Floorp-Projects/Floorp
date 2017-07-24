@@ -2371,6 +2371,60 @@ profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
   }
 }
 
+AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
+  MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock)) {
+    PR_SetEnv("MOZ_PROFILER_STARTUP=");
+    return;
+  }
+
+  PR_SetEnv("MOZ_PROFILER_STARTUP=1");
+  SprintfLiteral(mSetEntries, "MOZ_PROFILER_STARTUP_ENTRIES=%d",
+                 ActivePS::Entries(lock));
+  PR_SetEnv(mSetEntries);
+
+  SprintfLiteral(mSetInterval, "MOZ_PROFILER_STARTUP_INTERVAL=%f",
+                 ActivePS::Interval(lock));
+  PR_SetEnv(mSetInterval);
+
+  SprintfLiteral(mSetFeaturesBitfield,
+                 "MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=%d",
+                 ActivePS::Features(lock));
+  PR_SetEnv(mSetFeaturesBitfield);
+
+  std::string filtersString;
+  const Vector<std::string>& filters = ActivePS::Filters(lock);
+  for (uint32_t i = 0; i < filters.length(); ++i) {
+    filtersString += filters[i];
+    if (i != filters.length() - 1) {
+      filtersString += ",";
+    }
+  }
+  SprintfLiteral(mSetFilters, "MOZ_PROFILER_STARTUP_FILTERS=%s",
+                 filtersString.c_str());
+  PR_SetEnv(mSetFilters);
+}
+
+AutoSetProfilerEnvVarsForChildProcess::~AutoSetProfilerEnvVarsForChildProcess()
+{
+  // Our current process doesn't look at these variables after startup, so we
+  // can just unset all the variables. This allows us to use literal strings,
+  // which will be valid for the whole life time of the program and can be
+  // passed to PR_SetEnv without problems.
+  PR_SetEnv("MOZ_PROFILER_STARTUP=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_ENTRIES=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_INTERVAL=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_FILTERS=");
+}
+
 static void
 locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
 {
