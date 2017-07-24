@@ -274,12 +274,14 @@ ObjectActor.prototype = {
     for (let name of names) {
       ownProperties[name] = this._propertyDescriptor(name);
     }
+
     for (let sym of symbols) {
       ownSymbols.push({
         name: sym.toString(),
         descriptor: this._propertyDescriptor(sym)
       });
     }
+
     return { from: this.actorID,
              prototype: this.hooks.createValueGrip(this.obj.proto),
              ownProperties,
@@ -1436,20 +1438,22 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
     return false;
   }
 
-  let i = 0, names = [];
+  let i = 0, names = [], symbols = [];
   let preview = grip.preview = {
     kind: "Object",
     ownProperties: Object.create(null),
+    ownSymbols: [],
   };
 
   try {
     names = obj.getOwnPropertyNames();
+    symbols = obj.getOwnPropertySymbols();
   } catch (ex) {
     // Calling getOwnPropertyNames() on some wrapped native prototypes is not
     // allowed: "cannot modify properties of a WrappedNative". See bug 952093.
   }
-
   preview.ownPropertiesLength = names.length;
+  preview.ownSymbolsLength = symbols.length;
 
   let length;
   if (specialStringBehavior) {
@@ -1473,6 +1477,21 @@ function GenericObject(objectActor, grip, rawObj, specialStringBehavior = false)
     }
 
     preview.ownProperties[name] = desc;
+    if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
+      break;
+    }
+  }
+
+  for (let symbol of symbols) {
+    let descriptor = objectActor._propertyDescriptor(symbol, true);
+    if (!descriptor) {
+      continue;
+    }
+
+    preview.ownSymbols.push(Object.assign({
+      descriptor
+    }, hooks.createValueGrip(symbol)));
+
     if (++i == OBJECT_PREVIEW_MAX_ITEMS) {
       break;
     }
