@@ -44,6 +44,12 @@ function onZoomChange(event) {
     // so we need to jump through some hoops to get to the <xul:browser>.
     let gBrowser = event.currentTarget.gBrowser;
     let topDoc = event.target.defaultView.top.document;
+    if (!topDoc.documentElement) {
+      // In some events, such as loading synthetic documents, the
+      // documentElement will be null and getBrowserForDocument will
+      // return null.
+      return;
+    }
     browser = gBrowser.getBrowserForDocument(topDoc);
   } else {
     browser = event.originalTarget;
