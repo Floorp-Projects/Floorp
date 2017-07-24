@@ -161,6 +161,16 @@ PROFILER_FUNC_VOID(profiler_start(int aEntries, double aInterval,
 // profiler is inactive. After stopping the profiler is "inactive".
 PROFILER_FUNC_VOID(profiler_stop())
 
+// If the profiler is inactive, start it. If it's already active, restart it if
+// the requested settings differ from the current settings. Both the check and
+// the state change are performed while the profiler state is locked.
+// The only difference to profiler_start is that the current buffer contents are
+// not discarded if the profiler is already running with the requested settings.
+PROFILER_FUNC_VOID(profiler_ensure_started(int aEntries, double aInterval,
+                                           uint32_t aFeatures,
+                                           const char** aFilters,
+                                           uint32_t aFilterCount))
+
 //---------------------------------------------------------------------------
 // Control the profiler
 //---------------------------------------------------------------------------
