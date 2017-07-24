@@ -3104,6 +3104,7 @@ nsDocumentViewer::SetTextZoom(float aTextZoom)
     return NS_OK;
   }
 
+  bool textZoomChange = (mTextZoom != aTextZoom);
   mTextZoom = aTextZoom;
 
   // Set the text zoom on all children of mContainer (even if our zoom didn't
@@ -3122,9 +3123,12 @@ nsDocumentViewer::SetTextZoom(float aTextZoom)
   // And do the external resources
   mDocument->EnumerateExternalResources(SetExtResourceTextZoom, &ZoomInfo);
 
-  nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
-                                      NS_LITERAL_STRING("TextZoomChange"),
-                                      true, true);
+  // Dispatch TextZoomChange event only if text zoom value has changed.
+  if (textZoomChange) {
+    nsContentUtils::DispatchChromeEvent(mDocument, static_cast<nsIDocument*>(mDocument),
+                                        NS_LITERAL_STRING("TextZoomChange"),
+                                        true, true);
+  }
 
   return NS_OK;
 }
