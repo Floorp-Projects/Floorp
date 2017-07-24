@@ -9,7 +9,6 @@ DevToolsModules(
     'app-manager.js',
     'app-projects.js',
     'app-validator.js',
-    'build.js',
     'config-view.js',
     'project-list.js',
     'runtime-list.js',
