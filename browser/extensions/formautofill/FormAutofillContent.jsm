@@ -377,19 +377,28 @@ var FormAutofillContent = {
       return true;
     }
 
-    let pendingAddress = handler.createProfile();
-    if (Object.keys(pendingAddress).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD) {
-      this.log.debug(`Not saving since there are only ${Object.keys(pendingAddress).length} usable fields`);
+    let {addressRecord, creditCardRecord} = handler.createRecords();
+
+    if (!addressRecord && !creditCardRecord) {
       return true;
     }
 
-    this._onFormSubmit({
-      address: {
+    let data = {};
+    if (addressRecord) {
+      data.address = {
         guid: handler.address.filledRecordGUID,
-        record: pendingAddress,
-      },
-      // creditCard: {}
-    }, domWin);
+        record: addressRecord,
+      };
+    }
+
+    if (creditCardRecord) {
+      data.creditCard = {
+        guid: handler.creditCard.filledRecordGUID,
+        record: creditCardRecord,
+      };
+    }
+
+    this._onFormSubmit(data, domWin);
 
     return true;
   },

@@ -403,25 +403,47 @@ FormAutofillHandler.prototype = {
   },
 
   /**
-   * Return the profile that is converted from fieldDetails and only non-empty fields
-   * are included.
+   * Return the records that is converted from address/creditCard fieldDetails and
+   * only valid form records are included.
    *
    * @returns {Object} The new profile that convert from details with trimmed result.
    */
-  createProfile() {
-    let profile = {};
+  createRecords() {
+    let records = {};
 
-    this.address.fieldDetails.forEach(detail => {
-      let element = detail.elementWeakRef.get();
-      // Remove the unnecessary spaces
-      let value = element && element.value.trim();
-      if (!value) {
+    ["address", "creditCard"].forEach(type => {
+      let details = this[type].fieldDetails;
+      if (!details || details.length == 0) {
         return;
       }
 
-      profile[detail.fieldName] = value;
+      let recordName = `${type}Record`;
+      records[recordName] = {};
+      details.forEach(detail => {
+        let element = detail.elementWeakRef.get();
+        // Remove the unnecessary spaces
+        let value = element && element.value.trim();
+        if (!value) {
+          return;
+        }
+
+        records[recordName][detail.fieldName] = value;
+      });
     });
 
-    return profile;
+    if (records.addressRecord &&
+        Object.keys(records.addressRecord).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD) {
+      log.debug("No address record saving since there are only",
+                     Object.keys(records.addressRecord).length,
+                     "usable fields");
+      delete records.addressRecord;
+    }
+
+    if (records.creditCardRecord && !records.creditCardRecord["cc-number"]) {
+      log.debug("No credit card record saving since card number is empty");
+      delete records.creditCardRecord;
+    }
+
+    return records;
   },
 };
