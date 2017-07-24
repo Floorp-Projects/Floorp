@@ -3675,7 +3675,7 @@ public:
     void FlushIfHeavyGLCallsSinceLastFlush();
     static bool ShouldSpew();
     static bool ShouldDumpExts();
-    void Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
+    bool Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
 
     ////
 

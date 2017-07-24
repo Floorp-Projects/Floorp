@@ -2512,7 +2512,7 @@ SplitByChar(const nsACString& str, const char delim, std::vector<nsCString>* con
     out->push_back(nsCString(substr));
 }
 
-void
+bool
 GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
 {
     MOZ_ASSERT(src && dest);
@@ -2521,8 +2521,7 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
                                                     : SurfaceFormat::B8G8R8X8));
 
     if (!MakeCurrent()) {
-        gfxCriticalError() << "Failed to MakeCurrent in GLContext::Readback";
-        return;
+        return false;
     }
 
     SharedSurface* prev = GetLockedSurface();
@@ -2602,6 +2601,8 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
         if (prev)
             prev->LockProd();
     }
+
+    return true;
 }
 
 // Do whatever tear-down is necessary after drawing to our offscreen FBO,
