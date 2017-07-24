@@ -97,8 +97,7 @@ var pktUI = (function() {
                 !libraryButton ||
                 libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
                 libraryButton.getAttribute("overflowedItem") == "true" ||
-                !libraryButton.closest("toolbar") ||
-                libraryButton.closest("toolbar").id != "nav-bar") {
+                !libraryButton.closest("#nav-bar")) {
                 return;
             }
             libraryButton.removeAttribute("fade");
