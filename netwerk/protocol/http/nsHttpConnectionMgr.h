@@ -747,6 +747,9 @@ private:
 
     nsTArray<RefPtr<PendingTransactionInfo>>*
     GetTransactionPendingQHelper(nsConnectionEntry *ent, nsAHttpTransaction *trans);
+
+    // This is only a diagnostic check end it will e removed soon.
+    void CheckConnEntryMustBeInmCT(nsHttpConnectionInfo *ci);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnectionMgr::nsHalfOpenSocket, NS_HALFOPENSOCKET_IID)
