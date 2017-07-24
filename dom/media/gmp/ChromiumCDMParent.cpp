@@ -947,8 +947,15 @@ ChromiumCDMParent::InitializeVideoDecoder(
       __func__);
   }
 
+  // The Widevine CDM version 1.4.8.970 and above contain a video decoder that
+  // does not optimally allocate video frames; it requests buffers much larger
+  // than required. The exact formula the CDM uses to calculate their frame
+  // sizes isn't obvious, but they normally request around or slightly more
+  // than 1.5X the optimal amount. So pad the size of buffers we allocate so
+  // that we're likely to have buffers big enough to accomodate the CDM's weird
+  // frame size calculation.
   const size_t bufferSize =
-    I420FrameBufferSizePadded(aInfo.mImage.width, aInfo.mImage.height);
+    1.7 * I420FrameBufferSizePadded(aInfo.mImage.width, aInfo.mImage.height);
   if (bufferSize <= 0) {
     return MediaDataDecoder::InitPromise::CreateAndReject(
       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
