@@ -129,28 +129,6 @@ ProfilerParent::Init()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   ProfilerParentTracker::StartTracking(this);
-
-  if (profiler_is_active()) {
-    // If the profiler is already running in this process, start it in the
-    // child process immediately.
-    int entries = 0;
-    double interval = 0;
-    mozilla::Vector<const char*> filters;
-    uint32_t features;
-    profiler_get_start_params(&entries, &interval, &features, &filters);
-
-    ProfilerInitParams ipcParams;
-    ipcParams.enabled() = true;
-    ipcParams.entries() = entries;
-    ipcParams.interval() = interval;
-    ipcParams.features() = features;
-
-    for (uint32_t i = 0; i < filters.length(); ++i) {
-      ipcParams.filters().AppendElement(filters[i]);
-    }
-
-    Unused << SendStart(ipcParams);
-  }
 }
 
 ProfilerParent::~ProfilerParent()
