@@ -45,7 +45,8 @@
         "description": "Represents a cookie store in the browser. An incognito mode window, for instance, uses a separate cookie store from a non-incognito window.",
         "properties": {
           "id": {"type": "string", "description": "The unique identifier for the cookie store."},
-          "tabIds": {"type": "array", "items": {"type": "integer"}, "description": "Identifiers of all the browser tabs that share this cookie store."}
+          "tabIds": {"type": "array", "items": {"type": "integer"}, "description": "Identifiers of all the browser tabs that share this cookie store."},
+          "incognito": {"type": "boolean", "description": "Indicates if this is an incognito cookie store"}
         }
       },
       {
