@@ -428,7 +428,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
     }
   }
 
-  if (!geometry || !invalidRegion.IsEmpty()) {
+  if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
     if (gfxPrefs::WebRenderBlobImages()) {
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
       RefPtr<gfx::DrawTarget> dummyDt =
@@ -466,6 +466,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
     }
 
     geometry = aItem->AllocateGeometry(aDisplayListBuilder);
+    fallbackData->SetInvalid(false);
   }
 
   // Update current bounds to fallback data

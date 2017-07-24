@@ -642,6 +642,18 @@ void
 nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
                              const nsRect* aFrameInvalidRect)
 {
+  if (HasProperty(nsIFrame::WebRenderUserDataProperty())) {
+    nsIFrame::WebRenderUserDataTable* userDataTable =
+      GetProperty(nsIFrame::WebRenderUserDataProperty());
+    RefPtr<WebRenderUserData> data;
+    userDataTable->Get(nsDisplayItem::TYPE_IMAGE, getter_AddRefs(data));
+    if (data && data->AsFallbackData()) {
+      data->AsFallbackData()->SetInvalid(true);
+    }
+    SchedulePaint();
+    return;
+  }
+
   InvalidateLayer(nsDisplayItem::TYPE_IMAGE,
                   aLayerInvalidRect,
                   aFrameInvalidRect);

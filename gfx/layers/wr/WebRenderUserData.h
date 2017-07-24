@@ -18,6 +18,7 @@ class ImageClient;
 class ImageContainer;
 class WebRenderBridgeChild;
 class WebRenderImageData;
+class WebRenderFallbackData;
 class WebRenderLayerManager;
 
 class WebRenderUserData
@@ -30,6 +31,7 @@ public:
   { }
 
   virtual WebRenderImageData* AsImageData() { return nullptr; }
+  virtual WebRenderFallbackData* AsFallbackData() { return nullptr; }
 
   enum class UserDataType {
     eImage,
@@ -90,16 +92,20 @@ public:
   explicit WebRenderFallbackData(WebRenderLayerManager* aWRManager);
   virtual ~WebRenderFallbackData();
 
+  virtual WebRenderFallbackData* AsFallbackData() override { return this; }
   virtual UserDataType GetType() override { return UserDataType::eFallback; }
   static UserDataType Type() { return UserDataType::eFallback; }
   nsAutoPtr<nsDisplayItemGeometry> GetGeometry();
   void SetGeometry(nsAutoPtr<nsDisplayItemGeometry> aGeometry);
   nsRect GetBounds() { return mBounds; }
   void SetBounds(const nsRect& aRect) { mBounds = aRect; }
+  void SetInvalid(bool aInvalid) { mInvalid = aInvalid; }
+  bool IsInvalid() { return mInvalid; }
 
 protected:
   nsAutoPtr<nsDisplayItemGeometry> mGeometry;
   nsRect mBounds;
+  bool mInvalid;
 };
 
 class WebRenderAnimationData : public WebRenderUserData
