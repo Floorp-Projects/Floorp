@@ -22,8 +22,6 @@ webide.jar:
     content/devicepreferences.xhtml   (devicepreferences.xhtml)
     content/wifi-auth.js              (wifi-auth.js)
     content/wifi-auth.xhtml           (wifi-auth.xhtml)
-    content/logs.xhtml                (logs.xhtml)
-    content/logs.js                   (logs.js)
     content/project-listing.xhtml     (project-listing.xhtml)
     content/project-listing.js        (project-listing.js)
     content/project-panel.js          (project-panel.js)

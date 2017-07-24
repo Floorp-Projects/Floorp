@@ -20,7 +20,6 @@ const {Task} = require("devtools/shared/task");
 const {RuntimeScanners, RuntimeTypes} = require("devtools/client/webide/modules/runtimes");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const Telemetry = require("devtools/client/shared/telemetry");
-const {ProjectBuilding} = require("./build");
 
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
@@ -426,19 +425,6 @@ var AppManager = exports.AppManager = {
     AppManager.update("project-removed");
   }),
 
-  packageProject: Task.async(function* (project) {
-    if (!project) {
-      return;
-    }
-    if (project.type == "packaged" ||
-        project.type == "hosted") {
-      yield ProjectBuilding.build({
-        project: project,
-        logger: this.update.bind(this, "pre-package")
-      });
-    }
-  }),
-
   _selectedRuntime: null,
   set selectedRuntime(value) {
     this._selectedRuntime = value;
@@ -623,8 +609,7 @@ var AppManager = exports.AppManager = {
     return Task.spawn(function* () {
       let self = AppManager;
 
-      // Package and validate project
-      yield self.packageProject(project);
+      // Validate project
       yield self.validateAndUpdateProject(project);
 
       if (project.errorsCount > 0) {
@@ -640,7 +625,7 @@ var AppManager = exports.AppManager = {
 
       let response;
       if (project.type == "packaged") {
-        let packageDir = yield ProjectBuilding.getPackageDir(project);
+        let packageDir = project.location;
         console.log("Installing app from " + packageDir);
 
         response = yield self._appsFront.installPackaged(packageDir,
@@ -704,7 +689,7 @@ var AppManager = exports.AppManager = {
 
     return Task.spawn(function* () {
 
-      let packageDir = yield ProjectBuilding.getPackageDir(project);
+      let packageDir = project.location;
       let validation = new AppValidator({
         type: project.type,
         // Build process may place the manifest in a non-root directory

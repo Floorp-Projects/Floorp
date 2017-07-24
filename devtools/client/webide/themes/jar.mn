@@ -15,7 +15,6 @@ webide.jar:
   skin/monitor.css             (monitor.css)
   skin/config-view.css         (config-view.css)
   skin/wifi-auth.css           (wifi-auth.css)
-  skin/logs.css                (logs.css)
   skin/panel-listing.css       (panel-listing.css)
   skin/simulator.css           (simulator.css)
   skin/rocket.svg              (rocket.svg)
