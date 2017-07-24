@@ -141,7 +141,6 @@
     "browser/base/content/test/newtab/browser_newtab_perwindow_private_browsing.js": 2913, 
     "browser/base/content/test/newtab/browser_newtab_unpin.js": 3032, 
     "browser/base/content/test/plugins/browser_CTP_crashreporting.js": 4878, 
-    "browser/base/content/test/plugins/browser_CTP_data_urls.js": 4053, 
     "browser/base/content/test/plugins/browser_CTP_drag_drop.js": 5737, 
     "browser/base/content/test/plugins/browser_CTP_notificationBar.js": 4802, 
     "browser/base/content/test/plugins/browser_CTP_remove_navigate.js": 3322, 
