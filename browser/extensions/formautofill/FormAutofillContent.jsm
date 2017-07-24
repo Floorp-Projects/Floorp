@@ -95,7 +95,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let info = FormAutofillContent.getInputDetails(focusedInput);
 
     if (!FormAutofillContent.savedFieldNames.has(info.fieldName) ||
-        FormAutofillContent.getFormHandler(focusedInput).filledProfileGUID) {
+        FormAutofillContent.getFormHandler(focusedInput).address.filledRecordGUID) {
       let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
                           .createInstance(Ci.nsIAutoCompleteSearch);
       formHistory.startSearch(searchString, searchParam, previousResult, {
@@ -385,7 +385,7 @@ var FormAutofillContent = {
 
     this._onFormSubmit({
       address: {
-        guid: handler.filledProfileGUID,
+        guid: handler.address.filledRecordGUID,
         record: pendingAddress,
       },
       // creditCard: {}
@@ -484,28 +484,14 @@ var FormAutofillContent = {
       return;
     }
 
-    formHandler.collectFormFields();
+    let validDetails = formHandler.collectFormFields();
 
     this._formsDetails.set(formHandler.form.rootElement, formHandler);
     this.log.debug("Adding form handler to _formsDetails:", formHandler);
 
-    if (formHandler.isValidAddressForm) {
-      formHandler.addressFieldDetails.forEach(
-        detail => this._markAsAutofillField(detail.elementWeakRef.get())
-      );
-    } else {
-      this.log.debug("Ignoring address related fields since it has only",
-                     formHandler.addressFieldDetails.length,
-                     "field(s)");
-    }
-
-    if (formHandler.isValidCreditCardForm) {
-      formHandler.creditCardFieldDetails.forEach(
-        detail => this._markAsAutofillField(detail.elementWeakRef.get())
-      );
-    } else {
-      this.log.debug("Ignoring credit card related fields since it's without credit card number field");
-    }
+    validDetails.forEach(detail =>
+      this._markAsAutofillField(detail.elementWeakRef.get())
+    );
   },
 
   _markAsAutofillField(field) {
