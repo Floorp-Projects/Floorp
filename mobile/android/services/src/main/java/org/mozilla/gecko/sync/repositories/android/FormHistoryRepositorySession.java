@@ -23,7 +23,6 @@ import org.mozilla.gecko.sync.repositories.StoreTrackingRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.FormHistoryRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -120,59 +119,6 @@ public class FormHistoryRepositorySession extends
   }
 
   protected static final String[] GUID_COLUMNS = new String[] { FormHistory.GUID };
-
-  @Override
-  public void guidsSince(final long timestamp, final RepositorySessionGuidsSinceDelegate delegate) {
-    Runnable command = new Runnable() {
-      @Override
-      public void run() {
-        if (!isActive()) {
-          delegate.onGuidsSinceFailed(new InactiveSessionException());
-          return;
-        }
-
-        ArrayList<String> guids = new ArrayList<String>();
-
-        final long sharedEnd = now();
-        Cursor cur = null;
-        try {
-          cur = regularHelper.safeQuery(formsProvider, "", GUID_COLUMNS, regularBetween(timestamp, sharedEnd), null, null);
-          cur.moveToFirst();
-          while (!cur.isAfterLast()) {
-            guids.add(cur.getString(0));
-            cur.moveToNext();
-          }
-        } catch (RemoteException | NullCursorException e) {
-          delegate.onGuidsSinceFailed(e);
-          return;
-        } finally {
-          if (cur != null) {
-            cur.close();
-          }
-        }
-
-        try {
-          cur = deletedHelper.safeQuery(formsProvider, "", GUID_COLUMNS, deletedBetween(timestamp, sharedEnd), null, null);
-          cur.moveToFirst();
-          while (!cur.isAfterLast()) {
-            guids.add(cur.getString(0));
-            cur.moveToNext();
-          }
-        } catch (RemoteException | NullCursorException e) {
-          delegate.onGuidsSinceFailed(e);
-          return;
-        } finally {
-          if (cur != null) {
-            cur.close();
-          }
-        }
-
-        String guidsArray[] = guids.toArray(new String[guids.size()]);
-        delegate.onGuidsSinceSucceeded(guidsArray);
-      }
-    };
-    delegateQueue.execute(command);
-  }
 
   protected static FormHistoryRecord retrieveDuringFetch(final Cursor cursor) {
     // A simple and efficient way to distinguish two tables.
