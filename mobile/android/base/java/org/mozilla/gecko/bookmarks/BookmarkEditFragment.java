@@ -232,8 +232,10 @@ public class BookmarkEditFragment extends DialogFragment implements SelectFolder
         nameText.setText(bookmark.title);
 
         if (bookmark.type == Bookmarks.TYPE_FOLDER) {
+            toolbar.setTitle(R.string.bookmark_edit_folder_title);
             locationLayout.setVisibility(View.GONE);
         } else {
+            toolbar.setTitle(R.string.bookmark_edit_title);
             locationLayout.setVisibility(View.VISIBLE);
         }
         locationText.setText(bookmark.url);
