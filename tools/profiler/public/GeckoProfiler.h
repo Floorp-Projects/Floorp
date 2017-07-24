@@ -589,6 +589,29 @@ protected:
   const char* mMarkerName;
 };
 
+// Set MOZ_PROFILER_STARTUP* environment variables that will be inherited into
+// a child process that is about to be launched, in order to make that child
+// process start with the same profiler settings as in the current process.
+#ifdef MOZ_GECKO_PROFILER
+class MOZ_RAII AutoSetProfilerEnvVarsForChildProcess
+{
+public:
+  explicit AutoSetProfilerEnvVarsForChildProcess(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  ~AutoSetProfilerEnvVarsForChildProcess();
+
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  char mSetEntries[64];
+  char mSetInterval[64];
+  char mSetFeaturesBitfield[64];
+  char mSetFilters[1024];
+};
+#else
+class AutoSetProfilerEnvVarsForChildProcess
+{
+};
+#endif
+
 } // namespace mozilla
 
 #endif  // GeckoProfiler_h
