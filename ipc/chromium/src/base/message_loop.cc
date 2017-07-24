@@ -384,7 +384,7 @@ void MessageLoop::PostTask_Helper(already_AddRefed<nsIRunnable> task, int delay_
 #ifdef MOZ_TASK_TRACER
   nsCOMPtr<nsIRunnable> tracedTask = task;
   if (mozilla::tasktracer::IsStartLogging()) {
-    tracedTask = mozilla::tasktracer::CreateTracedRunnable(Move(task));
+    tracedTask = mozilla::tasktracer::CreateTracedRunnable(tracedTask.forget());
     (static_cast<mozilla::tasktracer::TracedRunnable*>(tracedTask.get()))->DispatchTask();
   }
   PendingTask pending_task(tracedTask.forget(), true);
