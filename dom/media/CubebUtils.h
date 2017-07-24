@@ -8,7 +8,6 @@
 #define CubebUtils_h_
 
 #include "cubeb/cubeb.h"
-#include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/Maybe.h"
 
@@ -34,11 +33,6 @@ uint32_t PreferredSampleRate();
 // Get the bit mask of the connected audio device's preferred layout.
 uint32_t PreferredChannelMap(uint32_t aChannels);
 
-enum Side {
-  Input,
-  Output
-};
-
 void PrefChanged(const char* aPref, void* aClosure);
 double GetVolumeScale();
 bool GetFirstStream();
@@ -54,9 +48,7 @@ cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap);
 cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel);
 #endif
 void GetCurrentBackend(nsAString& aBackend);
-void GetPreferredChannelLayout(nsAString& aLayout);
-void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
-                         Side aSide);
+
 } // namespace CubebUtils
 } // namespace mozilla
 
