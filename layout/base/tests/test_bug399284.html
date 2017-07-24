@@ -102,7 +102,7 @@ function encodeUTF16LE(string)
 
 function testFontSize(frame)
 {
-    var iframeDoc = $(frame).contentDocument;
+    var iframeDoc = SpecialPowers.wrap($(frame)).contentDocument;
     var size = parseInt(iframeDoc.defaultView.
                 getComputedStyle(iframeDoc.getElementById("testPara"), 
                                  null).
