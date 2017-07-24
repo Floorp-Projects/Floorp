@@ -36,6 +36,7 @@ private:
   virtual ~ProfilerChild();
 
   mozilla::ipc::IPCResult RecvStart(const ProfilerInitParams& params) override;
+  mozilla::ipc::IPCResult RecvEnsureStarted(const ProfilerInitParams& params) override;
   mozilla::ipc::IPCResult RecvStop() override;
   mozilla::ipc::IPCResult RecvPause() override;
   mozilla::ipc::IPCResult RecvResume() override;
