@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+@keyframes anim {
+  0% { background-color: red; }
+  100% { background-color: red; }
+}
+#target.x::before,
+#target.y::before {
+  content: "";
+  position: absolute;
+  width: 100px;
+  height: 100px;
+}
+#target.x::before {
+  animation: anim 100s infinite;
+}
+</style>
+<div id="target"></div>
+<script>
+var target = document.getElementById('target');
+requestAnimationFrame(() => {
+  // Create ::before, start animation
+  target.className = 'x';
+  requestAnimationFrame(() => {
+    // Remove ::before, stop animation
+    target.className = '';
+
+    requestAnimationFrame(() => {
+      // Create ::before, should not be animating
+      target.className = 'y';
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+});
+</script>
