@@ -24,6 +24,7 @@
 }
 
 #onboarding-overlay-button {
+  padding: 0;
   position: absolute;
   cursor: pointer;
   top: 30px;
