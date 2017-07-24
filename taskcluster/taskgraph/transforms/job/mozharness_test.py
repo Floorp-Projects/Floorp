@@ -38,6 +38,7 @@ BUILDER_NAME_PREFIX = {
     'windows10-64-pgo': 'Windows 10 64-bit',
     'windows10-64-asan': 'Windows 10 64-bit',
     'windows7-32': 'Windows 7 32-bit',
+    ('windows7-32', 'virtual-with-gpu'): 'Windows 7 VM-GFX 32-bit',
     'windows7-32-nightly': 'Windows 7 32-bit',
     'windows7-32-pgo': 'Windows 7 32-bit',
     'windows8-64': 'Windows 8 64-bit',
@@ -492,11 +493,14 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
         # Unittest builder name generation
         if 'pgo' in variant:
             build_type = variant
-        buildername = '{} {} {} test {}'.format(
-            BUILDER_NAME_PREFIX[test_platform],
-            branch,
-            build_type,
-            test_name
+        prefix = BUILDER_NAME_PREFIX.get(
+            (test_platform, test.get('virtualization')),
+            BUILDER_NAME_PREFIX[test_platform])
+        buildername = '{prefix} {branch} {build_type} test {test_name}'.format(
+            prefix=prefix,
+            branch=branch,
+            build_type=build_type,
+            test_name=test_name
         )
 
     worker.update({
