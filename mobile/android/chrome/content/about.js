@@ -54,7 +54,9 @@ function init() {
     links.forEach(function(link) {
       let url = formatter.formatURLPref(link.pref);
       let element = document.getElementById(link.id);
-      element.setAttribute("href", url);
+      if (element) {
+        element.setAttribute("href", url);
+      }
     });
   } catch (ex) {}
 
