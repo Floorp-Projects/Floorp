@@ -163,6 +163,13 @@ function initialize(event) {
     gDragDrop.onDrop(event);
   });
   addonPage.addEventListener("keypress", function(event) {
+    // If there is an embedded preferences <browser> running in a remote
+    // process, we will see the event here first before it gets a chance
+    // to bubble up through the embedded page.  To avoid stealing focus,
+    // we just ignore events when focus is in an options browser.
+    if (event.target.classList.contains("inline-options-browser")) {
+      return;
+    }
     gHeader.onKeyPress(event);
   });
 
