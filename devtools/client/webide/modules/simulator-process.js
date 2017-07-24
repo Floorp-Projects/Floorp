@@ -10,8 +10,9 @@ const { Cc, Ci, Cu } = require("chrome");
 const Environment = Cc["@mozilla.org/process/environment;1"]
                       .getService(Ci.nsIEnvironment);
 const EventEmitter = require("devtools/shared/event-emitter");
-const Subprocess = require("sdk/system/child_process/subprocess");
 const Services = require("Services");
+
+const {Subprocess} = Cu.import("resource://gre/modules/Subprocess.jsm", {});
 
 loader.lazyGetter(this, "OS", () => {
   switch (Services.appinfo.OS) {
@@ -85,19 +86,30 @@ SimulatorProcess.prototype = {
     }
 
     // Spawn a B2G instance.
-    this.process = Subprocess.call({
-      command: b2g,
+    Subprocess.call({
+      command: b2g.path,
       arguments: this.args,
+      environmentAppend: true,
       environment: environment,
-      stdout: data => this.emit("stdout", data),
-      stderr: data => this.emit("stderr", data),
+      stderr: "pipe",
+    }).then(process => {
+      this.process = process;
+      let dumpPipe = async (pipe, type) => {
+        let data = await pipe.readString();
+        while (data) {
+          this.emit(type, data);
+          data = await pipe.readString();
+        }
+      };
+      dumpPipe(process.stdout, "stdout");
+      dumpPipe(process.stderr, "stderr");
+
       // On B2G instance exit, reset tracked process, remote debugger port and
       // shuttingDown flag, then finally emit an exit event.
-      done: result => {
-        console.log("B2G terminated with " + result.exitCode);
+      process.wait().then(result => {
         this.process = null;
         this.emit("exit", result.exitCode);
-      }
+      });
     });
   },
 
