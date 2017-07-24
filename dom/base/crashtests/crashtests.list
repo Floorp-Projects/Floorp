@@ -218,3 +218,4 @@ load structured_clone_container_throws.html
 HTTP(..) load xhr_abortinprogress.html
 load xhr_empty_datauri.html
 load xhr_html_nullresponse.html
+load 1383478.html
