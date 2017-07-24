@@ -836,7 +836,7 @@ CreateErrorText(const char16_t* aDescription,
   }
 
   aErrorString.Assign(message);
-  nsTextFormatter::smprintf_free(message);
+  free(message);
 
   return NS_OK;
 }
@@ -914,7 +914,7 @@ nsExpatDriver::HandleError()
     }
     const char16_t *nameStart = uriEnd ? uriEnd + 1 : mismatch;
     tagName.Append(nameStart, (nameEnd ? nameEnd : pos) - nameStart);
-    
+
     nsAutoString msg;
     nsParserMsgUtils::GetLocalizedStringByName(XMLPARSER_PROPERTIES,
                                                "Expected", msg);
@@ -927,7 +927,7 @@ nsExpatDriver::HandleError()
 
     description.Append(message);
 
-    nsTextFormatter::smprintf_free(message);
+    free(message);
   }
 
   // Adjust the column number so that it is one based rather than zero based.

@@ -1380,12 +1380,3 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
   return n ? n - 1 : n;
 }
 
-/*
- * Free memory allocated, for the caller, by smprintf
- */
-void
-nsTextFormatter::smprintf_free(char16_t* aMem)
-{
-  free(aMem);
-}
-
