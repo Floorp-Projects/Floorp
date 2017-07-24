@@ -31,61 +31,21 @@ async function run_test_with_server(server, callback) {
   test_symbol_grip();
 }
 
-function test_symbol_grip() {
-  gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    let args = packet.frame.arguments;
+async function test_symbol_grip() {
+  gThreadClient.addOneTimeListener("paused", async function (event, packet) {
+    let [grip] = packet.frame.arguments;
 
-    do_check_eq(args[0].class, "Object");
+    // Checks grip.preview properties.
+    check_preview(grip);
 
-    let objClient = gThreadClient.pauseGrip(args[0]);
-    objClient.getPrototypeAndProperties(function (response) {
-      do_check_eq(response.ownProperties.x.configurable, true);
-      do_check_eq(response.ownProperties.x.enumerable, true);
-      do_check_eq(response.ownProperties.x.writable, true);
-      do_check_eq(response.ownProperties.x.value, 10);
+    let objClient = gThreadClient.pauseGrip(grip);
+    let response = await objClient.getPrototypeAndProperties();
+    // Checks the result of getPrototypeAndProperties.
+    check_prototype_and_properties(response);
 
-      const [
-        firstUnnamedSymbol,
-        secondUnnamedSymbol,
-        namedSymbol,
-        iteratorSymbol,
-      ] = response.ownSymbols;
-
-      do_check_eq(firstUnnamedSymbol.name, "Symbol()");
-      do_check_eq(firstUnnamedSymbol.descriptor.configurable, true);
-      do_check_eq(firstUnnamedSymbol.descriptor.enumerable, true);
-      do_check_eq(firstUnnamedSymbol.descriptor.writable, true);
-      do_check_eq(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
-
-      do_check_eq(secondUnnamedSymbol.name, "Symbol()");
-      do_check_eq(secondUnnamedSymbol.descriptor.configurable, true);
-      do_check_eq(secondUnnamedSymbol.descriptor.enumerable, true);
-      do_check_eq(secondUnnamedSymbol.descriptor.writable, true);
-      do_check_eq(secondUnnamedSymbol.descriptor.value, "second unnamed symbol");
-
-      do_check_eq(namedSymbol.name, "Symbol(named)");
-      do_check_eq(namedSymbol.descriptor.configurable, true);
-      do_check_eq(namedSymbol.descriptor.enumerable, true);
-      do_check_eq(namedSymbol.descriptor.writable, true);
-      do_check_eq(namedSymbol.descriptor.value, "named symbol");
-
-      do_check_eq(iteratorSymbol.name, "Symbol(Symbol.iterator)");
-      do_check_eq(iteratorSymbol.descriptor.configurable, true);
-      do_check_eq(iteratorSymbol.descriptor.enumerable, true);
-      do_check_eq(iteratorSymbol.descriptor.writable, true);
-      do_check_eq(iteratorSymbol.descriptor.value.class, "Function");
-
-      do_check_true(response.prototype != undefined);
-
-      let protoClient = gThreadClient.pauseGrip(response.prototype);
-      protoClient.getOwnPropertyNames(function (response) {
-        do_check_true(response.ownPropertyNames.toString != undefined);
-
-        gThreadClient.resume(function () {
-          gClient.close().then(gCallback);
-        });
-      });
-    });
+    await gThreadClient.resume();
+    await gClient.close();
+    gCallback();
   });
 
   gDebuggee.eval(`
@@ -100,5 +60,88 @@ function test_symbol_grip() {
       x: 10,
     });
   `);
+}
+
+function check_preview(grip) {
+  do_check_eq(grip.class, "Object");
+
+  const {preview} = grip;
+  do_check_eq(preview.ownProperties.x.configurable, true);
+  do_check_eq(preview.ownProperties.x.enumerable, true);
+  do_check_eq(preview.ownProperties.x.writable, true);
+  do_check_eq(preview.ownProperties.x.value, 10);
+
+  const [
+    firstUnnamedSymbol,
+    secondUnnamedSymbol,
+    namedSymbol,
+    iteratorSymbol,
+  ] = preview.ownSymbols;
+
+  do_check_eq(firstUnnamedSymbol.name, undefined);
+  do_check_eq(firstUnnamedSymbol.type, "symbol");
+  do_check_eq(firstUnnamedSymbol.descriptor.configurable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.enumerable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.writable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
+
+  do_check_eq(secondUnnamedSymbol.name, undefined);
+  do_check_eq(secondUnnamedSymbol.type, "symbol");
+  do_check_eq(secondUnnamedSymbol.descriptor.configurable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.enumerable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.writable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.value, "second unnamed symbol");
+
+  do_check_eq(namedSymbol.name, "named");
+  do_check_eq(namedSymbol.type, "symbol");
+  do_check_eq(namedSymbol.descriptor.configurable, true);
+  do_check_eq(namedSymbol.descriptor.enumerable, true);
+  do_check_eq(namedSymbol.descriptor.writable, true);
+  do_check_eq(namedSymbol.descriptor.value, "named symbol");
+
+  do_check_eq(iteratorSymbol.name, "Symbol.iterator");
+  do_check_eq(iteratorSymbol.type, "symbol");
+  do_check_eq(iteratorSymbol.descriptor.configurable, true);
+  do_check_eq(iteratorSymbol.descriptor.enumerable, true);
+  do_check_eq(iteratorSymbol.descriptor.writable, true);
+  do_check_eq(iteratorSymbol.descriptor.value.class, "Function");
+}
+
+function check_prototype_and_properties(response) {
+  do_check_eq(response.ownProperties.x.configurable, true);
+  do_check_eq(response.ownProperties.x.enumerable, true);
+  do_check_eq(response.ownProperties.x.writable, true);
+  do_check_eq(response.ownProperties.x.value, 10);
+
+  const [
+    firstUnnamedSymbol,
+    secondUnnamedSymbol,
+    namedSymbol,
+    iteratorSymbol,
+  ] = response.ownSymbols;
+
+  do_check_eq(firstUnnamedSymbol.name, "Symbol()");
+  do_check_eq(firstUnnamedSymbol.descriptor.configurable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.enumerable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.writable, true);
+  do_check_eq(firstUnnamedSymbol.descriptor.value, "first unnamed symbol");
+
+  do_check_eq(secondUnnamedSymbol.name, "Symbol()");
+  do_check_eq(secondUnnamedSymbol.descriptor.configurable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.enumerable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.writable, true);
+  do_check_eq(secondUnnamedSymbol.descriptor.value, "second unnamed symbol");
+
+  do_check_eq(namedSymbol.name, "Symbol(named)");
+  do_check_eq(namedSymbol.descriptor.configurable, true);
+  do_check_eq(namedSymbol.descriptor.enumerable, true);
+  do_check_eq(namedSymbol.descriptor.writable, true);
+  do_check_eq(namedSymbol.descriptor.value, "named symbol");
+
+  do_check_eq(iteratorSymbol.name, "Symbol(Symbol.iterator)");
+  do_check_eq(iteratorSymbol.descriptor.configurable, true);
+  do_check_eq(iteratorSymbol.descriptor.enumerable, true);
+  do_check_eq(iteratorSymbol.descriptor.writable, true);
+  do_check_eq(iteratorSymbol.descriptor.value.class, "Function");
 }
 
