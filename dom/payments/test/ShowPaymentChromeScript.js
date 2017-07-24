@@ -33,21 +33,16 @@ shippingAddress.init("USA",              // country
 
 const NormalUIService = {
   shippingOptionChanged: false,
-  canMakePayment: function(requestId) {
-    return null;
-  },
   showPayment: function(requestId) {
     paymentSrv.changeShippingAddress(requestId, shippingAddress);
-    return null;
   },
   abortPayment: function(requestId) {
-    return null;
   },
   completePayment: function(requestId) {
     let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"].
                            createInstance(Ci.nsIPaymentCompleteActionResponse);
     completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED);
-    return completeResponse;
+    paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   updatePayment: function(requestId) {
     let showResponse = null;
@@ -87,16 +82,13 @@ const NormalUIService = {
                         "Bill A. Pacheco",          // payer name
                         "",                         // payer email
                         "");                        // payer phone
+      paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
     }
-    return showResponse;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 const RejectUIService = {
-  canMakePayment: function(requestId) {
-    return null;
-  },
   showPayment: function(requestId) {
     const responseData = Cc["@mozilla.org/dom/payments/general-response-data;1"].
                             createInstance(Ci.nsIGeneralResponseData);
@@ -115,34 +107,24 @@ const RejectUIService = {
                       "",                 // payer name
                       "",                 // payer email
                       "");                // payer phone
-
-    return showResponse;
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   abortPayment: function(requestId) {
-    return null;
   },
   completePayment: function(requestId) {
-    return null;
   },
   updatePayment: function(requestId) {
-    return null;
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 };
 
 const ErrorUIService = {
-  canMakePayment: function(requestId) {
-    return null;
-  },
   showPayment: function(requestId) {
     paymentSrv.changeShippingOption(requestId, "");
-    return null;
   },
   abortPayment: function(requestId) {
-    return null;
   },
   completePayment: function(requestId) {
-    return null;
   },
   updatePayment: function(requestId) {
     let payRequest = paymentSrv.getPaymentRequestById(requestId);
@@ -168,8 +150,7 @@ const ErrorUIService = {
                       "",                 // payer name
                       "",                 // payer email
                       "");                // payer phone
-
-    return showResponse;
+    paymentSrv.respondPayment(showResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPaymentUIService]),
 
