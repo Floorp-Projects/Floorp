@@ -5,14 +5,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-ifdef LOCALE_MERGEDIR
-vpath crashreporter%.ini $(LOCALE_MERGEDIR)/browser/crashreporter
-endif
-vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
-ifdef LOCALE_MERGEDIR
-vpath crashreporter%.ini @srcdir@/en-US/crashreporter
-endif
-
 
 SUBMAKEFILES += \
 	$(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
@@ -186,7 +178,7 @@ endif
 endif
 
 ifdef MOZ_CRASHREPORTER
-libs:: crashreporter-override.ini
+libs:: $(call MERGE_FILE,crashreporter/crashreporter-override.ini)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 
