@@ -1537,7 +1537,6 @@ var GenericSubsection = {
     this.addSubSectionToSidebar(sectionID, title);
     let section = document.createElement("section");
     section.setAttribute("id", sectionID + "-" + title);
-    section.classList.add("data-subsection", "expanded");
     if (hasData) {
       section.classList.add("has-subdata");
     }
@@ -1830,20 +1829,6 @@ function setHasData(aSectionID, aHasData) {
 }
 
 /**
- * Helper function that expands and collapses sections +
- * changes caption on the toggle text
- */
-function toggleSection(aEvent) {
-  let parentElement = aEvent.target.parentElement;
-  if (!parentElement.classList.contains("has-data") &&
-      !parentElement.classList.contains("has-subdata")) {
-    return; // nothing to toggle
-  }
-
-  parentElement.classList.toggle("expanded");
-}
-
-/**
  * Sets the text of the page header based on a config pref + bundle strings
  */
 function setupPageHeader() {
@@ -1915,9 +1900,9 @@ function showSubSection(selected) {
 
   let section = document.getElementById(selected.getAttribute("value"));
   section.parentElement.childNodes.forEach((element) => {
-    element.classList.remove("expanded");
-  }, this);
-  section.classList.add("expanded");
+    element.hidden = true;
+  });
+  section.hidden = false;
 
   let title = selected.parentElement.querySelector(".category-name").textContent;
   document.getElementById("sectionTitle").textContent = title + " - " + selected.textContent;
@@ -2014,18 +1999,6 @@ function setupListeners() {
 
       LateWritesSingleton.renderLateWrites(gPingData.payload.lateWrites);
   });
-
-  // Clicking on the section name will toggle its state
-  let sectionHeaders = document.getElementsByClassName("section-name");
-  for (let sectionHeader of sectionHeaders) {
-    sectionHeader.addEventListener("click", toggleSection);
-  }
-
-  // Clicking on the "toggle" text will also toggle section's state
-  let toggleLinks = document.getElementsByClassName("toggle-caption");
-  for (let toggleLink of toggleLinks) {
-    toggleLink.addEventListener("click", toggleSection);
-  }
 }
 
 function onLoad() {
