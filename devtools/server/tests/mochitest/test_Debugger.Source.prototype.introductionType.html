@@ -33,9 +33,8 @@ window.onload = function () {
 addTest(function setup() {
   // Create an iframe to debug.
   let iframe = document.createElement("iframe");
-  iframe.src = "data:text/html," +
-               "<div id='Tootles' onclick='debugger;'>I'm a DIV!</div>" +
-               "<script id='Auddie'>function auddie() { debugger; }<\/script>";
+  iframe.srcdoc = "<div id='Tootles' onclick='debugger;'>I'm a DIV!</div>" +
+                  "<script id='Auddie'>function auddie() { debugger; }<\/script>";
   iframe.onload = onLoadHandler;
   document.body.appendChild(iframe);
 
@@ -140,11 +139,7 @@ addTest(function InsertRover() {
 // Create a XUL document with a script element, and check its introduction type.
 addTest(function XULDocumentScript() {
   let xulFrame = document.createElement("iframe");
-  xulFrame.src = "data:application/vnd.mozilla.xul+xml;charset=utf-8," +
-                 "<?xml version=\"1.0\"?>" +
-                 "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
-                 "<script id='xulie'>function xulScriptFunc() { debugger; }<\/script>" +
-                 "</window>";
+  xulFrame.src = "doc_Debugger.Source.prototype.introductionType.xul";
   xulFrame.onload = xulLoaded;
   info("Appending iframe containing XUL document");
   document.body.appendChild(xulFrame);

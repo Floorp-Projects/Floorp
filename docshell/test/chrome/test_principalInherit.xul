@@ -81,7 +81,8 @@ var tests = [
 
 addLoadEvent(function onLoad() {
   ok(Components.stack, "this test must be run with the system principal");
-  SimpleTest.executeSoon(nextTest);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["security.data_uri.unique_opaque_origin", false]]}, nextTest);
 });
 
 function loadListener(target, func) {
