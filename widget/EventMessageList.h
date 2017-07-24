@@ -385,7 +385,7 @@ NS_EVENT_MESSAGE(eDeviceMotion)
 NS_EVENT_MESSAGE(eDeviceProximity)
 NS_EVENT_MESSAGE(eUserProximity)
 NS_EVENT_MESSAGE(eDeviceLight)
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
+#if defined(MOZ_WIDGET_ANDROID)
 NS_EVENT_MESSAGE(eOrientationChange)
 #endif
 
