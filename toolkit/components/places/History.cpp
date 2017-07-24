@@ -2002,15 +2002,23 @@ public:
   NS_DECL_ISUPPORTS
 
   explicit ConcurrentStatementsHolder(mozIStorageConnection* aDBConn)
+  : mShutdownWasInvoked(false)
   {
     DebugOnly<nsresult> rv = aDBConn->AsyncClone(true, this);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) override {
-    if (NS_FAILED(aStatus))
+    if (NS_FAILED(aStatus)) {
       return NS_OK;
+    }
     mReadOnlyDBConn = do_QueryInterface(aConnection);
+    // It's possible Shutdown was invoked before we were handed back the
+    // cloned connection handle.
+    if (mShutdownWasInvoked) {
+      Shutdown();
+      return NS_OK;
+    }
 
     // Now we can create our cached statements.
 
@@ -2045,6 +2053,7 @@ public:
   }
 
   void Shutdown() {
+    mShutdownWasInvoked = true;
     if (mReadOnlyDBConn) {
       mIsVisitedCallbacks.Clear();
       DebugOnly<nsresult> rv;
@@ -2054,6 +2063,7 @@ public:
       }
       rv = mReadOnlyDBConn->AsyncClose(nullptr);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
+      mReadOnlyDBConn = nullptr;
     }
   }
 
@@ -2065,6 +2075,7 @@ private:
   nsCOMPtr<mozIStorageAsyncConnection> mReadOnlyDBConn;
   nsCOMPtr<mozIStorageAsyncStatement> mIsVisitedStatement;
   nsCOMArray<mozIStorageCompletionCallback> mIsVisitedCallbacks;
+  bool mShutdownWasInvoked;
 };
 
 NS_IMPL_ISUPPORTS(
