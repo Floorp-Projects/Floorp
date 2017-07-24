@@ -35,10 +35,28 @@ function removeItem(array, callback) {
  * installed.
  */
 this.DevToolsShim = {
-  gDevTools: null,
+  _gDevTools: null,
   listeners: [],
   tools: [],
   themes: [],
+
+  /**
+   * Lazy getter for the `gDevTools` instance. Should only be called when users interacts
+   * with DevTools as it will force loading them.
+   *
+   * @return {DevTools} a devtools instance (from client/framework/devtools)
+   */
+  get gDevTools() {
+    if (!this.isInstalled()) {
+      throw new Error(`Trying to interact with DevTools, but they are not installed`);
+    }
+
+    if (!this.isInitialized()) {
+      this._initDevTools();
+    }
+
+    return this._gDevTools;
+  },
 
   /**
    * Check if DevTools are currently installed (but not necessarily initialized).
@@ -57,7 +75,7 @@ this.DevToolsShim = {
    * @return {Boolean} true if DevTools are initialized.
    */
   isInitialized: function () {
-    return !!this.gDevTools;
+    return !!this._gDevTools;
   },
 
   /**
@@ -66,9 +84,9 @@ this.DevToolsShim = {
    * @param {DevTools} a devtools instance (from client/framework/devtools)
    */
   register: function (gDevTools) {
-    this.gDevTools = gDevTools;
+    this._gDevTools = gDevTools;
     this._onDevToolsRegistered();
-    this.gDevTools.emit("devtools-registered");
+    this._gDevTools.emit("devtools-registered");
   },
 
   /**
@@ -77,8 +95,8 @@ this.DevToolsShim = {
    */
   unregister: function () {
     if (this.isInitialized()) {
-      this.gDevTools.emit("devtools-unregistered");
-      this.gDevTools = null;
+      this._gDevTools.emit("devtools-unregistered");
+      this._gDevTools = null;
     }
   },
 
@@ -102,7 +120,7 @@ this.DevToolsShim = {
    */
   on: function (event, listener) {
     if (this.isInitialized()) {
-      this.gDevTools.on(event, listener);
+      this._gDevTools.on(event, listener);
     } else {
       this.listeners.push([event, listener]);
     }
@@ -114,7 +132,7 @@ this.DevToolsShim = {
    */
   off: function (event, listener) {
     if (this.isInitialized()) {
-      this.gDevTools.off(event, listener);
+      this._gDevTools.off(event, listener);
     } else {
       removeItem(this.listeners, ([e, l]) => e === event && l === listener);
     }
@@ -126,7 +144,7 @@ this.DevToolsShim = {
    */
   registerTool: function (tool) {
     if (this.isInitialized()) {
-      this.gDevTools.registerTool(tool);
+      this._gDevTools.registerTool(tool);
     } else {
       this.tools.push(tool);
     }
@@ -138,7 +156,7 @@ this.DevToolsShim = {
    */
   unregisterTool: function (tool) {
     if (this.isInitialized()) {
-      this.gDevTools.unregisterTool(tool);
+      this._gDevTools.unregisterTool(tool);
     } else {
       removeItem(this.tools, t => t === tool);
     }
@@ -150,7 +168,7 @@ this.DevToolsShim = {
    */
   registerTheme: function (theme) {
     if (this.isInitialized()) {
-      this.gDevTools.registerTheme(theme);
+      this._gDevTools.registerTheme(theme);
     } else {
       this.themes.push(theme);
     }
@@ -162,7 +180,7 @@ this.DevToolsShim = {
    */
   unregisterTheme: function (theme) {
     if (this.isInitialized()) {
-      this.gDevTools.unregisterTheme(theme);
+      this._gDevTools.unregisterTheme(theme);
     } else {
       removeItem(this.themes, t => t === theme);
     }
@@ -179,7 +197,7 @@ this.DevToolsShim = {
       return [];
     }
 
-    return this.gDevTools.getOpenedScratchpads();
+    return this._gDevTools.getOpenedScratchpads();
   },
 
   /**
@@ -195,7 +213,7 @@ this.DevToolsShim = {
       this._initDevTools();
     }
 
-    this.gDevTools.restoreScratchpadSession(scratchpads);
+    this._gDevTools.restoreScratchpadSession(scratchpads);
   },
 
   /**
@@ -216,10 +234,6 @@ this.DevToolsShim = {
       return Promise.resolve();
     }
 
-    if (!this.isInitialized()) {
-      this._initDevTools();
-    }
-
     return this.gDevTools.inspectNode(tab, selectors);
   },
 
@@ -231,15 +245,15 @@ this.DevToolsShim = {
   _onDevToolsRegistered: function () {
     // Register all pending event listeners on the real gDevTools object.
     for (let [event, listener] of this.listeners) {
-      this.gDevTools.on(event, listener);
+      this._gDevTools.on(event, listener);
     }
 
     for (let tool of this.tools) {
-      this.gDevTools.registerTool(tool);
+      this._gDevTools.registerTool(tool);
     }
 
     for (let theme of this.themes) {
-      this.gDevTools.registerTheme(theme);
+      this._gDevTools.registerTheme(theme);
     }
 
     this.listeners = [];
@@ -277,14 +291,6 @@ let webExtensionsMethods = [
 
 for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {
   this.DevToolsShim[method] = function () {
-    if (!this.isInstalled()) {
-      throw new Error(`Method ${method} unavailable if DevTools are not installed`);
-    }
-
-    if (!this.isInitialized()) {
-      this._initDevTools();
-    }
-
     return this.gDevTools[method].apply(this.gDevTools, arguments);
   };
 }
