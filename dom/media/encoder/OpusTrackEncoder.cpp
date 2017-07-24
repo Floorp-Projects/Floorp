@@ -10,12 +10,7 @@
 #include <opus/opus.h>
 
 #undef LOG
-#ifdef MOZ_WIDGET_GONK
-#include <android/log.h>
-#define LOG(args...) __android_log_print(ANDROID_LOG_INFO, "MediaEncoder", ## args);
-#else
 #define LOG(args, ...)
-#endif
 
 namespace mozilla {
 
