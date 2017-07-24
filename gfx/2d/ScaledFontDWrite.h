@@ -39,8 +39,8 @@ public:
                    bool aUseEmbeddedBitmap,
                    bool aForceGDIMode,
                    IDWriteRenderingParams *aParams,
-                   Float aContrast,
                    Float aGamma,
+                   Float aContrast,
                    const gfxFontStyle* aStyle = nullptr);
 
   FontType GetType() const override { return FontType::DWRITE; }
