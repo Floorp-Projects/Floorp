@@ -253,7 +253,7 @@ IDBIndex::GetLocale(nsString& aLocale) const
   if (mMetadata->locale().IsEmpty()) {
     SetDOMStringToNull(aLocale);
   } else {
-    aLocale.AssignWithConversion(mMetadata->locale());
+    CopyASCIItoUTF16(mMetadata->locale(), aLocale);
   }
 }
 
