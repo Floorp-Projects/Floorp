@@ -7,7 +7,8 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 
-const Environment = require("sdk/system/environment").env;
+const Environment = Cc["@mozilla.org/process/environment;1"]
+                      .getService(Ci.nsIEnvironment);
 const EventEmitter = require("devtools/shared/event-emitter");
 const Subprocess = require("sdk/system/child_process/subprocess");
 const Services = require("Services");
@@ -76,11 +77,11 @@ SimulatorProcess.prototype = {
     let environment;
     if (OS.indexOf("linux") > -1) {
       environment = ["TMPDIR=" + Services.dirsvc.get("TmpD", Ci.nsIFile).path];
-      ["DISPLAY", "XAUTHORITY"].forEach(key => {
-        if (key in Environment) {
-          environment.push(key + "=" + Environment[key]);
-        }
-      });
+      ["DISPLAY", "XAUTHORITY"]
+        .filter(key => Environment.exists(key))
+        .forEach(key => {
+          environment.push(key + "=" + Environment.get(key));
+        });
     }
 
     // Spawn a B2G instance.
