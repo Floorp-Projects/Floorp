@@ -1841,12 +1841,6 @@ function toggleSection(aEvent) {
   }
 
   parentElement.classList.toggle("expanded");
-
-  // Store section opened/closed state in a hidden checkbox (which is then used on reload)
-  let statebox = parentElement.getElementsByClassName("statebox")[0];
-  if (statebox) {
-    statebox.checked = parentElement.classList.contains("expanded");
-  }
 }
 
 /**
@@ -2047,12 +2041,7 @@ function onLoad() {
   Settings.render();
 
   // Restore sections states
-  let stateboxes = document.getElementsByClassName("statebox");
-  for (let box of stateboxes) {
-    if (box.checked) { // Was open. Will still display as empty if not has-data
-        box.parentElement.classList.add("expanded");
-    }
-  }
+  // TODO
 
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(() => PingPicker.update());
