@@ -325,11 +325,11 @@ var TPS = {
             if (that._tabsFinished == that._tabsAdded) {
               Logger.logInfo("all tabs loaded, continuing...");
 
-              // Wait a second before continuing to be sure tabs can be synced,
-              // otherwise we can get 'error locating tab'
+              // Wait some time before continuing to be sure tabs can be synced,
+              // otherwise we can get 'error locating tab' (bug 1383832).
               Utils.namedTimer(function() {
                 that.FinishAsyncOperation();
-              }, 1000, this, "postTabsOpening");
+              }, 2500, this, "postTabsOpening");
             }
           });
           break;
