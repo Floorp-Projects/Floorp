@@ -359,9 +359,6 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 void
 MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h)
 {
-#if defined(MOZ_WIDGET_GONK)
-  mMonitor.AssertCurrentThreadOwns(); // mWidth and mHeight are protected...
-#endif
   if ((mWidth < 0) || (mHeight < 0) ||
       (w !=  (unsigned int) mWidth) || (h != (unsigned int) mHeight)) {
     LOG(("MediaEngineRemoteVideoSource Video FrameSizeChange: %ux%u was %ux%u", w, h, mWidth, mHeight));

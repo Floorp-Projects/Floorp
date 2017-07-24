@@ -758,7 +758,11 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest,
                            nsresult aStatusCode)
 {
   workers::AssertIsOnMainThread();
-  if (NS_FAILED(aStatusCode)) {
+
+  // We need to check mObserver, which is nulled by FailWithNetworkError(),
+  // because in the case of "error" redirect mode, aStatusCode may be NS_OK but
+  // mResponse will definitely be null so we must not take the else branch.
+  if (NS_FAILED(aStatusCode) || !mObserver) {
     nsCOMPtr<nsIAsyncOutputStream> outputStream = do_QueryInterface(mPipeOutputStream);
     if (outputStream) {
       outputStream->CloseWithStatus(NS_BINDING_FAILED);
