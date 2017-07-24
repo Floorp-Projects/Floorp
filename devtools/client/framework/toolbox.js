@@ -98,6 +98,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId) {
   this.frameId = frameId;
 
   this._toolPanels = new Map();
+  this._inspectorExtensionSidebars = new Map();
   this._telemetry = new Telemetry();
 
   this._initInspector = null;
@@ -1456,6 +1457,61 @@ Toolbox.prototype = {
   },
 
   /**
+   * Retrieve the registered inspector extension sidebars
+   * (used by the inspector panel during its deferred initialization).
+   */
+  get inspectorExtensionSidebars() {
+    return this._inspectorExtensionSidebars;
+  },
+
+  /**
+   * Register an extension sidebar for the inspector panel.
+   *
+   * @param {String} id
+   *        An unique sidebar id
+   * @param {Object} options
+   * @param {String} options.title
+   *        A title for the sidebar
+   */
+  async registerInspectorExtensionSidebar(id, options) {
+    this._inspectorExtensionSidebars.set(id, options);
+
+    // Defer the extension sidebar creation if the inspector
+    // has not been created yet (and do not create the inspector
+    // only to register an extension sidebar).
+    if (!this._inspector) {
+      return;
+    }
+
+    const inspector = this.getPanel("inspector");
+    inspector.addExtensionSidebar(id, options);
+  },
+
+  /**
+   * Unregister an extension sidebar for the inspector panel.
+   *
+   * @param {String} id
+   *        An unique sidebar id
+   */
+  unregisterInspectorExtensionSidebar(id) {
+    const sidebarDef = this._inspectorExtensionSidebars.get(id);
+    if (!sidebarDef) {
+      return;
+    }
+
+    this._inspectorExtensionSidebars.delete(id);
+
+    // Remove the created sidebar instance if the inspector panel
+    // has been already created.
+    if (!this._inspector) {
+      return;
+    }
+
+    const inspector = this.getPanel("inspector");
+    inspector.removeExtensionSidebar(id);
+  },
+
+  /**
    * Unregister and unload an additional tool from this particular toolbox.
    *
    * @param {string} toolId
@@ -1481,9 +1537,7 @@ Toolbox.prototype = {
    */
   loadTool: function (id) {
     if (id === "inspector" && !this._inspector) {
-      return this.initInspector().then(() => {
-        return this.loadTool(id);
-      });
+      return this.initInspector().then(() => this.loadTool(id));
     }
 
     let deferred = defer();
@@ -2306,7 +2360,7 @@ Toolbox.prototype = {
         objectActor.preview.nodeType === domNodeConstants.ELEMENT_NODE) {
       // Open the inspector and select the DOM Element.
       await this.loadTool("inspector");
-      const inspector = await this.getPanel("inspector");
+      const inspector = this.getPanel("inspector");
       const nodeFound = await inspector.inspectNodeActor(objectActor.actor,
                                                          inspectFromAnnotation);
       if (nodeFound) {
