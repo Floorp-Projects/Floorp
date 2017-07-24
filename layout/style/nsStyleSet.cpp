@@ -219,6 +219,7 @@ nsStyleSet::nsStyleSet()
     mInReconstruct(false),
     mInitFontFeatureValuesLookup(true),
     mNeedsRestyleAfterEnsureUniqueInner(false),
+    mUsesViewportUnits(false),
     mDirty(0),
     mRootStyleContextCount(0),
 #ifdef DEBUG
@@ -2702,6 +2703,10 @@ nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 
   if (stylesChanged) {
     return eRestyle_Subtree;
+  }
+  if (aViewportChanged && mUsesViewportUnits) {
+    // Rebuild all style data without rerunning selector matching.
+    return eRestyle_ForceDescendants;
   }
   return nsRestyleHint(0);
 }
