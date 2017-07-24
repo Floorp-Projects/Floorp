@@ -1541,7 +1541,7 @@ nsWebBrowserPersist::GetExtensionForContentType(const char16_t *aContentType, ch
     }
 
     nsAutoCString contentType;
-    contentType.AssignWithConversion(aContentType);
+    LossyCopyUTF16toASCII(aContentType, contentType);
     nsAutoCString ext;
     rv = mMIMEService->GetPrimaryExtension(contentType, EmptyCString(), ext);
     if (NS_SUCCEEDED(rv))
@@ -2091,7 +2091,7 @@ nsWebBrowserPersist::CalculateUniqueFilename(nsIURI *aURI)
         if (localFile)
         {
             nsAutoString filenameAsUnichar;
-            filenameAsUnichar.AssignWithConversion(filename.get());
+            CopyASCIItoUTF16(filename, filenameAsUnichar);
             localFile->SetLeafName(filenameAsUnichar);
 
             // Resync the URI with the file after the extension has been appended
@@ -2126,7 +2126,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
         url->GetFileName(nameFromURL);
         if (mPersistFlags & PERSIST_FLAGS_DONT_CHANGE_FILENAMES)
         {
-            fileName.AssignWithConversion(NS_UnescapeURL(nameFromURL).BeginReading());
+            CopyASCIItoUTF16(NS_UnescapeURL(nameFromURL), fileName);
             aFilename = fileName;
             return NS_OK;
         }

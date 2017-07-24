@@ -323,8 +323,8 @@ TEST(Strings, replace_substr_2)
   const char *newName = "user";
   nsString acctName; acctName.AssignLiteral("forums.foo.com");
   nsAutoString newAcctName, oldVal, newVal;
-  oldVal.AssignWithConversion(oldName);
-  newVal.AssignWithConversion(newName);
+  CopyASCIItoUTF16(oldName, oldVal);
+  CopyASCIItoUTF16(newName, newVal);
   newAcctName.Assign(acctName);
 
   // here, oldVal is empty.  we are testing that this function

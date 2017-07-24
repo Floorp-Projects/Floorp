@@ -585,7 +585,7 @@ XRE_InitChildProcess(int aArgc,
     // '-' implies no support
     if (*appModelUserId != '-') {
       nsString appId;
-      appId.AssignWithConversion(nsDependentCString(appModelUserId));
+      CopyASCIItoUTF16(nsDependentCString(appModelUserId), appId);
       // The version string is encased in quotes
       appId.Trim("\"");
       // Set the id
