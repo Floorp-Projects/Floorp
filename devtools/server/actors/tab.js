@@ -1533,19 +1533,23 @@ DebuggerProgressListener.prototype = {
       return;
     }
 
-    // pageshow events for non-persisted pages have already been handled by a
-    // prior DOMWindowCreated event. For persisted pages, act as if the window
-    // had just been created since it's been unfrozen from bfcache.
-    if (evt.type == "pageshow" && !evt.persisted) {
+    let window = evt.target.defaultView;
+    let innerID = getWindowID(window);
+
+    // This method is alled on DOMWindowCreated and pageshow
+    // The common scenario is DOMWindowCreated, which is fired when the document
+    // loads. But we are to listen for pageshow in order to handle BFCache.
+    // When a page does into the BFCache, a pagehide event is fired with persisted=true
+    // but it doesn't necessarely mean persisted will be true for the pageshow
+    // event fired when the page is reloaded from the BFCache (see bug 1378133)
+    // So just check if we already know this window and accept any that isn't known yet
+    if (this._knownWindowIDs.has(innerID)) {
       return;
     }
 
-    let window = evt.target.defaultView;
     this._tabActor._windowReady(window);
 
-    if (evt.type !== "pageshow") {
-      this._knownWindowIDs.set(getWindowID(window), window);
-    }
+    this._knownWindowIDs.set(innerID, window);
   }, "DebuggerProgressListener.prototype.onWindowCreated"),
 
   onWindowHidden: DevToolsUtils.makeInfallible(function (evt) {
@@ -1563,6 +1567,7 @@ DebuggerProgressListener.prototype = {
 
     let window = evt.target.defaultView;
     this._tabActor._windowDestroyed(window, null, true);
+    this._knownWindowIDs.delete(getWindowID(window));
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
 
   observe: DevToolsUtils.makeInfallible(function (subject, topic) {
