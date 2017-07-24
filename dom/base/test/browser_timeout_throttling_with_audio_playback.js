@@ -4,7 +4,7 @@ var testURLs = [
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoop.html",
   "http://mochi.test:8888/browser/dom/base/test/file_audioLoopInIframe.html",
   "http://mochi.test:8888/browser/dom/base/test/file_pluginAudio.html",
-  "http://mochi.test:8888/browser/dom/base/test/file_webaudioLoop.html",
+  "http://mochi.test:8888/browser/dom/base/test/file_webaudio_startstop.html",
 ];
 
 // We want to ensure that while audio is being played back, a background tab is

@@ -181,6 +181,7 @@ public:
   AudioListener* Listener();
 
   AudioContextState State() const { return mAudioContextState; }
+  bool IsRunning() const;
 
   // Those three methods return a promise to content, that is resolved when an
   // (possibly long) operation is completed on the MSG (and possibly other)
