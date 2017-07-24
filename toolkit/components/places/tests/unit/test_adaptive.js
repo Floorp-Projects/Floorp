@@ -393,7 +393,7 @@ add_task(async function test_adaptive() {
 
     await PlacesTestUtils.clearHistory();
 
-    deferEnsureResults = Promise.defer();
+    deferEnsureResults = PromiseUtils.defer();
     await test();
     await deferEnsureResults.promise;
   }
