@@ -15,7 +15,8 @@ namespace mozilla {
 
 ServoDocumentRule::ServoDocumentRule(RefPtr<RawServoDocumentRule> aRawRule,
                                      uint32_t aLine, uint32_t aColumn)
-  : CSSMozDocumentRule(Servo_DocumentRule_GetRules(aRawRule).Consume())
+  : CSSMozDocumentRule(Servo_DocumentRule_GetRules(aRawRule).Consume(),
+                       aLine, aColumn)
   , mRawRule(Move(aRawRule))
 {
 }
