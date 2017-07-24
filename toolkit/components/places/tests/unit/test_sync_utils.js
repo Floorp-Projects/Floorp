@@ -2668,3 +2668,81 @@ add_task(async function test_migrateOldTrackerEntries() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
+
+add_task(async function test_ensureMobileQuery() {
+  do_print("Ensure we correctly create the mobile query");
+
+  const PlacesUIUtils = {};
+  try {
+    Cu.import("resource://gre/modules/PlacesUIUtils.jsm", PlacesUIUtils);
+  } catch (ex) {
+    do_print("Can't build left pane roots; skipping test");
+    return;
+  }
+
+  // Creates the organizer queries as a side effect.
+  let leftPaneId = PlacesUIUtils.leftPaneFolderId;
+  do_print(`Left pane root ID: ${leftPaneId}`);
+
+  let allBookmarksGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+    "PlacesOrganizer/OrganizerQuery", "AllBookmarks");
+  equal(allBookmarksGuids.length, 1, "Should create folder with all bookmarks queries");
+  let allBookmarkGuid = allBookmarksGuids[0];
+
+  do_print("Try creating query after organizer is ready");
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
+  equal(queryGuids.length, 0, "Should not create query without any mobile bookmarks");
+
+  do_print("Insert mobile bookmark, then create query");
+  let mozBmk = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.mobileGuid,
+    url: "https://mozilla.org",
+  });
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+    "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
+  equal(queryGuids.length, 1, "Should create query once mobile bookmarks exist");
+
+  let queryGuid = queryGuids[0];
+
+  let queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
+  equal(queryInfo.url, `place:folder=MOBILE_BOOKMARKS`, "Query should point to mobile root");
+  equal(queryInfo.title, "Mobile Bookmarks", "Query title should be localized");
+  equal(queryInfo.parentGuid, allBookmarkGuid, "Should append mobile query to all bookmarks queries");
+
+  do_print("Rename root and query, then recreate");
+  await PlacesUtils.bookmarks.update({
+    guid: PlacesUtils.bookmarks.mobileGuid,
+    title: "renamed root",
+  });
+  await PlacesUtils.bookmarks.update({
+    guid: queryGuid,
+    title: "renamed query",
+  });
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  let rootInfo = await PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.mobileGuid);
+  equal(rootInfo.title, "Mobile Bookmarks", "Should fix root title");
+  queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
+  equal(queryInfo.title, "Mobile Bookmarks", "Should fix query title");
+
+  do_print("Point query to different folder");
+  await PlacesUtils.bookmarks.update({
+    guid: queryGuid,
+    url: "place:folder=BOOKMARKS_MENU",
+  });
+  await PlacesSyncUtils.bookmarks.ensureMobileQuery()
+  queryInfo = await PlacesUtils.bookmarks.fetch(queryGuid);
+  equal(queryInfo.url.href, `place:folder=MOBILE_BOOKMARKS`,
+    "Should fix query URL to point to mobile root");
+
+  do_print("We shouldn't track the query or the left pane root");
+
+  let changes = await PlacesSyncUtils.bookmarks.pullChanges();
+  deepEqual(Object.keys(changes).sort(), [mozBmk.guid, "mobile"],
+    "Should not track mobile query");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
