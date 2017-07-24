@@ -4,9 +4,6 @@
 
 package org.mozilla.gecko.sync.repositories.android;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.DeletedColumns;
@@ -22,7 +19,6 @@ import org.mozilla.gecko.sync.repositories.android.RepoUtils.QueryHelper;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.PasswordRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -70,59 +66,6 @@ public class PasswordsRepositorySession extends
 
   private static final String WHERE_GUID_IS = Passwords.GUID + " = ?";
   private static final String WHERE_DELETED_GUID_IS = DeletedPasswords.GUID + " = ?";
-
-  @Override
-  public void guidsSince(final long timestamp, final RepositorySessionGuidsSinceDelegate delegate) {
-    final Runnable guidsSinceRunnable = new Runnable() {
-      @Override
-      public void run() {
-
-        if (!isActive()) {
-          delegate.onGuidsSinceFailed(new InactiveSessionException());
-          return;
-        }
-
-        // Checks succeeded, now get GUIDs.
-        final List<String> guids = new ArrayList<String>();
-        try {
-          Logger.debug(LOG_TAG, "Fetching guidsSince from data table.");
-          final Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".getGUIDsSince", GUID_COLS, dateModifiedWhere(timestamp), null, null);
-          try {
-            if (data.moveToFirst()) {
-              while (!data.isAfterLast()) {
-                guids.add(RepoUtils.getStringFromCursor(data, Passwords.GUID));
-                data.moveToNext();
-              }
-            }
-          } finally {
-            data.close();
-          }
-
-          // Fetch guids from deleted table.
-          Logger.debug(LOG_TAG, "Fetching guidsSince from deleted table.");
-          final Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".getGUIDsSince", DELETED_GUID_COLS, dateModifiedWhereDeleted(timestamp), null, null);
-          try {
-            if (deleted.moveToFirst()) {
-              while (!deleted.isAfterLast()) {
-                guids.add(RepoUtils.getStringFromCursor(deleted, DeletedColumns.GUID));
-                deleted.moveToNext();
-              }
-            }
-          } finally {
-            deleted.close();
-          }
-        } catch (Exception e) {
-          Logger.error(LOG_TAG, "Exception in fetch.");
-          delegate.onGuidsSinceFailed(e);
-          return;
-        }
-        String[] guidStrings = new String[guids.size()];
-        delegate.onGuidsSinceSucceeded(guids.toArray(guidStrings));
-      }
-    };
-
-    delegateQueue.execute(guidsSinceRunnable);
-  }
 
   @Override
   public void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {

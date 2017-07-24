@@ -15,7 +15,6 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDeleg
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
@@ -64,12 +63,6 @@ public class WBORepository extends Repository {
       if (wboRepository.shouldTrack()) {
         super.trackGUID(guid);
       }
-    }
-
-    @Override
-    public void guidsSince(long timestamp,
-                           RepositorySessionGuidsSinceDelegate delegate) {
-      throw new RuntimeException("guidsSince not implemented.");
     }
 
     @Override

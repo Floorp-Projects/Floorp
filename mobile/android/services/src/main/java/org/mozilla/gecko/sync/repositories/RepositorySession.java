@@ -14,7 +14,6 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -84,7 +83,6 @@ public abstract class RepositorySession {
     this.repository = repository;
   }
 
-  public abstract void guidsSince(long timestamp, RepositorySessionGuidsSinceDelegate delegate);
   public abstract void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate);
   public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException;
   public abstract void fetchAll(RepositorySessionFetchRecordsDelegate delegate);

@@ -19,7 +19,6 @@ import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
-import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
@@ -117,20 +116,6 @@ public class FennecTabsRepository extends Repository {
 
     protected String[] localClientSelectionArgs() {
       return null;
-    }
-
-    @Override
-    public void guidsSince(final long timestamp,
-                           final RepositorySessionGuidsSinceDelegate delegate) {
-      // Bug 783692: Now that Bug 730039 has landed, we could implement this,
-      // but it's not a priority since it's not used (yet).
-      Logger.warn(LOG_TAG, "Not returning anything from guidsSince.");
-      delegateQueue.execute(new Runnable() {
-        @Override
-        public void run() {
-          delegate.onGuidsSinceSucceeded(new String[] {});
-        }
-      });
     }
 
     @Override
