@@ -8,5 +8,8 @@ module.exports = {
     "assert": true,
     "sinon": true,
     "chai": true
+  },
+  "rules": {
+    "react/jsx-no-bind": 0
   }
 };

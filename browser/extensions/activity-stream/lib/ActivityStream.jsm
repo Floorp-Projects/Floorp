@@ -10,6 +10,7 @@ const {utils: Cu} = Components;
 const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {DefaultPrefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {LocalizationFeed} = Cu.import("resource://activity-stream/lib/LocalizationFeed.jsm", {});
+const {ManualMigration} = Cu.import("resource://activity-stream/lib/ManualMigration.jsm", {});
 const {NewTabInit} = Cu.import("resource://activity-stream/lib/NewTabInit.jsm", {});
 const {PlacesFeed} = Cu.import("resource://activity-stream/lib/PlacesFeed.jsm", {});
 const {PrefsFeed} = Cu.import("resource://activity-stream/lib/PrefsFeed.jsm", {});
@@ -81,6 +82,18 @@ const PREFS_CONFIG = new Map([
       "provider_name": "Pocket",
       "provider_icon": "pocket"
     }`
+  }],
+  ["migrationExpired", {
+    title: "Boolean flag that decides whether to show the migration message or not.",
+    value: false
+  }],
+  ["migrationRemainingDays", {
+    title: "Number of days to show the manual migration message",
+    value: 4
+  }],
+  ["migrationLastShownDate", {
+    title: "Timestamp when migration message was last shown. In seconds.",
+    value: 0
   }]
 ]);
 
@@ -132,6 +145,12 @@ for (const {name, factory, title, value} of SECTION_FEEDS_CONFIG.concat([
     name: "topsites",
     factory: () => new TopSitesFeed(),
     title: "Queries places and gets metadata for Top Sites section",
+    value: true
+  },
+  {
+    name: "migration",
+    factory: () => new ManualMigration(),
+    title: "Manual migration wizard",
     value: true
   }
 ])) {
