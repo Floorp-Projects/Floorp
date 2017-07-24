@@ -190,7 +190,7 @@ of the nsMathMLChar.  As we only stretch fences and separators in the vertical
 direction, this has no impact on overall appearance.
 */
 static void
-ApplyUnstretchedMetrics(nsPresContext*      aPresContext,
+ApplyUnstretchedMetrics(nsIFrame*           aFrame,
                         DrawTarget*         aDrawTarget,
                         float               aFontSizeInflation,
                         nsMathMLChar*       aMathMLChar,
@@ -199,7 +199,7 @@ ApplyUnstretchedMetrics(nsPresContext*      aPresContext,
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
     nsBoundingMetrics charSize;
-    aMathMLChar->Stretch(aPresContext, aDrawTarget, aFontSizeInflation,
+    aMathMLChar->Stretch(aFrame, aDrawTarget, aFontSizeInflation,
                          NS_STRETCH_DIRECTION_DEFAULT,
                          aMetrics, // size is unimportant as we aren't stretching
                          charSize, NS_STRETCH_NONE, aIsRTL);
@@ -322,15 +322,15 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
 
   // To achieve a minimum size of "1", the container should be enlarged by the
   // unstretched metrics of the fences and separators.
-  ApplyUnstretchedMetrics(aPresContext, drawTarget,
+  ApplyUnstretchedMetrics(this, drawTarget,
                           fontSizeInflation, mOpenChar,
                           containerSize, isRTL);
   for (i = 0; i < mSeparatorsCount; i++) {
-    ApplyUnstretchedMetrics(aPresContext, drawTarget,
+    ApplyUnstretchedMetrics(this, drawTarget,
                             fontSizeInflation, &mSeparatorsChar[i],
                             containerSize, isRTL);
   }
-  ApplyUnstretchedMetrics(aPresContext, drawTarget,
+  ApplyUnstretchedMetrics(this, drawTarget,
                           fontSizeInflation, mCloseChar,
                           containerSize, isRTL);
 
@@ -346,21 +346,21 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
 
   /////////////////
   // opening fence ...
-  ReflowChar(aPresContext, drawTarget, *fm,
+  ReflowChar(drawTarget, *fm,
              fontSizeInflation, mOpenChar,
              NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel,
              axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   /////////////////
   // separators ...
   for (i = 0; i < mSeparatorsCount; i++) {
-    ReflowChar(aPresContext, drawTarget, *fm,
+    ReflowChar(drawTarget, *fm,
                fontSizeInflation, &mSeparatorsChar[i],
                NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel,
                axisHeight, leading, em, containerSize, ascent, descent, isRTL);
   }
   /////////////////
   // closing fence ...
-  ReflowChar(aPresContext, drawTarget, *fm,
+  ReflowChar(drawTarget, *fm,
              fontSizeInflation, mCloseChar,
              NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel,
              axisHeight, leading, em, containerSize, ascent, descent, isRTL);
@@ -476,9 +476,8 @@ GetCharSpacing(nsMathMLChar*        aMathMLChar,
 }
 
 // helper functions to perform the common task of formatting our chars
-/*static*/ nsresult
-nsMathMLmfencedFrame::ReflowChar(nsPresContext*       aPresContext,
-                                 DrawTarget*          aDrawTarget,
+nsresult
+nsMathMLmfencedFrame::ReflowChar(DrawTarget*          aDrawTarget,
                                  nsFontMetrics&       aFontMetrics,
                                  float                aFontSizeInflation,
                                  nsMathMLChar*        aMathMLChar,
@@ -499,7 +498,7 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*       aPresContext,
 
     // stretch the char to the appropriate height if it is not big enough.
     nsBoundingMetrics charSize;
-    nsresult res = aMathMLChar->Stretch(aPresContext, aDrawTarget,
+    nsresult res = aMathMLChar->Stretch(this, aDrawTarget,
                                         aFontSizeInflation,
                                         NS_STRETCH_DIRECTION_VERTICAL,
                                         aContainerSize, charSize,
@@ -580,7 +579,7 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
 }
 
 static nscoord
-GetMaxCharWidth(nsPresContext*       aPresContext,
+GetMaxCharWidth(nsIFrame*            aFrame,
                 DrawTarget*          aDrawTarget,
                 float                aFontSizeInflation,
                 nsMathMLChar*        aMathMLChar,
@@ -588,7 +587,7 @@ GetMaxCharWidth(nsPresContext*       aPresContext,
                 int32_t              aScriptLevel,
                 nscoord              em)
 {
-  nscoord width = aMathMLChar->GetMaxWidth(aPresContext, aDrawTarget,
+  nscoord width = aMathMLChar->GetMaxWidth(aFrame, aDrawTarget,
                                            aFontSizeInflation);
 
   if (0 < aMathMLChar->Length()) {
@@ -607,7 +606,6 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, Re
 {
   nscoord width = 0;
 
-  nsPresContext* presContext = PresContext();
   const nsStyleFont* font = StyleFont();
   float fontSizeInflation = nsLayoutUtils:: FontSizeInflationFor(this);
   RefPtr<nsFontMetrics> fm =
@@ -617,7 +615,7 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, Re
 
   if (mOpenChar) {
     width +=
-      GetMaxCharWidth(presContext, aRenderingContext->GetDrawTarget(),
+      GetMaxCharWidth(this, aRenderingContext->GetDrawTarget(),
                       fontSizeInflation, mOpenChar,
                       NS_MATHML_OPERATOR_FORM_PREFIX, font->mScriptLevel, em);
   }
@@ -632,7 +630,7 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, Re
 
     if (i < mSeparatorsCount) {
       width +=
-        GetMaxCharWidth(presContext, aRenderingContext->GetDrawTarget(),
+        GetMaxCharWidth(this, aRenderingContext->GetDrawTarget(),
                         fontSizeInflation, &mSeparatorsChar[i],
                         NS_MATHML_OPERATOR_FORM_INFIX, font->mScriptLevel, em);
     }
@@ -641,7 +639,7 @@ nsMathMLmfencedFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, Re
 
   if (mCloseChar) {
     width +=
-      GetMaxCharWidth(presContext, aRenderingContext->GetDrawTarget(),
+      GetMaxCharWidth(this, aRenderingContext->GetDrawTarget(),
                       fontSizeInflation, mCloseChar,
                       NS_MATHML_OPERATOR_FORM_POSTFIX, font->mScriptLevel, em);
   }
