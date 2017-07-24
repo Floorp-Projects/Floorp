@@ -1,21 +1,9 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file includes the following constructors and global objects:
- *
- * DownloadList
- * Represents a collection of Download objects that can be viewed and managed by
- * the user interface, and persisted across sessions.
- *
- * DownloadCombinedList
- * Provides a unified, unordered list combining public and private downloads.
- *
- * DownloadSummary
- * Provides an aggregated view on the contents of a DownloadList.
+ * Provides collections of Download objects and aggregate views on them.
  */
 
 "use strict";
@@ -26,17 +14,9 @@ this.EXPORTED_SYMBOLS = [
   "DownloadSummary",
 ];
 
-// Globals
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-
-// DownloadList
 
 /**
  * Represents a collection of Download objects that can be viewed and managed by
@@ -254,8 +234,6 @@ this.DownloadList.prototype = {
   },
 };
 
-// DownloadCombinedList
-
 /**
  * Provides a unified, unordered list combining public and private downloads.
  *
@@ -335,17 +313,18 @@ this.DownloadCombinedList.prototype = {
     return this._publicList.remove(aDownload);
   },
 
-  // DownloadList view
-
+  // DownloadList callback
   onDownloadAdded(aDownload) {
     this._downloads.push(aDownload);
     this._notifyAllViews("onDownloadAdded", aDownload);
   },
 
+  // DownloadList callback
   onDownloadChanged(aDownload) {
     this._notifyAllViews("onDownloadChanged", aDownload);
   },
 
+  // DownloadList callback
   onDownloadRemoved(aDownload) {
     let index = this._downloads.indexOf(aDownload);
     if (index != -1) {
@@ -354,8 +333,6 @@ this.DownloadCombinedList.prototype = {
     this._notifyAllViews("onDownloadRemoved", aDownload);
   },
 };
-
-// DownloadSummary
 
 /**
  * Provides an aggregated view on the contents of a DownloadList.
@@ -524,8 +501,7 @@ this.DownloadSummary.prototype = {
     }
   },
 
-  // DownloadList view
-
+  // DownloadList callback
   onDownloadAdded(aDownload) {
     this._downloads.push(aDownload);
     if (this._list) {
@@ -533,10 +509,12 @@ this.DownloadSummary.prototype = {
     }
   },
 
+  // DownloadList callback
   onDownloadChanged(aDownload) {
     this._onListChanged();
   },
 
+  // DownloadList callback
   onDownloadRemoved(aDownload) {
     let index = this._downloads.indexOf(aDownload);
     if (index != -1) {
