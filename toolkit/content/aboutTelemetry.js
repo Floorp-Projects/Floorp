@@ -1853,13 +1853,31 @@ function displayProcessesSelector(selectedSection) {
   processes.hidden = !whitelist.includes(selectedSection);
 }
 
-function displaySearch(selectedSection) {
+function adjustSearchState() {
+  let selectedSection = document.querySelector("section.active").id;
   let blacklist = [
     "home",
   ];
   // TODO: Implement global search for the Home section
   let search = document.getElementById("search");
   search.hidden = blacklist.includes(selectedSection);
+  // Filter element on section change.
+  if (!blacklist.includes(selectedSection)) {
+    Search.search(search.value);
+  }
+}
+
+/**
+ * Change the url according to the current section displayed
+ * e.g about:telemetry#general-data
+ */
+function changeUrlPath(selectedSection, subSection) {
+  if (subSection) {
+    let hash = window.location.hash.split("_")[0] + "_" + selectedSection;
+    window.location.hash = hash;
+  } else {
+    window.location.hash = selectedSection.replace("-section", "-tab");
+  }
 }
 
 /**
@@ -1889,7 +1907,8 @@ function show(selected) {
   let placeholder = bundle.formatStringFromName("filterPlaceholder", [ title ], 1);
   search.setAttribute("placeholder", placeholder);
   displayProcessesSelector(selectedValue);
-  displaySearch(selectedValue);
+  adjustSearchState();
+  changeUrlPath(selectedValue);
 }
 
 function showSubSection(selected) {
@@ -1905,8 +1924,10 @@ function showSubSection(selected) {
   section.hidden = false;
 
   let title = selected.parentElement.querySelector(".category-name").textContent;
-  document.getElementById("sectionTitle").textContent = title + " - " + selected.textContent;
+  let subsection = selected.textContent;
+  document.getElementById("sectionTitle").textContent = title + " - " + subsection;
   document.getSelection().empty(); // prevent subsection text selection
+  changeUrlPath(subsection, true);
 }
 
 /**
@@ -2001,6 +2022,24 @@ function setupListeners() {
   });
 }
 
+// Restore sections states
+function urlStateRestore() {
+  if (window.location.hash) {
+    let section = window.location.hash.slice(1).replace("-tab", "-section");
+    let subsection = section.split("_")[1];
+    section = section.split("_")[0];
+    let category = document.querySelector(".category[value=" + section + "]");
+    if (category) {
+      show(category);
+      if (subsection) {
+        let selector = ".category-subsection[value=" + section + "-" + subsection + "]";
+        let subcategory = document.querySelector(selector);
+        showSubSection(subcategory);
+      }
+    }
+  }
+}
+
 function onLoad() {
   window.removeEventListener("load", onLoad);
 
@@ -2013,11 +2052,11 @@ function onLoad() {
   // Render settings.
   Settings.render();
 
-  // Restore sections states
-  // TODO
-
   // Update ping data when async Telemetry init is finished.
-  Telemetry.asyncFetchTelemetryData(() => PingPicker.update());
+  Telemetry.asyncFetchTelemetryData(async () => {
+    await PingPicker.update();
+    urlStateRestore();
+  });
 }
 
 var LateWritesSingleton = {
@@ -2269,6 +2308,7 @@ function displayPingData(ping, updatePayloadList = false) {
     console.log(err);
     PingPicker._showRawPingData();
   }
+  adjustSearchState();
 }
 
 function displayRichPingData(ping, updatePayloadList) {
