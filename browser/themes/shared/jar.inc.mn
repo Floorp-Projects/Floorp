@@ -122,7 +122,6 @@
 #endif
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
-  skin/classic/browser/bookmark-animation.svg         (../shared/icons/bookmark-animation.svg)
   skin/classic/browser/bookmark-hollow.svg            (../shared/icons/bookmark-hollow.svg)
 #ifndef MOZ_PHOTON_THEME
   skin/classic/browser/bookmarksMenu.svg              (../shared/icons/bookmarksMenu.svg)
@@ -162,7 +161,6 @@
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
-  skin/classic/browser/library-bookmark-animation.svg (../shared/icons/library-bookmark-animation.svg)
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/link.svg                       (../shared/icons/link.svg)
 #endif
