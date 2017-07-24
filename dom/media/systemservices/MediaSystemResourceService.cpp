@@ -47,23 +47,6 @@ MediaSystemResourceService::MediaSystemResourceService()
   : mDestroyed(false)
 {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-#ifdef MOZ_WIDGET_GONK
-  // The maximum number of hardware resoureces available.
-  // XXX need to hange to a dynamic way.
-  enum
-  {
-    VIDEO_DECODER_COUNT = 1,
-    VIDEO_ENCODER_COUNT = 1
-  };
-
-  MediaSystemResource* resource;
-
-  resource = new MediaSystemResource(VIDEO_DECODER_COUNT);
-  mResources.Put(static_cast<uint32_t>(MediaSystemResourceType::VIDEO_DECODER), resource);
-
-  resource = new MediaSystemResource(VIDEO_ENCODER_COUNT);
-  mResources.Put(static_cast<uint32_t>(MediaSystemResourceType::VIDEO_ENCODER), resource);
-#endif
 }
 
 MediaSystemResourceService::~MediaSystemResourceService()
