@@ -492,6 +492,12 @@ AudioContext::Listener()
   return mListener;
 }
 
+bool
+AudioContext::IsRunning() const
+{
+  return mAudioContextState == AudioContextState::Running;
+}
+
 already_AddRefed<Promise>
 AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
                               const Optional<OwningNonNull<DecodeSuccessCallback> >& aSuccessCallback,
