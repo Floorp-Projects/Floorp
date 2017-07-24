@@ -16,11 +16,14 @@ public:
   SandboxBrokerPolicyFactory();
 
 #ifdef MOZ_CONTENT_SANDBOX
-  UniquePtr<SandboxBroker::Policy> GetContentPolicy(int aPid);
+  UniquePtr<SandboxBroker::Policy> GetContentPolicy(int aPid, bool aFileProcess);
 #endif
 
 private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
+  static void AddDynamicPathList(SandboxBroker::Policy *policy,
+                                 nsAdoptingCString& paths,
+                                 int perms);
 };
 
 } // namespace mozilla

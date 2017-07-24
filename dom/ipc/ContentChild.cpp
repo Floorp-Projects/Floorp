@@ -1645,7 +1645,10 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
         }
       }
     }
-    sandboxEnabled = SetContentProcessSandbox(brokerFd, syscallWhitelist);
+    ContentChild* cc = ContentChild::GetSingleton();
+    bool isFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
+    sandboxEnabled = SetContentProcessSandbox(brokerFd, isFileProcess,
+                                              syscallWhitelist);
   }
 #elif defined(XP_WIN)
   mozilla::SandboxTarget::Instance()->StartSandbox();

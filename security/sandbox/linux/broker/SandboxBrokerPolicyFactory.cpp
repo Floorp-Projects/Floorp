@@ -11,10 +11,13 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "SpecialSystemDirectory.h"
 
 #ifdef ANDROID
@@ -42,14 +45,16 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // are cached over the lifetime of the factory.
 #if defined(MOZ_CONTENT_SANDBOX)
   SandboxBroker::Policy* policy = new SandboxBroker::Policy;
-  policy->AddDir(rdonly, "/");
   policy->AddDir(rdwrcr, "/dev/shm");
+  // Write permssions
+  //
   // Add write permissions on the temporary directory. This can come
   // from various environment variables (TMPDIR,TMP,TEMP,...) so
   // make sure to use the full logic.
   nsCOMPtr<nsIFile> tmpDir;
   nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
                                           getter_AddRefs(tmpDir));
+
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString tmpPath;
     rv = tmpDir->GetNativePath(tmpPath);
@@ -82,13 +87,131 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   }
 #endif
 
+  // Read permissions
+  // No read blocking at level 2 and below
+  if (Preferences::GetInt("security.sandbox.content.level") <= 2) {
+    policy->AddDir(rdonly, "/");
+    mCommonContentPolicy.reset(policy);
+    return;
+  }
+  policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/proc/cpuinfo");
+  policy->AddPath(rdonly, "/proc/meminfo");
+  policy->AddDir(rdonly, "/lib");
+  policy->AddDir(rdonly, "/etc");
+  policy->AddDir(rdonly, "/usr/share");
+  policy->AddDir(rdonly, "/usr/local/share");
+  policy->AddDir(rdonly, "/usr/lib");
+  policy->AddDir(rdonly, "/usr/lib32");
+  policy->AddDir(rdonly, "/usr/lib64");
+  policy->AddDir(rdonly, "/usr/X11R6/lib/X11/fonts");
+  policy->AddDir(rdonly, "/usr/tmp");
+  policy->AddDir(rdonly, "/var/tmp");
+  policy->AddDir(rdonly, "/sys/devices/cpu");
+  policy->AddDir(rdonly, "/sys/devices/system/cpu");
+
+  // Configuration dirs in the homedir that we want to allow read
+  // access to.
+  mozilla::Array<const char*, 3> confDirs = {
+    ".config",
+    ".themes",
+    ".fonts",
+  };
+
+  nsCOMPtr<nsIFile> homeDir;
+  rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(homeDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIFile> confDir;
+
+    for (auto dir : confDirs) {
+      rv = homeDir->Clone(getter_AddRefs(confDir));
+      if (NS_SUCCEEDED(rv)) {
+        rv = confDir->AppendNative(nsDependentCString(dir));
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString tmpPath;
+          rv = confDir->GetNativePath(tmpPath);
+          if (NS_SUCCEEDED(rv)) {
+            policy->AddDir(rdonly, tmpPath.get());
+          }
+        }
+      }
+    }
+
+    // ~/.local/share (for themes)
+    rv = homeDir->Clone(getter_AddRefs(confDir));
+    if (NS_SUCCEEDED(rv)) {
+      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".local"));
+      if (NS_SUCCEEDED(rv)) {
+        rv = confDir->AppendNative(NS_LITERAL_CSTRING("share"));
+      }
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoCString tmpPath;
+        rv = confDir->GetNativePath(tmpPath);
+        if (NS_SUCCEEDED(rv)) {
+          policy->AddDir(rdonly, tmpPath.get());
+        }
+      }
+    }
+
+    // ~/.fonts.conf (Fontconfig)
+    rv = homeDir->Clone(getter_AddRefs(confDir));
+    if (NS_SUCCEEDED(rv)) {
+      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".fonts.conf"));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoCString tmpPath;
+        rv = confDir->GetNativePath(tmpPath);
+        if (NS_SUCCEEDED(rv)) {
+          policy->AddPath(rdonly, tmpPath.get());
+        }
+      }
+    }
+
+    // .pangorc
+    rv = homeDir->Clone(getter_AddRefs(confDir));
+    if (NS_SUCCEEDED(rv)) {
+      rv = confDir->AppendNative(NS_LITERAL_CSTRING(".pangorc"));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoCString tmpPath;
+        rv = confDir->GetNativePath(tmpPath);
+        if (NS_SUCCEEDED(rv)) {
+          policy->AddPath(rdonly, tmpPath.get());
+        }
+      }
+    }
+  }
+
+  // Firefox binary dir.
+  // Note that unlike the previous cases, we use NS_GetSpecialDirectory
+  // instead of GetSpecialSystemDirectory. The former requires a working XPCOM
+  // system, which may not be the case for some tests. For quering for the
+  // location of XPCOM things, we can use it anyway.
+  nsCOMPtr<nsIFile> ffDir;
+  rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(ffDir));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = ffDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdonly, tmpPath.get());
+    }
+  }
+
+  if (mozilla::IsDevelopmentBuild()) {
+    // If this is a developer build the resources are symlinks to outside the binary dir.
+    // Therefore in non-release builds we allow reads from the whole repository.
+    // MOZ_DEVELOPER_REPO_DIR is set by mach run.
+    const char *developer_repo_dir = PR_GetEnv("MOZ_DEVELOPER_REPO_DIR");
+    if (developer_repo_dir) {
+      policy->AddDir(rdonly, developer_repo_dir);
+    }
+  }
+
   mCommonContentPolicy.reset(policy);
 #endif
 }
 
 #ifdef MOZ_CONTENT_SANDBOX
 UniquePtr<SandboxBroker::Policy>
-SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
+SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
 {
   // Policy entries that vary per-process (currently the only reason
   // that can happen is because they contain the pid) are added here.
@@ -103,21 +226,43 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
   UniquePtr<SandboxBroker::Policy>
     policy(new SandboxBroker::Policy(*mCommonContentPolicy));
 
+  // Bug 1198550: the profiler's replacement for dl_iterate_phdr
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/maps", aPid).get());
+
+  // Bug 1198552: memory reporting.
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/statm", aPid).get());
+  policy->AddPath(rdonly, nsPrintfCString("/proc/%d/smaps", aPid).get());
   // Now read any extra paths, this requires accessing user preferences
   // so we can only do it now. Our constructor is initialized before
   // user preferences are read in.
-  nsAdoptingCString extraPathString =
+  nsAdoptingCString extraReadPathString =
+    Preferences::GetCString("security.sandbox.content.read_path_whitelist");
+  AddDynamicPathList(policy.get(), extraReadPathString, rdonly);
+  nsAdoptingCString extraWritePathString =
     Preferences::GetCString("security.sandbox.content.write_path_whitelist");
-  if (extraPathString) {
-    for (const nsACString& path : extraPathString.Split(',')) {
-      nsCString trimPath(path);
-      trimPath.Trim(" ", true, true);
-      policy->AddDynamic(rdwr, trimPath.get());
-    }
+  AddDynamicPathList(policy.get(), extraWritePathString, rdwr);
+
+  // file:// processes get global read permissions
+  if (aFileProcess) {
+    policy->AddDir(rdonly, "/");
   }
 
   // Return the common policy.
   return policy;
+
+}
+
+void
+SandboxBrokerPolicyFactory::AddDynamicPathList(SandboxBroker::Policy *policy,
+                                               nsAdoptingCString& pathList,
+                                               int perms) {
+ if (pathList) {
+    for (const nsACString& path : pathList.Split(',')) {
+      nsCString trimPath(path);
+      trimPath.Trim(" ", true, true);
+      policy->AddDynamic(perms, trimPath.get());
+    }
+  }
 }
 
 #endif // MOZ_CONTENT_SANDBOX
