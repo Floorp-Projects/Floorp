@@ -1272,35 +1272,41 @@ MediaDecoder::UpdateVideoDecodeMode()
 {
   // The MDSM may yet be set.
   if (!mDecoderStateMachine) {
+    LOG("UpdateVideoDecodeMode(), early return because we don't have MDSM.");
     return;
   }
 
   // If an element is in-tree with UNTRACKED visibility, the visibility is
   // incomplete and don't update the video decode mode.
   if (mIsElementInTree && mElementVisibility == Visibility::UNTRACKED) {
+    LOG("UpdateVideoDecodeMode(), early return because we have incomplete visibility states.");
     return;
   }
 
   // If mHasSuspendTaint is set, never suspend the video decoder.
   if (mHasSuspendTaint) {
+    LOG("UpdateVideoDecodeMode(), set Normal because the element has been tainted.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
 
   // Don't suspend elements that is not in tree.
   if (!mIsElementInTree) {
+    LOG("UpdateVideoDecodeMode(), set Normal because the element is not in tree.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
 
   // If mForcedHidden is set, suspend the video decoder anyway.
   if (mForcedHidden) {
+    LOG("UpdateVideoDecodeMode(), set Suspend because the element is forced to be suspended.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
     return;
   }
 
   // Resume decoding in the advance, even the element is in the background.
   if (mIsBackgroundVideoDecodingAllowed) {
+    LOG("UpdateVideoDecodeMode(), set Normal because the tab is in background and hovered.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
     return;
   }
@@ -1310,8 +1316,10 @@ MediaDecoder::UpdateVideoDecodeMode()
   // itself is visible.
   if (mIsDocumentVisible &&
       mElementVisibility == Visibility::APPROXIMATELY_VISIBLE) {
+    LOG("UpdateVideoDecodeMode(), set Normal because the element visible.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Normal);
   } else {
+    LOG("UpdateVideoDecodeMode(), set Suspend because the element is not visible.");
     mDecoderStateMachine->SetVideoDecodeMode(VideoDecodeMode::Suspend);
   }
 }

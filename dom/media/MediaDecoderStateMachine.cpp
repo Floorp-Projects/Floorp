@@ -3166,20 +3166,23 @@ void MediaDecoderStateMachine::SetVideoDecodeMode(VideoDecodeMode aMode)
 void MediaDecoderStateMachine::SetVideoDecodeModeInternal(VideoDecodeMode aMode)
 {
   MOZ_ASSERT(OnTaskQueue());
-  LOG("VideoDecodeModeChanged: VideoDecodeMode=(%s->%s), mVideoDecodeSuspended=%c",
-      mVideoDecodeMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
-      aMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
-      mVideoDecodeSuspended ? 'T' : 'F');
 
   // Should not suspend decoding if we don't turn on the pref.
   if (!MediaPrefs::MDSMSuspendBackgroundVideoEnabled() &&
       aMode == VideoDecodeMode::Suspend) {
+    LOG("SetVideoDecodeModeInternal(), early return because preference off and set to Suspend");
     return;
   }
 
   if (aMode == mVideoDecodeMode) {
+    LOG("SetVideoDecodeModeInternal(), early return because the mode does not change");
     return;
   }
+
+  LOG("SetVideoDecodeModeInternal(), VideoDecodeMode=(%s->%s), mVideoDecodeSuspended=%c",
+      mVideoDecodeMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+      aMode == VideoDecodeMode::Normal ? "Normal" : "Suspend",
+      mVideoDecodeSuspended ? 'T' : 'F');
 
   // Set new video decode mode.
   mVideoDecodeMode = aMode;
