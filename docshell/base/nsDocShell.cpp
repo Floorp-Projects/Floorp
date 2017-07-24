@@ -10290,8 +10290,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
   }
 
+  bool loadFromExternal = false;
+
   // Before going any further vet loads initiated by external programs.
   if (aLoadType == LOAD_NORMAL_EXTERNAL) {
+    loadFromExternal = true;
     // Disallow external chrome: loads targetted at content windows
     bool isChrome = false;
     if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome) {
@@ -10794,7 +10797,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                         nsINetworkPredictor::PREDICT_LOAD, attrs, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace, aReferrer,
+  rv = DoURILoad(aURI, aOriginalURI, aResultPrincipalURI, aLoadReplace,
+                 loadFromExternal, aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
                  aTriggeringPrincipal, principalToInherit, aTypeHint,
@@ -10875,6 +10879,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aOriginalURI,
                       Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                       bool aLoadReplace,
+                      bool aLoadFromExternal,
                       nsIURI* aReferrerURI,
                       bool aSendReferrer,
                       uint32_t aReferrerPolicy,
@@ -11027,25 +11032,34 @@ nsDocShell::DoURILoad(nsIURI* aURI,
       new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
 
-  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
-    enum TopLevelDataState {
-      DATA_NAVIGATED = 0,
-      DATA_TYPED = 1,
-      NO_DATA = 2,
-    };
-    bool isDataURI = (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
-    if (isDataURI) {
-      // In all cases where the toplevel document is navigated to a data: URI
-      // the triggeringPrincipal is a CodeBasePrincipal. In all other cases
-      // e.g. typing a data: URL into the URL-Bar or also clicking a bookmark
-      // uses a SystemPrincipal as the triggeringPrincipal.
-      if (aTriggeringPrincipal->GetIsCodebasePrincipal()) {
-        Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, DATA_NAVIGATED);
-      } else {
-        Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, DATA_TYPED);
+  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT &&
+      nsIOService::BlockToplevelDataUriNavigations()) {
+    bool isDataURI =
+      (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+    // Let's block all toplevel document navigations to a data: URI.
+    // In all cases where the toplevel document is navigated to a
+    // data: URI the triggeringPrincipal is a codeBasePrincipal, or
+    // a NullPrincipal. In other cases, e.g. typing a data: URL into
+    // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
+    // we don't want to block those loads. Only exception, loads coming
+    // from an external applicaton (e.g. Thunderbird) don't load
+    // using a codeBasePrincipal, but we want to block those loads.
+    if (isDataURI && (aLoadFromExternal || 
+        !nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal))) {
+      NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
+      if (specUTF16.Length() > 50) {
+        specUTF16.Truncate(50);
+        specUTF16.AppendLiteral("...");
       }
-    } else {
-      Telemetry::Accumulate(Telemetry::DOCUMENT_DATA_URI_LOADS, NO_DATA);
+      const char16_t* params[] = { specUTF16.get() };
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
+                                      // no doc available, log to browser console
+                                      nullptr,
+                                      nsContentUtils::eSECURITY_PROPERTIES,
+                                      "BlockTopLevelDataURINavigation",
+                                      params, ArrayLength(params));
+      return NS_OK;
     }
   }
 
