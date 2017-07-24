@@ -223,8 +223,9 @@ GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
 {
 }
 
-GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules)
-  : Rule(0, 0) // TODO
+GroupRule::GroupRule(already_AddRefed<ServoCssRules> aRules,
+                     uint32_t aLineNumber, uint32_t aColumnNumber)
+  : Rule(aLineNumber, aColumnNumber)
   , mInner(ServoGroupRuleRules(Move(aRules)))
 {
   mInner.as<ServoGroupRuleRules>().SetParentRule(this);
