@@ -214,15 +214,6 @@ LOCAL_INCLUDES += [
     '/xpcom/threads',
 ]
 
-if CONFIG['MOZ_CODE_COVERAGE']:
-    SOURCES += [
-        'CodeCoverageHandler.cpp',
-    ]
-
-    EXPORTS.mozilla += [
-        'CodeCoverageHandler.h',
-    ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

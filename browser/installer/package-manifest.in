@@ -185,6 +185,9 @@
 @RESPATH@/browser/components/browser-feeds.xpt
 @RESPATH@/components/caps.xpt
 @RESPATH@/components/chrome.xpt
+#ifdef MOZ_CODE_COVERAGE
+@RESPATH@/components/code-coverage.xpt
+#endif
 @RESPATH@/components/commandhandler.xpt
 @RESPATH@/components/commandlines.xpt
 @RESPATH@/components/composer.xpt
