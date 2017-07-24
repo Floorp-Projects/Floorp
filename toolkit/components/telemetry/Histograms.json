@@ -2491,6 +2491,15 @@
     "alert_emails": ["necko@mozilla.com", "bsmedberg@mozilla.com"],
     "bug_numbers": [1354405]
   },
+  "NETWORK_RACE_CACHE_VALIDATION": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "62",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1377223],
+    "kind": "categorical",
+    "labels": ["NotSent", "CachedContentUsed", "CachedContentNotUsed"],
+    "description": "Stats for validation requests when cache won the race."
+  },
   "HTTP_AUTH_DIALOG_STATS_2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",
