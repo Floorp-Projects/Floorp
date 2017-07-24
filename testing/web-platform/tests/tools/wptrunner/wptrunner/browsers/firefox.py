@@ -176,6 +176,8 @@ class FirefoxBrowser(Browser):
             self.used_ports.add(self.marionette_port)
 
         env = os.environ.copy()
+        env["MOZ_CRASHREPORTER"] = "1"
+        env["MOZ_CRASHREPORTER_SHUTDOWN"] = "1"
         env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
         env["STYLO_THREADS"] = str(self.stylo_threads)
 
@@ -309,6 +311,14 @@ class FirefoxBrowser(Browser):
     def executor_browser(self):
         assert self.marionette_port is not None
         return ExecutorBrowser, {"marionette_port": self.marionette_port}
+
+    def check_for_crashes(self):
+        dump_dir = os.path.join(self.profile.profile, "minidumps")
+
+        return bool(mozcrash.check_for_crashes(dump_dir,
+                                               symbols_path=self.symbols_path,
+                                               stackwalk_binary=self.stackwalk_binary,
+                                               quiet=True))
 
     def log_crash(self, process, test):
         dump_dir = os.path.join(self.profile.profile, "minidumps")
