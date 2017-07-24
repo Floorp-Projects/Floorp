@@ -129,6 +129,34 @@ ProfilerParent::Init()
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   ProfilerParentTracker::StartTracking(this);
+
+  // We propagated the profiler state from the parent process to the child
+  // process through MOZ_PROFILER_STARTUP* environment variables.
+  // However, the profiler state might have changed in this process since then,
+  // and now that an active communication channel has been established with the
+  // child process, it's a good time to sync up the two profilers again.
+
+  int entries = 0;
+  double interval = 0;
+  mozilla::Vector<const char*> filters;
+  uint32_t features;
+  profiler_get_start_params(&entries, &interval, &features, &filters);
+
+  if (entries != 0) {
+    ProfilerInitParams ipcParams;
+    ipcParams.enabled() = true;
+    ipcParams.entries() = entries;
+    ipcParams.interval() = interval;
+    ipcParams.features() = features;
+
+    for (uint32_t i = 0; i < filters.length(); ++i) {
+      ipcParams.filters().AppendElement(filters[i]);
+    }
+
+    Unused << SendEnsureStarted(ipcParams);
+  } else {
+    Unused << SendStop();
+  }
 }
 
 ProfilerParent::~ProfilerParent()
