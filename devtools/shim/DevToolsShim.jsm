@@ -298,9 +298,10 @@ let addonSdkMethods = [
  * therefore DevTools should always be available when they are called.
  */
 let webExtensionsMethods = [
+  "createWebExtensionInspectedWindowFront",
   "getTargetForTab",
   "getTheme",
-  "createWebExtensionInspectedWindowFront",
+  "openBrowserConsole",
 ];
 
 for (let method of [...addonSdkMethods, ...webExtensionsMethods]) {
