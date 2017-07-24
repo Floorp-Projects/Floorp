@@ -112,9 +112,12 @@ class GTests(object):
             raise Exception("xre_path does not exist: %s", self.xre_path)
         env = dict(os.environ)
         env = self.build_core_environment(env)
+        env["PERFHERDER_ALERTING_ENABLED"] = "1"
         pathvar = ""
         if mozinfo.os == "linux":
             pathvar = "LD_LIBRARY_PATH"
+            # disable alerts for unstable tests (Bug 1369807)
+            del env["PERFHERDER_ALERTING_ENABLED"]
         elif mozinfo.os == "mac":
             pathvar = "DYLD_LIBRARY_PATH"
         elif mozinfo.os == "win":

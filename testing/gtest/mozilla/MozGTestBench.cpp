@@ -20,6 +20,8 @@ void GTestBench(const char* aSuite, const char* aName,
   // any measurements since it's not an optimized build.
   aTest();
 #else
+  bool shouldAlert = bool(getenv("PERFHERDER_ALERTING_ENABLED"));
+
   mozilla::TimeStamp start = TimeStamp::Now();
 
   aTest();
@@ -28,10 +30,10 @@ void GTestBench(const char* aSuite, const char* aName,
 
   // Print the result for each test. Let perfherder aggregate for us
   printf("PERFHERDER_DATA: {\"framework\": {\"name\": \"%s\"}, "
-                           "\"suites\": [{\"name\": \"%s\", \"subtests\": "
-                               "[{\"name\": \"%s\", \"value\": %i, \"lowerIsBetter\": true}]"
-                           "}]}\n",
-                           MOZ_GTEST_BENCH_FRAMEWORK, aSuite, aName, msDuration);
+                       "\"suites\": [{\"name\": \"%s\", \"subtests\": "
+                           "[{\"name\": \"%s\", \"value\": %i, \"lowerIsBetter\": true, \"shouldAlert\": %s}]"
+                       "}]}\n",
+                       MOZ_GTEST_BENCH_FRAMEWORK, aSuite, aName, msDuration, shouldAlert ? "true" : "false");
 #endif
 }
 
