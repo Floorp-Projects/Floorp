@@ -721,19 +721,6 @@ def set_tag(config, tests):
 
 
 @transforms.add
-def remove_linux_pgo_try_talos(config, tests):
-    """linux64-pgo talos tests don't run on try."""
-    def predicate(test):
-        return not(
-            test['test-platform'] == 'linux64-pgo/opt' and
-            (test['suite'] == 'talos' or test['suite'] == 'awsy') and
-            config.params['project'] == 'try'
-        )
-    for test in filter(predicate, tests):
-        yield test
-
-
-@transforms.add
 def set_test_type(config, tests):
     for test in tests:
         for test_type in ['mochitest', 'reftest']:
