@@ -398,7 +398,7 @@ InitGlobalLexicalOperation(JSContext* cx, LexicalEnvironmentObject* lexicalEnvAr
     Rooted<LexicalEnvironmentObject*> lexicalEnv(cx, lexicalEnvArg);
     RootedShape shape(cx, lexicalEnv->lookup(cx, script->getName(pc)));
     MOZ_ASSERT(shape);
-    lexicalEnv->setSlot(shape->slot(), value);
+    lexicalEnv->setSlotWithType(cx, shape, value);
 }
 
 inline bool
