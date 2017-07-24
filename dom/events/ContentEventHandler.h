@@ -166,18 +166,30 @@ public:
     }
     nsresult SetToRangeStart(nsRange* aRange) const
     {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
-      return aRange->SetStart(domNode, mOffset);
+      if (!IsValid()) {
+        return NS_ERROR_FAILURE;
+      }
+      ErrorResult errorResult;
+      aRange->SetStart(*mNode, mOffset, errorResult);
+      return errorResult.StealNSResult();
     }
     nsresult SetToRangeEnd(nsRange* aRange) const
     {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
-      return aRange->SetEnd(domNode, mOffset);
+      if (!IsValid()) {
+        return NS_ERROR_FAILURE;
+      }
+      ErrorResult errorResult;
+      aRange->SetEnd(*mNode, mOffset, errorResult);
+      return errorResult.StealNSResult();
     }
     nsresult SetToRangeEndAfter(nsRange* aRange) const
     {
-      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mNode));
-      return aRange->SetEndAfter(domNode);
+      if (!IsValid()) {
+        return NS_ERROR_FAILURE;
+      }
+      ErrorResult errorResult;
+      aRange->SetEndAfter(*mNode, errorResult);
+      return errorResult.StealNSResult();
     }
   };
 
