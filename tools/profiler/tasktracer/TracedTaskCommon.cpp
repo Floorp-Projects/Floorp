@@ -95,6 +95,9 @@ TracedTaskCommon::ClearTLSTraceInfo()
 /**
  * Implementation of class TracedRunnable.
  */
+
+NS_IMPL_ISUPPORTS(TracedRunnable, nsIRunnable);
+
 TracedRunnable::TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj)
   : TracedTaskCommon()
   , mOriginalObj(Move(aOriginalObj))
@@ -123,10 +126,10 @@ TracedRunnable::Run()
  * CreateTracedRunnable() returns a TracedRunnable wrapping the original
  * nsIRunnable object, aRunnable.
  */
-already_AddRefed<Runnable>
+already_AddRefed<nsIRunnable>
 CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  RefPtr<Runnable> runnable = new TracedRunnable(Move(aRunnable));
+  RefPtr<nsIRunnable> runnable = new TracedRunnable(Move(aRunnable));
   return runnable.forget();
 }
 
