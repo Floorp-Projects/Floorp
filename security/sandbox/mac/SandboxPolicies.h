@@ -186,7 +186,6 @@ static const char contentSandboxRules[] = R"(
 
   (allow mach-lookup
       (global-name "com.apple.coreservices.launchservicesd")
-      (global-name "com.apple.coreservices.appleevents")
       (global-name "com.apple.pasteboard.1")
       (global-name "com.apple.window_proxies")
       (global-name "com.apple.windowserver.active")
