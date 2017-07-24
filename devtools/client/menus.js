@@ -75,9 +75,9 @@ exports.menuitems = [
       // or close the toolbar and when hitting the key shortcut where we just
       // focus the toolbar if it doesn't already has it.
       if (event.target.tagName.toLowerCase() == "menuitem") {
-        window.DeveloperToolbar.toggle();
+        gDevToolsBrowser.getDeveloperToolbar(window).toggle();
       } else {
-        window.DeveloperToolbar.focusToggle();
+        gDevToolsBrowser.getDeveloperToolbar(window).focusToggle();
       }
     },
     key: {

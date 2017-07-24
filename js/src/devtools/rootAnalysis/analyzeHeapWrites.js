@@ -419,7 +419,6 @@ function ignoreContents(entry)
 
         // Needs main thread assertions or other fixes.
         /UndisplayedMap::GetEntryFor/,
-        /nsStyleContext::CalcStyleDifferenceInternal/,
         /EffectCompositor::GetServoAnimationRule/,
         /LookAndFeel::GetColor/,
         "Gecko_CopyStyleContentsFrom",

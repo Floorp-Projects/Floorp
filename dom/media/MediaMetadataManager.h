@@ -11,7 +11,6 @@
 #include "mozilla/LinkedList.h"
 
 #include "nsAutoPtr.h"
-#include "AbstractMediaDecoder.h"
 #include "MediaEventSource.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"

@@ -296,11 +296,6 @@ DecoderTraits::CreateReader(const MediaContainerType& aType,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MediaFormatReader* decoderReader = nullptr;
-
-  if (!aInit.mDecoder) {
-    return decoderReader;
-  }
-
   MediaResource* resource = aInit.mResource;
 
 #ifdef MOZ_FMP4

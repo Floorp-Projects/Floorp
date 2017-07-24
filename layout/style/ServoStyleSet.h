@@ -481,12 +481,6 @@ private:
     ServoStyleSet* mSet;
   };
 
-  already_AddRefed<ServoStyleContext> GetContext(nsIContent* aContent,
-                                                 ServoStyleContext* aParentContext,
-                                                 nsIAtom* aPseudoTag,
-                                                 CSSPseudoElementType aPseudoType,
-                                                 LazyComputeBehavior aMayCompute);
-
   /**
    * Rebuild the style data. This will force a stylesheet flush, and also
    * recompute the default computed styles.

@@ -806,10 +806,9 @@ child:
      *
      * @param event keyboard event
      * @param isTrusted true if triggered by a trusted key event
-     * @param modifierMask indicates which accesskey modifiers are pressed
      */
     async HandleAccessKey(WidgetKeyboardEvent event,
-                          uint32_t[] charCodes, int32_t modifierMask);
+                          uint32_t[] charCodes);
 
     /**
      * Tells the root child docShell whether or not to use

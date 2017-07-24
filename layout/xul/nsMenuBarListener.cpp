@@ -271,8 +271,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // the mozaccesskeynotfound event before handling accesskeys.
     WidgetKeyboardEvent* nativeKeyEvent =
       aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();
-    if (!nativeKeyEvent ||
-        (nativeKeyEvent && nativeKeyEvent->mAccessKeyForwardedToChild)) {
+    if (!nativeKeyEvent) {
       return NS_OK;
     }
 
@@ -301,6 +300,17 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       // so, we'll know the menu got activated.
       nsMenuFrame* result = mMenuBarFrame->FindMenuWithShortcut(keyEvent);
       if (result) {
+        // If the keyboard event matches with a menu item's accesskey and
+        // will be sent to a remote process, it should be executed with
+        // reply event from the focused remote process.  Note that if the
+        // menubar is active, the event is already marked as "stop cross
+        // process dispatching".  So, in that case, this won't wait
+        // reply from the remote content.
+        if (nativeKeyEvent->WillBeSentToRemoteProcess()) {
+          nativeKeyEvent->StopImmediatePropagation();
+          nativeKeyEvent->MarkAsWaitingReplyFromRemoteProcess();
+          return NS_OK;
+        }
         mMenuBarFrame->SetActiveByKeyboard();
         mMenuBarFrame->SetActive(true);
         result->OpenMenu(true);
@@ -317,6 +327,17 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // Also need to handle F10 specially on Non-Mac platform.
     else if (nativeKeyEvent->mMessage == eKeyPress && keyCode == NS_VK_F10) {
       if ((GetModifiersForAccessKey(keyEvent) & ~MODIFIER_CONTROL) == 0) {
+        // If the keyboard event should activate the menubar and will be
+        // sent to a remote process, it should be executed with reply
+        // event from the focused remote process.  Note that if the menubar
+        // is active, the event is already marked as "stop cross
+        // process dispatching".  So, in that case, this won't wait
+        // reply from the remote content.
+        if (nativeKeyEvent->WillBeSentToRemoteProcess()) {
+          nativeKeyEvent->StopImmediatePropagation();
+          nativeKeyEvent->MarkAsWaitingReplyFromRemoteProcess();
+          return NS_OK;
+        }
         // The F10 key just went down by itself or with ctrl pressed.
         // In Windows, both of these activate the menu bar.
         mMenuBarFrame->SetActiveByKeyboard();

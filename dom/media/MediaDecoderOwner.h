@@ -5,7 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
-#include "AbstractMediaDecoder.h"
+
+#include "MediaInfo.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {
