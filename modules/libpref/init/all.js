@@ -1031,20 +1031,20 @@ pref("devtools.errorconsole.deprecation_warnings", true);
 
 #ifdef NIGHTLY_BUILD
 // Don't show the Browser Toolbox prompt on local builds / nightly
-pref("devtools.debugger.prompt-connection", false);
+sticky_pref("devtools.debugger.prompt-connection", false);
 #else
-pref("devtools.debugger.prompt-connection", true);
+sticky_pref("devtools.debugger.prompt-connection", true);
 #endif
 
 #ifdef MOZILLA_OFFICIAL
 // Disable debugging chrome
-pref("devtools.chrome.enabled", false);
+sticky_pref("devtools.chrome.enabled", false);
 // Disable remote debugging connections
-pref("devtools.debugger.remote-enabled", false);
+sticky_pref("devtools.debugger.remote-enabled", false);
 #else
 // In local builds, enable the browser toolbox by default
-pref("devtools.chrome.enabled", true);
-pref("devtools.debugger.remote-enabled", true);
+sticky_pref("devtools.chrome.enabled", true);
+sticky_pref("devtools.debugger.remote-enabled", true);
 #endif
 
 
