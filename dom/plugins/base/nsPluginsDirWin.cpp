@@ -424,7 +424,7 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PL_strfree(info.fFileName);
 
   if (info.fVersion)
-    mozilla::SmprintfFree(info.fVersion);
+    free(info.fVersion);
 
   ZeroMemory((void *)&info, sizeof(info));
 
