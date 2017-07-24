@@ -27,8 +27,8 @@
   padding: 0;
   position: absolute;
   cursor: pointer;
-  top: 30px;
-  offset-inline-start: 30px;
+  top: 34px;
+  offset-inline-start: 34px;
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
@@ -36,12 +36,12 @@
 
 #onboarding-overlay-button-icon {
   width: 36px;
+  vertical-align: top;
 }
 
 #onboarding-notification-icon::after,
 #onboarding-overlay-button::after {
   background: #5ce6e6;
-  position: absolute;
   font-size: 12px;
   border: 1px solid #fff;
   text-align: center;
@@ -51,11 +51,13 @@
 
 #onboarding-overlay-button::after {
   content: attr(aria-label);
-  top: -6px;
+  display: inline-block;
   offset-inline-start: 39px;
   border-radius: 22px;
   padding: 5px 8px;
-  min-width: 100px;
+  width: 110px;
+  margin-inline-start: 3px;
+  margin-top: -5px;
 }
 
 #onboarding-overlay-dialog,
@@ -188,7 +190,6 @@
   padding-inline-start: calc(var(--padding-inline-start) - 1px);
   padding-top: calc(var(--padding-top) - 1px);
   padding-bottom: calc(var(--padding-bottom) - 1px);
-  background-color: #fff;
 }
 
 /* Default browser tour */
@@ -477,6 +478,7 @@
 #onboarding-notification-icon::after {
   --height: 22px;
   --vpadding: 3px;
+  position: absolute;
   content: attr(data-tooltip);
   top: 0;
   offset-inline-start: 73px;
