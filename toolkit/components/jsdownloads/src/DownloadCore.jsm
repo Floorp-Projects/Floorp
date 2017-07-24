@@ -1,40 +1,10 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file includes the following constructors and global objects:
- *
- * Download
- * Represents a single download, with associated state and actions.  This object
- * is transient, though it can be included in a DownloadList so that it can be
- * managed by the user interface and persisted across sessions.
- *
- * DownloadSource
- * Represents the source of a download, for example a document or an URI.
- *
- * DownloadTarget
- * Represents the target of a download, for example a file in the global
- * downloads directory, or a file in the system temporary directory.
- *
- * DownloadError
- * Provides detailed information about a download failure.
- *
- * DownloadSaver
- * Template for an object that actually transfers the data for the download.
- *
- * DownloadCopySaver
- * Saver object that simply copies the entire source file to the target.
- *
- * DownloadLegacySaver
- * Saver object that integrates with the legacy nsITransfer interface.
- *
- * DownloadPDFSaver
- * This DownloadSaver type creates a PDF file from the current document in a
- * given window, specified using the windowRef property of the DownloadSource
- * object associated with the download.
+ * Main implementation of the Downloads API objects. Consumers should get
+ * references to these objects through the "Downloads.jsm" module.
  */
 
 "use strict";
@@ -50,12 +20,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadPDFSaver",
 ];
 
-// Globals
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Integration.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -137,8 +102,6 @@ function deserializeUnknownProperties(aObject, aSerializable, aFilterFn) {
  * in calculating the speed of the download.
  */
 const kProgressUpdateIntervalMs = 400;
-
-// Download
 
 /**
  * Represents a single download, with associated state and actions.  This object
@@ -1225,8 +1188,6 @@ Download.fromSerializable = function(aSerializable) {
   return download;
 };
 
-// DownloadSource
-
 /**
  * Represents the source of a download, for example a document or an URI.
  */
@@ -1349,8 +1310,6 @@ this.DownloadSource.fromSerializable = function(aSerializable) {
 
   return source;
 };
-
-// DownloadTarget
 
 /**
  * Represents the target of a download, for example a file in the global
@@ -1476,8 +1435,6 @@ this.DownloadTarget.fromSerializable = function(aSerializable) {
   }
   return target;
 };
-
-// DownloadError
 
 /**
  * Provides detailed information about a download failure.
@@ -1669,8 +1626,6 @@ this.DownloadError.fromSerializable = function(aSerializable) {
   return e;
 };
 
-// DownloadSaver
-
 /**
  * Template for an object that actually transfers the data for the download.
  */
@@ -1818,8 +1773,6 @@ this.DownloadSaver.fromSerializable = function(aSerializable) {
   }
   return saver;
 };
-
-// DownloadCopySaver
 
 /**
  * Saver object that simply copies the entire source file to the target.
@@ -2296,8 +2249,6 @@ this.DownloadCopySaver.fromSerializable = function(aSerializable) {
   return saver;
 };
 
-// DownloadLegacySaver
-
 /**
  * Saver object that integrates with the legacy nsITransfer interface.
  *
@@ -2663,8 +2614,6 @@ this.DownloadLegacySaver.prototype = {
 this.DownloadLegacySaver.fromSerializable = function() {
   return new DownloadLegacySaver();
 };
-
-// DownloadPDFSaver
 
 /**
  * This DownloadSaver type creates a PDF file from the current document in a
