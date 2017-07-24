@@ -5,10 +5,13 @@ use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{Runner, FirefoxRunner};
 use regex::Captures;
+use rustc_serialize::base64::FromBase64;
 use rustc_serialize::json;
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
+use std::env;
 use std::error::Error;
+use std::fs::File;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
 use std::io::prelude::*;
@@ -18,6 +21,7 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
+use uuid::Uuid;
 use webdriver::capabilities::CapabilitiesMatching;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
                          WebDriverExtensionCommand};
@@ -263,12 +267,35 @@ impl Parameters for AddonInstallParameters {
             WebDriverError::new(ErrorStatus::InvalidArgument,
                                 "Message body was not an object")));
 
-        let path = try_opt!(
-            try_opt!(data.get("path"),
-                     ErrorStatus::InvalidArgument,
-                     "Missing 'path' parameter").as_string(),
-            ErrorStatus::InvalidArgument,
-            "'path' is not a string").to_string();
+        let base64 = match data.get("addon") {
+            Some(x) => {
+                let s = try_opt!(x.as_string(),
+                                 ErrorStatus::InvalidArgument,
+                                 "'addon' is not a string").to_string();
+
+                let addon_path = env::temp_dir().as_path()
+                    .join(format!("addon-{}.xpi", Uuid::new_v4()));
+                let mut addon_file = try!(File::create(&addon_path));
+                let addon_buf = try!(s.from_base64());
+                try!(addon_file.write(addon_buf.as_slice()));
+
+                Some(try_opt!(addon_path.to_str(),
+                              ErrorStatus::UnknownError,
+                              "could not write addon to file").to_string())
+            },
+            None => None,
+        };
+        let path = match data.get("path") {
+            Some(x) => Some(try_opt!(x.as_string(),
+                                     ErrorStatus::InvalidArgument,
+                                     "'path' is not a string").to_string()),
+            None => None,
+        };
+        if (base64.is_none() && path.is_none()) || (base64.is_some() && path.is_some()) {
+            return Err(WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                "Must specify exactly one of 'path' and 'addon'"));
+        }
 
         let temporary = match data.get("temporary") {
             Some(x) => try_opt!(x.as_boolean(),
@@ -278,7 +305,7 @@ impl Parameters for AddonInstallParameters {
         };
 
         return Ok(AddonInstallParameters {
-            path: path,
+            path: base64.or(path).unwrap(),
             temporary: temporary,
         })
     }
@@ -1586,5 +1613,51 @@ impl ToMarionette for FrameId {
             FrameId::Null => None
         };
         Ok(data)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use marionette::{AddonInstallParameters, Parameters};
+    use rustc_serialize::json::Json;
+    use std::io::Read;
+    use std::fs::File;
+    use webdriver::error::WebDriverResult;
+
+    #[test]
+    fn test_addon_install_params_missing_path() {
+        let json_data: Json = Json::from_str(r#"{"temporary": true}"#).unwrap();
+        let res: WebDriverResult<AddonInstallParameters> = Parameters::from_json(&json_data);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_addon_install_params_with_both_path_and_base64() {
+        let json_data: Json = Json::from_str(
+            r#"{"path": "/path/to.xpi", "addon": "aGVsbG8=", "temporary": true}"#).unwrap();
+        let res: WebDriverResult<AddonInstallParameters> = Parameters::from_json(&json_data);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_addon_install_params_with_path() {
+        let json_data: Json = Json::from_str(
+            r#"{"path": "/path/to.xpi", "temporary": true}"#).unwrap();
+        let parameters: AddonInstallParameters = Parameters::from_json(&json_data).unwrap();
+        assert_eq!(parameters.path, "/path/to.xpi");
+        assert_eq!(parameters.temporary, true);
+    }
+
+    #[test]
+    fn test_addon_install_params_with_base64() {
+        let json_data: Json = Json::from_str(
+            r#"{"addon": "aGVsbG8=", "temporary": true}"#).unwrap();
+        let parameters: AddonInstallParameters = Parameters::from_json(&json_data).unwrap();
+
+        assert_eq!(parameters.temporary, true);
+        let mut file = File::open(parameters.path).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        assert_eq!("hello", contents);
     }
 }

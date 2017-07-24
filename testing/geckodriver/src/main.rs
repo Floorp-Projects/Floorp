@@ -14,6 +14,7 @@ extern crate slog;
 extern crate slog_atomic;
 extern crate slog_stdlog;
 extern crate slog_stream;
+extern crate uuid;
 extern crate zip;
 extern crate webdriver;
 
