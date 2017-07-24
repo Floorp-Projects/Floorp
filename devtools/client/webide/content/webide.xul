@@ -153,7 +153,6 @@
         <iframe id="deck-panel-runtimedetails" flex="1" lazysrc="runtimedetails.xhtml"/>
         <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
         <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
-        <iframe id="deck-panel-logs" flex="1" src="logs.xhtml"/>
         <iframe id="deck-panel-simulator" flex="1" lazysrc="simulator.xhtml"/>
       </deck>
       <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>
