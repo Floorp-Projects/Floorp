@@ -184,16 +184,46 @@ public:
 
   static void GetAccessKeyLabelPrefix(dom::Element* aElement, nsAString& aPrefix);
 
+  /**
+   * HandleAccessKey() looks for access keys which matches with aEvent and
+   * execute when it matches with a chrome access key or some content access
+   * keys.
+   * If the event may match chrome access keys, this handles the access key
+   * synchronously (if there are nested ESMs, their HandleAccessKey() are
+   * also called recursively).
+   * If the event may match content access keys and focused target is a remote
+   * process, this does nothing for the content because when this is called,
+   * it should already have been handled in the remote process.
+   * If the event may match content access keys and focused target is not in
+   * remote process but there are some remote children, this will post
+   * HandleAccessKey messages to all remote children.
+   *
+   * @return            true if there is accesskey which aEvent and
+   *                    aAccessCharCodes match with.  Otherwise, false.
+   *                    I.e., when this returns true, a target is executed
+   *                    or focused.
+   *                    Note that even if this returns false, a target in
+   *                    remote process may be executed or focused
+   *                    asynchronously.
+   */
   bool HandleAccessKey(WidgetKeyboardEvent* aEvent,
                        nsPresContext* aPresContext,
-                       nsTArray<uint32_t>& aAccessCharCodes,
-                       int32_t aModifierMask,
-                       bool aMatchesContentAccessKey)
+                       nsTArray<uint32_t>& aAccessCharCodes)
   {
-    return HandleAccessKey(aEvent, aPresContext, aAccessCharCodes,
-                           aMatchesContentAccessKey, nullptr,
-                           eAccessKeyProcessingNormal, aModifierMask);
+    return WalkESMTreeToHandleAccessKey(aEvent, aPresContext, aAccessCharCodes,
+                                        nullptr, eAccessKeyProcessingNormal,
+                                        true);
   }
+
+  /**
+   * CheckIfEventMatchesAccessKey() looks for access key which matches with
+   * aEvent in the process but won't execute it.
+   *
+   * @return            true if there is accesskey which aEvent matches with
+   *                    in this process.  Otherwise, false.
+   */
+  bool CheckIfEventMatchesAccessKey(WidgetKeyboardEvent* aEvent,
+                                    nsPresContext* aPresContext);
 
   nsresult SetCursor(int32_t aCursor, imgIContainer* aContainer,
                      bool aHaveHotspot, float aHotspotX, float aHotspotY,
@@ -316,8 +346,6 @@ protected:
   public:
     static bool KeyCausesActivation() { return sKeyCausesActivation; }
     static bool ClickHoldContextMenu() { return sClickHoldContextMenu; }
-    static int32_t ChromeAccessModifierMask();
-    static int32_t ContentAccessModifierMask();
 
     static void Init();
     static void OnChange(const char* aPrefName, void*);
@@ -326,18 +354,9 @@ protected:
   private:
     static bool sKeyCausesActivation;
     static bool sClickHoldContextMenu;
-    static int32_t sGenericAccessModifierKey;
-    static int32_t sChromeAccessModifierMask;
-    static int32_t sContentAccessModifierMask;
 
     static int32_t GetAccessModifierMask(int32_t aItemType);
   };
-
-  /**
-   * Get appropriate access modifier mask for the aDocShell.  Returns -1 if
-   * access key isn't available.
-   */
-  static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
   /*
    * If aTargetFrame's widget has a cached cursor value, resets the cursor
@@ -431,7 +450,7 @@ protected:
   void FlushPendingEvents(nsPresContext* aPresContext);
 
   /**
-   * The phases of HandleAccessKey processing. See below.
+   * The phases of WalkESMTreeToHandleAccessKey processing. See below.
    */
   typedef enum {
     eAccessKeyProcessingNormal = 0,
@@ -440,35 +459,55 @@ protected:
   } ProcessingAccessKeyState;
 
   /**
-   * Access key handling.  If there is registered content for the accesskey
-   * given by the key event and modifier mask then call
-   * content.PerformAccesskey(), otherwise call HandleAccessKey() recursively,
-   * on descendant docshells first, then on the ancestor (with |aBubbledFrom|
-   * set to the docshell associated with |this|), until something matches.
+   * Walk EMS to look for access key and execute found access key when aExecute
+   * is true.
+   * If there is registered content for the accesskey given by the key event
+   * and modifier mask then call content.PerformAccesskey(), otherwise call
+   * WalkESMTreeToHandleAccessKey() recursively, on descendant docshells first,
+   * then on the ancestor (with |aBubbledFrom| set to the docshell associated
+   * with |this|), until something matches.
    *
    * @param aEvent the keyboard event triggering the acccess key
    * @param aPresContext the presentation context
    * @param aAccessCharCodes list of charcode candidates
-   * @param aMatchesContentAccessKey true if the content accesskey modifier is pressed
-   * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
-   *        on the child the call originally came from, i.e. this is the child
-   *        that recursively called us in its Up phase. The initial caller
-   *        passes |nullptr| here. This is to avoid an infinite loop.
+   * @param aBubbledFrom is used by an ancestor to avoid calling
+   *        WalkESMTreeToHandleAccessKey() on the child the call originally
+   *        came from, i.e. this is the child that recursively called us in
+   *        its Up phase. The initial caller passes |nullptr| here. This is to
+   *        avoid an infinite loop.
    * @param aAccessKeyState Normal, Down or Up processing phase (see enums
    *        above). The initial event receiver uses 'normal', then 'down' when
    *        processing children and Up when recursively calling its ancestor.
-   * @param aModifierMask modifier mask for the key event
+   * @param aExecute is true, execute an accesskey if it's found.  Otherwise,
+   *        found accesskey won't be executed.
+   *
+   * @return            true if there is a target which aEvent and
+   *                    aAccessCharCodes match with in this process.
+   *                    Otherwise, false.  I.e., when this returns true and
+   *                    aExecute is true, a target is executed or focused.
+   *                    Note that even if this returns false, a target in
+   *                    remote process may be executed or focused
+   *                    asynchronously.
    */
-  bool HandleAccessKey(WidgetKeyboardEvent* aEvent,
-                       nsPresContext* aPresContext,
-                       nsTArray<uint32_t>& aAccessCharCodes,
-                       bool aMatchesContentAccessKey,
-                       nsIDocShellTreeItem* aBubbledFrom,
-                       ProcessingAccessKeyState aAccessKeyState,
-                       int32_t aModifierMask);
+  bool WalkESMTreeToHandleAccessKey(WidgetKeyboardEvent* aEvent,
+                                    nsPresContext* aPresContext,
+                                    nsTArray<uint32_t>& aAccessCharCodes,
+                                    nsIDocShellTreeItem* aBubbledFrom,
+                                    ProcessingAccessKeyState aAccessKeyState,
+                                    bool aExecute);
 
-  bool ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
-                        bool aIsTrustedEvent);
+  /**
+   * Look for access key and execute found access key if aExecute is true in
+   * the instance.
+   *
+   * @return            true if there is a target which matches with
+   *                    aAccessCharCodes and aIsTrustedEvent.  Otherwise,
+   *                    false.  I.e., when this returns true and aExecute
+   *                    is true, a target is executed or focused.
+   */
+  bool LookForAccessKeyAndExecute(nsTArray<uint32_t>& aAccessCharCodes,
+                                  bool aIsTrustedEvent,
+                                  bool aExecute);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods

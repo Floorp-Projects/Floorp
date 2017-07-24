@@ -35,10 +35,6 @@ public:
     return ComputedData()->visited_style.mPtr;
   }
 
-  // Update visited state for a given element, and set the prescontext's
-  // body text color if applicable.
-  void UpdateWithElementState(dom::Element* aElement);
-
   /**
    * Makes this context match |aOther| in terms of which style structs have
    * been resolved.
