@@ -58,8 +58,8 @@
  *
  *       // credit card fields
  *       cc-name,
+ *       cc-number,            // e.g. ************1234
  *       cc-number-encrypted,
- *       cc-number-masked,     // e.g. ************1234
  *       cc-exp-month,
  *       cc-exp-year,          // 2-digit year will be converted to 4 digits
  *                             // upon saving
@@ -178,8 +178,8 @@ const VALID_ADDRESS_COMPUTED_FIELDS = [
 
 const VALID_CREDIT_CARD_FIELDS = [
   "cc-name",
+  "cc-number",
   "cc-number-encrypted",
-  "cc-number-masked",
   "cc-exp-month",
   "cc-exp-year",
 ];
@@ -1463,7 +1463,6 @@ class CreditCards extends AutofillRecords {
   _normalizeFields(creditCard) {
     // Fields that should not be set by content.
     delete creditCard["cc-number-encrypted"];
-    delete creditCard["cc-number-masked"];
 
     // Validate and encrypt credit card numbers, and calculate the masked numbers
     if (creditCard["cc-number"]) {
@@ -1478,9 +1477,9 @@ class CreditCards extends AutofillRecords {
       // e.g. creditCard["cc-number-encrypted"] = Encrypt(creditCard["cc-number"]);
 
       if (ccNumber.length > 4) {
-        creditCard["cc-number-masked"] = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
+        creditCard["cc-number"] = "*".repeat(ccNumber.length - 4) + ccNumber.substr(-4);
       } else {
-        creditCard["cc-number-masked"] = ccNumber;
+        creditCard["cc-number"] = ccNumber;
       }
     }
 
