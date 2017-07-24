@@ -9,13 +9,6 @@ var notification;
 var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
 var newWindowOpenedFromTab;
 
-// run these tests with notification animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
-});
-
 add_task(async function test_notificationPreventDefaultAndSwitchTabs() {
   let pm = Services.perms;
   pm.add(makeURI(notificationURL), "desktop-notification", pm.ALLOW_ACTION);

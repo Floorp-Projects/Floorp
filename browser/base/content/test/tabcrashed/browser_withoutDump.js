@@ -5,13 +5,8 @@ const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20pag
 /**
  * Monkey patches TabCrashHandler.getDumpID to return null in order to test
  * about:tabcrashed when a dump is not available.
- * Set pref to ensure these tests are run with notification animations enabled
  */
 add_task(async function setup() {
-  // run these tests with animations enabled
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
   let originalGetDumpID = TabCrashHandler.getDumpID;
   TabCrashHandler.getDumpID = function(browser) { return null; };
   registerCleanupFunction(() => {
