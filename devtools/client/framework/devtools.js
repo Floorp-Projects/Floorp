@@ -591,6 +591,15 @@ DevTools.prototype = {
   },
 
   /**
+   * Compatibility layer for web-extensions. Used by DevToolsShim for
+   * toolkit/components/extensions/ext-c-toolkit.js
+   */
+  openBrowserConsole: function () {
+    let {HUDService} = require("devtools/client/webconsole/hudservice");
+    HUDService.openBrowserConsoleOrFocus();
+  },
+
+  /**
    * Called from the DevToolsShim, used by nsContextMenu.js.
    *
    * @param {XULTab} tab
