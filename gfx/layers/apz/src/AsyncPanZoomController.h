@@ -850,11 +850,14 @@ private:
    * |GetCurrentAsyncTransform(eForCompositing)| and similar functions reflect
    * the async scroll offset and zoom stored in |mFrameMetrics|.
    *
+   * Returns true if the newly sampled value is different from the previously
+   * sampled value.
+   *
    * (This is only relevant when |gfxPrefs::APZFrameDelayEnabled() == true|.
    * Otherwise, GetCurrentAsyncTransform() always reflects what's stored in
    * |mFrameMetrics| immediately, without any delay.)
    */
-  void SampleCompositedAsyncTransform();
+  bool SampleCompositedAsyncTransform();
 
   /*
    * Helper functions to query the async scroll offset and zoom either
