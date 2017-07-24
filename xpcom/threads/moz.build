@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
     'AbstractThread.h',
     'BlockingResourceBase.h',
     'CondVar.h',
+    'CPUUsageWatcher.h',
     'DeadlockDetector.h',
     'EventQueue.h',
     'HangAnnotations.h',
@@ -73,6 +74,7 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'AbstractThread.cpp',
     'BlockingResourceBase.cpp',
+    'CPUUsageWatcher.cpp',
     'EventQueue.cpp',
     'HangAnnotations.cpp',
     'HangMonitor.cpp',
