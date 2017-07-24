@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm", this);
 
 var gHttpServer = null;
 
@@ -22,7 +21,6 @@ add_task(async function test_setup() {
 
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
-  Preferences.set("toolkit.telemetry.healthping.enabled", false);
 
   // Start the webserver to check if the pending ping correctly arrives.
   gHttpServer = new HttpServer();
