@@ -14,77 +14,61 @@ Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
+class ProfileAutoCompleteResult {
+  constructor(searchString, focusedFieldName, allFieldNames, matchingProfiles, {resultCode = null}) {
+    log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
 
-this.ProfileAutoCompleteResult = function(searchString,
-                                          focusedFieldName,
-                                          allFieldNames,
-                                          matchingProfiles,
-                                          {resultCode = null}) {
-  log.debug("Constructing new ProfileAutoCompleteResult:", [...arguments]);
-  this.searchString = searchString;
-  this._focusedFieldName = focusedFieldName;
-  this._allFieldNames = allFieldNames;
-  this._matchingProfiles = matchingProfiles;
+    // nsISupports
+    this.QueryInterface = XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]);
 
-  if (resultCode) {
-    this.searchResult = resultCode;
-  } else if (matchingProfiles.length > 0) {
-    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-  } else {
-    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    // The user's query string
+    this.searchString = searchString;
+    // The field name of the focused input.
+    this._focusedFieldName = focusedFieldName;
+    // All field names in the form which contains the focused input.
+    this._allFieldNames = allFieldNames;
+    // The matching profiles contains the information for filling forms.
+    this._matchingProfiles = matchingProfiles;
+    // The default item that should be entered if none is selected
+    this.defaultIndex = 0;
+    // The reason the search failed
+    this.errorDescription = "";
+
+    // The result code of this result object.
+    if (resultCode) {
+      this.searchResult = resultCode;
+    } else if (matchingProfiles.length > 0) {
+      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+    } else {
+      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    }
+
+    // An array of primary and secondary labels for each profile.
+    this._popupLabels = this._generateLabels(this._focusedFieldName,
+                                             this._allFieldNames,
+                                             this._matchingProfiles);
+    // Add an empty result entry for footer. Its content will come from
+    // the footer binding, so don't assign any value to it.
+    this._popupLabels.push({
+      primary: "",
+      secondary: "",
+      categories: FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
+      focusedCategory: FormAutofillUtils.getCategoryFromFieldName(focusedFieldName),
+    });
   }
-
-  this._popupLabels = this._generateLabels(this._focusedFieldName,
-                                           this._allFieldNames,
-                                           this._matchingProfiles);
-  // Add an empty result entry for footer. Its content will come from
-  // the footer binding, so don't assign any value to it.
-  this._popupLabels.push({
-    primary: "",
-    secondary: "",
-    categories: FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
-    focusedCategory: FormAutofillUtils.getCategoryFromFieldName(focusedFieldName),
-  });
-};
-
-ProfileAutoCompleteResult.prototype = {
-
-  // The user's query string
-  searchString: "",
-
-  // The default item that should be entered if none is selected
-  defaultIndex: 0,
-
-  // The reason the search failed
-  errorDescription: "",
-
-  // The result code of this result object.
-  searchResult: null,
-
-  // The field name of the focused input.
-  _focusedFieldName: "",
-
-  // All field names in the form which contains the focused input.
-  _allFieldNames: null,
-
-  // The matching profiles contains the information for filling forms.
-  _matchingProfiles: null,
-
-  // An array of primary and secondary labels for each profiles.
-  _popupLabels: null,
 
   /**
    * @returns {number} The number of results
    */
   get matchCount() {
     return this._popupLabels.length;
-  },
+  }
 
   _checkIndexBounds(index) {
     if (index < 0 || index >= this._popupLabels.length) {
       throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     }
-  },
+  }
 
   /**
    * Get the secondary label based on the focused field name and related field names
@@ -154,7 +138,7 @@ ProfileAutoCompleteResult.prototype = {
     }
 
     return ""; // Nothing matched.
-  },
+  }
 
   _generateLabels(focusedFieldName, allFieldNames, profiles) {
     // Skip results without a primary label.
@@ -173,7 +157,8 @@ ProfileAutoCompleteResult.prototype = {
                                            profile),
       };
     });
-  },
+  }
+
 
   /**
    * Retrieves a result
@@ -183,12 +168,12 @@ ProfileAutoCompleteResult.prototype = {
   getValueAt(index) {
     this._checkIndexBounds(index);
     return this._popupLabels[index].primary;
-  },
+  }
 
   getLabelAt(index) {
     this._checkIndexBounds(index);
     return JSON.stringify(this._popupLabels[index]);
-  },
+  }
 
   /**
    * Retrieves a comment (metadata instance)
@@ -198,7 +183,7 @@ ProfileAutoCompleteResult.prototype = {
   getCommentAt(index) {
     this._checkIndexBounds(index);
     return JSON.stringify(this._matchingProfiles[index]);
-  },
+  }
 
   /**
    * Retrieves a style hint specific to a particular index.
@@ -211,7 +196,7 @@ ProfileAutoCompleteResult.prototype = {
       return "autofill-footer";
     }
     return "autofill-profile";
-  },
+  }
 
   /**
    * Retrieves an image url.
@@ -221,7 +206,7 @@ ProfileAutoCompleteResult.prototype = {
   getImageAt(index) {
     this._checkIndexBounds(index);
     return "";
-  },
+  }
 
   /**
    * Retrieves a result
@@ -230,7 +215,7 @@ ProfileAutoCompleteResult.prototype = {
    */
   getFinalCompleteValueAt(index) {
     return this.getValueAt(index);
-  },
+  }
 
   /**
    * Removes a result from the resultset
@@ -240,8 +225,5 @@ ProfileAutoCompleteResult.prototype = {
    */
   removeValueAt(index, removeFromDatabase) {
     // There is no plan to support removing profiles via autocomplete.
-  },
-
-  // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult]),
-};
+  }
+}
