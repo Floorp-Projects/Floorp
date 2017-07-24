@@ -376,9 +376,17 @@ class ExecuteAsyncScriptRun(object):
             wait_timeout = None
 
         flag = self.result_flag.wait(wait_timeout)
-        if self.result[1] is None:
+
+        if self.result == (None, None):
             self.logger.debug("Timed out waiting for a result")
             self.result = False, ("EXTERNAL-TIMEOUT", None)
+        elif self.result[1] is None:
+            # We didn't get any data back from the test, so check if the
+            # browser is still responsive
+            if self.protocol.is_alive:
+                self.result = False, ("ERROR", None)
+            else:
+                self.result = False, ("CRASH", None)
         return self.result
 
     def _run(self):
