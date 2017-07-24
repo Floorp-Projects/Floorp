@@ -55,25 +55,34 @@ async function runTests(browser, accDoc) {
 
   await onReorders;
 
+  // aria-owned child should be after ordinal children.
   testChildrenIds(one, ["aa", "a"]);
 
-  onReorders = waitForEvents([
-      [EVENT_REORDER, "two"],    // "b" will go to "three"
-      [EVENT_REORDER, "three"], // some children will be reclaimed and acquired
-      [EVENT_REORDER, "one"]]); // removing aria-owns will reorder native children
+  onReorders = waitForEvent(EVENT_REORDER, "one");
 
   await ContentTask.spawn(browser, null, async function() {
     // removing aria-owns should reorder the children
     document.getElementById("one").removeAttribute("aria-owns");
-    // child order will be overridden by aria-owns
-    document.getElementById("three").setAttribute("aria-owns", "b d");
   });
 
   await onReorders;
 
+  // with no aria-owns, layout order should prevail.
   testChildrenIds(one, ["a", "aa"]);
-  testChildrenIds(two, ["c"]);
-  testChildrenIds(three, ["b", "d"]);
+
+  onReorders = waitForEvents([
+      [EVENT_REORDER, "four"],    // "b" will go to "three"
+      [EVENT_REORDER, "two"]]); // some children will be reclaimed and acquired
+
+  await ContentTask.spawn(browser, null, async function() {
+    // child order will be overridden by aria-owns
+    document.getElementById("four").setAttribute("aria-owns", "b e");
+  });
+
+  await onReorders;
+
+  testChildrenIds(four, ["b", "e"]);
+  testChildrenIds(two, ["d", "c"]);
 }
 
 /**
