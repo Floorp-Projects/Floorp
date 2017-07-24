@@ -76,23 +76,12 @@ var StarUI = {
   // nsIDOMEventListener
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "animationend": {
-        let libraryButton = document.getElementById("library-button");
-        if (aEvent.animationName.startsWith("library-bookmark-animation")) {
-          libraryButton.setAttribute("fade", "true");
-        } else if (aEvent.animationName == "library-bookmark-fade") {
-          libraryButton.removeEventListener("animationend", this);
-          libraryButton.removeAttribute("animate");
-          libraryButton.removeAttribute("fade");
-        }
-        break;
-      }
       case "mousemove":
         clearTimeout(this._autoCloseTimer);
         // The autoclose timer is not disabled on generic mouseout
         // because the user may not have actually interacted with the popup.
         break;
-      case "popuphidden": {
+      case "popuphidden":
         clearTimeout(this._autoCloseTimer);
         if (aEvent.originalTarget == this.panel) {
           if (!this._element("editBookmarkPanelContent").hidden)
@@ -107,7 +96,6 @@ var StarUI = {
           if (this._batching)
             this.endBatch();
 
-          let libraryButton;
           if (this._uriForRemoval) {
             if (this._isNewBookmark) {
               if (!PlacesUIUtils.useAsyncTransactions) {
@@ -130,21 +118,9 @@ var StarUI = {
 
             PlacesTransactions.RemoveBookmarksForUrls([this._uriForRemoval])
                               .transact().catch(Cu.reportError);
-          } else if (this._isNewBookmark &&
-                     Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-                     AppConstants.MOZ_PHOTON_ANIMATIONS &&
-                     (libraryButton = document.getElementById("library-button")) &&
-                     libraryButton.getAttribute("cui-areatype") != "menu-panel" &&
-                     libraryButton.getAttribute("overflowedItem") != "true" &&
-                     libraryButton.closest("#nav-bar")) {
-            BrowserUtils.setToolbarButtonHeightProperty(libraryButton);
-            libraryButton.removeAttribute("fade");
-            libraryButton.setAttribute("animate", "bookmark");
-            libraryButton.addEventListener("animationend", this);
           }
         }
         break;
-      }
       case "keypress":
         clearTimeout(this._autoCloseTimer);
         this._autoCloseTimerEnabled = false;
@@ -1710,13 +1686,6 @@ var BookmarkingUI = {
     if (!AppConstants.MOZ_PHOTON_THEME) {
       this._updateCustomizationState();
     }
-
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS &&
-        Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-      let starButtonBox = document.getElementById("star-button-box");
-      starButtonBox.setAttribute("animationsenabled", "true");
-      this.star.addEventListener("mouseover", this, {once: true});
-    }
   },
 
   _hasBookmarksObserver: false,
@@ -1724,10 +1693,6 @@ var BookmarkingUI = {
   uninit: function BUI_uninit() {
     this.updateBookmarkPageMenuItem(true);
     CustomizableUI.removeListener(this);
-
-    if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-      this.star.removeEventListener("mouseover", this);
-    }
 
     this._uninitView();
 
@@ -1806,7 +1771,6 @@ var BookmarkingUI = {
         this.button.setAttribute("label", this._starButtonOverflowedStarredLabel);
       }
     } else {
-      this.star.removeAttribute("animate");
       this.broadcaster.removeAttribute("starred");
       this.broadcaster.setAttribute("buttontooltiptext", this._unstarredTooltip);
       this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);
@@ -1941,11 +1905,6 @@ var BookmarkingUI = {
       // Disable the old animation in photon
       if (!isBookmarked && !AppConstants.MOZ_PHOTON_THEME)
         this._showBookmarkedNotification();
-      // Set up variables for new animation in Photon
-      if (!isBookmarked && AppConstants.MOZ_PHOTON_ANIMATIONS) {
-        BrowserUtils.setToolbarButtonHeightProperty(this.star);
-        this.star.setAttribute("animate", "true");
-      }
       PlacesCommandHook.bookmarkCurrentPage(true);
     }
   },
@@ -1956,11 +1915,6 @@ var BookmarkingUI = {
 
   handleEvent: function BUI_handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "mouseover":
-        if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
-          this.star.setAttribute("preloadanimations", "true");
-        }
-        break;
       case "ViewShowing":
         this.onPanelMenuViewShowing(aEvent);
         break;
