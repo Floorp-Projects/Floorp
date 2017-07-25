@@ -84,7 +84,9 @@ function check_empty_value_rejected(decl, emptyval, property)
 function run()
 {
   var gDeclaration = document.getElementById("testnode").style;
-  var gQuirksDeclaration = document.getElementById("quirks").contentDocument
+  var quirksFrame = document.getElementById("quirks");
+  var wrappedFrame = SpecialPowers.wrap(quirksFrame);
+  var gQuirksDeclaration = wrappedFrame.contentDocument
                              .getElementById("testnode").style;
 
   for (var property in gCSSProperties) {

@@ -20,14 +20,22 @@ function f()
     finish();
 }
 
+function init()
+{
+  SpecialPowers.pushPrefEnv({"set": [["security.data_uri.unique_opaque_origin", false]]}, start);
+}
+
 function start()
 {
     var html = "<script>" + f + "<\/script><body onload=f()>";
     var win = window.open("data:text/html," + encodeURIComponent(html), null, "width=300,height=300");
-    win.finish = function() { document.documentElement.removeAttribute("class"); };
+    win.finish = function() {
+      SpecialPowers.clearUserPref("security.data_uri.unique_opaque_origin");
+      document.documentElement.removeAttribute("class");
+    };
 }
 
 </script>
 </head>
-<body onload="start();"></body>
+<body onload="init();"></body>
 </html>

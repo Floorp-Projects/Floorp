@@ -406,7 +406,7 @@ groupbox {
   border-radius: 50%;
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
   margin-inline-end: 15px;
-  image-rendering: -moz-crisp-edges;
+  image-rendering: auto;
   border: 1px solid transparent;
 }
 

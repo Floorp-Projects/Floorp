@@ -35,6 +35,32 @@ with Files("mach*"):
 with Files("*.py"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+# usb and payments ?
+with Files("tests/feature-policy/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/fetch/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/fonts/math/**"):
+    BUG_COMPONENT = ("Core", "MathML")
+
+with Files("tests/fullscreen/**"):
+    BUG_COMPONENT = ("Core", "DOM")
+
+with Files("tests/gamepad/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+# Bug 1359076 - Deleting this feature due to security
+with Files("tests/generic-sensor/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
+with Files("tests/geolocation-API/**"):
+    BUG_COMPONENT = ("Core", "Geolocation")
+
+with Files("tests/gyroscope/**"):
+    BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
+
 with Files("tests/media/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 

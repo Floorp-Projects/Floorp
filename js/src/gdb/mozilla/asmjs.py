@@ -19,15 +19,15 @@ def on_stop(event):
             buf = gdb.parse_and_eval("(struct sigaction *) malloc(sizeof(struct sigaction))")
             sigaction_buffers[process] = buf
 
-        # See if AsmJSFaultHandler is installed as the SIGSEGV signal action.
+        # See if WasmFaultHandler is installed as the SIGSEGV signal action.
         sigaction_fn = gdb.parse_and_eval('__sigaction')
         sigaction_fn(SIGSEGV, 0, buf)
-        AsmJSFaultHandler = gdb.parse_and_eval("AsmJSFaultHandler")
-        if buf['__sigaction_handler']['sa_handler'] == AsmJSFaultHandler:
+        WasmFaultHandler = gdb.parse_and_eval("WasmFaultHandler<(Signal)0>")
+        if buf['__sigaction_handler']['sa_handler'] == WasmFaultHandler:
             # Advise the user that magic is happening.
-            print("js/src/gdb/mozilla/asmjs.py: Allowing AsmJSFaultHandler to run.")
+            print("js/src/gdb/mozilla/asmjs.py: Allowing WasmFaultHandler to run.")
 
-            # If AsmJSFaultHandler doesn't handle this segfault, it will unhook
+            # If WasmFaultHandler doesn't handle this segfault, it will unhook
             # itself and re-raise.
             gdb.execute("continue")
 

@@ -158,8 +158,9 @@ function run() {
     var htmldoc = "<!DOCTYPE HTML>" + link + link  + "<body>";
     var docurl = "data:text/html," + escape(htmldoc);
     post_clone_test(docurl, function() {
-      var clonedoc = iframe.contentDocument;
-      var clonewin = iframe.contentWindow;
+      var wrappedFrame = SpecialPowers.wrap(iframe);
+      var clonedoc = wrappedFrame.contentDocument;
+      var clonewin = wrappedFrame.contentWindow;
       var links = clonedoc.getElementsByTagName("link");
       // cause a clone
       var clonedsheet = links[1].sheet;

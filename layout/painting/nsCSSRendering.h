@@ -715,7 +715,8 @@ class nsContextBoxBlur {
 
 public:
   enum {
-    FORCE_MASK = 0x01
+    FORCE_MASK = 0x01,
+    DISABLE_HARDWARE_ACCELERATION_BLUR = 0x02
   };
   /**
    * Prepares a gfxContext to draw on. Do not call this twice; if you want

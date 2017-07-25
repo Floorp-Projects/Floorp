@@ -39,6 +39,9 @@ NewBufferFromStorageStream(nsIStorageStream *storageStream,
                            UniquePtr<char[]>* buffer, uint32_t* len);
 
 nsresult
+ResolveURI(nsIURI *in, nsIURI **out);
+
+nsresult
 PathifyURI(nsIURI *in, nsACString &out);
 } // namespace scache
 } // namespace mozilla
