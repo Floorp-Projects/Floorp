@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import re
 import os
 import requests
 
@@ -14,10 +13,10 @@ from . import files_changed
 from .taskgraph import TaskGraph
 from .util.seta import is_low_value_task
 from .util.taskcluster import find_task_id
+from .util.parameterization import resolve_task_references
 from slugid import nice as slugid
 
 logger = logging.getLogger(__name__)
-TASK_REFERENCE_PATTERN = re.compile('<([^>]+)>')
 
 _optimizations = {}
 
@@ -42,30 +41,6 @@ def optimize_task_graph(target_task_graph, params, do_not_optimize, existing_tas
                         label_to_taskid=label_to_taskid,
                         existing_tasks=existing_tasks)
     return get_subgraph(target_task_graph, named_links_dict, label_to_taskid), label_to_taskid
-
-
-def resolve_task_references(label, task_def, taskid_for_edge_name):
-    def repl(match):
-        key = match.group(1)
-        try:
-            return taskid_for_edge_name[key]
-        except KeyError:
-            # handle escaping '<'
-            if key == '<':
-                return key
-            raise KeyError("task '{}' has no dependency named '{}'".format(label, key))
-
-    def recurse(val):
-        if isinstance(val, list):
-            return [recurse(v) for v in val]
-        elif isinstance(val, dict):
-            if val.keys() == ['task-reference']:
-                return TASK_REFERENCE_PATTERN.sub(repl, val['task-reference'])
-            else:
-                return {k: recurse(v) for k, v in val.iteritems()}
-        else:
-            return val
-    return recurse(task_def)
 
 
 def optimize_task(task, params):

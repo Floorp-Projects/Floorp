@@ -144,6 +144,46 @@ function assert_records(expected, desc) {
   }
 }
 
+function assert_records_any_order(expected, desc) {
+  // Generate a unique label for each Animation object.
+  let animation_labels = new Map();
+  let animation_counter = 0;
+  for (let record of gRecords) {
+    for (let a of [...record.addedAnimations, ...record.changedAnimations, ...record.removedAnimations]) {
+      if (!animation_labels.has(a)) {
+        animation_labels.set(a, ++animation_counter);
+      }
+    }
+  }
+  for (let record of expected) {
+    for (let a of [...record.added, ...record.changed, ...record.removed]) {
+      if (!animation_labels.has(a)) {
+        animation_labels.set(a, ++animation_counter);
+      }
+    }
+  }
+
+  function record_label(record) {
+    // Generate a label of the form:
+    //
+    //   <added-animations>:<changed-animations>:<removed-animations>
+    let added   = record.addedAnimations   || record.added;
+    let changed = record.changedAnimations || record.changed;
+    let removed = record.removedAnimations || record.removed;
+    return [added  .map(a => animation_labels.get(a)).sort().join(),
+            changed.map(a => animation_labels.get(a)).sort().join(),
+            removed.map(a => animation_labels.get(a)).sort().join()]
+           .join(":");
+  }
+
+  // Sort records by their label.
+  gRecords.sort((a, b) => record_label(a) < record_label(b));
+  expected.sort((a, b) => record_label(a) < record_label(b));
+
+  // Assert the sorted record lists are equal.
+  assert_records(expected, desc);
+}
+
 // -- Tests ------------------------------------------------------------------
 
 // We run all tests first targeting the div and observing the div, then again
@@ -1114,19 +1154,17 @@ addAsyncAnimTest("tree_ordering", { observe: div, subtree: true }, function*() {
   //
   // That is because we don't do any document-level batching of animation
   // mutation records when we flush styles. We may introduce that in the
-  // future but for now all we are interested in testing here is that the order
-  // these records are dispatched is consistent between runs.
-  //
-  // We currently expect to get records in order div::after, childA, childB,
-  // childB::before, div, div::before
+  // future but for now all we are interested in testing here is that the
+  // right records are generated, but we allow them to occur in any order.
   yield waitForFrame();
-  assert_records([{ added: divAfterAnimations, changed: [], removed: [] },
-                  { added: childAAnimations, changed: [], removed: [] },
-                  { added: childBAnimations, changed: [], removed: [] },
-                  { added: childBPseudoAnimations, changed: [], removed: [] },
-                  { added: divAnimations, changed: [], removed: [] },
-                  { added: divBeforeAnimations, changed: [], removed: [] }],
-                 "records after simultaneous animation start");
+  assert_records_any_order(
+    [{ added: divAfterAnimations, changed: [], removed: [] },
+     { added: childAAnimations, changed: [], removed: [] },
+     { added: childBAnimations, changed: [], removed: [] },
+     { added: childBPseudoAnimations, changed: [], removed: [] },
+     { added: divAnimations, changed: [], removed: [] },
+     { added: divBeforeAnimations, changed: [], removed: [] }],
+    "records after simultaneous animation start");
 
   // The one case where we *do* currently perform document-level (or actually
   // timeline-level) batching is when animations are updated from a refresh

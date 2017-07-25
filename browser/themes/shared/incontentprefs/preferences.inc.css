@@ -109,11 +109,7 @@ html|option {
 }
 
 #category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults");
-}
-
-#category-application > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#content");
+  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#search");
 }
 
 #category-privacy > .category-icon {
@@ -122,14 +118,6 @@ html|option {
 
 #category-sync > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync");
-}
-
-#category-advanced > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#advanced");
-}
-
-#category-search-results > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults");
 }
 
 @media (max-width: 800px) {

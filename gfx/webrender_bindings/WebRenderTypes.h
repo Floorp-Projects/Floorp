@@ -342,7 +342,7 @@ static inline wr::BorderSide ToBorderSide(const gfx::Color& color, const uint8_t
   return bs;
 }
 
-static inline wr::BorderRadius ToUniformBorderRadius(const LayerSize& aSize)
+static inline wr::BorderRadius ToUniformBorderRadius(const mozilla::LayerSize& aSize)
 {
   wr::BorderRadius br;
   br.top_left = ToLayoutSize(aSize);
@@ -352,8 +352,8 @@ static inline wr::BorderRadius ToUniformBorderRadius(const LayerSize& aSize)
   return br;
 }
 
-static inline wr::BorderRadius ToBorderRadius(const LayerSize& topLeft, const LayerSize& topRight,
-                                              const LayerSize& bottomLeft, const LayerSize& bottomRight)
+static inline wr::BorderRadius ToBorderRadius(const mozilla::LayerSize& topLeft, const mozilla::LayerSize& topRight,
+                                              const mozilla::LayerSize& bottomLeft, const mozilla::LayerSize& bottomRight)
 {
   wr::BorderRadius br;
   br.top_left = ToLayoutSize(topLeft);
@@ -440,7 +440,7 @@ static inline wr::WrOpacityProperty ToWrOpacityProperty(uint64_t id, const float
 }
 
 static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const wr::LayoutRect& rect,
-                                                            const LayerSize& size)
+                                                            const mozilla::LayerSize& size)
 {
   wr::WrComplexClipRegion complex_clip;
   complex_clip.rect = rect;
@@ -450,7 +450,7 @@ static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const wr::LayoutRect
 
 template<class T>
 static inline wr::WrComplexClipRegion ToWrComplexClipRegion(const gfx::RectTyped<T>& rect,
-                                                            const LayerSize& size)
+                                                            const mozilla::LayerSize& size)
 {
   return ToWrComplexClipRegion(wr::ToLayoutRect(rect), size);
 }
@@ -488,19 +488,19 @@ static inline wr::WrExternalImage NativeTextureToWrExternalImage(uint32_t aHandl
   };
 }
 
-struct VecU8 {
+struct Vec_u8 {
   wr::WrVecU8 inner;
-  VecU8() {
+  Vec_u8() {
     SetEmpty();
   }
-  VecU8(VecU8&) = delete;
-  VecU8(VecU8&& src) {
+  Vec_u8(Vec_u8&) = delete;
+  Vec_u8(Vec_u8&& src) {
     inner = src.inner;
     src.SetEmpty();
   }
 
-  VecU8&
-  operator=(VecU8&& src) {
+  Vec_u8&
+  operator=(Vec_u8&& src) {
     inner = src.inner;
     src.SetEmpty();
     return *this;
@@ -520,7 +520,7 @@ struct VecU8 {
     inner.length = 0;
   }
 
-  ~VecU8() {
+  ~Vec_u8() {
     if (inner.data) {
       wr_vec_u8_free(inner);
     }

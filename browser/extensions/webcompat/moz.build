@@ -19,4 +19,4 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):
-  BUG_COMPONENT = ('Web Compatibility', 'Go Faster')
+  BUG_COMPONENT = ('Web Compatibility Tools', 'Go Faster')

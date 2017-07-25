@@ -4,11 +4,19 @@
 
 /**
  * This XPCOM component is loaded very early.
- * It handles command line arguments like -jsconsole, but also ensures starting
+ * Be careful to lazy load dependencies as much as possible.
+ *
+ * It manages all the possible entry points for DevTools:
+ * - Handles command line arguments like -jsconsole,
+ * - Register all key shortcuts,
+ * - Listen for "Web Developer" system menu opening, under "Tools",
+ * - Inject the wrench icon in toolbar customization, which is used
+ *   by the "Web Developer" list displayed in the hamburger menu,
+ * - Register the JSON Viewer protocol handler.
+ *
+ * Only once any of these entry point is fired, this module ensures starting
  * core modules like 'devtools-browser.js' that hooks the browser windows
  * and ensure setting up tools.
- *
- * Be careful to lazy load dependencies as much as possible.
  **/
 
 "use strict";
@@ -19,7 +27,135 @@ const kDebuggerPrefs = [
   "devtools.chrome.enabled"
 ];
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+                                  "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
+                                  "resource:///modules/CustomizableWidgets.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Bundle", function () {
+  const kUrl = "chrome://devtools/locale/key-shortcuts.properties";
+  return Services.strings.createBundle(kUrl);
+});
+
+XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
+  const isMac = AppConstants.platform == "macosx";
+
+  // Common modifier shared by most key shortcuts
+  const modifiers = isMac ? "accel,alt" : "accel,shift";
+
+  // List of all key shortcuts triggering installation UI
+  // `id` should match tool's id from client/definitions.js
+  return [
+    // The following keys are also registered in /client/menus.js
+    // And should be synced.
+
+    // Both are toggling the toolbox on the last selected panel
+    // or the default one.
+    {
+      id: "toggleToolbox",
+      shortcut: Bundle.GetStringFromName("toggleToolbox.commandkey"),
+      modifiers
+    },
+    // All locales are using F12
+    {
+      id: "toggleToolboxF12",
+      shortcut: Bundle.GetStringFromName("toggleToolboxF12.commandkey"),
+      modifiers: "" // F12 is the only one without modifiers
+    },
+    // Toggle the visibility of the Developer Toolbar (=gcli)
+    {
+      id: "toggleToolbar",
+      shortcut: Bundle.GetStringFromName("toggleToolbar.commandkey"),
+      modifiers: "shift"
+    },
+    // Open WebIDE window
+    {
+      id: "webide",
+      shortcut: Bundle.GetStringFromName("webide.commandkey"),
+      modifiers: "shift"
+    },
+    // Open the Browser Toolbox
+    {
+      id: "browserToolbox",
+      shortcut: Bundle.GetStringFromName("browserToolbox.commandkey"),
+      modifiers: "accel,alt,shift"
+    },
+    // Open the Browser Console
+    {
+      id: "browserConsole",
+      shortcut: Bundle.GetStringFromName("browserConsole.commandkey"),
+      modifiers: "accel,shift"
+    },
+    // Toggle the Responsive Design Mode
+    {
+      id: "responsiveDesignMode",
+      shortcut: Bundle.GetStringFromName("responsiveDesignMode.commandkey"),
+      modifiers
+    },
+    // Open ScratchPad window
+    {
+      id: "scratchpad",
+      shortcut: Bundle.GetStringFromName("scratchpad.commandkey"),
+      modifiers: "shift"
+    },
+
+    // The following keys are also registered in /client/definitions.js
+    // and should be synced.
+
+    // Key for opening the Inspector
+    {
+      toolId: "inspector",
+      shortcut: Bundle.GetStringFromName("inspector.commandkey"),
+      modifiers
+    },
+    // Key for opening the Web Console
+    {
+      toolId: "webconsole",
+      shortcut: Bundle.GetStringFromName("webconsole.commandkey"),
+      modifiers
+    },
+    // Key for opening the Debugger
+    {
+      toolId: "jsdebugger",
+      shortcut: Bundle.GetStringFromName("debugger.commandkey"),
+      modifiers
+    },
+    // Key for opening the Network Monitor
+    {
+      toolId: "netmonitor",
+      shortcut: Bundle.GetStringFromName("netmonitor.commandkey"),
+      modifiers
+    },
+    // Key for opening the Style Editor
+    {
+      toolId: "styleeditor",
+      shortcut: Bundle.GetStringFromName("styleeditor.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the Performance Panel
+    {
+      toolId: "performance",
+      shortcut: Bundle.GetStringFromName("performance.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the Storage Panel
+    {
+      toolId: "storage",
+      shortcut: Bundle.GetStringFromName("storage.commandkey"),
+      modifiers: "shift"
+    },
+    // Key for opening the DOM Panel
+    {
+      toolId: "dom",
+      shortcut: Bundle.GetStringFromName("dom.commandkey"),
+      modifiers
+    },
+  ];
+});
 
 function DevToolsStartup() {}
 
@@ -48,24 +184,183 @@ DevToolsStartup.prototype = {
       this.handleDebuggerServerFlag(cmdLine, debuggerServerFlag);
     }
 
-    let onStartup = window => {
-      Services.obs.removeObserver(onStartup,
-                                  "browser-delayed-startup-finished");
-      // Ensure loading core module once firefox is ready
-      this.initDevTools();
+    // Only top level Firefox Windows fire a browser-delayed-startup-finished event
+    let onWindowReady = window => {
+      this.hookWindow(window);
 
       if (devtoolsFlag) {
         this.handleDevToolsFlag(window);
+        // This listener is called for all Firefox windows, but we want to execute
+        // that command only once
+        devtoolsFlag = false;
       }
+      JsonView.initialize();
     };
-    Services.obs.addObserver(onStartup, "browser-delayed-startup-finished");
+    Services.obs.addObserver(onWindowReady, "browser-delayed-startup-finished");
   },
 
+  /**
+   * Register listeners to all possible entry points for Developer Tools.
+   * But instead of implementing the actual actions, defer to DevTools codebase.
+   * In most cases, it only needs to call this.initDevTools which handles the rest.
+   * We do that to prevent loading any DevTools module until the user intent to use them.
+   */
+  hookWindow(window) {
+    this.hookKeyShortcuts(window);
+
+    // All the other hooks are only necessary if the tools aren't loaded yet.
+    if (this.initialized) {
+      return;
+    }
+
+    this.hookWebDeveloperMenu(window);
+    this.hookDeveloperToggle(window);
+  },
+
+  /**
+   * Dynamically register a wrench icon in the customization menu.
+   * You can use this button by right clicking on Firefox toolbar
+   * and dragging it from the customization panel to the toolbar.
+   * (i.e. this isn't displayed by default to users!)
+   *
+   * _But_, the "Web Developer" entry in the hamburger menu (the menu with
+   * 3 horizontal lines), is using this "developer-button" view to populate
+   * its menu. So we have to register this button for the menu to work.
+   *
+   * Also, this menu duplicates its own entries from the "Web Developer"
+   * menu in the system menu, under "Tools" main menu item. The system
+   * menu is being hooked by "hookWebDeveloperMenu" which ends up calling
+   * devtools/client/framework/browser-menu to create the items for real,
+   * initDevTools, from onViewShowing is also calling browser-menu.
+   */
+  hookDeveloperToggle(window) {
+    let id = "developer-button";
+    let widget = CustomizableUI.getWidget(id);
+    if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
+      return;
+    }
+    let item = {
+      id: id,
+      type: "view",
+      viewId: "PanelUI-developer",
+      shortcutId: "key_toggleToolbox",
+      tooltiptext: "developer-button.tooltiptext2",
+      defaultArea: AppConstants.MOZ_DEV_EDITION ?
+                     CustomizableUI.AREA_NAVBAR :
+                     CustomizableUI.AREA_PANEL,
+      onViewShowing: (event) => {
+        // Ensure creating the menuitems in the system menu before trying to copy them.
+        this.initDevTools();
+
+        // Populate the subview with whatever menuitems are in the developer
+        // menu. We skip menu elements, because the menu panel has no way
+        // of dealing with those right now.
+        let doc = event.target.ownerDocument;
+
+        let menu = doc.getElementById("menuWebDeveloperPopup");
+
+        let itemsToDisplay = [...menu.children];
+        // Hardcode the addition of the "work offline" menuitem at the bottom:
+        itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
+        itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
+
+        let developerItems = doc.getElementById("PanelUI-developerItems");
+        // Import private helpers from CustomizableWidgets
+        let { clearSubview, fillSubviewFromMenuItems } =
+          Cu.import("resource:///modules/CustomizableWidgets.jsm", {});
+        clearSubview(developerItems);
+        fillSubviewFromMenuItems(itemsToDisplay, developerItems);
+      },
+      onInit(anchor) {
+        // Since onBeforeCreated already bails out when initialized, we can call
+        // it right away.
+        this.onBeforeCreated(anchor.ownerDocument);
+      },
+      onBeforeCreated(doc) {
+        // Bug 1223127, CUI should make this easier to do.
+        if (doc.getElementById("PanelUI-developerItems")) {
+          return;
+        }
+        let view = doc.createElement("panelview");
+        view.id = "PanelUI-developerItems";
+        let panel = doc.createElement("vbox");
+        panel.setAttribute("class", "panel-subview-body");
+        view.appendChild(panel);
+        doc.getElementById("PanelUI-multiView").appendChild(view);
+      }
+    };
+    CustomizableUI.createWidget(item);
+    CustomizableWidgets.push(item);
+  },
+
+  /*
+   * We listen to the "Web Developer" system menu, which is under "Tools" main item.
+   * This menu item is hardcoded empty in Firefox UI. We listen for its opening to
+   * populate it lazily. Loading main DevTools module is going to populate it.
+   */
+  hookWebDeveloperMenu(window) {
+    let menu = window.document.getElementById("webDeveloperMenu");
+    menu.addEventListener("popupshowing", () => this.initDevTools(), { once: true });
+  },
+
+  hookKeyShortcuts(window) {
+    let doc = window.document;
+    let keyset = doc.createElement("keyset");
+    keyset.setAttribute("id", "devtoolsKeyset");
+
+    for (let key of KeyShortcuts) {
+      let xulKey = this.createKey(doc, key, () => this.onKey(window, key));
+      keyset.appendChild(xulKey);
+    }
+
+    // Appending a <key> element is not always enough. The <keyset> needs
+    // to be detached and reattached to make sure the <key> is taken into
+    // account (see bug 832984).
+    let mainKeyset = doc.getElementById("mainKeyset");
+    mainKeyset.parentNode.insertBefore(keyset, mainKeyset);
+  },
+
+  onKey(window, key) {
+    let require = this.initDevTools();
+    let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+    gDevToolsBrowser.onKeyShortcut(window, key);
+  },
+
+  // Create a <xul:key> DOM Element
+  createKey(doc, { id, toolId, shortcut, modifiers: mod }, oncommand) {
+    let k = doc.createElement("key");
+    k.id = "key_" + (id || toolId);
+
+    if (shortcut.startsWith("VK_")) {
+      k.setAttribute("keycode", shortcut);
+    } else {
+      k.setAttribute("key", shortcut);
+    }
+
+    if (mod) {
+      k.setAttribute("modifiers", mod);
+    }
+
+    // Bug 371900: command event is fired only if "oncommand" attribute is set.
+    k.setAttribute("oncommand", ";");
+    k.addEventListener("command", oncommand);
+
+    return k;
+  },
+
+  /**
+   * Boolean flag to check if DevTools have been already initialized or not.
+   * By initialized, we mean that its main modules are loaded.
+   */
+  initialized: false,
+
   initDevTools: function () {
-    let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    this.initialized = true;
+    let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
-    loader.require("devtools/client/framework/devtools-browser");
+    require("devtools/client/framework/devtools-browser");
+    return require;
   },
 
   handleConsoleFlag: function (cmdLine) {
@@ -89,7 +384,7 @@ DevToolsStartup.prototype = {
 
   // Open the toolbox on the selected tab once the browser starts up.
   handleDevToolsFlag: function (window) {
-    const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+    const require = this.initDevTools();
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
     let target = TargetFactory.forTab(window.gBrowser.selectedTab);
@@ -218,6 +513,15 @@ DevToolsStartup.prototype = {
     }
   },
 
+  // Used by tests and the toolbox to register the same key shortcuts in toolboxes loaded
+  // in a window window.
+  get KeyShortcuts() {
+    return KeyShortcuts;
+  },
+  get wrappedJSObject() {
+    return this;
+  },
+
   /* eslint-disable max-len */
   helpInfo: "  --jsconsole        Open the Browser Console.\n" +
             "  --jsdebugger       Open the Browser Toolbox.\n" +
@@ -232,6 +536,68 @@ DevToolsStartup.prototype = {
 
   classID: Components.ID("{9e9a9283-0ce9-4e4a-8f1c-ba129a032c32}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
+};
+
+/**
+ * Singleton object that represents the JSON View in-content tool.
+ * It has the same lifetime as the browser.
+ */
+const JsonView = {
+  initialized: false,
+
+  initialize: function () {
+    // Prevent loading the frame script multiple times if we call this more than once.
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    // Load JSON converter module. This converter is responsible
+    // for handling 'application/json' documents and converting
+    // them into a simple web-app that allows easy inspection
+    // of the JSON data.
+    Services.ppmm.loadProcessScript(
+      "resource://devtools/client/jsonview/converter-observer.js",
+      true);
+
+    // Register for messages coming from the child process.
+    // This is never removed as there is no particular need to unregister
+    // it during shutdown.
+    Services.ppmm.addMessageListener(
+      "devtools:jsonview:save", this.onSave);
+  },
+
+  // Message handlers for events from child processes
+
+  /**
+   * Save JSON to a file needs to be implemented here
+   * in the parent process.
+   */
+  onSave: function (message) {
+    let chrome = Services.wm.getMostRecentWindow("navigator:browser");
+    let browser = chrome.gBrowser.selectedBrowser;
+    if (message.data.url === null) {
+      // Save original contents
+      chrome.saveBrowser(browser, false, message.data.windowID);
+    } else {
+      // The following code emulates saveBrowser, but:
+      // - Uses the given blob URL containing the custom contents to save.
+      // - Obtains the file name from the URL of the document, not the blob.
+      let persistable = browser.QueryInterface(Ci.nsIFrameLoaderOwner)
+        .frameLoader.QueryInterface(Ci.nsIWebBrowserPersistable);
+      persistable.startPersistence(message.data.windowID, {
+        onDocumentReady(doc) {
+          let uri = chrome.makeURI(doc.documentURI, doc.characterSet);
+          let filename = chrome.getDefaultFileName(undefined, uri, doc, null);
+          chrome.internalSave(message.data.url, doc, filename, null, doc.contentType,
+            false, null, null, null, doc, false, null, undefined);
+        },
+        onError(status) {
+          throw new Error("JSON Viewer's onSave failed in startPersistence");
+        }
+      });
+    }
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(

@@ -1957,12 +1957,15 @@ public:
 
   void Enter()
   {
+    // TODO : use more approriate way to decide whether need to release
+    // resource in bug1367983.
+#ifndef MOZ_WIDGET_ANDROID
     if (!mMaster->mLooping) {
       // We've decoded all samples.
       // We don't need decoders anymore if not looping.
       Reader()->ReleaseResources();
     }
-
+#endif
     bool hasNextFrame = (!mMaster->HasAudio() || !mMaster->mAudioCompleted)
                         && (!mMaster->HasVideo() || !mMaster->mVideoCompleted);
 
