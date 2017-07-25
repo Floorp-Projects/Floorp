@@ -23,20 +23,17 @@
  */
 
 const PREF_ACTIVE = "security.mixed_content.block_active_content";
-const ANIMATIONS_ENABLED = "toolkit.cosmeticAnimations.enabled";
 
 // We alternate for even and odd test cases to simulate different hosts
 const HTTPS_TEST_ROOT_1 = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://test1.example.com");
 const HTTPS_TEST_ROOT_2 = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://test2.example.com");
 
 var origBlockActive;
-var origAnimationsPrefValue;
 var gTestBrowser = null;
 
 registerCleanupFunction(function() {
   // Set preferences back to their original values
   Services.prefs.setBoolPref(PREF_ACTIVE, origBlockActive);
-  Services.prefs.setBoolPref(ANIMATIONS_ENABLED, origAnimationsPrefValue);
 });
 
 function cleanUpAfterTests() {
@@ -161,11 +158,8 @@ function test() {
 
   // Store original preferences so we can restore settings after testing
   origBlockActive = Services.prefs.getBoolPref(PREF_ACTIVE);
-  origAnimationsPrefValue = Services.prefs.getBoolPref(ANIMATIONS_ENABLED);
 
-Services.prefs.setBoolPref(PREF_ACTIVE, true);
-  // run these tests with animations enabled
-  Services.prefs.setBoolPref(ANIMATIONS_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_ACTIVE, true);
 
   // Not really sure what this is doing
   var newTab = BrowserTestUtils.addTab(gBrowser);
