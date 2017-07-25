@@ -40,9 +40,11 @@ BUILDER_NAME_PREFIX = {
     'windows7-32': 'Windows 7 32-bit',
     ('windows7-32', 'virtual-with-gpu'): 'Windows 7 VM-GFX 32-bit',
     'windows7-32-nightly': 'Windows 7 32-bit',
+    'windows7-32-devedition': 'Windows 7 32-bit DevEdition',
     'windows7-32-pgo': 'Windows 7 32-bit',
     'windows8-64': 'Windows 8 64-bit',
     'windows8-64-nightly': 'Windows 8 64-bit',
+    'windows8-64-devedition': 'Windows 8 64-bit DevEdition',
     'windows8-64-pgo': 'Windows 8 64-bit',
 }
 
