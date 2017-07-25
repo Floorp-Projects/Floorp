@@ -991,6 +991,25 @@ const Class JSFunction::class_ = {
 const Class* const js::FunctionClassPtr = &JSFunction::class_;
 
 JSString*
+js::FunctionToStringCache::lookup(JSScript* script) const
+{
+    for (size_t i = 0; i < NumEntries; i++) {
+        if (entries_[i].script == script)
+            return entries_[i].string;
+    }
+    return nullptr;
+}
+
+void
+js::FunctionToStringCache::put(JSScript* script, JSString* string)
+{
+    for (size_t i = NumEntries - 1; i > 0; i--)
+        entries_[i] = entries_[i - 1];
+
+    entries_[0].set(script, string);
+}
+
+JSString*
 js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
 {
     if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
@@ -1037,10 +1056,19 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
 
     // Fast path for the common case, to avoid StringBuffer overhead.
     if (!addParentheses && haveSource) {
+        FunctionToStringCache& cache = cx->zone()->functionToStringCache();
+        if (JSString* str = cache.lookup(script))
+            return str;
+
         size_t start = script->toStringStart(), end = script->toStringEnd();
-        if (end - start <= ScriptSource::SourceDeflateLimit)
-            return script->scriptSource()->substring(cx, start, end);
-        return script->scriptSource()->substringDontDeflate(cx, start, end);
+        JSString* str = (end - start <= ScriptSource::SourceDeflateLimit)
+            ? script->scriptSource()->substring(cx, start, end)
+            : script->scriptSource()->substringDontDeflate(cx, start, end);
+        if (!str)
+            return nullptr;
+
+        cache.put(script, str);
+        return str;
     }
 
     StringBuffer out(cx);
