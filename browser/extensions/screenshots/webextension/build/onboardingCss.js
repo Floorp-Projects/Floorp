@@ -231,14 +231,14 @@ body {
   opacity: 1; }
 
 .active-slide-1 #prev,
-.active-slide-4 #next {
+.active-slide-3 #next {
   display: none; }
 
 #done {
   background-image: url("MOZ_EXTENSION/icons/done.svg");
   display: none; }
 
-.active-slide-4 #done {
+.active-slide-3 #done {
   display: inline-block; }
 
 /* for smaller screen sizes */

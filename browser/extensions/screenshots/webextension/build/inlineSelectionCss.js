@@ -429,7 +429,7 @@ window.inlineSelectionCss = `
   display: flex;
   flex-direction: row-reverse;
   background: #f5f5f5;
-  border-radius: 1px;
+  border-radius: 2px;
   box-sizing: border-box;
   height: 80px;
   padding: 8px;
