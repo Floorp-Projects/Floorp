@@ -1260,7 +1260,7 @@ ScriptedProxyHandler::className(JSContext* cx, HandleObject proxy) const
 }
 
 JSString*
-ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
+ScriptedProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                               js_Function_str, js_toString_str, "object");
