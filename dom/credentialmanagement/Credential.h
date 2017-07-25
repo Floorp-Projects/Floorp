@@ -44,6 +44,12 @@ public:
   void
   GetType(nsAString& aType) const;
 
+  void
+  SetId(const nsAString& aId);
+
+  void
+  SetType(const nsAString& aType);
+
 private:
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsAutoString mId;
