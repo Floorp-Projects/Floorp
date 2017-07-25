@@ -84,14 +84,14 @@ private:
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
   uint32_t GetNamespace() { return mIdNamespace; }
-  wr::ImageKey GetImageKey()
+  wr::ImageKey GenerateImageKey()
   {
     wr::ImageKey key;
     key.mNamespace = GetNamespace();
     key.mHandle = GetNextResourceId();
     return key;
   }
-  bool GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
+  bool GenerateImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
