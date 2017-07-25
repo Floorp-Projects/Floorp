@@ -61,7 +61,7 @@ add_task(async function test_tracker_score_updated() {
     scoreUpdated++;
   }
 
-  Svc.Obs.add("weave:engine:score:updated", onScoreUpdated());
+  Svc.Obs.add("weave:engine:score:updated", onScoreUpdated);
 
   try {
     do_check_eq(engine.score, 0);
