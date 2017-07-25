@@ -636,6 +636,11 @@ class RTCPeerConnection {
             throw new this._win.DOMException(msg + " - missing username: " + spec,
                                              "InvalidAccessError");
           }
+          if (username.length > 512) {
+            throw new this._win.DOMException(msg +
+                                             " - username longer then 512 bytes: "
+                                             + username, "InvalidAccessError");
+          }
           if (credential == undefined) {
             throw new this._win.DOMException(msg + " - missing credential: " + spec,
                                              "InvalidAccessError");
