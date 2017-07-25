@@ -13,7 +13,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StyleBackendType.h"
 
 class nsIDocument;
 class nsIURI;
@@ -59,8 +58,7 @@ private:
   static PLDHashNumber ComputeHash(ImageURL* aURI,
                                    const Maybe<uint64_t>& aBlobSerial,
                                    const OriginAttributes& aAttrs,
-                                   void* aControlledDocument,
-                                   mozilla::StyleBackendType aStyleBackendType);
+                                   void* aControlledDocument);
   static void* GetControlledDocumentToken(nsIDocument* aDocument);
 
   RefPtr<ImageURL> mURI;
