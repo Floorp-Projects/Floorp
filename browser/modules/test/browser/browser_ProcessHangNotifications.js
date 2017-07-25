@@ -26,13 +26,6 @@ function promiseReportCallMade(aValue) {
   });
 }
 
-// run these tests with notification animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
-});
-
 function pushPrefs(...aPrefs) {
   return SpecialPowers.pushPrefEnv({"set": aPrefs});
 }

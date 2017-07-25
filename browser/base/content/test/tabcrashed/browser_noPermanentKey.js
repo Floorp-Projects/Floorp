@@ -2,13 +2,6 @@
 
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
-// run these tests with notification animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
-});
-
 add_task(async function setup() {
   await setupLocalCrashReportServer();
 });

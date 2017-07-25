@@ -2,13 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-// run these tests with animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]],
-  });
-});
-
 add_task(async function testPopupSelectPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
