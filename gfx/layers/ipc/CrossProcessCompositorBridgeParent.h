@@ -107,6 +107,12 @@ public:
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) override;
   virtual mozilla::ipc::IPCResult RecvRemotePluginsReady()  override { return IPC_FAIL_NO_REASON(this); }
 
+  // Use DidCompositeLocked if you already hold a lock on
+  // sIndirectLayerTreesLock; Otherwise use DidComposite, which would request
+  // the lock automatically.
+  void DidCompositeLocked(uint64_t aId,
+                                  TimeStamp& aCompositeStart,
+                                  TimeStamp& aCompositeEnd);
   virtual void DidComposite(uint64_t aId,
                             TimeStamp& aCompositeStart,
                             TimeStamp& aCompositeEnd) override;
