@@ -237,6 +237,7 @@
 #endif
 
 #ifdef XP_WIN
+#include "mozilla/audio/AudioNotificationSender.h"
 #include "mozilla/widget/AudioSession.h"
 #endif
 
@@ -2136,11 +2137,16 @@ ContentParent::ContentParent(ContentParent* aOpener,
   // PID along with the warning.
   nsDebugImpl::SetMultiprocessMode("Parent");
 
-#if defined(XP_WIN) && !defined(MOZ_B2G)
+#if defined(XP_WIN)
+  if (XRE_IsParentProcess()) {
+    audio::AudioNotificationSender::Init();
+  }
+#if !defined(MOZ_B2G)
   // Request Windows message deferral behavior on our side of the PContent
   // channel. Generally only applies to the situation where we get caught in
   // a deadlock with the plugin process when sending CPOWs.
   GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+#endif
 #endif
 
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
