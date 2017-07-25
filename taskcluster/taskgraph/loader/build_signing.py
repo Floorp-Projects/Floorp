@@ -11,6 +11,7 @@ from taskgraph.loader.single_dep import loader as base_loader
 LABELS_WHICH_SHOULD_SIGN_CI_BUILDS = (
     'build-win32/debug', 'build-win32/opt', 'build-win32/pgo',
     'build-win64/debug', 'build-win64/opt', 'build-win64/pgo',
+    'build-win32-devedition/opt', 'build-win64-devedition/opt',
 )
 
 
