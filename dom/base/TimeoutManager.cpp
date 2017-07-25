@@ -1291,6 +1291,8 @@ TimeoutManager::MaybeStartThrottleTimeout()
   nsCOMPtr<nsITimerCallback> callback =
     new ThrottleTimeoutsCallback(&mWindow);
 
+  mThrottleTimeoutsTimer->SetTarget(EventTarget());
+
   mThrottleTimeoutsTimer->InitWithCallback(
     callback, gTimeoutThrottlingDelay, nsITimer::TYPE_ONE_SHOT);
 }
