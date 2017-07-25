@@ -382,7 +382,8 @@ description > html|a {
  */
 
 #fxaProfileImage {
-  max-width: 60px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   list-style-image: url(chrome://browser/skin/fxa/default-avatar.svg);
   margin-inline-end: 15px;
@@ -391,7 +392,8 @@ description > html|a {
 }
 
 #fxaLoginStatus[hasName] #fxaProfileImage {
-  max-width: 80px;
+  width: 80px;
+  height: 80px;
 }
 
 #fxaProfileImage.actionable {
@@ -518,7 +520,8 @@ description > html|a {
 
 .fxaFirefoxLogo {
   list-style-image: url(chrome://browser/skin/fxa/logo.png);
-  max-width: 64px;
+  width: 64px;
+  height: 64px;
   margin-inline-end: 14px;
 }
 
