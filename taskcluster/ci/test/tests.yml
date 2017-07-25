@@ -1806,7 +1806,15 @@ xpcshell:
             linux64-qr/.*: ['mozilla-central', 'try']
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
+    worker-type:
+        by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
+            default: null
     docker-image: {"in-tree": "desktop1604-test"}
+    tier:
+        by-test-platform:
+            windows10-64.*: 2
+            default: default
     chunks:
         by-test-platform:
             linux64/debug: 10
