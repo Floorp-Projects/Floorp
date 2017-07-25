@@ -22,8 +22,15 @@ namespace mozilla {
 
 namespace wr {
 struct ColorF;
-struct LayoutRect;
-struct LayoutSize;
+
+struct TypedSize2D_f32__LayerPixel;
+typedef TypedSize2D_f32__LayerPixel LayerSize;
+typedef LayerSize LayoutSize;
+
+struct TypedRect_f32__LayerPixel;
+typedef TypedRect_f32__LayerPixel LayerRect;
+typedef LayerRect LayoutRect;
+
 } // namespace wr
 
 namespace gfx {

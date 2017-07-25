@@ -19,5 +19,10 @@ int GetEffectiveContentSandboxLevel();
 // .app/Contents/Resources/.
 bool IsDevelopmentBuild();
 
+// Return the repo directory and the repo object directory respectively. These
+// should only be used on developer builds to determine the path to the repo
+// or object directory.
+nsresult GetRepoDir(nsIFile **aRepoDir);
+nsresult GetObjDir(nsIFile **aObjDir);
 }
 #endif // mozilla_SandboxPolicies_h

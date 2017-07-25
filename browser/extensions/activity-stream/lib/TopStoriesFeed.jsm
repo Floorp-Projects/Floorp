@@ -14,6 +14,7 @@ const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.js
 
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
+const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
 const SECTION_ID = "TopStories";
 
 this.TopStoriesFeed = class TopStoriesFeed {
@@ -38,7 +39,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         title: {id: "header_recommended_by", values: {provider: options.provider_name}},
         rows: [],
         maxCards: 3,
-        contextMenuOptions: ["SaveToPocket", "Separator", "CheckBookmark", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
+        contextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
         infoOption: {
           header: {id: "pocket_feedback_header"},
           body: {id: "pocket_feedback_body"},
@@ -48,7 +49,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
           }
         },
         emptyState: {
-          message: {id: "empty_state_topstories"},
+          message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
           icon: "check"
         }
       };
@@ -77,15 +78,14 @@ this.TopStoriesFeed = class TopStoriesFeed {
         .then(body => {
           let items = JSON.parse(body).list;
           items = items
-            .filter(s => !NewTabUtils.blockedLinks.isBlocked(s.dedupe_url))
+            .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.dedupe_url}))
             .map(s => ({
               "guid": s.id,
-              "type": "trending",
+              "type": (Date.now() - (s.published_timestamp * 1000)) <= STORIES_NOW_THRESHOLD ? "now" : "trending",
               "title": s.title,
               "description": s.excerpt,
               "image": this._normalizeUrl(s.image_src),
-              "url": s.dedupe_url,
-              "lastVisitDate": s.published_timestamp
+              "url": s.dedupe_url
             }));
           return items;
         })

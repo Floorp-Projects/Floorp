@@ -99,7 +99,7 @@ DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
                                      UniqueStacks& aUniqueStacks)
 {
   StreamCommonProps("DOMEvent", aWriter, aProcessStartTime, aUniqueStacks);
-  aWriter.StringProperty("type", NS_ConvertUTF16toUTF8(mType).get());
+  aWriter.StringProperty("eventType", NS_ConvertUTF16toUTF8(mEventType).get());
   aWriter.IntProperty("phase", mPhase);
 }
 

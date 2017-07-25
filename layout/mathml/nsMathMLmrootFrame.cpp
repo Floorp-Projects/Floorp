@@ -261,7 +261,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   // height(radical) should be >= height(base) + psi + ruleThickness
   nsBoundingMetrics radicalSize;
-  mSqrChar.Stretch(aPresContext, drawTarget,
+  mSqrChar.Stretch(this, drawTarget,
                    fontSizeInflation,
                    NS_STRETCH_DIRECTION_VERTICAL,
                    contSize, radicalSize,
@@ -377,7 +377,7 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext, Refl
   nscoord indexWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, indexFrame,
                                          nsLayoutUtils::PREF_ISIZE);
-  nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(),
+  nscoord sqrWidth = mSqrChar.GetMaxWidth(this,
                                           aRenderingContext->GetDrawTarget(),
                                           fontSizeInflation);
 

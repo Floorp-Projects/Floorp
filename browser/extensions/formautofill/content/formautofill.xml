@@ -169,8 +169,6 @@
             this, "anonid", "autofill-warning"
           );
 
-          let {categories: allFieldCategories, focusedCategory} = JSON.parse(this.getAttribute("ac-value"));
-
           /**
            * Update the text on the footer.
            *
@@ -181,14 +179,14 @@
            *        Used to determine if it has the extra categories other than the focued category. If
            *        the value is true, we show "Also fill ...", otherwise, show "Fill ..." only.
            */
-          this._updateText = (categories = allFieldCategories, hasExtraCategories = true) => {
+          this._updateText = (categories = this._allFieldCategories, hasExtraCategories = true) => {
             let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
             let sep = this._stringBundle.GetStringFromName("fieldNameSeparator");
             // Show the categories in certain order to conform with the spec.
             let orderedCategoryList = ["address", "name", "organization", "tel", "email"];
             let showCategories = hasExtraCategories ?
-              orderedCategoryList.filter(category => categories.includes(category) && category != focusedCategory) :
-              [focusedCategory];
+              orderedCategoryList.filter(category => categories.includes(category) && category != this._focusedCategory) :
+              [this._focusedCategory];
             let categoriesText = showCategories.map(this._stringBundle.GetStringFromName).join(sep);
 
             this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey,
@@ -210,7 +208,7 @@
            *        The categories of all the fields contained in the selected address.
            */
           this._updateWarningMsgHandler = ({data: {categories}} = {data: {}}) => {
-            let hasSelectedAddress = focusedCategory && categories;
+            let hasSelectedAddress = this._focusedCategory && categories;
             // If the length of categories is 1, that means all the fillable fields are in the same
             // category. We will change the way to inform user according to this flag.
             let hasExtraCategories = hasSelectedAddress && categories.length > 1;
@@ -223,7 +221,6 @@
           };
 
           this._adjustAcItem();
-          this._updateText();
         ]]>
       </constructor>
 
@@ -232,7 +229,11 @@
         <![CDATA[
           /* global messageManager */
 
-          messageManager.removeMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+          if (this.showWarningText) {
+            messageManager.removeMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+          }
+
+          this._itemBox.removeAttribute("no-warning");
         ]]>
         </body>
       </method>
@@ -255,7 +256,19 @@
           let buttonText = this._stringBundle.GetStringFromName(buttonTextBundleKey);
           this._optionButton.textContent = buttonText;
 
-          messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+          let value = JSON.parse(this.getAttribute("ac-value"));
+
+          this._allFieldCategories = value.categories;
+          this._focusedCategory = value.focusedCategory;
+          this.showWarningText = this._allFieldCategories && this._focusedCategory;
+
+          if (this.showWarningText) {
+            messageManager.addMessageListener("FormAutofill:UpdateWarningMessage", this._updateWarningMsgHandler);
+
+            this._updateText();
+          } else {
+            this._itemBox.setAttribute("no-warning", "true");
+          }
         ]]>
         </body>
       </method>

@@ -41,6 +41,8 @@ input {
     background-image: url("assets/glyph-delete-16.svg"); }
   .icon.icon-dismiss {
     background-image: url("assets/glyph-dismiss-16.svg"); }
+  .icon.icon-info {
+    background-image: url("assets/glyph-info-16.svg"); }
   .icon.icon-new-window {
     background-image: url("assets/glyph-newWindow-16.svg"); }
   .icon.icon-new-window-private {
@@ -59,6 +61,8 @@ input {
     background-image: url("assets/glyph-trending-16.svg"); }
   .icon.icon-now {
     background-image: url("assets/glyph-now-16.svg"); }
+  .icon.icon-topsites {
+    background-image: url("assets/glyph-topsites-16.svg"); }
   .icon.icon-pin-small {
     background-image: url("assets/glyph-pin-12.svg");
     background-size: 12px;
@@ -344,7 +348,8 @@ main {
   height: 266px;
   display: flex;
   border: solid 1px rgba(0, 0, 0, 0.1);
-  border-radius: 3px; }
+  border-radius: 3px;
+  margin-bottom: 16px; }
   .sections-list .section-empty-state .empty-state {
     margin: auto;
     max-width: 350px; }
@@ -397,7 +402,7 @@ main {
   cursor: default;
   display: flex;
   position: relative;
-  margin: 0 0 48px;
+  margin: 0 0 40px;
   width: 100%;
   height: 36px; }
   .search-wrapper input {
@@ -757,3 +762,34 @@ main {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; }
+
+.manual-migration-container {
+  background: rgba(215, 215, 219, 0.5);
+  font-size: 13px;
+  height: 50px;
+  border-radius: 2px;
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between; }
+  .manual-migration-container p {
+    margin: 0 4px 0 12px;
+    align-self: center;
+    display: flex;
+    justify-content: space-between; }
+  .manual-migration-container .icon {
+    margin: 0 12px 0 0;
+    align-self: center; }
+
+.manual-migration-actions {
+  display: flex;
+  justify-content: space-between;
+  border: none;
+  padding: 0; }
+  .manual-migration-actions button {
+    align-self: center;
+    padding: 0 12px;
+    height: 24px;
+    margin-inline-end: 0;
+    margin-right: 12px;
+    font-size: 13px;
+    width: 106px; }

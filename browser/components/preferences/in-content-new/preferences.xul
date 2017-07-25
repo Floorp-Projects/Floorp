@@ -123,17 +123,6 @@
 
     <!-- category list -->
     <richlistbox id="categories">
-      <richlistitem id="category-search-results"
-                    class="category"
-                    value="paneSearchResults"
-                    helpTopic="prefs-main"
-                    tooltiptext="&paneSearchResults.title;"
-                    align="center"
-                    hidden="true">
-        <image class="category-icon"/>
-        <label class="category-name" flex="1">&paneSearchResults.title;</label>
-      </richlistitem>
-
       <richlistitem id="category-general"
                     class="category"
                     value="paneGeneral"

@@ -19,7 +19,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
+XPCOMUtils.defineLazyModuleGetter(this, "AddressResult",
+                                  "resource://formautofill/ProfileAutoCompleteResult.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CreditCardResult",
                                   "resource://formautofill/ProfileAutoCompleteResult.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHandler",
                                   "resource://formautofill/FormAutofillHandler.jsm");
@@ -119,12 +121,20 @@ AutofillProfileAutoCompleteSearch.prototype = {
       let adaptedRecords = handler.getAdaptedProfiles(records);
 
       let allFieldNames = FormAutofillContent.getAllFieldNames(focusedInput);
-      let result = new ProfileAutoCompleteResult(searchString,
-                                                 info.fieldName,
-                                                 allFieldNames,
-                                                 adaptedRecords,
-                                                 {});
-
+      let result = null;
+      if (collectionName == "addresses") {
+        result = new AddressResult(searchString,
+                                   info.fieldName,
+                                   allFieldNames,
+                                   adaptedRecords,
+                                   {});
+      } else {
+        result = new CreditCardResult(searchString,
+                                      info.fieldName,
+                                      allFieldNames,
+                                      adaptedRecords,
+                                      {});
+      }
       listener.onSearchResult(this, result);
       ProfileAutocomplete.setProfileAutoCompleteResult(result);
     });

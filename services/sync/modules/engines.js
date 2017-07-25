@@ -765,10 +765,18 @@ this.SyncEngine = function SyncEngine(name, service) {
 
   // Async initializations can be made in the initialize() method.
 
-  // The set of records needing a weak reupload.
-  // The difference between this and a "normal" reupload is that these records
-  // are only tracked in memory, and if the reupload attempt fails (shutdown,
-  // 412, etc), we abort uploading the "weak" set.
+  // The map of ids => metadata for records needing a weak upload.
+  //
+  // Currently the "metadata" fields are:
+  //
+  // - forceTombstone: whether or not we should ignore the local information
+  //   about the record, and write a tombstone for it anyway -- e.g. in the case
+  //   of records that should exist locally, but should never be uploaded to the
+  //   server (note that not all sync engines support tombstones)
+  //
+  // The difference between this and a "normal" upload is that these records
+  // are only tracked in memory, and if the upload attempt fails (shutdown,
+  // 412, etc), we abort uploading the "weak" set (by clearing the map).
   //
   // The rationale here is for the cases where we receive a record from the
   // server that we know is wrong in some (small) way. For example, the
@@ -776,11 +784,14 @@ this.SyncEngine = function SyncEngine(name, service) {
   // record is entirely missing the date, etc.
   //
   // In these cases, we fix our local copy of the record, and mark it for
-  // weak reupload. A normal ("strong") reupload is problematic here because
+  // weak upload. A normal ("strong") upload is problematic here because
   // in the case of a conflict from the server, there's a window where our
   // record would be marked as modified more recently than a change that occurs
   // on another device change, and we lose data from the user.
-  this._needWeakReupload = new Set();
+  //
+  // Additionally, we use this as the set of items to upload for bookmark
+  // repair reponse, which has similar constraints.
+  this._needWeakUpload = new Map();
 }
 
 // Enumeration to define approaches to handling bad records.
@@ -966,6 +977,10 @@ SyncEngine.prototype = {
     return tombstone;
   },
 
+  addForWeakUpload(id, { forceTombstone = false } = {}) {
+    this._needWeakUpload.set(id, { forceTombstone });
+  },
+
   // Any setup that needs to happen at the beginning of each sync.
   async _syncStartup() {
 
@@ -1034,7 +1049,6 @@ SyncEngine.prototype = {
 
     // Keep track of what to delete at the end of sync
     this._delete = {};
-    this._needWeakReupload.clear();
   },
 
   /**
@@ -1584,13 +1598,16 @@ SyncEngine.prototype = {
 
     // collection we'll upload
     let up = new Collection(this.engineURL, null, this.service);
-    let modifiedIDs = this._modified.ids();
+    let modifiedIDs = new Set(this._modified.ids());
+    for (let id of this._needWeakUpload.keys()) {
+      modifiedIDs.add(id);
+    }
     let counts = { failed: 0, sent: 0 };
-    if (modifiedIDs.length) {
-      this._log.trace("Preparing " + modifiedIDs.length +
+    if (modifiedIDs.size) {
+      this._log.trace("Preparing " + modifiedIDs.size +
                       " outgoing records");
 
-      counts.sent = modifiedIDs.length;
+      counts.sent = modifiedIDs.size;
 
       let failed = [];
       let successful = [];
@@ -1642,7 +1659,12 @@ SyncEngine.prototype = {
         let out;
         let ok = false;
         try {
-          out = await this._createRecord(id);
+          let { forceTombstone = false } = this._needWeakUpload.get(id) || {};
+          if (forceTombstone) {
+            out = await this._createTombstone(id);
+          } else {
+            out = await this._createRecord(id);
+          }
           if (this._log.level <= Log.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
@@ -1659,16 +1681,19 @@ SyncEngine.prototype = {
           this._log.warn("Error creating record", ex);
           ++counts.failed;
           if (Async.isShutdownException(ex) || !this.allowSkippedRecord) {
-            Observers.notify("weave:engine:sync:uploaded", counts, this.name);
+            if (!this.allowSkippedRecord) {
+              // Don't bother for shutdown errors
+              Observers.notify("weave:engine:sync:uploaded", counts, this.name);
+            }
             throw ex;
           }
         }
-        this._needWeakReupload.delete(id);
         if (ok) {
           let { enqueued, error } = await postQueue.enqueue(out);
           if (!enqueued) {
             ++counts.failed;
             if (!this.allowSkippedRecord) {
+              Observers.notify("weave:engine:sync:uploaded", counts, this.name);
               throw error;
             }
             this._modified.delete(id);
@@ -1679,67 +1704,11 @@ SyncEngine.prototype = {
       }
       await postQueue.flush(true);
     }
+    this._needWeakUpload.clear();
 
-    if (this._needWeakReupload.size) {
-      try {
-        const { sent, failed } = await this._weakReupload(up);
-        counts.sent += sent;
-        counts.failed += failed;
-      } catch (e) {
-        if (Async.isShutdownException(e)) {
-          throw e;
-        }
-        this._log.warn("Weak reupload failed", e);
-      }
-    }
     if (counts.sent || counts.failed) {
       Observers.notify("weave:engine:sync:uploaded", counts, this.name);
     }
-  },
-
-  async _weakReupload(collection) {
-    const counts = { sent: 0, failed: 0 };
-    let pendingSent = 0;
-    let postQueue = collection.newPostQueue(this._log, this.lastSync, (resp, batchOngoing = false) => {
-      if (!resp.success) {
-        this._needWeakReupload.clear();
-        this._log.warn("Uploading records (weak) failed: " + resp);
-        resp.failureCode = resp.status == 412 ? ENGINE_BATCH_INTERRUPTED : ENGINE_UPLOAD_FAIL;
-        throw resp;
-      }
-      if (!batchOngoing) {
-        counts.sent += pendingSent;
-        pendingSent = 0;
-      }
-    });
-
-    let pendingWeakReupload = await this.buildWeakReuploadMap(this._needWeakReupload);
-    for (let [id, encodedRecord] of pendingWeakReupload) {
-      try {
-        this._log.trace("Outgoing (weak)", encodedRecord);
-        encodedRecord.encrypt(this.service.collectionKeys.keyForCollection(this.name));
-      } catch (ex) {
-        if (Async.isShutdownException(ex)) {
-          throw ex;
-        }
-        this._log.warn(`Failed to encrypt record "${id}" during weak reupload`, ex);
-        ++counts.failed;
-        continue;
-      }
-      // Note that general errors (network error, 412, etc.) will throw here.
-      // `enqueued` is only false if the specific item failed to enqueue, but
-      // other items should be/are fine. For example, enqueued will be false if
-      // it is larger than the max post or WBO size.
-      let { enqueued } = await postQueue.enqueue(encodedRecord);
-      if (!enqueued) {
-        ++counts.failed;
-      } else {
-        ++pendingSent;
-      }
-      await Async.promiseYield();
-    }
-    await postQueue.flush(true);
-    return counts;
   },
 
   async _onRecordsWritten(succeeded, failed) {
@@ -1777,7 +1746,7 @@ SyncEngine.prototype = {
   },
 
   async _syncCleanup() {
-    this._needWeakReupload.clear();
+    this._needWeakUpload.clear();
     if (!this._modified) {
       return;
     }
@@ -1837,6 +1806,7 @@ SyncEngine.prototype = {
     this.resetLastSync();
     this.previousFailed = [];
     this.toFetch = [];
+    this._needWeakUpload.clear();
   },
 
   async wipeServer() {
@@ -1915,30 +1885,6 @@ SyncEngine.prototype = {
       this._tracker.addChangedID(id, change);
     }
   },
-
-  /**
-   * Returns a map of (id, unencrypted record) that will be used to perform
-   * the weak reupload. Subclasses may override this to filter out items we
-   * shouldn't upload as part of a weak reupload (items that have changed,
-   * for example).
-   */
-  async buildWeakReuploadMap(idSet) {
-    let result = new Map();
-    let maybeYield = Async.jankYielder();
-    for (let id of idSet) {
-      await maybeYield();
-      try {
-        let record = await this._createRecord(id);
-        result.set(id, record);
-      } catch (ex) {
-        if (Async.isShutdownException(ex)) {
-          throw ex;
-        }
-        this._log.warn("createRecord failed during weak reupload", ex);
-      }
-    }
-    return result;
-  }
 };
 
 /**

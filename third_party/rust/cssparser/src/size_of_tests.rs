@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use compact_cow_str::CompactCowStr;
+use cow_rc_str::CowRcStr;
 use std::borrow::Cow;
 use tokenizer::Token;
 
@@ -34,4 +34,4 @@ macro_rules! size_of_test {
 // These assume 64-bit
 size_of_test!(token, Token, 32);
 size_of_test!(std_cow_str, Cow<'static, str>, 32);
-size_of_test!(compact_cow_str, CompactCowStr, 16);
+size_of_test!(cow_rc_str, CowRcStr, 16);
