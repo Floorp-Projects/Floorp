@@ -185,6 +185,7 @@ load link-transition-before.html
 load 1381682.html
 load 1382672.html
 load 1382710.html
+pref(dom.animations-api.core.enabled,true) load 1383589-1.html
 load 1383001.html
 load 1383001-2.html
 load 1383319.html
