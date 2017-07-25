@@ -15,13 +15,6 @@ const mockRemoteClients = [
   { id: "2", name: "baz", type: "mobile" },
 ];
 
-// run these tests with animations enabled
-add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    "set": [["toolkit.cosmeticAnimations.enabled", true]]
-  });
-});
-
 add_task(async function bookmark() {
   // Open a unique page.
   let url = "http://example.com/browser_page_action_menu";

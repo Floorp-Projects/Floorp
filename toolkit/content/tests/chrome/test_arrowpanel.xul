@@ -194,10 +194,6 @@ function* nextTest()
       }
     }
 
-    // Run this check with animations enabled
-    let origPrefValue = SpecialPowers.getBoolPref("toolkit.cosmeticAnimations.enabled");
-    SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", true);
-
     // Check that the transition occurs for an arrow panel with animate="true"
     window.addEventListener("transitionend", transitionEnded, false);
     $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
@@ -208,9 +204,6 @@ function* nextTest()
     synthesizeKey("VK_ESCAPE", { });
     ok(!animatedPopupHidden, "animated popup not hidden yet");
     yield;
-
-    // restore the pref value
-    SpecialPowers.setBoolPref("toolkit.cosmeticAnimations.enabled", origPrefValue);
   }
 
   SimpleTest.finish()
