@@ -625,9 +625,9 @@ add_task(async function() {
 
   root.testing.format({hostname: "foo"});
   verify("call", "testing", "format", [{hostname: "foo",
-                                        url: null,
                                         relativeUrl: null,
-                                        strictRelativeUrl: null}]);
+                                        strictRelativeUrl: null,
+                                        url: null}]);
   tallied = null;
 
   for (let invalid of ["", " ", "http://foo", "foo/bar", "foo.com/", "foo?"]) {
@@ -639,16 +639,16 @@ add_task(async function() {
   root.testing.format({url: "http://foo/bar",
                        relativeUrl: "http://foo/bar"});
   verify("call", "testing", "format", [{hostname: null,
-                                        url: "http://foo/bar",
                                         relativeUrl: "http://foo/bar",
-                                        strictRelativeUrl: null}]);
+                                        strictRelativeUrl: null,
+                                        url: "http://foo/bar"}]);
   tallied = null;
 
   root.testing.format({relativeUrl: "foo.html", strictRelativeUrl: "foo.html"});
   verify("call", "testing", "format", [{hostname: null,
-                                        url: null,
                                         relativeUrl: `${wrapper.url}foo.html`,
-                                        strictRelativeUrl: `${wrapper.url}foo.html`}]);
+                                        strictRelativeUrl: `${wrapper.url}foo.html`,
+                                        url: null}]);
   tallied = null;
 
   for (let format of ["url", "relativeUrl"]) {
@@ -701,30 +701,30 @@ add_task(async function() {
   });
 
   root.testing.deep({foo: {bar: [{baz: {required: 12, optional: "42"}}]}});
-  verify("call", "testing", "deep", [{foo: {bar: [{baz: {required: 12, optional: "42"}}]}}]);
+  verify("call", "testing", "deep", [{foo: {bar: [{baz: {optional: "42", required: 12}}]}}]);
   tallied = null;
 
   Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {optional: "42"}}]}}),
                 /Type error for parameter arg \(Error processing foo\.bar\.0\.baz: Property "required" is required\) for testing\.deep/,
                 "should throw with the correct object path");
 
-  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {required: 12, optional: 42}}]}}),
+  Assert.throws(() => root.testing.deep({foo: {bar: [{baz: {optional: 42, required: 12}}]}}),
                 /Type error for parameter arg \(Error processing foo\.bar\.0\.baz\.optional: Expected string instead of 42\) for testing\.deep/,
                 "should throw with the correct object path");
 
 
   talliedErrors.length = 0;
 
-  root.testing.errors({warn: "0123", ignore: "0123", default: "0123"});
-  verify("call", "testing", "errors", [{warn: "0123", ignore: "0123", default: "0123"}]);
+  root.testing.errors({default: "0123", ignore: "0123", warn: "0123"});
+  verify("call", "testing", "errors", [{default: "0123", ignore: "0123", warn: "0123"}]);
   checkErrors([]);
 
-  root.testing.errors({warn: "0123", ignore: "x123", default: "0123"});
-  verify("call", "testing", "errors", [{warn: "0123", ignore: null, default: "0123"}]);
+  root.testing.errors({default: "0123", ignore: "x123", warn: "0123"});
+  verify("call", "testing", "errors", [{default: "0123", ignore: null,  warn: "0123"}]);
   checkErrors([]);
 
-  root.testing.errors({warn: "x123", ignore: "0123", default: "0123"});
-  verify("call", "testing", "errors", [{warn: null, ignore: "0123", default: "0123"}]);
+  root.testing.errors({default: "0123", ignore: "0123", warn: "x123"});
+  verify("call", "testing", "errors", [{default: "0123", ignore: "0123", warn: null}]);
   checkErrors([
     'String "x123" must match /^\\d+$/',
   ]);
@@ -783,7 +783,7 @@ add_task(async function() {
 
 
   root.testing.localize({foo: "__MSG_foo__", bar: "__MSG_foo__", url: "__MSG_http://example.com/__"});
-  verify("call", "testing", "localize", [{foo: "FOO", bar: "__MSG_foo__", url: "http://example.com/"}]);
+  verify("call", "testing", "localize", [{bar: "__MSG_foo__", foo: "FOO", url: "http://example.com/"}]);
   tallied = null;
 
 
