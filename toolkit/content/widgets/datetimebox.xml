@@ -1202,7 +1202,7 @@
       <![CDATA[
         this.DEBUG = false;
         this.mInputElement = this.parentNode;
-        this.mLocales = window.getAppLocalesAsBCP47();
+        this.mLocales = window.getRegionalPrefsLocales();
 
         this.mIsRTL = false;
         let intlUtils = window.intlUtils;

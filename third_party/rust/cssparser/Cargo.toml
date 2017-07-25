@@ -12,43 +12,43 @@
 
 [package]
 name = "cssparser"
-version = "0.17.0"
+version = "0.18.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>"]
 build = "build.rs"
-exclude = ["src/css-parsing-tests"]
+exclude = ["src/css-parsing-tests/**", "src/big-data-url.css"]
 description = "Rust implementation of CSS Syntax Level 3"
 documentation = "https://docs.rs/cssparser/"
 readme = "README.md"
 keywords = ["css", "syntax", "parser"]
 license = "MPL-2.0"
 repository = "https://github.com/servo/rust-cssparser"
-[dependencies.phf]
-version = "0.7"
-
-[dependencies.matches]
-version = "0.1"
-
 [dependencies.heapsize]
 version = ">= 0.3, < 0.5"
 optional = true
 
-[dependencies.cssparser-macros]
-version = "0.3"
+[dependencies.serde]
+version = "1.0"
+optional = true
 
 [dependencies.procedural-masquerade]
 version = "0.1"
 
-[dependencies.serde]
-version = "1.0"
-optional = true
+[dependencies.cssparser-macros]
+version = "0.3"
+
+[dependencies.matches]
+version = "0.1"
+
+[dependencies.phf]
+version = "0.7"
 [dev-dependencies.encoding_rs]
 version = "0.5"
 
-[dev-dependencies.rustc-serialize]
-version = "0.3"
-
 [dev-dependencies.difference]
 version = "1.0"
+
+[dev-dependencies.rustc-serialize]
+version = "0.3"
 [build-dependencies.syn]
 version = "0.11"
 
@@ -56,5 +56,5 @@ version = "0.11"
 version = "0.3"
 
 [features]
-dummy_match_byte = []
 bench = []
+dummy_match_byte = []

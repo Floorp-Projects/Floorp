@@ -391,6 +391,57 @@ class AbsoluteSymlinkFile(File):
         return True
 
 
+class HardlinkFile(File):
+    '''File class that is copied by hard linking (if available)
+
+    This is similar to the AbsoluteSymlinkFile, but with hard links. The symlink
+    implementation requires paths to be absolute, because they are resolved at
+    read time, which makes relative paths messy. Hard links resolve paths at
+    link-creation time, so relative paths are fine.
+    '''
+
+    def copy(self, dest, skip_if_older=True):
+        assert isinstance(dest, basestring)
+
+        if not hasattr(os, 'link'):
+            return super(HardlinkFile, self).copy(
+                dest, skip_if_older=skip_if_older
+            )
+
+        try:
+            path_st = os.stat(self.path)
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                raise ErrorMessage('Hard link target path does not exist: %s' % self.path)
+            else:
+                raise
+
+        st = None
+        try:
+            st = os.lstat(dest)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+        if st:
+            # The dest already points to the right place.
+            if st.st_dev == path_st.st_dev and st.st_ino == path_st.st_ino:
+                return False
+            # The dest exists and it points to the wrong place
+            os.remove(dest)
+
+        # At this point, either the dest used to exist and we just deleted it,
+        # or it never existed. We can now safely create the hard link.
+        try:
+            os.link(self.path, dest)
+        except OSError:
+            # If we can't hard link, fall back to copying
+            return super(HardlinkFile, self).copy(
+                dest, skip_if_older=skip_if_older
+            )
+        return True
+
+
 class ExistingFile(BaseFile):
     '''
     File class that represents a file that may exist but whose content comes

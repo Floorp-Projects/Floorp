@@ -186,7 +186,7 @@ class BookmarkRepairRequestor extends CollectionRepairRequestor {
     }
     let engine = this.service.engineManager.get("bookmarks");
     for (let id of validationInfo.problems.serverMissing) {
-      engine._modified.setWeak(id, { tombstone: false });
+      engine.addForWeakUpload(id);
     }
     let toFetch = engine.toFetch.concat(validationInfo.problems.clientMissing,
                                         validationInfo.problems.serverDeleted);
@@ -574,6 +574,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
     this._currentState = {
       request,
       rawCommand,
+      processedCommand: false,
       ids: [],
     }
 
@@ -587,11 +588,11 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
         // persist in the case of a restart, but that's OK - we'll then end up here
         // again) and also record them in the response we send back.
         for (let id of toUpload) {
-          engine._modified.setWeak(id, { tombstone: false });
+          engine.addForWeakUpload(id);
           this._currentState.ids.push(id);
         }
         for (let id of toDelete) {
-          engine._modified.setWeak(id, { tombstone: true });
+          engine.addForWeakUpload(id, { forceTombstone: true });
           this._currentState.ids.push(id);
         }
 
@@ -690,7 +691,10 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
       return;
     }
     Svc.Obs.remove("weave:engine:sync:uploaded", this.onUploaded, this);
-    log.debug(`bookmarks engine has uploaded stuff - creating a repair response`);
+    if (subject.failed) {
+      return;
+    }
+    log.debug(`bookmarks engine has uploaded stuff - creating a repair response`, subject);
     Async.promiseSpinningly(this._finishRepair());
   }
 
@@ -703,7 +707,7 @@ class BookmarkRepairResponder extends CollectionRepairResponder {
       clientID: clientsEngine.localID,
       flowID,
       ids: this._currentState.ids,
-    }
+    };
     let clientID = this._currentState.request.requestor;
     await clientsEngine.sendCommand("repairResponse", [response], clientID, { flowID });
     // and nuke the request from our client.

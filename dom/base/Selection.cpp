@@ -3503,11 +3503,10 @@ Selection::PostScrollSelectionIntoViewEvent(
   nsRefreshDriver* refreshDriver = presContext->RefreshDriver();
   NS_ENSURE_STATE(refreshDriver);
 
-  RefPtr<ScrollSelectionIntoViewEvent> ev =
+  mScrollEvent =
     new ScrollSelectionIntoViewEvent(this, aRegion, aVertical, aHorizontal,
                                      aFlags);
-  mScrollEvent = ev;
-  refreshDriver->AddEarlyRunner(ev);
+  refreshDriver->AddEarlyRunner(mScrollEvent.get());
   return NS_OK;
 }
 

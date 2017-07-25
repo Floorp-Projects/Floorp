@@ -835,16 +835,16 @@ Function createInstall
 
   ; In some locales, the footer message may be too long to fit on one line.
   ; Figure out how much height it needs and give it that much.
-  ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER)" $FontFooter \
+  ${GetTextWidthHeight} "$(STUB_BLURB_FOOTER2)" $FontFooter \
     ${INSTALL_FOOTER_WIDTH_DU} $R1 $R2
   !ifdef ${AB_CD}_rtl
     nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY} \
       ${WS_EX_TRANSPARENT} 30u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} "$R2u" \
-      "$(STUB_BLURB_FOOTER)"
+      "$(STUB_BLURB_FOOTER2)"
   !else
     nsDialogs::CreateControl STATIC ${DEFAULT_STYLES}|${SS_NOTIFY}|${SS_RIGHT} \
       ${WS_EX_TRANSPARENT} 175u ${INSTALL_FOOTER_TOP_DU} ${INSTALL_FOOTER_WIDTH_DU} "$R2u" \
-      "$(STUB_BLURB_FOOTER)"
+      "$(STUB_BLURB_FOOTER2)"
   !endif
   Pop $0
   SendMessage $0 ${WM_SETFONT} $FontFooter 0

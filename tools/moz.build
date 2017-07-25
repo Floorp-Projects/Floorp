@@ -43,6 +43,9 @@ with Files("rb/**"):
 with Files("rewriting/**"):
     BUG_COMPONENT = ("Core", "Rewriting and Analysis")
 
+with Files("tryselect/**"):
+    BUG_COMPONENT = ("Testing", "General")
+
 with Files("update-packaging/**"):
     BUG_COMPONENT = ("Release Engineering", "Other")
 

@@ -380,8 +380,8 @@ function ProcessInitData(v, test, token, initData, sessionType) {
 function CleanUpMedia(v) {
   v.setMediaKeys(null);
   v.remove();
-  v.onerror = null;
-  v.src = null;
+  v.removeAttribute("src");
+  v.load();
 }
 
 /*

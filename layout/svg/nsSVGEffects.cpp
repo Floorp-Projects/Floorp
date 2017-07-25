@@ -397,8 +397,20 @@ nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
 
   for (uint32_t i = 0; i < svgReset->mMask.mImageCount; i++) {
     nsCOMPtr<nsIURI> maskUri = nsSVGEffects::GetMaskURI(aFrame, i);
-    nsSVGPaintingProperty* prop = new nsSVGPaintingProperty(maskUri, aFrame,
-                                                            false);
+    bool hasRef = false;
+    if (maskUri) {
+      maskUri->GetHasRef(&hasRef);
+    }
+
+    // Accrording to maskUri, nsSVGPaintingProperty's ctor may trigger an
+    // external SVG resource download, so we should pass maskUri in only if
+    // maskUri has a chance pointing to an SVG mask resource.
+    //
+    // And, an URL may refer to an SVG mask resource if it consists of
+    // a fragment.
+    nsSVGPaintingProperty* prop =
+      new nsSVGPaintingProperty(hasRef ? maskUri.get() : nullptr,
+                                aFrame, false);
     mProperties.AppendElement(prop);
   }
 }

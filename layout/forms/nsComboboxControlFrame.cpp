@@ -1019,9 +1019,8 @@ nsComboboxControlFrame::RedisplayText()
                  "If we happen to run our redisplay event now, we might kill "
                  "ourselves!");
 
-    RefPtr<RedisplayTextEvent> event = new RedisplayTextEvent(this);
-    mRedisplayTextEvent = event;
-    nsContentUtils::AddScriptRunner(event);
+    mRedisplayTextEvent = new RedisplayTextEvent(this);
+    nsContentUtils::AddScriptRunner(mRedisplayTextEvent.get());
   }
   return rv;
 }

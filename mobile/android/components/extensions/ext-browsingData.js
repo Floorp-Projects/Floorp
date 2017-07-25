@@ -9,6 +9,41 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
                                   "resource://gre/modules/SharedPreferences.jsm");
 
+let clearCookies = async function(options) {
+  if (options.originTypes &&
+      (options.originTypes.protectedWeb || options.originTypes.extension)) {
+    return Promise.reject(
+      {message: "Firefox does not support protectedWeb or extension as originTypes."});
+  }
+
+  let cookieMgr = Services.cookies;
+  let yieldCounter = 0;
+  const YIELD_PERIOD = 10;
+
+  if (options.since) {
+    // Convert it to microseconds
+    let since =  options.since*1000;
+    // Iterate through the cookies and delete any created after our cutoff.
+    let cookiesEnum = cookieMgr.enumerator;
+    while (cookiesEnum.hasMoreElements()) {
+      let cookie = cookiesEnum.getNext().QueryInterface(Ci.nsICookie2);
+
+      if (cookie.creationTime >= since) {
+        // This cookie was created after our cutoff, clear it.
+        cookieMgr.remove(cookie.host, cookie.name, cookie.path,
+                         false, cookie.originAttributes);
+
+        if (++yieldCounter % YIELD_PERIOD == 0) {
+          await new Promise(resolve => setTimeout(resolve, 0)); // Don't block the main thread too long.
+        }
+      }
+    }
+  } else {
+    // Remove everything.
+    cookieMgr.removeAll();
+  }
+};
+
 this.browsingData = class extends ExtensionAPI {
   getAPI(context) {
     return {
@@ -50,6 +85,9 @@ this.browsingData = class extends ExtensionAPI {
           // We do not provide option to delete history by time
           // so, since value is given 0, which means Everything
           return Promise.resolve({options: {since: 0}, dataToRemove, dataRemovalPermitted});
+        },
+        removeCookies(options) {
+          return clearCookies(options);
         },
       },
     };

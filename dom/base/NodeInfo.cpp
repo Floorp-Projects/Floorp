@@ -36,6 +36,13 @@ using mozilla::dom::NodeInfo;
 NodeInfo::~NodeInfo()
 {
   mOwnerManager->RemoveNodeInfo(this);
+
+  // We can't use NS_IF_RELEASE because mName is const.
+  if (mInner.mName) {
+    mInner.mName->Release();
+  }
+  NS_IF_RELEASE(mInner.mPrefix);
+  NS_IF_RELEASE(mInner.mExtraName);
 }
 
 NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
@@ -46,6 +53,10 @@ NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
     mOwnerManager(aOwnerManager)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
+
+  NS_IF_ADDREF(mInner.mName);
+  NS_IF_ADDREF(mInner.mPrefix);
+  NS_IF_ADDREF(mInner.mExtraName);
 
   // Now compute our cached members.
 

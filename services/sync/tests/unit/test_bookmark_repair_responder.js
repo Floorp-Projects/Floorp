@@ -525,6 +525,91 @@ add_task(async function test_aborts_unknown_request() {
   await cleanup(server);
 });
 
+add_task(async function test_upload_fail() {
+  let server = await makeServer();
+
+  // Pretend we've already synced this bookmark, so that we can ensure it's
+  // uploaded in response to our repair request.
+  let bm = await PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                title: "Get Firefox",
+                                                url: "http://getfirefox.com/",
+                                                source: PlacesUtils.bookmarks.SOURCES.SYNC });
+
+  await Service.sync();
+  let request = {
+    request: "upload",
+    ids: [bm.guid],
+    flowID: Utils.makeGUID(),
+  }
+  let responder = new BookmarkRepairResponder();
+  await responder.repair(request, null);
+
+  checkRecordedEvents([
+    { object: "repairResponse",
+      method: "uploading",
+      value: undefined,
+      extra: {flowID: request.flowID, numIDs: "1"},
+    },
+  ]);
+
+  // This sync would normally upload the item - arrange for it to fail.
+  let engine = Service.engineManager.get("bookmarks");
+  let oldCreateRecord = engine._createRecord;
+  engine._createRecord = async function(id) {
+    return "anything"; // doesn't have an "encrypt"
+  }
+
+  let numFailures = 0;
+  let numSuccesses = 0;
+  function onUploaded(subject, data) {
+    if (data != "bookmarks") {
+      return;
+    }
+    if (subject.failed) {
+      numFailures += 1;
+    } else {
+      numSuccesses += 1;
+    }
+  }
+  Svc.Obs.add("weave:engine:sync:uploaded", onUploaded, this);
+
+  await Service.sync();
+
+  equal(numFailures, 1);
+  equal(numSuccesses, 0);
+
+  // should be no recorded events
+  checkRecordedEvents([]);
+
+  // restore the error injection so next sync succeeds - the repair should
+  // restart
+  engine._createRecord = oldCreateRecord;
+  await responder.repair(request, null);
+
+  checkRecordedEvents([
+    { object: "repairResponse",
+      method: "uploading",
+      value: undefined,
+      extra: {flowID: request.flowID, numIDs: "1"},
+    },
+  ]);
+
+  await Service.sync();
+  checkRecordedEvents([
+    { object: "repairResponse",
+      method: "finished",
+      value: undefined,
+      extra: {flowID: request.flowID, numIDs: "1"},
+    },
+  ])
+
+  equal(numFailures, 1);
+  equal(numSuccesses, 1);
+
+  Svc.Obs.remove("weave:engine:sync:uploaded", onUploaded, this);
+  await cleanup(server);
+});
+
 add_task(async function teardown() {
   Svc.Prefs.reset("engine.bookmarks.validation.enabled");
 });

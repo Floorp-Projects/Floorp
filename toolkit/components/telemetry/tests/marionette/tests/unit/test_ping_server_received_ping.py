@@ -12,10 +12,10 @@ class TestPingServer(TelemetryTestCase):
 
     def test_ping_server_received_ping(self):
 
-        data = {'sender': 'John', 'receiver': 'Joe', 'message': 'We did it!'}
+        data = {'type': 'server-test-ping', 'reason': 'unit-test'}
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         json_req = requests.post(self.ping_server_url, data=json.dumps(data), headers=headers)
-        ping = self.wait_for_ping()
+        ping = self.wait_for_ping(lambda p: p['type'] == 'server-test-ping')
         assert ping is not None
         assert json_req.status_code == 200
-        assert data['sender'] == ping['sender']
+        assert data['type'] == ping['type'] and data['reason'] == ping['reason']

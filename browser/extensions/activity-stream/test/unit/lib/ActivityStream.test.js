@@ -13,14 +13,15 @@ describe("ActivityStream", () => {
     sandbox = sinon.sandbox.create();
     ({ActivityStream, SECTIONS} = injector({
       "lib/LocalizationFeed.jsm": {LocalizationFeed: Fake},
+      "lib/ManualMigration.jsm": {ManualMigration: Fake},
       "lib/NewTabInit.jsm": {NewTabInit: Fake},
       "lib/PlacesFeed.jsm": {PlacesFeed: Fake},
-      "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
-      "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
       "lib/PrefsFeed.jsm": {PrefsFeed: Fake},
       "lib/SnippetsFeed.jsm": {SnippetsFeed: Fake},
-      "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake},
-      "lib/SystemTickFeed.jsm": {SystemTickFeed: Fake}
+      "lib/SystemTickFeed.jsm": {SystemTickFeed: Fake},
+      "lib/TelemetryFeed.jsm": {TelemetryFeed: Fake},
+      "lib/TopSitesFeed.jsm": {TopSitesFeed: Fake},
+      "lib/TopStoriesFeed.jsm": {TopStoriesFeed: Fake}
     }));
     as = new ActivityStream();
     sandbox.stub(as.store, "init");
@@ -117,6 +118,10 @@ describe("ActivityStream", () => {
         const feed = as.feeds.get(`feeds.section.${key}`)();
         assert.instanceOf(feed, Fake);
       });
+    });
+    it("should create a ManualMigration feed", () => {
+      const feed = as.feeds.get("feeds.migration")();
+      assert.instanceOf(feed, Fake);
     });
     it("should create a Snippets feed", () => {
       const feed = as.feeds.get("feeds.snippets")();

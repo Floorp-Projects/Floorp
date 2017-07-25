@@ -181,6 +181,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="textRunsMaxLen">255</field>
 
       <!--
+        Since we never want scrollbars, we always use the maxResults value.
+      -->
+      <property name="maxRows"
+                onget="return this.popup.maxResults;"/>
+
+      <!--
         onBeforeValueGet is called by the base-binding's .value getter.
         It can return an object with a "value" property, to override the
         return value of the getter.
@@ -1091,6 +1097,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "oneOffSearches":
                 this._enableOrDisableOneOffSearches();
                 break;
+              case "maxRichResults":
+                this.popup.maxResults = this._prefs.getIntPref(aData);
             }
           }
         ]]></body>
@@ -1788,10 +1796,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <getter>
           <![CDATA[
             if (!this._maxResults) {
-              var prefService =
-                Components.classes["@mozilla.org/preferences-service;1"]
-                          .getService(Components.interfaces.nsIPrefBranch);
-              this._maxResults = prefService.getIntPref("browser.urlbar.maxRichResults");
+              this._maxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
             }
             return this._maxResults;
           ]]>

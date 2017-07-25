@@ -25,9 +25,9 @@ DateTimeFormat::Initialize()
   }
 
   mLocale = new nsCString();
-  nsAutoCString locale;
-  intl::LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
-  mLocale->Assign(locale);
+  AutoTArray<nsCString, 10> regionalPrefsLocales;
+  intl::LocaleService::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales);
+  mLocale->Assign(regionalPrefsLocales[0]);
 
   return NS_OK;
 }

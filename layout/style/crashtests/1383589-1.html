@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+window.addEventListener('load', () => {
+  document.documentElement.animate([{ transform: 'none' }], 10000);
+  requestAnimationFrame(() => {
+    SpecialPowers.getDOMWindowUtils(window)
+                 .sendMouseEvent("mousemove", 100, 100, 1, 0, 1, 0);
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('reftest-wait');
+    });
+  });
+});
+</script>
