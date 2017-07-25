@@ -1655,7 +1655,9 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
         nsCString checkLoadURIPrefName = NS_LITERAL_CSTRING("capability.policy.") +
                                          policyName +
                                          NS_LITERAL_CSTRING(".checkloaduri.enabled");
-        if (!Preferences::GetString(checkLoadURIPrefName.get()).LowerCaseEqualsLiteral("allaccess")) {
+        nsAutoString value;
+        nsresult rv = Preferences::GetString(checkLoadURIPrefName.get(), value);
+        if (NS_FAILED(rv) || !value.LowerCaseEqualsLiteral("allaccess")) {
             continue;
         }
 
