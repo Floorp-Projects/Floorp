@@ -101,15 +101,8 @@ browser.jar:
   skin/classic/browser/preferences/applications.css            (preferences/applications.css)
   skin/classic/browser/social/services-16.png                  (social/services-16.png)
   skin/classic/browser/social/services-64.png                  (social/services-64.png)
-  skin/classic/browser/tabbrowser/newtab.svg                   (tabbrowser/newtab.svg)
-  skin/classic/browser/tabbrowser/newtab-win7.svg          (tabbrowser/newtab-win7.svg)
-  skin/classic/browser/tabbrowser/newtab-inverted.svg          (tabbrowser/newtab-inverted.svg)
-  skin/classic/browser/tabbrowser/newtab-inverted-win7.svg (tabbrowser/newtab-inverted-win7.svg)
   skin/classic/browser/tabbrowser/tab-active-middle.png        (tabbrowser/tab-active-middle.png)
   skin/classic/browser/tabbrowser/tab-active-middle@2x.png     (tabbrowser/tab-active-middle@2x.png)
-  skin/classic/browser/tabbrowser/tab-arrow-left.svg           (tabbrowser/tab-arrow-left.svg)
-  skin/classic/browser/tabbrowser/tab-arrow-left-win7.svg  (tabbrowser/tab-arrow-left-win7.svg)
-  skin/classic/browser/tabbrowser/tab-arrow-left-inverted.svg  (tabbrowser/tab-arrow-left-inverted.svg)
   skin/classic/browser/tabbrowser/tab-background-start.png     (tabbrowser/tab-background-start.png)
   skin/classic/browser/tabbrowser/tab-background-start@2x.png  (tabbrowser/tab-background-start@2x.png)
   skin/classic/browser/tabbrowser/tab-background-middle.png    (tabbrowser/tab-background-middle.png)
@@ -169,9 +162,6 @@ browser.jar:
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-win7.png      os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-win7@2x.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/downloads/download-glow-menuPanel.png  chrome://browser/skin/downloads/download-glow-menuPanel-win7.png os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab.svg                chrome://browser/skin/tabbrowser/newtab-win7.svg              os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/newtab-inverted.svg       chrome://browser/skin/tabbrowser/newtab-inverted-win7.svg     os=WINNT osversion<=6.1
-% override chrome://browser/skin/tabbrowser/tab-arrow-left.svg        chrome://browser/skin/tabbrowser/tab-arrow-left-win7.svg      os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3
 % override chrome://browser/skin/tabbrowser/tab-background-start@2x.png  chrome://browser/skin/tabbrowser/tab-background-start-preWin10@2x.png  os=WINNT osversion<=6.3
