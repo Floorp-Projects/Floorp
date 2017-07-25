@@ -144,7 +144,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
         JS::PersistentRootedObject obj;
         JS::PersistentRootedScript thisObjectKey;
-        char*               location;
+        char* location;
+        nsCString resolvedURL;
     };
 
     friend class ModuleEntry;
@@ -160,6 +161,11 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
+
+    // A map of on-disk file locations which are loaded as modules to the
+    // pre-resolved URIs they were loaded from. Used to prevent the same file
+    // from being loaded separately, from multiple URLs.
+    nsClassHashtable<nsCStringHashKey, nsCString> mLocations;
 
     bool mInitialized;
 };
