@@ -26,11 +26,10 @@
                         android:layout_below="@+id/tablet_tab_strip"
                         android:layout_above="@+id/find_in_page">
 
-            <fragment class="org.mozilla.gecko.GeckoViewFragment"
-                      android:id="@+id/layer_view"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:scrollbars="none"/>
+            <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
+                                         android:layout_width="match_parent"
+                                         android:layout_height="match_parent"
+                                         android:scrollbars="none"/>
 
             <AbsoluteLayout android:id="@+id/plugin_container"
                             android:background="@android:color/transparent"
