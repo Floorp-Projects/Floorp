@@ -7547,10 +7547,12 @@ HTMLMediaElement::MarkAsTainted()
   }
 }
 
-bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj)
+bool
+HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj)
 {
   return nsContentUtils::CallerHasPermission(aCx,
-                                             NS_LITERAL_STRING("debugger"));
+                                             NS_LITERAL_STRING("debugger")) ||
+         nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("tabs"));
  }
 
 void
