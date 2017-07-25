@@ -47,6 +47,14 @@ interface nsPIPlacesDatabase : nsISupports
   /**
    * Hook for clients who need to perform actions during/by the end of
    * the shutdown of the database.
+   * May be null if it's too late to get one.
    */
   readonly attribute nsIAsyncShutdownClient shutdownClient;
+
+  /**
+   * Hook for internal clients who need to perform actions just before the
+   * connection gets closed.
+   * May be null if it's too late to get one.
+   */
+  readonly attribute nsIAsyncShutdownClient connectionShutdownClient;
 };

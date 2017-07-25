@@ -2142,7 +2142,8 @@ function setupDbForShutdown(conn, name) {
       // Before it can safely close its connection, we need to make sure
       // that we have closed the high-level connection.
       try {
-        AsyncShutdown.placesClosingInternalConnection.addBlocker(`${name} closing as part of Places shutdown`,
+        PlacesUtils.history.connectionShutdownClient.jsclient.addBlocker(
+          `${name} closing as part of Places shutdown`,
           async function() {
             state = "1. Service has initiated shutdown";
 

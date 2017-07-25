@@ -1176,8 +1176,7 @@ KeyframeEffectReadOnly::GetProperties(
       // a) this is the last segment, or
       // b) the next segment's from-value differs.
       if (segmentIdx == segmentLen - 1 ||
-          property.mSegments[segmentIdx + 1].mFromValue.mGecko !=
-            segment.mToValue.mGecko) {
+          property.mSegments[segmentIdx + 1].mFromValue != segment.mToValue) {
         binding_detail::FastAnimationPropertyValueDetails toValue;
         CreatePropertyValue(property.mProperty, segment.mToKey,
                             Nothing(), segment.mToValue,

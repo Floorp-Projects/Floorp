@@ -22,6 +22,19 @@ PlacesShutdownBlocker::PlacesShutdownBlocker(const nsString& aName)
   if (mCounter > 1) {
     mName.AppendInt(mCounter);
   }
+  // Create a barrier that will be exposed to clients through GetClient(), so
+  // they can block Places shutdown.
+  nsCOMPtr<nsIAsyncShutdownService> asyncShutdown = services::GetAsyncShutdown();
+  MOZ_ASSERT(asyncShutdown);
+  if (asyncShutdown) {
+    nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
+    nsresult rv = asyncShutdown->MakeBarrier(mName, getter_AddRefs(barrier));
+    MOZ_ALWAYS_SUCCEEDS(rv);
+    if (NS_SUCCEEDED(rv) && barrier) {
+      mBarrier = new nsMainThreadPtrHolder<nsIAsyncShutdownBarrier>(
+        "PlacesShutdownBlocker::mBarrier", barrier);
+    }
+  }
 }
 
 // nsIAsyncShutdownBlocker
@@ -71,39 +84,8 @@ PlacesShutdownBlocker::GetState(nsIPropertyBag** _state)
   return NS_OK;
 }
 
-// nsIAsyncShutdownBlocker
-NS_IMETHODIMP
-PlacesShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
-{
-  MOZ_ASSERT(false, "should always be overridden");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMPL_ISUPPORTS(
-  PlacesShutdownBlocker,
-  nsIAsyncShutdownBlocker
-)
-
-////////////////////////////////////////////////////////////////////////////////
-
-ClientsShutdownBlocker::ClientsShutdownBlocker()
-  : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Clients shutdown"))
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  // Create a barrier that will be exposed to clients through GetClient(), so
-  // they can block Places shutdown.
-  nsCOMPtr<nsIAsyncShutdownService> asyncShutdown = services::GetAsyncShutdown();
-  MOZ_ASSERT(asyncShutdown);
-  if (asyncShutdown) {
-    nsCOMPtr<nsIAsyncShutdownBarrier> barrier;
-    MOZ_ALWAYS_SUCCEEDS(asyncShutdown->MakeBarrier(mName, getter_AddRefs(barrier)));
-    mBarrier = new nsMainThreadPtrHolder<nsIAsyncShutdownBarrier>(
-      "ClientsShutdownBlocker::mBarrier", barrier);
-  }
-}
-
 already_AddRefed<nsIAsyncShutdownClient>
-ClientsShutdownBlocker::GetClient()
+PlacesShutdownBlocker::GetClient()
 {
   nsCOMPtr<nsIAsyncShutdownClient> client;
   if (mBarrier) {
@@ -114,7 +96,7 @@ ClientsShutdownBlocker::GetClient()
 
 // nsIAsyncShutdownBlocker
 NS_IMETHODIMP
-ClientsShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
+PlacesShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
 {
   MOZ_ASSERT(NS_IsMainThread());
   mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(
@@ -130,6 +112,28 @@ ClientsShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
 
   mState = CALLED_WAIT_CLIENTS;
   return NS_OK;
+}
+
+// nsIAsyncShutdownCompletionCallback
+NS_IMETHODIMP
+PlacesShutdownBlocker::Done()
+{
+  MOZ_ASSERT(false, "Should always be overridden");
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(
+  PlacesShutdownBlocker,
+  nsIAsyncShutdownBlocker,
+  nsIAsyncShutdownCompletionCallback
+)
+
+////////////////////////////////////////////////////////////////////////////////
+
+ClientsShutdownBlocker::ClientsShutdownBlocker()
+  : PlacesShutdownBlocker(NS_LITERAL_STRING("Places Clients shutdown"))
+{
+  // Do nothing.
 }
 
 // nsIAsyncShutdownCompletionCallback
@@ -150,10 +154,9 @@ ClientsShutdownBlocker::Done()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(
+NS_IMPL_ISUPPORTS_INHERITED0(
   ClientsShutdownBlocker,
-  PlacesShutdownBlocker,
-  nsIAsyncShutdownCompletionCallback
+  PlacesShutdownBlocker
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,24 +168,16 @@ ConnectionShutdownBlocker::ConnectionShutdownBlocker(Database* aDatabase)
   // Do nothing.
 }
 
-// nsIAsyncShutdownBlocker
+// nsIAsyncShutdownCompletionCallback
 NS_IMETHODIMP
-ConnectionShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
+ConnectionShutdownBlocker::Done()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  mParentClient = new nsMainThreadPtrHolder<nsIAsyncShutdownClient>(
-    "ConnectionShutdownBlocker::mParentClient", aParentClient);
-  mState = RECEIVED_BLOCK_SHUTDOWN;
+  // At this point all the clients are done, we can stop blocking the shutdown
+  // phase.
+  mState = RECEIVED_DONE;
+
   // Annotate that Database shutdown started.
   sIsStarted = true;
-
-  // Fire internal database closing notification.
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  MOZ_ASSERT(os);
-  if (os) {
-    Unused << os->NotifyObservers(nullptr, TOPIC_PLACES_WILL_CLOSE_CONNECTION, nullptr);
-  }
-  mState = NOTIFIED_OBSERVERS_PLACES_WILL_CLOSE_CONNECTION;
 
   // At this stage, any use of this database is forbidden. Get rid of
   // `gDatabase`. Note, however, that the database could be
@@ -193,6 +188,7 @@ ConnectionShutdownBlocker::BlockShutdown(nsIAsyncShutdownClient* aParentClient)
   // Database::Shutdown will invoke Complete once the connection is closed.
   mDatabase->Shutdown();
   mState = CALLED_STORAGESHUTDOWN;
+  mBarrier = nullptr;
   return NS_OK;
 }
 
