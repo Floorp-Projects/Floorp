@@ -2003,7 +2003,6 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
       case Bailout_Debugger:
       case Bailout_UninitializedThis:
       case Bailout_BadDerivedConstructorReturn:
-      case Bailout_LoadStaticObject:
         // Do nothing.
         break;
 

@@ -3900,7 +3900,7 @@ LIRGenerator::visitGuardObjectIdentity(MGuardObjectIdentity* ins)
 {
     LGuardObjectIdentity* guard = new(alloc()) LGuardObjectIdentity(useRegister(ins->object()),
                                                                     useRegister(ins->expected()));
-    assignSnapshot(guard, ins->bailoutKind());
+    assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard);
     add(guard, ins);
     redefine(ins, ins->object());
 }
