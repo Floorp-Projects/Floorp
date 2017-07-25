@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+html {
+  width: 620px;
+}
+
 body {
   font-size: 1rem;
 }
@@ -22,7 +26,7 @@ label {
 
 label > span {
   box-sizing: border-box;
-  flex: 0 0 8em;
+  flex: 0 0 9.5em;
   padding-inline-end: 0.5em;
   align-self: center;
   text-align: end;
@@ -33,7 +37,7 @@ input,
 select {
   box-sizing: border-box;
   flex: 1 0 auto;
-  width: calc(50% - 8em);
+  width: calc(50% - 9.5em);
 }
 
 option {
