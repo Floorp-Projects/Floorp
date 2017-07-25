@@ -72,8 +72,7 @@ public:
   virtual void ReportUseCounters() override;
 
 protected:
-  explicit VectorImage(ImageURL* aURI = nullptr,
-                       StyleBackendType aStyleBackendType = StyleBackendType::None);
+  explicit VectorImage(ImageURL* aURI = nullptr);
   virtual ~VectorImage();
 
   virtual nsresult StartAnimation() override;
@@ -124,7 +123,7 @@ private:
                                           // (Only set after mIsFullyLoaded.)
   bool           mHasPendingInvalidation; // Invalidate observers next refresh
                                           // driver tick.
-  StyleBackendType mStyleBackendType;     // The style backend used for this image document.
+
   friend class ImageFactory;
 };
 
