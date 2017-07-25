@@ -113,7 +113,7 @@ WebRenderImageData::CreateAsyncImageWebRenderCommands(mozilla::wr::DisplayListBu
   // a bunch of the calculations normally done as part of that stacking
   // context need to be done manually and pushed over to the parent side,
   // where it will be done when we build the display list for the iframe.
-  // That happens in WebRenderCompositableHolder.
+  // That happens in AsyncImagePipelineManager.
   wr::LayoutRect r = aSc.ToRelativeLayoutRect(aBounds);
   aBuilder.PushIFrame(r, mPipelineId.ref());
 
