@@ -49,7 +49,7 @@ typedef FrameMetrics::ViewID ViewID;
  * from the nearest display item reference frame (which we assume will be inducing
  * a ContainerLayer).
  */
-static nsIntPoint
+static LayoutDeviceIntPoint
 GetContentRectLayerOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder)
 {
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
@@ -61,7 +61,7 @@ GetContentRectLayerOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuil
   nsPoint frameOffset = aBuilder->ToReferenceFrame(aContainerFrame) +
     aContainerFrame->GetContentRectRelativeToSelf().TopLeft();
 
-  return frameOffset.ToNearestPixels(auPerDevPixel);
+  return LayoutDeviceIntPoint::FromAppUnitsToNearest(frameOffset, auPerDevPixel);
 }
 
 // Return true iff |aManager| is a "temporary layer manager".  They're
@@ -199,7 +199,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
   static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
-  nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
+  LayoutDeviceIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
   // forces all layers above to be active.
