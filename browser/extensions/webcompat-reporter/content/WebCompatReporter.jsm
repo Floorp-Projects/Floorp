@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const TABLISTENER_JSM = "chrome://webcompat-reporter/content/TabListener.jsm";
 const WIDGET_ID = "webcompat-reporter-button";
+const PREF_STYLO_ENABLED = "layout.css.servo.enabled";
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
@@ -120,9 +121,18 @@ let WebCompatReporter = {
     const FRAMESCRIPT = "chrome://webcompat-reporter/content/wc-frame.js";
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     const WEBCOMPAT_ORIGIN = new win.URL(WebCompatReporter.endpoint).origin;
+    let styloEnabled = Services.prefs.getBoolPref(PREF_STYLO_ENABLED, false);
+
+    let params = new URLSearchParams();
+    params.append("url", `${tabData.url}`);
+    params.append("src", "desktop-reporter");
+    if (styloEnabled) {
+        params.append("details", "layout.css.servo.enabled: true");
+        params.append("label", "type-stylo");
+    }
 
     let tab = gBrowser.loadOneTab(
-      `${WebCompatReporter.endpoint}?url=${encodeURIComponent(tabData.url)}&src=desktop-reporter`,
+      `${WebCompatReporter.endpoint}?${params}`,
       {inBackground: false, triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal()});
 
     // If we successfully got a screenshot blob, add a listener to know when
