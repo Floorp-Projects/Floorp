@@ -76,6 +76,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryReportingPolicy",
                                   "resource://gre/modules/TelemetryReportingPolicy.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryModules",
                                   "resource://gre/modules/TelemetryModules.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
+                                  "resource://gre/modules/TelemetryHealthPing.jsm");
 
 /**
  * Setup Telemetry logging. This function also gets called when loggin related
@@ -787,6 +789,9 @@ var Impl = {
 
       // Stop any ping sending.
       await TelemetrySend.shutdown();
+
+      // Send latest data.
+      await TelemetryHealthPing.shutdown();
 
       await TelemetrySession.shutdown();
 

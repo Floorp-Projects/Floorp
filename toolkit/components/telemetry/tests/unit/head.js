@@ -301,6 +301,10 @@ function setEmptyPrefWatchlist() {
   });
 }
 
+function histogramValueCount(histogramSnapshot) {
+  return histogramSnapshot.counts.reduce((a, b) => a + b);
+}
+
 if (runningInParent) {
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
@@ -319,7 +323,8 @@ if (runningInParent) {
   // Ensure browser experiments are also disabled, to avoid network activity
   // when toggling PREF_ENABLED.
   Services.prefs.setBoolPref("experiments.enabled", false);
-
+  // Turn off Health Ping submission.
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, false);
 
   fakePingSendTimer((callback, timeout) => {
     Services.tm.dispatchToMainThread(() => callback());
