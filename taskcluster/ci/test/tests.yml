@@ -1527,7 +1527,7 @@ talos-perf-reftest-singletons:
     try-name: perf-reftest-singletons
     treeherder-symbol: tc-T(ps)
     virtualization: hardware
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     max-run-time: 3600
     e10s: true
     mozharness:
