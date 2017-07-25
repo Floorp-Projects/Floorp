@@ -72,7 +72,6 @@ public:
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame,
                                      LayerManager* aManager,
-                                     const nsIntRect& aVisibleRect,
                                      nsDisplayItem* aItem,
                                      const ContainerLayerParameters& aContainerParameters);
 
