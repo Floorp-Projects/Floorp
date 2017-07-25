@@ -62,8 +62,6 @@ public:
 #endif
   MOZ_DECL_STYLO_CONVERT_METHODS(mozilla::GeckoStyleContext, mozilla::ServoStyleContext);
 
-  void Destroy();
-
   // These two methods are for use by ArenaRefPtr.
   static mozilla::ArenaObjectID ArenaObjectID()
   {
@@ -90,13 +88,6 @@ public:
     return mFrameRefCnt;
   }
 #endif
-
-  bool HasSingleReference() const {
-    NS_ASSERTION(mRefCnt != 0,
-                 "do not call HasSingleReference on a newly created "
-                 "nsStyleContext with no references yet");
-    return mRefCnt == 1;
-  }
 
   inline nsPresContext* PresContext() const;
 
@@ -359,8 +350,6 @@ protected:
   //  - It also stores the additional bits listed at the top of
   //    nsStyleStruct.h.
   uint64_t                mBits;
-
-  uint32_t                mRefCnt;
 
 #ifdef DEBUG
   uint32_t                mFrameRefCnt; // number of frames that use this
