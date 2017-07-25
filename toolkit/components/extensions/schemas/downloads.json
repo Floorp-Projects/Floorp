@@ -96,8 +96,7 @@
             "type": "string"
           },
           "referrer": {
-            "type": "string",
-            "optional": true
+            "type": "string"
           },
           "filename": {
             "description": "Absolute local path.",
