@@ -144,7 +144,7 @@ windows7-32/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows7-32-pgo/opt:
@@ -154,7 +154,7 @@ windows7-32-pgo/opt:
         - desktop-screenshot-capture
         - headless
         - windows-tests
-        #- windows-talos
+        - windows-talos
 
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt
@@ -177,7 +177,7 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows10-64-pgo/opt:
@@ -186,7 +186,7 @@ windows10-64-pgo/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows10-64-nightly/opt:
