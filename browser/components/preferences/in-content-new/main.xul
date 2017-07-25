@@ -389,8 +389,6 @@
   </html:table>
 </groupbox>
 
-  <caption><label>&defaultSearchEngine.label;</label></caption>
-  <caption><label>&oneClickSearchEngines.label;</label></caption>
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
