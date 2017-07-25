@@ -114,10 +114,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	const LongStringRep = __webpack_require__(12);
 	const Number = __webpack_require__(13);
 	const ArrayRep = __webpack_require__(14);
-	const Obj = __webpack_require__(16);
-	const SymbolRep = __webpack_require__(19);
-	const InfinityRep = __webpack_require__(20);
-	const NaNRep = __webpack_require__(21);
+	const Obj = __webpack_require__(15);
+	const SymbolRep = __webpack_require__(18);
+	const InfinityRep = __webpack_require__(19);
+	const NaNRep = __webpack_require__(20);
+	const Accessor = __webpack_require__(21);
 
 	// DOM types (grips)
 	const Attribute = __webpack_require__(22);
@@ -137,12 +138,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	const ObjectWithURL = __webpack_require__(41);
 	const GripArray = __webpack_require__(42);
 	const GripMap = __webpack_require__(43);
-	const Grip = __webpack_require__(18);
+	const Grip = __webpack_require__(17);
 
 	// List of all registered template.
 	// XXX there should be a way for extensions to register a new
 	// or modify an existing rep.
-	let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep];
+	let reps = [RegExp, StyleSheet, Event, DateTime, CommentNode, ElementNode, TextNode, Attribute, LongStringRep, Func, PromiseRep, ArrayRep, Document, Window, ObjectWithText, ObjectWithURL, ErrorRep, GripArray, GripMap, Grip, Undefined, Null, StringRep, Number, SymbolRep, InfinityRep, NaNRep, Accessor];
 
 	/**
 	 * Generic rep that is using for rendering native JS types or an object.
@@ -206,6 +207,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = {
 	  Rep,
 	  REPS: {
+	    Accessor,
 	    ArrayRep,
 	    Attribute,
 	    CommentNode,
@@ -885,7 +887,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	const {
 	  wrapRender
 	} = __webpack_require__(7);
-	const Caption = __webpack_require__(15);
 	const { MODE } = __webpack_require__(1);
 
 	const ModePropType = React.PropTypes.oneOf(
@@ -918,7 +919,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  if (mode === MODE.TINY) {
 	    let isEmpty = object.length === 0;
-	    items = [DOM.span({ className: "length" }, isEmpty ? "" : object.length)];
+	    if (isEmpty) {
+	      items = [];
+	    } else {
+	      items = [DOM.span({
+	        className: "more-ellipsis",
+	        title: "more…"
+	      }, "…")];
+	    }
 	    brackets = needSpace(false);
 	  } else {
 	    items = arrayIterator(props, object, maxLengthMap.get(mode));
@@ -961,9 +969,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (array.length > max) {
-	    items.push(Caption({
-	      object: DOM.span({}, "more…")
-	    }));
+	    items.push(DOM.span({
+	      className: "more-ellipsis",
+	      title: "more…"
+	    }, "…"));
 	  }
 
 	  return items;
@@ -1014,43 +1023,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Dependencies
 	const React = __webpack_require__(8);
-	const DOM = React.DOM;
-
-	const { wrapRender } = __webpack_require__(7);
-
-	/**
-	 * Renders a caption. This template is used by other components
-	 * that needs to distinguish between a simple text/value and a label.
-	 */
-	Caption.propTypes = {
-	  object: React.PropTypes.oneOfType([React.PropTypes.number, React.PropTypes.string]).isRequired
-	};
-
-	function Caption(props) {
-	  return DOM.span({ "className": "caption" }, props.object);
-	}
-
-	// Exports from this module
-	module.exports = wrapRender(Caption);
-
-/***/ },
-/* 16 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* This Source Code Form is subject to the terms of the Mozilla Public
-	 * License, v. 2.0. If a copy of the MPL was not distributed with this
-	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-	// Dependencies
-	const React = __webpack_require__(8);
 	const {
 	  wrapRender
 	} = __webpack_require__(7);
-	const Caption = __webpack_require__(15);
-	const PropRep = __webpack_require__(17);
+	const PropRep = __webpack_require__(16);
 	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
+
+	const DEFAULT_TITLE = "Object";
+
 	/**
 	 * Renders an object. An object is represented by a list of its
 	 * properties enclosed in curly brackets.
@@ -1066,20 +1048,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	  let object = props.object;
 	  let propsArray = safePropIterator(props, object);
 
-	  if (props.mode === MODE.TINY || !propsArray.length) {
-	    return span({ className: "objectBox objectBox-object" }, getTitle(props, object));
+	  if (props.mode === MODE.TINY) {
+	    const tinyModeItems = [];
+	    if (getTitle(props, object) !== DEFAULT_TITLE) {
+	      tinyModeItems.push(getTitleElement(props, object));
+	    } else {
+	      tinyModeItems.push(span({
+	        className: "objectLeftBrace"
+	      }, "{"), propsArray.length > 0 ? span({
+	        key: "more",
+	        className: "more-ellipsis",
+	        title: "more…"
+	      }, "…") : null, span({
+	        className: "objectRightBrace"
+	      }, "}"));
+	    }
+
+	    return span({ className: "objectBox objectBox-object" }, ...tinyModeItems);
 	  }
 
-	  return span({ className: "objectBox objectBox-object" }, getTitle(props, object), span({
+	  return span({ className: "objectBox objectBox-object" }, getTitleElement(props, object), span({
 	    className: "objectLeftBrace"
 	  }, " { "), ...propsArray, span({
 	    className: "objectRightBrace"
 	  }, " }"));
 	}
 
+	function getTitleElement(props, object) {
+	  return span({ className: "objectTitle" }, getTitle(props, object));
+	}
+
 	function getTitle(props, object) {
-	  let title = props.title || object.class || "Object";
-	  return span({ className: "objectTitle" }, title);
+	  return props.title || object.class || DEFAULT_TITLE;
 	}
 
 	function safePropIterator(props, object, max) {
@@ -1116,9 +1116,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  let propsArray = getPropsArray(interestingObject);
 	  if (Object.keys(object).length > max) {
-	    propsArray.push(Caption({
-	      object: span({}, "more…")
-	    }));
+	    propsArray.push(span({
+	      className: "more-ellipsis",
+	      title: "more…"
+	    }, "…"));
 	  }
 
 	  return unfoldProps(propsArray);
@@ -1210,7 +1211,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1256,7 +1257,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Array} Array of React elements.
 	 */
 	function PropRep(props) {
-	  const Grip = __webpack_require__(18);
+	  const Grip = __webpack_require__(17);
 	  const { Rep } = __webpack_require__(2);
 
 	  let {
@@ -1291,7 +1292,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = wrapRender(PropRep);
 
 /***/ },
-/* 18 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1305,8 +1306,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(7);
-	const Caption = __webpack_require__(15);
-	const PropRep = __webpack_require__(17);
+	const PropRep = __webpack_require__(16);
 	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
@@ -1328,6 +1328,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  noGrip: React.PropTypes.bool
 	};
 
+	const DEFAULT_TITLE = "Object";
+
 	function GripRep(props) {
 	  let {
 	    mode = MODE.SHORT,
@@ -1340,23 +1342,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  if (mode === MODE.TINY) {
-	    return span(config, getTitle(props, object));
+	    let propertiesLength = object.preview && object.preview.ownPropertiesLength ? object.preview.ownPropertiesLength : object.ownPropertyLength;
+
+	    if (object.preview && object.preview.safeGetterValues) {
+	      propertiesLength += Object.keys(object.preview.safeGetterValues).length;
+	    }
+
+	    const tinyModeItems = [];
+	    if (getTitle(props, object) !== DEFAULT_TITLE) {
+	      tinyModeItems.push(getTitleElement(props, object));
+	    } else {
+	      tinyModeItems.push(span({
+	        className: "objectLeftBrace"
+	      }, "{"), propertiesLength > 0 ? span({
+	        key: "more",
+	        className: "more-ellipsis",
+	        title: "more…"
+	      }, "…") : null, span({
+	        className: "objectRightBrace"
+	      }, "}"));
+	    }
+
+	    return span(config, ...tinyModeItems);
 	  }
 
 	  let propsArray = safePropIterator(props, object, maxLengthMap.get(mode));
 
-	  return span(config, getTitle(props, object), span({
+	  return span(config, getTitleElement(props, object), span({
 	    className: "objectLeftBrace"
 	  }, " { "), ...propsArray, span({
 	    className: "objectRightBrace"
 	  }, " }"));
 	}
 
-	function getTitle(props, object) {
-	  let title = props.title || object.class || "Object";
+	function getTitleElement(props, object) {
 	  return span({
 	    className: "objectTitle"
-	  }, title);
+	  }, getTitle(props, object));
+	}
+
+	function getTitle(props, object) {
+	  return props.title || object.class || DEFAULT_TITLE;
 	}
 
 	function safePropIterator(props, object, max) {
@@ -1407,11 +1433,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // unquoted.
 	  const suppressQuotes = object.class === "Proxy";
 	  let propsArray = getProps(props, properties, indexes, suppressQuotes);
-	  if (Object.keys(properties).length > max || propertiesLength > max) {
+	  if (Object.keys(properties).length > max || propertiesLength > max
+	  // When the object has non-enumerable properties, we don't have them in the packet,
+	  // but we might want to show there's something in the object.
+	  || propertiesLength > propsArray.length) {
 	    // There are some undisplayed props. Then display "more...".
-	    propsArray.push(Caption({
-	      object: span({}, "more…")
-	    }));
+	    propsArray.push(span({
+	      key: "more",
+	      className: "more-ellipsis",
+	      title: "more…"
+	    }, "…"));
 	  }
 
 	  return unfoldProps(propsArray);
@@ -1543,7 +1574,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Grip;
 
 /***/ },
-/* 19 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1583,7 +1614,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 20 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1624,7 +1655,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ },
-/* 21 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* This Source Code Form is subject to the terms of the Mozilla Public
@@ -1653,6 +1684,74 @@ return /******/ (function(modules) { // webpackBootstrap
 	// Exports from this module
 	module.exports = {
 	  rep: wrapRender(NaNRep),
+	  supportsObject
+	};
+
+/***/ },
+/* 21 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* This Source Code Form is subject to the terms of the Mozilla Public
+	 * License, v. 2.0. If a copy of the MPL was not distributed with this
+	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+	// Dependencies
+	const React = __webpack_require__(8);
+	const {
+	  wrapRender
+	} = __webpack_require__(7);
+	const { MODE } = __webpack_require__(1);
+	// Shortcuts
+	const {
+	  span
+	} = React.DOM;
+	/**
+	 * Renders an object. An object is represented by a list of its
+	 * properties enclosed in curly brackets.
+	 */
+	Accessor.propTypes = {
+	  object: React.PropTypes.object.isRequired,
+	  mode: React.PropTypes.oneOf(Object.values(MODE))
+	};
+
+	function Accessor(props) {
+	  const {
+	    object
+	  } = props;
+
+	  const accessors = [];
+	  if (hasGetter(object)) {
+	    accessors.push("Getter");
+	  }
+	  if (hasSetter(object)) {
+	    accessors.push("Setter");
+	  }
+	  const title = accessors.join(" & ");
+
+	  return span({ className: "objectBox objectBox-accessor" }, span({
+	    className: "objectTitle"
+	  }, title));
+	}
+
+	function hasGetter(object) {
+	  return object && object.get && object.get.type !== "undefined";
+	}
+
+	function hasSetter(object) {
+	  return object && object.set && object.set.type !== "undefined";
+	}
+
+	function supportsObject(object, type, noGrip = false) {
+	  if (noGrip !== true && (hasGetter(object) || hasSetter(object))) {
+	    return true;
+	  }
+
+	  return false;
+	}
+
+	// Exports from this module
+	module.exports = {
+	  rep: wrapRender(Accessor),
 	  supportsObject
 	};
 
@@ -1858,7 +1957,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	} = __webpack_require__(7);
 
 	const { MODE } = __webpack_require__(1);
-	const { rep } = __webpack_require__(18);
+	const { rep } = __webpack_require__(17);
 
 	/**
 	 * Renders DOM event objects.
@@ -2050,7 +2149,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  wrapRender
 	} = __webpack_require__(7);
 
-	const PropRep = __webpack_require__(17);
+	const PropRep = __webpack_require__(16);
 	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
@@ -3059,7 +3158,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(7);
-	const Caption = __webpack_require__(15);
 	const { MODE } = __webpack_require__(1);
 
 	// Shortcuts
@@ -3094,9 +3192,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (mode === MODE.TINY) {
 	    let objectLength = getLength(object);
 	    let isEmpty = objectLength === 0;
-	    items = [span({
-	      className: "length"
-	    }, isEmpty ? "" : objectLength)];
+	    if (isEmpty) {
+	      items = [];
+	    } else {
+	      items = [span({
+	        className: "more-ellipsis",
+	        title: "more…"
+	      }, "…")];
+	    }
 	    brackets = needSpace(false);
 	  } else {
 	    let max = maxLengthMap.get(mode);
@@ -3150,7 +3253,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return null;
 	  }
 
-	  return grip.preview.items || grip.preview.childNodes || null;
+	  return grip.preview.items || grip.preview.childNodes || [];
 	}
 
 	function arrayIterator(props, grip, max) {
@@ -3164,10 +3267,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  const previewItems = getPreviewItems(grip);
-	  if (!previewItems) {
-	    return items;
-	  }
-
 	  let provider = props.provider;
 
 	  let emptySlots = 0;
@@ -3215,9 +3314,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  const itemsShown = items.length + foldedEmptySlots;
 	  if (gripLength > itemsShown) {
-	    items.push(Caption({
-	      object: span({}, "more…")
-	    }));
+	    items.push(span({
+	      className: "more-ellipsis",
+	      title: "more…"
+	    }, "…"));
 	  }
 
 	  return items;
@@ -3261,8 +3361,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isGrip,
 	  wrapRender
 	} = __webpack_require__(7);
-	const Caption = __webpack_require__(15);
-	const PropRep = __webpack_require__(17);
+	const PropRep = __webpack_require__(16);
 	const { MODE } = __webpack_require__(1);
 	// Shortcuts
 	const { span } = React.DOM;
@@ -3340,12 +3439,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  let entries = getEntries(props, mapEntries, indexes);
-	  if (entries.length < mapEntries.length) {
-	    // There are some undisplayed entries. Then display "more…".
-	    entries.push(Caption({
+	  if (entries.length < object.preview.size) {
+	    // There are some undisplayed entries. Then display "…".
+	    entries.push(span({
 	      key: "more",
-	      object: span({}, "more…")
-	    }));
+	      className: "more-ellipsis",
+	      title: "more…"
+	    }, "…"));
 	  }
 
 	  return unfoldEntries(entries);
@@ -3477,6 +3577,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  getChildren,
 	  getValue,
 	  isDefault,
+	  nodeHasAccessors,
 	  nodeHasProperties,
 	  nodeIsMissingArguments,
 	  nodeIsOptimizedOut,
@@ -3599,25 +3700,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    let label = item.name;
 	    let itemValue = getValue(item);
 
-	    const unavailable = nodeIsPrimitive(item) && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
+	    const isPrimitive = nodeIsPrimitive(item);
+
+	    const unavailable = isPrimitive && itemValue && itemValue.hasOwnProperty && itemValue.hasOwnProperty("unavailable");
 
 	    if (nodeIsOptimizedOut(item)) {
 	      objectValue = dom.span({ className: "unavailable" }, "(optimized away)");
 	    } else if (nodeIsMissingArguments(item) || unavailable) {
 	      objectValue = dom.span({ className: "unavailable" }, "(unavailable)");
-	    } else if (nodeHasProperties(item) || nodeIsPrimitive(item)) {
-	      let mode;
-	      if (depth === 0) {
-	        mode = this.props.mode;
-	      } else {
-	        mode = this.props.mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
+	    } else if (nodeHasProperties(item) || nodeHasAccessors(item) || isPrimitive) {
+	      let repsProp = Object.assign({}, this.props);
+	      if (depth > 0) {
+	        repsProp.mode = this.props.mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
 	      }
 
-	      objectValue = this.renderGrip(item, this.props, mode);
+	      objectValue = this.renderGrip(item, repsProp);
 	    }
 
 	    const SINGLE_INDENT_WIDTH = 15;
-	    const indentWidth = (depth + (nodeIsPrimitive(item) ? 1 : 0)) * SINGLE_INDENT_WIDTH;
+	    const indentWidth = (depth + (isPrimitive ? 1 : 0)) * SINGLE_INDENT_WIDTH;
 
 	    const {
 	      onDoubleClick,
@@ -3632,10 +3733,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      style: {
 	        marginLeft: indentWidth
 	      },
-	      onClick: e => {
+	      onClick: isPrimitive === false ? e => {
 	        e.stopPropagation();
 	        this.setExpanded(item, !expanded);
-	      },
+	      } : null,
 	      onDoubleClick: onDoubleClick ? e => {
 	        e.stopPropagation();
 	        onDoubleClick(item, {
@@ -3644,7 +3745,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          expanded
 	        });
 	      } : null
-	    }, nodeIsPrimitive(item) === false ? Svg("arrow", {
+	    }, isPrimitive === false ? Svg("arrow", {
 	      className: classnames({
 	        expanded: expanded
 	      })
@@ -3662,11 +3763,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, label) : null, label && objectValue ? dom.span({ className: "object-delimiter" }, " : ") : null, objectValue);
 	  }
 
-	  renderGrip(item, props, mode = MODE.TINY) {
+	  renderGrip(item, props) {
 	    const object = getValue(item);
 	    return Rep(Object.assign({}, props, {
 	      object,
-	      mode
+	      mode: props.mode || MODE.TINY
 	    }));
 	  }
 
@@ -3686,7 +3787,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    let roots = this.getRoots();
 	    if (roots.length === 1 && nodeIsPrimitive(roots[0])) {
-	      return this.renderGrip(roots[0], this.props, this.props.mode);
+	      return this.renderGrip(roots[0], this.props);
 	    }
 
 	    return Tree({
@@ -4356,6 +4457,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	const get = __webpack_require__(51);
+	const has = __webpack_require__(103);
 	const { maybeEscapePropertyName } = __webpack_require__(7);
 
 	let WINDOW_PROPERTIES = {};
@@ -4365,7 +4467,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getValue(item) {
-	  return get(item, "contents.value", undefined);
+	  if (has(item, "contents.value")) {
+	    return get(item, "contents.value");
+	  }
+
+	  if (has(item, "contents.getterValue")) {
+	    return get(item, "contents.getterValue", undefined);
+	  }
+
+	  if (nodeHasAccessors(item)) {
+	    return item.contents;
+	  }
+
+	  return undefined;
 	}
 
 	function isBucket(item) {
@@ -4405,7 +4519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function nodeIsPrimitive(item) {
-	  return !nodeHasChildren(item) && !nodeHasProperties(item);
+	  return !nodeHasChildren(item) && !nodeHasProperties(item) && !nodeHasAccessors(item);
 	}
 
 	function isPromise(item) {
@@ -4431,6 +4545,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return properties;
+	}
+
+	function getNodeGetter(item) {
+	  return get(item, "contents.get", undefined);
+	}
+
+	function getNodeSetter(item) {
+	  return get(item, "contents.set", undefined);
+	}
+
+	function nodeHasAccessors(item) {
+	  return !!getNodeGetter(item) || !!getNodeSetter(item);
+	}
+
+	function getAccessors(item) {
+	  const accessors = [];
+
+	  const getter = getNodeGetter(item);
+	  if (getter && getter.type !== "undefined") {
+	    accessors.push(createNode("<get>", `${item.path}/get`, { value: getter }));
+	  }
+
+	  const setter = getNodeSetter(item);
+	  if (setter && setter.type !== "undefined") {
+	    accessors.push(createNode("<set>", `${item.path}/set`, { value: setter }));
+	  }
+
+	  return accessors;
 	}
 
 	function isDefault(item, roots) {
@@ -4491,24 +4633,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/*
-	 * Ignore non-concrete values like getters and setters
-	 * for now by making sure we have a value.
+	 * Ignore properties that are neither non-concrete nor getters/setters.
 	*/
 	function makeNodesForProperties(objProps, parent, { bucketSize = 100 } = {}) {
-	  const { ownProperties, prototype, ownSymbols } = objProps;
+	  const {
+	    ownProperties,
+	    ownSymbols,
+	    prototype,
+	    safeGetterValues
+	  } = objProps;
+
 	  const parentPath = parent.path;
 	  const parentValue = getValue(parent);
-	  const properties = sortProperties(Object.keys(ownProperties)).filter(name => ownProperties[name].hasOwnProperty("value"));
+
+	  let allProperties = Object.assign({}, ownProperties, safeGetterValues);
+	  const properties = sortProperties(Object.keys(allProperties)).filter(name => allProperties[name].hasOwnProperty("value") || allProperties[name].hasOwnProperty("getterValue") || allProperties[name].hasOwnProperty("get") || allProperties[name].hasOwnProperty("set"));
 
 	  const numProperties = properties.length;
 
 	  let nodes = [];
 	  if (nodeIsArray(prototype) && numProperties > bucketSize) {
-	    nodes = makeNumericalBuckets(properties, bucketSize, parentPath, ownProperties);
+	    nodes = makeNumericalBuckets(properties, bucketSize, parentPath, allProperties);
 	  } else if (parentValue.class == "Window") {
-	    nodes = makeDefaultPropsBucket(properties, parentPath, ownProperties);
+	    nodes = makeDefaultPropsBucket(properties, parentPath, allProperties);
 	  } else {
-	    nodes = makeNodesForOwnProps(properties, parentPath, ownProperties);
+	    nodes = makeNodesForOwnProps(properties, parentPath, allProperties);
 	  }
 
 	  for (let index in ownSymbols) {
@@ -4540,10 +4689,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getChildren({ getObjectProperties, actors, item }) {
-	  const obj = item.contents;
-
 	  // Nodes can either have children already, or be an object with
 	  // properties that we need to go and fetch.
+	  if (nodeHasAccessors(item)) {
+	    return getAccessors(item);
+	  }
+
 	  if (nodeHasChildren(item)) {
 	    return item.contents;
 	  }
@@ -4551,8 +4702,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (!nodeHasProperties(item)) {
 	    return [];
 	  }
-
-	  const actor = obj.value.actor;
 
 	  // Because we are dynamically creating the tree as the user
 	  // expands it (not precalculated tree structure), we cache child
@@ -4569,10 +4718,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return item.contents.children;
 	  }
 
+	  const actor = get(getValue(item), "actor", undefined);
 	  const loadedProps = getObjectProperties(actor);
-	  const { ownProperties, prototype } = loadedProps || {};
+	  const {
+	    ownProperties,
+	    ownSymbols,
+	    safeGetterValues,
+	    prototype
+	  } = loadedProps || {};
 
-	  if (!ownProperties && !prototype) {
+	  if (!ownProperties && !ownSymbols && !safeGetterValues && !prototype) {
 	    return [];
 	  }
 
@@ -4589,6 +4744,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  isDefault,
 	  isPromise,
 	  makeNodesForProperties,
+	  nodeHasAccessors,
 	  nodeHasChildren,
 	  nodeHasProperties,
 	  nodeIsFunction,
@@ -6157,6 +6313,252 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = toKey;
+
+
+/***/ },
+/* 103 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseHas = __webpack_require__(104),
+	    hasPath = __webpack_require__(105);
+
+	/**
+	 * Checks if `path` is a direct property of `object`.
+	 *
+	 * @static
+	 * @since 0.1.0
+	 * @memberOf _
+	 * @category Object
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path to check.
+	 * @returns {boolean} Returns `true` if `path` exists, else `false`.
+	 * @example
+	 *
+	 * var object = { 'a': { 'b': 2 } };
+	 * var other = _.create({ 'a': _.create({ 'b': 2 }) });
+	 *
+	 * _.has(object, 'a');
+	 * // => true
+	 *
+	 * _.has(object, 'a.b');
+	 * // => true
+	 *
+	 * _.has(object, ['a', 'b']);
+	 * // => true
+	 *
+	 * _.has(other, 'a');
+	 * // => false
+	 */
+	function has(object, path) {
+	  return object != null && hasPath(object, path, baseHas);
+	}
+
+	module.exports = has;
+
+
+/***/ },
+/* 104 */
+/***/ function(module, exports) {
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+
+	/**
+	 * The base implementation of `_.has` without support for deep paths.
+	 *
+	 * @private
+	 * @param {Object} [object] The object to query.
+	 * @param {Array|string} key The key to check.
+	 * @returns {boolean} Returns `true` if `key` exists, else `false`.
+	 */
+	function baseHas(object, key) {
+	  return object != null && hasOwnProperty.call(object, key);
+	}
+
+	module.exports = baseHas;
+
+
+/***/ },
+/* 105 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var castPath = __webpack_require__(53),
+	    isArguments = __webpack_require__(106),
+	    isArray = __webpack_require__(54),
+	    isIndex = __webpack_require__(108),
+	    isLength = __webpack_require__(109),
+	    toKey = __webpack_require__(102);
+
+	/**
+	 * Checks if `path` exists on `object`.
+	 *
+	 * @private
+	 * @param {Object} object The object to query.
+	 * @param {Array|string} path The path to check.
+	 * @param {Function} hasFunc The function to check properties.
+	 * @returns {boolean} Returns `true` if `path` exists, else `false`.
+	 */
+	function hasPath(object, path, hasFunc) {
+	  path = castPath(path, object);
+
+	  var index = -1,
+	      length = path.length,
+	      result = false;
+
+	  while (++index < length) {
+	    var key = toKey(path[index]);
+	    if (!(result = object != null && hasFunc(object, key))) {
+	      break;
+	    }
+	    object = object[key];
+	  }
+	  if (result || ++index != length) {
+	    return result;
+	  }
+	  length = object == null ? 0 : object.length;
+	  return !!length && isLength(length) && isIndex(key, length) &&
+	    (isArray(object) || isArguments(object));
+	}
+
+	module.exports = hasPath;
+
+
+/***/ },
+/* 106 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseIsArguments = __webpack_require__(107),
+	    isObjectLike = __webpack_require__(63);
+
+	/** Used for built-in method references. */
+	var objectProto = Object.prototype;
+
+	/** Used to check objects for own properties. */
+	var hasOwnProperty = objectProto.hasOwnProperty;
+
+	/** Built-in value references. */
+	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+
+	/**
+	 * Checks if `value` is likely an `arguments` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArguments(function() { return arguments; }());
+	 * // => true
+	 *
+	 * _.isArguments([1, 2, 3]);
+	 * // => false
+	 */
+	var isArguments = baseIsArguments(function() { return arguments; }()) ? baseIsArguments : function(value) {
+	  return isObjectLike(value) && hasOwnProperty.call(value, 'callee') &&
+	    !propertyIsEnumerable.call(value, 'callee');
+	};
+
+	module.exports = isArguments;
+
+
+/***/ },
+/* 107 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var baseGetTag = __webpack_require__(57),
+	    isObjectLike = __webpack_require__(63);
+
+	/** `Object#toString` result references. */
+	var argsTag = '[object Arguments]';
+
+	/**
+	 * The base implementation of `_.isArguments`.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+	 */
+	function baseIsArguments(value) {
+	  return isObjectLike(value) && baseGetTag(value) == argsTag;
+	}
+
+	module.exports = baseIsArguments;
+
+
+/***/ },
+/* 108 */
+/***/ function(module, exports) {
+
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+
+	/** Used to detect unsigned integer values. */
+	var reIsUint = /^(?:0|[1-9]\d*)$/;
+
+	/**
+	 * Checks if `value` is a valid array-like index.
+	 *
+	 * @private
+	 * @param {*} value The value to check.
+	 * @param {number} [length=MAX_SAFE_INTEGER] The upper bounds of a valid index.
+	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
+	 */
+	function isIndex(value, length) {
+	  length = length == null ? MAX_SAFE_INTEGER : length;
+	  return !!length &&
+	    (typeof value == 'number' || reIsUint.test(value)) &&
+	    (value > -1 && value % 1 == 0 && value < length);
+	}
+
+	module.exports = isIndex;
+
+
+/***/ },
+/* 109 */
+/***/ function(module, exports) {
+
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
+
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This method is loosely based on
+	 * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 * @example
+	 *
+	 * _.isLength(3);
+	 * // => true
+	 *
+	 * _.isLength(Number.MIN_VALUE);
+	 * // => false
+	 *
+	 * _.isLength(Infinity);
+	 * // => false
+	 *
+	 * _.isLength('3');
+	 * // => false
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' &&
+	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+
+	module.exports = isLength;
 
 
 /***/ }
