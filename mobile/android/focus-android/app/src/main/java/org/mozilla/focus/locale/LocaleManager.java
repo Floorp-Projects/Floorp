@@ -323,7 +323,7 @@ public class LocaleManager {
         return locale.toString();
     }
 
-    private boolean isMirroringSystemLocale(final Context context) {
+    public boolean isMirroringSystemLocale(final Context context) {
         return getPersistedLocale(context) == null;
     }
 
