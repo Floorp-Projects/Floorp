@@ -11,6 +11,9 @@
 // Enable the JSON View tool (an inspector for application/json documents).
 pref("devtools.jsonview.enabled", true);
 
+// Enable the Inspector, this preference is used from mozilla-central.
+pref("devtools.inspector.enabled", true);
+
 // Default theme ("dark" or "light")
 #ifdef MOZ_DEV_EDITION
 sticky_pref("devtools.theme", "dark");
