@@ -22,8 +22,6 @@
 #include "nsIXMLContentSink.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
-#include "nsContentDLF.h"
-#include "nsContentCID.h"
 #include "nsSMILAnimationController.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
@@ -50,9 +48,8 @@ NS_IMPL_ISUPPORTS(SVGDocumentWrapper,
                   nsIObserver,
                   nsISupportsWeakReference)
 
-SVGDocumentWrapper::SVGDocumentWrapper(StyleBackendType aStyleBackendType /* = StyleBackendType::None */)
-  : mStyleBackendType(aStyleBackendType),
-    mIgnoreInvalidation(false),
+SVGDocumentWrapper::SVGDocumentWrapper()
+  : mIgnoreInvalidation(false),
     mRegisteredForXPCOMShutdown(false)
 { }
 
@@ -348,7 +345,7 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
                                         newLoadGroup,
                                         NS_LITERAL_CSTRING(IMAGE_SVG_XML),
                                         nullptr, nullptr,
-                                        (int16_t)mStyleBackendType,
+                                        nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE,
                                         getter_AddRefs(listener),
                                         getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);
