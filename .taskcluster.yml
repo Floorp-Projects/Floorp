@@ -99,6 +99,9 @@ tasks:
         - -cx
         - $let:
             extraArgs: {$if: 'tasks_for == "hg-push"', then: '', else: '${cron.quoted_args}'}
+          # NOTE: the explicit reference to mozilla-central below is required because android-stuff
+          # still uses tc-vcs, which does not support mozilla-unified
+          # https://bugzilla.mozilla.org/show_bug.cgi?id=1383973
           in: >
             cd /home/worker/checkouts/gecko &&
             ln -s /home/worker/artifacts artifacts &&
@@ -109,7 +112,7 @@ tasks:
             --message="$GECKO_COMMIT_MSG"
             --owner='${ownerEmail}'
             --level='${repository.level}'
-            --base-repository="$GECKO_BASE_REPOSITORY"
+            --base-repository='https://hg.mozilla.org/mozilla-central'
             --head-repository="$GECKO_HEAD_REPOSITORY"
             --head-ref="$GECKO_HEAD_REF"
             --head-rev="$GECKO_HEAD_REV"
