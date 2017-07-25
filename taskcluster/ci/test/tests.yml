@@ -1546,7 +1546,7 @@ talos-perf-reftest-singletons:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
@@ -1599,7 +1599,7 @@ talos-quantum-pageload-stylo:
                 macosx.*:
                     - talos/mac_config.py
                 windows.*:
-                    - talos/windows_taskcluster_config.py
+                    - talos/windows_config.py
                 default:
                     - talos/linux_config.py
         extra-options:
