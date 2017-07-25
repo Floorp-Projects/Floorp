@@ -361,6 +361,32 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     mNativeIMEContext = compositionEvent->mNativeIMEContext;
   }
 
+  // If the event is a composition event or a keyboard event, it should be
+  // dispatched with TextEventDispatcher if we could do that with current
+  // design.  However, we cannot do that without big changes and the behavior
+  // is not so complicated for now.  Therefore, we should just notify it
+  // of dispatching events and TextEventDispatcher should emulate the state
+  // with events here.
+  if (aEvent->mClass == eCompositionEventClass ||
+      aEvent->mClass == eKeyboardEventClass) {
+    TextEventDispatcher* dispatcher = GetTextEventDispatcher();
+    // However, if the event is being dispatched by the text event dispatcher
+    // or, there is native text event dispatcher listener, that means that
+    // native text input event handler is in this process like on Android,
+    // and the event is not synthesized for tests, the event is coming from
+    // the TextEventDispatcher.  In these cases, we shouldn't notify
+    // TextEventDispatcher of dispatching the event.
+    if (!dispatcher->IsDispatchingEvent() &&
+        !(mNativeTextEventDispatcherListener &&
+          !aEvent->mFlags.mIsSynthesizedForTests)) {
+      DebugOnly<nsresult> rv =
+        dispatcher->BeginInputTransactionFor(aEvent, this);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+        "The text event dispatcher should always succeed to start input "
+        "transaction for the event");
+    }
+  }
+
   aStatus = nsEventStatus_eIgnore;
 
   if (GetCurrentWidgetListener()) {
