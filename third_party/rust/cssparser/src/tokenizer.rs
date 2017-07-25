@@ -964,7 +964,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
                 b' ' | b'\t' | b'\n' | b'\r' | b'\x0C' => {
                     let value = tokenizer.slice_from(start_pos);
                     tokenizer.advance(1);
-                    return consume_url_end(tokenizer, value.into())
+                    return consume_url_end(tokenizer, start_pos, value.into())
                 }
                 b')' => {
                     let value = tokenizer.slice_from(start_pos);
@@ -974,7 +974,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
                 b'\x01'...b'\x08' | b'\x0B' | b'\x0E'...b'\x1F' | b'\x7F'  // non-printable
                     | b'"' | b'\'' | b'(' => {
                     tokenizer.advance(1);
-                    return consume_bad_url(tokenizer)
+                    return consume_bad_url(tokenizer, start_pos)
                 },
                 b'\\' | b'\0' => {
                     // * The tokenizer’s input is UTF-8 since it’s `&str`.
@@ -993,22 +993,20 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.consume_byte(),
                 b' ' | b'\t' | b'\n' | b'\r' | b'\x0C' => {
-                    return consume_url_end(
-                        tokenizer,
-                        // string_bytes is well-formed UTF-8, see other comments.
-                        unsafe { from_utf8_release_unchecked(string_bytes) }.into()
-                    )
+                    // string_bytes is well-formed UTF-8, see other comments.
+                    let string = unsafe { from_utf8_release_unchecked(string_bytes) }.into();
+                    return consume_url_end(tokenizer, start_pos, string)
                 }
                 b')' => {
                     break;
                 }
                 b'\x01'...b'\x08' | b'\x0B' | b'\x0E'...b'\x1F' | b'\x7F'  // non-printable
                     | b'"' | b'\'' | b'(' => {
-                    return consume_bad_url(tokenizer);
+                    return consume_bad_url(tokenizer, start_pos);
                 }
                 b'\\' => {
                     if tokenizer.has_newline_at(0) {
-                        return consume_bad_url(tokenizer)
+                        return consume_bad_url(tokenizer, start_pos)
                     }
 
                     // This pushes one well-formed code point to string_bytes
@@ -1028,27 +1026,31 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         )
     }
 
-    fn consume_url_end<'a>(tokenizer: &mut Tokenizer<'a>, string: CowRcStr<'a>) -> Token<'a> {
+    fn consume_url_end<'a>(tokenizer: &mut Tokenizer<'a>,
+                           start_pos: SourcePosition,
+                           string: CowRcStr<'a>)
+                           -> Token<'a> {
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.consume_byte(),
                 b' ' | b'\t' | b'\n' | b'\r' | b'\x0C' => {},
                 b')' => { break },
                 _ => {
-                    return consume_bad_url(tokenizer);
+                    return consume_bad_url(tokenizer, start_pos);
                 }
             }
         }
         UnquotedUrl(string)
     }
 
-    fn consume_bad_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
-        let start_pos = tokenizer.position();
+    fn consume_bad_url<'a>(tokenizer: &mut Tokenizer<'a>, start_pos: SourcePosition) -> Token<'a> {
         // Consume up to the closing )
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.consume_byte(),
                 b')' => { break },
                 b'\\' => {
-                    tokenizer.advance(1); // Skip an escaped ')' or '\'
+                    if matches!(tokenizer.next_byte(), Some(b')') | Some(b'\\')) {
+                        tokenizer.advance(1); // Skip an escaped ')' or '\'
+                    }
                 }
                 _ => {},
             }
