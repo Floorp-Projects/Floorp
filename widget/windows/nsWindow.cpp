@@ -8127,8 +8127,8 @@ nsWindow::GetMainWindowClass()
 {
   static const wchar_t* sMainWindowClass = nullptr;
   if (!sMainWindowClass) {
-    nsAdoptingString className =
-      Preferences::GetString("ui.window_class_override");
+    nsAutoString className;
+    Preferences::GetString("ui.window_class_override", className);
     if (!className.IsEmpty()) {
       sMainWindowClass = wcsdup(className.get());
     } else {
