@@ -8785,12 +8785,11 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     RootedObject scriptObject(cx);
     if (frame.isFunctionFrame()) {
         RootedFunction callee(cx, frame.callee());
-        if (callee->isInterpreted()) {
-            RootedScript script(cx, callee->nonLazyScript());
-            scriptObject = debug->wrapScript(cx, script);
-            if (!scriptObject)
-                return false;
-        }
+        MOZ_ASSERT(callee->isInterpreted());
+        RootedScript script(cx, callee->nonLazyScript());
+        scriptObject = debug->wrapScript(cx, script);
+        if (!scriptObject)
+            return false;
     } else if (frame.isWasmDebugFrame()) {
         RootedWasmInstanceObject instance(cx, frame.wasmInstance()->object());
         scriptObject = debug->wrapWasmScript(cx, instance);
@@ -8806,7 +8805,9 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
         if (!scriptObject)
             return false;
     }
-    args.rval().setObjectOrNull(scriptObject);
+
+    MOZ_ASSERT(scriptObject);
+    args.rval().setObject(*scriptObject);
     return true;
 }
 
