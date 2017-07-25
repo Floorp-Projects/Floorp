@@ -25,7 +25,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
@@ -268,50 +267,9 @@ typedef void ProfilerStackCallback(void** aPCs, size_t aCount, bool aIsMainThrea
 // WARNING: The target thread is suspended during the callback. Do not try to
 // allocate or acquire any locks, or you could deadlock. The target thread will
 // have resumed by the time this function returns.
-//
-// XXX: this function is in the process of being replaced with the other profiler_suspend_and_sample_thread() function.
 PROFILER_FUNC_VOID(
   profiler_suspend_and_sample_thread(int aThreadId,
                                      const std::function<ProfilerStackCallback>& aCallback,
-                                     bool aSampleNative = true))
-
-// An object of this class is passed to profiler_suspend_and_sample_thread().
-// For each stack frame, one of the Collect methods will be called.
-class ProfilerStackCollector
-{
-public:
-  // Some collectors need to worry about possibly overwriting previous
-  // generations of data. If that's not an issue, this can return Nothing,
-  // which is the default behaviour.
-  virtual mozilla::Maybe<uint32_t> Generation() { return mozilla::Nothing(); }
-
-  // This method will be called once if the thread being suspended is the main
-  // thread. Default behaviour is to do nothing.
-  virtual void SetIsMainThread() {}
-
-  // WARNING: The target thread is suspended when the Collect methods are
-  // called. Do not try to allocate or acquire any locks, or you could
-  // deadlock. The target thread will have resumed by the time this function
-  // returns.
-
-  virtual void CollectNativeLeafAddr(void* aAddr) = 0;
-
-  virtual void CollectJitReturnAddr(void* aAddr) = 0;
-
-  // aLabel is static and never null. aStr may be null. aLineNumber may be -1.
-  virtual void CollectCodeLocation(
-    const char* aLabel, const char* aStr, int aLineNumber,
-    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory) = 0;
-};
-
-// This method suspends the thread identified by aThreadId, samples its
-// pseudo-stack, JS stack, and (optionally) native stack, passing the collected
-// frames into aCollector. aFeatures dictates which compiler features are used.
-// |Privacy| and |Leaf| are the only relevant ones.
-PROFILER_FUNC_VOID(
-  profiler_suspend_and_sample_thread(int aThreadId,
-                                     uint32_t aFeatures,
-                                     ProfilerStackCollector& aCollector,
                                      bool aSampleNative = true))
 
 struct ProfilerBacktraceDestructor
