@@ -167,7 +167,7 @@ jmethodID JavaClass::GetStaticMethodId(
 jobject JavaClass::CallStaticObjectMethod(jmethodID methodID, ...) {
   va_list args;
   va_start(args, methodID);
-  jobject res = jni_->CallStaticObjectMethod(j_class_, methodID, args);
+  jobject res = jni_->CallStaticObjectMethodV(j_class_, methodID, args);
   CHECK_EXCEPTION(jni_) << "Error during CallStaticObjectMethod";
   return res;
 }
@@ -175,7 +175,7 @@ jobject JavaClass::CallStaticObjectMethod(jmethodID methodID, ...) {
 jint JavaClass::CallStaticIntMethod(jmethodID methodID, ...) {
   va_list args;
   va_start(args, methodID);
-  jint res = jni_->CallStaticIntMethod(j_class_, methodID, args);
+  jint res = jni_->CallStaticIntMethodV(j_class_, methodID, args);
   CHECK_EXCEPTION(jni_) << "Error during CallStaticIntMethod";
   return res;
 }
