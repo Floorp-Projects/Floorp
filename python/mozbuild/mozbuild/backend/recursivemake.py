@@ -1010,7 +1010,7 @@ class RecursiveMakeBackend(CommonBackend):
             build_files.add_optional_exists(p)
 
         for idl in manager.idls.values():
-            self._install_manifests['dist_idl'].add_symlink(idl['source'],
+            self._install_manifests['dist_idl'].add_link(idl['source'],
                 idl['basename'])
             self._install_manifests['dist_include'].add_optional_exists('%s.h'
                 % idl['root'])
@@ -1155,14 +1155,14 @@ class RecursiveMakeBackend(CommonBackend):
         # the manifest is listed as a duplicate.
         for source, (dest, is_test) in obj.installs.items():
             try:
-                self._install_manifests['_test_files'].add_symlink(source, dest)
+                self._install_manifests['_test_files'].add_link(source, dest)
             except ValueError:
                 if not obj.dupe_manifest and is_test:
                     raise
 
         for base, pattern, dest in obj.pattern_installs:
             try:
-                self._install_manifests['_test_files'].add_pattern_symlink(base,
+                self._install_manifests['_test_files'].add_pattern_link(base,
                     pattern, dest)
             except ValueError:
                 if not obj.dupe_manifest:
@@ -1390,11 +1390,11 @@ class RecursiveMakeBackend(CommonBackend):
                                 raise Exception("Wildcards are only supported in the filename part of "
                                                 "srcdir-relative or absolute paths.")
 
-                            install_manifest.add_pattern_symlink(basepath, wild, path)
+                            install_manifest.add_pattern_link(basepath, wild, path)
                         else:
-                            install_manifest.add_pattern_symlink(f.srcdir, f, path)
+                            install_manifest.add_pattern_link(f.srcdir, f, path)
                     else:
-                        install_manifest.add_symlink(f.full_path, dest)
+                        install_manifest.add_link(f.full_path, dest)
                 else:
                     install_manifest.add_optional_exists(dest)
                     backend_file.write('%s_FILES += %s\n' % (

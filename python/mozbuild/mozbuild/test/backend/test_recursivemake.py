@@ -588,9 +588,9 @@ class TestRecursiveMakeBackend(BackendTester):
         for item, installs in test_installs.items():
             for install_info in installs:
                 if len(install_info) == 3:
-                    synthesized_manifest.add_pattern_symlink(*install_info)
+                    synthesized_manifest.add_pattern_link(*install_info)
                 if len(install_info) == 2:
-                    synthesized_manifest.add_symlink(*install_info)
+                    synthesized_manifest.add_link(*install_info)
 
         self.assertEqual(len(synthesized_manifest), 3)
         for item, info in synthesized_manifest._dests.items():
@@ -660,7 +660,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         m = InstallManifest()
         backend._install_manifests['testing'] = m
-        m.add_symlink(__file__, 'self')
+        m.add_link(__file__, 'self')
         backend.consume(objs)
 
         man_dir = mozpath.join(env.topobjdir, '_build_manifests', 'install')
