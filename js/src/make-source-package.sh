@@ -7,6 +7,7 @@ set -e
 
 : ${MKDIR:=mkdir}
 : ${TAR:=tar}
+: ${AUTOCONF:=autoconf-2.13}
 : ${SRCDIR:=$(cd $(dirname $0); pwd 2>/dev/null)}
 : ${MOZJS_NAME:=mozjs}
 # The place to gather files to be added to the tarball.
@@ -34,6 +35,7 @@ echo "Environment:"
 echo "    MAKE = $MAKE"
 echo "    MKDIR = $MKDIR"
 echo "    TAR = $TAR"
+echo "    AUTOCONF = $AUTOCONF"
 echo "    STAGING = $STAGING"
 echo "    DIST = $DIST"
 echo "    SRCDIR = $SRCDIR"
@@ -97,6 +99,12 @@ case $cmd in
     # copy cargo config
     ${MKDIR} -p ${tgtpath}/.cargo
     cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo
+
+    # generate configure files to avoid build dependency on autoconf-2.13
+    cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
+    chmod a+x ${tgtpath}/js/src/configure
+    ${AUTOCONF} --localdir=${TOPSRCDIR}/js/src \
+        ${TOPSRCDIR}/js/src/old-configure.in >${tgtpath}/js/src/old-configure
 
     # put in js itself
     cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
