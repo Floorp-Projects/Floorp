@@ -41,6 +41,7 @@ config = {
     'tooltool_bootstrap': 'setup.sh',
     'enable_count_ctors': False,
     'max_build_output_timeout': 60 * 80,
+    'perfherder_extra_options': ['static-analysis'],
     #########################################################################
 
 
