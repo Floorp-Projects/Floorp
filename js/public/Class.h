@@ -436,7 +436,7 @@ typedef bool
  * that object.  A null return value means OOM.
  */
 typedef JSString*
-(* JSFunToStringOp)(JSContext* cx, JS::HandleObject obj, unsigned indent);
+(* JSFunToStringOp)(JSContext* cx, JS::HandleObject obj, bool isToSource);
 
 /**
  * Resolve a lazy property named by id in obj by defining it directly in obj.
