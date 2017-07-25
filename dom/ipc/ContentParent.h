@@ -39,6 +39,9 @@
 #define NO_REMOTE_TYPE ""
 
 // These must match the similar ones in E10SUtils.jsm.
+// Process names as reported by about:memory are defined in
+// ContentChild:RecvRemoteType.  Add your value there too or it will be called
+// "Web Content".
 #define DEFAULT_REMOTE_TYPE "web"
 #define FILE_REMOTE_TYPE "file"
 #define EXTENSION_REMOTE_TYPE "extension"
