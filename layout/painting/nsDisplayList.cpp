@@ -8581,6 +8581,12 @@ bool nsDisplayMask::TryMerge(nsDisplayItem* aItem)
   if (aItem->GetType() != TYPE_MASK)
     return false;
 
+  // Do not merge items for box-decoration-break:clone elements,
+  // since each box should have its own mask in that case.
+  if (mFrame->StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone) {
+    return false;
+  }
+
   // items for the same content element should be merged into a single
   // compositing group
   // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplaySVGEffects

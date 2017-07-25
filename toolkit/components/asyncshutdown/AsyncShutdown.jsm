@@ -1003,7 +1003,6 @@ Barrier.prototype = Object.freeze({
 if (!isContent) {
   this.AsyncShutdown.profileChangeTeardown = getPhase("profile-change-teardown");
   this.AsyncShutdown.profileBeforeChange = getPhase("profile-before-change");
-  this.AsyncShutdown.placesClosingInternalConnection = getPhase("places-will-close-connection");
   this.AsyncShutdown.sendTelemetry = getPhase("profile-before-change-telemetry");
 }
 
