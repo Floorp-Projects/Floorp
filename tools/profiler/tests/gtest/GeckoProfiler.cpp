@@ -664,3 +664,70 @@ TEST(GeckoProfiler, Bug1355807)
 
   profiler_stop();
 }
+
+class GTestStackCollector final : public ProfilerStackCollector
+{
+public:
+  GTestStackCollector()
+    : mSetIsMainThread(0)
+    , mFrames(0)
+  {}
+
+  virtual void SetIsMainThread() { mSetIsMainThread++; }
+
+  virtual void CollectNativeLeafAddr(void* aAddr) { mFrames++; }
+  virtual void CollectJitReturnAddr(void* aAddr) { mFrames++; }
+  virtual void CollectCodeLocation(
+    const char* aLabel, const char* aStr, int aLineNumber,
+    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory) { mFrames++; }
+
+  int mSetIsMainThread;
+  int mFrames;
+};
+
+void DoSuspendAndSample(int aTid, nsIThread* aThread)
+{
+  aThread->Dispatch(
+    NS_NewRunnableFunction(
+      "GeckoProfiler_SuspendAndSample_Test::TestBody",
+      [&]() {
+        uint32_t features = ProfilerFeature::Leaf;
+        GTestStackCollector collector;
+        profiler_suspend_and_sample_thread(aTid, features, collector,
+                                           /* sampleNative = */ true);
+
+        ASSERT_TRUE(collector.mSetIsMainThread == 1);
+        ASSERT_TRUE(collector.mFrames > 5); // approximate; must be > 0
+      }),
+    NS_DISPATCH_SYNC);
+}
+
+TEST(GeckoProfiler, SuspendAndSample)
+{
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  int tid = Thread::GetCurrentId();
+
+  ASSERT_TRUE(!profiler_is_active());
+
+  // Suspend and sample while the profiler is inactive.
+  DoSuspendAndSample(tid, thread);
+
+  uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
+  const char* filters[] = { "GeckoMain", "Compositor" };
+
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                 features, filters, MOZ_ARRAY_LENGTH(filters));
+
+  ASSERT_TRUE(profiler_is_active());
+
+  // Suspend and sample while the profiler is active.
+  DoSuspendAndSample(tid, thread);
+
+  profiler_stop();
+
+  ASSERT_TRUE(!profiler_is_active());
+}
+
