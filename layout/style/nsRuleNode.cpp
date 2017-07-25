@@ -3694,13 +3694,16 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, GeckoStyleContext* aContext,
     "LookAndFeel.h system-font constants out of sync with nsStyleConsts.h");
 
   // Fall back to defaultVariableFont.
-  nsFont systemFont = *defaultVariableFont;
+  Maybe<nsFont> lazySystemFont;
   const nsCSSValue* systemFontValue = aRuleData->ValueForSystemFont();
   if (eCSSUnit_Enumerated == systemFontValue->GetUnit()) {
+    lazySystemFont.emplace(*defaultVariableFont);
     LookAndFeel::FontID fontID =
       (LookAndFeel::FontID)systemFontValue->GetIntValue();
-    ComputeSystemFont(&systemFont, fontID, aPresContext, defaultVariableFont);
+    ComputeSystemFont(lazySystemFont.ptr(), fontID, aPresContext,
+                      defaultVariableFont);
   }
+  const nsFont& systemFont = lazySystemFont.refOr(*defaultVariableFont);
 
   // font-family: font family list, enum, inherit
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
