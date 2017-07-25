@@ -14,7 +14,7 @@ const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-var {Ci, Cu} = require("chrome");
+var {Ci, Cu, Cc} = require("chrome");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var Services = require("Services");
@@ -27,6 +27,8 @@ var Menu = require("devtools/client/framework/menu");
 var MenuItem = require("devtools/client/framework/menu-item");
 var { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
+var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupports)
+  .wrappedJSObject;
 
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
@@ -857,24 +859,25 @@ Toolbox.prototype = {
 
     let doc = this.win.parent.document;
 
-    for (let [id, toolDefinition] of gDevTools.getToolDefinitionMap()) {
-      // Prevent multiple entries for the same tool.
-      if (!toolDefinition.key || doc.getElementById("key_" + id)) {
+    for (let item of Startup.KeyShortcuts) {
+      // KeyShortcuts contain tool-specific and global key shortcuts,
+      // here we only need to copy shortcut specific to each tool.
+      if (!item.toolId) {
         continue;
       }
+      let { toolId, shortcut, modifiers } = item;
 
-      let toolId = id;
       let key = doc.createElement("key");
 
       key.id = "key_" + toolId;
 
-      if (toolDefinition.key.startsWith("VK_")) {
-        key.setAttribute("keycode", toolDefinition.key);
+      if (shortcut.startsWith("VK_")) {
+        key.setAttribute("keycode", shortcut);
       } else {
-        key.setAttribute("key", toolDefinition.key);
+        key.setAttribute("key", shortcut);
       }
 
-      key.setAttribute("modifiers", toolDefinition.modifiers);
+      key.setAttribute("modifiers", modifiers);
       // needed. See bug 371900
       key.setAttribute("oncommand", "void(0);");
       key.addEventListener("command", () => {

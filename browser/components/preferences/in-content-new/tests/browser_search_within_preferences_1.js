@@ -56,11 +56,7 @@ add_task(async function() {
 
   for (let i = 0; i < categoriesList.childElementCount; i++) {
     let child = categoriesList.children[i]
-    if (child.id == "category-search-results") {
-      is(child.selected, true, "Search results panel should be selected");
-    } else if (child.id) {
-      is(child.selected, false, "No other panel should be selected");
-    }
+    is(child.selected, false, "No other panel should be selected");
   }
   // Takes search off
   searchInput.value = "";
@@ -242,19 +238,15 @@ add_task(async function() {
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
   let searchInput = gBrowser.contentDocument.getElementById("searchInput");
-  let searchResultsCategory = gBrowser.contentDocument.getElementById("category-search-results");
 
   is(searchInput, gBrowser.contentDocument.activeElement.closest("#searchInput"),
     "Search input should be focused when visiting preferences");
 
   searchInput.value = "password";
   searchInput.doCommand();
-  is(searchResultsCategory.hidden, false, "search results category should be shown");
-  is(searchResultsCategory.selected, true, "search results category should be selected");
 
   let privacyCategory = gBrowser.contentDocument.getElementById("category-privacy");
   privacyCategory.click();
-  is(searchResultsCategory.hidden, true, "search results category should not be shown");
   is(searchInput.value, "", "search input should be empty");
   let categoriesList = gBrowser.contentDocument.getElementById("categories");
   for (let i = 0; i < categoriesList.childElementCount; i++) {

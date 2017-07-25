@@ -1253,6 +1253,15 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
     return false;
   }
 
+  // If there is no pending composition, we may have already sent
+  // eCompositionCommit(AsIs) event for the active composition.  If so, the
+  // remote process will receive composition events which causes cleaning up
+  // TextComposition.  So, this shouldn't do nothing and TextComposition
+  // should handle the request as it's handled asynchronously.
+  if (mIsPendingLastCommitEvent) {
+    return false;
+  }
+
   // If TabParent which has IME focus was already changed to different one, the
   // request shouldn't be sent to IME because it's too late.
   if (!IMEStateManager::DoesTabParentHaveIMEFocus(&mTabParent)) {
@@ -1260,16 +1269,6 @@ ContentCacheInParent::RequestIMEToCommitComposition(nsIWidget* aWidget,
     // remote process for avoiding data loss.
     aCommittedString = mCompositionString;
     return true;
-  }
-
-  // Even if the remote process has IME focus and there is no pending
-  // composition, we may have already sent eCompositionCommit(AsIs) event
-  // to it.  If so, the remote process will receive composition events
-  // which causes cleaning up TextComposition.  So, this shouldn't do nothing
-  // and TextComposition should handle the request as it's handled
-  // asynchronously.
-  if (mIsPendingLastCommitEvent) {
-    return false;
   }
 
   RefPtr<TextComposition> composition =

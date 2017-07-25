@@ -1,0 +1,2 @@
+include jsone *.py
+recursive-exclude test *

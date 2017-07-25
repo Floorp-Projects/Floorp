@@ -870,11 +870,8 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
       DocumentStyleRootIterator iter(doc);
       while (Element* root = iter.GetNextStyleRoot()) {
         ServoRestyleState state(*styleSet, currentChanges);
-        if (!forThrottledAnimationFlush ||
-            root->HasAnimationOnlyDirtyDescendantsForServo()) {
-          anyStyleChanged |=
-            ProcessPostTraversal(root, nullptr, state, aRestyleBehavior);
-        }
+        anyStyleChanged |=
+          ProcessPostTraversal(root, nullptr, state, aRestyleBehavior);
       }
     }
 

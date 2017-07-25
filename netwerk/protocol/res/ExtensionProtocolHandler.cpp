@@ -515,17 +515,11 @@ ExtensionProtocolHandler::DevRepoContains(nsIFile* aRequestedFile,
   MOZ_ASSERT(aResult);
   *aResult = false;
 
-  // On the first invocation, set mDevRepo if this is a
-  // development build with MOZ_DEVELOPER_REPO_DIR set.
+  // On the first invocation, set mDevRepo if this is a development build
   if (!mAlreadyCheckedDevRepo) {
     mAlreadyCheckedDevRepo = true;
     if (mozilla::IsDevelopmentBuild()) {
-      char *developer_repo_dir = PR_GetEnv("MOZ_DEVELOPER_REPO_DIR");
-      if (developer_repo_dir) {
-        NS_TRY(NS_NewLocalFile(NS_ConvertUTF8toUTF16(developer_repo_dir),
-                               false, getter_AddRefs(mDevRepo)));
-        NS_TRY(mDevRepo->Normalize());
-      }
+      NS_TRY(mozilla::GetRepoDir(getter_AddRefs(mDevRepo)));
     }
   }
 

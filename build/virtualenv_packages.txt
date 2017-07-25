@@ -22,6 +22,7 @@ mozilla.pth:third_party/python/pytest
 mozilla.pth:third_party/python/pytoml
 mozilla.pth:third_party/python/redo
 mozilla.pth:third_party/python/voluptuous
+mozilla.pth:third_party/python/json-e
 mozilla.pth:build
 objdir:build
 mozilla.pth:build/pymake
@@ -38,8 +39,7 @@ mozilla.pth:testing/marionette/harness
 mozilla.pth:testing/marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 mozilla.pth:testing/marionette/puppeteer/firefox
 packages.txt:testing/mozbase/packages.txt
-mozilla.pth:testing/taskcluster
-mozilla.pth:testing/tools/autotry
+mozilla.pth:tools
 mozilla.pth:testing/web-platform
 mozilla.pth:testing/web-platform/tests/tools/wptrunner
 mozilla.pth:testing/web-platform/tests/tools/wptserve

@@ -10,6 +10,18 @@
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/Preferences.h"
 
+#include "nsDirectoryServiceDefs.h"
+
+#if defined(XP_MACOSX)
+#include <CoreServices/CoreServices.h>
+// Info.plist key associated with the developer repo path
+#define MAC_DEV_REPO_KEY "MozillaDeveloperRepoPath"
+// Info.plist key associated with the developer repo object directory
+#define MAC_DEV_OBJ_KEY "MozillaDeveloperObjPath"
+#else
+#include "prenv.h"
+#endif /* XP_MACOSX */
+
 namespace mozilla {
 
 bool IsDevelopmentBuild()
@@ -17,6 +29,127 @@ bool IsDevelopmentBuild()
   nsCOMPtr<nsIFile> path = mozilla::Omnijar::GetPath(mozilla::Omnijar::GRE);
   // If the path doesn't exist, we're a dev build.
   return path == nullptr;
+}
+
+#if defined(XP_MACOSX)
+/*
+ * Helper function to read a string value for a given key from the .app's
+ * Info.plist.
+ */
+static nsresult
+GetStringValueFromBundlePlist(const nsAString& aKey, nsAutoCString& aValue)
+{
+  CFBundleRef mainBundle = CFBundleGetMainBundle();
+
+  // Read this app's bundle Info.plist as a dictionary
+  CFDictionaryRef bundleInfoDict = CFBundleGetInfoDictionary(mainBundle);
+  if (bundleInfoDict == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString keyAutoCString = NS_ConvertUTF16toUTF8(aKey);
+  CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault,
+                                              keyAutoCString.get(),
+                                              kCFStringEncodingUTF8);
+
+  CFStringRef value = (CFStringRef)CFDictionaryGetValue(bundleInfoDict, key);
+  const char* valueCString = CFStringGetCStringPtr(value,
+                                                   kCFStringEncodingUTF8);
+  aValue.Assign(valueCString);
+  CFRelease(key);
+
+  return NS_OK;
+}
+
+/*
+ * Helper function for reading a path string from the .app's Info.plist
+ * and returning a directory object for that path with symlinks resolved.
+ */
+static nsresult
+GetDirFromBundlePlist(const nsAString& aKey, nsIFile **aDir)
+{
+  nsresult rv;
+
+  nsAutoCString dirPath;
+  rv = GetStringValueFromBundlePlist(aKey, dirPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> dir;
+  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(dirPath),
+                       false,
+                       getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dir->Normalize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isDirectory = false;
+  rv = dir->IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isDirectory) {
+    return NS_ERROR_FILE_NOT_DIRECTORY;
+  }
+
+  dir.swap(*aDir);
+  return NS_OK;
+}
+
+#else /* !XP_MACOSX */
+
+/*
+ * Helper function for getting a directory object for a given env variable
+ */
+static nsresult
+GetDirFromEnv(const char* aEnvVar, nsIFile **aDir)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> dir;
+  const char *dir_path = PR_GetEnv(aEnvVar);
+  if (!dir_path) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(dir_path),
+                       false,
+                       getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dir->Normalize();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isDirectory = false;
+  rv = dir->IsDirectory(&isDirectory);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isDirectory) {
+    return NS_ERROR_FILE_NOT_DIRECTORY;
+  }
+
+  dir.swap(*aDir);
+  return NS_OK;
+}
+#endif /* XP_MACOSX */
+
+nsresult
+GetRepoDir(nsIFile **aRepoDir)
+{
+  MOZ_ASSERT(IsDevelopmentBuild());
+#if defined(XP_MACOSX)
+  return GetDirFromBundlePlist(NS_LITERAL_STRING(MAC_DEV_REPO_KEY), aRepoDir);
+#else
+  return GetDirFromEnv("MOZ_DEVELOPER_REPO_DIR", aRepoDir);
+#endif /* XP_MACOSX */
+}
+
+nsresult
+GetObjDir(nsIFile **aObjDir)
+{
+  MOZ_ASSERT(IsDevelopmentBuild());
+#if defined(XP_MACOSX)
+  return GetDirFromBundlePlist(NS_LITERAL_STRING(MAC_DEV_OBJ_KEY), aObjDir);
+#else
+  return GetDirFromEnv("MOZ_DEVELOPER_OBJ_DIR", aObjDir);
+#endif /* XP_MACOSX */
 }
 
 int GetEffectiveContentSandboxLevel() {

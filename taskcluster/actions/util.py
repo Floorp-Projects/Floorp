@@ -8,10 +8,18 @@ import json
 import sys
 
 from taskgraph import create
-from taskgraph.util.taskcluster import get_session
+from taskgraph.util.taskcluster import get_session, find_task_id
 
 # this is set to true for `mach taskgraph action-callback --test`
 testing = False
+
+
+def find_decision_task(parameters):
+    """Given the parameters for this action, find the taskId of the decision
+    task"""
+    return find_task_id('gecko.v2.{}.pushlog-id.{}.decision'.format(
+        parameters['project'],
+        parameters['pushlog_id']))
 
 
 def create_task(task_id, task_def):

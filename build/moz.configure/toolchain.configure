@@ -1047,6 +1047,14 @@ def is_windows(target, host):
 
 include('windows.configure', when=is_windows)
 
+# Shader Compiler for Windows (and MinGW Cross Compile)
+# ==============================================================
+
+fxc = check_prog('FXC', ('fxc.exe', 'fxc2.exe'), when=depends(target)
+                 (lambda t: t.kernel == 'WINNT'))
+wine = check_prog('WINE', ['wine'], when=depends(target, host)
+                  (lambda t, h: t.kernel == 'WINNT' and h.kernel == 'Linux'))
+
 # Security Hardening
 # ==============================================================
 
@@ -1162,8 +1170,10 @@ def enable_gold(enable_gold_option, c_compiler, developer_options, build_env):
             KIND='gold'
         )
 
-    die("Could not find any linker")
-
+    # For other platforms without gold or the GNU linker
+    return namespace(
+        KIND='other'
+    )
 
 set_config('LD_IS_BFD', depends(enable_gold.KIND)(lambda x: x == 'bfd' or None))
 set_config('LINKER_LDFLAGS', enable_gold.LINKER_FLAG)

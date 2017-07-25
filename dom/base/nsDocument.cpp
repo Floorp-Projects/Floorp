@@ -7050,7 +7050,7 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
   nsresult rv = Dispatch("nsDocument::DoNotifyPossibleTitleChange",
                          TaskCategory::Other, do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
-    mPendingTitleChangeEvent = event;
+    mPendingTitleChangeEvent = Move(event);
   }
 }
 

@@ -519,7 +519,12 @@ partial interface Window {
 
 partial interface Window {
   /**
-   * Returns a list of locales that the application should be localized to.
+   * Returns a list of locales that the internationalization components
+   * should be localized to.
+   *
+   * The function name refers to Regional Preferences which can be either
+   * fetched from the internal internationalization database (CLDR), or
+   * from the host environment.
    *
    * The result is a sorted list of valid locale IDs and it should be
    * used for all APIs that accept list of locales, like ECMA402 and L10n APIs.
@@ -529,7 +534,7 @@ partial interface Window {
    * Example: ["en-US", "de", "pl", "sr-Cyrl", "zh-Hans-HK"]
    */
   [Func="IsChromeOrXBL"]
-  sequence<DOMString> getAppLocalesAsBCP47();
+  sequence<DOMString> getRegionalPrefsLocales();
 
 #ifdef ENABLE_INTL_API
   /**

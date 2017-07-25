@@ -422,7 +422,7 @@ impl CSSWideKeyword {
 
 impl Parse for CSSWideKeyword {
     fn parse<'i, 't>(_context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<Self, ParseError<'i>> {
-        let ident = input.expect_ident()?;
+        let ident = input.expect_ident()?.clone();
         input.expect_exhausted()?;
         CSSWideKeyword::from_ident(&ident)
             .ok_or(SelectorParseError::UnexpectedIdent(ident).into())
@@ -2996,6 +2996,7 @@ where
         cached_system_font: None,
         in_media_query: false,
         quirks_mode: quirks_mode,
+        for_smil_animation: false,
     };
 
     let ignore_colors = !device.use_document_colors();

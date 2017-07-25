@@ -42,6 +42,9 @@ runWithMSE(function(ms, el) {
 
     ok(true, "Receive a sourceopen event");
     var videosb = ms.addSourceBuffer("video/mp4");
+    el.addEventListener("error", function(e) {
+      ok(false, "should not fire '" + e + "' event");
+    });
     is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
     var promises = [];
     promises.push(fetchAndLoad(videosb, 'bipbop/bipbop_video', ['init'], '.mp4'));

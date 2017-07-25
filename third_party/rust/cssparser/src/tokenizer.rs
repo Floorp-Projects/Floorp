@@ -10,7 +10,7 @@ use std::char;
 use std::ascii::AsciiExt;
 use std::i32;
 
-use compact_cow_str::CompactCowStr;
+use cow_rc_str::CowRcStr;
 use self::Token::*;
 
 
@@ -22,32 +22,32 @@ use self::Token::*;
 pub enum Token<'a> {
 
     /// A [`<ident-token>`](https://drafts.csswg.org/css-syntax/#ident-token-diagram)
-    Ident(CompactCowStr<'a>),
+    Ident(CowRcStr<'a>),
 
     /// A [`<at-keyword-token>`](https://drafts.csswg.org/css-syntax/#at-keyword-token-diagram)
     ///
     /// The value does not include the `@` marker.
-    AtKeyword(CompactCowStr<'a>),
+    AtKeyword(CowRcStr<'a>),
 
     /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "unrestricted"
     ///
     /// The value does not include the `#` marker.
-    Hash(CompactCowStr<'a>),
+    Hash(CowRcStr<'a>),
 
     /// A [`<hash-token>`](https://drafts.csswg.org/css-syntax/#hash-token-diagram) with the type flag set to "id"
     ///
     /// The value does not include the `#` marker.
-    IDHash(CompactCowStr<'a>),  // Hash that is a valid ID selector.
+    IDHash(CowRcStr<'a>),  // Hash that is a valid ID selector.
 
     /// A [`<string-token>`](https://drafts.csswg.org/css-syntax/#string-token-diagram)
     ///
     /// The value does not include the quotes.
-    QuotedString(CompactCowStr<'a>),
+    QuotedString(CowRcStr<'a>),
 
     /// A [`<url-token>`](https://drafts.csswg.org/css-syntax/#url-token-diagram) or `url( <string-token> )` function
     ///
     /// The value does not include the `url(` `)` markers or the quotes.
-    UnquotedUrl(CompactCowStr<'a>),
+    UnquotedUrl(CowRcStr<'a>),
 
     /// A `<delim-token>`
     Delim(char),
@@ -93,7 +93,7 @@ pub enum Token<'a> {
         int_value: Option<i32>,
 
         /// The unit, e.g. "px" in `12px`
-        unit: CompactCowStr<'a>
+        unit: CowRcStr<'a>
     },
 
     /// A [`<whitespace-token>`](https://drafts.csswg.org/css-syntax/#whitespace-token-diagram)
@@ -143,7 +143,7 @@ pub enum Token<'a> {
     /// A [`<function-token>`](https://drafts.csswg.org/css-syntax/#function-token-diagram)
     ///
     /// The value (name) does not include the `(` marker.
-    Function(CompactCowStr<'a>),
+    Function(CowRcStr<'a>),
 
     /// A `<(-token>`
     ParenthesisBlock,
@@ -157,12 +157,12 @@ pub enum Token<'a> {
     /// A `<bad-url-token>`
     ///
     /// This token always indicates a parse error.
-    BadUrl(CompactCowStr<'a>),
+    BadUrl(CowRcStr<'a>),
 
     /// A `<bad-string-token>`
     ///
     /// This token always indicates a parse error.
-    BadString(CompactCowStr<'a>),
+    BadString(CowRcStr<'a>),
 
     /// A `<)-token>`
     ///
@@ -245,6 +245,15 @@ impl<'a> Tokenizer<'a> {
     }
 
     #[inline]
+    pub fn see_function(&mut self, name: &str) {
+        if self.var_functions == SeenStatus::LookingForThem {
+            if name.eq_ignore_ascii_case("var") {
+                self.var_functions = SeenStatus::SeenAtLeastOne;
+            }
+        }
+    }
+
+    #[inline]
     pub fn look_for_viewport_percentages(&mut self) {
         self.viewport_percentages = SeenStatus::LookingForThem;
     }
@@ -254,6 +263,18 @@ impl<'a> Tokenizer<'a> {
         let seen = self.viewport_percentages == SeenStatus::SeenAtLeastOne;
         self.viewport_percentages = SeenStatus::DontCare;
         seen
+    }
+
+    #[inline]
+    pub fn see_dimension(&mut self, unit: &str) {
+        if self.viewport_percentages == SeenStatus::LookingForThem {
+            if unit.eq_ignore_ascii_case("vh") ||
+               unit.eq_ignore_ascii_case("vw") ||
+               unit.eq_ignore_ascii_case("vmin") ||
+               unit.eq_ignore_ascii_case("vmax") {
+                   self.viewport_percentages = SeenStatus::SeenAtLeastOne;
+            }
+        }
     }
 
     #[inline]
@@ -574,7 +595,7 @@ fn consume_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool) -> Toke
 
 /// Return `Err(())` on syntax error (ie. unescaped newline)
 fn consume_quoted_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool)
-                             -> Result<CompactCowStr<'a>, CompactCowStr<'a>> {
+                             -> Result<CowRcStr<'a>, CowRcStr<'a>> {
     tokenizer.advance(1);  // Skip the initial quote
     // start_pos is at code point boundary, after " or '
     let start_pos = tokenizer.position();
@@ -699,10 +720,7 @@ fn consume_ident_like<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
         if value.eq_ignore_ascii_case("url") {
             consume_unquoted_url(tokenizer).unwrap_or(Function(value))
         } else {
-            if tokenizer.var_functions == SeenStatus::LookingForThem &&
-                value.eq_ignore_ascii_case("var") {
-                tokenizer.var_functions = SeenStatus::SeenAtLeastOne;
-            }
+            tokenizer.see_function(&value);
             Function(value)
         }
     } else {
@@ -710,7 +728,7 @@ fn consume_ident_like<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     }
 }
 
-fn consume_name<'a>(tokenizer: &mut Tokenizer<'a>) -> CompactCowStr<'a> {
+fn consume_name<'a>(tokenizer: &mut Tokenizer<'a>) -> CowRcStr<'a> {
     // start_pos is the end of the previous token, therefore at a code point boundary
     let start_pos = tokenizer.position();
     let mut value_bytes;
@@ -887,14 +905,7 @@ fn consume_numeric<'a>(tokenizer: &mut Tokenizer<'a>) -> Token<'a> {
     let value = value as f32;
     if is_ident_start(tokenizer) {
         let unit = consume_name(tokenizer);
-        if tokenizer.viewport_percentages == SeenStatus::LookingForThem {
-            if unit.eq_ignore_ascii_case("vh") ||
-               unit.eq_ignore_ascii_case("vw") ||
-               unit.eq_ignore_ascii_case("vmin") ||
-               unit.eq_ignore_ascii_case("vmax") {
-                   tokenizer.viewport_percentages = SeenStatus::SeenAtLeastOne;
-           }
-        }
+        tokenizer.see_dimension(&unit);
         Dimension {
             value: value,
             int_value: int_value,
@@ -1017,7 +1028,7 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         )
     }
 
-    fn consume_url_end<'a>(tokenizer: &mut Tokenizer<'a>, string: CompactCowStr<'a>) -> Token<'a> {
+    fn consume_url_end<'a>(tokenizer: &mut Tokenizer<'a>, string: CowRcStr<'a>) -> Token<'a> {
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.consume_byte(),
                 b' ' | b'\t' | b'\n' | b'\r' | b'\x0C' => {},
