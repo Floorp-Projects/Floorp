@@ -108,6 +108,13 @@ PushNotifier::Dispatch(PushDispatcher& aDispatcher)
       // At least one content process is active, so e10s must be enabled.
       // Broadcast a message to notify observers and service workers.
       for (uint32_t i = 0; i < contentActors.Length(); ++i) {
+        // We need to filter based on process type, only "web" AKA the default
+        // remote type is acceptable.
+        if (!contentActors[i]->GetRemoteType().EqualsLiteral(
+               DEFAULT_REMOTE_TYPE)) {
+          continue;
+        }
+
         // Ensure that the content actor has the permissions avaliable for the
         // principal the push is being sent for before sending the push message
         // down.
