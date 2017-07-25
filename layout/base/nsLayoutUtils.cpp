@@ -6025,7 +6025,8 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
     nsContextBoxBlur contextBoxBlur;
     gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, 0, blurRadius,
                                                     presCtx->AppUnitsPerDevPixel(),
-                                                    aDestCtx, aDirtyRect, nullptr);
+                                                    aDestCtx, aDirtyRect, nullptr,
+                                                    nsContextBoxBlur::DISABLE_HARDWARE_ACCELERATION_BLUR);
     if (!shadowContext)
       continue;
 

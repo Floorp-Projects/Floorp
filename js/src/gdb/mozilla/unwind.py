@@ -43,6 +43,7 @@ SizeOfFramePrefix = {
     'JitFrame_Entry': 'JitFrameLayout',
     'JitFrame_Rectifier': 'RectifierFrameLayout',
     'JitFrame_IonAccessorIC': 'IonAccessorICFrameLayout',
+    'JitFrame_IonICCall': 'IonICCallFrameLayout',
     'JitFrame_Exit': 'ExitFrameLayout',
     'JitFrame_Bailout': 'JitFrameLayout',
 }
@@ -329,12 +330,12 @@ class UnwinderState(object):
             return not self.text_address_claimed(pc)
 
         cx = self.get_tls_context()
-        runtime = cx['runtime_']
-        if runtime == 0:
+        runtime = cx['runtime_']['value']
+        if long(runtime.address) == 0:
             return False
 
         jitRuntime = runtime['jitRuntime_']
-        if jitRuntime == 0:
+        if long(jitRuntime.address) == 0:
             return False
 
         execAllocators = [jitRuntime['execAlloc_'], jitRuntime['backedgeExecAlloc_']]

@@ -2339,7 +2339,7 @@ PluginInstanceChild::SetupFlashMsgThrottle()
 }
 
 WNDPROC
-PluginInstanceChild::FlashThrottleAsyncMsg::GetProc()
+PluginInstanceChild::FlashThrottleMsg::GetProc()
 {
     if (mInstance) {
         return mWindowed ? mInstance->mPluginWndProc :
@@ -2349,18 +2349,30 @@ PluginInstanceChild::FlashThrottleAsyncMsg::GetProc()
 }
 
 NS_IMETHODIMP
-PluginInstanceChild::FlashThrottleAsyncMsg::Run()
+PluginInstanceChild::FlashThrottleMsg::Run()
 {
-    RemoveFromAsyncList();
+    if (!mInstance) {
+        return NS_OK;
+    }
+
+    mInstance->mPendingFlashThrottleMsgs.RemoveElement(this);
 
     // GetProc() checks mInstance, and pulls the procedure from
     // PluginInstanceChild. We don't transport sub-class procedure
-    // ptrs around in FlashThrottleAsyncMsg msgs.
+    // ptrs around in FlashThrottleMsg msgs.
     if (!GetProc())
         return NS_OK;
 
     // deliver the event to flash
     CallWindowProc(GetProc(), GetWnd(), GetMsg(), GetWParam(), GetLParam());
+    return NS_OK;
+}
+
+nsresult
+PluginInstanceChild::FlashThrottleMsg::Cancel()
+{
+    MOZ_ASSERT(mInstance);
+    mInstance = nullptr;
     return NS_OK;
 }
 
@@ -2371,15 +2383,13 @@ PluginInstanceChild::FlashThrottleMessage(HWND aWnd,
                                           LPARAM aLParam,
                                           bool isWindowed)
 {
-    // We reuse ChildAsyncCall so we get the cancelation work
-    // that's done in Destroy.
-    RefPtr<FlashThrottleAsyncMsg> task =
-        new FlashThrottleAsyncMsg(this, aWnd, aMsg, aWParam,
-                                  aLParam, isWindowed);
-    {
-        MutexAutoLock lock(mAsyncCallMutex);
-        mPendingAsyncCalls.AppendElement(task);
-    }
+    // We save a reference to the FlashThrottleMsg so we can cancel it in
+    // Destroy if it's still alive.
+    RefPtr<FlashThrottleMsg> task =
+        new FlashThrottleMsg(this, aWnd, aMsg, aWParam, aLParam, isWindowed);
+
+    mPendingFlashThrottleMsgs.AppendElement(task);
+
     MessageLoop::current()->PostDelayedTask(task.forget(),
                                             kFlashWMUSERMessageThrottleDelayMs);
 }
@@ -4262,6 +4272,11 @@ PluginInstanceChild::Destroy()
     DestroyWinlessPopupSurrogate();
     UnhookWinlessFlashThrottle();
     DestroyPluginWindow();
+
+    for (uint32_t i = 0; i < mPendingFlashThrottleMsgs.Length(); ++i) {
+        mPendingFlashThrottleMsgs[i]->Cancel();
+    }
+    mPendingFlashThrottleMsgs.Clear();
 #endif
 
     // Pending async calls are discarded, not delivered. This matches the

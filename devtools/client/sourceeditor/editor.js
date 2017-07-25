@@ -462,7 +462,9 @@ Editor.prototype = {
   replaceDocument: function (doc) {
     let cm = editors.get(this);
     cm.swapDoc(doc);
-    this._updateLineNumberFormat();
+    if (!Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+      this._updateLineNumberFormat();
+    }
   },
 
   /**
@@ -568,7 +570,10 @@ Editor.prototype = {
       // cm will try to split into lines anyway, saving memory
       value = { split: () => lines };
     }
-    this._updateLineNumberFormat();
+
+    if (!Services.prefs.getBoolPref("devtools.debugger.new-debugger-frontend")) {
+      this._updateLineNumberFormat();
+    }
 
     cm.setValue(value);
 

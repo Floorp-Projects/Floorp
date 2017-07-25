@@ -196,6 +196,7 @@ mozJSComponentLoader::mozJSComponentLoader()
     : mModules(16),
       mImports(16),
       mInProgressImports(16),
+      mLocations(16),
       mInitialized(false)
 {
     MOZ_ASSERT(!sSelf, "mozJSComponentLoader should be a singleton");
@@ -246,15 +247,13 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
 
     nsIURI* ResolvedURI() { MOZ_ASSERT(mResolvedURI); return mResolvedURI; }
     nsresult EnsureResolvedURI() {
-        BEGIN_ENSURE(ResolvedURI, ScriptChannel);
-        return mScriptChannel->GetURI(getter_AddRefs(mResolvedURI));
+        BEGIN_ENSURE(ResolvedURI, URI);
+        return ResolveURI(mURI, getter_AddRefs(mResolvedURI));
     }
 
-    nsAutoCString& Key() { return *mKey; }
+    const nsACString& Key() { return mLocation; }
     nsresult EnsureKey() {
-        ENSURE_DEPS(ResolvedURI);
-        mKey.emplace();
-        return mResolvedURI->GetSpec(*mKey);
+        return NS_OK;
     }
 
     MOZ_MUST_USE nsresult GetLocation(nsCString& aLocation) {
@@ -269,7 +268,6 @@ class MOZ_STACK_CLASS ComponentLoaderInfo {
     nsCOMPtr<nsIURI> mURI;
     nsCOMPtr<nsIChannel> mScriptChannel;
     nsCOMPtr<nsIURI> mResolvedURI;
-    Maybe<nsAutoCString> mKey; // This is safe because we're MOZ_STACK_CLASS
 };
 
 #undef BEGIN_ENSURE
@@ -449,6 +447,7 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     size_t n = aMallocSizeOf(this);
     n += SizeOfTableExcludingThis(mModules, aMallocSizeOf);
     n += SizeOfTableExcludingThis(mImports, aMallocSizeOf);
+    n += mLocations.ShallowSizeOfExcludingThis(aMallocSizeOf);
     n += SizeOfTableExcludingThis(mInProgressImports, aMallocSizeOf);
     return n;
 }
@@ -613,8 +612,10 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
     bool writeToCache = false;
     StartupCache* cache = StartupCache::GetSingleton();
 
+    aInfo.EnsureResolvedURI();
+
     nsAutoCString cachePath(kJSCachePrefix);
-    rv = PathifyURI(aInfo.URI(), cachePath);
+    rv = PathifyURI(aInfo.ResolvedURI(), cachePath);
     NS_ENSURE_SUCCESS(rv, rv);
 
     script = ScriptPreloader::GetSingleton().GetCachedScript(cx, cachePath);
@@ -761,6 +762,7 @@ mozJSComponentLoader::UnloadModules()
 
     mInProgressImports.Clear();
     mImports.Clear();
+    mLocations.Clear();
 
     for (auto iter = mModules.Iter(); !iter.Done(); iter.Next()) {
         iter.Data()->Clear();
@@ -904,33 +906,6 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
     }
 
     ComponentLoaderInfo info(aLocation);
-    rv = info.EnsureResolvedURI();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // get the JAR if there is one
-    nsCOMPtr<nsIJARURI> jarURI;
-    jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
-    nsCOMPtr<nsIFileURL> baseFileURL;
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIURI> baseURI;
-        while (jarURI) {
-            jarURI->GetJARFile(getter_AddRefs(baseURI));
-            jarURI = do_QueryInterface(baseURI, &rv);
-        }
-        baseFileURL = do_QueryInterface(baseURI, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-        baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIFile> sourceFile;
-    rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> sourceLocalFile;
-    sourceLocalFile = do_QueryInterface(sourceFile, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = info.EnsureKey();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -941,12 +916,46 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
         newEntry = new ModuleEntry(RootingContext::get(callercx));
         if (!newEntry)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = info.EnsureResolvedURI();
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // get the JAR if there is one
+        nsCOMPtr<nsIJARURI> jarURI;
+        jarURI = do_QueryInterface(info.ResolvedURI(), &rv);
+        nsCOMPtr<nsIFileURL> baseFileURL;
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIURI> baseURI;
+            while (jarURI) {
+                jarURI->GetJARFile(getter_AddRefs(baseURI));
+                jarURI = do_QueryInterface(baseURI, &rv);
+            }
+            baseFileURL = do_QueryInterface(baseURI, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+            baseFileURL = do_QueryInterface(info.ResolvedURI(), &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        nsCOMPtr<nsIFile> sourceFile;
+        rv = baseFileURL->GetFile(getter_AddRefs(sourceFile));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = info.ResolvedURI()->GetSpec(newEntry->resolvedURL);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCString* existingPath;
+        if (mLocations.Get(newEntry->resolvedURL, &existingPath) && *existingPath != info.Key()) {
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        mLocations.Put(newEntry->resolvedURL, new nsCString(info.Key()));
         mInProgressImports.Put(info.Key(), newEntry);
 
         rv = info.EnsureURI();
         NS_ENSURE_SUCCESS(rv, rv);
         RootedValue exception(callercx);
-        rv = ObjectForLocation(info, sourceLocalFile, &newEntry->obj,
+        rv = ObjectForLocation(info, sourceFile, &newEntry->obj,
                                &newEntry->thisObjectKey,
                                &newEntry->location, true, &exception);
 
@@ -1112,6 +1121,7 @@ mozJSComponentLoader::Unload(const nsACString & aLocation)
     NS_ENSURE_SUCCESS(rv, rv);
     ModuleEntry* mod;
     if (mImports.Get(info.Key(), &mod)) {
+        mLocations.Remove(mod->resolvedURL);
         mImports.Remove(info.Key());
     }
 
