@@ -9,22 +9,23 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/StructuredCloneHolderBinding.h"
-#include "mozilla/RefCounted.h"
 
 #include "jsapi.h"
 
+#include "nsIMemoryReporter.h"
 #include "nsISupports.h"
 
 namespace mozilla {
 namespace dom {
 
-class StructuredCloneBlob : public StructuredCloneHolder
-                          , public RefCounted<StructuredCloneBlob>
+class StructuredCloneBlob final : public nsIMemoryReporter
+                                , public StructuredCloneHolder
 {
-public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(StructuredCloneBlob)
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-  explicit StructuredCloneBlob();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMEMORYREPORTER
 
   static JSObject* ReadStructuredClone(JSContext* aCx, JSStructuredCloneReader* aReader,
                                        StructuredCloneHolder* aHolder);
@@ -43,12 +44,18 @@ public:
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, JS::MutableHandleObject aResult);
 
 protected:
-  template <typename T, detail::RefCountAtomicity>
-  friend class detail::RefCounted;
-
-  ~StructuredCloneBlob() = default;
+  virtual ~StructuredCloneBlob();
 
 private:
+  explicit StructuredCloneBlob();
+
+  static already_AddRefed<StructuredCloneBlob> Create()
+  {
+    RefPtr<StructuredCloneBlob> holder = new StructuredCloneBlob();
+    RegisterWeakMemoryReporter(holder);
+    return holder.forget();
+  }
+
   bool ReadStructuredCloneInternal(JSContext* aCx, JSStructuredCloneReader* aReader,
                                    StructuredCloneHolder* aHolder);
 };
