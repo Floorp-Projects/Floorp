@@ -1580,7 +1580,7 @@ fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,6436) =
 == 582037-1b.html 582037-1-ref.html
 fuzzy-if(Android,3,256) == 582037-2a.html 582037-2-ref.html
 fuzzy-if(Android,3,256) == 582037-2b.html 582037-2-ref.html
-asserts(1-2) asserts-if(styloVsGecko,4) == 582146-1.html about:blank
+asserts(1-2) asserts-if(styloVsGecko,3) == 582146-1.html about:blank
 == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
