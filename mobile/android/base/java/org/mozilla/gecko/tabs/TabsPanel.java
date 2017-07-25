@@ -49,8 +49,6 @@ import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
-import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
-
 public class TabsPanel extends LinearLayout
                        implements GeckoPopupMenu.OnMenuItemClickListener,
                                   LightweightTheme.OnChangeListener,
@@ -214,8 +212,6 @@ public class TabsPanel extends LinearLayout
 
         if (mCurrentPanel == Panel.NORMAL_TABS) {
             mActivity.addTab();
-            // We only track opening normal tab
-            MmaDelegate.track(NEW_TAB);
         } else {
             mActivity.addPrivateTab();
         }

@@ -51,6 +51,8 @@ import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 
+import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
+
 
 public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
@@ -1050,6 +1052,7 @@ public class Tabs implements BundleEventListener {
      * the user's homepage.
      */
     public Tab addTab() {
+        MmaDelegate.track(NEW_TAB);
         return loadUrl(getHomepageForNewTab(mAppContext), Tabs.LOADURL_NEW_TAB);
     }
 
