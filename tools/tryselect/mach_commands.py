@@ -5,6 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import os
+import sys
 
 from mach.decorators import (
     CommandArgument,
@@ -14,6 +16,15 @@ from mach.decorators import (
 )
 
 from mozbuild.base import BuildEnvironmentNotFoundException, MachCommandBase
+
+CONFIG_ENVIRONMENT_NOT_FOUND = '''
+No config environment detected. This means we are unable to properly
+detect test files in the specified paths or tags. Please run:
+
+    $ mach configure
+
+and try again.
+'''.lstrip()
 
 
 def syntax_parser():
@@ -110,6 +121,11 @@ class TrySelect(MachCommandBase):
             # an artifact build is desired, but we still want the
             # command to succeed, if possible.
             pass
+
+        config_status = os.path.join(self.topobjdir, 'config.status')
+        if (kwargs['paths'] or kwargs['tags']) and not config_status:
+            print(CONFIG_ENVIRONMENT_NOT_FOUND)
+            sys.exit(1)
 
         def resolver_func():
             return self._spawn(TestResolver)

@@ -15,15 +15,6 @@ from collections import defaultdict
 
 import mozpack.path as mozpath
 
-CONFIG_ENVIRONMENT_NOT_FOUND = '''
-No config environment detected. This means we are unable to properly
-detect test files in the specified paths or tags. Please run:
-
-    $ mach configure
-
-and try again.
-'''.lstrip()
-
 
 def arg_parser():
     parser = argparse.ArgumentParser()
@@ -729,10 +720,6 @@ class AutoTry(object):
         builds, platforms, tests, talos, jobs, paths, tags, extra = self.validate_args(**kwargs)
 
         if paths or tags:
-            if not os.path.exists(os.path.join(self.topobjdir, 'config.status')):
-                print(CONFIG_ENVIRONMENT_NOT_FOUND)
-                sys.exit(1)
-
             paths = [os.path.relpath(os.path.normpath(os.path.abspath(item)), self.topsrcdir)
                      for item in paths]
             paths_by_flavor = self.paths_by_flavor(paths=paths, tags=tags)
