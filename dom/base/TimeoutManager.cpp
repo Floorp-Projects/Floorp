@@ -592,10 +592,7 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     break;
   }
 
-  uint32_t nestingLevel = sNestingLevel + 1;
-  if (!aIsInterval) {
-    timeout->mNestingLevel = nestingLevel;
-  }
+  timeout->mNestingLevel = sNestingLevel + 1;
 
   // Now clamp the actual interval we will use for the timer based on
   TimeDuration realInterval = CalculateDelay(timeout);
@@ -985,6 +982,10 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
   if (!aTimeout->mIsInterval) {
     return false;
   }
+
+  // Automatically increase the nesting level when a setInterval()
+  // is rescheduled just as if it was using a chained setTimeout().
+  aTimeout->mNestingLevel += 1;
 
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least CalculateDelay().
