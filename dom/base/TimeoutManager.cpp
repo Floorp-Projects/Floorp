@@ -309,7 +309,7 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
 // uses 5.
-#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
+#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5u
 
 TimeDuration
 TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
@@ -592,7 +592,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     break;
   }
 
-  timeout->mNestingLevel = sNestingLevel + 1;
+  timeout->mNestingLevel = sNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL
+                         ? sNestingLevel + 1 : sNestingLevel;
 
   // Now clamp the actual interval we will use for the timer based on
   TimeDuration realInterval = CalculateDelay(timeout);
@@ -985,7 +986,9 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
 
   // Automatically increase the nesting level when a setInterval()
   // is rescheduled just as if it was using a chained setTimeout().
-  aTimeout->mNestingLevel += 1;
+  if (aTimeout->mNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+    aTimeout->mNestingLevel += 1;
+  }
 
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least CalculateDelay().

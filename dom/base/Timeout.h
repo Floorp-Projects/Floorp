@@ -79,7 +79,9 @@ public:
   // when sync loops trigger nested firing.
   uint32_t mFiringId;
 
-  uint32_t mNestingLevel;
+  // Between 0 and DOM_CLAMP_TIMEOUT_NESTING_LEVEL.  Currently we don't
+  // care about nesting levels beyond that value.
+  uint8_t mNestingLevel;
 
   // The popup state at timeout creation time if not created from
   // another timeout
