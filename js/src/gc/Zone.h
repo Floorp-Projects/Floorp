@@ -161,6 +161,7 @@ struct Zone : public JS::shadow::Zone,
     explicit Zone(JSRuntime* rt, js::ZoneGroup* group);
     ~Zone();
     MOZ_MUST_USE bool init(bool isSystem);
+    void destroy(js::FreeOp *fop);
 
   private:
     js::ZoneGroup* const group_;
@@ -622,6 +623,9 @@ struct Zone : public JS::shadow::Zone,
         keepShapeTables_ = b;
     }
 
+    // Delete an empty compartment after its contents have been merged.
+    void deleteEmptyCompartment(JSCompartment* comp);
+
   private:
     js::ZoneGroupData<js::jit::JitZone*> jitZone_;
 
@@ -654,8 +658,8 @@ class ZoneGroupsIter
 
   public:
     explicit ZoneGroupsIter(JSRuntime* rt) : iterMarker(&rt->gc) {
-        it = rt->gc.groups.ref().begin();
-        end = rt->gc.groups.ref().end();
+        it = rt->gc.groups().begin();
+        end = rt->gc.groups().end();
 
         if (!done() && (*it)->usedByHelperThread)
             next();

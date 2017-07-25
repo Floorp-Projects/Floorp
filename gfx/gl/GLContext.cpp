@@ -535,7 +535,9 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     ////////////////
 
-    MakeCurrent();
+    if (!MakeCurrent()) {
+        return false;
+    }
 
     const std::string versionStr = (const char*)fGetString(LOCAL_GL_VERSION);
     if (versionStr.find("OpenGL ES") == 0) {
@@ -2449,8 +2451,9 @@ GLContext::FlushIfHeavyGLCallsSinceLastFlush()
     if (!mHeavyGLCallsSinceLastFlush) {
         return;
     }
-    MakeCurrent();
-    fFlush();
+    if (MakeCurrent()) {
+        fFlush();
+    }
 }
 
 /*static*/ bool
@@ -2509,7 +2512,7 @@ SplitByChar(const nsACString& str, const char delim, std::vector<nsCString>* con
     out->push_back(nsCString(substr));
 }
 
-void
+bool
 GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
 {
     MOZ_ASSERT(src && dest);
@@ -2517,7 +2520,9 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
     MOZ_ASSERT(dest->GetFormat() == (src->mHasAlpha ? SurfaceFormat::B8G8R8A8
                                                     : SurfaceFormat::B8G8R8X8));
 
-    MakeCurrent();
+    if (!MakeCurrent()) {
+        return false;
+    }
 
     SharedSurface* prev = GetLockedSurface();
 
@@ -2596,6 +2601,8 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
         if (prev)
             prev->LockProd();
     }
+
+    return true;
 }
 
 // Do whatever tear-down is necessary after drawing to our offscreen FBO,
@@ -2897,7 +2904,9 @@ GLContext::InitOffscreen(const gfx::IntSize& size, const SurfaceCaps& caps)
     if (!CreateScreenBuffer(size, caps))
         return false;
 
-    MakeCurrent();
+    if (!MakeCurrent()) {
+        return false;
+    }
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     fScissor(0, 0, size.width, size.height);
     fViewport(0, 0, size.width, size.height);

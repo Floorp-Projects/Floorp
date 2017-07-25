@@ -1598,9 +1598,10 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
     JS::AutoAssertNoGC nogc(cx);
 
     LeaveParseTaskZone(cx->runtime(), parseTask);
-    AutoCompartment ac(cx, parseTask->parseGlobal);
 
     {
+        AutoCompartment ac(cx, parseTask->parseGlobal);
+
         // Generator functions don't have Function.prototype as prototype but a
         // different function object, so the IdentifyStandardPrototype trick
         // below won't work.  Just special-case it.

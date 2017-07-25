@@ -5232,7 +5232,10 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     }
 
     {
-      gl->MakeCurrent();
+      if (!gl->MakeCurrent()) {
+        aError.Throw(NS_ERROR_NOT_AVAILABLE);
+        return;
+      }
       GLuint videoTexture = 0;
       gl->fGenTextures(1, &videoTexture);
       // skiaGL expect upload on drawing, and uses texture 0 for texturing,
