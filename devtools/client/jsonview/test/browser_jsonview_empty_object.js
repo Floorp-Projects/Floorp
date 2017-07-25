@@ -45,4 +45,4 @@ function testNestedObject(objExpr, summary = objExpr) {
 add_task(testRootObject("null"));
 add_task(testNestedObject("null"));
 add_task(testNestedObject("[]"));
-add_task(testNestedObject("{}", "Object"));
+add_task(testNestedObject("{}"));
