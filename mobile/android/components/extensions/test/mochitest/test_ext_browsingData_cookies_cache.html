@@ -92,6 +92,50 @@ add_task(async function testCookies() {
 
   await extension.unload();
 });
+
+add_task(async function testCache() {
+  function background() {
+    browser.test.onMessage.addListener(async msg => {
+      if (msg == "removeCache") {
+        await browser.browsingData.removeCache({});
+      }
+      browser.test.sendMessage("cacheRemoved");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      permissions: ["browsingData"],
+    },
+  });
+
+  // Returns a promise when 'cacheservice:empty-cache' event is fired
+  function topicObserved() {
+    return new Promise(resolve => {
+      let observe = (subject, topic, data) => {
+        Services.obs.removeObserver(observe, "cacheservice:empty-cache");
+        resolve(data);
+      };
+      Services.obs.addObserver(observe, "cacheservice:empty-cache");
+    });
+  }
+
+  async function testRemovalMethod(method) {
+    // We can assume the notification works properly, so we only need to observe
+    // the notification to know the cache was cleared.
+    let awaitNotification = topicObserved();
+    extension.sendMessage(method);
+    await awaitNotification;
+    await extension.awaitMessage("cacheRemoved");
+  }
+
+  await extension.startup();
+
+  await testRemovalMethod("removeCache");
+
+  await extension.unload();
+});
 </script>
 
 </body>
