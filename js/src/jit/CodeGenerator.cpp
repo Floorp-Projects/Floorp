@@ -8473,10 +8473,11 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
 {
     LInstruction* ins_;
     Label rejoinStore_;
+    bool strict_;
 
   public:
-    explicit OutOfLineStoreElementHole(LInstruction* ins)
-      : ins_(ins)
+    explicit OutOfLineStoreElementHole(LInstruction* ins, bool strict)
+      : ins_(ins), strict_(strict)
     {
         MOZ_ASSERT(ins->isStoreElementHoleV() || ins->isStoreElementHoleT() ||
                    ins->isFallibleStoreElementV() || ins->isFallibleStoreElementT());
@@ -8490,6 +8491,9 @@ class OutOfLineStoreElementHole : public OutOfLineCodeBase<CodeGenerator>
     }
     Label* rejoinStore() {
         return &rejoinStore_;
+    }
+    bool strict() const {
+        return strict_;
     }
 };
 
@@ -8579,7 +8583,8 @@ CodeGenerator::emitStoreElementHoleT(T* lir)
     static_assert(std::is_same<T, LStoreElementHoleT>::value || std::is_same<T, LFallibleStoreElementT>::value,
                   "emitStoreElementHoleT called with unexpected argument type");
 
-    OutOfLineStoreElementHole* ool = new(alloc()) OutOfLineStoreElementHole(lir);
+    OutOfLineStoreElementHole* ool =
+        new(alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
     addOutOfLineCode(ool, lir->mir());
 
     Register obj = ToRegister(lir->object());
@@ -8638,7 +8643,8 @@ CodeGenerator::emitStoreElementHoleV(T* lir)
     static_assert(std::is_same<T, LStoreElementHoleV>::value || std::is_same<T, LFallibleStoreElementV>::value,
                   "emitStoreElementHoleV called with unexpected parameter type");
 
-    OutOfLineStoreElementHole* ool = new(alloc()) OutOfLineStoreElementHole(lir);
+    OutOfLineStoreElementHole* ool =
+        new(alloc()) OutOfLineStoreElementHole(lir, current->mir()->strict());
     addOutOfLineCode(ool, lir->mir());
 
     Register obj = ToRegister(lir->object());
@@ -8898,7 +8904,7 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool)
     masm.bind(&callStub);
     saveLive(ins);
 
-    pushArg(Imm32(current->mir()->strict()));
+    pushArg(Imm32(ool->strict()));
     pushArg(value);
     if (index->isConstant())
         pushArg(Imm32(ToInt32(index)));
