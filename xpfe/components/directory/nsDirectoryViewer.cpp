@@ -1261,14 +1261,9 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                          const nsACString& aContentType,
                                          nsIDocShell* aContainer,
                                          nsISupports* aExtraInfo,
-                                         int16_t aStyleBackendType,
                                          nsIStreamListener** aDocListenerResult,
                                          nsIContentViewer** aDocViewerResult)
 {
-  MOZ_ASSERT(aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE ||
-             aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_GECKO ||
-             aStyleBackendType == nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_SERVO);
-
   nsresult rv;
 
   bool viewSource = FindInReadable(NS_LITERAL_CSTRING("view-source"),
@@ -1312,9 +1307,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
     nsCOMPtr<nsIStreamListener> listener;
     rv = factory->CreateInstance(aCommand, channel, aLoadGroup,
                                  NS_LITERAL_CSTRING("application/vnd.mozilla.xul+xml"),
-                                 aContainer, aExtraInfo,
-                                 nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE,
-                                 getter_AddRefs(listener),
+                                 aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
     if (NS_FAILED(rv)) return rv;
 
@@ -1363,16 +1356,12 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
   if (viewSource) {
     rv = factory->CreateInstance("view-source", aChannel, aLoadGroup,
                                  NS_LITERAL_CSTRING("text/html; x-view-type=view-source"),
-                                 aContainer, aExtraInfo,
-                                 nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE,
-                                 getter_AddRefs(listener),
+                                 aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
   } else {
     rv = factory->CreateInstance("view", aChannel, aLoadGroup,
                                  NS_LITERAL_CSTRING("text/html"),
-                                 aContainer, aExtraInfo,
-                                 nsIDocumentLoaderFactory::STYLE_BACKEND_TYPE_NONE,
-                                 getter_AddRefs(listener),
+                                 aContainer, aExtraInfo, getter_AddRefs(listener),
                                  aDocViewerResult);
   }
 
