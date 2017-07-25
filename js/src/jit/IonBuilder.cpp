@@ -7275,6 +7275,17 @@ IonBuilder::ensureDefiniteTypeSet(MDefinition* def, TemporaryTypeSet* types)
     return filter;
 }
 
+static size_t
+NumFixedSlots(JSObject* object)
+{
+    // Note: we can't use object->numFixedSlots() here, as this will read the
+    // shape and can race with the active thread if we are building off thread.
+    // The allocation kind and object class (which goes through the type) can
+    // be read freely, however.
+    gc::AllocKind kind = object->asTenured().getAllocKind();
+    return gc::GetGCKindSlots(kind, object->getClass());
+}
+
 static bool
 IsUninitializedGlobalLexicalSlot(JSObject* obj, PropertyName* name)
 {
@@ -7296,48 +7307,32 @@ IonBuilder::getStaticName(bool* emitted, JSObject* staticObject, PropertyName* n
 
     bool isGlobalLexical = staticObject->is<LexicalEnvironmentObject>() &&
                            staticObject->as<LexicalEnvironmentObject>().isGlobal();
+    MOZ_ASSERT(isGlobalLexical ||
+               staticObject->is<GlobalObject>() ||
+               staticObject->is<CallObject>() ||
+               staticObject->is<ModuleEnvironmentObject>());
+    MOZ_ASSERT(staticObject->isSingleton());
 
     // Always emit the lexical check. This could be optimized, but is
     // currently not for simplicity's sake.
     if (lexicalCheck)
         return Ok();
 
-    // Only optimize accesses on native objects.
-    if (!staticObject->isNative())
-        return Ok();
-
-    // Only optimize accesses on own data properties.
-    Shape* propertyShape = staticObject->as<NativeObject>().lastProperty()->searchLinear(NameToId(name));
-    if (!propertyShape || !propertyShape->isDataDescriptor() || !propertyShape->hasSlot())
-        return Ok();
-    uint32_t slot = propertyShape->slot();
-
     TypeSet::ObjectKey* staticKey = TypeSet::ObjectKey::get(staticObject);
     if (analysisContext)
         staticKey->ensureTrackedProperty(analysisContext, NameToId(name));
 
-    // Make sure the property is a normal data property. This is not done for
-    // call objects, as they are not tracked by TI and their data properties
-    // cannot be dynamically reconfigured.
-    Maybe<HeapTypeSetKey> property;
-    if (!staticObject->is<CallObject>()) {
-        if (staticKey->unknownProperties())
-            return Ok();
+    if (staticKey->unknownProperties())
+        return Ok();
 
-        property.emplace(staticKey->property(id));
-
-        if (property.ref().nonData(constraints()) ||
-            !property.ref().maybeTypes() ||
-            !property.ref().maybeTypes()->definiteProperty())
-        {
-            // We can't be sure the slot will match at runtime, so include a
-            // shape guard on the object.
-            MInstruction* obj = MConstant::NewConstraintlessObject(alloc(), staticObject);
-            current->add(obj);
-            addShapeGuard(obj, staticObject->as<NativeObject>().lastProperty(), Bailout_ShapeGuard);
-        } else {
-            MOZ_ASSERT(slot == property.ref().maybeTypes()->definiteSlot());
-        }
+    HeapTypeSetKey property = staticKey->property(id);
+    if (!property.maybeTypes() ||
+        !property.maybeTypes()->definiteProperty() ||
+        property.nonData(constraints()))
+    {
+        // The property has been reconfigured as non-configurable, non-enumerable
+        // or non-writable.
+        return Ok();
     }
 
     // Don't optimize global lexical bindings if they aren't initialized at
@@ -7363,37 +7358,13 @@ IonBuilder::getStaticName(bool* emitted, JSObject* staticObject, PropertyName* n
 
         // Try to inline properties that have never been overwritten.
         Value constantValue;
-        if (property.isSome() && property.ref().constant(constraints(), &constantValue)) {
+        if (property.constant(constraints(), &constantValue)) {
             pushConstant(constantValue);
             return Ok();
         }
     }
 
-    MOZ_TRY(loadStaticSlot(staticObject, barrier, types, slot));
-
-    // If the static object has a function object stored in this property,
-    // test that the result is that specific function. This is yet another
-    // technique for trying to force a property load to be a specific value,
-    // and is included because other mechanisms (property types and observed
-    // types) do not always work, especially in polymorphic framework code.
-    // We restrict this optimization to function properties, as they are less
-    // likely to change over time and are more likely to require precise
-    // information for inlining decisions.
-    if (!outermostBuilder()->script()->hadFrequentBailouts()) {
-        Value v = staticObject->as<NativeObject>().getSlot(slot);
-        if (v.isObject() &&
-            v.toObject().is<JSFunction>() &&
-            v.toObject().as<JSFunction>().isInterpreted())
-        {
-            JSObject* result = checkNurseryObject(&v.toObject().as<JSFunction>());
-            MDefinition* load = current->pop();
-            MInstruction* expected = MConstant::NewConstraintlessObject(alloc(), result);
-            expected->setResultTypeSet(MakeSingletonTypeSet(constraints(), result));
-            current->add(expected);
-            current->add(MGuardObjectIdentity::New(alloc(), load, expected, false, Bailout_LoadStaticObject));
-            current->push(expected);
-        }
-    }
+    MOZ_TRY(loadStaticSlot(staticObject, barrier, types, property.maybeTypes()->definiteSlot()));
 
     return Ok();
 }
@@ -7421,7 +7392,7 @@ IonBuilder::loadStaticSlot(JSObject* staticObject, BarrierKind barrier, Temporar
     if (barrier != BarrierKind::NoBarrier)
         rvalType = MIRType::Value;
 
-    return loadSlot(obj, slot, staticObject->as<NativeObject>().numFixedSlots(), rvalType, barrier, types);
+    return loadSlot(obj, slot, NumFixedSlots(staticObject), rvalType, barrier, types);
 }
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
@@ -7486,8 +7457,7 @@ IonBuilder::setStaticName(JSObject* staticObject, PropertyName* name)
         slotType = knownType;
 
     bool needsPreBarrier = property.needsBarrier(constraints());
-    return storeSlot(obj, property.maybeTypes()->definiteSlot(),
-                     staticObject->as<NativeObject>().numFixedSlots(),
+    return storeSlot(obj, property.maybeTypes()->definiteSlot(), NumFixedSlots(staticObject),
                      value, needsPreBarrier, slotType);
 }
 
@@ -10428,12 +10398,6 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (emitted)
             return Ok();
 
-        // Try to optimize for loads from a specific object.
-        trackOptimizationAttempt(TrackedStrategy::GetProp_Static);
-        MOZ_TRY(getPropTryStaticAccess(&emitted, obj, name, barrier, types));
-        if (emitted)
-            return Ok();
-
         // Try to emit a monomorphic/polymorphic access based on baseline caches.
         trackOptimizationAttempt(TrackedStrategy::GetProp_InlineAccess);
         MOZ_TRY(getPropTryInlineAccess(&emitted, obj, name, barrier, types));
@@ -11231,17 +11195,6 @@ PropertyShapesHaveSameSlot(const BaselineInspector::ReceiverVector& receivers, j
     }
 
     return firstShape;
-}
-
-AbortReasonOr<Ok>
-IonBuilder::getPropTryStaticAccess(bool* emitted, MDefinition* obj, PropertyName* name,
-                                   BarrierKind barrier, TemporaryTypeSet* types)
-{
-    if (!obj->isConstant() || obj->type() != MIRType::Object)
-        return Ok();
-
-    obj->setImplicitlyUsedUnchecked();
-    return getStaticName(emitted, &obj->toConstant()->toObject(), name);
 }
 
 AbortReasonOr<Ok>
@@ -12677,49 +12630,11 @@ IonBuilder::walkEnvironmentChain(unsigned hops)
     return env;
 }
 
-static bool
-SearchEnvironmentChainForCallObject(JSObject* environment, JSScript* script, JSObject** pcall)
-{
-    while (environment && !environment->is<GlobalObject>()) {
-        if (environment->is<CallObject>() &&
-            environment->as<CallObject>().callee().nonLazyScript() == script)
-        {
-            *pcall = environment;
-            return true;
-        }
-        environment = environment->enclosingEnvironment();
-    }
-    return false;
-}
-
 bool
 IonBuilder::hasStaticEnvironmentObject(EnvironmentCoordinate ec, JSObject** pcall)
 {
     JSScript* outerScript = EnvironmentCoordinateFunctionScript(script(), pc);
-    if (!outerScript)
-        return false;
-
-    // JSOP_SETALIASEDVAR only emits a cache when the outer script is a run
-    // once script. To avoid problems with the generic jsop_setprop() paths,
-    // only use static environment objects when a baseline cache exists.
-    if (*pc == JSOP_SETALIASEDVAR && !outerScript->treatAsRunOnce())
-        return false;
-
-    // If the callee is a specific JSFunction then there is a specific
-    // environment object on its chain we can use.
-    if (inlineCallInfo_) {
-        MDefinition* calleeDef = inlineCallInfo_->fun();
-        if (calleeDef->isConstant()) {
-            JSFunction* callee = &calleeDef->toConstant()->toObject().template as<JSFunction>();
-            JSObject* environment = callee->environment();
-            if (SearchEnvironmentChainForCallObject(environment, outerScript, pcall))
-                return true;
-        }
-    }
-
-    // Otherwise, if the outer script will only run once then we can go looking
-    // for its call object.
-    if (!outerScript->treatAsRunOnce())
+    if (!outerScript || !outerScript->treatAsRunOnce())
         return false;
 
     TypeSet::ObjectKey* funKey =
@@ -12740,8 +12655,16 @@ IonBuilder::hasStaticEnvironmentObject(EnvironmentCoordinate ec, JSObject** pcal
     envDef->setImplicitlyUsedUnchecked();
 
     JSObject* environment = script()->functionNonDelazifying()->environment();
-    if (SearchEnvironmentChainForCallObject(environment, outerScript, pcall))
-        return true;
+    while (environment && !environment->is<GlobalObject>()) {
+        if (environment->is<CallObject>() &&
+            environment->as<CallObject>().callee().nonLazyScript() == outerScript)
+        {
+            MOZ_ASSERT(environment->isSingleton());
+            *pcall = environment;
+            return true;
+        }
+        environment = environment->enclosingEnvironment();
+    }
 
     // Look for the call object on the current frame, if we are compiling the
     // outer script itself. Don't do this if we are at entry to the outer
@@ -12750,8 +12673,14 @@ IonBuilder::hasStaticEnvironmentObject(EnvironmentCoordinate ec, JSObject** pcal
 
     if (script() == outerScript && baselineFrame_ && info().osrPc()) {
         JSObject* singletonScope = baselineFrame_->singletonEnvChain;
-        if (SearchEnvironmentChainForCallObject(singletonScope, outerScript, pcall))
+        if (singletonScope &&
+            singletonScope->is<CallObject>() &&
+            singletonScope->as<CallObject>().callee().nonLazyScript() == outerScript)
+        {
+            MOZ_ASSERT(singletonScope->isSingleton());
+            *pcall = singletonScope;
             return true;
+        }
     }
 
     return true;

@@ -1040,7 +1040,7 @@ bool
 BaselineInspector::megamorphicGetterSetterFunction(jsbytecode* pc, bool isGetter,
                                                    JSFunction** getterOrSetter)
 {
-    if (!hasBaselineScript() || *pc == JSOP_SETALIASEDVAR)
+    if (!hasBaselineScript())
         return false;
 
     *getterOrSetter = nullptr;
@@ -1191,7 +1191,7 @@ BaselineInspector::commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shap
                                          ReceiverVector& receivers,
                                          ObjectGroupVector& convertUnboxedGroups)
 {
-    if (!hasBaselineScript() || *pc == JSOP_SETALIASEDVAR)
+    if (!hasBaselineScript())
         return false;
 
     MOZ_ASSERT(receivers.empty());
