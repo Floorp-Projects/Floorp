@@ -380,10 +380,10 @@ class nsStyleSet final
 
   /*
    * Do any processing that needs to happen as a result of a change in
-   * the characteristics of the medium, and return restyle hint needed
-   * for the change.
+   * the characteristics of the medium, and return whether style rules
+   * may have changed as a result.
    */
-  nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+  bool MediumFeaturesChanged();
 
   // APIs to manipulate the style sheet lists.  The sheets in each
   // list are stored with the most significant sheet last.

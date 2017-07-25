@@ -256,10 +256,10 @@ StyleSetHandle::Ptr::StyleSheetsHaveChanged() const
 {
   FORWARD(StyleSheetsHaveChanged, ());
 }
-nsRestyleHint
-StyleSetHandle::Ptr::MediumFeaturesChanged(bool aViewportChanged)
+bool
+StyleSetHandle::Ptr::MediumFeaturesChanged()
 {
-  FORWARD(MediumFeaturesChanged, (aViewportChanged));
+  FORWARD(MediumFeaturesChanged, ());
 }
 void
 StyleSetHandle::Ptr::InvalidateStyleForCSSRuleChanges()

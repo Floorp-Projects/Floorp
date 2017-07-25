@@ -115,7 +115,7 @@ public:
     return StylistNeedsUpdate();
   }
 
-  nsRestyleHint MediumFeaturesChanged(bool aViewportChanged) const;
+  bool MediumFeaturesChanged() const;
 
   void InvalidateStyleForCSSRuleChanges();
 
