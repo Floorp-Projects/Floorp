@@ -2069,7 +2069,8 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
     if (stub->state().canAttachStub()) {
         RootedValue idVal(cx, StringValue(name));
         GetPropIRGenerator gen(cx, script, pc, CacheKind::GetProp, stub->state().mode(),
-                               &isTemporarilyUnoptimizable, val, idVal, val, CanAttachGetter::Yes);
+                               &isTemporarilyUnoptimizable, val, idVal, val,
+                               GetPropertyResultFlags::All);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         BaselineCacheIRStubKind::Monitored,
@@ -2140,7 +2141,7 @@ DoGetPropSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* 
         RootedValue idVal(cx, StringValue(name));
         GetPropIRGenerator gen(cx, script, pc, CacheKind::GetPropSuper, stub->state().mode(),
                                &isTemporarilyUnoptimizable, val, idVal, receiver,
-                               CanAttachGetter::Yes);
+                               GetPropertyResultFlags::All);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         BaselineCacheIRStubKind::Monitored,

@@ -810,8 +810,10 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
 
     if (stub->state().canAttachStub()) {
         ICStubEngine engine = ICStubEngine::Baseline;
-        GetPropIRGenerator gen(cx, script, pc, CacheKind::GetElem, stub->state().mode(),
-                               &isTemporarilyUnoptimizable, lhs, rhs, lhs, CanAttachGetter::Yes);
+        GetPropIRGenerator gen(cx, script, pc,
+                               CacheKind::GetElem, stub->state().mode(),
+                               &isTemporarilyUnoptimizable, lhs, rhs, lhs,
+                               GetPropertyResultFlags::All);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         BaselineCacheIRStubKind::Monitored,
@@ -884,7 +886,7 @@ DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* 
         ICStubEngine engine = ICStubEngine::Baseline;
         GetPropIRGenerator gen(cx, script, pc, CacheKind::GetElemSuper, stub->state().mode(),
                                &isTemporarilyUnoptimizable, lhs, rhs, receiver,
-                               CanAttachGetter::Yes);
+                               GetPropertyResultFlags::All);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         BaselineCacheIRStubKind::Monitored,
