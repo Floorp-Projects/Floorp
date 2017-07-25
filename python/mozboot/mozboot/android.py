@@ -135,7 +135,7 @@ def get_paths(os_name):
     mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH',
                                    os.path.expanduser(os.path.join('~', '.mozbuild')))
     sdk_path = os.environ.get('ANDROID_SDK_HOME',
-                              os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)))
+                              os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name)))
     ndk_path = os.environ.get('ANDROID_NDK_HOME',
                               os.path.join(mozbuild_path, 'android-ndk-r11c'))
     return (mozbuild_path, sdk_path, ndk_path)
@@ -166,7 +166,7 @@ def ensure_android(os_name, artifact_mode=False, no_interactive=False):
     # ~/.mozbuild/{android-sdk-$OS_NAME, android-ndk-$VER}.
     mozbuild_path, sdk_path, ndk_path = get_paths(os_name)
     os_tag = 'darwin' if os_name == 'macosx' else os_name
-    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{}-3859397.zip'.format(os_tag)
+    sdk_url = 'https://dl.google.com/android/repository/sdk-tools-{0}-3859397.zip'.format(os_tag)
     ndk_url = android_ndk_url(os_name)
 
     ensure_android_sdk_and_ndk(mozbuild_path, os_name,
@@ -176,7 +176,7 @@ def ensure_android(os_name, artifact_mode=False, no_interactive=False):
 
     if no_interactive:
         # Cribbed from observation and https://stackoverflow.com/a/38381577.
-        path = os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name), 'licenses')
+        path = os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name), 'licenses')
         ensure_dir(path)
 
         licenses = {
@@ -186,7 +186,7 @@ def ensure_android(os_name, artifact_mode=False, no_interactive=False):
         for license, tag in licenses.items():
             lname = os.path.join(path, license)
             if not os.path.isfile(lname):
-                open(lname, 'w').write('\n{}\n'.format(tag))
+                open(lname, 'w').write('\n{0}\n'.format(tag))
 
 
     # We expect the |sdkmanager| tool to be at
@@ -225,7 +225,7 @@ def ensure_android_sdk_and_ndk(mozbuild_path, os_name, sdk_path, sdk_url, ndk_pa
         # android-sdk-$OS_NAME directory; it no longer does so.  We
         # preserve the old convention to smooth detecting existing SDK
         # installations.
-        install_mobile_android_sdk_or_ndk(sdk_url, os.path.join(mozbuild_path, 'android-sdk-{}'.format(os_name)))
+        install_mobile_android_sdk_or_ndk(sdk_url, os.path.join(mozbuild_path, 'android-sdk-{0}'.format(os_name)))
 
 
 def ensure_android_packages(sdkmanager_tool, packages=None):
@@ -239,7 +239,7 @@ def ensure_android_packages(sdkmanager_tool, packages=None):
     package_file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), 'android-packages.txt'))
     print(INSTALLING_ANDROID_PACKAGES % open(package_file_name, 'rt').read())
     subprocess.check_call([sdkmanager_tool,
-                           '--package_file={}'.format(package_file_name)])
+                           '--package_file={0}'.format(package_file_name)])
 
 
 def suggest_mozconfig(os_name, artifact_mode=False):
@@ -288,7 +288,7 @@ def main(argv):
         os_name = 'windows'
     else:
         raise NotImplementedError("We don't support bootstrapping the Android SDK (or Android NDK) "
-                                  "on {} yet!".format(platform.system()))
+                                  "on {0} yet!".format(platform.system()))
 
     ensure_android(os_name, artifact_mode=options.artifact_mode, no_interactive=options.no_interactive)
     suggest_mozconfig(os_name, options.artifact_mode)
