@@ -1153,6 +1153,14 @@ public:
     mUsesExChUnits = aValue;
   }
 
+  bool UsesViewportUnits() const {
+    return mUsesViewportUnits;
+  }
+
+  void SetUsesViewportUnits(bool aValue) {
+    mUsesViewportUnits = aValue;
+  }
+
   // true if there are OMTA transition updates for the current document which
   // have been throttled, and therefore some style information may not be up
   // to date
@@ -1459,6 +1467,8 @@ protected:
   unsigned              mUsesRootEMUnits : 1;
   // Does the associated document use ex or ch units?
   unsigned              mUsesExChUnits : 1;
+  // Does the associated document use viewport units (vw/vh/vmin/vmax)?
+  unsigned              mUsesViewportUnits : 1;
 
   // Has there been a change to the viewport's dimensions?
   unsigned              mPendingViewportChange : 1;
