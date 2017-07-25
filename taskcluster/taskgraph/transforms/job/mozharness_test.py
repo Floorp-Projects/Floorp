@@ -487,6 +487,11 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
         if buildername.startswith('Ubuntu'):
             buildername = buildername.replace('VM', 'HW')
     else:
+        variant = get_variant(test['test-platform'])
+        # If we are a pgo type, munge the build_type for the
+        # Unittest builder name generation
+        if 'pgo' in variant:
+            build_type = variant
         buildername = '{} {} {} test {}'.format(
             BUILDER_NAME_PREFIX[test_platform],
             branch,
