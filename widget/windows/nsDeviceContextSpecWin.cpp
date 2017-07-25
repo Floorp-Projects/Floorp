@@ -153,10 +153,9 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if (aPrintSettings) {
 #ifdef MOZ_ENABLE_SKIA_PDF
-    const nsAdoptingString& printViaPdf =
-      mozilla::Preferences::GetString("print.print_via_pdf_encoder");
-
-    if (printViaPdf == NS_LITERAL_STRING("skia-pdf")) {
+    nsAutoString printViaPdf;
+    Preferences::GetString("print.print_via_pdf_encoder", printViaPdf);
+    if (printViaPdf.EqualsLiteral("skia-pdf")) {
       mPrintViaSkPDF = true;
     }
 #endif

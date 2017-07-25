@@ -628,8 +628,8 @@ DecoderDoctorDocumentWatcher::SynthesizeAnalysis()
       nsAutoCString formatsPref("media.decoder-doctor.");
       formatsPref += id->mReportStringId;
       formatsPref += ".formats";
-      nsAdoptingString formatsWithIssues =
-        Preferences::GetString(formatsPref.Data());
+      nsAutoString formatsWithIssues;
+      Preferences::GetString(formatsPref.Data(), formatsWithIssues);
       if (formatsWithIssues.IsEmpty()) {
         continue;
       }
