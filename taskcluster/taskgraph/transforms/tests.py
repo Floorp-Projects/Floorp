@@ -840,6 +840,18 @@ def set_worker_type(config, tests):
 
 
 @transforms.add
+def skip_win10_hardware(config, tests):
+    """Windows 10 hardware isn't ready yet, don't even bother scheduling
+    unless we're on try"""
+    for test in tests:
+        if 'releng-hardware/gecko-t-win10-64-hw' not in test['worker-type']:
+            yield test
+        if config.params == 'try':
+            yield test
+        # Silently drop the test on the floor if its win10 hardware and we're not try
+
+
+@transforms.add
 def make_job_description(config, tests):
     """Convert *test* descriptions to *job* descriptions (input to
     taskgraph.transforms.job)"""
