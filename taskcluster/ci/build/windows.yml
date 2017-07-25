@@ -26,7 +26,7 @@ win32/opt:
     treeherder:
         platform: windows2012-32/opt
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -68,7 +68,7 @@ win32/pgo:
     treeherder:
         platform: windows2012-32/pgo
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 9000
@@ -109,7 +109,7 @@ win64/opt:
     treeherder:
         platform: windows2012-64/opt
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -151,7 +151,7 @@ win32-devedition/opt:
     treeherder:
         platform: windows2012-32-devedition/opt
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -172,7 +172,7 @@ win64-devedition/opt:
     treeherder:
         platform: windows2012-64-devedition/opt
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -196,7 +196,7 @@ win32-nightly/opt:
     treeherder:
         platform: windows2012-32/opt
         symbol: tc(N)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -222,7 +222,7 @@ win64-nightly/opt:
     treeherder:
         platform: windows2012-64/opt
         symbol: tc(N)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
@@ -245,7 +245,7 @@ win64/pgo:
     treeherder:
         platform: windows2012-64/pgo
         symbol: tc(B)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 10800
