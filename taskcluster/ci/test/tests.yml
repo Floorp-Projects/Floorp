@@ -322,7 +322,6 @@ marionette:
     tier:
         by-test-platform:
             android.*: 2
-            windows10.*: 3
             default: default
     chunks:
         by-test-platform:
