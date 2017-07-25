@@ -1029,8 +1029,8 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize) {
       }
 
       // Then sort by resident size.
-      let nodeA = pcollsByProcess[aProcessA]._degenerates["resident"];
-      let nodeB = pcollsByProcess[aProcessB]._degenerates["resident"];
+      let nodeA = pcollsByProcess[aProcessA]._degenerates.resident;
+      let nodeB = pcollsByProcess[aProcessB]._degenerates.resident;
       let residentA = nodeA ? nodeA._amount : -1;
       let residentB = nodeB ? nodeB._amount : -1;
 

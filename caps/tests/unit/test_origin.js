@@ -260,7 +260,7 @@ function run_test() {
     let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
     checkValues(orig, t[1]);
     let mod = orig;
-    mod["userContextId"] = 0;
+    mod.userContextId = 0;
     checkValues(mod, t[2]);
     do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
   });
@@ -281,7 +281,7 @@ function run_test() {
     let orig = ChromeUtils.createOriginAttributesFromOrigin(uri + t[0]);
     checkValues(orig, t[1]);
     let mod = orig;
-    mod["firstPartyDomain"] = "";
+    mod.firstPartyDomain = "";
     checkValues(mod, t[2]);
     do_check_eq(ChromeUtils.originAttributesToSuffix(mod), t[3]);
   });

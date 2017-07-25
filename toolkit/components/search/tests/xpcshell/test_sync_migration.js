@@ -20,9 +20,9 @@ add_task(async function test_sync_metadata_migration() {
 
   // Check that the entries are placed as specified correctly
   let metadata = await promiseEngineMetadata();
-  do_check_eq(metadata["engine"].order, 1);
-  do_check_eq(metadata["engine"].alias, "foo");
+  do_check_eq(metadata.engine.order, 1);
+  do_check_eq(metadata.engine.alias, "foo");
 
   metadata = await promiseGlobalMetadata();
-  do_check_eq(metadata["searchDefaultExpir"], 1471013469846);
+  do_check_eq(metadata.searchDefaultExpir, 1471013469846);
 });

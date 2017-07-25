@@ -1020,7 +1020,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
       rpp.setElements = function(start, vals) {
         vals.forEach((v, i) => { this.set(start+i, v); });
       };
-      r['new'] = function(length) {
+      r.new = function(length) {
         return wrap(jenvpp().NewObjectArray(jenv, length, elemClass, null),
                     classSig);
       };
@@ -1042,7 +1042,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
         j[setter].call(j, jenv, unwrap(this), start, vals.length,
                        ctype.array()(vals));
       };
-      r['new'] = function(length) {
+      r.new = function(length) {
         var j = jenvpp();
         return wrap(j[constructor].call(j, jenv, length), classSig);
       };
@@ -1093,7 +1093,7 @@ function JNILoadClass(jenv, classSig, opt_props) {
     var argctypes = mtd.sig.match(sigRegex()).map(s => sig2ctype(s));
     var returnSig = mtd.sig.substring(mtd.sig.indexOf(')')+1);
 
-    r['new'] = overloadFunc('new');
+    r.new = overloadFunc('new');
     r['new'+mtd.sig] = r['new('+(argctypes.length-1)+')'] = function() {
       var i, j = jenvpp();
       var args = [jenv, jcls, jmtd];

@@ -21,9 +21,9 @@ var WebsiteMetadata = {
   parseAsynchronously: function(doc) {
     Task.spawn(function() {
       let metadata = getMetadata(doc, doc.location.href, {
-        image_url: metadataRules['image_url'],
-        provider: metadataRules['provider'],
-        description_length: metadataRules['description_length']
+        image_url: metadataRules.image_url,
+        provider: metadataRules.provider,
+        description_length: metadataRules.description_length
       });
 
       // No metadata was extracted, so don't bother sending it.
