@@ -303,7 +303,6 @@ jsreftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            windows10-64/.*: 3
             default: default
 
 marionette:
