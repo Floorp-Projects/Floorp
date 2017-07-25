@@ -141,3 +141,7 @@ The following prefs are for testing purpose only.
 ``toolkit.telemetry.send.overrideOfficialCheck``
 
   If true, allows sending pings on unofficial builds. Requires a restart.
+
+``toolkit.telemetry.healthping.enabled``
+
+  If false, sending health pings is disabled. Defaults to true.
