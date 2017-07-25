@@ -1,7 +1,7 @@
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 
-Components.utils.import("resource:///modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function run_test()
 {

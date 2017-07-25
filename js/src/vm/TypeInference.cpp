@@ -2111,7 +2111,7 @@ class ConstraintDataConstantProperty
 bool
 HeapTypeSetKey::constant(CompilerConstraintList* constraints, Value* valOut)
 {
-    if (nonData(constraints))
+    if (nonData(constraints) || !object()->isSingleton())
         return false;
 
     // Only singleton object properties can be marked as constants.

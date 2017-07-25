@@ -7,7 +7,7 @@
 function init1()
 {
   targetIframe = document.createElementNS('http://www.w3.org/1999/xhtml', 'iframe');
-  targetIframe.src = "data:text/html,";
+  targetIframe.srcdoc = "<html></html>";
   targetIframe.setAttribute("style", "width: 300px; height: 200px; border: 1px dotted green;");
   targetIframe.addEventListener("load", init2);
   document.body.appendChild(targetIframe);

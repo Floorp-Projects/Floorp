@@ -278,6 +278,7 @@ GMPChild::RecvPreloadLibs(const nsCString& aLibs)
     "evr.dll", // MFGetStrideForBitmapInfoHeader
     "mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
     "msmpeg2vdec.dll", // H.264 decoder
+    "psapi.dll", // For GetMappedFileNameW, see bug 1383611
   };
 
   nsTArray<nsCString> libs;

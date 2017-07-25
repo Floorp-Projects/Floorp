@@ -11490,10 +11490,13 @@ class MGuardObjectIdentity
     public SingleObjectPolicy::Data
 {
     bool bailOnEquality_;
+    BailoutKind bailoutKind_;
 
-    MGuardObjectIdentity(MDefinition* obj, MDefinition* expected, bool bailOnEquality)
+    MGuardObjectIdentity(MDefinition* obj, MDefinition* expected, bool bailOnEquality,
+                         BailoutKind bailoutKind = Bailout_ObjectIdentityOrTypeGuard)
       : MBinaryInstruction(obj, expected),
-        bailOnEquality_(bailOnEquality)
+        bailOnEquality_(bailOnEquality),
+        bailoutKind_(bailoutKind)
     {
         setGuard();
         setMovable();
@@ -11508,10 +11511,15 @@ class MGuardObjectIdentity
     bool bailOnEquality() const {
         return bailOnEquality_;
     }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isGuardObjectIdentity())
             return false;
         if (bailOnEquality() != ins->toGuardObjectIdentity()->bailOnEquality())
+            return false;
+        if (bailoutKind() != ins->toGuardObjectIdentity()->bailoutKind())
             return false;
         return congruentIfOperandsEqual(ins);
     }

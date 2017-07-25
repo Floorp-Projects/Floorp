@@ -15,6 +15,7 @@ const {
   projection,
   clickedOnPoint
 } = require("devtools/server/actors/utils/shapes-geometry-utils");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const BASE_MARKER_SIZE = 10;
 // the width of the area around highlighter lines that can be clicked, in px
@@ -30,18 +31,23 @@ const _dragging = Symbol("shapes/dragging");
 class ShapesHighlighter extends AutoRefreshHighlighter {
   constructor(highlighterEnv) {
     super(highlighterEnv);
+    EventEmitter.decorate(this);
 
     this.ID_CLASS_PREFIX = "shapes-";
 
     this.referenceBox = "border";
     this.useStrokeBox = false;
     this.geometryBox = "";
+    this.hoveredPoint = null;
+    this.fillRule = "";
 
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
       this._buildMarkup.bind(this));
+    this.onPageHide = this.onPageHide.bind(this);
 
     let { pageListenerTarget } = this.highlighterEnv;
     DOM_EVENTS.forEach(event => pageListenerTarget.addEventListener(event, this));
+    pageListenerTarget.addEventListener("pagehide", this.onPageHide);
   }
 
   _buildMarkup() {
@@ -116,6 +122,17 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       attributes: {
         "id": "markers",
         "class": "markers",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "path",
+      parent: mainSvg,
+      attributes: {
+        "id": "marker-hover",
+        "class": "marker-hover",
+        "hidden": true
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -199,6 +216,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         break;
       case "mousemove":
         if (!this[_dragging]) {
+          this._handleMouseMoveNotDragging(pageX, pageY);
           return;
         }
         event.stopPropagation();
@@ -218,7 +236,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       case "dblclick":
         if (this.shapeType === "polygon") {
           let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
-          let index = this.getPolygonClickedPoint(percentX, percentY);
+          let index = this.getPolygonPointAt(percentX, percentY);
           if (index === -1) {
             this.getPolygonClickedLine(percentX, percentY);
             return;
@@ -238,7 +256,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _handlePolygonClick(pageX, pageY) {
     let { width, height } = this.zoomAdjustedDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
-    let point = this.getPolygonClickedPoint(percentX, percentY);
+    let point = this.getPolygonPointAt(percentX, percentY);
     if (point === -1) {
       return;
     }
@@ -271,7 +289,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let newX = `${valueX + deltaX}${unitX}`;
     let newY = `${valueY + deltaY}${unitY}`;
 
-    let polygonDef = this.coordUnits.map((coords, i) => {
+    let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
+    polygonDef += this.coordUnits.map((coords, i) => {
       return (i === point) ? `${newX} ${newY}` : `${coords[0]} ${coords[1]}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
@@ -287,13 +306,16 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * @param {Number} y the y coordinate of the new point
    */
   _addPolygonPoint(after, x, y) {
-    let polygonDef = this.coordUnits.map((coords, i) => {
+    let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
+    polygonDef += this.coordUnits.map((coords, i) => {
       return (i === after) ? `${coords[0]} ${coords[1]}, ${x}% ${y}%` :
                              `${coords[0]} ${coords[1]}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
                                       `polygon(${polygonDef})`;
 
+    this.hoveredPoint = after + 1;
+    this._emitHoverEvent(this.hoveredPoint);
     this.currentNode.style.setProperty(this.property, polygonDef, "important");
   }
 
@@ -304,12 +326,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _deletePolygonPoint(point) {
     let coordinates = this.coordUnits.slice();
     coordinates.splice(point, 1);
-    let polygonDef = coordinates.map((coords, i) => {
+    let polygonDef = (this.fillRule) ? `${this.fillRule}, ` : "";
+    polygonDef += coordinates.map((coords, i) => {
       return `${coords[0]} ${coords[1]}`;
     }).join(", ");
     polygonDef = (this.geometryBox) ? `polygon(${polygonDef}) ${this.geometryBox}` :
                                       `polygon(${polygonDef})`;
 
+    this.hoveredPoint = null;
+    this._emitHoverEvent(this.hoveredPoint);
     this.currentNode.style.setProperty(this.property, polygonDef, "important");
   }
   /**
@@ -320,7 +345,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _handleCircleClick(pageX, pageY) {
     let { width, height } = this.zoomAdjustedDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
-    let point = this.getCircleClickedPoint(percentX, percentY);
+    let point = this.getCirclePointAt(percentX, percentY);
     if (!point) {
       return;
     }
@@ -401,7 +426,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _handleEllipseClick(pageX, pageY) {
     let { width, height } = this.zoomAdjustedDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
-    let point = this.getEllipseClickedPoint(percentX, percentY);
+    let point = this.getEllipsePointAt(percentX, percentY);
     if (!point) {
       return;
     }
@@ -500,7 +525,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   _handleInsetClick(pageX, pageY) {
     let { width, height } = this.zoomAdjustedDimensions;
     let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
-    let point = this.getInsetClickedPoint(percentX, percentY);
+    let point = this.getInsetPointAt(percentX, percentY);
     if (!point) {
       return;
     }
@@ -553,6 +578,124 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.currentNode.style.setProperty(this.property, insetDef, "important");
   }
 
+  _handleMouseMoveNotDragging(pageX, pageY) {
+    let { percentX, percentY } = this.convertPageCoordsToPercent(pageX, pageY);
+    if (this.shapeType === "polygon") {
+      let point = this.getPolygonPointAt(percentX, percentY);
+      let oldHoveredPoint = this.hoveredPoint;
+      this.hoveredPoint = (point !== -1) ? point : null;
+      if (this.hoveredPoint !== oldHoveredPoint) {
+        this._emitHoverEvent(this.hoveredPoint);
+      }
+      this._handleMarkerHover(point);
+    } else if (this.shapeType === "circle") {
+      let point = this.getCirclePointAt(percentX, percentY);
+      let oldHoveredPoint = this.hoveredPoint;
+      this.hoveredPoint = point ? point : null;
+      if (this.hoveredPoint !== oldHoveredPoint) {
+        this._emitHoverEvent(this.hoveredPoint);
+      }
+      this._handleMarkerHover(point);
+    } else if (this.shapeType === "ellipse") {
+      let point = this.getEllipsePointAt(percentX, percentY);
+      let oldHoveredPoint = this.hoveredPoint;
+      this.hoveredPoint = point ? point : null;
+      if (this.hoveredPoint !== oldHoveredPoint) {
+        this._emitHoverEvent(this.hoveredPoint);
+      }
+      this._handleMarkerHover(point);
+    } else if (this.shapeType === "inset") {
+      let point = this.getInsetPointAt(percentX, percentY);
+      let oldHoveredPoint = this.hoveredPoint;
+      this.hoveredPoint = point ? point : null;
+      if (this.hoveredPoint !== oldHoveredPoint) {
+        this._emitHoverEvent(this.hoveredPoint);
+      }
+      this._handleMarkerHover(point);
+    }
+  }
+
+  _handleMarkerHover(point) {
+    // Hide hover marker for now, will be shown if point is a valid hover target
+    this.getElement("marker-hover").setAttribute("hidden", true);
+    if (point === null || point === undefined) {
+      return;
+    }
+
+    if (this.shapeType === "polygon") {
+      if (point === -1) {
+        return;
+      }
+      this._drawHoverMarker([this.coordinates[point]]);
+    } else if (this.shapeType === "circle") {
+      let { cx, cy, rx } = this.coordinates;
+      if (point === "radius") {
+        this._drawHoverMarker([[cx + rx, cy]]);
+      } else if (point === "center") {
+        this._drawHoverMarker([[cx, cy]]);
+      }
+    } else if (this.shapeType === "ellipse") {
+      if (point === "center") {
+        let { cx, cy } = this.coordinates;
+        this._drawHoverMarker([[cx, cy]]);
+      } else if (point === "rx") {
+        let { cx, cy, rx } = this.coordinates;
+        this._drawHoverMarker([[cx + rx, cy]]);
+      } else if (point === "ry") {
+        let { cx, cy, ry } = this.coordinates;
+        this._drawHoverMarker([[cx, cy + ry]]);
+      }
+    } else if (this.shapeType === "inset") {
+      if (!point) {
+        return;
+      }
+
+      let { top, right, bottom, left } = this.coordinates;
+      let centerX = (left + (100 - right)) / 2;
+      let centerY = (top + (100 - bottom)) / 2;
+      let points = point.split(",");
+      let coords = points.map(side => {
+        if (side === "top") {
+          return [centerX, top];
+        } else if (side === "right") {
+          return [100 - right, centerY];
+        } else if (side === "bottom") {
+          return [centerX, 100 - bottom];
+        } else if (side === "left") {
+          return [left, centerY];
+        }
+        return null;
+      });
+
+      this._drawHoverMarker(coords);
+    }
+  }
+
+  _drawHoverMarker(points) {
+    let { width, height } = this.zoomAdjustedDimensions;
+    let zoom = getCurrentZoom(this.win);
+    let path = points.map(([x, y]) => {
+      return getCirclePath(x, y, width, height, zoom);
+    }).join(" ");
+
+    let markerHover = this.getElement("marker-hover");
+    markerHover.setAttribute("d", path);
+    markerHover.removeAttribute("hidden");
+  }
+
+  _emitHoverEvent(point) {
+    if (point === null || point === undefined) {
+      this.emit("highlighter-event", {
+        type: "shape-hover-off"
+      });
+    } else {
+      this.emit("highlighter-event", {
+        type: "shape-hover-on",
+        point: point.toString()
+      });
+    }
+  }
+
   /**
    * Convert the given coordinates on the page to percentages relative to the current
    * element.
@@ -590,13 +733,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Get the id of the point clicked on the polygon highlighter.
+   * Get the id of the point on the polygon highlighter at the given coordinate.
    * @param {Number} pageX the x coordinate on the page, in % relative to the element
    * @param {Number} pageY the y coordinate on the page, in % relative to the element
    * @returns {Number} the index of the point that was clicked on in this.coordinates,
    *          or -1 if none of the points were clicked on.
    */
-  getPolygonClickedPoint(pageX, pageY) {
+  getPolygonPointAt(pageX, pageY) {
     let { coordinates } = this;
     let { width, height } = this.zoomAdjustedDimensions;
     let zoom = getCurrentZoom(this.win);
@@ -645,13 +788,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Check if the center point or radius of the circle highlighter was clicked
+   * Check if the center point or radius of the circle highlighter is at given coords
    * @param {Number} pageX the x coordinate on the page, in % relative to the element
    * @param {Number} pageY the y coordinate on the page, in % relative to the element
    * @returns {String} "center" if the center point was clicked, "radius" if the radius
    *          was clicked, "" if neither was clicked.
    */
-  getCircleClickedPoint(pageX, pageY) {
+  getCirclePointAt(pageX, pageY) {
     let { cx, cy, rx, ry } = this.coordinates;
     let { width, height } = this.zoomAdjustedDimensions;
     let zoom = getCurrentZoom(this.win);
@@ -673,14 +816,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Check if the center point or rx/ry points of the ellipse highlighter was clicked
+   * Check if the center or rx/ry points of the ellipse highlighter is at given point
    * @param {Number} pageX the x coordinate on the page, in % relative to the element
    * @param {Number} pageY the y coordinate on the page, in % relative to the element
    * @returns {String} "center" if the center point was clicked, "rx" if the x-radius
    *          point was clicked, "ry" if the y-radius point was clicked,
    *          "" if none was clicked.
    */
-  getEllipseClickedPoint(pageX, pageY) {
+  getEllipsePointAt(pageX, pageY) {
     let { cx, cy, rx, ry } = this.coordinates;
     let { width, height } = this.zoomAdjustedDimensions;
     let zoom = getCurrentZoom(this.win);
@@ -703,13 +846,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
   }
 
   /**
-   * Check if the edges of the inset highlighter was clicked
+   * Check if the edges of the inset highlighter is at given coords
    * @param {Number} pageX the x coordinate on the page, in % relative to the element
    * @param {Number} pageY the y coordinate on the page, in % relative to the element
    * @returns {String} "top", "left", "right", or "bottom" if any of those edges were
    *          clicked. "" if none were clicked.
    */
-  getInsetClickedPoint(pageX, pageY) {
+  getInsetPointAt(pageX, pageY) {
     let { top, left, right, bottom } = this.coordinates;
     let zoom = getCurrentZoom(this.win);
     let { width, height } = this.zoomAdjustedDimensions;
@@ -811,7 +954,11 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    */
   polygonPoints(definition) {
     this.coordUnits = this.polygonRawPoints();
-    return definition.split(", ").map(coords => {
+    let splitDef = definition.split(", ");
+    if (splitDef[0] === "evenodd" || splitDef[0] === "nonzero") {
+      splitDef.shift();
+    }
+    return splitDef.map(coords => {
       return splitCoords(coords).map(this.convertCoordsToPercent.bind(this));
     });
   }
@@ -827,7 +974,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }
     this.rawDefinition = definition;
     definition = definition.substring(8, definition.lastIndexOf(")"));
-    return definition.split(", ").map(coords => {
+    let splitDef = definition.split(", ");
+    if (splitDef[0].includes("evenodd") || splitDef[0].includes("nonzero")) {
+      this.fillRule = splitDef[0].trim();
+      splitDef.shift();
+    } else {
+      this.fillRule = "";
+    }
+    return splitDef.map(coords => {
       return splitCoords(coords).map(coord => {
         // Undo the insertion of &nbsp; that was done in splitCoords.
         return coord.replace(/\u00a0/g, " ");
@@ -1074,6 +1228,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
    * Show the highlighter on a given node
    */
   _show() {
+    this.hoveredPoint = this.options.hoverPoint;
     return this._update();
   }
 
@@ -1149,6 +1304,8 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     } else if (this.shapeType === "inset") {
       this._updateInsetShape(width, height, zoom);
     }
+
+    this._handleMarkerHover(this.hoveredPoint);
 
     let { width: winWidth, height: winHeight } = this._winDimensions;
     root.removeAttribute("hidden");
@@ -1261,6 +1418,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.getElement("markers").setAttribute("d", "");
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
+  }
+
+  onPageHide({ target }) {
+    // If a page hide event is triggered for current window's highlighter, hide the
+    // highlighter.
+    if (target.defaultView === this.win) {
+      this.hide();
+    }
   }
 }
 

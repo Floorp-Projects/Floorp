@@ -50,7 +50,7 @@ add_task(function* () {
   ok(highlighters.gridHighlighterShown, "CSS grid highlighter is shown.");
 
   info("Reload the page, expect the highlighter to be displayed once again");
-  let onStateRestored = highlighters.once("state-restored");
+  let onStateRestored = highlighters.once("grid-state-restored");
   yield refreshTab(gBrowser.selectedTab);
   let { restored } = yield onStateRestored;
   ok(restored, "The highlighter state was restored");
@@ -60,7 +60,7 @@ add_task(function* () {
 
   info("Navigate to another URL, and check that the highlighter is hidden");
   let otherUri = "data:text/html;charset=utf-8," + encodeURIComponent(OTHER_URI);
-  onStateRestored = highlighters.once("state-restored");
+  onStateRestored = highlighters.once("grid-state-restored");
   yield navigateTo(inspector, otherUri);
   ({ restored } = yield onStateRestored);
   ok(!restored, "The highlighter state was not restored");
