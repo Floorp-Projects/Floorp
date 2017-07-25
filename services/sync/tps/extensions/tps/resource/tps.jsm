@@ -507,10 +507,10 @@ var TPS = {
         for (let bookmark of bookmarks[folder]) {
           Logger.clearPotentialError();
           let placesItem;
-          bookmark["location"] = folder;
+          bookmark.location = folder;
 
           if (last_item_pos != -1)
-            bookmark["last_item_pos"] = last_item_pos;
+            bookmark.last_item_pos = last_item_pos;
           let item_id = -1;
 
           if (action != ACTION_MODIFY && action != ACTION_DELETE)

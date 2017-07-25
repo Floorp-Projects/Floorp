@@ -737,12 +737,12 @@ var gViewController = {
     this.headeredViews = document.getElementById("headered-views");
     this.headeredViewsDeck = document.getElementById("headered-views-content");
 
-    this.viewObjects["search"] = gSearchView;
-    this.viewObjects["discover"] = gDiscoverView;
-    this.viewObjects["list"] = gListView;
-    this.viewObjects["legacy"] = gLegacyView;
-    this.viewObjects["detail"] = gDetailView;
-    this.viewObjects["updates"] = gUpdatesView;
+    this.viewObjects.search = gSearchView;
+    this.viewObjects.discover = gDiscoverView;
+    this.viewObjects.list = gListView;
+    this.viewObjects.legacy = gLegacyView;
+    this.viewObjects.detail = gDetailView;
+    this.viewObjects.updates = gUpdatesView;
 
     for (let type in this.viewObjects) {
       let view = this.viewObjects[type];

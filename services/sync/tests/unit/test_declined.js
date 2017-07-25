@@ -61,10 +61,10 @@ add_task(async function testOldMeta() {
   let engineSync = new EngineSynchronizer(Service);
   await engineSync._updateEnabledFromMeta(meta, 3, manager);
 
-  Assert.ok(manager._engines["petrol"].enabled, "'petrol' locally enabled.");
-  Assert.ok(manager._engines["diesel"].enabled, "'diesel' locally enabled.");
+  Assert.ok(manager._engines.petrol.enabled, "'petrol' locally enabled.");
+  Assert.ok(manager._engines.diesel.enabled, "'diesel' locally enabled.");
   Assert.ok(!("nonlocal" in manager._engines), "We don't know anything about the 'nonlocal' engine.");
-  Assert.ok(!manager._engines["actual"].enabled, "'actual' not locally enabled.");
+  Assert.ok(!manager._engines.actual.enabled, "'actual' not locally enabled.");
   Assert.ok(!manager.isDeclined("actual"), "'actual' not declined, though.");
 
   let declinedEngines = new DeclinedEngines(Service);
@@ -107,10 +107,10 @@ add_task(async function testDeclinedMeta() {
   _("Record: " + JSON.stringify(meta));
 
   let manager = getEngineManager();
-  manager._engines["petrol"].enabled = true;
-  manager._engines["diesel"].enabled = true;
-  manager._engines["dummy"].enabled = true;
-  manager._engines["actual"].enabled = false;   // Disabled but not declined.
+  manager._engines.petrol.enabled = true;
+  manager._engines.diesel.enabled = true;
+  manager._engines.dummy.enabled = true;
+  manager._engines.actual.enabled = false;   // Disabled but not declined.
 
   manager.decline(["localdecline"]);            // Declined and not supported.
 

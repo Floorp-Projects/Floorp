@@ -299,5 +299,5 @@ add_task(async function test_unicodeValues() {
   let events = snapshot.parent;
   Assert.equal(events.length, 2, "Should have recorded 2 events.");
   Assert.equal(events[0][4], value, "Should have recorded the right value.");
-  Assert.equal(events[1][5]["key1"], value, "Should have recorded the right extra value.");
+  Assert.equal(events[1][5].key1, value, "Should have recorded the right extra value.");
 });

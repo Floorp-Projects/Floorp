@@ -62,7 +62,7 @@ function run_test() {
   let list = sis.read(sis.available());
   let searchSettings = JSON.parse(list);
 
-  cacheTemplate.visibleDefaultEngines = searchSettings["default"]["visibleDefaultEngines"];
+  cacheTemplate.visibleDefaultEngines = searchSettings.default.visibleDefaultEngines;
 
   run_next_test();
 }

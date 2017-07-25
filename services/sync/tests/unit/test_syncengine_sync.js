@@ -99,7 +99,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   try {
 
     // Confirm initial environment
-    do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
+    do_check_eq(engine._tracker.changedIDs.rekolok, undefined);
     let metaGlobal = await Service.recordManager.get(engine.metaURL);
     do_check_eq(metaGlobal.payload.engines, undefined);
     do_check_true(!!collection.payload("flying"));
@@ -113,7 +113,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     await engine._syncStartup();
 
     // The meta/global WBO has been filled with data about the engine
-    let engineData = metaGlobal.payload.engines["rotary"];
+    let engineData = metaGlobal.payload.engines.rotary;
     do_check_eq(engineData.version, engine.version);
     do_check_eq(engineData.syncID, engine.syncID);
 
@@ -174,7 +174,7 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
 
     // Confirm initial environment
     do_check_eq(engine.syncID, "fake-guid-00");
-    do_check_eq(engine._tracker.changedIDs["rekolok"], undefined);
+    do_check_eq(engine._tracker.changedIDs.rekolok, undefined);
 
     engine.lastSync = Date.now() / 1000;
     engine.lastSyncLocal = Date.now();
@@ -349,7 +349,7 @@ add_task(async function test_processIncoming_reconcile() {
     do_check_eq(engine._store.items.olderidentical, "Older but identical");
     do_check_eq(engine._store.items.updateclient, "Got data?");
     do_check_eq(engine._store.items.nukeme, "Nuke me!");
-    do_check_true(engine._tracker.changedIDs["olderidentical"] > 0);
+    do_check_true(engine._tracker.changedIDs.olderidentical > 0);
 
     await engine._syncStartup();
     await engine._processIncoming();
@@ -367,7 +367,7 @@ add_task(async function test_processIncoming_reconcile() {
     // The data for 'olderidentical' is identical on the server, so
     // it's no longer marked as changed anymore.
     do_check_eq(engine._store.items.olderidentical, "Older but identical");
-    do_check_eq(engine._tracker.changedIDs["olderidentical"], undefined);
+    do_check_eq(engine._tracker.changedIDs.olderidentical, undefined);
 
     // Updated with server data.
     do_check_eq(engine._store.items.updateclient, "Get this!");
@@ -1195,7 +1195,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
     do_check_true(!!collection.payload("scotsman"));
     do_check_eq(JSON.parse(collection.wbo("scotsman").data.ciphertext).id,
                 "scotsman");
-    do_check_eq(engine._tracker.changedIDs["scotsman"], undefined);
+    do_check_eq(engine._tracker.changedIDs.scotsman, undefined);
 
     // The 'flying' record wasn't marked so it wasn't uploaded
     do_check_eq(collection.payload("flying"), undefined);
@@ -1251,7 +1251,7 @@ async function test_uploadOutgoing_max_record_payload_bytes(allowSkippedRecord) 
     // Check we uploaded the other record to the server
     do_check_true(collection.payload("scotsman"));
     // And that we won't try to upload the huge record next time.
-    do_check_eq(engine._tracker.changedIDs["flying"], undefined);
+    do_check_eq(engine._tracker.changedIDs.flying, undefined);
 
   } catch (e) {
     if (allowSkippedRecord) {
@@ -1261,7 +1261,7 @@ async function test_uploadOutgoing_max_record_payload_bytes(allowSkippedRecord) 
     await engine.trackRemainingChanges();
 
     // Check that we will try to upload the huge record next time
-    do_check_eq(engine._tracker.changedIDs["flying"], 1000);
+    do_check_eq(engine._tracker.changedIDs.flying, 1000);
   } finally {
     // Check we didn't upload the oversized record to the server
     do_check_eq(collection.payload("flying"), undefined);
@@ -1317,9 +1317,9 @@ add_task(async function test_uploadOutgoing_failed() {
     // Confirm initial environment
     do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.payload("flying"), undefined);
-    do_check_eq(engine._tracker.changedIDs["flying"], FLYING_CHANGED);
-    do_check_eq(engine._tracker.changedIDs["scotsman"], SCOTSMAN_CHANGED);
-    do_check_eq(engine._tracker.changedIDs["peppercorn"], PEPPERCORN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.flying, FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.scotsman, SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.peppercorn, PEPPERCORN_CHANGED);
 
     engine.enabled = true;
     await sync_engine_and_validate_telem(engine, true);
@@ -1329,12 +1329,12 @@ add_task(async function test_uploadOutgoing_failed() {
 
     // Ensure the 'flying' record has been uploaded and is no longer marked.
     do_check_true(!!collection.payload("flying"));
-    do_check_eq(engine._tracker.changedIDs["flying"], undefined);
+    do_check_eq(engine._tracker.changedIDs.flying, undefined);
 
     // The 'scotsman' and 'peppercorn' records couldn't be uploaded so
     // they weren't cleared from the tracker.
-    do_check_eq(engine._tracker.changedIDs["scotsman"], SCOTSMAN_CHANGED);
-    do_check_eq(engine._tracker.changedIDs["peppercorn"], PEPPERCORN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.scotsman, SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.peppercorn, PEPPERCORN_CHANGED);
 
   } finally {
     await promiseClean(engine, server);
@@ -1448,8 +1448,8 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
     // Confirm initial environment
     do_check_eq(engine.lastSyncLocal, 0);
     do_check_eq(collection.payload("flying"), undefined);
-    do_check_eq(engine._tracker.changedIDs["flying"], FLYING_CHANGED);
-    do_check_eq(engine._tracker.changedIDs["scotsman"], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.flying, FLYING_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.scotsman, SCOTSMAN_CHANGED);
 
     engine.enabled = true;
     ping = await sync_engine_and_validate_telem(engine, true, onErrorPing => {
@@ -1462,7 +1462,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
 
     // Ensure the 'flying' record has been uploaded and is no longer marked.
     do_check_true(!!collection.payload("flying"));
-    do_check_eq(engine._tracker.changedIDs["flying"], undefined);
+    do_check_eq(engine._tracker.changedIDs.flying, undefined);
   } catch (err) {
     if (allowSkippedRecord) {
       do_throw("should not get here");
@@ -1470,7 +1470,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
 
     // Ensure the 'flying' record has not been uploaded and is still marked
     do_check_false(collection.payload("flying"));
-    do_check_true(engine._tracker.changedIDs["flying"]);
+    do_check_true(engine._tracker.changedIDs.flying);
   } finally {
     // Local timestamp has been set.
     do_check_true(engine.lastSyncLocal > 0);
@@ -1481,7 +1481,7 @@ async function createRecordFailTelemetry(allowSkippedRecord) {
     // In any case, the 'scotsman' record couldn't be created so it wasn't
     // uploaded nor it was not cleared from the tracker.
     do_check_false(collection.payload("scotsman"));
-    do_check_eq(engine._tracker.changedIDs["scotsman"], SCOTSMAN_CHANGED);
+    do_check_eq(engine._tracker.changedIDs.scotsman, SCOTSMAN_CHANGED);
 
     engine._store.createRecord = oldCreateRecord;
     await promiseClean(engine, server);
