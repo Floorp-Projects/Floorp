@@ -693,14 +693,15 @@ AddPseudoEntry(uint32_t aFeatures, NotNull<RacyThreadInfo*> aRacyInfo,
   if (dynamicString) {
     bool isChromeJSEntry = false;
     if (entry.isJs()) {
-      JSScript* script = entry.script();
-      if (script) {
-        isChromeJSEntry = IsChromeJSScript(script);
+      // We call entry.script() repeatedly -- rather than storing the result in
+      // a local variable in order -- to avoid rooting hazards.
+      if (entry.script()) {
+        isChromeJSEntry = IsChromeJSScript(entry.script());
         if (!entry.pc()) {
           // The JIT only allows the top-most entry to have a nullptr pc.
           MOZ_ASSERT(&entry == &aRacyInfo->entries[aRacyInfo->stackSize() - 1]);
         } else {
-          lineno = JS_PCToLineNumber(script, entry.pc());
+          lineno = JS_PCToLineNumber(entry.script(), entry.pc());
         }
       }
     } else {
