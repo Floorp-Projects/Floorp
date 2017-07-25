@@ -41,7 +41,7 @@ codegen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
-include codegen.pp
+-include codegen.pp
 
 codegen.pp: $(codegen_dependencies)
 	$(call py_action,webidl,$(srcdir))
