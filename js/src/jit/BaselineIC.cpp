@@ -814,6 +814,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
                                &isTemporarilyUnoptimizable, lhs, rhs, lhs, CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Monitored,
                                                         engine, script, stub, &attached);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -886,6 +887,7 @@ DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* 
                                CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Monitored,
                                                         engine, script, stub, &attached);
             if (newStub) {
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -1051,6 +1053,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                                &isTemporarilyUnoptimizable, objv, index, rhs);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Updated,
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
@@ -1114,6 +1117,7 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                                &isTemporarilyUnoptimizable, objv, index, rhs);
         if (gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Updated,
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
@@ -1311,6 +1315,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
                                                         engine, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -1379,6 +1384,7 @@ DoHasOwnFallback(JSContext* cx, BaselineFrame* frame, ICHasOwn_Fallback* stub_,
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
                                                         engine, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -1450,6 +1456,7 @@ DoGetNameFallback(JSContext* cx, BaselineFrame* frame, ICGetName_Fallback* stub_
         GetNameIRGenerator gen(cx, script, pc, stub->state().mode(), envChain, name);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Monitored,
                                                         engine, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -1529,6 +1536,7 @@ DoBindNameFallback(JSContext* cx, BaselineFrame* frame, ICBindName_Fallback* stu
         BindNameIRGenerator gen(cx, script, pc, stub->state().mode(), envChain, name);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
                                                         ICStubEngine::Baseline, script, stub,
                                                         &attached);
             if (newStub)
@@ -1703,6 +1711,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                                &isTemporarilyUnoptimizable, lhs, idVal, rhs);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Updated,
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
@@ -1774,6 +1783,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                                &isTemporarilyUnoptimizable, lhs, idVal, rhs);
         if (gen.tryAttachAddSlotStub(oldGroup, oldShape)) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Updated,
                                                         ICStubEngine::Baseline, frame->script(),
                                                         stub, &attached);
             if (newStub) {
@@ -2510,16 +2520,40 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
             return false;
     }
 
-    CallIRGenerator gen(cx, script, pc, stub->state().mode(), argc,
-                        callee, callArgs.thisv(),
-                        HandleValueArray::fromMarkedLocation(argc, vp+2));
-    bool optimizeAfterCall = false;
-    CallIRGenerator::OptStrategy optStrategy = gen.getOptStrategy(&optimizeAfterCall);
+    // Transition stub state to megamorphic or generic if warranted.
+    if (stub->state().maybeTransition())
+        stub->discardStubs(cx);
 
-    // Try attaching a call stub, if the CallIRGenerator has determined that this
-    // operation cannot be optimized after the call.
+    bool canAttachStub = stub->state().canAttachStub();
     bool handled = false;
-    if (!optimizeAfterCall) {
+
+    // Only bother to try optimizing JSOP_CALL with CacheIR if the chain is still
+    // allowed to attach stubs.
+    if (canAttachStub) {
+        CallIRGenerator gen(cx, script, pc, stub, stub->state().mode(), argc,
+                            callee, callArgs.thisv(),
+                            HandleValueArray::fromMarkedLocation(argc, vp+2));
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        gen.cacheIRStubKind(),
+                                                        ICStubEngine::Baseline,
+                                                        script, stub, &handled);
+
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+
+                // If it's an updated stub, initialize it.
+                if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated)
+                    SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+            }
+        }
+        if (!handled)
+            stub->state().trackNotAttached();
+    }
+
+    // Try attaching a regular call stub, but only if the CacheIR attempt didn't add
+    // any stubs.
+    if (!handled) {
         bool createSingleton = ObjectGroup::useSingletonForNewObject(cx, script, pc);
         if (!TryAttachCallStub(cx, stub, script, pc, op, argc, vp, constructing, false,
                                createSingleton, &handled))
@@ -2567,17 +2601,6 @@ DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub_, uint
     // Add a type monitor stub for the resulting value.
     if (!stub->addMonitorStubForValue(cx, frame, types, res))
         return false;
-
-    if (optimizeAfterCall && !handled && optStrategy != CallIRGenerator::OptStrategy::None) {
-        if (gen.tryAttachStub()) {
-            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
-                                                        ICStubEngine::Baseline, script, stub,
-                                                        &handled);
-            if (newStub) {
-                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
-            }
-        }
-    }
 
     if (!handled) {
         // If 'callee' is a potential Call_ConstStringSplit, try to attach an
@@ -4172,6 +4195,7 @@ DoGetIteratorFallback(JSContext* cx, BaselineFrame* frame, ICGetIterator_Fallbac
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
                                                         engine, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
@@ -4562,6 +4586,7 @@ DoTypeOfFallback(JSContext* cx, BaselineFrame* frame, ICTypeOf_Fallback* stub, H
         bool attached = false;
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        BaselineCacheIRStubKind::Regular,
                                                         engine, script, stub, &attached);
             if (newStub)
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");

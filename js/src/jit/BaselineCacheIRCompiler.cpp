@@ -1507,6 +1507,119 @@ BaselineCacheIRCompiler::emitStoreDenseElementHole()
 }
 
 bool
+BaselineCacheIRCompiler::emitArrayPush()
+{
+    ObjOperandId objId = reader.objOperandId();
+    ValOperandId rhsId = reader.valOperandId();
+
+    // Allocate the fixed registers first. These need to be fixed for
+    // callTypeUpdateIC.
+    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    ValueOperand val = allocator.useFixedValueRegister(masm, rhsId, R0);
+
+    Register obj = allocator.useRegister(masm, objId);
+    AutoScratchRegister scratchLength(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Load obj->elements in scratch.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+    masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratchLength);
+
+    BaseObjectElementIndex element(scratch, scratchLength);
+    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
+    Address elementsFlags(scratch, ObjectElements::offsetOfFlags());
+
+    // Check for copy-on-write or frozen elements.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::COPY_ON_WRITE |
+                            ObjectElements::FROZEN),
+                      failure->label());
+
+    // Fail if length != initLength.
+    masm.branch32(Assembler::NotEqual, initLength, scratchLength, failure->label());
+
+    // If scratchLength < capacity, we can add a dense element inline. If not we
+    // need to allocate more elements.
+    Label capacityOk;
+    Address capacity(scratch, ObjectElements::offsetOfCapacity());
+    masm.branch32(Assembler::Above, capacity, scratchLength, &capacityOk);
+
+    // Check for non-writable array length. We only have to do this if
+    // index >= capacity.
+    masm.branchTest32(Assembler::NonZero, elementsFlags,
+                      Imm32(ObjectElements::NONWRITABLE_ARRAY_LENGTH),
+                      failure->label());
+
+    LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+    save.takeUnchecked(scratch);
+    masm.PushRegsInMask(save);
+
+    masm.setupUnalignedABICall(scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(obj);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::addDenseElementDontReportOOM));
+    masm.mov(ReturnReg, scratch);
+
+    masm.PopRegsInMask(save);
+    masm.branchIfFalseBool(scratch, failure->label());
+
+    // Load the reallocated elements pointer.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    masm.bind(&capacityOk);
+
+    // Check if we have to convert a double element.
+    Label noConversion;
+    masm.branchTest32(Assembler::Zero, elementsFlags,
+                      Imm32(ObjectElements::CONVERT_DOUBLE_ELEMENTS),
+                      &noConversion);
+
+    // We need to convert int32 values being stored into doubles. Note that
+    // double arrays are only created by IonMonkey, so if we have no FP support
+    // Ion is disabled and there should be no double arrays.
+    if (cx_->runtime()->jitSupportsFloatingPoint) {
+        // It's fine to convert the value in place in Baseline. We can't do
+        // this in Ion.
+        masm.convertInt32ValueToDouble(val);
+    } else {
+        masm.assumeUnreachable("There shouldn't be double arrays when there is no FP support.");
+    }
+
+    masm.bind(&noConversion);
+
+    // Call the type update IC. After this everything must be infallible as we
+    // don't save all registers here.
+    LiveGeneralRegisterSet saveRegs;
+    saveRegs.add(obj);
+    saveRegs.add(val);
+    if (!callTypeUpdateIC(obj, val, scratch, saveRegs))
+        return false;
+
+    // Reload obj->elements as callTypeUpdateIC used the scratch register.
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
+
+    // Increment initLength and length.
+    Address length(scratch, ObjectElements::offsetOfLength());
+    masm.add32(Imm32(1), initLength);
+    masm.load32(length, scratchLength);
+    masm.add32(Imm32(1), length);
+
+    // Store the value.
+    masm.storeValue(val, element);
+    emitPostBarrierElement(obj, val, scratch, scratchLength);
+
+    // Return value is new length.
+    masm.add32(Imm32(1), scratchLength);
+    masm.tagValue(JSVAL_TYPE_INT32, scratchLength, val);
+
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitStoreTypedElement()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -2098,9 +2211,10 @@ BaselineCacheIRCompiler::init(CacheKind kind)
 static const size_t MaxOptimizedCacheIRStubs = 16;
 
 ICStub*
-jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
-                               CacheKind kind, ICStubEngine engine, JSScript* outerScript,
-                               ICFallbackStub* stub, bool* attached)
+js::jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
+                                   CacheKind kind, BaselineCacheIRStubKind stubKind,
+                                   ICStubEngine engine, JSScript* outerScript,
+                                   ICFallbackStub* stub, bool* attached)
 {
     // We shouldn't GC or report OOM (or any other exception) here.
     AutoAssertNoPendingException aanpe(cx);
@@ -2115,33 +2229,16 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     // unlimited number of stubs.
     MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 
-    enum class CacheIRStubKind { Regular, Monitored, Updated };
-
-    uint32_t stubDataOffset;
-    CacheIRStubKind stubKind;
-    switch (kind) {
-      case CacheKind::Compare:
-      case CacheKind::In:
-      case CacheKind::HasOwn:
-      case CacheKind::BindName:
-      case CacheKind::TypeOf:
-      case CacheKind::GetIterator:
-        stubDataOffset = sizeof(ICCacheIR_Regular);
-        stubKind = CacheIRStubKind::Regular;
-        break;
-      case CacheKind::GetProp:
-      case CacheKind::GetElem:
-      case CacheKind::GetName:
-      case CacheKind::GetPropSuper:
-      case CacheKind::GetElemSuper:
-      case CacheKind::Call:
+    uint32_t stubDataOffset = 0;
+    switch (stubKind) {
+      case BaselineCacheIRStubKind::Monitored:
         stubDataOffset = sizeof(ICCacheIR_Monitored);
-        stubKind = CacheIRStubKind::Monitored;
         break;
-      case CacheKind::SetProp:
-      case CacheKind::SetElem:
+      case BaselineCacheIRStubKind::Regular:
+        stubDataOffset = sizeof(ICCacheIR_Regular);
+        break;
+      case BaselineCacheIRStubKind::Updated:
         stubDataOffset = sizeof(ICCacheIR_Updated);
-        stubKind = CacheIRStubKind::Updated;
         break;
     }
 
@@ -2186,7 +2283,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
         bool updated = false;
         switch (stubKind) {
-          case CacheIRStubKind::Regular: {
+          case BaselineCacheIRStubKind::Regular: {
             if (!iter->isCacheIR_Regular())
                 continue;
             auto otherStub = iter->toCacheIR_Regular();
@@ -2196,7 +2293,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                 continue;
             break;
           }
-          case CacheIRStubKind::Monitored: {
+          case BaselineCacheIRStubKind::Monitored: {
             if (!iter->isCacheIR_Monitored())
                 continue;
             auto otherStub = iter->toCacheIR_Monitored();
@@ -2206,7 +2303,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
                 continue;
             break;
           }
-          case CacheIRStubKind::Updated: {
+          case BaselineCacheIRStubKind::Updated: {
             if (!iter->isCacheIR_Updated())
                 continue;
             auto otherStub = iter->toCacheIR_Updated();
@@ -2237,14 +2334,14 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         return nullptr;
 
     switch (stubKind) {
-      case CacheIRStubKind::Regular: {
+      case BaselineCacheIRStubKind::Regular: {
         auto newStub = new(newStubMem) ICCacheIR_Regular(code, stubInfo);
         writer.copyStubData(newStub->stubDataStart());
         stub->addNewStub(newStub);
         *attached = true;
         return newStub;
       }
-      case CacheIRStubKind::Monitored: {
+      case BaselineCacheIRStubKind::Monitored: {
         ICStub* monitorStub =
             stub->toMonitoredFallbackStub()->fallbackMonitorStub()->firstMonitorStub();
         auto newStub = new(newStubMem) ICCacheIR_Monitored(code, monitorStub, stubInfo);
@@ -2253,7 +2350,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
         *attached = true;
         return newStub;
       }
-      case CacheIRStubKind::Updated: {
+      case BaselineCacheIRStubKind::Updated: {
         auto newStub = new(newStubMem) ICCacheIR_Updated(code, stubInfo);
         if (!newStub->initUpdatingChain(cx, stubSpace)) {
             cx->recoverFromOutOfMemory();

@@ -1783,6 +1783,13 @@ IonCacheIRCompiler::emitStoreDenseElementHole()
 }
 
 bool
+IonCacheIRCompiler::emitArrayPush()
+{
+    MOZ_ASSERT_UNREACHABLE("emitArrayPush not supported for IonCaches.");
+    return false;
+}
+
+bool
 IonCacheIRCompiler::emitStoreTypedElement()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
