@@ -5,21 +5,17 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-
-.autofill-item-box > .profile-item-col > .profile-comment {
-  font-size: .83em;
-}
-
-.autofill-footer > .autofill-warning {
-  font-size: .83em;
-}
-
-.autofill-footer > .autofill-option-button {
-  font-size: .91em;
+.autofill-item-box {
+  --default-font-size: 12;
 }
 
 @media (-moz-windows-default-theme: 0) {
   xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-item-box {
     background-color: Highlight;
+  }
+
+  .autofill-item-box {
+    --label-text-color: -moz-FieldText;
+    --comment-text-color: GrayText;
   }
 }
