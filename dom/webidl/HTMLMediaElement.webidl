@@ -100,11 +100,11 @@ interface HTMLMediaElement : HTMLElement {
 
 // Mozilla extensions:
 partial interface HTMLMediaElement {
-  [Func="HasDebuggerPrivilege"]
+  [Func="HasDebuggerOrTabsPrivilege"]
   readonly attribute MediaSource? mozMediaSourceObject;
-  [Func="HasDebuggerPrivilege"]
+  [Func="HasDebuggerOrTabsPrivilege"]
   readonly attribute DOMString mozDebugReaderData;
-  [Func="HasDebuggerPrivilege", NewObject]
+  [Func="HasDebuggerOrTabsPrivilege", NewObject]
   Promise<DOMString> mozRequestDebugInfo();
 
   [Pref="media.test.dumpDebugInfo"]
