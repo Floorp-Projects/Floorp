@@ -194,9 +194,6 @@ IsH264DecoderBlacklisted()
 /* static */ bool
 WMFDecoderModule::HasH264()
 {
-  if (IsH264DecoderBlacklisted()) {
-    return false;
-  }
   return CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>();
 }
 
