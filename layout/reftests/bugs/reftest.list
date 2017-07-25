@@ -1817,8 +1817,8 @@ skip-if(Android) == 966510-1.html 966510-1-ref.html # scrollable elements other 
 skip-if(Android) == 966510-2.html 966510-2-ref.html # same as above
 fuzzy-if(skiaContent,1,123) == 978911-1.svg 978911-1-ref.svg
 == 983084-1.html 983084-1-ref.html
-skip-if(styloVsGecko) == 983084-2.html 983084-2-ref.html
-skip-if(styloVsGecko) == 983084-3.html 983084-1-ref.html
+== 983084-2.html 983084-2-ref.html
+== 983084-3.html 983084-1-ref.html
 == 983691-1.html 983691-ref.html
 HTTP(..) == 983985-1.html 983985-1-ref.html
 HTTP(..) == 983985-2.html 983985-2-ref.html
@@ -1866,7 +1866,7 @@ test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.h
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
 fuzzy-if(d2d,36,304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,127,701) HTTP(..) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
-skip-if(styloVsGecko) == 1111753-1.html about:blank
+== 1111753-1.html about:blank
 == 1114526-1.html 1114526-1-ref.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1-ref.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1-ref.html
