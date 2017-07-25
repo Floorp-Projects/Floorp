@@ -73,6 +73,8 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
 
 Zone::~Zone()
 {
+    MOZ_ASSERT(compartments_.ref().empty());
+
     JSRuntime* rt = runtimeFromAnyThread();
     if (this == rt->gc.systemZone)
         rt->gc.systemZone = nullptr;
@@ -87,7 +89,8 @@ Zone::~Zone()
 #endif
 }
 
-bool Zone::init(bool isSystemArg)
+bool
+Zone::init(bool isSystemArg)
 {
     isSystem = isSystemArg;
     return uniqueIds().init() &&
@@ -374,6 +377,21 @@ Zone::addTypeDescrObject(JSContext* cx, HandleObject obj)
     }
 
     return true;
+}
+
+void
+Zone::deleteEmptyCompartment(JSCompartment* comp)
+{
+    MOZ_ASSERT(comp->zone() == this);
+    MOZ_ASSERT(arenas.checkEmptyArenaLists());
+    for (auto& i : compartments()) {
+        if (i == comp) {
+            compartments().erase(&i);
+            comp->destroy(runtimeFromActiveCooperatingThread()->defaultFreeOp());
+            return;
+        }
+    }
+    MOZ_CRASH("Compartment not found");
 }
 
 ZoneList::ZoneList()

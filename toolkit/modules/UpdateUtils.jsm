@@ -135,7 +135,7 @@ function getDistributionPrefValue(aPrefName) {
 }
 
 function getSystemCapabilities() {
-  return gInstructionSet + "," + getMemoryMB();
+  return "ISET:" + gInstructionSet + ",MEM:" + getMemoryMB();
 }
 
 /**

@@ -345,7 +345,7 @@ add_task(async function test_custom() {
 // url constructed with %SYSTEM_CAPABILITIES%
 add_task(async function test_systemCapabilities() {
   let url = URL_PREFIX + "%SYSTEM_CAPABILITIES%/";
-  let systemCapabilities = getInstructionSet() + "," + getMemoryMB();
+  let systemCapabilities = "ISET:" + getInstructionSet() + ",MEM:" + getMemoryMB();
   Assert.equal(await getResult(url), systemCapabilities,
                "the url param for %SYSTEM_CAPABILITIES%" + MSG_SHOULD_EQUAL);
 });

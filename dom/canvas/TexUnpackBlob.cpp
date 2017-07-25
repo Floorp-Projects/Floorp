@@ -887,7 +887,10 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
     ////
 
     const auto& gl = webgl->gl;
-    MOZ_ALWAYS_TRUE( gl->MakeCurrent() );
+    if (!gl->MakeCurrent()) {
+        *out_error = LOCAL_GL_CONTEXT_LOST;
+        return true;
+    }
 
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, dstAlignment);
     if (webgl->IsWebGL2()) {

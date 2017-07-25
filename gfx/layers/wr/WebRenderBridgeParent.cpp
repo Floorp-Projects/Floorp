@@ -420,10 +420,10 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ++mWrEpoch; // Update webrender epoch
-  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(mWrEpoch),
+  uint32_t wrEpoch = GetNextWrEpoch();
+  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
                            aContentSize, dl, dlDesc, aIdNameSpace);
-  HoldPendingTransactionId(mWrEpoch, aTransactionId);
+  HoldPendingTransactionId(wrEpoch, aTransactionId);
 
   mScrollData = aScrollData;
   UpdateAPZ();
@@ -846,8 +846,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
   mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
 
   // Clear resources
-  ++mWrEpoch; // Update webrender epoch
-  mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+  mApi->ClearRootDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   DeleteOldImages();
@@ -896,7 +895,7 @@ WebRenderBridgeParent::UpdateWebRender(CompositorVsyncScheduler* aScheduler,
   mCompositableHolder = aHolder;
   mAnimStorage = aAnimStorage;
 
-  ++mWrEpoch; // Update webrender epoch
+  Unused << GetNextWrEpoch(); // Update webrender epoch
   // Register pipeline to updated CompositableHolder.
   mCompositableHolder->AddPipeline(mPipelineId);
 }
@@ -1180,12 +1179,16 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
 {
   uint64_t id = 0;
   while (!mPendingTransactionIds.empty()) {
-    id = mPendingTransactionIds.front().mId;
-    if (mPendingTransactionIds.front().mEpoch == aEpoch) {
-      mPendingTransactionIds.pop();
+    int64_t diff =
+      static_cast<int64_t>(aEpoch.mHandle) - static_cast<int64_t>(mPendingTransactionIds.front().mEpoch.mHandle);
+    if (diff < 0) {
       break;
     }
+    id = mPendingTransactionIds.front().mId;
     mPendingTransactionIds.pop();
+    if (diff == 0) {
+      break;
+    }
   }
   return id;
 }
@@ -1270,8 +1273,8 @@ WebRenderBridgeParent::ClearResources()
     return;
   }
 
-  ++mWrEpoch; // Update webrender epoch
-  mApi->ClearRootDisplayList(wr::NewEpoch(mWrEpoch), mPipelineId);
+  uint32_t wrEpoch = GetNextWrEpoch();
+  mApi->ClearRootDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   // XXX webrender does not hava a way to delete a group of resources/keys,
@@ -1298,7 +1301,7 @@ WebRenderBridgeParent::ClearResources()
   }
   mAsyncCompositables.Clear();
 
-  mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(mWrEpoch));
+  mCompositableHolder->RemovePipeline(mPipelineId, wr::NewEpoch(wrEpoch));
 
   for (std::unordered_set<uint64_t>::iterator iter = mActiveAnimations.begin(); iter != mActiveAnimations.end(); iter++) {
     mAnimStorage->ClearById(*iter);
@@ -1416,6 +1419,13 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
                                   XRE_GetProcessType(),
                                   mApi->GetMaxTextureSize(),
                                   mApi->GetUseANGLE());
+}
+
+uint32_t
+WebRenderBridgeParent::GetNextWrEpoch()
+{
+  MOZ_RELEASE_ASSERT(mWrEpoch != UINT32_MAX);
+  return ++mWrEpoch;
 }
 
 } // namespace layers
