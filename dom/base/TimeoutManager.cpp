@@ -316,8 +316,7 @@ TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
   TimeDuration result = aTimeout->mInterval;
 
-  if (aTimeout->mIsInterval ||
-      aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+  if (aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
     result = TimeDuration::Max(
       result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
   }
