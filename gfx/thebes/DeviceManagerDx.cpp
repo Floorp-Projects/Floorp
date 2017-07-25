@@ -14,6 +14,7 @@
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "nsIGfxInfo.h"
@@ -832,12 +833,8 @@ bool
 DeviceManagerDx::CanInitializeKeyedMutexTextures()
 {
   MutexAutoLock lock(mDeviceLock);
-  if (!mDeviceStatus) {
-    return false;
-  }
-  // Disable this on all Intel devices because of crashes.
-  // See bug 1292923.
-  return (mDeviceStatus->adapter().VendorId != 0x8086 || gfxPrefs::Direct3D11AllowIntelMutex());
+  return mDeviceStatus && gfxPrefs::Direct3D11AllowKeyedMutex() &&
+         gfxVars::AllowD3D11KeyedMutex();
 }
 
 bool
