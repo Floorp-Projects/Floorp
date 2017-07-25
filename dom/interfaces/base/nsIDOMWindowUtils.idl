@@ -995,6 +995,15 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   nsIDOMClientRect getBoundsWithoutFlushing(in nsIDOMElement aElement);
 
+  const long FLUSH_STYLE = 0;
+  const long FLUSH_LAYOUT = 1;
+  const long FLUSH_DISPLAY = 2;
+
+  /**
+   * Returns true if a flush of the given type is needed.
+   */
+  bool needsFlush(in long aFlushtype);
+
   /**
    * Returns the bounds of the window's currently loaded document. This will
    * generally be (0, 0, pageWidth, pageHeight) but in some cases (e.g. RTL
