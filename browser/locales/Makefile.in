@@ -99,7 +99,7 @@ libs-%:
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 ifndef RELEASE_OR_BETA
-	@$(MAKE) -C ../extensions/formautofill/locale AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../extensions/formautofill/locales AB_CD=$* XPI_NAME=locale-$*
 endif
 	@$(MAKE) -C ../extensions/onboarding/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../extensions/pocket/locale AB_CD=$* XPI_NAME=locale-$*
@@ -120,7 +120,7 @@ chrome-%:
 	@$(MAKE) -C ../../services/sync/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../extensions/spellcheck/locales chrome AB_CD=$*
 ifndef RELEASE_OR_BETA
-	@$(MAKE) -C ../extensions/formautofill/locale chrome AB_CD=$*
+	@$(MAKE) -C ../extensions/formautofill/locales chrome AB_CD=$*
 endif
 	@$(MAKE) -C ../extensions/pocket/locale chrome AB_CD=$*
 ifndef RELEASE_OR_BETA
