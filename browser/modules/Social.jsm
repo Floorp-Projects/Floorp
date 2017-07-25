@@ -254,7 +254,7 @@ this.OpenGraphBuilder = {
           if (pageData.text)
             body += pageData.text + "\n\n";
           body += pageData.url;
-          query["body"] = body;
+          query.body = body;
         }
       });
       // if the url template doesn't have title and no text was provided, add the title as the text.
