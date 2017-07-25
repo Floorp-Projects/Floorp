@@ -32,7 +32,7 @@ WebRenderLayer::WrBridge()
 }
 
 wr::WrImageKey
-WebRenderLayer::GenerateImageKey()
+WebRenderLayer::GetImageKey()
 {
   wr::WrImageKey key;
   key.mNamespace = WrBridge()->GetNamespace();
@@ -111,7 +111,7 @@ WebRenderLayer::UpdateImageKey(ImageClientSingle* aImageClient,
     WrManager()->AddImageKeyForDiscard(aOldKey.value());
   }
 
-  wr::WrImageKey key = GenerateImageKey();
+  wr::WrImageKey key = GetImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(aExternalImageId, key));
   return Some(key);
 }
