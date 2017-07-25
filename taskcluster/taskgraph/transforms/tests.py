@@ -765,32 +765,18 @@ def enable_stylo(config, tests):
 
 
 @transforms.add
-def parallel_stylo_tests(config, tests):
-    """Ensure that any stylo tests running with e10s enabled also test
-    parallel traversal in the style system."""
+def single_stylo_traversal_tests(config, tests):
+    """Enable single traversal for all tests on the sequential Stylo platform."""
 
     for test in tests:
-        if (not test['test-platform'].startswith('linux64-stylo/')) and \
-           (not test['test-platform'].startswith('linux64-stylo-sequential/')):
-            yield test
-            continue
-
-        e10s = test['e10s']
-        # We should have already handled 'both' in an earlier transform.
-        assert e10s != 'both'
-        if not e10s:
+        if not test['test-platform'].startswith('linux64-stylo-sequential/'):
             yield test
             continue
 
         # Bug 1356122 - Run Stylo tests in sequential mode
-        if test['test-platform'].startswith('linux64-stylo-sequential/'):
-            yield test
-
-        if test['test-platform'].startswith('linux64-stylo/'):
-            # add parallel stylo tests
-            test['mozharness'].setdefault('extra-options', [])\
-                              .append('--parallel-stylo-traversal')
-            yield test
+        test['mozharness'].setdefault('extra-options', [])\
+                          .append('--single-stylo-traversal')
+        yield test
 
 
 @transforms.add

@@ -144,11 +144,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             "default": False,
             "help": "Permits a software GL implementation (such as LLVMPipe) to use the GL compositor."}
          ],
-        [["--parallel-stylo-traversal"], {
+        [["--single-stylo-traversal"], {
             "action": "store_true",
-            "dest": "parallel_stylo_traversal",
+            "dest": "single_stylo_traversal",
             "default": False,
-            "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
+            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
         [["--enable-stylo"], {
             "action": "store_true",
@@ -718,7 +718,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 if self.config['enable_webrender']:
                     env['MOZ_WEBRENDER'] = '1'
 
-                env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
+                if self.config['single_stylo_traversal']:
+                    env['STYLO_THREADS'] = '1'
+                else:
+                    env['STYLO_THREADS'] = '4'
                 if self.config['enable_stylo']:
                     env['STYLO_FORCE_ENABLED'] = '1'
 
