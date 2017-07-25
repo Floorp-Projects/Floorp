@@ -456,8 +456,17 @@ Database::GetStatement(const nsACString& aQuery)
 already_AddRefed<nsIAsyncShutdownClient>
 Database::GetClientsShutdown()
 {
-  MOZ_ASSERT(mClientsShutdown);
-  return mClientsShutdown->GetClient();
+  if (mClientsShutdown)
+    return mClientsShutdown->GetClient();
+  return nullptr;
+}
+
+already_AddRefed<nsIAsyncShutdownClient>
+Database::GetConnectionShutdown()
+{
+  if (mConnectionShutdown)
+    return mConnectionShutdown->GetClient();
+  return nullptr;
 }
 
 // static

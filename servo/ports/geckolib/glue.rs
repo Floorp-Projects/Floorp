@@ -83,6 +83,7 @@ use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsIDocument;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
+use style::gecko_bindings::structs::nsTArray;
 use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasFFI, HasArcFFI, HasBoxFFI};
 use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
@@ -94,9 +95,10 @@ use style::parallel;
 use style::parser::ParserContext;
 use style::properties::{ComputedValues, Importance};
 use style::properties::{IS_FIELDSET_CONTENT, LonghandIdSet};
-use style::properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyId};
+use style::properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyId, ShorthandId};
 use style::properties::{SKIP_ROOT_AND_ITEM_BASED_DISPLAY_FIXUP, SourcePropertyDeclaration, StyleBuilder};
 use style::properties::animated_properties::{Animatable, AnimatableLonghand, AnimationValue};
+use style::properties::animated_properties::compare_property_priority;
 use style::properties::parse_one_declaration_into;
 use style::rule_tree::StyleSource;
 use style::selector_parser::PseudoElementCascadeType;
@@ -273,21 +275,26 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
         (Root::Normal, Restyle::ForThrottledAnimationFlush)
             => TraversalFlags::empty(),
         (Root::UnstyledChildrenOnly, Restyle::Normal) |
-        (Root::UnstyledChildrenOnly, Restyle::ForNewlyBoundElement) |
-        (Root::UnstyledChildrenOnly, Restyle::ForThrottledAnimationFlush)
+        (Root::UnstyledChildrenOnly, Restyle::ForNewlyBoundElement)
             => UNSTYLED_CHILDREN_ONLY,
         (Root::Normal, Restyle::ForCSSRuleChanges) => FOR_CSS_RULE_CHANGES,
         (Root::Normal, Restyle::ForReconstruct) => FOR_RECONSTRUCT,
         _ => panic!("invalid combination of TraversalRootBehavior and TraversalRestyleBehavior"),
     };
 
-    let needs_animation_only_restyle = element.has_animation_only_dirty_descendants() ||
-                                       element.has_animation_restyle_hints();
-    if needs_animation_only_restyle {
-        traverse_subtree(element,
-                         raw_data,
-                         traversal_flags | ANIMATION_ONLY,
-                         unsafe { &*snapshots });
+    // It makes no sense to do an animation restyle when we're restyling
+    // newly-inserted content.
+    if !traversal_flags.contains(UNSTYLED_CHILDREN_ONLY) {
+        let needs_animation_only_restyle =
+            element.has_animation_only_dirty_descendants() ||
+            element.has_animation_restyle_hints();
+
+        if needs_animation_only_restyle {
+            traverse_subtree(element,
+                             raw_data,
+                             traversal_flags | ANIMATION_ONLY,
+                             unsafe { &*snapshots });
+        }
     }
 
     if restyle_behavior == Restyle::ForThrottledAnimationFlush {
@@ -2812,7 +2819,7 @@ pub extern "C" fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
         TraversalFlags::empty()
     };
     debug_assert!(element.has_current_styles_for_traversal(&*data, flags),
-                  "Resolving style on element without current styles");
+                  "Resolving style on {:?} without current styles: {:?}", element, data);
     data.styles.primary().clone().into()
 }
 
@@ -2916,6 +2923,53 @@ fn create_context<'a>(
     }
 }
 
+struct PropertyAndIndex {
+    property: PropertyId,
+    index: usize,
+}
+
+struct PrioritizedPropertyIter<'a> {
+    properties: &'a nsTArray<PropertyValuePair>,
+    sorted_property_indices: Vec<PropertyAndIndex>,
+    curr: usize,
+}
+
+impl<'a> PrioritizedPropertyIter<'a> {
+    pub fn new(properties: &'a nsTArray<PropertyValuePair>) -> PrioritizedPropertyIter {
+        // If we fail to convert a nsCSSPropertyID into a PropertyId we shouldn't fail outright
+        // but instead by treating that property as the 'all' property we make it sort last.
+        let all = PropertyId::Shorthand(ShorthandId::All);
+
+        let mut sorted_property_indices: Vec<PropertyAndIndex> =
+            properties.iter().enumerate().map(|(index, pair)| {
+                PropertyAndIndex {
+                    property: PropertyId::from_nscsspropertyid(pair.mProperty)
+                              .unwrap_or(all.clone()),
+                    index,
+                }
+            }).collect();
+        sorted_property_indices.sort_by(|a, b| compare_property_priority(&a.property, &b.property));
+
+        PrioritizedPropertyIter {
+            properties,
+            sorted_property_indices,
+            curr: 0,
+        }
+    }
+}
+
+impl<'a> Iterator for PrioritizedPropertyIter<'a> {
+    type Item = &'a PropertyValuePair;
+
+    fn next(&mut self) -> Option<&'a PropertyValuePair> {
+        if self.curr >= self.sorted_property_indices.len() {
+            return None
+        }
+        self.curr += 1;
+        Some(&self.properties[self.sorted_property_indices[self.curr - 1].index])
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeListBorrowed,
                                                   element: RawGeckoElementBorrowed,
@@ -2946,9 +3000,8 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(keyframes: RawGeckoKeyframeLis
 
         let mut seen = LonghandIdSet::new();
 
-        let iter = keyframe.mPropertyValues.iter();
         let mut property_index = 0;
-        for property in iter {
+        for property in PrioritizedPropertyIter::new(&keyframe.mPropertyValues) {
             if simulate_compute_values_failure(property) {
                 continue;
             }

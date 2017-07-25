@@ -25,7 +25,7 @@ function run_test() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
-  PlacesTestUtils.clearHistory();
+  promiseForceExpirationStep(1);
 
   do_timeout(2000, check_result);
   do_test_pending();

@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
 
 registerCleanupFunction(async function() {
   await task_resetState();
-  await task_clearHistory();
+  await PlacesUtils.history.clear();
 });
 
 add_task(async function test_indicatorDrop() {

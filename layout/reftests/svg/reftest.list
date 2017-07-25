@@ -56,6 +56,9 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-differenc
 
 == border-radius-01.html pass.svg
 
+== box-decoration-break-clone.html box-decoration-break-clone-ref.html
+== box-decoration-break-slice.html box-decoration-break-slice-ref.html
+
 == clip-01.svg pass.svg
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg

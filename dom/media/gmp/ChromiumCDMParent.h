@@ -126,6 +126,7 @@ protected:
   ipc::IPCResult RecvShutdown() override;
   ipc::IPCResult RecvResetVideoDecoderComplete() override;
   ipc::IPCResult RecvDrainComplete() override;
+  ipc::IPCResult RecvIncreaseShmemPoolSize() override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendBufferToCDM(uint32_t aSizeInBytes);
 

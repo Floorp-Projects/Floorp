@@ -91,28 +91,20 @@ add_task(async function shutdown() {
   // cannot test for them.
   // Put an history notification that triggers AsyncGetBookmarksForURI between
   // asyncClose() and the actual connection closing.  Enqueuing a main-thread
-  // event just after places-will-close-connection should ensure it runs before
+  // event as a shutdown blocker should ensure it runs before
   // places-connection-closed.
   // Notice this code is not using helpers cause it depends on a very specific
   // order, a change in the helpers code could make this test useless.
-  await new Promise(resolve => {
-    Services.obs.addObserver(function onNotification() {
-      Services.obs.removeObserver(onNotification, "places-will-close-connection");
-      do_check_true(true, "Observed fake places shutdown");
 
-      Services.tm.dispatchToMainThread(() => {
+  let shutdownClient = PlacesUtils.history.shutdownClient.jsclient;
+  shutdownClient.addBlocker("Places Expiration: shutdown",
+    function() {
+      Services.tm.mainThread.dispatch(() => {
         // WARNING: this is very bad, never use out of testing code.
         PlacesUtils.bookmarks.QueryInterface(Ci.nsINavHistoryObserver)
                              .onPageChanged(NetUtil.newURI("http://book.ma.rk/"),
                                             Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON,
                                             "test", "test");
-        resolve(promiseTopicObserved("places-connection-closed"));
-      });
-    }, "places-will-close-connection");
-    shutdownPlaces();
-  });
+      }, Ci.nsIThread.DISPATCH_NORMAL);
+    });
 });
-
-
-
-
