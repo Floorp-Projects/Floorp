@@ -804,9 +804,16 @@ class GCRuntime
     void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
     bool triggerGCForTooMuchMalloc() {
+        if (!triggerGC(JS::gcreason::TOO_MUCH_MALLOC))
+            return false;
+
+        // Even though this method may be called off the main thread it is safe
+        // to access mallocCounter here since triggerGC() will return false in
+        // that case.
         stats().recordTrigger(mallocCounter.bytes(), mallocCounter.maxBytes());
-        return triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
+        return true;
     }
+
     int32_t getMallocBytes() const { return mallocCounter.bytes(); }
     size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
     bool isTooMuchMalloc() const { return mallocCounter.isTooMuchMalloc(); }
@@ -930,7 +937,8 @@ class GCRuntime
     void startTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
     void joinTask(GCParallelTask& task, gcstats::PhaseKind phase, AutoLockHelperThreadState& locked);
 
-  private:
+    // Delete an empty zone group after its contents have been merged.
+    void deleteEmptyZoneGroup(ZoneGroup* group);
 
   private:
     enum IncrementalResult
@@ -1089,7 +1097,10 @@ class GCRuntime
     UnprotectedData<ZoneGroup*> systemZoneGroup;
 
     // List of all zone groups (protected by the GC lock).
-    ActiveThreadOrGCTaskData<ZoneGroupVector> groups;
+  private:
+    ActiveThreadOrGCTaskData<ZoneGroupVector> groups_;
+  public:
+    ZoneGroupVector& groups() { return groups_.ref(); }
 
     // The unique atoms zone, which has no zone group.
     WriteOnceData<Zone*> atomsZone;

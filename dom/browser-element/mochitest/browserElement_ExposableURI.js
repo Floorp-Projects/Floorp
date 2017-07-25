@@ -46,10 +46,12 @@ function testWyciwyg() {
 }
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
-  document.body.appendChild(iframe);
-  testWyciwyg();
+  SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]}, _=>{
+    iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    document.body.appendChild(iframe);
+    testWyciwyg();
+  });
 }
 
 addEventListener('testready', runTest);

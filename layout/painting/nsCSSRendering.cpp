@@ -833,13 +833,12 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
       nsCSSBorderImageRenderer::CreateBorderImageRenderer(aPresContext, aForFrame, aBorderArea,
                                                           aStyleBorder, aDirtyRect, aSkipSides,
                                                           irFlags, &result);
-    if (aStyleBorder.IsBorderImageLoaded()) {
-      if (renderer) {
-        result &= renderer->DrawBorderImage(aPresContext, aRenderingContext,
-                                            aForFrame, aDirtyRect);
-      }
-
-      return result;
+    // renderer was created successfully, which means border image is ready to
+    // be used.
+    if (renderer) {
+      MOZ_ASSERT(result == DrawResult::SUCCESS);
+      return renderer->DrawBorderImage(aPresContext, aRenderingContext,
+                                       aForFrame, aDirtyRect);
     }
   }
 

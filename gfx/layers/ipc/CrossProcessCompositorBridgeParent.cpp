@@ -364,10 +364,16 @@ CrossProcessCompositorBridgeParent::DidComposite(
 {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
-    Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
-    layerTree->SetPendingTransactionId(0);
+    uint64_t transactionId = layerTree->GetPendingTransactionId();
+    if (transactionId) {
+      Unused << SendDidComposite(aId, transactionId, aCompositeStart, aCompositeEnd);
+      layerTree->SetPendingTransactionId(0);
+    }
   } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
-    Unused << SendDidComposite(aId, wrbridge->FlushPendingTransactionIds(), aCompositeStart, aCompositeEnd);
+    uint64_t transactionId = wrbridge->FlushPendingTransactionIds();
+    if (transactionId) {
+      Unused << SendDidComposite(aId, transactionId, aCompositeStart, aCompositeEnd);
+    }
   }
 }
 

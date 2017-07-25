@@ -72,9 +72,9 @@ public:
   static bool IsServiceAvailable();
 
   /**
-   * Reset loaded user prefs then read them
+   * Initialize user prefs from prefs.js/user.js
    */
-  static nsresult ResetAndReadUserPrefs();
+  static void InitializeUserPrefs();
 
   /**
    * Returns the singleton instance which is addreffed.
@@ -436,13 +436,17 @@ protected:
 
   nsresult NotifyServiceObservers(const char *aSubject);
   /**
-   * Reads the default pref file or, if that failed, try to save a new one.
+   * Loads the prefs.js file from the profile, or creates a new one.
    *
-   * @return NS_OK if either action succeeded,
-   *         or the error code related to the read attempt.
+   * @return the prefs file if successful, or nullptr on failure.
    */
-  nsresult UseDefaultPrefFile();
-  void UseUserPrefFile();
+  already_AddRefed<nsIFile> ReadSavedPrefs();
+
+  /**
+   * Loads the user.js file from the profile if present.
+   */
+  void ReadUserOverridePrefs();
+
   nsresult MakeBackupPrefFile(nsIFile *aFile);
 
   // Default pref file save can be blocking or not.
