@@ -700,11 +700,7 @@ class GCRuntime
 
     bool canChangeActiveContext(JSContext* cx);
 
-    void triggerFullGCForAtoms() {
-        MOZ_ASSERT(fullGCForAtomsRequested_);
-        fullGCForAtomsRequested_ = false;
-        MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::ALLOC_TRIGGER));
-    }
+    void triggerFullGCForAtoms(JSContext* cx);
 
     void runDebugGC();
     inline void poke();
