@@ -84,11 +84,7 @@ public:
   }
   DOMTimeMilliSec GetTimeToNonBlankPaint() const
   {
-    if (mNonBlankPaintTimeStamp.IsNull()) {
-      return 0;
-    }
-
-    return TimeStampToDOMHighRes(mNonBlankPaintTimeStamp);
+    return TimeStampToDOM(mNonBlankPaintTimeStamp);
   }
 
   enum class DocShellState : uint8_t {

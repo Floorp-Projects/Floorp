@@ -377,6 +377,7 @@ protected:
                      nsIURI* aOriginalURI,
                      mozilla::Maybe<nsCOMPtr<nsIURI>> const& aResultPrincipalURI,
                      bool aLoadReplace,
+                     bool aLoadFromExternal,
                      nsIURI* aReferrer,
                      bool aSendReferrer,
                      uint32_t aReferrerPolicy,

@@ -2435,8 +2435,9 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 #ifdef XP_LINUX
   if (shouldSandbox) {
     MOZ_ASSERT(!mSandboxBroker);
+    bool isFileProcess = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
     UniquePtr<SandboxBroker::Policy> policy =
-      sSandboxBrokerPolicyFactory->GetContentPolicy(Pid());
+      sSandboxBrokerPolicyFactory->GetContentPolicy(Pid(), isFileProcess);
     if (policy) {
       brokerFd = FileDescriptor();
       mSandboxBroker = SandboxBroker::Create(Move(policy), Pid(), brokerFd);

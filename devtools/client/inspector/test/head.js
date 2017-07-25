@@ -803,3 +803,33 @@ function* getDisplayedNodeTextContent(selector, inspector) {
   }
   return null;
 }
+
+/**
+ * Toggle the shapes highlighter by simulating a click on the toggle
+ * in the rules view with the given selector and property
+ *
+ * @param {CssRuleView} view
+ *        The instance of the rule-view panel
+ * @param {Object} highlighters
+ *        The highlighters instance of the rule-view panel
+ * @param {String} selector
+ *        The selector in the rule-view to look for the property in
+ * @param {String} property
+ *        The name of the property
+ * @param {Boolean} show
+ *        If true, the shapes highlighter is being shown. If false, it is being hidden
+ */
+function* toggleShapesHighlighter(view, highlighters, selector, property, show) {
+  info("Toggle shapes highlighter");
+  let container = getRuleViewProperty(view, selector, property).valueSpan;
+  let shapesToggle = container.querySelector(".ruleview-shape");
+  if (show) {
+    let onHighlighterShown = highlighters.once("shapes-highlighter-shown");
+    shapesToggle.click();
+    yield onHighlighterShown;
+  } else {
+    let onHighlighterHidden = highlighters.once("shapes-highlighter-hidden");
+    shapesToggle.click();
+    yield onHighlighterHidden;
+  }
+}
