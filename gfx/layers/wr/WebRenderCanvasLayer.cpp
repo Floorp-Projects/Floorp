@@ -83,7 +83,7 @@ WebRenderCanvasLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
                   Stringify(filter).c_str());
   }
 
-  wr::WrImageKey key = GetImageKey();
+  wr::WrImageKey key = GenerateImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
