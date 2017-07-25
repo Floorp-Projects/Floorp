@@ -141,7 +141,7 @@ load 387215-1.xhtml
 load 387219-1.xhtml
 load 387233-1.html
 load 387233-2.html
-load 387282-1.html
+asserts-if(stylo, 2) load 387282-1.html
 load 388175-1.html
 load 388367-1.html
 load 388709-1.html
@@ -399,8 +399,8 @@ load 536692-1.xhtml
 load 537645.xhtml
 load 541277-1.html
 load 541277-2.html
-load 541714-1.html
-load 541714-2.html
+asserts-if(stylo, 2) load 541714-1.html # bug 634161
+asserts-if(stylo, 3) load 541714-2.html # bug 634161
 load 542136-1.html
 load 545571-1.html
 load 547338.xul
@@ -558,7 +558,7 @@ load 914891.html
 load 915475.xhtml
 load 927558.html
 load 943509-1.html
-asserts(2-8) load 944909-1.html
+asserts-if(stylo, 2-8) load 944909-1.html
 load 946167-1.html
 load 947158.html
 load 949932.html
@@ -631,7 +631,7 @@ load text-overflow-bug671796.xhtml
 load text-overflow-bug713610.html
 load text-overflow-form-elements.html
 load text-overflow-iframe.html
-asserts-if(Android,2-4) asserts-if(!Android,4) load 1225005.html # bug 682647 and bug 448083
+asserts-if(Android,2-4) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
 asserts-if(stylo,0-15) load 1271765.html # bug 1324684
 asserts(2) load 1272983-1.html # bug 586628

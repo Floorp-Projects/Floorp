@@ -46,7 +46,7 @@ typedef float nscoord;
 #define nscoord_MAX NS_IEEEPositiveInfinity()
 #else
 typedef int32_t nscoord;
-#define nscoord_MAX nscoord(1 << 30)
+#define nscoord_MAX nscoord((1 << 30) - 1)
 #endif
 
 #define nscoord_MIN (-nscoord_MAX)
