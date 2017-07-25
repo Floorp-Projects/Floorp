@@ -46,6 +46,8 @@ const PREF_PRELOADED_SITES_ENABLED =  [ "usepreloadedtopurls.enabled",   true ];
 const PREF_PRELOADED_SITES_EXPIRE_DAYS = [ "usepreloadedtopurls.expire_days",  14 ];
 
 const PREF_MATCH_BUCKETS = [ "matchBuckets", "general:5,suggestion:Infinity" ];
+// Will default to matchBuckets if not defined.
+const PREF_MATCH_BUCKETS_SEARCH = [ "matchBucketsSearch", "" ];
 
 // AutoComplete query type constants.
 // Describes the various types of queries that we can process rows for.
@@ -124,6 +126,8 @@ const MATCHTYPE = {
 // Each bucket is an array containing the following indices:
 //   0: The match type of the acceptable entries.
 //   1: available number of slots in this bucket.
+// There are different matchBuckets definition for different contexts, currently
+// a general one (_matchBuckets) and a search one (_matchBucketsSearch).
 //
 // First buckets. Anything with an Infinity frecency ends up here.
 const DEFAULT_BUCKETS_BEFORE = [
@@ -508,16 +512,30 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.preloadedSitesEnabled = prefs.get(...PREF_PRELOADED_SITES_ENABLED);
     store.preloadedSitesExpireDays = prefs.get(...PREF_PRELOADED_SITES_EXPIRE_DAYS);
     store.matchBuckets = prefs.get(...PREF_MATCH_BUCKETS);
-    // Convert from the string format to an array.
+    // Convert from pref char format to an array and add the default buckets.
     try {
-      store.matchBuckets = convertBucketsCharPrefToArray(store.matchBuckets)
+      store.matchBuckets = convertBucketsCharPrefToArray(store.matchBuckets);
     } catch (ex) {
       store.matchBuckets = convertBucketsCharPrefToArray(PREF_MATCH_BUCKETS[1]);
     }
-    // Add the default buckets.
     store.matchBuckets = [ ...DEFAULT_BUCKETS_BEFORE,
                            ...store.matchBuckets,
                            ...DEFAULT_BUCKETS_AFTER ];
+    store.matchBucketsSearch = prefs.get(...PREF_MATCH_BUCKETS_SEARCH);
+    // Default to matchBuckets if not defined.
+    if (!store.matchBucketsSearch) {
+      store.matchBucketsSearch = store.matchBuckets;
+    } else {
+      // Convert from pref char format to an array and add the default buckets.
+      try {
+        store.matchBucketsSearch = convertBucketsCharPrefToArray(store.matchBucketsSearch);
+        store.matchBucketsSearch = [ ...DEFAULT_BUCKETS_BEFORE,
+                                     ...store.matchBucketsSearch,
+                                     ...DEFAULT_BUCKETS_AFTER ];
+      } catch (ex) {
+        store.matchBucketsSearch = store.matchBuckets;
+      }
+    }
     store.keywordEnabled = Services.prefs.getBoolPref("keyword.enabled", true);
 
     // If history is not set, onlyTyped value should be ignored.
@@ -814,14 +832,6 @@ function Search(searchString, searchParam, autocompleteListener,
 
   // Resolved when all the matches providers have been fetched.
   this._allMatchesPromises = [];
-
-  // Convert the buckets to readable objects with a count property.
-  this._buckets = Prefs.matchBuckets
-                       .map(([type, available]) => ({
-                         type,
-                         available,
-                         count: 0
-                       }));
 
   // Counters for the number of matches per MATCHTYPE.
   this._counts = Object.values(MATCHTYPE)
@@ -1824,6 +1834,17 @@ Search.prototype = {
 
   _getInsertIndexForMatch(match) {
     let index = 0;
+    // The buckets change depending on the context, that is currently decided by
+    // the first added match (the heuristic one).
+    if (!this._buckets) {
+      // Convert the buckets to readable objects with a count property.
+      let buckets = match.style.includes("searchengine") ? Prefs.matchBucketsSearch
+                                                         : Prefs.matchBuckets;
+      this._buckets = buckets.map(([type, available]) => ({ type,
+                                                            available,
+                                                            count: 0,
+                                                          }));
+    }
     for (let bucket of this._buckets) {
       // Move to the next bucket if the match type is incompatible, or if there
       // is no available space or if the frecency is below the threshold.

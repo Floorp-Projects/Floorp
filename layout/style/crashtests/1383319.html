@@ -1,0 +1,18 @@
+<!doctype html>
+<style>
+  @keyframes anim {
+    to { background-color: green; }
+  }
+  .foo {
+    width: 100px;
+    height: 100px;
+    background: red;
+    animation: anim 10s ease;
+  }
+</style>
+<div id="test" contenteditable>
+</div>
+<script>
+document.documentElement.offsetTop;
+test.innerHTML = '<div class="foo">Some random element</div>';
+</script>

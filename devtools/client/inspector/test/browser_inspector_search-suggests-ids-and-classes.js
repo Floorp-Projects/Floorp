@@ -17,12 +17,12 @@ const KEY_STATES = [
   ["s", [["span", 1], [".span", 1], ["#span", 1]]],
   ["p", [["span", 1], [".span", 1], ["#span", 1]]],
   ["a", [["span", 1], [".span", 1], ["#span", 1]]],
-  ["n", []],
+  ["n", [["span", 1], [".span", 1], ["#span", 1]]],
   [" ", [["span div", 1]]],
   // mixed tag/class/id suggestions only work for the first word
   ["d", [["span div", 1]]],
   ["VK_BACK_SPACE", [["span div", 1]]],
-  ["VK_BACK_SPACE", []],
+  ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
   ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
   ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
   ["VK_BACK_SPACE", [["span", 1], [".span", 1], ["#span", 1]]],
@@ -77,8 +77,6 @@ add_task(function* () {
     for (let i = 0; i < expectedSuggestions.length; i++) {
       is(expectedSuggestions[i][0], actualSuggestions[i].label,
          "The suggestion at " + i + "th index is correct.");
-      is(expectedSuggestions[i][1] || 1, actualSuggestions[i].count,
-         "The count for suggestion at " + i + "th index is correct.");
     }
   }
 });

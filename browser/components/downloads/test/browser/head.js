@@ -163,16 +163,6 @@ function httpUrl(aFileName) {
     aFileName;
 }
 
-function task_clearHistory() {
-  return new Promise(function(resolve) {
-    Services.obs.addObserver(function observeCH(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observeCH, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-      resolve();
-    }, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-    PlacesUtils.history.clear();
-  });
-}
-
 function openLibrary(aLeftPaneRoot) {
   let library = window.openDialog("chrome://browser/content/places/places.xul",
                                   "", "chrome,toolbar=yes,dialog=no,resizable",

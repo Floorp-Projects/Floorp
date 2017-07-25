@@ -139,6 +139,10 @@ ChromiumCDMChild::Allocate(uint32_t aCapacity)
           ToString(mBuffers).get());
   MOZ_ASSERT(IsOnMessageLoopThread());
 
+  if (mBuffers.IsEmpty()) {
+    Unused << SendIncreaseShmemPoolSize();
+  }
+
   // Find the shmem with the least amount of wasted space if we were to
   // select it for this sized allocation. We need to do this because shmems
   // for decrypted audio as well as video frames are both stored in this

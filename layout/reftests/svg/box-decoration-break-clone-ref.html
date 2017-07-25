@@ -1,0 +1,27 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    span {
+      padding: 0em 1em;
+      margin-left: 10px;
+      font: 24px sans-serif;
+      line-height: 2;
+      clip-path: url(#path);
+    }
+  </style>
+</head>
+<body>
+  <span>The</span><br>
+  <span>quick</span><br>
+  <span>orange fox</span>
+
+  <svg height="0">
+    <defs>
+      <clipPath id="path" clipPathUnits="objectBoundingBox">
+        <rect x="0" y="0" width="1" height="0.5"/>
+      </clipPath>
+    </defs>
+  </svg>
+</body>
+</html>
