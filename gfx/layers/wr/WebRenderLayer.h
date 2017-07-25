@@ -47,7 +47,7 @@ public:
 
   WebRenderLayerManager* WrManager();
   WebRenderBridgeChild* WrBridge();
-  wr::WrImageKey GenerateImageKey();
+  wr::WrImageKey GetImageKey();
 
   LayerRect Bounds();
   LayerRect BoundsForStackingContext();
