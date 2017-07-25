@@ -19,7 +19,6 @@ from mozpack.files import (
 )
 from mozpack.manifests import (
     InstallManifest,
-    InstallManifestNoSymlinks,
 )
 from mozbuild.util import DefinesAction
 
@@ -56,13 +55,15 @@ def process_manifest(destdir, paths, track=None,
             remove_empty_directories=False
             remove_all_directory_symlinks=False
 
-    manifest_cls = InstallManifestNoSymlinks if no_symlinks else InstallManifest
-    manifest = manifest_cls()
+    manifest = InstallManifest()
     for path in paths:
-        manifest |= manifest_cls(path=path)
+        manifest |= InstallManifest(path=path)
 
     copier = FileCopier()
-    manifest.populate_registry(copier, defines_override=defines)
+    link_policy = "copy" if no_symlinks else "symlink"
+    manifest.populate_registry(
+        copier, defines_override=defines, link_policy=link_policy
+    )
     result = copier.copy(destdir,
         remove_unaccounted=remove_unaccounted,
         remove_all_directory_symlinks=remove_all_directory_symlinks,
