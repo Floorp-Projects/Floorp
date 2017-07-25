@@ -293,8 +293,8 @@ add_test(function test_basicauth() {
   _("Test that the BasicAuthenticator doesn't screw up header case.");
   let res1 = new AsyncResource(server.baseURI + "/foo");
   res1.setHeader("Authorization", "Basic foobar");
-  do_check_eq(res1._headers["authorization"], "Basic foobar");
-  do_check_eq(res1.headers["authorization"], "Basic foobar");
+  do_check_eq(res1._headers.authorization, "Basic foobar");
+  do_check_eq(res1.headers.authorization, "Basic foobar");
 
   run_next_test();
 });

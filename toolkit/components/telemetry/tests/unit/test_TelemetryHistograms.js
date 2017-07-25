@@ -444,7 +444,7 @@ add_task(async function test_expired_histogram() {
       do_print("Nothing present for process " + process);
       continue;
     }
-    do_check_eq(Telemetry.histogramSnapshots[process]["__expired__"], undefined);
+    do_check_eq(Telemetry.histogramSnapshots[process].__expired__, undefined);
   }
   do_check_eq(Telemetry.histogramSnapshots.parent[test_expired_id], undefined);
   do_check_eq(rh[test_expired_id], undefined);

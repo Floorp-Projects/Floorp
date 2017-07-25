@@ -2552,7 +2552,7 @@ function __dumpDragData(aEvent, caller) {
     return;
   }
   let str = "Dumping drag data (" + (caller ? caller + " in " : "") + "CustomizeMode.jsm) {\n";
-  str += "  type: " + aEvent["type"] + "\n";
+  str += "  type: " + aEvent.type + "\n";
   for (let el of ["target", "currentTarget", "relatedTarget"]) {
     if (aEvent[el]) {
       str += "  " + el + ": " + aEvent[el] + "(localName=" + aEvent[el].localName + "; id=" + aEvent[el].id + ")\n";

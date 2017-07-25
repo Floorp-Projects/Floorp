@@ -1305,23 +1305,23 @@ var Impl = {
     payloadObj.keyedHistograms = keyedHistograms.parent || {};
     payloadObj.processes = {
       parent: {
-        scalars: scalars["parent"] || {},
-        keyedScalars: keyedScalars["parent"] || {},
-        events: events["parent"] || [],
+        scalars: scalars.parent || {},
+        keyedScalars: keyedScalars.parent || {},
+        events: events.parent || [],
       },
       content: {
-        scalars: scalars["content"],
-        keyedScalars: keyedScalars["content"],
-        histograms: histograms["content"],
-        keyedHistograms: keyedHistograms["content"],
-        events: events["content"] || [],
+        scalars: scalars.content,
+        keyedScalars: keyedScalars.content,
+        histograms: histograms.content,
+        keyedHistograms: keyedHistograms.content,
+        events: events.content || [],
       },
       extension: {
-        scalars: scalars["extension"],
-        keyedScalars: keyedScalars["extension"],
-        histograms: histograms["extension"],
-        keyedHistograms: keyedHistograms["extension"],
-        events: events["extension"] || [],
+        scalars: scalars.extension,
+        keyedScalars: keyedScalars.extension,
+        histograms: histograms.extension,
+        keyedHistograms: keyedHistograms.extension,
+        events: events.extension || [],
       },
     };
 
@@ -1331,11 +1331,11 @@ var Impl = {
         "gpu" in scalars ||
         "gpu" in keyedScalars) {
       payloadObj.processes.gpu = {
-        scalars: scalars["gpu"],
-        keyedScalars: keyedScalars["gpu"],
-        histograms: histograms["gpu"],
-        keyedHistograms: keyedHistograms["gpu"],
-        events: events["gpu"] || [],
+        scalars: scalars.gpu,
+        keyedScalars: keyedScalars.gpu,
+        histograms: histograms.gpu,
+        keyedHistograms: keyedHistograms.gpu,
+        events: events.gpu || [],
       };
     }
 

@@ -260,8 +260,8 @@ CaptivePortalDetector.prototype = {
     let request = {interfaceName: aInterfaceName};
     if (aCallback) {
       let callback = aCallback.QueryInterface(Ci.nsICaptivePortalCallback);
-      request["callback"] = callback;
-      request["retryCount"] = 0;
+      request.callback = callback;
+      request.retryCount = 0;
     }
     this._addRequest(request);
   },
@@ -332,7 +332,7 @@ CaptivePortalDetector.prototype = {
       }
     };
 
-    this._runningRequest["urlFetcher"] = urlFetcher;
+    this._runningRequest.urlFetcher = urlFetcher;
   },
 
   _startLogin: function _startLogin() {
@@ -343,7 +343,7 @@ CaptivePortalDetector.prototype = {
       url: this._canonicalSiteURL,
     };
     this._loginObserver.attach();
-    this._runningRequest["eventId"] = id;
+    this._runningRequest.eventId = id;
     this._sendEvent(kOpenCaptivePortalLoginEvent, details);
     gSysMsgr.broadcastMessage(kCaptivePortalSystemMessage, {});
   },
@@ -369,13 +369,13 @@ CaptivePortalDetector.prototype = {
       if (this._runningRequest.hasOwnProperty("eventId") && success) {
         let details = {
           type: kCaptivePortalLoginSuccessEvent,
-          id: this._runningRequest["eventId"],
+          id: this._runningRequest.eventId,
         };
         this._sendEvent(kCaptivePortalLoginSuccessEvent, details);
       }
 
       // Continue the following request
-      this._runningRequest["complete"] = true;
+      this._runningRequest.complete = true;
       this._removeRequest(this._runningRequest.interfaceName);
     }
   },

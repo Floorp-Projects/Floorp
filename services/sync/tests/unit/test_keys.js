@@ -215,9 +215,9 @@ add_task(async function test_ensureLoggedIn() {
    */
   let info_collections = {};
   do_check_true(collectionKeys.updateNeeded(info_collections));
-  info_collections["crypto"] = 5000;
+  info_collections.crypto = 5000;
   do_check_false(collectionKeys.updateNeeded(info_collections));
-  info_collections["crypto"] = 1 + (Date.now() / 1000);              // Add one in case computers are fast!
+  info_collections.crypto = 1 + (Date.now() / 1000);              // Add one in case computers are fast!
   do_check_true(collectionKeys.updateNeeded(info_collections));
 
   collectionKeys.lastModified = null;

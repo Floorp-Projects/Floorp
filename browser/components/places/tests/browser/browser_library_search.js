@@ -37,13 +37,13 @@ var testCases = [
   },
 
   function historyScope() {
-    let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["History"]);
-    search(PlacesUIUtils.leftPaneQueries["History"], "dummy", defScope);
+    let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries.History);
+    search(PlacesUIUtils.leftPaneQueries.History, "dummy", defScope);
   },
 
   function downloadsScope() {
-    let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries["Downloads"]);
-    search(PlacesUIUtils.leftPaneQueries["Downloads"], "dummy", defScope);
+    let defScope = getDefaultScope(PlacesUIUtils.leftPaneQueries.Downloads);
+    search(PlacesUIUtils.leftPaneQueries.Downloads, "dummy", defScope);
   },
 ];
 
@@ -56,9 +56,9 @@ var testCases = [
  */
 function getDefaultScope(aFolderId) {
   switch (aFolderId) {
-    case PlacesUIUtils.leftPaneQueries["History"]:
+    case PlacesUIUtils.leftPaneQueries.History:
       return "scopeBarHistory"
-    case PlacesUIUtils.leftPaneQueries["Downloads"]:
+    case PlacesUIUtils.leftPaneQueries.Downloads:
       return "scopeBarDownloads";
     default:
       return "scopeBarAll";
@@ -116,8 +116,8 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
 
     // getFolders() on a History query returns an empty array, so no use
     // comparing against aFolderId in that case.
-    if (aFolderId !== PlacesUIUtils.leftPaneQueries["History"] &&
-        aFolderId !== PlacesUIUtils.leftPaneQueries["Downloads"]) {
+    if (aFolderId !== PlacesUIUtils.leftPaneQueries.History &&
+        aFolderId !== PlacesUIUtils.leftPaneQueries.Downloads) {
       // contentTree.place should be equal to contentTree.result.root.uri,
       // but it's not until bug 476952 is fixed.
       let query = queryStringToQuery(contentTree.result.root.uri);

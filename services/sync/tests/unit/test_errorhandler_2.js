@@ -824,7 +824,7 @@ add_task(async function test_sync_engine_generic_fail() {
   let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
-  do_check_eq(Status.engines["catapult"], undefined);
+  do_check_eq(Status.engines.catapult, undefined);
 
   let promiseObserved = new Promise(res => {
     Svc.Obs.add("weave:engine:sync:finish", function onEngineFinish() {
@@ -846,7 +846,7 @@ add_task(async function test_sync_engine_generic_fail() {
   await promiseObserved;
 
   _("Status.engines: " + JSON.stringify(Status.engines));
-  do_check_eq(Status.engines["catapult"], ENGINE_UNKNOWN_FAIL);
+  do_check_eq(Status.engines.catapult, ENGINE_UNKNOWN_FAIL);
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
   // Test Error log was written on SYNC_FAILED_PARTIAL.
@@ -935,12 +935,12 @@ add_task(async function test_engine_applyFailed() {
 
   let promiseObserved = promiseOneObserver("weave:service:reset-file-log");
 
-  do_check_eq(Status.engines["catapult"], undefined);
+  do_check_eq(Status.engines.catapult, undefined);
   do_check_true(await EHTestsCommon.setUp(server));
   await Service.sync();
   await promiseObserved;
 
-  do_check_eq(Status.engines["catapult"], ENGINE_APPLY_FAIL);
+  do_check_eq(Status.engines.catapult, ENGINE_APPLY_FAIL);
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
   // Test Error log was written on SYNC_FAILED_PARTIAL.

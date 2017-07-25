@@ -45,7 +45,7 @@ TokenServerClientError.prototype.toString = function() {
 }
 TokenServerClientError.prototype.toJSON = function() {
   let result = this._toStringFields();
-  result["name"] = this.name;
+  result.name = this.name;
   return result;
 }
 

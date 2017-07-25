@@ -152,7 +152,7 @@ add_task(async function test_get_changed_ids() {
     scope:          0,
     foreignInstall: false
   };
-  reconciler.addons["DUMMY"] = record;
+  reconciler.addons.DUMMY = record;
   reconciler._addChange(record.modified, CHANGE_INSTALLED, record);
 
   changes = await engine.getChangedIDs();
