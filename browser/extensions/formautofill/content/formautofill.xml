@@ -70,8 +70,11 @@
           // Make item fit in popup as XUL box could not constrain
           // item's width
           this._itemBox.style.width = outerBoxRect.width + "px";
-          // Use two-lines layout when width is smaller than 150px
-          if (outerBoxRect.width <= 150) {
+          // Use two-lines layout when width is smaller than 150px or
+          // 185px if an image precedes the label.
+          let oneLineMinRequiredWidth = this.getAttribute("ac-image") ? 185 : 150;
+
+          if (outerBoxRect.width <= oneLineMinRequiredWidth) {
             this._itemBox.setAttribute("size", "small");
           } else {
             this._itemBox.removeAttribute("size");
@@ -84,8 +87,9 @@
 
   <binding id="autocomplete-profile-listitem" extends="chrome://formautofill/content/formautofill.xml#autocomplete-profile-listitem-base">
     <xbl:content xmlns="http://www.w3.org/1999/xhtml">
-      <div anonid="autofill-item-box" class="autofill-item-box">
+      <div anonid="autofill-item-box" class="autofill-item-box" xbl:inherits="ac-image">
         <div class="profile-label-col profile-item-col">
+          <span anonid="profile-label-affix" class="profile-label-affix"></span>
           <span anonid="profile-label" class="profile-label"></span>
         </div>
         <div class="profile-comment-col profile-item-col">
@@ -99,6 +103,9 @@
         <![CDATA[
           this._itemBox = document.getAnonymousElementByAttribute(
             this, "anonid", "autofill-item-box"
+          );
+          this._labelAffix = document.getAnonymousElementByAttribute(
+            this, "anonid", "profile-label-affix"
           );
           this._label = document.getAnonymousElementByAttribute(
             this, "anonid", "profile-label"
@@ -133,9 +140,11 @@
         <![CDATA[
           this._adjustAutofillItemLayout();
           this.setAttribute("formautofillattached", "true");
+          this._itemBox.style.setProperty("--primary-icon", `url(${this.getAttribute("ac-image")})`);
 
-          let {primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
+          let {primaryAffix, primary, secondary} = JSON.parse(this.getAttribute("ac-value"));
 
+          this._labelAffix.textContent = primaryAffix;
           this._label.textContent = primary;
           this._comment.textContent = secondary;
         ]]>
