@@ -732,6 +732,8 @@
 
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <label>&updateApplicationDescription.label;</label>
+  <separator/>
   <hbox align="start">
     <vbox flex="1">
       <description>
@@ -850,8 +852,8 @@
   <radiogroup id="updateRadioGroup">
     <radio id="autoDesktop"
            value="auto"
-           label="&updateAuto2.label;"
-           accesskey="&updateAuto2.accesskey;"/>
+           label="&updateAuto3.label;"
+           accesskey="&updateAuto3.accesskey;"/>
     <radio value="checkOnly"
           label="&updateCheckChoose2.label;"
           accesskey="&updateCheckChoose2.accesskey;"/>
