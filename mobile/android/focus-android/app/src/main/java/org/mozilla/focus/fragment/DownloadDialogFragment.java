@@ -78,7 +78,7 @@ public class DownloadDialogFragment extends DialogFragment {
                     @Override
                     public void onClick(View v) {
                         sendDownloadDialogButtonClicked(pendingDownload, shouldDownload);
-                        TelemetryWrapper.downloadDialogDownloadEvent();
+                        TelemetryWrapper.downloadDialogDownloadEvent(shouldDownload);
                         dismiss();
                     }
                 });

@@ -65,7 +65,6 @@ public final class TelemetryWrapper {
         private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
         private static final String SHOW = "show";
-        private static final String DOWNLOAD = "download";
     }
 
     private static class Object {
@@ -248,14 +247,13 @@ public final class TelemetryWrapper {
         event.queue();
     }
 
-    public static void downloadDialogDownloadEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.DOWNLOAD, Object.DOWNLOAD_DIALOG, Value.DOWNLOAD).queue();
+    public static void downloadDialogDownloadEvent(boolean sentToDownload) {
+        if (sentToDownload) {
+            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.DOWNLOAD).queue();
+        } else {
+            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.CANCEL_DOWNLOAD).queue();
+        }
     }
-
-    public static void downloadDialogCancelEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.DOWNLOAD, Object.DOWNLOAD_DIALOG, Value.CANCEL_DOWNLOAD).queue();
-    }
-
 
     public static void closeCustomTabEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_CLOSE_BUTTON).queue();
