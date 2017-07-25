@@ -236,6 +236,12 @@ HTMLEditor::CreateAnonymousElement(nsIAtom* aTag,
   }
   nac->AppendElement(newContent);
 
+  // Must style the new element, otherwise the PostRecreateFramesFor call
+  // below will do nothing.
+  if (ServoStyleSet* styleSet = ps->StyleSet()->GetAsServo()) {
+    styleSet->StyleNewSubtree(newContent);
+  }
+
   ElementDeletionObserver* observer =
     new ElementDeletionObserver(newContent, parentContent);
   NS_ADDREF(observer); // NodeWillBeDestroyed releases.
