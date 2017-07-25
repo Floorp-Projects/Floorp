@@ -246,8 +246,6 @@ class IonBuilder
                                         BarrierKind barrier, TemporaryTypeSet* types);
     AbortReasonOr<Ok> getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName* name,
                                              TemporaryTypeSet* types, bool innerized = false);
-    AbortReasonOr<Ok> getPropTryStaticAccess(bool* emitted, MDefinition* obj, PropertyName* name,
-                                             BarrierKind barrier, TemporaryTypeSet* types);
     AbortReasonOr<Ok> getPropTryInlineAccess(bool* emitted, MDefinition* obj, PropertyName* name,
                                              BarrierKind barrier, TemporaryTypeSet* types);
     AbortReasonOr<Ok> getPropTryTypedObject(bool* emitted, MDefinition* obj, PropertyName* name);
