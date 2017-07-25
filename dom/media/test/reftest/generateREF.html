@@ -23,7 +23,8 @@ or using nightly, the seekToNextFrame() ensure the ended event fired.
 */
 
 //window.onload = function() { setTimeout(dumpFirstFrame, 0); };
-window.onload = function() { setTimeout(dumpLastFrame, 0); };
+//window.onload = function() { setTimeout(dumpLastFrame, 0); };
+window.onload = function() { setTimeout(function(){dumpNthFrame(15);}, 0); };
 
 function drawVideoToInnerHTML(v) {
   var canvas = document.getElementById("canvas");
@@ -42,6 +43,24 @@ function dumpFirstFrame() {
   video.addEventListener("loadeddata", function() {
     drawVideoToInnerHTML(video);
   });
+}
+
+function dumpNthFrame(n) {
+  var video = document.getElementById("v1");
+  video.src = "street.mp4";
+  video.preload = "metadata";
+
+  function checkNthFrame() {
+    console.log(n+"th Frame time is " + video.currentTime);
+    n--;
+    if (n == 0) {
+      drawVideoToInnerHTML(video);
+    } else {
+      video.seekToNextFrame();
+    }
+  }
+  video.addEventListener("loadeddata", checkNthFrame);
+  video.addEventListener("seeked", checkNthFrame);
 }
 
 function dumpLastFrame() {
