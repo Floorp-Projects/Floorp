@@ -360,6 +360,7 @@ private:
     void ForceWriteCacheFile();
     void Cleanup();
 
+    void FinishPendingParses(MonitorAutoLock& aMal);
     void InvalidateCache();
 
     // Opens the cache file for reading.
@@ -386,7 +387,7 @@ private:
     void DecodeNextBatch(size_t chunkSize);
 
     static void OffThreadDecodeCallback(void* token, void* context);
-    void FinishOffThreadDecode();
+    void MaybeFinishOffThreadDecode();
     void DoFinishOffThreadDecode();
 
     size_t ShallowHeapSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
