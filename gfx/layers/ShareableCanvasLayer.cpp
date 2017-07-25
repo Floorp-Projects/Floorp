@@ -143,7 +143,10 @@ ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     if (destSize == readSize && destFormat == format) {
       RefPtr<DataSourceSurface> data =
         Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
-      mGLContext->Readback(frontbuffer, data);
+      if (!mGLContext->Readback(frontbuffer, data)) {
+        aDestTarget->ReleaseBits(destData);
+        return false;
+      }
       if (needsPremult) {
         gfxUtils::PremultiplyDataSurface(data, data);
       }
@@ -161,7 +164,9 @@ ShareableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   }
 
   // Readback handles Flush/MarkDirty.
-  mGLContext->Readback(frontbuffer, resultSurf);
+  if (!mGLContext->Readback(frontbuffer, resultSurf)) {
+    return false;
+  }
   if (needsPremult) {
     gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
   }

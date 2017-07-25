@@ -18,3 +18,4 @@ GTAGS
 fuzz/libFuzzer/*
 fuzz/corpus
 fuzz/out
+.chk

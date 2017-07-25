@@ -130,4 +130,20 @@ ZoneGroup::ionLazyLinkListAdd(jit::IonBuilder* builder)
     ionLazyLinkListSize_++;
 }
 
+void
+ZoneGroup::deleteEmptyZone(Zone* zone)
+{
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
+    MOZ_ASSERT(zone->group() == this);
+    MOZ_ASSERT(zone->compartments().empty());
+    for (auto& i : zones()) {
+        if (i == zone) {
+            zones().erase(&i);
+            zone->destroy(runtime->defaultFreeOp());
+            return;
+        }
+    }
+    MOZ_CRASH("Zone not found");
+}
+
 } // namespace js

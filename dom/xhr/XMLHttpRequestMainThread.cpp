@@ -3745,7 +3745,7 @@ XMLHttpRequestMainThread::HandleProgressTimerCallback()
   }
 
   if (InUploadPhase()) {
-    if (mUpload && !mUploadComplete) {
+    if (mUpload && !mUploadComplete && mFlagHadUploadListenersOnSend) {
       DispatchProgressEvent(mUpload, ProgressEventType::progress,
                             mUploadTransferred, mUploadTotal);
     }

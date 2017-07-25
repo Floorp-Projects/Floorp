@@ -26,6 +26,7 @@ interop_init()
   if [ ! -d "$INTEROP" ]; then
     git clone -q https://github.com/mozilla/tls-interop "$INTEROP"
   fi
+  INTEROP=$(cd "$INTEROP";pwd -P)
 
   # We use the BoringSSL keyfiles
   BORING=${BORING:=boringssl}
@@ -33,6 +34,7 @@ interop_init()
     git clone -q https://boringssl.googlesource.com/boringssl "$BORING"
     git -C "$BORING" checkout -q ea80f9d5df4c302de391e999395e1c87f9c786b3
   fi
+  BORING=$(cd "$BORING";pwd -P)
 
   SCRIPTNAME="interop.sh"
   html_head "interop test"
@@ -53,7 +55,7 @@ interop_run()
   server=$3
 
   (cd "$INTEROP";
-   cargo run -- --client ${client} --server ${server} --rootdir ../${BORING}/ssl/test/runner/ --test-cases cases.json) 2>interop-${test_name}.errors | tee interop-${test_name}.log
+   cargo run -- --client "$client" --server "$server" --rootdir "$BORING"/ssl/test/runner/ --test-cases cases.json) 2>interop-${test_name}.errors | tee interop-${test_name}.log
   html_msg "${PIPESTATUS[0]}" 0 "Interop" "Run successfully"
   grep -i 'FAILED\|Assertion failure' interop-${test_name}.errors
   html_msg $? 1 "Interop" "No failures"
@@ -62,7 +64,7 @@ interop_run()
 cd "$(dirname "$0")"
 SOURCE_DIR="$PWD"/../..
 interop_init
-NSS_SHIM="${BINDIR}"/nss_bogo_shim
-BORING_SHIM="../${BORING}"/build/ssl/test/bssl_shim
+NSS_SHIM="$BINDIR"/nss_bogo_shim
+BORING_SHIM="$BORING"/build/ssl/test/bssl_shim
 interop_run "nss_nss" ${NSS_SHIM} ${NSS_SHIM}
 interop_cleanup
