@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<!--This testing should match the 15th frame of street.mp4. The
+15th frame's time is 0.466666, so seek to a time which is a little
+greater than 0.466666, the display frame should be the 15th frame.  
+-->
+<head>
+<script type="text/javascript">
+function doTest() {
+  var video = document.getElementById("v1");
+  video.src = "../street.mp4";
+  video.preload = "metadata";
+
+  video.currentTime = 0.466667;
+
+  video.addEventListener("seeked", function() {
+    document.documentElement.removeAttribute('class');
+  });
+}
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</head>
+<body>
+<video id="v1" style="position:absolute; left:0; top:0"></video>
+</body>
+</html>
