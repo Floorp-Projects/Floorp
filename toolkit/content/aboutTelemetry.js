@@ -2189,7 +2189,7 @@ var SimpleMeasurements = {
   sortStartupMilestones(aSimpleMeasurements) {
     const telemetryTimestamps = TelemetryTimestamps.get();
     let startupEvents = Services.startup.getStartupInfo();
-    delete startupEvents["process"];
+    delete startupEvents.process;
 
     function keyIsMilestone(k) {
       return (k in startupEvents) || (k in telemetryTimestamps);
