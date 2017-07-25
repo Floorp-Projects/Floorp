@@ -491,10 +491,6 @@ class nsStyleSet final
   // of CSS sheet types.
   static bool IsCSSSheetType(mozilla::SheetType aSheetType);
 
-  void SetUsesViewportUnits(bool aValue) {
-    mUsesViewportUnits = aValue;
-  }
-
 private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
@@ -637,8 +633,6 @@ private:
   unsigned mInReconstruct : 1;
   unsigned mInitFontFeatureValuesLookup : 1;
   unsigned mNeedsRestyleAfterEnsureUniqueInner : 1;
-  // Does the associated document use viewport units (vw/vh/vmin/vmax)?
-  unsigned mUsesViewportUnits : 1;
   unsigned mDirty : int(mozilla::SheetType::Count);  // one bit per sheet type
 
   uint32_t mRootStyleContextCount;
