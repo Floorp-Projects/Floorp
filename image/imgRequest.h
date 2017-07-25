@@ -22,9 +22,6 @@
 #include "mozilla/net/ReferrerPolicy.h"
 #include "ImageCacheKey.h"
 
-#include "X11UndefineNone.h"
-#include "mozilla/StyleBackendType.h"
-
 class imgCacheValidator;
 class imgLoader;
 class imgRequestProxy;
@@ -56,7 +53,6 @@ class imgRequest final : public nsIStreamListener,
   typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
-  typedef mozilla::StyleBackendType StyleBackendType;
 
 public:
   imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey);
@@ -78,8 +74,7 @@ public:
                              nsISupports* aCX,
                              nsIPrincipal* aLoadingPrincipal,
                              int32_t aCORSMode,
-                             ReferrerPolicy aReferrerPolicy,
-                             StyleBackendType aBackendType = StyleBackendType::None);
+                             ReferrerPolicy aReferrerPolicy);
 
   void ClearLoader();
 
@@ -300,9 +295,6 @@ private:
   bool mDecodeRequested : 1;
   bool mNewPartPending : 1;
   bool mHadInsecureRedirect : 1;
-
-  // The backend used for this image document.
-  mozilla::StyleBackendType mStyleBackendType;
 };
 
 #endif // mozilla_image_imgRequest_h
