@@ -532,9 +532,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     return NS_OK;
   }
 
-  // Disallow negative intervals.  If aIsInterval also disallow 0,
-  // because we use that as a "don't repeat" flag.
-  interval = std::max(aIsInterval ? 1 : 0, interval);
+  // Disallow negative intervals.
+  interval = std::max(0, interval);
 
   // Make sure we don't proceed with an interval larger than our timer
   // code can handle. (Note: we already forced |interval| to be non-negative,
