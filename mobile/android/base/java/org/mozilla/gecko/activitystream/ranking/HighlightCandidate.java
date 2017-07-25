@@ -12,7 +12,6 @@ import android.support.annotation.StringDef;
 import android.support.annotation.VisibleForTesting;
 
 import org.mozilla.gecko.activitystream.ranking.RankingUtils.Func1;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
 import java.util.HashMap;
@@ -44,11 +43,12 @@ import java.util.Map;
     private String host;
     private double score;
 
-    public static HighlightCandidate fromCursor(Cursor cursor) throws InvalidHighlightCandidateException {
+    public static HighlightCandidate fromCursor(final Cursor cursor, final HighlightCandidateCursorIndices cursorIndices)
+            throws InvalidHighlightCandidateException {
         final HighlightCandidate candidate = new HighlightCandidate();
 
-        extractHighlight(candidate, cursor);
-        extractFeatures(candidate, cursor);
+        extractHighlight(candidate, cursor, cursorIndices);
+        extractFeatures(candidate, cursor, cursorIndices);
 
         return candidate;
     }
@@ -56,22 +56,24 @@ import java.util.Map;
     /**
      * Extract highlight object from cursor.
      */
-    private static void extractHighlight(HighlightCandidate candidate, Cursor cursor) {
-        candidate.highlight = Highlight.fromCursor(cursor);
+    private static void extractHighlight(final HighlightCandidate candidate, final Cursor cursor,
+            final HighlightCandidateCursorIndices cursorIndices) {
+        candidate.highlight = Highlight.fromCursor(cursor, cursorIndices);
     }
 
     /**
      * Extract and assign features that will be used for ranking.
      */
-    private static void extractFeatures(HighlightCandidate candidate, Cursor cursor) throws InvalidHighlightCandidateException {
+    private static void extractFeatures(final HighlightCandidate candidate, final Cursor cursor,
+            final HighlightCandidateCursorIndices cursorIndices) throws InvalidHighlightCandidateException {
         candidate.features.put(
                 FEATURE_AGE_IN_DAYS,
-                (System.currentTimeMillis() - cursor.getDouble(cursor.getColumnIndexOrThrow(BrowserContract.History.DATE_LAST_VISITED)))
+                (System.currentTimeMillis() - cursor.getDouble(cursorIndices.historyDateLastVisitedColumnIndex))
                         / (1000 * 3600 * 24));
 
         candidate.features.put(
                 FEATURE_VISITS_COUNT,
-                cursor.getDouble(cursor.getColumnIndexOrThrow(BrowserContract.History.VISITS)));
+                cursor.getDouble(cursorIndices.visitsColumnIndex));
 
         // Until we can determine those numbers we assume this domain has only been visited once
         // and the cursor returned all database entries.
@@ -108,15 +110,14 @@ import java.util.Map;
         // to the real creation date, or the earliest one mentioned in the clients constellation.
         // We are sourcing highlights from the recent visited history - so in order to
         // show up this bookmark need to have been visited recently too.
-        final int bookmarkDateColumnIndex = cursor.getColumnIndexOrThrow(BrowserContract.Bookmarks.DATE_CREATED);
-        if (cursor.isNull(bookmarkDateColumnIndex)) {
+        if (cursor.isNull(cursorIndices.bookmarkDateCreatedColumnIndex)) {
             candidate.features.put(
                     FEATURE_BOOKMARK_AGE_IN_MILLISECONDS,
                     0d);
         } else {
             candidate.features.put(
                     FEATURE_BOOKMARK_AGE_IN_MILLISECONDS,
-                    Math.max(1, System.currentTimeMillis() - cursor.getDouble(bookmarkDateColumnIndex)));
+                    Math.max(1, System.currentTimeMillis() - cursor.getDouble(cursorIndices.bookmarkDateCreatedColumnIndex)));
         }
 
         candidate.features.put(
