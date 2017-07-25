@@ -122,7 +122,7 @@ imgRequestProxy::imgRequestProxy() :
   mHadDispatch(false)
 {
   /* member initializers and constructor code */
-
+  LOG_FUNC(gImgLog, "imgRequestProxy::imgRequestProxy");
 }
 
 imgRequestProxy::~imgRequestProxy()
@@ -169,6 +169,8 @@ imgRequestProxy::~imgRequestProxy()
     mCanceled = true;
     GetOwner()->RemoveProxy(this, NS_OK);
   }
+
+  LOG_FUNC(gImgLog, "imgRequestProxy::~imgRequestProxy");
 }
 
 nsresult
