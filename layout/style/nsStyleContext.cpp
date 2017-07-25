@@ -84,7 +84,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   : mParent(aParent)
   , mPseudoTag(aPseudoTag)
   , mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT)
-  , mRefCnt(0)
 #ifdef DEBUG
   , mFrameRefCnt(0)
 #endif
@@ -435,7 +434,8 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
     str.AppendLiteral("  ");
   }
   str.Append(nsPrintfCString("%p(%d) parent=%p ",
-                             (void*)this, mRefCnt, (void *)mParent));
+                             (void*)this, IsGecko() ? AsGecko()->mRefCnt : 0,
+                             (void *)mParent));
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
@@ -471,25 +471,6 @@ void nsStyleContext::List(FILE* out, int32_t aIndent, bool aListDescendants)
   }
 }
 #endif
-
-// Overridden to prevent the global delete from being called, since the memory
-// came out of an nsIArena instead of the global delete operator's heap.
-void
-nsStyleContext::Destroy()
-{
-  if (IsGecko()) {
-    // Get the pres context.
-    RefPtr<nsPresContext> presContext = PresContext();
-    // Call our destructor.
-    this->AsGecko()->~GeckoStyleContext();
-    // Don't let the memory be freed, since it will be recycled
-    // instead. Don't call the global operator delete.
-    presContext->PresShell()->
-      FreeByObjectID(eArenaObjectID_GeckoStyleContext, this);
-  } else {
-    delete static_cast<ServoStyleContext*>(this);
-  }
-}
 
 already_AddRefed<GeckoStyleContext>
 NS_NewStyleContext(GeckoStyleContext* aParentContext,

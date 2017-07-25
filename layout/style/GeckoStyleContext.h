@@ -138,6 +138,13 @@ public:
     return mRuleNode;
   }
 
+  bool HasSingleReference() const {
+    NS_ASSERTION(mRefCnt != 0,
+                 "do not call HasSingleReference on a newly created "
+                 "nsStyleContext with no references yet");
+    return mRefCnt == 1;
+  }
+
   void AddRef() {
     if (mRefCnt == UINT32_MAX) {
       NS_WARNING("refcount overflow, leaking object");
@@ -220,6 +227,8 @@ public:
   nsResetStyleData*       mCachedResetData; // Cached reset style data.
   nsInheritedStyleData    mCachedInheritedData; // Cached inherited style data
 
+  uint32_t mRefCnt;
+
 #ifdef DEBUG
   void AssertStructsNotUsedElsewhere(GeckoStyleContext* aDestroyingContext,
                                      int32_t aLevels) const;
@@ -228,6 +237,7 @@ public:
 private:
   // Helper for ClearCachedInheritedStyleDataOnDescendants.
   void DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs);
+  void Destroy();
 
   // Children are kept in two circularly-linked lists.  The list anchor
   // is not part of the list (null for empty), and we point to the first
