@@ -7,6 +7,7 @@
 #ifndef jit_CodeGenerator_h
 #define jit_CodeGenerator_h
 
+#include "jit/CacheIR.h"
 #include "jit/IonCaches.h"
 #if defined(JS_ION_PERF)
 # include "jit/PerfSpewer.h"
@@ -468,8 +469,8 @@ class CodeGenerator final : public CodeGeneratorSpecific
   private:
     void addGetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs,
                              TypedOrValueRegister value, const ConstantOrRegister& id,
-                             TypedOrValueRegister output, Register maybeTemp, bool monitoredResult,
-                             bool allowDoubleResult, jsbytecode* profilerLeavePc);
+                             TypedOrValueRegister output, Register maybeTemp,
+                             GetPropertyResultFlags flags, jsbytecode* profilerLeavePc);
     void addSetPropertyCache(LInstruction* ins, LiveRegisterSet liveRegs, Register objReg,
                              Register temp, FloatRegister tempDouble,
                              FloatRegister tempF32, const ConstantOrRegister& id,
