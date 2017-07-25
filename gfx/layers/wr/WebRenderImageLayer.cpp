@@ -161,7 +161,7 @@ WebRenderImageLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
     // a bunch of the calculations normally done as part of that stacking
     // context need to be done manually and pushed over to the parent side,
     // where it will be done when we build the display list for the iframe.
-    // That happens in WebRenderCompositableHolder.
+    // That happens in AsyncImagePipelineManager.
 
     LayerRect rect = ViewAs<LayerPixel>(bounds,
         PixelCastJustification::MovingDownToChildren);
