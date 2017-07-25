@@ -155,7 +155,7 @@ WebRenderCompositableHolder::UpdateAsyncImagePipeline(const wr::PipelineId& aPip
 }
 
 bool
-WebRenderCompositableHolder::GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys)
+WebRenderCompositableHolder::GenerateImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys)
 {
   MOZ_ASSERT(aKeys.IsEmpty());
   MOZ_ASSERT(aTexture);
@@ -163,7 +163,7 @@ WebRenderCompositableHolder::GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, T
   WebRenderTextureHost* wrTexture = aTexture->AsWebRenderTextureHost();
 
   if (!gfxEnv::EnableWebRenderRecording() && wrTexture) {
-    wrTexture->GetWRImageKeys(aKeys, std::bind(&WebRenderCompositableHolder::GetImageKey, this));
+    wrTexture->GetWRImageKeys(aKeys, std::bind(&WebRenderCompositableHolder::GenerateImageKey, this));
     MOZ_ASSERT(!aKeys.IsEmpty());
     Range<const wr::ImageKey> keys(&aKeys[0], aKeys.Length());
     wrTexture->AddWRImage(aApi, keys, wrTexture->GetExternalImageKey());
@@ -183,7 +183,7 @@ WebRenderCompositableHolder::GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, T
     wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
     auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
 
-    wr::ImageKey key = GetImageKey();
+    wr::ImageKey key = GenerateImageKey();
     aKeys.AppendElement(key);
     aApi->AddImage(key, descriptor, slice);
     dSurf->Unmap();
@@ -231,7 +231,7 @@ WebRenderCompositableHolder::UpdateImageKeys(wr::WebRenderAPI* aApi,
     return true;
   }
 
-  aUseExternalImage = aHolder->mUseExternalImage = GetImageKeyForTextureHost(aApi, texture, aKeys);
+  aUseExternalImage = aHolder->mUseExternalImage = GenerateImageKeyForTextureHost(aApi, texture, aKeys);
   MOZ_ASSERT(!aKeys.IsEmpty());
   aHolder->mKeys.AppendElements(aKeys);
   aHolder->mCurrentTexture = texture;
