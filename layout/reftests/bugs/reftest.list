@@ -1984,12 +1984,9 @@ fuzzy-if(Android,27,874) fuzzy-if(gtkWidget,14,29) == 1313772.xhtml 1313772-ref.
 fuzzy(2,320000) == 1315113-1.html 1315113-1-ref.html
 fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1a.html 1316719-1-ref.html
-fuzzy(2,40000) fuzzy-if(webrender,26,691) == 1316719-1b.html 1316719-1-ref.html
-fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
-pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1a.html 1316719-1-ref.html
-pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1b.html 1316719-1-ref.html
-pref(layers.advanced.background-color,1) skip-if(!webrender) fuzzy-if(webrender,27,700) == 1316719-1c.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1a.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1b.html 1316719-1-ref.html
+fuzzy(2,40000) fuzzy-if(webrender,1-1,323-323) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 fails-if(styloVsGecko) == 1322512-1.html 1322512-1-ref.html
 == 1330051.svg 1330051-ref.svg
