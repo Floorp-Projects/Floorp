@@ -69,7 +69,6 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
  , mDecodeRequested(false)
  , mNewPartPending(false)
  , mHadInsecureRedirect(false)
- , mStyleBackendType(StyleBackendType::None)
 { }
 
 imgRequest::~imgRequest()
@@ -96,8 +95,7 @@ imgRequest::Init(nsIURI *aURI,
                  nsISupports* aCX,
                  nsIPrincipal* aLoadingPrincipal,
                  int32_t aCORSMode,
-                 ReferrerPolicy aReferrerPolicy,
-                 StyleBackendType aStyleBackendType)
+                 ReferrerPolicy aReferrerPolicy)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 
@@ -124,8 +122,6 @@ imgRequest::Init(nsIURI *aURI,
   mLoadingPrincipal = aLoadingPrincipal;
   mCORSMode = aCORSMode;
   mReferrerPolicy = aReferrerPolicy;
-
-  mStyleBackendType = aStyleBackendType;
 
   // If the original URI and the current URI are different, check whether the
   // original URI is secure. We deliberately don't take the current URI into
@@ -971,8 +967,7 @@ struct NewPartResult final
 static NewPartResult
 PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
                   ImageURL* aURI, bool aIsMultipart, image::Image* aExistingImage,
-                  ProgressTracker* aProgressTracker, uint32_t aInnerWindowId,
-                  StyleBackendType aStyleBackendType)
+                  ProgressTracker* aProgressTracker, uint32_t aInnerWindowId)
 {
   NewPartResult result(aExistingImage);
 
@@ -1020,7 +1015,7 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
       image::ImageFactory::CreateImage(aRequest, progressTracker,
                                        result.mContentType,
                                        aURI, /* aIsMultipart = */ true,
-                                       aInnerWindowId, aStyleBackendType);
+                                       aInnerWindowId);
 
     if (result.mIsFirstPart) {
       // First part for a multipart channel. Create the MultipartImage wrapper.
@@ -1045,7 +1040,7 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
       image::ImageFactory::CreateImage(aRequest, aProgressTracker,
                                        result.mContentType,
                                        aURI, /* aIsMultipart = */ false,
-                                       aInnerWindowId, aStyleBackendType);
+                                       aInnerWindowId);
   }
 
   MOZ_ASSERT(result.mImage);
@@ -1138,8 +1133,7 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
   if (newPartPending) {
     NewPartResult result = PrepareForNewPart(aRequest, aInStr, aCount, mURI,
                                              isMultipart, image,
-                                             progressTracker, mInnerWindowId,
-                                             mStyleBackendType);
+                                             progressTracker, mInnerWindowId);
     bool succeeded = result.mSucceeded;
 
     if (result.mImage) {
