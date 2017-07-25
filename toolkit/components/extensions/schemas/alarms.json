@@ -70,11 +70,7 @@
             "type": "function",
             "name": "callback",
             "parameters": [
-              {
-                "name": "alarm",
-                "$ref": "Alarm",
-                "optional": true
-               }
+              { "name": "alarm", "$ref": "Alarm" }
             ]
           }
         ]
