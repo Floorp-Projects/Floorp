@@ -277,6 +277,10 @@ private:
   void SetInputLayout(ID3D11InputLayout* aLayout);
   void SetVertexShader(ID3D11VertexShader* aShader);
 
+  // Resolve a TextureSource to an ID3D11ShaderResourceView, locking the
+  // texture if needed. The lock is released at the end of the frame.
+  ID3D11ShaderResourceView* ResolveTextureSourceForShader(TextureSource* aSource);
+
 private:
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;
