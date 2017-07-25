@@ -14042,6 +14042,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function getSourceByUrlInSources(sources, url) {
+	  if (!url) {
+	    return null;
+	  }
+
 	  return sources.find(source => source.get("url") === url);
 	}
 
@@ -16720,7 +16724,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function checkSelectedSource(state, dispatch, source) {
 	  var pendingLocation = (0, _selectors.getPendingSelectedLocation)(state);
 
-	  if (pendingLocation && pendingLocation.url === source.url) {
+	  if (pendingLocation && !!source.url && pendingLocation.url === source.url) {
 	    dispatch(selectSource(source.id, { line: pendingLocation.line }));
 	  }
 	}
@@ -21801,6 +21805,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  underscore: __webpack_require__(1117),
 	  lodash: __webpack_require__(1118),
 	  ember: __webpack_require__(1119),
+	  vuejs: __webpack_require__(1174),
 	  "magnifying-glass": __webpack_require__(357),
 	  "arrow-up": __webpack_require__(919),
 	  "arrow-down": __webpack_require__(920),
@@ -24117,6 +24122,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  footerHeight: "var(--editor-footer-height)"
 	};
 
+	var debugExpression = void 0;
 	class Editor extends _react.PureComponent {
 
 	  constructor() {
@@ -24149,7 +24155,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var selectedSource = nextProps.selectedSource,
 	        selectedLocation = nextProps.selectedLocation;
 
-	    this.clearDebugLine(this.props.selectedFrame);
 
 	    if (nextProps.startPanelSize !== this.props.startPanelSize || nextProps.endPanelSize !== this.props.endPanelSize) {
 	      this.state.editor.codeMirror.setSize();
@@ -24167,14 +24172,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      (0, _editor.showSourceText)(this.state.editor, selectedSource.toJS());
 	    }
 
-	    if (this.props.linesInScope !== nextProps.linesInScope) {
+	    if (this.state.editor && this.props.linesInScope !== nextProps.linesInScope) {
 	      this.state.editor.codeMirror.operation(() => {
 	        (0, _editor.clearLineClass)(this.state.editor.codeMirror, "in-scope");
 	      });
-	    }
 
-	    this.setDebugLine(nextProps.selectedFrame, selectedLocation);
-	    (0, _editor.resizeBreakpointGutter)(this.state.editor.codeMirror);
+	      this.clearDebugLine(this.props.selectedFrame);
+	      this.setDebugLine(nextProps.selectedFrame, selectedLocation);
+	      (0, _editor.resizeBreakpointGutter)(this.state.editor.codeMirror);
+	    }
 	  }
 
 	  setupEditor() {
@@ -24361,14 +24367,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.props.clearSelection();
 	  }
 
-	  openMenu(event, codeMirror) {
+	  inSelectedFrameSource() {
 	    var _props3 = this.props,
-	        selectedSource = _props3.selectedSource,
 	        selectedLocation = _props3.selectedLocation,
-	        showSource = _props3.showSource,
-	        jumpToMappedLocation = _props3.jumpToMappedLocation,
-	        addExpression = _props3.addExpression,
-	        toggleBlackBox = _props3.toggleBlackBox;
+	        selectedFrame = _props3.selectedFrame;
+
+	    return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
+	  }
+
+	  openMenu(event, codeMirror) {
+	    var _props4 = this.props,
+	        selectedSource = _props4.selectedSource,
+	        selectedLocation = _props4.selectedLocation,
+	        showSource = _props4.showSource,
+	        jumpToMappedLocation = _props4.jumpToMappedLocation,
+	        addExpression = _props4.addExpression,
+	        toggleBlackBox = _props4.toggleBlackBox;
 
 
 	    return (0, _EditorMenu2.default)({
@@ -24385,9 +24399,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onGutterClick(cm, line, gutter, ev) {
-	    var _props4 = this.props,
-	        selectedSource = _props4.selectedSource,
-	        toggleBreakpoint = _props4.toggleBreakpoint;
+	    var _props5 = this.props,
+	        selectedSource = _props5.selectedSource,
+	        toggleBreakpoint = _props5.toggleBreakpoint;
 
 	    // ignore right clicks in the gutter
 
@@ -24405,11 +24419,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onGutterContextMenu(event) {
-	    var _props5 = this.props,
-	        selectedSource = _props5.selectedSource,
-	        breakpoints = _props5.breakpoints,
-	        toggleBreakpoint = _props5.toggleBreakpoint,
-	        toggleDisabledBreakpoint = _props5.toggleDisabledBreakpoint;
+	    var _props6 = this.props,
+	        selectedSource = _props6.selectedSource,
+	        breakpoints = _props6.breakpoints,
+	        toggleBreakpoint = _props6.toggleBreakpoint,
+	        toggleDisabledBreakpoint = _props6.toggleDisabledBreakpoint;
 
 
 	    if (selectedSource && selectedSource.get("isBlackBoxed")) {
@@ -24446,10 +24460,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.closeConditionalPanel();
 	    }
 
-	    var _props6 = this.props,
-	        selectedLocation = _props6.selectedLocation,
-	        setBreakpointCondition = _props6.setBreakpointCondition,
-	        breakpoints = _props6.breakpoints;
+	    var _props7 = this.props,
+	        selectedLocation = _props7.selectedLocation,
+	        setBreakpointCondition = _props7.setBreakpointCondition,
+	        breakpoints = _props7.breakpoints;
 
 	    var sourceId = selectedLocation ? selectedLocation.sourceId : "";
 
@@ -24480,10 +24494,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  clearDebugLine(selectedFrame) {
-	    if (selectedFrame) {
-	      var line = selectedFrame.location.line;
-	      if (this.debugExpression) {
-	        this.debugExpression.clear();
+	    if (this.state.editor && selectedFrame) {
+	      var _selectedFrame$locati = selectedFrame.location,
+	          sourceId = _selectedFrame$locati.sourceId,
+	          line = _selectedFrame$locati.line;
+
+	      if (debugExpression) {
+	        debugExpression.clear();
 	      }
 
 	      this.state.editor.codeMirror.removeLineClass(line - 1, "line", "new-debug-line");
@@ -24491,14 +24508,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  setDebugLine(selectedFrame, selectedLocation) {
-	    if (selectedFrame && selectedLocation && selectedFrame.location.sourceId === selectedLocation.sourceId) {
-	      var _selectedFrame$locati = selectedFrame.location,
-	          line = _selectedFrame$locati.line,
-	          column = _selectedFrame$locati.column;
+	    if (this.state.editor && selectedFrame && selectedLocation && selectedFrame.location.sourceId === selectedLocation.sourceId) {
+	      var _selectedFrame$locati2 = selectedFrame.location,
+	          line = _selectedFrame$locati2.line,
+	          column = _selectedFrame$locati2.column;
 
 	      this.state.editor.codeMirror.addLineClass(line - 1, "line", "new-debug-line");
 
-	      this.debugExpression = (0, _editor.markText)(this.state.editor, "debug-expression", {
+	      debugExpression = (0, _editor.markText)(this.state.editor, "debug-expression", {
 	        start: { line, column },
 	        end: { line, column: null }
 	      });
@@ -24541,37 +24558,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.state.editor.setMode({ name: "text" });
 	  }
 
-	  renderHighlightLines() {
-	    var highlightedLineRange = this.props.highlightedLineRange;
-
-
-	    if (!highlightedLineRange) {
-	      return;
-	    }
-
-	    return HighlightLines({
-	      editor: this.state.editor,
-	      highlightedLineRange
-	    });
-	  }
-
-	  renderHitCounts() {
-	    var _props7 = this.props,
-	        hitCount = _props7.hitCount,
-	        selectedSource = _props7.selectedSource;
-
-
-	    if (!selectedSource || selectedSource.get("loading") || !hitCount || !this.state.editor) {
-	      return;
-	    }
-
-	    return hitCount.filter(marker => marker.get("count") > 0).map(marker => HitMarker({
-	      key: marker.get("line"),
-	      hitData: marker.toJS(),
-	      editor: this.state.editor.codeMirror
-	    }));
-	  }
-
 	  getInlineEditorStyles() {
 	    var _props8 = this.props,
 	        selectedSource = _props8.selectedSource,
@@ -24595,10 +24581,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 	  }
 
-	  renderPreview() {
+	  renderHighlightLines() {
+	    var highlightedLineRange = this.props.highlightedLineRange;
+
+
+	    if (!highlightedLineRange) {
+	      return;
+	    }
+
+	    return HighlightLines({
+	      editor: this.state.editor,
+	      highlightedLineRange
+	    });
+	  }
+
+	  renderHitCounts() {
 	    var _props9 = this.props,
-	        selectedSource = _props9.selectedSource,
-	        selection = _props9.selection;
+	        hitCount = _props9.hitCount,
+	        selectedSource = _props9.selectedSource;
+
+
+	    if (!selectedSource || selectedSource.get("loading") || !hitCount || !this.state.editor) {
+	      return;
+	    }
+
+	    return hitCount.filter(marker => marker.get("count") > 0).map(marker => HitMarker({
+	      key: marker.get("line"),
+	      hitData: marker.toJS(),
+	      editor: this.state.editor.codeMirror
+	    }));
+	  }
+
+	  renderPreview() {
+	    var _props10 = this.props,
+	        selectedSource = _props10.selectedSource,
+	        selection = _props10.selection;
 
 	    if (!this.state.editor || !selectedSource) {
 	      return null;
@@ -24631,7 +24648,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  renderInScopeLines() {
 	    var linesInScope = this.props.linesInScope;
 
-	    if (!(0, _devtoolsConfig.isEnabled)("highlightScopeLines") || !linesInScope || !this.inSelectedFrameSource()) {
+	    if (!this.state.editor || !(0, _devtoolsConfig.isEnabled)("highlightScopeLines") || !linesInScope || !this.inSelectedFrameSource()) {
 	      return;
 	    }
 
@@ -24640,14 +24657,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.state.editor.codeMirror.addLineClass(line - 1, "line", "in-scope");
 	      });
 	    });
-	  }
-
-	  inSelectedFrameSource() {
-	    var _props10 = this.props,
-	        selectedLocation = _props10.selectedLocation,
-	        selectedFrame = _props10.selectedFrame;
-
-	    return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
 	  }
 
 	  renderCallSites() {
@@ -24659,15 +24668,49 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return CallSites({ editor });
 	  }
 
-	  render() {
+	  renderSearchBar() {
 	    var _props11 = this.props,
 	        selectSource = _props11.selectSource,
 	        selectedSource = _props11.selectedSource,
 	        highlightLineRange = _props11.highlightLineRange,
-	        clearHighlightLineRange = _props11.clearHighlightLineRange,
-	        coverageOn = _props11.coverageOn,
-	        pauseData = _props11.pauseData,
-	        horizontal = _props11.horizontal;
+	        clearHighlightLineRange = _props11.clearHighlightLineRange;
+
+
+	    if (!this.state.editor) {
+	      return null;
+	    }
+
+	    return SearchBar({
+	      editor: this.state.editor,
+	      selectSource,
+	      selectedSource,
+	      highlightLineRange,
+	      clearHighlightLineRange
+	    });
+	  }
+
+	  renderFooter() {
+	    var horizontal = this.props.horizontal;
+
+
+	    if (!this.state.editor) {
+	      return null;
+	    }
+	    return Footer({ editor: this.state.editor, horizontal });
+	  }
+
+	  renderBreakpoints() {
+	    if (!this.state.editor) {
+	      return null;
+	    }
+
+	    return Breakpoints({ editor: this.state.editor });
+	  }
+
+	  render() {
+	    var _props12 = this.props,
+	        coverageOn = _props12.coverageOn,
+	        pauseData = _props12.pauseData;
 
 
 	    return _react.DOM.div({
@@ -24675,16 +24718,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        "coverage-on": coverageOn,
 	        paused: !!pauseData && (0, _devtoolsConfig.isEnabled)("highlightScopeLines")
 	      })
-	    }, SearchBar({
-	      editor: this.state.editor,
-	      selectSource,
-	      selectedSource,
-	      highlightLineRange,
-	      clearHighlightLineRange
-	    }), _react.DOM.div({
+	    }, this.renderSearchBar(), _react.DOM.div({
 	      className: "editor-mount devtools-monospace",
 	      style: this.getInlineEditorStyles()
-	    }), this.renderHighlightLines(), this.renderInScopeLines(), this.renderHitCounts(), Footer({ editor: this.state.editor, horizontal }), this.renderPreview(), this.renderCallSites(), Breakpoints({ editor: this.state.editor }));
+	    }), this.renderHighlightLines(), this.renderInScopeLines(), this.renderHitCounts(), this.renderFooter(), this.renderPreview(), this.renderCallSites(), this.renderBreakpoints());
 	  }
 	}
 
@@ -27819,10 +27856,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentDidMount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-
 	    this.addBreakpoint();
 	  }
 
@@ -27837,7 +27870,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        selectedSource = _props3.selectedSource;
 
 
-	    if (!editor || !selectedSource) {
+	    if (!selectedSource) {
 	      return;
 	    }
 
@@ -27908,10 +27941,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentDidMount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-
 	    this.addMarker();
 	  }
 
@@ -27920,10 +27949,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentWillUnmount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-
 	    var hitData = this.props.hitData;
 	    var line = hitData.line - 1;
 
@@ -45933,7 +45958,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var gutters = editor.display.gutters;
 	  var lineNumbers = gutters.querySelector(".CodeMirror-linenumbers");
 	  var breakpoints = gutters.querySelector(".breakpoints");
-	  breakpoints.style.width = `${lineNumbers.clientWidth}px`;
+	  var width = lineNumbers.clientWidth;
+	  breakpoints.style.width = `${width}px`;
 	}
 
 	module.exports = {
@@ -46997,6 +47023,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return getFrameUrl(frame).match(/ember/i);
 	}
 
+	function isVueJS(frame) {
+	  return getFrameUrl(frame).match(/vue\.js/i);
+	}
+
 	function isRxJs(frame) {
 	  return getFrameUrl(frame).match(/rxjs/i);
 	}
@@ -47053,6 +47083,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return "Ember";
 	  }
 
+	  if (isVueJS(frame)) {
+	    return "VueJS";
+	  }
+
 	  if (isRxJs(frame)) {
 	    return "RxJS";
 	  }
@@ -47074,6 +47108,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // eslint-disable-next-line max-len
 	    "ReactCompositeComponent._renderValidatedComponentWithoutOwnerOrContext/renderedElement<": "Render",
 	    _renderValidatedComponentWithoutOwnerOrContext: "Render"
+	  },
+	  VueJS: {
+	    "renderMixin/Vue.prototype._render": "Render"
 	  },
 	  Webpack: {
 	    // eslint-disable-next-line camelcase
@@ -47381,10 +47418,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentDidMount() {
-	    if (!this.props.editor) {
-	      return;
-	    }
-
 	    this.highlightLineRange();
 	  }
 
@@ -47404,16 +47437,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _props = this.props,
 	        highlightedLineRange = _props.highlightedLineRange,
 	        editor = _props.editor;
-
-
-	    if (!editor) {
-	      return;
-	    }
-
 	    var codeMirror = editor.codeMirror;
 
 
-	    if ((0, _isEmpty2.default)(highlightedLineRange) || !editor || !codeMirror) {
+	    if ((0, _isEmpty2.default)(highlightedLineRange) || !codeMirror) {
 	      return;
 	    }
 
@@ -47431,12 +47458,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _props2 = this.props,
 	        highlightedLineRange = _props2.highlightedLineRange,
 	        editor = _props2.editor;
-
-
-	    if (!editor) {
-	      return;
-	    }
-
 	    var codeMirror = editor.codeMirror;
 
 
@@ -52310,12 +52331,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  componentDidMount() {
 	    var _props = this.props,
 	        breakpoint = _props.breakpoint,
-	        editor = _props.editor,
 	        showCallSite = _props.showCallSite;
 
-	    if (!editor) {
-	      return;
-	    }
 
 	    if (!breakpoint && !showCallSite) {
 	      return;
@@ -52349,7 +52366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  componentWillUnmount() {
-	    if (!this.props.editor || !this.marker) {
+	    if (!this.marker) {
 	      return;
 	    }
 	    this.marker.clear();
@@ -52472,6 +52489,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  openSymbolModal(_, e) {
 	    e.preventDefault();
+	    e.stopPropagation();
 	    this.props.setActiveSearch("symbol");
 	  }
 
@@ -52493,6 +52511,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  closeModal() {
 	    this.props.closeActiveSearch();
 	    this.props.clearHighlightLineRange();
+	    this.setState({ query: "" });
 	  }
 
 	  selectResultItem(e, item) {
@@ -52697,6 +52716,14 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
+
+/***/ },
+/* 1172 */,
+/* 1173 */,
+/* 1174 */
+/***/ function(module, exports) {
+
+	module.exports = "<svg xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:cc=\"http://creativecommons.org/ns#\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 400 400\" xml:space=\"preserve\" id=\"svg2\" version=\"1.1\"><metadata id=\"metadata8\"><rdf:RDF><cc:Work rdf:about><dc:format>image/svg+xml</dc:format><dc:type rdf:resource=\"http://purl.org/dc/dcmitype/StillImage\"></dc></cc:Work></rdf:RDF></metadata><defs id=\"defs6\"></defs><g transform=\"matrix(1.3333333,0,0,-1.3333333,0,400)\" id=\"g10\"><g transform=\"translate(178.0626,235.0086)\" id=\"g12\"><path id=\"path14\" style=\"fill:#41b883;fill-opacity:1;fill-rule:nonzero;stroke:none\" d=\"M 0,0 -22.669,-39.264 -45.338,0 h -75.491 L -22.669,-170.017 75.491,0 Z\"></path></g><g transform=\"translate(178.0626,235.0086)\" id=\"g16\"><path id=\"path18\" style=\"fill:#34495e;fill-opacity:1;fill-rule:nonzero;stroke:none\" d=\"M 0,0 -22.669,-39.264 -45.338,0 H -81.565 L -22.669,-102.01 36.227,0 Z\"></path></g></g></svg>"
 
 /***/ }
 /******/ ])

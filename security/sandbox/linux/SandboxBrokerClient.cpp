@@ -143,7 +143,7 @@ SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
     // actually exist, if it's something that's optional or part of a
     // search path (e.g., shared libraries).  In those cases, this
     // error message is expected.
-    SANDBOX_LOG_ERROR("Rejected errno %d op %d flags 0%o path %s",
+    SANDBOX_LOG_ERROR("Failed errno %d op %d flags 0%o path %s",
                       resp.mError, aReq->mOp, aReq->mFlags, path);
   }
   if (openedFd >= 0) {

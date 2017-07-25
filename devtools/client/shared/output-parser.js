@@ -10,14 +10,17 @@ const {getCSSLexer} = require("devtools/shared/css/lexer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {
   ANGLE_TAKING_FUNCTIONS,
+  BASIC_SHAPE_FUNCTIONS,
   BEZIER_KEYWORDS,
   COLOR_TAKING_FUNCTIONS,
   CSS_TYPES
 } = require("devtools/shared/css/properties-db");
+const {appendText} = require("devtools/client/inspector/shared/utils");
 const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
+const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
 
 /**
  * This module is used to process text for output by developer tools. This means
@@ -77,6 +80,7 @@ OutputParser.prototype = {
     options.expectCubicBezier = this.supportsType(name, CSS_TYPES.TIMING_FUNCTION);
     options.expectDisplay = name === "display";
     options.expectFilter = name === "filter";
+    options.expectShape = name === "clip-path" || name === "shape-outside";
     options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
                             this.supportsType(name, CSS_TYPES.GRADIENT);
 
@@ -162,14 +166,12 @@ OutputParser.prototype = {
     };
 
     let spaceNeeded = false;
-    while (true) {
-      let token = tokenStream.nextToken();
-      if (!token) {
-        break;
-      }
+    let token = tokenStream.nextToken();
+    while (token) {
       if (token.tokenType === "comment") {
         // This doesn't change spaceNeeded, because we didn't emit
         // anything to the output.
+        token = tokenStream.nextToken();
         continue;
       }
 
@@ -197,6 +199,10 @@ OutputParser.prototype = {
             } else if (colorOK() &&
                        colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
               this._appendColor(functionText, options);
+            } else if (options.expectShape &&
+                       Services.prefs.getBoolPref(CSS_SHAPES_ENABLED_PREF) &&
+                       BASIC_SHAPE_FUNCTIONS.includes(token.text)) {
+              this._appendShape(functionText, options);
             } else {
               this._appendTextNode(functionText);
             }
@@ -273,6 +279,8 @@ OutputParser.prototype = {
                      token.tokenType === "id" || token.tokenType === "hash" ||
                      token.tokenType === "number" || token.tokenType === "dimension" ||
                      token.tokenType === "percentage" || token.tokenType === "dimension");
+
+      token = tokenStream.nextToken();
     }
 
     let result = this._toDOM();
@@ -351,6 +359,538 @@ OutputParser.prototype = {
     container.appendChild(toggle);
     container.appendChild(value);
     this.parsed.push(container);
+  },
+
+  /**
+   * Append a CSS shapes highlighter toggle next to the value, and parse the value
+   * into spans, each containing a point that can be hovered over.
+   *
+   * @param {String} shape
+   *        The shape text value to append
+   * @param {Object} options
+   *        Options object. For valid options and default values see
+   *        _mergeOptions()
+   */
+  _appendShape: function (shape, options) {
+    const shapeTypes = [{
+      prefix: "polygon(",
+      coordParser: this._addPolygonPointNodes.bind(this)
+    }, {
+      prefix: "circle(",
+      coordParser: this._addCirclePointNodes.bind(this)
+    }, {
+      prefix: "ellipse(",
+      coordParser: this._addEllipsePointNodes.bind(this)
+    }, {
+      prefix: "inset(",
+      coordParser: this._addInsetPointNodes.bind(this)
+    }];
+
+    let container = this._createNode("span", {});
+
+    let toggle = this._createNode("span", {
+      class: options.shapeClass
+    });
+
+    for (let { prefix, coordParser } of shapeTypes) {
+      if (shape.includes(prefix)) {
+        let coordsBegin = prefix.length;
+        let coordsEnd = shape.lastIndexOf(")");
+        let valContainer = this._createNode("span", {});
+
+        container.appendChild(toggle);
+
+        appendText(valContainer, shape.substring(0, coordsBegin));
+
+        let coordsString = shape.substring(coordsBegin, coordsEnd);
+        valContainer = coordParser(coordsString, valContainer);
+
+        appendText(valContainer, shape.substring(coordsEnd));
+        container.appendChild(valContainer);
+      }
+    }
+
+    this.parsed.push(container);
+  },
+
+  /**
+   * Parse the given polygon coordinates and create a span for each coordinate pair,
+   * adding it to the given container node.
+   *
+   * @param {String} coords
+   *        The string of coordinate pairs.
+   * @param {Node} container
+   *        The node to which spans containing points are added.
+   * @returns {Node} The container to which spans have been added.
+   */
+  _addPolygonPointNodes: function (coords, container) {
+    let tokenStream = getCSSLexer(coords);
+    let token = tokenStream.nextToken();
+    let coord = "";
+    let i = 0;
+    let depth = 0;
+    let isXCoord = true;
+    let fillRule = false;
+    let coordNode = this._createNode("span", {
+      class: "ruleview-shape-point",
+      "data-point": `${i}`,
+    });
+
+    while (token) {
+      if (token.tokenType === "symbol" && token.text === ",") {
+        // Comma separating coordinate pairs; add coordNode to container and reset vars
+        if (!isXCoord) {
+          // Y coord not added to coordNode yet
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": `${i}`,
+            "data-pair": (isXCoord) ? "x" : "y"
+          }, coord);
+          coordNode.appendChild(node);
+          coord = "";
+          isXCoord = !isXCoord;
+        }
+
+        if (fillRule) {
+          // If the last text added was a fill-rule, do not increment i.
+          fillRule = false;
+        } else {
+          container.appendChild(coordNode);
+          i++;
+        }
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+        coord = "";
+        depth = 0;
+        isXCoord = true;
+        coordNode = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": `${i}`,
+        });
+      } else if (token.tokenType === "symbol" && token.text === "(") {
+        depth++;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "symbol" && token.text === ")") {
+        depth--;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "whitespace" && coord === "") {
+        // Whitespace at beginning of coord; add to container
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+      } else if (token.tokenType === "whitespace" && depth === 0) {
+        // Whitespace signifying end of coord
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": `${i}`,
+          "data-pair": (isXCoord) ? "x" : "y"
+        }, coord);
+        coordNode.appendChild(node);
+        appendText(coordNode, coords.substring(token.startOffset, token.endOffset));
+        coord = "";
+        isXCoord = !isXCoord;
+      } else if ((token.tokenType === "number" || token.tokenType === "dimension" ||
+                  token.tokenType === "percentage" || token.tokenType === "function")) {
+        if (isXCoord && coord && depth === 0) {
+          // Whitespace is not necessary between x/y coords.
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": `${i}`,
+            "data-pair": "x"
+          }, coord);
+          coordNode.appendChild(node);
+          isXCoord = false;
+          coord = "";
+        }
+
+        coord += coords.substring(token.startOffset, token.endOffset);
+        if (token.tokenType === "function") {
+          depth++;
+        }
+      } else if (token.tokenType === "ident" &&
+                 (token.text === "nonzero" || token.text === "evenodd")) {
+        // A fill-rule (nonzero or evenodd).
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+        fillRule = true;
+      } else {
+        coord += coords.substring(token.startOffset, token.endOffset);
+      }
+      token = tokenStream.nextToken();
+    }
+
+    // Add coords if any are left over
+    if (coord) {
+      let node = this._createNode("span", {
+        class: "ruleview-shape-point",
+        "data-point": `${i}`,
+        "data-pair": (isXCoord) ? "x" : "y"
+      }, coord);
+      coordNode.appendChild(node);
+      container.appendChild(coordNode);
+    }
+    return container;
+  },
+
+  /**
+   * Parse the given circle coordinates and populate the given container appropriately
+   * with a separate span for the center point.
+   *
+   * @param {String} coords
+   *        The circle definition.
+   * @param {Node} container
+   *        The node to which the definition is added.
+   * @returns {Node} The container to which the definition has been added.
+   */
+  _addCirclePointNodes: function (coords, container) {
+    let tokenStream = getCSSLexer(coords);
+    let token = tokenStream.nextToken();
+    let depth = 0;
+    let coord = "";
+    let point = "radius";
+    let centerNode = this._createNode("span", {
+      class: "ruleview-shape-point",
+      "data-point": "center"
+    });
+    while (token) {
+      if (token.tokenType === "symbol" && token.text === "(") {
+        depth++;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "symbol" && token.text === ")") {
+        depth--;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "whitespace" && coord === "") {
+        // Whitespace at beginning of coord; add to container
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+      } else if (token.tokenType === "whitespace" && point === "radius" && depth === 0) {
+        // Whitespace signifying end of radius
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": "radius"
+        }, coord);
+        container.appendChild(node);
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+        point = "cx";
+        coord = "";
+        depth = 0;
+      } else if (token.tokenType === "whitespace" && depth === 0) {
+        // Whitespace signifying end of cx/cy
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": "center",
+          "data-pair": (point === "cx") ? "x" : "y"
+        }, coord);
+        centerNode.appendChild(node);
+        appendText(centerNode, coords.substring(token.startOffset, token.endOffset));
+        point = (point === "cx") ? "cy" : "cx";
+        coord = "";
+        depth = 0;
+      } else if (token.tokenType === "ident" && token.text === "at") {
+        // "at"; Add radius to container if not already done so
+        if (point === "radius" && coord) {
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "radius"
+          }, coord);
+          container.appendChild(node);
+        }
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+        point = "cx";
+        coord = "";
+        depth = 0;
+      } else if ((token.tokenType === "number" || token.tokenType === "dimension" ||
+                  token.tokenType === "percentage" || token.tokenType === "function")) {
+        if (point === "cx" && coord && depth === 0) {
+          // Center coords don't require whitespace between x/y. So if current point is
+          // cx, we have the cx coord, and depth is 0, then this token is actually cy.
+          // Add cx to centerNode and set point to cy.
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "center",
+            "data-pair": "x"
+          }, coord);
+          centerNode.appendChild(node);
+          point = "cy";
+          coord = "";
+        }
+
+        coord += coords.substring(token.startOffset, token.endOffset);
+        if (token.tokenType === "function") {
+          depth++;
+        }
+      } else {
+        coord += coords.substring(token.startOffset, token.endOffset);
+      }
+      token = tokenStream.nextToken();
+    }
+
+    // Add coords if any are left over.
+    if (coord) {
+      if (point === "radius") {
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": "radius"
+        }, coord);
+        container.appendChild(node);
+      } else {
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": "center",
+          "data-pair": (point === "cx") ? "x" : "y"
+        }, coord);
+        centerNode.appendChild(node);
+      }
+    }
+
+    if (centerNode.textContent) {
+      container.appendChild(centerNode);
+    }
+    return container;
+  },
+
+  /**
+   * Parse the given ellipse coordinates and populate the given container appropriately
+   * with a separate span for each point
+   *
+   * @param {String} coords
+   *        The ellipse definition.
+   * @param {Node} container
+   *        The node to which the definition is added.
+   * @returns {Node} The container to which the definition has been added.
+   */
+  _addEllipsePointNodes: function (coords, container) {
+    let tokenStream = getCSSLexer(coords);
+    let token = tokenStream.nextToken();
+    let depth = 0;
+    let coord = "";
+    let point = "rx";
+    let centerNode = this._createNode("span", {
+      class: "ruleview-shape-point",
+      "data-point": "center"
+    });
+    while (token) {
+      if (token.tokenType === "symbol" && token.text === "(") {
+        depth++;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "symbol" && token.text === ")") {
+        depth--;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "whitespace" && coord === "") {
+        // Whitespace at beginning of coord; add to container
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+      } else if (token.tokenType === "whitespace" && depth === 0) {
+        if (point === "rx" || point === "ry") {
+          // Whitespace signifying end of rx/ry
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": point,
+          }, coord);
+          container.appendChild(node);
+          appendText(container, coords.substring(token.startOffset, token.endOffset));
+          point = (point === "rx") ? "ry" : "cx";
+          coord = "";
+          depth = 0;
+        } else {
+          // Whitespace signifying end of cx/cy
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "center",
+            "data-pair": (point === "cx") ? "x" : "y"
+          }, coord);
+          centerNode.appendChild(node);
+          appendText(centerNode, coords.substring(token.startOffset, token.endOffset));
+          point = (point === "cx") ? "cy" : "cx";
+          coord = "";
+          depth = 0;
+        }
+      } else if (token.tokenType === "ident" && token.text === "at") {
+        // "at"; Add radius to container if not already done so
+        if (point === "ry" && coord) {
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "ry"
+          }, coord);
+          container.appendChild(node);
+        }
+        appendText(container, coords.substring(token.startOffset, token.endOffset));
+        point = "cx";
+        coord = "";
+        depth = 0;
+      } else if ((token.tokenType === "number" || token.tokenType === "dimension" ||
+                  token.tokenType === "percentage" || token.tokenType === "function")) {
+        if (point === "rx" && coord && depth === 0) {
+          // Radius coords don't require whitespace between x/y.
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "rx",
+          }, coord);
+          container.appendChild(node);
+          point = "ry";
+          coord = "";
+        }
+        if (point === "cx" && coord && depth === 0) {
+          // Center coords don't require whitespace between x/y.
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+            "data-point": "center",
+            "data-pair": "x"
+          }, coord);
+          centerNode.appendChild(node);
+          point = "cy";
+          coord = "";
+        }
+
+        coord += coords.substring(token.startOffset, token.endOffset);
+        if (token.tokenType === "function") {
+          depth++;
+        }
+      } else {
+        coord += coords.substring(token.startOffset, token.endOffset);
+      }
+      token = tokenStream.nextToken();
+    }
+
+    // Add coords if any are left over.
+    if (coord) {
+      if (point === "rx" || point === "ry") {
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": point
+        }, coord);
+        container.appendChild(node);
+      } else {
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+          "data-point": "center",
+          "data-pair": (point === "cx") ? "x" : "y"
+        }, coord);
+        centerNode.appendChild(node);
+      }
+    }
+
+    if (centerNode.textContent) {
+      container.appendChild(centerNode);
+    }
+    return container;
+  },
+
+  /**
+   * Parse the given inset coordinates and populate the given container appropriately.
+   *
+   * @param {String} coords
+   *        The inset definition.
+   * @param {Node} container
+   *        The node to which the definition is added.
+   * @returns {Node} The container to which the definition has been added.
+   */
+  _addInsetPointNodes: function (coords, container) {
+    const insetPoints = ["top", "right", "bottom", "left"];
+    let tokenStream = getCSSLexer(coords);
+    let token = tokenStream.nextToken();
+    let depth = 0;
+    let coord = "";
+    let i = 0;
+    let round = false;
+    // nodes is an array containing all the coordinate spans. otherText is an array of
+    // arrays, each containing the text that should be inserted into container before
+    // the node with the same index. i.e. all elements of otherText[i] is inserted
+    // into container before nodes[i].
+    let nodes = [];
+    let otherText = [[]];
+
+    while (token) {
+      if (round) {
+        // Everything that comes after "round" should just be plain text
+        otherText[i].push(coords.substring(token.startOffset, token.endOffset));
+      } else if (token.tokenType === "symbol" && token.text === "(") {
+        depth++;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "symbol" && token.text === ")") {
+        depth--;
+        coord += coords.substring(token.startOffset, token.endOffset);
+      } else if (token.tokenType === "whitespace" && coord === "") {
+        // Whitespace at beginning of coord; add to container
+        otherText[i].push(coords.substring(token.startOffset, token.endOffset));
+      } else if (token.tokenType === "whitespace" && depth === 0) {
+        // Whitespace signifying end of coord; create node and push to nodes
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point"
+        }, coord);
+        nodes.push(node);
+        i++;
+        coord = "";
+        otherText[i] = [coords.substring(token.startOffset, token.endOffset)];
+        depth = 0;
+      } else if ((token.tokenType === "number" || token.tokenType === "dimension" ||
+                  token.tokenType === "percentage" || token.tokenType === "function")) {
+        if (coord && depth === 0) {
+          // Inset coords don't require whitespace between each coord.
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+          }, coord);
+          nodes.push(node);
+          i++;
+          coord = "";
+          otherText[i] = [];
+        }
+
+        coord += coords.substring(token.startOffset, token.endOffset);
+        if (token.tokenType === "function") {
+          depth++;
+        }
+      } else if (token.tokenType === "ident" && token.text === "round") {
+        if (coord && depth === 0) {
+          // Whitespace is not necessary before "round"; create a new node for the coord
+          let node = this._createNode("span", {
+            class: "ruleview-shape-point",
+          }, coord);
+          nodes.push(node);
+          i++;
+          coord = "";
+          otherText[i] = [];
+        }
+        round = true;
+        otherText[i].push(coords.substring(token.startOffset, token.endOffset));
+      } else {
+        coord += coords.substring(token.startOffset, token.endOffset);
+      }
+      token = tokenStream.nextToken();
+    }
+
+    // Take care of any leftover text
+    if (coord) {
+      if (round) {
+        otherText[i].push(coord);
+      } else {
+        let node = this._createNode("span", {
+          class: "ruleview-shape-point",
+        }, coord);
+        nodes.push(node);
+      }
+    }
+
+    // insetPoints contains the 4 different possible inset points in the order they are
+    // defined. By taking the modulo of the index in insetPoints with the number of nodes,
+    // we can get which node represents each point (e.g. if there is only 1 node, it
+    // represents all 4 points). The exception is "left" when there are 3 nodes. In that
+    // case, it is nodes[1] that represents the left point rather than nodes[0].
+    for (let j = 0; j < 4; j++) {
+      let point = insetPoints[j];
+      let nodeIndex = (point === "left" && nodes.length === 3) ? 1 : j % nodes.length;
+      nodes[nodeIndex].classList.add(point);
+    }
+
+    nodes.forEach((node, j, array) => {
+      for (let text of otherText[j]) {
+        appendText(container, text);
+      }
+      container.appendChild(node);
+    });
+
+    // Add text that comes after the last node, if any exists
+    if (otherText[nodes.length]) {
+      for (let text of otherText[nodes.length]) {
+        appendText(container, text);
+      }
+    }
+
+    return container;
   },
 
   /**
@@ -697,6 +1237,7 @@ OutputParser.prototype = {
    *                                    // _wrapFilter.  Used only for
    *                                    // previewing with the filter swatch.
    *           - gridClass: ""          // The class to use for the grid icon.
+   *           - shapeClass: ""         // The class to use for the shape icon.
    *           - supportsColor: false   // Does the CSS property support colors?
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: undefined     // A string used to resolve
@@ -715,6 +1256,7 @@ OutputParser.prototype = {
       colorSwatchClass: "",
       filterSwatch: false,
       gridClass: "",
+      shapeClass: "",
       supportsColor: false,
       urlClass: "",
       baseURI: undefined,

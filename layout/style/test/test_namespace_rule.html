@@ -16,9 +16,9 @@ var HTML_NS = "http://www.w3.org/1999/xhtml";
 var style_text;
 
 function run() {
-    var iframe = $("iframe");
-    var ifwin = iframe.contentWindow;
-    var ifdoc = iframe.contentDocument;
+    var wrappedFrame = SpecialPowers.wrap($("iframe"));
+    var ifwin = wrappedFrame.contentWindow;
+    var ifdoc = wrappedFrame.contentDocument;
     var ifbody = ifdoc.getElementsByTagName("body")[0];
 
     function setup_style_text() {

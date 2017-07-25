@@ -1693,13 +1693,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (enable) {
             this.oneOffSearchButtons.telemetryOrigin = "urlbar";
             this.oneOffSearchButtons.style.display = "-moz-box";
-            this.oneOffSearchButtons.popup = this;
+            // Set .textbox first, since the popup setter will cause
+            // a _rebuild call that uses it.
             this.oneOffSearchButtons.textbox = this.input;
+            this.oneOffSearchButtons.popup = this;
           } else {
             this.oneOffSearchButtons.telemetryOrigin = null;
             this.oneOffSearchButtons.style.display = "none";
-            this.oneOffSearchButtons.popup = null;
             this.oneOffSearchButtons.textbox = null;
+            this.oneOffSearchButtons.popup = null;
           }
         ]]></body>
       </method>

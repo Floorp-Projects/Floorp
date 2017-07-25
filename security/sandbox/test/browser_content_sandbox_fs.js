@@ -276,14 +276,19 @@ async function testFileAccess() {
   // that will be read from either a web or file process.
   let tests = [];
 
+  // The Linux test runners create the temporary profile in the same
+  // system temp dir we give write access to, so this gives a false
+  // positive.
   let profileDir = GetProfileDir();
-  tests.push({
-    desc:     "profile dir",                // description
-    ok:       false,                        // expected to succeed?
-    browser:  webBrowser,                   // browser to run test in
-    file:     profileDir,                   // nsIFile object
-    minLevel: minProfileReadSandboxLevel(), // min level to enable test
-  });
+  if (!isLinux()) {
+    tests.push({
+      desc:     "profile dir",                // description
+      ok:       false,                        // expected to succeed?
+      browser:  webBrowser,                   // browser to run test in
+      file:     profileDir,                   // nsIFile object
+      minLevel: minProfileReadSandboxLevel(), // min level to enable test
+    });
+  }
   if (fileContentProcessEnabled) {
     tests.push({
       desc:     "profile dir",
@@ -336,19 +341,15 @@ async function testFileAccess() {
     }
   }
 
-  // Should we enable this /var test on Linux? Once we are running
-  // with read access restrictions on Linux, this todo will fail and
-  // should then be removed.
-  if (isLinux()) {
-    todo(level >= minHomeReadSandboxLevel(), "enable /var test on Linux?");
-  }
-  if (isMac()) {
+  if (isMac() || isLinux()) {
     let varDir = GetDir("/var");
 
-    // Mac sandbox rules use /private/var because /var is a symlink
-    // to /private/var on OS X. Make sure that hasn't changed.
-    varDir.normalize();
-    Assert.ok(varDir.path === "/private/var", "/var resolves to /private/var");
+    if (isMac()) {
+      // Mac sandbox rules use /private/var because /var is a symlink
+      // to /private/var on OS X. Make sure that hasn't changed.
+      varDir.normalize();
+      Assert.ok(varDir.path === "/private/var", "/var resolves to /private/var");
+    }
 
     tests.push({
       desc:     "/var",

@@ -530,11 +530,18 @@ nsHttpChannel::Connect()
         // otherwise, let's just proceed without using the cache.
     }
 
+    if (mRaceCacheWithNetwork && mCacheEntry && !mCachedContentIsValid &&
+        (mDidReval || mCachedContentIsPartial)) {
+        // We won't send the conditional request because the unconditional
+        // request was already sent (see bug 1377223).
+        AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::NotSent);
+    }
+
     // When racing, if OnCacheEntryAvailable is called before AsyncOpenURI
     // returns, then we may not have started reading from the cache.
     // If the content is valid, we should attempt to do so, as technically the
     // cache has won the race.
-    if (sRCWNEnabled && mCachedContentIsValid && mNetworkTriggered) {
+    if (mRaceCacheWithNetwork && mCachedContentIsValid) {
         Unused << ReadFromCache(true);
     }
 
@@ -2402,6 +2409,7 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
     uint32_t httpStatus = mResponseHead->Status();
 
     bool successfulReval = false;
+    bool partialContentUsed = false;
 
     // handle different server response categories.  Note that we handle
     // caching or not caching of error pages in
@@ -2425,9 +2433,12 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
         MaybeInvalidateCacheEntryForSubsequentGet();
         break;
     case 206:
-        if (mCachedContentIsPartial) // an internal byte range request...
+        if (mCachedContentIsPartial) { // an internal byte range request...
             rv = ProcessPartialContent();
-        else {
+            if (NS_SUCCEEDED(rv)) {
+                partialContentUsed = true;
+            }
+        } else {
             mCacheInputStream.CloseAndRelease();
             rv = ProcessNormal();
         }
@@ -2544,6 +2555,16 @@ nsHttpChannel::ContinueProcessResponse2(nsresult rv)
         MaybeInvalidateCacheEntryForSubsequentGet();
         break;
     }
+
+    if (mRaceDelay && !mRaceCacheWithNetwork &&
+        (mCachedContentIsPartial || mDidReval)) {
+        if (successfulReval || partialContentUsed) {
+            AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::CachedContentUsed);
+        } else {
+            AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::CachedContentNotUsed);
+        }
+    }
+
 
     if (gHttpHandler->IsTelemetryEnabled()) {
         CacheDisposition cacheDisposition;
@@ -4530,7 +4551,14 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry *entry,
         return NS_OK;
     }
 
-    if (mCachedContentIsValid && mNetworkTriggered) {
+    if (mRaceCacheWithNetwork && mCacheEntry && !mCachedContentIsValid &&
+        (mDidReval || mCachedContentIsPartial)) {
+        // We won't send the conditional request because the unconditional
+        // request was already sent (see bug 1377223).
+        AccumulateCategorical(Telemetry::LABELS_NETWORK_RACE_CACHE_VALIDATION::NotSent);
+    }
+
+    if (mRaceCacheWithNetwork && mCachedContentIsValid) {
         Unused << ReadFromCache(true);
     }
 

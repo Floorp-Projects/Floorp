@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Toplevel data navigation</title>
+</head>
+<body>
+test1: clicking data: URI tries to navigate window<br/>
+<a id="testlink" href="data:text/html,<body>toplevel data: URI navigations should be blocked</body>">click me</a>
+<script>
+  document.getElementById('testlink').click();
+</script>
+</body>
+</html>

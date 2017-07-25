@@ -250,6 +250,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
 
         c = self.config
         dirs = {}
+        dirs['abs_work_dir'] = abs_dirs['abs_work_dir']
         dirs['abs_app_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'application')
         dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'], 'tests')
         dirs['abs_test_extensions_dir'] = os.path.join(dirs['abs_test_install_dir'], 'extensions')
@@ -373,13 +374,13 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             str_format_values = {
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
+                'abs_work_dir' : dirs['abs_work_dir'],
                 'abs_app_dir': abs_app_dir,
                 'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
                 'error_summary_file': error_summary_file,
                 'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
                                           'gtest'),
-                'abs_work_dir': dirs['abs_work_dir'],
             }
 
             # TestingMixin._download_and_extract_symbols() will set

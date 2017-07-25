@@ -791,7 +791,9 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
   } else if (mDisplayName.EqualsASCII("WidevineCdm")) {
     kEMEKeySystem = kEMEKeySystemWidevine;
 #if XP_WIN
-    mLibs = NS_LITERAL_CSTRING("dxva2.dll");
+    // psapi.dll added for GetMappedFileNameW, which could possibly be avoided
+    // in future versions, see bug 1383611 for details.
+    mLibs = NS_LITERAL_CSTRING("dxva2.dll, psapi.dll");
 #endif
   } else {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
