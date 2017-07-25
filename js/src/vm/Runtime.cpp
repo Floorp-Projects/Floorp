@@ -887,8 +887,9 @@ JSRuntime::clearUsedByHelperThread(Zone* zone)
     MOZ_ASSERT(zone->group()->usedByHelperThread);
     zone->group()->usedByHelperThread = false;
     numHelperThreadZones--;
-    if (gc.fullGCForAtomsRequested() && !TlsContext.get())
-        gc.triggerFullGCForAtoms();
+    JSContext* cx = TlsContext.get();
+    if (gc.fullGCForAtomsRequested() && cx->canCollectAtoms())
+        gc.triggerFullGCForAtoms(cx);
 }
 
 bool
