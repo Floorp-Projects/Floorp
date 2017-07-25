@@ -230,13 +230,6 @@ pref("devtools.dom.enabled", false);
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
 
-// Default theme ("dark" or "light")
-#ifdef MOZ_DEV_EDITION
-sticky_pref("devtools.theme", "dark");
-#else
-sticky_pref("devtools.theme", "light");
-#endif
-
 // Web console filters
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);

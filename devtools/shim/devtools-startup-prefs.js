@@ -10,3 +10,10 @@
 
 // Enable the JSON View tool (an inspector for application/json documents).
 pref("devtools.jsonview.enabled", true);
+
+// Default theme ("dark" or "light")
+#ifdef MOZ_DEV_EDITION
+sticky_pref("devtools.theme", "dark");
+#else
+sticky_pref("devtools.theme", "light");
+#endif
