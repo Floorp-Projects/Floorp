@@ -275,7 +275,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
   private void stopCaptureOnCameraThread(
       Exchanger<Boolean> result) {
     if (camera == null) {
-      throw new RuntimeException("Camera is already stopped!");
+      Log.e(TAG, "Camera is already stopped!");
+      return;
     }
     Throwable error = null;
     try {
