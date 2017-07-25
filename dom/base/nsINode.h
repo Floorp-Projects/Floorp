@@ -1906,7 +1906,7 @@ public:
                                                   CallerType aCallerType,
                                                   ErrorResult& aRv);
 
-  const nsTHashtable<nsPtrHashKey<nsRange>>* GetExitingCommonAncestorRanges() const
+  const nsTHashtable<nsPtrHashKey<nsRange>>* GetExistingCommonAncestorRanges() const
   {
     if (!HasSlots()) {
       return nullptr;
