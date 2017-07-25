@@ -751,7 +751,7 @@ GetContentProcessSandboxTempDir()
 
   nsAutoString tempDirSuffix;
   rv = Preferences::GetString("security.sandbox.content.tempDirSuffix",
-                              &tempDirSuffix);
+                              tempDirSuffix);
   if (NS_WARN_IF(NS_FAILED(rv)) || tempDirSuffix.IsEmpty()) {
     return nullptr;
   }

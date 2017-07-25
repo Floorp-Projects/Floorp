@@ -199,13 +199,12 @@ public:
    * Gets string type pref value with raw return value of nsIPrefBranch.
    *
    * @param aPref       A pref name.
-   * @param aResult     Must not be nullptr.  The value is never modified
-   *                    when these methods fail.
+   * @param aResult     The value is never modified when these methods fail.
    */
-  static nsresult GetCString(const char* aPref, nsACString* aResult);
-  static nsresult GetString(const char* aPref, nsAString* aResult);
-  static nsresult GetLocalizedCString(const char* aPref, nsACString* aResult);
-  static nsresult GetLocalizedString(const char* aPref, nsAString* aResult);
+  static nsresult GetCString(const char* aPref, nsACString& aResult);
+  static nsresult GetString(const char* aPref, nsAString& aResult);
+  static nsresult GetLocalizedCString(const char* aPref, nsACString& aResult);
+  static nsresult GetLocalizedString(const char* aPref, nsAString& aResult);
 
   static nsresult GetComplex(const char* aPref, const nsIID &aType,
                              void** aResult);
@@ -393,12 +392,12 @@ public:
   static nsAdoptingString GetDefaultLocalizedString(const char* aPref);
   static nsAdoptingCString GetDefaultLocalizedCString(const char* aPref);
 
-  static nsresult GetDefaultCString(const char* aPref, nsACString* aResult);
-  static nsresult GetDefaultString(const char* aPref, nsAString* aResult);
+  static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);
+  static nsresult GetDefaultString(const char* aPref, nsAString& aResult);
   static nsresult GetDefaultLocalizedCString(const char* aPref,
-                                             nsACString* aResult);
+                                             nsACString& aResult);
   static nsresult GetDefaultLocalizedString(const char* aPref,
-                                            nsAString* aResult);
+                                            nsAString& aResult);
 
   static nsresult GetDefaultComplex(const char* aPref, const nsIID &aType,
                                     void** aResult);
