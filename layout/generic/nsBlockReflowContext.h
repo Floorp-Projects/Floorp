@@ -28,7 +28,7 @@ class nsBlockReflowContext {
 
 public:
   nsBlockReflowContext(nsPresContext* aPresContext,
-                       const ReflowInput& aParentRS);
+                       const ReflowInput& aParentRI);
   ~nsBlockReflowContext() { }
 
   void ReflowBlock(const mozilla::LogicalRect& aSpace,
