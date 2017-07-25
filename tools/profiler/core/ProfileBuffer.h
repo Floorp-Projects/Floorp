@@ -13,7 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/RefCounted.h"
 
-class ProfileBuffer final : public ProfilerStackCollector
+class ProfileBuffer final
 {
 public:
   explicit ProfileBuffer(int aEntrySize);
@@ -42,16 +42,9 @@ public:
   // record the resulting generation and index in |aLS| if it's non-null.
   void AddThreadIdEntry(int aThreadId, LastSample* aLS = nullptr);
 
-  virtual mozilla::Maybe<uint32_t> Generation() override
-  {
-    return mozilla::Some(mGeneration);
-  }
-
-  virtual void CollectNativeLeafAddr(void* aAddr) override;
-  virtual void CollectJitReturnAddr(void* aAddr) override;
-  virtual void CollectCodeLocation(
-    const char* aLabel, const char* aStr, int aLineNumber,
-    const mozilla::Maybe<js::ProfileEntry::Category>& aCategory) override;
+  // Add to the buffer a dynamic string. It'll be spread across one or more
+  // DynamicStringFragment entries.
+  void AddDynamicStringEntry(const char* aStr);
 
   // Maximum size of a frameKey string that we'll handle.
   static const size_t kMaxFrameKeyLength = 512;
