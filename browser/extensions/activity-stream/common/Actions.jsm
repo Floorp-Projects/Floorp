@@ -34,6 +34,8 @@ for (const type of [
   "FEED_INIT",
   "INIT",
   "LOCALE_UPDATED",
+  "MIGRATION_CANCEL",
+  "MIGRATION_START",
   "NEW_TAB_INITIAL_STATE",
   "NEW_TAB_LOAD",
   "NEW_TAB_UNLOAD",

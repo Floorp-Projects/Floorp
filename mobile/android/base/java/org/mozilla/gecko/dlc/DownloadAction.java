@@ -237,6 +237,10 @@ public class DownloadAction extends BaseAction {
 
             IOUtils.copy(gzInputStream, outputStream);
 
+            // We need to flush the output stream here so that everything is written before we verify
+            // the checksum of the file.
+            outputStream.flush();
+
             if (!verify(temporaryFile, checksum)) {
                 Log.w(LOGTAG, "Checksum of extracted file does not match.");
                 return;

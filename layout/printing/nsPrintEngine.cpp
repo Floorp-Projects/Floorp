@@ -1948,6 +1948,18 @@ nsPrintEngine::InitPrintDocConstruction(bool aHandleError)
 nsresult
 nsPrintEngine::AfterNetworkPrint(bool aHandleError)
 {
+  // If Destroy() has already been called, mPtr is nullptr.  Then, the instance
+  // needs to do nothing anymore in this method.
+  // Note: it shouldn't be possible for mPrt->mPrintObject to be null; we
+  // just check it for good measure, as we check its owner.
+  // Note: it shouldn't be possible for mPrt->mPrintObject->mDocShell to be
+  // null; we just check it for good measure, as we check its owner.
+  if (!mPrt ||
+      NS_WARN_IF(!mPrt->mPrintObject) ||
+      NS_WARN_IF(!mPrt->mPrintObject->mDocShell)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIWebProgress> webProgress = do_QueryInterface(mPrt->mPrintObject->mDocShell);
 
   webProgress->RemoveProgressListener(

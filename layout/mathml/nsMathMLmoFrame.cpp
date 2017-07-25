@@ -738,7 +738,8 @@ nsMathMLmoFrame::Stretch(DrawTarget*          aDrawTarget,
     }
 
     // let the MathMLChar stretch itself...
-    nsresult res = mMathMLChar.Stretch(PresContext(), aDrawTarget,
+    nsresult res = mMathMLChar.Stretch(this,
+                                       aDrawTarget,
                                        fontSizeInflation,
                                        aStretchDirection, container, charSize,
                                        stretchHint,
@@ -974,7 +975,7 @@ nsMathMLmoFrame::Place(DrawTarget*          aDrawTarget,
       StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK &&
       NS_MATHML_OPERATOR_IS_LARGEOP(mFlags) && UseMathMLChar()) {
     nsBoundingMetrics newMetrics;
-    rv = mMathMLChar.Stretch(PresContext(), aDrawTarget,
+    rv = mMathMLChar.Stretch(this, aDrawTarget,
                              nsLayoutUtils::FontSizeInflationFor(this),
                              NS_STRETCH_DIRECTION_VERTICAL,
                              aDesiredSize.mBoundingMetrics, newMetrics,
@@ -1035,7 +1036,7 @@ nsMathMLmoFrame::GetIntrinsicISizeMetrics(gfxContext* aRenderingContext,
     uint32_t stretchHint = GetStretchHint(mFlags, mPresentationData, true,
                                           StyleFont());
     aDesiredSize.Width() = mMathMLChar.
-      GetMaxWidth(PresContext(), aRenderingContext->GetDrawTarget(),
+      GetMaxWidth(this, aRenderingContext->GetDrawTarget(),
                   nsLayoutUtils::FontSizeInflationFor(this),
                   stretchHint);
   }

@@ -15,6 +15,7 @@ flake8:
         - tools/git
         - tools/lint
         - tools/mercurial
+        - tools/tryselect
         - toolkit/components/telemetry
     exclude:
         - testing/mochitest/pywebsocket

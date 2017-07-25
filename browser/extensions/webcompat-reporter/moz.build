@@ -22,4 +22,4 @@ JAR_MANIFESTS += ['jar.mn']
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 with Files('**'):
-    BUG_COMPONENT = ('Web Compatibility', 'General')
+    BUG_COMPONENT = ('Web Compatibility Tools', 'General')

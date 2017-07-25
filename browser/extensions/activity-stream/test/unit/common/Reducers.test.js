@@ -251,6 +251,66 @@ describe("Reducers", () => {
         assert.deepEqual(section.rows, [{url: "www.other.url"}]);
       });
     });
+    it("should not update state for empty action.data on PLACES_BOOKMARK_ADDED", () => {
+      const nextState = Sections(undefined, {type: at.PLACES_BOOKMARK_ADDED});
+      assert.equal(nextState, INITIAL_STATE.Sections);
+    });
+    it("should bookmark an item when PLACES_BOOKMARK_ADDED is received", () => {
+      const action = {
+        type: at.PLACES_BOOKMARK_ADDED,
+        data: {
+          url: "www.foo.bar",
+          bookmarkGuid: "bookmark123",
+          bookmarkTitle: "Title for bar.com",
+          lastModified: 1234567
+        }
+      };
+      const nextState = Sections(oldState, action);
+      // check a section to ensure the correct url was bookmarked
+      const newRow = nextState[0].rows[0];
+      const oldRow = nextState[0].rows[1];
+
+      // new row has bookmark data
+      assert.equal(newRow.url, action.data.url);
+      assert.equal(newRow.bookmarkGuid, action.data.bookmarkGuid);
+      assert.equal(newRow.bookmarkTitle, action.data.bookmarkTitle);
+      assert.equal(newRow.bookmarkDateCreated, action.data.lastModified);
+
+      // old row is unchanged
+      assert.equal(oldRow, oldState[0].rows[1]);
+    });
+    it("should not update state for empty action.data on PLACES_BOOKMARK_REMOVED", () => {
+      const nextState = Sections(undefined, {type: at.PLACES_BOOKMARK_REMOVED});
+      assert.equal(nextState, INITIAL_STATE.Sections);
+    });
+    it("should remove the bookmark when PLACES_BOOKMARK_REMOVED is received", () => {
+      const action = {
+        type: at.PLACES_BOOKMARK_REMOVED,
+        data: {
+          url: "www.foo.bar",
+          bookmarkGuid: "bookmark123"
+        }
+      };
+      // add some bookmark data for the first url in rows
+      oldState.forEach(item => {
+        item.rows[0].bookmarkGuid = "bookmark123";
+        item.rows[0].bookmarkTitle = "Title for bar.com";
+        item.rows[0].bookmarkDateCreated = 1234567;
+      });
+      const nextState = Sections(oldState, action);
+      // check a section to ensure the correct bookmark was removed
+      const newRow = nextState[0].rows[0];
+      const oldRow = nextState[0].rows[1];
+
+      // new row has bookmark data
+      assert.equal(newRow.url, action.data.url);
+      assert.isUndefined(newRow.bookmarkGuid);
+      assert.isUndefined(newRow.bookmarkTitle);
+      assert.isUndefined(newRow.bookmarkDateCreated);
+
+      // old row is unchanged
+      assert.equal(oldRow, oldState[0].rows[1]);
+    });
   });
   describe("#insertPinned", () => {
     let links;

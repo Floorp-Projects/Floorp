@@ -35,11 +35,6 @@ const whitelist = [
     platforms: ["win"],
     photon: true,
   },
-  {
-    file: "chrome://browser/skin/bookmark-hollow.svg",
-    platforms: ["linux", "win", "macosx"],
-    photon: true,
-  },
 
   // Non-Photon-only entries
   {

@@ -369,10 +369,15 @@ function FxAccountsInternal() {
  * The internal API's prototype.
  */
 FxAccountsInternal.prototype = {
-  // The timeout (in ms) we use to poll for a verified mail for the first 2 mins.
-  VERIFICATION_POLL_TIMEOUT_INITIAL: 15000, // 15 seconds
-  // And how often we poll after the first 2 mins.
-  VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 30000, // 30 seconds.
+  // The timeout (in ms) we use to poll for a verified mail for the first
+  // VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD minutes if the user has
+  // logged-in in this session.
+  VERIFICATION_POLL_TIMEOUT_INITIAL: 60000, // 1 minute.
+  // All the other cases (> 5 min, on restart etc).
+  VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 5 * 60000, // 5 minutes.
+  // After X minutes, the polling will slow down to _SUBSEQUENT if we have
+  // logged-in in this session.
+  VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD: 5,
   // The current version of the device registration, we use this to re-register
   // devices after we update what we send on device registration.
   DEVICE_REGISTRATION_VERSION: 2,
@@ -698,7 +703,7 @@ FxAccountsInternal.prototype = {
           return Promise.reject(new Error(
             "resendVerificationEmail called without a session token"));
         }
-        this.pollEmailStatus(currentState, data.sessionToken, "start");
+        this.startPollEmailStatus(currentState, data.sessionToken, "start");
         return this.fxAccountsClient.resendVerificationEmail(
           data.sessionToken).catch(err => this._handleTokenError(err));
       }
@@ -746,7 +751,7 @@ FxAccountsInternal.prototype = {
       // we're already verified. If the user changed their password, the check
       // will fail, and we'll enter the reauth state.
       log.trace("checkVerificationStatus - forcing verification status check");
-      return this.pollEmailStatus(currentState, data.sessionToken, "push");
+      return this.startPollEmailStatus(currentState, data.sessionToken, "push");
     });
   },
 
@@ -1111,7 +1116,7 @@ FxAccountsInternal.prototype = {
         if (data) {
           Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
           if (!this.isUserEmailVerified(data)) {
-            this.pollEmailStatus(currentState, data.sessionToken, "start");
+            this.startPollEmailStatus(currentState, data.sessionToken, "browser-startup");
           }
         }
         return data;
@@ -1148,7 +1153,7 @@ FxAccountsInternal.prototype = {
     }
     if (!currentState.whenVerifiedDeferred) {
       log.debug("whenVerified promise starts polling for verified email");
-      this.pollEmailStatus(currentState, data.sessionToken, "start");
+      this.startPollEmailStatus(currentState, data.sessionToken, "start");
     }
     return currentState.whenVerifiedDeferred.promise.then(
       result => currentState.resolve(result)
@@ -1160,84 +1165,60 @@ FxAccountsInternal.prototype = {
     Services.obs.notifyObservers(null, topic, data);
   },
 
-  // XXX - pollEmailStatus should maybe be on the AccountState object?
-  pollEmailStatus: function pollEmailStatus(currentState, sessionToken, why) {
-    log.debug("entering pollEmailStatus: " + why);
-    if (why == "start" || why == "push") {
-      if (this.currentTimer) {
-        log.debug("pollEmailStatus starting while existing timer is running");
-        clearTimeout(this.currentTimer);
-        this.currentTimer = null;
-      }
-
-      // If we were already polling, stop and start again.  This could happen
-      // if the user requested the verification email to be resent while we
-      // were already polling for receipt of an earlier email.
-      this.pollStartDate = Date.now();
-      if (!currentState.whenVerifiedDeferred) {
-        currentState.whenVerifiedDeferred = PromiseUtils.defer();
-        // This deferred might not end up with any handlers (eg, if sync
-        // is yet to start up.)  This might cause "A promise chain failed to
-        // handle a rejection" messages, so add an error handler directly
-        // on the promise to log the error.
-        currentState.whenVerifiedDeferred.promise.catch(err => {
-          log.info("the wait for user verification was stopped: " + err);
-        });
-      }
+  startPollEmailStatus(currentState, sessionToken, why) {
+    log.debug("entering startPollEmailStatus: " + why);
+    // If we were already polling, stop and start again.  This could happen
+    // if the user requested the verification email to be resent while we
+    // were already polling for receipt of an earlier email.
+    if (this.currentTimer) {
+      log.debug("startPollEmailStatus starting while existing timer is running");
+      clearTimeout(this.currentTimer);
+      this.currentTimer = null;
     }
 
-    // We return a promise for testing only. Other callers can ignore this,
-    // since verification polling continues in the background.
-    return this.checkEmailStatus(sessionToken, { reason: why })
-      .then((response) => {
-        log.debug("checkEmailStatus -> " + JSON.stringify(response));
-        if (response && response.verified) {
-          currentState.updateUserAccountData({ verified: true })
-            .then(() => {
-              return currentState.getUserAccountData();
-            })
-            .then(data => {
-              // Now that the user is verified, we can proceed to fetch keys
-              if (currentState.whenVerifiedDeferred) {
-                currentState.whenVerifiedDeferred.resolve(data);
-                delete currentState.whenVerifiedDeferred;
-              }
-              // Tell FxAccountsManager to clear its cache
-              this.notifyObservers(ON_FXA_UPDATE_NOTIFICATION, ONVERIFIED_NOTIFICATION);
-              // Record how we determined the account was verified
-              Services.telemetry.scalarSet("services.sync.fxa_verification_method",
-                                           why == "push" ? "push" : "poll");
-            });
-        } else {
-          // Poll email status again after a short delay.
-          this.pollEmailStatusAgain(currentState, sessionToken);
-        }
-      }, error => {
-        let timeoutMs = undefined;
-        if (error && error.retryAfter) {
-          // If the server told us to back off, back off the requested amount.
-          timeoutMs = (error.retryAfter + 3) * 1000;
-        }
-        // The server will return 401 if a request parameter is erroneous or
-        // if the session token expired. Let's continue polling otherwise.
-        if (!error || !error.code || error.code != 401) {
-          this.pollEmailStatusAgain(currentState, sessionToken, timeoutMs);
-        } else {
-          let error = new Error("Verification status check failed");
-          this._rejectWhenVerified(currentState, error);
-        }
+    this.pollStartDate = Date.now();
+    if (!currentState.whenVerifiedDeferred) {
+      currentState.whenVerifiedDeferred = PromiseUtils.defer();
+      // This deferred might not end up with any handlers (eg, if sync
+      // is yet to start up.)  This might cause "A promise chain failed to
+      // handle a rejection" messages, so add an error handler directly
+      // on the promise to log the error.
+      currentState.whenVerifiedDeferred.promise.catch(err => {
+        log.info("the wait for user verification was stopped: " + err);
       });
+    }
+    return this.pollEmailStatus(currentState, sessionToken, why);
   },
 
-  _rejectWhenVerified(currentState, error) {
-    currentState.whenVerifiedDeferred.reject(error);
-    delete currentState.whenVerifiedDeferred;
-  },
-
-  // Poll email status using truncated exponential back-off.
-  pollEmailStatusAgain(currentState, sessionToken, timeoutMs) {
-    let ageMs = Date.now() - this.pollStartDate;
-    if (ageMs >= this.POLL_SESSION) {
+  // We return a promise for testing only. Other callers can ignore this,
+  // since verification polling continues in the background.
+  async pollEmailStatus(currentState, sessionToken, why) {
+    log.debug("entering pollEmailStatus: " + why);
+    let nextPollMs;
+    try {
+      const response = await this.checkEmailStatus(sessionToken, { reason: why });
+      log.debug("checkEmailStatus -> " + JSON.stringify(response));
+      if (response && response.verified) {
+        await this.onPollEmailSuccess(currentState, why);
+        return;
+      }
+    } catch (error) {
+      if (error && error.code && error.code == 401) {
+        let error = new Error("Verification status check failed");
+        this._rejectWhenVerified(currentState, error);
+        return;
+      }
+      if (error && error.retryAfter) {
+        // If the server told us to back off, back off the requested amount.
+        nextPollMs = (error.retryAfter + 3) * 1000;
+      }
+    }
+    if (why == "push") {
+      return;
+    }
+    let pollDuration = Date.now() - this.pollStartDate;
+    // Polling session expired.
+    if (pollDuration >= this.POLL_SESSION) {
       if (currentState.whenVerifiedDeferred) {
         let error = new Error("User email verification timed out.");
         this._rejectWhenVerified(currentState, error);
@@ -1245,15 +1226,46 @@ FxAccountsInternal.prototype = {
       log.debug("polling session exceeded, giving up");
       return;
     }
-    if (timeoutMs === undefined) {
-      let currentMinute = Math.ceil(ageMs / 60000);
-      timeoutMs = currentMinute <= 2 ? this.VERIFICATION_POLL_TIMEOUT_INITIAL
-                                     : this.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT;
+    // Poll email status again after a short delay.
+    if (nextPollMs === undefined) {
+      let currentMinute = Math.ceil(pollDuration / 60000);
+      nextPollMs = (why == "start" && currentMinute < this.VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD) ?
+                   this.VERIFICATION_POLL_TIMEOUT_INITIAL :
+                   this.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT;
     }
-    log.debug("polling with timeout = " + timeoutMs);
+    this._scheduleNextPollEmailStatus(currentState, sessionToken, nextPollMs, why);
+  },
+
+  // Easy-to-mock testable method
+  _scheduleNextPollEmailStatus(currentState, sessionToken, nextPollMs, why) {
+    log.debug("polling with timeout = " + nextPollMs);
     this.currentTimer = setTimeout(() => {
-      this.pollEmailStatus(currentState, sessionToken, "timer");
-    }, timeoutMs);
+      this.pollEmailStatus(currentState, sessionToken, why);
+    }, nextPollMs);
+  },
+
+  async onPollEmailSuccess(currentState, why) {
+    try {
+      await currentState.updateUserAccountData({ verified: true })
+      const accountData = await currentState.getUserAccountData();
+      // Now that the user is verified, we can proceed to fetch keys
+      if (currentState.whenVerifiedDeferred) {
+        currentState.whenVerifiedDeferred.resolve(accountData);
+        delete currentState.whenVerifiedDeferred;
+      }
+      // Tell FxAccountsManager to clear its cache
+      this.notifyObservers(ON_FXA_UPDATE_NOTIFICATION, ONVERIFIED_NOTIFICATION);
+      // Record how we determined the account was verified
+      Services.telemetry.scalarSet("services.sync.fxa_verification_method",
+                                   why == "push" ? "push" : "poll");
+    } catch (e) {
+      log.error(e);
+    }
+  },
+
+  _rejectWhenVerified(currentState, error) {
+    currentState.whenVerifiedDeferred.reject(error);
+    delete currentState.whenVerifiedDeferred;
   },
 
   requiresHttps() {

@@ -16,22 +16,12 @@ const osPrefs =
 
 /**
  * This helper function retrives currently used app locales, allowing
- * all mozIntl APIs to use the current app locales unless called with
- * explicitly listed locales.
+ * all mozIntl APIs to use the current regional prefs locales unless
+ * called with explicitly listed locales.
  */
 function getLocales(locales) {
   if (!locales) {
-    return localeSvc.getAppLocalesAsBCP47();
-  }
-  return locales;
-}
-
-function getLocale(locales) {
-  if (!locales) {
-    return localeSvc.getAppLocale();
-  }
-  if (Array.isArray(locales)) {
-    return [0];
+    return localeSvc.getRegionalPrefsLocales();
   }
   return locales;
 }

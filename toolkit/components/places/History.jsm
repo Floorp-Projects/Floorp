@@ -531,12 +531,26 @@ this.History = Object.freeze({
    *      is neither not a valid GUID nor a valid URI.
    */
   hasVisits(guidOrURI) {
-    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
-
-    return new Promise(resolve => {
-      PlacesUtils.asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
-        resolve(aIsVisited);
+    // Quick fallback to the cpp version.
+    if (guidOrURI instanceof Ci.nsIURI) {
+      return new Promise(resolve => {
+        PlacesUtils.asyncHistory.isURIVisited(guidOrURI, (aURI, aIsVisited) => {
+          resolve(aIsVisited);
+        });
       });
+    }
+
+    guidOrURI = PlacesUtils.normalizeToURLOrGUID(guidOrURI);
+    let isGuid = typeof guidOrURI == "string";
+    let sqlFragment = isGuid ? "guid = :val"
+                             : "url_hash = hash(:val) AND url = :val "
+
+    return PlacesUtils.promiseDBConnection().then(async db => {
+      let rows = await db.execute(`SELECT 1 FROM moz_places
+                                    WHERE ${sqlFragment}
+                                      AND last_visit_date NOTNULL`,
+                                  { val: isGuid ? guidOrURI : guidOrURI.href });
+      return !!rows.length;
     });
   },
 

@@ -903,6 +903,82 @@ struct ParamTraits<mozilla::Maybe<T>>
   }
 };
 
+template<class... Ts>
+struct ParamTraits<mozilla::Variant<Ts...>>
+{
+  typedef mozilla::Variant<Ts...> paramType;
+  using Tag = typename mozilla::detail::VariantTag<Ts...>::Type;
+
+  struct VariantWriter
+  {
+    Message* msg;
+
+    template<class T>
+    void match(const T& t) {
+      WriteParam(msg, t);
+    }
+  };
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.tag);
+    param.match(VariantWriter(msg));
+  }
+
+  // Because VariantReader is a nested struct, we need the dummy template
+  // parameter to avoid making VariantReader<0> an explicit specialization,
+  // which is not allowed for a nested class template
+  template<size_t N, typename dummy = void>
+  struct VariantReader
+  {
+    using Next = VariantReader<N-1>;
+
+    static bool Read(const Message* msg, PickleIterator* iter,
+        Tag tag, paramType* result)
+    {
+      // Since the VariantReader specializations start at N , we need to
+      // subtract one to look at N - 1, the first valid tag.  This means our
+      // comparisons are off by 1.  If we get to N = 0 then we have failed to
+      // find a match to the tag.
+      if (tag == N - 1) {
+        // Recall, even though the template parameter is N, we are
+        // actually interested in the N - 1 tag.
+        typename mozilla::detail::Nth<N - 1, Ts...>::Type val;
+        if (ReadParam(msg, iter, &val)) {
+          *result = paramType::AsVariant(val);
+          return true;
+        }
+        return false;
+      } else {
+        return Next::Read(msg, iter, tag);
+      }
+    }
+
+  }; // VariantReader<N>
+
+  // Since we are conditioning on tag = N - 1 in the preceding specialization,
+  // if we get to `VariantReader<0, dummy>` we have failed to find
+  // a matching tag.
+  template<typename dummy>
+  struct VariantReader<0, dummy>
+  {
+    static bool Read(const Message* msg, PickleIterator* iter,
+        Tag tag, paramType* result)
+    {
+      return false;
+    }
+  };
+
+  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
+  {
+    Tag tag;
+    if (ReadParam(msg, iter, &tag)) {
+      return VariantReader<sizeof...(Ts)>::Read(msg, iter, tag, result);
+    }
+    return false;
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */

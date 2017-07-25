@@ -141,7 +141,8 @@ impl Color {
     ///
     /// FIXME(#2) Deprecated CSS2 System Colors are not supported yet.
     pub fn parse<'i, 't>(input: &mut Parser<'i, 't>) -> Result<Color, BasicParseError<'i>> {
-        let token = input.next()?;
+        // FIXME: remove clone() when lifetimes are non-lexical
+        let token = input.next()?.clone();
         match token {
             Token::Hash(ref value) | Token::IDHash(ref value) => {
                 Color::parse_hash(value.as_bytes())
@@ -422,21 +423,17 @@ fn parse_color_function<'i, 't>(name: &str, arguments: &mut Parser<'i, 't>) -> R
         if uses_commas {
             arguments.expect_comma()?;
         } else {
-            match arguments.next()? {
-                Token::Delim('/') => {},
-                t => return Err(BasicParseError::UnexpectedToken(t)),
-            };
+            arguments.expect_delim('/')?;
         };
-        let token = arguments.next()?;
-        match token {
+        match *arguments.next()? {
             Token::Number { value: v, .. } => {
                 clamp_unit_f32(v)
             }
             Token::Percentage { unit_value: v, .. } => {
                 clamp_unit_f32(v)
             }
-            t => {
-                return Err(BasicParseError::UnexpectedToken(t))
+            ref t => {
+                return Err(BasicParseError::UnexpectedToken(t.clone()))
             }
         }
     } else {
@@ -457,10 +454,10 @@ fn parse_rgb_components_rgb<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
 
     // Either integers or percentages, but all the same type.
     // https://drafts.csswg.org/css-color/#rgb-functions
-    match arguments.next()? {
+    match arguments.next()?.clone() {
         Token::Number { value: v, .. } => {
             red = clamp_floor_256_f32(v);
-            green = clamp_floor_256_f32(match arguments.next()? {
+            green = clamp_floor_256_f32(match arguments.next()?.clone() {
                 Token::Number { value: v, .. } => v,
                 Token::Comma => {
                     uses_commas = true;
@@ -475,7 +472,7 @@ fn parse_rgb_components_rgb<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
         }
         Token::Percentage { unit_value, .. } => {
             red = clamp_unit_f32(unit_value);
-            green = clamp_unit_f32(match arguments.next()? {
+            green = clamp_unit_f32(match arguments.next()?.clone() {
                 Token::Percentage { unit_value, .. } => unit_value,
                 Token::Comma => {
                     uses_commas = true;
@@ -498,28 +495,26 @@ fn parse_rgb_components_hsl<'i, 't>(arguments: &mut Parser<'i, 't>) -> Result<(u
     let mut uses_commas = false;
     // Hue given as an angle
     // https://drafts.csswg.org/css-values/#angles
-    let token = arguments.next()?;
-    let hue_degrees = match token {
-        Token::Number { value: v, .. } => Ok(v),
+    let hue_degrees = match *arguments.next()? {
+        Token::Number { value: v, .. } => v,
         Token::Dimension { value: v, ref unit, .. } => {
             match_ignore_ascii_case! { &*unit,
-                "deg" => Ok(v),
-                "grad" => Ok(v * 360. / 400.),
-                "rad" => Ok(v * 360. / (2. * PI)),
-                "turn" => Ok(v * 360.),
-                _ => Err(()),
+                "deg" => v,
+                "grad" => v * 360. / 400.,
+                "rad" => v * 360. / (2. * PI),
+                "turn" => v * 360.,
+                _ => return Err(BasicParseError::UnexpectedToken(Token::Ident(unit.clone()))),
             }
         }
-        t => return Err(BasicParseError::UnexpectedToken(t))
+        ref t => return Err(BasicParseError::UnexpectedToken(t.clone()))
     };
-    let hue_degrees = hue_degrees.map_err(|()| BasicParseError::UnexpectedToken(token))?;
     // Subtract an integer before rounding, to avoid some rounding errors:
     let hue_normalized_degrees = hue_degrees - 360. * (hue_degrees / 360.).floor();
     let hue = hue_normalized_degrees / 360.;
 
     // Saturation and lightness are clamped to 0% ... 100%
     // https://drafts.csswg.org/css-color/#the-hsl-notation
-    let saturation = match arguments.next()? {
+    let saturation = match arguments.next()?.clone() {
         Token::Percentage { unit_value, .. } => unit_value,
         Token::Comma => {
             uses_commas = true;

@@ -1,5 +1,6 @@
 "use strict";
 
+/* global AddressResult, CreditCardResult */
 Cu.import("resource://formautofill/ProfileAutoCompleteResult.jsm");
 
 let matchingProfiles = [{
@@ -42,7 +43,7 @@ let allFieldNames = [
   "tel",
 ];
 
-let testCases = [{
+let addressTestCases = [{
   description: "Focus on an `organization` field",
   options: {},
   matchingProfiles,
@@ -215,42 +216,173 @@ let testCases = [{
   },
 }];
 
+matchingProfiles = [{
+  guid: "test-guid-1",
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "************6785",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2014,
+}, {
+  guid: "test-guid-2",
+  "cc-name": "John Doe",
+  "cc-number": "************1234",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2014,
+}, {
+  guid: "test-guid-3",
+  "cc-number": "************5678",
+  "cc-exp-month": 8,
+  "cc-exp-year": 2018,
+}];
+
+allFieldNames = [
+  "cc-name",
+  "cc-number",
+  "cc-exp-month",
+  "cc-exp-year",
+];
+
+let creditCardTestCases = [{
+  description: "Focus on a `cc-name` field",
+  options: {},
+  matchingProfiles,
+  allFieldNames,
+  searchString: "",
+  fieldName: "cc-name",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+    defaultIndex: 0,
+    items: [{
+      value: "",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "Timothy Berners-Lee",
+        secondary: "************6785",
+      }),
+      image: "",
+    }, {
+      value: "",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "John Doe",
+        secondary: "************1234",
+      }),
+      image: "",
+    }],
+  },
+}, {
+  description: "Focus on a `cc-number` field",
+  options: {},
+  matchingProfiles,
+  allFieldNames,
+  searchString: "",
+  fieldName: "cc-number",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
+    defaultIndex: 0,
+    items: [{
+      value: "",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[0]),
+      label: JSON.stringify({
+        primary: "************6785",
+        secondary: "Timothy Berners-Lee",
+      }),
+      image: "",
+    }, {
+      value: "",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[1]),
+      label: JSON.stringify({
+        primary: "************1234",
+        secondary: "John Doe",
+      }),
+      image: "",
+    }, {
+      value: "",
+      style: "autofill-profile",
+      comment: JSON.stringify(matchingProfiles[2]),
+      label: JSON.stringify({
+        primary: "************5678",
+        secondary: "",
+      }),
+      image: "",
+    }],
+  },
+}, {
+  description: "No matching profiles",
+  options: {},
+  matchingProfiles: [],
+  allFieldNames,
+  searchString: "",
+  fieldName: "",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
+    defaultIndex: 0,
+    items: [],
+  },
+}, {
+  description: "Search with failure",
+  options: {resultCode: Ci.nsIAutoCompleteResult.RESULT_FAILURE},
+  matchingProfiles: [],
+  allFieldNames,
+  searchString: "",
+  fieldName: "",
+  expected: {
+    searchResult: Ci.nsIAutoCompleteResult.RESULT_FAILURE,
+    defaultIndex: 0,
+    items: [],
+  },
+}];
+
+let testSets = [{
+  collectionConstructor: AddressResult,
+  testCases: addressTestCases,
+}, {
+  collectionConstructor: CreditCardResult,
+  testCases: creditCardTestCases,
+}];
+
 add_task(async function test_all_patterns() {
-  testCases.forEach(testCase => {
-    do_print("Starting testcase: " + testCase.description);
-    let actual = new ProfileAutoCompleteResult(testCase.searchString,
-                                               testCase.fieldName,
-                                               testCase.allFieldNames,
-                                               testCase.matchingProfiles,
-                                               testCase.options);
-    let expectedValue = testCase.expected;
-    let expectedItemLength = expectedValue.items.length;
-    // If the last item shows up as a footer, we expect one more item
-    // than expected.
-    if (actual.getStyleAt(actual.matchCount - 1) == "autofill-footer") {
-      expectedItemLength++;
-    }
+  testSets.forEach(({collectionConstructor, testCases}) => {
+    testCases.forEach(testCase => {
+      do_print("Starting testcase: " + testCase.description);
+      let actual = new collectionConstructor(testCase.searchString,
+                                             testCase.fieldName,
+                                             testCase.allFieldNames,
+                                             testCase.matchingProfiles,
+                                             testCase.options);
+      let expectedValue = testCase.expected;
+      let expectedItemLength = expectedValue.items.length;
+      // If the last item shows up as a footer, we expect one more item
+      // than expected.
+      if (actual.getStyleAt(actual.matchCount - 1) == "autofill-footer") {
+        expectedItemLength++;
+      }
 
-    equal(actual.searchResult, expectedValue.searchResult);
-    equal(actual.defaultIndex, expectedValue.defaultIndex);
-    equal(actual.matchCount, expectedItemLength);
-    expectedValue.items.forEach((item, index) => {
-      equal(actual.getValueAt(index), item.value);
-      equal(actual.getCommentAt(index), item.comment);
-      equal(actual.getLabelAt(index), item.label);
-      equal(actual.getStyleAt(index), item.style);
-      equal(actual.getImageAt(index), item.image);
+      equal(actual.searchResult, expectedValue.searchResult);
+      equal(actual.defaultIndex, expectedValue.defaultIndex);
+      equal(actual.matchCount, expectedItemLength);
+      expectedValue.items.forEach((item, index) => {
+        equal(actual.getValueAt(index), item.value);
+        equal(actual.getCommentAt(index), item.comment);
+        equal(actual.getLabelAt(index), item.label);
+        equal(actual.getStyleAt(index), item.style);
+        equal(actual.getImageAt(index), item.image);
+      });
+
+      if (expectedValue.items.length != 0) {
+        Assert.throws(() => actual.getValueAt(expectedItemLength),
+          /Index out of range\./);
+
+        Assert.throws(() => actual.getLabelAt(expectedItemLength),
+          /Index out of range\./);
+
+        Assert.throws(() => actual.getCommentAt(expectedItemLength),
+          /Index out of range\./);
+      }
     });
-
-    if (expectedValue.items.length != 0) {
-      Assert.throws(() => actual.getValueAt(expectedItemLength),
-        /Index out of range\./);
-
-      Assert.throws(() => actual.getLabelAt(expectedItemLength),
-        /Index out of range\./);
-
-      Assert.throws(() => actual.getCommentAt(expectedItemLength),
-        /Index out of range\./);
-    }
   });
 });

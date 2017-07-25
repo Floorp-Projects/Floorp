@@ -661,7 +661,7 @@ class RTCPeerConnection {
           throw new this._win.DOMException(msg + " - improper scheme: " + scheme,
                                            "SyntaxError");
         }
-        if (scheme in { stuns: 1, turns: 1 }) {
+        if (scheme in { stuns: 1 }) {
           this.logWarning(scheme.toUpperCase() + " is not yet supported.");
         }
         if (stunServers >= 5) {

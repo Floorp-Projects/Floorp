@@ -5,9 +5,9 @@
 "use strict";
 
 /**
- * This module inject dynamically menu items and key shortcuts into browser UI.
+ * This module inject dynamically menu items into browser UI.
  *
- * Menu and shortcut definitions are fetched from:
+ * Menu definitions are fetched from:
  * - devtools/client/menus for top level entires
  * - devtools/client/definitions for tool-specifics entries
  */
@@ -27,53 +27,10 @@ function l10n(key) {
 }
 
 /**
- * Create a xul:key element
- *
- * @param {XULDocument} doc
- *        The document to which keys are to be added.
- * @param {String} id
- *        key's id, automatically prefixed with "key_".
- * @param {String} shortcut
- *        The key shortcut value.
- * @param {String} keytext
- *        If `shortcut` refers to a function key, refers to the localized
- *        string to describe a non-character shortcut.
- * @param {String} modifiers
- *        Space separated list of modifier names.
- * @param {Function} oncommand
- *        The function to call when the shortcut is pressed.
- *
- * @return XULKeyElement
- */
-function createKey({ doc, id, shortcut, keytext, modifiers, oncommand }) {
-  let k = doc.createElement("key");
-  k.id = "key_" + id;
-
-  if (shortcut.startsWith("VK_")) {
-    k.setAttribute("keycode", shortcut);
-    if (keytext) {
-      k.setAttribute("keytext", keytext);
-    }
-  } else {
-    k.setAttribute("key", shortcut);
-  }
-
-  if (modifiers) {
-    k.setAttribute("modifiers", modifiers);
-  }
-
-  // Bug 371900: command event is fired only if "oncommand" attribute is set.
-  k.setAttribute("oncommand", ";");
-  k.addEventListener("command", oncommand);
-
-  return k;
-}
-
-/**
  * Create a xul:menuitem element
  *
  * @param {XULDocument} doc
- *        The document to which keys are to be added.
+ *        The document to which menus are to be added.
  * @param {String} id
  *        Element id.
  * @param {String} label
@@ -101,29 +58,6 @@ function createMenuItem({ doc, id, label, accesskey, isCheckbox }) {
 }
 
 /**
- * Add a <key> to <keyset id="devtoolsKeyset">.
- * Appending a <key> element is not always enough. The <keyset> needs
- * to be detached and reattached to make sure the <key> is taken into
- * account (see bug 832984).
- *
- * @param {XULDocument} doc
- *        The document to which keys are to be added
- * @param {XULElement} or {DocumentFragment} keys
- *        Keys to add
- */
-function attachKeybindingsToBrowser(doc, keys) {
-  let devtoolsKeyset = doc.getElementById("devtoolsKeyset");
-
-  if (!devtoolsKeyset) {
-    devtoolsKeyset = doc.createElement("keyset");
-    devtoolsKeyset.setAttribute("id", "devtoolsKeyset");
-  }
-  devtoolsKeyset.appendChild(keys);
-  let mainKeyset = doc.getElementById("mainKeyset");
-  mainKeyset.parentNode.insertBefore(devtoolsKeyset, mainKeyset);
-}
-
-/**
  * Add a menu entry for a tool definition
  *
  * @param {Object} toolDefinition
@@ -145,31 +79,18 @@ function createToolMenuElements(toolDefinition, doc) {
     gDevToolsBrowser.selectToolCommand(window.gBrowser, id);
   }.bind(null, id);
 
-  let key = null;
-  if (toolDefinition.key) {
-    key = createKey({
-      doc,
-      id,
-      shortcut: toolDefinition.key,
-      modifiers: toolDefinition.modifiers,
-      oncommand: oncommand
-    });
-  }
-
   let menuitem = createMenuItem({
     doc,
     id: "menuitem_" + id,
     label: toolDefinition.menuLabel || toolDefinition.label,
     accesskey: toolDefinition.accesskey
   });
-  if (key) {
-    // Refer to the key in order to display the key shortcut at menu ends
-    menuitem.setAttribute("key", key.id);
-  }
+  // Refer to the key in order to display the key shortcut at menu ends
+  // This <key> element is being created by devtools/client/devtools-startup.js
+  menuitem.setAttribute("key", "key_" + id);
   menuitem.addEventListener("command", oncommand);
 
   return {
-    key,
     menuitem
   };
 }
@@ -186,11 +107,7 @@ function createToolMenuElements(toolDefinition, doc) {
  *        The tool definition after which the tool menu item is to be added.
  */
 function insertToolMenuElements(doc, toolDefinition, prevDef) {
-  let { key, menuitem } = createToolMenuElements(toolDefinition, doc);
-
-  if (key) {
-    attachKeybindingsToBrowser(doc, key);
-  }
+  let { menuitem } = createToolMenuElements(toolDefinition, doc);
 
   let ref;
   if (prevDef) {
@@ -254,8 +171,6 @@ function addAllToolsToMenu(doc) {
     fragMenuItems.appendChild(elements.menuitem);
   }
 
-  attachKeybindingsToBrowser(doc, fragKeys);
-
   let mps = doc.getElementById("menu_devtools_separator");
   if (mps) {
     mps.parentNode.insertBefore(fragMenuItems, mps);
@@ -263,13 +178,12 @@ function addAllToolsToMenu(doc) {
 }
 
 /**
- * Add global menus and shortcuts that are not panel specific.
+ * Add global menus that are not panel specific.
  *
  * @param {XULDocument} doc
- *        The document to which keys and menus are to be added.
+ *        The document to which menus are to be added.
  */
 function addTopLevelItems(doc) {
-  let keys = doc.createDocumentFragment();
   let menuItems = doc.createDocumentFragment();
 
   let { menuitems } = require("../menus");
@@ -292,50 +206,18 @@ function addTopLevelItems(doc) {
       menuitem.addEventListener("command", item.oncommand);
       menuItems.appendChild(menuitem);
 
-      if (item.key && l10nKey) {
-        // Create a <key>
-        let shortcut = l10n(l10nKey + ".key");
-        let key = createKey({
-          doc,
-          id: item.key.id,
-          shortcut: shortcut,
-          keytext: shortcut.startsWith("VK_") ? l10n(l10nKey + ".keytext") : null,
-          modifiers: item.key.modifiers,
-          oncommand: item.oncommand
-        });
-        // Refer to the key in order to display the key shortcut at menu ends
-        menuitem.setAttribute("key", key.id);
-        keys.appendChild(key);
-      }
-      if (item.additionalKeys) {
-        // Create additional <key>
-        for (let key of item.additionalKeys) {
-          let shortcut = l10n(key.l10nKey + ".key");
-          let node = createKey({
-            doc,
-            id: key.id,
-            shortcut: shortcut,
-            keytext: shortcut.startsWith("VK_") ? l10n(key.l10nKey + ".keytext") : null,
-            modifiers: key.modifiers,
-            oncommand: item.oncommand
-          });
-          keys.appendChild(node);
-        }
+      if (item.keyId) {
+        menuitem.setAttribute("key", "key_" + item.keyId);
       }
     }
   }
 
   // Cache all nodes before insertion to be able to remove them on unload
   let nodes = [];
-  for (let node of keys.children) {
-    nodes.push(node);
-  }
   for (let node of menuItems.children) {
     nodes.push(node);
   }
   FragmentsCache.set(doc, nodes);
-
-  attachKeybindingsToBrowser(doc, keys);
 
   let menu = doc.getElementById("menuWebDeveloperPopup");
   menu.appendChild(menuItems);
@@ -349,10 +231,10 @@ function addTopLevelItems(doc) {
 }
 
 /**
- * Remove global menus and shortcuts that are not panel specific.
+ * Remove global menus that are not panel specific.
  *
  * @param {XULDocument} doc
- *        The document to which keys and menus are to be added.
+ *        The document to which menus are to be added.
  */
 function removeTopLevelItems(doc) {
   let nodes = FragmentsCache.get(doc);
@@ -366,10 +248,10 @@ function removeTopLevelItems(doc) {
 }
 
 /**
- * Add menus and shortcuts to a browser document
+ * Add menus to a browser document
  *
  * @param {XULDocument} doc
- *        The document to which keys and menus are to be added.
+ *        The document to which menus are to be added.
  */
 exports.addMenus = function (doc) {
   addTopLevelItems(doc);
@@ -378,10 +260,10 @@ exports.addMenus = function (doc) {
 };
 
 /**
- * Remove menus and shortcuts from a browser document
+ * Remove menus from a browser document
  *
  * @param {XULDocument} doc
- *        The document to which keys and menus are to be removed.
+ *        The document to which menus are to be removed.
  */
 exports.removeMenus = function (doc) {
   // We only remove top level entries. Per-tool entries are removed while

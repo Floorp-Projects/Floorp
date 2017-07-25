@@ -681,6 +681,8 @@ Gecko_UpdateAnimations(RawGeckoElementBorrowed aElement,
     return;
   }
 
+  nsAutoAnimationMutationBatch mb(aElement->OwnerDoc());
+
   CSSPseudoElementType pseudoType =
     GetPseudoTypeFromElementForAnimation(aElement);
 

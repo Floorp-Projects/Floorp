@@ -22,9 +22,8 @@ function runWithMSE(testFunction) {
     document.body.appendChild(el);
     SimpleTest.registerCleanupFunction(function () {
       el.remove();
-      // Don't trigger load algorithm to prevent 'error' events.
-      el.preload = "none";
-      el.src = null;
+      el.removeAttribute("src");
+      el.load();
     });
 
     testFunction(ms, el);
