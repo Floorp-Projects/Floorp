@@ -1,28 +1,36 @@
 {
   "A11Y_INSTANTIATED_FLAG": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "flag",
-    "description": "has accessibility support been instantiated"
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1382820],
+    "description": "Flag indicating accessibility support has been instantiated.",
+    "alert_emails": ["accessibility@mozilla.com"]
   },
   "A11Y_CONSUMERS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "default",
     "kind": "enumerated",
     "n_values": 11,
-    "description": "Accessibility client by enum id"
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1382820],
+    "description": "A list of known accessibility clients that inject into Firefox process space (see https://dxr.mozilla.org/mozilla-central/source/accessible/windows/msaa/Compatibility.h).",
+    "alert_emails": ["accessibility@mozilla.com"]
   },
   "A11Y_ISIMPLEDOM_USAGE_FLAG": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "default",
     "kind": "flag",
-    "description": "have the ISimpleDOM* accessibility interfaces been used"
+    "description": "Flag indicating the ISimpleDOM* accessibility interfaces has been used.",
+    "alert_emails": ["accessibility@mozilla.com"]
   },
   "A11Y_IATABLE_USAGE_FLAG": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "default",
     "kind": "flag",
-    "description": "has the IAccessibleTable accessibility interface been used"
+    "description": "Flag indicating the IAccessibleTable accessibility interface has been used.",
+    "alert_emails": ["accessibility@mozilla.com"]
   },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
