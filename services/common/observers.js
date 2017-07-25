@@ -64,6 +64,8 @@ this.Observers = {
     if (observer) {
       this._service.removeObserver(observer, topic);
       this._cache.splice(this._cache.indexOf(observer), 1);
+    } else {
+      throw new Error("Attempt to remove non-existing observer");
     }
   },
 
