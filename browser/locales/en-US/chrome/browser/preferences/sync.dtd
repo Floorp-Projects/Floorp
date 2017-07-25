@@ -54,7 +54,7 @@ both, to better adapt this sentence to their language.
 <!ENTITY signIn.label                "Sign in">
 <!ENTITY signIn.accesskey            "g">
 <!ENTITY profilePicture.tooltip      "Change profile picture">
-<!ENTITY verifiedManage.label        "Manage Account">
+<!ENTITY verifiedManage.label        "Manage account">
 <!ENTITY verifiedManage.accesskey    "o">
 <!ENTITY disconnect3.label           "Disconnect…">
 <!ENTITY disconnect3.accesskey       "D">
