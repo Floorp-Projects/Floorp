@@ -1010,20 +1010,12 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
         return FunctionToString(cx, unwrapped, isToSource);
     }
 
-    StringBuffer out(cx);
     RootedScript script(cx);
 
     if (fun->hasScript()) {
         script = fun->nonLazyScript();
-        if (script->isGeneratorExp()) {
-            if (!out.append("function genexp() {") ||
-                !out.append("\n    [generator expression]\n") ||
-                !out.append("}"))
-            {
-                return nullptr;
-            }
-            return out.finishString();
-        }
+        if (MOZ_UNLIKELY(script->isGeneratorExp()))
+            return NewStringCopyZ<CanGC>(cx, "function genexp() {\n    [generator expression]\n}");
     }
 
     // Default class constructors are self-hosted, but have their source
@@ -1043,6 +1035,15 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
         return nullptr;
     }
 
+    // Fast path for the common case, to avoid StringBuffer overhead.
+    if (!addParentheses && haveSource) {
+        size_t start = script->toStringStart(), end = script->toStringEnd();
+        if (end - start <= ScriptSource::SourceDeflateLimit)
+            return script->scriptSource()->substring(cx, start, end);
+        return script->scriptSource()->substringDontDeflate(cx, start, end);
+    }
+
+    StringBuffer out(cx);
     if (addParentheses) {
         if (!out.append('('))
             return nullptr;
