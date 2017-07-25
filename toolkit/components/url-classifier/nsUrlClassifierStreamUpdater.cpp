@@ -774,6 +774,17 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
       NS_ENSURE_SUCCESS(rv, rv);
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_REMOTE_STATUS2,
                                      mTelemetryProvider, HTTPStatusToBucket(requestStatus));
+      if (requestStatus == 400) {
+        nsCOMPtr<nsIURI> uri;
+        nsAutoCString spec;
+        rv = httpChannel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          uri->GetAsciiSpec(spec);
+        }
+        printf_stderr("Safe Browsing server returned a 400 during update: request = %s \n",
+                      spec.get());
+      }
+
       LOG(("nsUrlClassifierStreamUpdater::OnStartRequest %s (%d)", succeeded ?
            "succeeded" : "failed", requestStatus));
       if (!succeeded) {
