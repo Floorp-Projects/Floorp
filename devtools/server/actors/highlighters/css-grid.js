@@ -1331,6 +1331,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
               startPos) {
     let lineStartPos = startPos;
 
+    // Keep track of the number of collapsed lines per line position
+    let stackedLines = [];
+
     for (let i = 0; i < gridDimension.lines.length; i++) {
       let line = gridDimension.lines[i];
       let linePos = line.start;
@@ -1345,6 +1348,21 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       // For such lines the API returns always 0 as line's number.
       if (line.number === 0) {
         continue;
+      }
+
+      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // line number to indicate there are lines beneath it.
+      const gridLine = gridDimension.tracks[line.number - 1];
+      if (gridLine) {
+        const { breadth }  = gridLine;
+        if (breadth === 0) {
+          stackedLines.push(gridDimension.lines[i].number);
+          if (stackedLines.length > 0) {
+            this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
+              dimensionType, 1);
+          }
+          continue;
+        }
       }
 
       this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
@@ -1425,8 +1443,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The grid line breadth value.
    * @param  {String} dimensionType
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   * @param  {Number||undefined} stackedLineIndex
+   *         The line index position of the stacked line.
    */
-  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType) {
+  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
+    stackedLineIndex) {
     let displayPixelRatio = getDisplayPixelRatio(this.win);
     let { devicePixelRatio } = this.win;
     let offset = (displayPixelRatio / 2) % 1;
@@ -1476,6 +1497,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     x -= boxWidth / 2;
     y -= boxHeight / 2;
 
+    if (stackedLineIndex) {
+      // Offset the stacked line number by half of the box's width/height
+      const xOffset = boxWidth / 4;
+      const yOffset = boxHeight / 4;
+
+      x += xOffset;
+      y += yOffset;
+    }
+
     if (!this.hasNodeTransformations) {
       x = Math.max(x, padding);
       y = Math.max(y, padding);
@@ -1491,7 +1521,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Write the line number inside of the rectangle.
     this.ctx.fillStyle = "black";
-    this.ctx.fillText(lineNumber, x + padding, y + textHeight + padding);
+    const numberText = stackedLineIndex ? "" : lineNumber;
+    this.ctx.fillText(numberText, x + padding, y + textHeight + padding);
 
     this.ctx.restore();
   }
