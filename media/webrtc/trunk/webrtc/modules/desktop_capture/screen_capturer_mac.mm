@@ -21,6 +21,7 @@
 #include <OpenGL/OpenGL.h>
 
 #include "webrtc/base/macutils.h"
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
@@ -232,6 +233,15 @@ class ScreenCapturerMac : public ScreenCapturer {
                                        void *user_parameter);
   void ReleaseBuffers();
 
+  struct ScreenCallbackData {
+    explicit ScreenCallbackData(ScreenCapturerMac* capturer)
+              : capturer(capturer) {}
+    rtc::CriticalSection crit_sect_;
+    ScreenCapturerMac* GUARDED_BY(crit_sect_) capturer;
+  };
+
+  ScreenCallbackData* screen_callback_data_;
+
   DesktopFrame* CreateFrame();
 
   Callback* callback_;
@@ -309,7 +319,8 @@ class InvertedDesktopFrame : public DesktopFrame {
 
 ScreenCapturerMac::ScreenCapturerMac(
     rtc::scoped_refptr<DesktopConfigurationMonitor> desktop_config_monitor)
-    : callback_(NULL),
+    : screen_callback_data_(new ScreenCallbackData(this)),
+      callback_(NULL),
       cgl_context_(NULL),
       current_display_(0),
       dip_to_pixel_scale_(1.0f),
@@ -336,7 +347,10 @@ ScreenCapturerMac::~ScreenCapturerMac() {
   }
 
   ReleaseBuffers();
-  UnregisterRefreshAndMoveHandlers();
+  {
+    rtc::CritScope lock(&screen_callback_data_->crit_sect_);
+    screen_callback_data_->capturer = nullptr;
+  }
   dlclose(app_services_library_);
   dlclose(opengl_library_);
 }
@@ -895,14 +909,14 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
 
 bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
   CGError err = CGRegisterScreenRefreshCallback(
-      ScreenCapturerMac::ScreenRefreshCallback, this);
+      ScreenCapturerMac::ScreenRefreshCallback, screen_callback_data_);
   if (err != kCGErrorSuccess) {
     LOG(LS_ERROR) << "CGRegisterScreenRefreshCallback " << err;
     return false;
   }
 
   err = CGScreenRegisterMoveCallback(
-      ScreenCapturerMac::ScreenUpdateMoveCallback, this);
+      ScreenCapturerMac::ScreenUpdateMoveCallback, screen_callback_data_);
   if (err != kCGErrorSuccess) {
     LOG(LS_ERROR) << "CGScreenRegisterMoveCallback " << err;
     return false;
@@ -913,9 +927,9 @@ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
 
 void ScreenCapturerMac::UnregisterRefreshAndMoveHandlers() {
   CGUnregisterScreenRefreshCallback(
-      ScreenCapturerMac::ScreenRefreshCallback, this);
+      ScreenCapturerMac::ScreenRefreshCallback, screen_callback_data_);
   CGScreenUnregisterMoveCallback(
-      ScreenCapturerMac::ScreenUpdateMoveCallback, this);
+      ScreenCapturerMac::ScreenUpdateMoveCallback, screen_callback_data_);
 }
 
 void ScreenCapturerMac::ScreenRefresh(CGRectCount count,
@@ -953,11 +967,24 @@ void ScreenCapturerMac::ScreenUpdateMove(CGScreenUpdateMoveDelta delta,
 void ScreenCapturerMac::ScreenRefreshCallback(CGRectCount count,
                                               const CGRect* rect_array,
                                               void* user_parameter) {
-  ScreenCapturerMac* capturer =
-      reinterpret_cast<ScreenCapturerMac*>(user_parameter);
-  if (capturer->screen_pixel_bounds_.is_empty())
-    capturer->ScreenConfigurationChanged();
-  capturer->ScreenRefresh(count, rect_array);
+  ScreenCallbackData* screen_callback_data =
+      reinterpret_cast<ScreenCallbackData*>(user_parameter);
+
+  screen_callback_data->crit_sect_.Enter();
+  if (!screen_callback_data->capturer) {
+    CGUnregisterScreenRefreshCallback(
+        ScreenCapturerMac::ScreenRefreshCallback, screen_callback_data);
+    CGScreenUnregisterMoveCallback(
+        ScreenCapturerMac::ScreenUpdateMoveCallback, screen_callback_data);
+    screen_callback_data->crit_sect_.Leave();
+    delete screen_callback_data;
+    return;
+  }
+
+  if (screen_callback_data->capturer->screen_pixel_bounds_.is_empty())
+    screen_callback_data->capturer->ScreenConfigurationChanged();
+  screen_callback_data->capturer->ScreenRefresh(count, rect_array);
+  screen_callback_data->crit_sect_.Leave();
 }
 
 void ScreenCapturerMac::ScreenUpdateMoveCallback(
@@ -965,9 +992,22 @@ void ScreenCapturerMac::ScreenUpdateMoveCallback(
     size_t count,
     const CGRect* rect_array,
     void* user_parameter) {
-  ScreenCapturerMac* capturer =
-      reinterpret_cast<ScreenCapturerMac*>(user_parameter);
-  capturer->ScreenUpdateMove(delta, count, rect_array);
+  ScreenCallbackData* screen_callback_data =
+      reinterpret_cast<ScreenCallbackData*>(user_parameter);
+
+  screen_callback_data->crit_sect_.Enter();
+  if (!screen_callback_data->capturer) {
+    CGUnregisterScreenRefreshCallback(
+        ScreenCapturerMac::ScreenRefreshCallback, screen_callback_data);
+    CGScreenUnregisterMoveCallback(
+        ScreenCapturerMac::ScreenUpdateMoveCallback, screen_callback_data);
+    screen_callback_data->crit_sect_.Leave();
+    delete screen_callback_data;
+    return;
+  }
+
+  screen_callback_data->capturer->ScreenUpdateMove(delta, count, rect_array);
+  screen_callback_data->crit_sect_.Leave();
 }
 
 DesktopFrame* ScreenCapturerMac::CreateFrame() {
