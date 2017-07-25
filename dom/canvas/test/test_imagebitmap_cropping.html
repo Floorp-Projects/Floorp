@@ -162,7 +162,6 @@ function prepareSources() {
     // Prepare image.
     gImage = document.createElement("img");
     gImage.src = gCanvas.toDataURL();
-    gImage.crossOrigin = "anonymous";
     var resolverImage;
     var promiseImage = new Promise(function(resolve, reject) {
       resolverImage = resolve;
