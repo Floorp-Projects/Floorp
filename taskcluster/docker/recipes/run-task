@@ -177,6 +177,8 @@ def main(args):
                         help='Directory to recursively chown to --user:--group')
     parser.add_argument('--vcs-checkout',
                         help='Directory where Gecko checkout should be created')
+    parser.add_argument('--comm-checkout',
+                        help='Directory where Comm checkout should be created')
     parser.add_argument('--tools-checkout',
                         help='Directory where build/tools checkout should be created')
     parser.add_argument('--fetch-hgfingerprint', action='store_true',
@@ -344,6 +346,26 @@ def main(args):
                      # Always check out the latest commit on default branch.
                      # This is non-deterministic!
                      branch=b'default')
+
+    # Checkout the repository, setting the COMM_HEAD_REV to the current
+    # revision hash. Revision hashes have priority over symbolic revisions. We
+    # disallow running tasks with symbolic revisions unless they have been
+    # resolved by a checkout.
+    if args.comm_checkout:
+        base_repo = os.environ.get('COMM_BASE_REPOSITORY')
+
+        os.environ['COMM_HEAD_REV'] = vcs_checkout(
+            os.environ['COMM_HEAD_REPOSITORY'],
+            args.comm_checkout,
+            os.environ['HG_STORE_PATH'],
+            base_repo=base_repo,
+            revision=os.environ.get('COMM_HEAD_REV'),
+            branch=os.environ.get('COMM_HEAD_REF'))
+
+    elif not os.environ.get('COMM_HEAD_REV') and \
+            os.environ.get('COMM_HEAD_REF'):
+        print('task should be defined in terms of non-symbolic revision')
+        return 1
 
     return run_and_prefix_output(b'task', task_args)
 
