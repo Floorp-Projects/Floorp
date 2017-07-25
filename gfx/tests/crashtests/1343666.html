@@ -9,7 +9,7 @@ function f()
 }
 
 window.onload = function() {
-  let a = window.open("data:text/plain,test", null, "width=300,height=300");
+  let a = window.open("empty.html", null, "width=300,height=300");
   setTimeout(function(){
     a.close();
     a.addEventListener("vrdisplayconnect", function(){});

@@ -74,6 +74,9 @@ public:
      * @param aSkipRect A pointer to a rect, measured in device units, that
      *  represents an area where blurring is unnecessary and shouldn't be done
      *  for speed reasons. It is safe to pass nullptr here.
+     *
+     * @param aUseHardwareAccel Flag to state whether or not we can use hardware
+     *  acceleration to speed up this blur.
      */
     already_AddRefed<gfxContext>
     Init(gfxContext* aDestinationCtx,
@@ -81,7 +84,8 @@ public:
          const mozilla::gfx::IntSize& aSpreadRadius,
          const mozilla::gfx::IntSize& aBlurRadius,
          const gfxRect* aDirtyRect,
-         const gfxRect* aSkipRect);
+         const gfxRect* aSkipRect,
+         bool aUseHardwareAccel = true);
 
     already_AddRefed<DrawTarget>
     InitDrawTarget(const mozilla::gfx::DrawTarget* aReferenceDT,
@@ -89,7 +93,8 @@ public:
                    const mozilla::gfx::IntSize& aSpreadRadius,
                    const mozilla::gfx::IntSize& aBlurRadius,
                    const mozilla::gfx::Rect* aDirtyRect = nullptr,
-                   const mozilla::gfx::Rect* aSkipRect = nullptr);
+                   const mozilla::gfx::Rect* aSkipRect = nullptr,
+                   bool aUseHardwareAccel = true);
 
     /**
      * Performs the blur and optionally colors the result if aShadowColor is not null.

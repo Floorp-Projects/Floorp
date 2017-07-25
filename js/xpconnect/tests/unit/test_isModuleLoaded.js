@@ -21,13 +21,4 @@ function run_test() {
   } catch (ex) {}
   do_check_true(!Cu.isModuleLoaded("resource://gre/modules/ISO8601DateUtils1.jsm"),
                 "isModuleLoaded returned correct value for non-loaded module");
-
-  // incorrect url
-  try {
-    Cu.isModuleLoaded("resource://modules/ISO8601DateUtils1.jsm");
-    do_check_true(false,
-                  "Should have thrown while trying to load a non existing file");
-  } catch (ex) {
-    do_check_true(true, "isModuleLoaded threw an exception while loading incorrect uri");
-  }
 }

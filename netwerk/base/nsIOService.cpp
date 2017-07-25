@@ -167,6 +167,7 @@ uint32_t   nsIOService::gDefaultSegmentSize = 4096;
 uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
 bool nsIOService::sIsDataURIUniqueOpaqueOrigin = false;
+bool nsIOService::sBlockToplevelDataUriNavigations = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -250,6 +251,8 @@ nsIOService::Init()
 
     Preferences::AddBoolVarCache(&sIsDataURIUniqueOpaqueOrigin,
                                  "security.data_uri.unique_opaque_origin", false);
+    Preferences::AddBoolVarCache(&sBlockToplevelDataUriNavigations,
+                                 "security.data_uri.block_toplevel_data_uri_navigations", false);
     Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity, OFFLINE_MIRRORS_CONNECTIVITY, true);
 
     gIOService = this;
@@ -1929,6 +1932,12 @@ nsIOService::SpeculativeAnonymousConnect2(nsIURI *aURI,
 nsIOService::IsDataURIUniqueOpaqueOrigin()
 {
   return sIsDataURIUniqueOpaqueOrigin;
+}
+
+/*static*/ bool
+nsIOService::BlockToplevelDataUriNavigations()
+{
+  return sBlockToplevelDataUriNavigations;
 }
 
 } // namespace net

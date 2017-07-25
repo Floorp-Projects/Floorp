@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Toplevel data navigation</title>
+</head>
+<body>
+test2: data: URI in iframe tries to window.open(data:, _blank);<br/>
+<iframe id="testFrame" src=""></iframe>
+<script>
+  let DATA_URI = `data:text/html,<body><script>
+    var win = window.open("data:text/html,<body>toplevel data: URI navigations should be blocked</body>", "_blank");
+    setTimeout(function () {
+      var result = win.document.body.innerHTML === "" ? "blocked" : "navigated";
+      parent.postMessage(result, "*");
+      win.close();
+    }, 1000);
+    <\/script></body>`;
+
+  window.addEventListener("message", receiveMessage);
+  function receiveMessage(event) {
+    window.removeEventListener("message", receiveMessage);
+    // propagate the information back to the caller
+    window.opener.postMessage(event.data, "*");
+  }
+  document.getElementById('testFrame').src = DATA_URI;
+</script>
+</body>
+</html>

@@ -31,6 +31,7 @@ struct SandboxReport {
   // user-granted permissions.
   enum class ProcType : uint8_t {
     CONTENT,
+    FILE,
     MEDIA_PLUGIN,
   };
 

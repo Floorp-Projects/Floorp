@@ -5,10 +5,24 @@ add_task(async function test() {
     {set: [["browser.tabs.remote.separateFileUriProcess", true]]}
   );
 
+  let fileData = "";
+  for (var i = 0; i < 100; ++i) {
+    fileData += "hello world!";
+  }
+
   let file = Cc["@mozilla.org/file/directory_service;1"]
                .getService(Ci.nsIDirectoryService)
                .QueryInterface(Ci.nsIProperties)
                .get("ProfD", Ci.nsIFile);
+  file.append('file.txt');
+  file.createUnique(Components.interfaces.nsIFile.FILE_TYPE, 0o600);
+
+  let outStream = Components.classes["@mozilla.org/network/file-output-stream;1"]
+                      .createInstance(Components.interfaces.nsIFileOutputStream);
+  outStream.init(file, 0x02 | 0x08 | 0x20, // write, create, truncate
+                 0666, 0);
+  outStream.write(fileData, fileData.length);
+  outStream.close();
 
   let fileHandler = Cc["@mozilla.org/network/io-service;1"]
                       .getService(Ci.nsIIOService)
@@ -23,11 +37,11 @@ add_task(async function test() {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  let blob = await ContentTask.spawn(browser, null, function() {
+  let blob = await ContentTask.spawn(browser, file.leafName, function(fileName) {
     return new content.window.Promise(resolve => {
       let xhr = new content.window.XMLHttpRequest();
       xhr.responseType = "blob";
-      xhr.open("GET", "prefs.js");
+      xhr.open("GET", fileName);
       xhr.send();
       xhr.onload = function() {
         resolve(xhr.response);
@@ -37,9 +51,10 @@ add_task(async function test() {
 
   ok(blob instanceof File, "We have a file");
 
-  file.append("prefs.js");
   is(blob.size, file.fileSize, "The size matches");
-  is(blob.name, "prefs.js", "The name is correct");
+  is(blob.name, file.leafName, "The name is correct");
+
+  file.remove(false);
 
   gBrowser.removeTab(tab);
 });

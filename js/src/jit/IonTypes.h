@@ -142,6 +142,9 @@ enum BailoutKind
     // Can also signal division by 0 (returns inf, a double).
     Bailout_DoubleOutput,
 
+    // Load of a value from a static object retrieved an unexpected value.
+    Bailout_LoadStaticObject,
+
     // END Invalid assumptions bailouts
 
 
@@ -233,6 +236,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonStringInputInvalidate";
       case Bailout_DoubleOutput:
         return "Bailout_DoubleOutput";
+      case Bailout_LoadStaticObject:
+        return "Bailout_LoadStaticObject";
 
       // Other bailouts.
       case Bailout_ArgumentCheck:

@@ -111,14 +111,16 @@ function iframe_loaded(event)
   var start_ser = [];
   var start_compute = [];
   var test_cs = [];
-  var ifdoc = iframe.contentDocument;
+  var wrappedFrame = SpecialPowers.wrap(iframe);
+  var ifdoc = wrappedFrame.contentDocument;
+  var ifwin = wrappedFrame.contentWindow;
 
   for (var idx = 0; idx < test_queue.length; ++idx) {
     var current_item = test_queue[idx];
     var info = gCSSProperties[current_item.prop];
 
     var test = ifdoc.getElementById("test" + idx);
-    var cur_cs = iframe.contentWindow.getComputedStyle(test);
+    var cur_cs = ifwin.getComputedStyle(test);
     test_cs.push(cur_cs);
     var cur_ser = ifdoc.styleSheets[0].cssRules[3*idx+2].style.getPropertyValue(current_item.prop);
     if (cur_ser == "") {
