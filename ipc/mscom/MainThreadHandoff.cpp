@@ -6,14 +6,15 @@
 
 #include "mozilla/mscom/MainThreadHandoff.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/AgileReference.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/Registration.h"
 #include "mozilla/mscom/Utils.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/DebugOnly.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/ThreadLocal.h"
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
@@ -310,6 +311,8 @@ MainThreadHandoff::FixIServiceProvider(ICallFrame* aFrame)
 HRESULT
 MainThreadHandoff::OnCall(ICallFrame* aFrame)
 {
+  TimeStamp callStart(TimeStamp::Now());
+
   // (1) Get info about the method call
   HRESULT hr;
   IID iid;
@@ -346,9 +349,14 @@ MainThreadHandoff::OnCall(ICallFrame* aFrame)
     return hr;
   }
 
+  TimeStamp callEnd(TimeStamp::Now());
+  TimeDuration totalTime(callEnd - callStart);
+  TimeDuration overhead(totalTime - invoker.GetDuration());
+
   // (3) Log *before* wrapping outputs so that the log will contain pointers to
   // the true target interface, not the wrapped ones.
-  InterceptorLog::Event(aFrame, targetInterface.get());
+  InterceptorLog::Event(aFrame, targetInterface.get(), overhead,
+                        invoker.GetDuration());
 
   // (4) Scan the function call for outparams that contain interface pointers.
   // Those will need to be wrapped with MainThreadHandoff so that they too will

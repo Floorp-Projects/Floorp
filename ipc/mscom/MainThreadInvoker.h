@@ -10,6 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Move.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 
@@ -26,9 +27,12 @@ public:
   MainThreadInvoker();
 
   bool Invoke(already_AddRefed<nsIRunnable>&& aRunnable);
+  const TimeDuration& GetDuration() const { return mDuration; }
   static HANDLE GetTargetThread() { return sMainThread; }
 
 private:
+  TimeDuration  mDuration;
+
   static bool InitStatics();
   static VOID CALLBACK MainThreadAPC(ULONG_PTR aParam);
 
