@@ -126,8 +126,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL2 = 21;
   /* Whether Advanced Layers is supported, starting in 56 */
   const long FEATURE_ADVANCED_LAYERS = 22;
+  /* Whether D3D11 keyed mutex is supported, starting in 56 */
+  const long FEATURE_D3D11_KEYED_MUTEX = 23;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_ADVANCED_LAYERS;
+  const long FEATURE_MAX_VALUE = FEATURE_D3D11_KEYED_MUTEX;
 
   /*
    * A set of return values from GetFeatureStatus
