@@ -846,8 +846,7 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
 
   ByteReader reader(aSample->Data(), sampleSize);
 
-  nsTArray<SPSData> SPSTable(MAX_SPS_COUNT);
-  SPSTable.SetLength(MAX_SPS_COUNT);
+  nsTArray<SPSData> SPSTable;
   // If we encounter SPS with the same id but different content, we will stop
   // attempting to detect duplicates.
   bool checkDuplicate = true;
@@ -875,6 +874,12 @@ H264::ExtractExtraData(const mozilla::MediaRawData* aSample)
         continue;
       }
       uint8_t spsId = data.seq_parameter_set_id;
+      if (spsId >= SPSTable.Length()) {
+        if (!SPSTable.SetLength(spsId + 1, fallible)) {
+          // OOM.
+          return nullptr;
+        }
+      }
       if (checkDuplicate && SPSTable[spsId].valid && SPSTable[spsId] == data) {
         // Duplicate ignore.
         continue;
