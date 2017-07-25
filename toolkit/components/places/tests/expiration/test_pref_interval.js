@@ -17,26 +17,24 @@ const EXPIRE_AGGRESSIVITY_MULTIPLIER = 3;
 
 var tests = [
 
-  // This test should be the first, so the interval won't be influenced by
-  // status of history.
   { desc: "Set interval to 1s.",
     interval: 1,
-    expectedTimerDelay: 1
+    expectedTimerDelay: 1 * EXPIRE_AGGRESSIVITY_MULTIPLIER
   },
 
   { desc: "Set interval to a negative value.",
     interval: -1,
-    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS
+    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER
   },
 
   { desc: "Set interval to 0.",
     interval: 0,
-    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS
+    expectedTimerDelay: DEFAULT_TIMER_DELAY_SECONDS * EXPIRE_AGGRESSIVITY_MULTIPLIER
   },
 
   { desc: "Set interval to a large value.",
     interval: 100,
-    expectedTimerDelay: 100
+    expectedTimerDelay: 100 * EXPIRE_AGGRESSIVITY_MULTIPLIER
   },
 
 ];
@@ -49,13 +47,12 @@ add_task(async function test() {
   force_expiration_start();
 
   for (let currentTest of tests) {
+    currentTest = tests.shift();
     print(currentTest.desc);
     let promise = promiseTopicObserved("test-interval-changed");
     setInterval(currentTest.interval);
     let [, data] = await promise;
-    Assert.equal(data, currentTest.expectedTimerDelay * EXPIRE_AGGRESSIVITY_MULTIPLIER);
+    Assert.equal(data, currentTest.expectedTimerDelay);
   }
-
   clearInterval();
 });
-

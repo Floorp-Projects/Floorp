@@ -443,7 +443,7 @@ add_task(async function mixup_frecency() {
     ],
   });
 
-  // Change the results mixup.
+  // Change the "general" context mixup.
   Services.prefs.setCharPref("browser.urlbar.matchBuckets",
                              "suggestion:1,general:5,suggestion:1");
 
@@ -502,7 +502,65 @@ add_task(async function mixup_frecency() {
     ],
   });
 
+  // Change the "search" context mixup.
+  Services.prefs.setCharPref("browser.urlbar.matchBucketsSearch",
+                             "suggestion:2,general:4");
+
+  await check_autocomplete({
+    checkSorting: true,
+    search: "frecency",
+    searchParam: "enable-actions",
+    matches: [
+      makeSearchMatch("frecency", { engineName: ENGINE_NAME, heuristic: true }),
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency foo",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency foo",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      {
+        uri: makeActionURI(("searchengine"), {
+          engineName: ENGINE_NAME,
+          input: "frecency bar",
+          searchQuery: "frecency",
+          searchSuggestion: "frecency bar",
+        }),
+        title: ENGINE_NAME,
+        style: ["action", "searchengine"],
+        icon: "",
+      },
+      { uri: NetUtil.newURI("http://example.com/hi3"),
+        title: "high frecency 3",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi2"),
+        title: "high frecency 2",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi1"),
+        title: "high frecency 1",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/hi0"),
+        title: "high frecency 0",
+        style: [ "bookmark" ] },
+      { uri: NetUtil.newURI("http://example.com/lo4"),
+        title: "low frecency 4" },
+      { uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3" },
+      { uri: NetUtil.newURI("http://example.com/lo2"),
+        title: "low frecency 2" },
+      { uri: NetUtil.newURI("http://example.com/lo1"),
+        title: "low frecency 1" },
+      { uri: NetUtil.newURI("http://example.com/lo0"),
+        title: "low frecency 0" },
+    ],
+  });
+
   Services.prefs.clearUserPref("browser.urlbar.matchBuckets");
+  Services.prefs.clearUserPref("browser.urlbar.matchBucketsSearch");
   await cleanUpSuggestions();
 });
 

@@ -137,6 +137,21 @@ GetPreEffectsVisualOverflowUnion(nsIFrame* aFirstContinuation,
   return collector.GetResult() + aFirstContinuationToUserSpace;
 }
 
+static nsRect
+GetPreEffectsVisualOverflow(nsIFrame* aFirstContinuation,
+                            nsIFrame* aCurrentFrame,
+                            const nsPoint& aFirstContinuationToUserSpace)
+{
+  PreEffectsVisualOverflowCollector collector(aFirstContinuation,
+                                              nullptr,
+                                              nsRect(),
+                                              false);
+  // Compute overflow areas of current frame relative to aFirstContinuation:
+  nsLayoutUtils::AddBoxesForFrame(aCurrentFrame, &collector);
+  // Return the result in user space:
+  return collector.GetResult() + aFirstContinuationToUserSpace;
+}
+
 
 bool
 nsSVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame)
@@ -211,9 +226,16 @@ nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame)
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aNonSVGFrame);
   // 'r' is in "user space":
-  nsRect r = GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
-                                              GetOffsetToBoundingBox(firstFrame),
-                                              false);
+  nsRect r;
+  if (aNonSVGFrame->StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone) {
+    r = GetPreEffectsVisualOverflow(firstFrame, aNonSVGFrame,
+                                    GetOffsetToBoundingBox(firstFrame));
+  } else {
+    r = GetPreEffectsVisualOverflowUnion(firstFrame, nullptr, nsRect(),
+                                         GetOffsetToBoundingBox(firstFrame),
+                                         false);
+  }
+
   return nsLayoutUtils::RectToGfxRect(r,
            aNonSVGFrame->PresContext()->AppUnitsPerCSSPixel());
 }

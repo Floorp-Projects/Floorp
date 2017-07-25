@@ -21,14 +21,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // Put any other stuff relative to this test folder below.
 
-
-// Simulates an expiration at shutdown.
-function shutdownExpiration() {
-  let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
-  expire.observe(null, "places-will-close-connection", null);
-}
-
-
 /**
  * Causes expiration component to start, otherwise it would wait for the first
  * history notification.

@@ -32,10 +32,6 @@
 // you should only use this notification, next ones are intended only for
 // internal Places use.
 #define TOPIC_PLACES_SHUTDOWN "places-shutdown"
-// For Internal use only.  Fired when connection is about to be closed, only
-// cleanup tasks should run at this stage, nothing should be added to the
-// database, nor APIs should be called.
-#define TOPIC_PLACES_WILL_CLOSE_CONNECTION "places-will-close-connection"
 // Fired when the connection has gone, nothing will work from now on.
 #define TOPIC_PLACES_CONNECTION_CLOSED "places-connection-closed"
 
@@ -85,6 +81,11 @@ public:
    * The AsyncShutdown client used by clients of this API to be informed of shutdown.
    */
   already_AddRefed<nsIAsyncShutdownClient> GetClientsShutdown();
+
+  /**
+   * The AsyncShutdown client used by clients of this API to be informed of connection shutdown.
+   */
+  already_AddRefed<nsIAsyncShutdownClient> GetConnectionShutdown();
 
   /**
    * Getter to use when instantiating the class.
