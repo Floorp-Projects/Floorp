@@ -35,8 +35,8 @@
 
 <!ENTITY  addressBar.label              "Address Bar">
 <!ENTITY  addressBar.suggest.label      "When using the address bar, suggest">
-<!ENTITY  locbar.history.label          "History">
-<!ENTITY  locbar.history.accesskey      "H">
+<!ENTITY  locbar.history2.label         "Browsing history">
+<!ENTITY  locbar.history2.accesskey     "H">
 <!ENTITY  locbar.bookmarks.label        "Bookmarks">
 <!ENTITY  locbar.bookmarks.accesskey    "k">
 <!ENTITY  locbar.openpage.label         "Open tabs">
