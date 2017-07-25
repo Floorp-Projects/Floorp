@@ -1800,8 +1800,9 @@ private:
   RefPtr<dom::Promise> mSeekDOMPromise;
 };
 
-// Check if the context is chrome or has the debugger permission
-bool HasDebuggerPrivilege(JSContext* aCx, JSObject* aObj);
+// Check if the context is chrome or has the debugger or tabs permission
+bool
+HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj);
 
 } // namespace dom
 } // namespace mozilla
