@@ -1820,10 +1820,6 @@ xpcshell:
             android.*: xlarge
             default: legacy # Bug 1281241: migrating to m3.large instances
     max-run-time: 5400
-    tier:
-        by-test-platform:
-            windows.*: 3
-            default: default
     e10s: false
     allow-software-gl-layers: false
     mozharness:
