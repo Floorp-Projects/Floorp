@@ -206,11 +206,13 @@ struct Zone : public JS::shadow::Zone,
 
     void scheduleGC() { MOZ_ASSERT(!CurrentThreadIsHeapBusy()); gcScheduled_ = true; }
     void unscheduleGC() { gcScheduled_ = false; }
-    bool isGCScheduled() { return gcScheduled_ && canCollect(); }
+    bool isGCScheduled() { return gcScheduled_; }
 
     void setPreservingCode(bool preserving) { gcPreserveCode_ = preserving; }
     bool isPreservingCode() const { return gcPreserveCode_; }
 
+    // Whether this zone can currently be collected. This doesn't take account
+    // of AutoKeepAtoms for the atoms zone.
     bool canCollect();
 
     void notifyObservingDebuggers();
