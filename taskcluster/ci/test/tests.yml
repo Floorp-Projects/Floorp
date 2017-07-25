@@ -610,7 +610,7 @@ mochitest-chrome:
     e10s: false
     run-on-projects:
         by-test-platform:
-            windows.*: ['try']
+            windows7-32.*: ['try']
             default: built-projects
     worker-type:
         by-test-platform:
