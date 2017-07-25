@@ -523,6 +523,10 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     }
 
     ElfRel_Section<Rel_Type> *section = (ElfRel_Section<Rel_Type> *)dyn->getSectionForType(Rel_Type::d_tag);
+    if (section == nullptr) {
+        fprintf(stderr, "No relocations\n");
+        return -1;
+    }
     assert(section->getType() == Rel_Type::sh_type);
 
     Elf32_Shdr relhack32_section =
