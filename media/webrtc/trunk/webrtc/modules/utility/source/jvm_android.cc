@@ -163,7 +163,7 @@ jmethodID JavaClass::GetStaticMethodId(
 jobject JavaClass::CallStaticObjectMethod(jmethodID methodID, ...) {
   va_list args;
   va_start(args, methodID);
-  jobject res = jni_->CallStaticObjectMethod(j_class_, methodID, args);
+  jobject res = jni_->CallStaticObjectMethodV(j_class_, methodID, args);
   CHECK_EXCEPTION(jni_) << "Error during CallStaticObjectMethod";
   return res;
 }
