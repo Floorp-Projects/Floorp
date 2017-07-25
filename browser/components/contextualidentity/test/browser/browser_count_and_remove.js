@@ -35,12 +35,12 @@ add_task(async function test() {
   is(ContextualIdentityService.countContainerTabs(1), 2, "2 container tabs created with id 1");
   is(ContextualIdentityService.countContainerTabs(2), 1, "1 container tab created with id 2");
 
-  ContextualIdentityService.closeContainerTabs(1);
+  await ContextualIdentityService.closeContainerTabs(1);
   is(ContextualIdentityService.countContainerTabs(), 1, "1 container tab created");
   is(ContextualIdentityService.countContainerTabs(1), 0, "0 container tabs created with id 1");
   is(ContextualIdentityService.countContainerTabs(2), 1, "1 container tab created with id 2");
 
-  ContextualIdentityService.closeContainerTabs();
+  await ContextualIdentityService.closeContainerTabs();
   is(ContextualIdentityService.countContainerTabs(), 0, "0 container tabs at the end.");
   is(ContextualIdentityService.countContainerTabs(1), 0, "0 container tabs at the end with id 1.");
   is(ContextualIdentityService.countContainerTabs(2), 0, "0 container tabs at the end with id 2.");
