@@ -57,7 +57,7 @@
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
-#include "mozilla/layers/WebRenderCompositableHolder.h"
+#include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/media/MediaSystemResourceService.h" // for MediaSystemResourceService
@@ -1656,7 +1656,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
     if (mWrBridge && sIndirectLayerTrees[child].mWrBridge) {
       sIndirectLayerTrees[child].mWrBridge->UpdateWebRender(mWrBridge->CompositorScheduler(),
                                                             mWrBridge->GetWebRenderAPI(),
-                                                            mWrBridge->CompositableHolder(),
+                                                            mWrBridge->AsyncImageManager(),
                                                             GetAnimationStorage());
       // Pretend we composited, since parent CompositorBridgeParent was replaced.
       CrossProcessCompositorBridgeParent* cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
@@ -1695,8 +1695,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<widget::CompositorWidget> widget = mWidget;
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
     gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget), aSize);
-  RefPtr<WebRenderCompositableHolder> holder =
-    new WebRenderCompositableHolder(WebRenderBridgeParent::AllocIdNameSpace());
+  RefPtr<AsyncImagePipelineManager> holder =
+    new AsyncImagePipelineManager(WebRenderBridgeParent::AllocIdNameSpace());
   MOZ_ASSERT(api); // TODO have a fallback
   api->SetRootPipeline(aPipelineId);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
@@ -1950,7 +1950,7 @@ CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipe
   if (!mWrBridge) {
     return;
   }
-  mWrBridge->CompositableHolder()->Update(aPipelineId, aEpoch);
+  mWrBridge->AsyncImageManager()->Update(aPipelineId, aEpoch);
 
   if (mPaused) {
     return;
