@@ -20,7 +20,6 @@
         app:navigationIcon="@drawable/abc_ic_clear_mtrl_alpha"
         app:subtitleTextColor="@android:color/white"
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="@string/bookmark_edit_title"
         app:titleTextColor="@android:color/white" />
 
     <LinearLayout

@@ -5348,9 +5348,9 @@ pref("urlclassifier.gethashnoise", 4);
 // Gethash timeout for Safebrowsing.
 pref("urlclassifier.gethash.timeout_ms", 5000);
 // Update server response timeout for Safebrowsing.
-pref("urlclassifier.update.response_timeout_ms", 15000);
+pref("urlclassifier.update.response_timeout_ms", 30000);
 // Download update timeout for Safebrowsing.
-pref("urlclassifier.update.timeout_ms", 60000);
+pref("urlclassifier.update.timeout_ms", 90000);
 
 // Name of the about: page contributed by safebrowsing to handle display of error
 // pages on phishing/malware hits.  (bug 399233)
