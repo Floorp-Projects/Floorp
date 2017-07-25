@@ -1834,9 +1834,7 @@ ScriptSource::appendSubstring(JSContext* cx, StringBuffer& buf, size_t start, si
     PinnedChars chars(cx, this, holder, start, len);
     if (!chars.get())
         return false;
-    // Sources can be large and we don't want to check "is this char Latin1"
-    // for each source code character, so inflate the buffer here.
-    if (len > 100 && !buf.ensureTwoByteChars())
+    if (len > SourceDeflateLimit && !buf.ensureTwoByteChars())
         return false;
     return buf.append(chars.get(), len);
 }
