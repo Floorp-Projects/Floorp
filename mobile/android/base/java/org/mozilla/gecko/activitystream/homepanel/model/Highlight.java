@@ -8,9 +8,8 @@ package org.mozilla.gecko.activitystream.homepanel.model;
 import android.database.Cursor;
 import android.support.annotation.Nullable;
 import android.text.format.DateUtils;
-
 import org.mozilla.gecko.activitystream.Utils;
-import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 
 public class Highlight implements Item {
     private final String title;
@@ -25,19 +24,19 @@ public class Highlight implements Item {
     private @Nullable Boolean isPinned;
     private @Nullable Boolean isBookmarked;
 
-    public static Highlight fromCursor(Cursor cursor) {
-        return new Highlight(cursor);
+    public static Highlight fromCursor(final Cursor cursor, final HighlightCandidateCursorIndices cursorIndices) {
+        return new Highlight(cursor, cursorIndices);
     }
 
-    private Highlight(Cursor cursor) {
-        title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE));
-        url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
-        source = Utils.highlightSource(cursor);
-        time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
+    private Highlight(final Cursor cursor, final HighlightCandidateCursorIndices cursorIndices) {
+        title = cursor.getString(cursorIndices.titleColumnIndex);
+        url = cursor.getString(cursorIndices.urlColumnIndex);
+        source = Utils.highlightSource(cursor, cursorIndices);
+        time = cursor.getLong(cursorIndices.highlightsDateColumnIndex);
 
-        historyId = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.HISTORY_ID));
+        historyId = cursor.getLong(cursorIndices.historyIDColumnIndex);
 
-        metadata = Metadata.fromCursor(cursor);
+        metadata = Metadata.fromCursor(cursor, cursorIndices);
 
         updateState();
     }
