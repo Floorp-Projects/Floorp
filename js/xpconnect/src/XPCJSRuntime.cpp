@@ -140,7 +140,7 @@ public:
   nsresult Dispatch()
   {
       nsCOMPtr<nsIRunnable> self(this);
-      return NS_IdleDispatchToCurrentThread(self.forget(), 1000);
+      return NS_IdleDispatchToCurrentThread(self.forget(), 2500);
   }
 
   void Start(bool aContinuation = false, bool aPurge = false)

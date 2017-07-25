@@ -2090,10 +2090,15 @@ CCRunnerFired(TimeStamp aDeadline, void* aData)
         // Our efforts to avoid a CC have failed, so we return to let the
         // timer fire once more to trigger a CC.
 
-        // Clear content unbinder before the first CC slice.
-        Element::ClearContentUnbinder();
-        // And trigger deferred deletion too.
-        nsCycleCollector_doDeferredDeletion();
+        if (!aDeadline.IsNull() && TimeStamp::Now() < aDeadline) {
+          // Clear content unbinder before the first CC slice.
+          Element::ClearContentUnbinder();
+
+          if (TimeStamp::Now() < aDeadline) {
+            // And trigger deferred deletion too.
+            nsCycleCollector_doDeferredDeletion();
+          }
+        }
         return didDoWork;
       }
     } else {
