@@ -43,21 +43,21 @@ function addPlace(aUrl, aFavicon) {
   let href = new URL(aUrl || "http://www.mozilla.org").href;
   let stmt = mDBConn.createStatement(
     "INSERT INTO moz_places (url, url_hash) VALUES (:url, hash(:url))");
-  stmt.params["url"] = href;
+  stmt.params.url = href;
   stmt.execute();
   stmt.finalize();
   let id = mDBConn.lastInsertRowID;
   if (aFavicon) {
     stmt = mDBConn.createStatement(
       "INSERT INTO moz_pages_w_icons (page_url, page_url_hash) VALUES (:url, hash(:url))");
-    stmt.params["url"] = href;
+    stmt.params.url = href;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement(
       "INSERT INTO moz_icons_to_pages (page_id, icon_id) " +
       "VALUES ((SELECT id FROM moz_pages_w_icons WHERE page_url_hash = hash(:url)), :favicon)");
-    stmt.params["url"] = href;
-    stmt.params["favicon"] = aFavicon;
+    stmt.params.url = href;
+    stmt.params.favicon = aFavicon;
     stmt.execute();
     stmt.finalize();
   }
@@ -70,12 +70,12 @@ function addBookmark(aPlaceId, aType, aParent, aKeywordId, aFolderType, aTitle) 
                                 title, guid)
      VALUES (:place_id, :type, :parent, :keyword_id, :folder_type, :title,
              GENERATE_GUID())`);
-  stmt.params["place_id"] = aPlaceId || null;
-  stmt.params["type"] = aType || bs.TYPE_BOOKMARK;
-  stmt.params["parent"] = aParent || bs.unfiledBookmarksFolder;
-  stmt.params["keyword_id"] = aKeywordId || null;
-  stmt.params["folder_type"] = aFolderType || null;
-  stmt.params["title"] = typeof(aTitle) == "string" ? aTitle : null;
+  stmt.params.place_id = aPlaceId || null;
+  stmt.params.type = aType || bs.TYPE_BOOKMARK;
+  stmt.params.parent = aParent || bs.unfiledBookmarksFolder;
+  stmt.params.keyword_id = aKeywordId || null;
+  stmt.params.folder_type = aFolderType || null;
+  stmt.params.title = typeof(aTitle) == "string" ? aTitle : null;
   stmt.execute();
   stmt.finalize();
   return mDBConn.lastInsertRowID;
@@ -102,7 +102,7 @@ tests.push({
     let stmt = mDBConn.createStatement(
       "INSERT INTO moz_anno_attributes (name) VALUES (:anno)"
     );
-    stmt.params["anno"] = this._obsoleteWeaveAttribute;
+    stmt.params.anno = this._obsoleteWeaveAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement(
@@ -111,8 +111,8 @@ tests.push({
          (SELECT id FROM moz_anno_attributes WHERE name = :anno)
        )`
     );
-    stmt.params["place_id"] = this._placeId;
-    stmt.params["anno"] = this._obsoleteWeaveAttribute;
+    stmt.params.place_id = this._placeId;
+    stmt.params.anno = this._obsoleteWeaveAttribute;
     stmt.execute();
     stmt.finalize();
   },
@@ -122,7 +122,7 @@ tests.push({
     let stmt = mDBConn.createStatement(
       "SELECT id FROM moz_anno_attributes WHERE name = :anno"
     );
-    stmt.params["anno"] = this._obsoleteWeaveAttribute;
+    stmt.params.anno = this._obsoleteWeaveAttribute;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -148,9 +148,9 @@ tests.push({
       `INSERT INTO moz_anno_attributes (name)
        VALUES (:anno1), (:anno2), (:anno3)`
     );
-    stmt.params["anno1"] = this._obsoleteSyncAttribute;
-    stmt.params["anno2"] = this._obsoleteGuidAttribute;
-    stmt.params["anno3"] = this._obsoleteWeaveAttribute;
+    stmt.params.anno1 = this._obsoleteSyncAttribute;
+    stmt.params.anno2 = this._obsoleteGuidAttribute;
+    stmt.params.anno3 = this._obsoleteWeaveAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement(
@@ -159,10 +159,10 @@ tests.push({
        FROM moz_anno_attributes
        WHERE name IN (:anno1, :anno2, :anno3)`
     );
-    stmt.params["item_id"] = this._bookmarkId;
-    stmt.params["anno1"] = this._obsoleteSyncAttribute;
-    stmt.params["anno2"] = this._obsoleteGuidAttribute;
-    stmt.params["anno3"] = this._obsoleteWeaveAttribute;
+    stmt.params.item_id = this._bookmarkId;
+    stmt.params.anno1 = this._obsoleteSyncAttribute;
+    stmt.params.anno2 = this._obsoleteGuidAttribute;
+    stmt.params.anno3 = this._obsoleteWeaveAttribute;
     stmt.execute();
     stmt.finalize();
   },
@@ -173,9 +173,9 @@ tests.push({
       `SELECT id FROM moz_anno_attributes
        WHERE name IN (:anno1, :anno2, :anno3)`
     );
-    stmt.params["anno1"] = this._obsoleteSyncAttribute;
-    stmt.params["anno2"] = this._obsoleteGuidAttribute;
-    stmt.params["anno3"] = this._obsoleteWeaveAttribute;
+    stmt.params.anno1 = this._obsoleteSyncAttribute;
+    stmt.params.anno2 = this._obsoleteGuidAttribute;
+    stmt.params.anno3 = this._obsoleteWeaveAttribute;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -198,24 +198,24 @@ tests.push({
     this._bookmarkId = addBookmark(this._placeId);
     // Add a used attribute and an unused one.
     let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.reset();
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.reset();
-    stmt.params["anno"] = this._unusedAttribute;
+    stmt.params.anno = this._unusedAttribute;
     stmt.execute();
     stmt.finalize();
 
     stmt = mDBConn.createStatement("INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["place_id"] = this._placeId;
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.place_id = this._placeId;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement("INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["item_id"] = this._bookmarkId;
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.item_id = this._bookmarkId;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();
   },
@@ -223,14 +223,14 @@ tests.push({
   check() {
     // Check that used attributes are still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_anno_attributes WHERE name = :anno");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that unused attribute has been removed
-    stmt.params["anno"] = this._unusedAttribute;
+    stmt.params.anno = this._unusedAttribute;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -250,17 +250,17 @@ tests.push({
     this._placeId = addPlace();
     // Add a used attribute.
     let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement("INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["place_id"] = this._placeId;
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.place_id = this._placeId;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.finalize();
     // Add an annotation with a nonexistent attribute
     stmt = mDBConn.createStatement("INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, 1337)");
-    stmt.params["place_id"] = this._placeId;
+    stmt.params.place_id = this._placeId;
     stmt.execute();
     stmt.finalize();
   },
@@ -268,12 +268,12 @@ tests.push({
   check() {
     // Check that used attribute is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_anno_attributes WHERE name = :anno");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // check that annotation with valid attribute is still there
     stmt = mDBConn.createStatement("SELECT id FROM moz_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // Check that annotation with bogus attribute has been removed
@@ -297,17 +297,17 @@ tests.push({
     this._placeId = addPlace();
     // Add a used attribute.
     let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement("INSERT INTO moz_annos (place_id, anno_attribute_id) VALUES(:place_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["place_id"] = this._placeId;
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.place_id = this._placeId;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.reset();
     // Add an annotation to a nonexistent page
-    stmt.params["place_id"] = 1337;
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.place_id = 1337;
+    stmt.params.anno = this._usedPageAttribute;
     stmt.execute();
     stmt.finalize();
   },
@@ -315,12 +315,12 @@ tests.push({
   check() {
     // Check that used attribute is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_anno_attributes WHERE name = :anno");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // check that annotation with valid attribute is still there
     stmt = mDBConn.createStatement("SELECT id FROM moz_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)");
-    stmt.params["anno"] = this._usedPageAttribute;
+    stmt.params.anno = this._usedPageAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // Check that an annotation to a nonexistent page has been removed
@@ -411,11 +411,11 @@ tests.push({
   check() {
     // Check that valid bookmark is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id");
-    stmt.params["item_id"] = this._validItemId;
+    stmt.params.item_id = this._validItemId;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that invalid bookmark has been removed
-    stmt.params["item_id"] = this._invalidItemId;
+    stmt.params.item_id = this._invalidItemId;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -449,18 +449,18 @@ tests.push({
   check() {
     // Check that valid bookmark is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE type = :type AND parent = :parent");
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
-    stmt.params["parent"] = this._tagId;
+    stmt.params.type = bs.TYPE_BOOKMARK;
+    stmt.params.parent = this._tagId;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that separator is no more there
-    stmt.params["type"] = bs.TYPE_SEPARATOR;
-    stmt.params["parent"] = this._tagId;
+    stmt.params.type = bs.TYPE_SEPARATOR;
+    stmt.params.parent = this._tagId;
     do_check_false(stmt.executeStep());
     stmt.reset();
     // Check that folder is no more there
-    stmt.params["type"] = bs.TYPE_FOLDER;
-    stmt.params["parent"] = this._tagId;
+    stmt.params.type = bs.TYPE_FOLDER;
+    stmt.params.parent = this._tagId;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -491,19 +491,19 @@ tests.push({
   check() {
     // Check that valid bookmark is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :id AND type = :type AND parent = :parent");
-    stmt.params["id"] = this._bookmarkId;
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
-    stmt.params["parent"] = this._tagId;
+    stmt.params.id = this._bookmarkId;
+    stmt.params.type = bs.TYPE_BOOKMARK;
+    stmt.params.parent = this._tagId;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["id"] = this._tagId;
-    stmt.params["type"] = bs.TYPE_FOLDER;
-    stmt.params["parent"] = bs.tagsFolder;
+    stmt.params.id = this._tagId;
+    stmt.params.type = bs.TYPE_FOLDER;
+    stmt.params.parent = bs.tagsFolder;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["id"] = this._emptyTagId;
-    stmt.params["type"] = bs.TYPE_FOLDER;
-    stmt.params["parent"] = bs.tagsFolder;
+    stmt.params.id = this._emptyTagId;
+    stmt.params.type = bs.TYPE_FOLDER;
+    stmt.params.parent = bs.tagsFolder;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -537,20 +537,20 @@ tests.push({
   check() {
     // Check that bookmarks are now children of a real folder (unsorted)
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND parent = :parent");
-    stmt.params["item_id"] = this._orphanBookmarkId;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
+    stmt.params.item_id = this._orphanBookmarkId;
+    stmt.params.parent = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["item_id"] = this._orphanSeparatorId;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
+    stmt.params.item_id = this._orphanSeparatorId;
+    stmt.params.parent = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["item_id"] = this._orphanFolderId;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
+    stmt.params.item_id = this._orphanFolderId;
+    stmt.params.parent = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["item_id"] = this._bookmarkId;
-    stmt.params["parent"] = this._orphanFolderId;
+    stmt.params.item_id = this._bookmarkId;
+    stmt.params.parent = this._orphanFolderId;
     do_check_true(stmt.executeStep());
     stmt.finalize();
   }
@@ -578,12 +578,12 @@ tests.push({
   check() {
     // Check that items with an fk have been converted to bookmarks
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND type = :type");
-    stmt.params["item_id"] = this._separatorId;
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
+    stmt.params.item_id = this._separatorId;
+    stmt.params.type = bs.TYPE_BOOKMARK;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["item_id"] = this._folderId;
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
+    stmt.params.item_id = this._folderId;
+    stmt.params.type = bs.TYPE_BOOKMARK;
     do_check_true(stmt.executeStep());
     stmt.finalize();
   }
@@ -611,13 +611,13 @@ tests.push({
   check() {
     // Check valid bookmark
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND type = :type");
-    stmt.params["item_id"] = this._validBookmarkId;
-    stmt.params["type"] = bs.TYPE_BOOKMARK;
+    stmt.params.item_id = this._validBookmarkId;
+    stmt.params.type = bs.TYPE_BOOKMARK;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check invalid bookmark has been converted to a folder
-    stmt.params["item_id"] = this._invalidBookmarkId;
-    stmt.params["type"] = bs.TYPE_FOLDER;
+    stmt.params.item_id = this._invalidBookmarkId;
+    stmt.params.type = bs.TYPE_FOLDER;
     do_check_true(stmt.executeStep());
     stmt.finalize();
   }
@@ -650,12 +650,12 @@ tests.push({
   check() {
     // Check that bookmarks are now children of a real folder (unsorted)
     let stmt = mDBConn.createStatement("SELECT id FROM moz_bookmarks WHERE id = :item_id AND parent = :parent");
-    stmt.params["item_id"] = this._bookmarkId1;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
+    stmt.params.item_id = this._bookmarkId1;
+    stmt.params.parent = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.reset();
-    stmt.params["item_id"] = this._bookmarkId2;
-    stmt.params["parent"] = bs.unfiledBookmarksFolder;
+    stmt.params.item_id = this._bookmarkId2;
+    stmt.params.parent = bs.unfiledBookmarksFolder;
     do_check_true(stmt.executeStep());
     stmt.finalize();
   }
@@ -697,8 +697,8 @@ tests.push({
          )`
       );
       for (let i = 0; i < (NUM_BOOKMARKS / 2); i++) {
-        stmt.params["parent"] = aParent;
-        stmt.params["rand"] = Math.round(Math.random() * (NUM_BOOKMARKS - 1));
+        stmt.params.parent = aParent;
+        stmt.params.rand = Math.round(Math.random() * (NUM_BOOKMARKS - 1));
         stmt.execute();
         stmt.reset();
       }
@@ -710,7 +710,7 @@ tests.push({
          FROM moz_bookmarks WHERE parent = :parent
          ORDER BY position ASC, ROWID ASC`
       );
-      stmt.params["parent"] = aParent;
+      stmt.params.parent = aParent;
       while (stmt.executeStep()) {
         aResultArray.push(stmt.row.id);
         print(stmt.row.id + "\t" + stmt.row.position + "\t" +
@@ -732,7 +732,7 @@ tests.push({
         `SELECT id, position FROM moz_bookmarks WHERE parent = :parent
          ORDER BY position ASC`
       );
-      stmt.params["parent"] = aParent;
+      stmt.params.parent = aParent;
       let pass = true;
       while (stmt.executeStep()) {
         print(stmt.row.id + "\t" + stmt.row.position);
@@ -780,19 +780,19 @@ tests.push({
     let stmt = mDBConn.createStatement(
       "SELECT title FROM moz_bookmarks WHERE id = :id"
     );
-    stmt.params["id"] = this._untitledTagId;
+    stmt.params.id = this._untitledTagId;
     do_check_true(stmt.executeStep());
     do_check_eq(stmt.row.title, "(notitle)");
     stmt.reset();
-    stmt.params["id"] = this._untitledFolderId;
+    stmt.params.id = this._untitledFolderId;
     do_check_true(stmt.executeStep());
     do_check_eq(stmt.row.title, "");
     stmt.reset();
-    stmt.params["id"] = this._titledTagId;
+    stmt.params.id = this._titledTagId;
     do_check_true(stmt.executeStep());
     do_check_eq(stmt.row.title, "titledTag");
     stmt.reset();
-    stmt.params["id"] = this._titledFolderId;
+    stmt.params.id = this._titledFolderId;
     do_check_true(stmt.executeStep());
     do_check_eq(stmt.row.title, "titledFolder");
     stmt.finalize();
@@ -810,18 +810,18 @@ tests.push({
   setup() {
     // Insert favicon entries
     let stmt = mDBConn.createStatement("INSERT INTO moz_icons (id, icon_url, fixed_icon_url_hash) VALUES(:favicon_id, :url, hash(fixup_url(:url)))");
-    stmt.params["favicon_id"] = 1;
-    stmt.params["url"] = "http://www1.mozilla.org/favicon.ico";
+    stmt.params.favicon_id = 1;
+    stmt.params.url = "http://www1.mozilla.org/favicon.ico";
     stmt.execute();
     stmt.reset();
-    stmt.params["favicon_id"] = 2;
-    stmt.params["url"] = "http://www2.mozilla.org/favicon.ico";
+    stmt.params.favicon_id = 2;
+    stmt.params.url = "http://www2.mozilla.org/favicon.ico";
     stmt.execute();
     stmt.finalize();
     // Insert orphan page.
     stmt = mDBConn.createStatement("INSERT INTO moz_pages_w_icons (id, page_url, page_url_hash) VALUES(:page_id, :url, hash(:url))");
-    stmt.params["page_id"] = 99;
-    stmt.params["url"] = "http://w99.mozilla.org/";
+    stmt.params.page_id = 99;
+    stmt.params.url = "http://w99.mozilla.org/";
     stmt.execute();
     stmt.finalize();
 
@@ -832,16 +832,16 @@ tests.push({
   check() {
     // Check that used icon is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_icons WHERE id = :favicon_id");
-    stmt.params["favicon_id"] = 1;
+    stmt.params.favicon_id = 1;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that unused icon has been removed
-    stmt.params["favicon_id"] = 2;
+    stmt.params.favicon_id = 2;
     do_check_false(stmt.executeStep());
     stmt.finalize();
     // Check that the orphan page is gone.
     stmt = mDBConn.createStatement("SELECT id FROM moz_pages_w_icons WHERE id = :page_id");
-    stmt.params["page_id"] = 99;
+    stmt.params.page_id = 99;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -861,10 +861,10 @@ tests.push({
     this._placeId = addPlace();
     // Add a valid visit and an invalid one
     let stmt = mDBConn.createStatement("INSERT INTO moz_historyvisits(place_id) VALUES (:place_id)");
-    stmt.params["place_id"] = this._placeId;
+    stmt.params.place_id = this._placeId;
     stmt.execute();
     stmt.reset();
-    stmt.params["place_id"] = this._invalidPlaceId;
+    stmt.params.place_id = this._invalidPlaceId;
     stmt.execute();
     stmt.finalize();
   },
@@ -872,11 +872,11 @@ tests.push({
   check() {
     // Check that valid visit is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_historyvisits WHERE place_id = :place_id");
-    stmt.params["place_id"] = this._placeId;
+    stmt.params.place_id = this._placeId;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that invalid visit has been removed
-    stmt.params["place_id"] = this._invalidPlaceId;
+    stmt.params.place_id = this._invalidPlaceId;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -896,12 +896,12 @@ tests.push({
     this._placeId = addPlace();
     // Add input history entries
     let stmt = mDBConn.createStatement("INSERT INTO moz_inputhistory (place_id, input) VALUES (:place_id, :input)");
-    stmt.params["place_id"] = this._placeId;
-    stmt.params["input"] = "moz";
+    stmt.params.place_id = this._placeId;
+    stmt.params.input = "moz";
     stmt.execute();
     stmt.reset();
-    stmt.params["place_id"] = this._invalidPlaceId;
-    stmt.params["input"] = "moz";
+    stmt.params.place_id = this._invalidPlaceId;
+    stmt.params.input = "moz";
     stmt.execute();
     stmt.finalize();
   },
@@ -909,11 +909,11 @@ tests.push({
   check() {
     // Check that inputhistory on valid place is still there
     let stmt = mDBConn.createStatement("SELECT place_id FROM moz_inputhistory WHERE place_id = :place_id");
-    stmt.params["place_id"] = this._placeId;
+    stmt.params.place_id = this._placeId;
     do_check_true(stmt.executeStep());
     stmt.reset();
     // Check that inputhistory on invalid place has gone
-    stmt.params["place_id"] = this._invalidPlaceId;
+    stmt.params.place_id = this._invalidPlaceId;
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }
@@ -936,17 +936,17 @@ tests.push({
     this._bookmarkId = addBookmark(this._placeId);
     // Add a used attribute.
     let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement("INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["item_id"] = this._bookmarkId;
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.item_id = this._bookmarkId;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();
     // Add an annotation with a nonexistent attribute
     stmt = mDBConn.createStatement("INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, 1337)");
-    stmt.params["item_id"] = this._bookmarkId;
+    stmt.params.item_id = this._bookmarkId;
     stmt.execute();
     stmt.finalize();
   },
@@ -954,12 +954,12 @@ tests.push({
   check() {
     // Check that used attribute is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_anno_attributes WHERE name = :anno");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // check that annotation with valid attribute is still there
     stmt = mDBConn.createStatement("SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // Check that annotation with bogus attribute has been removed
@@ -987,17 +987,17 @@ tests.push({
     this._bookmarkId = addBookmark(this._placeId);
     // Add a used attribute.
     let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();
     stmt = mDBConn.createStatement("INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))");
-    stmt.params["item_id"] = this._bookmarkId;
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.item_id = this._bookmarkId;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.reset();
     // Add an annotation to a nonexistent item
-    stmt.params["item_id"] = this._invalidBookmarkId;
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.item_id = this._invalidBookmarkId;
+    stmt.params.anno = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();
   },
@@ -1005,12 +1005,12 @@ tests.push({
   check() {
     // Check that used attribute is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_anno_attributes WHERE name = :anno");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // check that annotation with valid attribute is still there
     stmt = mDBConn.createStatement("SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)");
-    stmt.params["anno"] = this._usedItemAttribute;
+    stmt.params.anno = this._usedItemAttribute;
     do_check_true(stmt.executeStep());
     stmt.finalize();
     // Check that an annotation to a nonexistent page has been removed
@@ -1033,9 +1033,9 @@ tests.push({
   setup() {
     // Insert 2 keywords
     let stmt = mDBConn.createStatement("INSERT INTO moz_keywords (id, keyword, place_id) VALUES(:id, :keyword, :place_id)");
-    stmt.params["id"] = 1;
-    stmt.params["keyword"] = "unused";
-    stmt.params["place_id"] = 100;
+    stmt.params.id = 1;
+    stmt.params.keyword = "unused";
+    stmt.params.place_id = 100;
     stmt.execute();
     stmt.finalize();
   },
@@ -1044,7 +1044,7 @@ tests.push({
     // Check that "used" keyword is still there
     let stmt = mDBConn.createStatement("SELECT id FROM moz_keywords WHERE keyword = :keyword");
     // Check that "unused" keyword has gone
-    stmt.params["keyword"] = "unused";
+    stmt.params.keyword = "unused";
     do_check_false(stmt.executeStep());
     stmt.finalize();
   }

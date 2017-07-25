@@ -2196,7 +2196,7 @@ Engine.prototype = {
           appPath = appPath.spec;
           let spec = uri.spec;
           if (spec.includes(appPath)) {
-            let appURI = Services.io.newFileURI(getDir(knownDirs["app"]));
+            let appURI = Services.io.newFileURI(getDir(knownDirs.app));
             uri = Services.io.newURI(spec.replace(appPath, appURI.spec));
           }
         }
@@ -3636,7 +3636,7 @@ SearchService.prototype = {
         if (!("visibleDefaultEngines" in searchSettings[region])) {
           continue;
         }
-        for (let engine of searchSettings[region]["visibleDefaultEngines"]) {
+        for (let engine of searchSettings[region].visibleDefaultEngines) {
           jarNames.add(engine);
         }
       }
@@ -3667,7 +3667,7 @@ SearchService.prototype = {
       if (!region || !(region in searchSettings)) {
         region = "default";
       }
-      engineNames = searchSettings[region]["visibleDefaultEngines"];
+      engineNames = searchSettings[region].visibleDefaultEngines;
     }
 
     // Remove any engine names that are supposed to be ignored.

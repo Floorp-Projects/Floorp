@@ -14,7 +14,6 @@ module.exports = {
     }],
     curly: ["error", "all"],
     "dot-location": ["error", "property"],
-    "dot-notation": "error",
     "generator-star-spacing": ["error", "after"],
     indent: ["error", 2, {
       SwitchCase: 1,
