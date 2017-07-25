@@ -306,11 +306,46 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
      *        2. Check third party payment app support by traversing all
      *           registered third party payment apps.
      */
-    case nsIPaymentActionRequest::CANMAKE_ACTION:
+    case nsIPaymentActionRequest::CANMAKE_ACTION: {
+      rv = CallTestingUIAction(requestId, type);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    }
     /*
      *  TODO: Launch/inform payment UI here once the UI module is implemented.
      */
-    case nsIPaymentActionRequest::SHOW_ACTION:
+    case nsIPaymentActionRequest::SHOW_ACTION: {
+      if (mShowingRequest) {
+        nsCOMPtr<nsIPaymentShowActionResponse> showResponse =
+          do_CreateInstance(NS_PAYMENT_SHOW_ACTION_RESPONSE_CONTRACT_ID);
+        MOZ_ASSERT(showResponse);
+        rv = showResponse->Init(requestId,
+                                nsIPaymentActionResponse::PAYMENT_REJECTED,
+                                EmptyString(),
+                                EmptyString(),
+                                EmptyString(),
+                                EmptyString(),
+                                EmptyString());
+        nsCOMPtr<nsIPaymentActionResponse> response = do_QueryInterface(showResponse);
+        MOZ_ASSERT(response);
+        rv = RespondPayment(response);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      } else {
+        rv = GetPaymentRequestById(requestId, getter_AddRefs(mShowingRequest));
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_FAILURE;
+        }
+        rv = CallTestingUIAction(requestId, type);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      break;
+    }
     case nsIPaymentActionRequest::ABORT_ACTION:
     case nsIPaymentActionRequest::COMPLETE_ACTION: {
       rv = CallTestingUIAction(requestId, type);
@@ -391,11 +426,26 @@ PaymentRequestService::RespondPayment(nsIPaymentActionResponse* aResponse)
       rv = response->IsSucceeded(&isSucceeded);
       NS_ENSURE_SUCCESS(rv, rv);
       if (isSucceeded) {
+        mShowingRequest = nullptr;
+        mRequestQueue.RemoveElement(request);
+      }
+      break;
+    }
+    case nsIPaymentActionResponse::SHOW_ACTION: {
+      nsCOMPtr<nsIPaymentShowActionResponse> response =
+        do_QueryInterface(aResponse);
+      MOZ_ASSERT(response);
+      bool isAccepted;
+      rv = response->IsAccepted(&isAccepted);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!isAccepted) {
+        mShowingRequest = nullptr;
         mRequestQueue.RemoveElement(request);
       }
       break;
     }
     case nsIPaymentActionResponse::COMPLETE_ACTION: {
+      mShowingRequest = nullptr;
       mRequestQueue.RemoveElement(request);
       break;
     }
