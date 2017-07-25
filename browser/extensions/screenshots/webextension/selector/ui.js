@@ -239,9 +239,6 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
                      <div class="preview-instructions"></div>
                      <div class="myshots-all-buttons-container">
                        <button class="myshots-button myshots-link" tabindex="1"></button>
-                       <div class="spacer"></div>
-                       <button class="myshots-button visible" tabindex="2"></button>
-                       <button class="myshots-button full-page" tabindex="3"></button>
                      </div>
                    </div>
                  </div>
@@ -255,14 +252,8 @@ this.ui = (function() { // eslint-disable-line no-unused-vars
             const overlay = this.document.querySelector(".preview-overlay");
             overlay.querySelector(".preview-instructions").textContent = browser.i18n.getMessage("screenshotInstructions");
             overlay.querySelector(".myshots-link").textContent = browser.i18n.getMessage("myShotsLink");
-            overlay.querySelector(".visible").textContent = browser.i18n.getMessage("saveScreenshotVisibleArea");
-            overlay.querySelector(".full-page").textContent = browser.i18n.getMessage("saveScreenshotFullPage");
             overlay.querySelector(".myshots-button").addEventListener(
               "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onOpenMyShots)));
-            overlay.querySelector(".visible").addEventListener(
-              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onClickVisible)));
-            overlay.querySelector(".full-page").addEventListener(
-              "click", watchFunction(assertIsTrusted(standardOverlayCallbacks.onClickFullPage)));
             resolve();
           }), {once: true});
           document.body.appendChild(this.element);
