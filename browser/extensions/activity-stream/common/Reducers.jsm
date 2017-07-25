@@ -202,6 +202,37 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
+    case at.PLACES_BOOKMARK_ADDED:
+      if (!action.data) {
+        return prevState;
+      }
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          // find the item within the rows that is attempted to be bookmarked
+          if (item.url === action.data.url) {
+            const {bookmarkGuid, bookmarkTitle, lastModified} = action.data;
+            Object.assign(item, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified});
+          }
+          return item;
+        })
+      }));
+    case at.PLACES_BOOKMARK_REMOVED:
+      if (!action.data) {
+        return prevState;
+      }
+      return prevState.map(section => Object.assign({}, section, {
+        rows: section.rows.map(item => {
+          // find the bookmark within the rows that is attempted to be removed
+          if (item.url === action.data.url) {
+            const newSite = Object.assign({}, item);
+            delete newSite.bookmarkGuid;
+            delete newSite.bookmarkTitle;
+            delete newSite.bookmarkDateCreated;
+            return newSite;
+          }
+          return item;
+        })
+      }));
     case at.PLACES_LINK_DELETED:
     case at.PLACES_LINK_BLOCKED:
       return prevState.map(section =>

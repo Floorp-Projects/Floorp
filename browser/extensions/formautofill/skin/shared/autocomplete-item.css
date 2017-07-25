@@ -105,3 +105,7 @@ xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-it
   height: 41px;
   background-color: #EDEDED;
 }
+
+.autofill-footer[no-warning="true"] > .autofill-warning {
+  display: none;
+}

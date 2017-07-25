@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.18 */
+/* Generated with cbindgen:0.1.19 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -45,6 +45,15 @@ enum class BoxShadowClipMode : uint32_t {
 enum class ExtendMode : uint32_t {
   Clamp = 0,
   Repeat = 1,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
+enum class ExternalImageType : uint32_t {
+  Texture2DHandle = 0,
+  TextureRectHandle = 1,
+  TextureExternalHandle = 2,
+  ExternalBuffer = 3,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -105,15 +114,6 @@ enum class TransformStyle : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class WrExternalImageBufferType : uint32_t {
-  Texture2DHandle = 0,
-  TextureRectHandle = 1,
-  TextureExternalHandle = 2,
-  ExternalBuffer = 3,
-
-  Sentinel /* this must be last for serialization purposes. */
-};
-
 enum class WrExternalImageType : uint32_t {
   NativeTexture = 0,
   RawData = 1,
@@ -135,14 +135,14 @@ enum class WrFilterOpType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-enum class WrYuvColorSpace : uint32_t {
+enum class YuvColorSpace : uint32_t {
   Rec601 = 0,
   Rec709 = 1,
 
   Sentinel /* this must be last for serialization purposes. */
 };
 
-struct ArcVecU8;
+struct Arc_VecU8;
 
 struct LayerPixel;
 
@@ -150,7 +150,7 @@ struct RenderApi;
 
 struct Renderer;
 
-struct VecU8;
+struct Vec_u8;
 
 struct WrRenderedEpochs;
 
@@ -158,15 +158,21 @@ struct WrState;
 
 struct WrThreadPool;
 
-struct WrImageKey {
+typedef Vec_u8 VecU8;
+
+typedef Arc_VecU8 ArcVecU8;
+
+struct ImageKey {
   uint32_t mNamespace;
   uint32_t mHandle;
 
-  bool operator==(const WrImageKey& aOther) const {
+  bool operator==(const ImageKey& aOther) const {
     return mNamespace == aOther.mNamespace &&
            mHandle == aOther.mHandle;
   }
 };
+
+typedef ImageKey WrImageKey;
 
 struct WrImageDescriptor {
   ImageFormat format;
@@ -202,49 +208,61 @@ struct WrExternalImageId {
   }
 };
 
-struct WrFontKey {
+typedef ExternalImageType WrExternalImageBufferType;
+
+struct FontKey {
   uint32_t mNamespace;
   uint32_t mHandle;
 
-  bool operator==(const WrFontKey& aOther) const {
+  bool operator==(const FontKey& aOther) const {
     return mNamespace == aOther.mNamespace &&
            mHandle == aOther.mHandle;
   }
 };
 
-struct WrEpoch {
+typedef FontKey WrFontKey;
+
+struct Epoch {
   uint32_t mHandle;
 
-  bool operator==(const WrEpoch& aOther) const {
+  bool operator==(const Epoch& aOther) const {
     return mHandle == aOther.mHandle;
   }
-  bool operator<(const WrEpoch& aOther) const {
+  bool operator<(const Epoch& aOther) const {
     return mHandle < aOther.mHandle;
   }
-  bool operator<=(const WrEpoch& aOther) const {
+  bool operator<=(const Epoch& aOther) const {
     return mHandle <= aOther.mHandle;
   }
 };
 
-struct WrPipelineId {
+typedef Epoch WrEpoch;
+
+struct PipelineId {
   uint32_t mNamespace;
   uint32_t mHandle;
 
-  bool operator==(const WrPipelineId& aOther) const {
+  bool operator==(const PipelineId& aOther) const {
     return mNamespace == aOther.mNamespace &&
            mHandle == aOther.mHandle;
   }
 };
 
-struct LayoutSize {
+typedef PipelineId WrPipelineId;
+
+struct TypedSize2D_f32__LayerPixel {
   float width;
   float height;
 
-  bool operator==(const LayoutSize& aOther) const {
+  bool operator==(const TypedSize2D_f32__LayerPixel& aOther) const {
     return width == aOther.width &&
            height == aOther.height;
   }
 };
+
+typedef TypedSize2D_f32__LayerPixel LayerSize;
+
+typedef LayerSize LayoutSize;
 
 struct BuiltDisplayListDescriptor {
   uint64_t builder_start_time;
@@ -278,7 +296,7 @@ struct WrOpacityProperty {
   }
 };
 
-struct LayoutTransform {
+struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
   float m11;
   float m12;
   float m13;
@@ -296,7 +314,7 @@ struct LayoutTransform {
   float m43;
   float m44;
 
-  bool operator==(const LayoutTransform& aOther) const {
+  bool operator==(const TypedTransform3D_f32__LayoutPixel__LayoutPixel& aOther) const {
     return m11 == aOther.m11 &&
            m12 == aOther.m12 &&
            m13 == aOther.m13 &&
@@ -316,24 +334,30 @@ struct LayoutTransform {
   }
 };
 
+typedef LayerPixel LayoutPixel;
+
+typedef TypedTransform3D_f32__LayoutPixel__LayoutPixel LayoutTransform;
+
 struct WrTransformProperty {
   uint64_t id;
   LayoutTransform transform;
 };
 
-struct WrIdNamespace {
+struct IdNamespace {
   uint32_t mHandle;
 
-  bool operator==(const WrIdNamespace& aOther) const {
+  bool operator==(const IdNamespace& aOther) const {
     return mHandle == aOther.mHandle;
   }
-  bool operator<(const WrIdNamespace& aOther) const {
+  bool operator<(const IdNamespace& aOther) const {
     return mHandle < aOther.mHandle;
   }
-  bool operator<=(const WrIdNamespace& aOther) const {
+  bool operator<=(const IdNamespace& aOther) const {
     return mHandle <= aOther.mHandle;
   }
 };
+
+typedef IdNamespace WrIdNamespace;
 
 struct ColorF {
   float r;
@@ -359,25 +383,19 @@ struct TypedPoint2D_f32__LayerPixel {
   }
 };
 
-struct TypedSize2D_f32__LayerPixel {
-  float width;
-  float height;
-
-  bool operator==(const TypedSize2D_f32__LayerPixel& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height;
-  }
-};
-
-struct LayoutRect {
+struct TypedRect_f32__LayerPixel {
   TypedPoint2D_f32__LayerPixel origin;
   TypedSize2D_f32__LayerPixel size;
 
-  bool operator==(const LayoutRect& aOther) const {
+  bool operator==(const TypedRect_f32__LayerPixel& aOther) const {
     return origin == aOther.origin &&
            size == aOther.size;
   }
 };
+
+typedef TypedRect_f32__LayerPixel LayerRect;
+
+typedef LayerRect LayoutRect;
 
 struct BorderWidths {
   float left;
@@ -417,15 +435,9 @@ struct BorderRadius {
   }
 };
 
-struct LayoutPoint {
-  float x;
-  float y;
+typedef TypedPoint2D_f32__LayerPixel LayerPoint;
 
-  bool operator==(const LayoutPoint& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y;
-  }
-};
+typedef LayerPoint LayoutPoint;
 
 struct GradientStop {
   float offset;
@@ -437,20 +449,6 @@ struct GradientStop {
   }
 };
 
-struct SideOffsets2D_f32 {
-  float top;
-  float right;
-  float bottom;
-  float left;
-
-  bool operator==(const SideOffsets2D_f32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
-
 struct SideOffsets2D_u32 {
   uint32_t top;
   uint32_t right;
@@ -458,6 +456,20 @@ struct SideOffsets2D_u32 {
   uint32_t left;
 
   bool operator==(const SideOffsets2D_u32& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
+  }
+};
+
+struct SideOffsets2D_f32 {
+  float top;
+  float right;
+  float bottom;
+  float left;
+
+  bool operator==(const SideOffsets2D_f32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -477,15 +489,19 @@ struct NinePatchDescriptor {
   }
 };
 
-struct LayoutVector2D {
+struct TypedVector2D_f32__LayerPixel {
   float x;
   float y;
 
-  bool operator==(const LayoutVector2D& aOther) const {
+  bool operator==(const TypedVector2D_f32__LayerPixel& aOther) const {
     return x == aOther.x &&
            y == aOther.y;
   }
 };
+
+typedef TypedVector2D_f32__LayerPixel LayerVector2D;
+
+typedef LayerVector2D LayoutVector2D;
 
 struct WrComplexClipRegion {
   LayoutRect rect;
@@ -528,6 +544,8 @@ struct GlyphInstance {
            point == aOther.point;
   }
 };
+
+typedef YuvColorSpace WrYuvColorSpace;
 
 struct MutByteSlice {
   uint8_t *buffer;

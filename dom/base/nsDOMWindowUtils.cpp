@@ -2926,9 +2926,15 @@ nsDOMWindowUtils::GetUnanimatedComputedStyle(nsIDOMElement* aElement,
     nsComputedDOMStyle::GetUnanimatedStyleContextNoFlush(element,
                                                          pseudo, shell);
 
-  // We will support Servo in bug 1311257.
-  if (shell->StyleSet()->IsServo()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (styleContext->IsServo()) {
+    RefPtr<RawServoAnimationValue> value =
+      Servo_ComputedValues_ExtractAnimationValue(styleContext->AsServo(),
+                                                 propertyID).Consume();
+    if (!value) {
+      return NS_ERROR_FAILURE;
+    }
+    Servo_AnimationValue_Serialize(value, propertyID, &aResult);
+    return NS_OK;
   }
 
   StyleAnimationValue computedValue;

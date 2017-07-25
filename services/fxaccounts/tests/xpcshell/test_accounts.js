@@ -535,6 +535,110 @@ add_test(function test_polling_timeout() {
   });
 });
 
+add_test(function test_pollEmailStatus_start_verified() {
+  let fxa = new MockFxAccounts();
+  let test_user = getTestUser("carol");
+
+  fxa.internal.POLL_SESSION = 20 * 60000;
+  fxa.internal.VERIFICATION_POLL_TIMEOUT_INITIAL = 50000;
+
+  fxa.setSignedInUser(test_user).then(() => {
+    fxa.internal.getUserAccountData().then(user => {
+      fxa.internal.fxAccountsClient._email = test_user.email;
+      fxa.internal.fxAccountsClient._verified = true;
+      const mock = sinon.mock(fxa.internal)
+      mock.expects("_scheduleNextPollEmailStatus").never();
+      fxa.internal.startPollEmailStatus(fxa.internal.currentAccountState, user.sessionToken, "start").then(() => {
+        mock.verify();
+        mock.restore();
+        run_next_test();
+      });
+    });
+  });
+});
+
+add_test(function test_pollEmailStatus_start() {
+  let fxa = new MockFxAccounts();
+  let test_user = getTestUser("carol");
+
+  fxa.internal.POLL_SESSION = 20 * 60000;
+  fxa.internal.VERIFICATION_POLL_TIMEOUT_INITIAL = 123456;
+
+  fxa.setSignedInUser(test_user).then(() => {
+    fxa.internal.getUserAccountData().then(user => {
+      const mock = sinon.mock(fxa.internal)
+      mock.expects("_scheduleNextPollEmailStatus").once()
+          .withArgs(fxa.internal.currentAccountState, user.sessionToken, 123456, "start");
+      fxa.internal.startPollEmailStatus(fxa.internal.currentAccountState, user.sessionToken, "start").then(() => {
+        mock.verify();
+        mock.restore();
+        run_next_test();
+      });
+    });
+  });
+});
+
+add_test(function test_pollEmailStatus_start_subsequent() {
+  let fxa = new MockFxAccounts();
+  let test_user = getTestUser("carol");
+
+  fxa.internal.POLL_SESSION = 20 * 60000;
+  fxa.internal.VERIFICATION_POLL_TIMEOUT_INITIAL = 123456;
+  fxa.internal.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT = 654321;
+  fxa.internal.VERIFICATION_POLL_START_SLOWDOWN_THRESHOLD = -1;
+
+  fxa.setSignedInUser(test_user).then(() => {
+    fxa.internal.getUserAccountData().then(user => {
+      const mock = sinon.mock(fxa.internal)
+      mock.expects("_scheduleNextPollEmailStatus").once()
+          .withArgs(fxa.internal.currentAccountState, user.sessionToken, 654321, "start");
+      fxa.internal.startPollEmailStatus(fxa.internal.currentAccountState, user.sessionToken, "start").then(() => {
+        mock.verify();
+        mock.restore();
+        run_next_test();
+      });
+    });
+  });
+});
+
+add_test(function test_pollEmailStatus_browser_startup() {
+  let fxa = new MockFxAccounts();
+  let test_user = getTestUser("carol");
+
+  fxa.internal.POLL_SESSION = 20 * 60000;
+  fxa.internal.VERIFICATION_POLL_TIMEOUT_SUBSEQUENT = 654321;
+
+  fxa.setSignedInUser(test_user).then(() => {
+    fxa.internal.getUserAccountData().then(user => {
+      const mock = sinon.mock(fxa.internal)
+      mock.expects("_scheduleNextPollEmailStatus").once()
+          .withArgs(fxa.internal.currentAccountState, user.sessionToken, 654321, "browser-startup");
+      fxa.internal.startPollEmailStatus(fxa.internal.currentAccountState, user.sessionToken, "browser-startup").then(() => {
+        mock.verify();
+        mock.restore();
+        run_next_test();
+      });
+    });
+  });
+});
+
+add_test(function test_pollEmailStatus_push() {
+  let fxa = new MockFxAccounts();
+  let test_user = getTestUser("carol");
+
+  fxa.setSignedInUser(test_user).then(() => {
+    fxa.internal.getUserAccountData().then(user => {
+      const mock = sinon.mock(fxa.internal)
+      mock.expects("_scheduleNextPollEmailStatus").never();
+      fxa.internal.startPollEmailStatus(fxa.internal.currentAccountState, user.sessionToken, "push").then(() => {
+        mock.verify();
+        mock.restore();
+        run_next_test();
+      });
+    });
+  });
+});
+
 add_test(function test_getKeys() {
   let fxa = new MockFxAccounts();
   let user = getTestUser("eusebius");

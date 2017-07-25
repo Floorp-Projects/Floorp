@@ -30,8 +30,11 @@ loader.lazyRequireGetter(this, "CommandState", "devtools/shared/gcli/command-sta
 loader.lazyImporter(this, "ResponsiveUIManager", "resource://devtools/client/responsivedesign/responsivedesign.jsm");
 loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
 
-const {LocalizationHelper} = require("devtools/shared/l10n");
-const L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
+const {MultiLocalizationHelper} = require("devtools/shared/l10n");
+const L10N = new MultiLocalizationHelper(
+  "devtools/client/locales/startup.properties",
+  "devtools/client/locales/key-shortcuts.properties"
+);
 
 var Tools = {};
 exports.Tools = Tools;
@@ -62,9 +65,7 @@ Tools.options = {
 Tools.inspector = {
   id: "inspector",
   accesskey: l10n("inspector.accesskey"),
-  key: l10n("inspector.commandkey"),
   ordinal: 1,
-  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   icon: "chrome://devtools/skin/images/tool-inspector.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/inspector/inspector.xhtml",
@@ -72,7 +73,8 @@ Tools.inspector = {
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
     return l10n("inspector.tooltip2",
-    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+    l10n("inspector.commandkey"));
   },
   inMenu: true,
   commands: [
@@ -95,9 +97,7 @@ Tools.inspector = {
 };
 Tools.webConsole = {
   id: "webconsole",
-  key: l10n("cmd.commandkey"),
   accesskey: l10n("webConsoleCmd.accesskey"),
-  modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 2,
   oldWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xul",
   newWebConsoleURL: "chrome://devtools/content/webconsole/webconsole.xhtml",
@@ -108,7 +108,8 @@ Tools.webConsole = {
   panelLabel: l10n("ToolboxWebConsole.panelLabel"),
   get tooltip() {
     return l10n("ToolboxWebconsole.tooltip2",
-    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+    l10n("webconsole.commandkey"));
   },
   inMenu: true,
   commands: "devtools/client/webconsole/console-commands",
@@ -146,9 +147,7 @@ Services.prefs.addObserver(
 
 Tools.jsdebugger = {
   id: "jsdebugger",
-  key: l10n("debuggerMenu.commandkey"),
   accesskey: l10n("debuggerMenu.accesskey"),
-  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 3,
   icon: "chrome://devtools/skin/images/tool-debugger.svg",
   invertIconForDarkTheme: true,
@@ -158,7 +157,8 @@ Tools.jsdebugger = {
   panelLabel: l10n("ToolboxDebugger.panelLabel"),
   get tooltip() {
     return l10n("ToolboxDebugger.tooltip2",
-    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+    l10n("debugger.commandkey"));
   },
   inMenu: true,
   commands: "devtools/client/debugger/debugger-commands",
@@ -194,11 +194,9 @@ Services.prefs.addObserver(
 
 Tools.styleEditor = {
   id: "styleeditor",
-  key: l10n("open.commandkey"),
   ordinal: 4,
   visibilityswitch: "devtools.styleeditor.enabled",
   accesskey: l10n("open.accesskey"),
-  modifiers: "shift",
   icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
   invertIconForDarkTheme: true,
   url: "chrome://devtools/content/styleeditor/styleeditor.xul",
@@ -206,7 +204,7 @@ Tools.styleEditor = {
   panelLabel: l10n("ToolboxStyleEditor.panelLabel"),
   get tooltip() {
     return l10n("ToolboxStyleEditor.tooltip3",
-    "Shift+" + functionkey(this.key));
+    "Shift+" + functionkey(l10n("styleeditor.commandkey")));
   },
   inMenu: true,
   commands: "devtools/client/styleeditor/styleeditor-commands",
@@ -273,11 +271,10 @@ Tools.performance = {
   label: l10n("performance.label"),
   panelLabel: l10n("performance.panelLabel"),
   get tooltip() {
-    return l10n("performance.tooltip", "Shift+" + functionkey(this.key));
+    return l10n("performance.tooltip", "Shift+" +
+    functionkey(l10n("performance.commandkey")));
   },
   accesskey: l10n("performance.accesskey"),
-  key: l10n("performance.commandkey"),
-  modifiers: "shift",
   inMenu: true,
 
   isTargetSupported: function (target) {
@@ -313,9 +310,7 @@ Tools.memory = {
 Tools.netMonitor = {
   id: "netmonitor",
   accesskey: l10n("netmonitor.accesskey"),
-  key: l10n("netmonitor.commandkey2"),
   ordinal: 9,
-  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",
   icon: "chrome://devtools/skin/images/tool-network.svg",
   invertIconForDarkTheme: true,
@@ -324,7 +319,8 @@ Tools.netMonitor = {
   panelLabel: l10n("netmonitor.panelLabel"),
   get tooltip() {
     return l10n("netmonitor.tooltip2",
-    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+    (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+    l10n("netmonitor.commandkey"));
   },
   inMenu: true,
 
@@ -339,10 +335,8 @@ Tools.netMonitor = {
 
 Tools.storage = {
   id: "storage",
-  key: l10n("storage.commandkey"),
   ordinal: 10,
   accesskey: l10n("storage.accesskey"),
-  modifiers: "shift",
   visibilityswitch: "devtools.storage.enabled",
   icon: "chrome://devtools/skin/images/tool-storage.svg",
   invertIconForDarkTheme: true,
@@ -351,7 +345,8 @@ Tools.storage = {
   menuLabel: l10n("storage.menuLabel"),
   panelLabel: l10n("storage.panelLabel"),
   get tooltip() {
-    return l10n("storage.tooltip3", "Shift+" + functionkey(this.key));
+    return l10n("storage.tooltip3", "Shift+" +
+    functionkey(l10n("storage.commandkey")));
   },
   inMenu: true,
 
@@ -410,9 +405,7 @@ Tools.scratchpad = {
 Tools.dom = {
   id: "dom",
   accesskey: l10n("dom.accesskey"),
-  key: l10n("dom.commandkey"),
   ordinal: 13,
-  modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.dom.enabled",
   icon: "chrome://devtools/skin/images/tool-dom.svg",
   invertIconForDarkTheme: true,
@@ -421,7 +414,8 @@ Tools.dom = {
   panelLabel: l10n("dom.panelLabel"),
   get tooltip() {
     return l10n("dom.tooltip",
-      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") + this.key);
+      (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
+      l10n("dom.commandkey"));
   },
   inMenu: true,
 

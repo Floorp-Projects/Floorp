@@ -20,7 +20,7 @@ const localeService =
   Cc["@mozilla.org/intl/localeservice;1"].getService(Ci.mozILocaleService);
 const mozIntl = Cc["@mozilla.org/mozintl;1"].getService(Ci.mozIMozIntl);
 
-let appLocale = localeService.getAppLocalesAsBCP47()[0];
+let rpLocale = localeService.getRegionalPrefsLocales()[0];
 
 let testData = [
   {
@@ -44,12 +44,12 @@ let testData = [
       direction: "rtl",
     }
   },
-  // IntlUtils uses current app locales if locales is not provided.
+  // IntlUtils uses current regional prefs locales if locales is not provided.
   {
     locales: [],
     expected: {
-      locale: appLocale,
-      direction: mozIntl.getLocaleInfo(appLocale).direction,
+      locale: rpLocale,
+      direction: mozIntl.getLocaleInfo(rpLocale).direction,
     }
   },
 ];

@@ -106,7 +106,7 @@ public:
                uint32_t                aIndex,
                const nsRect*           aSelectedRect = nullptr);
 
-  void PaintForeground(nsPresContext* aPresContext,
+  void PaintForeground(nsIFrame* aForFrame,
                        gfxContext& aRenderingContext,
                        nsPoint aPt,
                        bool aIsSelected);
@@ -115,7 +115,7 @@ public:
   // @param aContainerSize - IN - suggested size for the stretched char
   // @param aDesiredStretchSize - OUT - the size that the char wants
   nsresult
-  Stretch(nsPresContext*           aPresContext,
+  Stretch(nsIFrame*                aForFrame,
           DrawTarget*              aDrawTarget,
           float                    aFontSizeInflation,
           nsStretchDirection       aStretchDirection,
@@ -165,7 +165,7 @@ public:
   // @param aStretchHint can be the value that will be passed to Stretch().
   // It is used to determine whether the operator is stretchy or a largeop.
   nscoord
-  GetMaxWidth(nsPresContext* aPresContext,
+  GetMaxWidth(nsIFrame* aForFrame,
               DrawTarget* aDrawTarget,
               float aFontSizeInflation,
               uint32_t aStretchHint = NS_STRETCH_NORMAL);
@@ -203,7 +203,7 @@ private:
   nsRect             mRect;
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
-  nsStyleContext*    mStyleContext;
+  RefPtr<nsStyleContext> mStyleContext;
   // mGlyphs/mBmData are arrays describing the glyphs used to draw the operator.
   // See the drawing methods below.
   RefPtr<gfxTextRun> mGlyphs[4];
@@ -239,7 +239,7 @@ private:
                 RefPtr<gfxFontGroup>* aFontGroup);
 
   nsresult
-  StretchInternal(nsPresContext*           aPresContext,
+  StretchInternal(nsIFrame*                aForFrame,
                   DrawTarget*              aDrawTarget,
                   float                    aFontSizeInflation,
                   nsStretchDirection&      aStretchDirection,

@@ -58,13 +58,13 @@ fails-if(!stylo) == anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor
 fails-if(!stylo) == anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg # bug 515919
 
 # 'fill-opacity' property
-fuzzy-if(skiaContent,1,885) fails-if(styloVsGecko||stylo) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
-fuzzy-if(skiaContent,1,210) fails-if(styloVsGecko||stylo) == anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
+fuzzy-if(skiaContent,1,885) == anim-css-fillopacity-1-by.svg            anim-css-fillopacity-1-ref.svg
+fuzzy-if(skiaContent,1,210) == anim-css-fillopacity-1-from-by.svg       anim-css-fillopacity-1-ref.svg
 == anim-css-fillopacity-1-from-to.svg       anim-css-fillopacity-1-ref.svg
 fuzzy-if(skiaContent,1,550) == anim-css-fillopacity-1-to.svg            anim-css-fillopacity-1-ref.svg
 == anim-css-fillopacity-2-paced.svg         anim-css-fillopacity-2-ref.svg
 fails == anim-css-fillopacity-3-clamp-big.svg     anim-css-fillopacity-3-ref.svg # bug 501188
-fuzzy-if(skiaContent,1,365) fails-if(styloVsGecko||stylo) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
+fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css-fillopacity-3-ref.svg
 
 # 'font' shorthand property
 fails-if(styloVsGecko||stylo) == anim-css-font-1.svg  anim-css-font-1-ref.svg

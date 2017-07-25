@@ -62,9 +62,8 @@ public:
   FixInterFrameSpacing(ReflowOutput& aDesiredSize) override;
 
   // helper routines to format the MathMLChars involved here
-  static nsresult
-  ReflowChar(nsPresContext*       aPresContext,
-             DrawTarget*          aDrawTarget,
+  nsresult
+  ReflowChar(DrawTarget*          aDrawTarget,
              nsFontMetrics&       aFontMetrics,
              float                aFontSizeInflation,
              nsMathMLChar*        aMathMLChar,

@@ -19,6 +19,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.ArrayList;
@@ -87,7 +88,7 @@ import java.util.List;
                 extras.build()
         );
 
-        onUrlOpenListener.onUrlOpen(topSite.getUrl(), EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+        onUrlOpenListener.onUrlOpen(StringUtils.decodeUserEnteredUrl(topSite.getUrl()), EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
     }
 
     @Override

@@ -5,28 +5,33 @@
 
 "use strict";
 
+var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(Ci.nsISupports)
+  .wrappedJSObject;
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
-var toolbox, toolIDs, idIndex, modifiedPrefs = [];
+var toolbox, toolIDs, toolShortcuts = [], idIndex, modifiedPrefs = [];
 
 function test() {
   addTab("about:blank").then(function () {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {
-      if (definition.key) {
-        toolIDs.push(id);
+      let shortcut = Startup.KeyShortcuts.filter(s => s.toolId == id)[0];
+      if (!shortcut) {
+        continue;
+      }
+      toolIDs.push(id);
+      toolShortcuts.push(shortcut);
 
-        // Enable disabled tools
-        let pref = definition.visibilityswitch, prefValue;
-        try {
-          prefValue = Services.prefs.getBoolPref(pref);
-        } catch (e) {
-          continue;
-        }
-        if (!prefValue) {
-          modifiedPrefs.push(pref);
-          Services.prefs.setBoolPref(pref, true);
-        }
+      // Enable disabled tools
+      let pref = definition.visibilityswitch, prefValue;
+      try {
+        prefValue = Services.prefs.getBoolPref(pref);
+      } catch (e) {
+        continue;
+      }
+      if (!prefValue) {
+        modifiedPrefs.push(pref);
+        Services.prefs.setBoolPref(pref, true);
       }
     }
     let target = TargetFactory.forTab(gBrowser.selectedTab);
@@ -49,8 +54,9 @@ function testShortcuts(aToolbox, aIndex) {
 
   toolbox.once("select", selectCB);
 
-  let key = gDevTools._tools.get(toolIDs[aIndex]).key;
-  let toolModifiers = gDevTools._tools.get(toolIDs[aIndex]).modifiers;
+  let shortcut = toolShortcuts[aIndex];
+  let key = shortcut.shortcut;
+  let toolModifiers = shortcut.modifiers;
   let modifiers = {
     accelKey: toolModifiers.includes("accel"),
     altKey: toolModifiers.includes("alt"),

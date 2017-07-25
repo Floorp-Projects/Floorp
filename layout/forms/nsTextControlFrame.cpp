@@ -674,7 +674,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
                                                    TaskCategory::Other,
                                                    do_AddRef(event));
       if (NS_SUCCEEDED(rv)) {
-        mScrollEvent = event;
+        mScrollEvent = Move(event);
       }
     }
   }

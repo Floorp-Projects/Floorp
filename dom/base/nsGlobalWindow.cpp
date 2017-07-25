@@ -15495,13 +15495,13 @@ nsGlobalWindow::GetPaintWorklet(ErrorResult& aRv)
 }
 
 void
-nsGlobalWindow::GetAppLocalesAsBCP47(nsTArray<nsString>& aLocales)
+nsGlobalWindow::GetRegionalPrefsLocales(nsTArray<nsString>& aLocales)
 {
-  nsTArray<nsCString> appLocales;
-  mozilla::intl::LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
+  AutoTArray<nsCString, 10> rpLocales;
+  mozilla::intl::LocaleService::GetInstance()->GetRegionalPrefsLocales(rpLocales);
 
-  for (uint32_t i = 0; i < appLocales.Length(); i++) {
-    aLocales.AppendElement(NS_ConvertUTF8toUTF16(appLocales[i]));
+  for (const auto& loc : rpLocales) {
+    aLocales.AppendElement(NS_ConvertUTF8toUTF16(loc));
   }
 }
 

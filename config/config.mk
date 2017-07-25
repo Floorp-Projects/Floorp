@@ -225,6 +225,9 @@ endif
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
+# linker
+OS_LDFLAGS += $(LINKER_LDFLAGS)
+
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
 	-f $(MOZ_JAR_MAKER_FILE_FORMAT) \
