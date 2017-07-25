@@ -99,7 +99,7 @@ WebRenderPaintedLayer::CreateWebRenderDisplayList(wr::DisplayListBuilder& aBuild
   LayerRect rect = Bounds();
   DumpLayerInfo("PaintedLayer", rect);
 
-  wr::WrImageKey key = GetImageKey();
+  wr::WrImageKey key = GenerateImageKey();
   WrBridge()->AddWebRenderParentCommand(OpAddExternalImage(mExternalImageId.value(), key));
   WrManager()->AddImageKeyForDiscard(key);
 
