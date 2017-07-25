@@ -274,6 +274,12 @@ protected:
   static void CreateIMEContentObserver(EditorBase* aEditorBase);
   static void DestroyIMEContentObserver();
 
+  /**
+   * NotifyIMEOfBlurForChildProcess() tries to send blur notification when
+   * a remote process has IME focus.  Otherwise, do nothing.
+   */
+  static void NotifyIMEOfBlurForChildProcess();
+
   static bool IsEditable(nsINode* node);
 
   static bool IsIMEObserverNeeded(const IMEState& aState);
