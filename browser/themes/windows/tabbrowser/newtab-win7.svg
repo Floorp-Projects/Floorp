@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="16" height="18" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#1c2835"/>
+      <stop offset="60%" stop-color="#606e7b"/>
+      <stop offset="100%" stop-color="#465765"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#gradient)">
+    <rect width="10" height="2" x="3" y="8"/>
+    <rect width="2" height="10" x="7" y="4"/>
+  </g>
+</svg>
