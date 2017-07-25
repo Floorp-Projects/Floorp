@@ -2462,6 +2462,10 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
   if (aIsActive) {
     MakeVisible();
 
+    if (!docShell) {
+      return;
+    }
+
     // We don't use TabChildBase::GetPresShell() here because that would create
     // a content viewer if one doesn't exist yet. Creating a content viewer can
     // cause JS to run, which we want to avoid. nsIDocShell::GetPresShell
