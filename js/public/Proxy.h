@@ -330,7 +330,7 @@ class JS_FRIEND_API(BaseProxyHandler)
                                  ESClass* cls) const;
     virtual bool isArray(JSContext* cx, HandleObject proxy, JS::IsArrayAnswer* answer) const;
     virtual const char* className(JSContext* cx, HandleObject proxy) const;
-    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const;
+    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const;
     virtual RegExpShared* regexp_toShared(JSContext* cx, HandleObject proxy) const;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const;
     virtual void trace(JSTracer* trc, JSObject* proxy) const;

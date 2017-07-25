@@ -4359,16 +4359,10 @@ CompileFunction(JSContext* cx, AutoObjectVector& envChain,
 } /* namespace JS */
 
 extern JS_PUBLIC_API(JSString*)
-JS_DecompileScript(JSContext* cx, JS::Handle<JSScript*> script, const char* name, unsigned indent);
-
-/*
- * API extension: OR this into indent to avoid pretty-printing the decompiled
- * source resulting from JS_DecompileFunction.
- */
-#define JS_DONT_PRETTY_PRINT    ((unsigned)0x8000)
+JS_DecompileScript(JSContext* cx, JS::Handle<JSScript*> script);
 
 extern JS_PUBLIC_API(JSString*)
-JS_DecompileFunction(JSContext* cx, JS::Handle<JSFunction*> fun, unsigned indent);
+JS_DecompileFunction(JSContext* cx, JS::Handle<JSFunction*> fun);
 
 
 /*

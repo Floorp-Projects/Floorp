@@ -183,7 +183,7 @@ OpaqueCrossCompartmentWrapper::className(JSContext* cx,
 
 JSString*
 OpaqueCrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject proxy,
-                                            unsigned indent) const
+                                            bool isToSource) const
 {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                               js_Function_str, js_toString_str, "object");
