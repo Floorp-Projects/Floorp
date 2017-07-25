@@ -691,37 +691,6 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 }
 
 nsresult
-PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  if (mNativeTextEventDispatcherListener) {
-    // Use mNativeTextEventDispatcherListener for IME notifications.
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      return RequestIMEToCommitComposition(false);
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      return RequestIMEToCommitComposition(true);
-    case NOTIFY_IME_OF_FOCUS:
-    case NOTIFY_IME_OF_BLUR:
-      return NotifyIMEOfFocusChange(aIMENotification);
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      return NotifyIMEOfSelectionChange(aIMENotification);
-    case NOTIFY_IME_OF_TEXT_CHANGE:
-      return NotifyIMEOfTextChange(aIMENotification);
-    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
-      return NotifyIMEOfCompositionUpdate(aIMENotification);
-    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
-      return NotifyIMEOfMouseButtonEvent(aIMENotification);
-    case NOTIFY_IME_OF_POSITION_CHANGE:
-      return NotifyIMEOfPositionChange(aIMENotification);
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
-}
-
-nsresult
 PuppetWidget::StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                              int32_t aPanelX, int32_t aPanelY,
                              nsString& aCommitted)
@@ -1492,9 +1461,40 @@ PuppetWidget::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
 
 NS_IMETHODIMP
 PuppetWidget::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
-                        const IMENotification& aNotification)
+                        const IMENotification& aIMENotification)
 {
   MOZ_ASSERT(aTextEventDispatcher == mTextEventDispatcher);
+
+  // If there is different text event dispatcher listener for handling
+  // text event dispatcher, that means that native keyboard events and
+  // IME events are handled in this process.  Therefore, we don't need
+  // to send any requests and notifications to the parent process.
+  if (mNativeTextEventDispatcherListener) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  switch (aIMENotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      return RequestIMEToCommitComposition(false);
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      return RequestIMEToCommitComposition(true);
+    case NOTIFY_IME_OF_FOCUS:
+    case NOTIFY_IME_OF_BLUR:
+      return NotifyIMEOfFocusChange(aIMENotification);
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      return NotifyIMEOfSelectionChange(aIMENotification);
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      return NotifyIMEOfTextChange(aIMENotification);
+    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
+      return NotifyIMEOfCompositionUpdate(aIMENotification);
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return NotifyIMEOfMouseButtonEvent(aIMENotification);
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      return NotifyIMEOfPositionChange(aIMENotification);
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
