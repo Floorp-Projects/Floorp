@@ -858,7 +858,20 @@ TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
 NS_IMETHODIMP
 TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret);
+  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, false, false);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::SnapshotSubsessionKeyedHistograms(bool clearSubsession,
+                                                 JSContext *cx,
+                                                 JS::MutableHandle<JS::Value> ret)
+{
+#if !defined(MOZ_WIDGET_ANDROID)
+  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, true,
+                                                        clearSubsession);
+#else
+  return NS_OK;
+#endif
 }
 
 bool
@@ -2414,16 +2427,6 @@ SetProfileDir(nsIFile* aProfD)
     return;
   }
   sTelemetryIOObserver->AddPath(profDirPath, NS_LITERAL_STRING("{profile}"));
-}
-
-void CreateStatisticsRecorder()
-{
-  TelemetryHistogram::CreateStatisticsRecorder();
-}
-
-void DestroyStatisticsRecorder()
-{
-  TelemetryHistogram::DestroyStatisticsRecorder();
 }
 
 // Scalar API C++ Endpoints

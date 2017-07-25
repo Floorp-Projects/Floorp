@@ -16,7 +16,6 @@ const {
 } = require("devtools/shared/specs/styles");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
-const { Class } = require("sdk/core/heritage");
 const { RuleRewriter } = require("devtools/shared/css/parsing-utils");
 
 /**
@@ -295,15 +294,15 @@ exports.StyleRuleFront = StyleRuleFront;
  * This lets the inspector use (mostly) the same code, regardless of
  * whether the server implements setRuleText.
  */
-var RuleModificationList = Class({
+class RuleModificationList {
   /**
    * Initialize a RuleModificationList.
    * @param {StyleRuleFront} rule the associated rule
    */
-  initialize: function (rule) {
+  constructor(rule) {
     this.rule = rule;
     this.modifications = [];
-  },
+  }
 
   /**
    * Apply the modifications in this object to the associated rule.
@@ -311,9 +310,9 @@ var RuleModificationList = Class({
    * @return {Promise} A promise which will be resolved when the modifications
    *         are complete; @see StyleRuleActor.modifyProperties.
    */
-  apply: function () {
+  apply() {
     return this.rule.modifyProperties(this.modifications);
-  },
+  }
 
   /**
    * Add a "set" entry to the modification list.
@@ -328,14 +327,14 @@ var RuleModificationList = Class({
    * @param {String} priority the property's priority, either the empty
    *                          string or "important"
    */
-  setProperty: function (index, name, value, priority) {
+  setProperty(index, name, value, priority) {
     this.modifications.push({
       type: "set",
       name: name,
       value: value,
       priority: priority
     });
-  },
+  }
 
   /**
    * Add a "remove" entry to the modification list.
@@ -347,12 +346,12 @@ var RuleModificationList = Class({
    *                       on an element's style.
    * @param {String} name the name of the property to remove
    */
-  removeProperty: function (index, name) {
+  removeProperty(index, name) {
     this.modifications.push({
       type: "remove",
       name: name
     });
-  },
+  }
 
   /**
    * Rename a property.  This implementation acts like
@@ -370,9 +369,9 @@ var RuleModificationList = Class({
    * code also defined the interface implemented by @see RuleRewriter.
    * @param {String} newName new name of the property
    */
-  renameProperty: function (index, name) {
+  renameProperty(index, name) {
     this.removeProperty(index, name);
-  },
+  }
 
   /**
    * Enable or disable a property.  This implementation acts like
@@ -388,11 +387,11 @@ var RuleModificationList = Class({
    * @param {Boolean} isEnabled true if the property should be enabled;
    *                        false if it should be disabled
    */
-  setPropertyEnabled: function (index, name, isEnabled) {
+  setPropertyEnabled(index, name, isEnabled) {
     if (!isEnabled) {
       this.removeProperty(index, name);
     }
-  },
+  }
 
   /**
    * Create a new property.  This implementation does nothing, because
@@ -415,7 +414,7 @@ var RuleModificationList = Class({
    * @param {Boolean} enabled True if the new property should be
    *                          enabled, false if disabled
    */
-  createProperty: function () {
+  createProperty() {
     // Nothing.
-  },
-});
+  }
+}

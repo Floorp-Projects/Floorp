@@ -789,8 +789,9 @@ nsHttpConnectionMgr::UpdateCoalescingForNewConn(nsHttpConnection *newConn,
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
     MOZ_ASSERT(newConn);
     MOZ_ASSERT(newConn->ConnectionInfo());
-    MOZ_ASSERT(ent);
+    MOZ_DIAGNOSTIC_ASSERT(ent);
     MOZ_ASSERT(mCT.GetWeak(newConn->ConnectionInfo()->HashKey()) == ent);
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
 
     nsHttpConnection *existingConn = FindCoalescableConnection(ent, true);
     if (existingConn) {
@@ -1253,6 +1254,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, uint32_t ca
 void
 nsHttpConnectionMgr::ClosePersistentConnections(nsConnectionEntry *ent)
 {
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
     LOG(("nsHttpConnectionMgr::ClosePersistentConnections [ci=%s]\n",
          ent->mConnInfo->HashKey().get()));
     while (ent->mIdleConns.Length()) {
@@ -1661,6 +1663,7 @@ nsHttpConnectionMgr::DispatchTransaction(nsConnectionEntry *ent,
                                          nsHttpTransaction *trans,
                                          nsHttpConnection *conn)
 {
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
     uint32_t caps = trans->Caps();
     int32_t priority = trans->Priority();
     nsresult rv;
@@ -1756,6 +1759,7 @@ nsHttpConnectionMgr::DispatchAbstractTransaction(nsConnectionEntry *ent,
                                                  int32_t priority)
 {
     MOZ_DIAGNOSTIC_ASSERT(ent);
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
     nsresult rv;
     MOZ_ASSERT(!conn->UsingSpdy(),
                "Spdy Must Not Use DispatchAbstractTransaction");
@@ -1904,6 +1908,7 @@ void
 nsHttpConnectionMgr::AddActiveConn(nsHttpConnection *conn,
                                    nsConnectionEntry *ent)
 {
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
     ent->mActiveConns.AppendElement(conn);
     mNumActiveConns++;
     ActivateTimeoutTick();
@@ -2091,7 +2096,8 @@ nsHttpConnection *
 nsHttpConnectionMgr::GetSpdyActiveConn(nsConnectionEntry *ent)
 {
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    MOZ_ASSERT(ent);
+    MOZ_DIAGNOSTIC_ASSERT(ent);
+    CheckConnEntryMustBeInmCT(ent->mConnInfo);
 
     nsHttpConnection *experienced = nullptr;
     nsHttpConnection *noExperience = nullptr;
@@ -2413,6 +2419,7 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, ARefBase *param)
         for (uint32_t index = 0;
              ent && (index < ent->mActiveConns.Length());
              ++index) {
+            CheckConnEntryMustBeInmCT(ent->mConnInfo);
             nsHttpConnection *activeConn = ent->mActiveConns[index];
             nsAHttpTransaction *liveTransaction = activeConn->Transaction();
             if (liveTransaction && liveTransaction->IsNullTransaction()) {
@@ -4061,6 +4068,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     MOZ_DIAGNOSTIC_ASSERT(out == mStreamOut || out == mBackupStreamOut,
                           "stream mismatch");
     MOZ_DIAGNOSTIC_ASSERT(mEnt);
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
 
     LOG(("nsHalfOpenSocket::OnOutputStreamReady [this=%p ent=%s %s]\n",
          this, mEnt->mConnInfo->Origin(),
@@ -4119,7 +4127,9 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         mFastOpenInProgress = false;
         mConnectionNegotiatingFastOpen = nullptr;
     }
+
     MOZ_DIAGNOSTIC_ASSERT(mEnt);
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
     nsresult rv =  SetupConn(out, false);
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
@@ -4134,6 +4144,8 @@ nsHalfOpenSocket::FastOpenEnabled()
     LOG(("nsHalfOpenSocket::FastOpenEnabled [this=%p]\n", this));
 
     MOZ_DIAGNOSTIC_ASSERT(mEnt);
+
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
 
     if (!mEnt) {
         return false;
@@ -4187,12 +4199,15 @@ nsHalfOpenSocket::StartFastOpen()
     MOZ_DIAGNOSTIC_ASSERT(!mBackupTransport);
     MOZ_DIAGNOSTIC_ASSERT(mEnt);
 
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
+
     LOG(("nsHalfOpenSocket::StartFastOpen [this=%p]\n",
          this));
 
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
 
     mFastOpenInProgress = true;
+    mEnt->mDoNotDestroy = true;
     // Remove this HalfOpen from mEnt->mHalfOpens.
     // The new connection will take care of closing this HalfOpen from now on!
     if (!mEnt->mHalfOpens.RemoveElement(this)) {
@@ -4206,7 +4221,7 @@ nsHalfOpenSocket::StartFastOpen()
         Abandon();
         return NS_ERROR_ABORT;
     }
-    mEnt->mDoNotDestroy = true;
+
     MOZ_ASSERT(gHttpHandler->ConnMgr()->mNumHalfOpenConns);
     if (gHttpHandler->ConnMgr()->mNumHalfOpenConns) { // just in case
         gHttpHandler->ConnMgr()->mNumHalfOpenConns--;
@@ -4243,6 +4258,9 @@ nsHalfOpenSocket::StartFastOpen()
     } else {
         LOG(("nsHalfOpenSocket::StartFastOpen [this=%p conn=%p]\n",
              this, mConnectionNegotiatingFastOpen.get()));
+
+        gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
+
         mEnt->mHalfOpenFastOpenBackups.AppendElement(this);
         // SetupBackupTimer should setup timer which will hold a ref to this
         // halfOpen. It will failed only if it cannot create timer. Anyway just
@@ -4266,6 +4284,8 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
 {
     MOZ_DIAGNOSTIC_ASSERT(mFastOpenInProgress);
     MOZ_DIAGNOSTIC_ASSERT(mEnt);
+
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
 
     LOG(("nsHalfOpenSocket::SetFastOpenConnected [this=%p conn=%p error=%x]\n",
          this, mConnectionNegotiatingFastOpen.get(),
@@ -4327,6 +4347,7 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         // mConnectionNegotiatingFastOpen is going away and halfOpen is taking
         // this mSocketTransport so add halfOpen to mEnt and update
         // mNumActiveConns.
+        gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
         mEnt->mHalfOpens.AppendElement(this);
         gHttpHandler->ConnMgr()->mNumHalfOpenConns++;
         gHttpHandler->ConnMgr()->StartedConnect();
@@ -4384,6 +4405,8 @@ nsHalfOpenSocket::CancelFastOpenConnection()
 
     LOG(("nsHalfOpenSocket::CancelFastOpenConnection [this=%p conn=%p]\n",
          this, mConnectionNegotiatingFastOpen.get()));
+
+    gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
 
     RefPtr<nsHalfOpenSocket> deleteProtector(this);
     mEnt->mHalfOpenFastOpenBackups.RemoveElement(this);
@@ -4594,6 +4617,7 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         MOZ_DIAGNOSTIC_ASSERT(static_cast<int32_t>(mEnt->mIdleConns.IndexOf(conn)) == -1);
         int32_t idx = mEnt->mActiveConns.IndexOf(conn);
         if (NS_SUCCEEDED(rv) && (idx != -1)) {
+            gHttpHandler->ConnMgr()->CheckConnEntryMustBeInmCT(mEnt->mConnInfo);
             mConnectionNegotiatingFastOpen = conn;
         } else {
             conn->SetFastOpen(false);
@@ -5150,6 +5174,18 @@ nsHttpConnectionMgr::MoveToWildCardConnEntry(nsHttpConnectionInfo *specificCI,
             wcEnt->mIdleConns.InsertElementAt(0, proxyConn);
             return;
         }
+    }
+}
+
+void
+nsHttpConnectionMgr::CheckConnEntryMustBeInmCT(nsHttpConnectionInfo *ci)
+{
+    nsConnectionEntry *ent = mCT.GetWeak(ci->HashKey());
+    MOZ_DIAGNOSTIC_ASSERT(ent);
+    if (ent->mHowItWasRemoved == nsConnectionEntry::CONN_ENTRY_CLEAR_CONNECTION_HISTORY) {
+        MOZ_DIAGNOSTIC_ASSERT(false);
+    } else if (ent->mHowItWasRemoved == nsConnectionEntry::CONN_ENTRY_REMOVED_SHUTDOWN) {
+        MOZ_DIAGNOSTIC_ASSERT(false);
     }
 }
 

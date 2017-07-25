@@ -31,18 +31,6 @@ GetAndClearHistogram(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
 }
 
 void
-GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
-             const char* name, JS::MutableHandleValue valueOut, bool is_keyed)
-{
-  JS::RootedValue snapshot(cx);
-  nsresult rv = is_keyed ? mTelemetry->GetKeyedHistogramSnapshots(cx, &snapshot)
-                         : mTelemetry->GetHistogramSnapshots(cx, &snapshot);
-
-  ASSERT_EQ(rv, NS_OK) << "Cannot call histogram snapshots";
-  valueOut.set(snapshot);
-}
-
-void
 GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
                              JS::MutableHandleValue valueOut)
 {
@@ -51,6 +39,21 @@ GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
     ASSERT_TRUE(JS_GetProperty(cx, valueInObj, name, &property))
       << "Cannot get property '" << name << "'";
     valueOut.set(property);
+}
+
+void
+GetSnapshots(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
+             const char* name, JS::MutableHandleValue valueOut, bool is_keyed)
+{
+  JS::RootedValue snapshots(cx);
+  nsresult rv = is_keyed ? mTelemetry->GetKeyedHistogramSnapshots(cx, &snapshots)
+                         : mTelemetry->GetHistogramSnapshots(cx, &snapshots);
+
+  JS::RootedValue snapshot(cx);
+  GetProperty(cx, "parent", snapshots, &snapshot);
+
+  ASSERT_EQ(rv, NS_OK) << "Cannot call histogram snapshots";
+  valueOut.set(snapshot);
 }
 
 }

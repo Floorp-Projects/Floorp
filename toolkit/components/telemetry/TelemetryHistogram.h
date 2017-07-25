@@ -19,9 +19,6 @@
 
 namespace TelemetryHistogram {
 
-void CreateStatisticsRecorder();
-void DestroyStatisticsRecorder();
-
 void InitializeGlobalState(bool canRecordBase, bool canRecordExtended);
 void DeInitializeGlobalState();
 #ifdef DEBUG
@@ -75,7 +72,8 @@ RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
                           char*** aHistograms);
 
 nsresult
-GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret);
+GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,
+                           bool subsession, bool clearSubsession);
 
 size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
