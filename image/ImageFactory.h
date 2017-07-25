@@ -7,7 +7,6 @@
 #ifndef mozilla_image_ImageFactory_h
 #define mozilla_image_ImageFactory_h
 
-#include "mozilla/StyleBackendType.h"
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
 
@@ -46,8 +45,7 @@ public:
                                              const nsCString& aMimeType,
                                              ImageURL* aURI,
                                              bool aIsMultiPart,
-                                             uint32_t aInnerWindowId,
-                                             StyleBackendType aStyleBackendType = StyleBackendType::None);
+                                             uint32_t aInnerWindowId);
   /**
    * Creates a new image which isn't associated with a URI or loaded through
    * the usual image loading mechanism.
@@ -85,8 +83,7 @@ private:
                     const nsCString& aMimeType,
                     ImageURL* aURI,
                     uint32_t aImageFlags,
-                    uint32_t aInnerWindowId,
-                    StyleBackendType aStyleBackendType);
+                    uint32_t aInnerWindowId);
 
   // This is a static factory class, so disallow instantiation.
   virtual ~ImageFactory() = 0;
