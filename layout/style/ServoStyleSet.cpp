@@ -119,13 +119,6 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged) const
   if (Servo_StyleSet_MediumFeaturesChanged(mRawSet.get())) {
     return eRestyle_Subtree;
   }
-  if (aViewportChanged) {
-    // Rebuild all style data without rerunning selector matching.
-    //
-    // FIXME(emilio, bug 1328652): We don't set mUsesViewportUnits in stylo yet,
-    // so assume the worst.
-    return eRestyle_ForceDescendants;
-  }
   return nsRestyleHint(0);
 }
 
