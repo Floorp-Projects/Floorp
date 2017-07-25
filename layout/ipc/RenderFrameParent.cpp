@@ -32,6 +32,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
@@ -378,4 +379,23 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
     layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
+}
+
+bool
+nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
+                                         nsTArray<WebRenderParentCommand>& aParentCommands,
+                                         mozilla::layers::WebRenderLayerManager* aManager,
+                                         nsDisplayListBuilder* aDisplayListBuilder)
+{
+  MOZ_ASSERT(aManager->IsLayersFreeTransaction());
+
+  mozilla::LayoutDeviceRect visible = mozilla::LayoutDeviceRect::FromAppUnits(
+      GetVisibleRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
+  visible += mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+
+  aBuilder.PushIFrame(aSc.ToRelativeLayoutRect(visible),
+      mozilla::wr::AsPipelineId(mRemoteFrame->GetLayersId()));
+
+  return true;
 }
