@@ -113,13 +113,13 @@ public class WebViewProvider {
         }
 
         @Override
-        public void restoreWebviewState(Bundle savedInstanceState) {
-            // TODO: restore navigation history, and reopen previously opened page
+        public void saveWebViewState(Bundle outState) {
+            // TODO: save anything needed for navigation history restoration.
         }
 
         @Override
-        public void onSaveInstanceState(Bundle outState) {
-            // TODO: save anything needed for navigation history restoration.
+        public void restoreWebViewState(Bundle inState) {
+            // TODO: restore navigation history, and reopen previously opened page
         }
 
         private ContentListener createContentListener() {

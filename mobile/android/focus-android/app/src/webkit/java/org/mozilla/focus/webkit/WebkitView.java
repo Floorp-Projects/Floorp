@@ -26,12 +26,16 @@ import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.FileUtils;
 import org.mozilla.focus.utils.ThreadUtils;
 import org.mozilla.focus.utils.UrlUtils;
+import org.mozilla.focus.web.BrowsingSession;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
+import java.util.UUID;
+
 public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String KEY_CURRENTURL = "currenturl";
+    private static final String KEY_STATE_UUID = "state_uuid";
 
     private IconHolder iconHolder;
     private Callback callback;
@@ -78,10 +82,15 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void restoreWebviewState(Bundle savedInstanceState) {
-        // We need to have a different method name because restoreState() returns
-        // a WebBackForwardList, and we can't overload with different return types:
-        final WebBackForwardList backForwardList = restoreState(savedInstanceState);
+    public void restoreWebViewState(Bundle inBundle) {
+        final BrowsingSession session = BrowsingSession.getInstance();
+
+        // Let's see if there's a UUID in the bundle and whether we have a state assigned to this UUID.
+        final String uuid = inBundle.getString(KEY_STATE_UUID);
+
+        final WebBackForwardList backForwardList = session.hasWebViewState(uuid)
+                ? super.restoreState(session.getWebViewState(uuid))
+                : null;
 
         // Pages are only added to the back/forward list when loading finishes. If a new page is
         // loading when the Activity is paused/killed, then that page won't be in the list,
@@ -92,7 +101,7 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
         // If the app is paused/killed before the initial page finished loading, then the entire
         // list will be null - so we need to additionally check whether the list even exists.
 
-        final String desiredURL = savedInstanceState.getString(KEY_CURRENTURL);
+        final String desiredURL = inBundle.getString(KEY_CURRENTURL);
         client.notifyCurrentURL(desiredURL);
 
         if (backForwardList != null &&
@@ -106,8 +115,22 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
-        saveState(outState);
+    public void saveWebViewState(Bundle outState) {
+        // We store the actual state into another bundle that we will keep in memory as long as this
+        // browsing session is active. The data that WebView stores in this bundle is too large for
+        // Android to save and restore as part of the state bundle.
+        final Bundle stateData = new Bundle();
+        super.saveState(stateData);
+
+        // We generate a UUID that we will store in the bundle that Android saves and restores. The
+        // actual data will be kept in memory and we are going to use the UUID to lookup the data
+        // when restoring.
+        final String uuid = UUID.randomUUID().toString();
+
+        BrowsingSession.getInstance().putWebViewState(uuid, stateData);
+
+        outState.putString(KEY_STATE_UUID, uuid);
+
         // See restoreWebViewState() for an explanation of why we need to save this in _addition_
         // to WebView's state
         outState.putString(KEY_CURRENTURL, getUrl());

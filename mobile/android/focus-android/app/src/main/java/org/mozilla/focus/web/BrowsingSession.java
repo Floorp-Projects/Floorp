@@ -5,14 +5,16 @@
 
 package org.mozilla.focus.web;
 
-import java.lang.ref.WeakReference;
-
 import android.content.Context;
-import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.focus.utils.SafeIntent;
+
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A global object keeping the state of the current browsing session.
@@ -38,8 +40,11 @@ public class BrowsingSession {
     private WeakReference<TrackingCountListener> listenerWeakReference;
     private @Nullable CustomTabConfig customTabConfig;
 
+    private Map<String, Bundle> webViewStates;
+
     private BrowsingSession() {
         listenerWeakReference = new WeakReference<>(null);
+        webViewStates = new HashMap<>();
     }
 
     public void start() {
@@ -49,6 +54,7 @@ public class BrowsingSession {
     public void stop() {
         isActive = false;
         customTabConfig = null;
+        webViewStates.clear();
     }
 
     public boolean isActive() {
@@ -80,6 +86,30 @@ public class BrowsingSession {
         }
 
         customTabConfig = CustomTabConfig.parseCustomTabIntent(context, intent);
+    }
+
+    /**
+     * Keep a reference to this WebView state (saved in Bundle) linked to the given UUID so that
+     * we can restore it later.
+     */
+    public void putWebViewState(@NonNull String uuid, @NonNull Bundle bundle) {
+        webViewStates.put(uuid, bundle);
+    }
+
+    /**
+     * Get the WebView state saved linked to the given UUID or null if no such state exists.
+     */
+    @Nullable
+    public Bundle getWebViewState(@Nullable String uuid) {
+        return uuid != null ? webViewStates.get(uuid) : null;
+    }
+
+    /**
+     * Do we have a WebView state linked to the given UUID?
+     */
+    public boolean hasWebViewState(@Nullable String uuid) {
+        return uuid != null && webViewStates.containsKey(uuid);
+
     }
 
     public boolean isCustomTab() {

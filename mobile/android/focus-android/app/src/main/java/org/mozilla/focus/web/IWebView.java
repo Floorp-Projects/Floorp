@@ -106,9 +106,9 @@ public interface IWebView {
 
     boolean canGoBack();
 
-    void restoreWebviewState(Bundle savedInstanceState);
+    void restoreWebViewState(Bundle inState);
 
-    void onSaveInstanceState(Bundle outState);
+    void saveWebViewState(Bundle outState);
 
     /**
      * Get an icon (usually favicon) for the currently displayed website.
