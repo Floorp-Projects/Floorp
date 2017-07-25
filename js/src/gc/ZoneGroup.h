@@ -76,6 +76,9 @@ class ZoneGroup
     // See the useExclusiveLocking field above.
     void setUseExclusiveLocking() { useExclusiveLocking = true; }
 
+    // Delete an empty zone after its contents have been merged.
+    void deleteEmptyZone(Zone* zone);
+
 #ifdef DEBUG
   private:
     // The number of possible bailing places encounters before forcefully bailing
