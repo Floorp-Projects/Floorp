@@ -39,7 +39,7 @@ class Compositor;
 class CompositorAnimationStorage;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
-class AsyncImagePipelineManager;
+class WebRenderCompositableHolder;
 class WebRenderImageHost;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
@@ -52,7 +52,7 @@ public:
                         widget::CompositorWidget* aWidget,
                         CompositorVsyncScheduler* aScheduler,
                         RefPtr<wr::WebRenderAPI>&& aApi,
-                        RefPtr<AsyncImagePipelineManager>&& aImageMgr,
+                        RefPtr<WebRenderCompositableHolder>&& aHolder,
                         RefPtr<CompositorAnimationStorage>&& aAnimStorage);
 
   static WebRenderBridgeParent* CeateDestroyed();
@@ -60,7 +60,7 @@ public:
   wr::PipelineId PipelineId() { return mPipelineId; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
   wr::Epoch WrEpoch() { return wr::NewEpoch(mWrEpoch); }
-  AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
+  WebRenderCompositableHolder* CompositableHolder() { return mCompositableHolder; }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
   mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
@@ -204,7 +204,7 @@ public:
 
   void UpdateWebRender(CompositorVsyncScheduler* aScheduler,
                        wr::WebRenderAPI* aApi,
-                       AsyncImagePipelineManager* aImageMgr,
+                       WebRenderCompositableHolder* aHolder,
                        CompositorAnimationStorage* aAnimStorage);
 
 private:
@@ -268,7 +268,7 @@ private:
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   RefPtr<wr::WebRenderAPI> mApi;
-  RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
+  RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
   std::vector<wr::ImageKey> mKeysToDelete;

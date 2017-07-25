@@ -28,15 +28,15 @@ class CompositorVsyncScheduler;
 class WebRenderImageHost;
 class WebRenderTextureHost;
 
-class AsyncImagePipelineManager final
+class WebRenderCompositableHolder final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncImagePipelineManager)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderCompositableHolder)
 
-  explicit AsyncImagePipelineManager(uint32_t aIdNamespace);
+  explicit WebRenderCompositableHolder(uint32_t aIdNamespace);
 
 protected:
-  ~AsyncImagePipelineManager();
+  ~WebRenderCompositableHolder();
 
 public:
   void Destroy(wr::WebRenderAPI* aApi);
@@ -108,8 +108,8 @@ private:
     Maybe<wr::Epoch> mDestroyedEpoch;
   };
 
-  struct AsyncImagePipeline {
-    AsyncImagePipeline();
+  struct AsyncImagePipelineHolder {
+    AsyncImagePipelineHolder();
 
     bool mInitialised;
     bool mIsChanged;
@@ -126,7 +126,7 @@ private:
 
   bool UpdateImageKeys(wr::WebRenderAPI* aApi,
                        bool& aUseExternalImage,
-                       AsyncImagePipeline* aImageMgr,
+                       AsyncImagePipelineHolder* aHolder,
                        nsTArray<wr::ImageKey>& aKeys,
                        nsTArray<wr::ImageKey>& aKeysToDelete);
 
@@ -134,7 +134,7 @@ private:
   uint32_t mResourceId;
 
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
-  nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
+  nsClassHashtable<nsUint64HashKey, AsyncImagePipelineHolder> mAsyncImagePipelineHolders;
   uint32_t mAsyncImageEpoch;
   nsTArray<wr::ImageKey> mKeysToDelete;
   bool mDestroyed;
