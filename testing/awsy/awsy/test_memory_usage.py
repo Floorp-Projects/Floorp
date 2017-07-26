@@ -370,6 +370,10 @@ class TestMemoryUsage(MarionetteTestCase):
                 self.logger.info("navigated to about:blank")
             self.signal_user_active()
 
+            # Create checkpoint that may contain retained processes that will
+            # be reused.
+            create_checkpoint("TabsClosedExtraProcesses", itr)
+
             # Clear out the retained processes and measure again.
             self.clear_preloaded_browser()
 
