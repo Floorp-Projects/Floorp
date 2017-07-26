@@ -65,7 +65,7 @@ namespace JS {
     D(RESET)                                    \
     D(OUT_OF_NURSERY)                           \
     D(EVICT_NURSERY)                            \
-    D(UNUSED0)                                  \
+    D(DELAYED_ATOMS_GC)                         \
     D(SHARED_MEMORY_LIMIT)                      \
     D(UNUSED1)                                  \
     D(INCREMENTAL_TOO_SLOW)                     \

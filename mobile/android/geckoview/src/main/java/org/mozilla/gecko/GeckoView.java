@@ -96,6 +96,7 @@ public class GeckoView extends LayerView {
         new GeckoViewHandler<ContentListener>(
             "GeckoViewContent", this,
             new String[]{
+                "GeckoView:ContextMenu",
                 "GeckoView:DOMTitleChanged",
                 "GeckoView:FullScreenEnter",
                 "GeckoView:FullScreenExit"
@@ -107,7 +108,13 @@ public class GeckoView extends LayerView {
                                       final GeckoBundle message,
                                       final EventCallback callback) {
 
-                if ("GeckoView:DOMTitleChanged".equals(event)) {
+                if ("GeckoView:ContextMenu".equals(event)) {
+                    listener.onContextMenu(GeckoView.this,
+                                           message.getInt("screenX"),
+                                           message.getInt("screenY"),
+                                           message.getString("uri"),
+                                           message.getString("elementSrc"));
+                } else if ("GeckoView:DOMTitleChanged".equals(event)) {
                     listener.onTitleChange(GeckoView.this,
                                            message.getString("title"));
                 } else if ("GeckoView:FullScreenEnter".equals(event)) {
@@ -115,7 +122,6 @@ public class GeckoView extends LayerView {
                 } else if ("GeckoView:FullScreenExit".equals(event)) {
                     listener.onFullScreen(GeckoView.this, false);
                 }
-
             }
         };
 
@@ -1288,6 +1294,23 @@ public class GeckoView extends LayerView {
          * @param fullScreen True if the page is in full screen mode.
          */
         void onFullScreen(GeckoView view, boolean fullScreen);
+
+
+        /**
+         * A user has initiated the context menu via long-press.
+         * This event is fired on links, (nested) images and (nested) media
+         * elements.
+         *
+         * @param view The GeckoView that initiated the callback.
+         * @param screenX The screen coordinates of the press.
+         * @param screenY The screen coordinates of the press.
+         * @param uri The URI of the pressed link, set for links and
+         *            image-links.
+         * @param elementSrc The source URI of the pressed element, set for
+         *                   (nested) images and media elements.
+         */
+        void onContextMenu(GeckoView view, int screenX, int screenY,
+                           String uri, String elementSrc);
     }
 
     public interface NavigationListener {

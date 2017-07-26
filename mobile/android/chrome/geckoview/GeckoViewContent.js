@@ -22,6 +22,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     addEventListener("MozDOMFullscreen:Exit", this, false);
     addEventListener("MozDOMFullscreen:Exited", this, false);
     addEventListener("MozDOMFullscreen:Request", this, false);
+    addEventListener("contextmenu", this, { capture: true, passive: false });
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenEntered",
                                            this);
@@ -37,6 +38,7 @@ class GeckoViewContent extends GeckoViewContentModule {
     removeEventListener("MozDOMFullscreen:Exit", this);
     removeEventListener("MozDOMFullscreen:Exited", this);
     removeEventListener("MozDOMFullscreen:Request", this);
+    removeEventListener("contextmenu", this);
 
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenEntered",
                                               this);
@@ -66,13 +68,35 @@ class GeckoViewContent extends GeckoViewContentModule {
   }
 
   handleEvent(aEvent) {
-    if (aEvent.originalTarget.defaultView != content) {
-      return;
-    }
-
     debug("handleEvent " + aEvent.type);
 
     switch (aEvent.type) {
+      case "contextmenu":
+        function nearestParentHref(node) {
+          while (node && !node.href) {
+            node = node.parentNode;
+          }
+          return node && node.href;
+        }
+
+        let node = aEvent.target;
+        let hrefNode = nearestParentHref(node);
+        let isImageNode = node instanceof Ci.nsIDOMHTMLImageElement;
+        let isMediaNode = node instanceof Ci.nsIDOMHTMLMediaElement;
+        let msg = {
+          screenX: aEvent.screenX,
+          screenY: aEvent.screenY,
+          uri: hrefNode,
+          elementSrc: isImageNode || isMediaNode
+                      ? node.currentSrc || node.src
+                      : null
+        };
+
+        if (hrefNode || isImageNode || isMediaNode) {
+          sendAsyncMessage("GeckoView:ContextMenu", msg);
+          aEvent.preventDefault();
+        }
+        break;
       case "MozDOMFullscreen:Request":
         sendAsyncMessage("GeckoView:DOMFullscreenRequest");
         break;

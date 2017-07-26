@@ -747,11 +747,11 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
     static const uint32_t MAX_OPTIMIZED_STUBS = 16;
     static const uint32_t MAX_SCRIPTED_STUBS = 7;
     static const uint32_t MAX_NATIVE_STUBS = 7;
-  private:
 
+  private:
     explicit ICCall_Fallback(JitCode* stubCode)
       : ICMonitoredFallbackStub(ICStub::Call_Fallback, stubCode)
-    { }
+    {}
 
   public:
     void noteUnoptimizableCall() {

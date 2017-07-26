@@ -316,7 +316,7 @@ BaseProxyHandler::className(JSContext* cx, HandleObject proxy) const
 }
 
 JSString*
-BaseProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
+BaseProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
     if (proxy->isCallable())
         return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
