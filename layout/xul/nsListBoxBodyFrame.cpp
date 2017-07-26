@@ -846,8 +846,7 @@ nsListBoxBodyFrame::InternalPositionChanged(bool aUp, int32_t aDelta)
 {
   RefPtr<nsPositionChangedEvent> event =
     new nsPositionChangedEvent(this, aUp, aDelta);
-  nsresult rv = mContent->OwnerDoc()->Dispatch("nsPositionChangedEvent",
-                                               TaskCategory::Other,
+  nsresult rv = mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                                do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
     if (!mPendingPositionChangeEvents.AppendElement(event)) {

@@ -235,7 +235,7 @@ static void DestroyTextureData(TextureData* aTextureData, LayersIPCChannel* aAll
 
   if (aMainThreadOnly && !NS_IsMainThread()) {
     RefPtr<LayersIPCChannel> allocatorRef = aAllocator;
-    SystemGroup::Dispatch(nullptr, TaskCategory::Other, NS_NewRunnableFunction(
+    SystemGroup::Dispatch(TaskCategory::Other, NS_NewRunnableFunction(
         "layers::DestroyTextureData",
         [aTextureData, allocatorRef, aDeallocate]() -> void {
           DestroyTextureData(aTextureData, allocatorRef, aDeallocate, true);

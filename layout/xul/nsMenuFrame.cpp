@@ -607,8 +607,7 @@ nsMenuFrame::PopupClosed(bool aDeselectMenu)
         nsCOMPtr<nsIRunnable> event =
           new nsMenuActivateEvent(current->GetContent(),
                                   PresContext(), true);
-        mContent->OwnerDoc()->Dispatch("nsMenuActivateEvent",
-                                       TaskCategory::Other,
+        mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                        event.forget());
       }
     }
@@ -658,8 +657,7 @@ nsMenuFrame::SelectMenu(bool aActivateFlag)
 
     nsCOMPtr<nsIRunnable> event =
       new nsMenuActivateEvent(mContent, PresContext(), aActivateFlag);
-    mContent->OwnerDoc()->Dispatch("nsMenuActivateEvent",
-                                   TaskCategory::Other,
+    mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                    event.forget());
   }
 

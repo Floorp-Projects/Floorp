@@ -165,8 +165,7 @@ ErrorReporter::~ErrorReporter()
   if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
     nsCOMPtr<nsIRunnable> runnable(sSpecCache);
     nsresult rv =
-      SystemGroup::Dispatch("ShortTermURISpecCache", TaskCategory::Other,
-                            runnable.forget());
+      SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
     if (NS_FAILED(rv)) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();
