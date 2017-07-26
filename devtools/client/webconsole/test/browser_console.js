@@ -67,6 +67,12 @@ function testMessages(hud) {
   // Test eval.
   hud.jsterm.execute("document.location.href");
 
+  // Test eval frame script
+  hud.jsterm.execute(`
+    gBrowser.selectedBrowser.messageManager.loadFrameScript('data:application/javascript,console.log("framescript-message")', false);
+    "framescript-eval";
+  `);
+
   // Check for network requests.
   let xhr = new XMLHttpRequest();
   xhr.onload = () => console.log("xhr loaded, status is: " + xhr.status);
@@ -126,6 +132,18 @@ function testMessages(hud) {
         name: "jsterm eval result",
         text: "browser.xul",
         category: CATEGORY_OUTPUT,
+        severity: SEVERITY_LOG,
+      },
+      {
+        name: "jsterm eval result 2",
+        text: "framescript-eval",
+        category: CATEGORY_OUTPUT,
+        severity: SEVERITY_LOG,
+      },
+      {
+        name: "frame script message",
+        text: "framescript-message",
+        category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       },
       {
