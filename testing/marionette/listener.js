@@ -715,7 +715,7 @@ function deleteSession(msg) {
  *     Unique identifier of the request.
  * @param {AsyncContentSender.ResponseType} type
  *     Type of response.
- * @param {?=} data
+ * @param {*} [Object] data
  *     JSON serialisable object to accompany the message.  Defaults to
  *     an empty dictionary.
  */
@@ -729,7 +729,7 @@ function sendToServer(uuid, data = undefined) {
 /**
  * Send asynchronous reply with value to chrome.
  *
- * @param {?} obj
+ * @param {Object} obj
  *     JSON serialisable object of arbitrary type and complexity.
  * @param {UUID} uuid
  *     Unique identifier of the request.

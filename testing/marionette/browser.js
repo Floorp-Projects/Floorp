@@ -16,17 +16,18 @@ Cu.import("chrome://marionette/content/frame.js");
 
 this.EXPORTED_SYMBOLS = ["browser"];
 
+/** @namespace */
 this.browser = {};
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /**
- * Get the <xul:browser> for the specified tab.
+ * Get the <code>&lt;xul:browser&gt;</code> for the specified tab.
  *
- * @param {<xul:tab>} tab
+ * @param {Tab} tab
  *     The tab whose browser needs to be returned.
  *
- * @return {<xul:browser>}
+ * @return {Browser}
  *     The linked browser for the tab or null if no browser can be found.
  */
 browser.getBrowserForTab = function(tab) {
@@ -48,7 +49,7 @@ browser.getBrowserForTab = function(tab) {
  * @param {nsIDOMWindow} win
  *     The window whose tabbrowser needs to be accessed.
  *
- * @return {<xul:tabbrowser>}
+ * @return {Tab}
  *     Tab browser or null if it's not a browser window.
  */
 browser.getTabBrowser = function(win) {

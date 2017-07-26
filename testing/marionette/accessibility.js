@@ -32,6 +32,7 @@ XPCOMUtils.defineLazyGetter(this, "service", () => {
 
 this.EXPORTED_SYMBOLS = ["accessibility"];
 
+/** @namespace */
 this.accessibility = {
   get service() {
     return service;
@@ -124,7 +125,7 @@ accessibility.Checks = class {
    *     Flag indicating that the element must have an accessible object.
    *     Defaults to not require this.
    *
-   * @return {Promise: nsIAccessible}
+   * @return {Promise.<nsIAccessible>}
    *     Promise with an accessibility object for the given element.
    */
   getAccessible(element, mustHaveAccessible = false) {

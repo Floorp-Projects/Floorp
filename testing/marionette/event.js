@@ -38,6 +38,9 @@ function getDOMWindowUtils(win) {
       .getInterface(Ci.nsIDOMWindowUtils);
 }
 
+/** @namespace */
+this.event = {};
+
 event.MouseEvents = {
   click: 0,
   dblclick: 1,
@@ -1293,7 +1296,7 @@ event.sendKeyUp = function(keyToSend, modifiers, window = undefined) {
  *
  * @param {string} keyToSend
  *     Code point or normalized key value
- * @param {?} modifiers
+ * @param {Object.<string, boolean>} modifiers
  *     Object with properties used in KeyboardEvent (shiftkey, repeat, ...)
  *     as well as, the event |type| such as keydown. All properties
  *     are optional.

@@ -27,7 +27,11 @@ const appinfo = {name: "<missing>", version: "<missing>"};
 try { appinfo.name = Services.appinfo.name.toLowerCase(); } catch (e) {}
 try { appinfo.version = Services.appinfo.version; } catch (e) {}
 
-/** State associated with a WebDriver session. */
+/**
+ * State associated with a WebDriver session.
+ *
+ * @namespace
+ */
 this.session = {};
 
 /** Representation of WebDriver session timeouts. */
@@ -43,6 +47,7 @@ session.Timeouts = class {
 
   toString() { return "[object session.Timeouts]"; }
 
+  /** Marshals timeout durations to a JSON Object. */
   toJSON() {
     return {
       implicit: this.implicit,
@@ -78,15 +83,29 @@ session.Timeouts = class {
   }
 };
 
-/** Enum of page loading strategies. */
+/**
+ * Enum of page loading strategies.
+ *
+ * @enum
+ */
 session.PageLoadStrategy = {
+  /** No page load strategy.  Navigation will return immediately. */
   None: "none",
+  /**
+   * Eager, causing navigation to complete when the document reaches
+   * the <code>interactive</code> ready state.
+   */
   Eager: "eager",
+  /**
+   * Normal, causing navigation to return when the document reaches the
+   * <code>complete</code> ready state.
+   */
   Normal: "normal",
 };
 
 /** Proxy configuration object representation. */
 session.Proxy = class {
+  /** @class */
   constructor() {
     this.proxyType = null;
     this.httpProxy = null;
@@ -159,6 +178,10 @@ session.Proxy = class {
 
   toString() { return "[object session.Proxy]"; }
 
+  /**
+   * @return {Object.<string, (number|string)>}
+   *     JSON serialisation of proxy object.
+   */
   toJSON() {
     return marshal({
       proxyType: this.proxyType,
@@ -175,6 +198,10 @@ session.Proxy = class {
     });
   }
 
+  /**
+   * @param {Object.<string, ?>} json
+   *     JSON Object to unmarshal.
+   */
   static fromJSON(json) {
     let p = new session.Proxy();
     if (typeof json == "undefined" || json === null) {
@@ -219,6 +246,7 @@ session.Proxy = class {
 
 /** WebDriver session capabilities representation. */
 session.Capabilities = class extends Map {
+  /** @class */
   constructor() {
     super([
       // webdriver
@@ -242,6 +270,12 @@ session.Capabilities = class extends Map {
     ]);
   }
 
+  /**
+   * @param {string} key
+   *     Capability name.
+   * @param {(string|number|boolean)} value
+   *     JSON-safe capability value.
+   */
   set(key, value) {
     if (key === "timeouts" && !(value instanceof session.Timeouts)) {
       throw new TypeError();
@@ -252,8 +286,14 @@ session.Capabilities = class extends Map {
     return super.set(key, value);
   }
 
+  /** @return {string} */
   toString() { return "[object session.Capabilities]"; }
 
+  /**
+   * JSON serialisation of capabilities object.
+   *
+   * @return {Object.<string, ?>}
+   */
   toJSON() {
     return marshal(this);
   }
@@ -264,11 +304,11 @@ session.Capabilities = class extends Map {
    * @param {Object.<string, ?>=} json
    *     WebDriver capabilities.
    * @param {boolean=} merge
-   *     If providing |json| with |desiredCapabilities| or
-   *     |requiredCapabilities| fields, or both, it should be set to
-   *     true to merge these before parsing.  This indicates
-   *     that the input provided is from a client and not from
-   *     |session.Capabilities#toJSON|.
+   *     If providing <var>json</var> with <tt>desiredCapabilities</tt> or
+   *     <tt>requiredCapabilities</tt> fields, or both, it should be
+   *     set to true to merge these before parsing.  This indicates that
+   *     the input provided is from a client and not from
+   *     {@link session.Capabilities#toJSON}.
    *
    * @return {session.Capabilities}
    *     Internal representation of WebDriver capabilities.
