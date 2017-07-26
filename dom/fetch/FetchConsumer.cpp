@@ -42,7 +42,9 @@ public:
     MOZ_ASSERT(aStatus > workers::Running);
     if (!mWasNotified) {
       mWasNotified = true;
-      mConsumer->ShutDownMainThreadConsuming();
+      // This will probably cause the releasing of the consumer.
+      // The WorkerHolder will be released as well.
+      mConsumer->ContinueConsumeBody(NS_BINDING_ABORTED, 0, nullptr);
     }
 
     return true;
@@ -213,6 +215,12 @@ public:
     // consuming of the body.
     mFetchBodyConsumer->NullifyConsumeBodyPump();
 
+    // If the binding requested cancel, we don't need to call
+    // ContinueConsumeBody, since that is the originator.
+    if (aStatus == NS_BINDING_ABORTED) {
+      return NS_OK;
+    }
+
     uint8_t* nonconstResult = const_cast<uint8_t*>(aResult);
     if (mFetchBodyConsumer->GetWorkerPrivate()) {
       RefPtr<ContinueConsumeBodyRunnable<Derived>> r =
@@ -244,10 +252,6 @@ public:
       return;
     }
 
-    // The loading is completed. Let's nullify the pump before continuing the
-    // consuming of the body.
-    mFetchBodyConsumer->NullifyConsumeBodyPump();
-
     MOZ_ASSERT(aBlob);
 
     if (mFetchBodyConsumer->GetWorkerPrivate()) {
@@ -278,6 +282,26 @@ NS_INTERFACE_MAP_BEGIN(ConsumeBodyDoneObserver<Derived>)
   NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamLoaderObserver)
 NS_INTERFACE_MAP_END
+
+template <class Derived>
+class ShutDownMainThreadConsumingRunnable final : public WorkerMainThreadRunnable
+{
+  RefPtr<FetchBodyConsumer<Derived>> mBodyConsumer;
+
+public:
+  explicit ShutDownMainThreadConsumingRunnable(FetchBodyConsumer<Derived>* aBodyConsumer)
+    : WorkerMainThreadRunnable(aBodyConsumer->GetWorkerPrivate(),
+                               NS_LITERAL_CSTRING("Fetch :: Cancel Pump"))
+    , mBodyConsumer(aBodyConsumer)
+  {}
+
+  bool
+  MainThreadRun() override
+  {
+    mBodyConsumer->ShutDownMainThreadConsuming();
+    return true;
+  }
+};
 
 } // anonymous
 
@@ -455,13 +479,12 @@ FetchBodyConsumer<Derived>::BeginConsumeBodyMainThread()
 {
   AssertIsOnMainThread();
 
-  AutoFailConsumeBody<Derived> autoReject(this);
-
+  // Nothing to do.
   if (mShuttingDown) {
-    // We haven't started yet, but we have been terminated. AutoFailConsumeBody
-    // will dispatch a runnable to release resources.
     return;
   }
+
+  AutoFailConsumeBody<Derived> autoReject(this);
 
   nsCOMPtr<nsIInputStreamPump> pump;
   nsresult rv = NS_NewInputStreamPump(getter_AddRefs(pump),
@@ -544,6 +567,11 @@ FetchBodyConsumer<Derived>::ContinueConsumeBody(nsresult aStatus,
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
     localPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
+
+  // We need to nullify mConsumeBodyPump on the main-thread and, in case it has
+  // not been created yet, we need to block the creation setting mShuttingDown
+  // to true.
+  ShutDownMainThreadConsuming();
 
   // Don't warn here since we warned above.
   if (NS_FAILED(aStatus)) {
@@ -640,6 +668,9 @@ FetchBodyConsumer<Derived>::ContinueConsumeBlobBody(BlobImpl* aBlobImpl)
   MOZ_ASSERT(mConsumePromise);
   RefPtr<Promise> localPromise = mConsumePromise.forget();
 
+  // Release the pump.
+  ShutDownMainThreadConsuming();
+
   RefPtr<dom::Blob> blob = dom::Blob::Create(mGlobal, aBlobImpl);
   MOZ_ASSERT(blob);
 
@@ -653,13 +684,21 @@ void
 FetchBodyConsumer<Derived>::ShutDownMainThreadConsuming()
 {
   if (!NS_IsMainThread()) {
-    RefPtr<FetchBodyConsumer<Derived>> self = this;
+    MOZ_ASSERT(mWorkerPrivate);
+    // In case of worker thread, we block the worker while the request is
+    // canceled on the main thread. This ensures that OnStreamComplete has a
+    // valid FetchConsumer around to call ShutDownMainThreadConsuming and we
+    // don't release the FetchConsumer on the main thread.
+    RefPtr<ShutDownMainThreadConsumingRunnable<Derived>> r =
+      new ShutDownMainThreadConsumingRunnable<Derived>(this);
 
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      "FetchBodyConsumer::ShutDownMainThreadConsuming",
-      [self] () { self->ShutDownMainThreadConsuming(); });
+    IgnoredErrorResult rv;
+    r->Dispatch(Killing, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return;
+    }
 
-    mMainThreadEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+    MOZ_DIAGNOSTIC_ASSERT(mShuttingDown);
     return;
   }
 
