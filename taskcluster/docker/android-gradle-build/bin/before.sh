@@ -7,6 +7,14 @@ set -x -e
 
 set -v
 
+# Populate $WORKSPACE/java/urs/lib/jvm/java_home.  $topsrcdir hasn't
+# been checked out yet, so we can't put this directly into
+# $topsrcdir/java_home.
+. $HOME/bin/repackage-jdk-centos.sh
+
+export JAVA_HOME=$WORKSPACE/java/usr/lib/jvm/java_home
+export PATH=$PATH:$JAVA_HOME/bin
+
 # Frowned upon, but simplest.
 RUN_AS_USER=root NEXUS_WORK=${WORKSPACE}/nexus /opt/sonatype/nexus/bin/nexus restart
 
@@ -17,5 +25,3 @@ rm -rf status
 
 # Verify Nexus has actually started.  Fail if this fails.
 curl --fail --silent --location http://localhost:8081/nexus/service/local/status | grep '<state>STARTED</state>'
-
-export JAVA_HOME=/usr/lib/jvm/jre-1.7.0-openjdk.x86_64
