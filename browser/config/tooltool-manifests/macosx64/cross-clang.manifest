@@ -8,14 +8,6 @@
     "unpack": true
   },
   {
-    "size": 6075028,
-    "visibility": "public",
-    "digest": "0b962ba55a5a2fbae44218683bdf6ea0dfe8165aba436173a065f7190976184586b9acf4c23478bc5b6d81a3e00f681bf16df0536c9c9718ad0570d064f69027",
-    "algorithm": "sha512",
-    "unpack": true,
-    "filename": "cctools.tar.xz"
-  },
-  {
     "size": 30823112,
     "visibility": "internal",
     "digest": "0c58e06a3ea8f4641c991a7406fc8733c574f0b4aa773bce0feaa5468d2b8440fa33cea056e16fad2b8a7ef4409ca7228113eb12adc87c3e115129d8a3b3b565",
