@@ -24,6 +24,7 @@
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StorageNotifierService.h"
+#include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
@@ -498,7 +499,19 @@ public:
     }
   }
 
-  virtual nsIEventTarget*
+  nsIPrincipal*
+  GetPrincipal() const override
+  {
+    return mWindow ? mWindow->GetPrincipal() : nullptr;
+  }
+
+  bool
+  IsPrivateBrowsing() const override
+  {
+    return mWindow ? mWindow->IsPrivateBrowsing() : false;
+  }
+
+  nsIEventTarget*
   GetEventTarget() const override
   {
     return mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
@@ -12372,16 +12385,7 @@ nsGlobalWindow::ObserveStorageNotification(StorageEvent* aEvent,
 {
   MOZ_ASSERT(aEvent);
 
-  // Enforce that the source storage area's private browsing state matches
-  // this window's state.  These flag checks and their maintenance independent
-  // from the principal's OriginAttributes matter because chrome docshells
-  // that are part of private browsing windows can be private browsing without
-  // having their OriginAttributes set (because they have the system
-  // principal).
-  bool isPrivateBrowsing = IsPrivateBrowsing();
-  if (isPrivateBrowsing != aPrivateBrowsing) {
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(IsPrivateBrowsing() == aPrivateBrowsing);
 
   // LocalStorage can only exist on an inner window, and we don't want to
   // generate events on frozen or otherwise-navigated-away from windows.
@@ -12433,18 +12437,9 @@ nsGlobalWindow::ObserveStorageNotification(StorageEvent* aEvent,
 
   else {
     MOZ_ASSERT(!NS_strcmp(aStorageType, u"localStorage"));
-    nsIPrincipal* storagePrincipal = aEvent->GetPrincipal();
-    if (!storagePrincipal) {
-      return;
-    }
 
-    bool equals = false;
-    nsresult rv = storagePrincipal->Equals(principal, &equals);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    if (!equals) {
-      return;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
+                                                        principal));
 
     fireMozStorageChanged = mLocalStorage == aEvent->GetStorageArea();
 
