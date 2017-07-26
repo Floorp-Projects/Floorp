@@ -50,18 +50,14 @@ add_task(async function test() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-async function getTransitionForUrl(url) {
-  // Ensure all the transactions completed.
-  await PlacesTestUtils.promiseAsyncUpdates();
-  let db = await PlacesUtils.promiseDBConnection();
-  let rows = await db.execute(`
-    SELECT visit_type
-    FROM moz_historyvisits
-    JOIN moz_places h ON place_id = h.id
-    WHERE url_hash = hash(:url) AND url = :url`,
-    { url });
-  if (rows.length) {
-    return rows[0].getResultByName("visit_type");
-  }
-  return null;
+function getTransitionForUrl(url) {
+  return PlacesUtils.withConnectionWrapper("browser_markPageAsFollowedLink", async db => {
+    let rows = await db.execute(`
+      SELECT visit_type
+      FROM moz_historyvisits
+      JOIN moz_places h ON place_id = h.id
+      WHERE url_hash = hash(:url) AND url = :url
+      `, { url });
+    return rows.length ? rows[0].getResultByName("visit_type") : null;
+  });
 }
