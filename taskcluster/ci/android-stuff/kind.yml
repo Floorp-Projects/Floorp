@@ -52,6 +52,9 @@ jobs:
               - name: private/android-sdk
                 path: /home/worker/private/android-sdk
                 type: directory
+              - name: private/java_home
+                path: /home/worker/private/java_home
+                type: directory
             caches:
               - name: tooltool-cache
                 mount-point: /home/worker/tooltool-cache

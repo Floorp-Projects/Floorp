@@ -46,21 +46,21 @@ WORKDIR /
 USER root
 
 # Update base.
-RUN yum upgrade -y
+RUN rpm --rebuilddb && yum upgrade -y
 
-# Install JDK and Sonatype Nexus.  Cribbed directly from
+# Install Sonatype Nexus.  Cribbed directly from
 # https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
 
 # Install the screen package here to use with xvfb.
 # Move installation to base centos6-build image once Bug 1272629 is fixed
-RUN yum install -y \
+# tzdata-java is symlinked from the JRE: see https://bugzilla.redhat.com/show_bug.cgi?id=1130800
+RUN rpm --rebuilddb && yum install -y \
   createrepo \
   curl \
-  java-1.7.0-openjdk-devel \
-  java-1.7.0-openjdk \
   screen \
   sudo \
   tar \
+  tzdata-java \
   unzip \
   wget \
   zip \

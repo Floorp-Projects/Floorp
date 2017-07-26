@@ -1,21 +1,5 @@
 [
   {
-    "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
-    "size": 151322128,
-    "digest": "1d6d6e8bbf7535a4f1c8f1292562e30c868bfd3ac323992fc287be09f7fa3167c2f9e01dc98143967983e30488fe3ecaebff530ba4ec9113033d60af936c4f4d",
-    "algorithm": "sha512",
-    "filename": "rustc.tar.xz",
-    "unpack": true
-  },
-  {
-    "size": 30899096,
-    "visibility": "public",
-    "digest": "ac9f5f95d11580d3dbeff87e80a585fe4d324b270dabb91b1165686acab47d99fa6651074ab0be09420239a5d6af38bb2c539506962a7b44e0ed4d080bba2953",
-    "algorithm": "sha512",
-    "unpack": true,
-    "filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz"
-  },
-  {
     "algorithm": "sha512",
     "visibility": "public",
     "filename": "dotgradle-online.tar.xz",
