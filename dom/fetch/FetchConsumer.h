@@ -8,6 +8,7 @@
 #define mozilla_dom_FetchConsumer_h
 
 #include "Fetch.h"
+#include "mozilla/dom/MutableBlobStorage.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -46,12 +47,6 @@ public:
   void
   ReleaseObject();
 
-  FetchBody<Derived>*
-  Body() const
-  {
-    return mBody;
-  }
-
   void
   BeginConsumeBodyMainThread();
 
@@ -81,6 +76,7 @@ private:
                     nsIGlobalObject* aGlobalObject,
                     workers::WorkerPrivate* aWorkerPrivate,
                     FetchBody<Derived>* aBody,
+                    nsIInputStream* aBodyStream,
                     Promise* aPromise,
                     FetchConsumeType aType);
 
@@ -94,7 +90,15 @@ private:
 
   nsCOMPtr<nsIThread> mTargetThread;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+
+#ifdef DEBUG
+  // This is used only to check if the body has been correctly consumed.
   RefPtr<FetchBody<Derived>> mBody;
+#endif
+
+  nsCOMPtr<nsIInputStream> mBodyStream;
+  MutableBlobStorage::MutableBlobStorageType mBlobStorageType;
+  nsCString mBodyMimeType;
 
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
