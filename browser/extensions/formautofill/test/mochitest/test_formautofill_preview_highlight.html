@@ -49,7 +49,7 @@ function checkFilledFieldHighlight(elem, expectedValue) {
                          computedStyle.getPropertyValue("color") === defaultTextColor;
 
   is(SpecialPowers.wrap(elem).previewValue, "", `Checking #${elem.id} filled previewValue`);
-  is(expectedValue, isStyleApplied, `Checking #${elem.id} filled style`);
+  is(isStyleApplied, expectedValue, `Checking #${elem.id} filled style`);
 }
 
 function checkFormPreviewFields(previewingAddress) {

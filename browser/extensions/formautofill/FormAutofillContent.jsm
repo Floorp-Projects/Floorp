@@ -294,7 +294,7 @@ let ProfileAutocomplete = {
 
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.clearPreviewedFormFields();
+    formHandler.clearPreviewedFormFields(focusedInput);
   },
 
   _previewSelectedProfile(selectedIndex) {
@@ -312,7 +312,7 @@ let ProfileAutocomplete = {
     let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
     let formHandler = FormAutofillContent.getFormHandler(focusedInput);
 
-    formHandler.previewFormFields(profile);
+    formHandler.previewFormFields(profile, focusedInput);
   },
 };
 
