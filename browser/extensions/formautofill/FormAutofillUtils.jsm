@@ -203,17 +203,17 @@ this.FormAutofillUtils = {
 
   /**
    * Find the option element from select element.
-   * 1. Try to find the locale using the country from profile.
+   * 1. Try to find the locale using the country from address.
    * 2. First pass try to find exact match.
-   * 3. Second pass try to identify values from profile value and options,
+   * 3. Second pass try to identify values from address value and options,
    *    and look for a match.
    * @param   {DOMElement} selectEl
-   * @param   {object} profile
+   * @param   {object} address
    * @param   {string} fieldName
    * @returns {DOMElement}
    */
-  findSelectOption(selectEl, profile, fieldName) {
-    let value = profile[fieldName];
+  findSelectOption(selectEl, address, fieldName) {
+    let value = address[fieldName];
     if (!value) {
       return null;
     }
@@ -225,7 +225,7 @@ this.FormAutofillUtils = {
     }
 
     // Set dataset to "data/US" as fallback
-    let dataset = this.addressData[`data/${profile.country}`] ||
+    let dataset = this.addressData[`data/${address.country}`] ||
                   this.addressData["data/US"];
     let collator = new Intl.Collator(dataset.lang, {sensitivity: "base", ignorePunctuation: true});
 
@@ -247,7 +247,7 @@ this.FormAutofillUtils = {
       let names = dataset.sub_names;
       let identifiedValue = this.identifyValue(keys, names, value, collator);
 
-      // No point going any further if we cannot identify value from profile
+      // No point going any further if we cannot identify value from address
       if (identifiedValue === undefined) {
         return null;
       }

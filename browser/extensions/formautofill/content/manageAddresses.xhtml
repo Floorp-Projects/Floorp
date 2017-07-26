@@ -5,10 +5,10 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Form Autofill - Manage Addresses</title>
+  <title>Saved Addresses</title>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
-  <link rel="stylesheet" href="chrome://formautofill/content/manageProfiles.css" />
-  <script src="chrome://formautofill/content/manageProfiles.js"></script>
+  <link rel="stylesheet" href="chrome://formautofill/content/manageAddresses.css" />
+  <script src="chrome://formautofill/content/manageAddresses.js"></script>
 </head>
 <body>
   <p style="padding-left: 30px; background: url(chrome://browser/skin/warning.svg) no-repeat left center">
@@ -18,12 +18,12 @@
   </p>
   <fieldset>
     <legend>Addresses</legend>
-    <select id="profiles" size="9" multiple="multiple"/>
+    <select id="addresses" size="9" multiple="multiple"/>
   </fieldset>
   <div id="controls-container">
     <button id="remove" disabled="disabled">Remove</button>
-    <button id="add">Add</button>
-    <button id="edit" disabled="disabled">Edit</button>
+    <button id="add">Add…</button>
+    <button id="edit" disabled="disabled">Edit…</button>
   </div>
 </body>
 </html>
