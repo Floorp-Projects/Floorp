@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/BufferList.h"
+#include "mozilla/MemoryReporting.h"
 
 #include <stdint.h>
 
@@ -338,6 +339,16 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     bool write(JSContext* cx, JS::HandleValue v, JS::HandleValue transferable,
                JS::CloneDataPolicy cloneDataPolicy,
                const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
+    {
+        return data_.SizeOfExcludingThis(mallocSizeOf);
+    }
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
+    {
+        return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
+    }
 
   private:
     // Copy and assignment are not supported.

@@ -29,11 +29,6 @@ JS_PUBLIC_API(JS::UniqueChars) JS_smprintf(const char* fmt, ...)
     return JS::UniqueChars(result.release());
 }
 
-JS_PUBLIC_API(void) JS_smprintf_free(char* mem)
-{
-    mozilla::SmprintfFree<js::SystemAllocPolicy>(mem);
-}
-
 JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last, const char* fmt, ...)
 {
     va_list ap;

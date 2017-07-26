@@ -72,6 +72,8 @@ ProcessLink::~ProcessLink()
 void
 ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Side aSide)
 {
+    mChan->AssertWorkerThread();
+
     NS_PRECONDITION(aTransport, "need transport layer");
 
     // FIXME need to check for valid channel
@@ -130,8 +132,12 @@ ProcessLink::Open(mozilla::ipc::Transport* aTransport, MessageLoop *aIOLoop, Sid
               &ProcessLink::OnTakeConnectedChannel));
         }
 
-        // Should not wait here if something goes wrong with the channel.
-        while (!mChan->Connected() && mChan->mChannelState != ChannelError) {
+        // Wait until one of the runnables above changes the state of the
+        // channel. Note that the state could be changed again after that (to
+        // ChannelClosing, for example, by the IO thread). We can rely on it not
+        // changing back to Closed: only the worker thread changes it to closed,
+        // and we're on the worker thread, blocked.
+        while (mChan->mChannelState == ChannelClosed) {
             mChan->mMonitor->Wait();
         }
     }

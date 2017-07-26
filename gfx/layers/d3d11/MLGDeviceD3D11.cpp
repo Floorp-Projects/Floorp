@@ -1651,37 +1651,37 @@ MLGDeviceD3D11::DrawInstanced(uint32_t aVertexCountPerInstance, uint32_t aInstan
 void
 MLGDeviceD3D11::SetPSTextures(uint32_t aSlot, uint32_t aNumTextures, TextureSource* const* aTextures)
 {
-  StackArray<ID3D11ShaderResourceView*, 2> textures(aNumTextures);
+  // TextureSource guarantees that the ID3D11ShaderResourceView will be cached,
+  // so we don't hold a RefPtr here.
+  StackArray<ID3D11ShaderResourceView*, 3> views(aNumTextures);
 
   for (size_t i = 0; i < aNumTextures; i++) {
-    if (!aTextures[i]) {
-      gfxWarning() << "Null TextureRef in SetPSTextures";
-      continue;
-    }
-
-    ID3D11ShaderResourceView* view = nullptr;
-    if (TextureSourceD3D11* source = aTextures[i]->AsSourceD3D11()) {
-      ID3D11Texture2D* texture = source->GetD3D11Texture();
-      if (!texture) {
-        gfxWarning() << "No D3D11 texture present in SetPSTextures";
-        continue;
-      }
-      MaybeLockTexture(texture);
-
-      view = source->GetShaderResourceView();
-    } else {
-      gfxWarning() << "Unknown texture type in SetPSTextures";
-      continue;
-    }
-
-    if (!view) {
-      gfxWarning() << "Failed to get shader resource view for texture";
-      continue;
-    }
-    textures[i] = view;
+    views[i] = ResolveTextureSourceForShader(aTextures[i]);
   }
 
-  mCtx->PSSetShaderResources(aSlot, aNumTextures, textures.data());
+  mCtx->PSSetShaderResources(aSlot, aNumTextures, views.data());
+}
+
+ID3D11ShaderResourceView*
+MLGDeviceD3D11::ResolveTextureSourceForShader(TextureSource* aTexture)
+{
+  if (!aTexture) {
+    return nullptr;
+  }
+
+  if (TextureSourceD3D11* source = aTexture->AsSourceD3D11()) {
+    ID3D11Texture2D* texture = source->GetD3D11Texture();
+    if (!texture) {
+      gfxWarning() << "No D3D11 texture present in SetPSTextures";
+      return nullptr;
+    }
+
+    MaybeLockTexture(texture);
+    return source->GetShaderResourceView();
+  }
+
+  gfxWarning() << "Unknown texture type in SetPSTextures";
+  return nullptr;
 }
 
 void

@@ -1033,7 +1033,7 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
   mLargeAllocStatus(LargeAllocStatus::NONE),
   mHasTriedToCacheTopInnerWindow(false),
-  mNumOfIndexedDBDatabases(0), mCleanedUp(false)
+  mNumOfIndexedDBDatabases(0)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -1620,6 +1620,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mNetworkUploadObserverEnabled(false),
     mNetworkDownloadObserverEnabled(false),
 #endif
+    mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
 #ifdef DEBUG
@@ -2005,10 +2006,7 @@ nsGlobalWindow::CleanUp()
 
   mMozSelfSupport = nullptr;
 
-  if (mPerformance) {
-    mPerformance->Shutdown();
-    mPerformance = nullptr;
-  }
+  mPerformance = nullptr;
 
 #ifdef MOZ_WEBSPEECH
   mSpeechSynthesis = nullptr;
@@ -4363,10 +4361,9 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
 {
   MOZ_ASSERT(IsInnerWindow());
 
-  if (mPerformance || !mDoc || mCleanedUp) {
+  if (mPerformance || !mDoc) {
     return;
   }
-
   RefPtr<nsDOMNavigationTiming> timing = mDoc->GetNavigationTiming();
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(mDoc->GetChannel()));
   bool timingEnabled = false;

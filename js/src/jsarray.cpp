@@ -1323,7 +1323,7 @@ js::array_join(JSContext* cx, unsigned argc, Value* vp)
     if (!CheckRecursionLimit(cx))
         return false;
 
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.join");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.join");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -1583,7 +1583,7 @@ DefineBoxedOrUnboxedFunctor3(ArrayReverseDenseKernel,
 bool
 js::array_reverse(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.reverse");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.reverse");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -2288,7 +2288,7 @@ js::NewbornArrayPush(JSContext* cx, HandleObject obj, const Value& v)
 bool
 js::array_push(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.push");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.push");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -2345,7 +2345,7 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::array_pop(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.pop");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.pop");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -2450,7 +2450,7 @@ DefineBoxedOrUnboxedFunctor3(ArrayShiftDenseKernel,
 bool
 js::array_shift(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.shift");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.shift");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -2526,7 +2526,7 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
 bool
 js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.unshift");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.unshift");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Step 1.
@@ -2769,7 +2769,7 @@ CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t coun
 static bool
 array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUsed)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.splice");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.splice");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */
@@ -3277,7 +3277,7 @@ ArraySliceOrdinary(JSContext* cx, HandleObject obj, uint64_t begin, uint64_t end
 bool
 js::array_slice(JSContext* cx, unsigned argc, Value* vp)
 {
-    AutoGeckoProfilerEntry pseudoFrame(cx->runtime(), "Array.prototype.slice");
+    AutoGeckoProfilerEntry pseudoFrame(cx, "Array.prototype.slice");
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Step 1. */

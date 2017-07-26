@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nspr.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
 
@@ -977,6 +978,27 @@ nsDocLoader::GetLoadType(uint32_t *aLoadType)
 {
   *aLoadType = 0;
 
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocLoader::GetTarget(nsIEventTarget** aTarget)
+{
+  nsCOMPtr<mozIDOMWindowProxy> window;
+  nsresult rv = GetDOMWindow(getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsPIDOMWindowOuter> piwindow = nsPIDOMWindowOuter::From(window);
+  NS_ENSURE_STATE(piwindow);
+
+  nsCOMPtr<nsIEventTarget> target = piwindow->TabGroup()->EventTargetFor(mozilla::TaskCategory::Other);
+  target.forget(aTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoader::SetTarget(nsIEventTarget* aTarget)
+{
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

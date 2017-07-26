@@ -23,7 +23,6 @@ public interface PanZoomController {
     }
 
     public void destroy();
-    public void attach();
 
     public boolean onTouchEvent(MotionEvent event);
     public boolean onMotionEvent(MotionEvent event);
