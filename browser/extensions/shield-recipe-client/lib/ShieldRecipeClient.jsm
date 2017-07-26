@@ -39,6 +39,7 @@ const DEFAULT_PREFS = {
   "logging.level": Log.Level.Warn,
   user_id: "",
   run_interval_seconds: 86400, // 24 hours
+  first_run: true,
 };
 const PREF_DEV_MODE = "extensions.shield-recipe-client.dev_mode";
 const PREF_SELF_SUPPORT_ENABLED = "browser.selfsupport.enabled";
