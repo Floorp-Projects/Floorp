@@ -32,7 +32,7 @@ option:nth-child(even) {
   background-color: -moz-oddtreerow;
 }
 
-#profiles {
+#addresses {
   font-size: 0.85em;
   width: 100%;
   height: 16.6em;
@@ -40,7 +40,7 @@ option:nth-child(even) {
   border-radius: 0 0 2px 2px;
 }
 
-#profiles > option {
+#addresses > option {
   padding-inline-start: 0.7em;
 }
 
