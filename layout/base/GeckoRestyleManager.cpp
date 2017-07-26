@@ -141,7 +141,7 @@ GetNextBlockInInlineSibling(nsIFrame* aFrame)
  */
 static nsIFrame*
 GetNextContinuationWithSameStyle(nsIFrame* aFrame,
-                                 nsStyleContext* aOldStyleContext,
+                                 GeckoStyleContext* aOldStyleContext,
                                  bool* aHaveMoreContinuations = nullptr)
 {
   // See GetPrevContinuationWithSameStyle about {ib} splits.
@@ -166,7 +166,7 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
   NS_ASSERTION(nextContinuation->GetContent() == aFrame->GetContent(),
                "unexpected content mismatch");
 
-  nsStyleContext* nextStyle = nextContinuation->StyleContext();
+  GeckoStyleContext* nextStyle = nextContinuation->StyleContext()->AsGecko();
   if (nextStyle != aOldStyleContext) {
     NS_ASSERTION(aOldStyleContext->GetPseudo() != nextStyle->GetPseudo() ||
                  aOldStyleContext->GetParent() != nextStyle->GetParent(),
@@ -922,8 +922,8 @@ GetPrevContinuationWithSameStyle(nsIFrame* aFrame)
     return nullptr;
   }
 
-  nsStyleContext* prevStyle = prevContinuation->StyleContext();
-  nsStyleContext* selfStyle = aFrame->StyleContext();
+  GeckoStyleContext* prevStyle = prevContinuation->StyleContext()->AsGecko();
+  GeckoStyleContext* selfStyle = aFrame->StyleContext()->AsGecko();
   if (prevStyle != selfStyle) {
     NS_ASSERTION(prevStyle->GetPseudo() != selfStyle->GetPseudo() ||
                  prevStyle->GetParent() != selfStyle->GetParent(),
@@ -981,8 +981,8 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
     // different parents.)
     nsIFrame* nextContinuation = aFrame->GetNextContinuation();
     if (nextContinuation) {
-      nsStyleContext* nextContinuationContext =
-        nextContinuation->StyleContext();
+      GeckoStyleContext* nextContinuationContext =
+        nextContinuation->StyleContext()->AsGecko();
       NS_ASSERTION(oldContext == nextContinuationContext ||
                    oldContext->GetPseudo() !=
                      nextContinuationContext->GetPseudo() ||
@@ -1458,7 +1458,7 @@ ElementRestyler::ConditionallyRestyleContentChildren(nsIFrame* aFrame,
   }
 
   for (nsIFrame* f = aFrame; f;
-       f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+       f = GetNextContinuationWithSameStyle(f, f->StyleContext()->AsGecko())) {
     nsIFrame::ChildListIterator lists(f);
     for (; !lists.IsDone(); lists.Next()) {
       for (nsIFrame* child : lists.CurrentList()) {
@@ -1738,7 +1738,7 @@ ElementRestyler::MoveStyleContextsForChildren(GeckoStyleContext* aOldContext)
 
   DebugOnly<nsIFrame*> lastContinuation;
   for (nsIFrame* f = mFrame; f;
-       f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+       f = GetNextContinuationWithSameStyle(f, f->StyleContext()->AsGecko())) {
     lastContinuation = f;
     if (!MoveStyleContextsForContentChildren(f, aOldContext, contextsToMove)) {
       return false;
@@ -3001,7 +3001,7 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
     InitializeAccessibilityNotifications(mFrame->StyleContext());
 
     for (nsIFrame* f = mFrame; f;
-         f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
+         f = GetNextContinuationWithSameStyle(f, f->StyleContext()->AsGecko())) {
       lastContinuation = f;
       RestyleContentChildren(f, aChildRestyleHint);
     }
