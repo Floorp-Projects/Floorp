@@ -167,7 +167,7 @@ SessionStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
   nsAutoCString originKey;
   nsAutoCString originAttributes;
   nsresult rv = GenerateOriginKey(aPrincipal, originAttributes, originKey);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
