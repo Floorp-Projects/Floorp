@@ -99,6 +99,7 @@ DEFAULTS = dict(
         'take_over_this_computer': True,
         'browser.newtabpage.activity-stream.default.sites': '',
         'browser.newtabpage.activity-stream.telemetry': False,
+        'browser.newtabpage.activity-stream.feeds.section.topstories': False,
         'browser.newtabpage.directory.source':
             '${webserver}/directoryLinks.json',
         'browser.newtabpage.introShown': True,

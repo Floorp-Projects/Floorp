@@ -143,3 +143,6 @@ user_pref("media.openUnsupportedTypeWithExternalApp", false);
 // The prefs recommended by Marionette are typically geared towards
 // consumer automation; not vendor testing.
 user_pref("marionette.prefs.recommended", false);
+
+// Make sure we don't reach out to the network with pocket
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
