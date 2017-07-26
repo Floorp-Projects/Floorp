@@ -26,7 +26,6 @@ import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
-import android.os.Parcelable;
 import android.support.v4.util.SimpleArrayMap;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -65,7 +64,6 @@ public class LayerView extends FrameLayout {
     private boolean mServerSurfaceValid;
     private int mWidth, mHeight;
 
-    private boolean onAttachedToWindowCalled;
     private int mDefaultClearColor = Color.WHITE;
     /* package */ GetPixelsResult mGetPixelsResult;
     private final List<DrawListener> mDrawListeners;
@@ -421,14 +419,6 @@ public class LayerView extends FrameLayout {
     }
 
     @Override
-    protected void onRestoreInstanceState(final Parcelable state) {
-        if (onAttachedToWindowCalled) {
-            attachCompositor();
-        }
-        super.onRestoreInstanceState(state);
-    }
-
-    @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
@@ -464,15 +454,6 @@ public class LayerView extends FrameLayout {
         }
 
         attachCompositor();
-
-        onAttachedToWindowCalled = true;
-    }
-
-    @Override
-    protected void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-
-        onAttachedToWindowCalled = false;
     }
 
     // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object

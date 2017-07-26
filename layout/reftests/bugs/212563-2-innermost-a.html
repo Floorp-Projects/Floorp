@@ -1,0 +1,13 @@
+<body onload="w(parent.document, top);">
+<font color=blue>new innermost
+<script type="text/javascript">
+function w(md, t)
+{
+  t.p(0); 
+  md.write(t.replacementForMiddleFrame);
+  t.p(3);
+  t.p(md.documentElement.innerHTML); 
+  md.close(); 
+  t.p(4);
+}
+</script>

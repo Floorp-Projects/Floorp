@@ -410,3 +410,10 @@ class InstallManifestNoSymlinks(InstallManifest):
         source will be copied to dest.
         """
         self.add_copy(source, dest)
+
+    def add_pattern_symlink(self, base, pattern, dest):
+        """A wrapper that accepts symlink patterns and installs file copies.
+
+        Files discovered with ``pattern`` will be copied to ``dest``.
+        """
+        self.add_pattern_copy(base, pattern, dest)

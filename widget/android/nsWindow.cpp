@@ -116,11 +116,8 @@ static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
 template<typename Lambda, bool IsStatic, typename InstanceType, class Impl>
-class nsWindow::WindowEvent : public nsAppShell::LambdaEvent<Lambda>
+class nsWindow::WindowEvent : public Runnable
 {
-    typedef nsAppShell::Event Event;
-    typedef nsAppShell::LambdaEvent<Lambda> Base;
-
     bool IsStaleCall()
     {
         if (IsStatic) {
@@ -142,35 +139,29 @@ class nsWindow::WindowEvent : public nsAppShell::LambdaEvent<Lambda>
         return natives && !natives->get();
     }
 
+    Lambda mLambda;
     const InstanceType mInstance;
-    const Event::Type mEventType;
 
 public:
     WindowEvent(Lambda&& aLambda,
-                InstanceType&& aInstance,
-                Event::Type aEventType = Event::Type::kGeneralActivity)
-        : Base(mozilla::Move(aLambda))
-        , mInstance(mozilla::Move(aInstance))
-        , mEventType(aEventType)
+                InstanceType&& aInstance)
+        : Runnable("nsWindowEvent")
+        , mLambda(mozilla::Move(aLambda))
+        , mInstance(Forward<InstanceType>(aInstance))
     {}
 
-    WindowEvent(Lambda&& aLambda,
-                Event::Type aEventType = Event::Type::kGeneralActivity)
-        : Base(mozilla::Move(aLambda))
-        , mInstance(Base::lambda.GetThisArg())
-        , mEventType(aEventType)
+    WindowEvent(Lambda&& aLambda)
+        : Runnable("nsWindowEvent")
+        , mLambda(mozilla::Move(aLambda))
+        , mInstance(mLambda.GetThisArg())
     {}
 
-    void Run() override
+    NS_IMETHOD Run() override
     {
         if (!IsStaleCall()) {
-            return Base::Run();
+            mLambda();
         }
-    }
-
-    Event::Type ActivityType() const override
-    {
-        return mEventType;
+        return NS_OK;
     }
 };
 
@@ -264,8 +255,7 @@ public:
             return aCall();
         }
 
-        nsAppShell::PostEvent(mozilla::MakeUnique<WindowEvent<Functor>>(
-                mozilla::Move(aCall)));
+        NS_DispatchToMainThread(new WindowEvent<Functor>(mozilla::Move(aCall)));
     }
 
     GeckoViewSupport(nsWindow* aWindow,
@@ -363,6 +353,7 @@ class nsWindow::NPZCSupport final
     template<typename Lambda>
     void PostInputEvent(Lambda&& aLambda)
     {
+        // Use priority queue for input events.
         nsAppShell::PostEvent(MakeUnique<InputEvent<Lambda>>(
                 this, mozilla::Move(aLambda)));
     }
@@ -997,6 +988,7 @@ public:
             }
         };
 
+        // Use priority queue for timing-sensitive event.
         nsAppShell::PostEvent(MakeUnique<LayerViewEvent>(
                 MakeUnique<OnResumedEvent>(aObj)));
     }

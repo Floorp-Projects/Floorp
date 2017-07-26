@@ -79,6 +79,7 @@ private:
   // The container for the created PaymentRequests
   nsTArray<RefPtr<PaymentRequest>> mRequestQueue;
   nsRefPtrHashtable<nsRefPtrHashKey<PaymentRequest>, PaymentRequestChild> mPaymentChildHash;
+  RefPtr<PaymentRequest> mShowingRequest;
 };
 
 } // end of namespace dom
