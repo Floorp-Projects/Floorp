@@ -2,16 +2,18 @@
 
 set -e -x
 
-mkdir -p artifacts
-pushd build
+: WORKSPACE ${WORKSPACE:=/workspace}
 
-rm -rf root && mkdir root && cd root
+set -v
+
+mkdir -p $WORKSPACE/java
+pushd $WORKSPACE/java
 
 # change these variables when updating java version
-mirror_url_base="http://mirror.centos.org/centos/6.7/updates/x86_64/Packages"
-openjdk=java-1.7.0-openjdk-1.7.0.85-2.6.1.3.el6_7.x86_64.rpm
-openjdk_devel=java-1.7.0-openjdk-devel-1.7.0.85-2.6.1.3.el6_7.x86_64.rpm
-jvm_openjdk_dir=java-1.7.0-openjdk-1.7.0.85.x86_64
+mirror_url_base="http://mirror.centos.org/centos/6/os/x86_64/Packages"
+openjdk=java-1.8.0-openjdk-headless-1.8.0.121-1.b13.el6.x86_64.rpm
+openjdk_devel=java-1.8.0-openjdk-devel-1.8.0.121-1.b13.el6.x86_64.rpm
+jvm_openjdk_dir=java-1.8.0-openjdk-1.8.0.121-1.b13.el6.x86_64
 
 # grab the rpm and unpack it
 wget ${mirror_url_base}/${openjdk}
@@ -31,6 +33,16 @@ mv $jvm_openjdk_dir java_home
 rm java_home/jre/lib/security/cacerts
 ln -s /etc/pki/java/cacerts java_home/jre/lib/security/cacerts
 
+# tzdb.dat is an absolute symlink, which might not work when we
+# repackage.  Copy the underlying timezone database.  Copying the
+# target file from the toolchain producing system avoids requiring the
+# consuming system to have java-tzdb installed, which would bake in a
+# subtle dependency that has been addressed in modern versions of
+# CentOS.  See https://bugzilla.redhat.com/show_bug.cgi?id=1130800 for
+# discussion.
+rm java_home/jre/lib/tzdb.dat
+cp /usr/share/javazi-1.8/tzdb.dat java_home/jre/lib/tzdb.dat
+
 # document version this is based on
 echo "Built from ${mirror_url_Base}
     ${openjdk}
@@ -38,8 +50,4 @@ echo "Built from ${mirror_url_Base}
 
 Run through rpm2cpio | cpio, and /usr/lib/jvm/${jvm_openjdk_dir} renamed to 'java_home'." > java_home/VERSION
 
-# tarball the unpacked rpm and put it in the taskcluster upload artifacts dir
-tar -Jvcf java_home-${jvm_openjdk_dir}.tar.xz java_home
 popd
-
-mv build/root/usr/lib/jvm/java_home-${jvm_openjdk_dir}.tar.xz artifacts

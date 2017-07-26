@@ -17,6 +17,13 @@ tar cJf android-sdk-linux.tar.xz android-sdk-linux
 mkdir -p /home/worker/private/android-sdk
 mv android-sdk-linux.tar.xz /home/worker/private/android-sdk
 
+cp -R /home/worker/workspace/build/src/java_home java_home
+tar cJf java_home.tar.xz java_home
+
+# We can't redistribute Java publicly.
+mkdir -p /home/worker/private/java_home
+mv java_home.tar.xz /home/worker/private/java_home
+
 cp -R /workspace/nexus/storage/jcenter jcentral
 tar cJf jcentral.tar.xz jcentral
 
@@ -41,6 +48,7 @@ popd
 # /build/tooltool.py add --visibility=public jcentral.tar.xz
 # /build/tooltool.py add --visibility=public gradle-dist.tar.xz
 # /build/tooltool.py add --visibility=internal android-sdk-linux.tar.xz
+# /build/tooltool.py add --visibility=internal java_home.tar.xz
 # /build/tooltool.py upload -v --url=http://relengapi/tooltool/ \
 #   --message="No message - Gradle and jcentral archives uploaded from taskcluster."
 # popd

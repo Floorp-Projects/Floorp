@@ -55,8 +55,8 @@ def javac_version(javac):
         output = subprocess.check_output([javac, '-version'],
                                          stderr=subprocess.STDOUT).rstrip()
         version = Version(output.split(' ')[-1])
-        if version < '1.7':
-            die('javac 1.7 or higher is required (found %s)' % version)
+        if version < '1.8':
+            die('javac 1.8 or higher is required (found %s)' % version)
         return version
     except subprocess.CalledProcessError as e:
         die('Failed to get javac version: %s', e.output)
