@@ -35,10 +35,10 @@ module.exports = createClass({
     let { boxModel } = this.props;
     let { geometryEditorEnabled, layout } = boxModel;
     let {
-      height,
+      height = "-",
       isPositionEditable,
       position,
-      width,
+      width = "-",
     } = layout;
 
     let buttonClass = "layout-geometry-editor devtools-button";
