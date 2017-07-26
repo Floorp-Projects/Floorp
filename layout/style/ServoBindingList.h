@@ -137,6 +137,7 @@ BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
 GROUP_RULE_FUNCS(Supports)
 GROUP_RULE_FUNCS(Document)
+BASIC_RULE_FUNCS(FontFeatureValues)
 #undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
@@ -211,6 +212,12 @@ SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
                    RawServoSupportsRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_DocumentRule_GetConditionText, void,
                    RawServoDocumentRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetFontFamily, void,
+                   RawServoFontFeatureValuesRuleBorrowed rule,
+                   nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetValueText, void,
+                   RawServoFontFeatureValuesRuleBorrowed rule,
+                   nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
