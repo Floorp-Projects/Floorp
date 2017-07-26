@@ -265,7 +265,15 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':
-  SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
+  EXPORTS.mozilla.audio += [
+      'AudioNotificationReceiver.h',
+      'AudioNotificationSender.h',
+  ]
+  SOURCES += [
+      'AudioNotificationReceiver.cpp',
+      'AudioNotificationSender.cpp',
+      'ThreadPoolCOMListener.cpp',
+  ]
 
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
 SOURCES += [
