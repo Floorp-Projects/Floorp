@@ -48,7 +48,6 @@
 #include "vm/StringBuffer.h"
 #include "vm/TraceLogging.h"
 #include "wasm/AsmJS.h"
-#include "wasm/WasmBinaryToExperimentalText.h"
 #include "wasm/WasmBinaryToText.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
@@ -609,24 +608,13 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
         bytes = copy.begin();
     }
 
-    bool experimental = false;
     if (args.length() > 1) {
-        JSString* opt = JS::ToString(cx, args[1]);
-        if (!opt)
-            return false;
-        bool match;
-        if (!JS_StringEqualsAscii(cx, opt, "experimental", &match))
-            return false;
-        experimental = match;
+        JS_ReportErrorASCII(cx, "wasm text format selection is not supported");
+        return false;
     }
 
     StringBuffer buffer(cx);
-    bool ok;
-    if (experimental)
-        ok = wasm::BinaryToExperimentalText(cx, bytes, length, buffer);
-    else
-        ok = wasm::BinaryToText(cx, bytes, length, buffer);
-
+    bool ok = wasm::BinaryToText(cx, bytes, length, buffer);
     if (!ok) {
         if (!cx->isExceptionPending())
             JS_ReportErrorASCII(cx, "wasm binary to text print error");
