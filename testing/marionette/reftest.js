@@ -37,10 +37,16 @@ const STATUS = {
 
 /**
  * Implements an fast runner for web-platform-tests format reftests
- * c.f. http://web-platform-tests.org/writing-tests/reftests.html
+ * c.f. http://web-platform-tests.org/writing-tests/reftests.html.
+ *
+ * @namespace
  */
-let reftest = {};
+this.reftest = {};
 
+/**
+ * @memberof reftest
+ * @class Runner
+ */
 reftest.Runner = class {
   constructor(driver) {
     this.driver = driver;
