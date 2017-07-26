@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><h1>Marionette</h1>
+
+<p><p>Marionette is the remote protocol that lets OOP programs
+ communicate with, instrument, and control Gecko.</p>
+<h2>Description</h2>
+
+<p><p>Marionette is an automation driver for Mozilla’s Gecko engine.
+ It can remotely control either the UI
+ or the internal JavaScript of the Gecko platform, such as Firefox.
+ It can control both the chrome and the content document,
+ giving a high level of control and ability to replicate user interaction.
+ In addition to performing actions on the browser,
+ Marionette can also read properties and attributes of the DOM.</p>
+<h2>Usage</h2>
+
+<p><p>Marionette can be activated by passing the -marionette flag.
+ To start Firefox with the remote protocol turned on:</p>
+<pre>
+% firefox -marionette
+…
+1491228343089    Marionette    INFO    Listening on port 2828
+</pre>
+
+<p><p>This binds to a TCP socket, over which <a href=#clients>clients</a>
+ can communicate with Marionette using the <a href=#protocol>protocol</a>.</p>
+<h2 id=protocol>Protocol</h2>
+
+<p><p>Marionette provides an asynchronous,
+ parallel pipelining user-facing interface.
+ Message sequencing limits chances of payload race conditions
+ and provides a uniform way in which payloads are serialised.</p>
+<p><p>Clients that deliver a blocking WebDriver interface
+ are still expected to not send further command requests
+ before the response from the last command has come back,
+ but if they still happen to do so because of programming error,
+ no harm will be done.
+ This guards against <a href=https://bugzil.la/1207125>mixing up responses</a>.</p>
+<p><p>Schematic flow of messages:</p>
+<pre>
+               client      server
+                 |            |
+      msgid=1    |----------->|
+                 |  command   |
+                 |            |
+      msgid=2    |<-----------|
+                 |  command   |
+                 |            |
+      msgid=2    |----------->|
+                 |  response  |
+                 |            |
+      msgid=1    |<-----------|
+                 |  response  |
+                 |            |
+</pre>
+
+<p><p>The protocol consists of a <a href=#command>command</a> message
+ and the corresponding <a href=#response>response</a> message.
+ A <a href=#response>response</a> message must always be sent
+ in reply to a <a href=#command>command</a> message.</p>
+<p><p>This means that the server implementation does not need to send
+ the reply precisely in the order of the received commands:
+ if it receives multiple messages, the server may even reply in random order.
+ It is therefore strongly adviced that clients take this into account
+ when implementing the client end of this wire protocol.</p>
+<p><p>This is required for pipelining messages.
+ On the server side, some functions are fast, and some less so.
+ If the server must reply in order, the slow functions delay the other replies
+ even if its execution is already completed.</p>
+<h2 id=command>Command</h2>
+
+<p><p>The request, or command message,
+ is a four element JSON array as shown below,
+ that may originate from either the client- or server remote ends:</p>
+<pre>[type, message ID, command, parameters]</pre>
+
+<dl>
+ <dt>type
+ <dd><p>Must be 0 (integer).
+  This indicates that the message
+  is the <a href=#command>command</a> message.
+
+ <dt>message ID
+ <dd><p>A 32-bit unsigned integer.
+  This number is used as sequencing number
+  that uniquely identifies a pair of <a href=#command>command</a>
+  and <a href=#response>response</a> messages.
+  The other remote part will reply
+  with a corresponding <a href=#response>response</a>
+  with the same message ID.
+
+ <dt>command
+ <dd><p>A string identifying the RPC method or command to execute.
+
+ <dt>parameters
+ <dd><p>An arbitrary JSON serialisable object.
+</dl>
+
+<h2 id=response>Response</h2>
+
+<p><p>The response message is also a four element array as shown below,
+ and must always be sent after receiving a <a href=#command>command</a>:</p>
+<pre>[type, message ID, error, result]</pre>
+
+<dl>
+ <dt>type
+ <dd><p>Must be 1 (integer).
+  This indicates that the message is
+  the <a href=#response>response</a> message.
+
+ <dt>message ID
+ <dd><p>A 32-bit unsigned integer.
+  This corresponds to the <a href=#command>command</a> message’s
+  message ID.
+
+ <dt>error
+ <dd><p>If the command executed correctly, this field is null.
+  If the error occurred on the server-side,
+  then this field is an <a href=#error>error</a> object.
+
+ <dt>result
+ <dd><p>The result object associated with the <a href=#command>command</a>,
+  if it executed correctly.
+  If an error occurred on the server-side, this field is null.
+
+  <p>The structure of the result entry can vary,
+   but is documented individually for each command.
+</dl>
+
+
+<h3 id=error>Error object</h3>
+
+<p><p>An error object is a serialisation of JavaScript error types,
+ and is structured like this:</p>
+<pre>
+{
+    "error": "invalid session id",
+    "message": "No active session with ID 1234",
+    "stacktrace": ""
+}
+</pre>
+
+<p><p>All the fields of the error object are required,
+ so the stacktrace and message fields may be empty strings.
+ The error field is on the other hand guaranteed
+ to be one of the JSON error codes
+ as laid out by the <a href=https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors>WebDriver standard</a>.</p>
+<h2 id=clients>Clients</h2>
+
+<p><p>Clients may be implemented in any language
+ that is capable of writing and receiving data over TCP socket.
+ A <a href=https://searchfox.org/mozilla-central/source/testing/marionette/client>reference client is provided</a>.
+ Clients may be implemented both synchronously and asynchronously,
+ although the latter is impossible in protocol levels 2 and earlier
+ due to the lack of message indexing.</p>
+<h2 id=bugs>Bugs</h2>
+
+<p><p>Bugs are tracked
+ in various <a href=https://bugzilla.mozilla.org/>Bugzilla</a> components:</p>
+<dl>
+ <dt>Marionette server
+ <dt>Marionette reference client
+ <dt>Marionette test harness
+ <dd><a href="https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette">Testing :: Marionette</a>
+
+ <dt>geckodriver
+ <dd><a href="https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=geckodriver">Testing :: geckodriver</a>
+</dl></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

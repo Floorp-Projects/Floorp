@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: packets.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: packets.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+/**
+ * Packets contain read / write functionality for the different packet types
+ * supported by the debugging protocol, so that a transport can focus on
+ * delivery and queue management without worrying too much about the specific
+ * packet types.
+ *
+ * They are intended to be "one use only", so a new packet should be
+ * instantiated for each incoming or outgoing packet.
+ *
+ * A complete Packet type should expose at least the following:
+ *   * read(stream, scriptableStream)
+ *     Called when the input stream has data to read
+ *   * write(stream)
+ *     Called when the output stream is ready to write
+ *   * get done()
+ *     Returns true once the packet is done being read / written
+ *   * destroy()
+ *     Called to clean up at the end of use
+ */
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {StreamUtils} =
+    Cu.import("chrome://marionette/content/stream-utils.js", {});
+
+const unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+    .createInstance(Ci.nsIScriptableUnicodeConverter);
+unicodeConverter.charset = "UTF-8";
+
+const defer = function() {
+  let deferred = {
+    promise: new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    }),
+  };
+  return deferred;
+};
+
+this.EXPORTED_SYMBOLS = ["RawPacket", "Packet", "JSONPacket", "BulkPacket"];
+
+// The transport's previous check ensured the header length did not
+// exceed 20 characters.  Here, we opt for the somewhat smaller, but still
+// large limit of 1 TiB.
+const PACKET_LENGTH_MAX = Math.pow(2, 40);
+
+/**
+ * A generic Packet processing object (extended by two subtypes below).
+ *
+ * @class
+ */
+function Packet(transport) {
+  this._transport = transport;
+  this._length = 0;
+}
+
+/**
+ * Attempt to initialize a new Packet based on the incoming packet header
+ * we've received so far.  We try each of the types in succession, trying
+ * JSON packets first since they are much more common.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {Packet}
+ *     Parsed packet of the matching type, or null if no types matched.
+ */
+Packet.fromHeader = function(header, transport) {
+  return JSONPacket.fromHeader(header, transport) ||
+         BulkPacket.fromHeader(header, transport);
+};
+
+Packet.prototype = {
+
+  get length() {
+    return this._length;
+  },
+
+  set length(length) {
+    if (length > PACKET_LENGTH_MAX) {
+      throw Error("Packet length " + length + " exceeds the max length of " +
+                  PACKET_LENGTH_MAX);
+    }
+    this._length = length;
+  },
+
+  destroy() {
+    this._transport = null;
+  },
+};
+
+/**
+ * With a JSON packet (the typical packet type sent via the transport),
+ * data is transferred as a JSON packet serialized into a string,
+ * with the string length prepended to the packet, followed by a colon
+ * ([length]:[packet]). The contents of the JSON packet are specified in
+ * the Remote Debugging Protocol specification.
+ *
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ */
+function JSONPacket(transport) {
+  Packet.call(this, transport);
+  this._data = "";
+  this._done = false;
+}
+
+/**
+ * Attempt to initialize a new JSONPacket based on the incoming packet
+ * header we've received so far.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {JSONPacket}
+ *     Parsed packet, or null if it's not a match.
+ */
+JSONPacket.fromHeader = function(header, transport) {
+  let match = this.HEADER_PATTERN.exec(header);
+
+  if (!match) {
+    return null;
+  }
+
+  let packet = new JSONPacket(transport);
+  packet.length = +match[1];
+  return packet;
+};
+
+JSONPacket.HEADER_PATTERN = /^(\d+):$/;
+
+JSONPacket.prototype = Object.create(Packet.prototype);
+
+Object.defineProperty(JSONPacket.prototype, "object", {
+  /**
+   * Gets the object (not the serialized string) being read or written.
+   */
+  get() {
+    return this._object;
+  },
+
+  /**
+   * Sets the object to be sent when write() is called.
+   */
+  set(object) {
+    this._object = object;
+    let data = JSON.stringify(object);
+    this._data = unicodeConverter.ConvertFromUnicode(data);
+    this.length = this._data.length;
+  },
+});
+
+JSONPacket.prototype.read = function(stream, scriptableStream) {
+
+  // Read in more packet data.
+  this._readData(stream, scriptableStream);
+
+  if (!this.done) {
+    // Don't have a complete packet yet.
+    return;
+  }
+
+  let json = this._data;
+  try {
+    json = unicodeConverter.ConvertToUnicode(json);
+    this._object = JSON.parse(json);
+  } catch (e) {
+    let msg = "Error parsing incoming packet: " + json + " (" + e +
+              " - " + e.stack + ")";
+    console.error(msg);
+    dump(msg + "\n");
+    return;
+  }
+
+  this._transport._onJSONObjectReady(this._object);
+};
+
+JSONPacket.prototype._readData = function(stream, scriptableStream) {
+  let bytesToRead = Math.min(
+      this.length - this._data.length,
+      stream.available());
+  this._data += scriptableStream.readBytes(bytesToRead);
+  this._done = this._data.length === this.length;
+};
+
+JSONPacket.prototype.write = function(stream) {
+
+  if (this._outgoing === undefined) {
+    // Format the serialized packet to a buffer
+    this._outgoing = this.length + ":" + this._data;
+  }
+
+  let written = stream.write(this._outgoing, this._outgoing.length);
+  this._outgoing = this._outgoing.slice(written);
+  this._done = !this._outgoing.length;
+};
+
+Object.defineProperty(JSONPacket.prototype, "done", {
+  get() {
+    return this._done;
+  },
+});
+
+JSONPacket.prototype.toString = function() {
+  return JSON.stringify(this._object, null, 2);
+};
+
+/**
+ * With a bulk packet, data is transferred by temporarily handing over
+ * the transport's input or output stream to the application layer for
+ * writing data directly.  This can be much faster for large data sets,
+ * and avoids various stages of copies and data duplication inherent in
+ * the JSON packet type.  The bulk packet looks like:
+ *
+ *     bulk [actor] [type] [length]:[data]
+ *
+ * The interpretation of the data portion depends on the kind of actor and
+ * the packet's type.  See the Remote Debugging Protocol Stream Transport
+ * spec for more details.
+ *
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ */
+function BulkPacket(transport) {
+  Packet.call(this, transport);
+  this._done = false;
+  this._readyForWriting = defer();
+}
+
+/**
+ * Attempt to initialize a new BulkPacket based on the incoming packet
+ * header we've received so far.
+ *
+ * @param {string} header
+ *     Packet header string to attempt parsing.
+ * @param {DebuggerTransport} transport
+ *     Transport instance that will own the packet.
+ *
+ * @return {BulkPacket}
+ *     Parsed packet, or null if it's not a match.
+ */
+BulkPacket.fromHeader = function(header, transport) {
+  let match = this.HEADER_PATTERN.exec(header);
+
+  if (!match) {
+    return null;
+  }
+
+  let packet = new BulkPacket(transport);
+  packet.header = {
+    actor: match[1],
+    type: match[2],
+    length: +match[3],
+  };
+  return packet;
+};
+
+BulkPacket.HEADER_PATTERN = /^bulk ([^: ]+) ([^: ]+) (\d+):$/;
+
+BulkPacket.prototype = Object.create(Packet.prototype);
+
+BulkPacket.prototype.read = function(stream) {
+  // Temporarily pause monitoring of the input stream
+  this._transport.pauseIncoming();
+
+  let deferred = defer();
+
+  this._transport._onBulkReadReady({
+    actor: this.actor,
+    type: this.type,
+    length: this.length,
+    copyTo: (output) => {
+      let copying = StreamUtils.copyStream(stream, output, this.length);
+      deferred.resolve(copying);
+      return copying;
+    },
+    stream,
+    done: deferred,
+  });
+
+  // Await the result of reading from the stream
+  deferred.promise.then(() => {
+    this._done = true;
+    this._transport.resumeIncoming();
+  }, this._transport.close);
+
+  // Ensure this is only done once
+  this.read = () => {
+    throw new Error("Tried to read() a BulkPacket's stream multiple times.");
+  };
+};
+
+BulkPacket.prototype.write = function(stream) {
+  if (this._outgoingHeader === undefined) {
+    // Format the serialized packet header to a buffer
+    this._outgoingHeader = "bulk " + this.actor + " " + this.type + " " +
+                           this.length + ":";
+  }
+
+  // Write the header, or whatever's left of it to write.
+  if (this._outgoingHeader.length) {
+    let written = stream.write(this._outgoingHeader,
+                               this._outgoingHeader.length);
+    this._outgoingHeader = this._outgoingHeader.slice(written);
+    return;
+  }
+
+  // Temporarily pause the monitoring of the output stream
+  this._transport.pauseOutgoing();
+
+  let deferred = defer();
+
+  this._readyForWriting.resolve({
+    copyFrom: (input) => {
+      let copying = StreamUtils.copyStream(input, stream, this.length);
+      deferred.resolve(copying);
+      return copying;
+    },
+    stream,
+    done: deferred,
+  });
+
+  // Await the result of writing to the stream
+  deferred.promise.then(() => {
+    this._done = true;
+    this._transport.resumeOutgoing();
+  }, this._transport.close);
+
+  // Ensure this is only done once
+  this.write = () => {
+    throw new Error("Tried to write() a BulkPacket's stream multiple times.");
+  };
+};
+
+Object.defineProperty(BulkPacket.prototype, "streamReadyForWriting", {
+  get() {
+    return this._readyForWriting.promise;
+  },
+});
+
+Object.defineProperty(BulkPacket.prototype, "header", {
+  get() {
+    return {
+      actor: this.actor,
+      type: this.type,
+      length: this.length,
+    };
+  },
+
+  set(header) {
+    this.actor = header.actor;
+    this.type = header.type;
+    this.length = header.length;
+  },
+});
+
+Object.defineProperty(BulkPacket.prototype, "done", {
+  get() {
+    return this._done;
+  },
+});
+
+BulkPacket.prototype.toString = function() {
+  return "Bulk: " + JSON.stringify(this.header, null, 2);
+};
+
+/**
+ * RawPacket is used to test the transport's error handling of malformed
+ * packets, by writing data directly onto the stream.
+ * @param transport DebuggerTransport
+ *        The transport instance that will own the packet.
+ * @param data string
+ *        The raw string to send out onto the stream.
+ */
+function RawPacket(transport, data) {
+  Packet.call(this, transport);
+  this._data = data;
+  this.length = data.length;
+  this._done = false;
+}
+
+RawPacket.prototype = Object.create(Packet.prototype);
+
+RawPacket.prototype.read = function(stream) {
+  // This hasn't yet been needed for testing.
+  throw Error("Not implmented.");
+};
+
+RawPacket.prototype.write = function(stream) {
+  let written = stream.write(this._data, this._data.length);
+  this._data = this._data.slice(written);
+  this._done = !this._data.length;
+};
+
+Object.defineProperty(RawPacket.prototype, "done", {
+  get() {
+    return this._done;
+  },
+});
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
