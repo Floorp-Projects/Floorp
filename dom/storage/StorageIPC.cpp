@@ -20,9 +20,37 @@
 namespace mozilla {
 namespace dom {
 
+namespace {
+
+StorageDBChild* sStorageChild = nullptr;
+
+// False until we shut the storage child down.
+bool sStorageChildDown = false;
+
+}
+
 // ----------------------------------------------------------------------------
 // Child
 // ----------------------------------------------------------------------------
+
+class StorageDBChild::ShutdownObserver final
+  : public nsIObserver
+{
+public:
+  ShutdownObserver()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+private:
+  ~ShutdownObserver()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+};
 
 NS_IMPL_ADDREF(StorageDBChild)
 
@@ -70,6 +98,44 @@ StorageDBChild::~StorageDBChild()
 {
 }
 
+// static
+StorageDBChild*
+StorageDBChild::Get()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sStorageChild;
+}
+
+// static
+StorageDBChild*
+StorageDBChild::GetOrCreate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sStorageChild || sStorageChildDown) {
+    // When sStorageChildDown is at true, sStorageChild is null.
+    // Checking sStorageChildDown flag here prevents reinitialization of
+    // the storage child after shutdown.
+    return sStorageChild;
+  }
+
+  // Use LocalStorageManager::Ensure in case we're called from
+  // DOMSessionStorageManager's initializer and we haven't yet initialized the
+  // local storage manager.
+  RefPtr<StorageDBChild> storageChild =
+    new StorageDBChild(LocalStorageManager::Ensure());
+
+  nsresult rv = storageChild->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  storageChild.forget(&sStorageChild);
+
+  return sStorageChild;
+}
+
 nsTHashtable<nsCStringHashKey>&
 StorageDBChild::OriginsHavingData()
 {
@@ -83,6 +149,8 @@ StorageDBChild::OriginsHavingData()
 nsresult
 StorageDBChild::Init()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   PBackgroundChild* actor = BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!actor)) {
     return NS_ERROR_FAILURE;
@@ -91,6 +159,16 @@ StorageDBChild::Init()
   AddIPDLReference();
 
   actor->SendPBackgroundStorageConstructor(this);
+
+  nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
+  MOZ_ASSERT(observerService);
+
+  nsCOMPtr<nsIObserver> observer = new ShutdownObserver();
+
+  MOZ_ALWAYS_SUCCEEDS(
+    observerService->AddObserver(observer,
+                                 "xpcom-shutdown",
+                                 false));
 
   return NS_OK;
 }
@@ -295,6 +373,35 @@ StorageDBChild::RecvError(const nsresult& aRv)
   return IPC_OK();
 }
 
+NS_IMPL_ISUPPORTS(StorageDBChild::ShutdownObserver, nsIObserver)
+
+NS_IMETHODIMP
+StorageDBChild::
+ShutdownObserver::Observe(nsISupports* aSubject,
+                          const char* aTopic,
+                          const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
+
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (NS_WARN_IF(!observerService)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Unused << observerService->RemoveObserver(this, "xpcom-shutdown");
+
+  if (sStorageChild) {
+    sStorageChildDown = true;
+
+    NS_RELEASE(sStorageChild);
+    sStorageChild = nullptr;
+  }
+
+  return NS_OK;
+}
+
 // ----------------------------------------------------------------------------
 // Parent
 // ----------------------------------------------------------------------------
@@ -335,10 +442,10 @@ private:
       return NS_OK;
     }
 
-    StorageDBBridge* db = LocalStorageCache::GetDatabase();
-    if (db) {
+    StorageDBThread* storageThread = StorageDBThread::Get();
+    if (storageThread) {
       InfallibleTArray<nsCString> scopes;
-      db->GetOriginsHavingData(&scopes);
+      storageThread->GetOriginsHavingData(&scopes);
       mozilla::Unused << mParent->SendOriginsHavingData(scopes);
     }
 
@@ -413,27 +520,31 @@ StorageDBParent::RecvAsyncPreload(const nsCString& aOriginSuffix,
                                   const nsCString& aOriginNoSuffix,
                                   const bool& aPriority)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  db->AsyncPreload(NewCache(aOriginSuffix, aOriginNoSuffix), aPriority);
+  storageThread->AsyncPreload(NewCache(aOriginSuffix, aOriginNoSuffix),
+                              aPriority);
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncGetUsage(const nsCString& aOriginNoSuffix)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
   // The object releases it self in LoadUsage method
   RefPtr<UsageParentBridge> usage =
     new UsageParentBridge(this, aOriginNoSuffix);
-  db->AsyncGetUsage(usage);
+
+  storageThread->AsyncGetUsage(usage);
+
   return IPC_OK();
 }
 
@@ -524,8 +635,8 @@ StorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
                              InfallibleTArray<nsString>* aValues,
                              nsresult* aRv)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -533,7 +644,8 @@ StorageDBParent::RecvPreload(const nsCString& aOriginSuffix,
     new SyncLoadCacheHelper(aOriginSuffix, aOriginNoSuffix, aAlreadyLoadedCount,
                             aKeys, aValues, aRv));
 
-  db->SyncPreload(cache, true);
+  storageThread->SyncPreload(cache, true);
+
   return IPC_OK();
 }
 
@@ -543,13 +655,15 @@ StorageDBParent::RecvAsyncAddItem(const nsCString& aOriginSuffix,
                                   const nsString& aKey,
                                   const nsString& aValue)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsresult rv = db->AsyncAddItem(NewCache(aOriginSuffix, aOriginNoSuffix), aKey,
-                                 aValue);
+  nsresult rv =
+    storageThread->AsyncAddItem(NewCache(aOriginSuffix, aOriginNoSuffix),
+                                aKey,
+                                aValue);
   if (NS_FAILED(rv) && mIPCOpen) {
     mozilla::Unused << SendError(rv);
   }
@@ -563,13 +677,15 @@ StorageDBParent::RecvAsyncUpdateItem(const nsCString& aOriginSuffix,
                                      const nsString& aKey,
                                      const nsString& aValue)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsresult rv = db->AsyncUpdateItem(NewCache(aOriginSuffix, aOriginNoSuffix),
-                                    aKey, aValue);
+  nsresult rv =
+    storageThread->AsyncUpdateItem(NewCache(aOriginSuffix, aOriginNoSuffix),
+                                   aKey,
+                                   aValue);
   if (NS_FAILED(rv) && mIPCOpen) {
     mozilla::Unused << SendError(rv);
   }
@@ -582,13 +698,14 @@ StorageDBParent::RecvAsyncRemoveItem(const nsCString& aOriginSuffix,
                                      const nsCString& aOriginNoSuffix,
                                      const nsString& aKey)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsresult rv = db->AsyncRemoveItem(NewCache(aOriginSuffix, aOriginNoSuffix),
-                                    aKey);
+  nsresult rv =
+    storageThread->AsyncRemoveItem(NewCache(aOriginSuffix, aOriginNoSuffix),
+                                   aKey);
   if (NS_FAILED(rv) && mIPCOpen) {
     mozilla::Unused << SendError(rv);
   }
@@ -600,12 +717,13 @@ mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
                                 const nsCString& aOriginNoSuffix)
 {
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::GetOrCreate();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  nsresult rv = db->AsyncClear(NewCache(aOriginSuffix, aOriginNoSuffix));
+  nsresult rv =
+    storageThread->AsyncClear(NewCache(aOriginSuffix, aOriginNoSuffix));
   if (NS_FAILED(rv) && mIPCOpen) {
     mozilla::Unused << SendError(rv);
   }
@@ -616,12 +734,13 @@ StorageDBParent::RecvAsyncClear(const nsCString& aOriginSuffix,
 mozilla::ipc::IPCResult
 StorageDBParent::RecvAsyncFlush()
 {
-  StorageDBBridge* db = LocalStorageCache::GetDatabase();
-  if (!db) {
+  StorageDBThread* storageThread = StorageDBThread::Get();
+  if (!storageThread) {
     return IPC_FAIL_NO_REASON(this);
   }
 
-  db->AsyncFlush();
+  storageThread->AsyncFlush();
+
   return IPC_OK();
 }
 
@@ -704,6 +823,8 @@ private:
       break;
     }
 
+    mParent = nullptr;
+
     return NS_OK;
   }
 };
@@ -731,7 +852,10 @@ StorageDBParent::CacheParentBridge::LoadItem(const nsAString& aKey,
   RefPtr<LoadRunnable> r =
     new LoadRunnable(mParent, LoadRunnable::loadItem, mOriginSuffix,
                      mOriginNoSuffix, aKey, aValue);
-  NS_DispatchToMainThread(r);
+
+  MOZ_ALWAYS_SUCCEEDS(
+    mOwningEventTarget->Dispatch(r, NS_DISPATCH_NORMAL));
+
   return true;
 }
 
@@ -748,7 +872,9 @@ StorageDBParent::CacheParentBridge::LoadDone(nsresult aRv)
   RefPtr<LoadRunnable> r =
     new LoadRunnable(mParent, LoadRunnable::loadDone, mOriginSuffix,
                      mOriginNoSuffix, aRv);
-  NS_DispatchToMainThread(r);
+
+  MOZ_ALWAYS_SUCCEEDS(
+    mOwningEventTarget->Dispatch(r, NS_DISPATCH_NORMAL));
 }
 
 void
@@ -756,6 +882,42 @@ StorageDBParent::CacheParentBridge::LoadWait()
 {
   // Should never be called on this implementation
   MOZ_ASSERT(false);
+}
+
+// XXX Fix me!
+// This should be just:
+// NS_IMPL_RELEASE_WITH_DESTROY(StorageDBParent::CacheParentBridge, Destroy)
+// But due to different strings used for refcount logging and different return
+// types, this is done manually for now.
+NS_IMETHODIMP_(void)
+StorageDBParent::CacheParentBridge::Release(void)
+{
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+  nsrefcnt count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "LocalStorageCacheBridge");
+  if (0 == count) {
+    mRefCnt = 1; /* stabilize */
+    /* enable this to find non-threadsafe destructors: */
+    /* NS_ASSERT_OWNINGTHREAD(_class); */
+    Destroy();
+  }
+}
+
+void
+StorageDBParent::CacheParentBridge::Destroy()
+{
+  if (mOwningEventTarget->IsOnCurrentThread()) {
+    delete this;
+    return;
+  }
+
+  RefPtr<Runnable> destroyRunnable =
+    NewNonOwningRunnableMethod("CacheParentBridge::Destroy",
+                               this,
+                               &CacheParentBridge::Destroy);
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(destroyRunnable,
+                                                   NS_DISPATCH_NORMAL));
 }
 
 // StorageDBParent::UsageParentBridge
@@ -782,6 +944,9 @@ private:
     }
 
     mozilla::Unused << mParent->SendLoadUsage(mOriginScope, mUsage);
+
+    mParent = nullptr;
+
     return NS_OK;
   }
 
@@ -796,7 +961,43 @@ void
 StorageDBParent::UsageParentBridge::LoadUsage(const int64_t aUsage)
 {
   RefPtr<UsageRunnable> r = new UsageRunnable(mParent, mOriginScope, aUsage);
-  NS_DispatchToMainThread(r);
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(r, NS_DISPATCH_NORMAL));
+}
+
+// XXX Fix me!
+// This should be just:
+// NS_IMPL_RELEASE_WITH_DESTROY(StorageDBParent::UsageParentBridge, Destroy)
+// But due to different strings used for refcount logging, this is done manually
+// for now.
+NS_IMETHODIMP_(MozExternalRefCountType)
+StorageDBParent::UsageParentBridge::Release(void)
+{
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
+  nsrefcnt count = --mRefCnt;
+  NS_LOG_RELEASE(this, count, "StorageUsageBridge");
+  if (count == 0) {
+    Destroy();
+    return 0;
+  }
+  return count;
+}
+
+void
+StorageDBParent::UsageParentBridge::Destroy()
+{
+  if (mOwningEventTarget->IsOnCurrentThread()) {
+    delete this;
+    return;
+  }
+
+  RefPtr<Runnable> destroyRunnable =
+    NewNonOwningRunnableMethod("UsageParentBridge::Destroy",
+                               this,
+                               &UsageParentBridge::Destroy);
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(destroyRunnable,
+                                                   NS_DISPATCH_NORMAL));
 }
 
 /*******************************************************************************
