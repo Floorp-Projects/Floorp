@@ -61,12 +61,22 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
       'hardware': 'releng-hardware/gecko-t-win7-32-hw',
     },
+    'windows7-32-devedition': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
+      'hardware': 'releng-hardware/gecko-t-win7-32-hw',
+    },
     'windows10-64': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
     'windows10-64-pgo': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows10-64-devedition': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
@@ -503,7 +513,15 @@ def set_tier(config, tests):
                                          'linux64-devedition/opt',
                                          'linux64-asan/opt',
                                          'windows7-32/debug',
-                                         'windows7-32-vm/debug',
+                                         'windows7-32/opt',
+                                         'windows7-32-pgo/opt',
+                                         'windows7-32-devedition/opt',
+                                         'windows7-32-nightly/opt',
+                                         'windows10-64/debug',
+                                         'windows10-64/opt',
+                                         'windows10-64-pgo/opt',
+                                         'windows10-64-devedition/opt',
+                                         'windows10-64-nightly/opt',
                                          'macosx64/opt',
                                          'macosx64/debug',
                                          'android-4.3-arm7-api-15/opt',
@@ -819,6 +837,18 @@ def set_worker_type(config, tests):
             raise Exception("unknown test_platform {}".format(test_platform))
 
         yield test
+
+
+@transforms.add
+def skip_win10_hardware(config, tests):
+    """Windows 10 hardware isn't ready yet, don't even bother scheduling
+    unless we're on try"""
+    for test in tests:
+        if 'releng-hardware/gecko-t-win10-64-hw' not in test['worker-type']:
+            yield test
+        if config.params == 'try':
+            yield test
+        # Silently drop the test on the floor if its win10 hardware and we're not try
 
 
 @transforms.add

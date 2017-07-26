@@ -144,7 +144,7 @@ windows7-32/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows7-32-pgo/opt:
@@ -154,10 +154,18 @@ windows7-32-pgo/opt:
         - desktop-screenshot-capture
         - headless
         - windows-tests
-        #- windows-talos
+        - windows-talos
 
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        - windows-tests
+
+windows7-32-devedition/opt:
+    build-platform: win32-devedition/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
@@ -170,13 +178,14 @@ windows10-64/debug:
     test-sets:
         - headless
         - windows-tests
+
 windows10-64/opt:
     build-platform: win64/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows10-64-pgo/opt:
@@ -185,11 +194,19 @@ windows10-64-pgo/opt:
         - awsy
         - desktop-screenshot-capture
         - headless
-        #- windows-talos
+        - windows-talos
         - windows-tests
 
 windows10-64-nightly/opt:
     build-platform: win64-nightly/opt
+    test-sets:
+        - awsy
+        - desktop-screenshot-capture
+        - headless
+        - windows-tests
+
+windows10-64-devedition/opt:
+    build-platform: win64-devedition/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
@@ -202,23 +219,26 @@ windows10-64-asan/opt:
         - common-tests
 
 # Windows8 tests; all via BBB
-# Disabled until flag day
 windows8-64/debug:
     build-platform: win64/debug
-    test-sets: []
-        #- windows8-tests
+    test-sets:
+        - windows8-tests
 windows8-64/opt:
     build-platform: win64/opt
-    test-sets: []
-        #- windows8-tests
+    test-sets:
+        - windows8-tests
 windows8-64-pgo/opt:
     build-platform: win64-pgo/opt
-    test-sets: []
-        #- windows8-tests
+    test-sets:
+        - windows8-tests
 windows8-64-nightly/opt:
     build-platform: win64-nightly/opt
-    test-sets: []
-        #- windows8-tests
+    test-sets:
+        - windows8-tests
+windows8-64-devedition/opt:
+    build-platform: win64-devedition/opt
+    test-sets:
+        - windows8-tests
 
 ##
 # MacOS X platforms (matching /macosx.*/)
