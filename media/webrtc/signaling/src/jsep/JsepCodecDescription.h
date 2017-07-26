@@ -819,7 +819,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
     if (mRemoteMMSSet) {
       mRemoteMaxMessageSize = message_size;
     } else {
-      mRemoteMaxMessageSize = WEBRTC_DATACHANELL_MAX_MESSAGE_SIZE_DEFAULT;
+      mRemoteMaxMessageSize = WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT;
     }
 
     int sctp_port = remoteMsection.GetSctpPort();
