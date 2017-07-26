@@ -38,6 +38,9 @@ const log = LogManager.getLogger("recipe-runner");
 const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 const TIMER_NAME = "recipe-client-addon-run";
 const RUN_INTERVAL_PREF = "run_interval_seconds";
+const FIRST_RUN_PREF = "first_run";
+const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
+const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
 
 this.RecipeRunner = {
   init() {
@@ -50,6 +53,28 @@ this.RecipeRunner = {
       this.run();
     }
 
+    if (prefs.getBoolPref(FIRST_RUN_PREF)) {
+      // Run once immediately after the UI is available. Do this before adding the
+      // timer so we can't end up racing it.
+      const observer = {
+        observe: (subject, topic, data) => {
+          Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION);
+
+          this.run();
+          this.registerTimer();
+          prefs.setBoolPref(FIRST_RUN_PREF, false);
+
+          Services.obs.notifyObservers(null, SHIELD_INIT_NOTIFICATION);
+        },
+      };
+      Services.obs.addObserver(observer, UI_AVAILABLE_NOTIFICATION);
+      CleanupManager.addCleanupHandler(() => Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION));
+    } else {
+      this.registerTimer();
+    }
+  },
+
+  registerTimer() {
     this.updateRunInterval();
     CleanupManager.addCleanupHandler(() => timerManager.unregisterTimer(TIMER_NAME));
 
