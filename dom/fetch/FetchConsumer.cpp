@@ -343,7 +343,7 @@ FetchBodyConsumer<Derived>::Create(nsIGlobalObject* aGlobal,
 
   if (!NS_IsMainThread()) {
     MOZ_ASSERT(workerPrivate);
-    if (NS_WARN_IF(!consumer->RegisterWorkerHolder())) {
+    if (NS_WARN_IF(!consumer->RegisterWorkerHolder(workerPrivate))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -451,15 +451,15 @@ FetchBodyConsumer<Derived>::AssertIsOnTargetThread() const
 
 template <class Derived>
 bool
-FetchBodyConsumer<Derived>::RegisterWorkerHolder()
+FetchBodyConsumer<Derived>::RegisterWorkerHolder(WorkerPrivate* aWorkerPrivate)
 {
-  MOZ_ASSERT(mWorkerPrivate);
-  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(aWorkerPrivate);
+  aWorkerPrivate->AssertIsOnWorkerThread();
 
   MOZ_ASSERT(!mWorkerHolder);
   mWorkerHolder.reset(new FetchBodyWorkerHolder<Derived>(this));
 
-  if (!mWorkerHolder->HoldWorker(mWorkerPrivate, Closing)) {
+  if (!mWorkerHolder->HoldWorker(aWorkerPrivate, Closing)) {
     NS_WARNING("Failed to add workerHolder");
     mWorkerHolder = nullptr;
     return false;
