@@ -42,5 +42,6 @@ jobs:
             need-xvfb: true
             keep-artifacts: false
         toolchains:
+          - linux64-clang
           - linux64-gcc
           - linux64-sccache
