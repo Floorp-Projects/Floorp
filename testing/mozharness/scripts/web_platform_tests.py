@@ -173,11 +173,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         if not sys.platform.startswith("linux"):
             cmd += ["--exclude=css"]
 
-        # Let wptrunner determine the test type when --try-test-paths is used
-        wpt_test_paths = self.try_test_paths.get("web-platform-tests")
-        if not wpt_test_paths:
-            for test_type in c.get("test_type", []):
-                cmd.append("--test-type=%s" % test_type)
+        for test_type in c.get("test_type", []):
+            cmd.append("--test-type=%s" % test_type)
 
         if not c["e10s"]:
             cmd.append("--disable-e10s")
@@ -192,7 +189,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             if val:
                 cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
-        if wpt_test_paths or "wdspec" in c.get("test_type", []):
+        if "wdspec" in c.get("test_type", []):
             geckodriver_path = os.path.join(dirs["abs_test_bin_dir"], "geckodriver")
             if not os.path.isfile(geckodriver_path):
                 self.fatal("Unable to find geckodriver binary "
@@ -209,13 +206,19 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             'abs_work_dir': dirs["abs_work_dir"]
             }
 
-        try_options, try_tests = self.try_args("web-platform-tests")
+        test_type_suite = {
+            "testharness": "web-platform-tests",
+            "reftest": "web-platform-tests-reftests",
+            "wdspec": "web-platform-tests-wdspec",
+        }
+        for test_type in c.get("test_type", []):
+            try_options, try_tests = self.try_args(test_type_suite[test_type])
 
-        cmd.extend(self.query_options(options,
-                                      try_options,
-                                      str_format_values=str_format_values))
-        cmd.extend(self.query_tests_args(try_tests,
-                                         str_format_values=str_format_values))
+            cmd.extend(self.query_options(options,
+                                          try_options,
+                                          str_format_values=str_format_values))
+            cmd.extend(self.query_tests_args(try_tests,
+                                             str_format_values=str_format_values))
 
         return cmd
 
