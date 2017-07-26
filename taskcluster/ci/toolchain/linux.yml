@@ -24,7 +24,6 @@ linux64-clang:
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-gcc
-        - linux64-sccache
 
 linux64-clang-tidy:
     description: "Clang-tidy build"
@@ -53,7 +52,6 @@ linux64-clang-tidy:
     toolchains:
         - linux64-clang
         - linux64-gcc
-        - linux64-sccache
 
 linux64-gcc:
     description: "GCC toolchain build"
@@ -112,7 +110,6 @@ linux64-cctools-port:
         toolchain-artifact: public/build/cctools.tar.xz
     toolchains:
         - linux64-clang
-        - linux64-sccache
 
 linux64-hfsplus:
     description: "hfsplus toolchain build"
@@ -136,7 +133,6 @@ linux64-hfsplus:
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
         - linux64-clang
-        - linux64-sccache
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

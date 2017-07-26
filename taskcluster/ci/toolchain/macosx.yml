@@ -27,7 +27,6 @@ macosx64-clang:
         - linux64-cctools-port
         - linux64-clang
         - linux64-gcc
-        - linux64-sccache
 
 macosx64-clang-tidy:
     description: "Clang-tidy build"
@@ -58,7 +57,6 @@ macosx64-clang-tidy:
         - linux64-cctools-port
         - linux64-clang
         - linux64-gcc
-        - linux64-sccache
 
 macosx64-cctools-port:
     description: "cctools-port toolchain build"
@@ -84,4 +82,3 @@ macosx64-cctools-port:
         - linux64-cctools-port
         - linux64-clang
         - linux64-gcc
-        - linux64-sccache
