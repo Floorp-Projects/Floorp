@@ -10,7 +10,6 @@
 #include "mozilla/LoadTainting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "nsContentUtils.h"
@@ -372,7 +371,7 @@ SRICheckDataVerifier::Verify(const SRIMetadata& aMetadata,
     nsCOMPtr<nsIRequest> request;
     request = do_QueryInterface(aChannel);
     request->GetName(requestURL);
-    SRILOG(("SRICheckDataVerifier::Verify, url=%s (length=%" PRIuSIZE ")",
+    SRILOG(("SRICheckDataVerifier::Verify, url=%s (length=%zu)",
             requestURL.get(), mBytesHashed));
   }
 

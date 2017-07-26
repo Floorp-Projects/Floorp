@@ -33,7 +33,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 namespace net {
@@ -296,7 +295,7 @@ private:
         mNotifyStorage = false;
 
       } else {
-        LOG(("  entry [left=%" PRIuSIZE ", canceled=%d]", mEntryArray.Length(), (bool)mCancel));
+        LOG(("  entry [left=%zu, canceled=%d]", mEntryArray.Length(), (bool)mCancel));
 
         // Third, notify each entry until depleted or canceled
         if (!mEntryArray.Length() || mCancel) {

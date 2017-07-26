@@ -28,7 +28,6 @@
 #include <media/stagefright/MetaData.h>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include <cinttypes>
 
@@ -314,7 +313,7 @@ String8 MetaData::typed_data::asString() const {
     const void *data = storage();
     switch(mType) {
         case TYPE_NONE:
-            out = String8::format("no type, size %" PRIuSIZE ")", mSize);
+            out = String8::format("no type, size %zu)", mSize);
             break;
         case TYPE_C_STRING:
             out = String8::format("(char*) %s", (const char *)data);
@@ -340,7 +339,7 @@ String8 MetaData::typed_data::asString() const {
         }
 
         default:
-            out = String8::format("(unknown type %" PRIu32 ", size %" PRIuSIZE ")",
+            out = String8::format("(unknown type %" PRIu32 ", size %zu)",
                                   mType, mSize);
             if (mSize <= 48) { // if it's less than three lines of hex data, dump it
                 AString foo;

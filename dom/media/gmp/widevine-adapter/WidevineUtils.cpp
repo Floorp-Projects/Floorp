@@ -5,7 +5,6 @@
 
 #include "WidevineUtils.h"
 #include "WidevineDecryptor.h"
-#include <mozilla/SizePrintfMacros.h>
 
 #include "gmp-api/gmp-errors.h"
 #include <stdarg.h>
@@ -80,7 +79,7 @@ CDMWrapper::~CDMWrapper()
 
 WidevineBuffer::WidevineBuffer(size_t aSize)
 {
-  CDM_LOG("WidevineBuffer(size=%" PRIuSIZE ") created", aSize);
+  CDM_LOG("WidevineBuffer(size=%zu) created", aSize);
   mBuffer.SetLength(aSize);
 }
 

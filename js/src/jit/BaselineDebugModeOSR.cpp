@@ -7,7 +7,6 @@
 #include "jit/BaselineDebugModeOSR.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jit/BaselineIC.h"
 #include "jit/JitcodeMap.h"
@@ -323,7 +322,7 @@ SpewPatchBaselineFrame(uint8_t* oldReturnAddress, uint8_t* newReturnAddress,
                        JSScript* script, ICEntry::Kind frameKind, jsbytecode* pc)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
-            "Patch return %p -> %p on BaselineJS frame (%s:%" PRIuSIZE ") from %s at %s",
+            "Patch return %p -> %p on BaselineJS frame (%s:%zu) from %s at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
             ICEntryKindToString(frameKind), CodeName[(JSOp)*pc]);
 }
@@ -333,7 +332,7 @@ SpewPatchBaselineFrameFromExceptionHandler(uint8_t* oldReturnAddress, uint8_t* n
                                            JSScript* script, jsbytecode* pc)
 {
     JitSpew(JitSpew_BaselineDebugModeOSR,
-            "Patch return %p -> %p on BaselineJS frame (%s:%" PRIuSIZE ") from exception handler at %s",
+            "Patch return %p -> %p on BaselineJS frame (%s:%zu) from exception handler at %s",
             oldReturnAddress, newReturnAddress, script->filename(), script->lineno(),
             CodeName[(JSOp)*pc]);
 }
@@ -669,7 +668,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     if (oldBaselineScript->hasDebugInstrumentation() == observing)
         return true;
 
-    JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%" PRIuSIZE ") for %s",
+    JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%zu) for %s",
             script->filename(), script->lineno(), observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
     script->setBaselineScript(cx->runtime(), nullptr);

@@ -50,7 +50,7 @@ bool
 Decoder::fail(size_t errorOffset, const char* msg)
 {
     MOZ_ASSERT(error_);
-    UniqueChars strWithOffset(JS_smprintf("at offset %" PRIuSIZE ": %s", errorOffset, msg));
+    UniqueChars strWithOffset(JS_smprintf("at offset %zu: %s", errorOffset, msg));
     if (!strWithOffset)
         return false;
 

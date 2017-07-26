@@ -38,7 +38,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "nsIDiskSpaceWatcher.h"
 #include "nsIDocShell.h"
@@ -397,7 +396,7 @@ nsOfflineCacheUpdateService::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
 nsresult
 nsOfflineCacheUpdateService::ProcessNextUpdate()
 {
-    LOG(("nsOfflineCacheUpdateService::ProcessNextUpdate [%p, num=%" PRIuSIZE "]",
+    LOG(("nsOfflineCacheUpdateService::ProcessNextUpdate [%p, num=%zu]",
          this, mUpdates.Length()));
 
     if (mDisabled)

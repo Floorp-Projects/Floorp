@@ -8,7 +8,6 @@
 
 #include "jit/C1Spewer.h"
 
-#include "mozilla/SizePrintfMacros.h"
 
 #include <time.h>
 
@@ -28,8 +27,8 @@ C1Spewer::beginFunction(MIRGraph* graph, JSScript* script)
 
     out_.printf("begin_compilation\n");
     if (script) {
-        out_.printf("  name \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
-        out_.printf("  method \"%s:%" PRIuSIZE "\"\n", script->filename(), script->lineno());
+        out_.printf("  name \"%s:%zu\"\n", script->filename(), script->lineno());
+        out_.printf("  method \"%s:%zu\"\n", script->filename(), script->lineno());
     } else {
         out_.printf("  name \"wasm compilation\"\n");
         out_.printf("  method \"wasm compilation\"\n");

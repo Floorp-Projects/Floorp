@@ -7,7 +7,6 @@
 #include "FlacDemuxer.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mp4_demuxer/BitReader.h"
 #include "nsAutoPtr.h"
 #include "prenv.h"
@@ -868,7 +867,7 @@ FlacTrackDemuxer::GetSamples(int32_t aNumSamples)
     frames->mSamples.AppendElement(frame);
   }
 
-  LOGV("GetSamples() End mSamples.Length=%" PRIuSIZE " aNumSamples=%d offset=%" PRId64
+  LOGV("GetSamples() End mSamples.Length=%zu aNumSamples=%d offset=%" PRId64
        " mParsedFramesDuration=%f mTotalFrameLen=%" PRIu64,
        frames->mSamples.Length(), aNumSamples, GetResourceOffset(),
        mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
@@ -976,7 +975,7 @@ FlacTrackDemuxer::GetNextFrame(const flac::Frame& aFrame)
 
   const uint32_t read = Read(frameWriter->Data(), offset, size);
   if (read != size) {
-    LOG("GetNextFrame() Exit read=%u frame->Size=%" PRIuSIZE, read, frame->Size());
+    LOG("GetNextFrame() Exit read=%u frame->Size=%zu", read, frame->Size());
     return nullptr;
   }
 

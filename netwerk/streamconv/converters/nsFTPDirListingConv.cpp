@@ -18,7 +18,6 @@
 #include "ParseFTPList.h"
 #include <algorithm>
 
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
 
@@ -136,7 +135,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
-        MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() buffering the following %" PRIuSIZE " bytes...\n\n%s\n\n",
+        MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() buffering the following %zu bytes...\n\n%s\n\n",
             strlen(line), line) );
     }
 
