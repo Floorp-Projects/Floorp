@@ -16,6 +16,12 @@ namespace layers {
 
 WebRenderLayerScrollData::WebRenderLayerScrollData()
   : mDescendantCount(-1)
+  , mTransformIsPerspective(false)
+  , mEventRegionsOverride(EventRegionsOverride::NoOverride)
+  , mScrollbarAnimationId(0)
+  , mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID)
+  , mIsScrollbarContainer(false)
+  , mFixedPosScrollContainerId(FrameMetrics::NULL_SCROLL_ID)
 {
 }
 
@@ -52,6 +58,31 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   mScrollbarTargetContainerId = aLayer->GetScrollbarTargetContainerId();
   mIsScrollbarContainer = aLayer->IsScrollbarContainer();
   mFixedPosScrollContainerId = aLayer->GetFixedPositionScrollContainerId();
+}
+
+void
+WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
+                                     nsDisplayItem* aItem)
+{
+  mDescendantCount = 0;
+
+  MOZ_ASSERT(aItem);
+  if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_INFO_LAYER) {
+    nsDisplayScrollInfoLayer* info = static_cast<nsDisplayScrollInfoLayer*>(aItem);
+    UniquePtr<ScrollMetadata> metadata = info->ComputeScrollMetadata(
+        nullptr, ContainerLayerParameters());
+    MOZ_ASSERT(metadata);
+    MOZ_ASSERT(metadata->GetMetrics().IsScrollInfoLayer());
+    mScrollIds.AppendElement(aOwner.AddMetadata(*metadata));
+  }
+  for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
+       asr;
+       asr = asr->mParent) {
+    Maybe<ScrollMetadata> metadata = asr->mScrollableFrame->ComputeScrollMetadata(
+        nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+    MOZ_ASSERT(metadata);
+    mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));
+  }
 }
 
 int32_t
@@ -110,6 +141,13 @@ WebRenderScrollData::AddNewLayerData()
   size_t len = mLayerScrollData.Length();
   Unused << mLayerScrollData.AppendElement();
   return len;
+}
+
+size_t
+WebRenderScrollData::AddLayerData(const WebRenderLayerScrollData& aData)
+{
+  mLayerScrollData.AppendElement(aData);
+  return mLayerScrollData.Length() - 1;
 }
 
 size_t

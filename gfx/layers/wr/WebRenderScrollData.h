@@ -41,6 +41,8 @@ public:
   void Initialize(WebRenderScrollData& aOwner,
                   Layer* aLayer,
                   int32_t aDescendantCount);
+  void Initialize(WebRenderScrollData& aOwner,
+                  nsDisplayItem* aItem);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
@@ -112,6 +114,9 @@ public:
   // Add a new empty WebRenderLayerScrollData and return the index that can be
   // used to look it up via GetLayerData.
   size_t AddNewLayerData();
+  // Add the provided WebRenderLayerScrollData and return the index that can
+  // be used to look it up via GetLayerData.
+  size_t AddLayerData(const WebRenderLayerScrollData& aData);
 
   size_t GetLayerCount() const;
 
