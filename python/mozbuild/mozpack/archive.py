@@ -11,7 +11,7 @@ import stat
 import tarfile
 
 from .files import (
-    BaseFile,
+    BaseFile, File,
 )
 
 # 2016-01-01T00:00:00+0000
@@ -33,12 +33,12 @@ def create_tar_from_files(fp, files):
     """
     with tarfile.open(name='', mode='w', fileobj=fp, dereference=True) as tf:
         for archive_path, f in sorted(files.items()):
-            if isinstance(f, BaseFile):
-                ti = tarfile.TarInfo(archive_path)
-                ti.mode = f.mode or 0644
-                ti.type = tarfile.REGTYPE
-            else:
-                ti = tf.gettarinfo(f, archive_path)
+            if not isinstance(f, BaseFile):
+                f = File(f)
+
+            ti = tarfile.TarInfo(archive_path)
+            ti.mode = f.mode or 0644
+            ti.type = tarfile.REGTYPE
 
             if not ti.isreg():
                 raise ValueError('not a regular file: %s' % f)
@@ -60,14 +60,10 @@ def create_tar_from_files(fp, files):
             # Set mtime to a constant value.
             ti.mtime = DEFAULT_MTIME
 
-            if isinstance(f, BaseFile):
-                ti.size = f.size()
-                # tarfile wants to pass a size argument to read(). So just
-                # wrap/buffer in a proper file object interface.
-                tf.addfile(ti, f.open())
-            else:
-                with open(f, 'rb') as fh:
-                    tf.addfile(ti, fh)
+            ti.size = f.size()
+            # tarfile wants to pass a size argument to read(). So just
+            # wrap/buffer in a proper file object interface.
+            tf.addfile(ti, f.open())
 
 
 def create_tar_gz_from_files(fp, files, filename=None, compresslevel=9):
