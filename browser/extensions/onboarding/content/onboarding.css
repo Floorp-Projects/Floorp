@@ -315,6 +315,18 @@
   margin-top: -32px;
 }
 
+/* Remove default dotted outline around buttons' text */
+.onboarding-tour-action-button::-moz-focus-inner {
+  border: 0;
+}
+
+/* Keyboard focus specific outline */
+.onboarding-tour-action-button:-moz-focusring {
+  outline: 2px solid rgba(0,149,221,0.5);
+  outline-offset: 1px;
+  -moz-outline-radius: 2px;
+}
+
 .onboarding-tour-action-button:hover:not([disabled]) ,
 #onboarding-notification-action-btn:hover {
   background: #0060df;

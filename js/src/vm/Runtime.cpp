@@ -317,8 +317,6 @@ JSRuntime::destroyRuntime()
 
     AutoNoteSingleThreadedRegion anstr;
 
-    MOZ_ASSERT_IF(!geckoProfiler().enabled(), !singleThreadedExecutionRequired_);
-
     MOZ_ASSERT(!hasHelperThreadZones());
     AutoLockForExclusiveAccess lock(this);
 

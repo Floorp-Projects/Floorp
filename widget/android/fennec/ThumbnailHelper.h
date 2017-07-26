@@ -194,24 +194,37 @@ public:
     template<class Functor>
     static void OnNativeCall(Functor&& aCall)
     {
-        class IdleEvent : public nsAppShell::LambdaEvent<Functor>
+        class IdleEvent : public Runnable
         {
-            using Base = nsAppShell::LambdaEvent<Functor>;
+            Functor mLambda;
+            bool mIdlePass;
 
         public:
             IdleEvent(Functor&& aCall)
-                : Base(Forward<Functor>(aCall))
+                : Runnable("ThumbnailHelperIdle")
+                , mLambda(Move(aCall))
+                , mIdlePass(false)
             {}
 
-            void Run() override
+            NS_IMETHOD Run() override
             {
+                // Because we can only post to the idle queue from the main
+                // queue, we must first post to the main queue and then to the
+                // idle queue. However, we use the same runnable object for
+                // both queues, and use mIdlePass to track our progress.
+                if (mIdlePass) {
+                    mLambda();
+                    return NS_OK;
+                }
+
+                mIdlePass = true;
                 MessageLoop::current()->PostIdleTask(
-                    NS_NewRunnableFunction("OnNativeCall", Move(Base::lambda)));
+                        nsCOMPtr<nsIRunnable>(this).forget());
+                return NS_OK;
             }
         };
 
-        // Invoke RequestThumbnail on the main thread when the thread is idle.
-        nsAppShell::PostEvent(MakeUnique<IdleEvent>(Forward<Functor>(aCall)));
+        NS_DispatchToMainThread(new IdleEvent(Move(aCall)));
     }
 
     static void

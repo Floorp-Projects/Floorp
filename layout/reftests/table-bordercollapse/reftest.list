@@ -1,3 +1,8 @@
+== bug1375518.html bug1375518-ref.html
+== bug1375518-2.html bug1375518-ref.html
+== bug1375518-3.html bug1375518-ref.html
+== bug1375518-4.html bug1375518-4-ref.html
+== bug1375518-5.html bug1375518-5-ref.html
 == bc_dyn_cell1.html bc_dyn_cell1_ref.html
 == bc_dyn_cell2.html bc_dyn_cell2_ref.html
 == bc_dyn_cell3.html bc_dyn_cell3_ref.html

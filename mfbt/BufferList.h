@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include "mozilla/AllocPolicy.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
@@ -135,6 +136,15 @@ class BufferList : private AllocPolicy
 
   // Returns the sum of the sizes of all the buffers.
   size_t Size() const { return mSize; }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+  {
+    size_t size = mSegments.sizeOfExcludingThis(aMallocSizeOf);
+    for (Segment& segment : mSegments) {
+      size += aMallocSizeOf(segment.Start());
+    }
+    return size;
+  }
 
   void Clear()
   {

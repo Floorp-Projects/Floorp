@@ -597,6 +597,21 @@ FrameIter::Data::Data(JSContext* cx, DebuggerEvalOption debuggerEvalOption,
 {
 }
 
+FrameIter::Data::Data(JSContext* cx, const CooperatingContext& target,
+                      DebuggerEvalOption debuggerEvalOption)
+  : cx_(cx),
+    debuggerEvalOption_(debuggerEvalOption),
+    principals_(nullptr),
+    state_(DONE),
+    pc_(nullptr),
+    interpFrames_(nullptr),
+    activations_(cx, target),
+    jitFrames_(),
+    ionInlineFrameNo_(0),
+    wasmFrames_()
+{
+}
+
 FrameIter::Data::Data(const FrameIter::Data& other)
   : cx_(other.cx_),
     debuggerEvalOption_(other.debuggerEvalOption_),
@@ -609,6 +624,16 @@ FrameIter::Data::Data(const FrameIter::Data& other)
     ionInlineFrameNo_(other.ionInlineFrameNo_),
     wasmFrames_(other.wasmFrames_)
 {
+}
+
+FrameIter::FrameIter(JSContext* cx, const CooperatingContext& target,
+                     DebuggerEvalOption debuggerEvalOption)
+  : data_(cx, target, debuggerEvalOption),
+    ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
+{
+    // settleOnActivation can only GC if principals are given.
+    JS::AutoSuppressGCAnalysis nogc;
+    settleOnActivation();
 }
 
 FrameIter::FrameIter(JSContext* cx, DebuggerEvalOption debuggerEvalOption)

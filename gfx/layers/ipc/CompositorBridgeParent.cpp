@@ -1662,7 +1662,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
       CrossProcessCompositorBridgeParent* cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
       if (cpcp) {
         TimeStamp now = TimeStamp::Now();
-        cpcp->DidComposite(child, now, now);
+        cpcp->DidCompositeLocked(child, now, now);
       }
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
@@ -2005,7 +2005,7 @@ CompositorBridgeParent::NotifyDidComposite(uint64_t aTransactionId, TimeStamp& a
   ForEachIndirectLayerTree([&] (LayerTreeState* lts, const uint64_t& aLayersId) -> void {
     if (lts->mCrossProcessParent && lts->mParent == this) {
       CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
-      cpcp->DidComposite(aLayersId, aCompositeStart, aCompositeEnd);
+      cpcp->DidCompositeLocked(aLayersId, aCompositeStart, aCompositeEnd);
     }
   });
 }

@@ -15,14 +15,11 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DownloadCore.jsm',
+    'DownloadIntegration.jsm',
     'DownloadList.jsm',
     'Downloads.jsm',
     'DownloadStore.jsm',
     'DownloadUIHelper.jsm',
-]
-
-EXTRA_PP_JS_MODULES += [
-    'DownloadIntegration.jsm',
 ]
 
 FINAL_LIBRARY = 'xul'

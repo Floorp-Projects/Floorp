@@ -25,10 +25,14 @@ using namespace js;
 
 using mozilla::DebugOnly;
 
-GeckoProfiler::GeckoProfiler(JSRuntime* rt)
+GeckoProfilerThread::GeckoProfilerThread()
+  : pseudoStack_(nullptr)
+{
+}
+
+GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
   : rt(rt),
     strings(mutexid::GeckoProfilerStrings),
-    pseudoStack_(nullptr),
     slowAssertions(false),
     enabled_(false),
     eventMarker_(nullptr)
@@ -37,7 +41,7 @@ GeckoProfiler::GeckoProfiler(JSRuntime* rt)
 }
 
 bool
-GeckoProfiler::init()
+GeckoProfilerRuntime::init()
 {
     auto locked = strings.lock();
     if (!locked->init())
@@ -47,16 +51,13 @@ GeckoProfiler::init()
 }
 
 void
-GeckoProfiler::setProfilingStack(PseudoStack* pseudoStack)
+GeckoProfilerThread::setProfilingStack(PseudoStack* pseudoStack)
 {
-    MOZ_ASSERT_IF(pseudoStack_, !enabled());
-    MOZ_ASSERT(strings.lock()->initialized());
-
     pseudoStack_ = pseudoStack;
 }
 
 void
-GeckoProfiler::setEventMarker(void (*fn)(const char*))
+GeckoProfilerRuntime::setEventMarker(void (*fn)(const char*))
 {
     eventMarker_ = fn;
 }
@@ -78,24 +79,19 @@ GetTopProfilingJitFrame(Activation* act)
     return iter.fp();
 }
 
-bool
-GeckoProfiler::enable(bool enabled)
+void
+GeckoProfilerRuntime::enable(bool enabled)
 {
-    MOZ_ASSERT(installed());
+#ifdef DEBUG
+    // All cooperating contexts must have profile stacks installed before the
+    // profiler can be enabled. Cooperating threads created while the profiler
+    // is enabled must have stacks set before they execute any JS.
+    for (const CooperatingContext& target : rt->cooperatingContexts())
+        MOZ_ASSERT(target.context()->geckoProfiler().installed());
+#endif
 
     if (enabled_ == enabled)
-        return true;
-
-    // Execution in the runtime must be single threaded if the Gecko profiler
-    // is enabled. There is only a single profiler stack in the runtime, from
-    // which entries must be added/removed in a LIFO fashion.
-    JSContext* cx = rt->activeContextFromOwnThread();
-    if (enabled) {
-        if (!rt->beginSingleThreadedExecution(cx))
-            return false;
-    } else {
-        rt->endSingleThreadedExecution(cx);
-    }
+        return;
 
     /*
      * Ensure all future generated code will be instrumented, or that all
@@ -163,13 +159,11 @@ GeckoProfiler::enable(bool enabled)
     // profiling stack iteration.
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->wasm.ensureProfilingLabels(enabled);
-
-    return true;
 }
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
-GeckoProfiler::profileString(JSScript* script, JSFunction* maybeFun)
+GeckoProfilerRuntime::profileString(JSScript* script, JSFunction* maybeFun)
 {
     auto locked = strings.lock();
     MOZ_ASSERT(locked->initialized());
@@ -186,7 +180,7 @@ GeckoProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-GeckoProfiler::onScriptFinalized(JSScript* script)
+GeckoProfilerRuntime::onScriptFinalized(JSScript* script)
 {
     /*
      * This function is called whenever a script is destroyed, regardless of
@@ -203,7 +197,7 @@ GeckoProfiler::onScriptFinalized(JSScript* script)
 }
 
 void
-GeckoProfiler::markEvent(const char* event)
+GeckoProfilerRuntime::markEvent(const char* event)
 {
     MOZ_ASSERT(enabled());
     if (eventMarker_) {
@@ -213,9 +207,9 @@ GeckoProfiler::markEvent(const char* event)
 }
 
 bool
-GeckoProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
+GeckoProfilerThread::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
 {
-    const char* dynamicString = profileString(script, maybeFun);
+    const char* dynamicString = cx->runtime()->geckoProfiler().profileString(script, maybeFun);
     if (dynamicString == nullptr) {
         ReportOutOfMemory(cx);
         return false;
@@ -238,7 +232,7 @@ GeckoProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
 }
 
 void
-GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
+GeckoProfilerThread::exit(JSScript* script, JSFunction* maybeFun)
 {
     pseudoStack_->pop();
 
@@ -246,7 +240,8 @@ GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
     /* Sanity check to make sure push/pop balanced */
     uint32_t sp = pseudoStack_->stackPointer;
     if (sp < PseudoStack::MaxEntries) {
-        const char* dynamicString = profileString(script, maybeFun);
+        JSRuntime* rt = script->runtimeFromActiveCooperatingThread();
+        const char* dynamicString = rt->geckoProfiler().profileString(script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
         MOZ_ASSERT(dynamicString);
 
@@ -281,7 +276,7 @@ GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
  * AddPtr held while invoking allocProfileString.
  */
 UniqueChars
-GeckoProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
+GeckoProfilerRuntime::allocProfileString(JSScript* script, JSFunction* maybeFun)
 {
     // Note: this profiler string is regexp-matched by
     // devtools/client/profiler/cleopatra/js/parserWorker.js.
@@ -329,7 +324,7 @@ GeckoProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-GeckoProfiler::trace(JSTracer* trc)
+GeckoProfilerThread::trace(JSTracer* trc)
 {
     if (pseudoStack_) {
         size_t size = pseudoStack_->stackSize();
@@ -339,7 +334,7 @@ GeckoProfiler::trace(JSTracer* trc)
 }
 
 void
-GeckoProfiler::fixupStringsMapAfterMovingGC()
+GeckoProfilerRuntime::fixupStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
     if (!locked->initialized())
@@ -356,7 +351,7 @@ GeckoProfiler::fixupStringsMapAfterMovingGC()
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void
-GeckoProfiler::checkStringsMapAfterMovingGC()
+GeckoProfilerRuntime::checkStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
     if (!locked->initialized())
@@ -381,10 +376,10 @@ ProfileEntry::trace(JSTracer* trc)
     }
 }
 
-GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSRuntime* rt,
+GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSContext* cx,
                                                    JSScript* script
                                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->geckoProfiler())
+    : profiler(&cx->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler->installed()) {
@@ -413,10 +408,10 @@ GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
     MOZ_ASSERT(spBefore_ == profiler->stackPointer());
 }
 
-AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
+AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSContext* cx, const char* label,
                                                ProfileEntry::Category category
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler_(&rt->geckoProfiler())
+    : profiler_(&cx->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler_->installed()) {
@@ -439,12 +434,12 @@ AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry()
     MOZ_ASSERT(spBefore_ == profiler_->stackPointer());
 }
 
-GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bool hasProfilerFrame
+GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSContext* cx, bool hasProfilerFrame
                                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->geckoProfiler())
+    : profiler(&cx->geckoProfiler())
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!hasProfilerFrame || !profiler->enabled()) {
+    if (!hasProfilerFrame || !cx->runtime()->geckoProfiler().enabled()) {
         profiler = nullptr;
         return;
     }
@@ -530,14 +525,13 @@ ProfileEntry::setPC(jsbytecode* pc)
 JS_FRIEND_API(void)
 js::SetContextProfilingStack(JSContext* cx, PseudoStack* pseudoStack)
 {
-    cx->runtime()->geckoProfiler().setProfilingStack(pseudoStack);
+    cx->geckoProfiler().setProfilingStack(pseudoStack);
 }
 
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
-    if (!cx->runtime()->geckoProfiler().enable(enabled))
-        MOZ_CRASH("Execution in this runtime should already be single threaded");
+    cx->runtime()->geckoProfiler().enable(enabled);
 }
 
 JS_FRIEND_API(void)

@@ -384,7 +384,11 @@ PaymentRequest::Show(ErrorResult& aRv)
   }
   nsresult rv = manager->ShowPayment(mInternalId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    promise->MaybeReject(NS_ERROR_FAILURE);
+    if (rv == NS_ERROR_ABORT) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    } else {
+      promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+    }
     mState = eClosed;
     return promise.forget();
   }
