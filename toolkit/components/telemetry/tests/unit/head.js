@@ -314,6 +314,7 @@ if (runningInParent) {
   // and will fail if receive an unexpected ping. Let's globally disable these features:
   // the relevant tests will enable these prefs when needed.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSender, false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
   Services.prefs.setBoolPref("toolkit.telemetry.newProfilePing.enabled", false);
   // Ensure browser experiments are also disabled, to avoid network activity
   // when toggling PREF_ENABLED.

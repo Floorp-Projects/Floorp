@@ -1800,10 +1800,11 @@ var Impl = {
 
       // Only send the shutdown ping using the pingsender from the second
       // browsing session on, to mitigate issues with "bot" profiles (see bug 1354482).
-      // Note: sending the "shutdown" ping using the pingsender is currently disabled
-      // due to a crash happening on OSX platforms. See bug 1357745 for context.
+      const sendOnThisSession =
+        Preferences.get(Utils.Preferences.ShutdownPingSenderFirstSession, false) ||
+        !TelemetryReportingPolicy.isFirstRun();
       let sendWithPingsender = Preferences.get(TelemetryUtils.Preferences.ShutdownPingSender, false) &&
-                               !TelemetryReportingPolicy.isFirstRun();
+                               sendOnThisSession;
 
       let options = {
         addClientId: true,

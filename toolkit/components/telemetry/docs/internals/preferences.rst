@@ -54,6 +54,10 @@ Preferences
 
   Allow the ``shutdown`` ping to be sent when the browser shuts down, from the second browsing session on, instead of the next restart, using the :doc:`ping sender <pingsender>`.
 
+``toolkit.telemetry.shutdownPingSender.enabledFirstSession``
+
+  Allow the ``shutdown`` ping to be sent using the :doc:`ping sender <pingsender>` from the first browsing session.
+
 ``toolkit.telemetry.newProfilePing.enabled``
 
   Enable the :doc:`../data/new-profile` ping on new profiles.
