@@ -901,7 +901,7 @@ set_config('MOZ_CONFIGURE_OPTIONS', all_configure_options)
 def js_option(*args, **kwargs):
     opt = option(*args, **kwargs)
 
-    @depends(opt.option, build_project)
+    @depends(opt.option, build_project, when=kwargs.get('when'))
     def js_option(value, build_project):
         if build_project != 'js':
             return value.format(opt.option)
