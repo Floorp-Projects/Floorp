@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include <cfloat>
 #include <stdarg.h>
@@ -51,7 +50,7 @@ BEGIN_TEST(testPrintf)
     CHECK(print_one("0xf0f0", "0x%lx", 0xf0f0ul));
     CHECK(print_one("0xF0F0", "0x%llX", 0xf0f0ull));
     CHECK(print_one("27270", "%zu", (size_t) 27270));
-    CHECK(print_one("27270", "%" PRIuSIZE, (size_t) 27270));
+    CHECK(print_one("27270", "%zu", (size_t) 27270));
     CHECK(print_one("hello", "he%so", "ll"));
     CHECK(print_one("(null)", "%s", zero()));
     CHECK(print_one("0", "%p", (char *) 0));

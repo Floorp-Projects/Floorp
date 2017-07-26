@@ -10,7 +10,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #include "jsapi.h"
@@ -2558,7 +2557,7 @@ TypeZone::addPendingRecompile(JSContext* cx, const RecompileInfo& info)
     if (!co || !co->isValid() || co->pendingInvalidation())
         return;
 
-    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%" PRIuSIZE,
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%zu",
               co->script(), co->script()->filename(), co->script()->lineno());
 
     co->setPendingInvalidation();
@@ -3336,7 +3335,7 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, TypeSet::
     if (types->hasType(type))
         return;
 
-    InferSpew(ISpewOps, "bytecodeType: %p %05" PRIuSIZE ": %s",
+    InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s",
               script, script->pcToOffset(pc), TypeSet::TypeString(type));
     types->addType(cx, type);
 }
@@ -3352,7 +3351,7 @@ js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc, StackType
     MOZ_ASSERT(types == TypeScript::BytecodeTypes(script, pc));
     MOZ_ASSERT(!types->hasType(type));
 
-    InferSpew(ISpewOps, "bytecodeType: %p %05" PRIuSIZE ": %s",
+    InferSpew(ISpewOps, "bytecodeType: %p %05zu: %s",
               script, script->pcToOffset(pc), TypeSet::TypeString(type));
     types->addType(cx, type);
 }
@@ -4643,7 +4642,7 @@ TypeScript::printTypes(JSContext* cx, HandleScript script) const
         fprintf(stderr, "Eval");
     else
         fprintf(stderr, "Main");
-    fprintf(stderr, " %#" PRIxPTR " %s:%" PRIuSIZE " ",
+    fprintf(stderr, " %#" PRIxPTR " %s:%zu ",
             uintptr_t(script.get()), script->filename(), script->lineno());
 
     if (script->functionNonDelazifying()) {

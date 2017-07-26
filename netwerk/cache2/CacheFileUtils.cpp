@@ -6,7 +6,6 @@
 #include "CacheLog.h"
 #include "CacheFileUtils.h"
 #include "LoadContextInfo.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
@@ -319,7 +318,7 @@ ValidityPair::Merge(const ValidityPair& aOther)
 void
 ValidityMap::Log() const
 {
-  LOG(("ValidityMap::Log() - number of pairs: %" PRIuSIZE, mMap.Length()));
+  LOG(("ValidityMap::Log() - number of pairs: %zu", mMap.Length()));
   for (uint32_t i=0; i<mMap.Length(); i++) {
     LOG(("    (%u, %u)", mMap[i].Offset() + 0, mMap[i].Len() + 0));
   }

@@ -11,7 +11,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EndianUtils.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "VideoUtils.h"
 
 extern mozilla::LazyLogModule gMediaDemuxerLog;
@@ -115,7 +114,7 @@ FrameParser::Parse(ByteReader* aReader, uint32_t* aBytesToSkip)
         // buffer, therefore we return immediately and let the calling function
         // handle skipping the rest of the tag.
         MP3LOGV("ID3v2 tag detected, size=%d,"
-                " needing to skip %" PRIuSIZE " bytes past the current buffer",
+                " needing to skip %zu bytes past the current buffer",
                 tagSize, skipSize - aReader->Remaining());
         *aBytesToSkip = skipSize - aReader->Remaining();
         return false;
@@ -527,7 +526,7 @@ FrameParser::VBRHeader::Parse(ByteReader* aReader)
   const bool rv = ParseVBRI(aReader) || ParseXing(aReader);
   if (rv) {
     MP3LOG("VBRHeader::Parse found valid VBR/CBR header: type=%s"
-           " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%" PRIuSIZE,
+           " NumAudioFrames=%u NumBytes=%u Scale=%u TOC-size=%zu",
            vbr_header::TYPE_STR[Type()], NumAudioFrames().valueOr(0),
            NumBytes().valueOr(0), Scale().valueOr(0), mTOC.size());
   }

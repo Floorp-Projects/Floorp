@@ -323,7 +323,7 @@ GC(JSContext* cx, unsigned argc, Value* vp)
 
     char buf[256] = { '\0' };
 #ifndef JS_MORE_DETERMINISTIC
-    SprintfLiteral(buf, "before %" PRIuSIZE ", after %" PRIuSIZE "\n",
+    SprintfLiteral(buf, "before %zu, after %zu\n",
                    preBytes, cx->runtime()->gc.usage.gcBytes());
 #endif
     JSString* str = JS_NewStringCopyZ(cx, buf);

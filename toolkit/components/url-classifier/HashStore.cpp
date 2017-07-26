@@ -38,7 +38,6 @@
 #include "prio.h"
 #include "mozilla/Logging.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "zlib.h"
 #include "Classifier.h"
 #include "nsUrlClassifierDBService.h"
@@ -191,7 +190,7 @@ TableUpdateV4::NewPrefixes(int32_t aSize, std::string& aPrefixes)
       LOG(("%.2X%.2X%.2X%.2X", c[0], c[1], c[2], c[3]));
     }
 
-    LOG(("---- %" PRIuSIZE " fixed-length prefixes in total.", aPrefixes.size() / aSize));
+    LOG(("---- %zu fixed-length prefixes in total.", aPrefixes.size() / aSize));
   }
 
   PrefixStdString* prefix = new PrefixStdString(aPrefixes);
@@ -1201,7 +1200,7 @@ HashStore::AugmentAdds(const nsTArray<uint32_t>& aPrefixes)
 {
   uint32_t cnt = aPrefixes.Length();
   if (cnt != mAddPrefixes.Length()) {
-    LOG(("Amount of prefixes in cache not consistent with store (%" PRIuSIZE " vs %" PRIuSIZE ")",
+    LOG(("Amount of prefixes in cache not consistent with store (%zu vs %zu)",
          aPrefixes.Length(), mAddPrefixes.Length()));
     return NS_ERROR_FAILURE;
   }

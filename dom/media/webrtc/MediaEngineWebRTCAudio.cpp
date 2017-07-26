@@ -626,7 +626,7 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
     mTotalFrames += aFrames;
     if (mTotalFrames > mLastLogFrames + mSampleFrequency) { // ~ 1 second
       MOZ_LOG(AudioLogModule(), LogLevel::Debug,
-              ("%p: Inserting %" PRIuSIZE " samples into graph, total frames = %" PRIu64,
+              ("%p: Inserting %zu samples into graph, total frames = %" PRIu64,
                (void*)this, aFrames, mTotalFrames));
       mLastLogFrames = mTotalFrames;
     }

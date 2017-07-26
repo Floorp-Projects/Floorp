@@ -5,7 +5,6 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 #include "AudioSegment.h"
@@ -117,12 +116,12 @@ MediaStreamGraphImpl::AddStreamGraphThread(MediaStream* aStream)
   } else {
     mStreams.AppendElement(aStream);
     LOG(LogLevel::Debug,
-        ("Adding media stream %p to graph %p, count %" PRIuSIZE,
+        ("Adding media stream %p to graph %p, count %zu",
          aStream,
          this,
          mStreams.Length()));
     LOG(LogLevel::Debug,
-        ("Adding media stream %p to graph %p, count %" PRIuSIZE,
+        ("Adding media stream %p to graph %p, count %zu",
          aStream,
          this,
          mStreams.Length()));
@@ -156,12 +155,12 @@ MediaStreamGraphImpl::RemoveStreamGraphThread(MediaStream* aStream)
   }
 
   LOG(LogLevel::Debug,
-      ("Removed media stream %p from graph %p, count %" PRIuSIZE,
+      ("Removed media stream %p from graph %p, count %zu",
        aStream,
        this,
        mStreams.Length()));
   LOG(LogLevel::Debug,
-      ("Removed media stream %p from graph %p, count %" PRIuSIZE,
+      ("Removed media stream %p from graph %p, count %zu",
        aStream,
        this,
        mStreams.Length()));
@@ -3908,7 +3907,7 @@ MediaStreamGraphImpl::SuspendOrResumeStreams(AudioContextOperation aAudioContext
   }
   LOG(LogLevel::Debug,
       ("Moving streams between suspended and running"
-       "state: mStreams: %" PRIuSIZE ", mSuspendedStreams: %" PRIuSIZE,
+       "state: mStreams: %zu, mSuspendedStreams: %zu",
        mStreams.Length(),
        mSuspendedStreams.Length()));
 #ifdef DEBUG

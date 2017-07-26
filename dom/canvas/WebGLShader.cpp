@@ -9,7 +9,6 @@
 #include "GLContext.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "prenv.h"

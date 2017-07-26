@@ -7,7 +7,6 @@
 #include "jit/PerfSpewer.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #ifdef XP_UNIX
 # include <unistd.h>
@@ -207,7 +206,7 @@ PerfSpewer::writeProfile(JSScript* script,
 
         size_t size = code->instructionsSize();
         if (size > 0) {
-            fprintf(PerfFilePtr, "%p %" PRIxSIZE " %s:%" PRIuSIZE ": Func%02d\n",
+            fprintf(PerfFilePtr, "%p %zx %s:%zu: Func%02d\n",
                     code->raw(),
                     size,
                     script->filename(),
@@ -231,7 +230,7 @@ PerfSpewer::writeProfile(JSScript* script,
         size_t prologueSize = basicBlocks_[0].start.offset();
 
         if (prologueSize > 0) {
-            fprintf(PerfFilePtr, "%" PRIxSIZE " %" PRIxSIZE " %s:%" PRIuSIZE ": Func%02d-Prologue\n",
+            fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Prologue\n",
                     funcStart, prologueSize, script->filename(), script->lineno(), thisFunctionIndex);
         }
 
@@ -244,7 +243,7 @@ PerfSpewer::writeProfile(JSScript* script,
 
             MOZ_ASSERT(cur <= blockStart);
             if (cur < blockStart) {
-                fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%" PRIuSIZE ": Func%02d-Block?\n",
+                fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%zu: Func%02d-Block?\n",
                         cur, blockStart - cur,
                         script->filename(), script->lineno(),
                         thisFunctionIndex);
@@ -254,7 +253,7 @@ PerfSpewer::writeProfile(JSScript* script,
             size_t size = blockEnd - blockStart;
 
             if (size > 0) {
-                fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxSIZE " %s:%d:%d: Func%02d-Block%d\n",
+                fprintf(PerfFilePtr, "%" PRIxPTR " %zx %s:%d:%d: Func%02d-Block%d\n",
                         blockStart, size,
                         r.filename, r.lineNumber, r.columnNumber,
                         thisFunctionIndex, r.id);
@@ -263,7 +262,7 @@ PerfSpewer::writeProfile(JSScript* script,
 
         MOZ_ASSERT(cur <= funcEndInlineCode);
         if (cur < funcEndInlineCode) {
-            fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%" PRIuSIZE ": Func%02d-Epilogue\n",
+            fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%zu: Func%02d-Epilogue\n",
                     cur, funcEndInlineCode - cur,
                     script->filename(), script->lineno(),
                     thisFunctionIndex);
@@ -271,7 +270,7 @@ PerfSpewer::writeProfile(JSScript* script,
 
         MOZ_ASSERT(funcEndInlineCode <= funcEnd);
         if (funcEndInlineCode < funcEnd) {
-            fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%" PRIuSIZE ": Func%02d-OOL\n",
+            fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxPTR " %s:%zu: Func%02d-OOL\n",
                     funcEndInlineCode, funcEnd - funcEndInlineCode,
                     script->filename(), script->lineno(),
                     thisFunctionIndex);
@@ -293,7 +292,7 @@ js::jit::writePerfSpewerBaselineProfile(JSScript* script, JitCode* code)
 
     size_t size = code->instructionsSize();
     if (size > 0) {
-        fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxSIZE " %s:%" PRIuSIZE ": Baseline\n",
+        fprintf(PerfFilePtr, "%" PRIxPTR " %zx %s:%zu: Baseline\n",
                 reinterpret_cast<uintptr_t>(code->raw()),
                 size, script->filename(), script->lineno());
     }
@@ -312,7 +311,7 @@ js::jit::writePerfSpewerJitCodeProfile(JitCode* code, const char* msg)
 
     size_t size = code->instructionsSize();
     if (size > 0) {
-        fprintf(PerfFilePtr, "%" PRIxPTR " %" PRIxSIZE " %s (%p 0x%" PRIxSIZE ")\n",
+        fprintf(PerfFilePtr, "%" PRIxPTR " %zx %s (%p 0x%zx)\n",
                 reinterpret_cast<uintptr_t>(code->raw()),
                 size, msg, code->raw(), size);
     }

@@ -15,7 +15,6 @@
 #ifdef DEBUG
 #include "MainThreadUtils.h"
 #endif
-#include "mozilla/SizePrintfMacros.h"
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -109,7 +108,7 @@ EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
 
 EventTokenBucket::~EventTokenBucket()
 {
-  SOCKET_LOG(("EventTokenBucket::dtor %p events=%" PRIuSIZE "\n",
+  SOCKET_LOG(("EventTokenBucket::dtor %p events=%zu\n",
               this, mEvents.GetSize()));
 
   CleanupTimers();

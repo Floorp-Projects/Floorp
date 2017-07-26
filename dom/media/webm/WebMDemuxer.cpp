@@ -25,7 +25,6 @@
 #include "XiphExtradata.h"
 #include "prprf.h"           // leaving it for PR_vsnprintf()
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #include <algorithm>
@@ -724,7 +723,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       }
     }
 
-    WEBM_DEBUG("push sample tstamp: %" PRId64 " next_tstamp: %" PRId64 " length: %" PRIuSIZE " kf: %d",
+    WEBM_DEBUG("push sample tstamp: %" PRId64 " next_tstamp: %" PRId64 " length: %zu kf: %d",
                tstamp, next_tstamp, length, isKeyframe);
     RefPtr<MediaRawData> sample;
     if (mInfo.mVideo.HasAlpha() && alphaLength != 0) {

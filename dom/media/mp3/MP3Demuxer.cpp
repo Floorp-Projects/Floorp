@@ -11,7 +11,6 @@
 #include <limits>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "nsAutoPtr.h"
 #include "TimeUnits.h"
 #include "VideoUtils.h"
@@ -304,7 +303,7 @@ MP3TrackDemuxer::GetSamples(int32_t aNumSamples)
     frames->mSamples.AppendElement(frame);
   }
 
-  MP3LOGV("GetSamples() End mSamples.Size()=%" PRIuSIZE " aNumSamples=%d mOffset=%" PRIu64
+  MP3LOGV("GetSamples() End mSamples.Size()=%zu aNumSamples=%d mOffset=%" PRIu64
           " mNumParsedFrames=%" PRIu64 " mFrameIndex=%" PRId64
           " mTotalFrameLen=%" PRIu64 " mSamplesPerFrame=%d mSamplesPerSecond=%d "
           "mChannels=%d",
@@ -630,7 +629,7 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange)
     Read(frameWriter->Data(), frame->mOffset, frame->Size());
 
   if (read != aRange.Length()) {
-    MP3LOG("GetNext() Exit read=%u frame->Size()=%" PRIuSIZE, read, frame->Size());
+    MP3LOG("GetNext() Exit read=%u frame->Size()=%zu", read, frame->Size());
     return nullptr;
   }
 

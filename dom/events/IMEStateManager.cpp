@@ -15,7 +15,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/Unused.h"
@@ -186,7 +185,7 @@ void
 IMEStateManager::Shutdown()
 {
   MOZ_LOG(sISMLog, LogLevel::Info,
-    ("Shutdown(), sTextCompositions=0x%p, sTextCompositions->Length()=%" PRIuSIZE,
+    ("Shutdown(), sTextCompositions=0x%p, sTextCompositions->Length()=%zu",
      sTextCompositions, sTextCompositions ? sTextCompositions->Length() : 0));
 
   MOZ_ASSERT(!sTextCompositions || !sTextCompositions->Length());
@@ -291,7 +290,7 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     if (i != TextCompositionArray::NoIndex) {
       MOZ_LOG(sISMLog, LogLevel::Debug,
         ("  OnDestroyPresContext(), "
-         "removing TextComposition instance from the array (index=%" PRIuSIZE ")", i));
+         "removing TextComposition instance from the array (index=%zu)", i));
       // there should be only one composition per presContext object.
       sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);

@@ -13,7 +13,6 @@
 #define __STDC_FORMAT_MACROS
 
 #include "mozilla/Attributes.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Vector.h"
 
@@ -154,7 +153,7 @@ const char * PCCounts::numExecName = "interp";
 static MOZ_MUST_USE bool
 DumpIonScriptCounts(Sprinter* sp, HandleScript script, jit::IonScriptCounts* ionCounts)
 {
-    if (!sp->jsprintf("IonScript [%" PRIuSIZE " blocks]:\n", ionCounts->numBlocks()))
+    if (!sp->jsprintf("IonScript [%zu blocks]:\n", ionCounts->numBlocks()))
         return false;
 
     for (size_t i = 0; i < ionCounts->numBlocks(); i++) {
@@ -242,11 +241,11 @@ js::DumpCompartmentPCCounts(JSContext* cx)
         if (!sprinter.init())
             return false;
 
-        fprintf(stdout, "--- SCRIPT %s:%" PRIuSIZE " ---\n", script->filename(), script->lineno());
+        fprintf(stdout, "--- SCRIPT %s:%zu ---\n", script->filename(), script->lineno());
         if (!DumpPCCounts(cx, script, &sprinter))
             return false;
         fputs(sprinter.string(), stdout);
-        fprintf(stdout, "--- END SCRIPT %s:%" PRIuSIZE " ---\n", script->filename(), script->lineno());
+        fprintf(stdout, "--- END SCRIPT %s:%zu ---\n", script->filename(), script->lineno());
     }
 
     return true;

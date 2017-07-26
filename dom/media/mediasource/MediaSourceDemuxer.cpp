@@ -259,7 +259,7 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
   if (mAudioTrack) {
     result += nsPrintfCString(
       "\tDumping Audio Track Buffer(%s): mLastAudioTime=%f\n"
-      "\t\tAudio Track Buffer Details: NumSamples=%" PRIuSIZE
+      "\t\tAudio Track Buffer Details: NumSamples=%zu"
       " Size=%u Evictable=%u "
       "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
       mAudioTrack->mAudioTracks.mInfo->mMimeType.get(),
@@ -277,7 +277,7 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
   if (mVideoTrack) {
     result += nsPrintfCString(
       "\tDumping Video Track Buffer(%s): mLastVideoTime=%f\n"
-      "\t\tVideo Track Buffer Details: NumSamples=%" PRIuSIZE
+      "\t\tVideo Track Buffer Details: NumSamples=%zu"
       " Size=%u Evictable=%u "
       "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
       mVideoTrack->mVideoTracks.mInfo->mMimeType.get(),

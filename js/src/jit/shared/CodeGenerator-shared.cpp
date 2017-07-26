@@ -7,7 +7,6 @@
 #include "jit/shared/CodeGenerator-shared-inl.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jit/CompactBuffer.h"
 #include "jit/IonCaches.h"
@@ -238,7 +237,7 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site)
         // bytecodeOffset, but the nativeOffset has changed, do nothing.
         // The same site just generated some more code.
         if (lastEntry.tree == tree && lastEntry.pc == pc) {
-            JitSpew(JitSpew_Profiling, " => In-place update [%" PRIuSIZE "-%" PRIu32 "]",
+            JitSpew(JitSpew_Profiling, " => In-place update [%zu-%" PRIu32 "]",
                     lastEntry.nativeOffset.offset(), nativeOffset);
             return true;
         }
@@ -285,7 +284,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntries()
 {
 #ifdef JS_JITSPEW
     InlineScriptTree* topTree = gen->info().inlineScriptTree();
-    JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%" PRIuSIZE "\n",
+    JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%zu\n",
                  topTree->script()->filename(), topTree->script()->lineno());
     for (unsigned i = 0; i < nativeToBytecodeList_.length(); i++)
         dumpNativeToBytecodeEntry(i);
@@ -308,7 +307,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
         if (nextRef->tree == ref.tree)
             pcDelta = nextRef->pc - ref.pc;
     }
-    JitSpewStart(JitSpew_Profiling, "    %08" PRIxSIZE " [+%-6d] => %-6ld [%-4d] {%-10s} (%s:%" PRIuSIZE,
+    JitSpewStart(JitSpew_Profiling, "    %08zx [+%-6d] => %-6ld [%-4d] {%-10s} (%s:%zu",
                  ref.nativeOffset.offset(),
                  nativeDelta,
                  (long) (ref.pc - script->code()),
@@ -317,7 +316,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
                  script->filename(), script->lineno());
 
     for (tree = tree->caller(); tree; tree = tree->caller()) {
-        JitSpewCont(JitSpew_Profiling, " <= %s:%" PRIuSIZE, tree->script()->filename(),
+        JitSpewCont(JitSpew_Profiling, " <= %s:%zu", tree->script()->filename(),
                                                     tree->script()->lineno());
     }
     JitSpewCont(JitSpew_Profiling, ")");
@@ -933,7 +932,7 @@ CodeGeneratorShared::generateCompactTrackedOptimizationsMap(JSContext* cx, JitCo
             "== Compact Native To Optimizations Map [%p-%p] size %u",
             data, data + trackedOptimizationsMapSize_, trackedOptimizationsMapSize_);
     JitSpew(JitSpew_OptimizationTrackingExtended,
-            "     with type list of length %" PRIuSIZE ", size %" PRIuSIZE,
+            "     with type list of length %zu, size %zu",
             allTypes->length(), allTypes->length() * sizeof(IonTrackedTypeWithAddendum));
 
     return true;
