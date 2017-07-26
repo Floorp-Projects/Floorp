@@ -365,6 +365,19 @@ def tup_progs(build_backends):
 
 tup = check_prog('TUP', tup_progs)
 
+# watchman detection
+# ==============================================================
+
+watchman = check_prog('WATCHMAN', ('watchman',), allow_missing=True)
+
+@depends_if(watchman)
+@checking('for watchman version')
+@imports('json')
+def watchman_version(watchman):
+    out = check_cmd_output(watchman, 'version')
+    res = json.loads(out)
+    return Version(res['version'])
+
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)
