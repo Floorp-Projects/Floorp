@@ -24,10 +24,6 @@ namespace dom {
 
 #define DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS 20000
 
-// static
-StorageDBBridge* LocalStorageCache::sDatabase = nullptr;
-bool LocalStorageCache::sDatabaseDown = false;
-
 namespace {
 
 const uint32_t kDefaultSet = 0;
@@ -243,13 +239,14 @@ LocalStorageCache::Preload()
     return;
   }
 
-  if (!StartDatabase()) {
+  StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+  if (!storageChild) {
     mLoaded = true;
     mLoadResult = NS_ERROR_FAILURE;
     return;
   }
 
-  sDatabase->AsyncPreload(this);
+  storageChild->AsyncPreload(this);
 }
 
 namespace {
@@ -309,7 +306,7 @@ LocalStorageCache::WaitForPreload(Telemetry::HistogramID aTelemetryID)
   // No need to check sDatabase for being non-null since preload is either
   // done before we've shut the DB down or when the DB could not start,
   // preload has not even be started.
-  sDatabase->SyncPreload(this);
+  StorageDBChild::Get()->SyncPreload(this);
 }
 
 nsresult
@@ -429,17 +426,18 @@ LocalStorageCache::SetItem(const LocalStorage* aStorage, const nsAString& aKey,
   data.mKeys.Put(aKey, aValue);
 
   if (aSource == ContentMutation && Persist(aStorage)) {
-    if (!sDatabase) {
+    StorageDBChild* storageChild = StorageDBChild::Get();
+    if (!storageChild) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
       return NS_ERROR_NOT_INITIALIZED;
     }
 
     if (DOMStringIsNull(aOld)) {
-      return sDatabase->AsyncAddItem(this, aKey, aValue);
+      return storageChild->AsyncAddItem(this, aKey, aValue);
     }
 
-    return sDatabase->AsyncUpdateItem(this, aKey, aValue);
+    return storageChild->AsyncUpdateItem(this, aKey, aValue);
   }
 
   return NS_OK;
@@ -470,13 +468,14 @@ LocalStorageCache::RemoveItem(const LocalStorage* aStorage,
   data.mKeys.Remove(aKey);
 
   if (aSource == ContentMutation && Persist(aStorage)) {
-    if (!sDatabase) {
+    StorageDBChild* storageChild = StorageDBChild::Get();
+    if (!storageChild) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
       return NS_ERROR_NOT_INITIALIZED;
     }
 
-    return sDatabase->AsyncRemoveItem(this, aKey);
+    return storageChild->AsyncRemoveItem(this, aKey);
   }
 
   return NS_OK;
@@ -511,13 +510,14 @@ LocalStorageCache::Clear(const LocalStorage* aStorage,
   }
 
   if (aSource == ContentMutation && Persist(aStorage) && (refresh || hadData)) {
-    if (!sDatabase) {
+    StorageDBChild* storageChild = StorageDBChild::Get();
+    if (!storageChild) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
       return NS_ERROR_NOT_INITIALIZED;
     }
 
-    return sDatabase->AsyncClear(this);
+    return storageChild->AsyncClear(this);
   }
 
   return hadData ? NS_OK : NS_SUCCESS_DOM_NO_OPERATION;
@@ -670,68 +670,6 @@ StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
 
   mUsage[aDataSetIndex] = newUsage;
   return true;
-}
-
-
-// static
-StorageDBBridge*
-LocalStorageCache::StartDatabase()
-{
-  if (sDatabase || sDatabaseDown) {
-    // When sDatabaseDown is at true, sDatabase is null.
-    // Checking sDatabaseDown flag here prevents reinitialization of
-    // the database after shutdown.
-    return sDatabase;
-  }
-
-  if (XRE_IsParentProcess()) {
-    // XXX Fix me!
-    return nullptr;
-  } else {
-    // Use LocalStorageManager::Ensure in case we're called from
-    // DOMSessionStorageManager's initializer and we haven't yet initialized the
-    // local storage manager.
-    RefPtr<StorageDBChild> db = new StorageDBChild(
-        LocalStorageManager::Ensure());
-
-    nsresult rv = db->Init();
-    if (NS_FAILED(rv)) {
-      return nullptr;
-    }
-
-    db.forget(&sDatabase);
-  }
-
-  return sDatabase;
-}
-
-// static
-StorageDBBridge*
-LocalStorageCache::GetDatabase()
-{
-  return sDatabase;
-}
-
-// static
-nsresult
-LocalStorageCache::StopDatabase()
-{
-  if (!sDatabase) {
-    return NS_OK;
-  }
-
-  sDatabaseDown = true;
-
-  nsresult rv = sDatabase->Shutdown();
-  if (XRE_IsParentProcess()) {
-    delete sDatabase;
-  } else {
-    StorageDBChild* child = static_cast<StorageDBChild*>(sDatabase);
-    NS_RELEASE(child);
-  }
-
-  sDatabase = nullptr;
-  return rv;
 }
 
 } // namespace dom

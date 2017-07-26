@@ -28,13 +28,21 @@ class PBackgroundStorageParent;
 // is responsible to send all requests to the parent process
 // and expects asynchronous answers. Those are then transparently
 // forwarded back to consumers on the child process.
-class StorageDBChild final : public StorageDBBridge
-                           , public PBackgroundStorageChild
+class StorageDBChild final
+  : public PBackgroundStorageChild
 {
+  class ShutdownObserver;
+
   virtual ~StorageDBChild();
 
 public:
   explicit StorageDBChild(LocalStorageManager* aManager);
+
+  static StorageDBChild*
+  Get();
+
+  static StorageDBChild*
+  GetOrCreate();
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -69,17 +77,21 @@ public:
   }
 
   virtual void AsyncClearMatchingOrigin(const nsACString& aOriginNoSuffix)
-    { /* NO-OP on the child process */ }
+  {
+    MOZ_CRASH("Shouldn't be called!");
+  }
 
   virtual void AsyncClearMatchingOriginAttributes(const OriginAttributesPattern& aPattern)
-    { /* NO-OP on the child process */ }
+  {
+    MOZ_CRASH("Shouldn't be called!");
+  }
 
   virtual void AsyncFlush()
-    { SendAsyncFlush(); }
+  {
+    MOZ_CRASH("Shouldn't be called!");
+  }
 
   virtual bool ShouldPreloadOrigin(const nsACString& aOriginNoSuffix);
-  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins)
-    { NS_NOTREACHED("Not implemented for child process"); }
 
 private:
   mozilla::ipc::IPCResult RecvObserve(const nsCString& aTopic,
@@ -148,7 +160,8 @@ public:
     CacheParentBridge(StorageDBParent* aParentDB,
                       const nsACString& aOriginSuffix,
                       const nsACString& aOriginNoSuffix)
-      : mParent(aParentDB)
+      : mOwningEventTarget(GetCurrentThreadSerialEventTarget())
+      , mParent(aParentDB)
       , mOriginSuffix(aOriginSuffix), mOriginNoSuffix(aOriginNoSuffix)
       , mLoaded(false), mLoadedCount(0) {}
     virtual ~CacheParentBridge() {}
@@ -168,7 +181,14 @@ public:
     virtual void LoadDone(nsresult aRv);
     virtual void LoadWait();
 
+    NS_IMETHOD_(void)
+    Release(void);
+
   private:
+    void
+    Destroy();
+
+    nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
     RefPtr<StorageDBParent> mParent;
     nsCString mOriginSuffix, mOriginNoSuffix;
     bool mLoaded;
@@ -181,14 +201,23 @@ public:
   public:
     UsageParentBridge(StorageDBParent* aParentDB,
                       const nsACString& aOriginScope)
-      : mParent(aParentDB), mOriginScope(aOriginScope) {}
+      : mOwningEventTarget(GetCurrentThreadSerialEventTarget())
+      , mParent(aParentDB)
+      , mOriginScope(aOriginScope) {}
     virtual ~UsageParentBridge() {}
 
     // StorageUsageBridge
     virtual const nsCString& OriginScope() { return mOriginScope; }
     virtual void LoadUsage(const int64_t usage);
 
+    NS_IMETHOD_(MozExternalRefCountType)
+    Release(void);
+
   private:
+    void
+    Destroy();
+
+    nsCOMPtr<nsISerialEventTarget> mOwningEventTarget;
     RefPtr<StorageDBParent> mParent;
     nsCString mOriginScope;
   };
