@@ -131,6 +131,7 @@ private:
   nsDataHashtable<nsCStringHashKey, RefPtr<StorageUsage> > mUsages;
 
   friend class LocalStorageCache;
+  friend class StorageDBChild;
   // Releases cache since it is no longer referrered by any Storage object.
   virtual void DropCache(LocalStorageCache* aCache);
 
