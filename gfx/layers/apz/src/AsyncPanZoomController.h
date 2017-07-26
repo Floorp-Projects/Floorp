@@ -1213,14 +1213,6 @@ private:
    */
 public:
   /**
-   * Gets whether this APZC has performed async key scrolling.
-   */
-  bool TestHasAsyncKeyScrolled() const
-  {
-    return mTestHasAsyncKeyScrolled;
-  }
-
-  /**
    * Set an extra offset for testing async scrolling.
    */
   void SetTestAsyncScrollOffset(const CSSPoint& aPoint)
@@ -1257,9 +1249,8 @@ private:
   LayerToParentLayerScale mTestAsyncZoom;
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
-  bool mAsyncTransformAppliedToContent : 1;
-  // Flag to track whether or not this APZC has ever async key scrolled.
-  bool mTestHasAsyncKeyScrolled : 1;
+  bool mAsyncTransformAppliedToContent;
+
 
   /* ===================================================================
    * The functions and members in this section are used for checkerboard
