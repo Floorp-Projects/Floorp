@@ -143,20 +143,12 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   }
 
   nsCOMPtr<nsIURI> baseURI;
-
-  nsIDocument* doc = GetEntryDocument();
-  if (doc) {
-    baseURI = doc->GetBaseURI();
+  nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
+  if (window) {
+    baseURI = window->GetDocBaseURI();
   } else {
-    // XXXnsm. One of our devtools browser test calls register() from a content
-    // script where there is no valid entry document. Use the window to resolve
-    // the uri in that case.
-    nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
-    nsCOMPtr<nsPIDOMWindowOuter> outerWindow;
-    if (window && (outerWindow = window->GetOuterWindow()) &&
-        outerWindow->GetServiceWorkersTestingEnabled()) {
-      baseURI = window->GetDocBaseURI();
-    }
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
   }
 
   nsresult rv;

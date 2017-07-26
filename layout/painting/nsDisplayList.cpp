@@ -2091,10 +2091,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   nsIDocument* document = presShell->GetDocument();
 
   if (gfxPrefs::WebRenderLayersFree() &&
-      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR &&
-      // We don't yet support many display items used in chrome, so
-      // layers-free mode is only for content.
-      !presContext->IsChrome()) {
+      layerManager->GetBackendType() == layers::LayersBackend::LAYERS_WR) {
     if (doBeginTransaction) {
       if (aCtx) {
         if (!layerManager->BeginTransactionWithTarget(aCtx)) {

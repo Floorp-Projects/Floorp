@@ -502,6 +502,10 @@ class ScriptSource
     void movePendingCompressedSource();
 
   public:
+    // When creating a JSString* from TwoByte source characters, we don't try to
+    // to deflate to Latin1 for longer strings, because this can be slow.
+    static const size_t SourceDeflateLimit = 100;
+
     explicit ScriptSource()
       : refs(0),
         data(SourceType(Missing())),

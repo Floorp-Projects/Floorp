@@ -17,8 +17,11 @@ namespace jit {
 class ICFallbackStub;
 class ICStub;
 
+enum class BaselineCacheIRStubKind { Regular, Monitored, Updated };
+
 ICStub* AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
-                                  CacheKind kind, ICStubEngine engine, JSScript* outerScript,
+                                  CacheKind kind, BaselineCacheIRStubKind stubKind,
+                                  ICStubEngine engine, JSScript* outerScript,
                                   ICFallbackStub* stub, bool* attached);
 
 } // namespace jit

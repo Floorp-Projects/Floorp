@@ -34,7 +34,7 @@ add_task(async function test_firstRun() {
   let metadata = TelemetrySession.getMetadata();
   do_check_false("previousBuildID" in metadata);
   let appBuildID = getAppInfo().appBuildID;
-  let buildIDPref = Services.prefs.getCharPref(TelemetrySession.Constants.PREF_PREVIOUS_BUILDID);
+  let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
   do_check_eq(appBuildID, buildIDPref);
 });
 
@@ -57,7 +57,7 @@ add_task(async function test_newBuild() {
   await TelemetryController.testReset();
   let metadata = TelemetrySession.getMetadata();
   do_check_eq(metadata.previousBuildId, oldBuildID);
-  let buildIDPref = Services.prefs.getCharPref(TelemetrySession.Constants.PREF_PREVIOUS_BUILDID);
+  let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
   do_check_eq(NEW_BUILD_ID, buildIDPref);
 });
 

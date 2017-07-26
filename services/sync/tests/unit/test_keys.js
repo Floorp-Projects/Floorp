@@ -117,54 +117,6 @@ add_test(function test_repeated_hmac() {
   run_next_test();
 });
 
-add_test(function test_sync_key_bundle_derivation() {
-  _("Ensure derivation from known values works.");
-
-  // The known values in this test were originally verified against Firefox
-  // Home.
-  let bundle = new SyncKeyBundle("st3fan", "q7ynpwq7vsc9m34hankbyi3s3i");
-
-  // These should be compared to the results from Home, as they once were.
-  let e = "14b8c09fa84e92729ee695160af6e0385f8f6215a25d14906e1747bdaa2de426";
-  let h = "370e3566245d79fe602a3adb5137e42439cd2a571235197e0469d7d541b07875";
-
-  let realE = Utils.bytesAsHex(bundle.encryptionKey);
-  let realH = Utils.bytesAsHex(bundle.hmacKey);
-
-  _("Real E: " + realE);
-  _("Real H: " + realH);
-  do_check_eq(realH, h);
-  do_check_eq(realE, e);
-
-  run_next_test();
-});
-
-add_test(function test_keymanager() {
-  let testKey = "ababcdefabcdefabcdefabcdef";
-  let username = "john@example.com";
-
-  // Decode the key here to mirror what generateEntry will do,
-  // but pass it encoded into the KeyBundle call below.
-
-  let sha256inputE = "" + HMAC_INPUT + username + "\x01";
-  let key = Utils.makeHMACKey(Utils.decodeKeyBase32(testKey));
-  let encryptKey = sha256HMAC(sha256inputE, key);
-
-  let sha256inputH = encryptKey + HMAC_INPUT + username + "\x02";
-  let hmacKey = sha256HMAC(sha256inputH, key);
-
-  // Encryption key is stored in base64 for WeaveCrypto convenience.
-  do_check_eq(encryptKey, new SyncKeyBundle(username, testKey).encryptionKey);
-  do_check_eq(hmacKey, new SyncKeyBundle(username, testKey).hmacKey);
-
-  // Test with the same KeyBundle for both.
-  let obj = new SyncKeyBundle(username, testKey);
-  do_check_eq(hmacKey, obj.hmacKey);
-  do_check_eq(encryptKey, obj.encryptionKey);
-
-  run_next_test();
-});
-
 add_task(async function test_ensureLoggedIn() {
   let log = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
