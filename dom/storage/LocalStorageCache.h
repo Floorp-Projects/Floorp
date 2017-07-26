@@ -131,13 +131,6 @@ public:
 
   void GetKeys(const LocalStorage* aStorage, nsTArray<nsString>& aKeys);
 
-  // Starts the database engine thread or the IPC bridge
-  static StorageDBBridge* StartDatabase();
-  static StorageDBBridge* GetDatabase();
-
-  // Stops the thread and flushes all uncommited data
-  static nsresult StopDatabase();
-
   // LocalStorageCacheBridge
 
   virtual const nsCString Origin() const;
@@ -260,13 +253,6 @@ private:
   // Whether we have already captured state of the cache preload on our first
   // access.
   bool mPreloadTelemetryRecorded : 1;
-
-  // StorageDBThread on the parent or single process,
-  // StorageDBChild on the child process.
-  static StorageDBBridge* sDatabase;
-
-  // False until we shut the database down.
-  static bool sDatabaseDown;
 };
 
 // StorageUsage
@@ -274,7 +260,7 @@ private:
 class StorageUsageBridge
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StorageUsageBridge)
+  NS_INLINE_DECL_THREADSAFE_VIRTUAL_REFCOUNTING(StorageUsageBridge)
 
   virtual const nsCString& OriginScope() = 0;
   virtual void LoadUsage(const int64_t aUsage) = 0;
