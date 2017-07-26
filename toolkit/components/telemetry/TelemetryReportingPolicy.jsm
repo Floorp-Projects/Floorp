@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://services-common/observers.js", this);
+Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
                                   "resource://gre/modules/TelemetrySend.jsm");
@@ -30,26 +31,7 @@ const LOGGER_PREFIX = "TelemetryReportingPolicy::";
 const OLDEST_ALLOWED_ACCEPTANCE_YEAR = 2012;
 
 const PREF_BRANCH = "datareporting.policy.";
-// Indicates whether this is the first run or not. This is used to decide when to display
-// the policy.
-const PREF_FIRST_RUN = "toolkit.telemetry.reportingpolicy.firstRun";
-// Allows to skip the datachoices infobar. This should only be used in tests.
-const PREF_BYPASS_NOTIFICATION = PREF_BRANCH + "dataSubmissionPolicyBypassNotification";
-// The submission kill switch: if this preference is disable, no submission will ever take place.
-const PREF_DATA_SUBMISSION_ENABLED = PREF_BRANCH + "dataSubmissionEnabled";
-// This preference holds the current policy version, which overrides
-// DEFAULT_DATAREPORTING_POLICY_VERSION
-const PREF_CURRENT_POLICY_VERSION = PREF_BRANCH + "currentPolicyVersion";
-// This indicates the minimum required policy version. If the accepted policy version
-// is lower than this, the notification bar must be showed again.
-const PREF_MINIMUM_POLICY_VERSION = PREF_BRANCH + "minimumPolicyVersion";
-// The version of the accepted policy.
-const PREF_ACCEPTED_POLICY_VERSION = PREF_BRANCH + "dataSubmissionPolicyAcceptedVersion";
-// The date user accepted the policy.
-const PREF_ACCEPTED_POLICY_DATE = PREF_BRANCH + "dataSubmissionPolicyNotifiedTime";
-// URL of privacy policy to be opened in a background tab on first run instead of showing the
-// data choices infobar.
-const PREF_FIRST_RUN_URL = PREF_BRANCH + "firstRunURL";
+
 // The following preferences are deprecated and will be purged during the preferences
 // migration process.
 const DEPRECATED_FHR_PREFS = [
@@ -204,7 +186,7 @@ var TelemetryReportingPolicyImpl = {
    * @return {Object} A date object or null on errors.
    */
   get dataSubmissionPolicyNotifiedDate() {
-    let prefString = Preferences.get(PREF_ACCEPTED_POLICY_DATE, "0");
+    let prefString = Preferences.get(TelemetryUtils.Preferences.AcceptedPolicyDate, "0");
     let valueInteger = parseInt(prefString, 10);
 
     // Bail out if we didn't store any value yet.
@@ -241,7 +223,7 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    Preferences.set(PREF_ACCEPTED_POLICY_DATE, aDate.getTime().toString());
+    Preferences.set(TelemetryUtils.Preferences.AcceptedPolicyDate, aDate.getTime().toString());
   },
 
   /**
@@ -252,11 +234,11 @@ var TelemetryReportingPolicyImpl = {
    */
   get dataSubmissionEnabled() {
     // Default is true because we are opt-out.
-    return Preferences.get(PREF_DATA_SUBMISSION_ENABLED, true);
+    return Preferences.get(TelemetryUtils.Preferences.DataSubmissionEnabled, true);
   },
 
   get currentPolicyVersion() {
-    return Preferences.get(PREF_CURRENT_POLICY_VERSION,
+    return Preferences.get(TelemetryUtils.Preferences.CurrentPolicyVersion,
                            TelemetryReportingPolicy.DEFAULT_DATAREPORTING_POLICY_VERSION);
   },
 
@@ -265,7 +247,7 @@ var TelemetryReportingPolicyImpl = {
    * to be valid.
    */
   get minimumPolicyVersion() {
-    const minPolicyVersion = Preferences.get(PREF_MINIMUM_POLICY_VERSION, 1);
+    const minPolicyVersion = Preferences.get(TelemetryUtils.Preferences.MinimumPolicyVersion, 1);
 
     // First check if the current channel has a specific minimum policy version. If not,
     // use the general minimum policy version.
@@ -276,16 +258,16 @@ var TelemetryReportingPolicyImpl = {
       this._log.error("minimumPolicyVersion - Unable to retrieve the current channel.");
       return minPolicyVersion;
     }
-    const channelPref = PREF_MINIMUM_POLICY_VERSION + ".channel-" + channel;
+    const channelPref = TelemetryUtils.Preferences.MinimumPolicyVersion + ".channel-" + channel;
     return Preferences.get(channelPref, minPolicyVersion);
   },
 
   get dataSubmissionPolicyAcceptedVersion() {
-    return Preferences.get(PREF_ACCEPTED_POLICY_VERSION, 0);
+    return Preferences.get(TelemetryUtils.Preferences.AcceptedPolicyVersion, 0);
   },
 
   set dataSubmissionPolicyAcceptedVersion(value) {
-    Preferences.set(PREF_ACCEPTED_POLICY_VERSION, value);
+    Preferences.set(TelemetryUtils.Preferences.AcceptedPolicyVersion, value);
   },
 
   /**
@@ -365,7 +347,7 @@ var TelemetryReportingPolicyImpl = {
 
     // Submission is enabled. We enable upload if user is notified or we need to bypass
     // the policy.
-    const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, false);
+    const bypassNotification = Preferences.get(TelemetryUtils.Preferences.BypassNotification, false);
     return this.isUserNotifiedOfCurrentPolicy || bypassNotification;
   },
 
@@ -392,7 +374,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    const bypassNotification = Preferences.get(PREF_BYPASS_NOTIFICATION, false);
+    const bypassNotification = Preferences.get(TelemetryUtils.Preferences.BypassNotification, false);
     if (this.isUserNotifiedOfCurrentPolicy || bypassNotification) {
       this._log.trace("_shouldNotify - User already notified or bypassing the policy.");
       return false;
@@ -449,7 +431,7 @@ var TelemetryReportingPolicyImpl = {
       return false;
     }
 
-    let firstRunPolicyURL = Preferences.get(PREF_FIRST_RUN_URL, "");
+    let firstRunPolicyURL = Preferences.get(TelemetryUtils.Preferences.FirsRunURL, "");
     if (!firstRunPolicyURL) {
       return false;
     }
@@ -508,10 +490,10 @@ var TelemetryReportingPolicyImpl = {
       return;
     }
 
-    this._isFirstRun = Preferences.get(PREF_FIRST_RUN, true);
+    this._isFirstRun = Preferences.get(TelemetryUtils.Preferences.FirstRun, true);
     if (this._isFirstRun) {
       // We're performing the first run, flip firstRun preference for subsequent runs.
-      Preferences.set(PREF_FIRST_RUN, false);
+      Preferences.set(TelemetryUtils.Preferences.FirstRun, false);
 
       try {
         if (this._openFirstRunPage()) {
