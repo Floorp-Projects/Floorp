@@ -301,6 +301,43 @@ APZCTreeManagerParent::RecvStartScrollbarDrag(
 }
 
 mozilla::ipc::IPCResult
+APZCTreeManagerParent::RecvStartAutoscroll(
+    const ScrollableLayerGuid& aGuid,
+    const ScreenPoint& aAnchorLocation)
+{
+  // Unlike RecvStartScrollbarDrag(), this message comes from the parent
+  // process (via nsBaseWidget::mAPZC) rather than from the child process
+  // (via TabChild::mApzcTreeManager), so there is no need to check the
+  // layers id against mLayersId (and in any case, it wouldn't match, because
+  // mLayersId stores the parent process's layers id, while nsBaseWidget is
+  // sending the child process's layers id).
+
+  APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod<ScrollableLayerGuid, ScreenPoint>(
+        "layers::IAPZCTreeManager::StartAutoscroll",
+        mTreeManager,
+        &IAPZCTreeManager::StartAutoscroll,
+        aGuid, aAnchorLocation));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+APZCTreeManagerParent::RecvStopAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  // See RecvStartAutoscroll() for why we don't check the layers id.
+
+  APZThreadUtils::RunOnControllerThread(
+      NewRunnableMethod<ScrollableLayerGuid>(
+        "layers::IAPZCTreeManager::StopAutoscroll",
+        mTreeManager,
+        &IAPZCTreeManager::StopAutoscroll,
+        aGuid));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 APZCTreeManagerParent::RecvSetLongTapEnabled(const bool& aTapGestureEnabled)
 {
   mTreeManager->SetLongTapEnabled(aTapGestureEnabled);

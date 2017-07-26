@@ -670,6 +670,23 @@ APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
 }
 
 void
+APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+                                 const ScreenPoint& aAnchorLocation)
+{
+  if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
+    apzc->StartAutoscroll(aAnchorLocation);
+  }
+}
+
+void
+APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
+    apzc->StopAutoscroll();
+  }
+}
+
+void
 APZCTreeManager::NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const
 {
   const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aGuid.mLayersId);
