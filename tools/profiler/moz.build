@@ -81,6 +81,7 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         ]
 
     LOCAL_INCLUDES += [
+        '/caps',
         '/docshell/base',
         '/ipc/chromium/src',
         '/mozglue/linker',

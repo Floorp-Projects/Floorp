@@ -12,16 +12,15 @@ namespace mozilla {
 namespace dom {
 
 Timeout::Timeout()
-  : mCleared(false),
+  : mTimeoutId(0),
+    mFiringId(TimeoutManager::InvalidFiringId),
+    mPopupState(openAllowed),
+    mReason(Reason::eTimeoutOrInterval),
+    mNestingLevel(0),
+    mCleared(false),
     mRunning(false),
     mIsInterval(false),
-    mIsTracking(false),
-    mReason(Reason::eTimeoutOrInterval),
-    mTimeoutId(0),
-    mInterval(0),
-    mFiringId(TimeoutManager::InvalidFiringId),
-    mNestingLevel(0),
-    mPopupState(openAllowed)
+    mIsTracking(false)
 {
 }
 

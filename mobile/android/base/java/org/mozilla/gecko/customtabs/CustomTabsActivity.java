@@ -567,4 +567,8 @@ public class CustomTabsActivity extends AppCompatActivity
 
     @Override
     public void onFullScreen(GeckoView view, boolean fullScreen) {}
+
+    @Override
+    public void onContextMenu(GeckoView view, int screenX, int screenY,
+                              String uri, String elementSrc) {}
 }

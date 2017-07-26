@@ -1209,7 +1209,7 @@ ToDisassemblySource(JSContext* cx, HandleValue v, JSAutoByteString* bytes)
 
         if (obj.is<JSFunction>()) {
             RootedFunction fun(cx, &obj.as<JSFunction>());
-            JSString* str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+            JSString* str = JS_DecompileFunction(cx, fun);
             if (!str)
                 return false;
             return bytes->encodeLatin1(cx, str);
@@ -2729,7 +2729,7 @@ GetPCCountJSON(JSContext* cx, const ScriptAndCounts& sac, StringBuffer& buf)
     if (!AppendJSONProperty(buf, "text", NO_COMMA))
         return false;
 
-    JSString* str = JS_DecompileScript(cx, script, nullptr, 0);
+    JSString* str = JS_DecompileScript(cx, script);
     if (!str || !(str = StringToSource(cx, str)))
         return false;
 

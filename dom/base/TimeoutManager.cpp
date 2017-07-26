@@ -309,15 +309,14 @@ TimeoutManager::IsInvalidFiringId(uint32_t aFiringId) const
 
 // The number of nested timeouts before we start clamping. HTML5 says 1, WebKit
 // uses 5.
-#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5
+#define DOM_CLAMP_TIMEOUT_NESTING_LEVEL 5u
 
 TimeDuration
 TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   MOZ_DIAGNOSTIC_ASSERT(aTimeout);
   TimeDuration result = aTimeout->mInterval;
 
-  if (aTimeout->mIsInterval ||
-      aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+  if (aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
     result = TimeDuration::Max(
       result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
   }
@@ -533,9 +532,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     return NS_OK;
   }
 
-  // Disallow negative intervals.  If aIsInterval also disallow 0,
-  // because we use that as a "don't repeat" flag.
-  interval = std::max(aIsInterval ? 1 : 0, interval);
+  // Disallow negative intervals.
+  interval = std::max(0, interval);
 
   // Make sure we don't proceed with an interval larger than our timer
   // code can handle. (Note: we already forced |interval| to be non-negative,
@@ -592,10 +590,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     break;
   }
 
-  uint32_t nestingLevel = sNestingLevel + 1;
-  if (!aIsInterval) {
-    timeout->mNestingLevel = nestingLevel;
-  }
+  timeout->mNestingLevel = sNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL
+                         ? sNestingLevel + 1 : sNestingLevel;
 
   // Now clamp the actual interval we will use for the timer based on
   TimeDuration realInterval = CalculateDelay(timeout);
@@ -984,6 +980,12 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout,
 
   if (!aTimeout->mIsInterval) {
     return false;
+  }
+
+  // Automatically increase the nesting level when a setInterval()
+  // is rescheduled just as if it was using a chained setTimeout().
+  if (aTimeout->mNestingLevel < DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
+    aTimeout->mNestingLevel += 1;
   }
 
   // Compute time to next timeout for interval timer.

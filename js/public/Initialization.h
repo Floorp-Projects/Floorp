@@ -50,7 +50,7 @@ JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn,
 
 /**
  * Initialize SpiderMonkey, returning true only if initialization succeeded.
- * Once this method has succeeded, it is safe to call JS_NewRuntime and other
+ * Once this method has succeeded, it is safe to call JS_NewContext and other
  * JSAPI methods.
  *
  * This method must be called before any other JSAPI method is used on any

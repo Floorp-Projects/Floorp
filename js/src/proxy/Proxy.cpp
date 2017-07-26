@@ -562,7 +562,7 @@ Proxy::className(JSContext* cx, HandleObject proxy)
 }
 
 JSString*
-Proxy::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent)
+Proxy::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource)
 {
     if (!CheckRecursionLimit(cx))
         return nullptr;
@@ -571,8 +571,8 @@ Proxy::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent)
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
     if (!policy.allowed())
-        return handler->BaseProxyHandler::fun_toString(cx, proxy, indent);
-    return handler->fun_toString(cx, proxy, indent);
+        return handler->BaseProxyHandler::fun_toString(cx, proxy, isToSource);
+    return handler->fun_toString(cx, proxy, isToSource);
 }
 
 RegExpShared*

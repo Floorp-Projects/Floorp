@@ -153,7 +153,7 @@ DeadObjectProxy<CC>::className(JSContext* cx, HandleObject wrapper) const
 
 template <DeadProxyIsCallableIsConstructorOption CC>
 JSString*
-DeadObjectProxy<CC>::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
+DeadObjectProxy<CC>::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
     ReportDead(cx);
     return nullptr;
