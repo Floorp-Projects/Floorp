@@ -637,9 +637,9 @@ nsComputedDOMStyle::DoGetStyleContextNoFlush(Element* aElement,
                      aElement, result->AsGecko(),
                      eRestyle_AllHintsWithAnimations);
           } else {
-              return presContext->StyleSet()->AsServo()->
-                GetBaseContextForElement(aElement, nullptr, presContext,
-                                         aPseudo, pseudoType, result->AsServo());
+            return presContext->StyleSet()->AsServo()->
+              GetBaseContextForElement(aElement, nullptr, presContext,
+                                       aPseudo, pseudoType, result->AsServo());
           }
         }
 
@@ -5403,7 +5403,6 @@ nsComputedDOMStyle::GetStickyOffset(mozilla::Side aSide)
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetStaticOffset(mozilla::Side aSide)
-
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueToCoord(val, StylePosition()->mOffset.Get(aSide), false);
