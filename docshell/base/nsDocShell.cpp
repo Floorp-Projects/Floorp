@@ -8187,8 +8187,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       principal = aPrincipal;
     }
     // generate (about:blank) document to load
-    nsContentDLF::CreateBlankDocument(mLoadGroup, principal,
-                                      getter_AddRefs(blankDoc));
+    blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal);
     if (blankDoc) {
       // Hack: set the base URI manually, since this document never
       // got Reset() with a channel.
