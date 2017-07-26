@@ -1836,7 +1836,8 @@ class ArrayType extends Type {
 
 class FunctionType extends Type {
   static get EXTRA_PROPERTIES() {
-    return ["parameters", "async", "returns", ...super.EXTRA_PROPERTIES];
+    return ["parameters", "async", "returns", "requireUserInput",
+            ...super.EXTRA_PROPERTIES];
   }
 
   static parseSchema(schema, path, extraProperties = []) {
@@ -1887,14 +1888,16 @@ class FunctionType extends Type {
     }
 
 
-    return new this(schema, parameters, isAsync, hasAsyncCallback);
+    return new this(schema, parameters, isAsync, hasAsyncCallback,
+                    !!schema.requireUserInput);
   }
 
-  constructor(schema, parameters, isAsync, hasAsyncCallback) {
+  constructor(schema, parameters, isAsync, hasAsyncCallback, requireUserInput) {
     super(schema);
     this.parameters = parameters;
     this.isAsync = isAsync;
     this.hasAsyncCallback = hasAsyncCallback;
+    this.requireUserInput = requireUserInput;
   }
 
   normalize(value, context) {
@@ -2167,6 +2170,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
 
     this.isAsync = type.isAsync;
     this.hasAsyncCallback = type.hasAsyncCallback;
+    this.requireUserInput = type.requireUserInput;
   }
 
   checkValue({type, optional, name}, value, context) {
@@ -2216,7 +2220,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
             original(...args);
           };
         }
-        let result = apiImpl.callAsyncFunction(actuals, callback);
+        let result = apiImpl.callAsyncFunction(actuals, callback, this.requireUserInput);
         if (DEBUG && this.hasAsyncCallback && !callback) {
           return result.then(result => {
             this.checkCallback([result], context);
