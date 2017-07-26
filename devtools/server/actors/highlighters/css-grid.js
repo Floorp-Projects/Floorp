@@ -352,11 +352,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
       this._buildMarkup.bind(this));
 
-    this.onNavigate = this.onNavigate.bind(this);
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
 
-    this.highlighterEnv.on("navigate", this.onNavigate);
     this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
@@ -590,7 +588,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
   destroy() {
     let { highlighterEnv } = this;
-    highlighterEnv.off("navigate", this.onNavigate);
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
@@ -677,14 +674,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     return pattern;
   }
 
-  /**
-   * Called when the page navigates. Used to clear the cached gap patterns and avoid
-   * using DeadWrapper objects as gap patterns the next time.
-   */
-  onNavigate() {
-    this._clearCache();
-  }
-
   onPageHide({ target }) {
     // If a page hide event is triggered for current window's highlighter, hide the
     // highlighter.
@@ -693,7 +682,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
   }
 
+  /**
+   * Called when the page will-navigate. Used to hide the grid highlighter and clear
+   * the cached gap patterns and avoid using DeadWrapper obejcts as gap patterns the
+   * next time.
+   */
   onWillNavigate({ isTopLevel }) {
+    this._clearCache();
+
     if (isTopLevel) {
       this.hide();
     }

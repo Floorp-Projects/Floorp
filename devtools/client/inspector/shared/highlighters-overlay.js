@@ -52,7 +52,6 @@ function HighlightersOverlay(inspector) {
   this.onMouseMove = this.onMouseMove.bind(this);
   this.onMouseOut = this.onMouseOut.bind(this);
   this.onWillNavigate = this.onWillNavigate.bind(this);
-  this.onNavigate = this.onNavigate.bind(this);
   this.showGridHighlighter = this.showGridHighlighter.bind(this);
   this.showShapesHighlighter = this.showShapesHighlighter.bind(this);
   this._handleRejection = this._handleRejection.bind(this);
@@ -60,7 +59,6 @@ function HighlightersOverlay(inspector) {
 
   // Add inspector events, not specific to a given view.
   this.inspector.on("markupmutation", this.onMarkupMutation);
-  this.inspector.target.on("navigate", this.onNavigate);
   this.inspector.target.on("will-navigate", this.onWillNavigate);
 
   EventEmitter.decorate(this);
@@ -387,7 +385,31 @@ HighlightersOverlay.prototype = {
   },
 
   /**
-   * Restore the saved highlighter states.
+   * Restores the saved grid highlighter state.
+   */
+  restoreGridState: Task.async(function* () {
+    try {
+      yield this.restoreState("grid", this.state.grid, this.showGridHighlighter);
+    } catch (e) {
+      this._handleRejection(e);
+    }
+  }),
+
+  /**
+   * Restores the saved shape highlighter state.
+   */
+  restoreShapeState: Task.async(function* () {
+    try {
+      yield this.restoreState("shapes", this.state.shapes, this.showShapesHighlighter);
+    } catch (e) {
+      this._handleRejection(e);
+    }
+  }),
+
+  /**
+   * Helper function called by restoreGridState and restoreShapeState.
+   * Restores the saved highlighter state for the given highlighter and their state.
+   *
    * @param {String} name
    *        The name of the highlighter to be restored
    * @param {Object} state
@@ -399,14 +421,12 @@ HighlightersOverlay.prototype = {
    */
   restoreState: Task.async(function* (name, state, showFunction) {
     let { selector, options, url } = state;
+
     if (!selector || url !== this.inspector.target.url) {
       // Bail out if no selector was saved, or if we are on a different page.
       this.emit(`${name}-state-restored`, { restored: false });
       return;
     }
-
-    // Wait for the new root to be ready in the inspector.
-    yield this.onInspectorNewRoot;
 
     let walker = this.inspector.walker;
     let rootNode = yield walker.getRootNode();
@@ -714,18 +734,6 @@ HighlightersOverlay.prototype = {
   }),
 
   /**
-   * Restore saved highlighter state after navigate.
-   */
-  onNavigate: Task.async(function* () {
-    try {
-      yield this.restoreState("grid", this.state.grid, this.showGridHighlighter);
-      yield this.restoreState("shapes", this.state.shapes, this.showShapesHighlighter);
-    } catch (e) {
-      this._handleRejection(e);
-    }
-  }),
-
-  /**
    * Clear saved highlighter shown properties on will-navigate.
    */
   onWillNavigate: function () {
@@ -734,9 +742,6 @@ HighlightersOverlay.prototype = {
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
     this.shapesHighlighterShown = null;
-
-    // The inspector panel should emit the new-root event when it is ready after navigate.
-    this.onInspectorNewRoot = this.inspector.once("new-root");
   },
 
   /**
@@ -756,7 +761,6 @@ HighlightersOverlay.prototype = {
 
     // Remove inspector events.
     this.inspector.off("markupmutation", this.onMarkupMutation);
-    this.inspector.target.off("navigate", this.onNavigate);
     this.inspector.target.off("will-navigate", this.onWillNavigate);
 
     this._lastHovered = null;
