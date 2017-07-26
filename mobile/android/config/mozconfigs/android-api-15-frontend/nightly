@@ -14,7 +14,7 @@ NO_NDK=1
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 ac_add_options --with-gradle="$topsrcdir/gradle-dist/bin/gradle"
-export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/jcentral"
+export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/jcenter","file://$topsrcdir/google"
 
 unset HOST_CC
 unset HOST_CXX
