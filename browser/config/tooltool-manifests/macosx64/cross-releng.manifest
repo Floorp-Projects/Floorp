@@ -24,15 +24,6 @@
     "filename": "MacOSX10.7.sdk.tar.bz2"
   },
   {
-    "version": "https://github.com/mozilla/libdmg-hfsplus rev ba04b00435a0853f1499d751617177828ee8ec00",
-    "size": 57060,
-    "visibility": "public",
-    "digest": "0c96f0d3ace71c4110abec6f7ead013600b0a73c89465d840276090d849279e555d977fb2aa6bbabb7891d7191fc8cc8a4e8242be888114be52346b77a512fcc",
-    "algorithm": "sha512",
-    "unpack": true,
-    "filename": "dmg.tar.xz"
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 155690216,
     "digest": "379f542ea16c775e7bcad36823f0068ca6a1f17c2b25e42ef978d51865298ba4207dc89bbb614805f81a123d12e339209a447afbd12c1122e16f4c7c41e7d92b",
