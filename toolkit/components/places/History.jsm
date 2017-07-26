@@ -546,10 +546,10 @@ this.History = Object.freeze({
                              : "url_hash = hash(:val) AND url = :val "
 
     return PlacesUtils.promiseDBConnection().then(async db => {
-      let rows = await db.execute(`SELECT 1 FROM moz_places
-                                    WHERE ${sqlFragment}
-                                      AND last_visit_date NOTNULL`,
-                                  { val: isGuid ? guidOrURI : guidOrURI.href });
+      let rows = await db.executeCached(`SELECT 1 FROM moz_places
+                                         WHERE ${sqlFragment}
+                                         AND last_visit_date NOTNULL`,
+                                        { val: isGuid ? guidOrURI : guidOrURI.href });
       return !!rows.length;
     });
   },
