@@ -8,13 +8,11 @@
 #include "Key.h"
 
 #include <algorithm>
-#include <stdint.h> // for UINT32_MAX, uintptr_t
 #include "IndexedDatabaseManager.h"
 #include "js/Date.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
 #include "mozilla/Casting.h"
-#include "mozilla/CheckedInt.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozIStorageStatement.h"
@@ -198,10 +196,7 @@ Key::ToLocaleBasedKey(Key& aTarget, const nsCString& aLocale) const
 
       nsDependentString str;
       DecodeString(it, end, str);
-      nsresult rv = aTarget.EncodeLocaleString(str, typeOffset, aLocale);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
+      aTarget.EncodeLocaleString(str, typeOffset, aLocale);
     }
   }
   aTarget.TrimBuffer();
@@ -226,7 +221,8 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
       IDB_REPORT_INTERNAL_ERR();
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
-    return EncodeString(str, aTypeOffset);
+    EncodeString(str, aTypeOffset);
+    return NS_OK;
   }
 
   if (aVal.isNumber()) {
@@ -303,11 +299,13 @@ Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
     }
 
     if (JS_IsArrayBufferObject(obj)) {
-      return EncodeBinary(obj, /* aIsViewObject */ false, aTypeOffset);
+      EncodeBinary(obj, /* aIsViewObject */ false, aTypeOffset);
+      return NS_OK;
     }
 
     if (JS_IsArrayBufferViewObject(obj)) {
-      return EncodeBinary(obj, /* aIsViewObject */ true, aTypeOffset);
+      EncodeBinary(obj, /* aIsViewObject */ true, aTypeOffset);
+      return NS_OK;
     }
   }
 
@@ -417,62 +415,44 @@ Key::EncodeJSVal(JSContext* aCx,
   return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
 }
 
-nsresult
+void
 Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
 {
   const char16_t* start = aString.BeginReading();
   const char16_t* end = aString.EndReading();
-  return EncodeString(start, end, aTypeOffset);
+  EncodeString(start, end, aTypeOffset);
 }
 
 template <typename T>
-nsresult
+void
 Key::EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset)
 {
-  return EncodeAsString(aStart, aEnd, eString + aTypeOffset);
+  EncodeAsString(aStart, aEnd, eString + aTypeOffset);
 }
 
 template <typename T>
-nsresult
+void
 Key::EncodeAsString(const T* aStart, const T* aEnd, uint8_t aType)
 {
   // First measure how long the encoded string will be.
-  if (NS_WARN_IF(aStart > aEnd || UINT32_MAX - 2 < uintptr_t(aEnd - aStart))) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
 
   // The +2 is for initial 3 and trailing 0. We'll compensate for multi-byte
   // chars below.
-  CheckedUint32 size = (aEnd - aStart) + 2;
-
-  MOZ_ASSERT(size.isValid());
+  uint32_t size = (aEnd - aStart) + 2;
 
   const T* start = aStart;
   const T* end = aEnd;
   for (const T* iter = start; iter < end; ++iter) {
     if (*iter > ONE_BYTE_LIMIT) {
       size += char16_t(*iter) > TWO_BYTE_LIMIT ? 2 : 1;
-      if (!size.isValid()) {
-        IDB_REPORT_INTERNAL_ERR();
-        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-      }
     }
   }
 
   // Allocate memory for the new size
   uint32_t oldLen = mBuffer.Length();
-  size += oldLen;
-
-  if (!size.isValid()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
   char* buffer;
-  if (!mBuffer.GetMutableData(&buffer, size.value())) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  if (!mBuffer.GetMutableData(&buffer, oldLen + size)) {
+    return;
   }
   buffer += oldLen;
 
@@ -501,8 +481,6 @@ Key::EncodeAsString(const T* aStart, const T* aEnd, uint8_t aType)
   *(buffer++) = eTerminator;
 
   NS_ASSERTION(buffer == mBuffer.EndReading(), "Wrote wrong number of bytes");
-
-  return NS_OK;
 }
 
 #ifdef ENABLE_INTL_API
@@ -539,9 +517,10 @@ Key::EncodeLocaleString(const nsDependentString& aString, uint8_t aTypeOffset,
     return NS_ERROR_FAILURE;
   }
 
-  return EncodeString(keyBuffer.Elements(),
-                      keyBuffer.Elements()+sortKeyLength,
-                      aTypeOffset);
+  EncodeString(keyBuffer.Elements(),
+               keyBuffer.Elements()+sortKeyLength,
+               aTypeOffset);
+  return NS_OK;
 }
 #endif
 
@@ -661,7 +640,7 @@ Key::DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd)
   return BitwiseCast<double>(bits);
 }
 
-nsresult
+void
 Key::EncodeBinary(JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset)
 {
   uint8_t* bufferData;
@@ -674,7 +653,7 @@ Key::EncodeBinary(JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset)
     js::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused, &bufferData);
   }
 
-  return EncodeAsString(bufferData, bufferData + bufferLength, eBinary + aTypeOffset);
+  EncodeAsString(bufferData, bufferData + bufferLength, eBinary + aTypeOffset);
 }
 
 // static
