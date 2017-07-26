@@ -966,6 +966,13 @@ protected:
   nsresult InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal);
 
   /**
+   * Call Load() and FinishDecoderSetup() on the decoder. It also handle
+   * resource cloning if DecoderType is ChannelMediaDecoder.
+   */
+  template<typename DecoderType, typename... LoadArgs>
+  nsresult SetupDecoder(DecoderType* aDecoder, LoadArgs&&... aArgs);
+
+  /**
    * Initialize a decoder to load the given channel. The decoder's stream
    * listener is returned via aListener.
    * mLoadingSrc must already be set.

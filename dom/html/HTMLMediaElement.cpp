@@ -98,6 +98,10 @@
 #include "MediaContainerType.h"
 #include "MP4Decoder.h"
 
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+#include "HLSDecoder.h"
+#endif
+
 #include "ImageContainer.h"
 #include "nsRange.h"
 #include <algorithm>
@@ -4745,26 +4749,74 @@ HTMLMediaElement::InitializeDecoderAsClone(ChannelMediaDecoder* aOriginal)
   return FinishDecoderSetup(decoder);
 }
 
+template<typename DecoderType, typename... LoadArgs>
+nsresult
+HTMLMediaElement::SetupDecoder(DecoderType* aDecoder, LoadArgs&&... aArgs)
+{
+  LOG(LogLevel::Debug,
+      ("%p Created decoder %p for type %s",
+       this,
+       aDecoder,
+       aDecoder->ContainerType().OriginalString().Data()));
+
+  nsresult rv = aDecoder->Load(Forward<LoadArgs>(aArgs)...);
+  if (NS_FAILED(rv)) {
+    aDecoder->Shutdown();
+    LOG(LogLevel::Debug, ("%p Failed to load for decoder %p", this, aDecoder));
+    return rv;
+  }
+
+  rv = FinishDecoderSetup(aDecoder);
+  // Only ChannelMediaDecoder supports resource cloning.
+  if (IsSame<DecoderType, ChannelMediaDecoder>::value && NS_SUCCEEDED(rv)) {
+    AddMediaElementToURITable();
+    NS_ASSERTION(
+      MediaElementTableCount(this, mLoadingSrc) == 1,
+      "Media element should have single table entry if decode initialized");
+  }
+
+  return rv;
+}
+
 nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                                        nsIStreamListener** aListener)
 {
   NS_ASSERTION(mLoadingSrc, "mLoadingSrc must already be set");
 
-  nsAutoCString mimeType;
   DecoderDoctorDiagnostics diagnostics;
 
+  nsAutoCString mimeType;
   aChannel->GetContentType(mimeType);
   NS_ASSERTION(!mimeType.IsEmpty(), "We should have the Content-Type.");
+  NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
+
+  HTMLMediaElement* self = this;
+  auto reportCanPlay = [&](bool aCanPlay) {
+    diagnostics.StoreFormatDiagnostics(
+      self->OwnerDoc(), mimeUTF16, aCanPlay, __func__);
+    if (!aCanPlay) {
+      nsAutoString src;
+      self->GetCurrentSrc(src);
+      const char16_t* params[] = { mimeUTF16.get(), src.get() };
+      self->ReportLoadError(
+        "MediaLoadUnsupportedMimeType", params, ArrayLength(params));
+    }
+  };
+
+  auto onExit = MakeScopeExit([&] {
+    if (self->mChannelLoader) {
+      self->mChannelLoader->Done();
+      self->mChannelLoader = nullptr;
+    }
+  });
 
   Maybe<MediaContainerType> containerType = MakeMediaContainerType(mimeType);
   if (!containerType) {
-    diagnostics.StoreFormatDiagnostics(OwnerDoc(),
-                                       NS_ConvertASCIItoUTF16(mimeType),
-                                       /* aCanPlay = */ false,
-                                       __func__);
+    reportCanPlay(false);
     return NS_ERROR_FAILURE;
   }
 
+  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
   MediaDecoderInit decoderInit(this,
                                mAudioChannel,
                                mMuted ? 0.0 : mVolume,
@@ -4776,45 +4828,23 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
                                HasAttr(kNameSpaceID_None, nsGkAtoms::loop),
                                *containerType);
 
+#ifdef MOZ_ANDROID_HLS_SUPPORT
+  if (HLSDecoder::IsSupportedType(*containerType)) {
+    RefPtr<HLSDecoder> decoder = new HLSDecoder(decoderInit);
+    reportCanPlay(true);
+    return SetupDecoder(decoder.get(), aChannel, isPrivateBrowsing, aListener);
+  }
+#endif
+
   RefPtr<ChannelMediaDecoder> decoder =
     DecoderTraits::CreateDecoder(decoderInit, &diagnostics);
-  diagnostics.StoreFormatDiagnostics(OwnerDoc(),
-                                     NS_ConvertASCIItoUTF16(mimeType),
-                                     decoder != nullptr,
-                                     __func__);
   if (!decoder) {
-    nsAutoString src;
-    GetCurrentSrc(src);
-    NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
-    const char16_t* params[] = { mimeUTF16.get(), src.get() };
-    ReportLoadError("MediaLoadUnsupportedMimeType", params, ArrayLength(params));
+    reportCanPlay(false);
     return NS_ERROR_FAILURE;
   }
 
-  LOG(LogLevel::Debug, ("%p Created decoder %p for type %s", this, decoder.get(), mimeType.get()));
-
-  if (mChannelLoader) {
-    mChannelLoader->Done();
-    mChannelLoader = nullptr;
-  }
-
-  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
-  nsresult rv = decoder->Load(aChannel, isPrivateBrowsing, aListener);
-  if (NS_FAILED(rv)) {
-    decoder->Shutdown();
-    LOG(LogLevel::Debug,
-        ("%p Failed to load for decoder %p", this, decoder.get()));
-    return rv;
-  }
-
-  rv = FinishDecoderSetup(decoder);
-  if (NS_SUCCEEDED(rv)) {
-    AddMediaElementToURITable();
-    NS_ASSERTION(MediaElementTableCount(this, mLoadingSrc) == 1,
-      "Media element should have single table entry if decode initialized");
-  }
-
-  return rv;
+  reportCanPlay(true);
+  return SetupDecoder(decoder.get(), aChannel, isPrivateBrowsing, aListener);
 }
 
 nsresult
