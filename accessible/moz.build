@@ -36,7 +36,8 @@ BROWSER_CHROME_MANIFESTS += [
   'tests/browser/e10s/browser.ini',
   'tests/browser/events/browser.ini',
   'tests/browser/scroll/browser.ini',
-  'tests/browser/states/browser.ini'
+  'tests/browser/states/browser.ini',
+  'tests/browser/tree/browser.ini'
 ]
 
 with Files("**"):

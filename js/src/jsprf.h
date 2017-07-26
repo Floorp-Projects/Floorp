@@ -20,8 +20,6 @@
 extern JS_PUBLIC_API(JS::UniqueChars) JS_smprintf(const char* fmt, ...)
     MOZ_FORMAT_PRINTF(1, 2);
 
-extern JS_PUBLIC_API(void) JS_smprintf_free(char* mem);
-
 extern JS_PUBLIC_API(JS::UniqueChars) JS_sprintf_append(JS::UniqueChars&& last,
                                                         const char* fmt, ...)
      MOZ_FORMAT_PRINTF(2, 3);

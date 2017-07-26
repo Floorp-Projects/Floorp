@@ -135,12 +135,11 @@ IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonGetProperty
         // needs a type barrier. Unfortunately, PropertyReadNeedsTypeBarrier
         // does not account for getters, so we should only attach a getter
         // stub if we inserted a type barrier.
-        CanAttachGetter canAttachGetter =
-            ic->monitoredResult() ? CanAttachGetter::Yes : CanAttachGetter::No;
         jsbytecode* pc = ic->idempotent() ? nullptr : ic->pc();
         bool isTemporarilyUnoptimizable = false;
         GetPropIRGenerator gen(cx, outerScript, pc, ic->kind(), ic->state().mode(),
-                               &isTemporarilyUnoptimizable, val, idVal, val, canAttachGetter);
+                               &isTemporarilyUnoptimizable, val, idVal, val,
+                               ic->resultFlags());
         if (ic->idempotent() ? gen.tryAttachIdempotentStub() : gen.tryAttachStub())
             ic->attachCacheIRStub(cx, gen.writerRef(), gen.cacheKind(), ionScript, &attached);
 

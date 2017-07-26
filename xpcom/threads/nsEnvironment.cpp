@@ -154,7 +154,7 @@ nsEnvironment::Set(const nsAString& aName, const nsAString& aValue)
 
   PR_SetEnv(newData.get());
   if (entry->mData) {
-    mozilla::SmprintfFree(entry->mData);
+    free(entry->mData);
   }
   entry->mData = newData.release();
   return NS_OK;

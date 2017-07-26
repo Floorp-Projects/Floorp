@@ -25,7 +25,7 @@ EXPORTS.mozilla += [
     'NativeOSFileInternals.h',
 ]
 
-EXTRA_PP_JS_MODULES += [
+EXTRA_JS_MODULES += [
     'osfile.jsm',
 ]
 

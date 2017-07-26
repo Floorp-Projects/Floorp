@@ -34,7 +34,7 @@ class CompileRuntime
     const JitRuntime* jitRuntime();
 
     // Compilation does not occur off thread when the Gecko Profiler is enabled.
-    GeckoProfiler& geckoProfiler();
+    GeckoProfilerRuntime& geckoProfiler();
 
     bool jitSupportsFloatingPoint();
     bool hadOutOfMemory();

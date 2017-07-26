@@ -139,14 +139,10 @@ load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html
 asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
+load 1264949.html
 # The following test relies on -webkit-text-fill-color being behind the
 # layout.css.prefixes.webkit pref
 pref(layout.css.prefixes.webkit,false) load 1265611-1.html
-load border-image-visited-link.html
-load font-face-truncated-src.html
-load large_border_image_width.html
-load long-url-list-stack-overflow.html
-load 1264949.html
 load 1270795.html
 load 1275026.html
 load 1278463-1.html
@@ -173,8 +169,6 @@ load 1356601-1.html
 load 1370793-1.xhtml
 load 1371450-1.html
 load 1374175-1.html
-load content-only-on-link-before.html
-load content-only-on-visited-before.html
 load 1375812-1.html
 load 1377053-1.html
 load 1377256-1.html
@@ -186,7 +180,15 @@ load 1381420-1.html
 load 1381682.html
 load 1382672.html
 load 1382710.html
-pref(dom.animations-api.core.enabled,true) load 1383589-1.html
 load 1383001.html
 load 1383001-2.html
 load 1383319.html
+pref(dom.animations-api.core.enabled,true) load 1383589-1.html
+load 1383975.html
+load border-image-visited-link.html
+load content-only-on-link-before.html
+load content-only-on-visited-before.html
+load font-face-truncated-src.html
+load large_border_image_width.html
+load link-transition-before.html
+load long-url-list-stack-overflow.html

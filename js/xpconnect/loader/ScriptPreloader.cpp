@@ -266,7 +266,15 @@ ScriptPreloader::Cleanup()
         }
     }
 
-    mScripts.Clear();
+    // Wait for any pending parses to finish before clearing the mScripts
+    // hashtable, since the parse tasks depend on memory allocated by those
+    // scripts.
+    {
+        MonitorAutoLock mal(mMonitor);
+        FinishPendingParses(mal);
+
+        mScripts.Clear();
+    }
 
     AutoSafeJSAPI jsapi;
     JS_RemoveExtraGCRootsTracer(jsapi.cx(), TraceOp, this);
@@ -282,9 +290,17 @@ ScriptPreloader::InvalidateCache()
 
     mCacheInvalidated = true;
 
-    mParsingScripts.clearAndFree();
-    while (auto script = mPendingScripts.getFirst())
-        script->remove();
+    // Wait for pending off-thread parses to finish, since they depend on the
+    // memory allocated by our CachedScripts, and can't be canceled
+    // asynchronously.
+    FinishPendingParses(mal);
+
+    // Pending scripts should have been cleared by the above, and new parses
+    // should not have been queued.
+    MOZ_ASSERT(mParsingScripts.empty());
+    MOZ_ASSERT(mParsingSources.empty());
+    MOZ_ASSERT(mPendingScripts.isEmpty());
+
     for (auto& script : IterHash(mScripts))
         script.Remove();
 
@@ -548,8 +564,6 @@ ScriptPreloader::PrepareCacheWriteInternal()
 
         if (!script->mSize && !script->XDREncode(jsapi.cx())) {
             script.Remove();
-        } else {
-            script->mSize = script->Range().length();
         }
     }
 
@@ -621,6 +635,11 @@ ScriptPreloader::WriteCache()
     {
         AutoFDClose fd;
         NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
+
+        // We also need to hold mMonitor while we're touching scripts in
+        // mScripts, or they may be freed before we're done with them.
+        mMonitor.AssertNotCurrentThreadOwns();
+        MonitorAutoLock mal(mMonitor);
 
         nsTArray<CachedScript*> scripts;
         for (auto& script : IterHash(mScripts, Match<ScriptStatus::Saved>())) {
@@ -696,7 +715,7 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
 {
     // Don't bother trying to cache any URLs with cache-busting query
     // parameters.
-    if (mStartupFinished || !mCacheInitialized || cachePath.FindChar('?') >= 0) {
+    if (!Active() || cachePath.FindChar('?') >= 0) {
         return;
     }
 
@@ -712,6 +731,21 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
         MOZ_ASSERT(jsscript);
         script->mScript = jsscript;
         script->mReadyToExecute = true;
+    }
+
+    // If we don't already have bytecode for this script, and it doesn't already
+    // exist in the child cache, encode it now, before it's ever executed.
+    //
+    // Ideally, we would like to do the encoding lazily, during idle slices.
+    // There are subtle issues with encoding scripts which have already been
+    // executed, though, which makes that somewhat risky. So until that
+    // situation is improved, and thoroughly tested, we need to encode eagerly.
+    //
+    // (See also the TranscodeResult_Failure_RunOnceNotSupported failure case in
+    // js::XDRScript)
+    if (!script->mSize && !(mChildCache && mChildCache->mScripts.Get(cachePath))) {
+        AutoSafeJSAPI jsapi;
+        Unused << script->XDREncode(jsapi.cx());
     }
 
     script->UpdateLoadTime(TimeStamp::Now());
@@ -782,7 +816,7 @@ ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
     // ready. If we wait until we hit an unfinished script, we wind up having at
     // most one batch of buffered scripts, and occasionally under-running that
     // buffer.
-    FinishOffThreadDecode();
+    MaybeFinishOffThreadDecode();
 
     if (!script->mReadyToExecute) {
         LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
@@ -794,7 +828,7 @@ ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
         // Check for finished operations again *after* locking, or we may race
         // against mToken being set between our last check and the time we
         // entered the mutex.
-        FinishOffThreadDecode();
+        MaybeFinishOffThreadDecode();
 
         if (!script->mReadyToExecute && script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
             LOG(Info, "Script is small enough to recompile on main thread\n");
@@ -805,7 +839,7 @@ ScriptPreloader::WaitForCachedScript(JSContext* cx, CachedScript* script)
                 mal.Wait();
 
                 MonitorAutoUnlock mau(mMonitor);
-                FinishOffThreadDecode();
+                MaybeFinishOffThreadDecode();
             }
         }
 
@@ -843,14 +877,30 @@ ScriptPreloader::OffThreadDecodeCallback(void* token, void* context)
 }
 
 void
-ScriptPreloader::DoFinishOffThreadDecode()
+ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal)
 {
-    mFinishDecodeRunnablePending = false;
-    FinishOffThreadDecode();
+    mMonitor.AssertCurrentThreadOwns();
+
+    mPendingScripts.clear();
+
+    MaybeFinishOffThreadDecode();
+
+    // Loop until all pending decode operations finish.
+    while (!mParsingScripts.empty()) {
+        aMal.Wait();
+        MaybeFinishOffThreadDecode();
+    }
 }
 
 void
-ScriptPreloader::FinishOffThreadDecode()
+ScriptPreloader::DoFinishOffThreadDecode()
+{
+    mFinishDecodeRunnablePending = false;
+    MaybeFinishOffThreadDecode();
+}
+
+void
+ScriptPreloader::MaybeFinishOffThreadDecode()
 {
     if (!mToken) {
         return;
@@ -940,7 +990,8 @@ ScriptPreloader::DecodeNextBatch(size_t chunkSize)
     JSContext* cx = jsapi.cx();
 
     JS::CompileOptions options(cx, JSVERSION_LATEST);
-    options.setNoScriptRval(true);
+    options.setNoScriptRval(true)
+           .setSourceIsLazy(true);
 
     if (!JS::CanCompileOffThread(cx, options, size) ||
         !JS::DecodeMultiOffThreadScripts(cx, options, mParsingSources,
@@ -990,8 +1041,10 @@ ScriptPreloader::CachedScript::XDREncode(JSContext* cx)
     JS::TranscodeResult code = JS::EncodeScript(cx, Buffer(), jsscript);
     if (code == JS::TranscodeResult_Ok) {
         mXDRRange.emplace(Buffer().begin(), Buffer().length());
+        mSize = Range().length();
         return true;
     }
+    mXDRData.destroy();
     JS_ClearPendingException(cx);
     return false;
 }

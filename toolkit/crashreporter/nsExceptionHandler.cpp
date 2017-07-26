@@ -3579,7 +3579,7 @@ OOPDeinit()
   pidToMinidump = nullptr;
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-  mozilla::SmprintfFree(childCrashNotifyPipe);
+  free(childCrashNotifyPipe);
   childCrashNotifyPipe = nullptr;
 #endif
 }

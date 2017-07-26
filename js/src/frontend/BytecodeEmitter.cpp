@@ -9516,15 +9516,6 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn, ValueUsage valueUsage /* = ValueUs
         if (pn2->as<PropertyAccess>().isSuper()) {
             if (!emitSuperPropOp(pn2, JSOP_GETPROP_SUPER, /* isCall = */ callop))
                 return false;
-        } else if ((pn->getOp() == JSOP_FUNCALL || pn->getOp() == JSOP_FUNAPPLY) &&
-                   pn2->expr()->getKind() == PNK_FUNCTION &&
-                   checkRunOnceContext()) {
-            // Top level lambdas whose .call or .apply methods are immediately
-            // invoked should be treated as run once lambdas.
-            emittingRunOnceLambda = true;
-            if (!emitPropOp(pn2, callop ? JSOP_CALLPROP : JSOP_GETPROP))
-                return false;
-            emittingRunOnceLambda = false;
         } else {
             if (!emitPropOp(pn2, callop ? JSOP_CALLPROP : JSOP_GETPROP))
                 return false;

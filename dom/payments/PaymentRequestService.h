@@ -51,6 +51,8 @@ private:
   nsInterfaceHashtable<nsStringHashKey, nsIPaymentActionCallback> mCallbackHashtable;
 
   nsCOMPtr<nsIPaymentUIService> mTestingUIService;
+
+  nsCOMPtr<nsIPaymentRequest> mShowingRequest;
 };
 
 } // end of namespace dom

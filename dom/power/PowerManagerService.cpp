@@ -33,7 +33,7 @@ static void LogFunctionAndJSStack(const char* funcname) {
                       "Call to %s. The JS stack is:\n%s\n",
                       funcname,
                       jsstack ? jsstack : "<no JS stack>");
-  JS_smprintf_free(jsstack);
+  js_free(jsstack);
 }
 // bug 839452
 #define LOG_FUNCTION_AND_JS_STACK() \

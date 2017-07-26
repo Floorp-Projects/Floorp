@@ -6197,18 +6197,9 @@ jit::PropertyReadNeedsTypeBarrier(JSContext* propertycx,
                 TypeSet::TypeList types;
                 if (!property.maybeTypes()->enumerateTypes(&types))
                     break;
-                // If there is a single possible type for the property,
-                // optimistically add it to the observed set. Don't do this
-                // for the special uninitialized lexical type, which will
-                // never actually be observed here and will cause problems
-                // downstream during compilation.
-                if (types.length() == 1 &&
-                    (!types[0].isPrimitive() ||
-                     types[0].primitive() != JSVAL_TYPE_MAGIC))
-                {
+                if (types.length() == 1) {
                     // Note: the return value here is ignored.
                     observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
-                    break;
                 }
                 break;
             }

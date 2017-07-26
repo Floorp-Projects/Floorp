@@ -585,7 +585,7 @@ JSRope::flatten(JSContext* maybecx)
 {
     mozilla::Maybe<AutoGeckoProfilerEntry> entry;
     if (maybecx && !maybecx->helperThread())
-        entry.emplace(maybecx->runtime(), "JSRope::flatten");
+        entry.emplace(maybecx, "JSRope::flatten");
 
     if (zone()->needsIncrementalBarrier())
         return flattenInternal<WithIncrementalBarrier>(maybecx);
