@@ -173,6 +173,8 @@ public class HighlightItem extends StreamItem implements IconCallback {
                 return;
             }
 
+            // hostSLD will be the empty String if the host cannot be determined. This is fine: it's very unlikely
+            // and the page title will be URL if there's an error there so we wouldn't want to write the URL again here.
             viewToUpdate.setText(hostSLD);
         }
     }
