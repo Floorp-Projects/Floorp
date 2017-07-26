@@ -30,13 +30,5 @@
     "algorithm": "sha512",
     "filename": "rustc.tar.xz",
     "unpack": true
-  },
-  {
-    "size": 281576,
-    "visibility": "public",
-    "digest": "71616564533d138fb12f08e761c2638d054814fdf9c9439638ec57b201e100445c364d73d8d7a4f0e3b784898d5fe6264e8242863fc5ac40163f1791468bbc46",
-    "algorithm": "sha512",
-    "filename": "hfsplus-tools.tar.xz",
-    "unpack": true
   }
 ]
