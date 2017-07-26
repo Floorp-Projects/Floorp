@@ -4816,7 +4816,6 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     return NS_ERROR_FAILURE;
   }
 
-  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
   MediaDecoderInit decoderInit(this,
                                mAudioChannel,
                                mMuted ? 0.0 : mVolume,
@@ -4832,7 +4831,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   if (HLSDecoder::IsSupportedType(*containerType)) {
     RefPtr<HLSDecoder> decoder = new HLSDecoder(decoderInit);
     reportCanPlay(true);
-    return SetupDecoder(decoder.get(), aChannel, isPrivateBrowsing, aListener);
+    return SetupDecoder(decoder.get(), aChannel);
   }
 #endif
 
@@ -4844,6 +4843,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   }
 
   reportCanPlay(true);
+  bool isPrivateBrowsing = NodePrincipal()->GetPrivateBrowsingId() > 0;
   return SetupDecoder(decoder.get(), aChannel, isPrivateBrowsing, aListener);
 }
 
