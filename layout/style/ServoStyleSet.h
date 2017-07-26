@@ -264,23 +264,13 @@ public:
    * This will traverse all of the document's style roots (that is, its document
    * element, and the roots of the document-level native anonymous content).
    *
-   * The only allowed flag (for now ) is `ForCSSRuleChanges`.
-   * We need to specify |ForCSSRuleChanges| to try to update all CSS animations
+   * We specify |ForCSSRuleChanges| to try to update all CSS animations
    * when we call this function due to CSS rule changes since @keyframes rules
    * may have changed.
    *
    * Returns true if a post-traversal is required.
    */
   bool StyleDocument(ServoTraversalFlags aFlags);
-
-  /**
-   * Performs a Servo animation-only traversal to compute style for all nodes
-   * with the animation-only dirty bit in the document.
-   *
-   * This will traverse all of the document's style roots (that is, its document
-   * element, and the roots of the document-level native anonymous content).
-   */
-  bool StyleDocumentForThrottledAnimationFlush();
 
   /**
    * Eagerly styles a subtree of unstyled nodes that was just appended to the
