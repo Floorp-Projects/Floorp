@@ -259,9 +259,7 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
-    def install_tooltool_clang_package(self, state_dir, checkout_root, manifest_file):
-        abs_manifest_file = os.path.join(checkout_root, manifest_file)
-
+    def install_tooltool_clang_package(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
         if not os.path.exists(mach_binary):
             raise ValueError("mach not found at %s" % mach_binary)
@@ -273,8 +271,7 @@ class BaseBootstrapper(object):
             raise ValueError("cannot determine path to Python executable")
 
         cmd = [sys.executable, mach_binary, 'artifact', 'toolchain',
-               '--tooltool-manifest', abs_manifest_file,
-               'clang']
+               '--from-build', toolchain_job]
 
         subprocess.check_call(cmd, cwd=state_dir)
 
