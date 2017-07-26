@@ -116,7 +116,7 @@ BEGIN_TEST(testXDR_source)
         CHECK(script);
         script = FreezeThaw(cx, script);
         CHECK(script);
-        JSString* out = JS_DecompileScript(cx, script, "testing", 0);
+        JSString* out = JS_DecompileScript(cx, script);
         CHECK(out);
         bool equal;
         CHECK(JS_StringEqualsAscii(cx, out, *s, &equal));

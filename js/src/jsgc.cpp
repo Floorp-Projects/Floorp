@@ -2589,6 +2589,7 @@ GCRuntime::updateZonePointersToRelocatedCells(Zone* zone, AutoLockForExclusiveAc
         comp->fixupAfterMovingGC();
 
     zone->externalStringCache().purge();
+    zone->functionToStringCache().purge();
 
     // Iterate through all cells that can contain relocatable pointers to update
     // them. Since updating each cell is independent we try to parallelize this
@@ -3128,6 +3129,18 @@ GCRuntime::maybeGC(Zone* zone)
         PrepareZoneForGC(zone);
         startGC(GC_NORMAL, JS::gcreason::EAGER_ALLOC_TRIGGER);
     }
+}
+
+void
+GCRuntime::triggerFullGCForAtoms(JSContext* cx)
+{
+    MOZ_ASSERT(fullGCForAtomsRequested_);
+    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+    MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
+    MOZ_ASSERT(!cx->keepAtoms);
+    MOZ_ASSERT(!rt->hasHelperThreadZones());
+    fullGCForAtomsRequested_ = false;
+    MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::DELAYED_ATOMS_GC));
 }
 
 // Do all possible decommit immediately from the current thread without
@@ -3696,6 +3709,7 @@ GCRuntime::purgeRuntime(AutoLockForExclusiveAccess& lock)
     for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
         zone->atomCache().clearAndShrink();
         zone->externalStringCache().purge();
+        zone->functionToStringCache().purge();
     }
 
     for (const CooperatingContext& target : rt->cooperatingContexts()) {
@@ -3855,18 +3869,40 @@ RelazifyFunctions(Zone* zone, AllocKind kind)
 static bool
 ShouldCollectZone(Zone* zone, JS::gcreason::Reason reason)
 {
-    // Normally we collect all scheduled zones.
-    if (reason != JS::gcreason::COMPARTMENT_REVIVED)
-        return zone->isGCScheduled();
-
-    // If we are repeating a GC becuase we noticed dead compartments haven't
+    // If we are repeating a GC because we noticed dead compartments haven't
     // been collected, then only collect zones contianing those compartments.
-    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-        if (comp->scheduledForDestruction)
-            return true;
+    if (reason == JS::gcreason::COMPARTMENT_REVIVED) {
+        for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+            if (comp->scheduledForDestruction)
+                return true;
+        }
+
+        return false;
     }
 
-    return false;
+    // Otherwise we only collect scheduled zones.
+    if (!zone->isGCScheduled())
+        return false;
+
+    // If canCollectAtoms() is false then either an instance of AutoKeepAtoms is
+    // currently on the stack or parsing is currently happening on another
+    // thread. In either case we don't have information about which atoms are
+    // roots, so we must skip collecting atoms.
+    //
+    // Note that only affects the first slice of an incremental GC since root
+    // marking is completed before we return to the mutator.
+    //
+    // Off-thread parsing is inhibited after the start of GC which prevents
+    // races between creating atoms during parsing and sweeping atoms on the
+    // active thread.
+    //
+    // Otherwise, we always schedule a GC in the atoms zone so that atoms which
+    // the other collected zones are using are marked, and we can update the
+    // set of atoms in use by the other collected zones at the end of the GC.
+    if (zone->isAtomsZone())
+        return TlsContext.get()->canCollectAtoms();
+
+    return true;
 }
 
 bool
@@ -3891,10 +3927,9 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         /* Set up which zones will be collected. */
         if (ShouldCollectZone(zone, reason)) {
-            if (!zone->isAtomsZone()) {
-                any = true;
-                zone->changeGCState(Zone::NoGC, Zone::Mark);
-            }
+            MOZ_ASSERT(zone->canCollect());
+            any = true;
+            zone->changeGCState(Zone::NoGC, Zone::Mark);
         } else {
             *isFullOut = false;
         }
@@ -3921,30 +3956,10 @@ GCRuntime::prepareZonesForCollection(JS::gcreason::Reason reason, bool* isFullOu
     }
 
     /*
-     * If keepAtoms() is true then either an instance of AutoKeepAtoms is
-     * currently on the stack or parsing is currently happening on another
-     * thread. In either case we don't have information about which atoms are
-     * roots, so we must skip collecting atoms.
-     *
-     * Note that only affects the first slice of an incremental GC since root
-     * marking is completed before we return to the mutator.
-     *
-     * Off-thread parsing is inhibited after the start of GC which prevents
-     * races between creating atoms during parsing and sweeping atoms on the
-     * active thread.
-     *
-     * Otherwise, we always schedule a GC in the atoms zone so that atoms which
-     * the other collected zones are using are marked, and we can update the
-     * set of atoms in use by the other collected zones at the end of the GC.
+     * Check that we do collect the atoms zone if we triggered a GC for that
+     * purpose.
      */
-    if (!TlsContext.get()->keepAtoms || rt->hasHelperThreadZones()) {
-        Zone* atomsZone = rt->atomsCompartment(lock)->zone();
-        if (atomsZone->isGCScheduled()) {
-            MOZ_ASSERT(!atomsZone->isCollecting());
-            atomsZone->changeGCState(Zone::NoGC, Zone::Mark);
-            any = true;
-        }
-    }
+    MOZ_ASSERT_IF(reason == JS::gcreason::DELAYED_ATOMS_GC, atomsZone->isGCMarking());
 
     /* Check that at least one zone is scheduled for collection. */
     return any;
@@ -6678,17 +6693,19 @@ GCRuntime::budgetIncrementalGC(bool nonincrementalByAPI, JS::gcreason::Reason re
     bool reset = false;
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
+            MOZ_ASSERT(zone->isGCScheduled());
             budget.makeUnlimited();
             stats().nonincremental(AbortReason::GCBytesTrigger);
         }
 
-        if (isIncrementalGCInProgress() && zone->isGCScheduled() != zone->wasGCStarted())
-            reset = true;
-
         if (zone->isTooMuchMalloc()) {
+            MOZ_ASSERT(zone->isGCScheduled());
             budget.makeUnlimited();
             stats().nonincremental(AbortReason::MallocBytesTrigger);
         }
+
+        if (isIncrementalGCInProgress() && zone->isGCScheduled() != zone->wasGCStarted())
+            reset = true;
     }
 
     if (reset)
@@ -6709,16 +6726,22 @@ class AutoScheduleZonesForGC
             if (rt->gc.gcMode() == JSGC_MODE_GLOBAL)
                 zone->scheduleGC();
 
-            /* This is a heuristic to avoid resets. */
+            // This is a heuristic to avoid resets.
             if (rt->gc.isIncrementalGCInProgress() && zone->needsIncrementalBarrier())
                 zone->scheduleGC();
 
-            /* This is a heuristic to reduce the total number of collections. */
+            // This is a heuristic to reduce the total number of collections.
             if (zone->usage.gcBytes() >=
                 zone->threshold.allocTrigger(rt->gc.schedulingState.inHighFrequencyGCMode()))
             {
                 zone->scheduleGC();
             }
+
+            // This ensures we collect zones that have reached the malloc limit.
+            // TODO: Start collecting these zones earlier like we do for the GC
+            // bytes trigger above (bug 1384049).
+            if (zone->isTooMuchMalloc())
+                zone->scheduleGC();
         }
     }
 

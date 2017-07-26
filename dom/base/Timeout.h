@@ -35,7 +35,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(Timeout)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(Timeout)
 
-  enum class Reason
+  enum class Reason : uint8_t
   {
     eTimeoutOrInterval,
     eIdleCallbackTimeout,
@@ -50,8 +50,51 @@ public:
   // Can only be called when frozen.
   const TimeDuration& TimeRemaining() const;
 
+private:
+  // mWhen and mTimeRemaining can't be in a union, sadly, because they
+  // have constructors.
+  // Nominal time to run this timeout.  Use only when timeouts are not
+  // frozen.
+  TimeStamp mWhen;
+
+  // Remaining time to wait.  Used only when timeouts are frozen.
+  TimeDuration mTimeRemaining;
+
+  ~Timeout() = default;
+
+public:
+  // Public member variables in this section.  Please don't add to this list
+  // or mix methods with these.  The interleaving public/private sections
+  // is necessary as we migrate members to private while still trying to
+  // keep decent binary packing.
+
   // Window for which this timeout fires
   RefPtr<nsGlobalWindow> mWindow;
+
+  // The language-specific information about the callback.
+  nsCOMPtr<nsITimeoutHandler> mScriptHandler;
+
+  // Interval
+  TimeDuration mInterval;
+
+  // Returned as value of setTimeout()
+  uint32_t mTimeoutId;
+
+  // Identifies which firing level this Timeout is being processed in
+  // when sync loops trigger nested firing.
+  uint32_t mFiringId;
+
+  // The popup state at timeout creation time if not created from
+  // another timeout
+  PopupControlState mPopupState;
+
+  // Used to allow several reasons for setting a timeout, where each
+  // 'Reason' value is using a possibly overlapping set of id:s.
+  Reason mReason;
+
+  // Between 0 and DOM_CLAMP_TIMEOUT_NESTING_LEVEL.  Currently we don't
+  // care about nesting levels beyond that value.
+  uint8_t mNestingLevel;
 
   // True if the timeout was cleared
   bool mCleared;
@@ -64,41 +107,6 @@ public:
 
   // True if this is a timeout coming from a tracking script
   bool mIsTracking;
-
-  // Used to allow several reasons for setting a timeout, where each
-  // 'Reason' value is using a possibly overlapping set of id:s.
-  Reason mReason;
-
-  // Returned as value of setTimeout()
-  uint32_t mTimeoutId;
-
-  // Interval
-  TimeDuration mInterval;
-
-  // Identifies which firing level this Timeout is being processed in
-  // when sync loops trigger nested firing.
-  uint32_t mFiringId;
-
-  uint32_t mNestingLevel;
-
-  // The popup state at timeout creation time if not created from
-  // another timeout
-  PopupControlState mPopupState;
-
-  // The language-specific information about the callback.
-  nsCOMPtr<nsITimeoutHandler> mScriptHandler;
-
-private:
-  // mWhen and mTimeRemaining can't be in a union, sadly, because they
-  // have constructors.
-  // Nominal time to run this timeout.  Use only when timeouts are not
-  // frozen.
-  TimeStamp mWhen;
-
-  // Remaining time to wait.  Used only when timeouts are frozen.
-  TimeDuration mTimeRemaining;
-
-  ~Timeout() = default;
 };
 
 } // namespace dom

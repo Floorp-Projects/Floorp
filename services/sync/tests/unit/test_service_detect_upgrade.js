@@ -220,7 +220,8 @@ add_task(async function v5_upgrade() {
     _("New meta/global: " + JSON.stringify(meta_global));
 
     // Fill the keys with bad data.
-    let badKeys = new SyncKeyBundle("foobar", "aaaaaaaaaaaaaaaaaaaaaaaaaa");
+    let badKeys = new BulkKeyBundle("crypto");
+    badKeys.generateRandom();
     await update_server_keys(badKeys, "keys", "crypto/keys");  // v4
     await update_server_keys(badKeys, "bulk", "crypto/bulk");  // v5
 

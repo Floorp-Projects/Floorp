@@ -68,7 +68,7 @@ class ScriptedProxyHandler : public BaseProxyHandler
                          JS::IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy,
-                                   unsigned indent) const override;
+                                   bool isToSource) const override;
     virtual RegExpShared* regexp_toShared(JSContext* cx, HandleObject proxy) const override;
     virtual bool boxedValue_unbox(JSContext* cx, HandleObject proxy,
                                   MutableHandleValue vp) const override;

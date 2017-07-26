@@ -163,6 +163,10 @@ CodeGeneratorShared::generateEpilogue()
 bool
 CodeGeneratorShared::generateOutOfLineCode()
 {
+    // OOL paths should not attempt to use |current| as it's the last block
+    // instead of the block corresponding to the OOL path.
+    current = nullptr;
+
     for (size_t i = 0; i < outOfLineCode_.length(); i++) {
         // Add native => bytecode mapping entries for OOL sites.
         // Not enabled on wasm yet since it doesn't contain bytecode mappings.

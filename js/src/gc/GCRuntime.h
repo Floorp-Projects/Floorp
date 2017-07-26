@@ -140,7 +140,11 @@ class GCSchedulingTunables
      */
     UnprotectedData<size_t> gcMaxBytes_;
 
-    /* Maximum nursery size for each zone group. */
+    /*
+     * Maximum nursery size for each zone group.
+     * Initially DefaultNurseryBytes and can be set by
+     * javascript.options.mem.nursery.max_kb
+     */
     ActiveThreadData<size_t> gcMaxNurseryBytes_;
 
     /*
@@ -709,11 +713,7 @@ class GCRuntime
 
     bool canChangeActiveContext(JSContext* cx);
 
-    void triggerFullGCForAtoms() {
-        MOZ_ASSERT(fullGCForAtomsRequested_);
-        fullGCForAtomsRequested_ = false;
-        MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::ALLOC_TRIGGER));
-    }
+    void triggerFullGCForAtoms(JSContext* cx);
 
     void runDebugGC();
     void notifyRootsRemoved();

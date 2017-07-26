@@ -40,7 +40,7 @@ let gContainersPane = {
     }
   },
 
-  onRemoveClick(button) {
+  async onRemoveClick(button) {
     let userContextId = parseInt(button.getAttribute("value"), 10);
 
     let count = ContextualIdentityService.countContainerTabs(userContextId);
@@ -62,7 +62,7 @@ let gContainersPane = {
         return;
       }
 
-      ContextualIdentityService.closeContainerTabs(userContextId);
+      await ContextualIdentityService.closeContainerTabs(userContextId);
     }
 
     ContextualIdentityService.remove(userContextId);
