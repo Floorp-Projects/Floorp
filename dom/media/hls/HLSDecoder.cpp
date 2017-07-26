@@ -64,9 +64,7 @@ HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 }
 
 nsresult
-HLSDecoder::Load(nsIChannel* aChannel,
-                 bool aIsPrivateBrowsing,
-                 nsIStreamListener**)
+HLSDecoder::Load(nsIChannel* aChannel)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
