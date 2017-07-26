@@ -11,7 +11,19 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(PublicKeyCredential, Credential, mResponse)
+NS_IMPL_CYCLE_COLLECTION_CLASS(PublicKeyCredential)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PublicKeyCredential,
+                                                Credential)
+  tmp->mRawIdCachedObj = nullptr;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PublicKeyCredential, Credential)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mRawIdCachedObj)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PublicKeyCredential, Credential)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(PublicKeyCredential, Credential)
 NS_IMPL_RELEASE_INHERITED(PublicKeyCredential, Credential)
@@ -19,15 +31,17 @@ NS_IMPL_RELEASE_INHERITED(PublicKeyCredential, Credential)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PublicKeyCredential)
 NS_INTERFACE_MAP_END_INHERITING(Credential)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PublicKeyCredential, Credential)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 PublicKeyCredential::PublicKeyCredential(nsPIDOMWindowInner* aParent)
   : Credential(aParent)
-{}
+  , mRawIdCachedObj(nullptr)
+{
+  mozilla::HoldJSObjects(this);
+}
 
 PublicKeyCredential::~PublicKeyCredential()
-{}
+{
+  mozilla::DropJSObjects(this);
+}
 
 JSObject*
 PublicKeyCredential::WrapObject(JSContext* aCx,
@@ -38,9 +52,12 @@ PublicKeyCredential::WrapObject(JSContext* aCx,
 
 void
 PublicKeyCredential::GetRawId(JSContext* aCx,
-                              JS::MutableHandle<JSObject*> aRetVal) const
+                              JS::MutableHandle<JSObject*> aRetVal)
 {
-  aRetVal.set(mRawId.ToUint8Array(aCx));
+  if (!mRawIdCachedObj) {
+    mRawIdCachedObj = mRawId.ToUint8Array(aCx);
+  }
+  aRetVal.set(mRawIdCachedObj);
 }
 
 already_AddRefed<AuthenticatorResponse>
