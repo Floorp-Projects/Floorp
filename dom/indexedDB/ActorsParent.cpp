@@ -9884,15 +9884,13 @@ CheckWasmModule(FileHelper* aFileHelper,
     return NS_ERROR_FAILURE;
   }
 
-  size_t compiledSize;
-  module->serializedSize(nullptr, &compiledSize);
-
+  size_t compiledSize = module->compiledSerializedSize();
   UniquePtr<uint8_t[]> compiled(new (fallible) uint8_t[compiledSize]);
   if (NS_WARN_IF(!compiled)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  module->serialize(nullptr, 0, compiled.get(), compiledSize);
+  module->compiledSerialize(compiled.get(), compiledSize);
 
   nsCOMPtr<nsIInputStream> inputStream;
   rv = NS_NewByteInputStream(getter_AddRefs(inputStream),

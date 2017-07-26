@@ -188,9 +188,11 @@ class Module : public JS::WasmModule
 
     // Structured clone support:
 
-    void serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) const override;
-    void serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
-                   uint8_t* maybeCompiledBegin, size_t maybeCompiledSize) const override;
+    size_t bytecodeSerializedSize() const override;
+    void bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const override;
+    size_t compiledSerializedSize() const override;
+    void compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const override;
+
     static bool assumptionsMatch(const Assumptions& current, const uint8_t* compiledBegin,
                                  size_t remain);
     static RefPtr<Module> deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
