@@ -23,6 +23,7 @@ linux64-clang:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-clang-tidy:
@@ -50,6 +51,7 @@ linux64-clang-tidy:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-gcc:

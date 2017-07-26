@@ -44,6 +44,7 @@ jobs:
                 - js/public/**
                 - js/src/**
         toolchains:
+            - linux64-gcc
             - linux64-sccache
 
     linux64-haz/debug:
@@ -64,4 +65,5 @@ jobs:
                 cd /home/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace
         toolchains:
+            - linux64-gcc
             - linux64-sccache
