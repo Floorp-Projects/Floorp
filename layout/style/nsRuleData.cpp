@@ -31,7 +31,7 @@ nsRuleData::GetPoisonOffset()
 nsRuleData::nsRuleData(uint32_t aSIDs,
                        nsCSSValue* aValueStorage,
                        nsPresContext* aContext,
-                       nsStyleContext* aStyleContext)
+                       GeckoStyleContext* aStyleContext)
   : GenericSpecifiedValues(StyleBackendType::Gecko, aContext, aSIDs)
   , mStyleContext(aStyleContext)
   , mValueStorage(aValueStorage)

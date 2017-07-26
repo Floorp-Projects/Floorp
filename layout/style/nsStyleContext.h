@@ -91,12 +91,6 @@ public:
 
   inline nsPresContext* PresContext() const;
 
-  inline mozilla::GeckoStyleContext* GetParent() const;
-
-  nsStyleContext* GetParentAllowServo() const {
-    return mParent;
-  }
-
   nsIAtom* GetPseudo() const { return mPseudoTag; }
   mozilla::CSSPseudoElementType GetPseudoType() const {
     return static_cast<mozilla::CSSPseudoElementType>(

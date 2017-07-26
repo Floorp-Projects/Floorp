@@ -5885,7 +5885,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       }
 
       if (resolveStyle) {
-        if (aContent->IsStyledByServo()) {
+        if (styleContext->IsServo()) {
           Element* element = aContent->AsElement();
           ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
 
@@ -5905,7 +5905,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                       LazyComputeBehavior::Assert);
         } else {
           styleContext =
-            ResolveStyleContext(styleContext->GetParent(), aContent, &aState);
+            ResolveStyleContext(styleContext->AsGecko()->GetParent(),
+                                aContent, &aState);
         }
 
         display = styleContext->StyleDisplay();
@@ -9647,7 +9648,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 
   // The parent has a frame, so try resolving a new context.
   RefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
-    ResolveStyleFor(aElement, oldContext->GetParent(),
+    ResolveStyleFor(aElement, oldContext->AsGecko()->GetParent(),
                     LazyComputeBehavior::Assert);
 
   if (oldDisplay == StyleDisplay::None) {
