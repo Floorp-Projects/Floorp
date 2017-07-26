@@ -68,6 +68,8 @@ public:
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
 
+  void Dump(const WebRenderScrollData& aOwner) const;
+
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
 private:
@@ -137,6 +139,8 @@ public:
   uint32_t GetPaintSequenceNumber() const;
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
+
+  void Dump() const;
 
 private:
   // Internal data structure used to maintain uniqueness of mScrollMetadatas.
