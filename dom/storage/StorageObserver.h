@@ -51,12 +51,17 @@ public:
               const nsAString& aOriginAttributesPattern = EmptyString(),
               const nsACString& aOriginScope = EmptyCString());
 
+  void
+  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+
 private:
   virtual ~StorageObserver() {}
 
   static void TestingPrefChanged(const char* aPrefName, void* aClosure);
 
   static StorageObserver* sSelf;
+
+  nsCOMPtr<nsIEventTarget> mBackgroundThread;
 
   // Weak references
   nsTArray<StorageObserverSink*> mSinks;
