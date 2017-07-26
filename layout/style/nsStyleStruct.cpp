@@ -1205,7 +1205,18 @@ nsStyleSVGReset::FinishStyle(nsPresContext* aPresContext)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPresContext->StyleSet()->IsServo());
 
-  mMask.ResolveImages(aPresContext);
+  NS_FOR_VISIBLE_IMAGE_LAYERS_BACK_TO_FRONT(i, mMask) {
+    nsStyleImage& image = mMask.mLayers[i].mImage;
+    if (image.GetType() == eStyleImageType_Image) {
+      // If the url of mask resource contains a reference('#'), it should be a
+      // <mask-source>, mostly. For a <mask-source>, there is no need to
+      // resolve this style image, since we do not depend on it to get the
+      // SVG mask resource.
+      if (!image.GetURLValue()->HasRef()) {
+        image.ResolveImage(aPresContext);
+      }
+    }
+  }
 }
 
 nsChangeHint
@@ -2460,6 +2471,9 @@ nsStyleImage::IsComplete() const
     case eStyleImageType_URL:
       return true;
     case eStyleImageType_Image: {
+      if (!IsResolved()) {
+        return false;
+      }
       imgRequestProxy* req = GetImageData();
       if (!req) {
         return false;
