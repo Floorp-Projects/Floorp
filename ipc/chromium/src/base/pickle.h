@@ -17,18 +17,14 @@
 #include "mozilla/BufferList.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/TimeStamp.h"
-
 #ifdef FUZZING
 #include "base/singleton.h"
 #include "mozilla/ipc/Faulty.h"
 #endif
-
-#if !defined(RELEASE_OR_BETA) || defined(DEBUG)
+#if (!defined(RELEASE_OR_BETA) && !defined(FUZZING)) || defined(DEBUG)
 #define MOZ_PICKLE_SENTINEL_CHECKING
 #endif
-
 class Pickle;
-
 class PickleIterator {
 public:
   explicit PickleIterator(const Pickle& pickle);

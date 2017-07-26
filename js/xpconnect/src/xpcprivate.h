@@ -1730,7 +1730,8 @@ public:
 
     inline void SweepTearOffs();
 
-    // Returns a string that shuld be free'd using JS_smprintf_free (or null).
+    // Returns a string that should be freed with js_free, or nullptr on
+    // failure.
     char* ToString(XPCWrappedNativeTearOff* to = nullptr) const;
 
     static nsIXPCScriptable* GatherProtoScriptable(nsIClassInfo* classInfo);

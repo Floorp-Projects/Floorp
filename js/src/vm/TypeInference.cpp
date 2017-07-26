@@ -2111,7 +2111,7 @@ class ConstraintDataConstantProperty
 bool
 HeapTypeSetKey::constant(CompilerConstraintList* constraints, Value* valOut)
 {
-    if (nonData(constraints) || !object()->isSingleton())
+    if (nonData(constraints))
         return false;
 
     // Only singleton object properties can be marked as constants.
@@ -3999,89 +3999,92 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* g
 
     RootedFunction function(cx, this->function());
     Vector<uint32_t, 32> pcOffsets(cx);
-    for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
-        {
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))
-                oomUnsafe.crash("rollbackPartiallyInitializedObjects");
-        }
+    JSRuntime::AutoProhibitActiveContextChange apacc(cx->runtime());
+    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
+        for (AllScriptFramesIter iter(cx, target); !iter.done(); ++iter) {
+            {
+                AutoEnterOOMUnsafeRegion oomUnsafe;
+                if (!pcOffsets.append(iter.script()->pcToOffset(iter.pc())))
+                    oomUnsafe.crash("rollbackPartiallyInitializedObjects");
+            }
 
-        if (!iter.isConstructing() || !iter.matchCallee(cx, function))
-            continue;
+            if (!iter.isConstructing() || !iter.matchCallee(cx, function))
+                continue;
 
-        // Derived class constructors initialize their this-binding later and
-        // we shouldn't run the definite properties analysis on them.
-        MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
+            // Derived class constructors initialize their this-binding later and
+            // we shouldn't run the definite properties analysis on them.
+            MOZ_ASSERT(!iter.script()->isDerivedClassConstructor());
 
-        Value thisv = iter.thisArgument(cx);
-        if (!thisv.isObject() ||
-            thisv.toObject().hasLazyGroup() ||
-            thisv.toObject().group() != group)
-        {
-            continue;
-        }
+            Value thisv = iter.thisArgument(cx);
+            if (!thisv.isObject() ||
+                thisv.toObject().hasLazyGroup() ||
+                thisv.toObject().group() != group)
+            {
+                continue;
+            }
 
-        if (thisv.toObject().is<UnboxedPlainObject>()) {
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!UnboxedPlainObject::convertToNative(cx, &thisv.toObject()))
-                oomUnsafe.crash("rollbackPartiallyInitializedObjects");
-        }
+            if (thisv.toObject().is<UnboxedPlainObject>()) {
+                AutoEnterOOMUnsafeRegion oomUnsafe;
+                if (!UnboxedPlainObject::convertToNative(cx, &thisv.toObject()))
+                    oomUnsafe.crash("rollbackPartiallyInitializedObjects");
+            }
 
-        // Found a matching frame.
-        RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
+            // Found a matching frame.
+            RootedPlainObject obj(cx, &thisv.toObject().as<PlainObject>());
 
-        // Whether all identified 'new' properties have been initialized.
-        bool finished = false;
+            // Whether all identified 'new' properties have been initialized.
+            bool finished = false;
 
-        // If not finished, number of properties that have been added.
-        uint32_t numProperties = 0;
+            // If not finished, number of properties that have been added.
+            uint32_t numProperties = 0;
 
-        // Whether the current SETPROP is within an inner frame which has
-        // finished entirely.
-        bool pastProperty = false;
+            // Whether the current SETPROP is within an inner frame which has
+            // finished entirely.
+            bool pastProperty = false;
 
-        // Index in pcOffsets of the outermost frame.
-        int callDepth = pcOffsets.length() - 1;
+            // Index in pcOffsets of the outermost frame.
+            int callDepth = pcOffsets.length() - 1;
 
-        // Index in pcOffsets of the frame currently being checked for a SETPROP.
-        int setpropDepth = callDepth;
+            // Index in pcOffsets of the frame currently being checked for a SETPROP.
+            int setpropDepth = callDepth;
 
-        for (Initializer* init = initializerList;; init++) {
-            if (init->kind == Initializer::SETPROP) {
-                if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
-                    // Have not yet reached this setprop.
+            for (Initializer* init = initializerList;; init++) {
+                if (init->kind == Initializer::SETPROP) {
+                    if (!pastProperty && pcOffsets[setpropDepth] < init->offset) {
+                        // Have not yet reached this setprop.
+                        break;
+                    }
+                    // This setprop has executed, reset state for the next one.
+                    numProperties++;
+                    pastProperty = false;
+                    setpropDepth = callDepth;
+                } else if (init->kind == Initializer::SETPROP_FRAME) {
+                    if (!pastProperty) {
+                        if (pcOffsets[setpropDepth] < init->offset) {
+                            // Have not yet reached this inner call.
+                            break;
+                        } else if (pcOffsets[setpropDepth] > init->offset) {
+                            // Have advanced past this inner call.
+                            pastProperty = true;
+                        } else if (setpropDepth == 0) {
+                            // Have reached this call but not yet in it.
+                            break;
+                        } else {
+                            // Somewhere inside this inner call.
+                            setpropDepth--;
+                        }
+                    }
+                } else {
+                    MOZ_ASSERT(init->kind == Initializer::DONE);
+                    finished = true;
                     break;
                 }
-                // This setprop has executed, reset state for the next one.
-                numProperties++;
-                pastProperty = false;
-                setpropDepth = callDepth;
-            } else if (init->kind == Initializer::SETPROP_FRAME) {
-                if (!pastProperty) {
-                    if (pcOffsets[setpropDepth] < init->offset) {
-                        // Have not yet reached this inner call.
-                        break;
-                    } else if (pcOffsets[setpropDepth] > init->offset) {
-                        // Have advanced past this inner call.
-                        pastProperty = true;
-                    } else if (setpropDepth == 0) {
-                        // Have reached this call but not yet in it.
-                        break;
-                    } else {
-                        // Somewhere inside this inner call.
-                        setpropDepth--;
-                    }
-                }
-            } else {
-                MOZ_ASSERT(init->kind == Initializer::DONE);
-                finished = true;
-                break;
             }
-        }
 
-        if (!finished) {
-            (void) NativeObject::rollbackProperties(cx, obj, numProperties);
-            found = true;
+            if (!finished) {
+                (void) NativeObject::rollbackProperties(cx, obj, numProperties);
+                found = true;
+            }
         }
     }
 

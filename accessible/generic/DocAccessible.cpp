@@ -2107,11 +2107,31 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
 #endif
 
     // Same child on same position, no change.
-    if (child->Parent() == aOwner &&
-        child->IndexInParent() == static_cast<int32_t>(insertIdx)) {
-      MOZ_ASSERT(owned->ElementAt(idx) == child, "Not in sync!");
-      idx++;
-      continue;
+    if (child->Parent() == aOwner) {
+      int32_t indexInParent = child->IndexInParent();
+
+      // The child is being placed in its current index,
+      // eg. aria-owns='id1 id2 id3' is changed to aria-owns='id3 id2 id1'.
+      if (indexInParent == static_cast<int32_t>(insertIdx)) {
+        MOZ_ASSERT(child->IsRelocated(),
+                   "A child, having an index in parent from aria ownded indices range, has to be aria owned");
+        MOZ_ASSERT(owned->ElementAt(idx) == child,
+                   "Unexpected child in ARIA owned array");
+        idx++;
+        continue;
+      }
+
+      // The child is being inserted directly after its current index,
+      // resulting in a no-move case. This will happen when a parent aria-owns
+      // its last ordinal child:
+      // <ul aria-owns='id2'><li id='id1'></li><li id='id2'></li></ul>
+      if (indexInParent == static_cast<int32_t>(insertIdx) - 1) {
+        MOZ_ASSERT(!child->IsRelocated(), "Child should be in its ordinal position");
+        child->SetRelocated(true);
+        owned->InsertElementAt(idx, child);
+        idx++;
+        continue;
+      }
     }
 
     MOZ_ASSERT(owned->SafeElementAt(idx) != child, "Already in place!");
@@ -2190,7 +2210,23 @@ DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
         }
       }
     }
-    MoveChild(child, origContainer, idxInParent);
+
+    // The child may have already be in its ordinal place for 2 reasons:
+    // 1. It was the last ordinal child, and the first aria-owned child.
+    //    given:      <ul id="list" aria-owns="b"><li id="a"></li><li id="b"></li></ul>
+    //    after load: $("list").setAttribute("aria-owns", "");
+    // 2. The preceding adopted children were just reclaimed, eg:
+    //    given:      <ul id="list"><li id="b"></li></ul>
+    //    after load: $("list").setAttribute("aria-owns", "a b");
+    //    later:      $("list").setAttribute("aria-owns", "");
+    if (origContainer != owner || child->IndexInParent() != idxInParent) {
+      MoveChild(child, origContainer, idxInParent);
+    } else {
+      MOZ_ASSERT(!child->PrevSibling() || !child->PrevSibling()->IsRelocated(),
+                 "No relocated child should appear before this one");
+      MOZ_ASSERT(!child->NextSibling() || child->NextSibling()->IsRelocated(),
+                 "No ordinal child should appear after this one");
+    }
   }
 
   aChildren->RemoveElementsAt(aStartIdx, aChildren->Length() - aStartIdx);

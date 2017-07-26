@@ -4108,9 +4108,9 @@ void
 EventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                   nsIContent* aMovingInto)
 {
-  OverOutElementsWrapper* wrapper = GetWrapperByEventID(aMouseEvent);
+  RefPtr<OverOutElementsWrapper> wrapper = GetWrapperByEventID(aMouseEvent);
 
-  if (!wrapper->mLastOverElement)
+  if (!wrapper || !wrapper->mLastOverElement)
     return;
   // Before firing mouseout, check for recursion
   if (wrapper->mLastOverElement == wrapper->mFirstOutEventElement)
@@ -4176,9 +4176,9 @@ EventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 {
   NS_ASSERTION(aContent, "Mouse must be over something");
 
-  OverOutElementsWrapper* wrapper = GetWrapperByEventID(aMouseEvent);
+  RefPtr<OverOutElementsWrapper> wrapper = GetWrapperByEventID(aMouseEvent);
 
-  if (wrapper->mLastOverElement == aContent)
+  if (!wrapper || wrapper->mLastOverElement == aContent)
     return;
 
   // Before firing mouseover, check for recursion
@@ -4348,7 +4348,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
         targetElement = mDocument->GetRootElement();
       }
       if (targetElement) {
-        OverOutElementsWrapper* helper = GetWrapperByEventID(aMouseEvent);
+        RefPtr<OverOutElementsWrapper> helper = GetWrapperByEventID(aMouseEvent);
         if (helper) {
           helper->mLastOverElement = targetElement;
         }
@@ -4363,8 +4363,8 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       // This is actually the window mouse exit or pointer leave event. We're not moving
       // into any new element.
 
-      OverOutElementsWrapper* helper = GetWrapperByEventID(aMouseEvent);
-      if (helper->mLastOverFrame &&
+      RefPtr<OverOutElementsWrapper> helper = GetWrapperByEventID(aMouseEvent);
+      if (helper && helper->mLastOverFrame &&
           nsContentUtils::GetTopLevelWidget(aMouseEvent->mWidget) !=
           nsContentUtils::GetTopLevelWidget(helper->mLastOverFrame->GetNearestWidget())) {
         // the Mouse/PointerOut event widget doesn't have same top widget with

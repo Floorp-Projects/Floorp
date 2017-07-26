@@ -9,9 +9,25 @@
 
 #include "vm/GeckoProfiler.h"
 
+#include "jscntxt.h"
+
 #include "vm/Runtime.h"
 
 namespace js {
+
+inline void
+GeckoProfilerThread::updatePC(JSContext* cx, JSScript* script, jsbytecode* pc)
+{
+    if (!cx->runtime()->geckoProfiler().enabled())
+        return;
+
+    uint32_t sp = pseudoStack_->stackPointer;
+    if (sp - 1 < PseudoStack::MaxEntries) {
+        MOZ_ASSERT(sp > 0);
+        MOZ_ASSERT(pseudoStack_->entries[sp - 1].rawScript() == script);
+        pseudoStack_->entries[sp - 1].setPC(pc);
+    }
+}
 
 /*
  * This class is used to suppress profiler sampling during

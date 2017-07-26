@@ -3,6 +3,8 @@
 
 #include <jni.h>
 
+#include "nsIRunnable.h"
+
 #include "mozilla/UniquePtr.h"
 
 #if defined(DEBUG) || !defined(RELEASE_OR_BETA)
@@ -132,13 +134,7 @@ void SetNativeHandle(JNIEnv* env, jobject instance, uintptr_t handle);
 
 jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
 
-struct AbstractCall
-{
-    virtual ~AbstractCall() {}
-    virtual void operator()() = 0;
-};
-
-void DispatchToGeckoPriorityQueue(UniquePtr<AbstractCall>&& aCall);
+void DispatchToGeckoPriorityQueue(already_AddRefed<nsIRunnable> aCall);
 
 /**
  * Returns whether Gecko is running in a Fennec environment, as determined by

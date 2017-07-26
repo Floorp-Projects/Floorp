@@ -362,6 +362,16 @@ CrossProcessCompositorBridgeParent::DidComposite(
   TimeStamp& aCompositeStart,
   TimeStamp& aCompositeEnd)
 {
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  DidCompositeLocked(aId, aCompositeStart, aCompositeEnd);
+}
+
+void
+CrossProcessCompositorBridgeParent::DidCompositeLocked(
+  uint64_t aId,
+  TimeStamp& aCompositeStart,
+  TimeStamp& aCompositeEnd)
+{
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
     uint64_t transactionId = layerTree->GetPendingTransactionId();

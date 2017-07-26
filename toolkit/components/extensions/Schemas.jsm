@@ -67,8 +67,44 @@ function readJSON(url) {
   });
 }
 
+function stripDescriptions(json, stripThis = true) {
+  if (Array.isArray(json)) {
+    for (let i = 0; i < json.length; i++) {
+      if (typeof json[i] === "object" && json[i] !== null) {
+        json[i] = stripDescriptions(json[i]);
+      }
+    }
+    return json;
+  }
+
+  let result = {};
+
+  // Objects are handled much more efficiently, both in terms of memory and
+  // CPU, if they have the same shape as other objects that serve the same
+  // purpose. So, normalize the order of properties to increase the chances
+  // that the majority of schema objects wind up in large shape groups.
+  for (let key of Object.keys(json).sort()) {
+    if (stripThis && key === "description" && typeof json[key] === "string") {
+      continue;
+    }
+
+    if (typeof json[key] === "object" && json[key] !== null) {
+      result[key] = stripDescriptions(json[key], key !== "properties");
+    } else {
+      result[key] = json[key];
+    }
+  }
+
+  return result;
+}
+
 async function readJSONAndBlobbify(url) {
   let json = await readJSON(url);
+
+  // We don't actually use descriptions at runtime, and they make up about a
+  // third of the size of our structured clone data, so strip them before
+  // blobbifying.
+  json = stripDescriptions(json);
 
   return new StructuredCloneHolder(json);
 }
@@ -2686,9 +2722,21 @@ this.Schemas = {
       value: new Namespace("", []),
     });
 
-    for (let blob of this.schemaJSON.values()) {
+    for (let [key, schema] of this.schemaJSON.entries()) {
       try {
-        this.loadSchema(blob.deserialize(global));
+        if (typeof schema.deserialize === "function") {
+          schema = schema.deserialize(global);
+
+          // If we're in the parent process, we need to keep the
+          // StructuredCloneHolder blob around in order to send to future child
+          // processes. If we're in a child, we have no further use for it, so
+          // just store the deserialized schema data in its place.
+          if (!isParentProcess) {
+            this.schemaJSON.set(key, schema);
+          }
+        }
+
+        this.loadSchema(schema);
       } catch (e) {
         Cu.reportError(e);
       }

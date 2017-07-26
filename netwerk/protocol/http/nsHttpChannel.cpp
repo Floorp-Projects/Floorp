@@ -7360,21 +7360,38 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // keep the connection around after the transaction is finished.
         //
         RefPtr<nsAHttpConnection> conn;
-        LOG(("  authRetry=%d, sticky conn cap=%d", authRetry, mCaps & NS_HTTP_STICKY_CONNECTION));
+        LOG(("  mAuthRetryPending=%d, status=%" PRIx32 ", sticky conn cap=%d",
+             mAuthRetryPending, static_cast<uint32_t>(status),
+             mCaps & NS_HTTP_STICKY_CONNECTION));
         // We must check caps for stickinness also on the transaction because it
         // might have been updated by the transaction itself during inspection of
         // the reposnse headers yet on the socket thread (found connection based
         // auth schema).
-        if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION ||
-                          mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
+        if ((mAuthRetryPending || NS_FAILED(status)) &&
+            (mCaps & NS_HTTP_STICKY_CONNECTION ||
+             mTransaction->Caps() & NS_HTTP_STICKY_CONNECTION)) {
+
             conn = mTransaction->GetConnectionReference();
             LOG(("  transaction %p provides connection %p", mTransaction.get(), conn.get()));
-            // This is so far a workaround to fix leak when reusing unpersistent
-            // connection for authentication retry. See bug 459620 comment 4
-            // for details.
-            if (conn && !conn->IsPersistent()) {
-                LOG(("  connection is not persistent, not reusing it"));
-                conn = nullptr;
+
+            if (conn) {
+                if (NS_FAILED(status)) {
+                    // Close (don't reuse) the sticky connection if it's in the middle
+                    // of an NTLM negotiation and this channel has been cancelled.
+                    // There are proxy servers known to get confused when we send
+                    // a new request over such a half-stated connection.
+                    if (!mAuthConnectionRestartable) {
+                        LOG(("  not reusing a half-authenticated sticky connection"));
+                        conn->DontReuse();
+                    }
+                    conn = nullptr;
+                } else if (!conn->IsPersistent()) {
+                    // This is so far a workaround to fix leak when reusing unpersistent
+                    // connection for authentication retry. See bug 459620 comment 4
+                    // for details.
+                    LOG(("  connection is not persistent, not reusing it"));
+                    conn = nullptr;
+                }
             }
         }
 

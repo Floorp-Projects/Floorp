@@ -9,7 +9,7 @@
 
 namespace js {
 
-class GeckoProfiler;
+class GeckoProfilerRuntime;
 
 namespace jit {
 
@@ -20,7 +20,7 @@ typedef GeckoProfilerInstrumentation<MacroAssembler, Register> BaseInstrumentati
 class IonInstrumentation : public BaseInstrumentation
 {
   public:
-    IonInstrumentation(GeckoProfiler* profiler, jsbytecode** pc)
+    IonInstrumentation(GeckoProfilerRuntime* profiler, jsbytecode** pc)
       : BaseInstrumentation(profiler)
     {
         MOZ_ASSERT(pc != nullptr);

@@ -4199,24 +4199,27 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
      *    assumption of !script->needsArgsObj();
      *  - type inference data for the script assuming script->needsArgsObj
      */
-    for (AllScriptFramesIter i(cx); !i.done(); ++i) {
-        /*
-         * We cannot reliably create an arguments object for Ion activations of
-         * this script.  To maintain the invariant that "script->needsArgsObj
-         * implies fp->hasArgsObj", the Ion bail mechanism will create an
-         * arguments object right after restoring the BaselineFrame and before
-         * entering Baseline code (in jit::FinishBailoutToBaseline).
-         */
-        if (i.isIon())
-            continue;
-        AbstractFramePtr frame = i.abstractFramePtr();
-        if (frame.isFunctionFrame() && frame.script() == script) {
-            /* We crash on OOM since cleaning up here would be complicated. */
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            ArgumentsObject* argsobj = ArgumentsObject::createExpected(cx, frame);
-            if (!argsobj)
-                oomUnsafe.crash("JSScript::argumentsOptimizationFailed");
-            SetFrameArgumentsObject(cx, frame, script, argsobj);
+    JSRuntime::AutoProhibitActiveContextChange apacc(cx->runtime());
+    for (const CooperatingContext& target : cx->runtime()->cooperatingContexts()) {
+        for (AllScriptFramesIter i(cx, target); !i.done(); ++i) {
+            /*
+             * We cannot reliably create an arguments object for Ion activations of
+             * this script.  To maintain the invariant that "script->needsArgsObj
+             * implies fp->hasArgsObj", the Ion bail mechanism will create an
+             * arguments object right after restoring the BaselineFrame and before
+             * entering Baseline code (in jit::FinishBailoutToBaseline).
+             */
+            if (i.isIon())
+                continue;
+            AbstractFramePtr frame = i.abstractFramePtr();
+            if (frame.isFunctionFrame() && frame.script() == script) {
+                /* We crash on OOM since cleaning up here would be complicated. */
+                AutoEnterOOMUnsafeRegion oomUnsafe;
+                ArgumentsObject* argsobj = ArgumentsObject::createExpected(cx, frame);
+                if (!argsobj)
+                    oomUnsafe.crash("JSScript::argumentsOptimizationFailed");
+                SetFrameArgumentsObject(cx, frame, script, argsobj);
+            }
         }
     }
 
