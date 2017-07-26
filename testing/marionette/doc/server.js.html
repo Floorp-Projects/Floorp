@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+    .getService(Ci.mozIJSSubScriptLoader);
+const ServerSocket = CC(
+    "@mozilla.org/network/server-socket;1",
+    "nsIServerSocket",
+    "initSpecialConnection");
+
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+Cu.import("chrome://marionette/content/assert.js");
+const {GeckoDriver} = Cu.import("chrome://marionette/content/driver.js", {});
+const {
+  error,
+  UnknownCommandError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+Cu.import("chrome://marionette/content/message.js");
+const {DebuggerTransport} =
+    Cu.import("chrome://marionette/content/transport.js", {});
+
+XPCOMUtils.defineLazyServiceGetter(
+    this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
+
+const logger = Log.repository.getLogger("Marionette");
+
+const {KeepWhenOffline, LoopbackOnly} = Ci.nsIServerSocket;
+
+this.EXPORTED_SYMBOLS = ["server"];
+
+/** @namespace */
+this.server = {};
+
+const PROTOCOL_VERSION = 3;
+
+const ENV_ENABLED = "MOZ_MARIONETTE";
+
+const PREF_CONTENT_LISTENER = "marionette.contentListener";
+const PREF_PORT = "marionette.port";
+const PREF_RECOMMENDED = "marionette.prefs.recommended";
+
+const NOTIFY_RUNNING = "remote-active";
+
+// Marionette sets preferences recommended for automation when it starts,
+// unless |marionette.prefs.recommended| has been set to false.
+// Where noted, some prefs should also be set in the profile passed to
+// Marionette to prevent them from affecting startup, since some of these
+// are checked before Marionette initialises.
+const RECOMMENDED_PREFS = new Map([
+
+  // Disable automatic downloading of new releases.
+  //
+  // This should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["app.update.auto", false],
+
+  // Disable automatically upgrading Firefox.
+  //
+  // This should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["app.update.enabled", false],
+
+  // Increase the APZ content response timeout in tests to 1 minute.
+  // This is to accommodate the fact that test environments tends to be
+  // slower than production environments (with the b2g emulator being
+  // the slowest of them all), resulting in the production timeout value
+  // sometimes being exceeded and causing false-positive test failures.
+  //
+  // (bug 1176798, bug 1177018, bug 1210465)
+  ["apz.content_response_timeout", 60000],
+
+  // Indicate that the download panel has been shown once so that
+  // whichever download test runs first doesn't show the popup
+  // inconsistently.
+  ["browser.download.panel.shown", true],
+
+  // Do not show the EULA notification.
+  //
+  // This should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["browser.EULA.override", true],
+
+  // Turn off about:newtab and make use of about:blank instead for new
+  // opened tabs.
+  //
+  // This should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["browser.newtabpage.enabled", false],
+
+  // Assume the about:newtab page's intro panels have been shown to not
+  // depend on which test runs first and happens to open about:newtab
+  ["browser.newtabpage.introShown", true],
+
+  // Never start the browser in offline mode
+  //
+  // This should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["browser.offline", false],
+
+  // Background thumbnails in particular cause grief, and disabling
+  // thumbnails in general cannot hurt
+  ["browser.pagethumbnails.capturing_disabled", true],
+
+  // Disable safebrowsing components.
+  //
+  // These should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["browser.safebrowsing.blockedURIs.enabled", false],
+  ["browser.safebrowsing.downloads.enabled", false],
+  ["browser.safebrowsing.malware.enabled", false],
+  ["browser.safebrowsing.phishing.enabled", false],
+
+  // Disable updates to search engines.
+  //
+  // Should be set in profile.
+  ["browser.search.update", false],
+
+  // Do not restore the last open set of tabs if the browser has crashed
+  ["browser.sessionstore.resume_from_crash", false],
+
+  // Don't check for the default web browser during startup.
+  //
+  // These should also be set in the profile prior to starting Firefox,
+  // as it is picked up at runtime.
+  ["browser.shell.checkDefaultBrowser", false],
+
+  // Start with a blank page (about:blank)
+  ["browser.startup.page", 0],
+
+  // Do not redirect user when a milstone upgrade of Firefox is detected
+  ["browser.startup.homepage_override.mstone", "ignore"],
+
+  // Disable browser animations
+  ["toolkit.cosmeticAnimations.enabled", false],
+
+  // Do not allow background tabs to be zombified, otherwise for tests
+  // that open additional tabs, the test harness tab itself might get
+  // unloaded
+  ["browser.tabs.disableBackgroundZombification", false],
+
+  // Do not warn when closing all other open tabs
+  ["browser.tabs.warnOnCloseOtherTabs", false],
+
+  // Do not warn when multiple tabs will be opened
+  ["browser.tabs.warnOnOpen", false],
+
+  // Disable first run splash page on Windows 10
+  ["browser.usedOnWindows10.introURL", ""],
+
+  // Disable the UI tour.
+  //
+  // Should be set in profile.
+  ["browser.uitour.enabled", false],
+
+  // Do not show datareporting policy notifications which can
+  // interfere with tests
+  [
+    "datareporting.healthreport.about.reportUrl",
+    "http://%(server)s/dummy/abouthealthreport/",
+  ],
+  [
+    "datareporting.healthreport.documentServerURI",
+    "http://%(server)s/dummy/healthreport/",
+  ],
+  ["datareporting.healthreport.logging.consoleEnabled", false],
+  ["datareporting.healthreport.service.enabled", false],
+  ["datareporting.healthreport.service.firstRun", false],
+  ["datareporting.healthreport.uploadEnabled", false],
+  ["datareporting.policy.dataSubmissionEnabled", false],
+  ["datareporting.policy.dataSubmissionPolicyAccepted", false],
+  ["datareporting.policy.dataSubmissionPolicyBypassNotification", true],
+
+  // Disable popup-blocker
+  ["dom.disable_open_during_load", false],
+
+  // Disable the ProcessHangMonitor
+  ["dom.ipc.reportProcessHangs", false],
+
+  // Disable slow script dialogues
+  ["dom.max_chrome_script_run_time", 0],
+  ["dom.max_script_run_time", 0],
+
+  // Only load extensions from the application and user profile
+  // AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_APPLICATION
+  //
+  // Should be set in profile.
+  ["extensions.autoDisableScopes", 0],
+  ["extensions.enabledScopes", 5],
+
+  // Do not block add-ons for e10s
+  ["extensions.e10sBlocksEnabling", false],
+
+  // Disable metadata caching for installed add-ons by default
+  ["extensions.getAddons.cache.enabled", false],
+
+  // Disable intalling any distribution extensions or add-ons.
+  // Should be set in profile.
+  ["extensions.installDistroAddons", false],
+  ["extensions.showMismatchUI", false],
+
+  // Turn off extension updates so they do not bother tests
+  ["extensions.update.enabled", false],
+  ["extensions.update.notifyUser", false],
+
+  // Make sure opening about:addons will not hit the network
+  [
+    "extensions.webservice.discoverURL",
+    "http://%(server)s/dummy/discoveryURL",
+  ],
+
+  // Allow the application to have focus even it runs in the background
+  ["focusmanager.testmode", true],
+
+  // Disable useragent updates
+  ["general.useragent.updates.enabled", false],
+
+  // Always use network provider for geolocation tests so we bypass the
+  // macOS dialog raised by the corelocation provider
+  ["geo.provider.testing", true],
+
+  // Do not scan Wifi
+  ["geo.wifi.scan", false],
+
+  // No hang monitor
+  ["hangmonitor.timeout", 0],
+
+  // Show chrome errors and warnings in the error console
+  ["javascript.options.showInConsole", true],
+
+  // Do not prompt for temporary redirects
+  ["network.http.prompt-temp-redirect", false],
+
+  // Disable speculative connections so they are not reported as leaking
+  // when they are hanging around
+  ["network.http.speculative-parallel-limit", 0],
+
+  // Do not automatically switch between offline and online
+  ["network.manage-offline-status", false],
+
+  // Make sure SNTP requests do not hit the network
+  ["network.sntp.pools", "%(server)s"],
+
+  // Local documents have access to all other local documents,
+  // including directory listings
+  ["security.fileuri.strict_origin_policy", false],
+
+  // Tests do not wait for the notification button security delay
+  ["security.notification_enable_delay", 0],
+
+  // Ensure blocklist updates do not hit the network
+  ["services.settings.server", "http://%(server)s/dummy/blocklist/"],
+
+  // Do not automatically fill sign-in forms with known usernames and
+  // passwords
+  ["signon.autofillForms", false],
+
+  // Disable password capture, so that tests that include forms are not
+  // influenced by the presence of the persistent doorhanger notification
+  ["signon.rememberSignons", false],
+
+  // Disable first-run welcome page
+  ["startup.homepage_welcome_url", "about:blank"],
+  ["startup.homepage_welcome_url.additional", ""],
+
+  // Prevent starting into safe mode after application crashes
+  ["toolkit.startup.max_resumed_crashes", -1],
+
+]);
+
+/**
+ * Bootstraps Marionette and handles incoming client connections.
+ *
+ * Starting the Marionette server will open a TCP socket sporting the
+ * debugger transport interface on the provided |port|.  For every new
+ * connection, a |server.TCPConnection| is created.
+ */
+server.TCPListener = class {
+  /**
+   * @param {number} port
+   *     Port for server to listen to.
+   */
+  constructor(port) {
+    this.port = port;
+    this.socket = null;
+    this.conns = new Set();
+    this.nextConnID = 0;
+    this.alive = false;
+    this._acceptConnections = false;
+    this.alteredPrefs = new Set();
+  }
+
+  /**
+   * Function produces a GeckoDriver.
+   *
+   * Determines application name to initialise the driver with.
+   *
+   * @return {GeckoDriver}
+   *     A driver instance.
+   */
+  driverFactory() {
+    Preferences.set(PREF_CONTENT_LISTENER, false);
+    return new GeckoDriver(Services.appinfo.name, this);
+  }
+
+  set acceptConnections(value) {
+    if (!value) {
+      logger.info("New connections will no longer be accepted");
+    } else {
+      logger.info("New connections are accepted again");
+    }
+
+    this._acceptConnections = value;
+  }
+
+  /**
+   * Bind this listener to |port| and start accepting incoming socket
+   * connections on |onSocketAccepted|.
+   *
+   * The marionette.port preference will be populated with the value
+   * of |this.port|.
+   */
+  start() {
+    if (this.alive) {
+      return;
+    }
+
+    Services.obs.notifyObservers(this, NOTIFY_RUNNING, true);
+
+    if (Preferences.get(PREF_RECOMMENDED)) {
+      // set recommended prefs if they are not already user-defined
+      for (let [k, v] of RECOMMENDED_PREFS) {
+        if (!Preferences.isSet(k)) {
+          logger.debug(`Setting recommended pref ${k} to ${v}`);
+          Preferences.set(k, v);
+          this.alteredPrefs.add(k);
+        }
+      }
+    }
+
+    const flags = KeepWhenOffline | LoopbackOnly;
+    const backlog = 1;
+    this.socket = new ServerSocket(this.port, flags, backlog);
+    this.socket.asyncListen(this);
+    this.port = this.socket.port;
+    Preferences.set(PREF_PORT, this.port);
+
+    this.alive = true;
+    this._acceptConnections = true;
+    env.set(ENV_ENABLED, "1");
+  }
+
+  stop() {
+    if (!this.alive) {
+      return;
+    }
+
+    this._acceptConnections = false;
+
+    this.socket.close();
+    this.socket = null;
+
+    for (let k of this.alteredPrefs) {
+      logger.debug(`Resetting recommended pref ${k}`);
+      Preferences.reset(k);
+    }
+    this.alteredPrefs.clear();
+
+    Services.obs.notifyObservers(this, NOTIFY_RUNNING);
+
+    this.alive = false;
+  }
+
+  onSocketAccepted(serverSocket, clientSocket) {
+    if (!this._acceptConnections) {
+      logger.warn("New connections are currently not accepted");
+      return;
+    }
+
+    let input = clientSocket.openInputStream(0, 0, 0);
+    let output = clientSocket.openOutputStream(0, 0, 0);
+    let transport = new DebuggerTransport(input, output);
+
+    let conn = new server.TCPConnection(
+        this.nextConnID++, transport, this.driverFactory.bind(this));
+    conn.onclose = this.onConnectionClosed.bind(this);
+    this.conns.add(conn);
+
+    logger.debug(`Accepted connection ${conn.id} ` +
+        `from ${clientSocket.host}:${clientSocket.port}`);
+    conn.sayHello();
+    transport.ready();
+  }
+
+  onConnectionClosed(conn) {
+    logger.debug(`Closed connection ${conn.id}`);
+    this.conns.delete(conn);
+  }
+};
+
+/**
+ * Marionette client connection.
+ *
+ * Dispatches packets received to their correct service destinations
+ * and sends back the service endpoint's return values.
+ *
+ * @param {number} connID
+ *     Unique identifier of the connection this dispatcher should handle.
+ * @param {DebuggerTransport} transport
+ *     Debugger transport connection to the client.
+ * @param {function(): GeckoDriver} driverFactory
+ *     Factory function that produces a |GeckoDriver|.
+ */
+server.TCPConnection = class {
+  constructor(connID, transport, driverFactory) {
+    this.id = connID;
+    this.conn = transport;
+
+    // transport hooks are TCPConnection#onPacket
+    // and TCPConnection#onClosed
+    this.conn.hooks = this;
+
+    // callback for when connection is closed
+    this.onclose = null;
+
+    // last received/sent message ID
+    this.lastID = 0;
+
+    this.driver = driverFactory();
+
+    // lookup of commands sent by server to client by message ID
+    this.commands_ = new Map();
+  }
+
+  /**
+   * Debugger transport callback that cleans up
+   * after a connection is closed.
+   */
+  onClosed(reason) {
+    this.driver.deleteSession();
+    if (this.onclose) {
+      this.onclose(this);
+    }
+  }
+
+  /**
+   * Callback that receives data packets from the client.
+   *
+   * If the message is a Response, we look up the command previously
+   * issued to the client and run its callback, if any.  In case of
+   * a Command, the corresponding is executed.
+   *
+   * @param {Array.&lt;number, number, ?, ?>} data
+   *     A four element array where the elements, in sequence, signifies
+   *     message type, message ID, method name or error, and parameters
+   *     or result.
+   */
+  onPacket(data) {
+    // unable to determine how to respond
+    if (!Array.isArray(data)) {
+      let e = new TypeError(
+          "Unable to unmarshal packet data: " + JSON.stringify(data));
+      error.report(e);
+      return;
+    }
+
+    // return immediately with any error trying to unmarshal message
+    let msg;
+    try {
+      msg = Message.fromMsg(data);
+      msg.origin = MessageOrigin.Client;
+      this.log_(msg);
+    } catch (e) {
+      let resp = this.createResponse(data[1]);
+      resp.sendError(e);
+      return;
+    }
+
+    // look up previous command we received a response for
+    if (msg instanceof Response) {
+      let cmd = this.commands_.get(msg.id);
+      this.commands_.delete(msg.id);
+      cmd.onresponse(msg);
+
+    // execute new command
+    } else if (msg instanceof Command) {
+      this.lastID = msg.id;
+      this.execute(msg);
+    }
+  }
+
+  /**
+   * Executes a WebDriver command and sends back a response when it has
+   * finished executing.
+   *
+   * Commands implemented in GeckoDriver and registered in its
+   * {@code GeckoDriver.commands} attribute.  The return values from
+   * commands are expected to be Promises.  If the resolved value of said
+   * promise is not an object, the response body will be wrapped in
+   * an object under a "value" field.
+   *
+   * If the command implementation sends the response itself by calling
+   * {@code resp.send()}, the response is guaranteed to not be sent twice.
+   *
+   * Errors thrown in commands are marshaled and sent back, and if they
+   * are not WebDriverError instances, they are additionally propagated
+   * and reported to {@code Components.utils.reportError}.
+   *
+   * @param {Command} cmd
+   *     The requested command to execute.
+   */
+  execute(cmd) {
+    let resp = this.createResponse(cmd.id);
+    let sendResponse = () => resp.sendConditionally(resp => !resp.sent);
+    let sendError = resp.sendError.bind(resp);
+
+    let req = Task.spawn(function* () {
+      let fn = this.driver.commands[cmd.name];
+      if (typeof fn == "undefined") {
+        throw new UnknownCommandError(cmd.name);
+      }
+
+      if (cmd.name !== "newSession") {
+        assert.session(this.driver);
+      }
+
+      let rv = yield fn.bind(this.driver)(cmd, resp);
+
+      if (typeof rv != "undefined") {
+        if (typeof rv != "object") {
+          resp.body = {value: rv};
+        } else {
+          resp.body = rv;
+        }
+      }
+    }.bind(this));
+
+    req.then(sendResponse, sendError).catch(error.report);
+  }
+
+  /**
+   * Fail-safe creation of a new instance of |message.Response|.
+   *
+   * @param {number} msgID
+   *     Message ID to respond to.  If it is not a number, -1 is used.
+   *
+   * @return {message.Response}
+   *     Response to the message with |msgID|.
+   */
+  createResponse(msgID) {
+    if (typeof msgID != "number") {
+      msgID = -1;
+    }
+    return new Response(msgID, this.send.bind(this));
+  }
+
+  sendError(err, cmdID) {
+    let resp = new Response(cmdID, this.send.bind(this));
+    resp.sendError(err);
+  }
+
+  /**
+   * When a client connects we send across a JSON Object defining the
+   * protocol level.
+   *
+   * This is the only message sent by Marionette that does not follow
+   * the regular message format.
+   */
+  sayHello() {
+    let whatHo = {
+      applicationType: "gecko",
+      marionetteProtocol: PROTOCOL_VERSION,
+    };
+    this.sendRaw(whatHo);
+  }
+
+  /**
+   * Delegates message to client based on the provided  {@code cmdID}.
+   * The message is sent over the debugger transport socket.
+   *
+   * The command ID is a unique identifier assigned to the client's request
+   * that is used to distinguish the asynchronous responses.
+   *
+   * Whilst responses to commands are synchronous and must be sent in the
+   * correct order.
+   *
+   * @param {Message} msg
+   *     The command or response to send.
+   */
+  send(msg) {
+    msg.origin = MessageOrigin.Server;
+    if (msg instanceof Command) {
+      this.commands_.set(msg.id, msg);
+      this.sendToEmulator(msg);
+    } else if (msg instanceof Response) {
+      this.sendToClient(msg);
+    }
+  }
+
+  // Low-level methods:
+
+  /**
+   * Send given response to the client over the debugger transport socket.
+   *
+   * @param {Response} resp
+   *     The response to send back to the client.
+   */
+  sendToClient(resp) {
+    this.driver.responseCompleted();
+    this.sendMessage(resp);
+  }
+
+  /**
+   * Marshal message to the Marionette message format and send it.
+   *
+   * @param {Message} msg
+   *     The message to send.
+   */
+  sendMessage(msg) {
+    this.log_(msg);
+    let payload = msg.toMsg();
+    this.sendRaw(payload);
+  }
+
+  /**
+   * Send the given payload over the debugger transport socket to the
+   * connected client.
+   *
+   * @param {Object.&lt;string, ?>} payload
+   *     The payload to ship.
+   */
+  sendRaw(payload) {
+    this.conn.send(payload);
+  }
+
+  log_(msg) {
+    let a = (msg.origin == MessageOrigin.Client ? " -> " : " &lt;- ");
+    let s = JSON.stringify(msg.toMsg());
+    logger.trace(this.id + a + s);
+  }
+
+  toString() {
+    return `[object server.TCPConnection ${this.id}]`;
+  }
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
