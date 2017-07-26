@@ -288,7 +288,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   const SnapshotTable& snapshots = Snapshots();
 
   bool isInitial = !aRoot->HasServoData();
-  bool forReconstruct = !!(aFlags & ServoTraversalFlags::ForReconstruct);
+  bool forReconstruct = !!(aFlags & ServoTraversalFlags::AggressivelyForgetful);
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
   MOZ_ASSERT(!(isInitial || forReconstruct) || !postTraversalRequired);
@@ -839,8 +839,12 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 {
   PreTraverse(aRoot);
 
+  auto flags = ServoTraversalFlags::Forgetful |
+               ServoTraversalFlags::AggressivelyForgetful |
+               ServoTraversalFlags::ClearDirtyDescendants |
+               ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
   DebugOnly<bool> postTraversalRequired =
-    PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::ForReconstruct);
+    PrepareAndTraverseSubtree(aRoot, flags);
   MOZ_ASSERT(!postTraversalRequired);
 }
 
