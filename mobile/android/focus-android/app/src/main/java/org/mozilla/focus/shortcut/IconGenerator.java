@@ -93,8 +93,8 @@ import org.mozilla.focus.utils.UrlUtils;
         paint.setAntiAlias(true);
 
         canvas.drawText(character,
-                canvas.getWidth() / 2,
-                (int) ((canvas.getHeight() / 2) - ((paint.descent() + paint.ascent()) / 2)),
+                canvas.getWidth() / 2.0f,
+                ((canvas.getHeight() / 2.0f) - ((paint.descent() + paint.ascent()) / 2.0f)),
                 paint);
 
         return bitmap;
