@@ -25,6 +25,7 @@ macosx64-clang:
         toolchain-artifact: public/build/clang.tar.xz
     toolchains:
         - linux64-cctools-port
+        - linux64-clang
         - linux64-gcc
         - linux64-sccache
 
@@ -55,6 +56,7 @@ macosx64-clang-tidy:
         toolchain-artifact: public/build/clang-tidy.tar.xz
     toolchains:
         - linux64-cctools-port
+        - linux64-clang
         - linux64-gcc
         - linux64-sccache
 
@@ -80,5 +82,6 @@ macosx64-cctools-port:
         toolchain-artifact: public/build/cctools.tar.bz2
     toolchains:
         - linux64-cctools-port
+        - linux64-clang
         - linux64-gcc
         - linux64-sccache
