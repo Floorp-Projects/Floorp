@@ -502,12 +502,12 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
 SERVO_BINDING_FUNC(Servo_TakeChangeHint,
                    nsChangeHint,
                    RawGeckoElementBorrowed element,
-                   mozilla::TraversalRestyleBehavior restyle_behavior,
+                   mozilla::ServoTraversalFlags flags,
                    bool* was_restyled)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    RawServoStyleSetBorrowed set,
-                   mozilla::TraversalRestyleBehavior restyle_behavior)
+                   mozilla::ServoTraversalFlags flags)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    mozilla::CSSPseudoElementType pseudo_type,
@@ -544,8 +544,7 @@ SERVO_BINDING_FUNC(Servo_TraverseSubtree,
                    RawGeckoElementBorrowed root,
                    RawServoStyleSetBorrowed set,
                    const mozilla::ServoElementSnapshotTable* snapshots,
-                   mozilla::TraversalRootBehavior root_behavior,
-                   mozilla::TraversalRestyleBehavior restyle_behavior)
+                   mozilla::ServoTraversalFlags flags)
 
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
