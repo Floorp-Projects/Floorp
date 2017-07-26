@@ -81,4 +81,3 @@ macosx64-cctools-port:
     toolchains:
         - linux64-cctools-port
         - linux64-clang
-        - linux64-gcc
