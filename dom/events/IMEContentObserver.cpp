@@ -1848,7 +1848,7 @@ IMEContentObserver::IMENotificationSender::Dispatch(nsIDocShell* aDocShell)
     aDocShell ? aDocShell->GetScriptGlobalObject() : nullptr;
   if (globalObject) {
     RefPtr<IMENotificationSender> queuedSender = this;
-    globalObject->Dispatch(nullptr, TaskCategory::Other,
+    globalObject->Dispatch(TaskCategory::Other,
                            queuedSender.forget());
   } else {
     NS_DispatchToCurrentThread(this);

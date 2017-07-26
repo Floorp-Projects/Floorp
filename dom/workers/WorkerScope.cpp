@@ -494,7 +494,7 @@ WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
 }
 
 nsresult
-WorkerGlobalScope::Dispatch(const char* aName, TaskCategory aCategory,
+WorkerGlobalScope::Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable)
 {
   return EventTargetFor(aCategory)->Dispatch(Move(aRunnable),
@@ -1080,7 +1080,7 @@ WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
 }
 
 nsresult
-WorkerDebuggerGlobalScope::Dispatch(const char* aName, TaskCategory aCategory,
+WorkerDebuggerGlobalScope::Dispatch(TaskCategory aCategory,
                                     already_AddRefed<nsIRunnable>&& aRunnable)
 {
   return EventTargetFor(aCategory)->Dispatch(Move(aRunnable),

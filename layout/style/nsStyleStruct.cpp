@@ -2031,8 +2031,7 @@ nsStyleImageRequest::~nsStyleImageRequest()
       task->Run();
     } else {
       if (mDocGroup) {
-        mDocGroup->Dispatch("StyleImageRequestCleanupTask",
-                            TaskCategory::Other, task.forget());
+        mDocGroup->Dispatch(TaskCategory::Other, task.forget());
       } else {
         // if Resolve was not called at some point, mDocGroup is not set.
         NS_DispatchToMainThread(task.forget());

@@ -25,7 +25,7 @@ DebuggerOnGCRunnable::Enqueue(JSContext* aCx, const JS::GCDescription& aDesc)
   RefPtr<DebuggerOnGCRunnable> runOnGC =
     new DebuggerOnGCRunnable(Move(gcEvent));
   if (NS_IsMainThread()) {
-    return SystemGroup::Dispatch("DebuggerOnGCRunnable", TaskCategory::GarbageCollection, runOnGC.forget());
+    return SystemGroup::Dispatch(TaskCategory::GarbageCollection, runOnGC.forget());
   } else {
     return NS_DispatchToCurrentThread(runOnGC);
   }

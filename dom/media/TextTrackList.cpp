@@ -193,9 +193,7 @@ TextTrackList::CreateAndDispatchChangeEvent()
     event->SetTrusted(true);
 
     nsCOMPtr<nsIRunnable> eventRunner = new ChangeEventRunner(this, event);
-    nsGlobalWindow::Cast(win)->Dispatch(
-      "TextTrackList::CreateAndDispatchChangeEvent", TaskCategory::Other,
-      eventRunner.forget());
+    nsGlobalWindow::Cast(win)->Dispatch(TaskCategory::Other, eventRunner.forget());
   }
 }
 

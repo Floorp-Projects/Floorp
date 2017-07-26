@@ -80,8 +80,7 @@ public:
     return mDocuments.end();
   }
 
-  nsresult Dispatch(const char* aName,
-                    TaskCategory aCategory,
+  nsresult Dispatch(TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable);
 
   nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;

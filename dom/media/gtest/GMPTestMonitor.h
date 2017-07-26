@@ -35,7 +35,6 @@ public:
   void SetFinished()
   {
     mozilla::SystemGroup::Dispatch(
-      "GMPTestMonitor::SetFinished",
       mozilla::TaskCategory::Other,
       mozilla::NewNonOwningRunnableMethod(
         "GMPTestMonitor::MarkFinished", this, &GMPTestMonitor::MarkFinished));

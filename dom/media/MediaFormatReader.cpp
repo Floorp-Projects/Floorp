@@ -118,7 +118,6 @@ GlobalAllocPolicy::GlobalAllocPolicy()
   , mDecoderLimit(MediaPrefs::MediaDecoderLimit())
 {
   SystemGroup::Dispatch(
-    "GlobalAllocPolicy::ClearOnShutdown",
     TaskCategory::Other,
     NS_NewRunnableFunction("GlobalAllocPolicy::GlobalAllocPolicy", [this]() {
       ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);

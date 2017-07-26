@@ -49,8 +49,7 @@ public:
 
     // Dispatching can fail during early startup, particularly when
     // MOZ_PROFILER_STARTUP is used.
-    nsresult rv = SystemGroup::Dispatch("CheckResponsivenessTask",
-                                        TaskCategory::Other,
+    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
                                         do_AddRef(this));
     if (NS_SUCCEEDED(rv)) {
       mHasEverBeenSuccessfullyDispatched = true;
@@ -81,8 +80,7 @@ public:
 
   NS_IMETHOD Notify(nsITimer* aTimer) final
   {
-    SystemGroup::Dispatch("CheckResponsivenessTask",
-                          TaskCategory::Other,
+    SystemGroup::Dispatch(TaskCategory::Other,
                           do_AddRef(this));
     return NS_OK;
   }
