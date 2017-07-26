@@ -270,7 +270,7 @@ void
 nsDOMDataChannel::Send(const nsAString& aData, ErrorResult& aRv)
 {
   NS_ConvertUTF16toUTF8 msgString(aData);
-  Send(nullptr, msgString, msgString.Length(), false, aRv);
+  Send(nullptr, msgString, false, aRv);
 }
 
 void
@@ -294,7 +294,7 @@ nsDOMDataChannel::Send(Blob& aData, ErrorResult& aRv)
     return;
   }
 
-  Send(msgStream, EmptyCString(), msgLength, true, aRv);
+  Send(msgStream, EmptyCString(), true, aRv);
 }
 
 void
@@ -310,7 +310,7 @@ nsDOMDataChannel::Send(const ArrayBuffer& aData, ErrorResult& aRv)
   char* data = reinterpret_cast<char*>(aData.Data());
 
   nsDependentCSubstring msgString(data, len);
-  Send(nullptr, msgString, len, true, aRv);
+  Send(nullptr, msgString, true, aRv);
 }
 
 void
@@ -326,13 +326,12 @@ nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv)
   char* data = reinterpret_cast<char*>(aData.Data());
 
   nsDependentCSubstring msgString(data, len);
-  Send(nullptr, msgString, len, true, aRv);
+  Send(nullptr, msgString, true, aRv);
 }
 
 void
 nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
                        const nsACString& aMsgString,
-                       uint32_t aMsgLength,
                        bool aIsBinary,
                        ErrorResult& aRv)
 {
@@ -357,18 +356,14 @@ nsDOMDataChannel::Send(nsIInputStream* aMsgStream,
   MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
              "Unknown state in nsDOMDataChannel::Send");
 
-  bool sent;
   if (aMsgStream) {
-    sent = mDataChannel->SendBinaryStream(aMsgStream, aMsgLength);
+    mDataChannel->SendBinaryStream(aMsgStream, aRv);
   } else {
     if (aIsBinary) {
-      sent = mDataChannel->SendBinaryMsg(aMsgString);
+      mDataChannel->SendBinaryMsg(aMsgString, aRv);
     } else {
-      sent = mDataChannel->SendMsg(aMsgString);
+      mDataChannel->SendMsg(aMsgString, aRv);
     }
-  }
-  if (!sent) {
-    aRv.Throw(NS_ERROR_FAILURE);
   }
 }
 
