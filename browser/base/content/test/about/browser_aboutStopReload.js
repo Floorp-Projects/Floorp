@@ -60,17 +60,33 @@ add_task(async function checkDontShowStopFromNonLocalURI() {
 
 add_task(async function checkDoShowStopOnNewTab() {
   let stopReloadContainer = document.getElementById("stop-reload-button");
-  let animatePromise = getAnimatePromise(stopReloadContainer);
+  let reloadButton = document.getElementById("reload-button");
+  let stopPromise = BrowserTestUtils.waitForAttribute("displaystop", reloadButton);
 
   await waitForNoAnimation(stopReloadContainer);
+
   let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
                                                         opening: "https://example.com",
                                                         waitForStateStop: true});
-  await animatePromise;
+  await stopPromise;
   await waitForNoAnimation(stopReloadContainer);
   await BrowserTestUtils.removeTab(tab);
 
-  info("Test finished: stop-reload animates when navigating to non-local URI on new tab");
+  info("Test finished: stop-reload shows stop when navigating to non-local URI during tab opening");
+});
+
+add_task(async function checkAnimateStopOnTabAfterTabFinishesOpening() {
+  let stopReloadContainer = document.getElementById("stop-reload-button");
+
+  await waitForNoAnimation(stopReloadContainer);
+  let tab = await BrowserTestUtils.openNewForegroundTab({gBrowser,
+                                                        waitForStateStop: true});
+  let animatePromise = getAnimatePromise(stopReloadContainer);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, "https://example.com");
+  await animatePromise;
+  await BrowserTestUtils.removeTab(tab);
+
+  info("Test finished: stop-reload animates when navigating to non-local URI on new tab after tab has opened");
 });
 
 add_task(async function checkDoShowStopFromLocalURI() {
