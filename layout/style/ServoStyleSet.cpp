@@ -272,6 +272,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   RawGeckoElementBorrowed aRoot,
   ServoTraversalFlags aFlags)
 {
+  MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(aRoot)));
   bool forThrottledAnimationFlush = !!(aFlags & ServoTraversalFlags::AnimationOnly);
 
   AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
@@ -288,13 +289,9 @@ ServoStyleSet::PrepareAndTraverseSubtree(
 
   bool isInitial = !aRoot->HasServoData();
   bool forReconstruct = !!(aFlags & ServoTraversalFlags::ForReconstruct);
-#ifdef DEBUG
-  bool forNewlyBoundElement = !!(aFlags & ServoTraversalFlags::ForNewlyBoundElement);
-#endif
   bool postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
-  MOZ_ASSERT(!(isInitial || forReconstruct || forNewlyBoundElement) ||
-             !postTraversalRequired);
+  MOZ_ASSERT(!(isInitial || forReconstruct) || !postTraversalRequired);
 
   // We don't need to trigger a second traversal if this restyle only for
   // flushing throttled animations. That's because the first traversal only
@@ -829,15 +826,8 @@ ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
   // XML pretty printer) _can_ apply bindings without having styled the bound
   // element. We could assert against this and require the callers manually
   // resolve the style first, but it's easy enough to just handle here.
-  //
-  // Also, when applying XBL bindings to elements within a display:none or
-  // unstyled subtree (for example, when <object> elements are wrapped to be
-  // exposed to JS), we need to tell the traversal that it is OK to
-  // skip restyling, rather than panic when trying to unwrap the styles
-  // it expects to have just computed.
 
-  ServoTraversalFlags flags = ServoTraversalFlags::ForNewlyBoundElement |
-    (MOZ_UNLIKELY(!aElement->HasServoData())
+  ServoTraversalFlags flags = (MOZ_UNLIKELY(!aElement->HasServoData())
       ? ServoTraversalFlags::Empty
       : ServoTraversalFlags::UnstyledChildrenOnly);
 
@@ -1190,6 +1180,23 @@ ServoStyleSet::MaybeGCRuleTree()
 {
   MOZ_ASSERT(NS_IsMainThread());
   Servo_MaybeGCRuleTree(mRawSet.get());
+}
+
+bool
+ServoStyleSet::MayTraverseFrom(Element* aElement)
+{
+  MOZ_ASSERT(aElement->IsInComposedDoc());
+  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
+  if (!parent) {
+    return true;
+  }
+
+  if (!parent->HasServoData()) {
+    return false;
+  }
+
+  RefPtr<ServoStyleContext> sc = Servo_ResolveStyleAllowStale(parent).Consume();
+  return sc->StyleDisplay()->mDisplay != StyleDisplay::None;
 }
 
 void

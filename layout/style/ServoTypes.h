@@ -62,10 +62,6 @@ enum class ServoTraversalFlags : uint32_t {
   // required when handling frame reconstruction.  The change hints in this case
   // are unneeded, since the old frames have already been destroyed.
   ForReconstruct = 1 << 3,
-  // Be tolerant to calls to restyle elements in unstyled
-  // or display:none subtrees (which can occur when styling elements with
-  // newly applied XBL bindings).
-  ForNewlyBoundElement = 1 << 4,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
