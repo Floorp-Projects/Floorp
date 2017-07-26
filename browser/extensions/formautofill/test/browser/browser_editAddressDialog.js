@@ -1,11 +1,11 @@
 "use strict";
 
-add_task(async function test_cancelEditProfileDialog() {
+add_task(async function test_cancelEditAddressDialog() {
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, null);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
-        ok(true, "Edit profile dialog is closed");
+        ok(true, "Edit address dialog is closed");
         resolve();
       }, {once: true});
       win.document.querySelector("#cancel").click();
@@ -13,12 +13,12 @@ add_task(async function test_cancelEditProfileDialog() {
   });
 });
 
-add_task(async function test_cancelEditProfileDialogWithESC() {
+add_task(async function test_cancelEditAddressDialogWithESC() {
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_PROFILE_DIALOG_URL);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
-        ok(true, "Edit profile dialog is closed with ESC key");
+        ok(true, "Edit address dialog is closed with ESC key");
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
@@ -28,10 +28,10 @@ add_task(async function test_cancelEditProfileDialogWithESC() {
 
 add_task(async function test_saveAddress() {
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, null);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, null);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
-        ok(true, "Edit profile dialog is closed");
+        ok(true, "Edit address dialog is closed");
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_TAB", {}, win);
@@ -58,7 +58,7 @@ add_task(async function test_saveAddress() {
       EventUtils.synthesizeKey(TEST_ADDRESS_1.tel, {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
       EventUtils.synthesizeKey("VK_TAB", {}, win);
-      info("saving profile");
+      info("saving address");
       EventUtils.synthesizeKey("VK_RETURN", {}, win);
     }, {once: true});
   });
@@ -71,13 +71,13 @@ add_task(async function test_saveAddress() {
   }
 });
 
-add_task(async function test_editProfile() {
+add_task(async function test_editAddress() {
   let addresses = await getAddresses();
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_PROFILE_DIALOG_URL, null, null, addresses[0]);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, addresses[0]);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
-        ok(true, "Edit profile dialog is closed");
+        ok(true, "Edit address dialog is closed");
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_TAB", {}, win);
