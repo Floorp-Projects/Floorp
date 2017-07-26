@@ -449,6 +449,7 @@
            hidden="true"
            flip="slide"
            position="bottomcenter topright"
+           tabspecific="true"
            noautofocus="true">
       <photonpanelmultiview id="page-action-multiView"
                             mainViewId="page-action-mainView">
