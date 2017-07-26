@@ -513,7 +513,7 @@ JS_IsSharedArrayBufferObject(JSObject* obj)
 }
 
 JS_FRIEND_API(uint8_t*)
-JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoCheckCannotGC&)
+JS_GetSharedArrayBufferData(JSObject* obj, bool* isSharedMemory, const JS::AutoRequireNoGC&)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)

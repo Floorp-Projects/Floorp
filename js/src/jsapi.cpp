@@ -5452,7 +5452,7 @@ JS_StringHasLatin1Chars(JSString* str)
 }
 
 JS_PUBLIC_API(const JS::Latin1Char*)
-JS_GetLatin1StringCharsAndLength(JSContext* cx, const JS::AutoCheckCannotGC& nogc, JSString* str,
+JS_GetLatin1StringCharsAndLength(JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
                                  size_t* plength)
 {
     MOZ_ASSERT(plength);
@@ -5467,7 +5467,7 @@ JS_GetLatin1StringCharsAndLength(JSContext* cx, const JS::AutoCheckCannotGC& nog
 }
 
 JS_PUBLIC_API(const char16_t*)
-JS_GetTwoByteStringCharsAndLength(JSContext* cx, const JS::AutoCheckCannotGC& nogc, JSString* str,
+JS_GetTwoByteStringCharsAndLength(JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
                                   size_t* plength)
 {
     MOZ_ASSERT(plength);
@@ -5525,7 +5525,7 @@ JS_CopyStringChars(JSContext* cx, mozilla::Range<char16_t> dest, JSString* str)
 }
 
 JS_PUBLIC_API(const Latin1Char*)
-JS_GetLatin1InternedStringChars(const JS::AutoCheckCannotGC& nogc, JSString* str)
+JS_GetLatin1InternedStringChars(const JS::AutoRequireNoGC& nogc, JSString* str)
 {
     MOZ_ASSERT(str->isAtom());
     JSFlatString* flat = str->ensureFlat(nullptr);
@@ -5535,7 +5535,7 @@ JS_GetLatin1InternedStringChars(const JS::AutoCheckCannotGC& nogc, JSString* str
 }
 
 JS_PUBLIC_API(const char16_t*)
-JS_GetTwoByteInternedStringChars(const JS::AutoCheckCannotGC& nogc, JSString* str)
+JS_GetTwoByteInternedStringChars(const JS::AutoRequireNoGC& nogc, JSString* str)
 {
     MOZ_ASSERT(str->isAtom());
     JSFlatString* flat = str->ensureFlat(nullptr);
@@ -5557,13 +5557,13 @@ JS_FlattenString(JSContext* cx, JSString* str)
 }
 
 extern JS_PUBLIC_API(const Latin1Char*)
-JS_GetLatin1FlatStringChars(const JS::AutoCheckCannotGC& nogc, JSFlatString* str)
+JS_GetLatin1FlatStringChars(const JS::AutoRequireNoGC& nogc, JSFlatString* str)
 {
     return str->latin1Chars(nogc);
 }
 
 extern JS_PUBLIC_API(const char16_t*)
-JS_GetTwoByteFlatStringChars(const JS::AutoCheckCannotGC& nogc, JSFlatString* str)
+JS_GetTwoByteFlatStringChars(const JS::AutoRequireNoGC& nogc, JSFlatString* str)
 {
     return str->twoByteChars(nogc);
 }

@@ -5005,11 +5005,11 @@ extern JS_PUBLIC_API(bool)
 JS_StringHasLatin1Chars(JSString* str);
 
 extern JS_PUBLIC_API(const JS::Latin1Char*)
-JS_GetLatin1StringCharsAndLength(JSContext* cx, const JS::AutoCheckCannotGC& nogc, JSString* str,
+JS_GetLatin1StringCharsAndLength(JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
                                  size_t* length);
 
 extern JS_PUBLIC_API(const char16_t*)
-JS_GetTwoByteStringCharsAndLength(JSContext* cx, const JS::AutoCheckCannotGC& nogc, JSString* str,
+JS_GetTwoByteStringCharsAndLength(JSContext* cx, const JS::AutoRequireNoGC& nogc, JSString* str,
                                   size_t* length);
 
 extern JS_PUBLIC_API(bool)
@@ -5028,10 +5028,10 @@ extern JS_PUBLIC_API(JSFlatString*)
 JS_FlattenString(JSContext* cx, JSString* str);
 
 extern JS_PUBLIC_API(const JS::Latin1Char*)
-JS_GetLatin1FlatStringChars(const JS::AutoCheckCannotGC& nogc, JSFlatString* str);
+JS_GetLatin1FlatStringChars(const JS::AutoRequireNoGC& nogc, JSFlatString* str);
 
 extern JS_PUBLIC_API(const char16_t*)
-JS_GetTwoByteFlatStringChars(const JS::AutoCheckCannotGC& nogc, JSFlatString* str);
+JS_GetTwoByteFlatStringChars(const JS::AutoRequireNoGC& nogc, JSFlatString* str);
 
 static MOZ_ALWAYS_INLINE JSFlatString*
 JSID_TO_FLAT_STRING(jsid id)
