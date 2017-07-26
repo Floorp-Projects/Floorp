@@ -279,9 +279,7 @@ def mozconfig_options(mozconfig, automation, help):
             add(key, value)
             os.environ[key] = value
         for key, value in mozconfig['vars']['added'].iteritems():
-            # mozconfig_loader adds _IS_SET variables that are irrelevant
-            if not key.endswith('_IS_SET'):
-                add(key, value)
+            add(key, value)
         for key, (_, value) in mozconfig['vars']['modified'].iteritems():
             add(key, value)
 
@@ -909,13 +907,3 @@ def js_option(*args, **kwargs):
             return value.format(opt.option)
 
     add_old_configure_arg(js_option)
-
-
-# Bug 1278542: This function is a workaround to resolve
-# |android_ndk_include|'s dependency on 'gonkdir.' The
-# actual implementation is located in b2g/moz.configure.
-# Remove this function as soon as 'android_ndk_include'
-# depends on 'target.'
-@depends('--help')
-def gonkdir(_):
-    return None

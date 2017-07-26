@@ -130,26 +130,24 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
     return BoxNonStrictThis(cx, thisv, res);
 }
 
-bool
+void
 js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain, MutableHandleValue res)
 {
     RootedObject env(cx, envChain);
     while (true) {
         if (IsExtensibleLexicalEnvironment(env)) {
             res.set(env->as<LexicalEnvironmentObject>().thisValue());
-            return true;
+            return;
         }
         if (!env->enclosingEnvironment()) {
             // This can only happen in Debugger eval frames: in that case we
             // don't always have a global lexical env, see EvaluateInEnv.
             MOZ_ASSERT(env->is<GlobalObject>());
             res.set(GetThisValue(env));
-            return true;
+            return;
         }
         env = env->enclosingEnvironment();
     }
-
-    return true;
 }
 
 bool
@@ -2726,8 +2724,7 @@ CASE(JSOP_GLOBALTHIS)
 {
     if (script->hasNonSyntacticScope()) {
         PUSH_NULL();
-        if (!GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(), REGS.stackHandleAt(-1)))
-            goto error;
+        GetNonSyntacticGlobalThis(cx, REGS.fp()->environmentChain(), REGS.stackHandleAt(-1));
     } else {
         PUSH_COPY(cx->global()->lexicalEnvironment().thisValue());
     }

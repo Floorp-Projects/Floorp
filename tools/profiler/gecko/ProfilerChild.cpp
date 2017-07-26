@@ -39,6 +39,21 @@ ProfilerChild::RecvStart(const ProfilerInitParams& params)
 }
 
 mozilla::ipc::IPCResult
+ProfilerChild::RecvEnsureStarted(const ProfilerInitParams& params)
+{
+  nsTArray<const char*> filterArray;
+  for (size_t i = 0; i < params.filters().Length(); ++i) {
+    filterArray.AppendElement(params.filters()[i].get());
+  }
+
+  profiler_ensure_started(params.entries(), params.interval(),
+                          params.features(),
+                          filterArray.Elements(), filterArray.Length());
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ProfilerChild::RecvStop()
 {
   profiler_stop();

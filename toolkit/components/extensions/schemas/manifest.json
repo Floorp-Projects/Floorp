@@ -333,6 +333,24 @@
         ]
       },
       {
+        "id": "MatchPatternInternal",
+        "description": "Same as MatchPattern above, but includes moz-extension protocol",
+        "choices": [
+          {
+            "type": "string",
+            "enum": ["<all_urls>"]
+          },
+          {
+            "type": "string",
+            "pattern": "^(https?|wss?|file|ftp|moz-extension|\\*)://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
+          },
+          {
+            "type": "string",
+            "pattern": "^file:///.*$"
+          }
+        ]
+      },
+      {
         "id": "ContentScript",
         "type": "object",
         "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time. Based on InjectDetails, but using underscore rather than camel case naming conventions.",

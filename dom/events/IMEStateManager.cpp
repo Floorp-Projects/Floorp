@@ -534,6 +534,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   bool setIMEState = true;
 
   if (newTabParent) {
+    MOZ_ASSERT(XRE_IsParentProcess());
     if (aAction.mFocusChange == InputContextAction::MENU_GOT_PSEUDO_FOCUS ||
         aAction.mFocusChange == InputContextAction::MENU_LOST_PSEUDO_FOCUS) {
       // XXX When menu keyboard listener is being uninstalled, IME state needs
@@ -559,7 +560,7 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
            "will get focus actually"));
       }
     } else if (newWidget->GetInputContext().mOrigin !=
-                 InputContext::ORIGIN_CONTENT) {
+                 InputContext::ORIGIN_MAIN) {
       // When focus is NOT changed actually, we shouldn't set IME state if
       // current input context was set by a remote process since that means
       // that the window is being activated and the child process may have

@@ -83,7 +83,6 @@ export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 export MOZ_PACKAGE_JSSHELL=1
 
 # Use ccache
-. "$topsrcdir/build/mozconfig.cache"
 
 HOST_CC="$topsrcdir/gcc/bin/gcc"
 HOST_CXX="$topsrcdir/gcc/bin/g++"

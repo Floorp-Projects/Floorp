@@ -65,9 +65,9 @@ add_old_configure_assignment('YASM', have_yasm)
 # Android NDK
 # ==============================================================
 
-@depends('--disable-compile-environment', build_project, gonkdir, '--help')
-def compiling_android(compile_env, build_project, gonkdir, _):
-    return compile_env and (gonkdir or build_project in ('mobile/android', 'js'))
+@depends('--disable-compile-environment', build_project, '--help')
+def compiling_android(compile_env, build_project, _):
+    return compile_env and build_project in ('mobile/android', 'js')
 
 include('android-ndk.configure', when=compiling_android)
 

@@ -38,6 +38,7 @@ GeckoStyleContext::GeckoStyleContext(GeckoStyleContext* aParent,
                                      bool aSkipParentDisplayBasedStyleFixup)
   : nsStyleContext(aParent, aPseudoTag, aPseudoType)
   , mCachedResetData(nullptr)
+  , mRefCnt(0)
   , mChild(nullptr)
   , mEmptyChild(nullptr)
   , mRuleNode(Move(aRuleNode))
@@ -79,6 +80,21 @@ GeckoStyleContext::operator new(size_t sz, nsPresContext* aPresContext)
   // Check the recycle list first.
   return aPresContext->PresShell()->
     AllocateByObjectID(eArenaObjectID_GeckoStyleContext, sz);
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void
+GeckoStyleContext::Destroy()
+{
+  // Get the pres context.
+  RefPtr<nsPresContext> presContext = PresContext();
+  // Call our destructor.
+  this->~GeckoStyleContext();
+  // Don't let the memory be freed, since it will be recycled
+  // instead. Don't call the global operator delete.
+  presContext->PresShell()->
+    FreeByObjectID(eArenaObjectID_GeckoStyleContext, this);
 }
 
 GeckoStyleContext::~GeckoStyleContext()

@@ -44,17 +44,19 @@ async function expectPopupOpen(browser) {
   const {autoCompletePopup, autoCompletePopup: {richlistbox: itemsBox}} = browser;
   const listItemElems = itemsBox.querySelectorAll(".autocomplete-richlistitem");
 
-  await BrowserTestUtils.waitForCondition(() => autoCompletePopup.popupOpen);
+  await BrowserTestUtils.waitForCondition(() => autoCompletePopup.popupOpen,
+                                         "popup should be open");
   await BrowserTestUtils.waitForCondition(() => {
     return [...listItemElems].every(item => {
       return (item.getAttribute("originaltype") == "autofill-profile" ||
              item.getAttribute("originaltype") == "autofill-footer") &&
              item.hasAttribute("formautofillattached");
     });
-  });
+  }, "The popup should be a form autofill one");
 }
 
 async function openPopupOn(browser, selector) {
+  await SimpleTest.promiseFocus(browser);
   /* eslint no-shadow: ["error", { "allow": ["selector"] }] */
   await ContentTask.spawn(browser, {selector}, async function({selector}) {
     content.document.querySelector(selector).focus();

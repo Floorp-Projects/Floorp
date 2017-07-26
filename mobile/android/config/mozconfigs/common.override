@@ -8,4 +8,3 @@
 MOZ_REQUIRE_SIGNING=0
 
 . "$topsrcdir/build/mozconfig.common.override"
-. "$topsrcdir/build/mozconfig.cache"

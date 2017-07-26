@@ -46,5 +46,17 @@ Credential::GetType(nsAString& aType) const
   aType.Assign(mType);
 }
 
+void
+Credential::SetId(const nsAString& aId)
+{
+  mId.Assign(aId);
+}
+
+void
+Credential::SetType(const nsAString& aType)
+{
+  mType.Assign(aType);
+}
+
 } // namespace dom
 } // namespace mozilla

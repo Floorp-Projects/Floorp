@@ -18,6 +18,7 @@ async protocol PProfiler
 {
 child:
   async Start(ProfilerInitParams params);
+  async EnsureStarted(ProfilerInitParams params);
   async Stop();
   async Pause();
   async Resume();

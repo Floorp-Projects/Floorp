@@ -375,7 +375,7 @@
   <checkbox id="openpageSuggestion" label="&locbar.openpage.label;"
             accesskey="&locbar.openpage.accesskey;"
             preference="browser.urlbar.suggest.openpage"/>
-  <label class="text-link" onclick="gotoPref('general')">
+  <label class="text-link" onclick="gotoPref('search')">
     &suggestionSettings2.label;
   </label>
 </groupbox>
@@ -412,24 +412,27 @@
   <caption><label>&siteData.label;</label></caption>
 
   <hbox align="baseline">
-    <label id="totalSiteDataSize"></label>
-    <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
-    <spacer flex="1" />
-    <button id="clearSiteDataButton"
-            class="accessory-button"
-            icon="clear"
-            label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
+    <vbox flex="1">
+      <description flex="1">
+        <label id="totalSiteDataSize"></label>
+        <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+      </description>
+    </vbox>
+    <vbox align="end">
+      <button id="siteDataSettings"
+              class="accessory-button"
+              label="&siteDataSettings.label;"
+              accesskey="&siteDataSettings.accesskey;"
+              searchkeywords="&window.title;
+                              &hostCol.label;
+                              &statusCol.label;
+                              &usageCol.label;"/>
+      <button id="clearSiteDataButton"
+          class="accessory-button"
+          icon="clear"
+          label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
+    </vbox>
   </hbox>
-  <vbox align="end">
-    <button id="siteDataSettings"
-            class="accessory-button"
-            label="&siteDataSettings.label;"
-            accesskey="&siteDataSettings.accesskey;"
-            searchkeywords="&window.title;
-                            &hostCol.label;
-                            &statusCol.label;
-                            &usageCol.label;"/>
-  </vbox>
 </groupbox>
 
 <!-- Tracking -->
@@ -520,11 +523,11 @@
     </columns>
     <rows>
       <row id="notificationsPolicyRow" align="center">
-        <hbox flex="1">
+        <description flex="1">
           <label id="notificationsPolicy">&notificationsPolicyDesc3.label;</label>
           <label id="notificationsPolicyLearnMore"
                  class="learnMore text-link">&notificationsPolicyLearnMore.label;</label>
-        </hbox>
+        </description>
         <hbox pack="end">
           <button id="notificationsPolicyButton"
                   class="accessory-button"
@@ -593,12 +596,12 @@
   </description>
 
   <vbox>
-    <hbox align="center">
+    <description flex="1">
       <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
-                accesskey="&enableHealthReport1.accesskey;"/>
+                accesskey="&enableHealthReport1.accesskey;" flex="1" />
       <label id="FHRLearnMore"
              class="learnMore text-link">&healthReportLearnMore.label;</label>
-    </hbox>
+    </description>
 #ifndef MOZ_TELEMETRY_REPORTING
     <description id="TelemetryDisabledDesc" class="indent" control="telemetryGroup">&healthReportingDisabled.label;</description>
 #endif
@@ -608,7 +611,7 @@
     <checkbox id="automaticallySubmitCrashesBox"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"
               label="&alwaysSubmitCrashReports1.label;"
-              accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
+              accesskey="&alwaysSubmitCrashReports1.accesskey;" flex="1" />
     <label id="crashReporterLearnMore"
            class="learnMore text-link">&crashReporterLearnMore.label;</label>
   </hbox>

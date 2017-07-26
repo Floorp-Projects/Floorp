@@ -1131,6 +1131,8 @@ or run without that action (ie: --no-{action})"
             '--retry', '4',
             '--tooltool-manifest',
             tooltool_manifest_path,
+            '--artifact-manifest',
+            os.path.join(dirs['abs_src_dir'], 'toolchains.json'),
             '--tooltool-url',
             c['tooltool_url'],
         ]
