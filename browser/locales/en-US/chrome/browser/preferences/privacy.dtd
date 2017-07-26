@@ -22,8 +22,8 @@
 <!ENTITY trackingProtectionPBM6.label         "Use Tracking Protection in Private Browsing to block known trackers">
 <!ENTITY trackingProtectionPBM6.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
-<!ENTITY changeBlockList.label          "Change Block List">
-<!ENTITY changeBlockList.accesskey      "C">
+<!ENTITY changeBlockList2.label               "Change Block List…">
+<!ENTITY changeBlockList2.accesskey           "C">
 
 <!ENTITY  doNotTrack.description        "Send websites a “Do Not Track” signal that you don’t want to be tracked">
 <!ENTITY  doNotTrack.learnMore.label    "Learn more">
