@@ -629,7 +629,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
           aFontSize = styleFont->mFont.size;
         }
         rootFontSize = aFontSize;
-      } else if (aStyleContext && !aStyleContext->GetParent()) {
+      // FIXME(emilio, bug 1384656): We can reach this from servo right now...
+      } else if (aStyleContext && !aStyleContext->AsGecko()->GetParent()) {
         // This is the root element (XXX we don't really know this, but
         // nsRuleNode::SetFont makes the same assumption!), so we should
         // use StyleFont on this context to get the root element's
@@ -642,7 +643,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         // NOTE: We should not call ResolveStyleFor() against the root element
         // to obtain the root style here because it may lead to reentrant call
         // of nsStyleSet::GetContext().
-        nsStyleContext* rootStyle = aStyleContext;
+        GeckoStyleContext* rootStyle = aStyleContext->AsGecko();
         while (rootStyle->GetParent()) {
           rootStyle = rootStyle->GetParent();
         }
@@ -1110,7 +1111,7 @@ SetPairCoords(const nsCSSValue& aValue,
 }
 
 static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
-                       nsPresContext* aPresContext, nsStyleContext *aContext,
+                       nsPresContext* aPresContext, nsStyleContext* aContext,
                        nscolor& aResult, RuleNodeCacheConditions& aConditions)
 {
   bool    result = false;
@@ -10508,18 +10509,11 @@ nsRuleNode::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
 }
 
 /* static */ bool
-nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
+nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
                                     uint32_t ruleTypeMask,
                                     bool aAuthorColorsAllowed)
 {
-#ifdef MOZ_STYLO
-  if (aStyleContext->IsServo()) {
-    NS_WARNING("stylo: nsRuleNode::HasAuthorSpecifiedRules not implemented");
-    return true;
-  }
-#endif
-
-  RefPtr<GeckoStyleContext> styleContext = aStyleContext->AsGecko();
+  RefPtr<GeckoStyleContext> styleContext = aStyleContext;
 
   uint32_t inheritBits = 0;
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)

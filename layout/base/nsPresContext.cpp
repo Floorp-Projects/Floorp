@@ -2262,9 +2262,9 @@ bool
 nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                        uint32_t aRuleTypeMask) const
 {
-  if (mShell->StyleSet()->IsGecko()) {
+  if (auto* geckoStyleContext = aFrame->StyleContext()->GetAsGecko()) {
     return
-      nsRuleNode::HasAuthorSpecifiedRules(aFrame->StyleContext(),
+      nsRuleNode::HasAuthorSpecifiedRules(geckoStyleContext,
                                           aRuleTypeMask,
                                           UseDocumentColors());
   }

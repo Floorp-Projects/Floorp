@@ -568,8 +568,8 @@ MustReresolveStyle(const nsStyleContext* aContext)
       return true;
     }
 
-    return aContext->GetParent() &&
-           aContext->GetParent()->HasPseudoElementData();
+    return aContext->AsGecko()->GetParent() &&
+           aContext->HasPseudoElementData();
   }
 
   return false;
@@ -895,7 +895,7 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
       // with a pseudo-element that contains elements.  (We also allow
       // the element to be NAC, just in case some chrome JS calls
       // getComputedStyle on a NAC-implemented pseudo.)
-      nsStyleContext* topWithPseudoElementData = mStyleContext;
+      GeckoStyleContext* topWithPseudoElementData = mStyleContext->AsGecko();
       while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }

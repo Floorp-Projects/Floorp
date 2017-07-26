@@ -4096,21 +4096,30 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
 
   if (selectionElement &&
       selectionStatus == nsISelectionController::SELECTION_ON) {
-    RefPtr<nsStyleContext> sc = nullptr;
-    sc = mPresContext->StyleSet()->
-      ProbePseudoElementStyle(selectionElement,
-                              CSSPseudoElementType::mozSelection,
-                              mFrame->StyleContext());
+    RefPtr<nsStyleContext> sc =
+      mPresContext->StyleSet()->
+        ProbePseudoElementStyle(selectionElement,
+                                CSSPseudoElementType::mozSelection,
+                                mFrame->StyleContext());
     // Use -moz-selection pseudo class.
     if (sc) {
       mSelectionBGColor =
         sc->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
       mSelectionTextColor =
         sc->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
-      mHasSelectionShadow =
-        nsRuleNode::HasAuthorSpecifiedRules(sc,
-                                            NS_AUTHOR_SPECIFIED_TEXT_SHADOW,
-                                            true);
+      if (auto* geckoStyleContext = sc->GetAsGecko()) {
+        mHasSelectionShadow =
+          nsRuleNode::HasAuthorSpecifiedRules(geckoStyleContext,
+                                              NS_AUTHOR_SPECIFIED_TEXT_SHADOW,
+                                              true);
+      } else {
+        NS_WARNING("stylo: Need a way to get HasAuthorSpecifiedRules from a "
+                   "raw style context");
+        // Or at least an element and a pseudo-style, which is probably a bit
+        // more doable, since we know that, at least when not in the presence of
+        // first-line / first-letter, we're inheriting from selectionElement.
+        mHasSelectionShadow = true;
+      }
       if (mHasSelectionShadow) {
         mSelectionShadow = sc->StyleText()->mTextShadow;
       }
