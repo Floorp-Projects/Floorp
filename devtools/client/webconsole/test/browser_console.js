@@ -17,7 +17,7 @@ const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 const TEST_IMAGE = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-image.png";
 
-"use strict";
+const {ObjectClient} = require("devtools/shared/client/main");
 
 add_task(function* () {
   yield loadTab(TEST_URI);
@@ -31,11 +31,11 @@ add_task(function* () {
 
   hud = yield opened;
   ok(hud, "browser console opened");
-
-  yield consoleOpened(hud);
+  yield testMessages(hud);
+  yield testCPOWInspection(hud);
 });
 
-function consoleOpened(hud) {
+function testMessages(hud) {
   hud.jsterm.clearOutput(true);
 
   expectUncaughtException();
@@ -157,6 +157,28 @@ function consoleOpened(hud) {
       },
     ],
   });
+}
+
+function* testCPOWInspection(hud) {
+  // Directly request evaluation to get an actor for the selected browser.
+  // Note that this doesn't actually render a message, and instead allows us
+  // us to assert that inspecting an object doesn't throw in the server.
+  // This would be done in a mochitest-chrome suite, but that doesn't run in
+  // e10s, so it's harder to get ahold of a CPOW.
+  let cpowEval = yield hud.jsterm.requestEvaluation("gBrowser.selectedBrowser");
+  info("Creating an ObjectClient with: " + cpowEval.result.actor);
+
+  let objectClient = new ObjectClient(hud.jsterm.hud.proxy.client, {
+    actor: cpowEval.result.actor,
+  });
+
+  // Before the fix for Bug 1382833, this wouldn't resolve due to a CPOW error
+  // in the ObjectActor.
+  let prototypeAndProperties = yield objectClient.getPrototypeAndProperties();
+
+  // Just a sanity check to make sure a valid packet came back
+  is(prototypeAndProperties.prototype.class, "XBL prototype JSClass",
+    "Looks like a valid response");
 }
 
 function waitForConsole() {
