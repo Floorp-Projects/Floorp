@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test backend of blank document</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<iframe></iframe>
+<pre id="log">
+<script>
+SimpleTest.waitForExplicitFinish();
+let win = window.open("file_blank_doc_backend.html", "", "width=500,height=500");
+function finish(parentWin, iframeWin) {
+  let parentDOMUtils = SpecialPowers.getDOMWindowUtils(parentWin);
+  let iframeDOMUtils = SpecialPowers.getDOMWindowUtils(iframeWin);
+  is(parentDOMUtils.isStyledByServo, iframeDOMUtils.isStyledByServo,
+     "Blank document backend should match the parent document");
+  win.close();
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>
