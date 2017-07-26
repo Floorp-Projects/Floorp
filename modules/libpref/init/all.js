@@ -709,7 +709,11 @@ pref("apz.fling_friction", "0.002");
 pref("apz.fling_min_velocity_threshold", "0.5");
 pref("apz.fling_stop_on_tap_threshold", "0.05");
 pref("apz.fling_stopped_threshold", "0.01");
+#ifdef NIGHTLY_BUILD
+pref("apz.frame_delay.enabled", true);
+#else
 pref("apz.frame_delay.enabled", false);
+#endif
 #if defined(NIGHTLY_BUILD) && !defined(MOZ_WIDGET_ANDROID)
 pref("apz.keyboard.enabled", true);
 #else
