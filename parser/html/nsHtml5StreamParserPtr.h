@@ -52,8 +52,7 @@ private:
   void release(nsHtml5StreamParser* aPtr)
   {
     nsCOMPtr<nsIRunnable> releaser = new nsHtml5StreamParserReleaser(aPtr);
-    if (NS_FAILED(aPtr->DispatchToMain("nsHtml5StreamParserReleaser",
-                                       releaser.forget()))) {
+    if (NS_FAILED(aPtr->DispatchToMain(releaser.forget()))) {
       NS_WARNING("Failed to dispatch releaser event.");
     }
   }

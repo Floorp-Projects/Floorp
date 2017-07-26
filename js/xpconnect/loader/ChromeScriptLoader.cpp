@@ -121,9 +121,7 @@ OffThreadScriptLoaderCallback(void* aToken, void* aCallbackData)
 
     scriptCompiler->SetToken(aToken);
 
-    SystemGroup::Dispatch("ScriptLoader::FinishCompile",
-                          TaskCategory::Other,
-                          scriptCompiler.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, scriptCompiler.forget());
 }
 
 bool

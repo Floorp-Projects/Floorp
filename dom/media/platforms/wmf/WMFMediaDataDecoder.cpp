@@ -67,9 +67,7 @@ SendTelemetry(unsigned long hr)
       Telemetry::Accumulate(Telemetry::MEDIA_WMF_DECODE_ERROR, sample);
     });
 
-  SystemGroup::Dispatch("WMFMediaDataDecoder::SendTelemetry",
-                        TaskCategory::Other,
-                        runnable.forget());
+  SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 RefPtr<ShutdownPromise>

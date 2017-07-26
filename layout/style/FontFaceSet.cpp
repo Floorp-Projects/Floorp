@@ -1522,8 +1522,7 @@ FontFaceSet::DispatchCheckLoadingFinishedAfterDelay()
     NewRunnableMethod("dom::FontFaceSet::CheckLoadingFinishedAfterDelay",
                       this,
                       &FontFaceSet::CheckLoadingFinishedAfterDelay);
-  mDocument->Dispatch("FontFaceSet::CheckLoadingFinishedAfterDelay",
-                      TaskCategory::Other, checkTask.forget());
+  mDocument->Dispatch(TaskCategory::Other, checkTask.forget());
 }
 
 void

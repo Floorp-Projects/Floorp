@@ -42,8 +42,7 @@ struct MainThreadRelease
       return;
     }
     DebugOnly<nsresult> rv =
-      SystemGroup::Dispatch("mscom::MainThreadRelease",
-                            TaskCategory::Other,
+      SystemGroup::Dispatch(TaskCategory::Other,
                             NewNonOwningRunnableMethod("mscom::MainThreadRelease",
                                                        aPtr, &T::Release));
     MOZ_ASSERT(NS_SUCCEEDED(rv));

@@ -163,7 +163,7 @@ nsPagePrintTimer::Notify(nsITimer *timer)
     if (donePrePrint && !mWaitingForRemotePrint) {
       StopWatchDogTimer();
       // Pass nullptr here since name already was set in constructor.
-      mDocument->Dispatch(nullptr, TaskCategory::Other, do_AddRef(this));
+      mDocument->Dispatch(TaskCategory::Other, do_AddRef(this));
     } else {
       // Start the watch dog if we're waiting for preprint to ensure that if any
       // mozPrintCallbacks take to long we error out.

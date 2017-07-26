@@ -1377,7 +1377,7 @@ nsHtml5StreamParser::FlushTreeOpsAndDisarmTimer()
   }
   mTreeBuilder->Flush();
   nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
-  if (NS_FAILED(DispatchToMain("nsHtml5ExecutorFlusher", runnable.forget()))) {
+  if (NS_FAILED(DispatchToMain(runnable.forget()))) {
     NS_WARNING("failed to dispatch executor flush event");
   }
 }
@@ -1414,7 +1414,7 @@ nsHtml5StreamParser::ParseAvailableData()
               // flush right above here did nothing.
               nsCOMPtr<nsIRunnable> runnable(mLoadFlusher);
               if (NS_FAILED(
-                    DispatchToMain("nsHtml5LoadFlusher", runnable.forget()))) {
+                    DispatchToMain(runnable.forget()))) {
                 NS_WARNING("failed to dispatch load flush event");
               }
             }
@@ -1757,7 +1757,7 @@ nsHtml5StreamParser::TimerFlush()
     if (mTokenizer->FlushViewSource()) {
       nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
       if (NS_FAILED(
-            DispatchToMain("nsHtml5ExecutorFlusher", runnable.forget()))) {
+            DispatchToMain(runnable.forget()))) {
         NS_WARNING("failed to dispatch executor flush event");
       }
     }
@@ -1767,7 +1767,7 @@ nsHtml5StreamParser::TimerFlush()
     if (mTreeBuilder->Flush(true)) {
       nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
       if (NS_FAILED(
-            DispatchToMain("nsHtml5ExecutorFlusher", runnable.forget()))) {
+            DispatchToMain(runnable.forget()))) {
         NS_WARNING("failed to dispatch executor flush event");
       }
     }
@@ -1785,19 +1785,16 @@ nsHtml5StreamParser::MarkAsBroken(nsresult aRv)
   mozilla::DebugOnly<bool> hadOps = mTreeBuilder->Flush(false);
   NS_ASSERTION(hadOps, "Should have had the markAsBroken op!");
   nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
-  if (NS_FAILED(DispatchToMain("nsHtml5ExecutorFlusher", runnable.forget()))) {
+  if (NS_FAILED(DispatchToMain(runnable.forget()))) {
     NS_WARNING("failed to dispatch executor flush event");
   }
 }
 
 nsresult
-nsHtml5StreamParser::DispatchToMain(const char* aName,
-                                    already_AddRefed<nsIRunnable>&& aRunnable)
+nsHtml5StreamParser::DispatchToMain(already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (mDocGroup) {
-    return mDocGroup->Dispatch(aName, TaskCategory::Network, runnable.forget());
+    return mDocGroup->Dispatch(TaskCategory::Network, Move(aRunnable));
   }
-  return SchedulerGroup::UnlabeledDispatch(
-    aName, TaskCategory::Network, runnable.forget());
+  return SchedulerGroup::UnlabeledDispatch(TaskCategory::Network, Move(aRunnable));
 }

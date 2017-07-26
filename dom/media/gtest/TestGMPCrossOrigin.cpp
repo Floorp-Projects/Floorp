@@ -428,7 +428,7 @@ ClearGMPStorage(already_AddRefed<nsIRunnable> aContinuation,
 {
   RefPtr<ClearGMPStorageTask> task(
     new ClearGMPStorageTask(Move(aContinuation), aTarget, aSince));
-  SystemGroup::Dispatch("ClearGMPStorage", TaskCategory::Other, task.forget());
+  SystemGroup::Dispatch(TaskCategory::Other, task.forget());
 }
 
 static void
@@ -799,8 +799,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     EnumerateGMPStorageDir(NS_LITERAL_CSTRING("id"),
                            NodeIdCollector(siteInfo.get()));
     // Invoke "Forget this site" on the main thread.
-    SystemGroup::Dispatch("TestForgetThisSite_Forget",
-                          TaskCategory::Other,
+    SystemGroup::Dispatch(TaskCategory::Other,
                           NewRunnableMethod<UniquePtr<NodeInfo>&&>(
                             "GMPStorageTest::TestForgetThisSite_Forget",
                             this,
@@ -1219,7 +1218,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
         "GMPStorageTest::Shutdown", this, &GMPStorageTest::Shutdown),
       Move(aContinuation),
       mNodeId));
-    SystemGroup::Dispatch("GMPShutdownObserver", TaskCategory::Other, task.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void Shutdown() {
@@ -1238,7 +1237,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     Shutdown();
     nsCOMPtr<nsIRunnable> task =
       NewRunnableMethod("GMPStorageTest::Dummy", this, &GMPStorageTest::Dummy);
-    SystemGroup::Dispatch("GMPStorageTest::Dummy", TaskCategory::Other, task.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void SessionMessage(const nsCString& aSessionId,

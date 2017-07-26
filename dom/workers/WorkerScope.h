@@ -208,7 +208,7 @@ public:
   // Override DispatchTrait API to target the worker thread.  Dispatch may
   // return failure if the worker thread is not alive.
   nsresult
-  Dispatch(const char* aName, TaskCategory aCategory,
+  Dispatch(TaskCategory aCategory,
            already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   nsISerialEventTarget*
@@ -421,7 +421,7 @@ public:
   // Override DispatchTrait API to target the worker thread.  Dispatch may
   // return failure if the worker thread is not alive.
   nsresult
-  Dispatch(const char* aName, TaskCategory aCategory,
+  Dispatch(TaskCategory aCategory,
            already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   nsISerialEventTarget*

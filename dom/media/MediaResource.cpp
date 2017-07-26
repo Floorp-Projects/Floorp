@@ -64,7 +64,6 @@ MediaResource::Destroy()
     return;
   }
   nsresult rv = SystemGroup::Dispatch(
-    "MediaResource::Destroy",
     TaskCategory::Other,
     NewNonOwningRunnableMethod(
       "MediaResource::Destroy", this, &MediaResource::Destroy));

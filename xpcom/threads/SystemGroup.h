@@ -21,8 +21,7 @@ class SystemGroup
 {
  public:
   // This method is safe to use from any thread.
-  static nsresult Dispatch(const char* aName,
-                           TaskCategory aCategory,
+  static nsresult Dispatch(TaskCategory aCategory,
                            already_AddRefed<nsIRunnable>&& aRunnable);
 
   // This method is safe to use from any thread.
