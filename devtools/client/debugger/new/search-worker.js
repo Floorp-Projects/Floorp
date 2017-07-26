@@ -784,6 +784,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function getMatches(query, text, modifiers) {
+	  if (!query || !text || !modifiers) {
+	    return [];
+	  }
 	  var regexQuery = (0, _buildQuery2.default)(query, modifiers, {
 	    isGlobal: true
 	  });
