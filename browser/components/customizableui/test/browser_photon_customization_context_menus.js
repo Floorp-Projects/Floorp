@@ -429,3 +429,32 @@ add_task(async function custom_context_menus() {
   widget.remove();
   ok(CustomizableUI.inDefaultState, "Should be in default state after removing button.");
 });
+
+// Bug 1383458 - shouldn't enable 'pin to overflow menu' for flexible spaces
+add_task(async function flexible_space_context_menu() {
+  CustomizableUI.addWidgetToArea("spring", "nav-bar");
+  let springs = document.querySelectorAll("#nav-bar toolbarspring");
+  let lastSpring = springs[springs.length - 1];
+  ok(lastSpring, "we added a spring");
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = popupShown(contextMenu);
+  EventUtils.synthesizeMouse(lastSpring, 2, 2, {type: "contextmenu", button: 2});
+  await shownPromise;
+  let expectedEntries = [
+    [".customize-context-moveToPanel", false],
+    [".customize-context-removeFromToolbar", true],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
+  contextMenu.hidePopup();
+  gCustomizeMode.removeFromArea(lastSpring);
+  ok(!lastSpring.parentNode, "Spring should have been removed successfully.");
+});
