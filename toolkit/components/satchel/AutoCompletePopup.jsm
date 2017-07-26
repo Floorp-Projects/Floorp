@@ -152,10 +152,11 @@ this.AutoCompletePopup = {
       return;
     }
 
+    let firstResultStyle = results[0].style;
     this.weakBrowser = Cu.getWeakReference(browser);
     this.openedPopup = browser.autoCompletePopup;
     // the layout varies according to different result type
-    this.openedPopup.setAttribute("firstresultstyle", results[0].style);
+    this.openedPopup.setAttribute("firstresultstyle", firstResultStyle);
     this.openedPopup.hidden = false;
     // don't allow the popup to become overly narrow
     this.openedPopup.setAttribute("width", Math.max(100, rect.width));
@@ -168,6 +169,12 @@ this.AutoCompletePopup = {
     if (results.length) {
       // Reset fields that were set from the last time the search popup was open
       this.openedPopup.mInput = AutoCompleteResultView;
+      // Temporarily increase the maxRows as we don't want to show
+      // the scrollbar in form autofill popup.
+      if (firstResultStyle == "autofill-profile") {
+        this.openedPopup._normalMaxRows = this.openedPopup.maxRows;
+        this.openedPopup.mInput.maxRows = 100;
+      }
       this.openedPopup.showCommentColumn = false;
       this.openedPopup.showImageColumn = false;
       this.openedPopup.addEventListener("popuphidden", this);
