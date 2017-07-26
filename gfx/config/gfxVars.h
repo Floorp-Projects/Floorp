@@ -39,6 +39,7 @@ class gfxVarReceiver;
   _(ScreenDepth,                int32_t,          0)                    \
   _(GREDirectory,               nsCString,        nsCString())          \
   _(UseOMTP,                    bool,             false)                \
+  _(AllowD3D11KeyedMutex,       bool,             false)                \
 
   /* Add new entries above this line. */
 

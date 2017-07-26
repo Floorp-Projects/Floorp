@@ -136,13 +136,13 @@
             "parameters": [
               {
                 "name": "result",
-                "type": "object",
-                "additionalProperties": {"type": "any"},
+                "type": "any",
                 "description": "The result of evaluation."
               },
               {
                 "name": "exceptionInfo",
                 "type": "object",
+                "optional": true,
                 "description": "An object providing details if an exception occurred while evaluating the expression.",
                 "properties": {
                   "isError": {

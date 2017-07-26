@@ -65,9 +65,9 @@ const convertNodeToHistoryItem = node => {
 const convertNodeToVisitItem = node => {
   return {
     id: node.pageGuid,
-    visitId: node.visitId,
+    visitId: String(node.visitId),
     visitTime: PlacesUtils.toDate(node.time).getTime(),
-    referringVisitId: node.fromVisitId,
+    referringVisitId: String(node.fromVisitId),
     transition: getTransition(node.visitType),
   };
 };

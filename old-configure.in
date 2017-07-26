@@ -84,65 +84,14 @@ if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ANDROID_NDK
 fi # COMPILE_ENVIRONMENT
 
-if test -n "$gonkdir"; then
-    dnl export for js/src/configure. We can't pass the option down normally,
-    dnl because it's a `--enable-project=b2g`-only option.
-    export gonkdir
-    kernel_name=`uname -s | tr "[[:upper:]]" "[[:lower:]]"`
-    android_source="$gonkdir"
-    ANDROID_SOURCE="$android_source"
-
-    case "$android_version" in
-    15)
-        CPPFLAGS="-I$gonkdir/frameworks/base/opengl/include -I$gonkdir/frameworks/base/native/include -I$gonkdir/frameworks/base/include -I$gonkdir/frameworks/base/services/camera -I$gonkdir/frameworks/base/include/media/ -I$gonkdir/frameworks/base/include/media/stagefright -I$gonkdir/frameworks/base/include/media/stagefright/openmax -I$gonkdir/frameworks/base/media/libstagefright/rtsp -I$gonkdir/frameworks/base/media/libstagefright/include -I$gonkdir/external/dbus -I$gonkdir/dalvik/libnativehelper/include/nativehelper $CPPFLAGS"
-        MOZ_SECUREELEMENT=1
-        ;;
-    17|18)
-        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_SECUREELEMENT=1
-        ;;
-    19)
-        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_AUDIO_OFFLOAD=1
-        MOZ_SECUREELEMENT=1
-        AC_SUBST(MOZ_AUDIO_OFFLOAD)
-        AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        ;;
-    21|22)
-        CPPFLAGS="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include $CPPFLAGS"
-        MOZ_AUDIO_OFFLOAD=1
-        AC_SUBST(MOZ_AUDIO_OFFLOAD)
-        AC_DEFINE(MOZ_AUDIO_OFFLOAD)
-        ;;
-    *)
-        AC_MSG_ERROR([Unsupported platform version: $android_version])
-        ;;
-    esac
-
-    CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $CPPFLAGS"
-    LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib $LDFLAGS"
-
+case "$target" in
+*-android*|*-linuxandroid*)
     AC_DEFINE(ANDROID)
-    AC_DEFINE_UNQUOTED(ANDROID_VERSION, $android_version)
-    AC_DEFINE(HAVE_SYS_UIO_H)
-    AC_DEFINE(HAVE_PTHREADS)
-
-    dnl ANDROID_VERSION is only required for the AC_SUBST below
-    ANDROID_VERSION=$android_version
-    AC_SUBST(ANDROID_VERSION)
-
-    direct_nspr_config=1
-
-else
-    case "$target" in
-    *-android*|*-linuxandroid*)
-        AC_DEFINE(ANDROID)
-        ;;
-    *-linux*)
-        AC_PATH_PROG(OBJCOPY,objcopy)
-        ;;
-    esac
-fi
+    ;;
+*-linux*)
+    AC_PATH_PROG(OBJCOPY,objcopy)
+    ;;
+esac
 
 case "$target" in
 *-apple-darwin*)
@@ -513,7 +462,7 @@ dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ARCH_OPTS
 else
-    if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+    if test "$OS_TARGET" = Android; then
         dnl Default Android builds to ARMv7.
         MOZ_ARCH=armv7-a
     fi
@@ -582,16 +531,14 @@ if test "$GNU_CC"; then
     AC_MSG_CHECKING([for -z text option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS -Wl,-z,text"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
-                  [NSPR_LDFLAGS="$NSPR_LDFLAGS -Wl,-z,text"],
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
     AC_MSG_CHECKING([for --build-id option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS -Wl,--build-id"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
-                  [NSPR_LDFLAGS="$NSPR_LDFLAGS -Wl,--build-id"],
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
@@ -857,13 +804,9 @@ case "$target" in
 
 *-android*|*-linuxandroid*)
     AC_DEFINE(NO_PW_GECOS)
-    if test -n "$gonkdir"; then
-        _PLATFORM_HAVE_RIL=1
-        MOZ_SYNTH_PICO=1
-    else
-        if test "$COMPILE_ENVIRONMENT"; then
-            MOZ_LINKER=1
-        fi
+
+    if test "$COMPILE_ENVIRONMENT"; then
+        MOZ_LINKER=1
     fi
 
     MOZ_GFX_OPTIMIZE_MOBILE=1
@@ -914,7 +857,6 @@ case "$target" in
         RC='$(WINDRES)'
         # Use static libgcc and libstdc++
         LDFLAGS="$LDFLAGS -static"
-        NSPR_LDFLAGS="$NSPR_LDFLAGS -static-libgcc"
         # Use temp file for windres (bug 213281)
         RCFLAGS='-O coff --use-temp-file'
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
@@ -1850,7 +1792,6 @@ if test -n "$MOZ_LINKER" -a "$OS_TARGET" = "Android"; then
     dnl Using LDFLAGS in nspr is safe, since we only really build
     dnl libraries there.
     DSO_LDOPTS="$DSO_LDOPTS -nostartfiles"
-    NSPR_LDFLAGS="$NSPR_LDFLAGS -nostartfiles"
   fi
 fi
 
@@ -2297,13 +2238,11 @@ dnl Ensure Android SDK and build-tools versions depending on
 dnl mobile target.
 dnl ========================================================
 
-if test -z "$gonkdir" ; then
-    case "$MOZ_BUILD_APP" in
-    mobile/android)
-        MOZ_ANDROID_SDK(23, 23, 23.0.3 23.0.1, 25.3.2 25.3.1)
-        ;;
-    esac
-fi
+case "$MOZ_BUILD_APP" in
+mobile/android)
+    MOZ_ANDROID_SDK(23, 23, 23.0.3 23.0.1, 25.3.2 25.3.1)
+    ;;
+esac
 
 dnl ========================================================
 dnl =
@@ -2740,19 +2679,6 @@ if test -n "$MOZ_APPLEMEDIA"; then
 fi
 fi # COMPILE_ENVIRONMENT
 
-dnl ========================================================
-dnl = Built-in fragmented MP4 support.
-dnl ========================================================
-
-if test x"$MOZ_WIDGET_TOOLKIT" = x"gonk" -a -n "$MOZ_FMP4" -a -n "$android_version"; then
-    # we now know for sure that $android_version is not an empty string!
-    if test "$android_version" -ge "18"; then
-        MOZ_GONK_MEDIACODEC=1
-        AC_SUBST(MOZ_GONK_MEDIACODEC)
-    fi
-fi
-
-
 dnl system libvpx Support
 dnl ========================================================
 MOZ_ARG_WITH_BOOL(system-libvpx,
@@ -2949,13 +2875,9 @@ MOZ_ARG_DISABLE_BOOL(pulseaudio,
 
 if test -n "$MOZ_PULSEAUDIO"; then
     AC_DEFINE(MOZ_PULSEAUDIO)
-    if test -z "$gonkdir"; then
-        PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
-             [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
-              AC_MSG_ERROR([pulseaudio audio backend requires libpulse development package])])
-    else
-        MOZ_PULSEAUDIO_CFLAGS="-I$gonkdir/external/pulseaudio/pulseaudio/src"
-    fi
+    PKG_CHECK_MODULES(MOZ_PULSEAUDIO, libpulse, ,
+         [echo "$MOZ_PULSEAUDIO_PKG_ERRORS"
+          AC_MSG_ERROR([pulseaudio audio backend requires libpulse development package])])
 fi
 
 AC_SUBST(MOZ_PULSEAUDIO)
@@ -3549,9 +3471,6 @@ MOZ_ARG_DISABLE_BOOL(sandbox,
 dnl ========================================================
 dnl = Content process sandboxing
 dnl ========================================================
-if test -n "$gonkdir"; then
-    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
-fi
 
 case "$OS_TARGET" in
 WINNT)
@@ -4189,29 +4108,6 @@ if test -n "$MOZ_DISABLE_STARTUPCACHE"; then
 fi
 AC_SUBST(MOZ_DISABLE_STARTUPCACHE)
 
-dnl =========================================
-dnl = Enable packaging Gaia with B2G desktop
-dnl =========================================
-if test x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
-    if test -n "$GAIADIR" -a ! -d "$GAIADIR" ; then
-        AC_MSG_ERROR([GAIADIR '$GAIADIR' isn't a valid directory])
-    fi
-
-    AC_SUBST(GAIADIR)
-    if test -n "$GAIADIR" ; then
-        AC_DEFINE(PACKAGE_GAIA)
-    fi
-
-    if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
-        AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
-    fi
-
-    if test -n "$FXOS_SIMULATOR" ; then
-        AC_DEFINE(FXOS_SIMULATOR)
-        AC_SUBST(FXOS_SIMULATOR)
-    fi
-fi
-
 dnl ========================================================
 dnl = Enable Pico Speech Synthesis (Gonk usually)
 dnl ========================================================
@@ -4668,7 +4564,7 @@ else
 fi
 
 case "$MOZ_WIDGET_TOOLKIT" in
-android|gonk)
+android)
     TK_CFLAGS="$MOZ_CAIRO_CFLAGS $MOZ_PIXMAN_CFLAGS"
     TK_LIBS="$MOZ_CAIRO_LIBS $MOZ_PIXMAN_LIBS"
     ;;
@@ -4704,11 +4600,6 @@ dnl option to disable necko's wifi scanner
 dnl
 
 case "$OS_TARGET" in
-  Android)
-    if test -n "$gonkdir"; then
-      NECKO_WIFI=1
-    fi
-    ;;
   Darwin)
     if test -z "$MOZ_IOS"; then
       NECKO_WIFI=1

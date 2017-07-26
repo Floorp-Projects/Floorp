@@ -425,6 +425,25 @@ public:
 
   static bool Exists(PSLockRef) { return !!sInstance; }
 
+  static bool Equals(PSLockRef,
+                     int aEntries, double aInterval, uint32_t aFeatures,
+                     const char** aFilters, uint32_t aFilterCount)
+  {
+    if (sInstance->mEntries != aEntries ||
+        sInstance->mInterval != aInterval ||
+        sInstance->mFeatures != aFeatures ||
+        sInstance->mFilters.length() != aFilterCount) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < sInstance->mFilters.length(); ++i) {
+      if (strcmp(sInstance->mFilters[i].c_str(), aFilters[i]) != 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static size_t SizeOf(PSLockRef, MallocSizeOf aMallocSizeOf)
   {
     size_t n = aMallocSizeOf(sInstance);
@@ -1680,6 +1699,23 @@ PrintUsageThenExit(int aExitCode)
     "  measured in milliseconds, when the profiler is first started.\n"
     "  If unset, the platform default is used.\n"
     "\n"
+    "  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=<Number>\n"
+    "  If MOZ_PROFILER_STARTUP is set, specifies the profiling features, as\n"
+    "  the integer value of the features bitfield.\n"
+    "  If unset, the value from MOZ_PROFILER_STARTUP_FEATURES is used.\n"
+    "\n"
+    "  MOZ_PROFILER_STARTUP_FEATURES=<Features>\n"
+    "  If MOZ_PROFILER_STARTUP is set, specifies the profiling features, as\n"
+    "  a comma-separated list of strings.\n"
+    "  Ignored if  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
+    "  If unset, the platform default is used.\n"
+    "\n"
+    "  MOZ_PROFILER_STARTUP_FILTERS=<Filters>\n"
+    "  If MOZ_PROFILER_STARTUP is set, specifies the thread filters, as a\n"
+    "  comma-separated list of strings. A given thread will be sampled if any\n"
+    "  of the filters is a case-insensitive substring of the thread name.\n"
+    "  If unset, a default is used.\n"
+    "\n"
     "  MOZ_PROFILER_SHUTDOWN\n"
     "  If set, the profiler saves a profile to the named file on shutdown.\n"
     "\n"
@@ -1989,6 +2025,33 @@ GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
 NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
 
+static bool
+HasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
+{
+  for (size_t i = 0; i < aFeatureCount; i++) {
+    if (strcmp(aFeatures[i], aFeature) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+uint32_t
+ParseFeaturesFromStringArray(const char** aFeatures, uint32_t aFeatureCount)
+{
+  #define ADD_FEATURE_BIT(n_, str_, Name_) \
+    if (HasFeature(aFeatures, aFeatureCount, str_)) { \
+      features |= ProfilerFeature::Name_; \
+    }
+
+  uint32_t features = 0;
+  PROFILER_FOR_EACH_FEATURE(ADD_FEATURE_BIT)
+
+  #undef ADD_FEATURE_BIT
+
+  return features;
+}
+
 // Find the ThreadInfo for the current thread. This should only be called in
 // places where TLSInfo can't be used. On success, *aIndexOut is set to the
 // index if it is non-null.
@@ -2106,12 +2169,39 @@ MozGlueLabelExit(PseudoStack* aPseudoStack)
   }
 }
 
+static nsTArray<const char*>
+SplitAtCommas(const char* aString, UniquePtr<char[]>& aStorage)
+{
+  size_t len = strlen(aString);
+  aStorage = MakeUnique<char[]>(len + 1);
+  PodCopy(aStorage.get(), aString, len + 1);
+
+  // Iterate over all characters in aStorage and split at commas, by
+  // overwriting commas with the null char.
+  nsTArray<const char*> array;
+  size_t currentElementStart = 0;
+  for (size_t i = 0; i <= len; i++) {
+    if (aStorage[i] == ',') {
+      aStorage[i] = '\0';
+    }
+    if (aStorage[i] == '\0') {
+      array.AppendElement(&aStorage[currentElementStart]);
+      currentElementStart = i + 1;
+    }
+  }
+  return array;
+}
+
 void
 profiler_init(void* aStackTop)
 {
   LOG("profiler_init");
 
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
+
+  if (getenv("MOZ_PROFILER_HELP")) {
+    PrintUsageThenExit(0); // terminates execution
+  }
 
   SharedLibraryInfo::Initialize();
 
@@ -2127,11 +2217,12 @@ profiler_init(void* aStackTop)
                       ProfilerFeature::Threads |
                       0;
 
-  const char* filters[] = { "GeckoMain", "Compositor", "DOM Worker" };
+  UniquePtr<char[]> filterStorage;
 
-  if (getenv("MOZ_PROFILER_HELP")) {
-    PrintUsageThenExit(0); // terminates execution
-  }
+  nsTArray<const char*> filters;
+  filters.AppendElement("GeckoMain");
+  filters.AppendElement("Compositor");
+  filters.AppendElement("DOM Worker");
 
   int entries = PROFILER_DEFAULT_ENTRIES;
   double interval = PROFILER_DEFAULT_INTERVAL;
@@ -2167,14 +2258,15 @@ profiler_init(void* aStackTop)
     // startup, even if no profiling is actually to be done. So, instead, it is
     // created on demand at the first call to PlatformStart().
 
-    if (!getenv("MOZ_PROFILER_STARTUP")) {
+    const char* startupEnv = getenv("MOZ_PROFILER_STARTUP");
+    if (!startupEnv || startupEnv[0] == '\0') {
       return;
     }
 
     LOG("- MOZ_PROFILER_STARTUP is set");
 
     const char* startupEntries = getenv("MOZ_PROFILER_STARTUP_ENTRIES");
-    if (startupEntries) {
+    if (startupEntries && startupEntries[0] != '\0') {
       errno = 0;
       entries = strtol(startupEntries, nullptr, 10);
       if (errno == 0 && entries > 0) {
@@ -2185,7 +2277,7 @@ profiler_init(void* aStackTop)
     }
 
     const char* startupInterval = getenv("MOZ_PROFILER_STARTUP_INTERVAL");
-    if (startupInterval) {
+    if (startupInterval && startupInterval[0] != '\0') {
       errno = 0;
       interval = PR_strtod(startupInterval, nullptr);
       if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
@@ -2195,14 +2287,44 @@ profiler_init(void* aStackTop)
       }
     }
 
+    const char* startupFeaturesBitfield =
+      getenv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD");
+    if (startupFeaturesBitfield && startupFeaturesBitfield[0] != '\0') {
+      errno = 0;
+      features = strtol(startupFeaturesBitfield, nullptr, 10);
+      if (errno == 0 && features != 0) {
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
+      } else {
+        PrintUsageThenExit(1);
+      }
+    } else {
+      const char* startupFeatures = getenv("MOZ_PROFILER_STARTUP_FEATURES");
+      if (startupFeatures && startupFeatures[0] != '\0') {
+        // Interpret startupFeatures as a list of feature strings, separated by
+        // commas.
+        UniquePtr<char[]> featureStringStorage;
+        nsTArray<const char*> featureStringArray =
+          SplitAtCommas(startupFeatures, featureStringStorage);
+        features = ParseFeaturesFromStringArray(featureStringArray.Elements(),
+                                                featureStringArray.Length());
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
+      }
+    }
+
+    const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
+    if (startupFilters && startupFilters[0] != '\0') {
+      filters = SplitAtCommas(startupFilters, filterStorage);
+      LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+    }
+
     locked_profiler_start(lock, entries, interval, features,
-                          filters, MOZ_ARRAY_LENGTH(filters));
+                          filters.Elements(), filters.Length());
   }
 
   // We do this with gPSMutex unlocked. The comment in profiler_stop() explains
   // why.
-  NotifyProfilerStarted(entries, interval, features, filters,
-                        MOZ_ARRAY_LENGTH(filters));
+  NotifyProfilerStarted(entries, interval, features,
+                        filters.Elements(), filters.Length());
 }
 
 static void
@@ -2309,6 +2431,60 @@ profiler_get_start_params(int* aEntries, double* aInterval, uint32_t* aFeatures,
   for (uint32_t i = 0; i < filters.length(); ++i) {
     (*aFilters)[i] = filters[i].c_str();
   }
+}
+
+AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
+  MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+{
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  if (!ActivePS::Exists(lock)) {
+    PR_SetEnv("MOZ_PROFILER_STARTUP=");
+    return;
+  }
+
+  PR_SetEnv("MOZ_PROFILER_STARTUP=1");
+  SprintfLiteral(mSetEntries, "MOZ_PROFILER_STARTUP_ENTRIES=%d",
+                 ActivePS::Entries(lock));
+  PR_SetEnv(mSetEntries);
+
+  SprintfLiteral(mSetInterval, "MOZ_PROFILER_STARTUP_INTERVAL=%f",
+                 ActivePS::Interval(lock));
+  PR_SetEnv(mSetInterval);
+
+  SprintfLiteral(mSetFeaturesBitfield,
+                 "MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=%d",
+                 ActivePS::Features(lock));
+  PR_SetEnv(mSetFeaturesBitfield);
+
+  std::string filtersString;
+  const Vector<std::string>& filters = ActivePS::Filters(lock);
+  for (uint32_t i = 0; i < filters.length(); ++i) {
+    filtersString += filters[i];
+    if (i != filters.length() - 1) {
+      filtersString += ",";
+    }
+  }
+  SprintfLiteral(mSetFilters, "MOZ_PROFILER_STARTUP_FILTERS=%s",
+                 filtersString.c_str());
+  PR_SetEnv(mSetFilters);
+}
+
+AutoSetProfilerEnvVarsForChildProcess::~AutoSetProfilerEnvVarsForChildProcess()
+{
+  // Our current process doesn't look at these variables after startup, so we
+  // can just unset all the variables. This allows us to use literal strings,
+  // which will be valid for the whole life time of the program and can be
+  // passed to PR_SetEnv without problems.
+  PR_SetEnv("MOZ_PROFILER_STARTUP=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_ENTRIES=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_INTERVAL=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_FEATURES_BITFIELD=");
+  PR_SetEnv("MOZ_PROFILER_STARTUP_FILTERS=");
 }
 
 static void
@@ -2517,6 +2693,53 @@ profiler_start(int aEntries, double aInterval, uint32_t aFeatures,
   }
   NotifyProfilerStarted(aEntries, aInterval, aFeatures,
                         aFilters, aFilterCount);
+}
+
+void
+profiler_ensure_started(int aEntries, double aInterval, uint32_t aFeatures,
+                        const char** aFilters, uint32_t aFilterCount)
+{
+  LOG("profiler_ensure_started");
+
+  bool startedProfiler = false;
+  SamplerThread* samplerThread = nullptr;
+  {
+    PSAutoLock lock(gPSMutex);
+
+    // Initialize if necessary.
+    if (!CorePS::Exists()) {
+      profiler_init(nullptr);
+    }
+
+    if (ActivePS::Exists(lock)) {
+      // The profiler is active.
+      if (!ActivePS::Equals(lock, aEntries, aInterval, aFeatures,
+                            aFilters, aFilterCount)) {
+        // Stop and restart with different settings.
+        samplerThread = locked_profiler_stop(lock);
+        locked_profiler_start(lock, aEntries, aInterval, aFeatures,
+                              aFilters, aFilterCount);
+        startedProfiler = true;
+      }
+    } else {
+      // The profiler is stopped.
+      locked_profiler_start(lock, aEntries, aInterval, aFeatures,
+                            aFilters, aFilterCount);
+      startedProfiler = true;
+    }
+  }
+
+  // We do these operations with gPSMutex unlocked. The comments in
+  // profiler_stop() explain why.
+  if (samplerThread) {
+    ProfilerParent::ProfilerStopped();
+    NotifyObservers("profiler-stopped");
+    delete samplerThread;
+  }
+  if (startedProfiler) {
+    NotifyProfilerStarted(aEntries, aInterval, aFeatures,
+                          aFilters, aFilterCount);
+  }
 }
 
 static MOZ_MUST_USE SamplerThread*

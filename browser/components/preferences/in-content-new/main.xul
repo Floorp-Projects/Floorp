@@ -389,8 +389,6 @@
   </html:table>
 </groupbox>
 
-  <caption><label>&defaultSearchEngine.label;</label></caption>
-  <caption><label>&oneClickSearchEngines.label;</label></caption>
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
           hidden="true">
@@ -457,9 +455,9 @@
 
   <vbox>
     <hbox id="fontSettings">
-      <hbox align="center">
+      <hbox align="center" flex="1">
         <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
-        <menulist id="defaultFont" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
         <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
         <menulist id="defaultFontSize" delayprefsave="true">
           <menupopup>
@@ -734,6 +732,8 @@
 
 <!-- Update -->
 <groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <label>&updateApplicationDescription.label;</label>
+  <separator/>
   <hbox align="start">
     <vbox flex="1">
       <description>
@@ -827,7 +827,9 @@
                 disabled="true"/>
       </hbox>
       <hbox id="unsupportedSystem" align="center">
-        <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        <description flex="1">
+          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        </description>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
@@ -850,8 +852,8 @@
   <radiogroup id="updateRadioGroup">
     <radio id="autoDesktop"
            value="auto"
-           label="&updateAuto2.label;"
-           accesskey="&updateAuto2.accesskey;"/>
+           label="&updateAuto3.label;"
+           accesskey="&updateAuto3.accesskey;"/>
     <radio value="checkOnly"
           label="&updateCheckChoose2.label;"
           accesskey="&updateCheckChoose2.accesskey;"/>

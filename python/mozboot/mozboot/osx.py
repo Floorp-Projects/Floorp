@@ -354,7 +354,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
         # 2. Android pieces.
         import android
-        android.ensure_android('macosx', artifact_mode=artifact_mode)
+        android.ensure_android('macosx', artifact_mode=artifact_mode,
+                               no_interactive=self.no_interactive)
 
     def suggest_homebrew_mobile_android_mozconfig(self, artifact_mode=False):
         import android
@@ -417,7 +418,8 @@ class OSXBootstrapper(BaseBootstrapper):
 
         # 2. Android pieces.
         import android
-        android.ensure_android('macosx', artifact_mode=artifact_mode)
+        android.ensure_android('macosx', artifact_mode=artifact_mode,
+                               no_interactive=self.no_interactive)
 
     def suggest_macports_mobile_android_mozconfig(self, artifact_mode=False):
         import android

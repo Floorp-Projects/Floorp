@@ -695,6 +695,13 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
   }
   MOZ_ASSERT(keyHandleBuf.Length() <= 0xFFFF);
 
+  nsAutoString keyHandleBase64Url;
+  rv = keyHandleBuf.ToJwkBase64(keyHandleBase64Url);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Cancel(rv);
+    return;
+  }
+
   CryptoBuffer clientDataBuf;
   if (!clientDataBuf.Assign(mClientData.ref())) {
     Cancel(NS_ERROR_OUT_OF_MEMORY);
@@ -775,6 +782,8 @@ WebAuthnManager::FinishMakeCredential(nsTArray<uint8_t>& aRegBuffer)
   attestation->SetAttestationObject(attObj);
 
   RefPtr<PublicKeyCredential> credential = new PublicKeyCredential(mCurrentParent);
+  credential->SetId(keyHandleBase64Url);
+  credential->SetType(NS_LITERAL_STRING("public-key"));
   credential->SetRawId(keyHandleBuf);
   credential->SetResponse(attestation);
 
@@ -817,6 +826,13 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 
   CryptoBuffer credentialBuf;
   if (!credentialBuf.Assign(aCredentialId)) {
+    Cancel(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  nsAutoString credentialBase64Url;
+  rv = credentialBuf.ToJwkBase64(credentialBase64Url);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     Cancel(rv);
     return;
   }
@@ -834,6 +850,8 @@ WebAuthnManager::FinishGetAssertion(nsTArray<uint8_t>& aCredentialId,
 
   RefPtr<PublicKeyCredential> credential =
     new PublicKeyCredential(mCurrentParent);
+  credential->SetId(credentialBase64Url);
+  credential->SetType(NS_LITERAL_STRING("public-key"));
   credential->SetRawId(credentialBuf);
   credential->SetResponse(assertion);
 

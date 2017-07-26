@@ -125,7 +125,7 @@ def create_parser(mach_interface=False):
                  'path and name of the mitmdump file to playback')
     add_arg('--mitmdumpPath',
             help="Path to mitmproxy's mitmdump playback tool")
-    add_arg("--firstNonBlankPaint", action='store_true', dest="first_non_blank_paint",
+    add_arg("--firstNonBlankPaint", action='store_true', dest="fnbpaint",
             help="Wait for firstNonBlankPaint event before recording the time")
     add_arg('--webServer', dest='webserver',
             help="DEPRECATED")

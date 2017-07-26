@@ -1733,7 +1733,7 @@ toolbarpaletteitem[place=panel] > .toolbaritem-combined-buttons > toolbarbutton 
 %ifndef MOZ_PHOTON_THEME
 #widget-overflow-scroller {
 %else
-#widget-overflow-mainView {
+#widget-overflow-mainView .panel-subview-body {
 %endif
   overflow-y: auto;
   overflow-x: hidden;

@@ -1222,7 +1222,7 @@ var gPrivacyPane = {
         if (!prefStrBundle.getFormattedString) {
           return;
         }
-        actualSizeLabel.value = prefStrBundle.getFormattedString("actualDiskCacheSize", size);
+        actualSizeLabel.textContent = prefStrBundle.getFormattedString("actualDiskCacheSize", size);
       },
 
       QueryInterface: XPCOMUtils.generateQI([
@@ -1231,7 +1231,7 @@ var gPrivacyPane = {
       ])
     };
 
-    actualSizeLabel.value = prefStrBundle.getString("actualDiskCacheSizeCalculated");
+    actualSizeLabel.textContent = prefStrBundle.getString("actualDiskCacheSizeCalculated");
 
     try {
       var cacheService =

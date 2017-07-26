@@ -316,6 +316,7 @@
               {
                 "name": "notifications",
                 "type": "object",
+                "additionalProperties": {"$ref": "CreateNotificationOptions"},
                 "description": "The set of notifications currently in the system."
               }
             ]

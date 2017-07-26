@@ -11,6 +11,8 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/PageTransitionEvent.h"
+#include "mozilla/Logging.h"
 #include "nsIFormAutoComplete.h"
 #include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -46,6 +48,9 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
+using mozilla::LogLevel;
+
+static mozilla::LazyLogModule sLogger("satchel");
 
 static nsIFormAutoComplete*
 GetFormAutoComplete()
@@ -234,6 +239,7 @@ nsFormFillController::ParentChainChanged(nsIContent* aContent)
 void
 nsFormFillController::NodeWillBeDestroyed(const nsINode* aNode)
 {
+  MOZ_LOG(sLogger, LogLevel::Verbose, ("NodeWillBeDestroyed: %p", aNode));
   mPwmgrInputs.Remove(aNode);
   mAutofillInputs.Remove(aNode);
   if (aNode == mListNode) {
@@ -261,6 +267,8 @@ nsFormFillController::MaybeRemoveMutationObserver(nsINode* aNode)
 NS_IMETHODIMP
 nsFormFillController::AttachToBrowser(nsIDocShell *aDocShell, nsIAutoCompletePopup *aPopup)
 {
+  MOZ_LOG(sLogger, LogLevel::Debug,
+          ("AttachToBrowser for docShell %p with popup %p", aDocShell, aPopup));
   NS_ENSURE_TRUE(aDocShell && aPopup, NS_ERROR_ILLEGAL_VALUE);
 
   mDocShells.AppendElement(aDocShell);
@@ -339,6 +347,9 @@ nsFormFillController::MarkAsAutofillField(nsIDOMHTMLInputElement *aInput)
    */
   nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
   NS_ENSURE_STATE(node);
+
+  MOZ_LOG(sLogger, LogLevel::Verbose,
+          ("MarkAsAutofillField: aInput = %p, node = %p", aInput, node.get()));
 
   if (mAutofillInputs.Get(node)) {
     return NS_OK;
@@ -586,6 +597,7 @@ NS_IMETHODIMP
 nsFormFillController::GetSearchAt(uint32_t index, nsACString & _retval)
 {
   if (mAutofillInputs.Get(mFocusedInputNode)) {
+    MOZ_LOG(sLogger, LogLevel::Debug, ("GetSearchAt: autofill-profiles field"));
     nsCOMPtr<nsIAutoCompleteSearch> profileSearch = do_GetService("@mozilla.org/autocomplete/search;1?name=autofill-profiles");
     if (profileSearch) {
       _retval.AssignLiteral("autofill-profiles");
@@ -593,6 +605,7 @@ nsFormFillController::GetSearchAt(uint32_t index, nsACString & _retval)
     }
   }
 
+  MOZ_LOG(sLogger, LogLevel::Debug, ("GetSearchAt: form-history field"));
   _retval.AssignLiteral("form-history");
   return NS_OK;
 }
@@ -762,6 +775,8 @@ NS_IMETHODIMP
 nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAString &aSearchParam,
                                   nsIAutoCompleteResult *aPreviousResult, nsIAutoCompleteObserver *aListener)
 {
+  MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch for %p", mFocusedInput));
+
   nsresult rv;
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
 
@@ -771,6 +786,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
   if (mFocusedInputNode &&
       (mPwmgrInputs.Get(mFocusedInputNode) ||
        formControl->ControlType() == NS_FORM_INPUT_PASSWORD)) {
+    MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: login field"));
 
     // Handle the case where a password field is focused but
     // MarkAsLoginManagerField wasn't called because password manager is disabled.
@@ -791,6 +807,7 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                                 this);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
+    MOZ_LOG(sLogger, LogLevel::Debug, ("StartSearch: non-login field"));
     mLastListener = aListener;
 
     nsCOMPtr<nsIAutoCompleteResult> datalistResult;
@@ -965,7 +982,13 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
         }
       }
 
-      RemoveForDocument(doc);
+      // Only remove the observer notifications and marked autofill and password
+      // manager fields if the page isn't going to be persisted (i.e. it's being
+      // unloaded) so that appropriate autocomplete handling works with bfcache.
+      bool persisted = aEvent->InternalDOMEvent()->AsPageTransitionEvent()->Persisted();
+      if (!persisted) {
+        RemoveForDocument(doc);
+      }
     }
     break;
   default:
@@ -980,6 +1003,7 @@ nsFormFillController::HandleEvent(nsIDOMEvent* aEvent)
 void
 nsFormFillController::RemoveForDocument(nsIDocument* aDoc)
 {
+  MOZ_LOG(sLogger, LogLevel::Verbose, ("RemoveForDocument: %p", aDoc));
   for (auto iter = mPwmgrInputs.Iter(); !iter.Done(); iter.Next()) {
     const nsINode* key = iter.Key();
     if (key && (!aDoc || key->OwnerDoc() == aDoc)) {
@@ -1016,6 +1040,7 @@ nsFormFillController::IsTextControl(nsINode* aNode)
 void
 nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
 {
+  MOZ_LOG(sLogger, LogLevel::Verbose, ("MaybeStartControllingInput for %p", aInput));
   nsCOMPtr<nsINode> inputNode = do_QueryInterface(aInput);
   if (!inputNode) {
     return;
@@ -1278,6 +1303,7 @@ nsFormFillController::ShowPopup()
 void
 nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
+  MOZ_LOG(sLogger, LogLevel::Debug, ("AddWindowListeners for window %p", aWindow));
   if (!aWindow) {
     return;
   }
@@ -1313,6 +1339,7 @@ nsFormFillController::AddWindowListeners(nsPIDOMWindowOuter* aWindow)
 void
 nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 {
+  MOZ_LOG(sLogger, LogLevel::Debug, ("RemoveWindowListeners for window %p", aWindow));
   if (!aWindow) {
     return;
   }
@@ -1344,6 +1371,7 @@ nsFormFillController::RemoveWindowListeners(nsPIDOMWindowOuter* aWindow)
 void
 nsFormFillController::StartControllingInput(nsIDOMHTMLInputElement *aInput)
 {
+  MOZ_LOG(sLogger, LogLevel::Verbose, ("StartControllingInput for %p", aInput));
   // Make sure we're not still attached to an input
   StopControllingInput();
 
@@ -1396,10 +1424,14 @@ nsFormFillController::StopControllingInput()
     nsCOMPtr<nsIAutoCompleteInput> input;
     mController->GetInput(getter_AddRefs(input));
     if (input == this) {
+      MOZ_LOG(sLogger, LogLevel::Verbose,
+              ("StopControllingInput: Nulled controller input for %p", this));
       mController->SetInput(nullptr);
     }
   }
 
+  MOZ_LOG(sLogger, LogLevel::Verbose,
+          ("StopControllingInput: Stopped controlling %p", mFocusedInput));
   if (mFocusedInputNode) {
     MaybeRemoveMutationObserver(mFocusedInputNode);
 

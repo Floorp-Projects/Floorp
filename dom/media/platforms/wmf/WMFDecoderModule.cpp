@@ -159,19 +159,18 @@ CanCreateWMFDecoder()
 }
 
 static bool
-IsH264DecoderBlacklisted()
+IsWin7H264Decoder4KCapable()
 {
-#ifdef BLACKLIST_CRASHY_H264_DECODERS
   WCHAR systemPath[MAX_PATH + 1];
   if (!ConstructSystem32Path(L"msmpeg2vdec.dll", systemPath, MAX_PATH + 1)) {
-    // Cannot build path -> Assume it's not the blacklisted DLL.
+    // Cannot build path -> Assume it's the old DLL or it's missing.
     return false;
   }
 
   DWORD zero;
   DWORD infoSize = GetFileVersionInfoSizeW(systemPath, &zero);
   if (infoSize == 0) {
-    // Can't get file info -> Assume we don't have the blacklisted DLL.
+    // Can't get file info -> Assume it's the old DLL or it's missing.
     return false;
   }
   auto infoData = MakeUnique<unsigned char[]>(infoSize);
@@ -180,23 +179,20 @@ IsH264DecoderBlacklisted()
   if (GetFileVersionInfoW(systemPath, 0, infoSize, infoData.get()) &&
     VerQueryValueW(infoData.get(), L"\\", (LPVOID*)&vInfo, &vInfoLen))
   {
-    if ((vInfo->dwFileVersionMS == ((12u << 16) | 0u))
-        && ((vInfo->dwFileVersionLS == ((9200u << 16) | 16426u))
-            || (vInfo->dwFileVersionLS == ((9200u << 16) | 17037u)))) {
-      // 12.0.9200.16426 & .17037 are blacklisted on Win64, see bug 1242343.
-      return true;
-    }
+    uint64_t version =
+      uint64_t(vInfo->dwFileVersionMS) << 32 | uint64_t(vInfo->dwFileVersionLS);
+    // 12.0.9200.16426 & later allow for >1920x1088 resolutions.
+    const uint64_t minimum =
+      (uint64_t(12) << 48) | (uint64_t(9200) << 16) | uint64_t(16426);
+    return version >= minimum;
   }
-#endif // BLACKLIST_CRASHY_H264_DECODERS
+  // Can't get file version -> Assume it's the old DLL.
   return false;
 }
 
 /* static */ bool
 WMFDecoderModule::HasH264()
 {
-  if (IsH264DecoderBlacklisted()) {
-    return false;
-  }
   return CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>();
 }
 
@@ -234,14 +230,15 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       MOZ_ASSERT(videoInfo);
       // Check Windows format constraints, based on:
       // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
-      if (IsWin8OrLater()) {
-        // Windows >7 supports at most 4096x2304.
+      if (IsWin8OrLater() || IsWin7H264Decoder4KCapable()) {
+        // Windows >7, and Win7 with recent-enough decoder, support at most
+        // 4096x2304.
         if (videoInfo->mImage.width > 4096
             || videoInfo->mImage.height > 2304) {
           return false;
         }
       } else {
-        // Windows <=7 supports at most 1920x1088.
+        // Windows <=7 (with original decoder) supports at most 1920x1088.
         if (videoInfo->mImage.width > 1920
             || videoInfo->mImage.height > 1088) {
           return false;

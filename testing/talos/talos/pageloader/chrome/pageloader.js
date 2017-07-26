@@ -43,6 +43,7 @@ var forceCC = true;
 var reportRSS = true;
 
 var useMozAfterPaint = false;
+var useFNBPaint = false;
 var gPaintWindow = window;
 var gPaintListener = false;
 var loadNoCache = false;
@@ -149,6 +150,7 @@ function plInit() {
     if (args.timeout) timeout = parseInt(args.timeout);
     if (args.delay) delay = parseInt(args.delay);
     if (args.mozafterpaint) useMozAfterPaint = true;
+    if (args.fnbpaint) useFNBPaint = true;
     if (args.rss) reportRSS = true;
     if (args.loadnocache) loadNoCache = true;
     if (args.scrolltest) scrollTest = true;
@@ -262,36 +264,56 @@ function plInit() {
                     content.selectedBrowser.getAttribute("remote") == "true")
 
         // Load the frame script for e10s / IPC message support
-        if (gUseE10S) {
-          let contentScript = "data:,function _contentLoadHandler(e) { " +
-            "  if (e.originalTarget.defaultView == content) { " +
-            "    content.wrappedJSObject.tpRecordTime = function(t, s, n) { sendAsyncMessage('PageLoader:RecordTime', { time: t, startTime: s, testName: n }); }; ";
-          if (useMozAfterPaint) {
-            contentScript += "" +
-            "function _contentPaintHandler() { " +
-            "  var utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils); " +
-            "  if (utils.isMozAfterPaintPending) { " +
-            "    addEventListener('MozAfterPaint', function(e) { " +
-            "      removeEventListener('MozAfterPaint', arguments.callee, true); " +
-            "      sendAsyncMessage('PageLoader:LoadEvent', {}); " +
-            "    }, true); " +
-            "  } else { " +
-            "    sendAsyncMessage('PageLoader:LoadEvent', {}); " +
-            "  } " +
-            "}; " +
-            "content.setTimeout(_contentPaintHandler, 0); ";
-          } else {
-            contentScript += "    sendAsyncMessage('PageLoader:LoadEvent', {}); ";
-          }
+        let contentScript = "data:,function _contentLoadHandler(e) { " +
+          "  if (e.originalTarget.defaultView == content) { " +
+          "    content.wrappedJSObject.tpRecordTime = function(t, s, n) { sendAsyncMessage('PageLoader:RecordTime', { time: t, startTime: s, testName: n }); }; ";
+        if (useFNBPaint) {
           contentScript += "" +
-            "  }" +
-            "} " +
-            "addEventListener('load', _contentLoadHandler, true); ";
-          content.selectedBrowser.messageManager.loadFrameScript(contentScript, false, true);
-          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
-          content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/tscroll.js", false, true);
-          content.selectedBrowser.messageManager.loadFrameScript("chrome://talos-powers-content/content/TalosContentProfiler.js", false, true);
+          "var gRetryCounter = 0; " +
+          "function _contentFNBPaintHandler() { " +
+          "  x = content.window.performance.timing.timeToNonBlankPaint; " +
+          "  if (typeof x == 'undefined') { " +
+          "    sendAsyncMessage('PageLoader:FNBPaintError', {}); " +
+          "  } " +
+          "  if (x > 0) { " +
+          "    sendAsyncMessage('PageLoader:LoadEvent', { 'fnbpaint': x }); " +
+          "  } else { " +
+          "    gRetryCounter += 1; " +
+          "    if (gRetryCounter <= 10) { " +
+          "      dump('fnbpaint is not yet available (0), retry number ' + gRetryCounter + '...\\n'); " +
+          "      content.setTimeout(_contentFNBPaintHandler, 100); " +
+          "    } else { " +
+          "      dump('unable to get a value for fnbpaint after ' + gRetryCounter + ' retries\\n'); " +
+          "      sendAsyncMessage('PageLoader:FNBPaintError', {}); " +
+          "    } " +
+          "  } " +
+          "}; " +
+          "content.setTimeout(_contentFNBPaintHandler, 0); ";
+        } else if (useMozAfterPaint) {
+          contentScript += "" +
+          "function _contentPaintHandler() { " +
+          "  var utils = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils); " +
+          "  if (utils.isMozAfterPaintPending) { " +
+          "    addEventListener('MozAfterPaint', function(e) { " +
+          "      removeEventListener('MozAfterPaint', arguments.callee, true); " +
+          "      sendAsyncMessage('PageLoader:LoadEvent', {}); " +
+          "    }, true); " +
+          "  } else { " +
+          "    sendAsyncMessage('PageLoader:LoadEvent', {}); " +
+          "  } " +
+          "}; " +
+          "content.setTimeout(_contentPaintHandler, 0); ";
+        } else {
+          contentScript += "    sendAsyncMessage('PageLoader:LoadEvent', {}); ";
         }
+        contentScript += "" +
+          "  }" +
+          "} " +
+          "addEventListener('load', _contentLoadHandler, true); ";
+        content.selectedBrowser.messageManager.loadFrameScript(contentScript, false, true);
+        content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/talos-content.js", false);
+        content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/tscroll.js", false, true);
+        content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/Profiler.js", false, true);
 
         if (reportRSS) {
           initializeMemoryCollector(plLoadPage, 100);
@@ -316,6 +338,7 @@ var ContentListener = {
   receiveMessage(message) {
     switch (message.name) {
       case "PageLoader:LoadEvent": return plLoadHandlerMessage(message);
+      case "PageLoader:FNBPaintError": return plFNBPaintErrorMessage(message);
       case "PageLoader:RecordTime": return plRecordTimeMessage(message);
     }
     return undefined;
@@ -342,44 +365,21 @@ function plLoadPage() {
     removeLastAddedMsgListener = null;
   }
 
-  if ((plPageFlags() & TEST_DOES_OWN_TIMING) && !gUseE10S) {
-    // if the page does its own timing, use a capturing handler
-    // to make sure that we can set up the function for content to call
-
-    content.addEventListener("load", plLoadHandlerCapturing, true);
-    removeLastAddedListener = function() {
-      content.removeEventListener("load", plLoadHandlerCapturing, true);
-      if (useMozAfterPaint) {
-        content.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
-        gPaintListener = false;
-      }
-    };
-  } else if (!gUseE10S) {
-    // if the page doesn't do its own timing, use a bubbling handler
-    // to make sure that we're called after the page's own onload() handling
-
-    // XXX we use a capturing event here too -- load events don't bubble up
-    // to the <browser> element.  See bug 390263.
-    content.addEventListener("load", plLoadHandler, true);
-    removeLastAddedListener = function() {
-      content.removeEventListener("load", plLoadHandler, true);
-      if (useMozAfterPaint) {
-        gPaintWindow.removeEventListener("MozAfterPaint", plPainted, true);
-        gPaintListener = false;
-      }
-    };
+  // messages to watch for page load
+  let mm = content.selectedBrowser.messageManager;
+  mm.addMessageListener("PageLoader:LoadEvent", ContentListener);
+  mm.addMessageListener("PageLoader:RecordTime", ContentListener);
+  if (useFNBPaint) {
+    mm.addMessageListener("PageLoader:FNBPaintError", ContentListener);
   }
 
-  // If the test browser is remote (e10s / IPC) we need to use messages to watch for page load
-  if (gUseE10S) {
-    let mm = content.selectedBrowser.messageManager;
-    mm.addMessageListener("PageLoader:LoadEvent", ContentListener);
-    mm.addMessageListener("PageLoader:RecordTime", ContentListener);
-    removeLastAddedMsgListener = function() {
-      mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
-      mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
-    };
-  }
+  removeLastAddedMsgListener = function() {
+    mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
+    mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
+    if (useFNBPaint) {
+      mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
+    }
+  };
 
   failTimeout.register(loadFail, timeout);
 
@@ -653,11 +653,18 @@ function plPainted() {
   _loadHandler();
 }
 
-function _loadHandler() {
+function _loadHandler(fnbpaint = 0) {
   failTimeout.clear();
+  var end_time = 0;
 
-  var end_time = Date.now();
-  var time = (end_time - start_time);
+  if (fnbpaint !== 0) {
+    // window.performance.timing.timeToNonBlankPaint is a timestamp
+    end_time = fnbpaint;
+  } else {
+    end_time = Date.now();
+  }
+
+  var duration = (end_time - start_time);
 
   TalosParentProfiler.pause("Bubbling load handler fired.");
 
@@ -668,7 +675,7 @@ function _loadHandler() {
     plStop(true);
   }
 
-  plRecordTime(time);
+  plRecordTime(duration);
 
   if (doRenderTest)
     runRenderTest();
@@ -677,7 +684,11 @@ function _loadHandler() {
 }
 
 // the core handler for remote (e10s) browser
-function plLoadHandlerMessage() {
+function plLoadHandlerMessage(message) {
+  let fnbpaint = 0;
+  if (message.json.fnbpaint !== undefined) {
+    fnbpaint = message.json.fnbpaint;
+  }
   failTimeout.clear();
 
   if ((plPageFlags() & EXECUTE_SCROLL_TEST)) {
@@ -705,7 +716,7 @@ function plLoadHandlerMessage() {
       plNextPage();
     }
   } else {
-    _loadHandler();
+    _loadHandler(fnbpaint);
   }
 }
 
@@ -719,6 +730,12 @@ function plRecordTimeMessage(message) {
     gStartTime = message.json.startTime;
   }
   _loadHandlerCapturing();
+}
+
+// error retrieving fnbpaint
+function plFNBPaintErrorMessage(message) {
+  dumpLine("Abort: firstNonBlankPaint value is not available after loading the page");
+  plStop(true);
 }
 
 function runRenderTest() {
@@ -778,17 +795,21 @@ function plStopAll(force) {
   if (content) {
     content.removeEventListener("load", plLoadHandlerCapturing, true);
     content.removeEventListener("load", plLoadHandler, true);
-    if (useMozAfterPaint)
+
+    if (useMozAfterPaint) {
       content.removeEventListener("MozAfterPaint", plPaintedCapturing, true);
       content.removeEventListener("MozAfterPaint", plPainted, true);
-
-    if (gUseE10S) {
-      let mm = content.selectedBrowser.messageManager;
-      mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
-      mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
-
-      mm.loadFrameScript("data:,removeEventListener('load', _contentLoadHandler, true);", false, true);
     }
+
+    let mm = content.selectedBrowser.messageManager;
+    mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
+    mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
+
+    if (useFNBPaint) {
+      mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
+    }
+
+    mm.loadFrameScript("data:,removeEventListener('load', _contentLoadHandler, true);", false, true);
   }
 
   if (MozillaFileLogger && MozillaFileLogger._foStream)
