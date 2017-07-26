@@ -61,6 +61,12 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
 }
 
 void
+WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount)
+{
+  mDescendantCount = aDescendantCount;
+}
+
+void
 WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
                                      nsDisplayItem* aItem)
 {
