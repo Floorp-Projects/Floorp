@@ -16,6 +16,7 @@
 #include "nsContainerFrame.h"
 #include "nsInlineFrame.h"
 #include "nsPlaceholderFrame.h"
+#include "nsPointerHashKeys.h"
 #include "nsFirstLetterFrame.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
@@ -132,7 +133,8 @@ struct MOZ_STACK_CLASS BidiParagraphData
   AutoTArray<char16_t, 16> mEmbeddingStack;
   AutoTArray<nsIFrame*, 16> mLogicalFrames;
   AutoTArray<nsLineBox*, 16> mLinePerFrame;
-  nsDataHashtable<nsISupportsHashKey, int32_t> mContentToFrameIndex;
+  nsDataHashtable<nsPtrHashKey<const nsIContent>, int32_t>
+    mContentToFrameIndex;
   // Cached presentation context for the frames we're processing.
   nsPresContext*      mPresContext;
   bool                mIsVisual;
