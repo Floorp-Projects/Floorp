@@ -398,8 +398,12 @@ BulletRenderer::BuildGlyphForText(nsDisplayItem* aItem, bool disableSubpixelAA)
 {
   MOZ_ASSERT(IsTextType());
 
+  RefPtr<DrawTarget> screenTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   RefPtr<DrawTargetCapture> capture =
-    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
+    Factory::CreateCaptureDrawTarget(screenTarget->GetBackendType(),
+                                     IntSize(),
+                                     screenTarget->GetFormat());
+
   RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
 
   {

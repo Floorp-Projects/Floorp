@@ -1232,14 +1232,6 @@ public:
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const = 0;
 
   /**
-   * Create a DrawTarget that captures the drawing commands and can be replayed
-   * onto a compatible DrawTarget afterwards.
-   *
-   * @param aSize Size of the area this DT will capture.
-   */
-  virtual already_AddRefed<DrawTargetCapture> CreateCaptureDT(const IntSize& aSize);
-
-  /**
    * Create a draw target optimized for drawing a shadow.
    *
    * Note that aSigma is the blur radius that must be used when we draw the
@@ -1496,6 +1488,16 @@ public:
 
   static already_AddRefed<DrawTarget>
     CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
+
+  /**
+   * Create a DrawTarget that captures the drawing commands and can be replayed
+   * onto a compatible DrawTarget afterwards.
+   *
+   * @param aSize Size of the area this DT will capture.
+   */
+  static already_AddRefed<DrawTargetCapture>
+    CreateCaptureDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat);
+
 
   static already_AddRefed<DrawTarget>
     CreateWrapAndRecordDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT);

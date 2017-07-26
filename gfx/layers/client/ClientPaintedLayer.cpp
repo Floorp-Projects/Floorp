@@ -204,16 +204,14 @@ ClientPaintedLayer::PaintOffMainThread()
       continue;
     }
 
-    RefPtr<DrawTarget> refDT =
-      Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetDefaultContentBackend(),
-                                target->GetSize(), target->GetFormat());
-
     // We don't clear the rect here like WRPaintedBlobLayers do
     // because ContentClient already clears the surface for us during BeginPaint.
-    RefPtr<DrawTargetCapture> captureDT = refDT->CreateCaptureDT(target->GetSize());
+    RefPtr<DrawTargetCapture> captureDT =
+      Factory::CreateCaptureDrawTarget(target->GetBackendType(),
+                                       target->GetSize(),
+                                       target->GetFormat());
     captureDT->SetTransform(target->GetTransform());
 
-    SetAntialiasingFlags(this, refDT);
     SetAntialiasingFlags(this, captureDT);
     SetAntialiasingFlags(this, target);
 

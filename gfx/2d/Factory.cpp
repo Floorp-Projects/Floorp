@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -48,6 +48,7 @@
 #include "mozilla/Mutex.h"
 #endif
 
+#include "DrawTargetCapture.h"
 #include "DrawTargetDual.h"
 #include "DrawTargetTiled.h"
 #include "DrawTargetWrapAndRecord.h"
@@ -416,6 +417,12 @@ already_AddRefed<DrawTarget>
 Factory::CreateRecordingDrawTarget(DrawEventRecorder *aRecorder, DrawTarget *aDT, IntSize aSize)
 {
   return MakeAndAddRef<DrawTargetRecording>(aRecorder, aDT, aSize);
+}
+
+already_AddRefed<DrawTargetCapture>
+Factory::CreateCaptureDrawTarget(BackendType aBackend, const IntSize& aSize, SurfaceFormat aFormat)
+{
+  return MakeAndAddRef<DrawTargetCaptureImpl>(aBackend, aSize, aFormat);
 }
 
 already_AddRefed<DrawTarget>
