@@ -383,6 +383,9 @@ RenderViewMLGPU::ExecuteRendering()
     return;
   }
 
+  // Note: we unbind slot 0 (which is where the render target could have been
+  // bound on a previous frame). Otherwise we trigger D3D11_DEVICE_PSSETSHADERRESOURCES_HAZARD.
+  mDevice->UnsetPSTexture(0);
   mDevice->SetRenderTarget(mTarget);
   mDevice->SetViewport(IntRect(IntPoint(0, 0), mTarget->GetSize()));
   mDevice->SetScissorRect(Some(mInvalidBounds));
