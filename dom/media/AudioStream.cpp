@@ -19,6 +19,9 @@
 #include "nsPrintfCString.h"
 #include "gfxPrefs.h"
 #include "AudioConverter.h"
+#if defined(XP_WIN)
+#include "mozilla/audio/AudioNotificationReceiver.h"
+#endif
 
 namespace mozilla {
 
@@ -120,6 +123,11 @@ AudioStream::AudioStream(DataSource& aSource)
   , mState(INITIALIZED)
   , mDataSource(aSource)
 {
+#if defined(XP_WIN)
+  if (XRE_IsContentProcess()) {
+    audio::AudioNotificationReceiver::Register(this);
+  }
+#endif
 }
 
 AudioStream::~AudioStream()
@@ -133,6 +141,11 @@ AudioStream::~AudioStream()
   if (mTimeStretcher) {
     soundtouch::destroySoundTouchObj(mTimeStretcher);
   }
+#if defined(XP_WIN)
+  if (XRE_IsContentProcess()) {
+    audio::AudioNotificationReceiver::Unregister(this);
+  }
+#endif
 }
 
 size_t
