@@ -23,14 +23,6 @@
     "unpack": true
   },
   {
-    "version": "clang 5.0pre/r293859",
-    "size": 313862839,
-    "digest": "44dee70d525ea93952af27f943d1cc773311970c31d971d2bc2e3437cce0c899f3a03ddd8e42e86f1b4fd9ab1c4bc1767cdb0406eb4b3934ae4fc272dab830dc",
-    "algorithm": "sha512",
-    "filename": "clang.tar.bz2",
-    "unpack": true
-  },
-  {
     "version": "makecab rev d2bc6797648b7a834782714a55d339d2fd4e58c8",
     "algorithm": "sha512",
     "visibility": "public",

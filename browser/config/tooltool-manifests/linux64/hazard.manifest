@@ -22,13 +22,5 @@
     "algorithm": "sha512",
     "filename": "rustc.tar.xz",
     "unpack": true
-  },
-  {
-    "version": "clang + llvm 3.9.0, built from SVN r290136",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
   }
 ]
