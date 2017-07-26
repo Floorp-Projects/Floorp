@@ -809,6 +809,8 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
         masm.testb(eax, eax);
         masm.j(Assembler::Zero, masm.failureLabel());
         break;
+      case Type_Void:
+        break;
       default:
         MOZ_CRASH("unknown failure kind");
     }

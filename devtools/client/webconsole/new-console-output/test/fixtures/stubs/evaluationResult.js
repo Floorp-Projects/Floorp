@@ -120,11 +120,13 @@ stubPreparedMessages.set("inspect({a: 1})", new ConsoleMessage({
           "value": 1
         }
       },
+      "ownSymbols": [],
       "ownPropertiesLength": 1,
+      "ownSymbolsLength": 0,
       "safeGetterValues": {}
     }
   },
-  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownPropertiesLength\":1,\"safeGetterValues\":{}}},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
+  "repeatId": "{\"frame\":null,\"groupId\":null,\"indent\":0,\"level\":\"log\",\"parameters\":{\"type\":\"object\",\"actor\":\"server1.conn0.child1/obj35\",\"class\":\"Object\",\"extensible\":true,\"frozen\":false,\"sealed\":false,\"ownPropertyLength\":1,\"preview\":{\"kind\":\"Object\",\"ownProperties\":{\"a\":{\"configurable\":true,\"enumerable\":true,\"writable\":true,\"value\":1}},\"ownSymbols\":[],\"ownPropertiesLength\":1,\"ownSymbolsLength\":0,\"safeGetterValues\":{}}},\"source\":\"javascript\",\"type\":\"result\",\"userProvidedStyles\":null}",
   "stacktrace": null,
   "frame": null,
   "groupId": null,
@@ -283,7 +285,9 @@ stubPackets.set("inspect({a: 1})", {
             "value": 1
           }
         },
+        "ownSymbols": [],
         "ownPropertiesLength": 1,
+        "ownSymbolsLength": 0,
         "safeGetterValues": {}
       }
     }

@@ -79,6 +79,22 @@ public class GeckoHLSResourceWrapper {
         }
     }
 
+    @WrapForJNI(calledFrom = "gecko")
+    public void play() {
+        if (DEBUG) Log.d(LOGTAG, "GeckoHLSResourceWrapper mediaelement played");
+        if (mPlayer != null) {
+            mPlayer.play();
+        }
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    public void pause() {
+        if (DEBUG) Log.d(LOGTAG, "GeckoHLSResourceWrapper mediaelement paused");
+        if (mPlayer != null) {
+            mPlayer.pause();
+        }
+    }
+
     private static void assertTrue(boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");

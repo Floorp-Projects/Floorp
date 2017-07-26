@@ -223,7 +223,6 @@ extensions.registerModules({
     url: "chrome://browser/content/ext-url-overrides.js",
     schema: "chrome://browser/content/schemas/url_overrides.json",
     scopes: ["addon_parent"],
-    events: ["startup"],
     manifest: ["chrome_url_overrides"],
     paths: [
       ["urlOverrides"],
