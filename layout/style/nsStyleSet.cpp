@@ -219,6 +219,7 @@ nsStyleSet::nsStyleSet()
     mInReconstruct(false),
     mInitFontFeatureValuesLookup(true),
     mNeedsRestyleAfterEnsureUniqueInner(false),
+    mUsesViewportUnits(false),
     mDirty(0),
     mRootStyleContextCount(0),
 #ifdef DEBUG
@@ -2674,8 +2675,8 @@ nsStyleSet::HasAttributeDependentStyle(Element*       aElement,
   return data.mHint;
 }
 
-bool
-nsStyleSet::MediumFeaturesChanged()
+nsRestyleHint
+nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 {
   NS_ASSERTION(mBatching == 0, "rule processors out of date");
 
@@ -2700,7 +2701,14 @@ nsStyleSet::MediumFeaturesChanged()
     stylesChanged = stylesChanged || thisChanged;
   }
 
-  return stylesChanged;
+  if (stylesChanged) {
+    return eRestyle_Subtree;
+  }
+  if (aViewportChanged && mUsesViewportUnits) {
+    // Rebuild all style data without rerunning selector matching.
+    return eRestyle_ForceDescendants;
+  }
+  return nsRestyleHint(0);
 }
 
 bool

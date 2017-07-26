@@ -84,31 +84,72 @@
         <toolbarbutton id="appMenuViewHistorySidebar"
                        label="&appMenuHistory.viewSidebar.label;"
                        type="checkbox"
+#ifndef MOZ_PHOTON_THEME
                        class="subviewbutton"
+#else
+                       class="subviewbutton subviewbutton-iconic"
+#endif
                        key="key_gotoHistory"
                        oncommand="SidebarUI.toggle('viewHistorySidebar'); PanelUI.hide();">
           <observes element="viewHistorySidebar" attribute="checked"/>
         </toolbarbutton>
         <toolbarbutton id="appMenuClearRecentHistory"
                        label="&appMenuHistory.clearRecent.label;"
+#ifndef MOZ_PHOTON_THEME
                        class="subviewbutton"
+#else
+                       class="subviewbutton subviewbutton-iconic"
+#endif
                        command="Tools:Sanitize"/>
         <toolbarbutton id="appMenuRestoreLastSession"
                        label="&appMenuHistory.restoreSession.label;"
+#ifndef MOZ_PHOTON_THEME
                        class="subviewbutton"
+#else
+                       class="subviewbutton subviewbutton-iconic"
+#endif
                        command="Browser:RestoreLastSession"/>
+#ifndef MOZ_PHOTON_THEME
         <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
         <vbox id="PanelUI-recentlyClosedTabs" tooltip="bhTooltip"/>
         <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
         <vbox id="PanelUI-recentlyClosedWindows" tooltip="bhTooltip"/>
         <menuseparator id="PanelUI-historyItems-separator"/>
         <vbox id="PanelUI-historyItems" tooltip="bhTooltip"/>
+#else
+        <toolbarseparator/>
+        <toolbarbutton id="appMenuRecentlyClosedTabs"
+                       label="&historyUndoMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedTabs', this)"/>
+        <toolbarbutton id="appMenuRecentlyClosedWindows"
+                       label="&historyUndoWindowMenu.label;"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       closemenu="none"
+                       oncommand="PanelUI.showSubView('appMenu-library-recentlyClosedWindows', this)"/>
+        <toolbarseparator/>
+        <label value="&appMenuHistory.recentHistory.label;"
+               class="subview-subheader"/>
+        <toolbaritem id="appMenu_historyMenu"
+                     orient="vertical"
+                     smoothscroll="false"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <!-- history menu items will go here -->
+        </toolbaritem>
+#endif
       </vbox>
       <toolbarbutton id="PanelUI-historyMore"
                      class="panel-subview-footer subviewbutton"
                      label="&appMenuHistory.showAll.label;"
                      oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
     </panelview>
+
+#ifdef MOZ_PHOTON_THEME
+    <panelview id="appMenu-library-recentlyClosedTabs"/>
+    <panelview id="appMenu-library-recentlyClosedWindows"/>
+#endif
 
     <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
                descriptionheightworkaround="true">

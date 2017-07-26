@@ -271,6 +271,24 @@ fn outer_block_end_consumed() {
     assert!(input.next().is_err());
 }
 
+/// https://github.com/servo/rust-cssparser/issues/174
+#[test]
+fn bad_url_slice_out_of_bounds() {
+    let mut input = ParserInput::new("url(\u{1}\\");
+    let mut parser = Parser::new(&mut input);
+    let result = parser.next_including_whitespace_and_comments();  // This used to panic
+    assert_eq!(result, Ok(&Token::BadUrl("\u{1}\\".into())));
+}
+
+/// https://bugzilla.mozilla.org/show_bug.cgi?id=1383975
+#[test]
+fn bad_url_slice_not_at_char_boundary() {
+    let mut input = ParserInput::new("url(9\n۰");
+    let mut parser = Parser::new(&mut input);
+    let result = parser.next_including_whitespace_and_comments();  // This used to panic
+    assert_eq!(result, Ok(&Token::BadUrl("9\n۰".into())));
+}
+
 #[test]
 fn unquoted_url_escaping() {
     let token = Token::UnquotedUrl("\

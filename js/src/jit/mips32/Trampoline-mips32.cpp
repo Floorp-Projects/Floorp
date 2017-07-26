@@ -861,6 +861,8 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
         // Called functions return bools, which are 0/false and non-zero/true
         masm.branchIfFalseBool(v0, masm.failureLabel());
         break;
+      case Type_Void:
+        break;
       default:
         MOZ_CRASH("unknown failure kind");
     }

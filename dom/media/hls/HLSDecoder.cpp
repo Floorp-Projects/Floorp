@@ -93,4 +93,26 @@ HLSDecoder::Load(MediaResource*)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+HLSDecoder::Play()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  HLS_DEBUG("HLSDecoder", "MediaElement called Play");
+  auto resourceWrapper =
+        static_cast<HLSResource*>(GetResource())->GetResourceWrapper();
+  resourceWrapper->Play();
+  return MediaDecoder::Play();
+}
+
+void
+HLSDecoder::Pause()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  HLS_DEBUG("HLSDecoder", "MediaElement called Pause");
+  auto resourceWrapper =
+      static_cast<HLSResource*>(GetResource())->GetResourceWrapper();
+  resourceWrapper->Pause();
+  return MediaDecoder::Pause();
+}
+
 } // namespace mozilla

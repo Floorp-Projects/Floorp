@@ -175,11 +175,31 @@ const CustomizableWidgets = [
     shortcutId: "key_gotoHistory",
     tooltiptext: "history-panelmenu.tooltiptext2",
     defaultArea: CustomizableUI.AREA_PANEL,
+    recentlyClosedTabsPanel: "appMenu-library-recentlyClosedTabs",
+    recentlyClosedWindowsPanel: "appMenu-library-recentlyClosedWindows",
+    handleEvent(event) {
+      switch (event.type) {
+        case "PanelMultiViewHidden":
+          this.onPanelMultiViewHidden(event);
+          break;
+        case "ViewShowing":
+          this.onSubViewShowing(event);
+          break;
+        default:
+          throw new Error(`Unsupported event for '${this.id}'`);
+      }
+    },
     onViewShowing(aEvent) {
       // Populate our list of history
       const kMaxResults = 15;
       let doc = aEvent.target.ownerDocument;
       let win = doc.defaultView;
+
+      if (AppConstants.MOZ_PHOTON_THEME && win.gPhotonStructure) {
+        // For the Photon panelview we're going to do something different!
+        this.onPhotonViewShowing(aEvent);
+        return;
+      }
 
       let options = PlacesUtils.history.getNewQueryOptions();
       options.excludeQueries = true;
@@ -277,14 +297,40 @@ const CustomizableWidgets = [
       }
       recentlyClosedWindows.appendChild(windowsFragment);
     },
+    onPhotonViewShowing(event) {
+      if (this._panelMenuView)
+        return;
+
+      let panelview = event.target;
+      let document = panelview.ownerDocument;
+      let window = document.defaultView;
+
+      // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
+      let query = "place:queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
+        "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING +
+        "&maxResults=42&excludeQueries=1";
+      this._panelMenuView = new window.PlacesPanelview(document.getElementById("appMenu_historyMenu"),
+        panelview, query);
+      // When either of these sub-subviews show, populate them with recently closed
+      // objects data.
+      document.getElementById(this.recentlyClosedTabsPanel).addEventListener("ViewShowing", this);
+      document.getElementById(this.recentlyClosedWindowsPanel).addEventListener("ViewShowing", this);
+      // When the popup is hidden (thus the panelmultiview node as well), make
+      // sure to stop listening to PlacesDatabase updates.
+      panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
+    },
     onCreated(aNode) {
+      // Skip this for the Photon panelview.
+      let doc = aNode.ownerDocument;
+      if (AppConstants.MOZ_PHOTON_THEME && doc.defaultView.gPhotonStructure)
+        return;
+
       // Middle clicking recently closed items won't close the panel - cope:
       let onRecentlyClosedClick = function(aEvent) {
         if (aEvent.button == 1) {
           CustomizableUI.hidePanelForNode(this);
         }
       };
-      let doc = aNode.ownerDocument;
       let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
       let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
       recentlyClosedTabs.addEventListener("click", onRecentlyClosedClick);
@@ -292,6 +338,51 @@ const CustomizableWidgets = [
     },
     onViewHiding(aEvent) {
       log.debug("History view is being hidden!");
+    },
+    onPanelMultiViewHidden(event) {
+      let panelMultiView = event.target;
+      let document = panelMultiView.ownerDocument;
+      if (this._panelMenuView) {
+        this._panelMenuView.uninit();
+        delete this._panelMenuView;
+        document.getElementById(this.recentlyClosedTabsPanel).removeEventListener("ViewShowing", this);
+        document.getElementById(this.recentlyClosedWindowsPanel).removeEventListener("ViewShowing", this);
+      }
+      panelMultiView.removeEventListener("PanelMultiViewHidden", this);
+    },
+    onSubViewShowing(event) {
+      let panelview = event.target;
+      let document = event.target.ownerDocument;
+      let window = document.defaultView;
+      let viewType = panelview.id == this.recentlyClosedTabsPanel ? "Tabs" : "Windows";
+
+      this._panelMenuView.clearAllContents(panelview);
+
+      let utils = RecentlyClosedTabsAndWindowsMenuUtils;
+      let method = `get${viewType}Fragment`;
+      let fragment = utils[method](window, "toolbarbutton");
+      let elementCount = fragment.childElementCount;
+      this._panelMenuView._setEmptyPopupStatus(panelview, !elementCount);
+      if (!elementCount)
+        return;
+
+      let body = document.createElement("vbox");
+      body.className = "panel-subview-body";
+      body.appendChild(fragment);
+      let footer;
+      while (--elementCount >= 0) {
+        let element = body.childNodes[elementCount];
+        CustomizableUI.addShortcut(element);
+        element.classList.add("subviewbutton");
+        if (element.classList.contains("restoreallitem")) {
+          footer = element;
+          element.classList.add("panel-subview-footer");
+        } else {
+          element.classList.add("subviewbutton-iconic", "bookmark-item");
+        }
+      }
+      panelview.appendChild(body);
+      panelview.appendChild(footer);
     }
   }, {
     id: "sync-button",
