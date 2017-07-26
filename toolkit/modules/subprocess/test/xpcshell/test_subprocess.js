@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 Cu.import("resource://gre/modules/AppConstants.jsm");

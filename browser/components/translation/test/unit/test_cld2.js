@@ -17,6 +17,7 @@
 //
 // Unit test compact language detector, CLD2
 //
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 // Test strings.
 const kTeststr_en =
