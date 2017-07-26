@@ -28,6 +28,11 @@ public class TestURIUtils {
     }
 
     @Test
+    public void testGetHostSecondLevelDomainURIHasNoHost() throws Exception {
+        assertGetHostSLD("file:///usr/bin", "");
+    }
+
+    @Test
     public void testGetHostSecondLevelDomainIPv4() throws Exception {
         assertGetHostSLD("http://192.168.1.1", "192.168.1.1");
     }

@@ -37,11 +37,14 @@ public class URIUtils {
      * Returns the second level domain (SLD) of a url. It removes any subdomain/TLD.
      * e.g. https://m.foo.com/bar/baz?noo=abc#123  => foo
      *
+     * The return value may still contain a public suffix (e.g. .com) if the suffix does not match any of our
+     * known values. If a host cannot be determined from the given url String, the empty String will be returned.
+     *
      * This implementation is taken from Firefox for iOS:
      *   https://github.com/mozilla-mobile/firefox-ios/blob/deb9736c905cdf06822ecc4a20152df7b342925d/Shared/Extensions/NSURLExtensions.swift#L152
      *
      * @param uriString A url from which to extract the second level domain.
-     * @return The second level domain of the url.
+     * @return The second level domain of the url or the empty String when the host cannot be determined.
      */
     @WorkerThread // PublicSuffix methods can touch the disk.
     public static String getHostSecondLevelDomain(@NonNull final Context context, @NonNull final String uriString)
@@ -53,7 +56,7 @@ public class URIUtils {
         final String baseDomain = getBaseDomain(context, uri);
         if (baseDomain == null) {
             final String normalizedHost = StringUtils.stripCommonSubdomains(uri.getHost());
-            return !TextUtils.isEmpty(normalizedHost) ? normalizedHost : uriString;
+            return !TextUtils.isEmpty(normalizedHost) ? normalizedHost : "";
         }
 
         return PublicSuffix.stripPublicSuffix(context, baseDomain);
@@ -98,7 +101,8 @@ public class URIUtils {
     /**
      * An async task that will take a URI formatted as a String and will retrieve
      * {@link #getHostSecondLevelDomain(Context, String)}. To use this, extend the class and override
-     * {@link #onPostExecute(Object)}, where the secondLevelDomain will be returned.
+     * {@link #onPostExecute(Object)}, where the secondLevelDomain, or the empty String if the host cannot determined,
+     * will be returned.
      */
     public static abstract class GetHostSecondLevelDomainAsyncTask extends AsyncTask<Void, Void, String> {
         protected final WeakReference<Context> contextWeakReference;
