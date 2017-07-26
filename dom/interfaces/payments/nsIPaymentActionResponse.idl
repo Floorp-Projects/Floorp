@@ -5,6 +5,48 @@
 
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
+#include "nsIPaymentAddress.idl"
+
+[builtinclass, scriptable, uuid(2a338575-c688-40ee-a157-7488ab292ef2)]
+interface nsIPaymentResponseData: nsISupports
+{
+  const uint32_t GENERAL_RESPONSE = 0;
+  const uint32_t BASICCARD_RESPONSE = 1;
+
+  readonly attribute uint32_t type;
+  void init(in uint32_t aType);
+};
+
+[builtinclass, scriptable, uuid(b986773e-2b30-4ed2-b8fe-6a96631c8000)]
+interface nsIGeneralResponseData : nsIPaymentResponseData
+{
+  readonly attribute AString data;
+
+  [implicit_jscontext]
+  void initData(in jsval aData);
+};
+
+/*
+  Since PaymentAddress is an no constructor interface type, UI code can not
+  easy create PaymentAddress by calling new PaymentAddress().
+  Unfortunately, BasicCardResponse has a PaymentAddress attribute, billingAddress
+  , it means UI can not create BsaicCardResponse by calling the init() with a
+  given JSObject directly, because PaymentAddress creation in JS code is hard.
+  To let UI code can create BasicCardResponse easier, nsIBasicCardResponse is
+  provided for UI by passing the raw data of BasicCardResponse,
+*/
+[builtinclass, scriptable, uuid(0d55a5e6-d185-44f0-b992-a8e1321e4bce)]
+interface nsIBasicCardResponseData : nsIPaymentResponseData
+{
+  readonly attribute AString data;
+
+  void initData(in AString aCardholderName,
+                in AString aCardNumber,
+                in AString aExpiryMonth,
+                in AString aExpiryYear,
+                in AString aCardSecurityCode,
+                in nsIPaymentAddress billingAddress);
+};
 
 [builtinclass, scriptable, uuid(a607c095-ef60-4a9b-a3d0-0506c60728b3)]
 interface nsIPaymentActionResponse : nsISupports
@@ -94,7 +136,7 @@ interface nsIPaymentShowActionResponse : nsIPaymentActionResponse
   void init(in AString aRequestId,
             in uint32_t aAcceptStatus,
             in AString aMethodName,
-            in AString aData,
+            in nsIPaymentResponseData aData,
             in AString aPayerName,
             in AString aPayerEmail,
             in AString aPayerPhone);
@@ -142,6 +184,16 @@ interface nsIPaymentCompleteActionResponse : nsIPaymentActionResponse
 };
 
 %{C++
+#define NS_GENERAL_RESPONSE_DATA_CID \
+  { 0xb986773e, 0x2b30, 0x4ed2, { 0xb8, 0xfe, 0x6a, 0x96, 0x63, 0x1c, 0x80, 0x00 } }
+#define NS_GENERAL_RESPONSE_DATA_CONTRACT_ID \
+  "@mozilla.org/dom/payments/general-response-data;1"
+
+#define NS_BASICCARD_RESPONSE_DATA_CID \
+  { 0x0d55a5e6, 0xd185, 0x44f0, { 0xb9, 0x92, 0xa8, 0xe1, 0x32, 0x1e, 0x4b, 0xce } }
+#define NS_BASICCARD_RESPONSE_DATA_CONTRACT_ID \
+  "@mozilla.org/dom/payments/basiccard-response-data;1"
+
 #define NS_PAYMENT_CANMAKE_ACTION_RESPONSE_CID \
   { 0x52fc3f9f, 0xc0cb, 0x4874, { 0xb3, 0xd4, 0xee, 0x4b, 0x6e, 0x9c, 0xbe, 0x9c } }
 #define NS_PAYMENT_CANMAKE_ACTION_RESPONSE_CONTRACT_ID \

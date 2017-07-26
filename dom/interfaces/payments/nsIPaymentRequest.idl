@@ -12,7 +12,8 @@ interface nsIArray;
 interface nsIPaymentMethodData : nsISupports
 {
   readonly attribute AString supportedMethods;
-  readonly attribute AString data;
+  [implicit_jscontext]
+  readonly attribute jsval data;
 };
 
 [scriptable, builtinclass, uuid(d22a6f5f-767b-4fea-bf92-68b0b8003eba)]
@@ -36,7 +37,8 @@ interface nsIPaymentDetailsModifier : nsISupports
   readonly attribute AString supportedMethods;
   readonly attribute nsIPaymentItem total;
   readonly attribute nsIArray additionalDisplayItems;
-  readonly attribute AString data;
+  [implicit_jscontext]
+  readonly attribute jsval data;
 };
 
 [scriptable, builtinclass, uuid(68341551-3605-4381-b936-41e830aa88fb)]
