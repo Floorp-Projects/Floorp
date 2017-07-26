@@ -568,14 +568,19 @@ public:
 #ifdef DESKTOP
   Maybe<ResultExpr> EvaluateIpcCall(int aCall) const override {
     switch(aCall) {
-      // SysV IPC is a problem: it follows the Unix "same uid policy"
-      // and can't be restricted/brokered like file access.
-#ifdef MOZ_ALSA
+      // These are a problem: SysV shared memory follows the Unix
+      // "same uid policy" and can't be restricted/brokered like file
+      // access.  But the graphics layer might not be using them
+      // anymore; this needs to be studied.
+    case SHMGET:
+    case SHMCTL:
+    case SHMAT:
+    case SHMDT:
     case SEMGET:
     case SEMCTL:
     case SEMOP:
+    case MSGGET:
       return Some(Allow());
-#endif
     default:
       return SandboxPolicyCommon::EvaluateIpcCall(aCall);
     }
