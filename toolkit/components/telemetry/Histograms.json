@@ -13613,27 +13613,5 @@
     "bug_numbers": [1274919],
     "description": "Measure the time how long the cursor is hovering before opening the unselcted tab. Only record the data if someone requests for sending unselected tab hover msg.",
     "releaseChannelCollection": "opt-out"
-  },
-  "WEBAUTHN_CREATE_CREDENTIAL_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "70",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 120000,
-    "n_buckets": 100,
-    "bug_numbers": [1265472],
-    "description": "Time in milliseconds to complete a WebAuthn create credential."
-  },
-  "WEBAUTHN_GET_ASSERTION_MS": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "jjones@mozilla.com"],
-    "expires_in_version": "70",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 120000,
-    "n_buckets": 100,
-    "bug_numbers": [1265472],
-    "description": "Time in milliseconds to complete a WebAuthn get assertion."
   }
 }
