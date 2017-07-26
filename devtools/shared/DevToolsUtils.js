@@ -29,6 +29,21 @@ for (let key of Object.keys(ThreadSafeDevToolsUtils)) {
 }
 
 /**
+ * Helper for Cu.isCrossProcessWrapper that works with Debugger.Objects.
+ * This will always return false in workers (see the implementation in
+ * ThreadSafeDevToolsUtils.js).
+ *
+ * @param Debugger.Object debuggerObject
+ * @return bool
+ */
+exports.isCPOW = function (debuggerObject) {
+  try {
+    return Cu.isCrossProcessWrapper(debuggerObject.unsafeDereference());
+  } catch (e) { }
+  return false;
+};
+
+/**
  * Waits for the next tick in the event loop to execute a callback.
  */
 exports.executeSoon = function (fn) {
