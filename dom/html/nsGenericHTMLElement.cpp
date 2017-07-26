@@ -487,7 +487,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (aDocument) {
     RegAccessKey();
-    if (HasName()) {
+    if (CanHaveName(NodeInfo()->NameAtom()) && HasName()) {
       aDocument->
         AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
     }
@@ -776,15 +776,16 @@ nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
         RegAccessKey();
       }
     } else if (aName == nsGkAtoms::name) {
-      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase) &&
-          CanHaveName(NodeInfo()->NameAtom())) {
+      if (aValue && !aValue->Equals(EmptyString(), eIgnoreCase)) {
         // This may not be quite right because we can have subclass code run
         // before here. But in practice subclasses don't care about this flag,
         // and in particular selector matching does not care.  Otherwise we'd
         // want to handle it like we handle id attributes (in PreIdMaybeChange
         // and PostIdMaybeChange).
         SetHasName();
-        AddToNameTable(aValue->GetAtomValue());
+        if (CanHaveName(NodeInfo()->NameAtom())) {
+          AddToNameTable(aValue->GetAtomValue());
+        }
       }
     }
   }
