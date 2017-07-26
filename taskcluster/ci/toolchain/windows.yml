@@ -102,7 +102,7 @@ win64-sccache:
         kind: build
         platform: toolchains/opt
         symbol: TW64(sccache)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 36000
