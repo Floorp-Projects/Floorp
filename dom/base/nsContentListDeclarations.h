@@ -57,17 +57,12 @@ NS_GetContentList(nsINode* aRootNode,
                   int32_t aMatchNameSpaceId,
                   const nsAString& aTagname);
 
+template<class ListType>
 already_AddRefed<nsContentList>
-NS_GetFuncStringNodeList(nsINode* aRootNode,
+GetFuncStringContentList(nsINode* aRootNode,
                          nsContentListMatchFunc aFunc,
                          nsContentListDestroyFunc aDestroyFunc,
                          nsFuncStringContentListDataAllocator aDataAllocator,
                          const nsAString& aString);
-already_AddRefed<nsContentList>
-NS_GetFuncStringHTMLCollection(nsINode* aRootNode,
-                               nsContentListMatchFunc aFunc,
-                               nsContentListDestroyFunc aDestroyFunc,
-                               nsFuncStringContentListDataAllocator aDataAllocator,
-                               const nsAString& aString);
 
 #endif // nsContentListDeclarations_h
