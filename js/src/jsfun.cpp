@@ -991,39 +991,50 @@ const Class JSFunction::class_ = {
 const Class* const js::FunctionClassPtr = &JSFunction::class_;
 
 JSString*
-js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
+js::FunctionToStringCache::lookup(JSScript* script) const
+{
+    for (size_t i = 0; i < NumEntries; i++) {
+        if (entries_[i].script == script)
+            return entries_[i].string;
+    }
+    return nullptr;
+}
+
+void
+js::FunctionToStringCache::put(JSScript* script, JSString* string)
+{
+    for (size_t i = NumEntries - 1; i > 0; i--)
+        entries_[i] = entries_[i - 1];
+
+    entries_[0].set(script, string);
+}
+
+JSString*
+js::FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource)
 {
     if (fun->isInterpretedLazy() && !JSFunction::getOrCreateScript(cx, fun))
         return nullptr;
 
     if (IsAsmJSModule(fun))
-        return AsmJSModuleToString(cx, fun, !prettyPrint);
+        return AsmJSModuleToString(cx, fun, isToSource);
     if (IsAsmJSFunction(fun))
         return AsmJSFunctionToString(cx, fun);
 
     if (IsWrappedAsyncFunction(fun)) {
         RootedFunction unwrapped(cx, GetUnwrappedAsyncFunction(fun));
-        return FunctionToString(cx, unwrapped, prettyPrint);
+        return FunctionToString(cx, unwrapped, isToSource);
     }
     if (IsWrappedAsyncGenerator(fun)) {
         RootedFunction unwrapped(cx, GetUnwrappedAsyncGenerator(fun));
-        return FunctionToString(cx, unwrapped, prettyPrint);
+        return FunctionToString(cx, unwrapped, isToSource);
     }
 
-    StringBuffer out(cx);
     RootedScript script(cx);
 
     if (fun->hasScript()) {
         script = fun->nonLazyScript();
-        if (script->isGeneratorExp()) {
-            if (!out.append("function genexp() {") ||
-                !out.append("\n    [generator expression]\n") ||
-                !out.append("}"))
-            {
-                return nullptr;
-            }
-            return out.finishString();
-        }
+        if (MOZ_UNLIKELY(script->isGeneratorExp()))
+            return NewStringCopyZ<CanGC>(cx, "function genexp() {\n    [generator expression]\n}");
     }
 
     // Default class constructors are self-hosted, but have their source
@@ -1033,9 +1044,9 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
     bool haveSource = fun->isInterpreted() && (fun->isClassConstructor() ||
                                                !fun->isSelfHostedBuiltin());
 
-    // If we're not in pretty mode, put parentheses around lambda functions
-    // so that eval returns lambda, not function statement.
-    bool addParentheses = haveSource && !prettyPrint && (fun->isLambda() && !fun->isArrow());
+    // If we're in toSource mode, put parentheses around lambda functions so
+    // that eval returns lambda, not function statement.
+    bool addParentheses = haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
     if (haveSource && !script->scriptSource()->hasSourceData() &&
         !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
@@ -1043,6 +1054,24 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         return nullptr;
     }
 
+    // Fast path for the common case, to avoid StringBuffer overhead.
+    if (!addParentheses && haveSource) {
+        FunctionToStringCache& cache = cx->zone()->functionToStringCache();
+        if (JSString* str = cache.lookup(script))
+            return str;
+
+        size_t start = script->toStringStart(), end = script->toStringEnd();
+        JSString* str = (end - start <= ScriptSource::SourceDeflateLimit)
+            ? script->scriptSource()->substring(cx, start, end)
+            : script->scriptSource()->substringDontDeflate(cx, start, end);
+        if (!str)
+            return nullptr;
+
+        cache.put(script, str);
+        return str;
+    }
+
+    StringBuffer out(cx);
     if (addParentheses) {
         if (!out.append('('))
             return nullptr;
@@ -1110,11 +1139,11 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
 }
 
 JSString*
-fun_toStringHelper(JSContext* cx, HandleObject obj, unsigned indent)
+fun_toStringHelper(JSContext* cx, HandleObject obj, bool isToSource)
 {
     if (!obj->is<JSFunction>()) {
         if (JSFunToStringOp op = obj->getOpsFunToString())
-            return op(cx, obj, indent);
+            return op(cx, obj, isToSource);
 
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                   JSMSG_INCOMPATIBLE_PROTO,
@@ -1123,7 +1152,7 @@ fun_toStringHelper(JSContext* cx, HandleObject obj, unsigned indent)
     }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
-    return FunctionToString(cx, fun, indent != JS_DONT_PRETTY_PRINT);
+    return FunctionToString(cx, fun, isToSource);
 }
 
 bool
@@ -1146,16 +1175,11 @@ js::fun_toString(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(IsFunctionObject(args.calleev()));
 
-    uint32_t indent = 0;
-
-    if (args.length() != 0 && !ToUint32(cx, args[0], &indent))
-        return false;
-
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
 
-    RootedString str(cx, fun_toStringHelper(cx, obj, indent));
+    JSString* str = fun_toStringHelper(cx, obj, /* isToSource = */ false);
     if (!str)
         return false;
 
@@ -1176,12 +1200,12 @@ fun_toSource(JSContext* cx, unsigned argc, Value* vp)
 
     RootedString str(cx);
     if (obj->isCallable())
-        str = fun_toStringHelper(cx, obj, JS_DONT_PRETTY_PRINT);
+        str = fun_toStringHelper(cx, obj, /* isToSource = */ true);
     else
         str = ObjectToSource(cx, obj);
-
     if (!str)
         return false;
+
     args.rval().setString(str);
     return true;
 }

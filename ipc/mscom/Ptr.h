@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/EnsureMTA.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/UniquePtr.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
@@ -41,9 +42,10 @@ struct MainThreadRelease
       return;
     }
     DebugOnly<nsresult> rv =
-      NS_DispatchToMainThread(NewNonOwningRunnableMethod("mscom::MainThreadRelease",
-                                                         aPtr,
-                                                         &T::Release));
+      SystemGroup::Dispatch("mscom::MainThreadRelease",
+                            TaskCategory::Other,
+                            NewNonOwningRunnableMethod("mscom::MainThreadRelease",
+                                                       aPtr, &T::Release));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 };

@@ -80,7 +80,7 @@ extern JSString*
 AsmJSFunctionToString(JSContext* cx, HandleFunction fun);
 
 extern JSString*
-AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda);
+AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool isToSource);
 
 // asm.js heap:
 

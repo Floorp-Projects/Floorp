@@ -3028,7 +3028,7 @@ public:
                                    bool aNoFakePlugin,
                                    nsIContent* aContent);
 
-  static already_AddRefed<nsIEventTarget>
+  static already_AddRefed<nsISerialEventTarget>
   GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, mozilla::TaskCategory aCategory);
 
   /**

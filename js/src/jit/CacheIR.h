@@ -19,6 +19,9 @@
 namespace js {
 namespace jit {
 
+
+enum class BaselineCacheIRStubKind;
+
 // CacheIR is an (extremely simple) linear IR language for inline caches.
 // From this IR, we can generate machine code for Baseline or Ion IC stubs.
 //
@@ -218,6 +221,7 @@ extern const char* CacheKindNames[];
     _(StoreUnboxedProperty)               \
     _(StoreDenseElement)                  \
     _(StoreDenseElementHole)              \
+    _(ArrayPush)                          \
     _(StoreTypedElement)                  \
     _(StoreUnboxedArrayElement)           \
     _(StoreUnboxedArrayElementHole)       \
@@ -819,6 +823,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(index);
         writeOperandId(rhs);
         buffer_.writeByte(handleAdd);
+    }
+    void arrayPush(ObjOperandId obj, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::ArrayPush, obj);
+        writeOperandId(rhs);
     }
     void callScriptedSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
@@ -1460,31 +1468,35 @@ class MOZ_RAII GetIteratorIRGenerator : public IRGenerator
 
 class MOZ_RAII CallIRGenerator : public IRGenerator
 {
-  public:
-    enum class OptStrategy {
-        None = 0,
-        StringSplit
-    };
-
   private:
     uint32_t argc_;
     HandleValue callee_;
     HandleValue thisval_;
     HandleValueArray args_;
+    PropertyTypeCheckInfo typeCheckInfo_;
+    BaselineCacheIRStubKind cacheIRStubKind_;
 
-    mozilla::Maybe<OptStrategy> cachedStrategy_;
-
-    OptStrategy canOptimize();
-    OptStrategy canOptimizeStringSplit(HandleFunction calleeFunc);
     bool tryAttachStringSplit();
+    bool tryAttachArrayPush();
+
+    void trackAttached(const char* name);
+    void trackNotAttached();
 
   public:
-    CallIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc, ICState::Mode mode,
+    CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc,
+                    ICCall_Fallback* stub, ICState::Mode mode,
                     uint32_t argc, HandleValue callee, HandleValue thisval,
                     HandleValueArray args);
 
-    OptStrategy getOptStrategy(bool* optimizeAfterCall = nullptr);
     bool tryAttachStub();
+
+    BaselineCacheIRStubKind cacheIRStubKind() const {
+        return cacheIRStubKind_;
+    }
+
+    const PropertyTypeCheckInfo* typeCheckInfo() const {
+        return &typeCheckInfo_;
+    }
 };
 
 class MOZ_RAII CompareIRGenerator : public IRGenerator

@@ -10545,7 +10545,7 @@ nsContentUtils::HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
   return nsIObjectLoadingContent::TYPE_NULL;
 }
 
-/* static */ already_AddRefed<nsIEventTarget>
+/* static */ already_AddRefed<nsISerialEventTarget>
 nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aCategory)
 {
   if (NS_WARN_IF(!aLoadInfo)) {
@@ -10555,7 +10555,7 @@ nsContentUtils::GetEventTargetByLoadInfo(nsILoadInfo* aLoadInfo, TaskCategory aC
   nsCOMPtr<nsIDOMDocument> domDoc;
   aLoadInfo->GetLoadingDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  nsCOMPtr<nsIEventTarget> target;
+  nsCOMPtr<nsISerialEventTarget> target;
   if (doc) {
     if (DocGroup* group = doc->GetDocGroup()) {
       target = group->EventTargetFor(aCategory);
