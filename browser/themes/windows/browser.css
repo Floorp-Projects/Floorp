@@ -813,8 +813,9 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 
 %include ../shared/sidebar.inc.css
 
-#sidebar {
-  background-color: Window;
+#sidebar-box {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
 #sidebar-header {
