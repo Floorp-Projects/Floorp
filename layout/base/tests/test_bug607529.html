@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
   
     if (e.data == "loaded" && !doneOneLoad) {
       doneOneLoad = true;
-      w.location = "data:text/html,<script>window.onload = function() { opener.postMessage('goback', '*'); }</" + "script>";
+      w.location = "file_bug607529-1.html";
     }
     else if (e.data == "goback") {
       w.history.back();
