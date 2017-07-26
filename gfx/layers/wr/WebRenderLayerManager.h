@@ -6,6 +6,8 @@
 #ifndef GFX_WEBRENDERLAYERMANAGER_H
 #define GFX_WEBRENDERLAYERMANAGER_H
 
+#include <vector>
+
 #include "gfxPrefs.h"
 #include "Layers.h"
 #include "mozilla/MozPromise.h"
@@ -13,6 +15,7 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/layers/WebRenderScrollData.h"
 #include "mozilla/layers/WebRenderUserData.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -236,9 +239,12 @@ private:
   wr::BuiltDisplayList mBuiltDisplayList;
   nsTArray<WebRenderParentCommand> mParentCommands;
 
-  // We need this for building scroll data for the compositor in
-  // layers-free mode
-  std::unordered_map<FrameMetrics::ViewID, ScrollMetadata> mScrollMetadata;
+  // This holds the scroll data that we need to send to the compositor for
+  // APZ to do it's job
+  WebRenderScrollData mScrollData;
+  // We use this as a temporary data structure while building the mScrollData
+  // inside a layers-free transaction.
+  std::vector<WebRenderLayerScrollData> mLayerScrollData;
 
   // Layers that have been mutated. If we have an empty transaction
   // then a display item layer will no longer be valid
