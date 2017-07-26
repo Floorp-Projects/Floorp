@@ -108,21 +108,23 @@ function Inspector(toolbox) {
   this.nodeMenuTriggerInfo = null;
 
   this._handleRejectionIfNotDestroyed = this._handleRejectionIfNotDestroyed.bind(this);
-  this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
-  this.onNewRoot = this.onNewRoot.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
-  this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
-  this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
-  this.onNewSelection = this.onNewSelection.bind(this);
-  this.onDetached = this.onDetached.bind(this);
-  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
+  this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
   this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
+  this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
+
+  this.onDetached = this.onDetached.bind(this);
+  this.onMarkupLoaded = this.onMarkupLoaded.bind(this);
+  this.onNewSelection = this.onNewSelection.bind(this);
+  this.onNewRoot = this.onNewRoot.bind(this);
+  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
   this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
-  this.onSidebarShown = this.onSidebarShown.bind(this);
-  this.onSidebarHidden = this.onSidebarHidden.bind(this);
-  this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onShowBoxModelHighlighterForNode =
     this.onShowBoxModelHighlighterForNode.bind(this);
+  this.onSidebarHidden = this.onSidebarHidden.bind(this);
+  this.onSidebarSelect = this.onSidebarSelect.bind(this);
+  this.onSidebarShown = this.onSidebarShown.bind(this);
+  this.onTextBoxContextMenu = this.onTextBoxContextMenu.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
   this._detectingActorFeatures = this._detectActorFeatures();
@@ -779,13 +781,7 @@ Inspector.prototype = {
       this.selection.setNodeFront(defaultNode, "navigateaway");
 
       this._initMarkup();
-      this.once("markuploaded", () => {
-        if (!this.markup) {
-          return;
-        }
-        this.markup.expandNode(this.selection.nodeFront);
-        this.emit("new-root");
-      });
+      this.once("markuploaded", this.onMarkupLoaded);
 
       // Setup the toolbar again, since its content may depend on the current document.
       this.setupToolbar();
@@ -794,6 +790,27 @@ Inspector.prototype = {
     this._getDefaultNodeForSelection()
         .then(onNodeSelected, this._handleRejectionIfNotDestroyed);
   },
+
+  /**
+   * Handler for "markuploaded" event fired on a new root mutation and after the markup
+   * view is initialized. Expands the current selected node and restores the saved
+   * highlighter state.
+   */
+  onMarkupLoaded: Task.async(function* () {
+    if (!this.markup) {
+      return;
+    }
+
+    this.markup.expandNode(this.selection.nodeFront);
+
+    // Restore the highlighter states prior to emitting "new-root".
+    yield Promise.all([
+      this.highlighters.restoreGridState(),
+      this.highlighters.restoreShapeState()
+    ]);
+
+    this.emit("new-root");
+  }),
 
   _selectionCssSelector: null,
 
