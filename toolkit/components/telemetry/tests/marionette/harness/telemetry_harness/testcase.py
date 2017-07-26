@@ -51,12 +51,14 @@ class TelemetryTestCase(PuppeteerMixin, MarionetteTestCase):
         # Wait 5 seconds to ensure that telemetry has reinitialized
         time.sleep(5)
 
-    def wait_for_ping(self, ping_filter_func):
-        if len(self.ping_list) == 0:
-            try:
-                Wait(self.marionette, 60).until(lambda t: len(self.ping_list) > 0)
-            except Exception as e:
-                self.fail('Error generating ping: {}'.format(e.message))
+    def wait_for_ping(self, action_func, ping_filter_func):
+        current_num_pings = len(self.ping_list)
+        if callable(action_func):
+            action_func()
+        try:
+            Wait(self.marionette, 60).until(lambda _: len(self.ping_list) > current_num_pings)
+        except Exception as e:
+            self.fail('Error generating ping: {}'.format(e.message))
         # Filter pings based on type and reason to make sure right ping is captured.
         self.ping_list = [p for p in self.ping_list if ping_filter_func(p)]
 
