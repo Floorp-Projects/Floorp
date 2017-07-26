@@ -7,6 +7,7 @@ package org.mozilla.gecko.activitystream.homepanel.stream;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.support.annotation.UiThread;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
 import java.lang.ref.WeakReference;
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 public class HighlightItem extends StreamItem implements IconCallback {
@@ -158,24 +160,41 @@ public class HighlightItem extends StreamItem implements IconCallback {
 
     /** Updates the text of the given view to the host second level domain. */
     private static class UpdatePageDomainAsyncTask extends URIUtils.GetHostSecondLevelDomainAsyncTask {
+        private static final int VIEW_TAG_ID = R.id.page; // same as the view.
+
         private final WeakReference<TextView> pageDomainViewWeakReference;
+        private final UUID viewTagAtStart;
 
         UpdatePageDomainAsyncTask(final Context contextReference, final String uriString, final TextView pageDomainView) {
             super(contextReference, uriString);
             this.pageDomainViewWeakReference = new WeakReference<>(pageDomainView);
+
+            // See isTagSameAsStartTag for details.
+            viewTagAtStart = UUID.randomUUID();
+            pageDomainView.setTag(VIEW_TAG_ID, viewTagAtStart);
         }
 
         @Override
         protected void onPostExecute(final String hostSLD) {
             super.onPostExecute(hostSLD);
             final TextView viewToUpdate = pageDomainViewWeakReference.get();
-            if (viewToUpdate == null) {
+
+            if (viewToUpdate == null || !isTagSameAsStartTag(viewToUpdate)) {
                 return;
             }
 
             // hostSLD will be the empty String if the host cannot be determined. This is fine: it's very unlikely
             // and the page title will be URL if there's an error there so we wouldn't want to write the URL again here.
             viewToUpdate.setText(hostSLD);
+        }
+
+        /**
+         * Returns true if the tag on the given view matches the tag from the constructor. We do this to ensure
+         * the View we're making this request for hasn't been re-used by the time this request completes.
+         */
+        @UiThread
+        private boolean isTagSameAsStartTag(final View viewToCheck) {
+            return viewTagAtStart.equals(viewToCheck.getTag(VIEW_TAG_ID));
         }
     }
 }
