@@ -411,6 +411,7 @@ WEBIDL_FILES = [
     'BarProp.webidl',
     'BaseAudioContext.webidl',
     'BaseKeyframeTypes.webidl',
+    'BasicCardPayment.webidl',
     'BatteryManager.webidl',
     'BeforeUnloadEvent.webidl',
     'BiquadFilterNode.webidl',
