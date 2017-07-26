@@ -1,13 +1,5 @@
 [
   {
-    "version": "gcc 4.9.4 + PR64905",
-    "size": 101297752,
-    "digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
-    "algorithm": "sha512",
-    "filename": "gcc.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 11189216,
     "digest": "18bc52b0599b1308b667e282abb45f47597bfc98a5140cfcab8da71dacf89dd76d0dee22a04ce26fe7ad1f04e2d6596991f9e5b01fd2aaaab5542965f596b0e6",
     "algorithm": "sha512",
