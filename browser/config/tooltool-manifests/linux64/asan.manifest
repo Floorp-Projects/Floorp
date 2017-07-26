@@ -16,15 +16,6 @@
     "unpack": true
   },
   {
-    "version": "sccache rev 69334a26ba65fc88e3934271a2ce6781c51b445e",
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "sccache2.tar.xz",
-    "unpack": true,
-    "digest": "7bbe53cda3f608826dc6a0266e648cd2ea09c88ef93edf87d582b41185b72740667e2c7bf6e9b2b911fb2915cbfb985e528598c7b3153092ad27d5e937342df7",
-    "size": 2191380
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 161014632,
     "digest": "65bebcf94fc66ea618c58c9ac33f0f206095ecfe3931cc6edb301f4b40480e3b44b0f39aea7a25fed8eef47e63523e7e670082947a3662cdc04c68ebbe5dfc89",
