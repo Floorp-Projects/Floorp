@@ -8494,9 +8494,10 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
     if (!moduleChars.init(parser))
         return JS::AsmJSCache_InternalError;
 
-    size_t bytecodeSize, compiledSize;
-    module.serializedSize(&bytecodeSize, &compiledSize);
+    size_t bytecodeSize = module.bytecodeSerializedSize();
     MOZ_RELEASE_ASSERT(bytecodeSize == 0);
+
+    size_t compiledSize = module.compiledSerializedSize();
     MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
 
     size_t serializedSize = sizeof(uint32_t) +
@@ -8524,7 +8525,7 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, JSContext* cx)
     // afterwards.)
     cursor = WriteScalar<uint32_t>(cursor, compiledSize);
 
-    module.serialize(/* bytecodeBegin = */ nullptr, /* bytecodeSize = */ 0, cursor, compiledSize);
+    module.compiledSerialize(cursor, compiledSize);
     cursor += compiledSize;
 
     cursor = moduleChars.serialize(cursor);
