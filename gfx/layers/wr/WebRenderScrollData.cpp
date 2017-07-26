@@ -6,6 +6,7 @@
 #include "mozilla/layers/WebRenderScrollData.h"
 
 #include "Layers.h"
+#include "LayersLogging.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
@@ -128,6 +129,27 @@ WebRenderLayerScrollData::GetTransformTyped() const
   return ViewAs<CSSTransformMatrix>(GetTransform());
 }
 
+void
+WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
+{
+  printf_stderr("LayerScrollData(%p) descendants %d\n", this, mDescendantCount);
+  for (size_t i : mScrollIds) {
+    printf_stderr("  metadata: %s\n", Stringify(aOwner.GetScrollMetadata(i)).c_str());
+  }
+  printf_stderr("  transform: %s perspective: %d visible: %s\n",
+    Stringify(mTransform).c_str(), mTransformIsPerspective,
+    Stringify(mVisibleRegion).c_str());
+  printf_stderr("  event regions: %s override: 0x%x\n",
+    Stringify(mEventRegions).c_str(), mEventRegionsOverride);
+  printf_stderr("  ref layers id: %" PRIu64 "\n", mReferentId.valueOr(0));
+  //printf_stderr("  scroll thumb: %s animation: %" PRIu64 "\n",
+  //  Stringify(mScrollThumbData).c_str(), mScrollbarAnimationId);
+  printf_stderr("  scroll container: %d target: %" PRIu64 "\n",
+    mIsScrollbarContainer, mScrollbarTargetContainerId);
+  printf_stderr("  fixed pos container: %" PRIu64 "\n",
+    mFixedPosScrollContainerId);
+}
+
 WebRenderScrollData::WebRenderScrollData()
   : mIsFirstPaint(false)
   , mPaintSequenceNumber(0)
@@ -225,6 +247,16 @@ uint32_t
 WebRenderScrollData::GetPaintSequenceNumber() const
 {
   return mPaintSequenceNumber;
+}
+
+void
+WebRenderScrollData::Dump() const
+{
+  printf_stderr("WebRenderScrollData with %zu layers firstpaint: %d\n",
+      mLayerScrollData.Length(), mIsFirstPaint);
+  for (size_t i = 0; i < mLayerScrollData.Length(); i++) {
+    mLayerScrollData.ElementAt(i).Dump(*this);
+  }
 }
 
 } // namespace layers
