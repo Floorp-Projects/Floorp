@@ -112,3 +112,13 @@ add_task(async function testExperiments() {
 
   getAll.restore();
 });
+
+add_task(async function isFirstRun() {
+  let environment = ClientEnvironment.getEnvironment();
+
+  // isFirstRun is read from a preference
+  await SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.first_run", true]]});
+  environment = ClientEnvironment.getEnvironment();
+  ok(environment.isFirstRun, "isFirstRun is read from preferences");
+});
+
