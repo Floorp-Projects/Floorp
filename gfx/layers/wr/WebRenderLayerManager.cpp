@@ -245,6 +245,7 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       // data that is in the display item.
       switch (itemType) {
       case nsDisplayItem::TYPE_SCROLL_INFO_LAYER:
+      case nsDisplayItem::TYPE_REMOTE:
         forceNewLayerData = true;
         break;
       default:
