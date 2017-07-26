@@ -62,13 +62,6 @@ extensions.registerModules({
       ["i18n"],
     ],
   },
-  permissions: {
-    url: "chrome://extensions/content/ext-c-permissions.js",
-    scopes: ["addon_child", "content_child", "devtools_child", "proxy_script"],
-    paths: [
-      ["permissions"],
-    ],
-  },
   runtime: {
     url: "chrome://extensions/content/ext-c-runtime.js",
     scopes: ["addon_child", "content_child", "devtools_child", "proxy_script"],
