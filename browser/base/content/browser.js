@@ -5055,6 +5055,7 @@ var CombinedStopReload = {
                         aRequest instanceof Ci.nsIRequest &&
                         aWebProgress.isTopLevel &&
                         aWebProgress.isLoadingDocument &&
+                        !gBrowser.tabAnimationsInProgress &&
                         this.animate;
 
     this._cancelTransition();
@@ -5076,6 +5077,7 @@ var CombinedStopReload = {
                         aRequest instanceof Ci.nsIRequest &&
                         aWebProgress.isTopLevel &&
                         !aWebProgress.isLoadingDocument &&
+                        !gBrowser.tabAnimationsInProgress &&
                         this.animate;
 
     if (shouldAnimate) {
