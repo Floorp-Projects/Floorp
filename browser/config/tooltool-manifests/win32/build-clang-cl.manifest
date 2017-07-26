@@ -1,19 +1,5 @@
 [
   {
-    "size": 266240,
-    "digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
-    "algorithm": "sha512",
-    "filename": "mozmake.exe"
-  },
-  {
-    "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
-    "size": 97017057,
-    "digest": "b726645f9d26c5a3048720b3839166021c1cf91a02d2ff2f10c49adced7455c7352e18b5052084d80bf9d1c40ec1bf72d0397921b8cd23262f89fdbd10def58f",
-    "algorithm": "sha512",
-    "filename": "rustc.tar.bz2",
-    "unpack": true
-  },
-  {
     "version": "Visual Studio 2015 Update 3 14.0.25425.01 / SDK 10.0.14393.0",
     "size": 326656969,
     "digest": "babc414ffc0457d27f5a1ed24a8e4873afbe2f1c1a4075469a27c005e1babc3b2a788f643f825efedff95b79686664c67ec4340ed535487168a3482e68559bc7",
