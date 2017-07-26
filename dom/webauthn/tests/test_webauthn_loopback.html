@@ -43,13 +43,18 @@ function() {
   function decodeCreatedCredential(aCredInfo) {
     /* PublicKeyCredential : Credential
        - rawId: Key Handle buffer pulled from U2F Register() Response
+       - id: Key Handle buffer in base64url form, should == rawId
+       - type: Literal 'public-key'
        - response : AuthenticatorAttestationResponse : AuthenticatorResponse
          - attestationObject: CBOR object
          - clientDataJSON: serialized JSON
        - clientExtensionResults: (not yet supported)
     */
 
+    is(aCredInfo.type, "public-key", "Credential type must be public-key")
+
     ok(aCredInfo.rawId.length > 0, "Key ID exists");
+    is(aCredInfo.id, bytesToBase64UrlSafe(aCredInfo.rawId), "Encoded Key ID and Raw Key ID match");
 
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
@@ -68,13 +73,18 @@ function() {
   function checkAssertionAndSigValid(aPublicKey, aAssertion) {
     /* PublicKeyCredential : Credential
        - rawId: ID of Credential from AllowList that succeeded
+       - id: Key Handle buffer in base64url form, should == rawId
+       - type: Literal 'public-key'
        - response : AuthenticatorAssertionResponse : AuthenticatorResponse
          - clientDataJSON: serialized JSON
          - authenticatorData: RP ID Hash || U2F Sign() Response
          - signature: U2F Sign() Response
     */
 
+    is(aAssertion.type, "public-key", "Credential type must be public-key")
+
     ok(aAssertion.rawId.length > 0, "Key ID exists");
+    is(aAssertion.id, bytesToBase64UrlSafe(aAssertion.rawId), "Encoded Key ID and Raw Key ID match");
 
     ok(aAssertion.response.authenticatorData.length > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));

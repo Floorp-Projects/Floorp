@@ -87,3 +87,22 @@ win64-clang-tidy:
             - 'build/build-clang/**'
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+
+win64-sccache:
+    description: "sccache toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TW64(sccache)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+    run:
+        using: toolchain-script
+        script: build-sccache.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/sccache2.tar.bz2

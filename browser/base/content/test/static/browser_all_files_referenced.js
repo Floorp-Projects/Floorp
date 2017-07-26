@@ -43,10 +43,6 @@ var whitelist = [
   // Used by setting this url as a pref in about:config
   {file: "chrome://browser/content/newtab/alternativeDefaultSites.json"},
 
-  // Temporary whitelisted while WebPayments in construction
-  // See Bug 1381141
-  {file: "chrome://payments/content/paymentRequest.xhtml"},
-
   // Add-on compat
   {file: "chrome://browser/skin/devtools/common.css"},
   {file: "chrome://global/content/XPCNativeWrapper.js"},
@@ -174,6 +170,14 @@ var whitelist = [
   {file: "resource://gre/modules/sdk/bootstrap.js"},
 
 ];
+
+// Temporary whitelisted while WebPayments in construction
+// See Bug 1381141
+if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_BUILD_APP == "browser") {
+  whitelist.push(
+    {file: "chrome://payments/content/paymentRequest.xhtml"}
+  );
+}
 
 if (!AppConstants.MOZ_PHOTON_THEME) {
   whitelist.push(

@@ -46,7 +46,7 @@ let json = [
             name: "sub_foo",
             type: "function",
             parameters: [],
-            returns: "integer",
+            returns: {type: "integer"},
           },
         ],
       },
@@ -121,6 +121,9 @@ class APIImplementation extends SchemaAPIInterface {
 
   callFunction(...args) {
     this.record("callFunction", args);
+    if (this.name === "sub_foo") {
+      return 13;
+    }
   }
 
   callFunctionNoReturn(...args) {

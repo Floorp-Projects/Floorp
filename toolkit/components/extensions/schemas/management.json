@@ -46,7 +46,7 @@
         "id": "ExtensionType",
         "description": "The type of this extension. Will always be 'extension'.",
         "type": "string",
-        "enum": ["extension"]
+        "enum": ["extension", "theme"]
       },
       {
         "id": "ExtensionInstallType",

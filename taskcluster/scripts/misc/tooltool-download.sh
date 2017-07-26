@@ -23,6 +23,10 @@ if [ -n "$RELENGAPI_PORT" ]; then
     TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --tooltool-url=http://relengapi/tooltool/"
 fi
 
+if [ -n "$UPLOAD_DIR" ]; then
+    TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --artifact-manifest $UPLOAD_DIR/toolchains.json"
+fi
+
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
 export TOOLTOOL_CACHE
 

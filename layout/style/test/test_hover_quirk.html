@@ -17,8 +17,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
     #content :hover::after {
       content: "any element";
     }
+
     #content :hover:first-of-type .child::after {
       content: "any child";
+    }
+
+    #content .parent .child::after {
+      content: "wrong" !important;
+    }
+
+    #content .parent:hover .child::after {
+      content: "any child" !important;
     }
 
     /* Should apply only to links: */
@@ -65,6 +74,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
       test(document.getElementById("span"), false);
       test(document.getElementById("label"), false);
       test(document.getElementById("link"), true);
+      test(document.getElementById("div"), false);
       SimpleTest.finish();
     });
   </script>
@@ -75,7 +85,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783213
   <div id="content">
     <span id="span">Span<span class="child"></span></span><br>
     <label id="label">Label<span class="child"></span></label><br>
-    <a id="link" href="#">Link<span class="child"></span></a>
+    <a id="link" href="#">Link<span class="child"></span></a><br>
+    <div id="div" class="parent">Div <span><span class="child"></span></span></div><br>
   </div>
   <pre id="test"></pre>
 </body>

@@ -104,6 +104,7 @@ class TsBase(Test):
         'xperf_user_providers',
         'xperf_stackwalk',
         'tpmozafterpaint',
+        'fnbpaint',
         'firstpaint',
         'userready',
         'testeventmap',
@@ -233,7 +234,7 @@ class PageloaderTest(Test):
     cycles = None
     timeout = None
     keys = ['tpmanifest', 'tpcycles', 'tppagecycles', 'tprender', 'tpchrome',
-            'tpmozafterpaint', 'tploadnocache', 'firstpaint', 'userready',
+            'tpmozafterpaint', 'fnbpaint', 'tploadnocache', 'firstpaint', 'userready',
             'testeventmap', 'base_vs_ref', 'rss', 'mainthread', 'resolution', 'cycles',
             'gecko_profile', 'gecko_profile_interval', 'gecko_profile_entries',
             'tptimeout', 'win_counters', 'w7_counters', 'linux_counters', 'mac_counters',
@@ -254,6 +255,7 @@ class QuantumPageloadTest(PageloaderTest):
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
     unit = 'ms'
     lower_is_better = True
+    fnbpaint = True
 
 
 @register_test()
@@ -553,7 +555,6 @@ class tp5o_scroll(PageloaderTest):
     tppagecycles = 12
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
-
     tpscrolltest = True
     """ASAP mode"""
     tpmozafterpaint = False
