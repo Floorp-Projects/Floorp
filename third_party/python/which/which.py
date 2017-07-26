@@ -198,7 +198,8 @@ def whichgen(command, path=None, verbose=0, exts=None):
                 dirName = dirName[1:-1]
             for ext in ['']+exts:
                 absName = os.path.abspath(
-                    os.path.normpath(os.path.join(dirName, command+ext)))
+                    os.path.expanduser(
+                    os.path.normpath(os.path.join(dirName, command+ext))))
                 if os.path.isfile(absName):
                     if usingGivenPath:
                         fromWhere = "from given path element %d" % i
