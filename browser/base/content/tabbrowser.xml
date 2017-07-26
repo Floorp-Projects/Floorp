@@ -126,6 +126,10 @@
         0
       </field>
 
+      <field name="tabAnimationsInProgress">
+        0
+      </field>
+
       <property name="_numPinnedTabs" readonly="true">
         <getter><![CDATA[
           for (var i = 0; i < this.tabs.length; i++) {
@@ -2681,6 +2685,10 @@
               this._lastRelatedTab = t;
             }
 
+            // This field is updated regardless if we actually animate
+            // since it's important that we keep this count correct in all cases.
+            this.tabAnimationsInProgress++;
+
             if (animate) {
               requestAnimationFrame(function() {
                 // kick the animation off
@@ -2972,6 +2980,8 @@
               newTab = true;
             }
 
+            this.tabAnimationsInProgress++;
+
             // Mute audio immediately to improve perceived speed of tab closure.
             if (!aAdoptedByTab && aTab.hasAttribute("soundplaying")) {
               // Don't persist the muted state as this wasn't a user action.
@@ -3053,6 +3063,8 @@
               aCloseWindow = false;
               aNewTab = false;
             }
+
+            this.tabAnimationsInProgress--;
 
             this._lastRelatedTab = null;
 
@@ -6791,6 +6803,7 @@
           if (tab.parentNode != this)
             return;
           tab._fullyOpen = true;
+          this.tabbrowser.tabAnimationsInProgress--;
 
           this.adjustTabstrip();
 
