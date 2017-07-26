@@ -105,7 +105,7 @@ load 587336-1.html
 load 590291-1.svg
 load 601999-1.html
 load 605626-1.svg
-asserts-if(!stylo, 2) load 606914.xhtml # bug 606914, bug 718883
+asserts-if(!stylo,2) load 606914.xhtml # bug 606914, bug 718883
 load 610594-1.html
 load 610954-1.html
 load 612662-1.svg
