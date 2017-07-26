@@ -264,14 +264,14 @@ public:
    * This will traverse all of the document's style roots (that is, its document
    * element, and the roots of the document-level native anonymous content).
    *
-   * |aRestyleBehavior| should be `Normal` or `ForCSSRuleChanges`.
+   * The only allowed flag (for now ) is `ForCSSRuleChanges`.
    * We need to specify |ForCSSRuleChanges| to try to update all CSS animations
    * when we call this function due to CSS rule changes since @keyframes rules
    * may have changed.
    *
    * Returns true if a post-traversal is required.
    */
-  bool StyleDocument(TraversalRestyleBehavior aRestyleBehavior);
+  bool StyleDocument(ServoTraversalFlags aFlags);
 
   /**
    * Performs a Servo animation-only traversal to compute style for all nodes
@@ -364,8 +364,7 @@ public:
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
   already_AddRefed<ServoStyleContext>
-  ResolveServoStyle(dom::Element* aElement,
-                    TraversalRestyleBehavior aRestyleBehavior);
+  ResolveServoStyle(dom::Element* aElement, ServoTraversalFlags aFlags);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
@@ -507,8 +506,7 @@ private:
    * Returns whether a post-traversal is required.
    */
   bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 TraversalRootBehavior aRootBehavior,
-                                 TraversalRestyleBehavior aRestyleBehavior);
+                                 ServoTraversalFlags aFlags);
 
   /**
    * Clear our cached mNonInheritingStyleContexts.

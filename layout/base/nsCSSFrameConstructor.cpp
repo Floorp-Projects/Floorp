@@ -2522,7 +2522,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     // NOTE(emilio): If the root has a non-null binding, we'll stop at the
     // document element and won't process any children, loading the bindings (or
     // failing to do so) will take care of the rest.
-    set->StyleDocument(TraversalRestyleBehavior::Normal);
+    set->StyleDocument(ServoTraversalFlags::Empty);
   }
 
   // FIXME: Should this use ResolveStyleContext?  (The calls in this

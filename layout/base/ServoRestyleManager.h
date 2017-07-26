@@ -191,7 +191,7 @@ private:
   bool ProcessPostTraversal(Element* aElement,
                             ServoStyleContext* aParentContext,
                             ServoRestyleState& aRestyleState,
-                            TraversalRestyleBehavior aRestyleBehavior);
+                            ServoTraversalFlags aFlags);
 
   struct TextPostTraversalState;
   bool ProcessPostTraversalForText(nsIContent* aTextNode,
@@ -212,7 +212,7 @@ private:
                                       int32_t aNameSpaceID,
                                       nsIAtom* aAttribute);
 
-  void DoProcessPendingRestyles(TraversalRestyleBehavior aRestyleBehavior);
+  void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be

@@ -93,6 +93,7 @@ constified-enums = [
     "UpdateAnimationsTasks",
     "ParsingMode",
     "ThemeWidgetType",
+    "ServoTraversalFlags",
 ]
 constified-enum-variants = [
     { enum = "nsCSSPropertyID", variants = ["eCSSProperty_COUNT.*"] },
@@ -132,8 +133,7 @@ whitelist-types = [
     "mozilla::dom::StyleChildrenIterator",
     "mozilla::HalfCorner",
     "mozilla::PropertyStyleAnimationValuePair",
-    "mozilla::TraversalRestyleBehavior",
-    "mozilla::TraversalRootBehavior",
+    "mozilla::ServoTraversalFlags",
     "mozilla::StyleShapeRadius",
     "mozilla::StyleGrid.*",
     "mozilla::UpdateAnimationsTasks",
@@ -386,8 +386,7 @@ structs-types = [
     "RefPtr",
     "CSSPseudoClassType",
     "CSSPseudoElementType",
-    "TraversalRestyleBehavior",
-    "TraversalRootBehavior",
+    "ServoTraversalFlags",
     "ComputedTimingFunction_BeforeFlag",
     "CounterStylePtr",
     "FontFamilyList",
