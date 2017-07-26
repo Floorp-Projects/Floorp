@@ -28,6 +28,7 @@ const {NoSuchElementError} =
 
 this.EXPORTED_SYMBOLS = ["l10n"];
 
+/** @namespace */
 this.l10n = {};
 
 /**

@@ -51,6 +51,8 @@ const PACKET_LENGTH_MAX = Math.pow(2, 40);
 
 /**
  * A generic Packet processing object (extended by two subtypes below).
+ *
+ * @class
  */
 function Packet(transport) {
   this._transport = transport;

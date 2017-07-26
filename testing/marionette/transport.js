@@ -105,6 +105,8 @@ const PACKET_HEADER_MAX = 200;
  *
  * See ./packets.js and the Remote Debugging Protocol specification for
  * more details on the format of these packets.
+ *
+ * @class
  */
 function DebuggerTransport(input, output) {
   EventEmitter.decorate(this);
@@ -717,15 +719,16 @@ LocalDebuggerTransport.prototype = {
  * A transport for the debugging protocol that uses nsIMessageManagers to
  * exchange packets with servers running in child processes.
  *
- * In the parent process, |mm| should be the nsIMessageSender for the
- * child process. In a child process, |mm| should be the child process
- * message manager, which sends packets to the parent.
+ * In the parent process, <var>mm</var> should be the nsIMessageSender
+ * for the child process. In a child process, |mm| should be the child
+ * process message manager, which sends packets to the parent.
  *
- * |prefix| is a string included in the message names, to distinguish
- * multiple servers running in the same child process.
+ * <var>prefix</var> is a string included in the message names, to
+ * distinguish multiple servers running in the same child process.
  *
- * This transport exchanges messages named 'debug:<prefix>:packet', where
- * <prefix> is |prefix|, whose data is the protocol packet.
+ * This transport exchanges messages named <tt>debug:PREFIX:packet</tt>,
+ * where <tt>PREFIX</tt> is <var>prefix</var>, whose data is the protocol
+ * packet.
  */
 function ChildDebuggerTransport(mm, prefix) {
   EventEmitter.decorate(this);
