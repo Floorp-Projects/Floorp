@@ -24,6 +24,7 @@
 #include "nsIExternalProtocolHandler.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIObjectFrame.h"
+#include "nsIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
 #include "nsPluginInstanceOwner.h"
@@ -2481,8 +2482,14 @@ nsObjectLoadingContent::OpenChannel()
                                                                mURI,
                                                                true,   // aInheritForAboutBlank
                                                                false); // aForceInherit
-  nsSecurityFlags securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
-  if (inherit) {
+  nsSecurityFlags securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
+
+  bool isData;
+  bool isURIUniqueOrigin = nsIOService::IsDataURIUniqueOpaqueOrigin() &&
+                           NS_SUCCEEDED(mURI->SchemeIs("data", &isData)) &&
+                           isData;
+
+  if (inherit && !isURIUniqueOrigin) {
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
   if (isSandBoxed) {
