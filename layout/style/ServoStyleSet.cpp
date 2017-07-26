@@ -113,10 +113,10 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
   mPresContext->RestyleManager()->AsServo()->PostRestyleEventForCSSRuleChanges();
 }
 
-bool
-ServoStyleSet::MediumFeaturesChanged() const
+nsRestyleHint
+ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged) const
 {
-  return Servo_StyleSet_MediumFeaturesChanged(mRawSet.get());
+  return Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), aViewportChanged);
 }
 
 size_t

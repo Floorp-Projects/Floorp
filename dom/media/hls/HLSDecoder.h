@@ -37,6 +37,10 @@ public:
                 bool aIsPrivateBrowsing,
                 nsIStreamListener**) override;
   nsresult Load(MediaResource*) override;
+
+  nsresult Play() override;
+
+  void Pause() override;
 };
 
 } // namespace mozilla

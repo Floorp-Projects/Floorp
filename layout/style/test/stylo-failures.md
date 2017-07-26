@@ -33,7 +33,6 @@ to mochitest command.
   * "layout.css.prefixes.device-pixel-ratio-webkit" support bug 1366956
     * test_media_queries.html `-device-pixel-ratio` [27]
     * test_webkit_device_pixel_ratio.html [3]
-  * test_media_queries_dynamic.html `restyle`: bug 1382077 [4]
   * test_media_queries_dynamic_xbl.html: xbl support bug 1382078 [1]
 * Animation support:
   * SMIL Animation

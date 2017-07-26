@@ -337,7 +337,7 @@ this.PanelMultiView = class {
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.window.removeEventListener("keydown", this);
-    this.node.dispatchEvent(new this.window.CustomEvent("destructed"));
+    this._dispatchViewEvent(this.node, "destructed");
     this.node = this._clickCapturer = this._viewContainer = this._mainViewContainer =
       this._subViews = this._viewStack = this.__dwu = this._panelViewCache = null;
   }
@@ -410,8 +410,7 @@ this.PanelMultiView = class {
   showMainView() {
     if (this.showingSubView) {
       let viewNode = this._currentSubView;
-      let evt = new this.window.CustomEvent("ViewHiding", { bubbles: true, cancelable: true });
-      viewNode.dispatchEvent(evt);
+      this._dispatchViewEvent(viewNode, "ViewHiding");
       if (this.panelViews) {
         viewNode.removeAttribute("current");
         this.showSubView(this._mainViewId);
@@ -473,37 +472,26 @@ this.PanelMultiView = class {
         }
       }
 
-      // Emit the ViewShowing event so that the widget definition has a chance
-      // to lazily populate the subview with things.
-      let detail = {
-        blockers: new Set(),
-        addBlocker(aPromise) {
-          this.blockers.add(aPromise);
-        },
-      };
+      this._viewShowing = viewNode;
 
       // Make sure that new panels always have a title set.
-      let cancel = false;
       if (this.panelViews && aAnchor) {
-        if (aAnchor && !viewNode.hasAttribute("title"))
+        if (!viewNode.hasAttribute("title"))
           viewNode.setAttribute("title", aAnchor.getAttribute("label"));
         viewNode.classList.add("PanelUI-subView");
-        let custWidget = CustomizableWidgets.find(widget => widget.viewId == viewNode.id);
-        if (custWidget) {
-          if (custWidget.onInit)
-            custWidget.onInit(aAnchor);
-          custWidget.onViewShowing({ target: viewNode, preventDefault: () => cancel = true, detail });
-        }
       }
       if (this.panelViews && this._mainViewWidth)
         viewNode.style.maxWidth = viewNode.style.minWidth = this._mainViewWidth + "px";
 
-      this._viewShowing = viewNode;
-      let evt = new window.CustomEvent("ViewShowing", { bubbles: true, cancelable: true, detail });
-      viewNode.dispatchEvent(evt);
-
-      if (!cancel)
-        cancel = evt.defaultPrevented;
+      // Emit the ViewShowing event so that the widget definition has a chance
+      // to lazily populate the subview with things.
+      let detail = {
+        blockers: new Set(),
+        addBlocker(promise) {
+          this.blockers.add(promise);
+        }
+      };
+      let cancel = this._dispatchViewEvent(viewNode, "ViewShowing", aAnchor, detail);
       if (detail.blockers.size) {
         try {
           let results = await Promise.all(detail.blockers);
@@ -543,8 +531,7 @@ this.PanelMultiView = class {
         // where it is and the active panelview slides in from the left in LTR
         // mode, right in RTL mode.
         let onTransitionEnd = () => {
-          evt = new window.CustomEvent("ViewHiding", { bubbles: true, cancelable: true });
-          previousViewNode.dispatchEvent(evt);
+          this._dispatchViewEvent(previousViewNode, "ViewHiding");
           previousViewNode.removeAttribute("current");
           this.descriptionHeightWorkaround(viewNode);
         };
@@ -656,8 +643,7 @@ this.PanelMultiView = class {
 
                 this._viewContainer.removeAttribute("transition-reverse");
 
-                viewNode.dispatchEvent(new window.CustomEvent("ViewShown",
-                  { bubbles: true, cancelable: false }));
+                this._dispatchViewEvent(viewNode, "ViewShown");
               }, { once: true });
             });
           }, { once: true });
@@ -669,12 +655,45 @@ this.PanelMultiView = class {
           // Now that the subview is visible, we can check the height of the
           // description elements it contains.
           this.descriptionHeightWorkaround(viewNode);
-          viewNode.dispatchEvent(new window.CustomEvent("ViewShown",
-            { bubbles: true, cancelable: false }));
+          this._dispatchViewEvent(viewNode, "ViewShown");
         });
         this._shiftMainView(aAnchor);
       }
     })().catch(e => Cu.reportError(e));
+  }
+
+  /**
+   * Helper method to emit an event on a panelview, whilst also making sure that
+   * the correct method is called on CustomizableWidget instances.
+   *
+   * @param  {panelview} viewNode  Target of the event to dispatch.
+   * @param  {String}    eventName Name of the event to dispatch.
+   * @param  {DOMNode}   [anchor]  Node where the panel is anchored to. Optional.
+   * @param  {Object}    [detail]  Event detail object. Optional.
+   * @return {Boolean} `true` if the event was canceled by an event handler, `false`
+   *                   otherwise.
+   */
+  _dispatchViewEvent(viewNode, eventName, anchor, detail) {
+    let cancel = false;
+    if (this.panelViews) {
+      let custWidget = CustomizableWidgets.find(widget => widget.viewId == viewNode.id);
+      let method = "on" + eventName;
+      if (custWidget && custWidget[method]) {
+        if (anchor && custWidget.onInit)
+          custWidget.onInit(anchor);
+        custWidget[method]({ target: viewNode, preventDefault: () => cancel = true, detail });
+      }
+    }
+
+    let evt = new this.window.CustomEvent(eventName, {
+      detail,
+      bubbles: true,
+      cancelable: eventName == "ViewShowing"
+    });
+    viewNode.dispatchEvent(evt);
+    if (!cancel)
+      cancel = evt.defaultPrevented;
+    return cancel;
   }
 
   /**
@@ -967,6 +986,7 @@ this.PanelMultiView = class {
           this._mainView.style.removeProperty("height");
           this._mainView.removeAttribute("exceeding");
         }
+        this._dispatchViewEvent(this.node, "PanelMultiViewHidden");
         break;
     }
   }
