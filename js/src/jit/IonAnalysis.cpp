@@ -1735,6 +1735,9 @@ TypeAnalyzer::insertConversions()
                 phi->type() == MIRType::MagicOptimizedOut ||
                 phi->type() == MIRType::MagicUninitializedLexical)
             {
+                if (!alloc().ensureBallast())
+                    return false;
+
                 replaceRedundantPhi(phi);
                 block->discardPhi(phi);
             } else {
