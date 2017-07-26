@@ -603,24 +603,38 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI, bool* aTerminateSender)
     return Err(NS_ERROR_FILE_NOT_DIRECTORY);
   }
 
-  /*
-   * Now get a channel for the resolved child URI and make sure the
-   * channel is a file channel.
-   */
+  // Make sure the child URI resolves to a file URI then get a file
+  // channel for the request. The resultant channel should be a
+  // file channel because we only request remote streams for unpacked
+  // extension resource loads where the URI resolves to a file.
+  nsAutoCString resolvedSpec;
+  NS_TRY(ResolveURI(aChildURI, resolvedSpec));
+
+  nsAutoCString resolvedScheme;
+  NS_TRY(net_ExtractURLScheme(resolvedSpec, resolvedScheme));
+  if (!resolvedScheme.EqualsLiteral("file")) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  NS_TRY(rv);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  NS_TRY(ioService->NewURI(resolvedSpec,
+                           nullptr,
+                           nullptr,
+                           getter_AddRefs(resolvedURI)));
 
   // We use the system principal to get a file channel for the request,
   // but only after we've checked (above) that the child URI is of
   // moz-extension scheme and that the URI host maps to a directory.
   nsCOMPtr<nsIChannel> channel;
   NS_TRY(NS_NewChannel(getter_AddRefs(channel),
-                       aChildURI,
+                       resolvedURI,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER));
 
-  // Channel should be a file channel. It should never be a JAR
-  // channel because we only request remote streams for unpacked
-  // extension resource loads where the URI resolves to a file.
   nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);
   NS_TRY(rv);
 
