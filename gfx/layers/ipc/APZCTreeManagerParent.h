@@ -127,6 +127,14 @@ public:
           const AsyncDragMetrics& aDragMetrics) override;
 
   mozilla::ipc::IPCResult
+  RecvStartAutoscroll(
+          const ScrollableLayerGuid& aGuid,
+          const ScreenPoint& aAnchorLocation) override;
+
+  mozilla::ipc::IPCResult
+  RecvStopAutoscroll(const ScrollableLayerGuid& aGuid) override;
+
+  mozilla::ipc::IPCResult
   RecvSetLongTapEnabled(const bool& aTapGestureEnabled) override;
 
   mozilla::ipc::IPCResult

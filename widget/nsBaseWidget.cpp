@@ -1956,6 +1956,24 @@ nsBaseWidget::StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
       aDragMetrics));
 }
 
+void
+nsBaseWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,
+                                   const ScrollableLayerGuid& aGuid)
+{
+  MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
+
+  mAPZC->StartAutoscroll(aGuid, aAnchorLocation);
+}
+
+void
+nsBaseWidget::StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  MOZ_ASSERT(XRE_IsParentProcess() && AsyncPanZoomEnabled());
+
+  mAPZC->StopAutoscroll(aGuid);
+}
+
+
 already_AddRefed<nsIScreen>
 nsBaseWidget::GetWidgetScreen()
 {
