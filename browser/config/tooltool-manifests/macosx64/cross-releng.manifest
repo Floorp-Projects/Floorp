@@ -1,13 +1,5 @@
 [
   {
-    "version": "clang + llvm 3.9.0, built from SVN r290136",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 35215976,
     "visibility": "internal",
     "digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da",
