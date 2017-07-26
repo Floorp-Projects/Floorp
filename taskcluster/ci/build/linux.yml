@@ -22,6 +22,7 @@ linux64/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-dmd/opt:
@@ -50,6 +51,7 @@ linux64-dmd/opt:
         need-xvfb: true
     run-on-projects: [ ]
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64/pgo:
@@ -78,6 +80,7 @@ linux64/pgo:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64/debug:
@@ -105,6 +108,7 @@ linux64/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-devedition-nightly/opt:
@@ -137,6 +141,7 @@ linux64-devedition-nightly/opt:
         custom-build-variant-cfg: devedition
     run-on-projects: [ 'mozilla-beta', ]
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-base-toolchains/opt:
@@ -164,6 +169,7 @@ linux64-base-toolchains/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-base-toolchains/debug:
@@ -192,6 +198,7 @@ linux64-base-toolchains/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux/opt:
@@ -219,6 +226,7 @@ linux/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux/debug:
@@ -247,6 +255,7 @@ linux/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux/pgo:
@@ -275,6 +284,7 @@ linux/pgo:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux-devedition-nightly/opt:
@@ -307,6 +317,7 @@ linux-devedition-nightly/opt:
         custom-build-variant-cfg: devedition
     run-on-projects: [ 'mozilla-beta', ]
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux-nightly/opt:
@@ -337,6 +348,7 @@ linux-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 
@@ -366,6 +378,7 @@ linux64-asan/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 
@@ -395,6 +408,7 @@ linux64-asan-fuzzing/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-asan/debug:
@@ -423,6 +437,7 @@ linux64-asan/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-nightly/opt:
@@ -453,6 +468,7 @@ linux64-nightly/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-noopt/debug:
@@ -483,6 +499,7 @@ linux64-noopt/debug:
         need-xvfb: true
     run-on-projects: [ 'trunk', 'try' ]
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-jsdcov/opt:
@@ -511,6 +528,7 @@ linux64-jsdcov/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-ccov/opt:
@@ -541,6 +559,7 @@ linux64-ccov/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-gcc
         - linux64-sccache
 
 linux64-add-on-devel/opt:
@@ -570,4 +589,5 @@ linux64-add-on-devel/opt:
         need-xvfb: true
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
     toolchains:
+        - linux64-gcc
         - linux64-sccache
