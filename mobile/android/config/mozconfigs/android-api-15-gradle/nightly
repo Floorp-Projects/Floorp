@@ -3,6 +3,6 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/android-api-15/nightly"
 
 ac_add_options --with-gradle="$topsrcdir/gradle-dist/bin/gradle"
-export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/jcentral"
+export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/jcenter","file://$topsrcdir/google"
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"

@@ -16,12 +16,20 @@
     "unpack": true
   },
   {
-    "algorithm": "sha512",
+    "size": 7797928,
     "visibility": "public",
-    "filename": "jcentral.tar.xz",
-    "unpack": true,
-    "digest": "28b36cc7a74babc9075aad2a11d3489242f76a90c3701b86fca91a215e3d31c2fcd89bd23a574af7b3f374c0ca3f247fd073ab2e68a2b26ea45e2c9a7494df0f",
-    "size": 52463192
+    "digest": "7bb5c7b3586179a7805ae60b025b7856cb8dbed66da1b7962bc446d94ea6fa45ed55ebfe065d2d82690c68bf71bdab613e97f53da79b85e3185955461f751256",
+    "algorithm": "sha512",
+    "filename": "google.tar.xz",
+    "unpack": true
+  },
+  {
+    "size": 52693504,
+    "visibility": "public",
+    "digest": "d8c0d91ff4039dd8a22e34634c0f72b21b1c272d60987f20a709fbfd919ba62eab4c3bddbaf96af1c6caf85320b4bf0676589071fe3b31724c51782a55da83e0",
+    "algorithm": "sha512",
+    "filename": "jcenter.tar.xz",
+    "unpack": true
   },
   {
     "algorithm": "sha512",
