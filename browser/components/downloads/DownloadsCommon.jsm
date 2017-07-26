@@ -47,6 +47,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
                                   "resource://gre/modules/AppMenuNotifications.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadHistory",
+                                  "resource://gre/modules/DownloadHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
@@ -56,9 +58,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
-                                  "resource://gre/modules/osfile.jsm")
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
@@ -742,32 +742,8 @@ DownloadsDataCtor.prototype = {
         download.endTime = Date.now();
 
         // This state transition code should actually be located in a Downloads
-        // API module (bug 941009).  Moreover, the fact that state is stored as
-        // annotations should be ideally hidden behind methods of
-        // nsIDownloadHistory (bug 830415).
-        if (!this._isPrivate) {
-          try {
-            let downloadMetaData = {
-              state: DownloadsCommon.stateOfDownload(download),
-              endTime: download.endTime,
-            };
-            if (download.succeeded) {
-              downloadMetaData.fileSize = download.target.size;
-            }
-            if (download.error && download.error.reputationCheckVerdict) {
-              downloadMetaData.reputationCheckVerdict =
-                download.error.reputationCheckVerdict;
-            }
-
-            PlacesUtils.annotations.setPageAnnotation(
-                          NetUtil.newURI(download.source.url),
-                          "downloads/metaData",
-                          JSON.stringify(downloadMetaData), 0,
-                          PlacesUtils.annotations.EXPIRE_WITH_HISTORY);
-          } catch (ex) {
-            Cu.reportError(ex);
-          }
-        }
+        // API module (bug 941009).
+        DownloadHistory.updateMetaData(download);
       }
 
       if (download.succeeded ||
