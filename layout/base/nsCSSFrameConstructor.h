@@ -1949,6 +1949,7 @@ private:
                             nsIContent*              aTextContent,
                             nsIFrame*                aTextFrame,
                             nsContainerFrame*        aParentFrame,
+                            nsStyleContext*          aParentStyleContext,
                             nsStyleContext*          aStyleContext,
                             nsFrameItems&            aResult);
 
