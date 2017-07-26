@@ -182,7 +182,7 @@ ServoStyleSet::ResolveStyleFor(Element* aElement,
         aElement, CSSPseudoElementType::NotPseudo, nullptr, aParentContext);
   }
 
-  return ResolveServoStyle(aElement, TraversalRestyleBehavior::Normal);
+  return ResolveServoStyle(aElement, ServoTraversalFlags::Empty);
 }
 
 
@@ -270,11 +270,10 @@ ServoStyleSet::PreTraverse(Element* aRoot,
 bool
 ServoStyleSet::PrepareAndTraverseSubtree(
   RawGeckoElementBorrowed aRoot,
-  TraversalRootBehavior aRootBehavior,
-  TraversalRestyleBehavior aRestyleBehavior)
+  ServoTraversalFlags aFlags)
 {
   bool forThrottledAnimationFlush =
-    aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
+    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
 
   AutoRestyleTimelineMarker marker(
     mPresContext->GetDocShell(), forThrottledAnimationFlush);
@@ -290,14 +289,12 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   const SnapshotTable& snapshots = Snapshots();
 
   bool isInitial = !aRoot->HasServoData();
-  bool forReconstruct =
-    aRestyleBehavior == TraversalRestyleBehavior::ForReconstruct;
+  bool forReconstruct = !!(aFlags & ServoTraversalFlags::ForReconstruct);
 #ifdef DEBUG
-  bool forNewlyBoundElement =
-    aRestyleBehavior == TraversalRestyleBehavior::ForNewlyBoundElement;
+  bool forNewlyBoundElement = !!(aFlags & ServoTraversalFlags::ForNewlyBoundElement);
 #endif
-  bool postTraversalRequired = Servo_TraverseSubtree(
-    aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior);
+  bool postTraversalRequired =
+    Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
   MOZ_ASSERT(!(isInitial || forReconstruct || forNewlyBoundElement) ||
              !postTraversalRequired);
 
@@ -324,8 +321,7 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     EffectCompositor::AnimationRestyleType::Throttled;
   if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
                      : compositor->PreTraverse(restyleType)) {
-    if (Servo_TraverseSubtree(
-          aRoot, mRawSet.get(), &snapshots, aRootBehavior, aRestyleBehavior)) {
+    if (Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags)) {
       MOZ_ASSERT(!forReconstruct);
       if (isInitial) {
         // We're doing initial styling, and the additional animation
@@ -420,7 +416,7 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
     computedValues =
       Servo_ResolveStyle(aPseudoElement,
                          mRawSet.get(),
-                         TraversalRestyleBehavior::Normal).Consume();
+                         ServoTraversalFlags::Empty).Consume();
   } else {
     computedValues =
       Servo_ResolvePseudoStyle(aOriginatingElement,
@@ -782,13 +778,11 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 }
 
 bool
-ServoStyleSet::StyleDocument(TraversalRestyleBehavior aRestyleBehavior)
+ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 {
-  MOZ_ASSERT(
-    aRestyleBehavior == TraversalRestyleBehavior::Normal ||
-    aRestyleBehavior == TraversalRestyleBehavior::ForCSSRuleChanges,
-    "StyleDocument() should be only called for normal traversal or CSS rule "
-    "changes");
+  MOZ_ASSERT(aFlags == ServoTraversalFlags::Empty ||
+             aFlags == ServoTraversalFlags::ForCSSRuleChanges,
+             "Should only be called for normal traversal or CSS rule changes");
 
   PreTraverse();
 
@@ -797,9 +791,7 @@ ServoStyleSet::StyleDocument(TraversalRestyleBehavior aRestyleBehavior)
   bool postTraversalRequired = false;
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
-    if (PrepareAndTraverseSubtree(root,
-                                  TraversalRootBehavior::Normal,
-                                  aRestyleBehavior)) {
+    if (PrepareAndTraverseSubtree(root, aFlags)) {
       postTraversalRequired = true;
     }
   }
@@ -814,10 +806,7 @@ ServoStyleSet::StyleDocumentForThrottledAnimationFlush()
   bool postTraversalRequired = false;
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
-    if (PrepareAndTraverseSubtree(
-          root,
-          TraversalRootBehavior::Normal,
-          TraversalRestyleBehavior::ForThrottledAnimationFlush)) {
+    if (PrepareAndTraverseSubtree(root, ServoTraversalFlags::ForThrottledAnimationFlush)) {
       postTraversalRequired = true;
     }
   }
@@ -832,9 +821,7 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
   PreTraverse();
 
   DebugOnly<bool> postTraversalRequired =
-    PrepareAndTraverseSubtree(aRoot,
-                              TraversalRootBehavior::Normal,
-                              TraversalRestyleBehavior::Normal);
+    PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::Empty);
   MOZ_ASSERT(!postTraversalRequired);
 }
 
@@ -843,9 +830,7 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
 {
   PreTraverse();
 
-  PrepareAndTraverseSubtree(aParent,
-                            TraversalRootBehavior::UnstyledChildrenOnly,
-                            TraversalRestyleBehavior::Normal);
+  PrepareAndTraverseSubtree(aParent, ServoTraversalFlags::UnstyledChildrenOnly);
   // We can't assert that Servo_TraverseSubtree returns false, since aParent
   // or some of its other children might have pending restyles.
 }
@@ -868,14 +853,12 @@ ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
   // skip restyling, rather than panic when trying to unwrap the styles
   // it expects to have just computed.
 
-  TraversalRootBehavior rootBehavior =
-    MOZ_UNLIKELY(!aElement->HasServoData())
-      ? TraversalRootBehavior::Normal
-      : TraversalRootBehavior::UnstyledChildrenOnly;
+  ServoTraversalFlags flags = ServoTraversalFlags::ForNewlyBoundElement |
+    (MOZ_UNLIKELY(!aElement->HasServoData())
+      ? ServoTraversalFlags::Empty
+      : ServoTraversalFlags::UnstyledChildrenOnly);
 
-  PrepareAndTraverseSubtree(aElement,
-                            rootBehavior,
-                            TraversalRestyleBehavior::ForNewlyBoundElement);
+  PrepareAndTraverseSubtree(aElement, flags);
 }
 
 void
@@ -884,9 +867,7 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
   PreTraverse(aRoot);
 
   DebugOnly<bool> postTraversalRequired =
-    PrepareAndTraverseSubtree(aRoot,
-                              TraversalRootBehavior::Normal,
-                              TraversalRestyleBehavior::ForReconstruct);
+    PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::ForReconstruct);
   MOZ_ASSERT(!postTraversalRequired);
 }
 
@@ -1085,14 +1066,13 @@ UpdateBodyTextColorIfNeeded(
 }
 
 already_AddRefed<ServoStyleContext>
-ServoStyleSet::ResolveServoStyle(Element* aElement,
-                                 TraversalRestyleBehavior aRestyleBehavior)
+ServoStyleSet::ResolveServoStyle(Element* aElement, ServoTraversalFlags aFlags)
 {
   UpdateStylistIfNeeded();
   RefPtr<ServoStyleContext> result =
     Servo_ResolveStyle(aElement,
                        mRawSet.get(),
-                       aRestyleBehavior).Consume();
+                       aFlags).Consume();
   UpdateBodyTextColorIfNeeded(*aElement, *result, *mPresContext);
   return result.forget();
 }

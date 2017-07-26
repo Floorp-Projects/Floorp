@@ -254,7 +254,7 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 
   bool wasRestyled;
   Unused << Servo_TakeChangeHint(aElement,
-                                 TraversalRestyleBehavior::Normal,
+                                 ServoTraversalFlags::Empty,
                                  &wasRestyled);
   aElement->UnsetHasDirtyDescendantsForServo();
   aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
@@ -492,13 +492,13 @@ UpdateFramePseudoElementStyles(nsIFrame* aFrame,
 
 static inline bool
 NeedsToTraverseElementChildren(const Element& aParent,
-                               TraversalRestyleBehavior aRestyleBehavior)
+                               ServoTraversalFlags aFlags)
 {
   if (aParent.HasAnimationOnlyDirtyDescendantsForServo()) {
     return true;
   }
 
-  if (aRestyleBehavior != TraversalRestyleBehavior::ForThrottledAnimationFlush) {
+  if (!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush)) {
     return aParent.HasDirtyDescendantsForServo() ||
            aParent.HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   }
@@ -510,7 +510,7 @@ ServoRestyleManager::ProcessPostTraversal(
   Element* aElement,
   ServoStyleContext* aParentContext,
   ServoRestyleState& aRestyleState,
-  TraversalRestyleBehavior aRestyleBehavior)
+  ServoTraversalFlags aFlags)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
 
@@ -526,7 +526,7 @@ ServoRestyleManager::ProcessPostTraversal(
   // in normal restyle later.
   bool wasRestyled;
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement,
-                                                 aRestyleBehavior,
+                                                 aFlags,
                                                  &wasRestyled);
 
   // We should really fix the weird primary frame mapping for image maps
@@ -604,7 +604,7 @@ ServoRestyleManager::ProcessPostTraversal(
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsNode);
     newContext =
-      aRestyleState.StyleSet().ResolveServoStyle(aElement, aRestyleBehavior);
+      aRestyleState.StyleSet().ResolveServoStyle(aElement, aFlags);
     MOZ_ASSERT(oldStyleContext->ComputedData() != newContext->ComputedData());
 
     newContext->ResolveSameStructsAs(oldStyleContext);
@@ -658,11 +658,11 @@ ServoRestyleManager::ProcessPostTraversal(
   }
 
   const bool traverseElementChildren =
-    NeedsToTraverseElementChildren(*aElement, aRestyleBehavior);
+    NeedsToTraverseElementChildren(*aElement, aFlags);
   const bool descendantsNeedFrames =
     aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   const bool forThrottledAnimationFlush =
-    aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
+    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
   const bool traverseTextChildren =
     wasRestyled || (!forThrottledAnimationFlush && descendantsNeedFrames);
   bool recreatedAnyContext = wasRestyled;
@@ -679,7 +679,7 @@ ServoRestyleManager::ProcessPostTraversal(
         recreatedAnyContext |= ProcessPostTraversal(n->AsElement(),
                                                     upToDateContext,
                                                     childrenRestyleState,
-                                                    aRestyleBehavior);
+                                                    aFlags);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState);
       }
@@ -810,8 +810,7 @@ ServoRestyleManager::FrameForPseudoElement(const Element* aElement,
 }
 
 void
-ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
-                                                aRestyleBehavior)
+ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
 {
   MOZ_ASSERT(PresContext()->Document(), "No document?  Pshaw!");
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(), "Missing a script blocker!");
@@ -834,7 +833,7 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
   bool forThrottledAnimationFlush =
-    aRestyleBehavior == TraversalRestyleBehavior::ForThrottledAnimationFlush;
+    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
 
   // Ensure the refresh driver is active during traversal to avoid mutating
   // mActiveTimer and mMostRecentRefresh time.
@@ -849,12 +848,13 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
     ++mAnimationGeneration;
   }
 
-  TraversalRestyleBehavior restyleBehavior = mRestyleForCSSRuleChanges
-    ? TraversalRestyleBehavior::ForCSSRuleChanges
-    : TraversalRestyleBehavior::Normal;
+  if (mRestyleForCSSRuleChanges) {
+    aFlags |= ServoTraversalFlags::ForCSSRuleChanges;
+  }
+
   while (forThrottledAnimationFlush
           ? styleSet->StyleDocumentForThrottledAnimationFlush()
-          : styleSet->StyleDocument(restyleBehavior)) {
+          : styleSet->StyleDocument(aFlags)) {
     if (!forThrottledAnimationFlush) {
       ClearSnapshots();
     }
@@ -871,7 +871,7 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
       while (Element* root = iter.GetNextStyleRoot()) {
         ServoRestyleState state(*styleSet, currentChanges);
         anyStyleChanged |=
-          ProcessPostTraversal(root, nullptr, state, aRestyleBehavior);
+          ProcessPostTraversal(root, nullptr, state, aFlags);
       }
     }
 
@@ -941,7 +941,7 @@ ServoRestyleManager::DoProcessPendingRestyles(TraversalRestyleBehavior
 void
 ServoRestyleManager::ProcessPendingRestyles()
 {
-  DoProcessPendingRestyles(TraversalRestyleBehavior::Normal);
+  DoProcessPendingRestyles(ServoTraversalFlags::Empty);
 }
 
 void
@@ -953,7 +953,7 @@ ServoRestyleManager::UpdateOnlyAnimationStyles()
     return;
   }
 
-  DoProcessPendingRestyles(TraversalRestyleBehavior::ForThrottledAnimationFlush);
+  DoProcessPendingRestyles(ServoTraversalFlags::ForThrottledAnimationFlush);
 }
 
 void
