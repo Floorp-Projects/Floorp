@@ -936,10 +936,28 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
   MOZ_ASSERT(!aRoot->HasServoData(), "Should have called StyleNewChildren");
   PreTraverseSync();
+  AutoPrepareTraversal guard(this);
 
+  // Do the traversal. The snapshots will not be used.
+  const SnapshotTable& snapshots = Snapshots();
   DebugOnly<bool> postTraversalRequired =
-    PrepareAndTraverseSubtree(aRoot, ServoTraversalFlags::Empty);
+    Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots,
+                          ServoTraversalFlags::Empty);
   MOZ_ASSERT(!postTraversalRequired);
+
+  // Annoyingly, the newly-styled content may have animations that need
+  // starting, which requires traversing them again. Mark the elements
+  // that need animation processing, then do a forgetful traversal to
+  // update the styles and clear the animation bits.
+  auto type = EffectCompositor::AnimationRestyleType::Throttled;
+  if (mPresContext->EffectCompositor()->PreTraverseInSubtree(aRoot, type)) {
+    postTraversalRequired =
+      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots,
+                            ServoTraversalFlags::AnimationOnly |
+                            ServoTraversalFlags::Forgetful |
+                            ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants);
+    MOZ_ASSERT(!postTraversalRequired);
+  }
 }
 
 void
@@ -947,10 +965,41 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
 {
   MOZ_ASSERT(aParent->HasServoData(), "Should have called StyleNewSubtree");
   PreTraverseSync();
+  AutoPrepareTraversal guard(this);
 
-  PrepareAndTraverseSubtree(aParent, ServoTraversalFlags::UnstyledChildrenOnly);
-  // We can't assert that Servo_TraverseSubtree returns false, since aParent
-  // or some of its other children might have pending restyles.
+  // Implementing StyleNewChildren correctly is very annoying, for two reasons:
+  // (1) We have to tiptoe around existing invalidations in the tree. In rare
+  //     cases Gecko calls into the frame constructor with pending invalidations,
+  //     and in other rare cases the frame constructor needs to perform
+  //     synchronous styling rather than using the normal lazy frame
+  //     construction mechanism. If both of these cases happen together, then we
+  //     get an |aParent| with dirty style and/or dirty descendants, which we
+  //     can't process right now because we're not set up to update the frames
+  //     and process the change hints. We handle this case by passing the
+  //     UnstyledOnly flag to servo.
+  // (2) We don't have a good way to handle animations. When styling unstyled
+  //     content, a followup animation traversal may be required (for example
+  //     to change the transition style from the after-change style we used in
+  //     the animation cascade to the timeline-correct style). But once we do
+  //     the initial styling, we don't have a good way to distinguish the new
+  //     content and scope our animation processing to that. We should handle
+  //     this somehow, but for now we just don't do the followup animation
+  //     traversal, which is buggy.
+
+  // Set ourselves up to find the children by marking the parent as having
+  // dirty descendants.
+  bool hadDirtyDescendants = aParent->HasDirtyDescendantsForServo();
+  aParent->SetHasDirtyDescendantsForServo();
+
+  // Do the traversal. The snapshots will be ignored.
+  const SnapshotTable& snapshots = Snapshots();
+  Servo_TraverseSubtree(aParent, mRawSet.get(), &snapshots,
+                        ServoTraversalFlags::UnstyledOnly);
+
+  // Restore the old state of the dirty descendants bit.
+  if (!hadDirtyDescendants) {
+    aParent->UnsetHasDirtyDescendantsForServo();
+  }
 }
 
 void

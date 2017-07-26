@@ -56,8 +56,9 @@ enum class ServoTraversalFlags : uint32_t {
   AnimationOnly = 1 << 0,
   // Traverses as normal mode but tries to update all CSS animations.
   ForCSSRuleChanges = 1 << 1,
-  // Traverse only unstyled children of the root (and their descendants).
-  UnstyledChildrenOnly = 1 << 2,
+  // Styles unstyled elements, but does not handle invalidations on
+  // already-styled elements.
+  UnstyledOnly = 1 << 2,
   // A forgetful traversal ignores the previous state of the frame tree, and
   // thus does not compute damage or maintain other state describing the styles
   // pre-traversal. A forgetful traversal is usually the right thing if you
