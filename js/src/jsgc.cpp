@@ -8094,13 +8094,16 @@ js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
 JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx)
   : cx_(maybecx ? maybecx : TlsContext.get())
 {
-    cx_->inUnsafeRegion++;
+    if (cx_)
+        cx_->inUnsafeRegion++;
 }
 
 JS::AutoAssertNoGC::~AutoAssertNoGC()
 {
-    MOZ_ASSERT(cx_->inUnsafeRegion > 0);
-    cx_->inUnsafeRegion--;
+    if (cx_) {
+        MOZ_ASSERT(cx_->inUnsafeRegion > 0);
+        cx_->inUnsafeRegion--;
+    }
 }
 
 #ifdef DEBUG

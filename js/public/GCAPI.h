@@ -535,7 +535,7 @@ class JS_PUBLIC_API(AutoAssertNoGC) : public AutoRequireNoGC
  * Assert if an allocation of a GC thing occurs while this class is live. This
  * class does not disable the static rooting hazard analysis.
  */
-class JS_PUBLIC_API(AutoAssertNoAlloc)
+class JS_PUBLIC_API(AutoAssertNoAlloc) : public AutoRequireNoGC
 {
 #ifdef JS_DEBUG
     js::gc::GCRuntime* gc;
