@@ -608,7 +608,8 @@ RemoteDataDecoder::ReturnDecodedData()
   if (!mDecodePromise.IsEmpty()) {
     mDecodePromise.Resolve(mDecodedData, __func__);
     mDecodedData.Clear();
-  } else if (!mDrainPromise.IsEmpty()) {
+  } else if (!mDrainPromise.IsEmpty() &&
+             (!mDecodedData.IsEmpty() || mDrainStatus == DrainStatus::DRAINED)) {
     mDrainPromise.Resolve(mDecodedData, __func__);
     mDecodedData.Clear();
   }
