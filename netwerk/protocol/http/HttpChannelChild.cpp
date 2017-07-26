@@ -1769,8 +1769,8 @@ HttpChannelChild::ProcessNotifyTrackingProtectionDisabled()
   MOZ_ASSERT(OnSocketThread());
 
   RefPtr<HttpChannelChild> self = this;
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
     NS_NewRunnableFunction(
       "nsChannelClassifier::NotifyTrackingProtectionDisabled",
       [self]() {
@@ -1785,12 +1785,7 @@ HttpChannelChild::ProcessNotifyTrackingResource()
   LOG(("HttpChannelChild::ProcessNotifyTrackingResource [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
-    NewRunnableMethod(
-      "HttpChannelChild::SetIsTrackingResource",
-      this, &HttpChannelChild::SetIsTrackingResource),
-    NS_DISPATCH_NORMAL);
+  SetIsTrackingResource();
 }
 
 void
@@ -1815,8 +1810,8 @@ HttpChannelChild::ProcessSetClassifierMatchedInfo(const nsCString& aList,
   LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
     NewRunnableMethod<const nsCString, const nsCString, const nsCString>
       ("HttpChannelChild::SetMatchedInfo",
        this, &HttpChannelChild::SetMatchedInfo,
