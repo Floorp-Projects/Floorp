@@ -219,6 +219,8 @@ public:
   // Returns the MessageLoop object for the current thread, or null if none.
   static MessageLoop* current();
 
+  static void set_current(MessageLoop* loop);
+
   // Enables or disables the recursive task processing. This happens in the case
   // of recursive message loops. Some unwanted message loop may occurs when
   // using common controls or printer functions. By default, recursive task

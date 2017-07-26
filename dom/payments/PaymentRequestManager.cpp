@@ -490,6 +490,9 @@ PaymentRequestManager::CanMakePayment(const nsAString& aRequestId)
 nsresult
 PaymentRequestManager::ShowPayment(const nsAString& aRequestId)
 {
+  if (mShowingRequest) {
+    return NS_ERROR_ABORT;
+  }
   RefPtr<PaymentRequest> request = GetPaymentRequestById(aRequestId);
   if (!request) {
     return NS_ERROR_FAILURE;
@@ -497,8 +500,9 @@ PaymentRequestManager::ShowPayment(const nsAString& aRequestId)
 
   nsAutoString requestId(aRequestId);
   IPCPaymentShowActionRequest action(requestId);
-
-  return SendRequestPayment(request, action);
+  nsresult rv = SendRequestPayment(request, action);
+  mShowingRequest = request;
+  return rv;
 }
 
 nsresult
@@ -593,6 +597,8 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
                                   response.payerEmail(),
                                   response.payerPhone());
       if (!response.isAccepted()) {
+        MOZ_ASSERT(mShowingRequest == request);
+        mShowingRequest = nullptr;
         mRequestQueue.RemoveElement(request);
         nsresult rv = ReleasePaymentChild(request);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -609,6 +615,8 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
       }
       request->RespondAbortPayment(response.isSucceeded());
       if (response.isSucceeded()) {
+        MOZ_ASSERT(mShowingRequest == request);
+        mShowingRequest = nullptr;
         mRequestQueue.RemoveElement(request);
         nsresult rv = ReleasePaymentChild(request);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -624,6 +632,8 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
         return NS_ERROR_FAILURE;
       }
       request->RespondComplete();
+      MOZ_ASSERT(mShowingRequest == request);
+      mShowingRequest = nullptr;
       mRequestQueue.RemoveElement(request);
       nsresult rv = ReleasePaymentChild(request);
       if (NS_WARN_IF(NS_FAILED(rv))) {

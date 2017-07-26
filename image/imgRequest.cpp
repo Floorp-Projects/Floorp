@@ -69,7 +69,9 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
  , mDecodeRequested(false)
  , mNewPartPending(false)
  , mHadInsecureRedirect(false)
-{ }
+{
+  LOG_FUNC(gImgLog, "imgRequest::imgRequest()");
+}
 
 imgRequest::~imgRequest()
 {

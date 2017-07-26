@@ -23,7 +23,6 @@ namespace JS {
     _(GetProp_DefiniteSlot)                             \
     _(GetProp_Unboxed)                                  \
     _(GetProp_CommonGetter)                             \
-    _(GetProp_Static)                                   \
     _(GetProp_InlineAccess)                             \
     _(GetProp_Innerize)                                 \
     _(GetProp_InlineCache)                              \

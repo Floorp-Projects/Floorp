@@ -393,10 +393,10 @@ protected:
   /**
    * For a range for which IsInSelection() is true, return the common
    * ancestor for the range.  This method uses the selection bits and
-   * nsGkAtoms::range property on the nodes to quickly find the ancestor.
-   * That is, it's a faster version of GetCommonAncestor that only works
-   * for ranges in a Selection.  The method will assert and the behavior
-   * is undefined if called on a range where IsInSelection() is false.
+   * node slots to quickly find the ancestor.  That is, it's a faster
+   * version of GetCommonAncestor that only works for ranges in a
+   * Selection.  The method will assert and the behavior is undefined if
+   * called on a range where IsInSelection() is false.
    */
   nsINode* GetRegisteredCommonAncestor();
 
