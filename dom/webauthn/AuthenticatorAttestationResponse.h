@@ -23,6 +23,8 @@ class AuthenticatorAttestationResponse final : public AuthenticatorResponse
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(AuthenticatorAttestationResponse,
+                                                         AuthenticatorResponse)
 
   explicit AuthenticatorAttestationResponse(nsPIDOMWindowInner* aParent);
 
@@ -34,13 +36,14 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void
-  GetAttestationObject(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const;
+  GetAttestationObject(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal);
 
   nsresult
   SetAttestationObject(CryptoBuffer& aBuffer);
 
 private:
   CryptoBuffer mAttestationObject;
+  JS::Heap<JSObject*> mAttestationObjectCachedObj;
 };
 
 } // namespace dom
