@@ -1,6 +1,7 @@
 /*
  * Test for form auto fill content helper fill all inputs function.
  */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 "use strict";
 
