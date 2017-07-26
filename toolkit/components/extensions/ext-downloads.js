@@ -645,7 +645,7 @@ this.downloads = class extends ExtensionAPI {
           });
         },
 
-        open_parent(downloadId) {
+        open(downloadId) {
           return DownloadMap.lazyInit().then(() => {
             let download = DownloadMap.fromId(downloadId).download;
             if (download.succeeded) {
