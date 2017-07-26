@@ -8187,13 +8187,11 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       principal = aPrincipal;
     }
     // generate (about:blank) document to load
-    blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal);
+    blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal, this);
     if (blankDoc) {
       // Hack: set the base URI manually, since this document never
       // got Reset() with a channel.
       blankDoc->SetBaseURI(aBaseURI);
-
-      blankDoc->SetContainer(this);
 
       // Copy our sandbox flags to the document. These are immutable
       // after being set here.
