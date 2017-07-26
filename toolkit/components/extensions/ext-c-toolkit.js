@@ -41,13 +41,6 @@ extensions.registerModules({
       ["runtime", "getBackgroundPage"],
     ],
   },
-  downloads: {
-    url: "chrome://extensions/content/ext-c-downloads.js",
-    scopes: ["addon_child"],
-    paths: [
-      ["downloads"],
-    ],
-  },
   extension: {
     url: "chrome://extensions/content/ext-c-extension.js",
     scopes: ["addon_child", "content_child", "devtools_child", "proxy_script"],
