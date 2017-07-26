@@ -1780,7 +1780,7 @@ var Events = {
     let eventsSection = document.getElementById("events");
     removeAllChildNodes(eventsSection);
 
-    if (!aPayload.processes || !aPayload.processes.parent) {
+    if (!aPayload.processes || !Object.values(aPayload.processes).find(p => "events" in p)) {
       return;
     }
 
@@ -1793,8 +1793,9 @@ var Events = {
       return;
     }
 
-    let events = aPayload.processes[selectedProcess].events;
-    const hasData = events && Object.keys(events).length > 0;
+    const hasData = Object.values(aPayload.processes).find(p => {
+      return ("events" in p) && (Object.keys(p.events).length > 0);
+    });
     setHasData("events-section", hasData);
     if (!hasData) {
       return;
@@ -1809,6 +1810,7 @@ var Events = {
       "extraHeader",
     ].map(h => bundle.GetStringFromName(h));
 
+    let events = aPayload.processes[selectedProcess].events;
     const table = GenericTable.render(events, headings);
     eventsSection.appendChild(table);
   },
@@ -2092,7 +2094,8 @@ var HistogramSection = {
     }
     if (hgramsProcess &&
         "processes" in aPayload &&
-        hgramsProcess in aPayload.processes) {
+        hgramsProcess in aPayload.processes &&
+        "histograms" in aPayload.processes[hgramsProcess]) {
       histograms = aPayload.processes[hgramsProcess].histograms;
     }
 
