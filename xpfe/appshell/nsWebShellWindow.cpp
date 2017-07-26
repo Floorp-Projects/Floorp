@@ -529,6 +529,7 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 namespace mozilla {
 
 class WebShellWindowTimerCallback final : public nsITimerCallback
+                                        , public nsINamed
 {
 public:
   explicit WebShellWindowTimerCallback(nsWebShellWindow* aWindow)
@@ -547,13 +548,19 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("WebShellWindowTimerCallback");
+    return NS_OK;
+  }
+
 private:
   ~WebShellWindowTimerCallback() {}
 
   RefPtr<nsWebShellWindow> mWindow;
 };
 
-NS_IMPL_ISUPPORTS(WebShellWindowTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(WebShellWindowTimerCallback, nsITimerCallback, nsINamed)
 
 } // namespace mozilla
 

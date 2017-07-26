@@ -25,6 +25,7 @@
 #include "nsSocketTransport2.h"
 #include "nsHashPropertyBag.h"
 #include "nsNetUtil.h"
+#include "nsINamed.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIProperty.h"
 #include "nsICertOverrideService.h"
@@ -159,6 +160,7 @@ class FlyWebMDNSService final
   , public nsIDNSServiceResolveListener
   , public nsIDNSRegistrationListener
   , public nsITimerCallback
+  , public nsINamed
 {
   friend class FlyWebService;
 
@@ -179,6 +181,12 @@ public:
 
   explicit FlyWebMDNSService(FlyWebService* aService,
                              const nsACString& aServiceType);
+
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("FlyWebMDNSService");
+    return NS_OK;
+  }
 
 private:
   virtual ~FlyWebMDNSService() = default;
@@ -296,7 +304,8 @@ NS_IMPL_ISUPPORTS(FlyWebMDNSService,
                   nsIDNSServiceDiscoveryListener,
                   nsIDNSServiceResolveListener,
                   nsIDNSRegistrationListener,
-                  nsITimerCallback)
+                  nsITimerCallback,
+                  nsINamed)
 
 FlyWebMDNSService::FlyWebMDNSService(
         FlyWebService* aService,

@@ -40,7 +40,8 @@ nsComposerCommandsUpdater::~nsComposerCommandsUpdater()
 }
 
 NS_IMPL_ISUPPORTS(nsComposerCommandsUpdater, nsISelectionListener,
-                  nsIDocumentStateListener, nsITransactionListener, nsITimerCallback)
+                  nsIDocumentStateListener, nsITransactionListener,
+                  nsITimerCallback, nsINamed)
 
 #if 0
 #pragma mark -
@@ -353,6 +354,13 @@ nsComposerCommandsUpdater::GetCommandUpdater()
   nsCOMPtr<nsICommandManager> manager = docShell->GetCommandManager();
   nsCOMPtr<nsPICommandUpdater> updater = do_QueryInterface(manager);
   return updater.forget();
+}
+
+NS_IMETHODIMP
+nsComposerCommandsUpdater::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsComposerCommandsUpdater");
+  return NS_OK;
 }
 
 #if 0

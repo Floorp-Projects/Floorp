@@ -12,6 +12,7 @@
 #include "nsAHttpTransaction.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
+#include "nsINamed.h"
 #include "nsISocketTransport.h"
 #include "nsITimer.h"
 #include "NullHttpTransaction.h"
@@ -103,6 +104,7 @@ class TLSFilterTransaction final
   , public nsAHttpSegmentReader
   , public nsAHttpSegmentWriter
   , public nsITimerCallback
+  , public nsINamed
 {
   ~TLSFilterTransaction();
 public:
@@ -111,6 +113,7 @@ public:
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   TLSFilterTransaction(nsAHttpTransaction *aWrappedTransaction,
                        const char *tlsHost, int32_t tlsPort,

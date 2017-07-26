@@ -1197,6 +1197,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsICancelable)
    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
    NS_INTERFACE_MAP_ENTRY(nsIBackgroundFileSaverObserver)
+   NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
@@ -2563,6 +2564,14 @@ nsExternalAppHandler::Notify(nsITimer* timer)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsExternalAppHandler::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsExternalAppHandler");
+  return NS_OK;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following section contains our nsIMIMEService implementation and related methods.
 //
