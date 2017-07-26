@@ -263,10 +263,10 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
+/* static */ nsresult
+nsContentDLF::CreateBlankDocument(nsILoadGroup* aLoadGroup,
                                   nsIPrincipal* aPrincipal,
-                                  nsIDocument **aDocument)
+                                  nsIDocument** aDocument)
 {
   *aDocument = nullptr;
 

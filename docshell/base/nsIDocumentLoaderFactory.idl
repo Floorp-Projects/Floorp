@@ -35,12 +35,4 @@ interface nsIDocumentLoaderFactory : nsISupports {
     nsIContentViewer createInstanceForDocument(in nsISupports aContainer,
                                          in nsIDocument aDocument,
                                          in string aCommand);
-
-    /**
-     * Create a blank document using the given loadgroup and given
-     * principal.  aPrincipal is allowed to be null, in which case the
-     * new document will get the about:blank codebase principal.
-     */
-    nsIDocument createBlankDocument(in nsILoadGroup aLoadGroup,
-                                    in nsIPrincipal aPrincipal);
 };

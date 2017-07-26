@@ -47,6 +47,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsCURILoader.h"
+#include "nsContentDLF.h"
 #include "nsDocShellCID.h"
 #include "nsDOMCID.h"
 #include "nsNetCID.h"
@@ -8186,8 +8187,8 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
       principal = aPrincipal;
     }
     // generate (about:blank) document to load
-    docFactory->CreateBlankDocument(mLoadGroup, principal,
-                                    getter_AddRefs(blankDoc));
+    nsContentDLF::CreateBlankDocument(mLoadGroup, principal,
+                                      getter_AddRefs(blankDoc));
     if (blankDoc) {
       // Hack: set the base URI manually, since this document never
       // got Reset() with a channel.
