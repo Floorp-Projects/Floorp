@@ -435,6 +435,11 @@ public:
       const ScrollableLayerGuid& aGuid,
       const AsyncDragMetrics& aDragMetrics) override;
 
+  void StartAutoscroll(const ScrollableLayerGuid& aGuid,
+                       const ScreenPoint& aAnchorLocation) override;
+
+  void StopAutoscroll(const ScrollableLayerGuid& aGuid) override;
+
   /*
    * Build the chain of APZCs that will handle overscroll for a pan starting at |aInitialTarget|.
    */
