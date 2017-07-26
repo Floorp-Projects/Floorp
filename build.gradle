@@ -30,9 +30,9 @@ allprojects {
     }
 
     repositories {
-        if (gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
+                url repository
             }
         }
     }
@@ -42,9 +42,9 @@ buildDir "${topobjdir}/gradle/build"
 
 buildscript {
     repositories {
-        if (gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY) {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
             maven {
-                url gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORY
+                url repository
             }
         }
         // For android-sdk-manager SNAPSHOT releases.
