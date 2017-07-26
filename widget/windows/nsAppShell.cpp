@@ -23,6 +23,7 @@
 #include "nsHashKeys.h"
 #include "GeckoProfiler.h"
 #include "nsComponentManagerUtils.h"
+#include "nsINamed.h"
 #include "nsITimer.h"
 #include "ScreenHelperWin.h"
 #include "mozilla/widget/ScreenManager.h"
@@ -43,13 +44,19 @@ static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
 class WinWakeLockListener final : public nsIDOMMozWakeLockListener
-                                , public nsITimerCallback {
+                                , public nsITimerCallback
+                                , public nsINamed {
 public:
   NS_DECL_ISUPPORTS;
 
   NS_IMETHOD Notify(nsITimer *timer) override {
     WAKE_LOCK_LOG("WinWakeLock: periodic timer fired");
     ResetScreenSaverTimeout();
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetName(nsACString& aName) override {
+    aName.AssignLiteral("WinWakeLockListener");
     return NS_OK;
   }
 private:
@@ -134,7 +141,7 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
-NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener, nsITimerCallback, nsINamed)
 StaticRefPtr<WinWakeLockListener> sWakeLockListener;
 
 static void

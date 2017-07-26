@@ -11,6 +11,7 @@
 #error "This header is only usable from within libxul (MOZILLA_INTERNAL_API)."
 #endif
 
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "nsITimer.h"
@@ -37,6 +38,7 @@ class LazyIdleThread final
   , public nsITimerCallback
   , public nsIThreadObserver
   , public nsIObserver
+  , public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -45,6 +47,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
   enum ShutdownMethod
   {

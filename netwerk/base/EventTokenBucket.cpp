@@ -75,7 +75,7 @@ TokenBucketCancelable::Fire()
 // EventTokenBucket
 ////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(EventTokenBucket, nsITimerCallback)
+NS_IMPL_ISUPPORTS(EventTokenBucket, nsITimerCallback, nsINamed)
 
 // by default 1hz with no burst
 EventTokenBucket::EventTokenBucket(uint32_t eventsPerSecond,
@@ -355,6 +355,13 @@ EventTokenBucket::Notify(nsITimer *timer)
   DispatchEvents();
   UpdateTimer();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EventTokenBucket::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("EventTokenBucket");
   return NS_OK;
 }
 

@@ -71,6 +71,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileReader)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(FileReader, DOMEventTargetHelper)
@@ -681,6 +682,14 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
     StartProgressEventTimer();
   }
 
+  return NS_OK;
+}
+
+// nsINamed
+NS_IMETHODIMP
+FileReader::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("FileReader");
   return NS_OK;
 }
 
