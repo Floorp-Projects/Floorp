@@ -397,6 +397,7 @@ GeckoStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
 
   UNIQUE_CASE(Font)
   UNIQUE_CASE(Display)
+  UNIQUE_CASE(Position)
   UNIQUE_CASE(Text)
   UNIQUE_CASE(TextReset)
   UNIQUE_CASE(Visibility)
@@ -863,6 +864,23 @@ GeckoStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
       nsStyleText* uniqueText = GET_UNIQUE_STYLE_DATA(Text);
       uniqueText->mTextAlign = NS_STYLE_TEXT_ALIGN_START;
     }
+  }
+
+  // Fixup the "justify-items: auto" value based on our parent style here if
+  // needed.
+  //
+  // Note that this only pulls a unique struct in the case the parent has the
+  // "legacy" modifier (which is not the default), and the computed value would
+  // change as a result.
+  //
+  // We check the parent first just to avoid unconditionally pulling the
+  // nsStylePosition struct on every style context.
+  if (mParent &&
+      mParent->StylePosition()->mJustifyItems & NS_STYLE_JUSTIFY_LEGACY &&
+      StylePosition()->mSpecifiedJustifyItems == NS_STYLE_JUSTIFY_AUTO &&
+      StylePosition()->mJustifyItems != mParent->StylePosition()->mJustifyItems) {
+    nsStylePosition* uniquePosition = GET_UNIQUE_STYLE_DATA(Position);
+    uniquePosition->mJustifyItems = mParent->StylePosition()->mJustifyItems;
   }
 
   // CSS2.1 section 9.2.4 specifies fixups for the 'display' property of

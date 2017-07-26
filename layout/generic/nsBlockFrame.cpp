@@ -1531,13 +1531,11 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     // Note: we check here for non-default "justify-items", though technically
     // that'd only affect rendering if some child has "justify-self:auto".
     // (It's safe to assume that's likely, since it's the default value that
-    // a child would have.) We also pass in nullptr for the parent style context
-    // because an accurate parameter is slower and only necessary to detect a
-    // narrow edge case with the "legacy" keyword.
+    // a child would have.)
     const nsStylePosition* stylePosition = reflowInput->mStylePosition;
     if (!IsStyleNormalOrAuto(stylePosition->mJustifyContent) ||
         !IsStyleNormalOrAuto(stylePosition->mAlignContent) ||
-        !IsStyleNormalOrAuto(stylePosition->ComputedJustifyItems(nullptr))) {
+        !IsStyleNormalOrAuto(stylePosition->mJustifyItems)) {
       Telemetry::Accumulate(Telemetry::BOX_ALIGN_PROPS_IN_BLOCKS_FLAG, true);
     } else {
       // If not already flagged by the parent, now check justify-self of the
