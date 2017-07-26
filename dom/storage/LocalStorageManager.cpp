@@ -76,7 +76,7 @@ LocalStorageManager::LocalStorageManager()
     // Do this only on the child process.  The thread IPC bridge
     // is also used to communicate chrome observer notifications.
     // Note: must be called after we set sSelf
-    LocalStorageCache::StartDatabase();
+    StorageDBChild::GetOrCreate();
   }
 }
 
@@ -168,9 +168,9 @@ LocalStorageManager::GetOriginUsage(const nsACString& aOriginNoSuffix)
 
   usage = new StorageUsage(aOriginNoSuffix);
 
-  StorageDBBridge* db = LocalStorageCache::StartDatabase();
-  if (db) {
-    db->AsyncGetUsage(usage);
+  StorageDBChild* storageChild = StorageDBChild::GetOrCreate();
+  if (storageChild) {
+    storageChild->AsyncGetUsage(usage);
   }
 
   mUsages.Put(aOriginNoSuffix, usage);
@@ -234,7 +234,7 @@ LocalStorageManager::GetStorageInternal(CreateMode aCreateMode,
     if (aCreateMode == CreateMode::CreateIfShouldPreload) {
       // This is a demand to just preload the cache, if the scope has
       // no data stored, bypass creation and preload of the cache.
-      StorageDBBridge* db = LocalStorageCache::GetDatabase();
+      StorageDBChild* db = StorageDBChild::Get();
       if (db) {
         if (!db->ShouldPreloadOrigin(LocalStorageManager::CreateOrigin(originAttrSuffix, originKey))) {
           return NS_OK;

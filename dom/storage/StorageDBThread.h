@@ -32,6 +32,15 @@ class StorageUsage;
 
 typedef mozilla::storage::StatementCache<mozIStorageStatement> StatementCache;
 
+// XXX Fix me!
+//     1. Move comments to StorageDBThread/StorageDBChild.
+//     2. Devirtualize relevant methods in StorageDBThread/StorageDBChild.
+//     3. Remove relevant methods in StorageDBThread/StorageDBChild that are
+//        unused.
+//     4. Remove this class completely.
+//
+//     See bug 1387636 for more details.
+#if 0
 // Interface used by the cache to post operations to the asynchronous
 // database thread or process.
 class StorageDBBridge
@@ -100,17 +109,15 @@ public:
   // Check whether the scope has any data stored on disk and is thus allowed to
   // preload
   virtual bool ShouldPreloadOrigin(const nsACString& aOriginNoSuffix) = 0;
-
-  // Get the complete list of scopes having data
-  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins) = 0;
 };
+#endif
 
 // The implementation of the the database engine, this directly works
 // with the sqlite or any other db API we are based on
 // This class is resposible for collecting and processing asynchronous
 // DB operations over caches (LocalStorageCache) communicating though
 // LocalStorageCacheBridge interface class
-class StorageDBThread final : public StorageDBBridge
+class StorageDBThread final
 {
 public:
   class PendingOperations;
@@ -287,11 +294,43 @@ public:
     Monitor mMonitor;
   };
 
+  class InitHelper;
+
+  class NoteBackgroundThreadRunnable;
+
+  class ShutdownRunnable : public Runnable
+  {
+    // Only touched on the main thread.
+    bool& mDone;
+
+  public:
+    explicit ShutdownRunnable(bool& aDone)
+      : Runnable("dom::StorageDBThread::ShutdownRunnable")
+      , mDone(aDone)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+
+  private:
+    ~ShutdownRunnable()
+    { }
+
+    NS_DECL_NSIRUNNABLE
+  };
+
 public:
   StorageDBThread();
   virtual ~StorageDBThread() {}
 
+  static StorageDBThread*
+  Get();
+
+  static StorageDBThread*
+  GetOrCreate();
+
   virtual nsresult Init();
+
+  // Flushes all uncommited data and stops the I/O thread.
   virtual nsresult Shutdown();
 
   virtual void AsyncPreload(LocalStorageCacheBridge* aCache,
@@ -358,7 +397,9 @@ public:
   virtual void AsyncFlush();
 
   virtual bool ShouldPreloadOrigin(const nsACString& aOrigin);
-  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins);
+
+  // Get the complete list of scopes having data.
+  void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins);
 
 private:
   nsCOMPtr<nsIFile> mDatabaseFile;

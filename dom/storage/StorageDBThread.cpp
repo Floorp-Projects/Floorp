@@ -23,6 +23,7 @@
 #include "mozIStorageValueArray.h"
 #include "mozIStorageFunction.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsIObserverService.h"
 #include "nsVariant.h"
 #include "mozilla/IOInterposer.h"
@@ -47,6 +48,11 @@ namespace dom {
 using namespace StorageUtils;
 
 namespace { // anon
+
+StorageDBThread* sStorageThread = nullptr;
+
+// False until we shut the storage thread down.
+bool sStorageThreadDown = false;
 
 // This is only a compatibility code for schema version 0.  Returns the 'scope'
 // key in the schema version 0 format for the scope column.
@@ -106,11 +112,64 @@ Scheme0Scope(LocalStorageCacheBridge* aCache)
 
 } // anon
 
-
+// XXX Fix me!
+#if 0
 StorageDBBridge::StorageDBBridge()
 {
 }
+#endif
 
+class StorageDBThread::InitHelper final
+  : public Runnable
+{
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+  mozilla::Mutex mMutex;
+  mozilla::CondVar mCondVar;
+  nsString mProfilePath;
+  nsresult mMainThreadResultCode;
+  bool mWaiting;
+
+public:
+  InitHelper()
+    : Runnable("dom::StorageDBThread::InitHelper")
+    , mOwningThread(GetCurrentThreadEventTarget())
+    , mMutex("InitHelper::mMutex")
+    , mCondVar(mMutex, "InitHelper::mCondVar")
+    , mMainThreadResultCode(NS_OK)
+    , mWaiting(true)
+  { }
+
+  // Because of the `sync Preload` IPC, we need to be able to synchronously
+  // initialize, which includes consulting and initializing
+  // some main-thread-only APIs. Bug 1386441 discusses improving this situation.
+  nsresult
+  SyncDispatchAndReturnProfilePath(nsAString& aProfilePath);
+
+private:
+  ~InitHelper() override = default;
+
+  nsresult
+  RunOnMainThread();
+
+  NS_DECL_NSIRUNNABLE
+};
+
+class StorageDBThread::NoteBackgroundThreadRunnable final
+  : public Runnable
+{
+  nsCOMPtr<nsIEventTarget> mOwningThread;
+
+public:
+  NoteBackgroundThreadRunnable()
+    : Runnable("dom::StorageDBThread::NoteBackgroundThreadRunnable")
+    , mOwningThread(GetCurrentThreadEventTarget())
+  { }
+
+private:
+  ~NoteBackgroundThreadRunnable() override = default;
+
+  NS_DECL_NSIRUNNABLE
+};
 
 StorageDBThread::StorageDBThread()
   : mThread(nullptr)
@@ -127,24 +186,64 @@ StorageDBThread::StorageDBThread()
 {
 }
 
+// static
+StorageDBThread*
+StorageDBThread::Get()
+{
+  AssertIsOnBackgroundThread();
+
+  return sStorageThread;
+}
+
+// static
+StorageDBThread*
+StorageDBThread::GetOrCreate()
+{
+  AssertIsOnBackgroundThread();
+
+  if (sStorageThread || sStorageThreadDown) {
+    // When sStorageThreadDown is at true, sStorageThread is null.
+    // Checking sStorageThreadDown flag here prevents reinitialization of
+    // the storage thread after shutdown.
+    return sStorageThread;
+  }
+
+  nsAutoPtr<StorageDBThread> storageThread(new StorageDBThread());
+
+  nsresult rv = storageThread->Init();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  sStorageThread = storageThread.forget();
+
+  return sStorageThread;
+}
+
 nsresult
 StorageDBThread::Init()
 {
-  nsresult rv;
+  AssertIsOnBackgroundThread();
 
-  // Need to determine location on the main thread, since
-  // NS_GetSpecialDirectory access the atom table that can
-  // be accessed only on the main thread.
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(mDatabaseFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<InitHelper> helper = new InitHelper();
+
+  nsString profilePath;
+  nsresult rv = helper->SyncDispatchAndReturnProfilePath(profilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mDatabaseFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = mDatabaseFile->InitWithPath(profilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   rv = mDatabaseFile->Append(NS_LITERAL_STRING("webappsstore.sqlite"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Ensure mozIStorageService init on the main thread first.
-  nsCOMPtr<mozIStorageService> service =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Need to keep the lock to avoid setting mThread later then
@@ -158,12 +257,20 @@ StorageDBThread::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  RefPtr<NoteBackgroundThreadRunnable> runnable =
+    new NoteBackgroundThreadRunnable();
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
+
   return NS_OK;
 }
 
 nsresult
 StorageDBThread::Shutdown()
 {
+  AssertIsOnBackgroundThread();
+
+  sStorageThreadDown = true;
+
   if (!mThread) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -904,7 +1011,7 @@ StorageDBThread::DBOperation::Perform(StorageDBThread* aThread)
     }
 
     StatementCache* statements;
-    if (MOZ_UNLIKELY(NS_IsMainThread())) {
+    if (MOZ_UNLIKELY(IsOnBackgroundThread())) {
       statements = &aThread->mReaderStatements;
     } else {
       statements = &aThread->mWorkerStatements;
@@ -1492,6 +1599,116 @@ StorageDBThread::PendingOperations::IsOriginUpdatePending(const nsACString& aOri
   }
 
   return false;
+}
+
+nsresult
+StorageDBThread::
+InitHelper::SyncDispatchAndReturnProfilePath(nsAString& aProfilePath)
+{
+  AssertIsOnBackgroundThread();
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+
+  mozilla::MutexAutoLock autolock(mMutex);
+  while (mWaiting) {
+    mCondVar.Wait();
+  }
+
+  if (NS_WARN_IF(NS_FAILED(mMainThreadResultCode))) {
+    return mMainThreadResultCode;
+  }
+
+  aProfilePath = mProfilePath;
+  return NS_OK;
+}
+
+nsresult
+StorageDBThread::
+InitHelper::RunOnMainThread()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Need to determine location on the main thread, since
+  // NS_GetSpecialDirectory accesses the atom table that can
+  // only be accessed on the main thread.
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = profileDir->GetPath(mProfilePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // This service has to be started on the main thread currently.
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageDBThread::
+InitHelper::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv = RunOnMainThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mMainThreadResultCode = rv;
+  }
+
+  mozilla::MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(mWaiting);
+
+  mWaiting = false;
+  mCondVar.Notify();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageDBThread::
+NoteBackgroundThreadRunnable::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StorageObserver* observer = StorageObserver::Self();
+  MOZ_ASSERT(observer);
+
+  observer->NoteBackgroundThread(mOwningThread);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageDBThread::
+ShutdownRunnable::Run()
+{
+  if (NS_IsMainThread()) {
+    mDone = true;
+
+    return NS_OK;
+  }
+
+  AssertIsOnBackgroundThread();
+
+  if (sStorageThread) {
+    sStorageThread->Shutdown();
+
+    delete sStorageThread;
+    sStorageThread = nullptr;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+
+  return NS_OK;
 }
 
 } // namespace dom
