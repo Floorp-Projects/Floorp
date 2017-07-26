@@ -7,23 +7,20 @@
 #ifndef HLSDecoder_h_
 #define HLSDecoder_h_
 
-#include "ChannelMediaDecoder.h"
+#include "MediaDecoder.h"
 
 namespace mozilla {
-class MediaFormatReader;
 
-class HLSDecoder final : public ChannelMediaDecoder
+class HLSDecoder final : public MediaDecoder
 {
 public:
   // MediaDecoder interface.
   explicit HLSDecoder(MediaDecoderInit& aInit)
-    : ChannelMediaDecoder(aInit)
+    : MediaDecoder(aInit)
   {
   }
 
   void Shutdown() override;
-
-  ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
 
   MediaDecoderStateMachine* CreateStateMachine() override;
 
@@ -37,8 +34,7 @@ public:
 
   nsresult Load(nsIChannel* aChannel,
                 bool aIsPrivateBrowsing,
-                nsIStreamListener**) override;
-  nsresult Load(MediaResource*) override;
+                nsIStreamListener**);
 
   nsresult Play() override;
 

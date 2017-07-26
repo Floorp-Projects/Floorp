@@ -27,7 +27,7 @@ HLSDecoder::Shutdown()
   if (resource) {
     resource->Detach();
   }
-  ChannelMediaDecoder::Shutdown();
+  MediaDecoder::Shutdown();
 }
 
 MediaDecoderStateMachine*
@@ -48,13 +48,6 @@ HLSDecoder::CreateStateMachine()
     new MediaFormatReader(init, new HLSDemuxer(resourceWrapper->GetPlayerId()));
 
   return new MediaDecoderStateMachine(this, mReader);
-}
-
-ChannelMediaDecoder*
-HLSDecoder::Clone(MediaDecoderInit& aInit)
-{
-  MOZ_CRASH("Clone is not supported");
-  return nullptr;
 }
 
 bool
@@ -95,13 +88,6 @@ HLSDecoder::Load(nsIChannel* aChannel,
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
   return InitializeStateMachine();
-}
-
-nsresult
-HLSDecoder::Load(MediaResource*)
-{
-  MOZ_CRASH("Clone is not supported");
-  return NS_ERROR_FAILURE;
 }
 
 nsresult
