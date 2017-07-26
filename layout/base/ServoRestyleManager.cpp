@@ -498,7 +498,7 @@ NeedsToTraverseElementChildren(const Element& aParent,
     return true;
   }
 
-  if (!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush)) {
+  if (!(aFlags & ServoTraversalFlags::AnimationOnly)) {
     return aParent.HasDirtyDescendantsForServo() ||
            aParent.HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   }
@@ -662,7 +662,7 @@ ServoRestyleManager::ProcessPostTraversal(
   const bool descendantsNeedFrames =
     aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   const bool forThrottledAnimationFlush =
-    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
+    !!(aFlags & ServoTraversalFlags::AnimationOnly);
   const bool traverseTextChildren =
     wasRestyled || (!forThrottledAnimationFlush && descendantsNeedFrames);
   bool recreatedAnyContext = wasRestyled;
@@ -832,8 +832,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
 
   ServoStyleSet* styleSet = StyleSet();
   nsIDocument* doc = PresContext()->Document();
-  bool forThrottledAnimationFlush =
-    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
+  bool forThrottledAnimationFlush = !!(aFlags & ServoTraversalFlags::AnimationOnly);
 
   // Ensure the refresh driver is active during traversal to avoid mutating
   // mActiveTimer and mMostRecentRefresh time.
@@ -852,9 +851,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
     aFlags |= ServoTraversalFlags::ForCSSRuleChanges;
   }
 
-  while (forThrottledAnimationFlush
-          ? styleSet->StyleDocumentForThrottledAnimationFlush()
-          : styleSet->StyleDocument(aFlags)) {
+  while (styleSet->StyleDocument(aFlags)) {
     if (!forThrottledAnimationFlush) {
       ClearSnapshots();
     }
@@ -865,8 +862,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
     // Recreate style contexts, and queue up change hints (which also handle
     // lazy frame construction).
     {
-      AutoRestyleTimelineMarker marker(
-        mPresContext->GetDocShell(), forThrottledAnimationFlush);
+      AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
       DocumentStyleRootIterator iter(doc);
       while (Element* root = iter.GetNextStyleRoot()) {
         ServoRestyleState state(*styleSet, currentChanges);
@@ -953,7 +949,7 @@ ServoRestyleManager::UpdateOnlyAnimationStyles()
     return;
   }
 
-  DoProcessPendingRestyles(ServoTraversalFlags::ForThrottledAnimationFlush);
+  DoProcessPendingRestyles(ServoTraversalFlags::AnimationOnly);
 }
 
 void
