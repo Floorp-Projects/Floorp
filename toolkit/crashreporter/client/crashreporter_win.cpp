@@ -912,7 +912,7 @@ static BOOL CALLBACK CrashReporterDialogProc(HWND hwndDlg, UINT message,
 
     if (!CheckBoolKey(gCrashReporterKey.c_str(),
                       SUBMIT_REPORT_VALUE, &enabled))
-      enabled = ShouldEnableSending();
+      enabled = true;
 
     CheckDlgButton(hwndDlg, IDC_SUBMITREPORTCHECK, enabled ? BST_CHECKED
                                                            : BST_UNCHECKED);
