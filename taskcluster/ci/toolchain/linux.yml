@@ -155,7 +155,7 @@ linux64-sccache:
         kind: build
         platform: toolchains/opt
         symbol: TL(sccache)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         docker-image: {in-tree: desktop-build}
