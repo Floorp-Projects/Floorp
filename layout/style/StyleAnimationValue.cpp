@@ -2147,16 +2147,23 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
     StyleAnimationValue::AppendTransformFunction(aOperatorType,
                                                  resultTail);
 
-  // FIXME: We should change the other transform code to also only
-  // take a single progress value, as having values that don't
-  // sum to 1 doesn't make sense for these.
-  if (aList1 == aList2) {
+  if (aCoeff1 == 0) {
+    // If the first coeffient is zero, we don't need to care about the first
+    // list at all.
     arr->Item(1).Reset();
-    // For accumulation, we need to increase accumulation count for |aList1|.
-    if (aOperatorType == eCSSKeyword_accumulatematrix) {
-      aCoeff2 += 1.0;
-    }
+  } else if (aList1 == aList2) {
+    // If we have the same list, clear the first list, add the first coefficient
+    // into the second one so that we can simply multiply the second list by the
+    // second coefficient value.
+    arr->Item(1).Reset();
+    aCoeff2 += aCoeff1;
   } else {
+    MOZ_ASSERT((aOperatorType == eCSSKeyword_accumulatematrix &&
+                aCoeff1 == 1.0) ||
+               (aOperatorType == eCSSKeyword_interpolatematrix &&
+                FuzzyEqualsAdditive(aCoeff1 + aCoeff2, 1.0)),
+              "|aCoeff1| should be 1.0 for accumulation, "
+              "|aCoeff1| + |aCoeff2| == 1.0 for interpolation");
     aList1->CloneInto(arr->Item(1).SetListValue());
   }
 
