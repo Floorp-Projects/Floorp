@@ -49,7 +49,7 @@ nsresult
 CallGetService(const nsCID& aCID, const nsIID& aIID, void** aResult)
 {
   nsComponentManagerImpl* compMgr = nsComponentManagerImpl::gComponentManager;
-  if (NS_WARN_IF(!compMgr)) {
+  if (!compMgr) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -60,7 +60,7 @@ nsresult
 CallGetService(const char* aContractID, const nsIID& aIID, void** aResult)
 {
   nsComponentManagerImpl* compMgr = nsComponentManagerImpl::gComponentManager;
-  if (NS_WARN_IF(!compMgr)) {
+  if (!compMgr) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
