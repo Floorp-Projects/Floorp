@@ -21,6 +21,8 @@ public:
   {
   }
 
+  void Shutdown() override;
+
   ChannelMediaDecoder* Clone(MediaDecoderInit& aInit) override;
 
   MediaDecoderStateMachine* CreateStateMachine() override;
