@@ -45,15 +45,22 @@ def gradle_flags(value):
 
 set_config('GRADLE_FLAGS', gradle_flags)
 
+# Automation will set this to (file:///path/to/local, ...) via the mozconfig.
+# Local developer default is (jcenter, maven.google.com).
+option(env='GRADLE_MAVEN_REPOSITORIES',
+       nargs='+',
+       default=('https://jcenter.bintray.com/',
+                'https://maven.google.com/',
+       ),
+       help='Comma-separated URLs of Maven repositories containing Gradle dependencies.')
 
-# Automation will set this to file:///path/to/local via the mozconfig.
-# Local developer default is jcenter.
-option(env='GRADLE_MAVEN_REPOSITORY', default='https://jcenter.bintray.com/',
-       help='Path to Maven repository containing Gradle dependencies.')
+@depends('GRADLE_MAVEN_REPOSITORIES')
+@imports(_from='os.path', _import='isdir')
+def gradle_maven_repositories(values):
+    if not values:
+        die('GRADLE_MAVEN_REPOSITORIES must not be empty')
+    if not all(values):
+        die('GRADLE_MAVEN_REPOSITORIES entries must not be empty')
+    return values
 
-@depends('GRADLE_MAVEN_REPOSITORY')
-def gradle_maven_repository(value):
-    if value:
-        return value[0]
-
-set_config('GRADLE_MAVEN_REPOSITORY', gradle_maven_repository)
+set_config('GRADLE_MAVEN_REPOSITORIES', gradle_maven_repositories)
