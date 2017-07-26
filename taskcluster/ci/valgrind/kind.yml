@@ -42,4 +42,5 @@ jobs:
             tooltool-downloads: public
             need-xvfb: true
         toolchains:
+            - linux64-gcc
             - linux64-sccache
