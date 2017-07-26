@@ -17,7 +17,6 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "VideoUtils.h"
 #include "gfxPlatform.h"
 
@@ -76,7 +75,7 @@ AppleVTDecoder::Init()
 RefPtr<MediaDataDecoder::DecodePromise>
 AppleVTDecoder::Decode(MediaRawData* aSample)
 {
-  LOG("mp4 input sample %p pts %lld duration %lld us%s %" PRIuSIZE " bytes",
+  LOG("mp4 input sample %p pts %lld duration %lld us%s %zu bytes",
       aSample,
       aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(),

@@ -12,7 +12,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "VideoUtils.h"
@@ -466,7 +465,7 @@ ConvertIndex(FallibleTArray<Index::Indice>& aDest,
 {
   if (!aDest.SetCapacity(aIndex.Length(), mozilla::fallible)) {
     return MediaResult{NS_ERROR_OUT_OF_MEMORY,
-                       RESULT_DETAIL("Could not resize to %" PRIuSIZE " indices",
+                       RESULT_DETAIL("Could not resize to %zu indices",
                                      aIndex.Length())};
   }
   for (size_t i = 0; i < aIndex.Length(); i++) {

@@ -52,7 +52,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
@@ -2078,7 +2077,7 @@ public:
         if (MOZ_LOG_TEST(AudioLogModule(), LogLevel::Debug)) {
           if (played_ticks_ > last_log_ + WEBRTC_DEFAULT_SAMPLE_RATE) { // ~ 1 second
             MOZ_LOG(AudioLogModule(), LogLevel::Debug,
-                    ("%p: Inserting %" PRIuSIZE " samples into track %d, total = %" PRIu64,
+                    ("%p: Inserting %zu samples into track %d, total = %" PRIu64,
                      (void*) this, frames, track_id_, played_ticks_));
             last_log_ = played_ticks_;
           }

@@ -4762,8 +4762,8 @@ static bool
 CheckSignatureAgainstExisting(ModuleValidator& m, ParseNode* usepn, const Sig& sig, const Sig& existing)
 {
     if (sig.args().length() != existing.args().length()) {
-        return m.failf(usepn, "incompatible number of arguments (%" PRIuSIZE
-                       " here vs. %" PRIuSIZE " before)",
+        return m.failf(usepn, "incompatible number of arguments (%zu"
+                       " here vs. %zu before)",
                        sig.args().length(), existing.args().length());
     }
 

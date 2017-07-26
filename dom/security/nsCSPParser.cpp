@@ -6,7 +6,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsCSPParser.h"
@@ -879,7 +878,7 @@ nsCSPParser::referrerDirectiveValue(nsCSPDirective* aDir)
   CSPPARSERLOG(("nsCSPParser::referrerDirectiveValue"));
 
   if (mCurDir.Length() != 2) {
-    CSPPARSERLOG(("Incorrect number of tokens in referrer directive, got %" PRIuSIZE " expected 1",
+    CSPPARSERLOG(("Incorrect number of tokens in referrer directive, got %zu expected 1",
                  mCurDir.Length() - 1));
     delete aDir;
     return;

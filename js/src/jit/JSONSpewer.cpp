@@ -8,7 +8,6 @@
 
 #include "jit/JSONSpewer.h"
 
-#include "mozilla/SizePrintfMacros.h"
 
 #include <stdarg.h>
 
@@ -26,7 +25,7 @@ JSONSpewer::beginFunction(JSScript* script)
 {
     beginObject();
     if (script)
-        formatProperty("name", "%s:%" PRIuSIZE, script->filename(), script->lineno());
+        formatProperty("name", "%s:%zu", script->filename(), script->lineno());
     else
         property("name", "wasm compilation");
     beginListProperty("passes");
