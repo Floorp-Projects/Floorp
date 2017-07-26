@@ -6,8 +6,8 @@
 #include "mozilla/layers/WebRenderScrollData.h"
 
 #include "Layers.h"
+#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/Unused.h"
-#include "Layers.h"
 #include "nsTArray.h"
 #include "UnitTransforms.h"
 
@@ -73,13 +73,23 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   mDescendantCount = 0;
 
   MOZ_ASSERT(aItem);
-  if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_INFO_LAYER) {
+  switch (aItem->GetType()) {
+  case nsDisplayItem::TYPE_SCROLL_INFO_LAYER: {
     nsDisplayScrollInfoLayer* info = static_cast<nsDisplayScrollInfoLayer*>(aItem);
     UniquePtr<ScrollMetadata> metadata = info->ComputeScrollMetadata(
         nullptr, ContainerLayerParameters());
     MOZ_ASSERT(metadata);
     MOZ_ASSERT(metadata->GetMetrics().IsScrollInfoLayer());
     mScrollIds.AppendElement(aOwner.AddMetadata(*metadata));
+    break;
+  }
+  case nsDisplayItem::TYPE_REMOTE: {
+    nsDisplayRemote* remote = static_cast<nsDisplayRemote*>(aItem);
+    mReferentId = Some(remote->GetRemoteLayersId());
+    break;
+  }
+  default:
+    break;
   }
   for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
        asr;
