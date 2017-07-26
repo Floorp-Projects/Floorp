@@ -28,8 +28,8 @@
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
-      <caption label="&defaultSearchEngine.label;"/>
-      <label>&chooseYourDefaultSearchEngine2.label;</label>
+      <caption><label>&defaultSearchEngine.label;</label></caption>
+      <description>&chooseYourDefaultSearchEngine2.label;</description>
       <hbox>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
         <hbox>
@@ -54,8 +54,8 @@
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
-      <caption label="&oneClickSearchEngines.label;"/>
-      <label>&chooseWhichOneToDisplay2.label;</label>
+      <caption><label>&oneClickSearchEngines.label;</label></caption>
+      <description>&chooseWhichOneToDisplay2.label;</description>
 
       <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
             seltype="single">
@@ -81,9 +81,6 @@
                 disabled="true"
                 />
       </hbox>
-
-      <separator class="thin"/>
-
       <hbox id="addEnginesBox" pack="start">
         <label id="addEngines" class="text-link">&findMoreSearchEngines.label;</label>
       </hbox>
