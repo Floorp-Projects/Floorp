@@ -91,13 +91,25 @@ ObjectActor.prototype = {
       g.proxyTarget = this.hooks.createValueGrip(this.obj.proxyTarget);
       g.proxyHandler = this.hooks.createValueGrip(this.obj.proxyHandler);
     } else {
-      g.class = this.obj.class;
-      g.extensible = this.obj.isExtensible();
-      g.frozen = this.obj.isFrozen();
-      g.sealed = this.obj.isSealed();
+      try {
+        g.class = this.obj.class;
+        g.extensible = this.obj.isExtensible();
+        g.frozen = this.obj.isFrozen();
+        g.sealed = this.obj.isSealed();
+      } catch (e) {
+        // Handle cases where the underlying object's calls to isExtensible, etc throw.
+        // This is possible with ProxyObjects like CPOWs. Note these are different from
+        // scripted Proxies created via `new Proxy`, which match this.obj.isProxy above.
+      }
     }
 
-    if (g.class != "DeadObject") {
+    // Changing the class so that CPOWs will be visible in the UI
+    let isCPOW = DevToolsUtils.isCPOW(this.obj);
+    if (isCPOW) {
+      g.class = "CPOW: " + g.class;
+    }
+
+    if (g.class != "DeadObject" && !isCPOW) {
       if (g.class == "Promise") {
         g.promiseState = this._createPromiseState();
       }
