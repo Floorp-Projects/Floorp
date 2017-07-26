@@ -255,3 +255,4 @@ windows8-tests:
     - mochitest-webgl
     - mochitest-clipboard
     - mochitest-chrome
+    - xpcshell
