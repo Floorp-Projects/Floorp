@@ -1,5 +1,6 @@
 /* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set sts=2 sw=2 et tw=80: */
+/* eslint-disable mozilla/no-arbitrary-setTimeout */
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
