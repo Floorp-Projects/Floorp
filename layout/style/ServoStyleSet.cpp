@@ -272,11 +272,9 @@ ServoStyleSet::PrepareAndTraverseSubtree(
   RawGeckoElementBorrowed aRoot,
   ServoTraversalFlags aFlags)
 {
-  bool forThrottledAnimationFlush =
-    !!(aFlags & ServoTraversalFlags::ForThrottledAnimationFlush);
+  bool forThrottledAnimationFlush = !!(aFlags & ServoTraversalFlags::AnimationOnly);
 
-  AutoRestyleTimelineMarker marker(
-    mPresContext->GetDocShell(), forThrottledAnimationFlush);
+  AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), forThrottledAnimationFlush);
 
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
@@ -780,11 +778,11 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 bool
 ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 {
-  MOZ_ASSERT(aFlags == ServoTraversalFlags::Empty ||
-             aFlags == ServoTraversalFlags::ForCSSRuleChanges,
-             "Should only be called for normal traversal or CSS rule changes");
-
-  PreTraverse();
+  if (!!(aFlags & ServoTraversalFlags::AnimationOnly)) {
+    PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
+  } else {
+    PreTraverse();
+  }
 
   // Restyle the document from the root element and each of the document level
   // NAC subtree roots.
@@ -792,21 +790,6 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
     if (PrepareAndTraverseSubtree(root, aFlags)) {
-      postTraversalRequired = true;
-    }
-  }
-  return postTraversalRequired;
-}
-
-bool
-ServoStyleSet::StyleDocumentForThrottledAnimationFlush()
-{
-  PreTraverse(nullptr, EffectCompositor::AnimationRestyleType::Full);
-
-  bool postTraversalRequired = false;
-  DocumentStyleRootIterator iter(mPresContext->Document());
-  while (Element* root = iter.GetNextStyleRoot()) {
-    if (PrepareAndTraverseSubtree(root, ServoTraversalFlags::ForThrottledAnimationFlush)) {
       postTraversalRequired = true;
     }
   }

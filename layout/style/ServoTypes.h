@@ -66,12 +66,6 @@ enum class ServoTraversalFlags : uint32_t {
   // or display:none subtrees (which can occur when styling elements with
   // newly applied XBL bindings).
   ForNewlyBoundElement = 1 << 4,
-  // Processes just the traversal for animation-only restyles and skips the
-  // normal traversal for other restyles unrelated to animations.
-  // This is used to bring throttled animations up-to-date such as when we need
-  // to get correct position for transform animations that are throttled because
-  // they are running on the compositor.
-  ForThrottledAnimationFlush = 1 << 5,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
