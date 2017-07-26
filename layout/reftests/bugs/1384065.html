@@ -1,0 +1,14 @@
+<!doctype html>
+<style>
+div {
+  display: none;
+}
+div::before {
+  content: "Should appear";
+}
+</style>
+<div></div>
+<script>
+  document.documentElement.offsetTop;
+  document.querySelector('div').style.display = "block";
+</script>
