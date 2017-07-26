@@ -32,6 +32,7 @@ this.TelemetryUtils = {
     OverrideOfficialCheck: "toolkit.telemetry.send.overrideOfficialCheck",
     Server: "toolkit.telemetry.server",
     ShutdownPingSender: "toolkit.telemetry.shutdownPingSender.enabled",
+    ShutdownPingSenderFirstSession: "toolkit.telemetry.shutdownPingSender.enabledFirstSession",
     TelemetryEnabled: "toolkit.telemetry.enabled",
     Unified: "toolkit.telemetry.unified",
     NewProfilePingEnabled: "toolkit.telemetry.newProfilePing.enabled",
