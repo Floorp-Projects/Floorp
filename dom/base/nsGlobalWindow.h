@@ -2010,6 +2010,8 @@ protected:
   bool mNetworkDownloadObserverEnabled;
 #endif // MOZ_B2G
 
+  bool mCleanedUp;
+
   nsCOMPtr<nsIDOMOfflineResourceList> mApplicationCache;
 
   using XBLPrototypeHandlerTable = nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*>;

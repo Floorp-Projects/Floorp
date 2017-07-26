@@ -106,7 +106,7 @@ Performance::CreateForMainThread(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   RefPtr<Performance> performance =
-    PerformanceMainThread::Create(aWindow, aDOMTiming, aChannel);
+    new PerformanceMainThread(aWindow, aDOMTiming, aChannel);
   return performance.forget();
 }
 
@@ -277,13 +277,18 @@ Performance::Mark(const nsAString& aName, ErrorResult& aRv)
     return;
   }
 
+  // Don't add the entry if the buffer is full. XXX should be removed by bug 1159003.
+  if (mUserEntries.Length() >= mResourceTimingBufferSize) {
+    return;
+  }
+
   if (IsPerformanceTimingAttribute(aName)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
 
   RefPtr<PerformanceMark> performanceMark =
-    new PerformanceMark(GetParentObject(), aName, Now());
+    new PerformanceMark(GetAsISupports(), aName, Now());
   InsertUserEntry(performanceMark);
 
   if (profiler_is_active()) {
@@ -339,6 +344,12 @@ Performance::Measure(const nsAString& aName,
     return;
   }
 
+  // Don't add the entry if the buffer is full. XXX should be removed by bug
+  // 1159003.
+  if (mUserEntries.Length() >= mResourceTimingBufferSize) {
+    return;
+  }
+
   DOMHighResTimeStamp startTime;
   DOMHighResTimeStamp endTime;
 
@@ -369,7 +380,7 @@ Performance::Measure(const nsAString& aName,
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure =
-    new PerformanceMeasure(GetParentObject(), aName, startTime, endTime);
+    new PerformanceMeasure(GetAsISupports(), aName, startTime, endTime);
   InsertUserEntry(performanceMeasure);
 
   if (profiler_is_active()) {
@@ -565,12 +576,6 @@ Performance::IsObserverEnabled(JSContext* aCx, JSObject* aGlobal)
                             NS_LITERAL_CSTRING("dom.enable_performance_observer"));
 
   return runnable->Dispatch() && runnable->IsEnabled();
-}
-
-void
-Performance::MemoryPressure()
-{
-  mUserEntries.Clear();
 }
 
 } // dom namespace
