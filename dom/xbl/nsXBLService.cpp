@@ -421,8 +421,13 @@ public:
     if (!presShell || !presShell->DidInitialize()) {
       return;
     }
+
     if (ServoStyleSet* servoSet = presShell->StyleSet()->GetAsServo()) {
-      servoSet->StyleNewlyBoundElement(mElement);
+      // Check MayTraverseFrom to handle programatic XBL consumers.
+      // See bug 1370793.
+      if (servoSet->MayTraverseFrom(mElement)) {
+        servoSet->StyleNewlyBoundElement(mElement);
+      }
     }
   }
 

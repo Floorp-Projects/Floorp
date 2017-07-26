@@ -329,6 +329,15 @@ public:
    */
   void MaybeGCRuleTree();
 
+  /**
+   * Returns true if the given element may be used as the root of a style
+   * traversal. Reasons for false include having an unstyled parent, or having
+   * a parent that is display:none.
+   *
+   * Most traversal callsites don't need to check this, but some do.
+   */
+  bool MayTraverseFrom(dom::Element* aElement);
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
