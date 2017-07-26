@@ -46,6 +46,15 @@ public:
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer);
 
+  /**
+   * Create a blank document using the given loadgroup and given
+   * principal.  aPrincipal is allowed to be null, in which case the
+   * new document will get the about:blank codebase principal.
+   */
+  static nsresult CreateBlankDocument(nsILoadGroup* aLoadGroup,
+                                      nsIPrincipal* aPrincipal,
+                                      nsIDocument** aDocument);
+
 private:
   static nsresult EnsureUAStyleSheet();
   static bool IsImageContentType(const char* aContentType);
