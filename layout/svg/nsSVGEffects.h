@@ -355,9 +355,12 @@ public:
     return mProperties;
   }
 
+  void ResolveImage(uint32_t aIndex);
+
 private:
   virtual ~nsSVGMaskProperty() {}
   nsTArray<RefPtr<nsSVGPaintingProperty>> mProperties;
+  nsIFrame* mFrame;
 };
 
 /**
