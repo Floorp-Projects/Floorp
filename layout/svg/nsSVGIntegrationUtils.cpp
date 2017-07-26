@@ -483,7 +483,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                              Point(0, 0),
                              DrawOptions(1.0, compositionOp));
       }
-    } else {
+    } else if (svgReset->mMask.mLayers[i].mImage.IsResolved()) {
       gfxContextMatrixAutoSaveRestore matRestore(maskContext);
 
       maskContext->Multiply(gfxMatrix::Translation(-devPixelOffsetToUserSpace));
@@ -500,6 +500,8 @@ PaintMaskSurface(const PaintFramesParams& aParams,
       aParams.imgParams.result &=
         nsCSSRendering::PaintStyleImageLayerWithSC(params, *maskContext, aSC,
                                               *aParams.frame->StyleBorder());
+    } else {
+      aParams.imgParams.result &= DrawResult::NOT_READY;
     }
   }
 }
