@@ -6,6 +6,7 @@
 #include "WebGLContextLossHandler.h"
 
 #include "mozilla/DebugOnly.h"
+#include "nsINamed.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
@@ -14,6 +15,7 @@
 namespace mozilla {
 
 class WatchdogTimerEvent final : public nsITimerCallback
+                               , public nsINamed
 {
     const WeakPtr<WebGLContextLossHandler> mHandler;
 
@@ -23,6 +25,12 @@ public:
     explicit WatchdogTimerEvent(WebGLContextLossHandler* handler)
         : mHandler(handler)
     { }
+
+    NS_IMETHOD GetName(nsACString& aName) override
+    {
+      aName.AssignLiteral("WatchdogTimerEvent");
+      return NS_OK;
+    }
 
 private:
     virtual ~WatchdogTimerEvent() { }
@@ -35,7 +43,7 @@ private:
     }
 };
 
-NS_IMPL_ISUPPORTS(WatchdogTimerEvent, nsITimerCallback, nsISupports)
+NS_IMPL_ISUPPORTS(WatchdogTimerEvent, nsITimerCallback, nsINamed)
 
 ////////////////////////////////////////
 

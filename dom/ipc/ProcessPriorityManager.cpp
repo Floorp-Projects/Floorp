@@ -18,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
 #include "nsIFrameLoader.h"
+#include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "StaticPtr.h"
 #include "nsIMozBrowserFrame.h"
@@ -226,6 +227,7 @@ class ParticularProcessPriorityManager final
   : public WakeLockObserver
   , public nsIObserver
   , public nsITimerCallback
+  , public nsINamed
   , public nsSupportsWeakReference
 {
   ~ParticularProcessPriorityManager();
@@ -273,6 +275,12 @@ public:
   void TabActivityChanged(TabParent* aTabParent, bool aIsActive);
 
   void ShutDown();
+
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ParticularProcessPriorityManager");
+    return NS_OK;
+  }
 
 private:
   static uint32_t sBackgroundPerceivableGracePeriodMS;
@@ -561,7 +569,8 @@ ProcessPriorityManagerImpl::TabActivityChanged(TabParent* aTabParent,
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
                   nsIObserver,
                   nsITimerCallback,
-                  nsISupportsWeakReference);
+                  nsISupportsWeakReference,
+                  nsINamed);
 
 ParticularProcessPriorityManager::ParticularProcessPriorityManager(
   ContentParent* aContentParent)

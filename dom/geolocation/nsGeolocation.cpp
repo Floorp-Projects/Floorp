@@ -21,6 +21,7 @@
 #include "nsDOMClassInfoID.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
+#include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
@@ -96,6 +97,7 @@ class nsGeolocationRequest final
   virtual ~nsGeolocationRequest();
 
   class TimerCallbackHolder final : public nsITimerCallback
+                                  , public nsINamed
   {
   public:
     NS_DECL_ISUPPORTS
@@ -104,6 +106,12 @@ class nsGeolocationRequest final
     explicit TimerCallbackHolder(nsGeolocationRequest* aRequest)
       : mRequest(aRequest)
     {}
+
+    NS_IMETHOD GetName(nsACString& aName) override
+    {
+      aName.AssignLiteral("nsGeolocationRequest::TimerCallbackHolder");
+      return NS_OK;
+    }
 
   private:
     ~TimerCallbackHolder() = default;
@@ -637,7 +645,9 @@ nsGeolocationRequest::Shutdown()
 // nsGeolocationRequest::TimerCallbackHolder
 ////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsGeolocationRequest::TimerCallbackHolder, nsISupports, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsGeolocationRequest::TimerCallbackHolder,
+                  nsITimerCallback,
+                  nsINamed)
 
 NS_IMETHODIMP
 nsGeolocationRequest::TimerCallbackHolder::Notify(nsITimer*)

@@ -23,7 +23,7 @@
 #include "nsDiskCacheDeviceSQL.h"
 #include "nsCacheUtils.h"
 #include "../cache2/CacheObserver.h"
-
+#include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -203,6 +203,7 @@ private:
 NS_IMPL_ISUPPORTS(nsCacheProfilePrefObserver, nsIObserver)
 
 class nsSetDiskSmartSizeCallback final : public nsITimerCallback
+                                       , public nsINamed
 {
     ~nsSetDiskSmartSizeCallback() {}
 
@@ -217,9 +218,14 @@ public:
         }
         return NS_OK;
     }
+
+    NS_IMETHOD GetName(nsACString& aName) override {
+      aName.AssignLiteral("nsSetDiskSmartSizeCallback");
+      return NS_OK;
+    }
 };
 
-NS_IMPL_ISUPPORTS(nsSetDiskSmartSizeCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsSetDiskSmartSizeCallback, nsITimerCallback, nsINamed)
 
 // Runnable sent to main thread after the cache IO thread calculates available
 // disk space, so that there is no race in setting mDiskCacheCapacity.

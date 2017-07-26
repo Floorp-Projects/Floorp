@@ -12,6 +12,7 @@
 
 #include "nsIAsyncInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsINamed.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
@@ -41,6 +42,7 @@ class FileReader final : public DOMEventTargetHelper,
                          public nsSupportsWeakReference,
                          public nsIInputStreamCallback,
                          public nsITimerCallback,
+                         public nsINamed,
                          public workers::WorkerHolder
 {
   friend class FileReaderDecreaseBusyCounter;
@@ -54,6 +56,7 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSINAMED
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
                                                          DOMEventTargetHelper)

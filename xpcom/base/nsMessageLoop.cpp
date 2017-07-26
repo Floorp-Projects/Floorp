@@ -8,6 +8,7 @@
 #include "mozilla/WeakPtr.h"
 #include "base/message_loop.h"
 #include "base/task.h"
+#include "nsINamed.h"
 #include "nsIRunnable.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -56,13 +57,19 @@ private:
  * saves us from worrying about an edge case somehow messing us up here.
  */
 class MessageLoopTimerCallback
-  : public nsITimerCallback
+  : public nsITimerCallback, public nsINamed
 {
 public:
   explicit MessageLoopTimerCallback(MessageLoopIdleTask* aTask);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("MessageLoopTimerCallback");
+    return NS_OK;
+  }
 
 private:
   WeakPtr<MessageLoopIdleTask> mTask;
@@ -142,7 +149,7 @@ MessageLoopTimerCallback::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(MessageLoopTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(MessageLoopTimerCallback, nsITimerCallback, nsINamed)
 
 } // namespace
 

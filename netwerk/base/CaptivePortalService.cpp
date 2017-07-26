@@ -26,7 +26,7 @@ static LazyLogModule gCaptivePortalLog("CaptivePortalService");
 
 NS_IMPL_ISUPPORTS(CaptivePortalService, nsICaptivePortalService, nsIObserver,
                   nsISupportsWeakReference, nsITimerCallback,
-                  nsICaptivePortalCallback)
+                  nsICaptivePortalCallback, nsINamed)
 
 CaptivePortalService::CaptivePortalService()
   : mState(UNKNOWN)
@@ -275,6 +275,17 @@ CaptivePortalService::Notify(nsITimer *aTimer)
   // Note - if mDelay is 0, the timer will not be rearmed.
   RearmTimer();
 
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// CaptivePortalService::nsINamed
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+CaptivePortalService::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("CaptivePortalService");
   return NS_OK;
 }
 

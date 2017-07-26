@@ -29,7 +29,7 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(HSTSPrimingListener, nsIStreamListener,
                   nsIRequestObserver, nsIInterfaceRequestor,
-                  nsITimerCallback)
+                  nsITimerCallback, nsINamed)
 
 // default to 2000ms, same as the preference
 // security.mixed_content.hsts_priming_request_timeout
@@ -211,6 +211,14 @@ HSTSPrimingListener::Notify(nsITimer* timer)
   }
 
   return NS_OK; // unused
+}
+
+/** nsINamed **/
+NS_IMETHODIMP
+HSTSPrimingListener::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("HSTSPrimingListener");
+  return NS_OK;
 }
 
 // static

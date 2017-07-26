@@ -15,6 +15,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsINamed.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIMutableArray.h"
 #include "nsIScriptError.h"
@@ -4174,6 +4175,7 @@ ServiceWorkerManager::RemoveNavigationInterception(const nsACString& aScope,
 }
 
 class UpdateTimerCallback final : public nsITimerCallback
+                                , public nsINamed
 {
   nsCOMPtr<nsIPrincipal> mPrincipal;
   const nsCString mScope;
@@ -4207,10 +4209,17 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("UpdateTimerCallback");
+    return NS_OK;
+  }
+
   NS_DECL_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(UpdateTimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(UpdateTimerCallback, nsITimerCallback, nsINamed)
 
 bool
 ServiceWorkerManager::MayHaveActiveServiceWorkerInstance(ContentParent* aContent,

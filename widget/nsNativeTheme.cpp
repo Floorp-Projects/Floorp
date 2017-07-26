@@ -38,7 +38,7 @@ nsNativeTheme::nsNativeTheme()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
 
 nsIPresShell *
 nsNativeTheme::GetPresShell(nsIFrame* aFrame)
@@ -683,6 +683,13 @@ nsNativeTheme::Notify(nsITimer* aTimer)
 
   mAnimatedContentList.Clear();
   mAnimatedContentTimeout = UINT32_MAX;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeTheme::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsNativeTheme");
   return NS_OK;
 }
 

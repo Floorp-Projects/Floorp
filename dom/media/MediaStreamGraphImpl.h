@@ -14,6 +14,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIMemoryReporter.h"
+#include "nsINamed.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsIAsyncShutdown.h"
@@ -99,12 +100,14 @@ public:
  */
 class MediaStreamGraphImpl : public MediaStreamGraph,
                              public nsIMemoryReporter,
-                             public nsITimerCallback
+                             public nsITimerCallback,
+                             public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   /**
    * Use aGraphDriverRequested with SYSTEM_THREAD_DRIVER or AUDIO_THREAD_DRIVER

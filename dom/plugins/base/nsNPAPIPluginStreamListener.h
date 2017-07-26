@@ -8,6 +8,7 @@
 
 #include "nscore.h"
 #include "nsIHTTPHeaderListener.h"
+#include "nsINamed.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
 #include "nsCOMArray.h"
@@ -41,7 +42,8 @@ protected:
 };
 
 class nsNPAPIPluginStreamListener : public nsITimerCallback,
-                                    public nsIHTTPHeaderListener
+                                    public nsIHTTPHeaderListener,
+                                    public nsINamed
 {
 private:
   typedef mozilla::PluginLibrary PluginLibrary;
@@ -50,6 +52,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIHTTPHEADERLISTENER
+  NS_DECL_NSINAMED
 
   nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst, void* notifyData,
                               const char* aURL);

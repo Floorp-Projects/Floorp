@@ -11,6 +11,7 @@
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIDocShell.h"
+#include "nsINamed.h"
 #include "nsITimeoutHandler.h"
 #include "mozilla/dom/TabGroup.h"
 #include "OrderedTimeoutIterator.h"
@@ -1167,6 +1168,7 @@ TimeoutManager::IsTimeoutTracking(uint32_t aTimeoutId)
 namespace {
 
 class ThrottleTimeoutsCallback final : public nsITimerCallback
+                                     , public nsINamed
 {
 public:
   explicit ThrottleTimeoutsCallback(nsGlobalWindow* aWindow)
@@ -1178,6 +1180,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ThrottleTimeoutsCallback");
+    return NS_OK;
+  }
+
 private:
   ~ThrottleTimeoutsCallback() {}
 
@@ -1187,7 +1195,7 @@ private:
   RefPtr<nsGlobalWindow> mWindow;
 };
 
-NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP
 ThrottleTimeoutsCallback::Notify(nsITimer* aTimer)
