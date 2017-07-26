@@ -1,13 +1,5 @@
 [
   {
-    "version": "clang 3.9.0",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 30823112,
     "visibility": "internal",
     "digest": "0c58e06a3ea8f4641c991a7406fc8733c574f0b4aa773bce0feaa5468d2b8440fa33cea056e16fad2b8a7ef4409ca7228113eb12adc87c3e115129d8a3b3b565",
