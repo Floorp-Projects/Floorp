@@ -4,19 +4,47 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:clipToPadding="false">
+    android:background="@drawable/background_home">
+
+    <org.mozilla.focus.widget.ResizableKeyboardLinearLayout
+        android:id="@+id/brand_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:layout_marginTop="81dp"
+        android:orientation="vertical"
+        app:animate="true">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/app_name"
+            android:paddingBottom="16dp"
+            android:src="@drawable/wordmark"
+            android:focusable="false" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:lineSpacingExtra="7sp"
+            android:text="@string/teaser"
+            android:textColor="#eeeeee"
+            android:textSize="14sp"
+            android:focusable="false" />
+
+    </org.mozilla.focus.widget.ResizableKeyboardLinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="81dp"
         android:orientation="horizontal"
-        android:elevation="4dp"
-        android:clipChildren="false"
-        android:clipToPadding="false">
+        android:elevation="4dp">
 
         <View
             android:id="@+id/toolbar_background"
@@ -80,6 +108,22 @@
                     android:visibility="gone"
                     android:background="?android:attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/content_description_clear_input" />
+
+                <ImageButton
+                    android:id="@+id/menu"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_menu"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingStart="8dp"
+                    android:layout_gravity="end"
+                    android:visibility="gone"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/content_description_menu" />
 
             </LinearLayout>
 

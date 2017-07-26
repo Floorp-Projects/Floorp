@@ -17,7 +17,6 @@ import android.view.WindowManager;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.BrowserFragment;
 import org.mozilla.focus.fragment.FirstrunFragment;
-import org.mozilla.focus.fragment.HomeFragment;
 import org.mozilla.focus.fragment.UrlInputFragment;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.notification.BrowsingNotificationService;
@@ -217,14 +216,14 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     }
 
     private void showHomeScreen() {
-        // We add the home fragment to the layout if it doesn't exist yet. I tried adding the fragment
-        // to the layout directly but then I wasn't able to remove it later. It was still visible but
-        // without an activity attached. So let's do it manually.
+        // We add the url input fragment to the layout if it doesn't exist yet. I tried adding the
+        // fragment to the layout directly but then I wasn't able to remove it later. It was still
+        // visible but without an activity attached. So let's do it manually.
         final FragmentManager fragmentManager = getSupportFragmentManager();
-        if (fragmentManager.findFragmentByTag(HomeFragment.FRAGMENT_TAG) == null) {
+        if (fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) == null) {
             fragmentManager
                     .beginTransaction()
-                    .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                    .replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
                     .commit();
         }
     }

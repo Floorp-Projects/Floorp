@@ -19,7 +19,7 @@
             android:layout_height="81dp"
             android:background="@drawable/animated_background" />
 
-        <org.mozilla.focus.widget.ResizableKeyboardLayout
+        <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
             app:viewToHideWhenActivated="@+id/erase"
             android:layout_marginTop="25dp"
             android:id="@+id/main_content"
@@ -81,7 +81,7 @@
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
                 android:contentDescription="@string/content_description_erase" />
 
-        </org.mozilla.focus.widget.ResizableKeyboardLayout>
+        </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
     </FrameLayout>
 
     <FrameLayout

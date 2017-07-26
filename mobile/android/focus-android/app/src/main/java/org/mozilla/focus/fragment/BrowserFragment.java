@@ -663,7 +663,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         transaction
-                .replace(R.id.container, HomeFragment.create(), HomeFragment.FRAGMENT_TAG)
+                .replace(R.id.container, UrlInputFragment.createWithBackground(), UrlInputFragment.FRAGMENT_TAG)
                 .commit();
 
         ViewUtils.showBrandedSnackbar(getActivity().findViewById(android.R.id.content),
@@ -690,7 +690,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             case R.id.display_url:
                 final Fragment urlFragment = UrlInputFragment
-                        .createWithBrowserScreenAnimation(UrlUtils.getSearchTermsOrUrl(getContext(), getUrl()), urlView);
+                        .createAsOverlay(UrlUtils.getSearchTermsOrUrl(getContext(), getUrl()), urlView);
 
                 getActivity().getSupportFragmentManager()
                         .beginTransaction()
