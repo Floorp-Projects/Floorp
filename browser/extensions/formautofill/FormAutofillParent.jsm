@@ -117,8 +117,8 @@ FormAutofillParent.prototype = {
       }
 
       case "formautofill-storage-changed": {
-        // Early exit if the action is not "add" nor "remove"
-        if (data != "add" && data != "remove") {
+        // Early exit if only metadata is changed
+        if (data == "notifyUsed") {
           break;
         }
 
