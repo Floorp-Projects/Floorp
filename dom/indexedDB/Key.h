@@ -287,15 +287,15 @@ private:
   nsresult
   EncodeJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset);
 
-  nsresult
+  void
   EncodeString(const nsAString& aString, uint8_t aTypeOffset);
 
   template <typename T>
-  nsresult
+  void
   EncodeString(const T* aStart, const T* aEnd, uint8_t aTypeOffset);
 
   template <typename T>
-  nsresult
+  void
   EncodeAsString(const T* aStart, const T* aEnd, uint8_t aType);
 
 #ifdef ENABLE_INTL_API
@@ -307,7 +307,7 @@ private:
   void
   EncodeNumber(double aFloat, uint8_t aType);
 
-  nsresult
+  void
   EncodeBinary(JSObject* aObject, bool aIsViewObject, uint8_t aTypeOffset);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
