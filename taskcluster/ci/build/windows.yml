@@ -18,6 +18,7 @@ win32/debug:
         config:
             - builds/taskcluster_firefox_windows_32_debug.py
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win32/opt:
@@ -40,6 +41,7 @@ win32/opt:
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win32-dmd/opt:
@@ -64,6 +66,7 @@ win32-dmd/opt:
         custom-build-variant-cfg: dmd
     run-on-projects: [ ]
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win32/pgo:
@@ -87,6 +90,7 @@ win32/pgo:
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win64/debug:
@@ -109,6 +113,7 @@ win64/debug:
         config:
             - builds/taskcluster_firefox_windows_64_debug.py
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win64/opt:
@@ -131,6 +136,7 @@ win64/opt:
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win64-dmd/opt:
@@ -155,6 +161,7 @@ win64-dmd/opt:
         custom-build-variant-cfg: dmd
     run-on-projects: [ ]
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win32-devedition/opt:
@@ -225,6 +232,7 @@ win32-nightly/opt:
             - disable_signing.py
             - taskcluster_nightly.py
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win64-nightly/opt:
@@ -253,6 +261,7 @@ win64-nightly/opt:
             - disable_signing.py
             - taskcluster_nightly.py
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win64/pgo:
@@ -276,6 +285,7 @@ win64/pgo:
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win32-add-on-devel/opt:
@@ -300,6 +310,7 @@ win32-add-on-devel/opt:
             - balrog/production.py
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win64-add-on-devel/opt:
@@ -324,6 +335,7 @@ win64-add-on-devel/opt:
             - balrog/production.py
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win64-noopt/debug:
@@ -347,6 +359,7 @@ win64-noopt/debug:
             - builds/taskcluster_firefox_win64_noopt_debug.py
     run-on-projects: [ 'trunk', 'try' ]
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win32-noopt/debug:
@@ -370,6 +383,7 @@ win32-noopt/debug:
             - builds/taskcluster_firefox_win32_noopt_debug.py
     run-on-projects: [ 'trunk', 'try' ]
     toolchains:
+        - win32-clang-cl
         - win64-sccache
 
 win64-asan/debug:
@@ -393,6 +407,7 @@ win64-asan/debug:
             - builds/taskcluster_firefox_win64_asan_debug.py
     run-on-projects: []
     toolchains:
+        - win64-clang-cl
         - win64-sccache
 
 win64-asan/opt:
@@ -416,4 +431,5 @@ win64-asan/opt:
             - builds/taskcluster_firefox_win64_asan_opt.py
     run-on-projects: []
     toolchains:
+        - win64-clang-cl
         - win64-sccache
