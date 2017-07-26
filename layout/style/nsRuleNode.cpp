@@ -8659,20 +8659,27 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   // justify-items: enum, inherit, initial
   const auto& justifyItemsValue = *aRuleData->ValueForJustifyItems();
   if (MOZ_UNLIKELY(justifyItemsValue.GetUnit() == eCSSUnit_Inherit)) {
-    if (MOZ_LIKELY(parentContext)) {
-      pos->mJustifyItems =
-        parentPos->ComputedJustifyItems(parentContext->GetParent());
-    } else {
-      pos->mJustifyItems = NS_STYLE_JUSTIFY_NORMAL;
-    }
+    pos->mSpecifiedJustifyItems =
+      MOZ_LIKELY(parentContext)
+        ? parentPos->mJustifyItems
+        : NS_STYLE_JUSTIFY_NORMAL;
     conditions.SetUncacheable();
   } else {
     SetValue(justifyItemsValue,
-             pos->mJustifyItems, conditions,
+             pos->mSpecifiedJustifyItems, conditions,
              SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-             parentPos->mJustifyItems, // unused, we handle 'inherit' above
+             parentPos->mSpecifiedJustifyItems, // unused, we handle 'inherit' above
              NS_STYLE_JUSTIFY_AUTO);
   }
+
+  // NOTE(emilio): Even though "auto" technically depends on the parent style
+  // context, most of the time it'll resolve to "normal".  So, we
+  // optimistically assume here that it does resolve to "normal", and we
+  // handle the other cases in ApplyStyleFixups. This way, position structs
+  // can be cached in the default/common case.
+  pos->mJustifyItems =
+    pos->mSpecifiedJustifyItems == NS_STYLE_JUSTIFY_AUTO
+      ? NS_STYLE_JUSTIFY_NORMAL : pos->mSpecifiedJustifyItems;
 
   // justify-self: enum, inherit, initial
   SetValue(*aRuleData->ValueForJustifySelf(),

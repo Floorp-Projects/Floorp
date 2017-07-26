@@ -1679,12 +1679,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   uint8_t UsedAlignSelf(nsStyleContext* aParent) const;
 
   /**
-   * Return the computed value for 'justify-items' given our parent StyleContext
-   * aParent (or null for the root).
-   */
-  uint8_t ComputedJustifyItems(nsStyleContext* aParent) const;
-
-  /**
    * Return the used value for 'justify-self' given our parent StyleContext
    * aParent (or null for the root).
    */
@@ -1710,14 +1704,17 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
   uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
-private:
-  friend class nsRuleNode;
-
-  // mJustifyItems should only be read via ComputedJustifyItems(), which
-  // lazily resolves its "auto" value. nsRuleNode needs direct access so
-  // it can set mJustifyItems' value when populating this struct.
+  // We cascade mSpecifiedJustifyItems, to handle the auto value, but store the
+  // computed value in mJustifyItems.
+  //
+  // They're effectively only different in this regard: mJustifyItems is set to
+  // mSpecifiedJustifyItems, except when the latter is AUTO -- in that case,
+  // mJustifyItems is set to NORMAL, or to the parent style context's
+  // mJustifyItems if it has the legacy flag.
+  //
+  // This last part happens in nsStyleContext::ApplyStyleFixups.
+  uint8_t       mSpecifiedJustifyItems; // [reset] see nsStyleConsts.h
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
-public:
   uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
