@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: browser.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: browser.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+/* global frame */
+
+const {utils: Cu} = Components;
+
+Cu.import("chrome://marionette/content/element.js");
+const {
+  NoSuchWindowError,
+  UnsupportedOperationError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+Cu.import("chrome://marionette/content/frame.js");
+
+this.EXPORTED_SYMBOLS = ["browser"];
+
+/** @namespace */
+this.browser = {};
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+
+/**
+ * Get the &lt;code>&amp;lt;xul:browser&amp;gt;&lt;/code> for the specified tab.
+ *
+ * @param {Tab} tab
+ *     The tab whose browser needs to be returned.
+ *
+ * @return {Browser}
+ *     The linked browser for the tab or null if no browser can be found.
+ */
+browser.getBrowserForTab = function(tab) {
+  // Fennec
+  if ("browser" in tab) {
+    return tab.browser;
+
+  // Firefox
+  } else if ("linkedBrowser" in tab) {
+    return tab.linkedBrowser;
+  }
+
+  return null;
+};
+
+/**
+ * Return the tab browser for the specified chrome window.
+ *
+ * @param {nsIDOMWindow} win
+ *     The window whose tabbrowser needs to be accessed.
+ *
+ * @return {Tab}
+ *     Tab browser or null if it's not a browser window.
+ */
+browser.getTabBrowser = function(win) {
+  // Fennec
+  if ("BrowserApp" in win) {
+    return win.BrowserApp;
+
+  // Firefox
+  } else if ("gBrowser" in win) {
+    return win.gBrowser;
+  }
+
+  return null;
+};
+
+/**
+ * Creates a browsing context wrapper.
+ *
+ * Browsing contexts handle interactions with the browser, according to
+ * the current environment (Firefox, Fennec).
+ *
+ * @param {nsIDOMWindow} win
+ *     The window whose browser needs to be accessed.
+ * @param {GeckoDriver} driver
+ *     Reference to the driver the browser is attached to.
+ */
+browser.Context = class {
+
+  /**
+   * @param {ChromeWindow} win
+   *     ChromeWindow that contains the top-level browsing context.
+   * @param {GeckoDriver} driver
+   *     Reference to driver instance.
+   */
+  constructor(win, driver) {
+    this.window = win;
+    this.driver = driver;
+
+    // In Firefox this is &lt;xul:tabbrowser> (not &lt;xul:browser>!)
+    // and BrowserApp in Fennec
+    this.tabBrowser = browser.getTabBrowser(win);
+
+    this.knownFrames = [];
+
+    // Used to set curFrameId upon new session
+    this.newSession = true;
+
+    this.seenEls = new element.Store();
+
+    // A reference to the tab corresponding to the current window handle,
+    // if any.  Specifically, this.tab refers to the last tab that Marionette
+    // switched to in this browser window. Note that this may not equal the
+    // currently selected tab.  For example, if Marionette switches to tab
+    // A, and then clicks on a button that opens a new tab B in the same
+    // browser window, this.tab will still point to tab A, despite tab B
+    // being the currently selected tab.
+    this.tab = null;
+
+    // Commands which trigger a page load can cause the frame script to be
+    // reloaded. To not loose the currently active command, or any other
+    // already pushed following command, store them as long as they haven't
+    // been fully processed. The commands get flushed after a new browser
+    // has been registered.
+    this.pendingCommands = [];
+    this._needsFlushPendingCommands = false;
+
+    // We should have one frame.Manager per browser.Context so that we
+    // can handle modals in each &lt;xul:browser>.
+    this.frameManager = new frame.Manager(driver);
+    this.frameRegsPending = 0;
+
+    // register all message listeners
+    this.frameManager.addMessageManagerListeners(driver.mm);
+    this.getIdForBrowser = driver.getIdForBrowser.bind(driver);
+    this.updateIdForBrowser = driver.updateIdForBrowser.bind(driver);
+  }
+
+  /**
+   * Returns the content browser for the currently selected tab.
+   * If there is no tab selected, null will be returned.
+   */
+  get contentBrowser() {
+    if (this.tab) {
+      return browser.getBrowserForTab(this.tab);
+    } else if (this.tabBrowser &amp;&amp;
+        this.driver.isReftestBrowser(this.tabBrowser)) {
+      return this.tabBrowser;
+    }
+
+    return null;
+  }
+
+  /**
+   * The current frame ID is managed per browser element on desktop in
+   * case the ID needs to be refreshed. The currently selected window is
+   * identified by a tab.
+   */
+  get curFrameId() {
+    let rv = null;
+    if (this.tab || this.driver.isReftestBrowser(this.contentBrowser)) {
+      rv = this.getIdForBrowser(this.contentBrowser);
+    }
+    return rv;
+  }
+
+  /**
+   * Returns the current title of the content browser.
+   *
+   * @return {string}
+   *     Read-only property containing the current title.
+   *
+   * @throws {NoSuchWindowError}
+   *     If the current ChromeWindow does not have a content browser.
+   */
+  get currentTitle() {
+    // Bug 1363368 - contentBrowser could be null until we wait for its
+    // initialization been finished
+    if (this.contentBrowser) {
+      return this.contentBrowser.contentTitle;
+    }
+    throw new NoSuchWindowError(
+        "Current window does not have a content browser");
+  }
+
+  /**
+   * Returns the current URI of the content browser.
+   *
+   * @return {nsIURI}
+   *     Read-only property containing the currently loaded URL.
+   *
+   * @throws {NoSuchWindowError}
+   *     If the current ChromeWindow does not have a content browser.
+   */
+  get currentURI() {
+    // Bug 1363368 - contentBrowser could be null until we wait for its
+    // initialization been finished
+    if (this.contentBrowser) {
+      return this.contentBrowser.currentURI;
+    }
+    throw new NoSuchWindowError(
+        "Current window does not have a content browser");
+  }
+
+  /**
+   * Gets the position and dimensions of the top-level browsing context.
+   *
+   * @return {Map.&lt;string, number>}
+   *     Object with |x|, |y|, |width|, and |height| properties.
+   */
+  get rect() {
+    return {
+      x: this.window.screenX,
+      y: this.window.screenY,
+      width: this.window.outerWidth,
+      height: this.window.outerHeight,
+    };
+  }
+
+  /**
+   * Retrieves the current tabmodal UI object.  According to the browser
+   * associated with the currently selected tab.
+   */
+  getTabModalUI() {
+    let br = this.contentBrowser;
+    if (!br.hasAttribute("tabmodalPromptShowing")) {
+      return null;
+    }
+
+    // The modal is a direct sibling of the browser element.
+    // See tabbrowser.xml's getTabModalPromptBox.
+    let modals = br.parentNode.getElementsByTagNameNS(
+        XUL_NS, "tabmodalprompt");
+    return modals[0].ui;
+  }
+
+  /**
+   * Close the current window.
+   *
+   * @return {Promise}
+   *     A promise which is resolved when the current window has been closed.
+   */
+  closeWindow() {
+    return new Promise(resolve => {
+      this.window.addEventListener("unload", ev => {
+        resolve();
+      }, {once: true});
+      this.window.close();
+    });
+  }
+
+  /**
+   * Close the current tab.
+   *
+   * @return {Promise}
+   *     A promise which is resolved when the current tab has been closed.
+   *
+   * @throws UnsupportedOperationError
+   *     If tab handling for the current application isn't supported.
+   */
+  closeTab() {
+    // If the current window is not a browser then close it directly. Do the
+    // same if only one remaining tab is open, or no tab selected at all.
+    if (!this.tabBrowser ||
+        !this.tabBrowser.tabs ||
+        this.tabBrowser.tabs.length === 1 ||
+        !this.tab) {
+      return this.closeWindow();
+    }
+
+    return new Promise((resolve, reject) => {
+      if (this.tabBrowser.closeTab) {
+        // Fennec
+        this.tabBrowser.deck.addEventListener("TabClose", ev => {
+          resolve();
+        }, {once: true});
+        this.tabBrowser.closeTab(this.tab);
+
+      } else if (this.tabBrowser.removeTab) {
+        // Firefox
+        this.tab.addEventListener("TabClose", ev => {
+          resolve();
+        }, {once: true});
+        this.tabBrowser.removeTab(this.tab);
+
+      } else {
+        reject(new UnsupportedOperationError(
+            `closeTab() not supported in ${this.driver.appName}`));
+      }
+    });
+  }
+
+  /**
+   * Opens a tab with given URI.
+   *
+   * @param {string} uri
+   *      URI to open.
+   */
+  addTab(uri) {
+    return this.tabBrowser.addTab(uri, true);
+  }
+
+  /**
+   * Set the current tab.
+   *
+   * @param {number=} index
+   *     Tab index to switch to. If the parameter is undefined,
+   *     the currently selected tab will be used.
+   * @param {nsIDOMWindow=} win
+   *     Switch to this window before selecting the tab.
+   * @param {boolean=} focus
+   *      A boolean value which determins whether to focus
+   *      the window. Defaults to true.
+   *
+   * @throws UnsupportedOperationError
+   *     If tab handling for the current application isn't supported.
+   */
+  switchToTab(index, win, focus = true) {
+    if (win) {
+      this.window = win;
+      this.tabBrowser = browser.getTabBrowser(win);
+    }
+
+    if (!this.tabBrowser) {
+      return;
+    }
+
+    if (typeof index == "undefined") {
+      this.tab = this.tabBrowser.selectedTab;
+    } else {
+      this.tab = this.tabBrowser.tabs[index];
+
+      if (focus) {
+        if (this.tabBrowser.selectTab) {
+          // Fennec
+          this.tabBrowser.selectTab(this.tab);
+
+        } else if ("selectedTab" in this.tabBrowser) {
+          // Firefox
+          this.tabBrowser.selectedTab = this.tab;
+
+        } else {
+          throw new UnsupportedOperationError("switchToTab() not supported");
+        }
+      }
+    }
+  }
+
+  /**
+   * Registers a new frame, and sets its current frame id to this frame
+   * if it is not already assigned, and if a) we already have a session
+   * or b) we're starting a new session and it is the right start frame.
+   *
+   * @param {string} uid
+   *     Frame uid for use by Marionette.
+   * @param {xul:browser} target
+   *     The &lt;xul:browser> that was the target of the originating message.
+   */
+  register(uid, target) {
+    if (this.tabBrowser) {
+      // If we're setting up a new session on Firefox, we only process the
+      // registration for this frame if it belongs to the current tab.
+      if (!this.tab) {
+        this.switchToTab();
+      }
+
+      if (target === this.contentBrowser) {
+        this.updateIdForBrowser(this.contentBrowser, uid);
+        this._needsFlushPendingCommands = true;
+      }
+    }
+
+    // used to delete sessions
+    this.knownFrames.push(uid);
+  }
+
+  /**
+   * Flushes any queued pending commands after a reload of the frame script.
+   */
+  flushPendingCommands() {
+    if (!this._needsFlushPendingCommands) {
+      return;
+    }
+
+    this.pendingCommands.forEach(cb => cb());
+    this.pendingCommands = [];
+    this._needsFlushPendingCommands = false;
+  }
+
+  /**
+    * This function intercepts commands interacting with content and queues
+    * or executes them as needed.
+    *
+    * No commands interacting with content are safe to process until
+    * the new listener script is loaded and registers itself.
+    * This occurs when a command whose effect is asynchronous (such
+    * as goBack) results in a reload of the frame script and new commands
+    * are subsequently posted to the server.
+    */
+  executeWhenReady(cb) {
+    if (this._needsFlushPendingCommands) {
+      this.pendingCommands.push(cb);
+    } else {
+      cb();
+    }
+  }
+
+};
+
+/**
+ * The window storage is used to save outer window IDs mapped to weak
+ * references of Window objects.
+ *
+ * Usage:
+ *
+ *     let wins = new browser.Windows();
+ *     wins.set(browser.outerWindowID, window);
+ *
+ *     ...
+ *
+ *     let win = wins.get(browser.outerWindowID);
+ *
+ */
+browser.Windows = class extends Map {
+
+  /**
+   * Save a weak reference to the Window object.
+   *
+   * @param {string} id
+   *     Outer window ID.
+   * @param {Window} win
+   *     Window object to save.
+   *
+   * @return {browser.Windows}
+   *     Instance of self.
+   */
+  set(id, win) {
+    let wref = Cu.getWeakReference(win);
+    super.set(id, wref);
+    return this;
+  }
+
+  /**
+   * Get the window object stored by provided |id|.
+   *
+   * @param {string} id
+   *     Outer window ID.
+   *
+   * @return {Window}
+   *     Saved window object.
+   *
+   * @throws {RangeError}
+   *     If |id| is not in the store.
+   */
+  get(id) {
+    let wref = super.get(id);
+    if (!wref) {
+      throw new RangeError();
+    }
+    return wref.get();
+  }
+
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

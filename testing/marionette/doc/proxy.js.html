@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: proxy.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: proxy.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+const {
+  error,
+  WebDriverError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+Cu.import("chrome://marionette/content/modal.js");
+
+this.EXPORTED_SYMBOLS = ["proxy"];
+
+const uuidgen = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator);
+
+const logger = Log.repository.getLogger("Marionette");
+
+// Proxy handler that traps requests to get a property.  Will prioritise
+// properties that exist on the object's own prototype.
+var ownPriorityGetterTrap = {
+  get: (obj, prop) => {
+    if (obj.hasOwnProperty(prop)) {
+      return obj[prop];
+    }
+    return (...args) => obj.send(prop, args);
+  },
+};
+
+/** @namespace */
+this.proxy = {};
+
+/**
+ * Creates a transparent interface between the chrome- and content
+ * contexts.
+ *
+ * Calls to this object will be proxied via the message manager to a
+ * content frame script, and responses are returend as promises.
+ *
+ * The argument sequence is serialised and passed as an array, unless it
+ * consists of a single object type that isn't null, in which case it's
+ * passed literally.  The latter specialisation is temporary to achieve
+ * backwards compatibility with listener.js.
+ *
+ * @param {function(): (nsIMessageSender|nsIMessageBroadcaster)} mmFn
+ *     Closure function returning the current message manager.
+ * @param {function(string, Object, number)} sendAsyncFn
+ *     Callback for sending async messages.
+ */
+proxy.toListener = function(mmFn, sendAsyncFn, browserFn) {
+  let sender = new proxy.AsyncMessageChannel(
+      mmFn, sendAsyncFn, browserFn);
+  return new Proxy(sender, ownPriorityGetterTrap);
+};
+
+/**
+ * Provides a transparent interface between chrome- and content space.
+ *
+ * The AsyncMessageChannel is an abstraction of the message manager
+ * IPC architecture allowing calls to be made to any registered message
+ * listener in Marionette.  The {@code #send(...)} method returns a promise
+ * that gets resolved when the message handler calls {@code .reply(...)}.
+ */
+proxy.AsyncMessageChannel = class {
+  constructor(mmFn, sendAsyncFn, browserFn) {
+    this.mmFn_ = mmFn;
+    this.sendAsync = sendAsyncFn;
+    this.browserFn_ = browserFn;
+
+    // TODO(ato): Bug 1242595
+    this.activeMessageId = null;
+
+    this.listeners_ = new Map();
+    this.dialogueObserver_ = null;
+    this.closeHandler = null;
+  }
+
+  get browser() {
+    return this.browserFn_();
+  }
+
+  get mm() {
+    return this.mmFn_();
+  }
+
+  /**
+   * Send a message across the channel.  The name of the function to
+   * call must be registered as a message listener.
+   *
+   * Usage:
+   *
+   *     let channel = new AsyncMessageChannel(
+   *         messageManager, sendAsyncMessage.bind(this));
+   *     let rv = yield channel.send("remoteFunction", ["argument"]);
+   *
+   * @param {string} name
+   *     Function to call in the listener, e.g. for the message listener
+   *     "Marionette:foo8", use "foo".
+   * @param {Array.&lt;?>=} args
+   *     Argument list to pass the function. If args has a single entry
+   *     that is an object, we assume it's an old style dispatch, and
+   *     the object will passed literally.
+   *
+   * @return {Promise}
+   *     A promise that resolves to the result of the command.
+   * @throws {TypeError}
+   *     If an unsupported reply type is received.
+   * @throws {WebDriverError}
+   *     If an error is returned over the channel.
+   */
+  send(name, args = []) {
+    let uuid = uuidgen.generateUUID().toString();
+    // TODO(ato): Bug 1242595
+    this.activeMessageId = uuid;
+
+    return new Promise((resolve, reject) => {
+      let path = proxy.AsyncMessageChannel.makePath(uuid);
+      let cb = msg => {
+        this.activeMessageId = null;
+
+        switch (msg.json.type) {
+          case proxy.AsyncMessageChannel.ReplyType.Ok:
+          case proxy.AsyncMessageChannel.ReplyType.Value:
+            resolve(msg.json.data);
+            break;
+
+          case proxy.AsyncMessageChannel.ReplyType.Error:
+            let err = WebDriverError.fromJSON(msg.json.data);
+            reject(err);
+            break;
+
+          default:
+            throw new TypeError(
+                `Unknown async response type: ${msg.json.type}`);
+        }
+      };
+
+      // The currently selected tab or window has been closed. No clean-up
+      // is necessary to do because all loaded listeners are gone.
+      this.closeHandler = event => {
+        logger.debug(`Received DOM event ${event.type} for ${event.target}`);
+
+        switch (event.type) {
+          case "TabClose":
+          case "unload":
+            this.removeHandlers();
+            resolve();
+            break;
+        }
+      }
+
+      // A modal or tab modal dialog has been opened. To be able to handle it,
+      // the active command has to be aborted. Therefore remove all handlers,
+      // and cancel any ongoing requests in the listener.
+      this.dialogueObserver_ = (subject, topic) => {
+        logger.debug(`Received observer notification "${topic}"`);
+
+        this.removeAllListeners_();
+        // TODO(ato): It's not ideal to have listener specific behaviour here:
+        this.sendAsync("cancelRequest");
+
+        this.removeHandlers();
+        resolve();
+      };
+
+      // start content message listener, and install handlers for
+      // modal dialogues, and window/tab state changes.
+      this.addListener_(path, cb);
+      this.addHandlers();
+
+      // sendAsync is GeckoDriver#sendAsync
+      this.sendAsync(name, marshal(args), uuid);
+    });
+  }
+
+  /**
+   * Add all necessary handlers for events and observer notifications.
+   */
+  addHandlers() {
+    modal.addHandler(this.dialogueObserver_);
+
+    // Register event handlers in case the command closes the current
+    // tab or window, and the promise has to be escaped.
+    if (this.browser) {
+      this.browser.window.addEventListener("unload", this.closeHandler);
+
+      if (this.browser.tab) {
+        let node = this.browser.tab.addEventListener ?
+            this.browser.tab : this.browser.contentBrowser;
+        node.addEventListener("TabClose", this.closeHandler);
+      }
+    }
+  }
+
+  /**
+   * Remove all registered handlers for events and observer notifications.
+   */
+  removeHandlers() {
+    modal.removeHandler(this.dialogueObserver_);
+
+    if (this.browser) {
+      this.browser.window.removeEventListener("unload", this.closeHandler);
+
+      if (this.browser.tab) {
+        let node = this.browser.tab.addEventListener ?
+            this.browser.tab : this.browser.contentBrowser;
+        node.removeEventListener("TabClose", this.closeHandler);
+      }
+    }
+  }
+
+  /**
+   * Reply to an asynchronous request.
+   *
+   * Passing an WebDriverError prototype will cause the receiving channel
+   * to throw this error.
+   *
+   * Usage:
+   *
+   * &lt;pre>&lt;code>
+   *     let channel = proxy.AsyncMessageChannel(
+   *         messageManager, sendAsyncMessage.bind(this));
+   *
+   *     // throws in requester:
+   *     channel.reply(uuid, new WebDriverError());
+   *
+   *     // returns with value:
+   *     channel.reply(uuid, "hello world!");
+   *
+   *     // returns with undefined:
+   *     channel.reply(uuid);
+   * &lt;/pre>&lt;/code>
+   *
+   * @param {UUID} uuid
+   *     Unique identifier of the request.
+   * @param {*} obj
+   *     Message data to reply with.
+   */
+  reply(uuid, obj = undefined) {
+    // TODO(ato): Eventually the uuid will be hidden in the dispatcher
+    // in listener, and passing it explicitly to this function will be
+    // unnecessary.
+    if (typeof obj == "undefined") {
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Ok);
+    } else if (error.isError(obj)) {
+      let err = error.wrap(obj);
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Error, err);
+    } else {
+      this.sendReply_(uuid, proxy.AsyncMessageChannel.ReplyType.Value, obj);
+    }
+  }
+
+  sendReply_(uuid, type, data = undefined) {
+    const path = proxy.AsyncMessageChannel.makePath(uuid);
+
+    let payload;
+    if (data &amp;&amp; typeof data.toJSON == "function") {
+      payload = data.toJSON();
+    } else {
+      payload = data;
+    }
+
+    const msg = {type, data: payload};
+
+    // here sendAsync is actually the content frame's
+    // sendAsyncMessage(path, message) global
+    this.sendAsync(path, msg);
+  }
+
+  /**
+   * Produces a path, or a name, for the message listener handler that
+   * listens for a reply.
+   *
+   * @param {UUID} uuid
+   *     Unique identifier of the channel request.
+   *
+   * @return {string}
+   *     Path to be used for nsIMessageListener.addMessageListener.
+   */
+  static makePath(uuid) {
+    return "Marionette:asyncReply:" + uuid;
+  }
+
+  addListener_(path, callback) {
+    let autoRemover = msg => {
+      this.removeListener_(path);
+      this.removeHandlers();
+      callback(msg);
+    };
+
+    this.mm.addMessageListener(path, autoRemover);
+    this.listeners_.set(path, autoRemover);
+  }
+
+  removeListener_(path) {
+    if (!this.listeners_.has(path)) {
+      return true;
+    }
+
+    let l = this.listeners_.get(path);
+    this.mm.removeMessageListener(path, l[1]);
+    return this.listeners_.delete(path);
+  }
+
+  removeAllListeners_() {
+    let ok = true;
+    for (let [p] of this.listeners_) {
+      ok |= this.removeListener_(p);
+    }
+    return ok;
+  }
+};
+proxy.AsyncMessageChannel.ReplyType = {
+  Ok: 0,
+  Value: 1,
+  Error: 2,
+};
+
+/**
+ * A transparent content-to-chrome RPC interface where responses are
+ * presented as promises.
+ *
+ * @param {nsIFrameMessageManager} frameMessageManager
+ *     The content frame's message manager, which itself is usually an
+ *     implementor of.
+ */
+proxy.toChromeAsync = function(frameMessageManager) {
+  let sender = new AsyncChromeSender(frameMessageManager);
+  return new Proxy(sender, ownPriorityGetterTrap);
+};
+
+/**
+ * Sends asynchronous RPC messages to chrome space using a frame's
+ * sendAsyncMessage (nsIAsyncMessageSender) function.
+ *
+ * Example on how to use from a frame content script:
+ *
+ *     let sender = new AsyncChromeSender(messageManager);
+ *     let promise = sender.send("runEmulatorCmd", "my command");
+ *     let rv = yield promise;
+ */
+class AsyncChromeSender {
+  constructor(frameMessageManager) {
+    this.mm = frameMessageManager;
+  }
+
+  /**
+   * Call registered function in chrome context.
+   *
+   * @param {string} name
+   *     Function to call in the chrome, e.g. for "Marionette:foo", use
+   *     "foo".
+   * @param {*} args
+   *     Argument list to pass the function.  Must be JSON serialisable.
+   *
+   * @return {Promise}
+   *     A promise that resolves to the value sent back.
+   */
+  send(name, args) {
+    let uuid = uuidgen.generateUUID().toString();
+
+    let proxy = new Promise((resolve, reject) => {
+      let responseListener = msg => {
+        if (msg.json.id != uuid) {
+          return;
+        }
+
+        this.mm.removeMessageListener(
+            "Marionette:listenerResponse", responseListener);
+
+        if ("value" in msg.json) {
+          resolve(msg.json.value);
+        } else if ("error" in msg.json) {
+          reject(msg.json.error);
+        } else {
+          throw new TypeError(
+              `Unexpected response: ${msg.name} ${JSON.stringify(msg.json)}`);
+        }
+      };
+
+      let msg = {arguments: marshal(args), id: uuid};
+      this.mm.addMessageListener(
+          "Marionette:listenerResponse", responseListener);
+      this.mm.sendAsyncMessage("Marionette:" + name, msg);
+    });
+
+    return proxy;
+  }
+}
+
+/**
+ * Creates a transparent interface from the content- to the chrome context.
+ *
+ * Calls to this object will be proxied via the frame's sendSyncMessage
+ * (nsISyncMessageSender) function.  Since the message is synchronous,
+ * the return value is presented as a return value.
+ *
+ * Example on how to use from a frame content script:
+ *
+ *     let chrome = proxy.toChrome(sendSyncMessage.bind(this));
+ *     let cookie = chrome.getCookie("foo");
+ *
+ * @param {nsISyncMessageSender} sendSyncMessageFn
+ *     The frame message manager's sendSyncMessage function.
+ */
+proxy.toChrome = function(sendSyncMessageFn) {
+  let sender = new proxy.SyncChromeSender(sendSyncMessageFn);
+  return new Proxy(sender, ownPriorityGetterTrap);
+};
+
+/**
+ * The SyncChromeSender sends synchronous RPC messages to the chrome
+ * context, using a frame's sendSyncMessage (nsISyncMessageSender)
+ * function.
+ *
+ * Example on how to use from a frame content script:
+ *
+ *     let sender = new SyncChromeSender(sendSyncMessage.bind(this));
+ *     let res = sender.send("addCookie", cookie);
+ */
+proxy.SyncChromeSender = class {
+  constructor(sendSyncMessage) {
+    this.sendSyncMessage_ = sendSyncMessage;
+  }
+
+  send(func, args) {
+    let name = "Marionette:" + func.toString();
+    return this.sendSyncMessage_(name, marshal(args));
+  }
+};
+
+var marshal = function(args) {
+  if (args.length == 1 &amp;&amp; typeof args[0] == "object") {
+    return args[0];
+  }
+  return args;
+};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
