@@ -58,10 +58,18 @@ enum class ServoTraversalFlags : uint32_t {
   ForCSSRuleChanges = 1 << 1,
   // Traverse only unstyled children of the root (and their descendants).
   UnstyledChildrenOnly = 1 << 2,
-  // Traverses in a mode that doesn't generate any change hints, which is what's
-  // required when handling frame reconstruction.  The change hints in this case
-  // are unneeded, since the old frames have already been destroyed.
-  ForReconstruct = 1 << 3,
+  // A forgetful traversal ignores the previous state of the frame tree, and
+  // thus does not compute damage or maintain other state describing the styles
+  // pre-traversal. A forgetful traversal is usually the right thing if you
+  // aren't going to do a post-traversal.
+  Forgetful = 1 << 3,
+  // Actively seeks out and clears change hints that may have been posted into
+  // the tree. Nonsensical without also passing Forgetful.
+  AggressivelyForgetful = 1 << 4,
+  // Clears the dirty descendants bit in the subtree.
+  ClearDirtyDescendants = 1 << 5,
+  // Clears the animation-only dirty descendants bit in the subtree.
+  ClearAnimationOnlyDirtyDescendants = 1 << 6,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
