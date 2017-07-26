@@ -1829,23 +1829,17 @@ class PackageFrontend(MachCommandBase):
                     return 1
 
                 task_id = optimize_task(task, {})
-                if task_id in (True, False):
+                artifact_name = task.attributes.get('toolchain-artifact')
+                if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find artifacts for a toolchain build '
                              'named `{build}`')
                     return 1
 
-                for artifact in list_artifacts(task_id):
-                    name = artifact['name']
-                    if not name.startswith('public/'):
-                        continue
-                    name = name[len('public/'):]
-                    if name.startswith('logs/'):
-                        continue
-                    name = os.path.basename(name)
-                    records[name] = DownloadRecord(
-                        get_artifact_url(task_id, artifact['name']),
-                        name, None, None, None, unpack=True)
+                name = os.path.basename(artifact_name)
+                records[name] = DownloadRecord(
+                    get_artifact_url(task_id, artifact_name),
+                    name, None, None, None, unpack=True)
 
         # Handle the list of files of the form path@task-id on the command
         # line. Each of those give a path to an artifact to download.
