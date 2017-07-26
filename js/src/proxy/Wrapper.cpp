@@ -264,11 +264,11 @@ Wrapper::className(JSContext* cx, HandleObject proxy) const
 }
 
 JSString*
-Wrapper::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
+Wrapper::fun_toString(JSContext* cx, HandleObject proxy, bool isToSource) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return fun_toStringHelper(cx, target, indent);
+    return fun_toStringHelper(cx, target, isToSource);
 }
 
 RegExpShared*

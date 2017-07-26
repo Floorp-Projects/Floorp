@@ -101,10 +101,14 @@ MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell* cell);
 namespace JS {
 struct Zone;
 
-/* Default size for the generational nursery in bytes. */
+/*
+ * Default size for the generational nursery in bytes.
+ * This is the initial nursery size, when running in the browser this is
+ * updated by JS_SetGCParameter().
+ */
 const uint32_t DefaultNurseryBytes = 16 * js::gc::ChunkSize;
 
-/* Default maximum heap size in bytes to pass to JS_NewRuntime(). */
+/* Default maximum heap size in bytes to pass to JS_NewContext(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
 
 namespace shadow {

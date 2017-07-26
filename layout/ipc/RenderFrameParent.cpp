@@ -32,6 +32,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
@@ -49,7 +50,7 @@ typedef FrameMetrics::ViewID ViewID;
  * from the nearest display item reference frame (which we assume will be inducing
  * a ContainerLayer).
  */
-static nsIntPoint
+static LayoutDeviceIntPoint
 GetContentRectLayerOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuilder)
 {
   nscoord auPerDevPixel = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
@@ -61,7 +62,7 @@ GetContentRectLayerOffset(nsIFrame* aContainerFrame, nsDisplayListBuilder* aBuil
   nsPoint frameOffset = aBuilder->ToReferenceFrame(aContainerFrame) +
     aContainerFrame->GetContentRectRelativeToSelf().TopLeft();
 
-  return frameOffset.ToNearestPixels(auPerDevPixel);
+  return LayoutDeviceIntPoint::FromAppUnitsToNearest(frameOffset, auPerDevPixel);
 }
 
 // Return true iff |aManager| is a "temporary layer manager".  They're
@@ -160,7 +161,6 @@ already_AddRefed<Layer>
 RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                               nsIFrame* aFrame,
                               LayerManager* aManager,
-                              const nsIntRect& aVisibleRect,
                               nsDisplayItem* aItem,
                               const ContainerLayerParameters& aContainerParameters)
 {
@@ -200,7 +200,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
   static_cast<RefLayer*>(layer.get())->SetReferentId(mLayersId);
-  nsIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
+  LayoutDeviceIntPoint offset = GetContentRectLayerOffset(aFrame, aBuilder);
   // We can only have an offset if we're a child of an inactive
   // container, but our display item is LAYER_ACTIVE_FORCE which
   // forces all layers above to be active.
@@ -374,12 +374,28 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
                             const ContainerLayerParameters& aContainerParameters)
 {
-  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
-  visibleRect += aContainerParameters.mOffset;
-  RefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
+  RefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, this, aContainerParameters);
   if (layer && layer->AsContainerLayer()) {
     layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }
   return layer.forget();
+}
+
+bool
+nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
+                                         nsTArray<WebRenderParentCommand>& aParentCommands,
+                                         mozilla::layers::WebRenderLayerManager* aManager,
+                                         nsDisplayListBuilder* aDisplayListBuilder)
+{
+  MOZ_ASSERT(aManager->IsLayersFreeTransaction());
+
+  mozilla::LayoutDeviceRect visible = mozilla::LayoutDeviceRect::FromAppUnits(
+      GetVisibleRect(), mFrame->PresContext()->AppUnitsPerDevPixel());
+  visible += mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
+
+  aBuilder.PushIFrame(aSc.ToRelativeLayoutRect(visible),
+      mozilla::wr::AsPipelineId(mRemoteFrame->GetLayersId()));
+
+  return true;
 }

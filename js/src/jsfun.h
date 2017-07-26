@@ -673,7 +673,7 @@ static_assert(sizeof(JSFunction) == sizeof(js::shadow::Function),
               "shadow interface must match actual interface");
 
 extern JSString*
-fun_toStringHelper(JSContext* cx, js::HandleObject obj, unsigned indent);
+fun_toStringHelper(JSContext* cx, js::HandleObject obj, bool isToSource);
 
 namespace js {
 
@@ -883,7 +883,7 @@ JSFunction::getExtendedSlot(size_t which) const
 
 namespace js {
 
-JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPring);
+JSString* FunctionToString(JSContext* cx, HandleFunction fun, bool isToSource);
 
 template<XDRMode mode>
 bool

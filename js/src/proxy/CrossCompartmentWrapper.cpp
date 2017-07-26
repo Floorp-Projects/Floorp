@@ -449,12 +449,12 @@ CrossCompartmentWrapper::className(JSContext* cx, HandleObject wrapper) const
 }
 
 JSString*
-CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, unsigned indent) const
+CrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject wrapper, bool isToSource) const
 {
     RootedString str(cx);
     {
         AutoCompartment call(cx, wrappedObject(wrapper));
-        str = Wrapper::fun_toString(cx, wrapper, indent);
+        str = Wrapper::fun_toString(cx, wrapper, isToSource);
         if (!str)
             return nullptr;
     }
