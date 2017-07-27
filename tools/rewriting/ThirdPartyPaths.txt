@@ -8,6 +8,7 @@ gfx/graphite2/
 gfx/harfbuzz/
 gfx/ots/
 gfx/qcms/
+gfx/sfntly/
 gfx/skia/
 gfx/vr/openvr/
 gfx/webrender
