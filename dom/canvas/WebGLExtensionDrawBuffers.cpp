@@ -48,17 +48,7 @@ WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl)
 {
     gl::GLContext* gl = webgl->GL();
 
-    if (!gl->IsSupported(gl::GLFeature::draw_buffers))
-        return false;
-
-    // WEBGL_draw_buffers requires at least 4 color attachments.
-    if (webgl->mGLMaxDrawBuffers < webgl->kMinMaxDrawBuffers ||
-        webgl->mGLMaxColorAttachments < webgl->kMinMaxColorAttachments)
-    {
-        return false;
-    }
-
-    return true;
+    return gl->IsSupported(gl::GLFeature::draw_buffers);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers, WEBGL_draw_buffers)

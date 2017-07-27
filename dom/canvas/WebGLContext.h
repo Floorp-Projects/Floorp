@@ -332,9 +332,6 @@ class WebGLContext
         UNMASKED_RENDERER_WEBGL = 0x9246
     };
 
-    static const uint32_t kMinMaxColorAttachments;
-    static const uint32_t kMinMaxDrawBuffers;
-
     const uint32_t mMaxPerfWarnings;
     mutable uint64_t mNumPerfWarnings;
     const uint32_t mMaxAcceptableFBStatusInvals;
@@ -501,8 +498,6 @@ public:
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();
     void ClearBackbufferIfNeeded();
-
-    bool MinCapabilityMode() const { return mMinCapability; }
 
     void RunContextLossTimer();
     void UpdateContextLossStatus();
@@ -1445,7 +1440,6 @@ protected:
     bool mResetLayer;
     bool mLayerIsMirror;
     bool mOptionsFrozen;
-    bool mMinCapability;
     bool mDisableExtensions;
     bool mIsMesa;
     bool mLoseContextOnMemoryPressure;
