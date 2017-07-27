@@ -578,16 +578,17 @@ nsDefaultURIFixup::MakeAlternateURI(nsIURI* aURI)
   // are www. & .com but they could be any other value, e.g. www. & .org
 
   nsAutoCString prefix("www.");
-  nsAdoptingCString prefPrefix =
-    Preferences::GetCString("browser.fixup.alternate.prefix");
-  if (prefPrefix) {
+  nsAutoCString prefPrefix;
+  nsresult rv =
+    Preferences::GetCString("browser.fixup.alternate.prefix", prefPrefix);
+  if (NS_SUCCEEDED(rv)) {
     prefix.Assign(prefPrefix);
   }
 
   nsAutoCString suffix(".com");
-  nsAdoptingCString prefSuffix =
-    Preferences::GetCString("browser.fixup.alternate.suffix");
-  if (prefSuffix) {
+  nsAutoCString prefSuffix;
+  rv = Preferences::GetCString("browser.fixup.alternate.suffix", prefSuffix);
+  if (NS_SUCCEEDED(rv)) {
     suffix.Assign(prefSuffix);
   }
 

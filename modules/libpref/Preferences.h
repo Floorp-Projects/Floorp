@@ -21,7 +21,6 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsIFile;
-class nsAdoptingCString;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef void (*PrefChangedFunc)(const char *, void *);
@@ -146,30 +145,6 @@ public:
     GetFloat(aPref, &result);
     return result;
   }
-
-  /**
-   * Gets char type pref value directly.  If failed, the get() of result
-   * returns nullptr.  Even if succeeded but the result was empty string, the
-   * get() does NOT return nullptr.  So, you can check whether the method
-   * succeeded or not by:
-   *
-   * nsAdoptingString value = Prefereces::GetString("foo.bar");
-   * if (!value) {
-   *   // failed
-   * }
-   *
-   * Be aware.  If you wrote as:
-   *
-   * nsAutoString value = Preferences::GetString("foo.bar");
-   * if (!value.get()) {
-   *   // the condition is always FALSE!!
-   * }
-   *
-   * The value.get() doesn't return nullptr. You must use nsAdoptingString
-   * when you need to check whether it was failure or not.
-   */
-  static nsAdoptingCString GetCString(const char* aPref);
-  static nsAdoptingCString GetLocalizedCString(const char* aPref);
 
   /**
    * Gets int, float, or bool type pref value with raw return value of
@@ -378,15 +353,7 @@ public:
 
   /**
    * Gets the default value of the char type pref.
-   * If the get() of the result returned nullptr, that meant the value didn't
-   * have default value.
-   *
-   * See the comment at definition at GetString() and GetCString() for more
-   * details of the result.
    */
-  static nsAdoptingCString GetDefaultCString(const char* aPref);
-  static nsAdoptingCString GetDefaultLocalizedCString(const char* aPref);
-
   static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);
   static nsresult GetDefaultString(const char* aPref, nsAString& aResult);
   static nsresult GetDefaultLocalizedCString(const char* aPref,

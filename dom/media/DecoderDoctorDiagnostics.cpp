@@ -404,8 +404,8 @@ AllowNotification(const NotificationAndReportStringId& aNotification)
   // - Comma-separater list of ids -> Allow if aReportStringId (from
   //                                  dom.properties) is one of them.
   // - Nothing (missing or empty) -> Disable everything.
-  nsAdoptingCString filter =
-    Preferences::GetCString("media.decoder-doctor.notifications-allowed");
+  nsAutoCString filter;
+  Preferences::GetCString("media.decoder-doctor.notifications-allowed", filter);
   return filter.EqualsLiteral("*") ||
          StringListContains(filter, aNotification.mReportStringId);
 }
@@ -424,10 +424,11 @@ AllowDecodeIssue(const MediaResult& aDecodeIssue, bool aDecodeIssueIsError)
   // - '*' -> Allow everything.
   // - Comma-separater list of ids -> Allow if the issue name is one of them.
   // - Nothing (missing or empty) -> Disable everything.
-  nsAdoptingCString filter =
-    Preferences::GetCString(aDecodeIssueIsError
-                            ? "media.decoder-doctor.decode-errors-allowed"
-                            : "media.decoder-doctor.decode-warnings-allowed");
+  nsAutoCString filter;
+  Preferences::GetCString(aDecodeIssueIsError
+                          ? "media.decoder-doctor.decode-errors-allowed"
+                          : "media.decoder-doctor.decode-warnings-allowed",
+                          filter);
   if (filter.EqualsLiteral("*")) {
     return true;
   }
