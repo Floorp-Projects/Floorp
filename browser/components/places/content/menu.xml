@@ -605,7 +605,7 @@
       ]]></handler>
       <handler event="transitionend"><![CDATA[
         if (event.originalTarget.getAttribute("anonid") == "container" &&
-            event.propertyName == "transform") {
+            (event.propertyName == "transform" || event.propertyName == "-moz-window-transform")) {
           this.style.removeProperty("pointer-events");
         }
       ]]></handler>
