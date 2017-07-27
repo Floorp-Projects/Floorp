@@ -45,6 +45,7 @@ const CONTENT = {
       label: GetStringFromName(changeAutofillOptsKey),
       accessKey: "C",
       callbackState: "open-pref",
+      disableHighlight: true,
     },
     options: {
       persistWhileVisible: true,
@@ -110,9 +111,9 @@ let FormAutofillDoorhanger = {
       return [null, null];
     }
 
-    let {label, accessKey, callbackState} = mainActionParams;
+    let {label, accessKey, disableHighlight, callbackState} = mainActionParams;
     let callback = resolve.bind(null, callbackState);
-    let mainAction = {label, accessKey, callback};
+    let mainAction = {label, accessKey, callback, disableHighlight};
 
     if (!secondaryActionParams) {
       return [mainAction, null];
