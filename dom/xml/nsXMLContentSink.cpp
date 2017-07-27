@@ -401,8 +401,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
     NS_ASSERTION(mDocument->IndexOf(rootElement) != -1,
                  "rootElement not in doc?");
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    nsNodeUtils::ContentInserted(mDocument, rootElement,
-                                 mDocument->IndexOf(rootElement));
+    nsNodeUtils::ContentInserted(mDocument, rootElement);
     mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
 
