@@ -9,6 +9,7 @@
 #include "nsIAutoConfig.h"
 #include "nsITimer.h"
 #include "nsIFile.h"
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIPrefService.h"
@@ -20,7 +21,8 @@ class nsAutoConfig : public nsIAutoConfig,
                      public nsITimerCallback,
                      public nsIStreamListener,
                      public nsIObserver,
-                     public nsSupportsWeakReference
+                     public nsSupportsWeakReference,
+                     public nsINamed
 
 {
     public:
@@ -31,6 +33,7 @@ class nsAutoConfig : public nsIAutoConfig,
         NS_DECL_NSISTREAMLISTENER
         NS_DECL_NSIOBSERVER
         NS_DECL_NSITIMERCALLBACK
+        NS_DECL_NSINAMED
 
         nsAutoConfig();
         nsresult Init();

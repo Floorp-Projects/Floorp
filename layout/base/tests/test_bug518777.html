@@ -35,12 +35,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=518777
 <body>
 <p><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=518777">Mozilla Bug 518777</a></p>
 
-<!--
-iframe source is
-<html><body onload='window.scrollTo(0,99999999); document.documentElement.offsetWidth; window.parent.dotest();' style='background: rgb(0,0,255); width: 100px; height: 50100px;'></body></html>
--->
 <iframe id="source" width="50" height="50"
-       src="data:text/html,%3Chtml%3E%3Cbody%20onload%3D%27window.scrollTo%280%2C99999999%29%3B%20document.documentElement.offsetWidth%3B%20window.parent.dotest%28%29%3B%27%20style%3D%27background%3A%20rgb%280%2C0%2C255%29%3B%20width%3A%20100px%3B%20height%3A%2050100px%3B%27%3E%3C%2Fbody%3E%3C%2Fhtml%3E"></iframe>
+       srcdoc="<html><body onload='window.scrollTo(0,99999999); document.documentElement.offsetWidth; window.parent.dotest();' style='background: rgb(0,0,255); width: 100px; height: 50100px;'></body></html>"></iframe>
 
 <pre id="test">
 </pre>

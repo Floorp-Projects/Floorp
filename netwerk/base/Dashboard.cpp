@@ -12,6 +12,7 @@
 #include "nsIDNSService.h"
 #include "nsIDNSRecord.h"
 #include "nsIInputStream.h"
+#include "nsINamed.h"
 #include "nsISocketTransport.h"
 #include "nsIThread.h"
 #include "nsProxyRelease.h"
@@ -130,6 +131,7 @@ NS_IMPL_ISUPPORTS0(DnsData)
 class ConnectionData
     : public nsITransportEventSink
     , public nsITimerCallback
+    , public nsINamed
 {
     virtual ~ConnectionData()
     {
@@ -142,6 +144,13 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSITIMERCALLBACK
+
+    NS_IMETHOD GetName(nsACString& aName) override
+    {
+      aName.AssignLiteral("net::ConnectionData");
+      return NS_OK;
+    }
+
 
     void StartTimer(uint32_t aTimeout);
     void StopTimer();
@@ -167,7 +176,7 @@ public:
     nsString mStatus;
 };
 
-NS_IMPL_ISUPPORTS(ConnectionData, nsITransportEventSink, nsITimerCallback)
+NS_IMPL_ISUPPORTS(ConnectionData, nsITransportEventSink, nsITimerCallback, nsINamed)
 
 
 class RcwnData

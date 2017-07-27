@@ -4780,8 +4780,7 @@ nsTreeBodyFrame::PostScrollEvent()
     return;
 
   RefPtr<ScrollEvent> event = new ScrollEvent(this);
-  nsresult rv = mContent->OwnerDoc()->Dispatch("ScrollEvent",
-                                               TaskCategory::Other,
+  nsresult rv = mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                                do_AddRef(event));
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch ScrollEvent");
@@ -4977,8 +4976,7 @@ nsTreeBodyFrame::FullScrollbarsUpdate(bool aNeedsFullInvalidation)
   if (!mCheckingOverflow) {
     nsContentUtils::AddScriptRunner(checker);
   } else {
-    mContent->OwnerDoc()->Dispatch("nsOverflowChecker",
-                                   TaskCategory::Other,
+    mContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                    checker.forget());
   }
   return weakFrame.IsAlive();

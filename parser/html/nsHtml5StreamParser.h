@@ -390,8 +390,7 @@ public:
      * Dispatch an event to a Quantum DOM main thread-ish thread.
      * (Not the parser thread.)
      */
-    nsresult DispatchToMain(const char* aName,
-                            already_AddRefed<nsIRunnable>&& aRunnable);
+    nsresult DispatchToMain(already_AddRefed<nsIRunnable>&& aRunnable);
 
     nsCOMPtr<nsIRequest>          mRequest;
     nsCOMPtr<nsIRequestObserver>  mObserver;

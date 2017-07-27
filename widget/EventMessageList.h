@@ -455,6 +455,9 @@ NS_EVENT_MESSAGE(eEditorInput)
 NS_EVENT_MESSAGE(eSelectStart)
 NS_EVENT_MESSAGE(eSelectionChange)
 
+// visibility change
+NS_EVENT_MESSAGE(eVisibilityChange)
+
 // Details element events.
 NS_EVENT_MESSAGE(eToggle)
 

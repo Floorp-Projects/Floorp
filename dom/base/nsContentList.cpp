@@ -249,7 +249,7 @@ NS_GetContentList(nsINode* aRootNode,
 
 #ifdef DEBUG
 const nsCacheableFuncStringContentList::ContentListType
-  nsCacheableFuncStringNodeList::sType = nsCacheableFuncStringContentList::eNodeList;
+  nsCachableElementsByNameNodeList::sType = nsCacheableFuncStringContentList::eNodeList;
 const nsCacheableFuncStringContentList::ContentListType
   nsCacheableFuncStringHTMLCollection::sType = nsCacheableFuncStringContentList::eHTMLCollection;
 #endif
@@ -338,33 +338,21 @@ GetFuncStringContentList(nsINode* aRootNode,
   return list.forget();
 }
 
+// Explicit instantiations to avoid link errors
+template
 already_AddRefed<nsContentList>
-NS_GetFuncStringNodeList(nsINode* aRootNode,
-                         nsContentListMatchFunc aFunc,
-                         nsContentListDestroyFunc aDestroyFunc,
-                         nsFuncStringContentListDataAllocator aDataAllocator,
-                         const nsAString& aString)
-{
-  return GetFuncStringContentList<nsCacheableFuncStringNodeList>(aRootNode,
-                                                                 aFunc,
-                                                                 aDestroyFunc,
-                                                                 aDataAllocator,
-                                                                 aString);
-}
-
+GetFuncStringContentList<nsCachableElementsByNameNodeList>(nsINode* aRootNode,
+                                                           nsContentListMatchFunc aFunc,
+                                                           nsContentListDestroyFunc aDestroyFunc,
+                                                           nsFuncStringContentListDataAllocator aDataAllocator,
+                                                           const nsAString& aString);
+template
 already_AddRefed<nsContentList>
-NS_GetFuncStringHTMLCollection(nsINode* aRootNode,
-                               nsContentListMatchFunc aFunc,
-                               nsContentListDestroyFunc aDestroyFunc,
-                               nsFuncStringContentListDataAllocator aDataAllocator,
-                               const nsAString& aString)
-{
-  return GetFuncStringContentList<nsCacheableFuncStringHTMLCollection>(aRootNode,
-                                                                       aFunc,
-                                                                       aDestroyFunc,
-                                                                       aDataAllocator,
-                                                                       aString);
-}
+GetFuncStringContentList<nsCacheableFuncStringHTMLCollection>(nsINode* aRootNode,
+                                                              nsContentListMatchFunc aFunc,
+                                                              nsContentListDestroyFunc aDestroyFunc,
+                                                              nsFuncStringContentListDataAllocator aDataAllocator,
+                                                              const nsAString& aString);
 
 //-----------------------------------------------------
 // nsContentList implementation
@@ -1076,12 +1064,31 @@ nsContentList::AssertInSync()
 #endif
 
 //-----------------------------------------------------
-// nsCacheableFuncStringNodeList
+// nsCachableElementsByNameNodeList
 
 JSObject*
-nsCacheableFuncStringNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+nsCachableElementsByNameNodeList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
   return NodeListBinding::Wrap(cx, this, aGivenProto);
+}
+
+void
+nsCachableElementsByNameNodeList::AttributeChanged(nsIDocument* aDocument,
+                                                   Element* aElement,
+                                                   int32_t aNameSpaceID,
+                                                   nsIAtom* aAttribute,
+                                                   int32_t aModType,
+                                                   const nsAttrValue* aOldValue)
+{
+  // No need to rebuild the list if the changed attribute is not the name
+  // attribute.
+  if (aAttribute != nsGkAtoms::name) {
+    return;
+  }
+
+  nsCacheableFuncStringContentList::AttributeChanged(aDocument, aElement,
+                                                     aNameSpaceID, aAttribute,
+                                                     aModType, aOldValue);
 }
 
 //-----------------------------------------------------

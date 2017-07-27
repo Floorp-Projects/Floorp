@@ -8,6 +8,7 @@
 #include "mozilla/dom/PaymentRequest.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "nsContentUtils.h"
+#include "BasicCardPayment.h"
 #include "PaymentRequestManager.h"
 
 namespace mozilla {
@@ -52,7 +53,8 @@ PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
 }
 
 bool
-PaymentRequest::IsValidMethodData(const Sequence<PaymentMethodData>& aMethodData,
+PaymentRequest::IsValidMethodData(JSContext* aCx,
+                                  const Sequence<PaymentMethodData>& aMethodData,
                                   nsAString& aErrorMsg)
 {
   if (!aMethodData.Length()) {
@@ -61,10 +63,23 @@ PaymentRequest::IsValidMethodData(const Sequence<PaymentMethodData>& aMethodData
   }
 
   for (const PaymentMethodData& methodData : aMethodData) {
-    if (!methodData.mSupportedMethods.Length()) {
+    if (methodData.mSupportedMethods.IsEmpty()) {
       aErrorMsg.AssignLiteral(
-        "At least one payment method identifier is required.");
+        "Payment method identifier is required.");
       return false;
+    }
+    RefPtr<BasicCardService> service = BasicCardService::GetService();
+    MOZ_ASSERT(service);
+    if (service->IsBasicCardPayment(methodData.mSupportedMethods)) {
+      if (!methodData.mData.WasPassed()) {
+        continue;
+      }
+      MOZ_ASSERT(aCx);
+      if (!service->IsValidBasicCardRequest(aCx,
+                                            methodData.mData.Value(),
+                                            aErrorMsg)) {
+        return false;
+      }
     }
   }
 
@@ -259,7 +274,9 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Check payment methods and details
   nsAutoString message;
-  if (!IsValidMethodData(aMethodData, message) ||
+  if (!IsValidMethodData(nsContentUtils::GetCurrentJSContext(),
+                         aMethodData,
+                         message) ||
       !IsValidDetailsInit(aDetails, message)) {
     aRv.ThrowTypeError<MSG_ILLEGAL_PR_CONSTRUCTOR>(message);
     return nullptr;

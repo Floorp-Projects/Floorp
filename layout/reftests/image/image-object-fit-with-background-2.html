@@ -12,7 +12,7 @@
      from filling its container, we can't optimize away the background; it need
      to be painted in the uncovered area.
 -->
-<html class="reftest-print">
+<html class="reftest-paged">
   <head>
     <meta charset="utf-8">
     <style type="text/css">
@@ -22,7 +22,7 @@
         width: 32px;
         /* We make the height 6in larger than the image's intrinsic height,
          * which gives us the following happy results:
-         *  (1) the <img> will split over several 3in tall reftest-print cards
+         *  (1) the <img> will split over several 3in tall reftest-paged cards
          *      (so, we get to test fragmentation).
          *  (2) the image pixels end up on the second fragment (not the first),
          *      so we get to test image-data painting on later fragments.

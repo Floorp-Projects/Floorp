@@ -25,7 +25,7 @@
 using namespace mozilla;
 using mozilla::dom::Link;
 
-NS_IMPL_ISUPPORTS(nsAndroidHistory, IHistory, nsIRunnable, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsAndroidHistory, IHistory, nsIRunnable, nsITimerCallback, nsINamed)
 
 nsAndroidHistory* nsAndroidHistory::sHistory = nullptr;
 
@@ -191,6 +191,13 @@ nsAndroidHistory::Notify(nsITimer *timer)
   }
   mPendingVisitURIs.Clear();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAndroidHistory::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsAndroidHistory");
   return NS_OK;
 }
 

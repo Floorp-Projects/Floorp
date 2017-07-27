@@ -7,6 +7,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/SharedThreadPool.h"
 #include "nsAutoPtr.h"
 #include "nsITimer.h"

@@ -271,9 +271,11 @@ partial interface Document {
 };
 
 // http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface
+// https://w3c.github.io/page-visibility/#extensions-to-the-document-interface
 partial interface Document {
   readonly attribute boolean hidden;
   readonly attribute VisibilityState visibilityState;
+           attribute EventHandler onvisibilitychange;
 };
 
 // http://dev.w3.org/csswg/cssom/#extensions-to-the-document-interface

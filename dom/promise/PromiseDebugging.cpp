@@ -42,7 +42,7 @@ public:
       return;
     }
     sDispatched.set(true);
-    SystemGroup::Dispatch("FlushRejections", TaskCategory::Other,
+    SystemGroup::Dispatch(TaskCategory::Other,
                           do_AddRef(new FlushRejections()));
   }
 

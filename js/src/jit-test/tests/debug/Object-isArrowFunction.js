@@ -20,3 +20,5 @@ checkIsArrow(false, 'Math.atan2');
 checkIsArrow(false, 'Function.prototype');
 checkIsArrow(false, 'Function("")');
 checkIsArrow(false, 'new Function("")');
+checkIsArrow(false, '(async function f () {})');
+checkIsArrow(true,  '(async () => { })');

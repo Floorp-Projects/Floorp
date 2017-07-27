@@ -29,6 +29,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       ],
       supportedTypes: ['prepaid', 'debit', 'credit'],
     },
+  }, {
+    supportedMethods: "testing-payment-method",
   }];
   const defaultDetails = {
     id: "test payment",
@@ -160,12 +162,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
       });
       payRequest.show().then(response => {
         is(response.requestId, "test payment", "response.requestId should be 'test payment'.");
-        is(response.methodName, "basic-card", "response.methodName should be 'basic-card'.");
-        is(response.details.cardholderName, "Bill A. Pacheco", "response.details.cardholderName should be 'Bill A. Pacheco'.");
-        is(response.details.cardNumber, "4024007191304152", "response.details.cardNumber should be '4024007191304152'.");
-        is(response.details.expiryMonth, "05", "response.details.expiryMonth should be '05'.");
-        is(response.details.expiryYear, "2019", "response.details.expiryYear should be '2019'.");
-        is(response.details.cardSecurityCode, "024", "response.details.cardSecurityCode should be '024'.");
+        is(response.methodName, "testing-payment-method", "response.methodName should be 'testing-payment-method'.");
+        is(response.details.paymentToken, "6880281f-0df3-4b8e-916f-66575e2457c1", "response.details.paymentToken should be '6880281f-0df3-4b8e-916f-66575e2457c1'.");
         is(response.shippingAddress.country, "USA", "response.shippingAddress.country should be 'USA'.");
         is(response.shippingAddress.addressLine.length, 1, "response.shippingAddress.addressLine.length should be 1.");
         is(response.shippingAddress.addressLine[0], "Easton Ave", "response.shippingAddress.addressLine[0] should be 'Easton Ave'.");
@@ -234,6 +232,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     });
   }
 
+  function testNullDetailsResponse() {
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("test-null-details-response-complete",
+                                 function nullDetailsResponseCompleteHandler() {
+        gScript.removeMessageListener("test-null-details-response-complete",
+                                      nullDetailsResponseCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("test-null-details-response");
+    });
+  }
+
   function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
@@ -248,6 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345366
     testRejectShow()
     .then(testShow)
     .then(testUpdateWithError)
+    .then(testNullDetailsResponse)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
