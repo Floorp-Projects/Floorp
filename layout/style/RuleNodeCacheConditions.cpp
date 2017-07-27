@@ -26,7 +26,7 @@ RuleNodeCacheConditions::Matches(nsStyleContext* aStyleContext) const
     return false;
   }
   if ((mBits & eHaveWritingMode) &&
-      (GetWritingMode() != WritingMode(aStyleContext).GetBits())) {
+      (mWritingMode != WritingMode(aStyleContext).GetBits())) {
     return false;
   }
   return true;
@@ -46,7 +46,7 @@ RuleNodeCacheConditions::List() const
     if (!first) {
       printf(", ");
     }
-    printf("WritingMode(0x%x)", GetWritingMode());
+    printf("WritingMode(0x%x)", mWritingMode);
   }
   printf(" }");
 }
