@@ -56,10 +56,10 @@ parent:
   async DPBegin(IntSize aSize);
   async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
               LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-              WebRenderScrollData aScrollData, uint32_t idNameSpace);
+              WebRenderScrollData aScrollData, uint32_t idNameSpace, TimeStamp fwdTime);
   sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                  LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-                 WebRenderScrollData aScrollData, uint32_t idNameSpace);
+                 WebRenderScrollData aScrollData, uint32_t idNameSpace, TimeStamp fwdTime);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync DPGetSnapshot(PTexture texture);
   async AddPipelineIdForAsyncCompositable(PipelineId aImageId, CompositableHandle aHandle);
