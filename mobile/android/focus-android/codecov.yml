@@ -4,7 +4,7 @@ codecov:
 comment: false
 
 coverage:
-  precision: 0
+  precision: 2
   round: down
   status:
     project:
@@ -13,7 +13,7 @@ coverage:
     patch:
       default:
         enabled: yes
-        threshold: 1
+        threshold: 0.1
         if_not_found: success
     changes:
       default:
