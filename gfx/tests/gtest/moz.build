@@ -47,7 +47,6 @@ UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
 SOURCES += [ '/gfx/ots/tests/%s' % p for p in [
     'cff_type2_charstring_test.cc',
     'layout_common_table_test.cc',
-    'table_dependencies_test.cc',
 ]]
 
 include('/ipc/chromium/chromium-config.mozbuild')

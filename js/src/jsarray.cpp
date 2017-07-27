@@ -568,6 +568,28 @@ DeletePropertyOrThrow(JSContext* cx, HandleObject obj, uint64_t index)
 }
 
 static bool
+DeletePropertiesOrThrow(JSContext* cx, HandleObject obj, uint64_t len, uint64_t finalLength)
+{
+    if (obj->is<ArrayObject>() && !obj->isIndexed() &&
+        !obj->as<NativeObject>().denseElementsAreFrozen())
+    {
+        if (len <= UINT32_MAX) {
+            // Skip forward to the initialized elements of this array.
+            len = Min(uint32_t(len), obj->as<ArrayObject>().getDenseInitializedLength());
+        }
+    }
+
+    for (uint64_t k = len; k > finalLength; k--) {
+        if (!CheckForInterrupt(cx))
+            return false;
+
+        if (!DeletePropertyOrThrow(cx, obj, k - 1))
+            return false;
+    }
+    return true;
+}
+
+static bool
 SetArrayLengthProperty(JSContext* cx, HandleArrayObject obj, HandleValue value)
 {
     RootedId id(cx, NameToId(cx->names().length));
@@ -2946,11 +2968,8 @@ array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueIsUse
             }
 
             /* Steps 15.c-d. */
-            for (uint64_t k = len; k > finalLength; k--) {
-                /* Steps 15.d.i-ii. */
-                if (!DeletePropertyOrThrow(cx, obj, k - 1))
-                    return false;
-            }
+            if (!DeletePropertiesOrThrow(cx, obj, len, finalLength))
+                return false;
         }
     } else if (itemCount > actualDeleteCount) {
         MOZ_ASSERT(actualDeleteCount <= UINT32_MAX);

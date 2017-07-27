@@ -90,7 +90,7 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
             cgd = cgdNext;
             cgdNext = nullptr;
         } else {
-            cgd = GetGlyphDataForChar(ch);
+            cgd = GetGlyphDataForChar(face, ch);
         }
 
         FT_UInt gid = cgd->glyphIndex;
@@ -108,7 +108,7 @@ gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
             if (FT_HAS_KERNING(face) && i + 1 < aLength) {
                 chNext = aText[i + 1];
                 if (chNext != 0) {
-                    cgdNext = GetGlyphDataForChar(chNext);
+                    cgdNext = GetGlyphDataForChar(face, chNext);
                     gidNext = cgdNext->glyphIndex;
                     if (gidNext && gidNext != spaceGlyph)
                         lsbDeltaNext = cgdNext->lsbDelta;
@@ -174,11 +174,8 @@ gfxFT2Font::~gfxFT2Font()
 }
 
 void
-gfxFT2Font::FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd)
+gfxFT2Font::FillGlyphDataForChar(FT_Face face, uint32_t ch, CachedGlyphData *gd)
 {
-    gfxFT2LockedFace faceLock(this);
-    FT_Face face = faceLock.get();
-
     if (!face->charmap || face->charmap->encoding != FT_ENCODING_UNICODE) {
         FT_Select_Charmap(face, FT_ENCODING_UNICODE);
     }

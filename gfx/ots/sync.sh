@@ -33,3 +33,6 @@ mv README.tmp README.mozilla
 
 echo "Applying ots-visibility.patch..."
 patch -p3 < ots-visibility.patch
+
+echo "Applying ots-config.patch..."
+patch -p3 < ots-config.patch
