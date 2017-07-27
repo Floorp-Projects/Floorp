@@ -54,6 +54,7 @@ this.TelemetryUtils = {
     DataSubmissionEnabled: "datareporting.policy.dataSubmissionEnabled",
     FhrUploadEnabled: "datareporting.healthreport.uploadEnabled",
     MinimumPolicyVersion: "datareporting.policy.minimumPolicyVersion",
+    FirstRunURL: "datareporting.policy.firstRunURL",
   }),
 
   /**
