@@ -21,7 +21,7 @@ function startTest() {
 
   mediaRecorder.onerror = function (e) {
     is(callbackStep, 0, 'should fired onstop callback');
-    is(e.name, 'GenericError', 'error name should be GenericError');
+    is(e.error.name, 'UnknownError', 'error name should be UnknownError');
     is(mediaRecorder.mimeType, '', 'mimetype should be empty');
     is(mediaRecorder.state, 'recording', 'state is recording');
     info('onerror callback fired');
