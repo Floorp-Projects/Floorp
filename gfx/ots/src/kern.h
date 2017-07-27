@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -30,7 +30,16 @@ struct OpenTypeKERNFormat0 {
 // WebFonts unlikely use it. I've checked thousands of proprietary fonts and
 // free fonts, and found no font uses the format.
 
-struct OpenTypeKERN {
+class OpenTypeKERN : public Table {
+ public:
+  explicit OpenTypeKERN(Font *font, uint32_t tag)
+      : Table(font, tag, tag) { }
+
+  bool Parse(const uint8_t *data, size_t length);
+  bool Serialize(OTSStream *out);
+  bool ShouldSerialize();
+
+ private:
   uint16_t version;
   std::vector<OpenTypeKERNFormat0> subtables;
 };

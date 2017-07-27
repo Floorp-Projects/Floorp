@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,91 +7,75 @@
 // VDMX - Vertical Device Metrics
 // http://www.microsoft.com/typography/otspec/vdmx.htm
 
-#define TABLE_NAME "VDMX"
-
-#define DROP_THIS_TABLE(...) \
-  do { \
-    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
-    OTS_FAILURE_MSG("Table discarded"); \
-    delete font->vdmx; \
-    font->vdmx = 0; \
-  } while (0)
-
 namespace ots {
 
-bool ots_vdmx_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypeVDMX::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
-  font->vdmx = new OpenTypeVDMX;
-  OpenTypeVDMX * const vdmx = font->vdmx;
 
-  if (!table.ReadU16(&vdmx->version) ||
-      !table.ReadU16(&vdmx->num_recs) ||
-      !table.ReadU16(&vdmx->num_ratios)) {
-    return OTS_FAILURE_MSG("Failed to read table header");
+  if (!table.ReadU16(&this->version) ||
+      !table.ReadU16(&this->num_recs) ||
+      !table.ReadU16(&this->num_ratios)) {
+    return Error("Failed to read table header");
   }
 
-  if (vdmx->version > 1) {
-    DROP_THIS_TABLE("bad version: %u", vdmx->version);
-    return true;  // continue transcoding
+  if (this->version > 1) {
+    return Drop("Unsupported table version: %u", this->version);
   }
 
-  vdmx->rat_ranges.reserve(vdmx->num_ratios);
-  for (unsigned i = 0; i < vdmx->num_ratios; ++i) {
+  this->rat_ranges.reserve(this->num_ratios);
+  for (unsigned i = 0; i < this->num_ratios; ++i) {
     OpenTypeVDMXRatioRecord rec;
 
     if (!table.ReadU8(&rec.charset) ||
         !table.ReadU8(&rec.x_ratio) ||
         !table.ReadU8(&rec.y_start_ratio) ||
         !table.ReadU8(&rec.y_end_ratio)) {
-      return OTS_FAILURE_MSG("Failed to read ratio header %d", i);
+      return Error("Failed to read RatioRange record %d", i);
     }
 
     if (rec.charset > 1) {
-      DROP_THIS_TABLE("bad charset: %u", rec.charset);
-      return true;
+      return Drop("Unsupported character set: %u", rec.charset);
     }
 
     if (rec.y_start_ratio > rec.y_end_ratio) {
-      DROP_THIS_TABLE("bad y ratio");
-      return true;
+      return Drop("Bad y ratio");
     }
 
     // All values set to zero signal the default grouping to use;
     // if present, this must be the last Ratio group in the table.
-    if ((i < vdmx->num_ratios - 1u) &&
+    if ((i < this->num_ratios - 1u) &&
         (rec.x_ratio == 0) &&
         (rec.y_start_ratio == 0) &&
         (rec.y_end_ratio == 0)) {
       // workaround for fonts which have 2 or more {0, 0, 0} terminators.
-      DROP_THIS_TABLE("superfluous terminator found");
-      return true;
+      return Drop("Superfluous terminator found");
     }
 
-    vdmx->rat_ranges.push_back(rec);
+    this->rat_ranges.push_back(rec);
   }
 
-  vdmx->offsets.reserve(vdmx->num_ratios);
+  this->offsets.reserve(this->num_ratios);
   const size_t current_offset = table.offset();
   // current_offset is less than (2 bytes * 3) + (4 bytes * USHRT_MAX) = 256k.
-  for (unsigned i = 0; i < vdmx->num_ratios; ++i) {
+  for (unsigned i = 0; i < this->num_ratios; ++i) {
     uint16_t offset;
     if (!table.ReadU16(&offset)) {
-      return OTS_FAILURE_MSG("Failed to read ratio offset %d", i);
+      return Error("Failed to read ratio offset %d", i);
     }
     if (current_offset + offset >= length) {  // thus doesn't overflow.
-      return OTS_FAILURE_MSG("Bad ratio offset %d for ration %d", offset, i);
+      return Error("Bad ratio offset %d for ration %d", offset, i);
     }
 
-    vdmx->offsets.push_back(offset);
+    this->offsets.push_back(offset);
   }
 
-  vdmx->groups.reserve(vdmx->num_recs);
-  for (unsigned i = 0; i < vdmx->num_recs; ++i) {
+  this->groups.reserve(this->num_recs);
+  for (unsigned i = 0; i < this->num_recs; ++i) {
     OpenTypeVDMXGroup group;
     if (!table.ReadU16(&group.recs) ||
         !table.ReadU8(&group.startsz) ||
         !table.ReadU8(&group.endsz)) {
-      return OTS_FAILURE_MSG("Failed to read record header %d", i);
+      return Error("Failed to read record header %d", i);
     }
     group.entries.reserve(group.recs);
     for (unsigned j = 0; j < group.recs; ++j) {
@@ -99,71 +83,68 @@ bool ots_vdmx_parse(Font *font, const uint8_t *data, size_t length) {
       if (!table.ReadU16(&vt.y_pel_height) ||
           !table.ReadS16(&vt.y_max) ||
           !table.ReadS16(&vt.y_min)) {
-        return OTS_FAILURE_MSG("Failed to read reacord %d group %d", i, j);
+        return Error("Failed to read reacord %d group %d", i, j);
       }
       if (vt.y_max < vt.y_min) {
-        DROP_THIS_TABLE("bad y min/max");
-        return true;
+        return Drop("bad y min/max");
       }
 
       // This table must appear in sorted order (sorted by yPelHeight),
       // but need not be continuous.
       if ((j != 0) && (group.entries[j - 1].y_pel_height >= vt.y_pel_height)) {
-        DROP_THIS_TABLE("the table is not sorted");
-        return true;
+        return Drop("The table is not sorted");
       }
 
       group.entries.push_back(vt);
     }
-    vdmx->groups.push_back(group);
+    this->groups.push_back(group);
   }
 
   return true;
 }
 
-bool ots_vdmx_should_serialise(Font *font) {
-  if (!font->glyf) return false;  // this table is not for CFF fonts.
-  return font->vdmx != NULL;
+bool OpenTypeVDMX::ShouldSerialize() {
+  return Table::ShouldSerialize() &&
+         // this table is not for CFF fonts.
+         GetFont()->GetTable(OTS_TAG_GLYF) != NULL;
 }
 
-bool ots_vdmx_serialise(OTSStream *out, Font *font) {
-  OpenTypeVDMX * const vdmx = font->vdmx;
-
-  if (!out->WriteU16(vdmx->version) ||
-      !out->WriteU16(vdmx->num_recs) ||
-      !out->WriteU16(vdmx->num_ratios)) {
-    return OTS_FAILURE_MSG("Failed to write table header");
+bool OpenTypeVDMX::Serialize(OTSStream *out) {
+  if (!out->WriteU16(this->version) ||
+      !out->WriteU16(this->num_recs) ||
+      !out->WriteU16(this->num_ratios)) {
+    return Error("Failed to write table header");
   }
 
-  for (unsigned i = 0; i < vdmx->rat_ranges.size(); ++i) {
-    const OpenTypeVDMXRatioRecord& rec = vdmx->rat_ranges[i];
+  for (unsigned i = 0; i < this->rat_ranges.size(); ++i) {
+    const OpenTypeVDMXRatioRecord& rec = this->rat_ranges[i];
     if (!out->Write(&rec.charset, 1) ||
         !out->Write(&rec.x_ratio, 1) ||
         !out->Write(&rec.y_start_ratio, 1) ||
         !out->Write(&rec.y_end_ratio, 1)) {
-      return OTS_FAILURE_MSG("Failed to write ratio %d", i);
+      return Error("Failed to write RatioRange record %d", i);
     }
   }
 
-  for (unsigned i = 0; i < vdmx->offsets.size(); ++i) {
-    if (!out->WriteU16(vdmx->offsets[i])) {
-      return OTS_FAILURE_MSG("Failed to write ratio offset %d", i);
+  for (unsigned i = 0; i < this->offsets.size(); ++i) {
+    if (!out->WriteU16(this->offsets[i])) {
+      return Error("Failed to write ratio offset %d", i);
     }
   }
 
-  for (unsigned i = 0; i < vdmx->groups.size(); ++i) {
-    const OpenTypeVDMXGroup& group = vdmx->groups[i];
+  for (unsigned i = 0; i < this->groups.size(); ++i) {
+    const OpenTypeVDMXGroup& group = this->groups[i];
     if (!out->WriteU16(group.recs) ||
         !out->Write(&group.startsz, 1) ||
         !out->Write(&group.endsz, 1)) {
-      return OTS_FAILURE_MSG("Failed to write group %d", i);
+      return Error("Failed to write group %d", i);
     }
     for (unsigned j = 0; j < group.entries.size(); ++j) {
       const OpenTypeVDMXVTable& vt = group.entries[j];
       if (!out->WriteU16(vt.y_pel_height) ||
           !out->WriteS16(vt.y_max) ||
           !out->WriteS16(vt.y_min)) {
-        return OTS_FAILURE_MSG("Failed to write group %d entry %d", i, j);
+        return Error("Failed to write group %d entry %d", i, j);
       }
     }
   }
@@ -171,16 +152,4 @@ bool ots_vdmx_serialise(OTSStream *out, Font *font) {
   return true;
 }
 
-void ots_vdmx_reuse(Font *font, Font *other) {
-  font->vdmx = other->vdmx;
-  font->vdmx_reused = true;
-}
-
-void ots_vdmx_free(Font *font) {
-  delete font->vdmx;
-}
-
 }  // namespace ots
-
-#undef TABLE_NAME
-#undef DROP_THIS_TABLE
