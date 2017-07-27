@@ -1001,7 +1001,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 }
 
 #if defined(GP_OS_windows)
-static uintptr_t GetThreadHandle(PlatformData* aData);
+static HANDLE GetThreadHandle(PlatformData* aData);
 #endif
 
 #if defined(USE_FRAME_POINTER_STACK_WALK) || defined(USE_MOZ_STACK_WALK)
@@ -1024,9 +1024,9 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
   //          cannot rely on ActivePS.
 
   // Start with the current function. We use 0 as the frame number here because
-  // the FramePointerStackWalk() and MozStackWalk() calls below will use 1..N.
-  // This is a bit weird but it doesn't matter because StackWalkCallback()
-  // doesn't use the frame number argument.
+  // the FramePointerStackWalk() and MozStackWalkThread() calls below will use
+  // 1..N. This is a bit weird but it doesn't matter because
+  // StackWalkCallback() doesn't use the frame number argument.
   StackWalkCallback(/* frameNum */ 0, aRegs.mPC, aRegs.mSP, &aNativeStack);
 
   uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
@@ -1039,10 +1039,10 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
                           stackEnd);
   }
 #elif defined(USE_MOZ_STACK_WALK)
-  uintptr_t thread = GetThreadHandle(aThreadInfo.GetPlatformData());
+  HANDLE thread = GetThreadHandle(aThreadInfo.GetPlatformData());
   MOZ_ASSERT(thread);
-  MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &aNativeStack,
-               thread, /* platformData */ nullptr);
+  MozStackWalkThread(StackWalkCallback, /* skipFrames */ 0, maxFrames,
+                     &aNativeStack, thread, /* context */ nullptr);
 #else
 # error "bad configuration"
 #endif
