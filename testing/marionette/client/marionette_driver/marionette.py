@@ -2017,7 +2017,7 @@ class Marionette(object):
         window outerWidth and outerHeight values, which include scroll bars,
         title bars, etc.
 
-        :returns: dictionary representation of current window width and height
+        :returns: Window rect.
         """
         warnings.warn("window_size property has been deprecated, please use get_window_rect()",
                       DeprecationWarning)
@@ -2036,23 +2036,43 @@ class Marionette(object):
         :param width: The width to resize the window to.
         :param height: The height to resize the window to.
 
+        :returns Window rect.
         """
         warnings.warn("set_window_size() has been deprecated, please use set_window_rect()",
                       DeprecationWarning)
         body = {"width": width, "height": height}
         return self._send_message("setWindowSize", body)
 
+    def minimize_window(self):
+        """Iconify the browser window currently receiving commands.
+        The action should be equivalent to the user pressing the minimize
+        button in the OS window.
+
+        Note that this command is not available on Fennec.  It may also
+        not be available in certain window managers.
+
+        :returns Window rect.
+        """
+        return self._send_message("WebDriver:MinimizeWindow")
+
     def maximize_window(self):
-        """ Resize the browser window currently receiving commands. The action
-        should be equivalent to the user pressing the maximize button
+        """Resize the browser window currently receiving commands.
+        The action should be equivalent to the user pressing the maximize
+        button in the OS window.
+
+
+        Note that this command is not available on Fennec.  It may also
+        not be available in certain window managers.
+
+        :returns: Window rect.
         """
         return self._send_message("maximizeWindow")
 
     def fullscreen(self):
-        """ Synchronously sets the user agent window to full screen as if the user
-        had done "View > Enter Full Screen",  or restores it if it is already
-        in full screen.
+        """Synchronously sets the user agent window to full screen as
+        if the user had done "View > Enter Full Screen",  or restores
+        it if it is already in full screen.
 
-        :returns: dictionary representation of current window width and height
+        :returns: Window rect.
         """
         return self._send_message("fullscreen")

@@ -2891,6 +2891,49 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
 };
 
 /**
+ * Synchronously minimizes the user agent window as if the user pressed
+ * the minimize button, or restores it if it is already minimized.
+ *
+ * Not supported on Fennec.
+ *
+ * @return {Object.<string, number>}
+ *     Window rect and window state.
+ *
+ * @throws {UnsupportedOperationError}
+ *     Not available for current application.
+ * @throws {NoSuchWindowError}
+ *     Top-level browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ */
+GeckoDriver.prototype.minimizeWindow = function* (cmd, resp) {
+  assert.firefox();
+  const win = assert.window(this.getCurrentWindow());
+  assert.noUserPrompt(this.dialog);
+
+  let state;
+  yield new Promise(resolve => {
+    win.addEventListener("sizemodechange", resolve, {once: true});
+
+    if (win.windowState == win.STATE_MINIMIZED) {
+      win.restore();
+      state = "normal";
+    } else {
+      win.minimize();
+      state = "minimized";
+    }
+  });
+
+  resp.body = {
+    x: win.screenX,
+    y: win.screenY,
+    width: win.outerWidth,
+    height: win.outerHeight,
+    state,
+  };
+};
+
+/**
  * Synchronously maximizes the user agent window as if the user pressed
  * the maximize button, or restores it if it is already maximized.
  *
@@ -3426,6 +3469,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:IsElementDisplayed": GeckoDriver.prototype.isElementDisplayed,
   "WebDriver:IsElementEnabled": GeckoDriver.prototype.isElementEnabled,
   "WebDriver:IsElementSelected": GeckoDriver.prototype.isElementSelected,
+  "WebDriver:MinimizeWindow": GeckoDriver.prototype.minimizeWindow,
   "WebDriver:MaximizeWindow": GeckoDriver.prototype.maximizeWindow,
   "WebDriver:Navigate": GeckoDriver.prototype.get,
   "WebDriver:NewSession": GeckoDriver.prototype.newSession,
