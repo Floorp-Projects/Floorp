@@ -2477,7 +2477,7 @@ ServoStyleSheet*
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
                      css::LoaderReusableStyleSheets* aReusableSheets,
-                     RawGeckoURLExtraData* aBaseURLData,
+                     RawGeckoURLExtraData* aURLExtraData,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
                      RawServoMediaListStrong aMediaList)
@@ -2493,7 +2493,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
                                 aURLStringLength);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nullptr,
-                          aBaseURLData->BaseURI());
+                          aURLExtraData->BaseURI());
 
   StyleSheet* previousFirstChild = aParent->GetFirstChild();
   if (NS_SUCCEEDED(rv)) {
@@ -2504,11 +2504,21 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
       !aParent->GetFirstChild() ||
       aParent->GetFirstChild() == previousFirstChild) {
     // Servo and Gecko have different ideas of what a valid URL is, so we might
-    // get in here with a URL string that NS_NewURI can't handle.  If so,
-    // silently do nothing.  Eventually we should be able to assert that the
-    // NS_NewURI succeeds, here.
+    // get in here with a URL string that NS_NewURI can't handle.  We may also
+    // reach here via an import cycle.  For the import cycle case, we need some
+    // sheet object per spec, even if its empty.  DevTools uses the URI to
+    // realize it has hit an import cycle, so we mark it complete to make the
+    // sheet readable from JS.
     RefPtr<ServoStyleSheet> emptySheet =
       aParent->CreateEmptyChildSheet(media.forget());
+    // Make a dummy URI if we don't have one because some methods assume
+    // non-null URIs.
+    if (!uri) {
+      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:invalid"));
+    }
+    emptySheet->SetURIs(uri, uri, uri);
+    emptySheet->SetPrincipal(aURLExtraData->GetPrincipal());
+    emptySheet->SetComplete();
     aParent->PrependStyleSheet(emptySheet);
     return emptySheet.forget().take();
   }
