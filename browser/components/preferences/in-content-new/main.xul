@@ -697,7 +697,7 @@
 
 
 <!-- DRM Content -->
-<groupbox id="drmGroup" data-category="paneGeneral" hidden="true">
+<groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
   <caption><label>&drmContent2.label;</label></caption>
   <grid id="contentGrid2">
     <columns>

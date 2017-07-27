@@ -413,14 +413,8 @@ this.ContentSearch = {
     Services.search.currentEngine = Services.search.getEngineByName(data);
   },
 
-  _onMessageManageEngines(msg, data) {
-    let browserWin = msg.target.ownerGlobal;
-    let pref = Services.prefs.getBoolPref("browser.preferences.useOldOrganization");
-    if (pref) {
-      browserWin.openPreferences("paneSearch", {origin: "contentSearch"});
-    } else {
-      browserWin.openPreferences("general-search", {origin: "contentSearch"});
-    }
+  _onMessageManageEngines(msg) {
+    msg.target.ownerGlobal.openPreferences("paneSearch", { origin: "contentSearch" });
   },
 
   async _onMessageGetSuggestions(msg, data) {

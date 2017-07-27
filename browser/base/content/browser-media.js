@@ -172,7 +172,7 @@ var gEMEHandler = {
         if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
           openPreferences("paneContent", {origin: "browserMedia"});
         } else {
-          openPreferences("panePrivacy", {origin: "browserMedia"});
+          openPreferences("general-drm", {origin: "browserMedia"});
         }
       },
       dismiss: true
