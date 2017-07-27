@@ -2451,7 +2451,7 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
           nsString json;
           json.Adopt(aDesc.formatJSON(aCx, PR_Now()));
           RefPtr<NotifyGCEndRunnable> notify = new NotifyGCEndRunnable(json);
-          NS_DispatchToMainThread(notify);
+          SystemGroup::Dispatch(TaskCategory::GarbageCollection, notify.forget());
         }
       }
 
