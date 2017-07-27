@@ -74,8 +74,6 @@ JS::Zone::Zone(JSRuntime* rt, ZoneGroup* group)
 
 Zone::~Zone()
 {
-    MOZ_ASSERT(compartments_.ref().empty());
-
     JSRuntime* rt = runtimeFromAnyThread();
     if (this == rt->gc.systemZone)
         rt->gc.systemZone = nullptr;
