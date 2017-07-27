@@ -56,8 +56,7 @@ class TrySelect(MachCommandBase):
         The |mach try| command is a frontend for scheduling tasks to
         run on try server using selectors. A selector is a subcommand
         that provides its own set of command line arguments and are
-        listed below. Currently there is only single selector called
-        `syntax`, but more selectors will be added in the future.
+        listed below.
 
         If no subcommand is specified, the `syntax` selector is run by
         default. Run |mach try syntax --help| for more information on
@@ -69,8 +68,59 @@ class TrySelect(MachCommandBase):
             'try', subcommand='syntax', context=self._mach_context, **kwargs)
 
     @SubCommand('try',
+                'fuzzy',
+                description='Select tasks on try using a fuzzy finder')
+    @CommandArgument('-u', '--update', action='store_true', default=False,
+                     help="Update fzf before running")
+    def try_fuzzy(self, update):
+        """Select which tasks to use with fzf.
+
+        This selector runs all task labels through a fuzzy finding interface.
+        All selected task labels and their dependencies will be scheduled on
+        try.
+
+        Keyboard Shortcuts
+        ------------------
+
+        When in the fuzzy finder interface, start typing to filter down the
+        task list. Then use the following keyboard shortcuts to select tasks:
+
+          accept: <enter>
+          cancel: <ctrl-c> or <esc>
+          cursor-up: <ctrl-k> or <up>
+          cursor-down: <ctrl-j> or <down>
+          toggle-select-down: <tab>
+          toggle-select-up: <shift-tab>
+          select-all: <ctrl-a>
+          deselect-all: <ctrl-d>
+          toggle-all: <ctrl-t>
+          clear-input: <alt-bspace>
+
+        There are many more shortcuts enabled by default, you can also define
+        your own shortcuts by setting `--bind` in the $FZF_DEFAULT_OPTS
+        environment variable. See `man fzf` for more info.
+
+        Extended Search
+        ---------------
+
+        When typing in search terms, the following modifiers can be applied:
+
+          'word: exact match (line must contain the literal string "word")
+          ^word: exact prefix match (line must start with literal "word")
+          word$: exact suffix match (line must end with literal "word")
+          !word: exact negation match (line must not contain literal "word")
+          'a | 'b: OR operator (joins two exact match operators together)
+
+        For example:
+
+          ^start 'exact | !ignore fuzzy end$
+        """
+        from tryselect.selectors.fuzzy import run_fuzzy_try
+        return run_fuzzy_try(update)
+
+    @SubCommand('try',
                 'syntax',
-                description='Push selected tasks using try syntax',
+                description='Select tasks on try using try syntax',
                 parser=syntax_parser)
     def try_syntax(self, **kwargs):
         """Push the current tree to try, with the specified syntax.
