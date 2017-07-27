@@ -631,6 +631,7 @@ ShouldSuppressLineBreak(const nsStyleContext* aContext,
   return false;
 }
 
+// FIXME(emilio): Why in GeckoStyleContext.cpp?
 void
 nsStyleContext::SetStyleBits()
 {

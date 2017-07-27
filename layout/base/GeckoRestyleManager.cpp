@@ -2227,6 +2227,24 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
     }
   }
 
+  if (auto* position = oldContext->PeekStylePosition()) {
+    const bool wasLegacyJustifyItems =
+      position->mJustifyItems & NS_STYLE_JUSTIFY_LEGACY;
+    const auto newJustifyItems = aNewContext->StylePosition()->mJustifyItems;
+    const bool isLegacyJustifyItems =
+       newJustifyItems & NS_STYLE_JUSTIFY_LEGACY;
+
+    // Children with justify-items: legacy may depend on our value.
+    if (wasLegacyJustifyItems != isLegacyJustifyItems ||
+        (wasLegacyJustifyItems && position->mJustifyItems != newJustifyItems)) {
+      LOG_RESTYLE_CONTINUE("legacy justify-items changed between old and new"
+                           " style contexts");
+      aRestyleResult = RestyleResult::eContinue;
+      aCanStopWithStyleChange = false;
+      return;
+    }
+  }
+
   // If the old and new style contexts differ in their
   // NS_STYLE_HAS_TEXT_DECORATION_LINES or NS_STYLE_HAS_PSEUDO_ELEMENT_DATA
   // bits, then we must keep restyling so that those new bit values are
