@@ -58,6 +58,11 @@ typedef enum FT_LcdFilter_
 #define SK_FONTHOST_CAIRO_STANDALONE 1
 #endif
 
+extern "C" {
+    extern void mozilla_LockFTLibrary(FT_Library aFTLibrary);
+    extern void mozilla_UnlockFTLibrary(FT_Library aFTLibrary);
+}
+
 static cairo_user_data_key_t kSkTypefaceKey;
 
 static bool gFontHintingEnabled = true;
@@ -744,6 +749,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
         isLCD(glyph) &&
         gSetLcdFilter;
     if (useLcdFilter) {
+        mozilla_LockFTLibrary(face->glyph->library);
         gSetLcdFilter(face->glyph->library, fLcdFilter);
     }
 
@@ -758,6 +764,7 @@ void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)
 
     if (useLcdFilter) {
         gSetLcdFilter(face->glyph->library, FT_LCD_FILTER_NONE);
+        mozilla_UnlockFTLibrary(face->glyph->library);
     }
 }
 

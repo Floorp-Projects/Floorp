@@ -186,6 +186,18 @@ mozilla_ReleaseFTFace(FT_Face aFace)
   mozilla::gfx::Factory::ReleaseFTFace(aFace);
 }
 
+void
+mozilla_LockFTLibrary(FT_Library aFTLibrary)
+{
+  mozilla::gfx::Factory::LockFTLibrary(aFTLibrary);
+}
+
+void
+mozilla_UnlockFTLibrary(FT_Library aFTLibrary)
+{
+  mozilla::gfx::Factory::UnlockFTLibrary(aFTLibrary);
+}
+
 }
 #endif
 
@@ -665,6 +677,20 @@ void
 Factory::ReleaseFTLibrary(FT_Library aFTLibrary)
 {
   FT_Done_FreeType(aFTLibrary);
+}
+
+void
+Factory::LockFTLibrary(FT_Library aFTLibrary)
+{
+  MOZ_ASSERT(mFTLock);
+  mFTLock->Lock();
+}
+
+void
+Factory::UnlockFTLibrary(FT_Library aFTLibrary)
+{
+  MOZ_ASSERT(mFTLock);
+  mFTLock->Unlock();
 }
 
 FT_Face
