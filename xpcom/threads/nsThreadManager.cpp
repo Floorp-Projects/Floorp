@@ -440,10 +440,9 @@ nsThreadManager::EnableMainThreadEventPrioritization()
   }
   sIsInitialized = true;
   MOZ_ASSERT(Preferences::IsServiceAvailable());
-  bool enable =
-    Preferences::GetBool("prioritized_input_events.enabled", false);
+  bool supported = Preferences::GetBool("input_event_queue.supported", false);
 
-  if (!enable) {
+  if (!supported) {
     return;
   }
   InputEventStatistics::Get().SetEnable(true);
