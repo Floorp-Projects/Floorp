@@ -479,8 +479,7 @@ TableRowsCollection::HandleInsert(nsIContent* aContainer,
 void
 TableRowsCollection::ContentAppended(nsIDocument* aDocument,
                                      nsIContent* aContainer,
-                                     nsIContent* aFirstNewContent,
-                                     int32_t aNewIndexInContainer)
+                                     nsIContent* aFirstNewContent)
 {
   if (!nsContentUtils::IsInSameAnonymousTree(mParent, aFirstNewContent) ||
       !InterestingContainer(aContainer)) {
@@ -504,8 +503,7 @@ TableRowsCollection::ContentAppended(nsIDocument* aDocument,
 void
 TableRowsCollection::ContentInserted(nsIDocument* aDocument,
                                      nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     int32_t aIndexInContainer)
+                                     nsIContent* aChild)
 {
   if (!nsContentUtils::IsInSameAnonymousTree(mParent, aChild) ||
       !InterestingContainer(aContainer)) {
@@ -519,7 +517,6 @@ void
 TableRowsCollection::ContentRemoved(nsIDocument* aDocument,
                                     nsIContent* aContainer,
                                     nsIContent* aChild,
-                                    int32_t aIndexInContainer,
                                     nsIContent* aPreviousSibling)
 {
   if (!nsContentUtils::IsInSameAnonymousTree(mParent, aChild) ||

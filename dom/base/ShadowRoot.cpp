@@ -493,8 +493,7 @@ ShadowRoot::AttributeChanged(nsIDocument* aDocument,
 void
 ShadowRoot::ContentAppended(nsIDocument* aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aFirstNewContent,
-                            int32_t aNewIndexInContainer)
+                            nsIContent* aFirstNewContent)
 {
   if (mInsertionPointChanged) {
     DistributeAllNodes();
@@ -525,8 +524,7 @@ ShadowRoot::ContentAppended(nsIDocument* aDocument,
 void
 ShadowRoot::ContentInserted(nsIDocument* aDocument,
                             nsIContent* aContainer,
-                            nsIContent* aChild,
-                            int32_t aIndexInContainer)
+                            nsIContent* aChild)
 {
   if (mInsertionPointChanged) {
     DistributeAllNodes();
@@ -553,7 +551,6 @@ void
 ShadowRoot::ContentRemoved(nsIDocument* aDocument,
                            nsIContent* aContainer,
                            nsIContent* aChild,
-                           int32_t aIndexInContainer,
                            nsIContent* aPreviousSibling)
 {
   if (mInsertionPointChanged) {

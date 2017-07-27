@@ -170,8 +170,7 @@ SVGUseElement::AttributeChanged(nsIDocument* aDocument,
 void
 SVGUseElement::ContentAppended(nsIDocument *aDocument,
                                nsIContent *aContainer,
-                               nsIContent *aFirstNewContent,
-                               int32_t aNewIndexInContainer)
+                               nsIContent *aFirstNewContent)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aContainer)) {
     TriggerReclone();
@@ -181,8 +180,7 @@ SVGUseElement::ContentAppended(nsIDocument *aDocument,
 void
 SVGUseElement::ContentInserted(nsIDocument *aDocument,
                                nsIContent *aContainer,
-                               nsIContent *aChild,
-                               int32_t aIndexInContainer)
+                               nsIContent *aChild)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
     TriggerReclone();
@@ -193,7 +191,6 @@ void
 SVGUseElement::ContentRemoved(nsIDocument *aDocument,
                               nsIContent *aContainer,
                               nsIContent *aChild,
-                              int32_t aIndexInContainer,
                               nsIContent *aPreviousSibling)
 {
   if (nsContentUtils::IsInSameAnonymousTree(this, aChild)) {
