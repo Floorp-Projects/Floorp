@@ -59,10 +59,10 @@ impl Zero for Au {
     }
 }
 
-// (1 << 30) - 1 lets us add/subtract two Au and check for overflow
+// 1 << 30 lets us add/subtract two Au and check for overflow
 // after the operation. Gecko uses the same min/max values
-pub const MAX_AU: Au = Au((1 << 30) - 1);
-pub const MIN_AU: Au = Au(- ((1 << 30) - 1));
+pub const MAX_AU: Au = Au(1 << 30);
+pub const MIN_AU: Au = Au(- (1 << 30));
 
 impl Encodable for Au {
     fn encode<S: Encoder>(&self, e: &mut S) -> Result<(), S::Error> {
