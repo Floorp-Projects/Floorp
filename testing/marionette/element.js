@@ -22,6 +22,14 @@ Cu.import("chrome://marionette/content/wait.js");
 
 const logger = Log.repository.getLogger("Marionette");
 
+this.EXPORTED_SYMBOLS = ["element"];
+
+const DOCUMENT_POSITION_DISCONNECTED = 1;
+const XMLNS = "http://www.w3.org/1999/xhtml";
+
+const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator);
+
 /**
  * This module provides shared functionality for dealing with DOM-
  * and web elements in Marionette.
@@ -34,19 +42,12 @@ const logger = Log.repository.getLogger("Marionette");
  * web element reference for every element representing the same element
  * is the same.
  *
- * The @code{element.Store} provides a mapping between web element
+ * The {@link element.Store} provides a mapping between web element
  * references and DOM elements for each browsing context.  It also provides
  * functionality for looking up and retrieving elements.
+ *
+ * @namespace
  */
-
-this.EXPORTED_SYMBOLS = ["element"];
-
-const DOCUMENT_POSITION_DISCONNECTED = 1;
-const XMLNS = "http://www.w3.org/1999/xhtml";
-
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
-
 this.element = {};
 
 element.Key = "element-6066-11e4-a52e-4f735466cecf";
@@ -71,6 +72,9 @@ element.Strategy = {
  *
  * Elements are added by calling |add(el)| or |addAll(elements)|, and
  * may be queried by their web element reference using |get(element)|.
+ *
+ * @class
+ * @memberof element
  */
 element.Store = class {
   constructor() {
@@ -236,7 +240,7 @@ element.Store = class {
  * @param {Object.<string, ?>} opts
  *     Options.
  *
- * @return {Promise: (nsIDOMElement|Array<nsIDOMElement>)}
+ * @return {Promise.<(nsIDOMElement|Array.<nsIDOMElement>)>}
  *     Single element or a sequence of elements.
  *
  * @throws InvalidSelectorError
@@ -612,7 +616,7 @@ element.makeWebElement = function(uuid) {
  * Checks if |ref| has either |element.Key| or |element.LegacyKey|
  * as properties.
  *
- * @param {?} ref
+ * @param {Object.<string, string>} ref
  *     Object that represents a web element reference.
  * @return {boolean}
  *     True if |ref| has either expected property.

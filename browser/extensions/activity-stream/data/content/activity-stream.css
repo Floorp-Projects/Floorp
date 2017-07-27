@@ -78,7 +78,7 @@ body,
 
 body {
   background: #F6F6F8;
-  color: #383E49;
+  color: #0C0C0D;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu', 'Helvetica Neue', sans-serif;
   font-size: 16px; }
 
@@ -137,7 +137,7 @@ a {
     background: #FBFBFB;
     border: solid 1px #BFBFBF;
     border-radius: 5px;
-    color: #858585;
+    color: #0C0C0D;
     cursor: pointer;
     padding: 10px 30px; }
     .actions button:hover {
@@ -185,6 +185,8 @@ main {
   font-weight: bold;
   text-transform: uppercase;
   margin: 0 0 18px; }
+  .section-title span {
+    vertical-align: middle; }
 
 .top-sites-list {
   list-style: none;
@@ -373,7 +375,8 @@ main {
 .topic {
   font-size: 13px;
   color: #BFC0C7;
-  min-width: 780px; }
+  min-width: 780px;
+  line-height: 16px; }
   .topic ul {
     display: inline;
     padding-left: 12px; }
@@ -396,7 +399,7 @@ main {
     margin-left: 5px;
     background-image: url("assets/topic-show-more-12.svg");
     background-repeat: no-repeat;
-    background-position-y: 2px; }
+    vertical-align: middle; }
 
 .search-wrapper {
   cursor: default;
@@ -499,7 +502,7 @@ main {
           background: #2B99FF;
           color: #FFF; }
           .context-menu > ul > li > a:hover a, .context-menu > ul > li > a:focus a {
-            color: #383E49; }
+            color: #0C0C0D; }
           .context-menu > ul > li > a:hover:hover, .context-menu > ul > li > a:hover:focus, .context-menu > ul > li > a:focus:hover, .context-menu > ul > li > a:focus:focus {
             color: #FFF; }
 
@@ -734,14 +737,14 @@ main {
   .card-outer .card-title {
     margin: 0 0 2px;
     font-size: inherit;
-    word-wrap: break-word; }
+    word-wrap: break-word;
+    line-height: 19px; }
   .card-outer .card-description {
     font-size: 12px;
     margin: 0;
     word-wrap: break-word;
     overflow: hidden;
-    line-height: 18px;
-    max-height: 34px; }
+    line-height: 19px; }
   .card-outer .card-context {
     padding: 16px 16px 14px 14px;
     position: absolute;

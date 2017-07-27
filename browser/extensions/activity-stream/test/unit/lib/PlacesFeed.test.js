@@ -99,6 +99,49 @@ describe("PlacesFeed", () => {
       feed.onAction({type: at.DELETE_HISTORY_URL, data: "guava.com"});
       assert.calledWith(global.NewTabUtils.activityStreamLinks.deleteHistoryEntry, "guava.com");
     });
+    it("should call openNewWindow with the correct url on OPEN_NEW_WINDOW", () => {
+      sinon.stub(feed, "openNewWindow");
+      const openWindowAction = {type: at.OPEN_NEW_WINDOW, data: {url: "foo.com"}};
+      feed.onAction(openWindowAction);
+      assert.calledWith(feed.openNewWindow, openWindowAction);
+    });
+    it("should call openNewWindow with the correct url and privacy args on OPEN_PRIVATE_WINDOW", () => {
+      sinon.stub(feed, "openNewWindow");
+      const openWindowAction = {type: at.OPEN_PRIVATE_WINDOW, data: {url: "foo.com"}};
+      feed.onAction(openWindowAction);
+      assert.calledWith(feed.openNewWindow, openWindowAction, true);
+    });
+    it("should call openNewWindow with the correct url on OPEN_NEW_WINDOW", () => {
+      const openWindowAction = {
+        type: at.OPEN_NEW_WINDOW,
+        data: {url: "foo.com"},
+        _target: {browser: {ownerGlobal: {openLinkIn: () => {}}}}
+      };
+      sinon.stub(openWindowAction._target.browser.ownerGlobal, "openLinkIn");
+      feed.onAction(openWindowAction);
+      assert.calledOnce(openWindowAction._target.browser.ownerGlobal.openLinkIn);
+    });
+    it("should open link on OPEN_LINK", () => {
+      sinon.stub(feed, "openNewWindow");
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: {url: "foo.com"},
+        _target: {browser: {loadURI: sinon.spy()}}
+      };
+      feed.onAction(openLinkAction);
+      assert.calledWith(openLinkAction._target.browser.loadURI, openLinkAction.data.url);
+    });
+    it("should open link with referrer on OPEN_LINK", () => {
+      globals.set("Services", {io: {newURI: url => `URI:${url}`}});
+      sinon.stub(feed, "openNewWindow");
+      const openLinkAction = {
+        type: at.OPEN_LINK,
+        data: {url: "foo.com", referrer: "foo.com/ref"},
+        _target: {browser: {loadURI: sinon.spy()}}
+      };
+      feed.onAction(openLinkAction);
+      assert.calledWith(openLinkAction._target.browser.loadURI, openLinkAction.data.url, `URI:${openLinkAction.data.referrer}`);
+    });
     it("should save to Pocket on SAVE_TO_POCKET", () => {
       feed.onAction({type: at.SAVE_TO_POCKET, data: {site: {url: "raspberry.com", title: "raspberry"}}, _target: {browser: {}}});
       assert.calledWith(global.Pocket.savePage, {}, "raspberry.com", "raspberry");

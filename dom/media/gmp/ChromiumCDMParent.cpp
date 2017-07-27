@@ -651,7 +651,7 @@ ChromiumCDMParent::RecvIncreaseShmemPoolSize()
 bool
 ChromiumCDMParent::PurgeShmems()
 {
-  GMP_LOG("ChromiumCDMParent::PurgeShmems(this=%p) frame_size=%" PRIuSIZE
+  GMP_LOG("ChromiumCDMParent::PurgeShmems(this=%p) frame_size=%zu"
           " limit=%" PRIu32 " active=%" PRIu32,
           this,
           mVideoFrameBufferSize,
@@ -673,7 +673,7 @@ bool
 ChromiumCDMParent::EnsureSufficientShmems(size_t aVideoFrameSize)
 {
   GMP_LOG("ChromiumCDMParent::EnsureSufficientShmems(this=%p) "
-          "size=%" PRIuSIZE " expected_size=%" PRIuSIZE " limit=%" PRIu32
+          "size=%zu expected_size=%zu limit=%" PRIu32
           " active=%" PRIu32,
           this,
           aVideoFrameSize,

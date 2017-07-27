@@ -19,6 +19,9 @@
 #include "gfxVR.h"
 #include "VRDisplayHost.h"
 
+#if defined(XP_MACOSX)
+class MacIOSurface;
+#endif
 namespace mozilla {
 namespace gfx {
 namespace impl {
@@ -35,6 +38,11 @@ protected:
   virtual void StopPresentation() override;
 #if defined(XP_WIN)
   virtual bool SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
+                           const IntSize& aSize,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect) override;
+#elif defined(XP_MACOSX)
+  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface,
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
@@ -58,6 +66,11 @@ protected:
 
   void UpdateStageParameters();
   void PollEvents();
+  bool SubmitFrame(void* aTextureHandle,
+                   ::vr::ETextureType aTextureType,
+                   const IntSize& aSize,
+                   const gfx::Rect& aLeftEyeRect,
+                   const gfx::Rect& aRightEyeRect);
 };
 
 class VRControllerOpenVR : public VRControllerHost

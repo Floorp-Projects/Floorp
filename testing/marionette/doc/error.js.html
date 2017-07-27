@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: error.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: error.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {interfaces: Ci, utils: Cu} = Components;
+
+const ERRORS = new Set([
+  "ElementClickInterceptedError",
+  "ElementNotAccessibleError",
+  "ElementNotInteractableError",
+  "InsecureCertificateError",
+  "InvalidArgumentError",
+  "InvalidCookieDomainError",
+  "InvalidElementStateError",
+  "InvalidSelectorError",
+  "InvalidSessionIDError",
+  "JavaScriptError",
+  "MoveTargetOutOfBoundsError",
+  "NoAlertOpenError",
+  "NoSuchElementError",
+  "NoSuchFrameError",
+  "NoSuchWindowError",
+  "ScriptTimeoutError",
+  "SessionNotCreatedError",
+  "StaleElementReferenceError",
+  "TimeoutError",
+  "UnableToSetCookieError",
+  "UnexpectedAlertOpenError",
+  "UnknownCommandError",
+  "UnknownError",
+  "UnsupportedOperationError",
+  "WebDriverError",
+]);
+
+const BUILTIN_ERRORS = new Set([
+  "Error",
+  "EvalError",
+  "InternalError",
+  "RangeError",
+  "ReferenceError",
+  "SyntaxError",
+  "TypeError",
+  "URIError",
+]);
+
+this.EXPORTED_SYMBOLS = ["error", "error.pprint"].concat(Array.from(ERRORS));
+
+/** @namespace */
+this.error = {};
+
+/**
+ * Check if |val| is an instance of the |Error| prototype.
+ *
+ * Because error objects may originate from different globals, comparing
+ * the prototype of the left hand side with the prototype property from
+ * the right hand side, which is what |instanceof| does, will not work.
+ * If the LHS and RHS come from different globals, this check will always
+ * fail because the two objects will not have the same identity.
+ *
+ * Therefore it is not safe to use |instanceof| in any multi-global
+ * situation, e.g. in content across multiple Window objects or anywhere
+ * in chrome scope.
+ *
+ * This function also contains a special check if |val| is an XPCOM
+ * |nsIException| because they are special snowflakes and may indeed
+ * cause Firefox to crash if used with |instanceof|.
+ *
+ * @param {*} val
+ *     Any value that should be undergo the test for errorness.
+ * @return {boolean}
+ *     True if error, false otherwise.
+ */
+error.isError = function(val) {
+  if (val === null || typeof val != "object") {
+    return false;
+  } else if (val instanceof Ci.nsIException) {
+    return true;
+  }
+
+  // DOMRectList errors on string comparison
+  try {
+    let proto = Object.getPrototypeOf(val);
+    return BUILTIN_ERRORS.has(proto.toString());
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Checks if obj is an object in the WebDriverError prototypal chain.
+ */
+error.isWebDriverError = function(obj) {
+  return error.isError(obj) &amp;&amp;
+      ("name" in obj &amp;&amp; ERRORS.has(obj.name));
+};
+
+/**
+ * Ensures error instance is a WebDriverError.
+ *
+ * If the given error is already in the WebDriverError prototype
+ * chain, |err| is returned unmodified.  If it is not, it is wrapped
+ * in UnknownError.
+ *
+ * @param {Error} err
+ *     Error to conditionally turn into a WebDriverError.
+ *
+ * @return {WebDriverError}
+ *     If |err| is a WebDriverError, it is returned unmodified.
+ *     Otherwise an UnknownError type is returned.
+ */
+error.wrap = function(err) {
+  if (error.isWebDriverError(err)) {
+    return err;
+  }
+  return new UnknownError(err);
+};
+
+/**
+ * Unhandled error reporter.  Dumps the error and its stacktrace to console,
+ * and reports error to the Browser Console.
+ */
+error.report = function(err) {
+  let msg = "Marionette threw an error: " + error.stringify(err);
+  dump(msg + "\n");
+  if (Cu.reportError) {
+    Cu.reportError(msg);
+  }
+};
+
+/**
+ * Prettifies an instance of Error and its stacktrace to a string.
+ */
+error.stringify = function(err) {
+  try {
+    let s = err.toString();
+    if ("stack" in err) {
+      s += "\n" + err.stack;
+    }
+    return s;
+  } catch (e) {
+    return "&lt;unprintable error>";
+  }
+};
+
+/**
+ * Pretty-print values passed to template strings.
+ *
+ * Usage:
+ *
+ *     const {pprint} = Cu.import("chrome://marionette/content/error.js", {});
+ *     let bool = {value: true};
+ *     pprint`Expected boolean, got ${bool}`;
+ *     => 'Expected boolean, got [object Object] {"value": true}'
+ *
+ *     let htmlElement = document.querySelector("input#foo");
+ *     pprint`Expected element ${htmlElement}`;
+ *     => 'Expected element &lt;input id="foo" class="bar baz">'
+ */
+error.pprint = function(ss, ...values) {
+  function prettyObject(obj) {
+    let proto = Object.prototype.toString.call(obj);
+    let s = "";
+    try {
+      s = JSON.stringify(obj);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        s = `&lt;${e.message}>`;
+      } else {
+        throw e;
+      }
+    }
+    return proto + " " + s;
+  }
+
+  function prettyElement(el) {
+    let ident = [];
+    if (el.id) {
+      ident.push(`id="${el.id}"`);
+    }
+    if (el.classList.length > 0) {
+      ident.push(`class="${el.className}"`);
+    }
+
+    let idents = "";
+    if (ident.length > 0) {
+      idents = " " + ident.join(" ");
+    }
+
+    return `&lt;${el.localName}${idents}>`;
+  }
+
+  let res = [];
+  for (let i = 0; i &lt; ss.length; i++) {
+    res.push(ss[i]);
+    if (i &lt; values.length) {
+      let val = values[i];
+      let s;
+      try {
+        if (val &amp;&amp; val.nodeType === 1) {
+          s = prettyElement(val);
+        } else {
+          s = prettyObject(val);
+        }
+      } catch (e) {
+        s = typeof val;
+      }
+      res.push(s);
+    }
+  }
+  return res.join("");
+};
+
+/**
+ * WebDriverError is the prototypal parent of all WebDriver errors.
+ * It should not be used directly, as it does not correspond to a real
+ * error in the specification.
+ */
+class WebDriverError extends Error {
+  /**
+   * @param {(string|Error)=} x
+   *     Optional string describing error situation or Error instance
+   *     to propagate.
+   */
+  constructor(x) {
+    super(x);
+    this.name = this.constructor.name;
+    this.status = "webdriver error";
+
+    // Error's ctor does not preserve x' stack
+    if (error.isError(x)) {
+      this.stack = x.stack;
+    }
+  }
+
+  /**
+   * @return {Object.&lt;string, string>}
+   *     JSON serialisation of error prototype.
+   */
+  toJSON() {
+    return {
+      error: this.status,
+      message: this.message || "",
+      stacktrace: this.stack || "",
+    }
+  }
+
+  /**
+   * Unmarshals a JSON error representation to the appropriate Marionette
+   * error type.
+   *
+   * @param {Object.&lt;string, string>} json
+   *     Error object.
+   *
+   * @return {Error}
+   *     Error prototype.
+   */
+  static fromJSON(json) {
+    if (typeof json.error == "undefined") {
+      let s = JSON.stringify(json);
+      throw new TypeError("Undeserialisable error type: " + s);
+    }
+    if (!STATUSES.has(json.error)) {
+      throw new TypeError("Not of WebDriverError descent: " + json.error);
+    }
+
+    let cls = STATUSES.get(json.error);
+    let err = new cls();
+    if ("message" in json) {
+      err.message = json.message;
+    }
+    if ("stacktrace" in json) {
+      err.stack = json.stacktrace;
+    }
+    return err;
+  }
+}
+
+/** The Gecko a11y API indicates that the element is not accessible. */
+class ElementNotAccessibleError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "element not accessible";
+  }
+}
+
+/**
+ * An element click could not be completed because the element receiving
+ * the events is obscuring the element that was requested clicked.
+ *
+ * @param {Element=} obscuredEl
+ *     Element obscuring the element receiving the click.  Providing this
+ *     is not required, but will produce a nicer error message.
+ * @param {Map.&lt;string, number>} coords
+ *     Original click location.  Providing this is not required, but
+ *     will produce a nicer error message.
+ */
+class ElementClickInterceptedError extends WebDriverError {
+  constructor(obscuredEl = undefined, coords = undefined) {
+    let msg = "";
+    if (obscuredEl &amp;&amp; coords) {
+      const doc = obscuredEl.ownerDocument;
+      const overlayingEl = doc.elementFromPoint(coords.x, coords.y);
+
+      switch (obscuredEl.style.pointerEvents) {
+        case "none":
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              `because it does not have pointer events enabled, ` +
+              error.pprint`and element ${overlayingEl} ` +
+              `would receive the click instead`;
+          break;
+
+        default:
+          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+              `at point (${coords.x},${coords.y}) ` +
+              error.pprint`because another element ${overlayingEl} ` +
+              `obscures it`;
+          break;
+      }
+    }
+
+    super(msg);
+    this.status = "element click intercepted";
+  }
+}
+
+/**
+ * A command could not be completed because the element is not pointer-
+ * or keyboard interactable.
+ */
+class ElementNotInteractableError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "element not interactable";
+  }
+}
+
+/**
+ * Navigation caused the user agent to hit a certificate warning, which
+ * is usually the result of an expired or invalid TLS certificate.
+ */
+class InsecureCertificateError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "insecure certificate";
+  }
+}
+
+/** The arguments passed to a command are either invalid or malformed. */
+class InvalidArgumentError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "invalid argument";
+  }
+}
+
+class InvalidCookieDomainError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "invalid cookie domain";
+  }
+}
+
+class InvalidElementStateError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "invalid element state";
+  }
+}
+
+class InvalidSelectorError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "invalid selector";
+  }
+}
+
+class InvalidSessionIDError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "invalid session id";
+  }
+}
+
+/**
+ * Creates a richly annotated error for an error situation that occurred
+ * whilst evaluating injected scripts.
+ */
+class JavaScriptError extends WebDriverError {
+  /**
+   * @param {(string|Error)} x
+   *     An Error object instance or a string describing the error
+   *     situation.
+   * @param {string=} fnName
+   *     Name of the function to use in the stack trace message.
+   * @param {string=} file
+   *     Filename of the test file on the client.
+   * @param {number=} line
+   *     Line number of |file|.
+   * @param {string=} script
+   *     Script being executed, in text form.
+   */
+  constructor(x,
+      {fnName = null, file = null, line = null, script = null} = {}) {
+    let msg = String(x);
+    let trace = "";
+
+    if (fnName !== null) {
+      trace += fnName;
+      if (file !== null) {
+        trace += ` @${file}`;
+        if (line !== null) {
+          trace += `, line ${line}`;
+        }
+      }
+    }
+
+    if (error.isError(x)) {
+      let jsStack = x.stack.split("\n");
+      let match = jsStack[0].match(/:(\d+):\d+$/);
+      let jsLine = match ? parseInt(match[1]) : 0;
+      if (script !== null) {
+        let src = script.split("\n")[jsLine];
+        trace += "\n" +
+          `inline javascript, line ${jsLine}\n` +
+          `src: "${src}"`;
+      }
+      trace += "\nStack:\n" + x.stack;
+    }
+
+    super(msg);
+    this.status = "javascript error";
+    this.stack = trace;
+  }
+}
+
+class MoveTargetOutOfBoundsError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "move target out of bounds";
+  }
+}
+
+class NoAlertOpenError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such alert";
+  }
+}
+
+class NoSuchElementError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such element";
+  }
+}
+
+class NoSuchFrameError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such frame";
+  }
+}
+
+class NoSuchWindowError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such window";
+  }
+}
+
+class ScriptTimeoutError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "script timeout";
+  }
+}
+
+class SessionNotCreatedError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "session not created";
+  }
+}
+
+class StaleElementReferenceError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "stale element reference";
+  }
+}
+
+class TimeoutError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "timeout";
+  }
+}
+
+class UnableToSetCookieError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "unable to set cookie";
+  }
+}
+
+class UnexpectedAlertOpenError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "unexpected alert open";
+  }
+}
+
+class UnknownCommandError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "unknown command";
+  }
+}
+
+class UnknownError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "unknown error";
+  }
+}
+
+class UnsupportedOperationError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "unsupported operation";
+  }
+}
+
+const STATUSES = new Map([
+  ["element click intercepted", ElementClickInterceptedError],
+  ["element not accessible", ElementNotAccessibleError],
+  ["element not interactable", ElementNotInteractableError],
+  ["insecure certificate", InsecureCertificateError],
+  ["invalid argument", InvalidArgumentError],
+  ["invalid cookie domain", InvalidCookieDomainError],
+  ["invalid element state", InvalidElementStateError],
+  ["invalid selector", InvalidSelectorError],
+  ["invalid session id", InvalidSessionIDError],
+  ["javascript error", JavaScriptError],
+  ["move target out of bounds", MoveTargetOutOfBoundsError],
+  ["no alert open", NoAlertOpenError],
+  ["no such element", NoSuchElementError],
+  ["no such frame", NoSuchFrameError],
+  ["no such window", NoSuchWindowError],
+  ["script timeout", ScriptTimeoutError],
+  ["session not created", SessionNotCreatedError],
+  ["stale element reference", StaleElementReferenceError],
+  ["timeout", TimeoutError],
+  ["unable to set cookie", UnableToSetCookieError],
+  ["unexpected alert open", UnexpectedAlertOpenError],
+  ["unknown command", UnknownCommandError],
+  ["unknown error", UnknownError],
+  ["unsupported operation", UnsupportedOperationError],
+  ["webdriver error", WebDriverError],
+]);
+
+// Errors must be expored on the local this scope so that the
+// EXPORTED_SYMBOLS and the Cu.import("foo", {}) machinery sees them.
+// We could assign each error definition directly to |this|, but
+// because they are Error prototypes this would mess up their names.
+for (let cls of STATUSES.values()) {
+  this[cls.name] = cls;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

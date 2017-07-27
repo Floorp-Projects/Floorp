@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>browser_searchSuggestionEngine searchSuggestionEngine.xml</ShortName>
+<!-- Redirect the actual search request to the test-server because of proxy restriction -->
+<Url type="application/x-suggestions+json" method="GET" template="http://mochi.test:8888/browser/browser/base/content/test/urlbar/searchSuggestionEngine.sjs?{searchTerms}"/>
+<!-- Redirect speculative connect to a local http server we run for this test -->
+<Url type="text/html" method="GET" template="http://localhost:20709/" rel="searchform">
+  <Param name="terms" value="{searchTerms}"/>
+</Url>
+</SearchPlugin>

@@ -21,11 +21,26 @@ this.EXPORTED_SYMBOLS = [
 
 const logger = Log.repository.getLogger("Marionette");
 
+/**
+ * Messages may originate from either the server or the client.
+ * Because the remote protocol is full duplex, both endpoints may be the
+ * origin of both commands and responses.
+ *
+ * @enum
+ * @see {@link Message}
+ */
 const MessageOrigin = {
+  /** Indicates that the message originates from the client. */
   Client: 0,
+  /** Indicates that the message originates from the server. */
   Server: 1,
 };
 
+/**
+ * Representation of the packets transproted over the wire.
+ *
+ * @class
+ */
 this.Message = {};
 
 /**
@@ -36,8 +51,9 @@ this.Message = {};
  *     message type, message ID, method name or error, and parameters
  *     or result.
  *
- * @return {(Command,Response)}
- *     Based on the message type, a Command or Response instance.
+ * @return {Message}
+ *     Based on the message type, a {@link Command} or {@link Response}
+ *     instance.
  *
  * @throws {TypeError}
  *     If the message type is not recognised.
@@ -95,7 +111,7 @@ Message.fromMsg = function(data) {
  *     Message ID unique identifying this message.
  * @param {string} name
  *     Command name.
- * @param {Object<string, ?>} params
+ * @param {Object.<string, ?>} params
  *     Command parameters.
  */
 class Command {
@@ -190,6 +206,13 @@ const validator = {
 const ResponseBody = () => new Proxy({}, validator);
 
 /**
+ * @callback ResponseCallback
+ *
+ * @param {Response} resp
+ *     Response to handle.
+ */
+
+/**
  * Represents the response returned from the remote end after execution
  * of its corresponding command.
  *
@@ -205,7 +228,7 @@ const ResponseBody = () => new Proxy({}, validator);
  * @param {number} msgID
  *     Message ID tied to the corresponding command request this is a
  *     response for.
- * @param {function(Response|Message)} respHandler
+ * @param {ResponseHandler} respHandler
  *     Function callback called on sending the response.
  */
 class Response {

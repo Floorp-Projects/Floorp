@@ -24,7 +24,11 @@ this.EXPORTED_SYMBOLS = ["assert"];
 const isFennec = () => AppConstants.platform == "android";
 const isFirefox = () => Services.appinfo.name == "Firefox";
 
-/** Shorthands for common assertions made in Marionette. */
+/**
+ * Shorthands for common assertions made in Marionette.
+ *
+ * @namespace
+ */
 this.assert = {};
 
 /**

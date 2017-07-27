@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include <stdarg.h>
 
@@ -163,7 +162,7 @@ void
 JSONPrinter::property(const char* name, size_t value)
 {
     propertyName(name);
-    out_.printf("%" PRIuSIZE, value);
+    out_.printf("%zu", value);
 }
 #endif
 

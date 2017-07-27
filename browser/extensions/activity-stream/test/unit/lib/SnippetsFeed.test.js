@@ -1,29 +1,60 @@
 const {SnippetsFeed} = require("lib/SnippetsFeed.jsm");
-const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
+const {actionTypes: at} = require("common/Actions.jsm");
+const {GlobalOverrider} = require("test/unit/utils");
+
+const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+
+let overrider = new GlobalOverrider();
 
 describe("SnippetsFeed", () => {
   let sandbox;
+  let clock;
   beforeEach(() => {
+    clock = sinon.useFakeTimers();
+    overrider.set({
+      ProfileAge: class ProfileAge {
+        constructor() {
+          this.created = Promise.resolve(0);
+          this.reset = Promise.resolve(WEEK_IN_MS);
+        }
+      }
+    });
     sandbox = sinon.sandbox.create();
   });
   afterEach(() => {
+    clock.restore();
+    overrider.restore();
     sandbox.restore();
   });
-  it("should dispatch the right version and snippetsURL on INIT", () => {
+  it("should dispatch a SNIPPETS_DATA action with the right data on INIT", async () => {
     const url = "foo.com/%STARTPAGE_VERSION%";
     sandbox.stub(global.Services.prefs, "getStringPref").returns(url);
+    sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
 
-    feed.onAction({type: at.INIT});
+    clock.tick(WEEK_IN_MS * 2);
 
-    assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({
-      type: at.SNIPPETS_DATA,
-      data: {
-        snippetsURL: "foo.com/4",
-        version: 4
-      }
-    }));
+    await feed.init();
+
+    assert.calledOnce(feed.store.dispatch);
+
+    const action = feed.store.dispatch.firstCall.args[0];
+    assert.propertyVal(action, "type", at.SNIPPETS_DATA);
+    assert.isObject(action.data);
+    assert.propertyVal(action.data, "snippetsURL", "foo.com/5");
+    assert.propertyVal(action.data, "version", 5);
+    assert.propertyVal(action.data, "profileCreatedWeeksAgo", 2);
+    assert.propertyVal(action.data, "profileResetWeeksAgo", 1);
+    assert.propertyVal(action.data, "telemetryEnabled", true);
+  });
+  it("should call .init on an INIT aciton", () => {
+    const feed = new SnippetsFeed();
+    sandbox.stub(feed, "init");
+    feed.store = {dispatch: sandbox.stub()};
+
+    feed.onAction({type: at.INIT});
+    assert.calledOnce(feed.init);
   });
   it("should call .init when a FEED_INIT happens for feeds.snippets", () => {
     const feed = new SnippetsFeed();
@@ -41,20 +72,5 @@ describe("SnippetsFeed", () => {
     feed.uninit();
 
     assert.calledWith(feed.store.dispatch, {type: at.SNIPPETS_RESET});
-  });
-  describe("_onUrlChange", () => {
-    it("should dispatch a new snippetsURL", () => {
-      const url = "boo.com/%STARTPAGE_VERSION%";
-      sandbox.stub(global.Services.prefs, "getStringPref").returns(url);
-      const feed = new SnippetsFeed();
-      feed.store = {dispatch: sandbox.stub()};
-
-      feed._onUrlChange();
-
-      assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({
-        type: at.SNIPPETS_DATA,
-        data: {snippetsURL: "boo.com/4"}
-      }));
-    });
   });
 });

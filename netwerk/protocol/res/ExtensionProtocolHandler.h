@@ -32,7 +32,6 @@ public:
    *
    * @param aChildURI a moz-extension URI sent from the child that refers
    *        to a web accessible resource file in an enabled unpacked extension
-   * @param aChildLoadInfo the loadinfo for the request sent from the child
    * @param aTerminateSender out param set to true when the params are invalid
    *        and indicate the child should be terminated. If |aChildURI| is
    *        not a moz-extension URI, the child is in an invalid state and
@@ -46,7 +45,6 @@ public:
    *         set to true.
    */
   Result<nsCOMPtr<nsIInputStream>, nsresult> NewStream(nsIURI* aChildURI,
-                                                       nsILoadInfo* aChildLoadInfo,
                                                        bool* aTerminateSender);
 
   /**
@@ -55,7 +53,6 @@ public:
    *
    * @param aChildURI a moz-extension URI sent from the child that refers
    *        to a web accessible resource file in an enabled unpacked extension
-   * @param aChildLoadInfo the loadinfo for the request sent from the child
    * @param aTerminateSender out param set to true when the params are invalid
    *        and indicate the child should be terminated. If |aChildURI| is
    *        not a moz-extension URI, the child is in an invalid state and
@@ -71,7 +68,6 @@ public:
    *         set to true.
    */
   Result<Ok, nsresult> NewFD(nsIURI* aChildURI,
-                             nsILoadInfo* aChildLoadInfo,
                              bool* aTerminateSender,
                              NeckoParent::GetExtensionFDResolver& aResolve);
 

@@ -10,11 +10,12 @@ Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["navigate"];
 
+/** @namespace */
 this.navigate = {};
 
 /**
  * Determines if we expect to get a DOM load event (DOMContentLoaded)
- * on navigating to the |future| URL.
+ * on navigating to the <code>future</code> URL.
  *
  * @param {string} current
  *     URL the browser is currently visiting.
@@ -25,8 +26,8 @@ this.navigate = {};
  *     Full page load would be expected if future is followed.
  *
  * @throws TypeError
- *     If |current| is not defined, or any of |current| or |future|
- *     are invalid URLs.
+ *     If <code>current</code> is not defined, or any of
+ *     <code>current</code> or <code>future</code>  are invalid URLs.
  */
 navigate.isLoadEventExpected = function(current, future = undefined) {
   // assume we will go somewhere exciting

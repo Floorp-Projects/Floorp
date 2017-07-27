@@ -8,7 +8,6 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Printf.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 
 #include "mozilla/net/CookieServiceChild.h"
@@ -2914,7 +2913,7 @@ nsCookieService::EnsureReadDomain(const nsCookieKey &aKey)
   mDefaultDBState->readSet.PutEntry(aKey);
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("EnsureReadDomain(): %" PRIuSIZE " cookies read for base domain %s, "
+    ("EnsureReadDomain(): %zu cookies read for base domain %s, "
      " originAttributes = %s", array.Length(), aKey.mBaseDomain.get(),
      suffix.get()));
 }
@@ -3011,7 +3010,7 @@ nsCookieService::EnsureReadComplete()
   mDefaultDBState->readSet.Clear();
 
   COOKIE_LOGSTRING(LogLevel::Debug,
-    ("EnsureReadComplete(): %" PRIuSIZE " cookies read", array.Length()));
+    ("EnsureReadComplete(): %zu cookies read", array.Length()));
 }
 
 NS_IMETHODIMP

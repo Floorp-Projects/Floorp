@@ -6,8 +6,9 @@
 #include "mozilla/layers/WebRenderScrollData.h"
 
 #include "Layers.h"
+#include "LayersLogging.h"
+#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/Unused.h"
-#include "Layers.h"
 #include "nsTArray.h"
 #include "UnitTransforms.h"
 
@@ -16,6 +17,12 @@ namespace layers {
 
 WebRenderLayerScrollData::WebRenderLayerScrollData()
   : mDescendantCount(-1)
+  , mTransformIsPerspective(false)
+  , mEventRegionsOverride(EventRegionsOverride::NoOverride)
+  , mScrollbarAnimationId(0)
+  , mScrollbarTargetContainerId(FrameMetrics::NULL_SCROLL_ID)
+  , mIsScrollbarContainer(false)
+  , mFixedPosScrollContainerId(FrameMetrics::NULL_SCROLL_ID)
 {
 }
 
@@ -54,6 +61,47 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   mFixedPosScrollContainerId = aLayer->GetFixedPositionScrollContainerId();
 }
 
+void
+WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount)
+{
+  mDescendantCount = aDescendantCount;
+}
+
+void
+WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
+                                     nsDisplayItem* aItem)
+{
+  mDescendantCount = 0;
+
+  MOZ_ASSERT(aItem);
+  switch (aItem->GetType()) {
+  case nsDisplayItem::TYPE_SCROLL_INFO_LAYER: {
+    nsDisplayScrollInfoLayer* info = static_cast<nsDisplayScrollInfoLayer*>(aItem);
+    UniquePtr<ScrollMetadata> metadata = info->ComputeScrollMetadata(
+        nullptr, ContainerLayerParameters());
+    MOZ_ASSERT(metadata);
+    MOZ_ASSERT(metadata->GetMetrics().IsScrollInfoLayer());
+    mScrollIds.AppendElement(aOwner.AddMetadata(*metadata));
+    break;
+  }
+  case nsDisplayItem::TYPE_REMOTE: {
+    nsDisplayRemote* remote = static_cast<nsDisplayRemote*>(aItem);
+    mReferentId = Some(remote->GetRemoteLayersId());
+    break;
+  }
+  default:
+    break;
+  }
+  for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
+       asr;
+       asr = asr->mParent) {
+    Maybe<ScrollMetadata> metadata = asr->mScrollableFrame->ComputeScrollMetadata(
+        nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+    MOZ_ASSERT(metadata);
+    mScrollIds.AppendElement(aOwner.AddMetadata(metadata.ref()));
+  }
+}
+
 int32_t
 WebRenderLayerScrollData::GetDescendantCount() const
 {
@@ -79,6 +127,27 @@ CSSTransformMatrix
 WebRenderLayerScrollData::GetTransformTyped() const
 {
   return ViewAs<CSSTransformMatrix>(GetTransform());
+}
+
+void
+WebRenderLayerScrollData::Dump(const WebRenderScrollData& aOwner) const
+{
+  printf_stderr("LayerScrollData(%p) descendants %d\n", this, mDescendantCount);
+  for (size_t i : mScrollIds) {
+    printf_stderr("  metadata: %s\n", Stringify(aOwner.GetScrollMetadata(i)).c_str());
+  }
+  printf_stderr("  transform: %s perspective: %d visible: %s\n",
+    Stringify(mTransform).c_str(), mTransformIsPerspective,
+    Stringify(mVisibleRegion).c_str());
+  printf_stderr("  event regions: %s override: 0x%x\n",
+    Stringify(mEventRegions).c_str(), mEventRegionsOverride);
+  printf_stderr("  ref layers id: %" PRIu64 "\n", mReferentId.valueOr(0));
+  //printf_stderr("  scroll thumb: %s animation: %" PRIu64 "\n",
+  //  Stringify(mScrollThumbData).c_str(), mScrollbarAnimationId);
+  printf_stderr("  scroll container: %d target: %" PRIu64 "\n",
+    mIsScrollbarContainer, mScrollbarTargetContainerId);
+  printf_stderr("  fixed pos container: %" PRIu64 "\n",
+    mFixedPosScrollContainerId);
 }
 
 WebRenderScrollData::WebRenderScrollData()
@@ -110,6 +179,13 @@ WebRenderScrollData::AddNewLayerData()
   size_t len = mLayerScrollData.Length();
   Unused << mLayerScrollData.AppendElement();
   return len;
+}
+
+size_t
+WebRenderScrollData::AddLayerData(const WebRenderLayerScrollData& aData)
+{
+  mLayerScrollData.AppendElement(aData);
+  return mLayerScrollData.Length() - 1;
 }
 
 size_t
@@ -171,6 +247,16 @@ uint32_t
 WebRenderScrollData::GetPaintSequenceNumber() const
 {
   return mPaintSequenceNumber;
+}
+
+void
+WebRenderScrollData::Dump() const
+{
+  printf_stderr("WebRenderScrollData with %zu layers firstpaint: %d\n",
+      mLayerScrollData.Length(), mIsFirstPaint);
+  for (size_t i = 0; i < mLayerScrollData.Length(); i++) {
+    mLayerScrollData.ElementAt(i).Dump(*this);
+  }
 }
 
 } // namespace layers

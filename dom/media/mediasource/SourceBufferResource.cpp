@@ -11,7 +11,6 @@
 #include "nsISeekableStream.h"
 #include "nsISupports.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TaskQueue.h"
 #include "MediaData.h"
 
@@ -143,7 +142,7 @@ void
 SourceBufferResource::AppendData(MediaByteBuffer* aData)
 {
   MOZ_ASSERT(OnTaskQueue());
-  SBR_DEBUG("AppendData(aData=%p, aLength=%" PRIuSIZE ")",
+  SBR_DEBUG("AppendData(aData=%p, aLength=%zu)",
             aData->Elements(), aData->Length());
   mInputBuffer.AppendItem(aData);
   mEnded = false;

@@ -140,6 +140,7 @@ public:
                                                                         bool aHasAlpha = true);
   static size_t GetMaxWidth();
   static size_t GetMaxHeight();
+  const void* GetIOSurfacePtr() { return mIOSurfacePtr; }
 
 private:
   friend class nsCARenderer;

@@ -6,7 +6,6 @@
 #include "WebGLUniformLocation.h"
 
 #include "GLContext.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLActiveInfo.h"
@@ -153,7 +152,7 @@ WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize, size_t setterA
         setterArraySize % setterElemSize)
     {
         mContext->ErrorInvalidValue("%s: Expected an array of length a multiple of %d,"
-                                    " got an array of length %" PRIuSIZE ".",
+                                    " got an array of length %zu.",
                                     funcName, setterElemSize, setterArraySize);
         return false;
     }
@@ -170,7 +169,7 @@ WebGLUniformLocation::ValidateArrayLength(uint8_t setterElemSize, size_t setterA
     {
         mContext->ErrorInvalidOperation("%s: Expected an array of length exactly %d"
                                         " (since this uniform is not an array uniform),"
-                                        " got an array of length %" PRIuSIZE ".",
+                                        " got an array of length %zu.",
                                         funcName, setterElemSize, setterArraySize);
         return false;
     }

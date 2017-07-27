@@ -605,8 +605,8 @@ impl AnimationValue {
                                 CSSWideKeyword::Unset |
                             % endif
                             CSSWideKeyword::Inherit => {
-                                let inherit_struct = context.inherited_style()
-                                                            .get_${prop.style_struct.name_lower}();
+                                let inherit_struct = context.builder
+                                                            .get_parent_${prop.style_struct.name_lower}();
                                 inherit_struct.clone_${prop.ident}()
                             },
                         };
@@ -2274,7 +2274,7 @@ impl Animatable for MatrixDecomposed3D {
         use std::f64;
 
         debug_assert!((self_portion + other_portion - 1.0f64).abs() <= f64::EPSILON ||
-                      other_portion == 1.0f64,
+                      other_portion == 1.0f64 || other_portion == 0.0f64,
                       "add_weighted should only be used for interpolating or accumulating transforms");
 
         let mut sum = *self;

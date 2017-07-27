@@ -9,7 +9,6 @@
 
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #undef LOG
 #undef LOG_ENABLED
@@ -133,7 +132,7 @@ public:
     size_t poolUse = mShmemPool.Length() - mPoolFree;
     if (poolUse > mMaxPoolUse) {
       mMaxPoolUse = poolUse;
-      LOG(("Maximum ShmemPool use increased: %" PRIuSIZE " buffers", mMaxPoolUse));
+      LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
     }
 #endif
     return Move(res);

@@ -320,7 +320,7 @@ HistoryStore.prototype = {
     record.uri = Utils.makeURI(record.histUri);
     if (!record.uri) {
       this._log.warn("Attempted to process invalid URI, skipping.");
-      throw "Invalid URI in record";
+      throw new Error("Invalid URI in record");
     }
 
     if (!Utils.checkGUID(record.id)) {

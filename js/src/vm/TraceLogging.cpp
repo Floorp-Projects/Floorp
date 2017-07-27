@@ -474,7 +474,7 @@ TraceLoggerThreadState::getOrCreateEventPayload(const char* filename,
         return nullptr;
 
     DebugOnly<size_t> ret =
-        snprintf(str, len + 1, "script %s:%" PRIuSIZE ":%" PRIuSIZE, filename, lineno, colno);
+        snprintf(str, len + 1, "script %s:%zu:%zu", filename, lineno, colno);
     MOZ_ASSERT(ret == len);
     MOZ_ASSERT(strlen(str) == len);
 

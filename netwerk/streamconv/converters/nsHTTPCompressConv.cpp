@@ -15,7 +15,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "nsIForcePendingChannel.h"
 #include "nsIRequest.h"
 
@@ -201,7 +200,7 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
     outPtr = outBuffer.get();
 
     // brotli api is documented in brotli/dec/decode.h and brotli/dec/decode.c
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress %" PRIuSIZE "\n", self, avail));
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress %zu\n", self, avail));
     size_t totalOut = self->mBrotli->mTotalOut;
     res = ::BrotliDecompressStream(
       &avail, reinterpret_cast<const unsigned char **>(&dataIn),
@@ -209,7 +208,7 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
     outSize = kOutSize - outSize;
     self->mBrotli->mTotalOut = totalOut;
     self->mBrotli->mBrotliStateIsStreamEnd = BrotliStateIsStreamEnd(&self->mBrotli->mState);
-    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32 " out=%" PRIuSIZE "\n",
+    LOG(("nsHttpCompresssConv %p brotlihandler decompress rv=%" PRIx32 " out=%zu\n",
          self, static_cast<uint32_t>(res), outSize));
 
     if (res == BROTLI_RESULT_ERROR) {

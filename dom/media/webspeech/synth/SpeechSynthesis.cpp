@@ -7,7 +7,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsSpeechTask.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
@@ -158,7 +157,7 @@ void
 SpeechSynthesis::AdvanceQueue()
 {
   LOG(LogLevel::Debug,
-      ("SpeechSynthesis::AdvanceQueue length=%" PRIuSIZE, mSpeechQueue.Length()));
+      ("SpeechSynthesis::AdvanceQueue length=%zu", mSpeechQueue.Length()));
 
   if (mSpeechQueue.IsEmpty()) {
     return;

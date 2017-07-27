@@ -16,6 +16,7 @@ from mozpack.files import (
 import mozpack.path as mozpath
 import errno
 from collections import (
+    defaultdict,
     Counter,
     OrderedDict,
 )
@@ -152,6 +153,34 @@ class FileRegistry(object):
         directory).
         '''
         return set(k for k, v in self._required_directories.items() if v > 0)
+
+    def output_to_inputs_tree(self):
+        '''
+        Return a dictionary mapping each output path to the set of its
+        required input paths.
+
+        All paths are normalized.
+        '''
+        tree = {}
+        for output, file in self:
+            output = mozpath.normpath(output)
+            tree[output] = set(mozpath.normpath(f) for f in file.inputs())
+        return tree
+
+    def input_to_outputs_tree(self):
+        '''
+        Return a dictionary mapping each input path to the set of
+        impacted output paths.
+
+        All paths are normalized.
+        '''
+        tree = defaultdict(set)
+        for output, file in self:
+            output = mozpath.normpath(output)
+            for input in file.inputs():
+                input = mozpath.normpath(input)
+                tree[input].add(output)
+        return dict(tree)
 
 
 class FileRegistrySubtree(object):

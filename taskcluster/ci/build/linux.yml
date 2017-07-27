@@ -21,6 +21,10 @@ linux64/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-dmd/opt:
     description: "Linux64 DMD Opt"
@@ -47,6 +51,10 @@ linux64-dmd/opt:
         tooltool-downloads: public
         need-xvfb: true
     run-on-projects: [ ]
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64/pgo:
     description: "Linux64 PGO"
@@ -73,6 +81,10 @@ linux64/pgo:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64/debug:
     description: "Linux64 Debug"
@@ -98,6 +110,10 @@ linux64/debug:
         custom-build-variant-cfg: debug
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-devedition-nightly/opt:
     description: "Linux64 devedition Nightly"
@@ -128,6 +144,10 @@ linux64-devedition-nightly/opt:
         need-xvfb: true
         custom-build-variant-cfg: devedition
     run-on-projects: [ 'mozilla-beta', ]
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-base-toolchains/opt:
     description: "Linux64 base toolchains Opt"
@@ -153,6 +173,10 @@ linux64-base-toolchains/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-base-toolchains/debug:
     description: "Linux64 base toolchains Debug"
@@ -179,6 +203,10 @@ linux64-base-toolchains/debug:
         custom-build-variant-cfg: debug
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux/opt:
     description: "Linux32 Opt"
@@ -204,6 +232,10 @@ linux/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux/debug:
     description: "Linux32 Debug"
@@ -230,6 +262,10 @@ linux/debug:
         custom-build-variant-cfg: debug
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux/pgo:
     description: "Linux32 PGO"
@@ -256,6 +292,10 @@ linux/pgo:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux-devedition-nightly/opt:
     description: "Linux32 devedition Nightly"
@@ -286,6 +326,10 @@ linux-devedition-nightly/opt:
         need-xvfb: true
         custom-build-variant-cfg: devedition
     run-on-projects: [ 'mozilla-beta', ]
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux-nightly/opt:
     description: "Linux32 Nightly"
@@ -314,6 +358,10 @@ linux-nightly/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 
 linux64-asan/opt:
@@ -341,6 +389,10 @@ linux64-asan/opt:
         custom-build-variant-cfg: asan-tc
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 
 linux64-asan-fuzzing/opt:
@@ -368,6 +420,9 @@ linux64-asan-fuzzing/opt:
         custom-build-variant-cfg: fuzzing-asan-tc
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-asan/debug:
     description: "Linux64 Debug ASAN"
@@ -394,6 +449,10 @@ linux64-asan/debug:
         custom-build-variant-cfg: asan-tc-and-debug
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-nightly/opt:
     description: "Linux64 Nightly"
@@ -422,6 +481,10 @@ linux64-nightly/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-noopt/debug:
     description: "Linux64 No-optimize Debug"
@@ -450,6 +513,10 @@ linux64-noopt/debug:
         keep-artifacts: false
         need-xvfb: true
     run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-jsdcov/opt:
     description: "Linux64-JSDCov Opt"
@@ -476,6 +543,10 @@ linux64-jsdcov/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-ccov/opt:
     description: "Linux64-CCov Opt"
@@ -504,6 +575,10 @@ linux64-ccov/opt:
         custom-build-variant-cfg: code-coverage
         tooltool-downloads: public
         need-xvfb: true
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 linux64-add-on-devel/opt:
     description: "Linux64 add-on-devel"
@@ -531,3 +606,7 @@ linux64-add-on-devel/opt:
         tooltool-downloads: public
         need-xvfb: true
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache

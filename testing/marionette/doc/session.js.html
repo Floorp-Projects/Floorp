@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: session.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: session.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+Cu.import("chrome://marionette/content/assert.js");
+const {
+  error,
+  InvalidArgumentError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+
+this.EXPORTED_SYMBOLS = ["session"];
+
+const logger = Log.repository.getLogger("Marionette");
+const {pprint} = error;
+
+// Enable testing this module, as Services.appinfo.* is not available
+// in xpcshell tests.
+const appinfo = {name: "&lt;missing>", version: "&lt;missing>"};
+try { appinfo.name = Services.appinfo.name.toLowerCase(); } catch (e) {}
+try { appinfo.version = Services.appinfo.version; } catch (e) {}
+
+/**
+ * State associated with a WebDriver session.
+ *
+ * @namespace
+ */
+this.session = {};
+
+/** Representation of WebDriver session timeouts. */
+session.Timeouts = class {
+  constructor() {
+    // disabled
+    this.implicit = 0;
+    // five mintues
+    this.pageLoad = 300000;
+    // 30 seconds
+    this.script = 30000;
+  }
+
+  toString() { return "[object session.Timeouts]"; }
+
+  /** Marshals timeout durations to a JSON Object. */
+  toJSON() {
+    return {
+      implicit: this.implicit,
+      pageLoad: this.pageLoad,
+      script: this.script,
+    };
+  }
+
+  static fromJSON(json) {
+    assert.object(json);
+    let t = new session.Timeouts();
+
+    for (let [typ, ms] of Object.entries(json)) {
+      switch (typ) {
+        case "implicit":
+          t.implicit = assert.positiveInteger(ms);
+          break;
+
+        case "script":
+          t.script = assert.positiveInteger(ms);
+          break;
+
+        case "pageLoad":
+          t.pageLoad = assert.positiveInteger(ms);
+          break;
+
+        default:
+          throw new InvalidArgumentError("Unrecognised timeout: " + typ);
+      }
+    }
+
+    return t;
+  }
+};
+
+/**
+ * Enum of page loading strategies.
+ *
+ * @enum
+ */
+session.PageLoadStrategy = {
+  /** No page load strategy.  Navigation will return immediately. */
+  None: "none",
+  /**
+   * Eager, causing navigation to complete when the document reaches
+   * the &lt;code>interactive&lt;/code> ready state.
+   */
+  Eager: "eager",
+  /**
+   * Normal, causing navigation to return when the document reaches the
+   * &lt;code>complete&lt;/code> ready state.
+   */
+  Normal: "normal",
+};
+
+/** Proxy configuration object representation. */
+session.Proxy = class {
+  /** @class */
+  constructor() {
+    this.proxyType = null;
+    this.httpProxy = null;
+    this.httpProxyPort = null;
+    this.sslProxy = null;
+    this.sslProxyPort = null;
+    this.ftpProxy = null;
+    this.ftpProxyPort = null;
+    this.socksProxy = null;
+    this.socksProxyPort = null;
+    this.socksVersion = null;
+    this.proxyAutoconfigUrl = null;
+  }
+
+  /**
+   * Sets Firefox proxy settings.
+   *
+   * @return {boolean}
+   *     True if proxy settings were updated as a result of calling this
+   *     function, or false indicating that this function acted as
+   *     a no-op.
+   */
+  init() {
+    switch (this.proxyType) {
+      case "manual":
+        Preferences.set("network.proxy.type", 1);
+        if (this.httpProxy &amp;&amp; this.httpProxyPort) {
+          Preferences.set("network.proxy.http", this.httpProxy);
+          Preferences.set("network.proxy.http_port", this.httpProxyPort);
+        }
+        if (this.sslProxy &amp;&amp; this.sslProxyPort) {
+          Preferences.set("network.proxy.ssl", this.sslProxy);
+          Preferences.set("network.proxy.ssl_port", this.sslProxyPort);
+        }
+        if (this.ftpProxy &amp;&amp; this.ftpProxyPort) {
+          Preferences.set("network.proxy.ftp", this.ftpProxy);
+          Preferences.set("network.proxy.ftp_port", this.ftpProxyPort);
+        }
+        if (this.socksProxy) {
+          Preferences.set("network.proxy.socks", this.socksProxy);
+          Preferences.set("network.proxy.socks_port", this.socksProxyPort);
+          if (this.socksVersion) {
+            Preferences.set("network.proxy.socks_version", this.socksVersion);
+          }
+        }
+        return true;
+
+      case "pac":
+        Preferences.set("network.proxy.type", 2);
+        Preferences.set(
+            "network.proxy.autoconfig_url", this.proxyAutoconfigUrl);
+        return true;
+
+      case "autodetect":
+        Preferences.set("network.proxy.type", 4);
+        return true;
+
+      case "system":
+        Preferences.set("network.proxy.type", 5);
+        return true;
+
+      case "noproxy":
+        Preferences.set("network.proxy.type", 0);
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  toString() { return "[object session.Proxy]"; }
+
+  /**
+   * @return {Object.&lt;string, (number|string)>}
+   *     JSON serialisation of proxy object.
+   */
+  toJSON() {
+    return marshal({
+      proxyType: this.proxyType,
+      httpProxy: this.httpProxy,
+      httpProxyPort: this.httpProxyPort,
+      sslProxy: this.sslProxy,
+      sslProxyPort: this.sslProxyPort,
+      ftpProxy: this.ftpProxy,
+      ftpProxyPort: this.ftpProxyPort,
+      socksProxy: this.socksProxy,
+      socksProxyPort: this.socksProxyPort,
+      socksProxyVersion: this.socksProxyVersion,
+      proxyAutoconfigUrl: this.proxyAutoconfigUrl,
+    });
+  }
+
+  /**
+   * @param {Object.&lt;string, ?>} json
+   *     JSON Object to unmarshal.
+   */
+  static fromJSON(json) {
+    let p = new session.Proxy();
+    if (typeof json == "undefined" || json === null) {
+      return p;
+    }
+
+    assert.object(json);
+
+    assert.in("proxyType", json);
+    p.proxyType = json.proxyType;
+
+    if (json.proxyType == "manual") {
+      if (typeof json.httpProxy != "undefined") {
+        p.httpProxy = assert.string(json.httpProxy);
+        p.httpProxyPort = assert.positiveInteger(json.httpProxyPort);
+      }
+
+      if (typeof json.sslProxy != "undefined") {
+        p.sslProxy = assert.string(json.sslProxy);
+        p.sslProxyPort = assert.positiveInteger(json.sslProxyPort);
+      }
+
+      if (typeof json.ftpProxy != "undefined") {
+        p.ftpProxy = assert.string(json.ftpProxy);
+        p.ftpProxyPort = assert.positiveInteger(json.ftpProxyPort);
+      }
+
+      if (typeof json.socksProxy != "undefined") {
+        p.socksProxy = assert.string(json.socksProxy);
+        p.socksProxyPort = assert.positiveInteger(json.socksProxyPort);
+        p.socksProxyVersion = assert.positiveInteger(json.socksProxyVersion);
+      }
+    }
+
+    if (typeof json.proxyAutoconfigUrl != "undefined") {
+      p.proxyAutoconfigUrl = assert.string(json.proxyAutoconfigUrl);
+    }
+
+    return p;
+  }
+};
+
+/** WebDriver session capabilities representation. */
+session.Capabilities = class extends Map {
+  /** @class */
+  constructor() {
+    super([
+      // webdriver
+      ["browserName", appinfo.name],
+      ["browserVersion", appinfo.version],
+      ["platformName", Services.sysinfo.getProperty("name").toLowerCase()],
+      ["platformVersion", Services.sysinfo.getProperty("version")],
+      ["pageLoadStrategy", session.PageLoadStrategy.Normal],
+      ["acceptInsecureCerts", false],
+      ["timeouts", new session.Timeouts()],
+      ["proxy", new session.Proxy()],
+
+      // features
+      ["rotatable", appinfo.name == "B2G"],
+
+      // proprietary
+      ["specificationLevel", 0],
+      ["moz:processID", Services.appinfo.processID],
+      ["moz:profile", maybeProfile()],
+      ["moz:accessibilityChecks", false],
+    ]);
+  }
+
+  /**
+   * @param {string} key
+   *     Capability name.
+   * @param {(string|number|boolean)} value
+   *     JSON-safe capability value.
+   */
+  set(key, value) {
+    if (key === "timeouts" &amp;&amp; !(value instanceof session.Timeouts)) {
+      throw new TypeError();
+    } else if (key === "proxy" &amp;&amp; !(value instanceof session.Proxy)) {
+      throw new TypeError();
+    }
+
+    return super.set(key, value);
+  }
+
+  /** @return {string} */
+  toString() { return "[object session.Capabilities]"; }
+
+  /**
+   * JSON serialisation of capabilities object.
+   *
+   * @return {Object.&lt;string, ?>}
+   */
+  toJSON() {
+    return marshal(this);
+  }
+
+  /**
+   * Unmarshal a JSON object representation of WebDriver capabilities.
+   *
+   * @param {Object.&lt;string, ?>=} json
+   *     WebDriver capabilities.
+   * @param {boolean=} merge
+   *     If providing &lt;var>json&lt;/var> with &lt;tt>desiredCapabilities&lt;/tt> or
+   *     &lt;tt>requiredCapabilities&lt;/tt> fields, or both, it should be
+   *     set to true to merge these before parsing.  This indicates that
+   *     the input provided is from a client and not from
+   *     {@link session.Capabilities#toJSON}.
+   *
+   * @return {session.Capabilities}
+   *     Internal representation of WebDriver capabilities.
+   */
+  static fromJSON(json, {merge = false} = {}) {
+    if (typeof json == "undefined" || json === null) {
+      json = {};
+    }
+    assert.object(json);
+
+    if (merge) {
+      json = session.Capabilities.merge_(json);
+    }
+    return session.Capabilities.match_(json);
+  }
+
+  // Processes capabilities as described by WebDriver.
+  static merge_(json) {
+    for (let entry of [json.desiredCapabilities, json.requiredCapabilities]) {
+      if (typeof entry == "undefined" || entry === null) {
+        continue;
+      }
+      assert.object(entry,
+          error.pprint`Expected ${entry} to be a capabilities object`);
+    }
+
+    let desired = json.desiredCapabilities || {};
+    let required = json.requiredCapabilities || {};
+
+    // One level deep union merge of desired- and required capabilities
+    // with preference on required
+    return Object.assign({}, desired, required);
+  }
+
+  // Matches capabilities as described by WebDriver.
+  static match_(caps = {}) {
+    let matched = new session.Capabilities();
+
+    const defined = v => typeof v != "undefined" &amp;&amp; v !== null;
+    const wildcard = v => v === "*";
+
+    // Iff |actual| provides some value, or is a wildcard or an exact
+    // match of |expected|.  This means it can be null or undefined,
+    // or "*", or "firefox".
+    function stringMatch(actual, expected) {
+      return !defined(actual) || (wildcard(actual) || actual === expected);
+    }
+
+    for (let [k, v] of Object.entries(caps)) {
+      switch (k) {
+        case "browserName":
+          let bname = matched.get("browserName");
+          if (!stringMatch(v, bname)) {
+            throw new TypeError(
+                pprint`Given browserName ${v}, but my name is ${bname}`);
+          }
+          break;
+
+        // TODO(ato): bug 1326397
+        case "browserVersion":
+          let bversion = matched.get("browserVersion");
+          if (!stringMatch(v, bversion)) {
+            throw new TypeError(
+                pprint`Given browserVersion ${v}, ` +
+                pprint`but current version is ${bversion}`);
+          }
+          break;
+
+        case "platformName":
+          let pname = matched.get("platformName");
+          if (!stringMatch(v, pname)) {
+            throw new TypeError(
+                pprint`Given platformName ${v}, ` +
+                pprint`but current platform is ${pname}`);
+          }
+          break;
+
+        // TODO(ato): bug 1326397
+        case "platformVersion":
+          let pversion = matched.get("platformVersion");
+          if (!stringMatch(v, pversion)) {
+            throw new TypeError(
+                pprint`Given platformVersion ${v}, ` +
+                pprint`but current platform version is ${pversion}`);
+          }
+          break;
+
+        case "acceptInsecureCerts":
+          assert.boolean(v);
+          matched.set("acceptInsecureCerts", v);
+          break;
+
+        case "pageLoadStrategy":
+          if (v === null) {
+            matched.set("pageLoadStrategy", session.PageLoadStrategy.Normal);
+          } else {
+            assert.string(v);
+
+            if (Object.values(session.PageLoadStrategy).includes(v)) {
+              matched.set("pageLoadStrategy", v);
+            } else {
+              throw new InvalidArgumentError(
+                  "Unknown page load strategy: " + v);
+            }
+          }
+
+          break;
+
+        case "proxy":
+          let proxy = session.Proxy.fromJSON(v);
+          matched.set("proxy", proxy);
+          break;
+
+        case "timeouts":
+          let timeouts = session.Timeouts.fromJSON(v);
+          matched.set("timeouts", timeouts);
+          break;
+
+        case "specificationLevel":
+          assert.positiveInteger(v);
+          matched.set("specificationLevel", v);
+          break;
+
+        case "moz:accessibilityChecks":
+          assert.boolean(v);
+          matched.set("moz:accessibilityChecks", v);
+          break;
+      }
+    }
+
+    return matched;
+  }
+};
+
+// Specialisation of |JSON.stringify| that produces JSON-safe object
+// literals, dropping empty objects and entries which values are undefined
+// or null.  Objects are allowed to produce their own JSON representations
+// by implementing a |toJSON| function.
+function marshal(obj) {
+  let rv = Object.create(null);
+
+  function* iter(mapOrObject) {
+    if (mapOrObject instanceof Map) {
+      for (const [k, v] of mapOrObject) {
+        yield [k, v];
+      }
+    } else {
+      for (const k of Object.keys(mapOrObject)) {
+        yield [k, mapOrObject[k]];
+      }
+    }
+  }
+
+  for (let [k, v] of iter(obj)) {
+    // Skip empty values when serialising to JSON.
+    if (typeof v == "undefined" || v === null) {
+      continue;
+    }
+
+    // Recursively marshal objects that are able to produce their own
+    // JSON representation.
+    if (typeof v.toJSON == "function") {
+      v = marshal(v.toJSON());
+
+    // Or do the same for object literals.
+    } else if (isObject(v)) {
+      v = marshal(v);
+    }
+
+    // And finally drop (possibly marshaled) objects which have no
+    // entries.
+    if (!isObjectEmpty(v)) {
+      rv[k] = v;
+    }
+  }
+
+  return rv;
+}
+
+function isObject(obj) {
+  return Object.prototype.toString.call(obj) == "[object Object]";
+}
+
+function isObjectEmpty(obj) {
+  return isObject(obj) &amp;&amp; Object.keys(obj).length === 0;
+}
+
+// Services.dirsvc is not accessible from content frame scripts,
+// but we should not panic about that.
+function maybeProfile() {
+  try {
+    return Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+  } catch (e) {
+    return "&lt;protected>";
+  }
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

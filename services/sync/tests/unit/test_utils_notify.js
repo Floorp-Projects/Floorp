@@ -21,7 +21,7 @@ add_task(async function run_test() {
       return this.notify("bad", "one", async function() {
         rightThis = this == obj;
         didCall = true;
-        throw 10;
+        throw new Error("covfefe");
       })();
     }
   };
@@ -76,7 +76,7 @@ add_task(async function run_test() {
     ret = await obj.throwy();
     do_throw("throwy should have thrown!");
   } catch (ex) {
-    do_check_eq(ex, 10);
+    do_check_eq(ex.message, "covfefe");
   }
   do_check_eq(ret, null);
   do_check_true(rightThis);
@@ -93,7 +93,7 @@ add_task(async function run_test() {
   do_check_eq(tf.data, undefined);
 
   do_check_eq(te.state, 4);
-  do_check_eq(te.subject, 10);
+  do_check_eq(te.subject.message, "covfefe");
   do_check_eq(te.topic, "foo:bad:error");
   do_check_eq(te.data, "one");
 });

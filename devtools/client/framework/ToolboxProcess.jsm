@@ -187,6 +187,7 @@ BrowserToolboxProcess.prototype = {
     // We would like to copy prefs into this new profile...
     let prefsFile = debuggingProfileDir.clone();
     prefsFile.append("prefs.js");
+
     // ... but unfortunately, when we run tests, it seems the starting profile
     // clears out the prefs file before re-writing it, and in practice the
     // file is empty when we get here. So just copying doesn't work in that
@@ -194,7 +195,20 @@ BrowserToolboxProcess.prototype = {
     // We could force a sync pref flush and then copy it... but if we're doing
     // that, we might as well just flush directly to the new profile, which
     // always works:
+
+    // Before dumping the preferences to prefsFile, clear the current pref for
+    // extensions.lastAppVersion. The AddonManager expects this pref to be undefined
+    // when loading a new profile, this will trigger the installation of system addons
+    // without showing the addon update popup.
+    let appVersion = Services.prefs.getCharPref("extensions.lastAppVersion", "");
+    Services.prefs.clearUserPref("extensions.lastAppVersion");
+
     Services.prefs.savePrefFile(prefsFile);
+
+    // Restore the overridden extensions.lastAppVersion preference.
+    if (appVersion) {
+      Services.prefs.setCharPref("extensions.lastAppVersion", appVersion);
+    }
 
     dumpn("Finished creating the chrome toolbox user profile at: " +
           this._dbgProfilePath);

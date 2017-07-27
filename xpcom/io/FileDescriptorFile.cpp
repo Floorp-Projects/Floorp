@@ -46,7 +46,7 @@ FileDescriptorFile::FileDescriptorFile(const FileDescriptorFile& aOther)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-FileDescriptorFile::Clone(nsIFile **aFileOut)
+FileDescriptorFile::Clone(nsIFile** aFileOut)
 {
   RefPtr<FileDescriptorFile> fdFile = new FileDescriptorFile(*this);
   fdFile.forget(aFileOut);
@@ -55,7 +55,7 @@ FileDescriptorFile::Clone(nsIFile **aFileOut)
 
 NS_IMETHODIMP
 FileDescriptorFile::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
-                                     PRFileDesc **aRetval)
+                                     PRFileDesc** aRetval)
 {
   // Remove optional OS_READAHEAD flag so we test against PR_RDONLY
   aFlags &= ~nsIFile::OS_READAHEAD;
@@ -91,61 +91,61 @@ FileDescriptorFile::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
 //-----------------------------------------------------------------------------
 
 nsresult
-FileDescriptorFile::GetLeafName(nsAString &aLeafName)
+FileDescriptorFile::GetLeafName(nsAString& aLeafName)
 {
   return mFile->GetLeafName(aLeafName);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetNativeLeafName(nsACString &aLeafName)
+FileDescriptorFile::GetNativeLeafName(nsACString& aLeafName)
 {
   return mFile->GetNativeLeafName(aLeafName);
 }
 
 nsresult
-FileDescriptorFile::GetTarget(nsAString &_retval)
+FileDescriptorFile::GetTarget(nsAString& aRetVal)
 {
-  return mFile->GetTarget(_retval);
+  return mFile->GetTarget(aRetVal);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetNativeTarget(nsACString &_retval)
+FileDescriptorFile::GetNativeTarget(nsACString& aRetVal)
 {
-  return mFile->GetNativeTarget(_retval);
+  return mFile->GetNativeTarget(aRetVal);
 }
 
 nsresult
-FileDescriptorFile::GetPath(nsAString &_retval)
+FileDescriptorFile::GetPath(nsAString& aRetVal)
 {
-  return mFile->GetPath(_retval);
+  return mFile->GetPath(aRetVal);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetNativePath(nsACString &_retval)
+FileDescriptorFile::GetNativePath(nsACString& aRetVal)
 {
-  return mFile->GetNativePath(_retval);
+  return mFile->GetNativePath(aRetVal);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Equals(nsIFile *inFile, bool *_retval)
+FileDescriptorFile::Equals(nsIFile* aOther, bool* aRetVal)
 {
-  return mFile->Equals(inFile, _retval);
+  return mFile->Equals(aOther, aRetVal);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Contains(nsIFile *inFile, bool *_retval)
+FileDescriptorFile::Contains(nsIFile* aOther, bool* aRetVal)
 {
-  return mFile->Contains(inFile, _retval);
+  return mFile->Contains(aOther, aRetVal);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetParent(nsIFile **aParent)
+FileDescriptorFile::GetParent(nsIFile** aParent)
 {
   return mFile->GetParent(aParent);
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetFollowLinks(bool *aFollowLinks)
+FileDescriptorFile::GetFollowLinks(bool* aFollowLinks)
 {
   return mFile->GetFollowLinks(aFollowLinks);
 }
@@ -155,13 +155,13 @@ FileDescriptorFile::GetFollowLinks(bool *aFollowLinks)
 //-----------------------------------------------------------------------------
 
 nsresult
-FileDescriptorFile::Append(const nsAString &node)
+FileDescriptorFile::Append(const nsAString& aNode)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::AppendNative(const nsACString &fragment)
+FileDescriptorFile::AppendNative(const nsACString& aFragment)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -173,37 +173,37 @@ FileDescriptorFile::Normalize()
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Create(uint32_t type, uint32_t permissions)
+FileDescriptorFile::Create(uint32_t aType, uint32_t aPermissions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-FileDescriptorFile::SetLeafName(const nsAString &aLeafName)
+FileDescriptorFile::SetLeafName(const nsAString& aLeafName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::SetNativeLeafName(const nsACString &aLeafName)
+FileDescriptorFile::SetNativeLeafName(const nsACString& aLeafName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-FileDescriptorFile::InitWithPath(const nsAString &filePath)
+FileDescriptorFile::InitWithPath(const nsAString& aPath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::InitWithNativePath(const nsACString &filePath)
+FileDescriptorFile::InitWithNativePath(const nsACString& aPath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::InitWithFile(nsIFile *aFile)
+FileDescriptorFile::InitWithFile(nsIFile* aFile)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -215,113 +215,117 @@ FileDescriptorFile::SetFollowLinks(bool aFollowLinks)
 }
 
 nsresult
-FileDescriptorFile::AppendRelativePath(const nsAString &node)
+FileDescriptorFile::AppendRelativePath(const nsAString& aNode)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::AppendRelativeNativePath(const nsACString &fragment)
+FileDescriptorFile::AppendRelativeNativePath(const nsACString& aFragment)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
+FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
+FileDescriptorFile::SetPersistentDescriptor(const nsACString& aPersistentDescriptor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetRelativeDescriptor(nsIFile *fromFile, nsACString& _retval)
+FileDescriptorFile::GetRelativeDescriptor(nsIFile* aFromFile,
+                                          nsACString& aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::SetRelativeDescriptor(nsIFile *fromFile,
-                                   const nsACString& relativeDesc)
+FileDescriptorFile::SetRelativeDescriptor(nsIFile* aFromFile,
+                                          const nsACString& aRelativeDesc)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetRelativePath(nsIFile *fromFile, nsACString& _retval)
+FileDescriptorFile::GetRelativePath(nsIFile* aFromFile, nsACString& aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::SetRelativePath(nsIFile *fromFile,
-                                     const nsACString& relativePath)
+FileDescriptorFile::SetRelativePath(nsIFile* aFromFile,
+                                    const nsACString& aRelativePath)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-FileDescriptorFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
+FileDescriptorFile::CopyTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::CopyToNative(nsIFile *newParent, const nsACString &newName)
+FileDescriptorFile::CopyToNative(nsIFile* aNewParent,
+                                 const nsACString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-FileDescriptorFile::CopyToFollowingLinks(nsIFile *newParentDir,
-                                  const nsAString &newName)
+FileDescriptorFile::CopyToFollowingLinks(nsIFile* aNewParentDir,
+                                         const nsAString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::CopyToFollowingLinksNative(nsIFile *newParent,
-                                        const nsACString &newName)
+FileDescriptorFile::CopyToFollowingLinksNative(nsIFile* aNewParent,
+                                               const nsACString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-FileDescriptorFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
+FileDescriptorFile::MoveTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::MoveToNative(nsIFile *newParent, const nsACString &newName)
+FileDescriptorFile::MoveToNative(nsIFile* aNewParent,
+                                 const nsACString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::RenameTo(nsIFile *newParentDir, const nsAString &newName)
+FileDescriptorFile::RenameTo(nsIFile* aNewParentDir, const nsAString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::RenameToNative(nsIFile *newParentDir, const nsACString &newName)
+FileDescriptorFile::RenameToNative(nsIFile* aNewParentDir,
+                                   const nsACString& aNewName)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Remove(bool recursive)
+FileDescriptorFile::Remove(bool aRecursive)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetPermissions(uint32_t *aPermissions)
+FileDescriptorFile::GetPermissions(uint32_t* aPermissions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -333,7 +337,7 @@ FileDescriptorFile::SetPermissions(uint32_t aPermissions)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetPermissionsOfLink(uint32_t *aPermissionsOfLink)
+FileDescriptorFile::GetPermissionsOfLink(uint32_t* aPermissionsOfLink)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -345,7 +349,7 @@ FileDescriptorFile::SetPermissionsOfLink(uint32_t aPermissions)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetLastModifiedTime(PRTime *aLastModTime)
+FileDescriptorFile::GetLastModifiedTime(PRTime* aLastModTime)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -357,7 +361,7 @@ FileDescriptorFile::SetLastModifiedTime(PRTime aLastModTime)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetLastModifiedTimeOfLink(PRTime *aLastModTimeOfLink)
+FileDescriptorFile::GetLastModifiedTimeOfLink(PRTime* aLastModTimeOfLink)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -369,7 +373,7 @@ FileDescriptorFile::SetLastModifiedTimeOfLink(PRTime aLastModTimeOfLink)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetFileSize(int64_t *aFileSize)
+FileDescriptorFile::GetFileSize(int64_t* aFileSize)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -381,91 +385,91 @@ FileDescriptorFile::SetFileSize(int64_t aFileSize)
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetFileSizeOfLink(int64_t *aFileSize)
+FileDescriptorFile::GetFileSizeOfLink(int64_t* aFileSize)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Exists(bool *_retval)
+FileDescriptorFile::Exists(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsWritable(bool *_retval)
+FileDescriptorFile::IsWritable(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsReadable(bool *_retval)
+FileDescriptorFile::IsReadable(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsExecutable(bool *_retval)
+FileDescriptorFile::IsExecutable(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsHidden(bool *_retval)
+FileDescriptorFile::IsHidden(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsDirectory(bool *_retval)
+FileDescriptorFile::IsDirectory(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsFile(bool *_retval)
+FileDescriptorFile::IsFile(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsSymlink(bool *_retval)
+FileDescriptorFile::IsSymlink(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::IsSpecial(bool *_retval)
+FileDescriptorFile::IsSpecial(bool* aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::CreateUnique(uint32_t type, uint32_t attributes)
+FileDescriptorFile::CreateUnique(uint32_t aType, uint32_t aAttributes)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
+FileDescriptorFile::GetDirectoryEntries(nsISimpleEnumerator** aEntries)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::OpenANSIFileDesc(const char *mode, FILE **_retval)
+FileDescriptorFile::OpenANSIFileDesc(const char* aMode, FILE** aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::Load(PRLibrary **_retval)
+FileDescriptorFile::Load(PRLibrary** aRetVal)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-FileDescriptorFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
+FileDescriptorFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

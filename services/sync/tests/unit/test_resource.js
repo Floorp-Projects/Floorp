@@ -445,7 +445,7 @@ add_task(async function test() {
   // And this is what happens if JS throws an exception.
   res18 = new Resource(server.baseURI + "/json");
   onProgress = function(rec) {
-    throw "BOO!";
+    throw new Error("BOO!");
   };
   res18._onProgress = onProgress;
   let oldWarn = res18._log.warn;
@@ -459,8 +459,8 @@ add_task(async function test() {
   }
 
   // It throws and logs.
-  do_check_eq(error.result, Cr.NS_ERROR_XPC_JS_THREW_STRING);
-  do_check_eq(error.message, "NS_ERROR_XPC_JS_THREW_STRING");
+  do_check_eq(error.result, Cr.NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS);
+  do_check_eq(error.message, "NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS");
   do_check_eq(warnings.pop(), "${action} request to ${url} failed: ${ex}");
   do_check_eq(warnings.pop(),
               "Got exception calling onProgress handler during fetch of " +

@@ -30,14 +30,14 @@ async function throwsGen(constraint, f) {
   ok(threw, "did not throw an exception");
 
   const debuggingMessage = `got ${exception}, expected ${constraint}`;
-  let message = exception;
-  if (typeof exception === "object") {
-    message = exception.message;
-  }
 
   if (typeof constraint === "function") {
-    ok(constraint(message), debuggingMessage);
+    ok(constraint(exception), debuggingMessage);
   } else {
+    let message = exception;
+    if (typeof exception === "object") {
+      message = exception.message;
+    }
     ok(constraint === message, debuggingMessage);
   }
 }

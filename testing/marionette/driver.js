@@ -75,6 +75,14 @@ const logger = Log.repository.getLogger("Marionette");
 const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
     .getService(Ci.nsIMessageBroadcaster);
 
+/**
+ * The Marionette WebDriver services provides a standard conforming
+ * implementation of the W3C WebDriver specification.
+ *
+ * @see {@link https://w3c.github.io/webdriver/webdriver-spec.html}
+ * @namespace driver
+ */
+
 // This is used to prevent newSession from returning before the telephony
 // API's are ready; see bug 792647.  This assumes that marionette-server.js
 // will be loaded before the 'system-message-listener-ready' message
@@ -84,11 +92,16 @@ Services.obs.addObserver(function() {
   systemMessageListenerReady = true;
 }, "system-message-listener-ready");
 
+/**
+ * @enum
+ * @memberof driver
+ */
 this.Context = {
   CHROME: "chrome",
   CONTENT: "content",
 };
 
+/** @memberof driver */
 this.Context.fromString = function(s) {
   s = s.toUpperCase();
   if (s in this) {
@@ -98,11 +111,17 @@ this.Context.fromString = function(s) {
 };
 
 /**
-* Helper function for converting an nsISimpleEnumerator to
-* a javascript iterator
-* @param{nsISimpleEnumerator} enumerator
-*    enumerator to convert
-*/
+ * Helper function for converting a {@link nsISimpleEnumerator} to a
+ * JavaScript iterator.
+ *
+ * @memberof driver
+ *
+ * @param {nsISimpleEnumerator} enumerator
+ *     Enumerator to turn into  iterator.
+ *
+ * @return {Iterable}
+ *     Iterator.
+ */
 function* enumeratorIterator(enumerator) {
   while (enumerator.hasMoreElements()) {
     yield enumerator.getNext();
@@ -114,9 +133,11 @@ function* enumeratorIterator(enumerator) {
  * in chrome space and mediates calls to the message listener of the current
  * browsing context's content frame message listener via ListenerProxy.
  *
- * Throughout this prototype, functions with the argument {@code cmd}'s
- * documentation refers to the contents of the {@code cmd.parameters}
+ * Throughout this prototype, functions with the argument <var>cmd</var>'s
+ * documentation refers to the contents of the <code>cmd.parameter</code>}
  * object.
+ *
+ * @class GeckoDriver
  *
  * @param {string} appName
  *     Description of the product, for example "Firefox".
@@ -318,7 +339,7 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
  *
  * @param {string} name
  *     Suffix of the targetted message listener
- *     ({@code Marionette:<suffix>}).
+ *     <tt>Marionette:SUFFIX</tt>.
  * @param {Object=} msg
  *     Optional JSON serialisable object to send to the listener.
  * @param {number=} commandID
@@ -376,9 +397,9 @@ GeckoDriver.prototype.sendTargettedAsyncMessage_ = function(name, payload) {
 /**
  * Get the session's current top-level browsing context.
  *
- * It will return the outer {@ChromeWindow} previously selected by window
- * handle through {@code #switchToWindow}, or the first window that was
- * registered.
+ * It will return the outer {@link ChromeWindow} previously selected by
+ * window handle through {@link #switchToWindow}, or the first window that
+ * was registered.
  *
  * @param {Context=} forcedContext
  *     Optional name of the context to use for finding the window.
@@ -465,7 +486,7 @@ GeckoDriver.prototype.addBrowser = function(win) {
  *
  * @param {nsIDOMWindow} win
  *     Window whose browser we need to access.
- * @param {boolean=false} isNewSession
+ * @param {boolean=} [false] isNewSession
  *     True if this is the first time we're talking to this browser.
  */
 GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
@@ -776,7 +797,7 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  * context, if in content space, or in chrome space otherwise, and returns
  * the return value of the function.
  *
- * It is important to note that if the {@code sandboxName} parameter
+ * It is important to note that if the <var>sandboxName</var> parameter
  * is left undefined, the script will be evaluated in a mutable sandbox,
  * causing any change it makes on the global state of the document to have
  * lasting side-effects.
@@ -784,15 +805,15 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  * @param {string} script
  *     Script to evaluate as a function body.
  * @param {Array.<(string|boolean|number|object|WebElement)>} args
- *     Arguments exposed to the script in {@code arguments}.  The array
- *     items must be serialisable to the WebDriver protocol.
+ *     Arguments exposed to the script in <code>arguments</code>.
+ *     The array items must be serialisable to the WebDriver protocol.
  * @param {number} scriptTimeout
  *     Duration in milliseconds of when to interrupt and abort the
  *     script evaluation.
  * @param {string=} sandbox
  *     Name of the sandbox to evaluate the script in.  The sandbox is
  *     cached for later re-use on the same Window object if
- *     {@code newSandbox} is false.  If he parameter is undefined,
+ *     <var>newSandbox</var> is false.  If he parameter is undefined,
  *     the script is evaluated in a mutable sandbox.  If the parameter
  *     is "system", it will be evaluted in a sandbox with elevated system
  *     privileges, equivalent to chrome space.
@@ -805,8 +826,8 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  * @param {number=} line
  *     Line in the client's program where this script is evaluated.
  * @param {boolean=} debug_script
- *     Attach an {@code onerror} event handler on the Window object.
- *     It does not differentiate content errors from chrome errors.
+ *     Attach an <code>onerror</code> event handler on the {@link Window}
+ *     object.  It does not differentiate content errors from chrome errors.
  * @param {boolean=} directInject
  *     Evaluate the script without wrapping it in a function.
  *
@@ -814,11 +835,11 @@ GeckoDriver.prototype.getContext = function(cmd, resp) {
  *     Return value from the script, or null which signifies either the
  *     JavaScript notion of null or undefined.
  *
- * @throws ScriptTimeoutError
- *     If the script was interrupted due to reaching the {@code
- *     scriptTimeout} or default timeout.
- * @throws JavaScriptError
- *     If an Error was thrown whilst evaluating the script.
+ * @throws {ScriptTimeoutError}
+ *     If the script was interrupted due to reaching the
+ *     <var>scriptTimeout</var> or default timeout.
+ * @throws {JavaScriptError}
+ *     If an {@link Error} was thrown whilst evaluating the script.
  */
 GeckoDriver.prototype.executeScript = function*(cmd, resp) {
   assert.window(this.getCurrentWindow());
@@ -830,7 +851,7 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
     sandboxName: cmd.parameters.sandbox,
     newSandbox: !!(typeof cmd.parameters.newSandbox == "undefined") ||
         cmd.parameters.newSandbox,
-    filename: cmd.parameters.filename,
+    file: cmd.parameters.filename,
     line: cmd.parameters.line,
     debug: cmd.parameters.debug_script,
   };
@@ -843,15 +864,17 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  * context, if in content space, or in chrome space otherwise, and returns
  * the object passed to the callback.
  *
- * The callback is always the last argument to the {@code arguments}
+ * The callback is always the last argument to the <var>arguments</var>
  * list passed to the function scope of the script.  It can be retrieved
  * as such:
  *
+ * <pre><code>
  *     let callback = arguments[arguments.length - 1];
  *     callback("foo");
  *     // "foo" is returned
+ * </code></pre>
  *
- * It is important to note that if the {@code sandboxName} parameter
+ * It is important to note that if the <var>sandboxName</var> parameter
  * is left undefined, the script will be evaluated in a mutable sandbox,
  * causing any change it makes on the global state of the document to have
  * lasting side-effects.
@@ -859,15 +882,15 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  * @param {string} script
  *     Script to evaluate as a function body.
  * @param {Array.<(string|boolean|number|object|WebElement)>} args
- *     Arguments exposed to the script in {@code arguments}.  The array
- *     items must be serialisable to the WebDriver protocol.
+ *     Arguments exposed to the script in <code>arguments</code>.
+ *     The array items must be serialisable to the WebDriver protocol.
  * @param {number} scriptTimeout
  *     Duration in milliseconds of when to interrupt and abort the
  *     script evaluation.
  * @param {string=} sandbox
  *     Name of the sandbox to evaluate the script in.  The sandbox is
  *     cached for later re-use on the same Window object if
- *     {@code newSandbox} is false.  If the parameter is undefined,
+ *     <var>newSandbox</var> is false.  If the parameter is undefined,
  *     the script is evaluated in a mutable sandbox.  If the parameter
  *     is "system", it will be evaluted in a sandbox with elevated system
  *     privileges, equivalent to chrome space.
@@ -880,8 +903,8 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  * @param {number=} line
  *     Line in the client's program where this script is evaluated.
  * @param {boolean=} debug_script
- *     Attach an {@code onerror} event handler on the Window object.
- *     It does not differentiate content errors from chrome errors.
+ *     Attach an <code>onerror</code> event handler on the {@link Window}
+ *     object.  It does not differentiate content errors from chrome errors.
  * @param {boolean=} directInject
  *     Evaluate the script without wrapping it in a function.
  *
@@ -889,10 +912,10 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  *     Return value from the script, or null which signifies either the
  *     JavaScript notion of null or undefined.
  *
- * @throws ScriptTimeoutError
- *     If the script was interrupted due to reaching the {@code
- *     scriptTimeout} or default timeout.
- * @throws JavaScriptError
+ * @throws {ScriptTimeoutError}
+ *     If the script was interrupted due to reaching the
+ *     <var>scriptTimeout</var> or default timeout.
+ * @throws {JavaScriptError}
  *     If an Error was thrown whilst evaluating the script.
  */
 GeckoDriver.prototype.executeAsyncScript = function* (cmd, resp) {
@@ -905,7 +928,7 @@ GeckoDriver.prototype.executeAsyncScript = function* (cmd, resp) {
     sandboxName: cmd.parameters.sandbox,
     newSandbox: !!(typeof cmd.parameters.newSandbox == "undefined") ||
         cmd.parameters.newSandbox,
-    filename: cmd.parameters.filename,
+    file: cmd.parameters.filename,
     line: cmd.parameters.line,
     debug: cmd.parameters.debug_script,
     async: true,
@@ -2505,8 +2528,8 @@ GeckoDriver.prototype.switchToShadowRoot = function*(cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  * @throws {InvalidCookieDomainError}
- *     If |cookie| is for a different domain than the active document's
- *     host.
+ *     If <var>cookie</var> is for a different domain than the active
+ *     document's host.
  */
 GeckoDriver.prototype.addCookie = function(cmd, resp) {
   assert.content(this.context);
@@ -2531,8 +2554,8 @@ GeckoDriver.prototype.addCookie = function(cmd, resp) {
 /**
  * Get all the cookies for the current domain.
  *
- * This is the equivalent of calling {@code document.cookie} and parsing
- * the result.
+ * This is the equivalent of calling <code>document.cookie</code> and
+ * parsing the result.
  *
  * @throws {UnsupportedOperationError}
  *     Not available in current context.
@@ -2761,7 +2784,7 @@ GeckoDriver.prototype.deleteSession = function(cmd, resp) {
  *     List of web elements to highlight.
  * @param {boolean} full
  *     True to take a screenshot of the entire document element. Is not
- *     considered if {@code id} is not defined. Defaults to true.
+ *     considered if <var>id</var> is not defined. Defaults to true.
  * @param {boolean=} hash
  *     True if the user requests a hash of the image data.
  * @param {boolean=} scroll
@@ -2769,9 +2792,9 @@ GeckoDriver.prototype.deleteSession = function(cmd, resp) {
  *     scroll to the element.
  *
  * @return {string}
- *     If |hash| is false, PNG image encoded as Base64 encoded string.
- *     If |hash| is True, hex digest of the SHA-256 hash of the base64
- *     encoded string.
+ *     If <var>hash</var> is false, PNG image encoded as Base64 encoded
+ *     string.  If <var>hash</var> is true, hex digest of the SHA-256
+ *     hash of the Base64 encoded string.
  */
 GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
   let win = assert.window(this.getCurrentWindow());
@@ -3050,7 +3073,7 @@ GeckoDriver.prototype.acceptConnections = function(cmd, resp) {
  * Marionette will stop accepting new connections before ending the
  * current session, and finally attempting to quit the application.
  *
- * Optional {@code nsIAppStartup} flags may be provided as
+ * Optional {@link nsIAppStartup} flags may be provided as
  * an array of masks, and these will be combined by ORing
  * them with a bitmask.  The available masks are defined in
  * https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIAppStartup.

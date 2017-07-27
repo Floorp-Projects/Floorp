@@ -3,7 +3,7 @@ Cu.import("resource://services-sync/service.js");
 
 add_task(async function run_test() {
   _("Make sure catch when copied to an object will correctly catch stuff");
-  let ret, rightThis, didCall, didThrow, wasTen, wasLocked;
+  let ret, rightThis, didCall, didThrow, wasCovfefe, wasLocked;
   let obj = {
     _catch: Utils.catch,
     _log: {
@@ -27,7 +27,7 @@ add_task(async function run_test() {
       return this._catch(async function() {
         rightThis = this == obj;
         didCall = true;
-        throw 10;
+        throw new Error("covfefe");
       })();
     },
 
@@ -35,9 +35,9 @@ add_task(async function run_test() {
       return this._catch(async function() {
         rightThis = this == obj;
         didCall = true;
-        throw 10;
+        throw new Error("covfefe");
       }, async function(ex) {
-        wasTen = (ex == 10)
+        wasCovfefe = ex && ex.message == "covfefe";
       })();
     },
 
@@ -45,15 +45,15 @@ add_task(async function run_test() {
       return this._catch(async function() {
         rightThis = this == obj;
         didCall = true;
-        throw ("Could not acquire lock.");
+        Utils.throwLockException(null);
       })();
     },
 
     lockedy_chained() {
-      return this._catch(function() {
+      return this._catch(async function() {
         rightThis = this == obj;
         didCall = true;
-        return Promise.resolve().then( () => { throw ("Could not acquire lock.") });
+        Utils.throwLockException(null);
       })();
     },
   };
@@ -65,7 +65,7 @@ add_task(async function run_test() {
   do_check_true(rightThis);
   do_check_true(didCall);
   do_check_false(didThrow);
-  do_check_eq(wasTen, undefined);
+  do_check_eq(wasCovfefe, undefined);
   do_check_false(wasLocked);
 
   _("Make sure catch/throw results in debug call and caller doesn't need to handle exception");
@@ -75,7 +75,7 @@ add_task(async function run_test() {
   do_check_true(rightThis);
   do_check_true(didCall);
   do_check_true(didThrow);
-  do_check_eq(wasTen, undefined);
+  do_check_eq(wasCovfefe, undefined);
   do_check_false(wasLocked);
 
   _("Test callback for exception testing.");
@@ -85,29 +85,29 @@ add_task(async function run_test() {
   do_check_true(rightThis);
   do_check_true(didCall);
   do_check_true(didThrow);
-  do_check_true(wasTen);
+  do_check_true(wasCovfefe);
   do_check_false(wasLocked);
 
   _("Test the lock-aware catch that Service uses.");
   obj._catch = Service._catch;
   rightThis = didCall = didThrow = wasLocked = false;
-  wasTen = undefined;
+  wasCovfefe = undefined;
   ret = await obj.lockedy();
   do_check_eq(ret, undefined);
   do_check_true(rightThis);
   do_check_true(didCall);
   do_check_true(didThrow);
-  do_check_eq(wasTen, undefined);
+  do_check_eq(wasCovfefe, undefined);
   do_check_true(wasLocked);
 
   _("Test the lock-aware catch that Service uses with a chained promise.");
   rightThis = didCall = didThrow = wasLocked = false;
-  wasTen = undefined;
+  wasCovfefe = undefined;
   ret = await obj.lockedy_chained();
   do_check_eq(ret, undefined);
   do_check_true(rightThis);
   do_check_true(didCall);
   do_check_true(didThrow);
-  do_check_eq(wasTen, undefined);
+  do_check_eq(wasCovfefe, undefined);
   do_check_true(wasLocked);
 });

@@ -6,6 +6,15 @@
 
 JAR_MANIFESTS += ['jar.mn']
 
+EXTRA_COMPONENTS += [
+    'devtools-startup.js',
+    'devtools-startup.manifest',
+]
+
+JS_PREFERENCE_PP_FILES += [
+    'devtools-startup-prefs.js',
+]
+
 # Register the about:debugging page only for 'addon' and 'all' builds.
 if CONFIG['MOZ_DEVTOOLS'] != 'server':
     EXTRA_COMPONENTS += [

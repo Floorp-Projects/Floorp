@@ -884,7 +884,10 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
     for i in stsc_iter {
         let chunk_id = i.0 as usize;
         let sample_counts = i.1;
-        let mut cur_position: u64 = stco.offsets[chunk_id];
+        let mut cur_position = match stco.offsets.get(chunk_id) {
+            Some(&i) => i,
+            _ => return None,
+        };
         for _ in 0 .. sample_counts {
             let start_offset = cur_position;
             let end_offset = match (stsz.sample_size, sample_size_iter.next()) {
@@ -913,7 +916,11 @@ fn create_sample_table(track: &Track, track_offset_time: i64) -> Option<Vec<mp4p
     // Mark the sync sample in sample_table according to 'stss'.
     if let Some(ref v) = track.stss {
         for iter in &v.samples {
-            sample_table[(iter - 1) as usize].sync = true;
+            if let Some(elem) = sample_table.get_mut((iter - 1) as usize) {
+                elem.sync = true;
+            } else {
+                return None;
+            }
         }
     }
 

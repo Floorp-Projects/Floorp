@@ -1217,6 +1217,24 @@ const transformListType = {
         [{ time: 0,    expected: rotate3dToMatrix(1, 1, 0,    -Math.PI / 4) },
          { time: 1000, expected: rotate3dToMatrix(1, 1, 0, 3 * Math.PI / 4) }]);
     }, property + ': matrix3d');
+
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var matrixArray = [ 1, 0, 0, 0,
+                          0, 1, 0, 0,
+                          0, 0, 1, 0,
+                          0, 0, 1, 1 ];
+
+      target.style[idlName] = createMatrixFromArray(matrixArray);
+      var animation =
+        target.animate({ [idlName]: [ 'none', 'none' ] },
+                       { duration: 1000, fill: 'both', composite: 'accumulate' });
+
+      testAnimationSampleMatrices(animation, idlName,
+        [{ time: 0,    expected: matrixArray },
+         { time: 1000, expected: matrixArray }]);
+    }, property + ': none');
   },
 };
 

@@ -76,9 +76,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                                        .getService(Components.interfaces.nsIPrefService)
                                        .getDefaultBranch("browser.urlbar.");
 
+        Services.prefs.addObserver("browser.search.suggest.enabled", this);
+        this.browserSearchSuggestEnabled = Services.prefs.getBoolPref("browser.search.suggest.enabled");
+
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
+        this.speculativeConnectEnabled = this._prefs.getBoolPref("speculativeConnect.enabled");
+        this.urlbarSearchSuggestEnabled = this._prefs.getBoolPref("suggest.searches");
         this.timeout = this._prefs.getIntPref("delay");
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
@@ -134,6 +139,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <destructor><![CDATA[
         this._prefs.removeObserver("", this);
         this._prefs = null;
+        Services.prefs.removeObserver("browser.search.suggest.enabled", this);
         this.inputField.controllers.removeController(this._copyCutController);
         this.inputField.removeEventListener("paste", this);
         this.inputField.removeEventListener("mousedown", this);
@@ -1082,12 +1088,19 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "formatting.enabled":
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
                 break;
+              case "speculativeConnect.enabled":
+                this.speculativeConnectEnabled = this._prefs.getBoolPref(aData);
+                break;
+              case "browser.search.suggest.enabled":
+                this.browserSearchSuggestEnabled = Services.prefs.getBoolPref(aData);
+                break;
               case "suggest.searches":
+                this.urlbarSearchSuggestEnabled = this._prefs.getBoolPref(aData);
               case "userMadeSearchSuggestionsChoice":
                 // Mirror the value for future use, see the comment in the
                 // binding's constructor.
                 this._prefs.setBoolPref("searchSuggestionsChoice",
-                  this._prefs.getBoolPref("suggest.searches"));
+                  this.urlbarSearchSuggestEnabled);
                 // Clear the cached value to allow changing conditions in tests.
                 delete this._whichSearchSuggestionsNotification;
                 break;
@@ -1381,8 +1394,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return this._whichSearchSuggestionsNotification;
           }
 
-          if (Services.prefs.getBoolPref("browser.search.suggest.enabled") &&
-              !this.inPrivateContext &&
+          if (this.browserSearchSuggestEnabled && !this.inPrivateContext &&
               // In any case, if the user made a choice we should not nag him.
               !this._userMadeSearchSuggestionsChoice) {
             let enabledByDefault = this._defaultPrefs.getBoolPref("suggest.searches");
@@ -1392,7 +1404,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
             if (enabledByDefault &&
                 // Has not been switched off.
-                this._prefs.getBoolPref("suggest.searches") &&
+                this.urlbarSearchSuggestEnabled &&
                 this._prefs.getIntPref("timesBeforeHidingSuggestionsHint")) {
               return "opt-out";
             }
@@ -2124,11 +2136,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="maybeSetupSpeculativeConnect">
         <parameter name="aUriString"/>
         <body><![CDATA[
-          // We shouldn't leak autocomplete result in the private context.
-          if (!Services.prefs.getBoolPref("browser.urlbar.speculativeConnect.enabled") ||
-              this.input.inPrivateContext) {
-            return;
-          }
           try {
             let uri = makeURI(aUriString);
             Services.io.speculativeConnect2(uri, gBrowser.contentPrincipal, null);
@@ -2152,18 +2159,29 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               this.richlistbox.suppressMenuItemEvent = false;
             }
             // If this is the first time we get the result from the current
-            // search, and the result is an "autofill" result, that means it's
-            // the site that user frequently visits. Then we could speculatively
-            // connect to this site as a performance optimization.
+            // search and we are not in the private context, we can speculatively
+            // connect to the intended site as a performance optimization.
             if (!this.input.gotResultForCurrentQuery &&
-                this.input.mController.matchCount > 0 &&
-                this.input.mController.getStyleAt(0).includes("autofill")) {
-              let uri = this.input.mController.getFinalCompleteValueAt(0);
-              // "http" will be stripped out, but other scheme won't.
-              if (!uri.includes("://")) {
-                uri = "http://" + uri;
+                this.input.speculativeConnectEnabled &&
+                !this.input.inPrivateContext &&
+                this.input.mController.matchCount > 0) {
+              let firstStyle = this.input.mController.getStyleAt(0);
+              if (firstStyle.includes("autofill")) {
+                let uri = this.input.mController.getFinalCompleteValueAt(0);
+                // "http" will be stripped out, but other scheme won't.
+                if (!uri.includes("://")) {
+                  uri = "http://" + uri;
+                }
+                this.maybeSetupSpeculativeConnect(uri);
+              } else if (firstStyle.includes("searchengine") &&
+                         this.input.browserSearchSuggestEnabled &&
+                         this.input.urlbarSearchSuggestEnabled) {
+                // Preconnect to the current search engine only if the search
+                // suggestions are enabled.
+                let engine = Services.search.currentEngine;
+                engine.speculativeConnect({window,
+                                           originAttributes: gBrowser.contentPrincipal.originAttributes});
               }
-              this.maybeSetupSpeculativeConnect(uri);
             }
 
             // When a result is present the footer should always be visible.

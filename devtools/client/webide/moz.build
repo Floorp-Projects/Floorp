@@ -17,9 +17,5 @@ MOCHITEST_CHROME_MANIFESTS += [
     'test/chrome.ini'
 ]
 
-JS_PREFERENCE_FILES += [
-    'webide-prefs.js',
-]
-
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: WebIDE')

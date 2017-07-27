@@ -16,6 +16,21 @@ var { requireRawId } = Cu.import("resource://devtools/shared/loader-plugin-raw.j
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
                          "require", "loader"];
 
+// Fire an event to notify the DevTools addon bootstrap that DevTools are being
+// initialized. The loader is always the first entry point for all DevTools consumers.
+Services.obs.notifyObservers(null, "devtools-loader-starting");
+
+// Load DevToolsPreferences as soon as DevTools code starts being required.
+// With DevTools as an addon, the DevTools preferences need to be dynamically loaded.
+const isParentProcess =
+    Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+const isFirefox = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+if (isParentProcess && isFirefox) {
+  // Load client preferences if we are in Firefox's parent process only.
+  const {DevToolsPreferences} =
+    Cu.import("chrome://devtools/content/preferences/DevToolsPreferences.jsm", {});
+  DevToolsPreferences.loadPrefs();
+}
 /**
  * Providers are different strategies for loading the devtools.
  */

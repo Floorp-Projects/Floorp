@@ -90,12 +90,12 @@ add_task(function* () {
 
     is(labels[0].textContent, "0",
       "The first json property name was incorrect.");
-    is(values[0].textContent, "Object",
+    is(values[0].textContent, "{\u2026}",
       "The first json property value was incorrect.");
 
     is(labels[1].textContent, "1",
       "The second json property name was incorrect.");
-    is(values[1].textContent, "Object",
+    is(values[1].textContent, "{\u2026}",
       "The second json property value was incorrect.");
   }
 });

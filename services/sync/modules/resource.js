@@ -215,7 +215,7 @@ AsyncResource.prototype = {
   },
 
   _onComplete(ex, data, channel) {
-    this._log.trace("In _onComplete. Error is " + ex + ".");
+    this._log.trace("In _onComplete. An error occurred.", ex);
 
     if (ex) {
       if (!Async.isShutdownException(ex)) {

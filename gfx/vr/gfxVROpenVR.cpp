@@ -16,7 +16,9 @@
 #ifdef XP_WIN
 #include "CompositorD3D11.h"
 #include "TextureD3D11.h"
-#endif // XP_WIN
+#elif defined(XP_MACOSX)
+#include "mozilla/gfx/MacIOSurface.h"
+#endif
 
 #include "gfxVROpenVR.h"
 #include "VRManager.h"
@@ -279,22 +281,20 @@ VRDisplayOpenVR::StopPresentation()
   mIsPresenting = false;
 }
 
-
-#if defined(XP_WIN)
-
 bool
-VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
-  const IntSize& aSize,
-  const gfx::Rect& aLeftEyeRect,
-  const gfx::Rect& aRightEyeRect)
+VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
+                             ::vr::ETextureType aTextureType,
+                             const IntSize& aSize,
+                             const gfx::Rect& aLeftEyeRect,
+                             const gfx::Rect& aRightEyeRect)
 {
   if (!mIsPresenting) {
     return false;
   }
 
   ::vr::Texture_t tex;
-  tex.handle = (void *)aSource->GetD3D11Texture();
-  tex.eType = ::vr::ETextureType::TextureType_DirectX;
+  tex.handle = aTextureHandle;
+  tex.eType = aTextureType;
   tex.eColorSpace = ::vr::EColorSpace::ColorSpace_Auto;
 
   ::vr::VRTextureBounds_t bounds;
@@ -322,6 +322,39 @@ VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
   mVRCompositor->PostPresentHandoff();
 
   return true;
+}
+
+#if defined(XP_WIN)
+
+bool
+VRDisplayOpenVR::SubmitFrame(TextureSourceD3D11* aSource,
+                             const IntSize& aSize,
+                             const gfx::Rect& aLeftEyeRect,
+                             const gfx::Rect& aRightEyeRect)
+{
+  return SubmitFrame((void *)aSource->GetD3D11Texture(),
+                     ::vr::ETextureType::TextureType_DirectX,
+                     aSize, aLeftEyeRect, aRightEyeRect);
+}
+
+#elif defined(XP_MACOSX)
+
+bool
+VRDisplayOpenVR::SubmitFrame(MacIOSurface* aMacIOSurface,
+                             const IntSize& aSize,
+                             const gfx::Rect& aLeftEyeRect,
+                             const gfx::Rect& aRightEyeRect)
+{
+  const void* ioSurface = aMacIOSurface->GetIOSurfacePtr();
+  bool result = false;
+  if (ioSurface == nullptr) {
+    NS_WARNING("VRDisplayOpenVR::SubmitFrame() could not get an IOSurface");
+  } else {
+    result = SubmitFrame((void *)ioSurface,
+                         ::vr::ETextureType::TextureType_IOSurface,
+                         aSize, aLeftEyeRect, aRightEyeRect);
+  }
+  return result;
 }
 
 #endif

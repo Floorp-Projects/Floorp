@@ -14,6 +14,7 @@
 
 this.EXPORTED_SYMBOLS = ["atom"];
 
+/** @namespace */
 this.atom = {};
 
 // https://github.com/SeleniumHQ/selenium/blob/master/javascript/atoms/action.js#L83

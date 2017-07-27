@@ -101,6 +101,7 @@ private:
     nsCOMPtr<nsIRequest>            mRequest;
     nsCOMPtr<nsIFile>               mJarFile;
     nsCOMPtr<nsIFile>               mJarFileOverride;
+    nsCOMPtr<nsIZipReader>          mPreCachedJarReader;
     nsCOMPtr<nsIURI>                mJarBaseURI;
     nsCString                       mJarEntry;
     nsCString                       mInnerJarEntry;

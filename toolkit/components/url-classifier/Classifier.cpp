@@ -21,7 +21,6 @@
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Unused.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
@@ -814,7 +813,7 @@ Classifier::ApplyUpdatesBackground(nsTArray<TableUpdate*>* aUpdates,
       }
     }
 
-    LOG(("Applying %" PRIuSIZE " table updates.", aUpdates->Length()));
+    LOG(("Applying %zu table updates.", aUpdates->Length()));
 
     for (uint32_t i = 0; i < aUpdates->Length(); i++) {
       // Previous UpdateHashStore() may have consumed this update..
@@ -879,7 +878,7 @@ Classifier::ApplyUpdatesForeground(nsresult aBackgroundRv,
 nsresult
 Classifier::ApplyFullHashes(nsTArray<TableUpdate*>* aUpdates)
 {
-  LOG(("Applying %" PRIuSIZE " table gethashes.", aUpdates->Length()));
+  LOG(("Applying %zu table gethashes.", aUpdates->Length()));
 
   ScopedUpdatesClearer scopedUpdatesClearer(aUpdates);
   for (uint32_t i = 0; i < aUpdates->Length(); i++) {
@@ -1254,11 +1253,11 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
     if (updateV2) {
       LOG(("Applied update to table %s:", store.TableName().get()));
       LOG(("  %d add chunks", updateV2->AddChunks().Length()));
-      LOG(("  %" PRIuSIZE " add prefixes", updateV2->AddPrefixes().Length()));
-      LOG(("  %" PRIuSIZE " add completions", updateV2->AddCompletes().Length()));
+      LOG(("  %zu add prefixes", updateV2->AddPrefixes().Length()));
+      LOG(("  %zu add completions", updateV2->AddCompletes().Length()));
       LOG(("  %d sub chunks", updateV2->SubChunks().Length()));
-      LOG(("  %" PRIuSIZE " sub prefixes", updateV2->SubPrefixes().Length()));
-      LOG(("  %" PRIuSIZE " sub completions", updateV2->SubCompletes().Length()));
+      LOG(("  %zu sub prefixes", updateV2->SubPrefixes().Length()));
+      LOG(("  %zu sub completions", updateV2->SubCompletes().Length()));
       LOG(("  %d add expirations", updateV2->AddExpirations().Length()));
       LOG(("  %d sub expirations", updateV2->SubExpirations().Length()));
     }
@@ -1273,11 +1272,11 @@ Classifier::UpdateHashStore(nsTArray<TableUpdate*>* aUpdates,
 
   LOG(("Table %s now has:", store.TableName().get()));
   LOG(("  %d add chunks", store.AddChunks().Length()));
-  LOG(("  %" PRIuSIZE " add prefixes", store.AddPrefixes().Length()));
-  LOG(("  %" PRIuSIZE " add completions", store.AddCompletes().Length()));
+  LOG(("  %zu add prefixes", store.AddPrefixes().Length()));
+  LOG(("  %zu add completions", store.AddCompletes().Length()));
   LOG(("  %d sub chunks", store.SubChunks().Length()));
-  LOG(("  %" PRIuSIZE " sub prefixes", store.SubPrefixes().Length()));
-  LOG(("  %" PRIuSIZE " sub completions", store.SubCompletes().Length()));
+  LOG(("  %zu sub prefixes", store.SubPrefixes().Length()));
+  LOG(("  %zu sub completions", store.SubCompletes().Length()));
 
   rv = store.WriteFile();
   NS_ENSURE_SUCCESS(rv, rv);

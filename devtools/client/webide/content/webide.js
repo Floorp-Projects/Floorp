@@ -116,6 +116,12 @@ var UI = {
 
     this.configureSimulator = this.configureSimulator.bind(this);
     Simulators.on("configure", this.configureSimulator);
+
+    // This allows to use mac specific selectors in webide css files, using
+    // `:root[platform="mac"]`.
+    if (navigator.platform.startsWith("Mac")) {
+      document.documentElement.setAttribute("platform", "mac");
+    }
   },
 
   destroy: function () {
@@ -200,9 +206,6 @@ var UI = {
         break;
       case "runtime-targets":
         this.autoSelectProject();
-        break;
-      case "pre-package":
-        this.prePackageLog(details);
         break;
     }
     this._updatePromise = promise.resolve();
@@ -881,12 +884,6 @@ var UI = {
 
     return gDevTools.showToolbox(target, null, host, options);
   },
-
-  prePackageLog: function (msg) {
-    if (msg == "start") {
-      UI.selectDeckPanel("logs");
-    }
-  }
 };
 
 EventEmitter.decorate(UI);

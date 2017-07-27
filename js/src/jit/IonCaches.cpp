@@ -6,7 +6,6 @@
 
 #include "jit/IonCaches.h"
 
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
 
 #include "jstypes.h"

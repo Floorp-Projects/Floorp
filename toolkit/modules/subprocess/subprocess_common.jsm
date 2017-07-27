@@ -25,7 +25,7 @@ Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subproces
 /* global SubprocessConstants */
 var EXPORTED_SYMBOLS = ["BaseProcess", "PromiseWorker", "SubprocessConstants"];
 
-const BUFFER_SIZE = 4096;
+const BUFFER_SIZE = 32768;
 
 let nextResponseId = 0;
 

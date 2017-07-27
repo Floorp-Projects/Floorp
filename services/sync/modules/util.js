@@ -24,9 +24,25 @@ XPCOMUtils.defineLazyGetter(this, "FxAccountsCommon", function() {
 });
 
 /*
+ * Custom exception types.
+ */
+class LockException extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "LockException";
+  }
+}
+
+class HMACMismatch extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "HMACMismatch";
+  }
+}
+
+/*
  * Utility functions
  */
-
 this.Utils = {
   // Alias in functions from CommonUtils. These previously were defined here.
   // In the ideal world, references to these would be removed.
@@ -99,6 +115,10 @@ this.Utils = {
     };
   },
 
+  throwLockException(label) {
+    throw new LockException(`Could not acquire lock. Label: "${label}".`);
+  },
+
   /**
    * Wrap a [promise-returning] function to call lock before calling the function
    * then unlock when it finishes executing or if it threw an error.
@@ -110,7 +130,7 @@ this.Utils = {
     let thisArg = this;
     return async function WrappedLock() {
       if (!thisArg.lock()) {
-        throw "Could not acquire lock. Label: \"" + label + "\".";
+        Utils.throwLockException(label);
       }
 
       try {
@@ -122,7 +142,7 @@ this.Utils = {
   },
 
   isLockException: function isLockException(ex) {
-    return ex && ex.indexOf && ex.indexOf("Could not acquire lock.") == 0;
+    return ex instanceof LockException;
   },
 
   /**
@@ -244,12 +264,12 @@ this.Utils = {
   // Split these out in case we want to make them richer in future, and to
   // avoid inevitable confusion if the message changes.
   throwHMACMismatch: function throwHMACMismatch(shouldBe, is) {
-    throw "Record SHA256 HMAC mismatch: should be " + shouldBe + ", is " + is;
+    throw new HMACMismatch(
+        `Record SHA256 HMAC mismatch: should be ${shouldBe}, is ${is}`);
   },
 
   isHMACMismatch: function isHMACMismatch(ex) {
-    const hmacFail = "Record SHA256 HMAC mismatch: ";
-    return ex && ex.indexOf && (ex.indexOf(hmacFail) == 0);
+    return ex instanceof HMACMismatch;
   },
 
   /**

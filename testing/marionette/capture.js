@@ -14,7 +14,11 @@ const BG_COLOUR = "rgb(255,255,255)";
 const PNG_MIME = "image/png";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-/** Provides primitives to capture screenshots. */
+/**
+ * Provides primitives to capture screenshots.
+ *
+ * @namespace
+ */
 this.capture = {};
 
 capture.Format = {

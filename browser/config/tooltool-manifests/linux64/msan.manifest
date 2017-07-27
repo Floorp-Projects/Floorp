@@ -1,21 +1,5 @@
 [
   {
-    "version": "gcc 4.9.4 + PR64905",
-    "size": 101297752,
-    "digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
-    "algorithm": "sha512",
-    "filename": "gcc.tar.xz",
-    "unpack": true
-  },
-  {
-    "version": "clang 3.9.0, libgcc 4.9.4",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 161014632,
     "digest": "65bebcf94fc66ea618c58c9ac33f0f206095ecfe3931cc6edb301f4b40480e3b44b0f39aea7a25fed8eef47e63523e7e670082947a3662cdc04c68ebbe5dfc89",

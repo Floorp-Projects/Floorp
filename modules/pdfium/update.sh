@@ -112,6 +112,10 @@ apply_patches() {
     # Patch to remove openjpeg support
     echo "Applying patches/bug1368948_remove_openjpeg.patch"
     patch -p3 < patches/bug1368948_remove_openjpeg.patch
+
+    # Patch to avoid using GDIPlusExt while rendering EMF
+    echo "Applying patches/bug1367948_avoid_using_GDIPlusExt.patch"
+    patch -p3 < patches/bug1367948_avoid_using_GDIPlusExt.patch
 }
 
 update_readme() {

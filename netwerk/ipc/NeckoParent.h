@@ -240,12 +240,10 @@ protected:
   /* WebExtensions */
   virtual mozilla::ipc::IPCResult
     RecvGetExtensionStream(const URIParams& aURI,
-                           const LoadInfoArgs& aLoadInfo,
                            GetExtensionStreamResolver&& aResolve) override;
 
   virtual mozilla::ipc::IPCResult
     RecvGetExtensionFD(const URIParams& aURI,
-                       const OptionalLoadInfoArgs& aLoadInfo,
                        GetExtensionFDResolver&& aResolve) override;
 };
 

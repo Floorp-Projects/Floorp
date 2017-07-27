@@ -37,8 +37,11 @@
 **      %ld, %lu, %lx, %lX, %lo - "long" versions of above
 **      %lld, %llu, %llx, %llX, %llo - "long long" versions of above
 **      %zd, %zo, %zu, %zx, %zX - size_t versions of above
-**      %Id, %Io, %Iu, %Ix, %IX - size_t versions of above (for Windows compat)
-**           You should use PRI*SIZE macros instead
+**      %Id, %Io, %Iu, %Ix, %IX - size_t versions of above (for Windows compat).
+**           Note that MSVC 2015 and newer supports the z length modifier so
+**           users should prefer using %z instead of %I. We are supporting %I in
+**           addition to %z in case third-party code that uses %I gets routed to
+**           use this printf implementation.
 **      %s - string
 **      %S, %ls - wide string, that is wchar_t*
 **      %c - character
@@ -53,7 +56,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
 

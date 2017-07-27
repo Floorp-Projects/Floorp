@@ -22,7 +22,11 @@ const CERT_PINNING_ENFORCEMENT_PREF =
 const HSTS_PRELOAD_LIST_PREF =
     "network.stricttransportsecurity.preloadlist";
 
-/** TLS certificate service override management for Marionette. */
+/**
+ * TLS certificate service override management for Marionette.
+ *
+ * @namespace
+ */
 this.cert = {
   Error: {
     Untrusted: 1,

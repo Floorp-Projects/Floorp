@@ -20,6 +20,7 @@
 #include "LoadInfo.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsContentUtils.h"
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
 #include "nsIFileStreams.h"
@@ -41,6 +42,7 @@
 
 #if defined(XP_WIN)
 #include "nsILocalFileWin.h"
+#include "WinUtils.h"
 #endif
 
 #if !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
@@ -69,6 +71,10 @@ public:
 namespace net {
 
 using extensions::URLInfo;
+
+LazyLogModule gExtProtocolLog("ExtProtocol");
+#undef LOG
+#define LOG(...) MOZ_LOG(gExtProtocolLog, LogLevel::Debug, (__VA_ARGS__))
 
 StaticRefPtr<ExtensionProtocolHandler> ExtensionProtocolHandler::sSingleton;
 
@@ -248,14 +254,10 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
   mozilla::ipc::URIParams uri;
   SerializeURI(mURI, uri);
 
-  // Serialize the LoadInfo to send to parent
-  OptionalLoadInfoArgs loadInfo;
-  NS_TRY(mozilla::ipc::LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfo));
-
   RefPtr<ExtensionStreamGetter> self = this;
   if (mIsJarChannel) {
     // Request an FD for this moz-extension URI
-    gNeckoChild->SendGetExtensionFD(uri, loadInfo)->Then(
+    gNeckoChild->SendGetExtensionFD(uri)->Then(
       mMainThreadEventTarget,
       __func__,
       [self] (const FileDescriptor& fd) {
@@ -269,7 +271,7 @@ ExtensionStreamGetter::GetAsync(nsIStreamListener* aListener,
   }
 
   // Request an input stream for this moz-extension URI
-  gNeckoChild->SendGetExtensionStream(uri, loadInfo)->Then(
+  gNeckoChild->SendGetExtensionStream(uri)->Then(
     mMainThreadEventTarget,
     __func__,
     [self] (const OptionalIPCStream& stream) {
@@ -550,13 +552,10 @@ ExtensionProtocolHandler::DevRepoContains(nsIFile* aRequestedFile,
 #endif /* !defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX) */
 
 Result<nsCOMPtr<nsIInputStream>, nsresult>
-ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
-                                    nsILoadInfo* aChildLoadInfo,
-                                    bool* aTerminateSender)
+ExtensionProtocolHandler::NewStream(nsIURI* aChildURI, bool* aTerminateSender)
 {
   MOZ_ASSERT(!IsNeckoChild());
   NS_TRY(aChildURI ? NS_OK : NS_ERROR_INVALID_ARG);
-  NS_TRY(aChildLoadInfo ? NS_OK : NS_ERROR_INVALID_ARG);
   NS_TRY(aTerminateSender ? NS_OK : NS_ERROR_INVALID_ARG);
 
   *aTerminateSender = true;
@@ -604,19 +603,38 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
     return Err(NS_ERROR_FILE_NOT_DIRECTORY);
   }
 
-  /*
-   * Now get a channel for the resolved child URI and make sure the
-   * channel is a file channel.
-   */
-
-  nsCOMPtr<nsIChannel> channel;
-  NS_TRY(NS_NewChannelInternal(getter_AddRefs(channel),
-                               aChildURI,
-                               aChildLoadInfo));
-
-  // Channel should be a file channel. It should never be a JAR
-  // channel because we only request remote streams for unpacked
+  // Make sure the child URI resolves to a file URI then get a file
+  // channel for the request. The resultant channel should be a
+  // file channel because we only request remote streams for unpacked
   // extension resource loads where the URI resolves to a file.
+  nsAutoCString resolvedSpec;
+  NS_TRY(ResolveURI(aChildURI, resolvedSpec));
+
+  nsAutoCString resolvedScheme;
+  NS_TRY(net_ExtractURLScheme(resolvedSpec, resolvedScheme));
+  if (!resolvedScheme.EqualsLiteral("file")) {
+    return Err(NS_ERROR_UNEXPECTED);
+  }
+
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  NS_TRY(rv);
+
+  nsCOMPtr<nsIURI> resolvedURI;
+  NS_TRY(ioService->NewURI(resolvedSpec,
+                           nullptr,
+                           nullptr,
+                           getter_AddRefs(resolvedURI)));
+
+  // We use the system principal to get a file channel for the request,
+  // but only after we've checked (above) that the child URI is of
+  // moz-extension scheme and that the URI host maps to a directory.
+  nsCOMPtr<nsIChannel> channel;
+  NS_TRY(NS_NewChannel(getter_AddRefs(channel),
+                       resolvedURI,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsIContentPolicy::TYPE_OTHER));
+
   nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel, &rv);
   NS_TRY(rv);
 
@@ -631,6 +649,12 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
   // it for reliable subpath checks.
   NS_TRY(extensionDir->Normalize());
   NS_TRY(requestedFile->Normalize());
+#if defined(XP_WIN)
+  if (!widget::WinUtils::ResolveJunctionPointsAndSymLinks(extensionDir) ||
+      !widget::WinUtils::ResolveJunctionPointsAndSymLinks(requestedFile)) {
+    return Err(NS_ERROR_FILE_ACCESS_DENIED);
+  }
+#endif
 
   bool isResourceFromExtensionDir = false;
   NS_TRY(extensionDir->Contains(requestedFile, &isResourceFromExtensionDir));
@@ -660,13 +684,11 @@ ExtensionProtocolHandler::NewStream(nsIURI* aChildURI,
 
 Result<Ok, nsresult>
 ExtensionProtocolHandler::NewFD(nsIURI* aChildURI,
-                                nsILoadInfo* aChildLoadInfo,
                                 bool* aTerminateSender,
                                 NeckoParent::GetExtensionFDResolver& aResolve)
 {
   MOZ_ASSERT(!IsNeckoChild());
   NS_TRY(aChildURI ? NS_OK : NS_ERROR_INVALID_ARG);
-  NS_TRY(aChildLoadInfo ? NS_OK : NS_ERROR_INVALID_ARG);
   NS_TRY(aTerminateSender ? NS_OK : NS_ERROR_INVALID_ARG);
 
   *aTerminateSender = true;
@@ -762,6 +784,31 @@ ExtensionProtocolHandler::SubstituteRemoteFileChannel(nsIURI* aURI,
   NewSimpleChannel(aURI, aLoadinfo, streamGetter, aRetVal);
 }
 
+static Result<Ok, nsresult>
+LogCacheCheck(const nsIJARChannel* aJarChannel,
+              nsIJARURI* aJarURI,
+              bool aIsCached)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> innerFileURI;
+  NS_TRY(aJarURI->GetJARFile(getter_AddRefs(innerFileURI)));
+
+  nsCOMPtr<nsIFileURL> innerFileURL = do_QueryInterface(innerFileURI, &rv);
+  NS_TRY(rv);
+
+  nsCOMPtr<nsIFile> jarFile;
+  NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
+
+  nsAutoCString uriSpec, jarSpec;
+  Unused << aJarURI->GetSpec(uriSpec);
+  Unused << innerFileURI->GetSpec(jarSpec);
+  LOG("[JARChannel %p] Cache %s: %s (%s)",
+      aJarChannel, aIsCached ? "hit" : "miss", uriSpec.get(), jarSpec.get());
+
+  return Ok();
+}
+
 Result<Ok, nsresult>
 ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
                                                      nsILoadInfo* aLoadinfo,
@@ -779,6 +826,18 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
   nsCOMPtr<nsIJARURI> jarURI = do_QueryInterface(uri, &rv);
   NS_TRY(rv);
 
+  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
+  NS_TRY(rv);
+
+  bool isCached = false;
+  NS_TRY(jarChannel->EnsureCached(&isCached));
+  if (MOZ_LOG_TEST(gExtProtocolLog, LogLevel::Debug)) {
+    Unused << LogCacheCheck(jarChannel, jarURI, isCached);
+  }
+  if (isCached) {
+    return Ok();
+  }
+
   nsCOMPtr<nsIURI> innerFileURI;
   NS_TRY(jarURI->GetJARFile(getter_AddRefs(innerFileURI)));
 
@@ -787,9 +846,6 @@ ExtensionProtocolHandler::SubstituteRemoteJarChannel(nsIURI* aURI,
 
   nsCOMPtr<nsIFile> jarFile;
   NS_TRY(innerFileURL->GetFile(getter_AddRefs(jarFile)));
-
-  nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(*aRetVal, &rv);
-  NS_TRY(rv);
 
   RefPtr<ExtensionStreamGetter> streamGetter =
     new ExtensionStreamGetter(aURI, aLoadinfo, jarChannel.forget(), jarFile);

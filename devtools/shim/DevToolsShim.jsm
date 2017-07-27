@@ -209,11 +209,7 @@ this.DevToolsShim = {
       return;
     }
 
-    if (!this.isInitialized()) {
-      this._initDevTools();
-    }
-
-    this._gDevTools.restoreScratchpadSession(scratchpads);
+    this.gDevTools.restoreScratchpadSession(scratchpads);
   },
 
   /**

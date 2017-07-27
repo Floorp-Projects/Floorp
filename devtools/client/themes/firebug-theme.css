@@ -7,7 +7,7 @@
 @import url(resource://devtools/client/themes/common.css);
 @import url(chrome://devtools/skin/light-theme.css);
 
-:root {
+:root.theme-firebug {
   font-size: 11px;
   font-family: var(--proportional-font-family);
 }

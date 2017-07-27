@@ -1,21 +1,5 @@
 [
   {
-    "version": "clang + llvm 3.9.0, built from SVN r290136",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
-    "unpack": true
-  },
-  {
-    "size": 6075028,
-    "visibility": "public",
-    "digest": "0b962ba55a5a2fbae44218683bdf6ea0dfe8165aba436173a065f7190976184586b9acf4c23478bc5b6d81a3e00f681bf16df0536c9c9718ad0570d064f69027",
-    "algorithm": "sha512",
-    "unpack": true,
-    "filename": "cctools.tar.xz"
-  },
-  {
     "size": 35215976,
     "visibility": "internal",
     "digest": "8be736545ddab25ebded188458ce974d5c9a7e29f3c50d2ebfbcb878f6aff853dd2ff5a3528bdefc64396a10101a1b50fd2fe52000140df33643cebe1ea759da",
@@ -24,37 +8,11 @@
     "filename": "MacOSX10.7.sdk.tar.bz2"
   },
   {
-    "version": "sccache rev 69334a26ba65fc88e3934271a2ce6781c51b445e",
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "sccache2.tar.xz",
-    "unpack": true,
-    "digest": "7bbe53cda3f608826dc6a0266e648cd2ea09c88ef93edf87d582b41185b72740667e2c7bf6e9b2b911fb2915cbfb985e528598c7b3153092ad27d5e937342df7",
-    "size": 2191380
-  },
-  {
-    "version": "https://github.com/mozilla/libdmg-hfsplus rev ba04b00435a0853f1499d751617177828ee8ec00",
-    "size": 57060,
-    "visibility": "public",
-    "digest": "0c96f0d3ace71c4110abec6f7ead013600b0a73c89465d840276090d849279e555d977fb2aa6bbabb7891d7191fc8cc8a4e8242be888114be52346b77a512fcc",
-    "algorithm": "sha512",
-    "unpack": true,
-    "filename": "dmg.tar.xz"
-  },
-  {
     "version": "rustc 1.19.0 (0ade33941 2017-07-17) repack",
     "size": 155690216,
     "digest": "379f542ea16c775e7bcad36823f0068ca6a1f17c2b25e42ef978d51865298ba4207dc89bbb614805f81a123d12e339209a447afbd12c1122e16f4c7c41e7d92b",
     "algorithm": "sha512",
     "filename": "rustc.tar.xz",
-    "unpack": true
-  },
-  {
-    "size": 281576,
-    "visibility": "public",
-    "digest": "71616564533d138fb12f08e761c2638d054814fdf9c9439638ec57b201e100445c364d73d8d7a4f0e3b784898d5fe6264e8242863fc5ac40163f1791468bbc46",
-    "algorithm": "sha512",
-    "filename": "hfsplus-tools.tar.xz",
     "unpack": true
   }
 ]

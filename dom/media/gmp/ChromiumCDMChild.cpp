@@ -15,7 +15,6 @@
 #include "base/time.h"
 #include "GMPUtils.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 namespace gmp {
@@ -822,7 +821,7 @@ ChromiumCDMChild::GiveBuffer(ipc::Shmem&& aBuffer)
   MOZ_ASSERT(IsOnMessageLoopThread());
   size_t sz = aBuffer.Size<uint8_t>();
   mBuffers.AppendElement(Move(aBuffer));
-  GMP_LOG("ChromiumCDMChild::RecvGiveBuffer(capacity=%" PRIuSIZE
+  GMP_LOG("ChromiumCDMChild::RecvGiveBuffer(capacity=%zu"
           ") bufferSizes={%s} mDecoderInitialized=%d",
           sz,
           ToString(mBuffers).get(),

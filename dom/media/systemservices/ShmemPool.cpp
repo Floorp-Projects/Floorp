@@ -50,7 +50,7 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize)
   size_t poolUse = mShmemPool.Length() - mPoolFree;
   if (poolUse > mMaxPoolUse) {
     mMaxPoolUse = poolUse;
-    LOG(("Maximum ShmemPool use increased: %" PRIuSIZE " buffers", mMaxPoolUse));
+    LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
   }
 #endif
   return Move(res);
@@ -65,7 +65,7 @@ void ShmemPool::Put(ShmemBuffer&& aShmem)
 #ifdef DEBUG
   size_t poolUse = mShmemPool.Length() - mPoolFree;
   if (poolUse > 0) {
-    LOG_VERBOSE(("ShmemPool usage reduced to %" PRIuSIZE " buffers", poolUse));
+    LOG_VERBOSE(("ShmemPool usage reduced to %zu buffers", poolUse));
   }
 #endif
 }

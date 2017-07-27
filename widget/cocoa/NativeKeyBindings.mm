@@ -8,7 +8,6 @@
 #include "nsTArray.h"
 #include "nsCocoaUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TextEvents.h"
 
 namespace mozilla {
@@ -223,7 +222,7 @@ NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
   nsCocoaUtils::GetCommandsFromKeyEvent(cocoaEvent, bindingCommands);
 
   MOZ_LOG(gNativeKeyBindingsLog, LogLevel::Info,
-    ("%p NativeKeyBindings::GetEditCommands, bindingCommands=%" PRIuSIZE,
+    ("%p NativeKeyBindings::GetEditCommands, bindingCommands=%zu",
      this, bindingCommands.Length()));
 
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {

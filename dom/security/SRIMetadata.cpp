@@ -9,7 +9,6 @@
 #include "hasht.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/Logging.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "nsICryptoHash.h"
 
 static mozilla::LogModule*
@@ -115,7 +114,7 @@ SRIMetadata::operator+=(const SRIMetadata& aOther)
   // We only pull in the first element of the other metadata
   MOZ_ASSERT(aOther.mHashes.Length() == 1);
   if (mHashes.Length() < SRIMetadata::MAX_ALTERNATE_HASHES) {
-    SRIMETADATALOG(("SRIMetadata::operator+=, appending another '%s' hash (new length=%" PRIuSIZE ")",
+    SRIMETADATALOG(("SRIMetadata::operator+=, appending another '%s' hash (new length=%zu)",
                     mAlgorithm.get(), mHashes.Length()));
     mHashes.AppendElement(aOther.mHashes[0]);
   }

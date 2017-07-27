@@ -429,21 +429,32 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
 
     def run_checkspidermonkey(self, **params):
         import subprocess
-        import sys
+
+        self.virtualenv_manager.ensure()
+        python = self.virtualenv_manager.python_path
 
         js = os.path.join(self.bindir, executable_name('js'))
 
         print('Running jit-tests')
-        jittest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
-              js, '--no-slow', '--jitflags=all']
+        jittest_cmd = [
+            python,
+            os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
+            js,
+            '--no-slow',
+            '--jitflags=all',
+        ]
         if params['valgrind']:
             jittest_cmd.append('--valgrind')
 
         jittest_result = subprocess.call(jittest_cmd)
 
         print('running jstests')
-        jstest_cmd = [os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
-              js, '--jitflags=all']
+        jstest_cmd = [
+            python,
+            os.path.join(self.topsrcdir, 'js', 'src', 'tests', 'jstests.py'),
+            js,
+            '--jitflags=all',
+        ]
         jstest_result = subprocess.call(jstest_cmd)
 
         print('running jsapi-tests')
@@ -451,15 +462,15 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
 
         print('running check-style')
-        check_style_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
+        check_style_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_spidermonkey_style.py')]
         check_style_result = subprocess.call(check_style_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
         print('running check-masm')
-        check_masm_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_macroassembler_style.py')]
+        check_masm_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_macroassembler_style.py')]
         check_masm_result = subprocess.call(check_masm_cmd, cwd=os.path.join(self.topsrcdir, 'js', 'src'))
 
         print('running check-js-msg-encoding')
-        check_js_msg_cmd = [sys.executable, os.path.join(self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
+        check_js_msg_cmd = [python, os.path.join(self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
         check_js_msg_result = subprocess.call(check_js_msg_cmd, cwd=self.topsrcdir)
 
         all_passed = jittest_result and jstest_result and jsapi_tests_result and check_style_result and check_masm_result and check_js_msg_result
