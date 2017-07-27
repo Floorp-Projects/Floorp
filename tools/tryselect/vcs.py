@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import json
+import os
 import subprocess
 import sys
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -74,13 +76,19 @@ class VCSHelper(object):
             print(e.output)
             raise
 
+    def write_task_config(self, labels):
+        config = os.path.join(self.root, 'try_task_config.json')
+        with open(config, 'w') as fh:
+            json.dump(sorted(labels), fh, indent=2)
+        return config
+
     def check_working_directory(self):
         if self.has_uncommitted_changes:
             print(UNCOMMITTED_CHANGES)
             sys.exit(1)
 
     @abstractmethod
-    def push_to_try(self, msg):
+    def push_to_try(self, msg, labels=None):
         pass
 
     @abstractproperty
@@ -94,8 +102,12 @@ class VCSHelper(object):
 
 class HgHelper(VCSHelper):
 
-    def push_to_try(self, msg):
+    def push_to_try(self, msg, labels=None):
         self.check_working_directory()
+
+        if labels:
+            config = self.write_task_config(labels)
+            self.run(['hg', 'add', config])
 
         try:
             return subprocess.check_call(['hg', 'push-to-try', '-m', msg])
@@ -107,6 +119,9 @@ class HgHelper(VCSHelper):
             return 1
         finally:
             self.run(['hg', 'revert', '-a'])
+
+            if labels and os.path.isfile(config):
+                os.remove(config)
 
     @property
     def files_changed(self):
@@ -121,12 +136,16 @@ class HgHelper(VCSHelper):
 
 class GitHelper(VCSHelper):
 
-    def push_to_try(self, msg):
+    def push_to_try(self, msg, labels=None):
         self.check_working_directory()
 
         if not find_executable('git-cinnabar'):
             print(GIT_CINNABAR_NOT_FOUND)
-            sys.exit(1)
+            return 1
+
+        if labels:
+            config = self.write_task_config(labels)
+            self.run(['git', 'add', config])
 
         subprocess.check_call(['git', 'commit', '--allow-empty', '-m', msg])
         try:
