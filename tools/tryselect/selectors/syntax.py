@@ -8,12 +8,11 @@ import ConfigParser
 import argparse
 import os
 import re
-import subprocess
 import sys
-import which
 from collections import defaultdict
 
 import mozpack.path as mozpath
+from ..vcs import VCSHelper
 
 
 def arg_parser():
@@ -276,11 +275,7 @@ class AutoTry(object):
         self._resolver_func = resolver_func
         self._resolver = None
         self.mach_context = mach_context
-
-        if os.path.exists(os.path.join(self.topsrcdir, '.hg')):
-            self._use_git = False
-        else:
-            self._use_git = True
+        self.vcs = VCSHelper.create()
 
     @property
     def resolver(self):
@@ -484,111 +479,9 @@ class AutoTry(object):
         try_syntax = " ".join(parts)
         return try_syntax
 
-    def _run_git(self, *args):
-        args = ['git'] + list(args)
-        ret = subprocess.call(args)
-        if ret:
-            print('ERROR git command %s returned %s' %
-                  (args, ret))
-            sys.exit(1)
-
-    def _git_push_to_try(self, msg):
-        self._run_git('commit', '--allow-empty', '-m', msg)
-        try:
-            self._run_git('push', 'hg::ssh://hg.mozilla.org/try',
-                          '+HEAD:refs/heads/branches/default/tip')
-        finally:
-            self._run_git('reset', 'HEAD~')
-
-    def _git_find_changed_files(self):
-        # This finds the files changed on the current branch based on the
-        # diff of the current branch its merge-base base with other branches.
-        try:
-            args = ['git', 'rev-parse', 'HEAD']
-            current_branch = subprocess.check_output(args).strip()
-            args = ['git', 'for-each-ref', 'refs/heads', 'refs/remotes',
-                    '--format=%(objectname)']
-            all_branches = subprocess.check_output(args).splitlines()
-            other_branches = set(all_branches) - set([current_branch])
-            args = ['git', 'merge-base', 'HEAD'] + list(other_branches)
-            base_commit = subprocess.check_output(args).strip()
-            args = ['git', 'diff', '--name-only', '-z', 'HEAD', base_commit]
-            return subprocess.check_output(args).strip('\0').split('\0')
-        except subprocess.CalledProcessError as e:
-            print('Failed while determining files changed on this branch')
-            print('Failed whle running: %s' % args)
-            print(e.output)
-            sys.exit(1)
-
-    def _hg_find_changed_files(self):
-        hg_args = [
-            'hg', 'log', '-r',
-            '::. and not public()',
-            '--template',
-            '{join(files, "\n")}\n',
-        ]
-        try:
-            return subprocess.check_output(hg_args).splitlines()
-        except subprocess.CalledProcessError as e:
-            print('Failed while finding files changed since the last '
-                  'public ancestor')
-            print('Failed whle running: %s' % hg_args)
-            print(e.output)
-            sys.exit(1)
-
-    def find_changed_files(self):
-        """Finds files changed in a local source tree.
-
-        For hg, changes since the last public ancestor of '.' are
-        considered. For git, changes in the current branch are considered.
-        """
-        if self._use_git:
-            return self._git_find_changed_files()
-        return self._hg_find_changed_files()
-
-    def push_to_try(self, msg, verbose):
-        if not self._use_git:
-            try:
-                hg_args = ['hg', 'push-to-try', '-m', msg]
-                subprocess.check_call(hg_args, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
-                print('ERROR hg command %s returned %s' % (hg_args, e.returncode))
-                print('\nmach failed to push to try. There may be a problem '
-                      'with your ssh key, or another issue with your mercurial '
-                      'installation.')
-                # Check for the presence of the "push-to-try" extension, and
-                # provide instructions if it can't be found.
-                try:
-                    subprocess.check_output(['hg', 'showconfig',
-                                             'extensions.push-to-try'])
-                except subprocess.CalledProcessError:
-                    print('\nThe "push-to-try" hg extension is required. It '
-                          'can be installed to Mercurial 3.3 or above by '
-                          'running ./mach mercurial-setup')
-                sys.exit(1)
-        else:
-            try:
-                which.which('git-cinnabar')
-                self._git_push_to_try(msg)
-            except which.WhichError:
-                print('ERROR git-cinnabar is required to push from git to try with'
-                      'the autotry command.\n\nMore information can by found at '
-                      'https://github.com/glandium/git-cinnabar')
-                sys.exit(1)
-
-    def find_uncommited_changes(self):
-        if self._use_git:
-            stat = subprocess.check_output(['git', 'status', '-z'])
-            return any(len(entry.strip()) and entry.strip()[0] in ('A', 'M', 'D')
-                       for entry in stat.split('\0'))
-        else:
-            stat = subprocess.check_output(['hg', 'status'])
-            return any(len(entry.strip()) and entry.strip()[0] in ('A', 'M', 'R')
-                       for entry in stat.splitlines())
-
     def find_paths_and_tags(self, verbose):
         paths, tags = set(), set()
-        changed_files = self.find_changed_files()
+        changed_files = self.vcs.files_changed
         if changed_files:
             if verbose:
                 print("Pushing tests based on modifications to the "
@@ -710,10 +603,6 @@ class AutoTry(object):
                 if value in (None, []) and key in defaults:
                     kwargs[key] = defaults[key]
 
-        if kwargs["push"] and self.find_uncommited_changes():
-            print('ERROR please commit changes before continuing')
-            sys.exit(1)
-
         if not any(kwargs[item] for item in ("paths", "tests", "tags")):
             kwargs["paths"], kwargs["tags"] = self.find_paths_and_tags(kwargs["verbose"])
 
@@ -773,7 +662,7 @@ class AutoTry(object):
             print('The following try syntax was calculated:\n%s' % msg)
 
         if kwargs["push"]:
-            self.push_to_try(msg, kwargs["verbose"])
+            self.vcs.push_to_try(msg)
 
         if kwargs["save"] is not None:
             self.save_config(kwargs["save"], msg)
