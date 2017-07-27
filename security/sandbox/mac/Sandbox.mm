@@ -129,6 +129,15 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
   std::vector<const char *> params;
   char *profile = NULL;
   bool profile_needs_free = false;
+
+// 11 bytes is enough to store any int32_t, plus one for the NUL byte. In
+// practice of course, it's unlikely we'll see a macOS minor version greater
+// than 2 digits in the lifetime of this code. Better safe than sorry though!
+#define MAX_MACOS_MINOR_VERSION_LENGTH 12
+  char macOSMinor[MAX_MACOS_MINOR_VERSION_LENGTH];
+  snprintf(macOSMinor, sizeof(macOSMinor), "%d", OSXVersion::OSXVersionMinor());
+#undef MAX_MACOS_MINOR_VERSION_LENGTH
+
   if (aInfo.type == MacSandboxType_Plugin) {
     profile = const_cast<char *>(pluginSandboxRules);
     params.push_back("SHOULD_LOG");
@@ -160,10 +169,8 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
       params.push_back(aInfo.level == 2 ? "TRUE" : "FALSE");
       params.push_back("SANDBOX_LEVEL_3");
       params.push_back(aInfo.level == 3 ? "TRUE" : "FALSE");
-      params.push_back("MAC_OS_MINOR_9");
-      params.push_back(OSXVersion::OSXVersionMinor() == 9 ? "TRUE" : "FALSE");
-      params.push_back("MAC_OS_MINOR_MIN_13");
-      params.push_back(OSXVersion::OSXVersionMinor() >= 13 ? "TRUE" : "FALSE");
+      params.push_back("MAC_OS_MINOR");
+      params.push_back(macOSMinor);
       params.push_back("APP_PATH");
       params.push_back(aInfo.appPath.c_str());
       params.push_back("APP_BINARY_PATH");
