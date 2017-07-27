@@ -170,7 +170,7 @@ public:
 
     uint64_t ByteCountReceived() override { return mInput.ByteCount(); }
     uint64_t ByteCountSent() override { return mOutput.ByteCount(); }
-    static void CloseSocket(PRFileDesc *aFd, bool aTelemetryEnabled);
+    static void CloseSocket(PRFileDesc *aFd, nsSocketTransportService *aSTS);
     static void SendPRBlockingTelemetry(PRIntervalTime aStart,
         Telemetry::HistogramID aIDNormal,
         Telemetry::HistogramID aIDShutdown,
