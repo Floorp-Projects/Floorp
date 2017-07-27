@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1376695
+-->
+<head>
+  <title>Test for Bug 1376695</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1376695">Mozilla Bug 1376695</a>
+<p id="display"></p>
+<div id="originalFoo" name="foo">
+<pre id="test">
+<script type="application/javascript">
+
+/** Test to ensure that the list returned by getElementsByName is updated after
+  * mutations.
+  **/
+
+var fooList = document.getElementsByName("foo");
+var originalDiv = document.getElementById("originalFoo");
+
+is(fooList.length, 1, "Should find one element with name 'foo' initially");
+is(fooList[0], originalDiv, "Element should be the original div");
+
+var newTree = document.createElement("p");
+var child1 = document.createElement("div");
+var child2 = document.createElement("div");
+child2.setAttribute("name", "foo");
+
+newTree.appendChild(child1);
+newTree.appendChild(child2);
+document.body.appendChild(newTree);
+
+is(fooList.length, 2,
+   "Should find two elements with name 'foo' after appending the new tree");
+is(fooList[1], child2, "Element should be the new appended div with name 'foo'");
+
+document.body.removeChild(newTree);
+
+is(fooList.length, 1,
+   "Should find one element with name 'foo' after removing the new tree");
+is(fooList[0], originalDiv,
+   "Element should be the original div after removing the new tree");
+
+</script>
+</pre>
+</body>
+</html>

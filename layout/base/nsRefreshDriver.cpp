@@ -2142,8 +2142,7 @@ nsRefreshDriver::Thaw()
         "nsRefreshDriver::DoRefresh", this, &nsRefreshDriver::DoRefresh);
       nsPresContext* pc = GetPresContext();
       if (pc) {
-        pc->Document()->Dispatch("nsRefreshDriver::DoRefresh",
-                                 TaskCategory::Other,
+        pc->Document()->Dispatch(TaskCategory::Other,
                                  event.forget());
         EnsureTimerStarted();
       } else {

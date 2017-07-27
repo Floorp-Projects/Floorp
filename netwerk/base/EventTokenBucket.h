@@ -10,6 +10,7 @@
 #include "ARefBase.h"
 #include "nsCOMPtr.h"
 #include "nsDeque.h"
+#include "nsINamed.h"
 #include "nsITimer.h"
 
 #include "mozilla/TimeStamp.h"
@@ -68,11 +69,14 @@ public:
 
 class TokenBucketCancelable;
 
-class EventTokenBucket : public nsITimerCallback, public ARefBase
+class EventTokenBucket : public nsITimerCallback
+                       , public nsINamed
+                       , public ARefBase
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   // This should be constructed on the main thread
   EventTokenBucket(uint32_t eventsPerSecond, uint32_t burstSize);

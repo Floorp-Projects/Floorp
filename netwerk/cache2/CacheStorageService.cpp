@@ -107,7 +107,8 @@ NS_IMPL_ISUPPORTS(CacheStorageService,
                   nsICacheStorageService,
                   nsIMemoryReporter,
                   nsITimerCallback,
-                  nsICacheTesting)
+                  nsICacheTesting,
+                  nsINamed)
 
 CacheStorageService* CacheStorageService::sSelf = nullptr;
 
@@ -1333,6 +1334,13 @@ CacheStorageService::Notify(nsITimer* aTimer)
     Dispatch(event);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CacheStorageService::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("CacheStorageService");
   return NS_OK;
 }
 

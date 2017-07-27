@@ -83,7 +83,7 @@ struct BreadthFirst {
     //
     // We do nothing with noGC, other than require it to exist, with a lifetime
     // that encloses our own.
-    BreadthFirst(JSContext* cx, Handler& handler, const JS::AutoCheckCannotGC& noGC)
+    BreadthFirst(JSContext* cx, Handler& handler, const JS::AutoRequireNoGC& noGC)
       : wantNames(true), cx(cx), visited(), handler(handler), pending(),
         traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }

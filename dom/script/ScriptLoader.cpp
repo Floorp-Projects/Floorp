@@ -1502,8 +1502,7 @@ public:
   static void Dispatch(already_AddRefed<NotifyOffThreadScriptLoadCompletedRunnable>&& aSelf) {
     RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> self = aSelf;
     RefPtr<DocGroup> docGroup = self->mDocGroup;
-    docGroup->Dispatch("NotifyOffThreadScriptLoadCompletedRunnable",
-                       TaskCategory::Other, self.forget());
+    docGroup->Dispatch(TaskCategory::Other, self.forget());
   }
 
   NS_DECL_NSIRUNNABLE
@@ -2421,7 +2420,7 @@ ScriptLoader::ProcessPendingRequestsAsync()
                         this,
                         &ScriptLoader::ProcessPendingRequests);
     if (mDocument) {
-      mDocument->Dispatch("ScriptLoader", TaskCategory::Other, task.forget());
+      mDocument->Dispatch(TaskCategory::Other, task.forget());
     } else {
       NS_DispatchToCurrentThread(task.forget());
     }

@@ -206,8 +206,7 @@ FileBlockCache::Close()
                              // releasing memory etc!
                              nsCOMPtr<nsIRunnable> event =
                                new ShutdownThreadEvent(thread);
-                             SystemGroup::Dispatch("ShutdownThreadEvent",
-                                                   TaskCategory::Other,
+                             SystemGroup::Dispatch(TaskCategory::Other,
                                                    event.forget());
                            }),
     NS_DISPATCH_NORMAL);

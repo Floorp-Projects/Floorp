@@ -21,12 +21,4 @@ interface nsINamed : nsISupports
      * never contain privacy sensitive information.
      */
     readonly attribute ACString name;
-
-    /*
-     * Note: The string you pass in should be a compile-time literal.
-     *
-     * WARNING: This value will be included in telemetry, so it should
-     * never contain privacy sensitive information.
-     */
-    [noscript] void setName(in string aName);
 };

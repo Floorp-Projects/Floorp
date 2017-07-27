@@ -15,7 +15,7 @@
 #include "nsXULAppAPI.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RecursiveMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 
@@ -99,7 +99,7 @@ class ChannelEventQueue final
     , mFlushing(false)
     , mOwner(owner)
     , mMutex("ChannelEventQueue::mMutex")
-    , mRunningMonitor("ChannelEventQueue::mRunningMonitor")
+    , mRunningMutex("ChannelEventQueue::mRunningMutex")
   {}
 
   // Puts IPDL-generated channel event into queue, to be run later
@@ -160,7 +160,7 @@ class ChannelEventQueue final
   Mutex mMutex;
 
   // To guarantee event execution order among threads
-  ReentrantMonitor mRunningMonitor;
+  RecursiveMutex mRunningMutex;
 
   friend class AutoEventEnqueuer;
 };
@@ -182,7 +182,7 @@ ChannelEventQueue::RunOrEnqueue(ChannelEvent* aCallback,
 
   // To guarantee that the running event and all the events generated within
   // it will be finished before events on other threads.
-  ReentrantMonitorAutoEnter monitor(mRunningMonitor);
+  RecursiveMutexAutoLock lock(mRunningMutex);
 
   {
     MutexAutoLock lock(mMutex);

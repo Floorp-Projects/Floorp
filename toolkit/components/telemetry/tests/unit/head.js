@@ -301,6 +301,10 @@ function setEmptyPrefWatchlist() {
   });
 }
 
+function histogramValueCount(histogramSnapshot) {
+  return histogramSnapshot.counts.reduce((a, b) => a + b);
+}
+
 if (runningInParent) {
   // Set logging preferences for all the tests.
   Services.prefs.setCharPref("toolkit.telemetry.log.level", "Trace");
@@ -314,11 +318,13 @@ if (runningInParent) {
   // and will fail if receive an unexpected ping. Let's globally disable these features:
   // the relevant tests will enable these prefs when needed.
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSender, false);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
   Services.prefs.setBoolPref("toolkit.telemetry.newProfilePing.enabled", false);
   // Ensure browser experiments are also disabled, to avoid network activity
   // when toggling PREF_ENABLED.
   Services.prefs.setBoolPref("experiments.enabled", false);
-
+  // Turn off Health Ping submission.
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, false);
 
   fakePingSendTimer((callback, timeout) => {
     Services.tm.dispatchToMainThread(() => callback());

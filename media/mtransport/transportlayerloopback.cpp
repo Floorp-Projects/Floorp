@@ -19,6 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsString.h"
 
 #include "transportflow.h"
 #include "transportlayerloopback.h"
@@ -118,7 +119,7 @@ void TransportLayerLoopback::DeliverPackets() {
   }
 }
 
-NS_IMPL_ISUPPORTS(TransportLayerLoopback::Deliverer, nsITimerCallback)
+NS_IMPL_ISUPPORTS(TransportLayerLoopback::Deliverer, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP TransportLayerLoopback::Deliverer::Notify(nsITimer *timer) {
   if (!layer_)
@@ -128,4 +129,10 @@ NS_IMETHODIMP TransportLayerLoopback::Deliverer::Notify(nsITimer *timer) {
 
   return NS_OK;
 }
+
+NS_IMETHODIMP TransportLayerLoopback::Deliverer::GetName(nsACString& aName) {
+  aName.AssignLiteral("TransportLayerLoopback::Deliverer");
+  return NS_OK;
+}
+
 }  // close namespace

@@ -110,8 +110,7 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
   if (!gFeaturesAlreadyReported) {
     gFeaturesAlreadyReported = new nsTArray<nsCString>;
     nsCOMPtr<nsIRunnable> r = new RegisterObserverRunnable();
-    SystemGroup::Dispatch("ScopedGfxFeatureReporter::RegisterObserverRunnable",
-                          TaskCategory::Other, r.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 
   nsAutoCString featureString;
@@ -132,8 +131,7 @@ ScopedGfxFeatureReporter::AppNote(const nsACString& aMessage)
     CrashReporter::AppendAppNotesToCrashReport(aMessage);
   } else {
     nsCOMPtr<nsIRunnable> r = new AppendAppNotesRunnable(aMessage);
-    SystemGroup::Dispatch("ScopedGfxFeatureReporter::AppendAppNotesRunnable",
-                          TaskCategory::Other, r.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 }
   

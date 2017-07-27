@@ -104,6 +104,7 @@ NS_IMPL_CYCLE_COLLECTION(TextEditRules, mBogusNode, mCachedSelectionNode)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditRules)
   NS_INTERFACE_MAP_ENTRY(nsIEditRules)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditRules)
 NS_INTERFACE_MAP_END
 
@@ -1587,6 +1588,13 @@ TextEditRules::Notify(nsITimer* aTimer)
   ASSERT_PASSWORD_LENGTHS_EQUAL();
   mLastLength = 0;
   return rv;
+}
+
+NS_IMETHODIMP
+TextEditRules::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("TextEditRules");
+  return NS_OK;
 }
 
 nsresult

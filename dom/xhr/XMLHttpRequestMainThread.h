@@ -878,7 +878,8 @@ class nsXMLHttpRequestXPCOMifier final : public nsIStreamListener,
                                          public nsIAsyncVerifyRedirectCallback,
                                          public nsIProgressEventSink,
                                          public nsIInterfaceRequestor,
-                                         public nsITimerCallback
+                                         public nsITimerCallback,
+                                         public nsINamed
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXMLHttpRequestXPCOMifier,
@@ -903,6 +904,7 @@ public:
   NS_FORWARD_NSIASYNCVERIFYREDIRECTCALLBACK(mXHR->)
   NS_FORWARD_NSIPROGRESSEVENTSINK(mXHR->)
   NS_FORWARD_NSITIMERCALLBACK(mXHR->)
+  NS_FORWARD_NSINAMED(mXHR->)
 
   NS_DECL_NSIINTERFACEREQUESTOR
 

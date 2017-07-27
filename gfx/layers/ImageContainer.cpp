@@ -129,7 +129,7 @@ ImageContainerListener::ClearImageContainer()
 already_AddRefed<ImageClient>
 ImageContainer::GetImageClient()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock mon(mRecursiveMutex);
   EnsureImageClient();
   RefPtr<ImageClient> imageClient = mImageClient;
   return imageClient.forget();
@@ -163,7 +163,7 @@ ImageContainer::EnsureImageClient()
 }
 
 ImageContainer::ImageContainer(Mode flag)
-: mReentrantMonitor("ImageContainer.mReentrantMonitor"),
+: mRecursiveMutex("ImageContainer.mRecursiveMutex"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
@@ -178,7 +178,7 @@ ImageContainer::ImageContainer(Mode flag)
 }
 
 ImageContainer::ImageContainer(const CompositableHandle& aHandle)
-  : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
+  : mRecursiveMutex("ImageContainer.mRecursiveMutex"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
@@ -206,7 +206,7 @@ ImageContainer::~ImageContainer()
 RefPtr<PlanarYCbCrImage>
 ImageContainer::CreatePlanarYCbCrImage()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   EnsureImageClient();
   if (mImageClient && mImageClient->AsImageClientSingle()) {
     return new SharedPlanarYCbCrImage(mImageClient);
@@ -217,7 +217,7 @@ ImageContainer::CreatePlanarYCbCrImage()
 RefPtr<SharedRGBImage>
 ImageContainer::CreateSharedRGBImage()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   EnsureImageClient();
   if (!mImageClient || !mImageClient->AsImageClientSingle()) {
     return nullptr;
@@ -228,7 +228,7 @@ ImageContainer::CreateSharedRGBImage()
 void
 ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   mGenerationCounter = ++sGenerationCounter;
 
@@ -298,7 +298,7 @@ ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
 void
 ImageContainer::ClearImagesFromImageBridge()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   SetCurrentImageInternal(nsTArray<NonOwningImage>());
 }
 
@@ -306,7 +306,7 @@ void
 ImageContainer::SetCurrentImages(const nsTArray<NonOwningImage>& aImages)
 {
   MOZ_ASSERT(!aImages.IsEmpty());
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mIsAsync) {
     if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
       imageBridge->UpdateImageClient(this);
@@ -327,14 +327,14 @@ ImageContainer::ClearAllImages()
     return;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   SetCurrentImageInternal(nsTArray<NonOwningImage>());
 }
 
 void
 ImageContainer::ClearCachedResources()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
   if (mImageClient && mImageClient->AsImageClientSingle()) {
     if (!mImageClient->HasTextureClientRecycler()) {
       return;
@@ -378,7 +378,7 @@ CompositableHandle ImageContainer::GetAsyncContainerHandle()
 bool
 ImageContainer::HasCurrentImage()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   return !mCurrentImages.IsEmpty();
 }
@@ -387,7 +387,7 @@ void
 ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
                                  uint32_t* aGenerationCounter)
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   *aImages = mCurrentImages;
   if (aGenerationCounter) {
@@ -398,7 +398,7 @@ ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages,
 gfx::IntSize
 ImageContainer::GetCurrentSize()
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   if (mCurrentImages.IsEmpty()) {
     return gfx::IntSize(0, 0);
@@ -410,7 +410,7 @@ ImageContainer::GetCurrentSize()
 void
 ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
 {
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
 
   // An image composition notification is sent the first time a particular
   // image is composited by an ImageHost. Thus, every time we receive such

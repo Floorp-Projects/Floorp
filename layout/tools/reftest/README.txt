@@ -564,7 +564,7 @@ corresponds to the mobile style "pinch zoom" style of zoom. This is unsupported
 in many configurations, and any tests using this will probably want to have
 pref(apz.allow_zooming,true) on them.
 
-Printing Tests: class="reftest-print"
+Pagination Tests: class="reftest-paged"
 =====================================
 
 Now that the patch for bug 374050 has landed
@@ -575,15 +575,15 @@ The page size used is 5in wide and 3in tall (with the default half-inch
 margins).  This is to allow tests to have less text and to make the
 entire test fit on the screen.
 
-There is a layout/reftests/printing directory for printing reftests; however,
-there is nothing special about this directory.  You can put printing reftests
+There is a layout/reftests/printing directory for pagination reftests; however,
+there is nothing special about this directory.  You can put pagination reftests
 anywhere that is appropriate.
 
-The suggested first lines for any printing test is
-<!DOCTYPE html><html class="reftest-print">
+The suggested first lines for any pagination test is
+<!DOCTYPE html><html class="reftest-paged">
 <style>html{font-size:12pt}</style>
 
-The reftest-print class on the root element triggers the reftest to
+The reftest-paged class on the root element triggers the reftest to
 switch into page mode. Fixing the font size is suggested, although not
 required, because the pages are a fixed size in inches. The switch to page mode
 happens on load if the reftest-wait class is not present; otherwise it happens

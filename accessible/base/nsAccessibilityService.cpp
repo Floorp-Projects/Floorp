@@ -58,6 +58,7 @@
 #endif
 
 #include "nsImageFrame.h"
+#include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsLayoutUtils.h"
 #include "nsPluginFrame.h"
@@ -412,6 +413,7 @@ static StaticAutoPtr<nsTArray<nsCOMPtr<nsIContent> > > sPendingPlugins;
 static StaticAutoPtr<nsTArray<nsCOMPtr<nsITimer> > > sPluginTimers;
 
 class PluginTimerCallBack final : public nsITimerCallback
+                                , public nsINamed
 {
   ~PluginTimerCallBack() {}
 
@@ -444,11 +446,17 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString& aName) final
+  {
+    aName.AssignLiteral("PluginTimerCallBack");
+    return NS_OK;
+  }
+
 private:
   nsCOMPtr<nsIContent> mContent;
 };
 
-NS_IMPL_ISUPPORTS(PluginTimerCallBack, nsITimerCallback)
+NS_IMPL_ISUPPORTS(PluginTimerCallBack, nsITimerCallback, nsINamed)
 #endif
 
 already_AddRefed<Accessible>

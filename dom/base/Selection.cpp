@@ -52,6 +52,7 @@
 #include "nsITimer.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsINamed.h"
 
 #include "nsISelectionController.h"//for the enums
 #include "nsAutoCopyListener.h"
@@ -196,6 +197,7 @@ struct CachedOffsetForFrame {
 };
 
 class nsAutoScrollTimer final : public nsITimerCallback
+                              , public nsINamed
 {
 public:
 
@@ -280,6 +282,12 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("nsAutoScrollTimer");
+    return NS_OK;
+  }
+
 protected:
   virtual ~nsAutoScrollTimer()
   {
@@ -299,7 +307,7 @@ private:
   uint32_t mDelay;
 };
 
-NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback)
+NS_IMPL_ISUPPORTS(nsAutoScrollTimer, nsITimerCallback, nsINamed)
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection)
 {

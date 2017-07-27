@@ -257,9 +257,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
       LOG("Reporting telemetry AUDIO_MFT_OUTPUT_NULL_SAMPLES");
       Telemetry::Accumulate(Telemetry::HistogramID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
     });
-    SystemGroup::Dispatch("WMFAudioMFTManager::Output()::report_telemetry",
-                          TaskCategory::Other,
-                          task.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
     return E_FAIL;
   }
 

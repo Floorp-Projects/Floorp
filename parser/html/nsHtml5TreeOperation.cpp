@@ -597,7 +597,7 @@ nsHtml5TreeOperation::SvgLoad(nsIContent* aNode)
 {
   nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(aNode);
   if (NS_FAILED(aNode->OwnerDoc()->Dispatch(
-        "nsHtml5SVGLoadDispatcher", TaskCategory::Network, event.forget()))) {
+        TaskCategory::Network, event.forget()))) {
     NS_WARNING("failed to dispatch svg load dispatcher");
   }
 }

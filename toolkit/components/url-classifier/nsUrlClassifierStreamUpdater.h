@@ -9,6 +9,7 @@
 #include <nsISupportsUtils.h>
 
 #include "nsCOMPtr.h"
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsIUrlClassifierStreamUpdater.h"
 #include "nsIStreamListener.h"
@@ -25,7 +26,8 @@ class nsUrlClassifierStreamUpdater final : public nsIUrlClassifierStreamUpdater,
                                            public nsIStreamListener,
                                            public nsIObserver,
                                            public nsIInterfaceRequestor,
-                                           public nsITimerCallback
+                                           public nsITimerCallback,
+                                           public nsINamed
 {
 public:
   nsUrlClassifierStreamUpdater();
@@ -38,6 +40,7 @@ public:
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
 private:
   // No subclassing

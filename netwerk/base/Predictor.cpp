@@ -1551,9 +1551,7 @@ Predictor::LearnNative(nsIURI *targetURI, nsIURI *sourceURI,
 
     RefPtr<PredictorLearnRunnable> runnable = new PredictorLearnRunnable(
       targetURI, sourceURI, reason, originAttributes);
-    SystemGroup::Dispatch("PredictorLearnRunnable",
-                          TaskCategory::Other,
-                          runnable.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
 
     return NS_OK;
   }

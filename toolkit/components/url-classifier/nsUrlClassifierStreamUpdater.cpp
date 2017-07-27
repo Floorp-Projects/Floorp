@@ -98,7 +98,8 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierStreamUpdater,
                   nsIStreamListener,
                   nsIObserver,
                   nsIInterfaceRequestor,
-                  nsITimerCallback)
+                  nsITimerCallback,
+                  nsINamed)
 
 /**
  * Clear out the update.
@@ -1009,6 +1010,16 @@ nsUrlClassifierStreamUpdater::Notify(nsITimer *timer)
   }
 
   MOZ_ASSERT_UNREACHABLE("A timer is fired from nowhere.");
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+//// nsINamed
+
+NS_IMETHODIMP
+nsUrlClassifierStreamUpdater::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsUrlClassifierStreamUpdater");
   return NS_OK;
 }
 

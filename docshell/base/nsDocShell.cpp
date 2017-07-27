@@ -1771,8 +1771,7 @@ nsDocShell::FirePageHideNotificationInternal(bool aIsUnload,
 }
 
 nsresult
-nsDocShell::DispatchToTabGroup(const char* aName,
-                               TaskCategory aCategory,
+nsDocShell::DispatchToTabGroup(TaskCategory aCategory,
                                already_AddRefed<nsIRunnable>&& aRunnable)
 {
   // Hold the ref so we won't forget to release it.
@@ -1785,14 +1784,13 @@ nsDocShell::DispatchToTabGroup(const char* aName,
   }
 
   RefPtr<mozilla::dom::TabGroup> tabGroup = win->TabGroup();
-  return tabGroup->Dispatch(aName, aCategory, runnable.forget());
+  return tabGroup->Dispatch(aCategory, runnable.forget());
 }
 
 NS_IMETHODIMP
 nsDocShell::DispatchLocationChangeEvent()
 {
   return DispatchToTabGroup(
-    "nsDocShell::FireDummyOnLocationChange",
     TaskCategory::Other,
     NewRunnableMethod("nsDocShell::FireDummyOnLocationChange",
                       this,
@@ -6793,17 +6791,11 @@ nsDocShell::RefreshURI(nsIURI* aURI, int32_t aDelay, bool aRepeat,
     return NS_OK;
   }
 
-  nsRefreshTimer* refreshTimer = new nsRefreshTimer();
+  nsCOMPtr<nsITimerCallback> refreshTimer =
+    new nsRefreshTimer(this, aURI, aDelay, aRepeat, aMetaRefresh);
+
   uint32_t busyFlags = 0;
   GetBusyFlags(&busyFlags);
-
-  nsCOMPtr<nsISupports> dataRef = refreshTimer;  // Get the ref count to 1
-
-  refreshTimer->mDocShell = this;
-  refreshTimer->mURI = aURI;
-  refreshTimer->mDelay = aDelay;
-  refreshTimer->mRepeat = aRepeat;
-  refreshTimer->mMetaRefresh = aMetaRefresh;
 
   if (!mRefreshURIList) {
     mRefreshURIList = nsArray::Create();
@@ -8592,8 +8584,7 @@ nsDocShell::RestorePresentation(nsISHEntry* aSHEntry, bool* aRestoring)
   mRestorePresentationEvent.Revoke();
 
   RefPtr<RestorePresentationEvent> evt = new RestorePresentationEvent(this);
-  nsresult rv = DispatchToTabGroup("nsDocShell::RestorePresentationEvent",
-                                   TaskCategory::Other,
+  nsresult rv = DispatchToTabGroup(TaskCategory::Other,
                                    RefPtr<RestorePresentationEvent>(evt).forget());
   if (NS_SUCCEEDED(rv)) {
     mRestorePresentationEvent = evt.get();
@@ -10264,8 +10255,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                               aFlags, aTypeHint, aPostData, aHeadersData,
                               aLoadType, aSHEntry, aFirstParty, aSrcdoc,
                               aSourceDocShell, aBaseURI, false);
-      return DispatchToTabGroup("nsDocShell::InternalLoadEvent",
-                                TaskCategory::Other, ev.forget());
+      return DispatchToTabGroup(TaskCategory::Other, ev.forget());
     }
 
     // Just ignore this load attempt
@@ -13634,8 +13624,10 @@ nsDocShell::SetLayoutHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
   return NS_OK;
 }
 
-nsRefreshTimer::nsRefreshTimer()
-  : mDelay(0), mRepeat(false), mMetaRefresh(false)
+nsRefreshTimer::nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI,
+                               int32_t aDelay, bool aRepeat, bool aMetaRefresh)
+  : mDocShell(aDocShell), mURI(aURI), mDelay(aDelay), mRepeat(aRepeat),
+    mMetaRefresh(aMetaRefresh)
 {
 }
 
@@ -13649,6 +13641,7 @@ NS_IMPL_RELEASE(nsRefreshTimer)
 NS_INTERFACE_MAP_BEGIN(nsRefreshTimer)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMETHODIMP
@@ -13662,6 +13655,13 @@ nsRefreshTimer::Notify(nsITimer* aTimer)
     aTimer->GetDelay(&delay);
     mDocShell->ForceRefreshURIFromTimer(mURI, delay, mMetaRefresh, aTimer);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRefreshTimer::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsRefreshTimer");
   return NS_OK;
 }
 
@@ -14166,8 +14166,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
                          aPostDataStream, aHeadersDataStream, noOpenerImplied,
                          aIsTrusted, aTriggeringPrincipal);
-  return DispatchToTabGroup("nsDocShell::OnLinkClickEvent",
-                            TaskCategory::UI, ev.forget());
+  return DispatchToTabGroup(TaskCategory::UI, ev.forget());
 }
 
 NS_IMETHODIMP

@@ -478,7 +478,7 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     }
   }
   if (global) {
-    rv = global->Dispatch("GASRunnable", TaskCategory::Other, runnable.forget());
+    rv = global->Dispatch(TaskCategory::Other, runnable.forget());
   } else {
     rv = NS_DispatchToMainThread(runnable);
   }

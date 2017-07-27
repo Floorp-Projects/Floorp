@@ -115,7 +115,6 @@ namespace CrashReporter {
                           bool escape);
   void LogMessage(const std::string& message);
   void DeleteDump();
-  bool ShouldEnableSending();
 
   // Telemetry ping
   bool SendCrashPing(StringTable& strings, const std::string& hash,

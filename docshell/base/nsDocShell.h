@@ -44,6 +44,7 @@
 // Interfaces Needed
 #include "nsIDocCharset.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsINamed.h"
 #include "nsIRefreshURI.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
@@ -106,12 +107,15 @@ enum ViewMode
 };
 
 class nsRefreshTimer : public nsITimerCallback
+                     , public nsINamed
 {
 public:
-  nsRefreshTimer();
+  nsRefreshTimer(nsDocShell* aDocShell, nsIURI* aURI, int32_t aDelay,
+                 bool aRepeat, bool aMetaRefresh);
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   int32_t GetDelay() { return mDelay ;}
 
@@ -1090,8 +1094,7 @@ private:
                                         bool aSkipCheckingDynEntries);
 
   // Dispatch a runnable to the TabGroup associated to this docshell.
-  nsresult DispatchToTabGroup(const char* aName,
-                              mozilla::TaskCategory aCategory,
+  nsresult DispatchToTabGroup(mozilla::TaskCategory aCategory,
                               already_AddRefed<nsIRunnable>&& aRunnable);
 
 #ifdef DEBUG

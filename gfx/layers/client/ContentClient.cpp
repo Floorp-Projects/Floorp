@@ -92,8 +92,15 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 }
 
 void
+ContentClient::BeginAsyncPaint()
+{
+  mInAsyncPaint = true;
+}
+
+void
 ContentClient::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
+  mInAsyncPaint = false;
 }
 
 void
@@ -239,6 +246,13 @@ ContentClientRemoteBuffer::BeginPaint()
 }
 
 void
+ContentClientRemoteBuffer::BeginAsyncPaint()
+{
+  BeginPaint();
+  mInAsyncPaint = true;
+}
+
+void
 ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates)
 {
   MOZ_ASSERT(!mTextureClientOnWhite || !aReadbackUpdates || aReadbackUpdates->Length() == 0);
@@ -349,14 +363,19 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
     return;
   }
 
+  OpenMode mode = OpenMode::OPEN_READ_WRITE;
+  if (mInAsyncPaint) {
+    mode |= OpenMode::OPEN_ASYNC_WRITE;
+  }
+
   // We just created the textures and we are about to get their draw targets
   // so we have to lock them here.
-  DebugOnly<bool> locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+  DebugOnly<bool> locked = mTextureClient->Lock(mode);
   MOZ_ASSERT(locked, "Could not lock the TextureClient");
 
   *aBlackDT = mTextureClient->BorrowDrawTarget();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    locked = mTextureClientOnWhite->Lock(mode);
     MOZ_ASSERT(locked, "Could not lock the second TextureClient for component alpha");
 
     *aWhiteDT = mTextureClientOnWhite->BorrowDrawTarget();
@@ -430,14 +449,18 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 bool
 ContentClientRemoteBuffer::LockBuffers()
 {
+  OpenMode mode = OpenMode::OPEN_READ_WRITE;
+  if (mInAsyncPaint) {
+    mode |= OpenMode::OPEN_ASYNC_WRITE;
+  }
   if (mTextureClient) {
-    bool locked = mTextureClient->Lock(OpenMode::OPEN_READ_WRITE);
+    bool locked = mTextureClient->Lock(mode);
     if (!locked) {
       return false;
     }
   }
   if (mTextureClientOnWhite) {
-    bool locked = mTextureClientOnWhite->Lock(OpenMode::OPEN_READ_WRITE);
+    bool locked = mTextureClientOnWhite->Lock(mode);
     if (!locked) {
       UnlockBuffers();
       return false;
@@ -551,6 +574,13 @@ ContentClientDoubleBuffered::BeginPaint()
   }
   mBufferRect = mFrontBufferRect;
   mBufferRotation = mFrontBufferRotation;
+}
+
+void
+ContentClientDoubleBuffered::BeginAsyncPaint()
+{
+  BeginPaint();
+  mInAsyncPaint = true;
 }
 
 // Sync front/back buffers content

@@ -226,7 +226,8 @@ public:
 };
 
 class NotificationPermissionRequest : public nsIContentPermissionRequest,
-                                      public nsIRunnable
+                                      public nsIRunnable,
+                                      public nsINamed
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -245,6 +246,12 @@ public:
   {
     MOZ_ASSERT(aPromise);
     mRequester = new nsContentPermissionRequester(mWindow);
+  }
+
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("NotificationPermissionRequest");
+    return NS_OK;
   }
 
 protected:
@@ -528,6 +535,7 @@ NS_IMPL_CYCLE_COLLECTION(NotificationPermissionRequest, mWindow, mPromise,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIContentPermissionRequest)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentPermissionRequest)
 NS_INTERFACE_MAP_END
 
@@ -1797,8 +1805,7 @@ Notification::RequestPermission(const GlobalObject& aGlobal,
   nsCOMPtr<nsIRunnable> request =
     new NotificationPermissionRequest(principal, window, promise, permissionCallback);
 
-  global->Dispatch("Notification::RequestPermission", TaskCategory::Other,
-                   request.forget());
+  global->Dispatch(TaskCategory::Other, request.forget());
 
   return promise.forget();
 }
@@ -1995,8 +2002,7 @@ Notification::Get(nsPIDOMWindowInner* aWindow,
   RefPtr<NotificationGetRunnable> r =
     new NotificationGetRunnable(origin, aFilter.mTag, callback);
 
-  aRv = global->Dispatch("Notification::Get", TaskCategory::Other,
-                         r.forget());
+  aRv = global->Dispatch(TaskCategory::Other, r.forget());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

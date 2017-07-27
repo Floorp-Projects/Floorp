@@ -76,19 +76,36 @@
 # include "FennecJNIWrappers.h"
 #endif
 
-#if defined(MOZ_PROFILING) && \
-    (defined(GP_OS_windows) || defined(GP_OS_darwin))
+// Win32 builds always have frame pointers, so FramePointerStackWalk() always
+// works.
+#if defined(GP_PLAT_x86_windows)
 # define HAVE_NATIVE_UNWIND
-# define USE_NS_STACKWALK
+# define USE_FRAME_POINTER_STACK_WALK
 #endif
 
-// This should also work on ARM Linux, but not tested there yet.
+// Win64 builds always omit frame pointers, so we use the slower
+// MozStackWalk(), which works in that case.
+#if defined(GP_PLAT_amd64_windows)
+# define HAVE_NATIVE_UNWIND
+# define USE_MOZ_STACK_WALK
+#endif
+
+// Mac builds only have frame pointers when MOZ_PROFILING is specified, so
+// FramePointerStackWalk() only works in that case. We don't use MozStackWalk()
+// on Mac.
+#if defined(GP_OS_darwin) && defined(MOZ_PROFILING)
+# define HAVE_NATIVE_UNWIND
+# define USE_FRAME_POINTER_STACK_WALK
+#endif
+
+// Android builds use the ARM Exception Handling ABI to unwind.
 #if defined(GP_PLAT_arm_android)
 # define HAVE_NATIVE_UNWIND
 # define USE_EHABI_STACKWALK
 # include "EHABIStackWalk.h"
 #endif
 
+// Linux builds use LUL, which uses DWARF info to unwind stacks.
 #if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_x86_linux)
 # define HAVE_NATIVE_UNWIND
 # define USE_LUL_STACKWALK
@@ -987,7 +1004,7 @@ MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
 static uintptr_t GetThreadHandle(PlatformData* aData);
 #endif
 
-#ifdef USE_NS_STACKWALK
+#if defined(USE_FRAME_POINTER_STACK_WALK) || defined(USE_MOZ_STACK_WALK)
 static void
 StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
 {
@@ -1014,20 +1031,20 @@ DoNativeBacktrace(PSLockRef aLock, const ThreadInfo& aThreadInfo,
 
   uint32_t maxFrames = uint32_t(MAX_NATIVE_FRAMES - aNativeStack.mCount);
 
-#if defined(GP_OS_darwin) || (defined(GP_PLAT_x86_windows))
+#if defined(USE_FRAME_POINTER_STACK_WALK)
   void* stackEnd = aThreadInfo.StackTop();
   if (aRegs.mFP >= aRegs.mSP && aRegs.mFP <= stackEnd) {
     FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
                           &aNativeStack, reinterpret_cast<void**>(aRegs.mFP),
                           stackEnd);
   }
-#else
-  // Win64 always omits frame pointers so for it we use the slower
-  // MozStackWalk().
+#elif defined(USE_MOZ_STACK_WALK)
   uintptr_t thread = GetThreadHandle(aThreadInfo.GetPlatformData());
   MOZ_ASSERT(thread);
   MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &aNativeStack,
                thread, /* platformData */ nullptr);
+#else
+# error "bad configuration"
 #endif
 }
 #endif
@@ -1274,6 +1291,7 @@ DoSharedSample(PSLockRef aLock, bool aIsSynchronous,
     MergeStacks(ActivePS::Features(aLock), aIsSynchronous, aThreadInfo, aRegs,
                 nativeStack, aBuffer);
 
+    // We can't walk the whole native stack, but we can record the top frame.
     if (ActivePS::FeatureLeaf(aLock)) {
       aBuffer.AddEntry(ProfileBufferEntry::NativeLeafAddr((void*)aRegs.mPC));
     }

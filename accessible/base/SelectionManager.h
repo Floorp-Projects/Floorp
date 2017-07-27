@@ -121,9 +121,10 @@ protected:
 
 private:
   // Currently focused control.
-  WeakFrame mCurrCtrlFrame;
   int32_t mCaretOffset;
   HyperTextAccessible* mAccWithCaret;
+  nsWeakPtr mCurrCtrlNormalSel;
+  nsWeakPtr mCurrCtrlSpellSel;
 };
 
 } // namespace a11y

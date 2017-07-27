@@ -13,7 +13,7 @@ dbg.onDebuggerStatement = function (frame) {
   assertEq(frame.environment instanceof Debugger.Environment, true);
 
   // If we make g no longer a debuggee, then trying to touch the frame at
-  // all show throw.
+  // all should throw.
   dbg.removeDebuggee(g);
   assertThrowsInstanceOf(() => frame.script, Error);
   assertThrowsInstanceOf(() => frame.environment, Error);

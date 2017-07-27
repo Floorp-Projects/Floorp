@@ -193,8 +193,11 @@ public:
   nsIHTMLCollection* Scripts();
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {
-    return NS_GetFuncStringNodeList(this, MatchNameAttribute, nullptr,
-                                    UseExistingNameString, aName);
+    return GetFuncStringContentList<nsCachableElementsByNameNodeList>(this,
+                                                                      MatchNameAttribute,
+                                                                      nullptr,
+                                                                      UseExistingNameString,
+                                                                      aName);
   }
   already_AddRefed<nsIDocument> Open(JSContext* cx,
                                      const nsAString& aType,

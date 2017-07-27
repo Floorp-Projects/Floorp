@@ -213,65 +213,65 @@ LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return tier_->sizeOfExcludingThis(mallocSizeOf);
 }
 
-/* virtual */ void
-Module::serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) const
+/* virtual */ size_t
+Module::bytecodeSerializedSize() const
 {
-    if (maybeBytecodeSize)
-        *maybeBytecodeSize = bytecode_->bytes.length();
-
-    // The compiled debug code must not be saved, set compiled size to 0,
-    // so Module::assumptionsMatch will return false during assumptions
-    // deserialization.
-    if (maybeCompiledSize && metadata().debugEnabled)
-        *maybeCompiledSize = 0;
-
-    if (maybeCompiledSize && !metadata().debugEnabled) {
-        *maybeCompiledSize = assumptions_.serializedSize() +
-                             linkData_.serializedSize() +
-                             SerializedVectorSize(imports_) +
-                             SerializedVectorSize(exports_) +
-                             SerializedPodVectorSize(dataSegments_) +
-                             SerializedVectorSize(elemSegments_) +
-                             code_->serializedSize();
-    }
+    return bytecode_->bytes.length();
 }
 
 /* virtual */ void
-Module::serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
-                  uint8_t* maybeCompiledBegin, size_t maybeCompiledSize) const
+Module::bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const
 {
-    MOZ_ASSERT(!!maybeBytecodeBegin == !!maybeBytecodeSize);
-    MOZ_ASSERT(!!maybeCompiledBegin == !!maybeCompiledSize);
+    MOZ_ASSERT(!!bytecodeBegin == !!bytecodeSize);
 
-    if (maybeBytecodeBegin) {
-        // Bytecode deserialization is not guarded by Assumptions and thus must not
-        // change incompatibly between builds. Thus, for simplicity, the format
-        // of the bytecode file is simply a .wasm file (thus, backwards
-        // compatibility is ensured by backwards compatibility of the wasm
-        // binary format).
+    // Bytecode deserialization is not guarded by Assumptions and thus must not
+    // change incompatibly between builds. For simplicity, the format of the
+    // bytecode file is a .wasm file which ensures backwards compatibility.
 
-        const Bytes& bytes = bytecode_->bytes;
-        uint8_t* bytecodeEnd = WriteBytes(maybeBytecodeBegin, bytes.begin(), bytes.length());
-        MOZ_RELEASE_ASSERT(bytecodeEnd == maybeBytecodeBegin + maybeBytecodeSize);
+    const Bytes& bytes = bytecode_->bytes;
+    uint8_t* bytecodeEnd = WriteBytes(bytecodeBegin, bytes.begin(), bytes.length());
+    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
+}
+
+/* virtual */ size_t
+Module::compiledSerializedSize() const
+{
+    // The compiled debug code must not be saved, set compiled size to 0,
+    // so Module::assumptionsMatch will return false during assumptions
+    // deserialization.
+    if (metadata().debugEnabled)
+        return 0;
+
+    return assumptions_.serializedSize() +
+           linkData_.serializedSize() +
+           SerializedVectorSize(imports_) +
+           SerializedVectorSize(exports_) +
+           SerializedPodVectorSize(dataSegments_) +
+           SerializedVectorSize(elemSegments_) +
+           code_->serializedSize();
+}
+
+/* virtual */ void
+Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
+{
+    if (metadata().debugEnabled) {
+        MOZ_RELEASE_ASSERT(compiledSize == 0);
+        return;
     }
 
-    MOZ_ASSERT_IF(maybeCompiledBegin && metadata().debugEnabled, maybeCompiledSize == 0);
+    // Assumption must be serialized at the beginning of the compiled bytes so
+    // that compiledAssumptionsMatch can detect a build-id mismatch before any
+    // other decoding occurs.
 
-    if (maybeCompiledBegin && !metadata().debugEnabled) {
-        // Assumption must be serialized at the beginning of the compiled bytes so
-        // that compiledAssumptionsMatch can detect a build-id mismatch before any
-        // other decoding occurs.
-
-        uint8_t* cursor = maybeCompiledBegin;
-        cursor = assumptions_.serialize(cursor);
-        cursor = linkData_.serialize(cursor);
-        cursor = SerializeVector(cursor, imports_);
-        cursor = SerializeVector(cursor, exports_);
-        cursor = SerializePodVector(cursor, dataSegments_);
-        cursor = SerializeVector(cursor, elemSegments_);
-        cursor = code_->serialize(cursor, linkData_);
-        MOZ_RELEASE_ASSERT(cursor == maybeCompiledBegin + maybeCompiledSize);
-    }
+    uint8_t* cursor = compiledBegin;
+    cursor = assumptions_.serialize(cursor);
+    cursor = linkData_.serialize(cursor);
+    cursor = SerializeVector(cursor, imports_);
+    cursor = SerializeVector(cursor, exports_);
+    cursor = SerializePodVector(cursor, dataSegments_);
+    cursor = SerializeVector(cursor, elemSegments_);
+    cursor = code_->serialize(cursor, linkData_);
+    MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
 }
 
 /* static */ bool

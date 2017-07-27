@@ -2449,6 +2449,11 @@ CacheIRCompiler::emitMegamorphicLoadSlotByValueResult()
     if (!addFailurePath(&failure))
         return false;
 
+    // The object must be Native.
+    masm.loadObjClass(obj, scratch);
+    masm.branchTest32(Assembler::NonZero, Address(scratch, Class::offsetOfFlags()),
+                      Imm32(Class::NON_NATIVE), failure->label());
+
     // idVal will be in vp[0], result will be stored in vp[1].
     masm.reserveStack(sizeof(Value));
     masm.Push(idVal);

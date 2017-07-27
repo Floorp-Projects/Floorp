@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsICancelable.h"
+#include "nsINamed.h"
 #include "nsIPrincipal.h"
 #include "nsString.h"
 #include "nsITimer.h"
@@ -18,7 +19,8 @@ namespace mozilla {
 
 class AlertImageRequest final : public imgINotificationObserver,
                                 public nsICancelable,
-                                public nsITimerCallback
+                                public nsITimerCallback,
+                                public nsINamed
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -27,6 +29,7 @@ public:
   NS_DECL_IMGINOTIFICATIONOBSERVER
   NS_DECL_NSICANCELABLE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   AlertImageRequest(nsIURI* aURI, nsIPrincipal* aPrincipal,
                     bool aInPrivateBrowsing, uint32_t aTimeout,

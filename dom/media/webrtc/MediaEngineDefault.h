@@ -5,6 +5,7 @@
 #ifndef MEDIAENGINEDEFAULT_H_
 #define MEDIAENGINEDEFAULT_H_
 
+#include "nsINamed.h"
 #include "nsITimer.h"
 
 #include "nsAutoPtr.h"
@@ -36,6 +37,7 @@ class MediaEngineDefault;
  * The default implementation of the MediaEngine interface.
  */
 class MediaEngineDefaultVideoSource : public nsITimerCallback,
+                                      public nsINamed,
 #ifdef MOZ_WEBRTC
                                       public MediaEngineCameraVideoSource
 #else
@@ -87,6 +89,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
 protected:
   ~MediaEngineDefaultVideoSource();

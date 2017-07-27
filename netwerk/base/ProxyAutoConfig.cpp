@@ -9,6 +9,7 @@
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
+#include "nsINamed.h"
 #include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIURLParser.h"
@@ -276,6 +277,7 @@ static void SetRunning(ProxyAutoConfig *arg)
 // The PACResolver is used for dnsResolve()
 class PACResolver final : public nsIDNSListener
                         , public nsITimerCallback
+                        , public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -311,6 +313,13 @@ public:
     return NS_OK;
   }
 
+  // nsINamed
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("PACResolver");
+    return NS_OK;
+  }
+
   nsresult                 mStatus;
   nsCOMPtr<nsICancelable>  mRequest;
   nsCOMPtr<nsIDNSRecord>   mResponse;
@@ -320,7 +329,7 @@ public:
 private:
   ~PACResolver() {}
 };
-NS_IMPL_ISUPPORTS(PACResolver, nsIDNSListener, nsITimerCallback)
+NS_IMPL_ISUPPORTS(PACResolver, nsIDNSListener, nsITimerCallback, nsINamed)
 
 static
 void PACLogToConsole(nsString &aMessage)

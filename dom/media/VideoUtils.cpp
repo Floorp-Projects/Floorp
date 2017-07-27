@@ -341,6 +341,13 @@ SimpleTimer::Notify(nsITimer *timer) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+SimpleTimer::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("SimpleTimer");
+  return NS_OK;
+}
+
 nsresult
 SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarget)
 {
@@ -378,7 +385,7 @@ SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarg
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(SimpleTimer, nsITimerCallback)
+NS_IMPL_ISUPPORTS(SimpleTimer, nsITimerCallback, nsINamed)
 
 already_AddRefed<SimpleTimer>
 SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIEventTarget* aTarget)
@@ -397,7 +404,7 @@ LogToBrowserConsole(const nsAString& aMsg)
     nsString msg(aMsg);
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
       "LogToBrowserConsole", [msg]() { LogToBrowserConsole(msg); });
-    SystemGroup::Dispatch("LogToBrowserConsole", TaskCategory::Other, task.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
     return;
   }
   nsCOMPtr<nsIConsoleService> console(

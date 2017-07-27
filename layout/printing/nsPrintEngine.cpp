@@ -3759,8 +3759,7 @@ nsPrintEngine::FirePrintCompletionEvent()
   nsCOMPtr<nsIDocument> doc = cv->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
 
-  NS_ENSURE_SUCCESS_VOID(doc->Dispatch("nsPrintCompletionEvent",
-                                       TaskCategory::Other, event.forget()));
+  NS_ENSURE_SUCCESS_VOID(doc->Dispatch(TaskCategory::Other, event.forget()));
 }
 
 void

@@ -14,6 +14,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
 #include "nsIDNSListener.h"
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsIProtocolProxyCallback.h"
 #include "nsIChannelEventSink.h"
@@ -71,7 +72,8 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIObserver,
                          public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
-                         public nsIChannelEventSink
+                         public nsIChannelEventSink,
+                         public nsINamed
 {
   friend class WebSocketFrame;
 
@@ -88,6 +90,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSINAMED
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
   //

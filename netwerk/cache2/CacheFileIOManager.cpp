@@ -1192,7 +1192,7 @@ public:
 
 StaticRefPtr<CacheFileIOManager> CacheFileIOManager::gInstance;
 
-NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback)
+NS_IMPL_ISUPPORTS(CacheFileIOManager, nsITimerCallback, nsINamed)
 
 CacheFileIOManager::CacheFileIOManager()
   : mShuttingDown(false)
@@ -1623,6 +1623,13 @@ CacheFileIOManager::Notify(nsITimer * aTimer)
     file->WriteMetadataIfNeeded();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CacheFileIOManager::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("CacheFileIOManager");
   return NS_OK;
 }
 

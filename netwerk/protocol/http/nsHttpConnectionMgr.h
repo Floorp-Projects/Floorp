@@ -21,6 +21,7 @@
 #include "nsWeakReference.h"
 #include "TCPFastOpen.h"
 
+#include "nsINamed.h"
 #include "nsIObserver.h"
 #include "nsITimer.h"
 
@@ -358,6 +359,7 @@ private:
                                    public nsITransportEventSink,
                                    public nsIInterfaceRequestor,
                                    public nsITimerCallback,
+                                   public nsINamed,
                                    public nsSupportsWeakReference,
                                    public TCPFastOpen
     {
@@ -370,6 +372,7 @@ private:
         NS_DECL_NSITRANSPORTEVENTSINK
         NS_DECL_NSIINTERFACEREQUESTOR
         NS_DECL_NSITIMERCALLBACK
+        NS_DECL_NSINAMED
 
         nsHalfOpenSocket(nsConnectionEntry *ent,
                          nsAHttpTransaction *trans,

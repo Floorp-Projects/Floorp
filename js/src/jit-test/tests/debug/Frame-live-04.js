@@ -1,5 +1,7 @@
 // frame.live is false for frames discarded during uncatchable error unwinding.
 
+load(libdir + 'asserts.js');
+
 var g = newGlobal();
 var dbg = Debugger(g);
 var hits = 0;
@@ -23,5 +25,7 @@ g.eval("function x() { y(); }");
 assertEq(g.eval("debugger; 'ok';"), "ok");
 assertEq(hits, 2);
 assertEq(snapshot.length, 3);
-for (var i = 0; i < snapshot.length; i++)
+for (var i = 0; i < snapshot.length; i++) {
     assertEq(snapshot[i].live, false);
+    assertThrowsInstanceOf(() => frame.script, Error);
+}

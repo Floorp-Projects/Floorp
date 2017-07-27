@@ -29,8 +29,8 @@ What if you have to pull in an update to webrender itself?
 1) Update your graphics branch checkout to the latest code on the
    graphics branch
 2) Check out and update the webrender repo to the version you want
-3) Copy over the webrender and webrender_traits folders into gfx/. The best way
-   to do this is to simply delete the gfx/webrender and gfx/webrender_traits
+3) Copy over the webrender and webrender_api folders into gfx/. The best way
+   to do this is to simply delete the gfx/webrender and gfx/webrender_api
    folders and use |cp -R| to copy them in again from the webrender repo. Update
    the "latest commit" information at the bottom of this file with the version.
 4) If you need to modify webrender_bindings/Cargo.toml to include or remove

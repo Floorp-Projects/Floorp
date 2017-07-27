@@ -251,9 +251,15 @@ user_pref("browser.contentHandlers.types.5.uri", "http://test1.example.org/rss?u
 
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref("toolkit.telemetry.server", "https://%(server)s/telemetry-dummy/");
-// Don't new-profile' ping on new profiles during tests, otherwise the testing framework
+// Don't send 'new-profile' ping on new profiles during tests, otherwise the testing framework
 // might wait on the pingsender to finish and slow down tests.
 user_pref("toolkit.telemetry.newProfilePing.enabled", false);
+// Don't send the 'shutdown' ping using the pingsender on the first session using
+// the 'pingsender' process. Valgrind marks the process as leaky (e.g. see bug 1364068
+// for the 'new-profile' ping) but does not provide enough information
+// to suppress the leak. Running locally does not reproduce the issue,
+// so disable this until we rewrite the pingsender in Rust (bug 1339035).
+user_pref("toolkit.telemetry.shutdownPingSender.enabledFirstSession", false);
 
 // A couple of preferences with default values to test that telemetry preference
 // watching is working.

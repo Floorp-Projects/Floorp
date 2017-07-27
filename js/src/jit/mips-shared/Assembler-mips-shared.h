@@ -906,12 +906,6 @@ class AssemblerMIPSShared : public AssemblerShared
   public:
     bool oom() const;
 
-    void disableProtection() {}
-    void enableProtection() {}
-    void setLowerBoundForProtection(size_t) {}
-    void unprotectRegion(unsigned char*, size_t) {}
-    void reprotectRegion(unsigned char*, size_t) {}
-
     void setPrinter(Sprinter* sp) {
     }
 

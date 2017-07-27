@@ -433,15 +433,15 @@ DOMIntersectionObserver::Update(nsIDocument* aDocument, DOMHighResTimeStamp time
       intersectionRatio = intersectionRect.isSome() ? 1.0 : 0.0;
     }
 
-    size_t threshold = -1;
+    int32_t threshold = -1;
     if (intersectionRatio > 0.0) {
       if (intersectionRatio >= 1.0) {
         intersectionRatio = 1.0;
-        threshold = mThresholds.Length();
+        threshold = (int32_t)mThresholds.Length();
       } else {
         for (size_t k = 0; k < mThresholds.Length(); ++k) {
           if (mThresholds[k] <= intersectionRatio) {
-            threshold = k + 1;
+            threshold = (int32_t)k + 1;
           } else {
             break;
           }

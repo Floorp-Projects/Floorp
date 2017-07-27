@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -16,12 +14,7 @@
 
 "use strict";
 
-// Globals
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -29,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
-
-// DownloadLegacyTransfer
 
 /**
  * nsITransfer implementation that provides a bridge to a Download object.
@@ -67,14 +58,12 @@ function DownloadLegacyTransfer() {
 DownloadLegacyTransfer.prototype = {
   classID: Components.ID("{1b4c85df-cbdd-4bb6-b04e-613caece083c}"),
 
-  // nsISupports
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsIWebProgressListener2,
                                          Ci.nsITransfer]),
 
   // nsIWebProgressListener
-
   onStateChange: function DLT_onStateChange(aWebProgress, aRequest, aStateFlags,
                                             aStatus) {
     if (!Components.isSuccessCode(aStatus)) {
@@ -153,6 +142,7 @@ DownloadLegacyTransfer.prototype = {
     }
   },
 
+  // nsIWebProgressListener
   onProgressChange: function DLT_onProgressChange(aWebProgress, aRequest,
                                                   aCurSelfProgress,
                                                   aMaxSelfProgress,
@@ -165,6 +155,7 @@ DownloadLegacyTransfer.prototype = {
 
   onLocationChange() { },
 
+  // nsIWebProgressListener
   onStatusChange: function DLT_onStatusChange(aWebProgress, aRequest, aStatus,
                                               aMessage) {
     // The status change may optionally be received in addition to the state
@@ -183,7 +174,6 @@ DownloadLegacyTransfer.prototype = {
   onSecurityChange() { },
 
   // nsIWebProgressListener2
-
   onProgressChange64: function DLT_onProgressChange64(aWebProgress, aRequest,
                                                       aCurSelfProgress,
                                                       aMaxSelfProgress,
@@ -195,6 +185,7 @@ DownloadLegacyTransfer.prototype = {
     }).catch(Cu.reportError);
   },
 
+  // nsIWebProgressListener2
   onRefreshAttempted: function DLT_onRefreshAttempted(aWebProgress, aRefreshURI,
                                                       aMillis, aSameURI) {
     // Indicate that refreshes and redirects are allowed by default.  However,
@@ -203,7 +194,6 @@ DownloadLegacyTransfer.prototype = {
   },
 
   // nsITransfer
-
   init: function DLT_init(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime,
                           aTempFile, aCancelable, aIsPrivate) {
     this._cancelable = aCancelable;
@@ -262,8 +252,6 @@ DownloadLegacyTransfer.prototype = {
     this._redirects = redirects;
   },
 
-  // Private methods and properties
-
   /**
    * This deferred object contains a promise that is resolved with the Download
    * object associated with this nsITransfer instance, when it is available.
@@ -293,7 +281,5 @@ DownloadLegacyTransfer.prototype = {
    */
   _signatureInfo: null,
 };
-
-// Module
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DownloadLegacyTransfer]);

@@ -2,6 +2,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsIPipe.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsStringStream.h"

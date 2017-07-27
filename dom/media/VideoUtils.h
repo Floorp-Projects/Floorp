@@ -20,6 +20,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsINamed.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsRect.h"
@@ -284,10 +285,11 @@ RefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
 }
 
 // Simple timer to run a runnable after a timeout.
-class SimpleTimer : public nsITimerCallback
+class SimpleTimer : public nsITimerCallback, public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSINAMED
 
   // Create a new timer to run aTask after aTimeoutMs milliseconds
   // on thread aTarget. If aTarget is null, task is run on the main thread.

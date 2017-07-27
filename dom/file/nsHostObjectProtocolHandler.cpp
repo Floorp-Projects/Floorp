@@ -469,13 +469,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD
-  SetName(const char* aName) override
-  {
-    MOZ_CRASH("The name shall never be set!");
-    return NS_OK;
-  }
-
 private:
   explicit ReleasingTimerHolder(nsTArray<nsWeakPtr>&& aArray)
     : mURIs(aArray)

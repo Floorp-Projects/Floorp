@@ -20,6 +20,7 @@
 
 #include "mozilla/CondVar.h"
 #include "mozilla/DeadlockDetector.h"
+#include "mozilla/RecursiveMutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RWLock.h"
@@ -38,7 +39,7 @@ namespace mozilla {
 // static members
 const char* const BlockingResourceBase::kResourceTypeName[] = {
   // needs to be kept in sync with BlockingResourceType
-  "Mutex", "ReentrantMonitor", "CondVar"
+  "Mutex", "ReentrantMonitor", "CondVar", "RecursiveMutex"
 };
 
 #ifdef DEBUG
@@ -526,6 +527,66 @@ ReentrantMonitor::Wait(PRIntervalTime aInterval)
   return rv;
 }
 
+
+//
+// Debug implementation of RecursiveMutex
+void
+RecursiveMutex::Lock()
+{
+  BlockingResourceBase* chainFront = ResourceChainFront();
+
+  // the code below implements mutex reentrancy semantics
+
+  if (this == chainFront) {
+    // immediately re-entered the mutex: acceptable
+    LockInternal();
+    ++mEntryCount;
+    return;
+  }
+
+  // this is sort of a hack around not recording the thread that
+  // owns this monitor
+  if (chainFront) {
+    for (BlockingResourceBase* br = ResourceChainPrev(chainFront);
+         br;
+         br = ResourceChainPrev(br)) {
+      if (br == this) {
+        NS_WARNING(
+          "Re-entering RecursiveMutex after acquiring other resources.");
+
+        // show the caller why this is potentially bad
+        CheckAcquire();
+
+        LockInternal();
+        ++mEntryCount;
+        return;
+      }
+    }
+  }
+
+  CheckAcquire();
+  LockInternal();
+  NS_ASSERTION(mEntryCount == 0, "RecursiveMutex isn't free!");
+  Acquire();       // protected by us
+  mOwningThread = PR_GetCurrentThread();
+  mEntryCount = 1;
+}
+
+void
+RecursiveMutex::Unlock()
+{
+  if (--mEntryCount == 0) {
+    Release();              // protected by us
+    mOwningThread = nullptr;
+  }
+  UnlockInternal();
+}
+
+void
+RecursiveMutex::AssertCurrentThreadIn()
+{
+  MOZ_ASSERT(IsAcquired() && mOwningThread == PR_GetCurrentThread());
+}
 
 //
 // Debug implementation of CondVar

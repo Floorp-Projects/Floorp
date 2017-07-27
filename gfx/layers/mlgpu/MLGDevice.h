@@ -424,6 +424,12 @@ public:
     return mMaxConstantBufferBindSize;
   }
 
+  // Helper function for unbinding textures since SetPSTexture is overloaded.
+  void UnsetPSTexture(uint32_t aSlot) {
+    TextureSource* nullTexture = nullptr;
+    SetPSTexture(aSlot, nullTexture);
+  }
+
 protected:
   virtual ~MLGDevice();
 

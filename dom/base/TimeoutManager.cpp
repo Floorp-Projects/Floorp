@@ -10,6 +10,8 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
 #include "mozilla/TimeStamp.h"
+#include "nsIDocShell.h"
+#include "nsINamed.h"
 #include "nsITimeoutHandler.h"
 #include "mozilla/dom/TabGroup.h"
 #include "OrderedTimeoutIterator.h"
@@ -107,10 +109,6 @@ TimeoutManager::IsActive() const
   // A window is considered active if:
   // * It is a chrome window
   // * It is playing audio
-  // * If it is using user media
-  // * If it is using WebRTC
-  // * If it has open WebSockets
-  // * If it has active IndexedDB databases
   //
   // Note that a window can be considered active if it is either in the
   // foreground or in the background.
@@ -121,45 +119,6 @@ TimeoutManager::IsActive() const
 
   // Check if we're playing audio
   if (mWindow.AsInner()->IsPlayingAudio()) {
-    return true;
-  }
-
-  // Check if there are any active IndexedDB databases
-  if (mWindow.AsInner()->HasActiveIndexedDBDatabases()) {
-    return true;
-  }
-
-  // Check if we have active GetUserMedia
-  if (MediaManager::Exists() &&
-      MediaManager::Get()->IsWindowStillActive(mWindow.WindowID())) {
-    return true;
-  }
-
-  bool active = false;
-#if 0
-  // Check if we have active PeerConnections This doesn't actually
-  // work, since we sometimes call IsActive from Resume, which in turn
-  // is sometimes called from nsGlobalWindow::LeaveModalState. The
-  // problem here is that LeaveModalState can be called with pending
-  // exeptions on the js context, and the following call to
-  // HasActivePeerConnection is a JS call, which will assert on that
-  // exception. Also, calling JS is expensive so we should try to fix
-  // this in some other way.
-  nsCOMPtr<IPeerConnectionManager> pcManager =
-    do_GetService(IPEERCONNECTION_MANAGER_CONTRACTID);
-
-  if (pcManager && NS_SUCCEEDED(pcManager->HasActivePeerConnection(
-                     mWindow.WindowID(), &active)) &&
-      active) {
-    return true;
-  }
-#endif // MOZ_WEBRTC
-
-  // Check if we have web sockets
-  RefPtr<WebSocketEventService> eventService = WebSocketEventService::Get();
-  if (eventService &&
-      NS_SUCCEEDED(eventService->HasListenerFor(mWindow.WindowID(), &active)) &&
-      active) {
     return true;
   }
 
@@ -246,7 +205,7 @@ TimeoutManager::MinSchedulingDelay() const
   TimeDuration unthrottled =
     isBackground ? TimeDuration::FromMilliseconds(gMinBackgroundTimeoutValue)
                  : TimeDuration();
-  if (mBudgetThrottleTimeouts && mExecutionBudget < TimeDuration()) {
+  if (BudgetThrottlingEnabled() && mExecutionBudget < TimeDuration()) {
     // Only throttle if execution budget is less than 0
     double factor = 1.0 / GetRegenerationFactor(mWindow.IsBackgroundInternal());
     return TimeDuration::Min(
@@ -373,7 +332,7 @@ TimeoutManager::UpdateBudget(const TimeStamp& aNow, const TimeDuration& aDuratio
   // window is active or not. If throttling is enabled and the window
   // is active and then becomes inactive, an overdrawn budget will
   // still be counted against the minimum delay.
-  if (mBudgetThrottleTimeouts) {
+  if (BudgetThrottlingEnabled()) {
     bool isBackground = mWindow.IsBackgroundInternal();
     double factor = GetRegenerationFactor(isBackground);
     TimeDuration regenerated = (aNow - mLastBudgetUpdate).MultDouble(factor);
@@ -1209,6 +1168,7 @@ TimeoutManager::IsTimeoutTracking(uint32_t aTimeoutId)
 namespace {
 
 class ThrottleTimeoutsCallback final : public nsITimerCallback
+                                     , public nsINamed
 {
 public:
   explicit ThrottleTimeoutsCallback(nsGlobalWindow* aWindow)
@@ -1220,6 +1180,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 
+  NS_IMETHOD GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ThrottleTimeoutsCallback");
+    return NS_OK;
+  }
+
 private:
   ~ThrottleTimeoutsCallback() {}
 
@@ -1229,7 +1195,7 @@ private:
   RefPtr<nsGlobalWindow> mWindow;
 };
 
-NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP
 ThrottleTimeoutsCallback::Notify(nsITimer* aTimer)
@@ -1239,6 +1205,66 @@ ThrottleTimeoutsCallback::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
+}
+
+bool
+TimeoutManager::BudgetThrottlingEnabled() const
+{
+  // A window can be throttled using budget if
+  // * It isn't active
+  // * If it isn't using user media
+  // * If it isn't using WebRTC
+  // * If it hasn't got open WebSockets
+  // * If it hasn't got active IndexedDB databases
+  //
+  // Note that we allow both foreground and background to be
+  // considered for budget throttling. What determines if they are if
+  // budget throttling is enabled is the regeneration factor.
+
+  if (!mBudgetThrottleTimeouts || IsActive()) {
+    return false;
+  }
+
+  // Check if there are any active IndexedDB databases
+  if (mWindow.AsInner()->HasActiveIndexedDBDatabases()) {
+    return false;
+  }
+
+  // Check if we have active GetUserMedia
+  if (MediaManager::Exists() &&
+      MediaManager::Get()->IsWindowStillActive(mWindow.WindowID())) {
+    return false;
+  }
+
+  bool active = false;
+#if 0
+  // Check if we have active PeerConnections This doesn't actually
+  // work, since we sometimes call IsActive from Resume, which in turn
+  // is sometimes called from nsGlobalWindow::LeaveModalState. The
+  // problem here is that LeaveModalState can be called with pending
+  // exeptions on the js context, and the following call to
+  // HasActivePeerConnection is a JS call, which will assert on that
+  // exception. Also, calling JS is expensive so we should try to fix
+  // this in some other way.
+  nsCOMPtr<IPeerConnectionManager> pcManager =
+    do_GetService(IPEERCONNECTION_MANAGER_CONTRACTID);
+
+  if (pcManager && NS_SUCCEEDED(pcManager->HasActivePeerConnection(
+                     mWindow.WindowID(), &active)) &&
+      active) {
+    return false;
+  }
+#endif // MOZ_WEBRTC
+
+  // Check if we have web sockets
+  RefPtr<WebSocketEventService> eventService = WebSocketEventService::Get();
+  if (eventService &&
+      NS_SUCCEEDED(eventService->HasListenerFor(mWindow.WindowID(), &active)) &&
+      active) {
+    return false;
+  }
+
+  return true;
 }
 
 void

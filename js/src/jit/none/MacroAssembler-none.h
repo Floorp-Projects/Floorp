@@ -424,12 +424,6 @@ class MacroAssemblerNone : public Assembler
     void profilerEnterFrame(Register , Register ) { MOZ_CRASH(); }
     void profilerExitFrame() { MOZ_CRASH(); }
 
-    void disableProtection() { MOZ_CRASH(); }
-    void enableProtection() { MOZ_CRASH(); }
-    void setLowerBoundForProtection(size_t) { MOZ_CRASH(); }
-    void unprotectRegion(unsigned char*, size_t) { MOZ_CRASH(); }
-    void reprotectRegion(unsigned char*, size_t) { MOZ_CRASH(); }
-
 #ifdef JS_NUNBOX32
     Address ToPayload(Address) { MOZ_CRASH(); }
     Address ToType(Address) { MOZ_CRASH(); }

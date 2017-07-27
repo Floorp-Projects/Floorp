@@ -1617,8 +1617,8 @@ template <bool HandleMissing>
 bool
 GetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* vp)
 {
-    if (MOZ_UNLIKELY(!obj->isNative()))
-        return false;
+    // Condition checked by caller.
+    MOZ_ASSERT(obj->isNative());
     return GetNativeDataProperty<HandleMissing>(cx, &obj->as<NativeObject>(), NameToId(name), vp);
 }
 
@@ -1666,8 +1666,8 @@ GetNativeDataPropertyByValue(JSContext* cx, JSObject* obj, Value* vp)
 {
     JS::AutoCheckCannotGC nogc;
 
-    if (MOZ_UNLIKELY(!obj->isNative()))
-        return false;
+    // Condition checked by caller.
+    MOZ_ASSERT(obj->isNative());
 
     // vp[0] contains the id, result will be stored in vp[1].
     Value idVal = vp[0];

@@ -7,6 +7,8 @@
 #ifndef mozilla_PostTraversalTask_h
 #define mozilla_PostTraversalTask_h
 
+#include "nscore.h"
+
 /* a task to be performed immediately after a Servo traversal */
 
 namespace mozilla {

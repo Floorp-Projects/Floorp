@@ -215,8 +215,7 @@ nsSHEntryShared::RemoveFromBFCacheAsync()
     return NS_ERROR_UNEXPECTED;
   }
   nsCOMPtr<nsIRunnable> evt = new DestroyViewerEvent(mContentViewer, mDocument);
-  nsresult rv = mDocument->Dispatch("nsSHEntryShared::DestroyViewerEvent",
-                                    mozilla::TaskCategory::Other, evt.forget());
+  nsresult rv = mDocument->Dispatch(mozilla::TaskCategory::Other, evt.forget());
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch DestroyViewerEvent");
   } else {

@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,13 +13,7 @@ this.EXPORTED_SYMBOLS = [
   "DownloadIntegration",
 ];
 
-////////////////////////////////////////////////////////////////////////////////
-//// Globals
-
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Integration.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -133,9 +125,6 @@ const kVerdictMap = {
   [Ci.nsIApplicationReputationService.VERDICT_DANGEROUS_HOST]:
                 Downloads.Error.BLOCK_VERDICT_MALWARE,
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadIntegration
 
 /**
  * Provides functions to integrate with the host application, handling for
@@ -799,9 +788,6 @@ this.DownloadIntegration = {
   },
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadObserver
-
 this.DownloadObserver = {
   /**
    * Flag to determine if the observers have been added previously.
@@ -914,9 +900,7 @@ this.DownloadObserver = {
     }
   },
 
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsIObserver
-
+  // nsIObserver
   observe: function DO_observe(aSubject, aTopic, aData) {
     let downloadsCount;
     let p = DownloadUIHelper.getPrompter();
@@ -997,14 +981,8 @@ this.DownloadObserver = {
     }
   },
 
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadHistoryObserver
 
 /**
  * Registers a Places observer so that operations on download history are
@@ -1028,19 +1006,15 @@ this.DownloadHistoryObserver.prototype = {
    */
   _list: null,
 
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsISupports
-
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
 
-  ////////////////////////////////////////////////////////////////////////////
-  //// nsINavHistoryObserver
-
+  // nsINavHistoryObserver
   onDeleteURI: function DL_onDeleteURI(aURI, aGUID) {
     this._list.removeFinished(download => aURI.equals(NetUtil.newURI(
                                                       download.source.url)));
   },
 
+  // nsINavHistoryObserver
   onClearHistory: function DL_onClearHistory() {
     this._list.removeFinished();
   },
@@ -1052,9 +1026,6 @@ this.DownloadHistoryObserver.prototype = {
   onPageChanged: function () {},
   onDeleteVisits: function () {},
 };
-
-////////////////////////////////////////////////////////////////////////////////
-//// DownloadAutoSaveView
 
 /**
  * This view can be added to a DownloadList object to trigger a save operation
@@ -1131,9 +1102,7 @@ this.DownloadAutoSaveView.prototype = {
     this._writer.arm();
   },
 
-  //////////////////////////////////////////////////////////////////////////////
-  //// DownloadList view
-
+  // DownloadList callback
   onDownloadAdded: function (aDownload)
   {
     if (gCombinedDownloadIntegration.shouldPersistDownload(aDownload)) {
@@ -1144,6 +1113,7 @@ this.DownloadAutoSaveView.prototype = {
     }
   },
 
+  // DownloadList callback
   onDownloadChanged: function (aDownload)
   {
     if (!gCombinedDownloadIntegration.shouldPersistDownload(aDownload)) {
@@ -1161,6 +1131,7 @@ this.DownloadAutoSaveView.prototype = {
     }
   },
 
+  // DownloadList callback
   onDownloadRemoved: function (aDownload)
   {
     if (this._downloadsMap.has(aDownload)) {

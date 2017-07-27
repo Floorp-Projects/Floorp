@@ -146,7 +146,7 @@ SchedulerEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t
   if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
     return NS_ERROR_UNEXPECTED;
   }
-  return mDispatcher->Dispatch(nullptr, mCategory, Move(aRunnable));
+  return mDispatcher->Dispatch(mCategory, Move(aRunnable));
 }
 
 NS_IMETHODIMP
@@ -169,20 +169,13 @@ SchedulerEventTarget::IsOnCurrentThreadInfallible()
 }
 
 /* static */ nsresult
-SchedulerGroup::UnlabeledDispatch(const char* aName,
-                                  TaskCategory aCategory,
+SchedulerGroup::UnlabeledDispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  if (aName) {
-    if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-      named->SetName(aName);
-    }
-  }
   if (NS_IsMainThread()) {
-    return NS_DispatchToCurrentThread(runnable.forget());
+    return NS_DispatchToCurrentThread(Move(aRunnable));
   } else {
-    return NS_DispatchToMainThread(runnable.forget());
+    return NS_DispatchToMainThread(Move(aRunnable));
   }
 }
 
@@ -219,11 +212,10 @@ SchedulerGroup::SchedulerGroup()
 }
 
 nsresult
-SchedulerGroup::Dispatch(const char* aName,
-                         TaskCategory aCategory,
+SchedulerGroup::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return LabeledDispatch(aName, aCategory, Move(aRunnable));
+  return LabeledDispatch(aCategory, Move(aRunnable));
 }
 
 nsISerialEventTarget*
@@ -305,15 +297,14 @@ SchedulerGroup::FromEventTarget(nsIEventTarget* aEventTarget)
 }
 
 nsresult
-SchedulerGroup::LabeledDispatch(const char* aName,
-                                TaskCategory aCategory,
+SchedulerGroup::LabeledDispatch(TaskCategory aCategory,
                                 already_AddRefed<nsIRunnable>&& aRunnable)
 {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
     runnable = new Runnable(runnable.forget(), this);
   }
-  return UnlabeledDispatch(aName, aCategory, runnable.forget());
+  return UnlabeledDispatch(aCategory, runnable.forget());
 }
 
 void

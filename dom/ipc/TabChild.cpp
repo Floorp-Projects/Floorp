@@ -3544,14 +3544,13 @@ TabChildGlobal::GetGlobalJSObject()
 }
 
 nsresult
-TabChildGlobal::Dispatch(const char* aName,
-                         TaskCategory aCategory,
+TabChildGlobal::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
   if (mTabChild && mTabChild->TabGroup()) {
-    return mTabChild->TabGroup()->Dispatch(aName, aCategory, Move(aRunnable));
+    return mTabChild->TabGroup()->Dispatch(aCategory, Move(aRunnable));
   }
-  return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
+  return DispatcherTrait::Dispatch(aCategory, Move(aRunnable));
 }
 
 nsISerialEventTarget*
