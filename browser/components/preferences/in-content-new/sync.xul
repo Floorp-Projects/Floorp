@@ -70,12 +70,12 @@
     </hbox>
     <label class="fxaMobilePromo">
         &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
-        --><label id="fxaMobilePromo-android"
-                  class="androidLink text-link"><!--
+        --><image class="androidLink"></image><label id="fxaMobilePromo-android"
+                  class="text-link"><!--
         -->&mobilePromo3.androidLink;</label><!--
         -->&mobilePromo3.iOSBefore;<!--
-        --><label id="fxaMobilePromo-ios"
-                  class="iOSLink text-link"><!--
+        --><image class="iOSLink"></image><label id="fxaMobilePromo-ios"
+                  class="text-link"><!--
         -->&mobilePromo3.iOSLink;</label><!--
         -->&mobilePromo3.end;
     </label>
@@ -218,10 +218,10 @@
     </groupbox>
     <label class="fxaMobilePromo">
         &mobilePromo3.start;<!-- We put these comments to avoid inserting white spaces
-        --><label class="androidLink text-link" id="fxaMobilePromo-android-hasFxaAccount"><!--
+        --><image class="androidLink"></image><label class="text-link" id="fxaMobilePromo-android-hasFxaAccount"><!--
         -->&mobilePromo3.androidLink;</label><!--
         -->&mobilePromo3.iOSBefore;<!--
-        --><label class="iOSLink text-link" id="fxaMobilePromo-ios-hasFxaAccount"><!--
+        --><image class="iOSLink"></image><label class="text-link" id="fxaMobilePromo-ios-hasFxaAccount"><!--
         -->&mobilePromo3.iOSLink;</label><!--
         -->&mobilePromo3.end;
     </label>
