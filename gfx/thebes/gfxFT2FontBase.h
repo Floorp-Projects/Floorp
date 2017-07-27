@@ -36,11 +36,14 @@ public:
 
     virtual FontType GetType() const override { return FONT_TYPE_FT2; }
 
+private:
+    uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
+    void InitMetrics();
+
 protected:
     virtual const Metrics& GetHorizontalMetrics() override;
 
     uint32_t mSpaceGlyph;
-    bool mHasMetrics;
     Metrics mMetrics;
 };
 

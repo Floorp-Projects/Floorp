@@ -28,6 +28,12 @@ public: // new functions
 
     FT2FontEntry *GetFontEntry();
 
+    virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                        FontCacheSizes* aSizes) const override;
+    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                        FontCacheSizes* aSizes) const override;
+
+protected:
     struct CachedGlyphData {
         CachedGlyphData()
             : glyphIndex(0xffffffffU) { }
@@ -41,7 +47,7 @@ public: // new functions
         int32_t xAdvance;
     };
 
-    const CachedGlyphData* GetGlyphDataForChar(uint32_t ch) {
+    const CachedGlyphData* GetGlyphDataForChar(FT_Face aFace, uint32_t ch) {
         CharGlyphMapEntryType *entry = mCharGlyphCache.PutEntry(ch);
 
         if (!entry)
@@ -49,18 +55,12 @@ public: // new functions
 
         if (entry->mData.glyphIndex == 0xffffffffU) {
             // this is a new entry, fill it
-            FillGlyphDataForChar(ch, &entry->mData);
+            FillGlyphDataForChar(aFace, ch, &entry->mData);
         }
 
         return &entry->mData;
     }
 
-    virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const override;
-    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const override;
-
-protected:
     bool ShapeText(DrawTarget      *aDrawTarget,
                    const char16_t  *aText,
                    uint32_t         aOffset,
@@ -70,7 +70,7 @@ protected:
                    RoundingFlags    aRounding,
                    gfxShapedText   *aShapedText) override;
 
-    void FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd);
+    void FillGlyphDataForChar(FT_Face face, uint32_t ch, CachedGlyphData *gd);
 
     void AddRange(const char16_t *aText,
                   uint32_t         aOffset,
