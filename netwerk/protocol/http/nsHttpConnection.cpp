@@ -285,11 +285,11 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     // pack them all into a new spdy session.
 
     nsTArray<RefPtr<nsAHttpTransaction> > list;
-    nsresult rv = NS_OK;
+    nsresult status = NS_OK;
     if (!mDid0RTTSpdy) {
-        rv = TryTakeSubTransactions(list);
+        status = TryTakeSubTransactions(list);
 
-        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
+        if (NS_FAILED(status) && status != NS_ERROR_NOT_IMPLEMENTED) {
             return;
         }
     }
@@ -304,6 +304,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
         mProxyConnectInProgress = false;
     }
 
+    nsresult rv = NS_OK;
     bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mTLSFilter;
     if (spdyProxy) {
         RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
@@ -315,7 +316,7 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     }
 
     if (!mDid0RTTSpdy) {
-        rv = MoveTransactionsToSpdy(rv, list);
+        rv = MoveTransactionsToSpdy(status, list);
         if (NS_FAILED(rv)) {
             return;
         }
