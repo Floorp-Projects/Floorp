@@ -1,7 +1,7 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 ac_add_options --target=i386-linux-android
-ac_add_options --with-android-min-sdk=15
+ac_add_options --with-android-min-sdk=16
 
 ac_add_options --enable-profiling
 

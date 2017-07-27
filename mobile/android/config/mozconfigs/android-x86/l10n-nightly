@@ -8,7 +8,7 @@ ac_add_options --disable-tests
 
 # Android
 ac_add_options --target=i386-linux-android
-ac_add_options --with-android-min-sdk=15
+ac_add_options --with-android-min-sdk=16
 
 ac_add_options --enable-updater
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}

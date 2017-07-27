@@ -4,7 +4,7 @@
 ac_add_options --enable-profiling
 
 # Android
-ac_add_options --with-android-min-sdk=15
+ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
 ac_add_options --with-branding=mobile/android/branding/nightly
