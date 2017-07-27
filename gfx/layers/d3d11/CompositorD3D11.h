@@ -236,6 +236,7 @@ private:
   gfx::IntRect mCurrentClip;
 
   bool mVerifyBuffersFailed;
+  bool mUseMutexOnPresent;
 };
 
 }
