@@ -1958,7 +1958,8 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
 
   nsCOMPtr<nsIURI> uri;
 
-  nsAdoptingCString urlStr = Preferences::GetCString("browser.chromeURL");
+  nsAutoCString urlStr;
+  Preferences::GetCString("browser.chromeURL", urlStr);
   if (urlStr.IsEmpty()) {
     urlStr.AssignLiteral("chrome://navigator/content/navigator.xul");
   }
