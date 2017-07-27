@@ -51,6 +51,13 @@ PARAMETERS = {
     'try_task_config': None,
 }
 
+COMM_PARAMETERS = {
+    'comm_base_repository': 'https://hg.mozilla.org/comm-central',
+    'comm_head_ref': None,
+    'comm_head_repository': 'https://hg.mozilla.org/comm-central',
+    'comm_head_rev': None,
+}
+
 
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""
@@ -66,11 +73,19 @@ class Parameters(ReadOnlyDict):
                         default = default()
                     kwargs[name] = default
 
+            if set(kwargs) & set(COMM_PARAMETERS.keys()):
+                for name, default in COMM_PARAMETERS.items():
+                    if name not in kwargs:
+                        if callable(default):
+                            default = default()
+                        kwargs[name] = default
+
         ReadOnlyDict.__init__(self, **kwargs)
 
     def check(self):
         names = set(self)
         valid = set(PARAMETERS.keys())
+        valid_comm = set(COMM_PARAMETERS.keys())
         msg = []
 
         missing = valid - names
@@ -78,6 +93,14 @@ class Parameters(ReadOnlyDict):
             msg.append("missing parameters: " + ", ".join(missing))
 
         extra = names - valid
+
+        if extra & set(valid_comm):
+            # If any comm_* parameters are specified, ensure all of them are specified.
+            missing = valid_comm - extra
+            if missing:
+                msg.append("missing parameters: " + ", ".join(missing))
+            extra = extra - valid_comm
+
         if extra and self.strict:
             msg.append("extra parameters: " + ", ".join(extra))
 
@@ -85,7 +108,7 @@ class Parameters(ReadOnlyDict):
             raise ParameterMismatch("; ".join(msg))
 
     def __getitem__(self, k):
-        if k not in PARAMETERS.keys():
+        if not (k in PARAMETERS.keys() or k in COMM_PARAMETERS.keys()):
             raise KeyError("no such parameter {!r}".format(k))
         try:
             return super(Parameters, self).__getitem__(k)
