@@ -404,11 +404,10 @@ always = dependable(True)
 never = dependable(False)
 
 
-# Create a decorator that will only execute the body of a function
-# if the passed function returns True when passed all positional
-# arguments.
+# Like @depends, but the decorated function is only called if one of the
+# arguments it would be called with has a positive value (bool(value) is True)
 @template
-def depends_tmpl(eval_args_fn, *args, **kwargs):
+def depends_if(*args, **kwargs):
     if kwargs:
         assert len(kwargs) == 1
         when = kwargs['when']
@@ -417,25 +416,10 @@ def depends_tmpl(eval_args_fn, *args, **kwargs):
     def decorator(func):
         @depends(*args, when=when)
         def wrapper(*args):
-            if eval_args_fn(args):
+            if any(arg for arg in args):
                 return func(*args)
         return wrapper
     return decorator
-
-
-# Like @depends, but the decorated function is only called if one of the
-# arguments it would be called with has a positive value (bool(value) is True)
-@template
-def depends_if(*args, **kwargs):
-    return depends_tmpl(any, *args, **kwargs)
-
-
-# Like @depends, but the decorated function is only called if all of the
-# arguments it would be called with have a positive value.
-@template
-def depends_all(*args, **kwargs):
-    return depends_tmpl(all, *args, **kwargs)
-
 
 # Hacks related to old-configure
 # ==============================
