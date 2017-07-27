@@ -3301,7 +3301,7 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        addAddonMenuItemToMenu(mMenu, info);
+        addBrowserActionMenuItemToMenu(mMenu, info);
     }
 
     /**
