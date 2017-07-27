@@ -31,10 +31,12 @@ this.TopStoriesFeed = class TopStoriesFeed {
       this.stories_endpoint = this._produceUrlWithApiKey(options.stories_endpoint, apiKey);
       this.topics_endpoint = this._produceUrlWithApiKey(options.topics_endpoint, apiKey);
       this.read_more_endpoint = options.read_more_endpoint;
+      this.stories_referrer = options.stories_referrer;
 
       // TODO https://github.com/mozilla/activity-stream/issues/2902
       const sectionOptions = {
         id: SECTION_ID,
+        eventSource: "TOP_STORIES",
         icon: options.provider_icon,
         title: {id: "header_recommended_by", values: {provider: options.provider_name}},
         rows: [],
@@ -42,7 +44,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
         contextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
         infoOption: {
           header: {id: "pocket_feedback_header"},
-          body: {id: "pocket_feedback_body"},
+          body: {id: options.provider_description},
           link: {
             href: options.survey_link,
             id: "pocket_send_feedback"
@@ -85,6 +87,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
               "title": s.title,
               "description": s.excerpt,
               "image": this._normalizeUrl(s.image_src),
+              "referrer": this.stories_referrer,
               "url": s.dedupe_url
             }));
           return items;
