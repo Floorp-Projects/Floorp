@@ -18,8 +18,7 @@ EXTRA_JS_MODULES += [
     'NewTabRemoteResources.jsm',
     'NewTabSearchProvider.jsm',
     'NewTabURL.jsm',
-    'NewTabWebChannel.jsm',
-    'PreviewProvider.jsm'
+    'NewTabWebChannel.jsm'
 ]
 
 XPIDL_SOURCES += [
