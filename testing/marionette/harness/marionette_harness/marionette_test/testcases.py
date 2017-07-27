@@ -311,7 +311,7 @@ class MarionetteTestCase(CommonTestCase):
     def setUp(self):
         super(MarionetteTestCase, self).setUp()
         self.marionette.test_name = self.test_name
-        self.marionette.execute_script("dump('TEST-START: {0}')"
+        self.marionette.execute_script(r"dump('TEST-START: {0}\n')"
                                        .format(self.test_name),
                                        sandbox="simpletest")
 
@@ -323,7 +323,7 @@ class MarionetteTestCase(CommonTestCase):
 
         if not self.marionette.crashed:
             try:
-                self.marionette.execute_script("dump('TEST-END: {0}')"
+                self.marionette.execute_script(r"dump('TEST-END: {0}\n')"
                                                .format(self.test_name),
                                                sandbox="simpletest")
                 self.marionette.test_name = None
