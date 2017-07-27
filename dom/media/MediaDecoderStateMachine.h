@@ -108,8 +108,8 @@ class MediaSink;
 class AbstractThread;
 class AudioSegment;
 class DecodedStream;
-class MediaDecoderReaderWrapper;
 class OutputStreamManager;
+class ReaderProxy;
 class TaskQueue;
 
 extern LazyLogModule gMediaDecoderLog;
@@ -548,7 +548,7 @@ private:
   // The media sink resource.  Used on the state machine thread.
   RefPtr<media::MediaSink> mMediaSink;
 
-  const RefPtr<MediaDecoderReaderWrapper> mReader;
+  const RefPtr<ReaderProxy> mReader;
 
   // The end time of the last audio frame that's been pushed onto the media sink
   // in microseconds. This will approximately be the end time
