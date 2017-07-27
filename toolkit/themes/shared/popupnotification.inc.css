@@ -82,16 +82,16 @@
   flex: 0 50%;
 }
 
-.popup-notification-button[default]:not([disabled]) {
+.popup-notification-button[default][highlight="true"]:not([disabled]) {
   background-color: #0996f8;
   color: white;
 }
 
-.popup-notification-button[default]:hover:not([disabled]) {
+.popup-notification-button[default][highlight="true"]:hover:not([disabled]) {
   background-color: #0675d3;
 }
 
-.popup-notification-button[default]:hover:active:not([disabled]) {
+.popup-notification-button[default][highlight="true"]:hover:active:not([disabled]) {
   background-color: #0568ba;
 }
 
