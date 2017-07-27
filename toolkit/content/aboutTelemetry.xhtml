@@ -137,76 +137,66 @@
           <select id="processes" hidden="true"></select>
       </div>
 
-      <div id="home-section" class="tab active">
+      <section id="home-section" class="active">
         <h3 id="page-subtitle"></h3>
         <p id="home-explanation"></p>
         <p id="ping-explanation"></p>
-      </div>
+      </section>
 
-      <div id="raw-ping-data-section" class="tab" hidden="true">
+      <section id="raw-ping-data-section">
         <pre id="raw-ping-data"></pre>
-      </div>
-
-      <section id="general-data-section" class="tab data-section" hidden="true">
-        <div id="general-data" class="data">
-        </div>
       </section>
 
-      <section id="environment-data-section" class="tab data-section" hidden="true">
-        <div id="environment-data" class="data">
-        </div>
+      <section id="general-data-section">
+        <div id="general-data" class="data"></div>
       </section>
 
-      <section id="session-info-section" class="tab data-section" hidden="true">
-        <div id="session-info" class="data">
-        </div>
+      <section id="environment-data-section">
+        <div id="environment-data" class="data"></div>
       </section>
 
-      <section id="scalars-section" class="tab data-section" hidden="true">
-        <div id="scalars" class="data">
-        </div>
+      <section id="session-info-section">
+        <div id="session-info" class="data"></div>
       </section>
 
-      <section id="keyed-scalars-section" class="tab data-section" hidden="true">
-        <div id="keyed-scalars" class="data">
-        </div>
+      <section id="scalars-section">
+        <div id="scalars" class="data"></div>
       </section>
 
-      <section id="histograms-section" class="tab data-section" hidden="true">
-        <div id="histograms" class="data">
-        </div>
+      <section id="keyed-scalars-section">
+        <div id="keyed-scalars" class="data"></div>
       </section>
 
-      <section id="keyed-histograms-section" class="tab data-section" hidden="true">
-        <div id="keyed-histograms" class="data">
-        </div>
+      <section id="histograms-section">
+        <div id="histograms" class="data"></div>
       </section>
 
-      <section id="events-section" class="tab data-section" hidden="true">
-        <div id="events" class="data">
-        </div>
+      <section id="keyed-histograms-section">
+        <div id="keyed-histograms" class="data"></div>
       </section>
 
-      <section id="simple-measurements-section" class="tab data-section" hidden="true">
-        <div id="simple-measurements" class="data">
-        </div>
+      <section id="events-section">
+        <div id="events" class="data"></div>
       </section>
 
-      <section id="telemetry-log-section" class="tab data-section" hidden="true">
-        <div id="telemetry-log" class="data">
-        </div>
+      <section id="simple-measurements-section">
+        <div id="simple-measurements" class="data"></div>
       </section>
 
-      <section id="slow-sql-section" class="tab data-section" hidden="true">
+      <section id="telemetry-log-section">
+        <div id="telemetry-log" class="data"></div>
+      </section>
+
+      <section id="slow-sql-section">
         <div id="slow-sql-tables" class="data">
           <p id="sql-warning" class="hidden">&aboutTelemetry.fullSqlWarning;</p>
         </div>
       </section>
 
-      <section id="chrome-hangs-section" class="tab data-section" hidden="true">
+      <section id="chrome-hangs-section">
         <div id="chrome-hangs" class="data">
-          <a id="chrome-hangs-fetch-symbols" href="#">&aboutTelemetry.fetchStackSymbols;</a>
-          <a id="chrome-hangs-hide-symbols" class="hidden" href="#">&aboutTelemetry.hideStackSymbols;</a>
+          <a id="chrome-hangs-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
+          <a id="chrome-hangs-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
           <br/>
           <br/>
           <div id="chrome-hangs-data">
@@ -214,15 +204,14 @@
         </div>
       </section>
 
-      <section id="thread-hang-stats-section" class="tab data-section" hidden="true">
-        <div id="thread-hang-stats" class="data">
-        </div>
+      <section id="thread-hang-stats-section">
+        <div id="thread-hang-stats" class="data"></div>
       </section>
 
-      <section id="late-writes-section" class="tab data-section" hidden="true">
+      <section id="late-writes-section">
         <div id="late-writes" class="data">
-          <a id="late-writes-fetch-symbols" href="#">&aboutTelemetry.fetchStackSymbols;</a>
-          <a id="late-writes-hide-symbols" class="hidden" href="#">&aboutTelemetry.hideStackSymbols;</a>
+          <a id="late-writes-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
+          <a id="late-writes-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
           <br/>
           <br/>
           <div id="late-writes-data">
@@ -230,15 +219,14 @@
         </div>
       </section>
 
-      <section id="addon-details-section" class="tab data-section" hidden="true">
-        <div id="addon-details" class="data">
-        </div>
+      <section id="addon-details-section">
+        <div id="addon-details" class="data"></div>
       </section>
 
-      <section id="captured-stacks-section" class="tab data-section" hidden="true">
+      <section id="captured-stacks-section">
         <div id="captured-stacks" class="data">
-          <a id="captured-stacks-fetch-symbols" href="#">&aboutTelemetry.fetchStackSymbols;</a>
-          <a id="captured-stacks-hide-symbols" class="hidden" href="#">&aboutTelemetry.hideStackSymbols;</a>
+          <a id="captured-stacks-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
+          <a id="captured-stacks-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
           <br/>
           <br/>
           <div id="captured-stacks-data">

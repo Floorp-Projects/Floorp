@@ -139,25 +139,15 @@ body {
   position: relative;
 }
 
+section:not(.active) {
+  display: none;
+}
+
 #page-description {
   border: 1px solid threedshadow;
   margin: 0px;
   padding: 10px;
   line-height: 1.2;
-}
-
-#settings {
-  border: 1px solid lightgrey;
-  padding: 5px;
-}
-
-.change-data-choices-link {
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-}
-
-.change-data-choices-link:hover {
-  text-decoration: none;
 }
 
 #ping-explanation > span {
@@ -198,20 +188,6 @@ body {
 #ping-source-picker {
   margin-left: 5px;
   margin-bottom: 10px;
-}
-
-.data-section:not(.has-data),
-.data-subsection:not(.has-subdata) {
-  color: gray;
-}
-
-.section-name {
-  font-size: x-large;
-  display: inline;
-}
-
-.has-data .section-name {
-  cursor: pointer;
 }
 
 .stack-title {
