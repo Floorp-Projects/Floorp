@@ -34,6 +34,7 @@ const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
+const NEGATIVE_LINE_NUMBERS_PREF = "devtools.gridinspector.showNegativeLineNumbers";
 
 const DEFAULT_GRID_COLOR = "#4B0082";
 
@@ -1141,6 +1142,35 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
                        this.getFirstRowLinePos(fragment));
       this.renderLineNumbers(fragment.rows, ROWS, "top", "left",
                        this.getFirstColLinePos(fragment));
+
+      if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
+        this.renderNegativeLineNumbers(fragment.cols, COLUMNS, "left", "top",
+                          this.getLastRowLinePos(fragment));
+        this.renderNegativeLineNumbers(fragment.rows, ROWS, "top", "left",
+                          this.getLastColLinePos(fragment));
+      }
+    }
+  }
+
+  /**
+   * Render the negative grid lines given the grid dimension information of the
+   * column or row lines.
+   *
+   * See @param for renderLines.
+   */
+  renderNegativeLineNumbers(gridDimension, dimensionType, mainSide, crossSide,
+            startPos) {
+    let lineStartPos = startPos;
+
+    const { lines } = gridDimension;
+
+    for (let i = 0, line = lines[i]; i < lines.length; line = lines[++i]) {
+      let linePos = line.start;
+
+      const negativeLineNumber = i - lines.length;
+
+      this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos, line.breadth,
+        dimensionType);
     }
   }
 
@@ -1479,6 +1509,18 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // Calculate the x & y coordinates for the line number container, so that it is
     // centered on the line, and in the middle of the gap if there is any.
     let x, y;
+
+    let startOffset = (boxHeight + 2) / devicePixelRatio;
+
+    if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
+      // If the line number is negative, offset it from the grid container edge,
+      // (downwards if its a column, rightwards if its a row).
+      if (lineNumber < 0) {
+        startPos += startOffset;
+      } else {
+        startPos -= startOffset;
+      }
+    }
 
     if (dimensionType === COLUMNS) {
       x = linePos + breadth / 2;
