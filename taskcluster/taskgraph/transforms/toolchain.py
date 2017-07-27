@@ -16,27 +16,45 @@ def use_toolchains(config, jobs):
     of corresponding artifacts to jobs using toolchains.
     """
     artifacts = {}
+    aliases_by_job = {}
+
+    def get_attribute(dict, key, attributes, attribute_name):
+        '''Get `attribute_name` from the given `attributes` dict, and if there
+        is a corresponding value, set `key` in `dict` to that value.'''
+        value = attributes.get(attribute_name)
+        if value:
+            dict[key] = value
+
     # Toolchain jobs can depend on other toolchain jobs, but we don't have full
     # tasks for them, since they're being transformed. So scan the jobs list in
     # that case, otherwise, use the list of tasks for the kind dependencies.
     if config.kind == 'toolchain':
         jobs = list(jobs)
         for job in jobs:
-            artifact = job.get('run', {}).get('toolchain-artifact')
-            if artifact:
-                artifacts[job['name']] = artifact
+            run = job.get('run', {})
+            get_attribute(artifacts, job['name'], run, 'toolchain-artifact')
+            get_attribute(aliases_by_job, job['name'], run, 'toolchain-alias')
     else:
         for task in config.kind_dependencies_tasks:
             if task.kind != 'toolchain':
                 continue
-            artifact = task.attributes.get('toolchain-artifact')
-            if artifact:
-                artifacts[task.label.replace('%s-' % task.kind, '')] = artifact
+            name = task.label.replace('%s-' % task.kind, '')
+            get_attribute(artifacts, name, task.attributes, 'toolchain-artifact')
+            get_attribute(aliases_by_job, name, task.attributes, 'toolchain-alias')
+
+    aliases = {}
+    for job, alias in aliases_by_job.items():
+        if alias in aliases:
+            raise Exception(
+                "Cannot use the alias %s for %s, it's already used for %s"
+                % (alias, job, aliases[alias]))
+        aliases[alias] = job
 
     for job in jobs:
         env = job.setdefault('worker', {}).setdefault('env', {})
 
-        toolchains = job.pop('toolchains', [])
+        toolchains = [aliases.get(t, t)
+                      for t in job.pop('toolchains', [])]
 
         if config.kind == 'toolchain' and job['name'] in toolchains:
             raise Exception("Toolchain job %s can't use itself as toolchain"
