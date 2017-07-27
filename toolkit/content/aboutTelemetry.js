@@ -1450,7 +1450,7 @@ var Search = {
   },
 
   search(text) {
-    let selectedSection = document.querySelector(".data-section.active");
+    let selectedSection = document.querySelector("section.active");
     if (selectedSection.id === "histograms-section") {
       let histograms = selectedSection.getElementsByClassName("histogram");
       this.filterElements(histograms, text);
@@ -1535,8 +1535,9 @@ var GenericSubsection = {
 
   renderSubsectionHeader(title, hasData, sectionID) {
     this.addSubSectionToSidebar(sectionID, title);
-    let section = document.createElement("section");
+    let section = document.createElement("div");
     section.setAttribute("id", sectionID + "-" + title);
+    section.classList.add("sub-section");
     if (hasData) {
       section.classList.add("has-subdata");
     }
@@ -1856,7 +1857,8 @@ function displayProcessesSelector(selectedSection) {
 function adjustSearchState() {
   let selectedSection = document.querySelector("section.active").id;
   let blacklist = [
-    "home",
+    "home-section",
+    "raw-ping-data-section"
   ];
   // TODO: Implement global search for the Home section
   let search = document.getElementById("search");
@@ -1891,14 +1893,12 @@ function show(selected) {
   document.getSelection().empty();
 
   let selectedValue = selected.getAttribute("value");
-  let current_section = document.querySelector(".active");
+  let current_section = document.querySelector("section.active");
   let selected_section = document.getElementById(selectedValue);
   if (current_section == selected_section)
     return;
   current_section.classList.remove("active");
-  current_section.hidden = true;
   selected_section.classList.add("active");
-  selected_section.hidden = false;
 
   let title = selected.querySelector(".category-name").textContent.trim();
   document.getElementById("sectionTitle").textContent = title;
