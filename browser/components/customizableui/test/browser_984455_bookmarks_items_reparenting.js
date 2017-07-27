@@ -19,13 +19,13 @@ const kSmallWidth = 400;
 function bookmarksMenuPanelShown() {
   return new Promise(resolve => {
     let bookmarksMenuPopup = document.getElementById("BMB_bookmarksPopup");
-    let onTransitionEnd = (e) => {
+    let onPopupShown = (e) => {
       if (e.target == bookmarksMenuPopup) {
-        bookmarksMenuPopup.removeEventListener("transitionend", onTransitionEnd);
+        bookmarksMenuPopup.removeEventListener("popupshown", onPopupShown);
         resolve();
       }
     }
-    bookmarksMenuPopup.addEventListener("transitionend", onTransitionEnd);
+    bookmarksMenuPopup.addEventListener("popupshown", onPopupShown);
   });
 }
 
