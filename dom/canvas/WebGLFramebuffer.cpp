@@ -678,8 +678,8 @@ WebGLFramebuffer::GetColorAttachPoint(GLenum attachPoint)
 
     const size_t colorId = attachPoint - LOCAL_GL_COLOR_ATTACHMENT0;
 
-    MOZ_ASSERT(mContext->mImplMaxColorAttachments <= kMaxColorAttachments);
-    if (colorId >= mContext->mImplMaxColorAttachments)
+    MOZ_ASSERT(mContext->mGLMaxColorAttachments <= kMaxColorAttachments);
+    if (colorId >= mContext->mGLMaxColorAttachments)
         return Nothing();
 
     return Some(&mColorAttachments[colorId]);
@@ -983,7 +983,7 @@ WebGLFramebuffer::ResolveAttachments() const
     ////
     // Nuke attachment points.
 
-    for (uint32_t i = 0; i < mContext->mImplMaxColorAttachments; i++) {
+    for (uint32_t i = 0; i < mContext->mGLMaxColorAttachments; i++) {
         const GLenum attachEnum = LOCAL_GL_COLOR_ATTACHMENT0 + i;
         gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachEnum,
                                      LOCAL_GL_RENDERBUFFER, 0);
@@ -1254,7 +1254,7 @@ WebGLFramebuffer::RefreshDrawBuffers() const
     // yields a framebuffer status of FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER.
     // We could workaround this only on affected versions, but it's easier be
     // unconditional.
-    std::vector<GLenum> driverBuffers(mContext->mImplMaxDrawBuffers, LOCAL_GL_NONE);
+    std::vector<GLenum> driverBuffers(mContext->mGLMaxDrawBuffers, LOCAL_GL_NONE);
     for (const auto& attach : mColorDrawBuffers) {
         if (attach->HasImage()) {
             const uint32_t index = attach->mAttachmentPoint - LOCAL_GL_COLOR_ATTACHMENT0;
@@ -1289,7 +1289,7 @@ WebGLFramebuffer::RefreshReadBuffer() const
 void
 WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>& buffers)
 {
-    if (buffers.Length() > mContext->mImplMaxDrawBuffers) {
+    if (buffers.Length() > mContext->mGLMaxDrawBuffers) {
         // "An INVALID_VALUE error is generated if `n` is greater than MAX_DRAW_BUFFERS."
         mContext->ErrorInvalidValue("%s: `buffers` must have a length <="
                                     " MAX_DRAW_BUFFERS.", funcName);
@@ -1476,13 +1476,13 @@ WebGLFramebuffer::FramebufferTexture2D(const char* funcName, GLenum attachEnum,
          */
 
         if (texImageTarget == LOCAL_GL_TEXTURE_2D) {
-            if (uint32_t(level) > FloorLog2(mContext->mImplMaxTextureSize))
+            if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize))
                 return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
         } else {
             MOZ_ASSERT(texImageTarget >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
                        texImageTarget <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
 
-            if (uint32_t(level) > FloorLog2(mContext->mImplMaxCubeMapTextureSize))
+            if (uint32_t(level) > FloorLog2(mContext->mGLMaxCubeMapTextureSize))
                 return mContext->ErrorInvalidValue("%s: `level` is too large.", funcName);
         }
     } else if (level != 0) {
@@ -1538,13 +1538,13 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
         texImageTarget = tex->Target().get();
         switch (texImageTarget) {
         case LOCAL_GL_TEXTURE_3D:
-            if (uint32_t(layer) >= mContext->mImplMax3DTextureSize) {
+            if (uint32_t(layer) >= mContext->mGLMax3DTextureSize) {
                 mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
                                             "MAX_3D_TEXTURE_SIZE");
                 return;
             }
 
-            if (uint32_t(level) > FloorLog2(mContext->mImplMax3DTextureSize)) {
+            if (uint32_t(level) > FloorLog2(mContext->mGLMax3DTextureSize)) {
                 mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
                                             "MAX_3D_TEXTURE_SIZE");
                 return;
@@ -1552,13 +1552,13 @@ WebGLFramebuffer::FramebufferTextureLayer(const char* funcName, GLenum attachEnu
             break;
 
         case LOCAL_GL_TEXTURE_2D_ARRAY:
-            if (uint32_t(layer) >= mContext->mImplMaxArrayTextureLayers) {
+            if (uint32_t(layer) >= mContext->mGLMaxArrayTextureLayers) {
                 mContext->ErrorInvalidValue("%s: `layer` must be < %s.", funcName,
                                             "MAX_ARRAY_TEXTURE_LAYERS");
                 return;
             }
 
-            if (uint32_t(level) > FloorLog2(mContext->mImplMaxTextureSize)) {
+            if (uint32_t(level) > FloorLog2(mContext->mGLMaxTextureSize)) {
                 mContext->ErrorInvalidValue("%s: `level` must be <= log2(%s).", funcName,
                                             "MAX_TEXTURE_SIZE");
                 return;
