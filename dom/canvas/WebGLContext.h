@@ -55,30 +55,6 @@
 class nsIDocShell;
 
 /*
- * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
- *   https://bugzilla.mozilla.org/show_bug.cgi?id=686732
- *
- * Exceptions: some of the following values are set to higher values than in the spec because
- * the values in the spec are ridiculously low. They are explicitly marked below
- */
-#define MINVALUE_GL_MAX_TEXTURE_SIZE                  1024  // Different from the spec, which sets it to 64 on page 162
-#define MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE         512   // Different from the spec, which sets it to 16 on page 162
-#define MINVALUE_GL_MAX_VERTEX_ATTRIBS                8     // Page 164
-#define MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS      16    // Page 164
-#define MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS        128   // Page 164
-#define MINVALUE_GL_MAX_VARYING_VECTORS               8     // Page 164
-#define MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS           8     // Page 164
-#define MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS    0     // Page 164
-#define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
-#define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
-
-/*
- * Minimum value constants define in 6.2 State Tables of OpenGL ES - 3.0.4
- */
-#define MINVALUE_GL_MAX_3D_TEXTURE_SIZE             256
-#define MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS        256
-
-/*
  * WebGL-only GLenums
  */
 #define LOCAL_GL_BROWSER_DEFAULT_WEBGL                       0x9244
@@ -1510,6 +1486,9 @@ public:
     GLuint GLMaxTextureUnits() const {
         return mGLMaxTextureUnits;
     }
+
+    float mGLAliasedLineWidthRange[2];
+    float mGLAliasedPointSizeRange[2];
 
     bool IsFormatValidForFB(TexInternalFormat format) const;
 

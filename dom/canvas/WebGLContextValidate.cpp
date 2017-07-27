@@ -34,6 +34,66 @@
 #include "nsCocoaFeatures.h"
 #endif
 
+////////////////////
+// Minimum value constants defined in GLES 2.0.25 $6.2 "State Tables":
+const uint32_t kMinMaxVertexAttribs          =   8; // Page 164
+const uint32_t kMinMaxVertexUniformVectors   = 128; // Page 164
+const uint32_t kMinMaxFragmentUniformVectors =  16; // Page 164
+const uint32_t kMinMaxVaryingVectors         =   8; // Page 164
+
+const uint32_t kMinMaxVertexTextureImageUnits   = 0; // Page 164
+const uint32_t kMinMaxFragmentTextureImageUnits = 8; // Page 164
+const uint32_t kMinMaxCombinedTextureImageUnits = 8; // Page 164
+
+const uint32_t kMinMaxColorAttachments = 4;
+const uint32_t kMinMaxDrawBuffers      = 4;
+
+// These few deviate from the spec: (The minimum values in the spec are ridiculously low)
+const uint32_t kMinMaxTextureSize        = 1024; // ES2 spec says `64` (p162)
+const uint32_t kMinMaxCubeMapTextureSize =  512; // ES2 spec says `16` (p162)
+const uint32_t kMinMaxRenderbufferSize   = 1024; // ES2 spec says `1` (p164)
+
+// Minimum value constants defined in GLES 3.0.4 $6.2 "State Tables":
+const uint32_t kMinMax3DTextureSize      = 256;
+const uint32_t kMinMaxArrayTextureLayers = 256;
+
+////////////////////
+// "Common" but usable values to avoid WebGL fingerprinting:
+const uint32_t kCommonMaxTextureSize        = 2048;
+const uint32_t kCommonMaxCubeMapTextureSize = 2048;
+const uint32_t kCommonMaxRenderbufferSize   = 2048;
+
+const uint32_t kCommonMaxVertexTextureImageUnits   =  8;
+const uint32_t kCommonMaxFragmentTextureImageUnits =  8;
+const uint32_t kCommonMaxCombinedTextureImageUnits = 16;
+
+const uint32_t kCommonMaxVertexAttribs          =  16;
+const uint32_t kCommonMaxVertexUniformVectors   = 256;
+const uint32_t kCommonMaxFragmentUniformVectors = 224;
+const uint32_t kCommonMaxVaryingVectors         =   8;
+
+const uint32_t kCommonMaxViewportDims = 4096;
+
+// The following ranges came from a 2013 Moto E and an old macbook.
+const float kCommonAliasedPointSizeRangeMin =  1;
+const float kCommonAliasedPointSizeRangeMax = 63;
+const float kCommonAliasedLineWidthRangeMin =  1;
+const float kCommonAliasedLineWidthRangeMax =  5;
+
+template<class T>
+static bool
+RestrictCap(T* const cap, const T restrictedVal)
+{
+    if (*cap < restrictedVal) {
+        return false; // already too low!
+    }
+
+    *cap = restrictedVal;
+    return true;
+}
+
+////////////////////
+
 namespace mozilla {
 
 bool
@@ -454,6 +514,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // even though the hardware supports much more.  The
     // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
     gl->GetUIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
+    mGLMaxCombinedTextureImageUnits = mGLMaxTextureUnits;
 
     if (mGLMaxTextureUnits < 8) {
         const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %u is < 8!",
@@ -531,6 +592,76 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
             // maxVertexOutputComponents in the OpenGL 3.2 spec.
         }
     }
+
+    ////////////////
+
+    gl->fGetFloatv(LOCAL_GL_ALIASED_LINE_WIDTH_RANGE, mGLAliasedLineWidthRange);
+
+    const GLenum driverPName = gl->IsCoreProfile() ? LOCAL_GL_POINT_SIZE_RANGE
+                                                   : LOCAL_GL_ALIASED_POINT_SIZE_RANGE;
+    gl->fGetFloatv(driverPName, mGLAliasedPointSizeRange);
+
+    ////////////////
+
+    if (gfxPrefs::WebGLMinCapabilityMode()) {
+        bool ok = true;
+
+        ok &= RestrictCap(&mGLMaxVertexTextureImageUnits  , kMinMaxVertexTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxFragmentTextureImageUnits, kMinMaxFragmentTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxCombinedTextureImageUnits, kMinMaxCombinedTextureImageUnits);
+
+        ok &= RestrictCap(&mGLMaxVertexAttribs         , kMinMaxVertexAttribs);
+        ok &= RestrictCap(&mGLMaxVertexUniformVectors  , kMinMaxVertexUniformVectors);
+        ok &= RestrictCap(&mGLMaxFragmentUniformVectors, kMinMaxFragmentUniformVectors);
+        ok &= RestrictCap(&mGLMaxVaryingVectors        , kMinMaxVaryingVectors);
+
+        ok &= RestrictCap(&mGLMaxColorAttachments, kMinMaxColorAttachments);
+        ok &= RestrictCap(&mGLMaxDrawBuffers     , kMinMaxDrawBuffers);
+
+        ok &= RestrictCap(&mGLMaxTextureSize       , kMinMaxTextureSize);
+        ok &= RestrictCap(&mGLMaxCubeMapTextureSize, kMinMaxCubeMapTextureSize);
+        ok &= RestrictCap(&mGLMax3DTextureSize     , kMinMax3DTextureSize);
+
+        ok &= RestrictCap(&mGLMaxArrayTextureLayers, kMinMaxArrayTextureLayers);
+        ok &= RestrictCap(&mGLMaxRenderbufferSize  , kMinMaxRenderbufferSize);
+
+        if (!ok) {
+            GenerateWarning("Unable to restrict WebGL limits to minimums.");
+            return false;
+        }
+
+        mDisableFragHighP = true;
+    } else if (nsContentUtils::ShouldResistFingerprinting()) {
+        bool ok = true;
+
+        ok &= RestrictCap(&mGLMaxTextureSize       , kCommonMaxTextureSize);
+        ok &= RestrictCap(&mGLMaxCubeMapTextureSize, kCommonMaxCubeMapTextureSize);
+        ok &= RestrictCap(&mGLMaxRenderbufferSize  , kCommonMaxRenderbufferSize);
+
+        ok &= RestrictCap(&mGLMaxVertexTextureImageUnits  , kCommonMaxVertexTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxFragmentTextureImageUnits, kCommonMaxFragmentTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxCombinedTextureImageUnits, kCommonMaxCombinedTextureImageUnits);
+
+        ok &= RestrictCap(&mGLMaxVertexAttribs         , kCommonMaxVertexAttribs);
+        ok &= RestrictCap(&mGLMaxVertexUniformVectors  , kCommonMaxVertexUniformVectors);
+        ok &= RestrictCap(&mGLMaxFragmentUniformVectors, kCommonMaxFragmentUniformVectors);
+        ok &= RestrictCap(&mGLMaxVaryingVectors        , kCommonMaxVaryingVectors);
+
+        ok &= RestrictCap(&mGLAliasedLineWidthRange[0], kCommonAliasedLineWidthRangeMin);
+        ok &= RestrictCap(&mGLAliasedLineWidthRange[1], kCommonAliasedLineWidthRangeMax);
+        ok &= RestrictCap(&mGLAliasedPointSizeRange[0], kCommonAliasedPointSizeRangeMin);
+        ok &= RestrictCap(&mGLAliasedPointSizeRange[1], kCommonAliasedPointSizeRangeMax);
+
+        ok &= RestrictCap(&mGLMaxViewportDims[0], kCommonMaxViewportDims);
+        ok &= RestrictCap(&mGLMaxViewportDims[1], kCommonMaxViewportDims);
+
+        if (!ok) {
+            GenerateWarning("Unable to restrict WebGL limits in order to resist fingerprinting");
+            return false;
+        }
+    }
+
+    ////////////////
 
     if (gl->IsCompatibilityProfile()) {
         gl->fEnable(LOCAL_GL_POINT_SPRITE);
