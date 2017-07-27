@@ -573,5 +573,25 @@ Performance::MemoryPressure()
   mUserEntries.Clear();
 }
 
+size_t
+Performance::SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t userEntries = 0;
+  for (const PerformanceEntry* entry : mUserEntries) {
+    userEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return userEntries;
+}
+
+size_t
+Performance::SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t resourceEntries = 0;
+  for (const PerformanceEntry* entry : mResourceEntries) {
+    resourceEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return resourceEntries;
+}
+
 } // dom namespace
 } // mozilla namespace

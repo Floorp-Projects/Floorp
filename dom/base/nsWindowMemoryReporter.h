@@ -27,6 +27,8 @@ class nsWindowSizes {
   macro(DOM,   mDOMCDATANodesSize) \
   macro(DOM,   mDOMCommentNodesSize) \
   macro(DOM,   mDOMEventTargetsSize) \
+  macro(DOM,   mDOMPerformanceUserEntries) \
+  macro(DOM,   mDOMPerformanceResourceEntries) \
   macro(DOM,   mDOMOtherSize) \
   macro(Style, mStyleSheetsSize) \
   macro(Other, mLayoutPresShellSize) \

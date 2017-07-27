@@ -103,6 +103,9 @@ public:
 
   void MemoryPressure();
 
+  size_t SizeOfUserEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfResourceEntries(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 protected:
   Performance();
   explicit Performance(nsPIDOMWindowInner* aWindow);
