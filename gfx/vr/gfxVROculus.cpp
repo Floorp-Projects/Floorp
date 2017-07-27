@@ -1552,50 +1552,57 @@ VRSystemManagerOculus::HandleInput()
     axis = static_cast<uint32_t>(OculusControllerAxisType::ThumbstickYAxis);
     HandleAxisMove(i, axis, -inputState.Thumbstick[i].y);
 
-    // Start to process pose
+    // Process pose state.
+    GamepadPoseState poseState;
+    GetControllerPoseState(handIdx, poseState);
+    HandlePoseTracking(i, poseState, controller);
+  }
+}
+
+void
+VRSystemManagerOculus::GetControllerPoseState(uint32_t aHandIdx, GamepadPoseState& aPoseState,
+                                              bool aForceUpdate)
+{
     ovrTrackingState state = ovr_GetTrackingState(mSession->Get(), 0.0, false);
 
     // HandPoses is ordered by ovrControllerType_LTouch and ovrControllerType_RTouch,
     // therefore, we can't get its state by the index of mOculusController.
-    ovrPoseStatef& pose(state.HandPoses[handIdx]);
-    GamepadPoseState poseState;
+    ovrPoseStatef& pose(state.HandPoses[aHandIdx]);
 
-    if (state.HandStatusFlags[handIdx] & ovrStatus_OrientationTracked) {
-      poseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
-      poseState.orientation[0] = pose.ThePose.Orientation.x;
-      poseState.orientation[1] = pose.ThePose.Orientation.y;
-      poseState.orientation[2] = pose.ThePose.Orientation.z;
-      poseState.orientation[3] = pose.ThePose.Orientation.w;
-      poseState.angularVelocity[0] = pose.AngularVelocity.x;
-      poseState.angularVelocity[1] = pose.AngularVelocity.y;
-      poseState.angularVelocity[2] = pose.AngularVelocity.z;
+    if (aForceUpdate || state.HandStatusFlags[aHandIdx] & ovrStatus_OrientationTracked) {
+      aPoseState.flags |= GamepadCapabilityFlags::Cap_Orientation;
+      aPoseState.orientation[0] = pose.ThePose.Orientation.x;
+      aPoseState.orientation[1] = pose.ThePose.Orientation.y;
+      aPoseState.orientation[2] = pose.ThePose.Orientation.z;
+      aPoseState.orientation[3] = pose.ThePose.Orientation.w;
+      aPoseState.angularVelocity[0] = pose.AngularVelocity.x;
+      aPoseState.angularVelocity[1] = pose.AngularVelocity.y;
+      aPoseState.angularVelocity[2] = pose.AngularVelocity.z;
 
-      poseState.flags |= GamepadCapabilityFlags::Cap_AngularAcceleration;
-      poseState.angularAcceleration[0] = pose.AngularAcceleration.x;
-      poseState.angularAcceleration[1] = pose.AngularAcceleration.y;
-      poseState.angularAcceleration[2] = pose.AngularAcceleration.z;
-      poseState.isOrientationValid = true;
+      aPoseState.flags |= GamepadCapabilityFlags::Cap_AngularAcceleration;
+      aPoseState.angularAcceleration[0] = pose.AngularAcceleration.x;
+      aPoseState.angularAcceleration[1] = pose.AngularAcceleration.y;
+      aPoseState.angularAcceleration[2] = pose.AngularAcceleration.z;
+      aPoseState.isOrientationValid = true;
     }
-    if (state.HandStatusFlags[handIdx] & ovrStatus_PositionTracked) {
-      poseState.flags |= GamepadCapabilityFlags::Cap_Position;
-      poseState.position[0] = pose.ThePose.Position.x;
-      poseState.position[1] = pose.ThePose.Position.y;
-      poseState.position[2] = pose.ThePose.Position.z;
-      poseState.linearVelocity[0] = pose.LinearVelocity.x;
-      poseState.linearVelocity[1] = pose.LinearVelocity.y;
-      poseState.linearVelocity[2] = pose.LinearVelocity.z;
+    if (aForceUpdate || state.HandStatusFlags[aHandIdx] & ovrStatus_PositionTracked) {
+      aPoseState.flags |= GamepadCapabilityFlags::Cap_Position;
+      aPoseState.position[0] = pose.ThePose.Position.x;
+      aPoseState.position[1] = pose.ThePose.Position.y;
+      aPoseState.position[2] = pose.ThePose.Position.z;
+      aPoseState.linearVelocity[0] = pose.LinearVelocity.x;
+      aPoseState.linearVelocity[1] = pose.LinearVelocity.y;
+      aPoseState.linearVelocity[2] = pose.LinearVelocity.z;
 
-      poseState.flags |= GamepadCapabilityFlags::Cap_LinearAcceleration;
-      poseState.linearAcceleration[0] = pose.LinearAcceleration.x;
-      poseState.linearAcceleration[1] = pose.LinearAcceleration.y;
-      poseState.linearAcceleration[2] = pose.LinearAcceleration.z;
+      aPoseState.flags |= GamepadCapabilityFlags::Cap_LinearAcceleration;
+      aPoseState.linearAcceleration[0] = pose.LinearAcceleration.x;
+      aPoseState.linearAcceleration[1] = pose.LinearAcceleration.y;
+      aPoseState.linearAcceleration[2] = pose.LinearAcceleration.z;
 
       float eyeHeight = ovr_GetFloat(mSession->Get(), OVR_KEY_EYE_HEIGHT, OVR_DEFAULT_EYE_HEIGHT);
-      poseState.position[1] -= eyeHeight;
-      poseState.isPositionValid = true;
+      aPoseState.position[1] -= eyeHeight;
+      aPoseState.isPositionValid = true;
     }
-    HandlePoseTracking(i, poseState, controller);
-  }
 }
 
 void
@@ -1766,6 +1773,11 @@ VRSystemManagerOculus::ScanForControllers()
   ovrInputState inputState;
   bool hasInputState = ovr_GetInputState(mSession->Get(), ovrControllerType_Touch,
                                          &inputState) == ovrSuccess;
+
+  if (!hasInputState) {
+    return;
+  }
+
   ovrControllerType activeControllerArray[2];
   uint32_t newControllerCount = 0;
 
@@ -1800,6 +1812,16 @@ VRSystemManagerOculus::ScanForControllers()
 
       // Not already present, add it.
       AddGamepad(oculusController->GetControllerInfo());
+
+      // Process pose state.
+      // We wanna Oculus Touch has the right position when it shows up,
+      // so we force to update the pose no matter if it has OrientationTracked
+      // or PositionTracked.
+      const uint32_t handIdx = static_cast<uint32_t>(hand) - 1;
+      GamepadPoseState poseState;
+      GetControllerPoseState(handIdx, poseState, true);
+      HandlePoseTracking(i, poseState, oculusController);
+
       ++mControllerCount;
     }
   }
