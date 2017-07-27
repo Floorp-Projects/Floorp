@@ -59,7 +59,8 @@ add_task(async function test_webRequest_filter_window() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.serviceWorkers.testing.enabled", true]],
+    set: [["dom.serviceWorkers.testing.enabled", true],
+          ["network.http.rcwn.enabled", false]],
   });
 
   let events = {
