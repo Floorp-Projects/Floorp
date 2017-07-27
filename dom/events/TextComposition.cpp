@@ -246,6 +246,17 @@ TextComposition::DispatchCompositionEvent(
 {
   mWasCompositionStringEmpty = mString.IsEmpty();
 
+  // If this instance has requested to commit or cancel composition but
+  // is not synthesizing commit event, that means that the IME commits or
+  // cancels the composition asynchronously.  Typically, iBus behaves so.
+  // Then, synthesized events which were dispatched immediately after
+  // the request has already committed our editor's composition string and
+  // told it to web apps.  Therefore, we should ignore the delayed events.
+  if (mRequestedToCommitOrCancel && !aIsSynthesized) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+    return;
+  }
+
   // If the content is a container of TabParent, composition should be in the
   // remote process.
   if (mTabParent) {
@@ -290,17 +301,6 @@ TextComposition::DispatchCompositionEvent(
   }
 
   if (!IsValidStateForComposition(aCompositionEvent->mWidget)) {
-    *aStatus = nsEventStatus_eConsumeNoDefault;
-    return;
-  }
-
-  // If this instance has requested to commit or cancel composition but
-  // is not synthesizing commit event, that means that the IME commits or
-  // cancels the composition asynchronously.  Typically, iBus behaves so.
-  // Then, synthesized events which were dispatched immediately after
-  // the request has already committed our editor's composition string and
-  // told it to web apps.  Therefore, we should ignore the delayed events.
-  if (mRequestedToCommitOrCancel && !aIsSynthesized) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return;
   }
