@@ -3112,17 +3112,6 @@ if test -n "$MOZ_CRASHREPORTER"; then
   fi
 fi
 
-MOZ_ARG_WITH_STRING(crashreporter-enable-percent,
-[  --with-crashreporter-enable-percent=NN
-                          Enable sending crash reports by default on NN% of users. (default=100)],
-[ val=`echo $withval | sed 's/[^0-9]//g'`
-    MOZ_CRASHREPORTER_ENABLE_PERCENT="$val"])
-
-if test -z "$MOZ_CRASHREPORTER_ENABLE_PERCENT"; then
-   MOZ_CRASHREPORTER_ENABLE_PERCENT=100
-fi
-AC_DEFINE_UNQUOTED(MOZ_CRASHREPORTER_ENABLE_PERCENT, $MOZ_CRASHREPORTER_ENABLE_PERCENT)
-
 dnl ========================================================
 dnl = libjpeg-turbo configuration
 dnl ========================================================

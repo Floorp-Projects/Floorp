@@ -2379,7 +2379,7 @@ nsSMILTimedElement::FireTimeEventAsync(EventMessage aMsg, int32_t aDetail)
 
   nsCOMPtr<nsIRunnable> event =
     new AsyncTimeEventRunner(mAnimationElement, aMsg, aDetail);
-  mAnimationElement->OwnerDoc()->Dispatch("AsyncTimeEventRunner", TaskCategory::Other,
+  mAnimationElement->OwnerDoc()->Dispatch(TaskCategory::Other,
                                           event.forget());
 }
 

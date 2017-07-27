@@ -2038,6 +2038,11 @@ nsHTMLDocument::MatchNameAttribute(Element* aElement, int32_t aNamespaceID,
                                    nsIAtom* aAtom, void* aData)
 {
   NS_PRECONDITION(aElement, "Must have element to work with!");
+
+  if (!aElement->HasName()) {
+    return false;
+  }
+
   nsString* elementName = static_cast<nsString*>(aData);
   return
     aElement->GetNameSpaceID() == kNameSpaceID_XHTML &&

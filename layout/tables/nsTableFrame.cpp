@@ -5112,8 +5112,7 @@ nsTableFrame::BCRecalcNeeded(nsStyleContext* aOldStyleContext,
     // introduces a unwanted cellmap data dependence on color
     nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
     nsresult rv =
-      GetContent()->OwnerDoc()->Dispatch("nsDelayedCalcBCBorders",
-                                         TaskCategory::Other, evt.forget());
+      GetContent()->OwnerDoc()->Dispatch(TaskCategory::Other, evt.forget());
     return NS_SUCCEEDED(rv);
   }
   return false;

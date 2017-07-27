@@ -106,7 +106,6 @@ JS::detail::InitWithFailureDiagnostic(bool isDebugBuild)
     RETURN_IF_FAIL(js::wasm::InitInstanceStaticData());
 
     js::gc::InitMemorySubsystem(); // Ensure gc::SystemPageSize() works.
-    RETURN_IF_FAIL(js::gc::InitializeStaticData());
 
     RETURN_IF_FAIL(js::jit::InitProcessExecutableMemory());
 

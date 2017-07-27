@@ -32,7 +32,7 @@ namespace mozilla {
 
 using namespace mozilla::gfx;
 
-NS_IMPL_ISUPPORTS(MediaEngineDefaultVideoSource, nsITimerCallback)
+NS_IMPL_ISUPPORTS(MediaEngineDefaultVideoSource, nsITimerCallback, nsINamed)
 /**
  * Default video source.
  */
@@ -283,6 +283,13 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   // implicitly releases last image
   mImage = ycbcr_image.forget();
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaEngineDefaultVideoSource::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("MediaEngineDefaultVideoSource");
   return NS_OK;
 }
 

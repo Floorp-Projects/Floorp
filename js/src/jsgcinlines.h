@@ -438,7 +438,6 @@ typedef CompartmentsIterT<GCZonesIter> GCCompartmentsIter;
 
 /* Iterates over all zones in the current sweep group. */
 class GCSweepGroupIter {
-  private:
     JS::Zone* current;
 
   public:

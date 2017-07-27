@@ -7,6 +7,7 @@
 
 #include "nsICacheStorageService.h"
 #include "nsIMemoryReporter.h"
+#include "nsINamed.h"
 #include "nsITimer.h"
 #include "nsICacheTesting.h"
 
@@ -68,6 +69,7 @@ class CacheStorageService final : public nsICacheStorageService
                                 , public nsIMemoryReporter
                                 , public nsITimerCallback
                                 , public nsICacheTesting
+                                , public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -75,6 +77,7 @@ public:
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSICACHETESTING
+  NS_DECL_NSINAMED
 
   CacheStorageService();
 

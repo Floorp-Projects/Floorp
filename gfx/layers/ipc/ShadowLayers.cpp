@@ -245,7 +245,6 @@ ShadowLayerForwarder::~ShadowLayerForwarder()
     RefPtr<ReleaseOnMainThreadTask<ActiveResourceTracker>> event =
       new ReleaseOnMainThreadTask<ActiveResourceTracker>(mActiveResourceTracker);
     if (mEventTarget) {
-      event->SetName("ActiveResourceTracker::~ActiveResourceTracker");
       mEventTarget->Dispatch(event.forget(), nsIEventTarget::DISPATCH_NORMAL);
     } else {
       NS_DispatchToMainThread(event);

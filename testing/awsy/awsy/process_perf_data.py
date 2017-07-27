@@ -17,6 +17,7 @@ CHECKPOINTS = [
     { 'name': "After tabs open", 'path': "memory-report-TabsOpen-4.json.gz" },
     { 'name': "After tabs open [+30s]", 'path': "memory-report-TabsOpenSettled-4.json.gz" },
     { 'name': "After tabs open [+30s, forced GC]", 'path': "memory-report-TabsOpenForceGC-4.json.gz" },
+    { 'name': "Tabs closed extra processes", 'path': "memory-report-TabsClosedExtraProcesses-4.json.gz" },
     { 'name': "Tabs closed", 'path': "memory-report-TabsClosed-4.json.gz" },
     { 'name': "Tabs closed [+30s]", 'path': "memory-report-TabsClosedSettled-4.json.gz" },
     { 'name': "Tabs closed [+30s, forced GC]", 'path': "memory-report-TabsClosedForceGC-4.json.gz" }
@@ -41,6 +42,7 @@ def update_checkpoint_paths(checkpoint_files):
                       ['TabsOpen-', -1],
                       ['TabsOpenSettled-', -1],
                       ['TabsOpenForceGC-', -1],
+                      ['TabsClosedExtraProcesses-', -1],
                       ['TabsClosed-', -1],
                       ['TabsClosedSettled-', -1],
                       ['TabsClosedForceGC-', -1]]

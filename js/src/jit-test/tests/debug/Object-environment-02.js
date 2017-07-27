@@ -9,12 +9,21 @@ g.h = function () {
     assertEq(fn.environment instanceof Debugger.Environment, true);
     var closure = frame.eval("f").return;
     assertEq(closure.environment instanceof Debugger.Environment, true);
+    var async_fun = frame.eval("m").return;
+    assertEq(async_fun.environment instanceof Debugger.Environment, true);
+    var async_iter = frame.eval("n").return;
+    assertEq(async_iter.environment instanceof Debugger.Environment, true);
     hits++;
 };
-g.eval("function j(a) {\n" +
-       "    var f = function () { return a; };\n" +
-       "    h();\n" +
-       "    return f;\n" +
-       "}\n" +
-       "j(0);\n");
+g.eval(`
+   function j(a) {
+       var f = function () { return a; };
+       function* g() { }
+       async function m() { }
+       async function* n() { }
+       h();
+       return f;
+   }
+   j(0);
+`);
 assertEq(hits, 1);

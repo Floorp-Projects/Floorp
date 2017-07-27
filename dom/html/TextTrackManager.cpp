@@ -630,7 +630,6 @@ TextTrackManager::DispatchUpdateCueDisplay()
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (win) {
       nsGlobalWindow::Cast(win)->Dispatch(
-        "TextTrackManager::UpdateCueDisplay",
         TaskCategory::Other,
         NewRunnableMethod("dom::TextTrackManager::UpdateCueDisplay",
                           this,
@@ -653,7 +652,6 @@ TextTrackManager::DispatchTimeMarchesOn()
     nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
     if (win) {
       nsGlobalWindow::Cast(win)->Dispatch(
-        "TextTrackManager::TimeMarchesOn",
         TaskCategory::Other,
         NewRunnableMethod("dom::TextTrackManager::TimeMarchesOn",
                           this,

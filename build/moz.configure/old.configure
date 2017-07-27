@@ -250,7 +250,6 @@ def old_configure_options(*options):
     '--with-app-name',
     '--with-arch',
     '--with-branding',
-    '--with-crashreporter-enable-percent',
     '--with-cross-lib',
     '--with-debug-label',
     '--with-default-mozilla-five-home',

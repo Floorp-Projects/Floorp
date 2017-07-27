@@ -12,6 +12,7 @@
 
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsIDocumentStateListener.h"
+#include "nsINamed.h"
 #include "nsISelectionListener.h"
 #include "nsISupportsImpl.h"            // for NS_DECL_ISUPPORTS
 #include "nsITimer.h"                   // for NS_DECL_NSITIMERCALLBACK, etc
@@ -27,7 +28,8 @@ class nsPICommandUpdater;
 class nsComposerCommandsUpdater : public nsISelectionListener,
                                   public nsIDocumentStateListener,
                                   public nsITransactionListener,
-                                  public nsITimerCallback
+                                  public nsITimerCallback,
+                                  public nsINamed
 {
 public:
 
@@ -44,6 +46,9 @@ public:
 
   // nsITimerCallback interfaces
   NS_DECL_NSITIMERCALLBACK
+
+  // nsINamed
+  NS_DECL_NSINAMED
 
   /** nsITransactionListener interfaces
     */

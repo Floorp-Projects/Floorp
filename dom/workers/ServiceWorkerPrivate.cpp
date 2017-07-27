@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsINamed.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIPushErrorReporter.h"
 #include "nsISupportsImpl.h"
@@ -1053,6 +1054,7 @@ namespace {
 
 class AllowWindowInteractionHandler final : public ExtendableEventCallback
                                           , public nsITimerCallback
+                                          , public nsINamed
                                           , public WorkerHolder
 {
   nsCOMPtr<nsITimer> mTimer;
@@ -1137,6 +1139,14 @@ class AllowWindowInteractionHandler final : public ExtendableEventCallback
     return NS_OK;
   }
 
+  // nsINamed virtual methods
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("AllowWindowInteractionHandler");
+    return NS_OK;
+  }
+
   // WorkerHolder virtual methods
   bool
   Notify(Status aStatus) override
@@ -1164,7 +1174,7 @@ public:
   }
 };
 
-NS_IMPL_ISUPPORTS(AllowWindowInteractionHandler, nsITimerCallback)
+NS_IMPL_ISUPPORTS(AllowWindowInteractionHandler, nsITimerCallback, nsINamed)
 
 class SendNotificationEventRunnable final : public ExtendableEventWorkerRunnable
 {
@@ -2019,6 +2029,7 @@ ServiceWorkerPrivate::IsIdle() const
 namespace {
 
 class ServiceWorkerPrivateTimerCallback final : public nsITimerCallback
+                                              , public nsINamed
 {
 public:
   typedef void (ServiceWorkerPrivate::*Method)(nsITimer*);
@@ -2038,6 +2049,13 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("ServiceWorkerPrivateTimerCallback");
+    return NS_OK;
+  }
+
 private:
   ~ServiceWorkerPrivateTimerCallback() = default;
 
@@ -2047,7 +2065,7 @@ private:
   NS_DECL_THREADSAFE_ISUPPORTS
 };
 
-NS_IMPL_ISUPPORTS(ServiceWorkerPrivateTimerCallback, nsITimerCallback);
+NS_IMPL_ISUPPORTS(ServiceWorkerPrivateTimerCallback, nsITimerCallback, nsINamed);
 
 } // anonymous namespace
 

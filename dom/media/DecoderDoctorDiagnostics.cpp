@@ -826,12 +826,6 @@ DecoderDoctorDocumentWatcher::GetName(nsACString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-DecoderDoctorDocumentWatcher::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 void
 DecoderDoctorDiagnostics::StoreFormatDiagnostics(nsIDocument* aDocument,
                                                  const nsAString& aFormat,

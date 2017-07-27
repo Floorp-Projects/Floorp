@@ -310,7 +310,7 @@ PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
   if (mTabChild && !mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
     mPaintTask = new PaintTask(this);
     nsCOMPtr<nsIRunnable> event(mPaintTask.get());
-    mTabChild->TabGroup()->Dispatch("PuppetWidget::Invalidate", TaskCategory::Other, event.forget());
+    mTabChild->TabGroup()->Dispatch(TaskCategory::Other, event.forget());
     return;
   }
 }

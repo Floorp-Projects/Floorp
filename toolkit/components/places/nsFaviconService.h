@@ -16,6 +16,7 @@
 #include "nsTHashtable.h"
 #include "nsToolkitCompsCID.h"
 #include "nsURIHashKey.h"
+#include "nsINamed.h"
 #include "nsITimer.h"
 #include "Database.h"
 #include "imgITools.h"
@@ -51,6 +52,7 @@ public:
 class nsFaviconService final : public nsIFaviconService
                              , public mozIAsyncFavicons
                              , public nsITimerCallback
+                             , public nsINamed
 {
 public:
   nsFaviconService();
@@ -124,6 +126,7 @@ public:
   NS_DECL_NSIFAVICONSERVICE
   NS_DECL_MOZIASYNCFAVICONS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
 private:
   imgITools* GetImgTools() {

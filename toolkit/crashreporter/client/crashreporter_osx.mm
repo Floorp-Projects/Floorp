@@ -169,14 +169,12 @@ static bool RestartApplication()
   // load default state of submit checkbox
   // we don't just do this via IB because we want the default to be
   // off a certain percentage of the time
-  BOOL submitChecked = NO;
+  BOOL submitChecked = YES;
   NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
   if (nil != [userDefaults objectForKey:@"submitReport"]) {
-    submitChecked =  [userDefaults boolForKey:@"submitReport"];
+    submitChecked = [userDefaults boolForKey:@"submitReport"];
   }
   else {
-    // use compile-time specified enable percentage
-    submitChecked = ShouldEnableSending();
     [userDefaults setBool:submitChecked forKey:@"submitReport"];
   }
   [mSubmitReportButton setState:(submitChecked ? NSOnState : NSOffState)];

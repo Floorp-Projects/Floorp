@@ -5,10 +5,120 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PaymentActionResponse.h"
-#include "nsIRunnable.h"
+#include "PaymentRequestUtils.h"
+#include "BasicCardPayment.h"
 
 namespace mozilla {
 namespace dom {
+
+/* PaymentResponseData */
+
+NS_IMPL_ISUPPORTS(PaymentResponseData, nsIPaymentResponseData)
+
+NS_IMETHODIMP
+PaymentResponseData::GetType(uint32_t* aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  *aType = mType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentResponseData::Init(const uint32_t aType)
+{
+  if (aType != nsIPaymentResponseData::GENERAL_RESPONSE &&
+      aType != nsIPaymentResponseData::BASICCARD_RESPONSE) {
+    return NS_ERROR_FAILURE;
+  }
+  mType = aType;
+  return NS_OK;
+}
+
+/* GeneralResponseData */
+
+NS_IMPL_ISUPPORTS_INHERITED(GeneralResponseData,
+                            PaymentResponseData,
+                            nsIGeneralResponseData)
+
+GeneralResponseData::GeneralResponseData()
+  : mData(NS_LITERAL_STRING("{}"))
+{
+  Init(nsIPaymentResponseData::GENERAL_RESPONSE);
+}
+
+NS_IMETHODIMP
+GeneralResponseData::GetData(nsAString& aData)
+{
+  aData = mData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GeneralResponseData::InitData(JS::HandleValue aValue, JSContext* aCx)
+{
+  if (aValue.isNullOrUndefined()) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = SerializeFromJSVal(aCx, aValue, mData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+/* BasicCardResponseData */
+
+NS_IMPL_ISUPPORTS_INHERITED(BasicCardResponseData,
+                            PaymentResponseData,
+                            nsIBasicCardResponseData)
+
+BasicCardResponseData::BasicCardResponseData()
+{
+  Init(nsIPaymentResponseData::BASICCARD_RESPONSE);
+}
+
+NS_IMETHODIMP
+BasicCardResponseData::GetData(nsAString& aData)
+{
+  aData = mData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasicCardResponseData::InitData(const nsAString& aCardholderName,
+                                const nsAString& aCardNumber,
+                                const nsAString& aExpiryMonth,
+                                const nsAString& aExpiryYear,
+                                const nsAString& aCardSecurityCode,
+                                nsIPaymentAddress* aBillingAddress)
+{
+  // cardNumber is a required attribute, cannot be empty;
+  if (aCardNumber.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<BasicCardService> service = BasicCardService::GetService();
+  MOZ_ASSERT(service);
+
+  if (!service->IsValidExpiryMonth(aExpiryMonth)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!service->IsValidExpiryYear(aExpiryYear)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = service->EncodeBasicCardData(aCardholderName,
+                                             aCardNumber,
+                                             aExpiryMonth,
+                                             aExpiryYear,
+                                             aCardSecurityCode,
+                                             aBillingAddress,
+                                             mData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
 
 /* PaymentActionResponse */
 
@@ -121,15 +231,49 @@ NS_IMETHODIMP
 PaymentShowActionResponse::Init(const nsAString& aRequestId,
                                 const uint32_t aAcceptStatus,
                                 const nsAString& aMethodName,
-                                const nsAString& aData,
+                                nsIPaymentResponseData* aData,
                                 const nsAString& aPayerName,
                                 const nsAString& aPayerEmail,
                                 const nsAString& aPayerPhone)
 {
+  NS_ENSURE_ARG_POINTER(aData);
   mRequestId = aRequestId;
   mAcceptStatus = aAcceptStatus;
   mMethodName = aMethodName;
-  mData = aData;
+
+  RefPtr<BasicCardService> service = BasicCardService::GetService();
+  MOZ_ASSERT(service);
+  bool isBasicCardPayment = service->IsBasicCardPayment(mMethodName);
+
+  uint32_t responseType;
+  NS_ENSURE_SUCCESS(aData->GetType(&responseType), NS_ERROR_FAILURE);
+  switch (responseType) {
+    case nsIPaymentResponseData::GENERAL_RESPONSE: {
+      if (isBasicCardPayment) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIGeneralResponseData> data = do_QueryInterface(aData);
+      MOZ_ASSERT(data);
+      NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
+      break;
+    }
+    case nsIPaymentResponseData::BASICCARD_RESPONSE: {
+      if (!isBasicCardPayment) {
+        return NS_ERROR_FAILURE;
+      }
+      nsCOMPtr<nsIBasicCardResponseData> data = do_QueryInterface(aData);
+      MOZ_ASSERT(data);
+      NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
+      break;
+    }
+    default: {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  if (mData.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
   mPayerName = aPayerName;
   mPayerEmail = aPayerEmail;
   mPayerPhone = aPayerPhone;

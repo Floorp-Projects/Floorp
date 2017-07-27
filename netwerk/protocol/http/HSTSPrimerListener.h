@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsINamed.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsITimer.h"
@@ -90,7 +91,8 @@ enum HSTSPrimingResult {
 // nsIStreamListener in order to receive events from AsyncOpen2
 class HSTSPrimingListener final : public nsIStreamListener,
                                   public nsIInterfaceRequestor,
-                                  public nsITimerCallback
+                                  public nsITimerCallback,
+                                  public nsINamed
 {
 public:
   explicit HSTSPrimingListener(nsIHstsPrimingCallback* aCallback);
@@ -100,6 +102,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
 private:
   ~HSTSPrimingListener() {}

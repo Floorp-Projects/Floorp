@@ -546,15 +546,15 @@ protected:
   nsString mString;
 };
 
-class nsCacheableFuncStringNodeList
+class nsCachableElementsByNameNodeList
   : public nsCacheableFuncStringContentList
 {
 public:
-  nsCacheableFuncStringNodeList(nsINode* aRootNode,
-                                nsContentListMatchFunc aFunc,
-                                nsContentListDestroyFunc aDestroyFunc,
-                                nsFuncStringContentListDataAllocator aDataAllocator,
-                                const nsAString& aString)
+  nsCachableElementsByNameNodeList(nsINode* aRootNode,
+                                   nsContentListMatchFunc aFunc,
+                                   nsContentListDestroyFunc aDestroyFunc,
+                                   nsFuncStringContentListDataAllocator aDataAllocator,
+                                   const nsAString& aString)
     : nsCacheableFuncStringContentList(aRootNode, aFunc, aDestroyFunc,
                                        aDataAllocator, aString)
   {
@@ -562,6 +562,8 @@ public:
     mType = eNodeList;
 #endif
   }
+
+  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 

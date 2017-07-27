@@ -9,7 +9,7 @@
 #include "nsIGeolocationProvider.h"
 #include "nsServiceManagerUtils.h"
 
-NS_IMPL_ISUPPORTS(MLSFallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS(MLSFallback, nsITimerCallback, nsINamed)
 
 MLSFallback::MLSFallback(uint32_t delay)
 : mDelayMs(delay)
@@ -57,6 +57,13 @@ NS_IMETHODIMP
 MLSFallback::Notify(nsITimer* aTimer)
 {
   return CreateMLSFallbackProvider();
+}
+
+NS_IMETHODIMP
+MLSFallback::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("MLSFallback");
+  return NS_OK;
 }
 
 nsresult

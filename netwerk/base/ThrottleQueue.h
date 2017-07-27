@@ -8,6 +8,7 @@
 #define mozilla_net_ThrottleQueue_h
 
 #include "mozilla/TimeStamp.h"
+#include "nsINamed.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsITimer.h"
 
@@ -28,6 +29,7 @@ class ThrottleInputStream;
 class ThrottleQueue final
   : public nsIInputChannelThrottleQueue
   , public nsITimerCallback
+  , public nsINamed
 {
 public:
 
@@ -36,6 +38,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTCHANNELTHROTTLEQUEUE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   void QueueStream(ThrottleInputStream* aStream);
   void DequeueStream(ThrottleInputStream* aStream);

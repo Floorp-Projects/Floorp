@@ -1155,7 +1155,8 @@ PresentationControllingInfo::NotifyData(const nsACString& aData, bool aIsBinary)
 
 NS_IMPL_ISUPPORTS_INHERITED(PresentationPresentingInfo,
                             PresentationSessionInfo,
-                            nsITimerCallback)
+                            nsITimerCallback,
+                            nsINamed)
 
 nsresult
 PresentationPresentingInfo::Init(nsIPresentationControlChannel* aControlChannel)
@@ -1540,6 +1541,14 @@ PresentationPresentingInfo::Notify(nsITimer* aTimer)
 
   mTimer = nullptr;
   return ReplyError(NS_ERROR_DOM_TIMEOUT_ERR);
+}
+
+// nsITimerCallback
+NS_IMETHODIMP
+PresentationPresentingInfo::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("PresentationPresentingInfo");
+  return NS_OK;
 }
 
 // PromiseNativeHandler
