@@ -1,0 +1,37 @@
+# HG changeset patch
+# User Farmer Tseng <fatseng@mozilla.com>
+# Date 1501050302 -28800
+#      Wed Jul 26 14:25:02 2017 +0800
+# Node ID 29d89e1872c50736819c365f538a86cf79a94e6d
+# Parent  4a23ddee84be23934eb5ce5f408f53ddb059fa18
+Bug 1367948 - Part2. Prevent PDFium from using GDIPlusExt to avoid garbage rendering.
+
+MozReview-Commit-ID: 8hE0q6jKFzj
+
+diff --git a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_device.cpp b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_device.cpp
+--- a/modules/pdfium/pdfium/core/fxge/win32/fx_win32_device.cpp
++++ b/modules/pdfium/pdfium/core/fxge/win32/fx_win32_device.cpp
+@@ -75,16 +75,23 @@ bool GetSubFontName(CFX_ByteString* name
+       *name = g_JpFontNameMap[i].m_pSubFontName;
+       return true;
+     }
+   }
+   return false;
+ }
+ 
+ bool IsGDIEnabled() {
++  // In Chromium, PDFium runs in sandboxed process which can't get the screen
++  // DC. Therefore, we |return false| here to avoid using the GDIPlusExt class
++  // within PDFium in order to take the same code paths as Chromium.
++  // This avoids an issue where PDFium can render some garbage to EMF
++  // (see bug 1367948).
++  return false;
++
+   // If GDI is disabled then GetDC for the desktop will fail.
+   HDC hdc = ::GetDC(nullptr);
+   if (!hdc)
+     return false;
+   ::ReleaseDC(nullptr, hdc);
+   return true;
+ }
+ 
