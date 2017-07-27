@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <script type="application/javascript">
+      let table = document.createElement('table');
+      document.documentElement.appendChild(table);
+      let tr = document.createElement('tr');
+      table.appendChild(tr);
+      let input = document.createElement('input');
+      document.documentElement.appendChild(input);
+
+      let img = document.createElement('img');
+      input.appendChild(img);
+      img.contentEditable = 'true'
+      tr.appendChild(img);
+      img.offsetParent;
+
+      // Since table's cell is selected by the following, it will show
+      // object resizer that is anonymous element.
+      window.getSelection().selectAllChildren(tr);
+      // Document.adoptNode will remove anonymous element of object resizer
+      // and it shouldn't cause crash
+      document.implementation.createDocument('', '').adoptNode(table);
+    </script>
+  </head>
+</html>
+
