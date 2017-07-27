@@ -73,6 +73,14 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
         'GECKO_HEAD_REV': config.params['head_rev'],
     })
 
+    if 'comm_base_repository' in config.params:
+        taskdesc['worker']['env'].update({
+            'COMM_BASE_REPOSITORY': config.params['comm_base_repository'],
+            'COMM_HEAD_REF': config.params['comm_head_rev'],
+            'COMM_HEAD_REPOSITORY': config.params['comm_head_repository'],
+            'COMM_HEAD_REV': config.params['comm_head_rev'],
+        })
+
 
 def support_vcs_checkout(config, job, taskdesc):
     """Update a job/task with parameters to enable a VCS checkout.
@@ -105,6 +113,15 @@ def support_vcs_checkout(config, job, taskdesc):
         'GECKO_HEAD_REV': config.params['head_rev'],
         'HG_STORE_PATH': '~/checkouts/hg-store',
     })
+
+    if 'comm_base_repository' in config.params:
+        taskdesc['worker']['env'].update({
+            'COMM_BASE_REPOSITORY': config.params['comm_base_repository'],
+            'COMM_HEAD_REPOSITORY': config.params['comm_head_repository'],
+            'COMM_HEAD_REV': config.params['comm_head_rev'],
+        })
+    elif job['run']['comm-checkout']:
+        raise Exception("Can't checkout from comm-* repository if not given a repository.")
 
     # Give task access to hgfingerprint secret so it can pin the certificate
     # for hg.mozilla.org.
