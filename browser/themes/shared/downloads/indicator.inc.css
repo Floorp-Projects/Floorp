@@ -21,20 +21,12 @@
   width: 16px;
   height: 16px;
   background-size: 16px;
-  fill: var(--toolbarbutton-icon-fill);
   -moz-context-properties: fill;
 %ifdef MOZ_PHOTON_ANIMATIONS
   background: url("chrome://browser/skin/downloads/download-icons.svg#default-bar") center no-repeat;
 %else
   background: var(--downloads-indicator-image) center no-repeat;
 %endif
-}
-
-%ifdef MOZ_PHOTON_ANIMATIONS
-toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-icon,
-%endif
-toolbar[brighttext] #downloads-button:not([attention="success"]) > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
-  fill: var(--toolbarbutton-icon-fill-inverted);
 }
 
 %ifdef MOZ_PHOTON_ANIMATIONS
