@@ -698,7 +698,7 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
         if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
             return -1;
 
-        if (arrayIndex >= mContext->mImplMaxDrawBuffers)
+        if (arrayIndex >= mContext->mGLMaxDrawBuffers)
             return -1;
 
         const auto baseLoc = GetFragDataByUserName(this, baseUserName);

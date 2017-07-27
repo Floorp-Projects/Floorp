@@ -183,13 +183,13 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
         if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
-            return JS::Int32Value(mImplMaxColorAttachments);
+            return JS::Int32Value(mGLMaxColorAttachments);
 
         } else if (pname == LOCAL_GL_MAX_DRAW_BUFFERS) {
-            return JS::Int32Value(mImplMaxDrawBuffers);
+            return JS::Int32Value(mGLMaxDrawBuffers);
 
         } else if (pname >= LOCAL_GL_DRAW_BUFFER0 &&
-                   pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mImplMaxDrawBuffers))
+                   pname < GLenum(LOCAL_GL_DRAW_BUFFER0 + mGLMaxDrawBuffers))
         {
             GLint ret = LOCAL_GL_NONE;
             if (!mBoundDrawFramebuffer) {
@@ -406,13 +406,13 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
 
         case LOCAL_GL_MAX_TEXTURE_SIZE:
-            return JS::Int32Value(mImplMaxTextureSize);
+            return JS::Int32Value(mGLMaxTextureSize);
 
         case LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-            return JS::Int32Value(mImplMaxCubeMapTextureSize);
+            return JS::Int32Value(mGLMaxCubeMapTextureSize);
 
         case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
-            return JS::Int32Value(mImplMaxRenderbufferSize);
+            return JS::Int32Value(mGLMaxRenderbufferSize);
 
         case LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS:
             return JS::Int32Value(mGLMaxVertexUniformVectors);
@@ -524,8 +524,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // 2 ints
         case LOCAL_GL_MAX_VIEWPORT_DIMS: {
-            GLint iv[2] = { 0 };
-            gl->fGetIntegerv(pname, iv);
+            GLint iv[2] = { GLint(mGLMaxViewportDims[0]), GLint(mGLMaxViewportDims[1]) };
             JSObject* obj = dom::Int32Array::Create(cx, this, 2, iv);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;

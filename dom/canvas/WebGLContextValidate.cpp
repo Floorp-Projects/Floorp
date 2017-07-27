@@ -468,18 +468,18 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBound2DArrayTextures.SetLength(mGLMaxTextureUnits);
     mBoundSamplers.SetLength(mGLMaxTextureUnits);
 
-    gl->fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, (GLint*)mImplMaxViewportDims);
+    gl->fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, (GLint*)mGLMaxViewportDims);
 
     ////////////////
 
-    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mImplMaxTextureSize);
-    gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mImplMaxCubeMapTextureSize);
-    gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mImplMaxRenderbufferSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mGLMaxTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mGLMaxCubeMapTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mGLMaxRenderbufferSize);
 
-    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mImplMax3DTextureSize))
-        mImplMax3DTextureSize = 0;
-    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mImplMaxArrayTextureLayers))
-        mImplMaxArrayTextureLayers = 0;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mGLMax3DTextureSize))
+        mGLMax3DTextureSize = 0;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mGLMaxArrayTextureLayers))
+        mGLMaxArrayTextureLayers = 0;
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
     gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
@@ -488,16 +488,9 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     mGLMaxColorAttachments = 1;
     mGLMaxDrawBuffers = 1;
-    gl->GetPotentialInteger(LOCAL_GL_MAX_COLOR_ATTACHMENTS,
-                            (GLint*)&mGLMaxColorAttachments);
-    gl->GetPotentialInteger(LOCAL_GL_MAX_DRAW_BUFFERS, (GLint*)&mGLMaxDrawBuffers);
 
     if (IsWebGL2()) {
-        mImplMaxColorAttachments = mGLMaxColorAttachments;
-        mImplMaxDrawBuffers = std::min(mGLMaxDrawBuffers, mImplMaxColorAttachments);
-    } else {
-        mImplMaxColorAttachments = 1;
-        mImplMaxDrawBuffers = 1;
+        UpdateMaxDrawBuffers();
     }
 
     ////////////////
