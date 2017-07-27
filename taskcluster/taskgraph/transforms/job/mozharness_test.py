@@ -523,3 +523,8 @@ def mozharness_test_buildbot_bridge(config, job, taskdesc):
             'installer_path': mozharness['build-artifact-name'],
         }
     })
+
+    if mozharness['requires-signed-builds']:
+        upstream_task = '<build-signing>'
+        installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
+        worker['properties']['signed_installer_url'] = {'task-reference': installer_url}
