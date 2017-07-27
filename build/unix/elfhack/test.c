@@ -130,7 +130,7 @@ __thread int foo;
 __thread long long int bar[512];
 
 void end_test() {
-    static int count = 0;
+    static size_t count = 0;
     /* Only exit when both constructors have been called */
     if (++count == 2)
         ret = 0;
