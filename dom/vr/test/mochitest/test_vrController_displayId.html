@@ -25,11 +25,10 @@
 
       function listenControllerEvents() {
         async_test(function(t) {
-          window.addEventListener("gamepadconnected", function() {
-              var gamepads = navigator.getGamepads();
-              assert_equals(gamepads[controllerCount].displayId, vrDisplay.displayId, "gamepad.displayId should be equal to vrDisplay.");
+          window.addEventListener("gamepadbuttondown", function(e) {
+              assert_equals(e.gamepad.displayId, vrDisplay.displayId, "gamepad.displayId should be equal to vrDisplay.");
               ++controllerCount;
-              if (controllerCount == 1) {
+              if (controllerCount == 2) {
                 t.done();
               }
           });
@@ -43,6 +42,7 @@
             vrDisplay = displays[0];
             assert_equals(displays.length, 1, "displays.length must be one after attach.");
             assert_equals(displays[0].displayId, 1, "displayId must be one.");
+            addController();
             addController();
           });
         }, "Finish to add VRDisplay.");
