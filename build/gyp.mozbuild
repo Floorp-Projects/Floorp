@@ -20,7 +20,7 @@ gyp_vars.update({
     'use_official_google_api_keys': 0,
     'have_clock_monotonic': 1 if CONFIG['HAVE_CLOCK_MONOTONIC'] else 0,
     'have_ethtool_cmd_speed_hi': 1 if CONFIG['MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI'] else 0,
-    'include_alsa_audio': 1 if CONFIG['MOZ_ALSA'] else 0,
+    'include_alsa_audio': 0,
     'include_pulse_audio': 1 if CONFIG['MOZ_PULSEAUDIO'] else 0,
     # basic stuff for everything
     'include_internal_video_render': 0,
