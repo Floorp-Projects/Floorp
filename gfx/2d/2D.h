@@ -1645,6 +1645,8 @@ public:
 
   static FT_Library NewFTLibrary();
   static void ReleaseFTLibrary(FT_Library aFTLibrary);
+  static void LockFTLibrary(FT_Library aFTLibrary);
+  static void UnlockFTLibrary(FT_Library aFTLibrary);
 
   static FT_Face NewFTFace(FT_Library aFTLibrary, const char* aFileName, int aFaceIndex);
   static FT_Face NewFTFaceFromData(FT_Library aFTLibrary, const uint8_t* aData, size_t aDataSize, int aFaceIndex);

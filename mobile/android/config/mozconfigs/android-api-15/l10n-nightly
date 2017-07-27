@@ -1,13 +1,17 @@
+NO_NDK=1
+
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 # L10n
 ac_add_options --with-l10n-base=../../l10n-central
 
+. "$topsrcdir/build/mozconfig.no-compile"
+
 # Global options
 ac_add_options --disable-tests
 
 # Android
-ac_add_options --with-android-min-sdk=15
+ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
 ac_add_options --enable-updater

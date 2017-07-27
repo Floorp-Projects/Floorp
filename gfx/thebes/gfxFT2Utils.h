@@ -46,42 +46,7 @@ public:
      */
     uint32_t GetUVSGlyph(uint32_t aCharCode, uint32_t aVariantSelector);
 
-    void GetMetrics(gfxFont::Metrics* aMetrics, uint32_t* aSpaceGlyph);
-
-    // A scale factor for use in converting horizontal metrics from font units
-    // to pixels.
-    gfxFloat XScale()
-    {
-        if (MOZ_UNLIKELY(!mFace))
-            return 0.0;
-
-        const FT_Size_Metrics& ftMetrics = mFace->size->metrics;
-
-        if (FT_IS_SCALABLE(mFace)) {
-            // Prefer FT_Size_Metrics::x_scale to x_ppem as x_ppem does not
-            // have subpixel accuracy.
-            //
-            // FT_Size_Metrics::x_scale is in 16.16 fixed point format.  Its
-            // (fractional) value is a factor that converts vertical metrics
-            // from design units to units of 1/64 pixels, so that the result
-            // may be interpreted as pixels in 26.6 fixed point format.
-            return FLOAT_FROM_26_6(FLOAT_FROM_16_16(ftMetrics.x_scale));
-        }
-
-        // Not scalable.
-        // FT_Size_Metrics doc says x_scale is "only relevant for scalable
-        // font formats".
-        return gfxFloat(ftMetrics.x_ppem) / gfxFloat(mFace->units_per_EM);
-    }
-
 protected:
-    /**
-     * Get extents for a simple character representable by a single glyph.
-     * The return value is the glyph id of that glyph or zero if no such glyph
-     * exists.  aExtents is only set when this returns a non-zero glyph id.
-     */
-    uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
-
     typedef FT_UInt (*CharVariantFunction)(FT_Face  face,
                                            FT_ULong charcode,
                                            FT_ULong variantSelector);

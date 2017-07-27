@@ -9,6 +9,14 @@
 #include "mozilla/Likely.h"
 #include "gfxFontConstants.h"
 #include "gfxFontUtils.h"
+#include <algorithm>
+
+#include FT_TRUETYPE_TAGS_H
+#include FT_TRUETYPE_TABLES_H
+
+#ifndef FT_FACE_FLAG_COLOR
+#define FT_FACE_FLAG_COLOR ( 1L << 14 )
+#endif
 
 using namespace mozilla::gfx;
 
@@ -16,13 +24,12 @@ gfxFT2FontBase::gfxFT2FontBase(const RefPtr<UnscaledFontFreeType>& aUnscaledFont
                                cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
                                const gfxFontStyle *aFontStyle)
-    : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont),
-      mSpaceGlyph(0),
-      mHasMetrics(false)
+    : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont)
+    , mSpaceGlyph(0)
 {
     cairo_scaled_font_reference(mScaledFont);
-    gfxFT2LockedFace face(this);
-    mFUnitsConvFactor = face.XScale();
+
+    InitMetrics();
 }
 
 gfxFT2FontBase::~gfxFT2FontBase()
@@ -109,20 +116,310 @@ gfxFT2FontBase::GetGlyphExtents(uint32_t aGlyph, cairo_text_extents_t* aExtents)
     cairo_scaled_font_glyph_extents(CairoScaledFont(), glyphs, 1, aExtents);
 }
 
-const gfxFont::Metrics&
-gfxFT2FontBase::GetHorizontalMetrics()
+// aScale is intended for a 16.16 x/y_scale of an FT_Size_Metrics
+static inline FT_Long
+ScaleRoundDesignUnits(FT_Short aDesignMetric, FT_Fixed aScale)
 {
-    if (mHasMetrics)
-        return mMetrics;
+    FT_Long fixed26dot6 = FT_MulFix(aDesignMetric, aScale);
+    return ROUND_26_6_TO_INT(fixed26dot6);
+}
+
+// Snap a line to pixels while keeping the center and size of the line as
+// close to the original position as possible.
+//
+// Pango does similar snapping for underline and strikethrough when fonts are
+// hinted, but nsCSSRendering::GetTextDecorationRectInternal always snaps the
+// top and size of lines.  Optimizing the distance between the line and
+// baseline is probably good for the gap between text and underline, but
+// optimizing the center of the line is better for positioning strikethough.
+static void
+SnapLineToPixels(gfxFloat& aOffset, gfxFloat& aSize)
+{
+    gfxFloat snappedSize = std::max(floor(aSize + 0.5), 1.0);
+    // Correct offset for change in size
+    gfxFloat offset = aOffset - 0.5 * (aSize - snappedSize);
+    // Snap offset
+    aOffset = floor(offset + 0.5);
+    aSize = snappedSize;
+}
+
+/**
+ * Get extents for a simple character representable by a single glyph.
+ * The return value is the glyph id of that glyph or zero if no such glyph
+ * exists.  aExtents is only set when this returns a non-zero glyph id.
+ */
+uint32_t
+gfxFT2FontBase::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
+{
+    FT_UInt gid = GetGlyph(aChar);
+    if (gid) {
+        GetGlyphExtents(gid, aExtents);
+    }
+    return gid;
+}
+
+void
+gfxFT2FontBase::InitMetrics()
+{
+    mFUnitsConvFactor = 0.0;
 
     if (MOZ_UNLIKELY(GetStyle()->size <= 0.0) ||
         MOZ_UNLIKELY(GetStyle()->sizeAdjust == 0.0)) {
-        new(&mMetrics) gfxFont::Metrics(); // zero initialize
+        memset(&mMetrics, 0, sizeof(mMetrics)); // zero initialize
         mSpaceGlyph = GetGlyph(' ');
-    } else {
-        gfxFT2LockedFace face(this);
-        face.GetMetrics(&mMetrics, &mSpaceGlyph);
+        return;
     }
+
+    // Explicitly lock the face so we can release it early before calling
+    // back into Cairo below.
+    FT_Face face = cairo_ft_scaled_font_lock_face(GetCairoScaledFont());
+
+    if (MOZ_UNLIKELY(!face)) {
+        // No face.  This unfortunate situation might happen if the font
+        // file is (re)moved at the wrong time.
+        const gfxFloat emHeight = GetAdjustedSize();
+        mMetrics.emHeight = emHeight;
+        mMetrics.maxAscent = mMetrics.emAscent = 0.8 * emHeight;
+        mMetrics.maxDescent = mMetrics.emDescent = 0.2 * emHeight;
+        mMetrics.maxHeight = emHeight;
+        mMetrics.internalLeading = 0.0;
+        mMetrics.externalLeading = 0.2 * emHeight;
+        const gfxFloat spaceWidth = 0.5 * emHeight;
+        mMetrics.spaceWidth = spaceWidth;
+        mMetrics.maxAdvance = spaceWidth;
+        mMetrics.aveCharWidth = spaceWidth;
+        mMetrics.zeroOrAveCharWidth = spaceWidth;
+        const gfxFloat xHeight = 0.5 * emHeight;
+        mMetrics.xHeight = xHeight;
+        mMetrics.capHeight = mMetrics.maxAscent;
+        const gfxFloat underlineSize = emHeight / 14.0;
+        mMetrics.underlineSize = underlineSize;
+        mMetrics.underlineOffset = -underlineSize;
+        mMetrics.strikeoutOffset = 0.25 * emHeight;
+        mMetrics.strikeoutSize = underlineSize;
+
+        SanitizeMetrics(&mMetrics, false);
+        return;
+    }
+
+    const FT_Size_Metrics& ftMetrics = face->size->metrics;
+
+    mMetrics.maxAscent = FLOAT_FROM_26_6(ftMetrics.ascender);
+    mMetrics.maxDescent = -FLOAT_FROM_26_6(ftMetrics.descender);
+    mMetrics.maxAdvance = FLOAT_FROM_26_6(ftMetrics.max_advance);
+    gfxFloat lineHeight = FLOAT_FROM_26_6(ftMetrics.height);
+
+    gfxFloat emHeight;
+    // Scale for vertical design metric conversion: pixels per design unit.
+    // If this remains at 0.0, we can't use metrics from OS/2 etc.
+    gfxFloat yScale = 0.0;
+    if (FT_IS_SCALABLE(face)) {
+        // Prefer FT_Size_Metrics::x_scale to x_ppem as x_ppem does not
+        // have subpixel accuracy.
+        //
+        // FT_Size_Metrics::y_scale is in 16.16 fixed point format.  Its
+        // (fractional) value is a factor that converts vertical metrics from
+        // design units to units of 1/64 pixels, so that the result may be
+        // interpreted as pixels in 26.6 fixed point format.
+        mFUnitsConvFactor = FLOAT_FROM_26_6(FLOAT_FROM_16_16(ftMetrics.x_scale));
+        yScale = FLOAT_FROM_26_6(FLOAT_FROM_16_16(ftMetrics.y_scale));
+        emHeight = face->units_per_EM * yScale;
+    } else { // Not scalable.
+        emHeight = ftMetrics.y_ppem;
+        // FT_Face doc says units_per_EM and a bunch of following fields
+        // are "only relevant to scalable outlines". If it's an sfnt,
+        // we can get units_per_EM from the 'head' table instead; otherwise,
+        // we don't have a unitsPerEm value so we can't compute/use yScale or
+        // mFUnitsConvFactor (x scale).
+        const TT_Header* head =
+            static_cast<TT_Header*>(FT_Get_Sfnt_Table(face, ft_sfnt_head));
+        if (head) {
+            // Bug 1267909 - Even if the font is not explicitly scalable,
+            // if the face has color bitmaps, it should be treated as scalable
+            // and scaled to the desired size. Metrics based on y_ppem need
+            // to be rescaled for the adjusted size. This makes metrics agree
+            // with the scales we pass to Cairo for Fontconfig fonts.
+            if (face->face_flags & FT_FACE_FLAG_COLOR) {
+                emHeight = GetAdjustedSize();
+                gfxFloat adjustScale = emHeight / ftMetrics.y_ppem;
+                mMetrics.maxAscent *= adjustScale;
+                mMetrics.maxDescent *= adjustScale;
+                mMetrics.maxAdvance *= adjustScale;
+                lineHeight *= adjustScale;
+            }
+            gfxFloat emUnit = head->Units_Per_EM;
+            mFUnitsConvFactor = ftMetrics.x_ppem / emUnit;
+            yScale = emHeight / emUnit;
+        }
+    }
+
+    TT_OS2 *os2 =
+        static_cast<TT_OS2*>(FT_Get_Sfnt_Table(face, ft_sfnt_os2));
+
+    if (os2 && os2->sTypoAscender && yScale > 0.0) {
+        mMetrics.emAscent = os2->sTypoAscender * yScale;
+        mMetrics.emDescent = -os2->sTypoDescender * yScale;
+        FT_Short typoHeight =
+            os2->sTypoAscender - os2->sTypoDescender + os2->sTypoLineGap;
+        lineHeight = typoHeight * yScale;
+
+        // If the OS/2 fsSelection USE_TYPO_METRICS bit is set,
+        // set maxAscent/Descent from the sTypo* fields instead of hhea.
+        const uint16_t kUseTypoMetricsMask = 1 << 7;
+        if (os2->fsSelection & kUseTypoMetricsMask) {
+            mMetrics.maxAscent = NS_round(mMetrics.emAscent);
+            mMetrics.maxDescent = NS_round(mMetrics.emDescent);
+        } else {
+            // maxAscent/maxDescent get used for frame heights, and some fonts
+            // don't have the HHEA table ascent/descent set (bug 279032).
+            // We use NS_round here to parallel the pixel-rounded values that
+            // freetype gives us for ftMetrics.ascender/descender.
+            mMetrics.maxAscent =
+                std::max(mMetrics.maxAscent, NS_round(mMetrics.emAscent));
+            mMetrics.maxDescent =
+                std::max(mMetrics.maxDescent, NS_round(mMetrics.emDescent));
+        }
+    } else {
+        mMetrics.emAscent = mMetrics.maxAscent;
+        mMetrics.emDescent = mMetrics.maxDescent;
+    }
+
+    // gfxFont::Metrics::underlineOffset is the position of the top of the
+    // underline.
+    //
+    // FT_FaceRec documentation describes underline_position as "the
+    // center of the underlining stem".  This was the original definition
+    // of the PostScript metric, but in the PostScript table of OpenType
+    // fonts the metric is "the top of the underline"
+    // (http://www.microsoft.com/typography/otspec/post.htm), and FreeType
+    // (up to version 2.3.7) doesn't make any adjustment.
+    //
+    // Therefore get the underline position directly from the table
+    // ourselves when this table exists.  Use FreeType's metrics for
+    // other (including older PostScript) fonts.
+    if (face->underline_position && face->underline_thickness && yScale > 0.0) {
+        mMetrics.underlineSize = face->underline_thickness * yScale;
+        TT_Postscript *post = static_cast<TT_Postscript*>
+            (FT_Get_Sfnt_Table(face, ft_sfnt_post));
+        if (post && post->underlinePosition) {
+            mMetrics.underlineOffset = post->underlinePosition * yScale;
+        } else {
+            mMetrics.underlineOffset = face->underline_position * yScale
+                + 0.5 * mMetrics.underlineSize;
+        }
+    } else { // No underline info.
+        // Imitate Pango.
+        mMetrics.underlineSize = emHeight / 14.0;
+        mMetrics.underlineOffset = -mMetrics.underlineSize;
+    }
+
+    if (os2 && os2->yStrikeoutSize && os2->yStrikeoutPosition && yScale > 0.0) {
+        mMetrics.strikeoutSize = os2->yStrikeoutSize * yScale;
+        mMetrics.strikeoutOffset = os2->yStrikeoutPosition * yScale;
+    } else { // No strikeout info.
+        mMetrics.strikeoutSize = mMetrics.underlineSize;
+        // Use OpenType spec's suggested position for Roman font.
+        mMetrics.strikeoutOffset = emHeight * 409.0 / 2048.0
+            + 0.5 * mMetrics.strikeoutSize;
+    }
+    SnapLineToPixels(mMetrics.strikeoutOffset, mMetrics.strikeoutSize);
+
+    if (os2 && os2->sxHeight && yScale > 0.0) {
+        mMetrics.xHeight = os2->sxHeight * yScale;
+    } else {
+        // CSS 2.1, section 4.3.2 Lengths: "In the cases where it is
+        // impossible or impractical to determine the x-height, a value of
+        // 0.5em should be used."
+        mMetrics.xHeight = 0.5 * emHeight;
+    }
+
+    // aveCharWidth is used for the width of text input elements so be
+    // liberal rather than conservative in the estimate.
+    if (os2 && os2->xAvgCharWidth) {
+        // Round to pixels as this is compared with maxAdvance to guess
+        // whether this is a fixed width font.
+        mMetrics.aveCharWidth =
+            ScaleRoundDesignUnits(os2->xAvgCharWidth, ftMetrics.x_scale);
+    } else {
+        mMetrics.aveCharWidth = 0.0; // updated below
+    }
+
+    if (os2 && os2->sCapHeight && yScale > 0.0) {
+        mMetrics.capHeight = os2->sCapHeight * yScale;
+    } else {
+        mMetrics.capHeight = mMetrics.maxAscent;
+    }
+
+    // Release the face lock to safely load glyphs with GetCharExtents if
+    // necessary without recursively locking.
+    cairo_ft_scaled_font_unlock_face(GetCairoScaledFont());
+
+    cairo_text_extents_t extents;
+    mSpaceGlyph = GetCharExtents(' ', &extents);
+    if (mSpaceGlyph) {
+        mMetrics.spaceWidth = extents.x_advance;
+    } else {
+        mMetrics.spaceWidth = mMetrics.maxAdvance; // guess
+    }
+
+    if (GetCharExtents('0', &extents)) {
+        mMetrics.zeroOrAveCharWidth = extents.x_advance;
+    } else {
+        mMetrics.zeroOrAveCharWidth = 0.0;
+    }
+
+    // Prefering a measured x over sxHeight because sxHeight doesn't consider
+    // hinting, but maybe the x extents are not quite right in some fancy
+    // script fonts.  CSS 2.1 suggests possibly using the height of an "o",
+    // which would have a more consistent glyph across fonts.
+    if (GetCharExtents('x', &extents) && extents.y_bearing < 0.0) {
+        mMetrics.xHeight = -extents.y_bearing;
+        mMetrics.aveCharWidth =
+            std::max(mMetrics.aveCharWidth, extents.x_advance);
+    }
+
+    if (GetCharExtents('H', &extents) && extents.y_bearing < 0.0) {
+        mMetrics.capHeight = -extents.y_bearing;
+    }
+
+    mMetrics.aveCharWidth =
+        std::max(mMetrics.aveCharWidth, mMetrics.zeroOrAveCharWidth);
+    if (mMetrics.aveCharWidth == 0.0) {
+        mMetrics.aveCharWidth = mMetrics.spaceWidth;
+    }
+    if (mMetrics.zeroOrAveCharWidth == 0.0) {
+        mMetrics.zeroOrAveCharWidth = mMetrics.aveCharWidth;
+    }
+    // Apparently hinting can mean that max_advance is not always accurate.
+    mMetrics.maxAdvance =
+        std::max(mMetrics.maxAdvance, mMetrics.aveCharWidth);
+
+    mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
+
+    // Make the line height an integer number of pixels so that lines will be
+    // equally spaced (rather than just being snapped to pixels, some up and
+    // some down).  Layout calculates line height from the emHeight +
+    // internalLeading + externalLeading, but first each of these is rounded
+    // to layout units.  To ensure that the result is an integer number of
+    // pixels, round each of the components to pixels.
+    mMetrics.emHeight = floor(emHeight + 0.5);
+
+    // maxHeight will normally be an integer, but round anyway in case
+    // FreeType is configured differently.
+    mMetrics.internalLeading =
+        floor(mMetrics.maxHeight - mMetrics.emHeight + 0.5);
+
+    // Text input boxes currently don't work well with lineHeight
+    // significantly less than maxHeight (with Verdana, for example).
+    lineHeight = floor(std::max(lineHeight, mMetrics.maxHeight) + 0.5);
+    mMetrics.externalLeading =
+        lineHeight - mMetrics.internalLeading - mMetrics.emHeight;
+
+    // Ensure emAscent + emDescent == emHeight
+    gfxFloat sum = mMetrics.emAscent + mMetrics.emDescent;
+    mMetrics.emAscent = sum > 0.0 ?
+        mMetrics.emAscent * mMetrics.emHeight / sum : 0.0;
+    mMetrics.emDescent = mMetrics.emHeight - mMetrics.emAscent;
 
     SanitizeMetrics(&mMetrics, false);
 
@@ -137,8 +434,11 @@ gfxFT2FontBase::GetHorizontalMetrics()
     fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mMetrics.spaceWidth, mMetrics.aveCharWidth, mMetrics.xHeight);
     fprintf (stderr, "    uOff: %f uSize: %f stOff: %f stSize: %f\n", mMetrics.underlineOffset, mMetrics.underlineSize, mMetrics.strikeoutOffset, mMetrics.strikeoutSize);
 #endif
+}
 
-    mHasMetrics = true;
+const gfxFont::Metrics&
+gfxFT2FontBase::GetHorizontalMetrics()
+{
     return mMetrics;
 }
 
@@ -146,7 +446,6 @@ gfxFT2FontBase::GetHorizontalMetrics()
 uint32_t
 gfxFT2FontBase::GetSpaceGlyph()
 {
-    GetHorizontalMetrics();
     return mSpaceGlyph;
 }
 
