@@ -758,6 +758,11 @@ class MachCommandConditions(object):
         """Must have a git source checkout."""
         return getattr(cls, 'substs', {}).get('VCS_CHECKOUT_TYPE') == 'git'
 
+    @staticmethod
+    def is_artifact_build(cls):
+        """Must be an artifact build."""
+        return getattr(cls, 'substs', {}).get('MOZ_ARTIFACT_BUILDS')
+
 
 class PathArgument(object):
     """Parse a filesystem path argument and transform it in various ways."""

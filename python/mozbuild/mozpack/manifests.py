@@ -200,16 +200,7 @@ class InstallManifest(object):
         if not isinstance(other, InstallManifest):
             raise ValueError('Can only | with another instance of InstallManifest.')
 
-        # We must copy source files to ourselves so extra dependencies from
-        # the preprocessor are taken into account. Ideally, we would track
-        # which source file each entry came from. However, this is more
-        # complicated and not yet implemented. The current implementation
-        # will result in over invalidation, possibly leading to performance
-        # loss.
-        self._source_files |= other._source_files
-
-        for dest in sorted(other._dests):
-            self._add_entry(dest, other._dests[dest])
+        self.add_entries_from(other)
 
         return self
 
@@ -330,6 +321,26 @@ class InstallManifest(object):
             raise ValueError('Item already in manifest: %s' % dest)
 
         self._dests[dest] = entry
+
+    def add_entries_from(self, other, base=''):
+        """
+        Copy data from another mozpack.copier.InstallManifest
+        instance, adding an optional base prefix to the destination.
+
+        This allows to merge two manifests into a single manifest, or
+        two take the tagged union of two manifests.
+        """
+        # We must copy source files to ourselves so extra dependencies from
+        # the preprocessor are taken into account. Ideally, we would track
+        # which source file each entry came from. However, this is more
+        # complicated and not yet implemented. The current implementation
+        # will result in over invalidation, possibly leading to performance
+        # loss.
+        self._source_files |= other._source_files
+
+        for dest in sorted(other._dests):
+            new_dest = mozpath.join(base, dest) if base else dest
+            self._add_entry(new_dest, other._dests[dest])
 
     def populate_registry(self, registry, defines_override={},
                           link_policy='symlink'):
