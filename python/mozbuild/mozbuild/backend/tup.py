@@ -236,11 +236,8 @@ class TupOnly(CommonBackend, PartialBackend):
                 pass
 
         with self._write_file(mozpath.join(self.environment.topobjdir, 'Tuprules.tup')) as fh:
-            acdefines = [name for name in self.environment.defines
-                if not name in self.environment.non_global_defines]
-            acdefines_flags = ' '.join(['-D%s=%s' % (name,
-                shell_quote(self.environment.defines[name]))
-                for name in sorted(acdefines)])
+            acdefines_flags = ' '.join(['-D%s=%s' % (name, shell_quote(value))
+                for (name, value) in sorted(self.environment.acdefines.iteritems())])
             # TODO: AB_CD only exists in Makefiles at the moment.
             acdefines_flags += ' -DAB_CD=en-US'
 
