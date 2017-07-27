@@ -931,9 +931,14 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
       for (let i = 0; i < rules.length; i++) {
         let rule = rules[i];
         if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
-          // Associated styleSheet may be null if it has already been seen due
-          // to duplicate @imports for the same URL.
-          if (!rule.styleSheet || !this._shouldListSheet(doc, rule.styleSheet)) {
+          // With the Gecko style system, the associated styleSheet may be null
+          // if it has already been seen because an import cycle for the same
+          // URL.  With Stylo, the styleSheet will exist (which is correct per
+          // the latest CSSOM spec), so we also need to check ancestors for the
+          // same URL to avoid cycles.
+          let sheet = rule.styleSheet;
+          if (!sheet || this._haveAncestorWithSameURL(sheet) ||
+              !this._shouldListSheet(doc, sheet)) {
             continue;
           }
           let actor = this.parentActor.createStyleSheetActor(rule.styleSheet);
@@ -950,6 +955,23 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
 
       return imported;
     }.bind(this));
+  },
+
+  /**
+   * Check all ancestors to see if this sheet's URL matches theirs as a way to
+   * detect an import cycle.
+   *
+   * @param {DOMStyleSheet} sheet
+   */
+  _haveAncestorWithSameURL(sheet) {
+    let sheetHref = sheet.href;
+    while (sheet.parentStyleSheet) {
+      if (sheet.parentStyleSheet.href == sheetHref) {
+        return true;
+      }
+      sheet = sheet.parentStyleSheet;
+    }
+    return false;
   },
 
   /**
