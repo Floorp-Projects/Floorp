@@ -366,14 +366,10 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         return false;
     }
 
-    mMinCapability = gfxPrefs::WebGLMinCapabilityMode();
     mDisableExtensions = gfxPrefs::WebGLDisableExtensions();
     mLoseContextOnMemoryPressure = gfxPrefs::WebGLLoseContextOnMemoryPressure();
     mCanLoseContextInForeground = gfxPrefs::WebGLCanLoseContextInForeground();
     mRestoreWhenVisible = gfxPrefs::WebGLRestoreWhenVisible();
-
-    if (MinCapabilityMode())
-        mDisableFragHighP = true;
 
     // These are the default values, see 6.2 State tables in the
     // OpenGL ES 2.0.25 spec.
@@ -445,10 +441,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     MakeContextCurrent();
 
-    if (MinCapabilityMode())
-        mGLMaxVertexAttribs = MINVALUE_GL_MAX_VERTEX_ATTRIBS;
-    else
-        gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
+    gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
 
     if (mGLMaxVertexAttribs < 8) {
         const nsPrintfCString reason("GL_MAX_VERTEX_ATTRIBS: %d is < 8!",
@@ -460,10 +453,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
     // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
-    if (MinCapabilityMode())
-        mGLMaxTextureUnits = MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS;
-    else
-        gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
+    gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
 
     if (mGLMaxTextureUnits < 8) {
         const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!",
@@ -482,29 +472,17 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     ////////////////
 
-    if (MinCapabilityMode()) {
-        mImplMaxTextureSize = MINVALUE_GL_MAX_TEXTURE_SIZE;
-        mImplMaxCubeMapTextureSize = MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE;
-        mImplMaxRenderbufferSize = MINVALUE_GL_MAX_RENDERBUFFER_SIZE;
+    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mImplMaxTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mImplMaxCubeMapTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mImplMaxRenderbufferSize);
 
-        mImplMax3DTextureSize = MINVALUE_GL_MAX_3D_TEXTURE_SIZE;
-        mImplMaxArrayTextureLayers = MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mImplMax3DTextureSize))
+        mImplMax3DTextureSize = 0;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mImplMaxArrayTextureLayers))
+        mImplMaxArrayTextureLayers = 0;
 
-        mGLMaxTextureImageUnits = MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS;
-        mGLMaxVertexTextureImageUnits = MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-    } else {
-        gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mImplMaxTextureSize);
-        gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mImplMaxCubeMapTextureSize);
-        gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mImplMaxRenderbufferSize);
-
-        if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mImplMax3DTextureSize))
-            mImplMax3DTextureSize = 0;
-        if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mImplMaxArrayTextureLayers))
-            mImplMaxArrayTextureLayers = 0;
-
-        gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
-        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
-    }
+    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
+    gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
 
     ////////////////
 
@@ -513,12 +491,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     gl->GetPotentialInteger(LOCAL_GL_MAX_COLOR_ATTACHMENTS,
                             (GLint*)&mGLMaxColorAttachments);
     gl->GetPotentialInteger(LOCAL_GL_MAX_DRAW_BUFFERS, (GLint*)&mGLMaxDrawBuffers);
-
-    if (MinCapabilityMode()) {
-        mGLMaxColorAttachments = std::min(mGLMaxColorAttachments,
-                                          kMinMaxColorAttachments);
-        mGLMaxDrawBuffers = std::min(mGLMaxDrawBuffers, kMinMaxDrawBuffers);
-    }
 
     if (IsWebGL2()) {
         mImplMaxColorAttachments = mGLMaxColorAttachments;
@@ -530,47 +502,41 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     ////////////////
 
-    if (MinCapabilityMode()) {
-        mGLMaxFragmentUniformVectors = MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS;
-        mGLMaxVertexUniformVectors = MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS;
-        mGLMaxVaryingVectors = MINVALUE_GL_MAX_VARYING_VECTORS;
+    if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
+        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
+        gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
     } else {
-        if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
-            gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
-            gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
-            gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
+        gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &mGLMaxFragmentUniformVectors);
+        mGLMaxFragmentUniformVectors /= 4;
+        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, &mGLMaxVertexUniformVectors);
+        mGLMaxVertexUniformVectors /= 4;
+
+        /* We are now going to try to read GL_MAX_VERTEX_OUTPUT_COMPONENTS
+            * and GL_MAX_FRAGMENT_INPUT_COMPONENTS, however these constants
+            * only entered the OpenGL standard at OpenGL 3.2. So we will try
+            * reading, and check OpenGL error for INVALID_ENUM.
+            *
+            * On the public_webgl list, "problematic GetParameter pnames"
+            * thread, the following formula was given:
+            *   maxVaryingVectors = min(GL_MAX_VERTEX_OUTPUT_COMPONENTS,
+            *                           GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
+            */
+        GLint maxVertexOutputComponents = 0;
+        GLint maxFragmentInputComponents = 0;
+
+        const bool ok = (gl->GetPotentialInteger(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS,
+                                                    &maxVertexOutputComponents) &&
+                            gl->GetPotentialInteger(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS,
+                                                    &maxFragmentInputComponents));
+
+        if (ok) {
+            mGLMaxVaryingVectors = std::min(maxVertexOutputComponents,
+                                            maxFragmentInputComponents) / 4;
         } else {
-            gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &mGLMaxFragmentUniformVectors);
-            mGLMaxFragmentUniformVectors /= 4;
-            gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, &mGLMaxVertexUniformVectors);
-            mGLMaxVertexUniformVectors /= 4;
-
-            /* We are now going to try to read GL_MAX_VERTEX_OUTPUT_COMPONENTS
-             * and GL_MAX_FRAGMENT_INPUT_COMPONENTS, however these constants
-             * only entered the OpenGL standard at OpenGL 3.2. So we will try
-             * reading, and check OpenGL error for INVALID_ENUM.
-             *
-             * On the public_webgl list, "problematic GetParameter pnames"
-             * thread, the following formula was given:
-             *   maxVaryingVectors = min(GL_MAX_VERTEX_OUTPUT_COMPONENTS,
-             *                           GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
-             */
-            GLint maxVertexOutputComponents = 0;
-            GLint maxFragmentInputComponents = 0;
-
-            const bool ok = (gl->GetPotentialInteger(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS,
-                                                     &maxVertexOutputComponents) &&
-                             gl->GetPotentialInteger(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS,
-                                                     &maxFragmentInputComponents));
-
-            if (ok) {
-                mGLMaxVaryingVectors = std::min(maxVertexOutputComponents,
-                                                maxFragmentInputComponents) / 4;
-            } else {
-                mGLMaxVaryingVectors = 16;
-                // 16 = 64/4, and 64 is the min value for
-                // maxVertexOutputComponents in the OpenGL 3.2 spec.
-            }
+            mGLMaxVaryingVectors = 16;
+            // 16 = 64/4, and 64 is the min value for
+            // maxVertexOutputComponents in the OpenGL 3.2 spec.
         }
     }
 

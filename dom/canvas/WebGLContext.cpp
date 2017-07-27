@@ -104,10 +104,6 @@ WebGLContextOptions::WebGLContextOptions()
         alpha = false;
 }
 
-
-/*static*/ const uint32_t WebGLContext::kMinMaxColorAttachments = 4;
-/*static*/ const uint32_t WebGLContext::kMinMaxDrawBuffers = 4;
-
 WebGLContext::WebGLContext()
     : WebGLContextUnchecked(nullptr)
     , mMaxPerfWarnings(gfxPrefs::WebGLMaxPerfWarnings())
@@ -134,7 +130,6 @@ WebGLContext::WebGLContext()
     mShouldPresent = true;
     mResetLayer = true;
     mOptionsFrozen = false;
-    mMinCapability = false;
     mDisableExtensions = false;
     mIsMesa = false;
     mEmitContextLostErrorOnce = false;
