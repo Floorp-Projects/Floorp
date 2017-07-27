@@ -58,7 +58,9 @@ function() {
 
     let clientData = JSON.parse(buffer2string(aCredInfo.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gCredentialChallenge), "Challenge is correct");
-    is(clientData.origin, window.location.origin, "Origin is correct");
+    // WD-05 vs. WD-06: In WD-06, the second parameter should be "window.location.origin". Fix
+    // this in Bug 1384776
+    is(clientData.origin, document.domain, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
     return webAuthnDecodeAttestation(aCredInfo.response.attestationObject.buffer)
@@ -89,7 +91,9 @@ function() {
     ok(aAssertion.response.authenticatorData.length > 0, "Authenticator data exists");
     let clientData = JSON.parse(buffer2string(aAssertion.response.clientDataJSON));
     is(clientData.challenge, bytesToBase64UrlSafe(gAssertionChallenge), "Challenge is correct");
-    is(clientData.origin, window.location.origin, "Origin is correct");
+    // WD-05 vs. WD-06: In WD-06, the second parameter should be "window.location.origin". Fix
+    // this in Bug 1384776
+    is(clientData.origin, document.domain, "Origin is correct");
     is(clientData.hashAlg, "S256", "Hash algorithm is correct");
 
     // Parse the signature data
