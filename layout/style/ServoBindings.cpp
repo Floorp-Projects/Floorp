@@ -237,7 +237,8 @@ ServoComputedData::ServoComputedData(
 const nsStyleVariables*
 ServoComputedData::GetStyleVariables() const
 {
-  return Servo_GetEmptyVariables();
+  MOZ_CRASH("ServoComputedData::GetStyleVariables should never need to be "
+            "called");
 }
 
 void

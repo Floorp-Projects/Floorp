@@ -581,8 +581,6 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    ServoStyleContextBorrowed, uint32_t index,
                    nsAString* name)
 
-SERVO_BINDING_FUNC(Servo_GetEmptyVariables, const nsStyleVariables*)
-
 
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
