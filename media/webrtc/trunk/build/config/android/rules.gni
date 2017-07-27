@@ -5,7 +5,9 @@
 # Do not add any imports to non-//build directories here.
 # Some projects (e.g. V8) do not have non-build directories DEPS'ed in.
 import("//build/config/android/config.gni")
-import("//build/config/android/internal_rules.gni")
+if (!build_with_mozilla) {
+  import("//build/config/android/internal_rules.gni")
+}
 import("//build/config/compiler/compiler.gni")
 import("//build/config/dcheck_always_on.gni")
 import("//build/toolchain/toolchain.gni")
@@ -144,7 +146,10 @@ template("wrapper_script") {
 
 if (enable_java_templates) {
   import("//build/config/sanitizers/sanitizers.gni")
-  import("//tools/grit/grit_rule.gni")
+
+  if (!build_with_mozilla) {
+    import("//tools/grit/grit_rule.gni")
+  }
 
   # Declare a jni target
   #
