@@ -968,11 +968,6 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel);
  */
 uint32_t NS_GetDefaultReferrerPolicy();
 
-/**
- * Update the window id of the current focused top level content window.
- */
-nsresult NS_NotifyCurrentTopLevelOuterContentWindowId(uint64_t aWindowId);
-
 namespace mozilla {
 namespace net {
 
