@@ -73,12 +73,21 @@ class MOZ_STACK_CLASS AncestorFilter {
   nsAutoPtr<Filter> mFilter;
 
   // Stack of indices to pop to.  These are indices into mHashes.
-  nsTArray<uint32_t> mPopTargets;
+  // 16 is chosen because it's enough to avoid most allocations for the
+  // Speedometer 2 benchmark, and also it covers many cases in some casual
+  // local browsing tests performed.  Higher values in the range of tens
+  // were observed while testing through local browsing but they were rare.
+  AutoTArray<uint32_t, 16> mPopTargets;
 
   // List of hashes; this is what we pop using mPopTargets.  We store
   // hashes of our ancestor element tag names, ids, and classes in
   // here.
-  nsTArray<uint32_t> mHashes;
+  // 50 is chosen to be the same as the preallocated buffer size used in
+  // TreeMatchContext::InitAncestors().  This value seems to be large
+  // enough for Speedometer 2, although some casual testing browsing real
+  // sites suggested they can easily require values much larger (in the
+  // range of hundreds.)
+  AutoTArray<uint32_t, 50> mHashes;
 
   // A debug-only stack of Elements for use in assertions
 #ifdef DEBUG
