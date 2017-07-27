@@ -335,8 +335,6 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
 static PRCallOnceType _pr_has_connectex_once;
 typedef BOOL (PASCAL FAR * _pr_win_connectex_ptr)(_In_ SOCKET s, _In_reads_bytes_(namelen) const struct sockaddr FAR *name, _In_ int namelen, _In_reads_bytes_opt_(dwSendDataLength) PVOID lpSendBuffer, _In_ DWORD dwSendDataLength, _Out_ LPDWORD lpdwBytesSent, _Inout_ LPOVERLAPPED lpOverlapped);
 
-
-
 #ifndef WSAID_CONNECTEX
 #define WSAID_CONNECTEX \
   {0x25a207b9,0xddf3,0x4660,{0x8e,0xe9,0x76,0xe5,0x8c,0x74,0x06,0x3e}}
