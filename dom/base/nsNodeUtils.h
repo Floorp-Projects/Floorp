@@ -92,12 +92,10 @@ public:
    * Send ContentAppended notifications to nsIMutationObservers
    * @param aContainer           Node into which new child/children were added
    * @param aFirstNewContent     First new child
-   * @param aNewIndexInContainer Index of first new child
    * @see nsIMutationObserver::ContentAppended
    */
   static void ContentAppended(nsIContent* aContainer,
-                              nsIContent* aFirstNewContent,
-                              int32_t aNewIndexInContainer);
+                              nsIContent* aFirstNewContent);
 
   /**
    * Send NativeAnonymousChildList notifications to nsIMutationObservers
@@ -112,22 +110,19 @@ public:
    * Send ContentInserted notifications to nsIMutationObservers
    * @param aContainer        Node into which new child was inserted
    * @param aChild            Newly inserted child
-   * @param aIndexInContainer Index of new child
    * @see nsIMutationObserver::ContentInserted
    */
   static void ContentInserted(nsINode* aContainer,
-                              nsIContent* aChild,
-                              int32_t aIndexInContainer);
+                              nsIContent* aChild);
   /**
    * Send ContentRemoved notifications to nsIMutationObservers
    * @param aContainer        Node from which child was removed
    * @param aChild            Removed child
-   * @param aIndexInContainer Index of removed child
+   * @param aPreviousSibling  Previous sibling of the removed child
    * @see nsIMutationObserver::ContentRemoved
    */
   static void ContentRemoved(nsINode* aContainer,
                              nsIContent* aChild,
-                             int32_t aIndexInContainer,
                              nsIContent* aPreviousSibling);
   /**
    * Send ParentChainChanged notifications to nsIMutationObservers
