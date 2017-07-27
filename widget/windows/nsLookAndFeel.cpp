@@ -65,6 +65,7 @@ nsLookAndFeel::nsLookAndFeel()
   , mUseAccessibilityTheme(0)
   , mUseDefaultTheme(0)
   , mNativeThemeId(eWindowsTheme_Generic)
+  , mCaretBlinkTime(-1)
 {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
@@ -333,7 +334,12 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 
   switch (aID) {
     case eIntID_CaretBlinkTime:
-        aResult = (int32_t)::GetCaretBlinkTime();
+        // eIntID_CaretBlinkTime is often called by updating editable text 
+        // that has focus. So it should be cached to improve performance.
+        if (mCaretBlinkTime < 0) {
+            mCaretBlinkTime = static_cast<int32_t>(::GetCaretBlinkTime());
+        }
+        aResult = mCaretBlinkTime;
         break;
     case eIntID_CaretWidth:
         aResult = 1;
@@ -739,6 +745,7 @@ nsLookAndFeel::RefreshImpl()
        e != end; ++e) {
     e->mCacheValid = false;
   }
+  mCaretBlinkTime = -1;
 }
 
 /* virtual */
