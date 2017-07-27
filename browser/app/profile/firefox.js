@@ -1518,6 +1518,8 @@ pref("toolkit.telemetry.shutdownPingSender.enabled", true);
 pref("toolkit.telemetry.shutdownPingSender.enabledFirstSession", false);
 // Enables sending the 'new-profile' ping on new profiles.
 pref("toolkit.telemetry.newProfilePing.enabled", true);
+// Enables sending 'update' pings on Firefox updates.
+pref("toolkit.telemetry.updatePing.enabled", true);
 
 // Telemetry experiments settings.
 pref("experiments.enabled", true);
