@@ -19,7 +19,7 @@ before_install:
   - touch local.properties
 
 script:
-  - ./gradlew --info clean assembleFocusWebkitDebug
+  - ./gradlew clean assemble
   - export ADJUST_TOKEN_FOCUS='..no..value..'
   - ./gradlew jacocoTestReport
 
