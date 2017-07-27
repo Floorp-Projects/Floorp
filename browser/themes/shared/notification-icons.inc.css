@@ -21,118 +21,118 @@
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#default-info);
+  list-style-image: url(chrome://browser/skin/notification-icons/default-info.svg);
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
 
 .focus-tab-by-prompt-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#focus-tab-by-prompt);
+  list-style-image: url(chrome://browser/skin/notification-icons/focus-tab-by-prompt.svg);
 }
 
 .popup-notification-icon[popupid="persistent-storage"],
 .persistent-storage-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#persistent-storage);
+  list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage.svg);
 }
 
 .persistent-storage-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#persistent-storage-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/persistent-storage-blocked.svg);
 }
 
 .popup-notification-icon[popupid="web-notifications"],
 .desktop-notification-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#desktop-notification);
+  list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification.svg);
 }
 
 .desktop-notification-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#desktop-notification-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/desktop-notification-blocked.svg);
 }
 
 .geo-icon {
 %ifdef XP_MACOSX
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-osx);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-osx.svg);
 %elif defined(MOZ_WIDGET_GTK)
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-linux);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-linux.svg);
 %else
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-windows);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-windows.svg);
 %endif
 }
 
 .geo-icon.blocked-permission-icon {
 %ifdef XP_MACOSX
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-osx-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-osx-blocked.svg);
 %elif defined(MOZ_WIDGET_GTK)
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-linux-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-linux-blocked.svg);
 %else
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-windows-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-windows-blocked.svg);
 %endif
 }
 
 .popup-notification-icon[popupid="geolocation"] {
 %ifdef XP_MACOSX
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-osx);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-osx.svg);
 %elif defined(MOZ_WIDGET_GTK)
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-linux-detailed);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-linux-detailed.svg);
 %else
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-windows-detailed);
+  list-style-image: url(chrome://browser/skin/notification-icons/geo-windows-detailed.svg);
 %endif
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .indexedDB-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#indexedDB);
+  list-style-image: url(chrome://browser/skin/notification-icons/indexedDB.svg);
 }
 
 .indexedDB-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#indexedDB-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/indexedDB-blocked.svg);
 }
 
 .login-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#login);
+  list-style-image: url(chrome://browser/skin/notification-icons/login.svg);
 }
 
 .popup-notification-icon[popupid="password"] {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#login-detailed);
+  list-style-image: url(chrome://browser/skin/notification-icons/login-detailed.svg);
 }
 
 .camera-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
+  list-style-image: url(chrome://browser/skin/notification-icons/camera.svg);
 }
 
 .camera-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera-sharing);
+  list-style-image: url(chrome://browser/skin/notification-icons/camera-sharing.svg);
 }
 
 .camera-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/camera-blocked.svg);
 }
 
 .microphone-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone.svg);
 }
 
 .microphone-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-sharing);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone-sharing.svg);
 }
 
 .microphone-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone-blocked.svg);
 }
 
 .popup-notification-icon.microphone-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone-detailed);
+  list-style-image: url(chrome://browser/skin/notification-icons/microphone-detailed.svg);
 }
 
 .screen-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#screen);
+  list-style-image: url(chrome://browser/skin/notification-icons/screen.svg);
 }
 
 .screen-icon.in-use {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-sharing);
+  list-style-image: url(chrome://browser/skin/notification-icons/screen-sharing.svg);
 }
 
 .screen-icon.blocked-permission-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#screen-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/screen-blocked.svg);
 }
 
 #webRTC-preview:not([hidden]) {
@@ -165,7 +165,7 @@ html|*#webRTC-previewVideo {
 
 /* This icon has a block sign in it, so we don't need a blocked version. */
 .popup-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#popup");
+  list-style-image: url("chrome://browser/skin/notification-icons/popup.svg");
 }
 
 /* EME */
@@ -240,12 +240,12 @@ html|*#webRTC-previewVideo {
 /* PLUGINS */
 
 .plugin-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin);
+  list-style-image: url(chrome://browser/skin/notification-icons/plugin.svg);
   transition: fill 1.5s;
 }
 
 #plugin-icon-badge {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-badge);
+  list-style-image: url(chrome://browser/skin/notification-icons/plugin-badge.svg);
   opacity: 0;
   transition: opacity 1.5s;
 }
@@ -272,7 +272,7 @@ html|*#webRTC-previewVideo {
 }
 
 .plugin-blocked > .plugin-icon {
-  list-style-image: url(chrome://browser/skin/notification-icons.svg#plugin-blocked);
+  list-style-image: url(chrome://browser/skin/notification-icons/plugin-blocked.svg);
   fill: #d92215 !important;
 }
 
@@ -350,6 +350,6 @@ html|*#webRTC-previewVideo {
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-manual"],
 .popup-notification-icon[popupid="update-restart"] {
-  background: #74BF43 url(chrome://browser/skin/notification-icons.svg#update) no-repeat center;
+  background: #74BF43 url(chrome://browser/skin/notification-icons/update.svg) no-repeat center;
   border-radius: 50%;
 }
