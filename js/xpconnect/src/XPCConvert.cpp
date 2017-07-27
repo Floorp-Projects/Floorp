@@ -1708,14 +1708,6 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                         *pErr = NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING;
                     return false;
                 }
-                if (0 != count) {
-                    len = (count + 1) * sizeof(char);
-                    if (!(*((void**)d) = moz_xmalloc(len)))
-                        return false;
-                    return true;
-                }
-                // else ...
-
                 *((char**)d) = nullptr;
                 return true;
             }
