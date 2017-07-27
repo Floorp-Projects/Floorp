@@ -202,9 +202,9 @@ class TaskClusterArtifactFinderMixin(object):
 
     def set_artifacts(self, installer, tests, symbols):
         """ Sets installer, test and symbols URLs from the artifacts of BBB based task."""
-        self.installer_url, self.test_url, self.symbols_url = installer, tests, symbols
+        self.installer_url, self.test_packages_url, self.symbols_url = installer, tests, symbols
         self.info('Set installer_url: %s' % self.installer_url)
-        self.info('Set test_url: %s' % self.test_url)
+        self.info('Set test_packages_url: %s' % self.test_packages_url)
         self.info('Set symbols_url: %s' % self.symbols_url)
 
     def set_parent_artifacts(self, child_task_id):
@@ -250,7 +250,7 @@ class TaskClusterArtifactFinderMixin(object):
             if installer_path:
                 self.set_artifacts(
                     self.url_to_artifact(parent_id, installer_path),
-                    self.url_to_artifact(parent_id, 'public/build/test_packages.json'),
+                    self.url_to_artifact(parent_id, 'public/build/target.test_packages.json'),
                     self.url_to_artifact(parent_id, 'public/build/target.crashreporter-symbols.zip')
                 )
             else:
@@ -268,3 +268,9 @@ class TaskClusterArtifactFinderMixin(object):
                 task_id=parent_id,
                 properties_file_path='public/build/buildbot_properties.json'
             )
+
+        # Use the signed installer if it's set
+        if 'signed_installer_url' in properties:
+            signed_installer_url = properties['signed_installer_url']
+            self.info('Overriding installer_url with signed_installer_url: %s' % signed_installer_url)
+            self.installer_url = signed_installer_url
