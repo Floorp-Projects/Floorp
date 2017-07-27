@@ -233,9 +233,6 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if platform in ('linux64-pgo', 'linux-pgo', 'android-api-15-nightly',
                         'android-x86-nightly'):
             return False
-        if platform in ('macosx64-nightly', 'win64-nightly', 'win32-nightly'):
-            # Don't do some nightlies on-push until it's ready.
-            return False
         if platform in ('linux64', 'linux'):
             if task.attributes['build_type'] == 'opt' and \
                task.attributes.get('unittest_suite') != 'talos':
@@ -244,7 +241,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if task.kind in [
             'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
             'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing',
-            'push-apk', 'push-apk-breakpoint',
+            'push-apk', 'push-apk-breakpoint', 'beetmover-repackage',
+            'beetmover-repackage-signing',
         ]:
             return False
         return True
