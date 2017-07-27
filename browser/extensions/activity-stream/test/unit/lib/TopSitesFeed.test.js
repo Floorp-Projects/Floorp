@@ -165,28 +165,6 @@ describe("Top Sites Feed", () => {
       feed.onAction(newTabAction);
       assert.notCalled(feed.refresh);
     });
-    it("should call openNewWindow with the correct url on OPEN_NEW_WINDOW", () => {
-      sinon.stub(feed, "openNewWindow");
-      const openWindowAction = {type: at.OPEN_NEW_WINDOW, data: {url: "foo.com"}};
-      feed.onAction(openWindowAction);
-      assert.calledWith(feed.openNewWindow, openWindowAction);
-    });
-    it("should call openNewWindow with the correct url and privacy args on OPEN_PRIVATE_WINDOW", () => {
-      sinon.stub(feed, "openNewWindow");
-      const openWindowAction = {type: at.OPEN_PRIVATE_WINDOW, data: {url: "foo.com"}};
-      feed.onAction(openWindowAction);
-      assert.calledWith(feed.openNewWindow, openWindowAction, true);
-    });
-    it("should call openNewWindow with the correct url on OPEN_NEW_WINDOW", () => {
-      const openWindowAction = {
-        type: at.OPEN_NEW_WINDOW,
-        data: {url: "foo.com"},
-        _target: {browser: {ownerGlobal: {openLinkIn: () => {}}}}
-      };
-      sinon.stub(openWindowAction._target.browser.ownerGlobal, "openLinkIn");
-      feed.onAction(openWindowAction);
-      assert.calledOnce(openWindowAction._target.browser.ownerGlobal.openLinkIn);
-    });
     it("should call with correct parameters on TOP_SITES_PIN", () => {
       const pinAction = {
         type: at.TOP_SITES_PIN,

@@ -103,7 +103,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "NEW_TAB_VISIBLE", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_REGISTER", "SECTION_ROWS_UPDATE", "SET_PREF", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_REGISTER", "SECTION_ROWS_UPDATE", "SET_PREF", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -343,13 +343,13 @@ var _require = __webpack_require__(2);
 
 const injectIntl = _require.injectIntl;
 
-const ContextMenu = __webpack_require__(15);
+const ContextMenu = __webpack_require__(16);
 
 var _require2 = __webpack_require__(1);
 
 const ac = _require2.actionCreators;
 
-const linkMenuOptions = __webpack_require__(22);
+const linkMenuOptions = __webpack_require__(23);
 const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow"];
 
 class LinkMenu extends React.Component {
@@ -408,6 +408,129 @@ module.exports._unconnected = LinkMenu;
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* globals Services */
+
+
+let usablePerfObj;
+
+let Cu;
+const isRunningInChrome = typeof Window === "undefined";
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  Cu = Components.utils;
+} else {
+  Cu = { import() {} };
+}
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  // Borrow the high-resolution timer from the hidden window....
+  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
+} else {
+  // we must be running in content space
+  usablePerfObj = performance;
+}
+
+var _PerfService = function _PerfService(options) {
+  // For testing, so that we can use a fake Window.performance object with
+  // known state.
+  if (options && options.performanceObj) {
+    this._perf = options.performanceObj;
+  } else {
+    this._perf = usablePerfObj;
+  }
+};
+
+_PerfService.prototype = {
+  /**
+   * Calls the underlying mark() method on the appropriate Window.performance
+   * object to add a mark with the given name to the appropriate performance
+   * timeline.
+   *
+   * @param  {String} name  the name to give the current mark
+   * @return {void}
+   */
+  mark: function mark(str) {
+    this._perf.mark(str);
+  },
+
+  /**
+   * Calls the underlying getEntriesByName on the appropriate Window.performance
+   * object.
+   *
+   * @param  {String} name
+   * @param  {String} type eg "mark"
+   * @return {Array}       Performance* objects
+   */
+  getEntriesByName: function getEntriesByName(name, type) {
+    return this._perf.getEntriesByName(name, type);
+  },
+
+  /**
+   * The timeOrigin property from the appropriate performance object.
+   * Used to ensure that timestamps from the add-on code and the content code
+   * are comparable.
+   *
+   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   */
+  get timeOrigin() {
+    return this._perf.timeOrigin;
+  },
+
+  /**
+   * Returns the "absolute" version of performance.now(), i.e. one that
+   * based on the timeOrigin of the XUL hiddenwindow.
+   *
+   * @return {Number}
+   */
+  absNow: function absNow() {
+    return this.timeOrigin + this._perf.now();
+  },
+
+  /**
+   * This returns the absolute startTime from the most recent performance.mark()
+   * with the given name.
+   *
+   * @param  {String} name  the name to lookup the start time for
+   *
+   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   *
+   * @throws {Error}        "No Marks with the name ..." if none are available
+   *
+   * @note Always surround calls to this by try/catch.  Otherwise your code
+   * may fail when the `privacy.resistFingerprinting` pref is true.  When
+   * this pref is set, all attempts to get marks will likely fail, which will
+   * cause this method to throw.
+   *
+   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
+   * for more info.
+   */
+  getMostRecentAbsMarkStartByName(name) {
+    let entries = this.getEntriesByName(name, "mark");
+
+    if (!entries.length) {
+      throw new Error(`No marks with the name ${name}`);
+    }
+
+    let mostRecentEntry = entries[entries.length - 1];
+    return this._perf.timeOrigin + mostRecentEntry.startTime;
+  }
+};
+
+var perfService = new _PerfService();
+module.exports = {
+  _PerfService,
+  perfService
+};
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 
 
 const React = __webpack_require__(0);
@@ -421,12 +544,12 @@ var _require2 = __webpack_require__(2);
 const addLocaleData = _require2.addLocaleData,
       IntlProvider = _require2.IntlProvider;
 
-const TopSites = __webpack_require__(20);
-const Search = __webpack_require__(18);
-const ConfirmDialog = __webpack_require__(14);
-const ManualMigration = __webpack_require__(16);
-const PreferencesPane = __webpack_require__(17);
-const Sections = __webpack_require__(19);
+const TopSites = __webpack_require__(21);
+const Search = __webpack_require__(19);
+const ConfirmDialog = __webpack_require__(15);
+const ManualMigration = __webpack_require__(17);
+const PreferencesPane = __webpack_require__(18);
+const Sections = __webpack_require__(20);
 
 // Locales that should be displayed RTL
 const RTL_LIST = ["ar", "he", "fa", "ur"];
@@ -498,7 +621,7 @@ class Base extends React.Component {
 module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -508,7 +631,7 @@ var _require = __webpack_require__(1);
 
 const at = _require.actionTypes;
 
-var _require2 = __webpack_require__(23);
+var _require2 = __webpack_require__(6);
 
 const perfSvc = _require2.perfService;
 
@@ -547,17 +670,22 @@ module.exports = class DetectUserSessionStart {
   /**
    * _sendEvent - Sends a message to the main process to indicate the current
    *              tab is now visible to the user, includes the
-   *              visibility-change-event time in ms from the UNIX epoch.
+   *              visibility_event_rcvd_ts time in ms from the UNIX epoch.
    */
   _sendEvent() {
-    this._perfService.mark("visibility-change-event");
+    this._perfService.mark("visibility_event_rcvd_ts");
 
-    let absVisChangeTime = this._perfService.getMostRecentAbsMarkStartByName("visibility-change-event");
+    try {
+      let visibility_event_rcvd_ts = this._perfService.getMostRecentAbsMarkStartByName("visibility_event_rcvd_ts");
 
-    this.sendAsyncMessage("ActivityStream:ContentToMain", {
-      type: at.NEW_TAB_VISIBLE,
-      data: { absVisibilityChangeTime: absVisChangeTime }
-    });
+      this.sendAsyncMessage("ActivityStream:ContentToMain", {
+        type: at.SAVE_SESSION_PERF_DATA,
+        data: { visibility_event_rcvd_ts }
+      });
+    } catch (ex) {
+      // If this failed, it's likely because the `privacy.resistFingerprinting`
+      // pref is true.  We should at least not blow up.
+    }
   }
 
   /**
@@ -573,7 +701,7 @@ module.exports = class DetectUserSessionStart {
 };
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -658,7 +786,7 @@ module.exports.OUTGOING_MESSAGE_NAME = OUTGOING_MESSAGE_NAME;
 module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -820,7 +948,8 @@ class SnippetsProvider {
     // Check if the cached version of of the snippets in snippetsMap. If it's too
     // old, blow away the entire snippetsMap.
     const cachedVersion = this.snippetsMap.get("snippets-cached-version");
-    if (cachedVersion !== this.version) {
+
+    if (cachedVersion !== this.appData.version) {
       this.snippetsMap.clear();
     }
 
@@ -828,16 +957,16 @@ class SnippetsProvider {
     const lastUpdate = this.snippetsMap.get("snippets-last-update");
     const needsUpdate = !(lastUpdate >= 0) || Date.now() - lastUpdate > SNIPPETS_UPDATE_INTERVAL_MS;
 
-    if (needsUpdate && this.snippetsURL) {
+    if (needsUpdate && this.appData.snippetsURL) {
       this.snippetsMap.set("snippets-last-update", Date.now());
       try {
         // TODO: timeout?
-        const response = await fetch(this.snippetsURL);
+        const response = await fetch(this.appData.snippetsURL);
         if (response.status === 200) {
           const payload = await response.text();
 
           this.snippetsMap.set("snippets", payload);
-          this.snippetsMap.set("snippets-cached-version", this.version);
+          this.snippetsMap.set("snippets-cached-version", this.appData.version);
         }
       } catch (e) {
         console.error(e); // eslint-disable-line no-console
@@ -884,14 +1013,15 @@ class SnippetsProvider {
    * init - Fetch the snippet payload and show snippets
    *
    * @param  {obj} options
-   * @param  {str} options.snippetsURL  The URL from which we fetch snippets
-   * @param  {int} options.version  The current snippets version
-   * @param  {str} options.elementId  The id of the element of the snippets container
+   * @param  {str} options.appData.snippetsURL  The URL from which we fetch snippets
+   * @param  {int} options.appData.version  The current snippets version
+   * @param  {str} options.elementId  The id of the element in which to inject snippets
+   * @param  {str} options.containerElementId  The id of the element of element containing the snippets element
+   * @param  {bool} options.connect  Should gSnippetsMap connect to indexedDB?
    */
   async init(options) {
     Object.assign(this, {
-      snippetsURL: "",
-      version: 0,
+      appData: {},
       elementId: "snippets",
       containerElementId: "snippets-container",
       connect: true
@@ -905,6 +1035,11 @@ class SnippetsProvider {
       } catch (e) {
         console.error(e); // eslint-disable-line no-console
       }
+    }
+
+    // Cache app data values so they can be accessible from gSnippetsMap
+    for (const key of Object.keys(this.appData)) {
+      this.snippetsMap.set(`appData.${key}`, this.appData[key]);
     }
 
     // Refresh snippets, if enough time has passed.
@@ -925,7 +1060,7 @@ module.exports.SNIPPETS_UPDATE_INTERVAL_MS = SNIPPETS_UPDATE_INTERVAL_MS;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(24)))
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1226,13 +1361,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = ReactDOM;
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1246,7 +1381,12 @@ var _require = __webpack_require__(2);
 
 const FormattedMessage = _require.FormattedMessage;
 
-const cardContextTypes = __webpack_require__(13);
+const cardContextTypes = __webpack_require__(14);
+
+var _require2 = __webpack_require__(1);
+
+const ac = _require2.actionCreators,
+      at = _require2.actionTypes;
 
 /**
  * Card component.
@@ -1257,12 +1397,14 @@ const cardContextTypes = __webpack_require__(13);
  * this class. Each card will then get a context menu which reflects the actions that
  * can be done on this Card.
  */
+
 class Card extends React.Component {
   constructor(props) {
     super(props);
     this.state = { showContextMenu: false, activeCard: null };
     this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
     this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onLinkClick = this.onLinkClick.bind(this);
   }
   onMenuButtonClick(event) {
     event.preventDefault();
@@ -1270,6 +1412,15 @@ class Card extends React.Component {
       activeCard: this.props.index,
       showContextMenu: true
     });
+  }
+  onLinkClick(event) {
+    event.preventDefault();
+    this.props.dispatch(ac.SendToMain({ type: at.OPEN_LINK, data: this.props.link }));
+    this.props.dispatch(ac.UserEvent({
+      event: "CLICK",
+      source: this.props.eventSource,
+      action_position: this.props.index
+    }));
   }
   onMenuUpdate(showContextMenu) {
     this.setState({ showContextMenu });
@@ -1293,7 +1444,7 @@ class Card extends React.Component {
       { className: `card-outer${isContextMenuOpen ? " active" : ""}` },
       React.createElement(
         "a",
-        { href: link.url },
+        { href: link.url, onClick: this.onLinkClick },
         React.createElement(
           "div",
           { className: "card" },
@@ -1362,7 +1513,7 @@ class Card extends React.Component {
 module.exports = Card;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1388,7 +1539,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1507,7 +1658,7 @@ module.exports._unconnected = ConfirmDialog;
 module.exports.Dialog = ConfirmDialog;
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1601,7 +1752,7 @@ module.exports.ContextMenu = ContextMenu;
 module.exports.ContextMenuItem = ContextMenuItem;
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1679,7 +1830,7 @@ module.exports = connect()(ManualMigration);
 module.exports._unconnected = ManualMigration;
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1708,7 +1859,7 @@ const PreferencesInput = props => React.createElement(
   React.createElement(
     "label",
     { htmlFor: props.prefName },
-    React.createElement(FormattedMessage, { id: props.titleStringId })
+    React.createElement(FormattedMessage, { id: props.titleStringId, values: props.titleStringValues })
   ),
   props.descStringId && React.createElement(
     "p",
@@ -1724,6 +1875,13 @@ class PreferencesPane extends React.Component {
     this.handleClickOutside = this.handleClickOutside.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.togglePane = this.togglePane.bind(this);
+
+    // TODO This is temporary until sections register their PreferenceInput component automatically
+    try {
+      this.topStoriesOptions = JSON.parse(props.Prefs.values["feeds.section.topstories.options"]);
+    } catch (e) {
+      console.error("Problem parsing feeds.section.topstories.options", e); // eslint-disable-line no-console
+    }
   }
   componentDidMount() {
     document.addEventListener("click", this.handleClickOutside);
@@ -1784,8 +1942,10 @@ class PreferencesPane extends React.Component {
               titleStringId: "settings_pane_search_header", descStringId: "settings_pane_search_body" }),
             React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handleChange,
               titleStringId: "settings_pane_topsites_header", descStringId: "settings_pane_topsites_body" }),
-            React.createElement(PreferencesInput, { className: "showTopStories", prefName: "feeds.section.topstories", value: prefs["feeds.section.topstories"], onChange: this.handleChange,
-              titleStringId: "settings_pane_pocketstories_header", descStringId: "settings_pane_pocketstories_body" })
+            this.topStoriesOptions && React.createElement(PreferencesInput, { className: "showTopStories", prefName: "feeds.section.topstories",
+              value: prefs["feeds.section.topstories"], onChange: this.handleChange,
+              titleStringId: "header_recommended_by", titleStringValues: { provider: this.topStoriesOptions.provider_name },
+              descStringId: this.topStoriesOptions.provider_description })
           ),
           React.createElement(
             "section",
@@ -1807,7 +1967,7 @@ module.exports.PreferencesPane = PreferencesPane;
 module.exports.PreferencesInput = PreferencesInput;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1906,7 +2066,7 @@ module.exports = connect()(injectIntl(Search));
 module.exports._unconnected = Search;
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1924,13 +2084,14 @@ var _require2 = __webpack_require__(2);
 
 const FormattedMessage = _require2.FormattedMessage;
 
-const Card = __webpack_require__(12);
-const Topics = __webpack_require__(21);
+const Card = __webpack_require__(13);
+const Topics = __webpack_require__(22);
 
 class Section extends React.Component {
   render() {
     var _props = this.props;
     const id = _props.id,
+          eventSource = _props.eventSource,
           title = _props.title,
           icon = _props.icon,
           rows = _props.rows,
@@ -1989,7 +2150,7 @@ class Section extends React.Component {
       React.createElement(
         "ul",
         { className: "section-list", style: { padding: 0 } },
-        rows.slice(0, maxCards).map((link, index) => link && React.createElement(Card, { index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions }))
+        rows.slice(0, maxCards).map((link, index) => link && React.createElement(Card, { index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions, eventSource: eventSource }))
       ),
       !initialized && React.createElement(
         "div",
@@ -2026,7 +2187,7 @@ module.exports._unconnected = Sections;
 module.exports.Section = Section;
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2047,7 +2208,12 @@ const LinkMenu = __webpack_require__(5);
 
 var _require3 = __webpack_require__(1);
 
-const ac = _require3.actionCreators;
+const ac = _require3.actionCreators,
+      at = _require3.actionTypes;
+
+var _require4 = __webpack_require__(6);
+
+const perfSvc = _require4.perfService;
 
 const TOP_SITES_SOURCE = "TOP_SITES";
 const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
@@ -2139,6 +2305,97 @@ class TopSite extends React.Component {
   }
 }
 
+/**
+ * A proxy class that uses double requestAnimationFrame from
+ * componentDidMount to dispatch a SAVE_SESSION_PERF_DATA to the main procsess
+ * after the paint.
+ *
+ * This uses two callbacks because, after one callback, this part of the tree
+ * may have rendered but not yet reflowed.  This strategy is modeled after
+ * https://stackoverflow.com/a/34999925 but uses a double rFA because
+ * we want to get to the closest reliable paint for measuring, and
+ * setTimeout is often throttled or queued by browsers in ways that could
+ * make it lag too long.
+ *
+ * XXX Should be made more generic by using this.props.children, or potentially
+ * even split out into a higher-order component to wrap whatever.
+ *
+ * @class TopSitesPerfTimer
+ * @extends {React.Component}
+ */
+class TopSitesPerfTimer extends React.Component {
+  constructor(props) {
+    super(props);
+    // Just for test dependency injection:
+    this.perfSvc = this.props.perfSvc || perfSvc;
+
+    this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
+    this._timestampSent = false;
+  }
+
+  componentDidMount() {
+    this._maybeSendPaintedEvent();
+  }
+
+  componentDidUpdate() {
+    this._maybeSendPaintedEvent();
+  }
+
+  /**
+   * Call the given callback when the subsequent animation frame
+   * (not the upcoming one) paints.
+   *
+   * @param {Function} callback
+   *
+   * @returns void
+   */
+  _onNextFrame(callback) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(callback);
+    });
+  }
+
+  _maybeSendPaintedEvent() {
+    // If we've already saved a timestamp for this session, don't do so again.
+    if (this._timestampSent) {
+      return;
+    }
+
+    // We don't want this to ever happen, but sometimes it does.  And when it
+    // does (typically on the first newtab at startup time calling
+    // componentDidMount), the paint(s) we care about will be later (eg
+    // in a subsequent componentDidUpdate).
+    if (!this.props.TopSites.initialized) {
+      // XXX should send bad event
+      return;
+    }
+
+    this._onNextFrame(this._sendPaintedEvent);
+  }
+
+  _sendPaintedEvent() {
+    this.perfSvc.mark("topsites_first_painted_ts");
+
+    try {
+      let topsites_first_painted_ts = this.perfSvc.getMostRecentAbsMarkStartByName("topsites_first_painted_ts");
+
+      this.props.dispatch(ac.SendToMain({
+        type: at.SAVE_SESSION_PERF_DATA,
+        data: { topsites_first_painted_ts }
+      }));
+    } catch (ex) {
+      // If this failed, it's likely because the `privacy.resistFingerprinting`
+      // pref is true.  We should at least not blow up, and should continue
+      // to set this._timestampSent to avoid going through this again.
+    }
+
+    this._timestampSent = true;
+  }
+  render() {
+    return React.createElement(TopSites, this.props);
+  }
+}
+
 const TopSites = props => React.createElement(
   "section",
   null,
@@ -2159,12 +2416,13 @@ const TopSites = props => React.createElement(
   )
 );
 
-module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSites);
-module.exports._unconnected = TopSites;
+module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSitesPerfTimer);
+module.exports._unconnected = TopSitesPerfTimer;
 module.exports.TopSite = TopSite;
+module.exports.TopSites = TopSites;
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2229,7 +2487,7 @@ module.exports._unconnected = Topics;
 module.exports.Topic = Topic;
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2272,7 +2530,7 @@ module.exports = {
     icon: "new-window",
     action: ac.SendToMain({
       type: at.OPEN_NEW_WINDOW,
-      data: { url: site.url }
+      data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_NEW_WINDOW"
   }),
@@ -2281,7 +2539,7 @@ module.exports = {
     icon: "new-window-private",
     action: ac.SendToMain({
       type: at.OPEN_PRIVATE_WINDOW,
-      data: { url: site.url }
+      data: { url: site.url, referrer: site.referrer }
     }),
     userEvent: "OPEN_PRIVATE_WINDOW"
   }),
@@ -2340,111 +2598,6 @@ module.exports.CheckBookmark = site => site.bookmarkGuid ? module.exports.Remove
 module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports.UnpinTopSite(site) : module.exports.PinTopSite(site, index);
 
 /***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* globals Services */
-
-
-let usablePerfObj;
-
-let Cu;
-const isRunningInChrome = typeof Window === "undefined";
-
-/* istanbul ignore if */
-if (isRunningInChrome) {
-  Cu = Components.utils;
-} else {
-  Cu = { import() {} };
-}
-
-Cu.import("resource://gre/modules/Services.jsm");
-
-/* istanbul ignore if */
-if (isRunningInChrome) {
-  // Borrow the high-resolution timer from the hidden window....
-  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else {
-  // we must be running in content space
-  usablePerfObj = performance;
-}
-
-var _PerfService = function _PerfService(options) {
-  // For testing, so that we can use a fake Window.performance object with
-  // known state.
-  if (options && options.performanceObj) {
-    this._perf = options.performanceObj;
-  } else {
-    this._perf = usablePerfObj;
-  }
-};
-
-_PerfService.prototype = {
-  /**
-   * Calls the underlying mark() method on the appropriate Window.performance
-   * object to add a mark with the given name to the appropriate performance
-   * timeline.
-   *
-   * @param  {String} name  the name to give the current mark
-   * @return {void}
-   */
-  mark: function mark(str) {
-    this._perf.mark(str);
-  },
-
-  /**
-   * Calls the underlying getEntriesByName on the appropriate Window.performance
-   * object.
-   *
-   * @param  {String} name
-   * @param  {String} type eg "mark"
-   * @return {Array}       Performance* objects
-   */
-  getEntriesByName: function getEntriesByName(name, type) {
-    return this._perf.getEntriesByName(name, type);
-  },
-
-  /**
-   * The timeOrigin property from the appropriate performance object.
-   * Used to ensure that timestamps from the add-on code and the content code
-   * are comparable.
-   *
-   * @return {Number} A double of milliseconds with a precision of 0.5us.
-   */
-  get timeOrigin() {
-    return this._perf.timeOrigin;
-  },
-
-  /**
-   * This returns the startTime from the most recen!t performance.mark()
-   * with the given name.
-   *
-   * @param  {String} name  the name to lookup the start time for
-   *
-   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
-   *
-   * @throws {Error}        "No Marks with the name ..." if none are available
-   */
-  getMostRecentAbsMarkStartByName(name) {
-    let entries = this.getEntriesByName(name, "mark");
-
-    if (!entries.length) {
-      throw new Error(`No marks with the name ${name}`);
-    }
-
-    let mostRecentEntry = entries[entries.length - 1];
-    return this._perf.timeOrigin + mostRecentEntry.startTime;
-  }
-};
-
-var perfService = new _PerfService();
-module.exports = {
-  _PerfService,
-  perfService
-};
-
-/***/ }),
 /* 24 */
 /***/ (function(module, exports) {
 
@@ -2485,22 +2638,22 @@ module.exports = Redux;
 
 
 const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(11);
-const Base = __webpack_require__(6);
+const ReactDOM = __webpack_require__(12);
+const Base = __webpack_require__(7);
 
 var _require = __webpack_require__(3);
 
 const Provider = _require.Provider;
 
-const initStore = __webpack_require__(8);
+const initStore = __webpack_require__(9);
 
-var _require2 = __webpack_require__(10);
+var _require2 = __webpack_require__(11);
 
 const reducers = _require2.reducers;
 
-const DetectUserSessionStart = __webpack_require__(7);
+const DetectUserSessionStart = __webpack_require__(8);
 
-var _require3 = __webpack_require__(9);
+var _require3 = __webpack_require__(10);
 
 const SnippetsProvider = _require3.SnippetsProvider;
 
@@ -2520,10 +2673,7 @@ const snippets = new SnippetsProvider();
 const unsubscribe = store.subscribe(() => {
   const state = store.getState();
   if (state.Snippets.initialized) {
-    snippets.init({
-      snippetsURL: state.Snippets.snippetsURL,
-      version: state.Snippets.version
-    });
+    snippets.init({ appData: state.Snippets });
     unsubscribe();
   }
 });

@@ -186,6 +186,14 @@ class PlacesFeed {
     }
   }
 
+  openNewWindow(action, isPrivate = false) {
+    const win = action._target.browser.ownerGlobal;
+    const privateParam = {private: isPrivate};
+    const params = (action.data.referrer) ?
+      Object.assign(privateParam, {referrerURI: Services.io.newURI(action.data.referrer)}) : privateParam;
+    win.openLinkIn(action.data.url, "window", params);
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -207,9 +215,23 @@ class PlacesFeed {
       case at.DELETE_HISTORY_URL:
         NewTabUtils.activityStreamLinks.deleteHistoryEntry(action.data);
         break;
+      case at.OPEN_NEW_WINDOW:
+        this.openNewWindow(action);
+        break;
+      case at.OPEN_PRIVATE_WINDOW:
+        this.openNewWindow(action, true);
+        break;
       case at.SAVE_TO_POCKET:
         Pocket.savePage(action._target.browser, action.data.site.url, action.data.site.title);
         break;
+      case at.OPEN_LINK: {
+        if (action.data.referrer) {
+          action._target.browser.loadURI(action.data.url, Services.io.newURI(action.data.referrer));
+        } else {
+          action._target.browser.loadURI(action.data.url);
+        }
+        break;
+      }
     }
   }
 }

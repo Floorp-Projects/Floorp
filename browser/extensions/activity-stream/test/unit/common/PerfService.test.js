@@ -18,6 +18,13 @@ describe("_PerfService", () => {
     sandbox.restore();
   });
 
+  describe("#absNow", () => {
+    it("should return a number > the time origin", () => {
+      const absNow = perfService.absNow();
+
+      assert.isAbove(absNow, perfService.timeOrigin);
+    });
+  });
   describe("#getEntriesByName", () => {
     it("should call getEntriesByName on the appropriate Window.performance",
     () => {
@@ -78,7 +85,7 @@ describe("_PerfService", () => {
 
   describe("#timeOrigin", () => {
     it("should get the origin of the wrapped performance object", () => {
-      assert.equal(perfService.timeOrigin, 10000); // fake origin from utils.js
+      assert.equal(perfService.timeOrigin, fakePerfObj.timeOrigin);
     });
   });
 });
