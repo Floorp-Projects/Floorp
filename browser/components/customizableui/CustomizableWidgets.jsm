@@ -82,20 +82,6 @@ function setAttributes(aNode, aAttrs) {
   }
 }
 
-function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
-  let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1 toolbarbutton-combined";
-  let attrs = {class: cls};
-  if (aModifyCloseMenu) {
-    attrs.closemenu = inPanel ? "none" : null;
-  }
-  for (let i = 0, l = aNode.childNodes.length; i < l; ++i) {
-    if (aNode.childNodes[i].localName == "separator")
-      continue;
-    setAttributes(aNode.childNodes[i], attrs);
-  }
-}
-
 function fillSubviewFromMenuItems(aMenuItems, aSubview) {
   let attrs = ["oncommand", "onclick", "label", "key", "disabled",
                "command", "observes", "hidden", "class", "origin",
@@ -768,19 +754,25 @@ const CustomizableWidgets = [
         id: "zoom-out-button",
         command: "cmd_fullZoomReduce",
         label: true,
+        closemenu: "none",
         tooltiptext: "tooltiptext2",
         shortcutId: "key_fullZoomReduce",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }, {
         id: "zoom-reset-button",
         command: "cmd_fullZoomReset",
+        closemenu: "none",
         tooltiptext: "tooltiptext2",
         shortcutId: "key_fullZoomReset",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }, {
         id: "zoom-in-button",
         command: "cmd_fullZoomEnlarge",
+        closemenu: "none",
         label: true,
         tooltiptext: "tooltiptext2",
         shortcutId: "key_fullZoomEnlarge",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
@@ -800,72 +792,6 @@ const CustomizableWidgets = [
         setAttributes(btnNode, aButton);
         node.appendChild(btnNode);
       });
-
-      updateCombinedWidgetStyle(node, this.currentArea, true);
-
-      let listener = {
-        onWidgetAdded: (aWidgetId, aArea, aPosition) => {
-          if (aWidgetId != this.id)
-            return;
-
-          updateCombinedWidgetStyle(node, aArea, true);
-        },
-
-        onWidgetRemoved: (aWidgetId, aPrevArea) => {
-          if (aWidgetId != this.id)
-            return;
-
-          // When a widget is demoted to the palette ('removed'), it's visual
-          // style should change.
-          updateCombinedWidgetStyle(node, null, true);
-        },
-
-        onWidgetReset: aWidgetNode => {
-          if (aWidgetNode != node)
-            return;
-          updateCombinedWidgetStyle(node, this.currentArea, true);
-        },
-
-        onWidgetUndoMove: aWidgetNode => {
-          if (aWidgetNode != node)
-            return;
-          updateCombinedWidgetStyle(node, this.currentArea, true);
-        },
-
-        onWidgetMoved: (aWidgetId, aArea) => {
-          if (aWidgetId != this.id)
-            return;
-          updateCombinedWidgetStyle(node, aArea, true);
-        },
-
-        onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
-          if (aWidgetId != this.id || aDoc != aDocument)
-            return;
-
-          CustomizableUI.removeListener(listener);
-        },
-
-        onWidgetDrag: (aWidgetId, aArea) => {
-          if (aWidgetId != this.id)
-            return;
-          aArea = aArea || this.currentArea;
-          updateCombinedWidgetStyle(node, aArea, true);
-        },
-
-        // Hack. This can go away when the old menu panel goes away (post photon).
-        // We need it right now for the case where we re-register the old-style
-        // main menu panel if photon is disabled at runtime, and we automatically
-        // put the widgets in there, so they get the right style in the panel.
-        onAreaNodeRegistered: (aArea, aContainer) => {
-          if (aContainer.ownerDocument == node.ownerDocument &&
-              aArea == this.currentArea &&
-              aArea == CustomizableUI.AREA_PANEL) {
-            updateCombinedWidgetStyle(node, aArea, true);
-          }
-        },
-      };
-      CustomizableUI.addListener(listener);
-
       return node;
     }
   }, {
@@ -880,18 +806,21 @@ const CustomizableWidgets = [
         label: true,
         tooltiptext: "tooltiptext2",
         shortcutId: "key_cut",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }, {
         id: "copy-button",
         command: "cmd_copy",
         label: true,
         tooltiptext: "tooltiptext2",
         shortcutId: "key_copy",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }, {
         id: "paste-button",
         command: "cmd_paste",
         label: true,
         tooltiptext: "tooltiptext2",
         shortcutId: "key_paste",
+        "class": "toolbarbutton-1 toolbarbutton-combined",
       }];
 
       let node = aDocument.createElementNS(kNSXUL, "toolbaritem");
@@ -912,66 +841,12 @@ const CustomizableWidgets = [
         node.appendChild(btnNode);
       });
 
-      updateCombinedWidgetStyle(node, this.currentArea);
-
       let listener = {
-        onWidgetAdded: (aWidgetId, aArea, aPosition) => {
-          if (aWidgetId != this.id)
-            return;
-          updateCombinedWidgetStyle(node, aArea);
-        },
-
-        onWidgetRemoved: (aWidgetId, aPrevArea) => {
-          if (aWidgetId != this.id)
-            return;
-          // When a widget is demoted to the palette ('removed'), it's visual
-          // style should change.
-          updateCombinedWidgetStyle(node);
-        },
-
-        onWidgetReset: aWidgetNode => {
-          if (aWidgetNode != node)
-            return;
-          updateCombinedWidgetStyle(node, this.currentArea);
-        },
-
-        onWidgetUndoMove: aWidgetNode => {
-          if (aWidgetNode != node)
-            return;
-          updateCombinedWidgetStyle(node, this.currentArea);
-        },
-
-        onWidgetMoved: (aWidgetId, aArea) => {
-          if (aWidgetId != this.id)
-            return;
-          updateCombinedWidgetStyle(node, aArea);
-        },
-
         onWidgetInstanceRemoved: (aWidgetId, aDoc) => {
           if (aWidgetId != this.id || aDoc != aDocument)
             return;
           CustomizableUI.removeListener(listener);
         },
-
-        onWidgetDrag: (aWidgetId, aArea) => {
-          if (aWidgetId != this.id)
-            return;
-          aArea = aArea || this.currentArea;
-          updateCombinedWidgetStyle(node, aArea);
-        },
-
-        // Hack. This can go away when the old menu panel goes away (post photon).
-        // We need it right now for the case where we re-register the old-style
-        // main menu panel if photon is disabled at runtime, and we automatically
-        // put the widgets in there, so they get the right style in the panel.
-        onAreaNodeRegistered: (aArea, aContainer) => {
-          if (aContainer.ownerDocument == node.ownerDocument &&
-              aArea == this.currentArea &&
-              aArea == CustomizableUI.AREA_PANEL) {
-            updateCombinedWidgetStyle(node, aArea);
-          }
-        },
-
         onWidgetOverflow(aWidgetNode) {
           if (aWidgetNode == node) {
             node.ownerGlobal.updateEditUIVisibility();
