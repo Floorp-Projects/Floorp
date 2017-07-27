@@ -8,7 +8,7 @@ var testPage = "data:text/plain,test bug 477014";
 
 add_task(async function() {
   let tabToDetach = BrowserTestUtils.addTab(gBrowser, testPage);
-  await waitForDocLoadComplete(tabToDetach.linkedBrowser);
+  await BrowserTestUtils.browserStopped(tabToDetach.linkedBrowser);
 
   gBrowser.setIcon(tabToDetach, iconURLSpec,
                    Services.scriptSecurityManager.getSystemPrincipal());

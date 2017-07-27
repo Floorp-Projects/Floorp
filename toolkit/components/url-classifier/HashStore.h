@@ -184,9 +184,10 @@ public:
 
   void SetFullUpdate(bool aIsFullUpdate) { mFullUpdate = aIsFullUpdate; }
   void NewPrefixes(int32_t aSize, std::string& aPrefixes);
-  void NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   void SetNewClientState(const nsACString& aState) { mClientState = aState; }
   void NewChecksum(const std::string& aChecksum);
+
+  nsresult NewRemovalIndices(const uint32_t* aIndices, size_t aNumOfIndices);
   nsresult NewFullHashResponse(const Prefix& aPrefix,
                                CachedFullHashResponse& aResponse);
 

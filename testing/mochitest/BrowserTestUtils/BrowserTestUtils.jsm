@@ -318,25 +318,41 @@ this.BrowserTestUtils = {
     });
   },
 
+  _webProgressListeners: new Set(),
+
   /**
    * Waits for the web progress listener associated with this tab to fire a
    * STATE_STOP for the toplevel document.
    *
    * @param {xul:browser} browser
    *        A xul:browser.
+   * @param {String} expectedURI (optional)
+   *        A specific URL to check the channel load against
+   * @param {Boolean} checkAborts (optional, defaults to false)
+   *        Whether NS_BINDING_ABORTED stops 'count' as 'real' stops
+   *        (e.g. caused by the stop button or equivalent APIs)
    *
    * @return {Promise}
    * @resolves When STATE_STOP reaches the tab's progress listener
    */
-  browserStopped(browser) {
+  browserStopped(browser, expectedURI, checkAborts=false) {
     return new Promise(resolve => {
+      const kDocStopFlags = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
+                            Ci.nsIWebProgressListener.STATE_STOP;
       let wpl = {
         onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
-          if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+          dump("Saw state " + aStateFlags.toString(16) + " and status " + aStatus.toString(16) + "\n");
+          if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
+              aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+              (checkAborts || aStatus != Cr.NS_BINDING_ABORTED) &&
               aWebProgress.isTopLevel) {
-            browser.webProgress.removeProgressListener(filter);
-            filter.removeProgressListener(wpl);
-            resolve();
+            let chan = aRequest.QueryInterface(Ci.nsIChannel);
+            dump("Browser loaded " + chan.originalURI.spec + "\n");
+            if (!expectedURI || chan.originalURI.spec == expectedURI) {
+              browser.removeProgressListener(wpl);
+              BrowserTestUtils._webProgressListeners.delete(wpl);
+              resolve();
+            }
           };
         },
         onSecurityChange() {},
@@ -345,12 +361,12 @@ this.BrowserTestUtils = {
         QueryInterface: XPCOMUtils.generateQI([
           Ci.nsIWebProgressListener,
           Ci.nsIWebProgressListener2,
+          Ci.nsISupportsWeakReference,
         ]),
       };
-      const filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
-                       .createInstance(Ci.nsIWebProgress);
-      filter.addProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_ALL);
-      browser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
+      browser.addProgressListener(wpl);
+      this._webProgressListeners.add(wpl);
+      dump("Waiting for browser load" + (expectedURI ? (" of " + expectedURI) : "") + "\n");
     });
   },
 

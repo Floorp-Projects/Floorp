@@ -454,6 +454,10 @@ protected:
   nsCOMPtr<nsIURI> mProxyURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mTopWindowURI;
+  nsCOMPtr<nsIStreamListener> mListener;
+  nsCOMPtr<nsISupports> mListenerContext;
+  // An instance of nsHTTPCompressConv
+  nsCOMPtr<nsIStreamListener> mCompressListener;
 
 private:
   // Proxy release all members above on main thread.
@@ -466,12 +470,7 @@ protected:
 
   nsTArray<Pair<nsString, nsString>> mSecurityConsoleMessages;
 
-  nsCOMPtr<nsIStreamListener>       mListener;
-  nsCOMPtr<nsISupports>             mListenerContext;
   nsCOMPtr<nsISupports>             mOwner;
-
-  // An instance of nsHTTPCompressConv
-  nsCOMPtr<nsIStreamListener>       mCompressListener;
 
   nsHttpRequestHead                 mRequestHead;
   // Upload throttling.

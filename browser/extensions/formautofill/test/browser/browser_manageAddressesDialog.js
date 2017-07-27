@@ -1,7 +1,7 @@
 "use strict";
 
 const TEST_SELECTORS = {
-  selAddresses: "#profiles",
+  selAddresses: "#addresses",
   btnRemove: "#remove",
   btnAdd: "#add",
   btnEdit: "#edit",
@@ -19,8 +19,8 @@ function waitForRecords() {
   });
 }
 
-add_task(async function test_manageProfilesInitialState() {
-  await BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_PROFILES_DIALOG_URL}, async function(browser) {
+add_task(async function test_manageAddressesInitialState() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: MANAGE_ADDRESSES_DIALOG_URL}, async function(browser) {
     await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
       let selAddresses = content.document.querySelector(args.selAddresses);
       let btnRemove = content.document.querySelector(args.btnRemove);
@@ -35,12 +35,12 @@ add_task(async function test_manageProfilesInitialState() {
   });
 });
 
-add_task(async function test_cancelManageProfileDialogWithESC() {
+add_task(async function test_cancelManageAddressDialogWithESC() {
   await new Promise(resolve => {
-    let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL);
+    let win = window.openDialog(MANAGE_ADDRESSES_DIALOG_URL);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
-        ok(true, "Manage profiles dialog is closed with ESC key");
+        ok(true, "Manage addresses dialog is closed with ESC key");
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
@@ -48,12 +48,12 @@ add_task(async function test_cancelManageProfileDialogWithESC() {
   });
 });
 
-add_task(async function test_removingSingleAndMultipleProfiles() {
+add_task(async function test_removingSingleAndMultipleAddresses() {
   await saveAddress(TEST_ADDRESS_1);
   await saveAddress(TEST_ADDRESS_2);
   await saveAddress(TEST_ADDRESS_3);
 
-  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL, null, DIALOG_SIZE);
+  let win = window.openDialog(MANAGE_ADDRESSES_DIALOG_URL, null, DIALOG_SIZE);
   await waitForRecords();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);
@@ -81,8 +81,8 @@ add_task(async function test_removingSingleAndMultipleProfiles() {
   win.close();
 });
 
-add_task(async function test_profilesDialogWatchesStorageChanges() {
-  let win = window.openDialog(MANAGE_PROFILES_DIALOG_URL, null, DIALOG_SIZE);
+add_task(async function test_addressesDialogWatchesStorageChanges() {
+  let win = window.openDialog(MANAGE_ADDRESSES_DIALOG_URL, null, DIALOG_SIZE);
   await waitForRecords();
 
   let selAddresses = win.document.querySelector(TEST_SELECTORS.selAddresses);

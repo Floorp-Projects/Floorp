@@ -1829,45 +1829,31 @@ class PackageFrontend(MachCommandBase):
                     return 1
 
                 task_id = optimize_task(task, {})
-                if task_id in (True, False):
+                artifact_name = task.attributes.get('toolchain-artifact')
+                if task_id in (True, False) or not artifact_name:
                     self.log(logging.ERROR, 'artifact', {'build': user_value},
                              'Could not find artifacts for a toolchain build '
                              'named `{build}`')
                     return 1
 
-                for artifact in list_artifacts(task_id):
-                    name = artifact['name']
-                    if not name.startswith('public/'):
-                        continue
-                    name = name[len('public/'):]
-                    if name.startswith('logs/'):
-                        continue
-                    name = os.path.basename(name)
-                    records[name] = DownloadRecord(
-                        get_artifact_url(task_id, artifact['name']),
-                        name, None, None, None, unpack=True)
+                name = os.path.basename(artifact_name)
+                records[name] = DownloadRecord(
+                    get_artifact_url(task_id, artifact_name),
+                    name, None, None, None, unpack=True)
 
         # Handle the list of files of the form path@task-id on the command
         # line. Each of those give a path to an artifact to download.
-        # For backwards compatibility with mozboot's
-        # install_tooltool_clang_package (until that is migrated to use
-        # --from-build), files without a @ are considered as a filter over the
-        # tooltool manifest contents.
         for f in files:
-            if '@' in f:
-                name, task_id = f.rsplit('@', 1)
-                records[name] = DownloadRecord(
-                    get_artifact_url(task_id, name), os.path.basename(name),
-                    None, None, None, unpack=True)
-
-        files = tuple(f for f in files if '@' not in f)
+            if '@' not in f:
+                self.log(logging.ERROR, 'artifact', {},
+                         'Expected a list of files of the form path@task-id')
+                return 1
+            name, task_id = f.rsplit('@', 1)
+            records[name] = DownloadRecord(
+                get_artifact_url(task_id, name), os.path.basename(name),
+                None, None, None, unpack=True)
 
         for record in records.itervalues():
-            if files and not any(record.basename == f or
-                                      record.basename.startswith('%s.' % f)
-                                      for f in files):
-                continue
-
             self.log(logging.INFO, 'artifact', {'name': record.basename},
                      'Downloading {name}')
             valid = False

@@ -4,5 +4,5 @@
 
 from __future__ import print_function, unicode_literals
 
-WINDOWS = 'browser/config/tooltool-manifests/win64/clang.manifest'
-LINUX = 'browser/config/tooltool-manifests/linux64/clang.manifest'
+WINDOWS = 'win64-clang-cl'
+LINUX = 'linux64-clang'

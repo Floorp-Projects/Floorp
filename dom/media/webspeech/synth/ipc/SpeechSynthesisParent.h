@@ -34,7 +34,8 @@ protected:
                                                                     const nsString& aUri,
                                                                     const float& aVolume,
                                                                     const float& aRate,
-                                                                    const float& aPitch)
+                                                                    const float& aPitch,
+                                                                    const bool& aIsChrome)
                                                                     override;
 
   bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) override;
@@ -45,7 +46,8 @@ protected:
                                                                  const nsString& aUri,
                                                                  const float& aVolume,
                                                                  const float& aRate,
-                                                                 const float& aPitch) override;
+                                                                 const float& aPitch,
+                                                                 const bool& aIsChrome) override;
 };
 
 class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
@@ -77,8 +79,8 @@ class SpeechTaskParent : public nsSpeechTask
 {
   friend class SpeechSynthesisRequestParent;
 public:
-  SpeechTaskParent(float aVolume, const nsAString& aUtterance)
-    : nsSpeechTask(aVolume, aUtterance) {}
+  SpeechTaskParent(float aVolume, const nsAString& aUtterance, bool aIsChrome)
+    : nsSpeechTask(aVolume, aUtterance, aIsChrome) {}
 
   nsresult DispatchStartImpl(const nsAString& aUri);
 

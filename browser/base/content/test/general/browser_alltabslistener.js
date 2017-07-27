@@ -96,8 +96,8 @@ function test() {
   // We must wait until a page has completed loading before
   // starting tests or we get notifications from that
   let promises = [
-    waitForDocLoadComplete(gBackgroundBrowser),
-    waitForDocLoadComplete(gForegroundBrowser)
+    BrowserTestUtils.browserStopped(gBackgroundBrowser, kBasePage),
+    BrowserTestUtils.browserStopped(gForegroundBrowser, kBasePage)
   ];
   gBackgroundBrowser.loadURI(kBasePage);
   gForegroundBrowser.loadURI(kBasePage);

@@ -77,6 +77,7 @@ EditDialog.prototype = {
       case "DOMContentLoaded": {
         this.init();
         if (this._address) {
+          document.title = "Edit Address";
           this.loadInitialValues(this._address);
         }
         break;
