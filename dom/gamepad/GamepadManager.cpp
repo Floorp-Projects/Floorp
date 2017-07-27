@@ -558,7 +558,9 @@ GamepadManager::MaybeConvertToNonstandardGamepadEvent(const GamepadChangeEvent& 
     return;
   }
 
-  RefPtr<Gamepad> gamepad = aWindow->GetGamepad(aEvent.index());
+  const uint32_t index = GetGamepadIndexWithServiceType(aEvent.index(),
+                                                        aEvent.service_type());
+  RefPtr<Gamepad> gamepad = aWindow->GetGamepad(index);
   const GamepadChangeEventBody& body = aEvent.body();
 
   if (gamepad) {
@@ -586,7 +588,6 @@ GamepadManager::SetGamepadByEvent(const GamepadChangeEvent& aEvent, nsGlobalWind
 {
   bool ret = false;
   bool firstTime = false;
-
   const uint32_t index = GetGamepadIndexWithServiceType(aEvent.index(),
                                                         aEvent.service_type());
   if (aWindow) {
