@@ -619,7 +619,7 @@ WalkStackThread(void* aData)
  * whose in memory address doesn't match its in-file address.
  */
 
-MFBT_API bool
+MFBT_API void
 MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                    uint32_t aMaxFrames, void* aClosure,
                    HANDLE aThread, CONTEXT* aContext)
@@ -635,7 +635,7 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   // EnsureWalkThreadReady's _beginthreadex takes a heap lock and must be
   // avoided if we're walking another (i.e. suspended) thread.
   if (!aThread && !EnsureWalkThreadReady()) {
-    return false;
+    return;
   }
 
   HANDLE currentThread = ::GetCurrentThread();
@@ -652,7 +652,7 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
       if (data.walkCallingThread) {
         PrintError("DuplicateHandle (process)");
       }
-      return false;
+      return;
     }
   }
   if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -663,7 +663,7 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
     if (data.walkCallingThread) {
       PrintError("DuplicateHandle (thread)");
     }
-    return false;
+    return;
   }
 
   data.skipFrames = aSkipFrames;
@@ -731,16 +731,14 @@ MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   for (uint32_t i = 0; i < data.pc_count; ++i) {
     (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);
   }
-
-  return data.pc_count != 0;
 }
 
-MFBT_API bool
+MFBT_API void
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure)
 {
-  return MozStackWalkThread(aCallback, aSkipFrames, aMaxFrames, aClosure,
-                            nullptr, nullptr);
+  MozStackWalkThread(aCallback, aSkipFrames, aMaxFrames, aClosure,
+                     nullptr, nullptr);
 }
 
 static BOOL CALLBACK
@@ -995,7 +993,7 @@ void DemangleSymbol(const char* aSymbol,
 #if ((defined(__i386) || defined(PPC) || defined(__ppc__)) && \
      (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX))
 
-MFBT_API bool
+MFBT_API void
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure)
 {
@@ -1037,8 +1035,8 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 #else
 #  error Unsupported configuration
 #endif
-  return FramePointerStackWalk(aCallback, aSkipFrames, aMaxFrames,
-                               aClosure, bp, stackEnd);
+  FramePointerStackWalk(aCallback, aSkipFrames, aMaxFrames, aClosure, bp,
+                        stackEnd);
 }
 
 #elif defined(HAVE__UNWIND_BACKTRACE)
@@ -1052,7 +1050,6 @@ struct unwind_info
   int skip;
   int maxFrames;
   int numFrames;
-  bool isCriticalAbort;
   void* closure;
 };
 
@@ -1063,7 +1060,6 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
   void* pc = reinterpret_cast<void*>(_Unwind_GetIP(context));
   // TODO Use something like '_Unwind_GetGR()' to get the stack pointer.
   if (IsCriticalAddress(pc)) {
-    info->isCriticalAbort = true;
     // We just want to stop the walk, so any error code will do.  Using
     // _URC_NORMAL_STOP would probably be the most accurate, but it is not
     // defined on Android for ARM.
@@ -1080,7 +1076,7 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
   return _URC_NO_REASON;
 }
 
-MFBT_API bool
+MFBT_API void
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure)
 {
@@ -1090,23 +1086,18 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   info.skip = aSkipFrames + 1;
   info.maxFrames = aMaxFrames;
   info.numFrames = 0;
-  info.isCriticalAbort = false;
   info.closure = aClosure;
 
-  (void)_Unwind_Backtrace(unwind_callback, &info);
-
-  // We ignore the return value from _Unwind_Backtrace and instead determine
-  // the outcome from |info|.  There are two main reasons for this:
+  // We ignore the return value from _Unwind_Backtrace. There are three main
+  // reasons for this.
   // - On ARM/Android bionic's _Unwind_Backtrace usually (always?) returns
   //   _URC_FAILURE.  See
   //   https://bugzilla.mozilla.org/show_bug.cgi?id=717853#c110.
   // - If aMaxFrames != 0, we want to stop early, and the only way to do that
   //   is to make unwind_callback return something other than _URC_NO_REASON,
   //   which causes _Unwind_Backtrace to return a non-success code.
-  if (info.isCriticalAbort) {
-    return false;
-  }
-  return info.numFrames != 0;
+  // - MozStackWalk doesn't have a return value anyway.
+  (void)_Unwind_Backtrace(unwind_callback, &info);
 }
 
 #endif
@@ -1150,11 +1141,10 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 
 #else // unsupported platform.
 
-MFBT_API bool
+MFBT_API void
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
              uint32_t aMaxFrames, void* aClosure)
 {
-  return false;
 }
 
 MFBT_API bool
@@ -1173,7 +1163,7 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 
 #if defined(XP_WIN) || defined (XP_MACOSX) || defined (XP_LINUX)
 namespace mozilla {
-bool
+void
 FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                       uint32_t aMaxFrames, void* aClosure, void** aBp,
                       void* aStackEnd)
@@ -1204,7 +1194,7 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
     aBp += 2;
 #endif
     if (IsCriticalAddress(pc)) {
-      return false;
+      return;
     }
     if (--skip < 0) {
       // Assume that the SP points to the BP of the function
@@ -1219,19 +1209,17 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
     }
     aBp = next;
   }
-  return numFrames != 0;
 }
 } // namespace mozilla
 
 #else
 
 namespace mozilla {
-MFBT_API bool
+MFBT_API void
 FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                       uint32_t aMaxFrames, void* aClosure, void** aBp,
                       void* aStackEnd)
 {
-  return false;
 }
 }
 
