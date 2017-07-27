@@ -748,6 +748,10 @@ class Onboarding {
                                  "onboarding.notification-icon-tooltip-updated",
       [BRAND_SHORT_NAME], 1);
     div.querySelector("#onboarding-notification-icon").setAttribute("data-tooltip", toolTip);
+
+    let closeBtn = div.querySelector("#onboarding-notification-close-btn");
+    closeBtn.setAttribute("title",
+      this._bundle.GetStringFromName("onboarding.notification-close-button-tooltip"));
     return div;
   }
 
@@ -784,9 +788,12 @@ class Onboarding {
     `;
 
     div.querySelector("label[for='onboarding-tour-hidden-checkbox']").textContent =
-       this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
+      this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
     div.querySelector("#onboarding-header").textContent =
-       this._bundle.GetStringFromName("onboarding.overlay-title2");
+      this._bundle.GetStringFromName("onboarding.overlay-title2");
+    let closeBtn = div.querySelector("#onboarding-overlay-close-btn");
+    closeBtn.setAttribute("title",
+      this._bundle.GetStringFromName("onboarding.overlay-close-button-tooltip"));
     return div;
   }
 
