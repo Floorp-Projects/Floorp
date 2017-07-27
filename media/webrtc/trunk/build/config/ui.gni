@@ -31,10 +31,10 @@ declare_args() {
 
   # Indicates if Aura is enabled. Aura is a low-level windowing library, sort
   # of a replacement for GDI or GTK.
-  use_aura = is_win || is_linux
+  use_aura = (is_win || is_linux) && !build_with_mozilla
 
   # Whether we should use glib, a low level C utility library.
-  use_glib = is_linux
+  use_glib = is_linux && !build_with_mozilla
 }
 
 declare_args() {
@@ -55,7 +55,7 @@ if (use_ozone) {
   use_glib = false
 }
 
-if (is_linux && !use_ozone) {
+if (is_linux && !use_ozone && !build_with_mozilla) {
   use_cairo = true
   use_pango = true
 } else {

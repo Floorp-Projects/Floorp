@@ -42,8 +42,6 @@ namespace {
 
 #endif  // !defined(WEBRTC_ARCH_LITTLE_ENDIAN)
 
-const int kBytesPerPixel = DesktopFrame::kBytesPerPixel;
-
 // Pixel colors used when generating cursor outlines.
 const uint32_t kPixelRgbaBlack = RGBA(0, 0, 0, 0xff);
 const uint32_t kPixelRgbaWhite = RGBA(0xff, 0xff, 0xff, 0xff);
@@ -76,7 +74,7 @@ void AddCursorOutline(int width, int height, uint32_t* data) {
 // Premultiplies RGB components of the pixel data in the given image by
 // the corresponding alpha components.
 void AlphaMul(uint32_t* data, int width, int height) {
-  static_assert(sizeof(uint32_t) == kBytesPerPixel,
+  static_assert(sizeof(uint32_t) == DesktopFrame::kBytesPerPixel,
                 "size of uint32 should be the number of bytes per pixel");
 
   for (uint32_t* data_end = data + width * height; data != data_end; ++data) {
@@ -144,7 +142,7 @@ MouseCursor* CreateMouseCursorFromHCursor(HDC dc, HCURSOR cursor) {
   bmi.bV5Width = width;
   bmi.bV5Height = -height;  // request a top-down bitmap.
   bmi.bV5Planes = 1;
-  bmi.bV5BitCount = kBytesPerPixel * 8;
+  bmi.bV5BitCount = DesktopFrame::kBytesPerPixel * 8;
   bmi.bV5Compression = BI_RGB;
   bmi.bV5AlphaMask = 0xff000000;
   bmi.bV5CSType = LCS_WINDOWS_COLOR_SPACE;
