@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="iso-8859-1" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-paged">
 <head>
   <title>Media Query - Print mode test - min-width</title>
   <style type="text/css"><![CDATA[
@@ -8,7 +8,7 @@
     @media print { .a { color: aqua; } }
     @media screen { .b { color: aqua; } }
 
-    /* we set the width to 5 inches/360pt/127mm in the reftest-print class*/
+    /* we set the width to 5 inches/360pt/127mm in the reftest-paged class*/
     @media (min-width: 5in) { .c { color: aqua; } }    /* y */
     @media (min-width: 360pt) { .d { color: aqua; } }  /* y */ 
     @media (min-width: 127mm) { .e { color: aqua; } }  /* y */

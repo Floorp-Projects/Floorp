@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
           ProcessHangMonitor:false, ReaderParent:false, RecentWindow:false,
           RemotePrompt:false, SessionStore:false,
           ShellService:false, SimpleServiceDiscovery:false, TabCrashHandler:false,
-          Task:false, UITour:false, UIState:false, UpdateListener:false, WebChannel:false,
+          UITour:false, UIState:false, UpdateListener:false, WebChannel:false,
           WindowsRegistry:false, webrtcUI:false */
 
 
@@ -94,7 +94,6 @@ let initializedModules = {};
   ["ShellService", "resource:///modules/ShellService.jsm"],
   ["SimpleServiceDiscovery", "resource://gre/modules/SimpleServiceDiscovery.jsm"],
   ["TabCrashHandler", "resource:///modules/ContentCrashHandlers.jsm"],
-  ["Task", "resource://gre/modules/Task.jsm"],
   ["UIState", "resource://services-sync/UIState.jsm"],
   ["UITour", "resource:///modules/UITour.jsm"],
   ["UpdateListener", "resource://gre/modules/UpdateListener.jsm", "init"],

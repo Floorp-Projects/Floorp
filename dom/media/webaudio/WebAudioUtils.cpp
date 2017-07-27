@@ -104,8 +104,7 @@ WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID, const char* aKey)
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
       "dom::WebAudioUtils::LogToDeveloperConsole",
       [aWindowID, aKey] { LogToDeveloperConsole(aWindowID, aKey); });
-    SystemGroup::Dispatch("dom::WebAudioUtils::LogToDeveloperConsole",
-        TaskCategory::Other, task.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
     return;
   }
 

@@ -89,7 +89,8 @@ NS_IMPL_ISUPPORTS(WebSocketChannel,
                   nsIInterfaceRequestor,
                   nsIChannelEventSink,
                   nsIThreadRetargetableRequest,
-                  nsIObserver)
+                  nsIObserver,
+                  nsINamed)
 
 // We implement RFC 6455, which uses Sec-WebSocket-Version: 13 on the wire.
 #define SEC_WEBSOCKET_VERSION "13"
@@ -3317,6 +3318,15 @@ WebSocketChannel::Notify(nsITimer *timer)
     MOZ_ASSERT(0, "Unknown Timer");
   }
 
+  return NS_OK;
+}
+
+// nsINamed
+
+NS_IMETHODIMP
+WebSocketChannel::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("WebSocketChannel");
   return NS_OK;
 }
 

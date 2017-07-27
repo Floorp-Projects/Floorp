@@ -3656,6 +3656,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpConnectionMgr::nsHalfOpenSocket)
     NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+    NS_INTERFACE_MAP_ENTRY(nsINamed)
     // we have no macro that covers this case.
     if (aIID.Equals(NS_GET_IID(nsHttpConnectionMgr::nsHalfOpenSocket)) ) {
         AddRef();
@@ -4034,6 +4035,13 @@ nsHttpConnectionMgr::nsHalfOpenSocket::Notify(nsITimer *timer)
 
     mSynTimer = nullptr;
     return NS_OK;
+}
+
+NS_IMETHODIMP // method for nsINamed
+nsHttpConnectionMgr::nsHalfOpenSocket::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsHttpConnectionMgr::nsHalfOpenSocket");
+  return NS_OK;
 }
 
 already_AddRefed<nsHttpConnectionMgr::PendingTransactionInfo>

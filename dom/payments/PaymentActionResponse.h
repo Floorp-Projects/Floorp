@@ -14,6 +14,53 @@ namespace dom {
 
 class PaymentRequestParent;
 
+class PaymentResponseData : public nsIPaymentResponseData
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPAYMENTRESPONSEDATA
+
+  PaymentResponseData() = default;
+
+protected:
+  virtual ~PaymentResponseData() = default;
+
+  uint32_t mType;
+};
+
+class GeneralResponseData final : public PaymentResponseData
+                                , public nsIGeneralResponseData
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIPAYMENTRESPONSEDATA(PaymentResponseData::)
+  NS_DECL_NSIGENERALRESPONSEDATA
+
+  GeneralResponseData();
+
+private:
+  ~GeneralResponseData() = default;
+
+  nsString mData;
+};
+
+class BasicCardResponseData final : public nsIBasicCardResponseData
+                                  , public PaymentResponseData
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_FORWARD_NSIPAYMENTRESPONSEDATA(PaymentResponseData::)
+  NS_DECL_NSIBASICCARDRESPONSEDATA
+
+  BasicCardResponseData();
+
+private:
+  ~BasicCardResponseData() = default;
+
+  nsString mData;
+  nsCOMPtr<nsIPaymentAddress> mBillingAddress;
+};
+
 class PaymentActionResponse : public nsIPaymentActionResponse
 {
 public:

@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsINamed.h"
 #include "nsINetworkInfoService.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDevice.h"
@@ -233,11 +234,13 @@ private:
 class PresentationPresentingInfo final : public PresentationSessionInfo
                                        , public PromiseNativeHandler
                                        , public nsITimerCallback
+                                       , public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   PresentationPresentingInfo(const nsAString& aUrl,
                              const nsAString& aSessionId,

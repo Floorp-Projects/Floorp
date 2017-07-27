@@ -634,8 +634,7 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
     // is not shut down until way too late, so we cannot do that. Instead, we
     // just detect that the dispatch failed and manually unleak the leaked
     // nsIRunnable in that situation.
-    nsresult rv = SystemGroup::Dispatch("NotifyBHRHangObservers",
-                                        TaskCategory::Other,
+    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
                                         do_AddRef(runnable.get()));
     if (NS_FAILED(rv)) {
       // NOTE: We go through `get()` here in order to avoid the

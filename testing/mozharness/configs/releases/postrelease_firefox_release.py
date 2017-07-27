@@ -18,5 +18,5 @@ config = {
     "ssh_user": "ffxbld",
     "ssh_key": "~/.ssh/ffxbld_rsa",
     "ship_it_root": "https://ship-it.mozilla.org",
-    "ship_it_username":  "ffxbld",
+    "ship_it_username":  "ship_it-ffxbld",
 }

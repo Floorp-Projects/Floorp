@@ -244,11 +244,5 @@ TimeoutExecutor::GetName(nsACString& aNameOut)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TimeoutExecutor::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 } // namespace dom
 } // namespace mozilla

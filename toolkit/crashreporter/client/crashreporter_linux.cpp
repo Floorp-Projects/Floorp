@@ -58,11 +58,9 @@ static void LoadSettings()
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck),
                                    settings["IncludeURL"][0] != '0');
     }
-    bool enabled;
+    bool enabled = true;
     if (settings.find("SubmitReport") != settings.end())
       enabled = settings["SubmitReport"][0] != '0';
-    else
-      enabled = ShouldEnableSending();
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck),
                                  enabled);
   }

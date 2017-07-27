@@ -9,6 +9,7 @@
 #include "CacheStorageService.h"
 #include "CacheHashUtils.h"
 #include "nsIEventTarget.h"
+#include "nsINamed.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Atomics.h"
@@ -259,10 +260,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileIOListener, CACHEFILEIOLISTENER_IID)
 
 
 class CacheFileIOManager : public nsITimerCallback
+                         , public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   enum {
     OPEN         =  0U,

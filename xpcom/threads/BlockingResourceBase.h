@@ -50,7 +50,7 @@ class BlockingResourceBase
 {
 public:
   // Needs to be kept in sync with kResourceTypeNames.
-  enum BlockingResourceType { eMutex, eReentrantMonitor, eCondVar };
+  enum BlockingResourceType { eMutex, eReentrantMonitor, eCondVar, eRecursiveMutex };
 
   /**
    * kResourceTypeName

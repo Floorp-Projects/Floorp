@@ -11,6 +11,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditRules.h"
 #include "nsIEditor.h"
+#include "nsINamed.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
 #include "nsString.h"
@@ -40,6 +41,7 @@ class Selection;
  */
 class TextEditRules : public nsIEditRules
                     , public nsITimerCallback
+                    , public nsINamed
 {
 public:
   typedef dom::Element Element;
@@ -67,6 +69,9 @@ public:
                          nsresult aResult) override;
   NS_IMETHOD_(bool) DocumentIsEmpty() override;
   NS_IMETHOD DocumentModified() override;
+
+  // nsINamed methods
+  NS_DECL_NSINAMED
 
 protected:
   virtual ~TextEditRules();

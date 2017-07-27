@@ -82,7 +82,8 @@ public:
   static already_AddRefed<ContentClient> CreateContentClient(CompositableForwarder* aFwd);
 
   explicit ContentClient(CompositableForwarder* aForwarder)
-  : CompositableClient(aForwarder)
+  : CompositableClient(aForwarder),
+    mInAsyncPaint(false)
   {}
   virtual ~ContentClient()
   {}
@@ -103,7 +104,11 @@ public:
 
   // call before and after painting into this content client
   virtual void BeginPaint() {}
+  virtual void BeginAsyncPaint();
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr);
+
+protected:
+  bool mInAsyncPaint;
 };
 
 /**
@@ -243,6 +248,7 @@ public:
    * are affected by mapping/unmapping.
    */
   virtual void BeginPaint() override;
+  virtual void BeginAsyncPaint() override;
   virtual void EndPaint(nsTArray<ReadbackProcessor::Update>* aReadbackUpdates = nullptr) override;
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
@@ -347,6 +353,7 @@ public:
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) override;
 
   virtual void BeginPaint() override;
+  virtual void BeginAsyncPaint() override;
 
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) override;
 

@@ -682,6 +682,11 @@ DOCUMENT_ONLY_EVENT(selectionchange,
                     eSelectionChange,
                     EventNameType_HTMLXUL,
                     eBasicEventClass)
+DOCUMENT_ONLY_EVENT(visibilitychange,
+                    eVisibilityChange,
+                    EventNameType_HTMLXUL,
+                    eBasicEventClass)
+
 
 NON_IDL_EVENT(MozMouseHittest,
               eMouseHitTest,

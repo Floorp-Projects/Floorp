@@ -65,15 +65,6 @@ Runnable::GetName(nsACString& aName)
   return NS_OK;
 }
 
-nsresult
-Runnable::SetName(const char* aName)
-{
-#ifndef RELEASE_OR_BETA
-  mName = aName;
-#endif
-  return NS_OK;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED(CancelableRunnable, Runnable,
                             nsICancelableRunnable)
 

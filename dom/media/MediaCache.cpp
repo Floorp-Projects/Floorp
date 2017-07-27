@@ -1509,9 +1509,7 @@ MediaCache::QueueUpdate()
   // shutdown and get freed in the final cycle-collector cleanup.  So
   // don't leak a runnable in that case.
   nsCOMPtr<nsIRunnable> event = new UpdateEvent(this);
-  SystemGroup::Dispatch("MediaCache::UpdateEvent",
-                        TaskCategory::Other,
-                        event.forget());
+  SystemGroup::Dispatch(TaskCategory::Other, event.forget());
 }
 
 void

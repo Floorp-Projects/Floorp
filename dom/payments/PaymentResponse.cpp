@@ -5,6 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/PaymentResponse.h"
+#include "mozilla/dom/BasicCardPaymentBinding.h"
+#include "BasicCardPayment.h"
+#include "PaymentAddress.h"
 #include "PaymentRequestUtils.h"
 
 namespace mozilla {
@@ -73,7 +76,25 @@ PaymentResponse::GetMethodName(nsString& aRetVal) const
 void
 PaymentResponse::GetDetails(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal) const
 {
-  DeserializeToJSObject(mDetails, aCx, aRetVal);
+  RefPtr<BasicCardService> service = BasicCardService::GetService();
+  MOZ_ASSERT(service);
+  if (!service->IsBasicCardPayment(mMethodName)) {
+    DeserializeToJSObject(mDetails, aCx, aRetVal);
+  } else {
+    BasicCardResponse response;
+    nsresult rv = service->DecodeBasicCardData(mDetails, mOwner, response);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    MOZ_ASSERT(aCx);
+    JS::RootedValue value(aCx);
+    JS::MutableHandleValue handleValue(&value);
+    if (NS_WARN_IF(!response.ToObjectInternal(aCx, handleValue))) {
+      return;
+    }
+    aRetVal.set(&handleValue.toObject());
+  }
 }
 
 void

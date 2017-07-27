@@ -445,8 +445,7 @@ HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
     this,
     &HTMLTrackElement::DispatchTrustedEvent,
     aEventName);
-  doc->Dispatch("HTMLTrackElement::DispatchTrackRunnable",
-                TaskCategory::Other, runnable.forget());
+  doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 void
