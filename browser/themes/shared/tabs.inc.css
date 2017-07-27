@@ -121,15 +121,15 @@
 }
 
 .tab-sharing-icon-overlay[sharing="camera"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
 }
 
 .tab-sharing-icon-overlay[sharing="microphone"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
 .tab-sharing-icon-overlay[sharing="screen"] {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
 }
 
 .tab-icon-overlay {
