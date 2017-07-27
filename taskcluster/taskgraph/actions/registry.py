@@ -15,7 +15,7 @@ from types import FunctionType
 from collections import namedtuple
 from taskgraph.util.docker import docker_image
 from taskgraph.parameters import Parameters
-from actions import util
+from . import util
 
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
@@ -318,8 +318,8 @@ def _load():
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
     for f in os.listdir(os.path.dirname(__file__)):
-        if f.endswith('.py') and f not in ('__init__.py', 'registry.py'):
-            __import__('actions.' + f[:-3])
+        if f.endswith('.py') and f not in ('__init__.py', 'registry.py', 'util.py'):
+            __import__('taskgraph.actions.' + f[:-3])
     return callbacks, actions
 
 
