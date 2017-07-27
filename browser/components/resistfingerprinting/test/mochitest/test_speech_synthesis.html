@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1333641
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1333641</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1333641 **/
+  SimpleTest.waitForExplicitFinish();
+  window.onload = setupSpeechSynthesis;
+
+  // This function setup the speechSynthesis and flip 'privacy.resistFingerprinting'
+  // after it has been setup correctly.
+  function setupSpeechSynthesis() {
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      isnot(window.speechSynthesis.getVoices().length, 0, "Voices added");
+      SimpleTest.waitForFocus(() => {
+        SpecialPowers.pushPrefEnv({"set":
+          [["privacy.resistFingerprinting", true]]
+        }, doGetVoicesTest);
+      }, window);
+    }, {once: true});
+
+    is(window.speechSynthesis.getVoices().length, 0, "No voices added initially");
+  }
+
+  function doGetVoicesTest() {
+    is(window.speechSynthesis.getVoices().length, 0,
+       "There should be no voices after fingerprinting resistance is enabled.");
+    doVoiceschangedEventTest();
+  }
+
+  function doVoiceschangedEventTest() {
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      ok(false, "The voiceschanged event should not be fired.");
+      doSpeakTestAsync();
+    }, {once: true});
+
+    window.addEventListener("TestEvent", () => {
+      // If we receive this event without receiving a 'voiceschanged' event, this means
+      // the voiceschanged event has been blocked correctly.
+      ok(true, "Got the 'TestEvent' event.");
+      doSpeakTestAsync();
+    }, {once: true});
+
+    // Notify 'synth-voices-changed' for triggering the voiceschanged event.
+    SpecialPowers.Services.obs.notifyObservers(null, "synth-voices-changed");
+    window.dispatchEvent(new CustomEvent("TestEvent"));
+  }
+
+  // This tests Speak() and its asynchronousness.
+  function doSpeakTestAsync() {
+    // For non-e10s, this test will always fail since the event will be triggered immediately
+    // after speak() is called. So, new added events after speak() won't be called. We skip
+    // this test if it is non-e10s.
+    if (SpecialPowers.Services.appinfo.browserTabsRemoteAutostart) {
+      let utterance = new window.SpeechSynthesisUtterance("Hello, world!");
+      window.speechSynthesis.speak(utterance);
+
+      utterance.addEventListener("start", () => {
+        ok(false, "speechSynthesis should not start speaking if fingerprinting resistance is enabled.");
+        doSpeakTestSync();
+      }, {once: true});
+
+      utterance.addEventListener("error", () => {
+        ok(true, "speechSynthesis.speak should fail if fingerprinting resistance is enabled.");
+        doSpeakTestSync();
+      }, {once: true});
+    } else {
+      doSpeakTestSync();
+    }
+  }
+
+  // This tests Speak() and its synchronousness.
+  function doSpeakTestSync() {
+    let utterance = new window.SpeechSynthesisUtterance("Hello, world!");
+    utterance.addEventListener("start", () => {
+      ok(false, "speechSynthesis should not start speaking if fingerprinting resistance is enabled.");
+      SimpleTest.finish();
+    }, {once: true});
+
+    utterance.addEventListener("error", () => {
+      ok(true, "speechSynthesis.speak should fail if fingerprinting resistance is enabled.");
+      SimpleTest.finish();
+    }, {once: true});
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test"></pre>
+</body>
+</html>

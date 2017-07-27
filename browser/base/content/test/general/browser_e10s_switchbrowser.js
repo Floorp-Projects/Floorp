@@ -66,7 +66,7 @@ var waitForLoad = async function(uri) {
                                                  null, null, null,
                                                  Services.scriptSecurityManager.getSystemPrincipal());
 
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   gExpectedHistory.index++;
   gExpectedHistory.entries.push({
     uri: gBrowser.currentURI.spec,
@@ -79,7 +79,7 @@ var waitForLoadWithFlags = async function(uri, flags = Ci.nsIWebNavigation.LOAD_
   info("Loading " + uri + " flags = " + flags);
   gBrowser.selectedBrowser.loadURIWithFlags(uri, flags, null, null, null);
 
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   if (!(flags & Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY)) {
 
     if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY) {
@@ -98,14 +98,14 @@ var waitForLoadWithFlags = async function(uri, flags = Ci.nsIWebNavigation.LOAD_
 var back = async function() {
   info("Going back");
   gBrowser.goBack();
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   gExpectedHistory.index--;
 };
 
 var forward = async function() {
   info("Going forward");
   gBrowser.goForward();
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   gExpectedHistory.index++;
 };
 
@@ -206,7 +206,7 @@ add_task(async function test_synchronous() {
   is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   is(gBrowser.selectedBrowser.isRemoteBrowser, false, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 
@@ -217,7 +217,7 @@ add_task(async function test_synchronous() {
   is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   is(gBrowser.selectedBrowser.isRemoteBrowser, expectedRemote, "Remote attribute should be correct");
   is(gBrowser.selectedBrowser.permanentKey, permanentKey, "browser.permanentKey is still the same");
 

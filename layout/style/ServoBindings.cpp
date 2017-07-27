@@ -2746,13 +2746,17 @@ Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
                                uint32_t sourceLen,
                                uint32_t lineNumber,
                                uint32_t colNumber,
-                               nsIURI* uri)
+                               nsIURI* uri,
+                               const char* followup)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsDependentCSubstring paramValue(param, paramLen);
   nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
   reporter->ReportUnexpectedUnescaped(message, wideParam);
+  if (followup) {
+    reporter->ReportUnexpected(followup);
+  }
   nsDependentCSubstring sourceValue(source, sourceLen);
   reporter->OutputError(lineNumber, colNumber, sourceValue);
 }

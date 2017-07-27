@@ -29,6 +29,12 @@
 
   --toolbarbutton-inner-padding: 3px;
 %endif
+%ifdef MOZ_PHOTON_ANIMATIONS
+  /* This default value of --toolbarbutton-height is defined to prevent
+     CSS errors for an invalid variable. The value should not get used,
+     as a more specific value should be set when the value will be used. */
+  --toolbarbutton-height: 0;
+%endif
 }
 
 /* Larger buttons in touch mode */

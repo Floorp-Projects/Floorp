@@ -489,10 +489,10 @@ Classifier::Check(const nsACString& aSpec,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (has) {
-        LookupResult *result = aResults.AppendElement();
-        if (!result)
+        LookupResult *result = aResults.AppendElement(fallible);
+        if (!result) {
           return NS_ERROR_OUT_OF_MEMORY;
-
+        }
         LOG(("Found a result in %s: %s",
              cache->TableName().get(),
              confirmed ? "confirmed." : "Not confirmed."));

@@ -687,7 +687,8 @@ void Gecko_ReportUnexpectedCSSError(mozilla::css::ErrorReporter* reporter,
                                     uint32_t sourceLen,
                                     uint32_t lineNumber,
                                     uint32_t colNumber,
-                                    nsIURI* aURI);
+                                    nsIURI* aURI,
+                                    const char* followup);
 
 } // extern "C"
 

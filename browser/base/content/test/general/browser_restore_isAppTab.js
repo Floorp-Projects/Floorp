@@ -53,7 +53,7 @@ add_task(async function navigate() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:robots");
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   loadFrameScript(browser);
   let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");
@@ -63,7 +63,7 @@ add_task(async function navigate() {
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.loadURI(DUMMY);
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   loadFrameScript(browser);
   isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
@@ -77,7 +77,7 @@ add_task(async function navigate() {
   ok(isAppTab, "Docshell should think it is an app tab");
 
   gBrowser.loadURI("about:robots");
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   loadFrameScript(browser);
   isAppTab = await isBrowserAppTab(browser);
   ok(isAppTab, "Docshell should think it is an app tab");
@@ -92,7 +92,7 @@ add_task(async function crash() {
   let tab = BrowserTestUtils.addTab(gBrowser, DUMMY);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
-  await waitForDocLoadComplete();
+  await BrowserTestUtils.browserStopped(gBrowser);
   loadFrameScript(browser);
   let isAppTab = await isBrowserAppTab(browser);
   ok(!isAppTab, "Docshell shouldn't think it is an app tab");

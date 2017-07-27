@@ -5,21 +5,21 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const EDIT_PROFILE_URL = "chrome://formautofill/content/editProfile.xhtml";
+const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 this.log = null;
-FormAutofillUtils.defineLazyLogGetter(this, "manageProfiles");
+FormAutofillUtils.defineLazyLogGetter(this, "manageAddresses");
 
-function ManageProfileDialog() {
+function ManageAddressDialog() {
   this.prefWin = window.opener;
   window.addEventListener("DOMContentLoaded", this, {once: true});
 }
 
-ManageProfileDialog.prototype = {
+ManageAddressDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
   _elements: {},
@@ -42,7 +42,7 @@ ManageProfileDialog.prototype = {
 
   init() {
     this._elements = {
-      addresses: document.getElementById("profiles"),
+      addresses: document.getElementById("addresses"),
       controlsContainer: document.getElementById("controls-container"),
       remove: document.getElementById("remove"),
       add: document.getElementById("add"),
@@ -185,7 +185,7 @@ ManageProfileDialog.prototype = {
    * @param  {object} address [optional]
    */
   openEditDialog(address) {
-    this.prefWin.gSubDialog.open(EDIT_PROFILE_URL, null, address);
+    this.prefWin.gSubDialog.open(EDIT_ADDRESS_URL, null, address);
   },
 
   /**
@@ -302,4 +302,4 @@ ManageProfileDialog.prototype = {
   },
 };
 
-new ManageProfileDialog();
+new ManageAddressDialog();

@@ -34,7 +34,6 @@ and try again.
 
 def lint(paths, config, binary=None, fix=None, setup=None, **lintargs):
     """Run eslint."""
-    global project_root
     setup_helper.set_project_root(lintargs['root'])
 
     module_path = setup_helper.get_project_root()
