@@ -1635,8 +1635,6 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             ExprVar('mozilla::ipc::CreateEndpoints'),
             args=[ _backstagePass(),
                    parentpidvar, childpidvar,
-                   _protocolId(p),
-                   ExprVar(_messageStartName(p) + 'Child'),
                    parentvar, childvar
                    ])))
         return openfunc
