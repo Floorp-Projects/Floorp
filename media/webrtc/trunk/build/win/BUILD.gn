@@ -15,7 +15,7 @@ windows_manifest("default_exe_manifest") {
   type = "exe"
 }
 
-if (is_win) {
+if (is_win && !build_with_mozilla) {
   action("copy_cdb_to_output") {
     script = "//build/win/copy_cdb_to_output.py"
     inputs = [
