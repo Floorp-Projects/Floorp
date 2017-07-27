@@ -26,6 +26,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIStringStream.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIUploadChannel.h"
 #include "nsIScriptError.h"
 #include "nsIWebNavigation.h"
@@ -505,7 +506,7 @@ NS_IMETHODIMP
 nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
                               const nsAString& aNonce,
                               bool aParserCreated,
-                              const nsAString& aContent,
+                              nsISupports* aElementOrContent,
                               uint32_t aLineNumber,
                               bool* outAllowsInline)
 {
@@ -520,12 +521,36 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
+   nsAutoString content(EmptyString());
+
   // always iterate all policies, otherwise we might not send out all reports
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     bool allowed =
       mPolicies[i]->allows(aContentType, CSP_UNSAFE_INLINE, EmptyString(), aParserCreated) ||
-      mPolicies[i]->allows(aContentType, CSP_NONCE, aNonce, aParserCreated) ||
-      mPolicies[i]->allows(aContentType, CSP_HASH, aContent, aParserCreated);
+      mPolicies[i]->allows(aContentType, CSP_NONCE, aNonce, aParserCreated);
+
+    // If the inlined script or style is allowed by either unsafe-inline or the
+    // nonce, go ahead and shortcut this loop so we can avoid allocating
+    // unecessary strings
+    if (allowed) {
+      continue;
+    }
+
+    // Check the content length to ensure the content is not allocated more than
+    // once. Even though we are in a for loop, it is probable that there is only one
+    // policy, so this check may be unnecessary.
+    if (content.Length() == 0) {
+      // postpone the allocation until absolutely necessary.
+      nsCOMPtr<nsISupportsString> stringContent = do_QueryInterface(aElementOrContent);
+      nsCOMPtr<nsIScriptElement> element = do_QueryInterface(aElementOrContent);
+      if (stringContent) {
+        Unused << stringContent->GetData(content);
+      } else if (element) {
+        element->GetScriptText(content);
+      }
+    }
+
+    allowed = mPolicies[i]->allows(aContentType, CSP_HASH, content, aParserCreated);
 
     if (!allowed) {
       // policy is violoated: deny the load unless policy is report only and
@@ -537,7 +562,7 @@ nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
       mPolicies[i]->getDirectiveStringForContentType(aContentType, violatedDirective);
       reportInlineViolation(aContentType,
                             aNonce,
-                            aContent,
+                            content,
                             violatedDirective,
                             i,
                             aLineNumber);

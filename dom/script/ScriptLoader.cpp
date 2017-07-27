@@ -1110,13 +1110,9 @@ CSPAllowsInlineScript(nsIScriptElement* aElement, nsIDocument* aDocument)
   scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
   bool parserCreated = aElement->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER;
 
-  // query the scripttext
-  nsAutoString scriptText;
-  aElement->GetScriptText(scriptText);
-
   bool allowInlineScript = false;
   rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
-                            nonce, parserCreated, scriptText,
+                            nonce, parserCreated, aElement,
                             aElement->GetScriptLineNumber(),
                             &allowInlineScript);
   return allowInlineScript;
