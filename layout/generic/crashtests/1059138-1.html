@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Testcase for bug 1059138</title>
+<template>
+  <div class="inner" style="border: 1px solid black; display:flex; width: 500px;">
+    <button class="action-button">
+      ThisIsAButton
+    </button>
+    <content></content>
+  </div>
+</template>
+
+<script>
+  // Gets content from <template>
+  var template = document.querySelector('template').content;
+
+  // Creates an object based in the HTML Element prototype
+  var MyElementProto = Object.create(HTMLElement.prototype);
+
+  // Fires when an instance of the element is created
+  MyElementProto.createdCallback = function() {
+    // Creates the shadow root
+    var shadowRoot = this.createShadowRoot();
+
+    // Adds a template clone into shadow root
+    var clone = document.importNode(template, true);
+    shadowRoot.appendChild(clone);
+  };
+  // Registers <my-elem> in the main document
+  window.MyElement = document.registerElement('my-elem', {
+      prototype: MyElementProto
+  });
+</script>
+</head>
+<body>
+  <my-elem><div>ThisIsADivFlexItem</div></my-elem>
+</body>
+</html>
