@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.activity;
 
+import android.os.RemoteException;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.uiautomator.UiDevice;
@@ -177,6 +178,9 @@ public final class TestHelper {
     }
     static void pressHomeKey() {
         mDevice.pressHome();
+    }
+    static void pressRecentAppsKey() throws RemoteException {
+        mDevice.pressRecentApps();
     }
     static void openNotification() {
         mDevice.openNotification();

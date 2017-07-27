@@ -62,6 +62,10 @@ public class ImageSelectTest {
                         .addHeader("Set-Cookie", "sphere=battery; Expires=Wed, 21 Oct 2035 07:28:00 GMT;"));
                 webServer.enqueue(new MockResponse()
                         .setBody(TestHelper.readTestAsset("rabbit.jpg")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("download.jpg")));
+                webServer.enqueue(new MockResponse()
+                        .setBody(TestHelper.readTestAsset("rabbit.jpg")));
 
                 webServer.start();
             } catch (IOException e) {
@@ -204,19 +208,15 @@ public class ImageSelectTest {
         TestHelper.urlBar.click();
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
         TestHelper.inlineAutocompleteEditText.clearTextField();
-        TestHelper.inlineAutocompleteEditText.setText("http://www.google.com");
+        TestHelper.inlineAutocompleteEditText.setText(webServer.url(TEST_PATH).toString());
         TestHelper.hint.waitForExists(waitingTime);
         TestHelper.pressEnterKey();
         TestHelper.webView.waitForExists(waitingTime);
 
         // Find image and long tap it
-        UiObject webImage = TestHelper.mDevice.findObject(new UiSelector()
-                .className("android.view.View")
-                .instance(2)
-                .enabled(true));
-        webImage.waitForExists(waitingTime);
-        Assert.assertTrue(webImage.exists());
-        webImage.dragTo(webImage, 5);
+        rabbitImage.waitForExists(waitingTime);
+        Assert.assertTrue(rabbitImage.exists());
+        rabbitImage.dragTo(rabbitImage, 5);
         imageMenuTitle.waitForExists(waitingTime);
         Assert.assertTrue(imageMenuTitle.exists());
         Assert.assertTrue(shareMenu.exists());

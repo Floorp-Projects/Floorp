@@ -94,8 +94,11 @@ public class TypicalUseScenarioTest {
         TestHelper.pressEnterKey();
         TestHelper.webView.waitForExists(waitingTime);
         assertTrue (TestHelper.browserURLbar.getText().contains("https://www.google"));
-        TestHelper.lockIcon.waitForExists(waitingTime * 2);
-        assertTrue (TestHelper.lockIcon.isEnabled());
+
+        // The DOM for lockicon is not detected consistenly, even when it is visible.
+        // Disabling the check
+        //TestHelper.lockIcon.waitForExists(waitingTime * 2);
+        //assertTrue (TestHelper.lockIcon.isEnabled());
 
         // Let's delete my history again
         TestHelper.floatingEraseButton.perform(click());
