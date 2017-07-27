@@ -35,7 +35,7 @@ window {
 }
 
 #screenShareButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#screen-indicator");
+  background-image: url("chrome://browser/skin/notification-icons/screen-indicator.svg");
   background-position: center center;
   background-repeat: no-repeat;
   background-size: 16px;
@@ -67,17 +67,17 @@ window[sharingaudio] > #audioVideoButton {
 }
 
 window[sharingvideo] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#camera-indicator");
+  background-image: url("chrome://browser/skin/notification-icons/camera-indicator.svg");
 }
 
 window[sharingaudio] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#microphone-indicator");
+  background-image: url("chrome://browser/skin/notification-icons/microphone-indicator.svg");
 }
 
 /* Multi-icon button: */
 window[sharingaudio][sharingvideo] > #audioVideoButton {
-  background-image: url("chrome://browser/skin/notification-icons.svg#camera-indicator"),
-                    url("chrome://browser/skin/notification-icons.svg#microphone-indicator");
+  background-image: url("chrome://browser/skin/notification-icons/camera-indicator.svg"),
+                    url("chrome://browser/skin/notification-icons/microphone-indicator.svg");
   background-position: 6px center, 26px center;
   background-size: 16px, 16px;
   min-width: 46px;
