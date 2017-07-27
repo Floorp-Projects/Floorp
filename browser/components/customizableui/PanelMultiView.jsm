@@ -839,10 +839,10 @@ this.PanelMultiView = class {
               this._mainView.setAttribute("exceeding", "true");
             }
           };
-          // On Windows, we cannot measure the full height of the main view
+          // On some platforms we cannot measure the full height of the main view
           // until it is visible. Unfortunately, this causes a visible jump when
           // the view needs to scroll, but there is no easy way around this.
-          if (AppConstants.platform == "win") {
+          if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
             // We register a "once" listener so we don't need to store the value
             // of maxHeight elsewhere on the object.
             this._panel.addEventListener("popupshown", blockInBoxWorkaround,
