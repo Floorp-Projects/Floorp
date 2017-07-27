@@ -64,7 +64,7 @@ HasListenersForKeyEvents(nsIContent* aContent)
       nullptr, nullptr, &targets);
   NS_ENSURE_SUCCESS(rv, false);
   for (size_t i = 0; i < targets.Length(); i++) {
-    if (targets[i]->HasUntrustedOrNonSystemGroupKeyEventListeners()) {
+    if (targets[i]->HasNonSystemGroupListenersForUntrustedKeyEvents()) {
       return true;
     }
   }
