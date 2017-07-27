@@ -50,6 +50,11 @@ add_task(function* () {
   yield onDataChanged;
 
   checkScrubberIsAt(scrubberEl, timeHeaderEl, 0);
+
+  // Wait for promise of setCurrentTimes if setCurrentTimes is running.
+  if (panel.setCurrentTimeAllPromise) {
+    yield panel.setCurrentTimeAllPromise;
+  }
 });
 
 function* synthesizeInHeaderAndWaitForChange(timeline, x, y, type) {
