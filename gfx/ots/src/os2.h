@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,7 +9,7 @@
 
 namespace ots {
 
-struct OpenTypeOS2 {
+struct OS2Data {
   uint16_t version;
   int16_t avg_char_width;
   uint16_t weight_class;
@@ -49,6 +49,17 @@ struct OpenTypeOS2 {
   uint16_t max_context;
   uint16_t lower_optical_pointsize;
   uint16_t upper_optical_pointsize;
+};
+
+class OpenTypeOS2 : public Table {
+ public:
+  explicit OpenTypeOS2(Font *font, uint32_t tag)
+      : Table(font, tag, tag) { }
+
+  bool Parse(const uint8_t *data, size_t length);
+  bool Serialize(OTSStream *out);
+
+  OS2Data table;
 };
 
 }  // namespace ots

@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,7 +13,14 @@
 
 namespace ots {
 
-struct OpenTypeMetricsHeader {
+class OpenTypeMetricsHeader : public Table {
+ public:
+  explicit OpenTypeMetricsHeader(Font *font, uint32_t tag, uint32_t type)
+      : Table(font, tag, type) { }
+
+  bool Parse(const uint8_t *data, size_t length);
+  bool Serialize(OTSStream *out);
+
   uint32_t version;
   int16_t ascent;
   int16_t descent;
@@ -28,27 +35,22 @@ struct OpenTypeMetricsHeader {
   uint16_t num_metrics;
 };
 
-struct OpenTypeMetricsTable {
+struct OpenTypeMetricsTable : public Table {
+ public:
+  explicit OpenTypeMetricsTable(Font *font, uint32_t tag, uint32_t type,
+                                uint32_t header_tag)
+      : Table(font, tag, type), m_header_tag(header_tag) { }
+
+  bool Parse(const uint8_t *data, size_t length);
+  bool Serialize(OTSStream *out);
+
+ private:
+  uint32_t m_header_tag;
+
   std::vector<std::pair<uint16_t, int16_t> > entries;
   std::vector<int16_t> sbs;
 };
 
-bool ParseMetricsHeader(Font *font, Buffer *table,
-                        OpenTypeMetricsHeader *header);
-bool SerialiseMetricsHeader(const ots::Font *font,
-                            OTSStream *out,
-                            const OpenTypeMetricsHeader *header);
-
-bool ParseMetricsTable(const ots::Font *font,
-                       Buffer *table,
-                       const uint16_t num_glyphs,
-                       const OpenTypeMetricsHeader *header,
-                       OpenTypeMetricsTable *metrics);
-bool SerialiseMetricsTable(const ots::Font *font,
-                           OTSStream *out,
-                           const OpenTypeMetricsTable *metrics);
-
 }  // namespace ots
 
 #endif  // OTS_METRICS_H_
-

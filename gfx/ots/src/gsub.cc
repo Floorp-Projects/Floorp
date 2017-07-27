@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -82,7 +82,12 @@ bool ParseSingleSubstitution(const ots::Font *font,
     return OTS_FAILURE_MSG("Failed to read single subst table header");
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
   if (format == 1) {
     // Parse SingleSubstFormat1
     int16_t delta_glyph_id = 0;
@@ -170,7 +175,12 @@ bool ParseMutipleSubstitution(const ots::Font *font,
     return OTS_FAILURE_MSG("Bad multiple subst table format %d", format);
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
   const unsigned sequence_end = static_cast<unsigned>(6) +
       sequence_count * 2;
   if (sequence_end > std::numeric_limits<uint16_t>::max()) {
@@ -245,7 +255,12 @@ bool ParseAlternateSubstitution(const ots::Font *font,
     return OTS_FAILURE_MSG("Bad alternate subst table format %d", format);
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
   const unsigned alternate_set_end = static_cast<unsigned>(6) +
       alternate_set_count * 2;
   if (alternate_set_end > std::numeric_limits<uint16_t>::max()) {
@@ -362,7 +377,12 @@ bool ParseLigatureSubstitution(const ots::Font *font,
     return OTS_FAILURE_MSG("Bad ligature substitution table format %d", format);
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
   const unsigned ligature_set_end = static_cast<unsigned>(6) +
       lig_set_count * 2;
   if (ligature_set_end > std::numeric_limits<uint16_t>::max()) {
@@ -398,8 +418,18 @@ bool ParseLigatureSubstitution(const ots::Font *font,
 // Contextual Substitution Subtable
 bool ParseContextSubstitution(const ots::Font *font,
                               const uint8_t *data, const size_t length) {
-  return ots::ParseContextSubtable(font, data, length, font->maxp->num_glyphs,
-                                   font->gsub->num_lookups);
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  ots::OpenTypeGSUB *gsub = static_cast<ots::OpenTypeGSUB*>(
+      font->GetTypedTable(OTS_TAG_GSUB));
+  if (!gsub) {
+    return OTS_FAILURE_MSG("Internal error!");
+  }
+  return ots::ParseContextSubtable(font, data, length, maxp->num_glyphs,
+                                   gsub->num_lookups);
 }
 
 // Lookup Type 6:
@@ -407,9 +437,19 @@ bool ParseContextSubstitution(const ots::Font *font,
 bool ParseChainingContextSubstitution(const ots::Font *font,
                                       const uint8_t *data,
                                       const size_t length) {
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  ots::OpenTypeGSUB *gsub = static_cast<ots::OpenTypeGSUB*>(
+      font->GetTypedTable(OTS_TAG_GSUB));
+  if (!gsub) {
+    return OTS_FAILURE_MSG("Internal error!");
+  }
   return ots::ParseChainingContextSubtable(font, data, length,
-                                           font->maxp->num_glyphs,
-                                           font->gsub->num_lookups);
+                                           maxp->num_glyphs,
+                                           gsub->num_lookups);
 }
 
 // Lookup Type 7:
@@ -434,7 +474,12 @@ bool ParseReverseChainingContextSingleSubstitution(
     return OTS_FAILURE_MSG("Failed to read reverse chaining header");
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  ots::OpenTypeMAXP *maxp = static_cast<ots::OpenTypeMAXP*>(
+      font->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return OTS_FAILURE_MSG("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
 
   uint16_t backtrack_glyph_count = 0;
   if (!subtable.ReadU16(&backtrack_glyph_count)) {
@@ -530,66 +575,10 @@ bool ParseReverseChainingContextSingleSubstitution(
 
 namespace ots {
 
-// As far as I checked, following fonts contain invalid values in GSUB table.
-// OTS will drop their GSUB table.
-//
-// # too large substitute (value is 0xFFFF)
-// kaiu.ttf
-// mingliub2.ttf
-// mingliub1.ttf
-// mingliub0.ttf
-// GraublauWeb.otf
-// GraublauWebBold.otf
-//
-// # too large alternate (value is 0xFFFF)
-// ManchuFont.ttf
-//
-// # bad offset to lang sys table (NULL offset)
-// DejaVuMonoSansBold.ttf
-// DejaVuMonoSansBoldOblique.ttf
-// DejaVuMonoSansOblique.ttf
-// DejaVuSansMono-BoldOblique.ttf
-// DejaVuSansMono-Oblique.ttf
-// DejaVuSansMono-Bold.ttf
-//
-// # bad start coverage index
-// GenBasBI.ttf
-// GenBasI.ttf
-// AndBasR.ttf
-// GenBkBasI.ttf
-// CharisSILR.ttf
-// CharisSILBI.ttf
-// CharisSILI.ttf
-// CharisSILB.ttf
-// DoulosSILR.ttf
-// CharisSILBI.ttf
-// GenBkBasB.ttf
-// GenBkBasR.ttf
-// GenBkBasBI.ttf
-// GenBasB.ttf
-// GenBasR.ttf
-//
-// # glyph range is overlapping
-// KacstTitleL.ttf
-// KacstDecorative.ttf
-// KacstTitle.ttf
-// KacstArt.ttf
-// KacstPoster.ttf
-// KacstQurn.ttf
-// KacstDigital.ttf
-// KacstBook.ttf
-// KacstFarsi.ttf
-
-bool ots_gsub_parse(Font *font, const uint8_t *data, size_t length) {
-  // Parsing gsub table requires |font->maxp->num_glyphs|
-  if (!font->maxp) {
-    return OTS_FAILURE_MSG("Missing maxp table in font, needed by GSUB");
-  }
-
+bool OpenTypeGSUB::Parse(const uint8_t *data, size_t length) {
+  // Parsing gsub table requires |maxp->num_glyphs|
+  Font *font = GetFont();
   Buffer table(data, length);
-
-  OpenTypeGSUB *gsub = new OpenTypeGSUB;
-  font->gsub = gsub;
 
   uint32_t version = 0;
   uint16_t offset_script_list = 0;
@@ -599,74 +588,61 @@ bool ots_gsub_parse(Font *font, const uint8_t *data, size_t length) {
       !table.ReadU16(&offset_script_list) ||
       !table.ReadU16(&offset_feature_list) ||
       !table.ReadU16(&offset_lookup_list)) {
-    return OTS_FAILURE_MSG("Incomplete table");
+    return Error("Incomplete table");
   }
 
   if (version != 0x00010000) {
-    return OTS_FAILURE_MSG("Bad version");
+    return Error("Bad version");
   }
 
   if (offset_lookup_list) {
     if (offset_lookup_list < kGsubHeaderSize || offset_lookup_list >= length) {
-      return OTS_FAILURE_MSG("Bad lookup list offset in table header");
+      return Error("Bad lookup list offset in table header");
     }
 
     if (!ParseLookupListTable(font, data + offset_lookup_list,
                               length - offset_lookup_list,
                               &kGsubLookupSubtableParser,
-                              &gsub->num_lookups)) {
-      return OTS_FAILURE_MSG("Failed to parse lookup list table");
+                              &this->num_lookups)) {
+      return Error("Failed to parse lookup list table");
     }
   }
 
   uint16_t num_features = 0;
   if (offset_feature_list) {
     if (offset_feature_list < kGsubHeaderSize || offset_feature_list >= length) {
-      return OTS_FAILURE_MSG("Bad feature list offset in table header");
+      return Error("Bad feature list offset in table header");
     }
 
     if (!ParseFeatureListTable(font, data + offset_feature_list,
-                               length - offset_feature_list, gsub->num_lookups,
+                               length - offset_feature_list, this->num_lookups,
                                &num_features)) {
-      return OTS_FAILURE_MSG("Failed to parse feature list table");
+      return Error("Failed to parse feature list table");
     }
   }
 
   if (offset_script_list) {
     if (offset_script_list < kGsubHeaderSize || offset_script_list >= length) {
-      return OTS_FAILURE_MSG("Bad script list offset in table header");
+      return Error("Bad script list offset in table header");
     }
 
     if (!ParseScriptListTable(font, data + offset_script_list,
                               length - offset_script_list, num_features)) {
-      return OTS_FAILURE_MSG("Failed to parse script list table");
+      return Error("Failed to parse script list table");
     }
   }
 
-  gsub->data = data;
-  gsub->length = length;
+  this->m_data = data;
+  this->m_length = length;
   return true;
 }
 
-bool ots_gsub_should_serialise(Font *font) {
-  return font->gsub != NULL && font->gsub->data != NULL;
-}
-
-bool ots_gsub_serialise(OTSStream *out, Font *font) {
-  if (!out->Write(font->gsub->data, font->gsub->length)) {
-    return OTS_FAILURE_MSG("Failed to write GSUB table");
+bool OpenTypeGSUB::Serialize(OTSStream *out) {
+  if (!out->Write(this->m_data, this->m_length)) {
+    return Error("Failed to write GSUB table");
   }
 
   return true;
-}
-
-void ots_gsub_reuse(Font *font, Font *other) {
-  font->gsub = other->gsub;
-  font->gsub_reused = true;
-}
-
-void ots_gsub_free(Font *font) {
-  delete font->gsub;
 }
 
 }  // namespace ots

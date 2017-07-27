@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,8 +9,6 @@
 
 // name - Naming Table
 // http://www.microsoft.com/typography/otspec/name.htm
-
-#define TABLE_NAME "name"
 
 namespace {
 
@@ -56,25 +54,22 @@ void AssignToUtf16BeFromAscii(std::string* target,
 
 namespace ots {
 
-bool ots_name_parse(Font *font, const uint8_t* data, size_t length) {
+bool OpenTypeNAME::Parse(const uint8_t* data, size_t length) {
   Buffer table(data, length);
-
-  OpenTypeNAME* name = new OpenTypeNAME;
-  font->name = name;
 
   uint16_t format = 0;
   if (!table.ReadU16(&format) || format > 1) {
-    return OTS_FAILURE_MSG("Failed to read name table format or bad format %d", format);
+    return Error("Failed to read table format or bad format %d", format);
   }
 
   uint16_t count = 0;
   if (!table.ReadU16(&count)) {
-    return OTS_FAILURE_MSG("Failed to read name count");
+    return Error("Failed to read name count");
   }
 
   uint16_t string_offset = 0;
   if (!table.ReadU16(&string_offset) || string_offset > length) {
-    return OTS_FAILURE_MSG("Failed to read strings offset");
+    return Error("Failed to read or bad stringOffset");
   }
   const char* string_base = reinterpret_cast<const char*>(data) +
       string_offset;
@@ -94,7 +89,7 @@ bool ots_name_parse(Font *font, const uint8_t* data, size_t length) {
         !table.ReadU16(&rec.name_id) ||
         !table.ReadU16(&name_length) ||
         !table.ReadU16(&name_offset)) {
-      return OTS_FAILURE_MSG("Failed to read name entry %d", i);
+      return Error("Failed to read name entry %d", i);
     }
     // check platform & encoding, discard names with unknown values
     switch (rec.platform_id) {
@@ -148,40 +143,40 @@ bool ots_name_parse(Font *font, const uint8_t* data, size_t length) {
       }
     }
 
-    if (!name->names.empty() && !(name->names.back() < rec)) {
-      OTS_WARNING("name records are not sorted.");
+    if (!this->names.empty() && !(this->names.back() < rec)) {
+      Warning("name records are not sorted.");
       sort_required = true;
     }
 
-    name->names.push_back(rec);
+    this->names.push_back(rec);
   }
 
   if (format == 1) {
     // extended name table format with language tags
     uint16_t lang_tag_count;
     if (!table.ReadU16(&lang_tag_count)) {
-      return OTS_FAILURE_MSG("Failed to read language tag count");
+      return Error("Failed to read langTagCount");
     }
     for (unsigned i = 0; i < lang_tag_count; ++i) {
       uint16_t tag_length = 0;
       uint16_t tag_offset = 0;
       if (!table.ReadU16(&tag_length) || !table.ReadU16(&tag_offset)) {
-        return OTS_FAILURE_MSG("Faile to read tag length or offset");
+        return Error("Faile to read length or offset for langTagRecord %d", i);
       }
       const unsigned tag_end = static_cast<unsigned>(string_offset) +
           tag_offset + tag_length;
       if (tag_end > length) {
-        return OTS_FAILURE_MSG("bad end of tag %d > %ld for name entry %d", tag_end, length, i);
+        return Error("bad end of tag %d > %ld for langTagRecord %d", tag_end, length, i);
       }
       std::string tag(string_base + tag_offset, tag_length);
-      name->lang_tags.push_back(tag);
+      this->lang_tags.push_back(tag);
     }
   }
 
   if (table.offset() > string_offset) {
     // the string storage apparently overlapped the name/tag records;
     // consider this font to be badly broken
-    return OTS_FAILURE_MSG("Bad table offset %ld > %d", table.offset(), string_offset);
+    return Error("Bad table offset %ld > %d", table.offset(), string_offset);
   }
 
   // check existence of required name strings (synthesize if necessary)
@@ -207,8 +202,8 @@ bool ots_name_parse(Font *font, const uint8_t* data, size_t length) {
   // if not, we'll add our fixed versions here
   bool mac_name[kStdNameCount] = { 0 };
   bool win_name[kStdNameCount] = { 0 };
-  for (std::vector<NameRecord>::iterator name_iter = name->names.begin();
-       name_iter != name->names.end(); ++name_iter) {
+  for (std::vector<NameRecord>::iterator name_iter = this->names.begin();
+       name_iter != this->names.end(); ++name_iter) {
     const uint16_t id = name_iter->name_id;
     if (id >= kStdNameCount || kStdNames[id] == NULL) {
       continue;
@@ -236,48 +231,42 @@ bool ots_name_parse(Font *font, const uint8_t* data, size_t length) {
                          1033 /* language_id */ , i /* name_id */);
       AssignToUtf16BeFromAscii(&win_rec.text, std::string(kStdNames[i]));
 
-      name->names.push_back(mac_rec);
-      name->names.push_back(win_rec);
+      this->names.push_back(mac_rec);
+      this->names.push_back(win_rec);
       sort_required = true;
     }
   }
 
   if (sort_required) {
-    std::sort(name->names.begin(), name->names.end());
+    std::sort(this->names.begin(), this->names.end());
   }
 
   return true;
 }
 
-bool ots_name_should_serialise(Font *font) {
-  return font->name != NULL;
-}
-
-bool ots_name_serialise(OTSStream* out, Font *font) {
-  const OpenTypeNAME* name = font->name;
-
-  uint16_t name_count = static_cast<uint16_t>(name->names.size());
-  uint16_t lang_tag_count = static_cast<uint16_t>(name->lang_tags.size());
+bool OpenTypeNAME::Serialize(OTSStream* out) {
+  uint16_t name_count = static_cast<uint16_t>(this->names.size());
+  uint16_t lang_tag_count = static_cast<uint16_t>(this->lang_tags.size());
   uint16_t format = 0;
   size_t string_offset = 6 + name_count * 12;
 
-  if (name->lang_tags.size() > 0) {
+  if (this->lang_tags.size() > 0) {
     // lang tags require a format-1 name table
     format = 1;
     string_offset += 2 + lang_tag_count * 4;
   }
   if (string_offset > 0xffff) {
-    return OTS_FAILURE_MSG("Bad string offset %ld", string_offset);
+    return Error("Bad stringOffset: %ld", string_offset);
   }
   if (!out->WriteU16(format) ||
       !out->WriteU16(name_count) ||
       !out->WriteU16(static_cast<uint16_t>(string_offset))) {
-    return OTS_FAILURE_MSG("Failed to write name header");
+    return Error("Failed to write name header");
   }
 
   std::string string_data;
-  for (std::vector<NameRecord>::const_iterator name_iter = name->names.begin();
-       name_iter != name->names.end(); ++name_iter) {
+  for (std::vector<NameRecord>::const_iterator name_iter = this->names.begin();
+       name_iter != this->names.end(); ++name_iter) {
     const NameRecord& rec = *name_iter;
     if (string_data.size() + rec.text.size() >
             std::numeric_limits<uint16_t>::max() ||
@@ -287,44 +276,33 @@ bool ots_name_serialise(OTSStream* out, Font *font) {
         !out->WriteU16(rec.name_id) ||
         !out->WriteU16(static_cast<uint16_t>(rec.text.size())) ||
         !out->WriteU16(static_cast<uint16_t>(string_data.size())) ) {
-      return OTS_FAILURE_MSG("Faile to write name entry");
+      return Error("Faile to write nameRecord");
     }
     string_data.append(rec.text);
   }
 
   if (format == 1) {
     if (!out->WriteU16(lang_tag_count)) {
-      return OTS_FAILURE_MSG("Faile to write language tag count");
+      return Error("Faile to write langTagCount");
     }
     for (std::vector<std::string>::const_iterator tag_iter =
-             name->lang_tags.begin();
-         tag_iter != name->lang_tags.end(); ++tag_iter) {
+             this->lang_tags.begin();
+         tag_iter != this->lang_tags.end(); ++tag_iter) {
       if (string_data.size() + tag_iter->size() >
               std::numeric_limits<uint16_t>::max() ||
           !out->WriteU16(static_cast<uint16_t>(tag_iter->size())) ||
           !out->WriteU16(static_cast<uint16_t>(string_data.size()))) {
-        return OTS_FAILURE_MSG("Failed to write string");
+        return Error("Failed to write langTagRecord");
       }
       string_data.append(*tag_iter);
     }
   }
 
   if (!out->Write(string_data.data(), string_data.size())) {
-    return OTS_FAILURE_MSG("Faile to write string data");
+    return Error("Faile to write string data");
   }
 
   return true;
 }
 
-void ots_name_reuse(Font *font, Font *other) {
-  font->name = other->name;
-  font->name_reused = true;
-}
-
-void ots_name_free(Font *font) {
-  delete font->name;
-}
-
 }  // namespace
-
-#undef TABLE_NAME

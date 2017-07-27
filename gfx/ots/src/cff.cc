@@ -1,4 +1,4 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -904,14 +904,13 @@ bool ParseDictData(const uint8_t *data, size_t table_length,
 
 namespace ots {
 
-bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypeCFF::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  font->cff = new OpenTypeCFF;
-  font->cff->data = data;
-  font->cff->length = length;
-  font->cff->font_dict_length = 0;
-  font->cff->local_subrs = NULL;
+  Font *font = GetFont();
+
+  this->m_data = data;
+  this->m_length = length;
 
   // parse "6. Header" in the Adobe Compact Font Format Specification
   uint8_t major = 0;
@@ -949,7 +948,7 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
   if (!ParseIndex(&table, &name_index)) {
     return OTS_FAILURE();
   }
-  if (!ParseNameData(&table, name_index, &(font->cff->name))) {
+  if (!ParseNameData(&table, name_index, &(this->name))) {
     return OTS_FAILURE();
   }
 
@@ -973,14 +972,19 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
     return OTS_FAILURE();
   }
 
-  const uint16_t num_glyphs = font->maxp->num_glyphs;
+  OpenTypeMAXP *maxp = static_cast<OpenTypeMAXP*>(
+    GetFont()->GetTypedTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return Error("Required maxp table missing");
+  }
+  const uint16_t num_glyphs = maxp->num_glyphs;
   const size_t sid_max = string_index.count + kNStdString;
   // string_index.count == 0 is allowed.
 
   // parse "9. Top DICT Data"
   if (!ParseDictData(data, length, top_dict_index,
                      num_glyphs, sid_max,
-                     DICT_DATA_TOPLEVEL, font->cff)) {
+                     DICT_DATA_TOPLEVEL, this)) {
     return OTS_FAILURE();
   }
 
@@ -993,58 +997,44 @@ bool ots_cff_parse(Font *font, const uint8_t *data, size_t length) {
 
   // Check if all fd_index in FDSelect are valid.
   std::map<uint16_t, uint8_t>::const_iterator iter;
-  std::map<uint16_t, uint8_t>::const_iterator end = font->cff->fd_select.end();
-  for (iter = font->cff->fd_select.begin(); iter != end; ++iter) {
-    if (iter->second >= font->cff->font_dict_length) {
+  std::map<uint16_t, uint8_t>::const_iterator end = this->fd_select.end();
+  for (iter = this->fd_select.begin(); iter != end; ++iter) {
+    if (iter->second >= this->font_dict_length) {
       return OTS_FAILURE();
     }
   }
 
   // Check if all charstrings (font hinting code for each glyph) are valid.
-  for (size_t i = 0; i < font->cff->char_strings_array.size(); ++i) {
+  for (size_t i = 0; i < this->char_strings_array.size(); ++i) {
     if (!ValidateType2CharStringIndex(font,
-                                      *(font->cff->char_strings_array.at(i)),
+                                      *(this->char_strings_array.at(i)),
                                       global_subrs_index,
-                                      font->cff->fd_select,
-                                      font->cff->local_subrs_per_font,
-                                      font->cff->local_subrs,
+                                      this->fd_select,
+                                      this->local_subrs_per_font,
+                                      this->local_subrs,
                                       &table)) {
-      return OTS_FAILURE_MSG("Failed validating charstring set %d", (int) i);
+      return Error("Failed validating charstring set %d", (int) i);
     }
   }
 
   return true;
 }
 
-bool ots_cff_should_serialise(Font *font) {
-  return font->cff != NULL;
-}
-
-bool ots_cff_serialise(OTSStream *out, Font *font) {
-  // TODO(yusukes): would be better to transcode the data,
-  //                rather than simple memcpy.
-  if (!out->Write(font->cff->data, font->cff->length)) {
-    return OTS_FAILURE();
+bool OpenTypeCFF::Serialize(OTSStream *out) {
+  if (!out->Write(this->m_data, this->m_length)) {
+    return Error("Failed to write table");
   }
   return true;
 }
 
-void ots_cff_reuse(Font *font, Font *other) {
-  font->cff = other->cff;
-  font->cff_reused = true;
-}
-
-void ots_cff_free(Font *font) {
-  if (font->cff) {
-    for (size_t i = 0; i < font->cff->char_strings_array.size(); ++i) {
-      delete (font->cff->char_strings_array)[i];
-    }
-    for (size_t i = 0; i < font->cff->local_subrs_per_font.size(); ++i) {
-      delete (font->cff->local_subrs_per_font)[i];
-    }
-    delete font->cff->local_subrs;
-    delete font->cff;
+OpenTypeCFF::~OpenTypeCFF() {
+  for (size_t i = 0; i < this->char_strings_array.size(); ++i) {
+    delete (this->char_strings_array)[i];
   }
+  for (size_t i = 0; i < this->local_subrs_per_font.size(); ++i) {
+    delete (this->local_subrs_per_font)[i];
+  }
+  delete this->local_subrs;
 }
 
 }  // namespace ots
