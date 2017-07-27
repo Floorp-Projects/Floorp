@@ -84,6 +84,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
     // The leaf filename is "user" by default, but is configurable.
     nsPrintfCString shmPath("%s/dconf/", userDir);
     policy->AddPrefix(rdwrcr, shmPath.get());
+    policy->AddAncestors(Move(shmPath));
   }
 #endif
 
