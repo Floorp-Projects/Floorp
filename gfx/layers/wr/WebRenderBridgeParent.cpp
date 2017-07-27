@@ -1110,12 +1110,9 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   mCompositableHolder->SetCompositionTime(TimeStamp::Now());
   mCompositableHolder->ApplyAsyncImages(mApi);
 
-  if (gfxPrefs::WebRenderOMTAEnabled()) {
-    SampleAnimations(opacityArray, transformArray);
-
-    if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
-      scheduleComposite = true;
-    }
+  SampleAnimations(opacityArray, transformArray);
+  if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
+    scheduleComposite = true;
   }
 
   if (PushAPZStateToWR(transformArray)) {
