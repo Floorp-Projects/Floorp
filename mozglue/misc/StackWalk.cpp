@@ -110,7 +110,7 @@ my_malloc_logger(uint32_t aType,
   // stack shows up as having two pthread_cond_wait$UNIX2003 frames.
   const char* name = "new_sem_from_pool";
   MozStackWalk(stack_callback, /* skipFrames */ 0, /* maxFrames */ 0,
-               const_cast<char*>(name), 0, nullptr);
+               const_cast<char*>(name));
 }
 
 // This is called from NS_LogInit() and from the stack walking functions, but
@@ -186,7 +186,7 @@ StackWalkInitCriticalAddress()
 }
 #endif
 
-#if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)) // WIN32 x86 stack walking code
+#if MOZ_STACKWALK_SUPPORTS_WINDOWS
 
 #include <windows.h>
 #include <process.h>
@@ -222,7 +222,7 @@ struct WalkStackData
   void** sps;
   uint32_t sp_size;
   uint32_t sp_count;
-  void* platformData;
+  CONTEXT* context;
 };
 
 DWORD gStackWalkThread;
@@ -378,18 +378,20 @@ static void
 WalkStackMain64(struct WalkStackData* aData)
 {
   // Get a context for the specified thread.
-  CONTEXT context;
-  if (!aData->platformData) {
-    memset(&context, 0, sizeof(CONTEXT));
-    context.ContextFlags = CONTEXT_FULL;
-    if (!GetThreadContext(aData->thread, &context)) {
+  CONTEXT context_buf;
+  CONTEXT* context;
+  if (!aData->context) {
+    context = &context_buf;
+    memset(context, 0, sizeof(CONTEXT));
+    context->ContextFlags = CONTEXT_FULL;
+    if (!GetThreadContext(aData->thread, context)) {
       if (aData->walkCallingThread) {
         PrintError("GetThreadContext");
       }
       return;
     }
   } else {
-    context = *static_cast<CONTEXT*>(aData->platformData);
+    context = aData->context;
   }
 
 #if defined(_M_IX86) || defined(_M_IA64)
@@ -397,13 +399,13 @@ WalkStackMain64(struct WalkStackData* aData)
   STACKFRAME64 frame64;
   memset(&frame64, 0, sizeof(frame64));
 #ifdef _M_IX86
-  frame64.AddrPC.Offset    = context.Eip;
-  frame64.AddrStack.Offset = context.Esp;
-  frame64.AddrFrame.Offset = context.Ebp;
+  frame64.AddrPC.Offset    = context->Eip;
+  frame64.AddrStack.Offset = context->Esp;
+  frame64.AddrFrame.Offset = context->Ebp;
 #elif defined _M_IA64
-  frame64.AddrPC.Offset    = context.StIIP;
-  frame64.AddrStack.Offset = context.SP;
-  frame64.AddrFrame.Offset = context.RsBSP;
+  frame64.AddrPC.Offset    = context->StIIP;
+  frame64.AddrStack.Offset = context->SP;
+  frame64.AddrFrame.Offset = context->RsBSP;
 #endif
   frame64.AddrPC.Mode      = AddrModeFlat;
   frame64.AddrStack.Mode   = AddrModeFlat;
@@ -452,7 +454,7 @@ WalkStackMain64(struct WalkStackData* aData)
       aData->process,
       aData->thread,
       &frame64,
-      &context,
+      context,
       nullptr,
       SymFunctionTableAccess64, // function table access routine
       SymGetModuleBase64,       // module base routine
@@ -479,8 +481,8 @@ WalkStackMain64(struct WalkStackData* aData)
     // If we reach a frame in JIT code, we don't have enough information to
     // unwind, so we have to give up.
     if (sJitCodeRegionStart &&
-        (uint8_t*)context.Rip >= sJitCodeRegionStart &&
-        (uint8_t*)context.Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
+        (uint8_t*)context->Rip >= sJitCodeRegionStart &&
+        (uint8_t*)context->Rip < sJitCodeRegionStart + sJitCodeRegionSize) {
       break;
     }
 
@@ -488,8 +490,8 @@ WalkStackMain64(struct WalkStackData* aData)
     // unwind data, so their JIT unwind callback just throws up its hands and
     // terminates the process.
     if (sMsMpegJitCodeRegionStart &&
-        (uint8_t*)context.Rip >= sMsMpegJitCodeRegionStart &&
-        (uint8_t*)context.Rip < sMsMpegJitCodeRegionStart + sMsMpegJitCodeRegionSize) {
+        (uint8_t*)context->Rip >= sMsMpegJitCodeRegionStart &&
+        (uint8_t*)context->Rip < sMsMpegJitCodeRegionStart + sMsMpegJitCodeRegionSize) {
       break;
     }
 
@@ -497,30 +499,30 @@ WalkStackMain64(struct WalkStackData* aData)
     // Try to look up unwind metadata for the current function.
     ULONG64 imageBase;
     PRUNTIME_FUNCTION runtimeFunction =
-      RtlLookupFunctionEntry(context.Rip, &imageBase, NULL);
+      RtlLookupFunctionEntry(context->Rip, &imageBase, NULL);
 
     if (runtimeFunction) {
       PVOID dummyHandlerData;
       ULONG64 dummyEstablisherFrame;
       RtlVirtualUnwind(UNW_FLAG_NHANDLER,
                        imageBase,
-                       context.Rip,
+                       context->Rip,
                        runtimeFunction,
-                       &context,
+                       context,
                        &dummyHandlerData,
                        &dummyEstablisherFrame,
                        nullptr);
     } else if (firstFrame) {
       // Leaf functions can be unwound by hand.
-      context.Rip = *reinterpret_cast<DWORD64*>(context.Rsp);
-      context.Rsp += sizeof(void*);
+      context->Rip = *reinterpret_cast<DWORD64*>(context->Rsp);
+      context->Rsp += sizeof(void*);
     } else {
       // Something went wrong.
       break;
     }
 
-    addr = context.Rip;
-    spaddr = context.Rsp;
+    addr = context->Rip;
+    spaddr = context->Rsp;
     firstFrame = false;
 #else
 #error "unknown platform"
@@ -618,9 +620,9 @@ WalkStackThread(void* aData)
  */
 
 MFBT_API bool
-MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
-             void* aPlatformData)
+MozStackWalkThread(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
+                   uint32_t aMaxFrames, void* aClosure,
+                   HANDLE aThread, CONTEXT* aContext)
 {
   StackWalkInitCriticalAddress();
   static HANDLE myProcess = nullptr;
@@ -637,8 +639,7 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   }
 
   HANDLE currentThread = ::GetCurrentThread();
-  HANDLE targetThread =
-    aThread ? reinterpret_cast<HANDLE>(aThread) : currentThread;
+  HANDLE targetThread = aThread ? aThread : currentThread;
   data.walkCallingThread = (targetThread == currentThread);
 
   // Have to duplicate handle to get a real handle.
@@ -677,7 +678,7 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   data.sps = local_sps;
   data.sp_count = 0;
   data.sp_size = ArrayLength(local_sps);
-  data.platformData = aPlatformData;
+  data.context = aContext;
 
   if (aThread) {
     // If we're walking the stack of another thread, we don't need to
@@ -734,6 +735,13 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   return data.pc_count != 0;
 }
 
+MFBT_API bool
+MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
+             uint32_t aMaxFrames, void* aClosure)
+{
+  return MozStackWalkThread(aCallback, aSkipFrames, aMaxFrames, aClosure,
+                            nullptr, nullptr);
+}
 
 static BOOL CALLBACK
 callbackEspecial64(
@@ -989,11 +997,8 @@ void DemangleSymbol(const char* aSymbol,
 
 MFBT_API bool
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
-             void* aPlatformData)
+             uint32_t aMaxFrames, void* aClosure)
 {
-  MOZ_ASSERT(!aThread);
-  MOZ_ASSERT(!aPlatformData);
   StackWalkInitCriticalAddress();
 
   // Get the frame pointer
@@ -1077,11 +1082,8 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
 
 MFBT_API bool
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
-             void* aPlatformData)
+             uint32_t aMaxFrames, void* aClosure)
 {
-  MOZ_ASSERT(!aThread);
-  MOZ_ASSERT(!aPlatformData);
   StackWalkInitCriticalAddress();
   unwind_info info;
   info.callback = aCallback;
@@ -1150,11 +1152,8 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 
 MFBT_API bool
 MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
-             void* aPlatformData)
+             uint32_t aMaxFrames, void* aClosure)
 {
-  MOZ_ASSERT(!aThread);
-  MOZ_ASSERT(!aPlatformData);
   return false;
 }
 
