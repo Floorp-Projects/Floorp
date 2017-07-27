@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MediaDecoderReaderWrapper_h_
-#define MediaDecoderReaderWrapper_h_
+#ifndef ReaderProxy_h_
+#define ReaderProxy_h_
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/RefPtr.h"
@@ -23,18 +23,18 @@ namespace mozilla {
  * It also adjusts the seek target passed to Seek() to ensure correct seek time
  * is passed to the underlying reader.
  */
-class MediaDecoderReaderWrapper {
+class ReaderProxy
+{
   using MetadataPromise = MediaFormatReader::MetadataPromise;
   using AudioDataPromise = MediaFormatReader::AudioDataPromise;
   using VideoDataPromise = MediaFormatReader::VideoDataPromise;
   using SeekPromise = MediaFormatReader::SeekPromise;
   using WaitForDataPromise = MediaFormatReader::WaitForDataPromise;
   using TrackSet = MediaFormatReader::TrackSet;
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReaderWrapper);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ReaderProxy);
 
 public:
-  MediaDecoderReaderWrapper(AbstractThread* aOwnerThread,
-                            MediaFormatReader* aReader);
+  ReaderProxy(AbstractThread* aOwnerThread, MediaFormatReader* aReader);
 
   media::TimeUnit StartTime() const;
   RefPtr<MetadataPromise> ReadMetadata();
@@ -85,7 +85,7 @@ public:
     AbstractCanonical<media::NullableTimeUnit>* aCanonical);
 
 private:
-  ~MediaDecoderReaderWrapper();
+  ~ReaderProxy();
   RefPtr<MetadataPromise> OnMetadataRead(MetadataHolder&& aMetadata);
   RefPtr<MetadataPromise> OnMetadataNotRead(const MediaResult& aError);
   void UpdateDuration();
@@ -97,7 +97,7 @@ private:
   Maybe<media::TimeUnit> mStartTime;
 
   // State-watching manager.
-  WatchManager<MediaDecoderReaderWrapper> mWatchManager;
+  WatchManager<ReaderProxy> mWatchManager;
 
   // Duration, mirrored from the state machine task queue.
   Mirror<media::NullableTimeUnit> mDuration;
@@ -105,4 +105,4 @@ private:
 
 } // namespace mozilla
 
-#endif // MediaDecoderReaderWrapper_h_
+#endif // ReaderProxy_h_
