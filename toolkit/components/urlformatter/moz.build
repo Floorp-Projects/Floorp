@@ -16,15 +16,8 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'urlformatter'
 
 EXTRA_COMPONENTS += [
-    'nsURLFormatter.manifest',
-]
-
-EXTRA_PP_COMPONENTS += [
     'nsURLFormatter.js',
-]
-
-CONFIGURE_SUBST_FILES += [
-    'api_keys',
+    'nsURLFormatter.manifest',
 ]
 
 DEFINES['OBJDIR'] = OBJDIR
