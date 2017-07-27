@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>Test advisory link (Bug #1366384)</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="classifierHelper.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+
+<script class="testbody" type="text/javascript">
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
+
+var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow);
+
+var testDatas = [
+  { url: "itisaphishingsite.org/phishing.html",
+    list: "mochi1-phish-simple",
+    provider: "google",
+  },
+
+  { url: "fakeitisaphishingsite.org/phishing.html",
+    list: "fake1-phish-simple",
+    provider: "mozilla",
+  },
+
+  { url: "phishing.example.com/test.html",
+    list: "mochi2-phish-simple",
+    provider: "google4",
+  },
+];
+
+let pushPrefs = (...p) => SpecialPowers.pushPrefEnv({set: p});
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished");
+}
+
+function addUrlToDB(list, url) {
+  let testData = [{ db: list, url}];
+
+  return classifierHelper.addUrlToDB(testData)
+    .catch(function(err) {
+      ok(false, "Couldn't update classifier. Error code: " + err);
+      // Abort test.
+      SimpleTest.finish();
+    });
+}
+
+function setupTestData(data) {
+  let promises = [];
+  let providerList = "browser.safebrowsing.provider." + data.provider + ".lists";
+  promises.push(pushPrefs([providerList, data.list]));
+
+  let activeTablePref = "urlclassifier.phishTable";
+  let activeTable = SpecialPowers.getCharPref(activeTablePref);
+      activeTable += "," + data.list;
+  promises.push(pushPrefs([activeTablePref, activeTable]));
+
+  promises.push(addUrlToDB(data.list, data.url));
+  return Promise.all(promises);
+}
+
+function testOnWindow(aTestData) {
+  return new Promise(resolve  => {
+    let win = mainWindow.OpenBrowserWindow();
+
+    (async function() {
+      await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
+
+      let browser = win.gBrowser.selectedBrowser;
+      await BrowserTestUtils.loadURI(browser, aTestData.url);
+      await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded")
+
+      let doc = win.gBrowser.contentDocument;
+      let advisoryEl = doc.getElementById("advisory_provider");
+      if (aTestData.provider != "google" && aTestData.provider != "google4") {
+        ok(!advisoryEl, "Advisory should not be shown");
+      } else {
+        ok(advisoryEl, "Advisory element should exist");
+        let expectedUrl =
+          SpecialPowers.getCharPref("browser.safebrowsing.provider." +
+                                    aTestData.provider +
+                                    ".advisoryURL");
+        is(advisoryEl.href, expectedUrl, "Correct advisory url");
+        let expectedText =
+          SpecialPowers.getCharPref("browser.safebrowsing.provider." +
+                                    aTestData.provider +
+                                    ".advisoryName");
+        is(advisoryEl.text, expectedText, "correct advisory text");
+      }
+
+      win.close();
+      resolve();
+    })();
+  });
+}
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["browser.safebrowsing.phishing.enabled", true]]},
+  test);
+
+function test() {
+  (async function() {
+    await classifierHelper.waitForInit();
+
+    for (let testData of testDatas) {
+      await setupTestData(testData);
+      await testOnWindow(testData);
+      await classifierHelper._cleanup();
+    }
+
+    SimpleTest.finish();
+  })();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+
+</pre>
+<iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
+</body>
+</html>
