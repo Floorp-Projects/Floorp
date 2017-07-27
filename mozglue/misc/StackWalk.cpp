@@ -1175,33 +1175,33 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 namespace mozilla {
 bool
 FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-                      uint32_t aMaxFrames, void* aClosure, void** bp,
+                      uint32_t aMaxFrames, void* aClosure, void** aBp,
                       void* aStackEnd)
 {
   // Stack walking code courtesy Kipp's "leaky".
 
   int32_t skip = aSkipFrames;
   uint32_t numFrames = 0;
-  while (bp) {
-    void** next = (void**)*bp;
-    // bp may not be a frame pointer on i386 if code was compiled with
+  while (aBp) {
+    void** next = (void**)*aBp;
+    // aBp may not be a frame pointer on i386 if code was compiled with
     // -fomit-frame-pointer, so do some sanity checks.
-    // (bp should be a frame pointer on ppc(64) but checking anyway may help
+    // (aBp should be a frame pointer on ppc(64) but checking anyway may help
     // a little if the stack has been corrupted.)
     // We don't need to check against the begining of the stack because
-    // we can assume that bp > sp
-    if (next <= bp ||
+    // we can assume that aBp > sp
+    if (next <= aBp ||
         next > aStackEnd ||
         (uintptr_t(next) & 3)) {
       break;
     }
 #if (defined(__ppc__) && defined(XP_MACOSX)) || defined(__powerpc64__)
     // ppc mac or powerpc64 linux
-    void* pc = *(bp + 2);
-    bp += 3;
+    void* pc = *(aBp + 2);
+    aBp += 3;
 #else // i386 or powerpc32 linux
-    void* pc = *(bp + 1);
-    bp += 2;
+    void* pc = *(aBp + 1);
+    aBp += 2;
 #endif
     if (IsCriticalAddress(pc)) {
       return false;
@@ -1212,12 +1212,12 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
       // but this should be sufficient for our use the SP
       // to order elements on the stack.
       numFrames++;
-      (*aCallback)(numFrames, pc, bp, aClosure);
+      (*aCallback)(numFrames, pc, aBp, aClosure);
       if (aMaxFrames != 0 && numFrames == aMaxFrames) {
         break;
       }
     }
-    bp = next;
+    aBp = next;
   }
   return numFrames != 0;
 }
@@ -1228,7 +1228,8 @@ FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
 namespace mozilla {
 MFBT_API bool
 FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-                      void* aClosure, void** aBp)
+                      uint32_t aMaxFrames, void* aClosure, void** aBp,
+                      void* aStackEnd)
 {
   return false;
 }
