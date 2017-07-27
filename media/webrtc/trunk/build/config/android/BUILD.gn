@@ -124,63 +124,65 @@ config("runtime_library") {
   ldflags = [ "-nostdlib" ]
   lib_dirs = [ android_libcpp_lib_dir ]
 
-  # The libc++ runtime library (must come first).
-  # ASan needs to dynamically link to libc++ even in static builds so
-  # that it can interpose operator new.
-  if (is_component_build || is_asan) {
-    libs = [ "c++_shared" ]
-  } else {
-    libs = [ "c++_static" ]
-  }
-  libs += [
-    "c++abi",
-    "android_support",
-  ]
-
-  # arm builds of libc++ starting in NDK r12 depend on unwind.
-  if (current_cpu == "arm") {
-    libs += [ "unwind" ]
-  }
-
-  # Manually link the libgcc.a that the cross compiler uses. This is
-  # absolute because the linker will look inside the sysroot if it's not.
-  libs += [
-    rebase_path(android_libgcc_file),
-    "c",
-  ]
-
-  # Clang with libc++ does not require an explicit atomic library reference.
-  if (!is_clang) {
-    libs += [ "atomic" ]
-  }
-
-  if (is_clang) {
-    # Work around incompatibilities between bionic and clang headers.
-    defines += [
-      "__compiler_offsetof=__builtin_offsetof",
-      "nan=__builtin_nan",
+  if (!build_with_mozilla) {
+    # The libc++ runtime library (must come first).
+    # ASan needs to dynamically link to libc++ even in static builds so
+    # that it can interpose operator new.
+    if (is_component_build || is_asan) {
+      libs = [ "c++_shared" ]
+    } else {
+      libs = [ "c++_static" ]
+    }
+    libs += [
+      "c++abi",
+      "android_support",
     ]
 
-    if (current_cpu == "x64" || current_cpu == "arm64" ||
-        current_cpu == "mips64el") {
-      # 64-bit targets build with NDK 21, 32-bit targets with NDK 16
-      # (see ./config.gni).  When using clang, NDK 21 defines snprintf to
-      # something for a kind of for of _FORTIFY_SOURCE support, see
-      # third_party/android_tools/ndk/platforms/android-21/arch-x86_64/usr/include/stdio.h
-      # Making snprintf a macro breaks base/strings/string_utils.h which
-      # defines base::snprintf().  So define snprintf to itself to force the
-      # NDK to not redefine it.  This disables _chk for snprintf, but since
-      # 32-bit versions use NDK 16 which doesn't have any fortify support, that
-      # seems ok.  b/32067310 tracks better fortify support with clang.
-      # TODO(thakis): Remove this once b/32067310 is fixed.
-      defines += [ "snprintf=snprintf" ]
+    # arm builds of libc++ starting in NDK r12 depend on unwind.
+    if (current_cpu == "arm") {
+      libs += [ "unwind" ]
     }
-  }
 
-  # TODO(jdduke) Re-enable on mips after resolving linking
-  # issues with libc++ (crbug.com/456380).
-  if (current_cpu != "mipsel" && current_cpu != "mips64el") {
-    ldflags += [ "-Wl,--warn-shared-textrel" ]
+    # Manually link the libgcc.a that the cross compiler uses. This is
+    # absolute because the linker will look inside the sysroot if it's not.
+    libs += [
+      rebase_path(android_libgcc_file),
+      "c",
+    ]
+
+    # Clang with libc++ does not require an explicit atomic library reference.
+    if (!is_clang) {
+      libs += [ "atomic" ]
+    }
+
+    if (is_clang) {
+      # Work around incompatibilities between bionic and clang headers.
+      defines += [
+        "__compiler_offsetof=__builtin_offsetof",
+        "nan=__builtin_nan",
+      ]
+
+      if (current_cpu == "x64" || current_cpu == "arm64" ||
+          current_cpu == "mips64el") {
+        # 64-bit targets build with NDK 21, 32-bit targets with NDK 16
+        # (see ./config.gni).  When using clang, NDK 21 defines snprintf to
+        # something for a kind of for of _FORTIFY_SOURCE support, see
+        # third_party/android_tools/ndk/platforms/android-21/arch-x86_64/usr/include/stdio.h
+        # Making snprintf a macro breaks base/strings/string_utils.h which
+        # defines base::snprintf().  So define snprintf to itself to force the
+        # NDK to not redefine it.  This disables _chk for snprintf, but since
+        # 32-bit versions use NDK 16 which doesn't have any fortify support, that
+        # seems ok.  b/32067310 tracks better fortify support with clang.
+        # TODO(thakis): Remove this once b/32067310 is fixed.
+        defines += [ "snprintf=snprintf" ]
+      }
+    }
+
+    # TODO(jdduke) Re-enable on mips after resolving linking
+    # issues with libc++ (crbug.com/456380).
+    if (current_cpu != "mipsel" && current_cpu != "mips64el") {
+      ldflags += [ "-Wl,--warn-shared-textrel" ]
+    }
   }
 }
 

@@ -84,7 +84,11 @@ def main():
 
 
 if __name__ == '__main__':
-  if sys.platform != 'darwin':
-    raise Exception("This script only runs on Mac")
-  print main()
+  if sys.platform == 'darwin':
+    print main()
+  else:
+    # Mozilla builds cross-compile on Linux, so return some fake data to keep
+    # the build system happy. These values aren't used anywhere.
+    print "."
+    print "."
   sys.exit(0)
