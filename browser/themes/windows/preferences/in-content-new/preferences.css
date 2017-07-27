@@ -9,24 +9,16 @@
     list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#general-native");
   }
 
-  #category-application > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#applications-native");
-  }
-
   #category-privacy > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#privacy-native");
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#security-native");
   }
 
   #category-sync > .category-icon {
     list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#sync-native");
   }
 
-  #category-advanced > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#advanced-native");
-  }
-
-  #category-search-results > .category-icon {
-    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#searchResults-native");
+  #category-search > .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content-new/icons.svg#search-native");
   }
 }
 
