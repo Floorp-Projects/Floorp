@@ -8,6 +8,7 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.skin.SkinConfig;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import android.content.Context;
@@ -32,6 +33,7 @@ public abstract class TabsLayout extends RecyclerView
     private final boolean isPrivate;
     private TabsPanel tabsPanel;
     private final TabsLayoutAdapter tabsAdapter;
+    private View emptyView;
 
     public TabsLayout(Context context, AttributeSet attrs, int itemViewLayoutResId) {
         super(context, attrs);
@@ -72,7 +74,17 @@ public abstract class TabsLayout extends RecyclerView
 
     @Override
     public void show() {
-        setVisibility(View.VISIBLE);
+        if (SkinConfig.isPhoton()) {
+            final boolean hasTabs = (tabsAdapter.getItemCount() > 0);
+            setVisibility(hasTabs ? VISIBLE : GONE);
+
+            if (emptyView != null) {
+                emptyView.setVisibility(hasTabs ? GONE : VISIBLE);
+            }
+        } else {
+            setVisibility(View.VISIBLE);
+        }
+
         Tabs.getInstance().refreshThumbnails();
         Tabs.registerOnTabsChangedListener(this);
         refreshTabsData();
@@ -83,6 +95,10 @@ public abstract class TabsLayout extends RecyclerView
         setVisibility(View.GONE);
         Tabs.unregisterOnTabsChangedListener(this);
         tabsAdapter.clear();
+
+        if (emptyView != null) {
+            emptyView.setVisibility(VISIBLE);
+        }
     }
 
     @Override
@@ -188,6 +204,14 @@ public abstract class TabsLayout extends RecyclerView
 
         tabsAdapter.setTabs(tabData);
         scrollSelectedTabToTopOfTray();
+
+        // Show empty view if we're in private panel and there's no private tabs.
+        boolean hasTabs = !tabData.isEmpty();
+        setVisibility(hasTabs ? VISIBLE : GONE);
+
+        if (emptyView != null) {
+            emptyView.setVisibility(hasTabs ? GONE : VISIBLE);
+        }
     }
 
     private void closeTab(View view) {
@@ -235,7 +259,7 @@ public abstract class TabsLayout extends RecyclerView
 
     @Override
     public void setEmptyView(View emptyView) {
-        // We never display an empty view.
+        this.emptyView = emptyView;
     }
 
     @Override
