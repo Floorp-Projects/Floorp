@@ -55,7 +55,9 @@ add_task(async function setup() {
 });
 
 async function clean() {
+  let promiseLogReset = promiseOneObserver("weave:service:reset-file-log");
   await Service.startOver();
+  await promiseLogReset;
   Status.resetSync();
   Status.resetBackoff();
   errorHandler.didReportProlongedError = false;
