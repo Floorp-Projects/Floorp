@@ -1,10 +1,5 @@
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
-const {
-  // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
-  // backstage pass.
-  fetchGuidsWithAnno,
-} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm", {});
 Cu.import("resource://testing-common/httpd.js");
 Cu.importGlobalProperties(["URLSearchParams"]);
 
@@ -1513,8 +1508,8 @@ add_task(async function test_move_orphans() {
 
   do_print("Verify synced orphan annos match");
   {
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids.sort(), [fxBmk.syncId, tbBmk.syncId].sort(),
       "Orphaned bookmarks should match before moving");
   }
@@ -1526,8 +1521,8 @@ add_task(async function test_move_orphans() {
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids, [tbBmk.syncId],
       "Should remove orphan annos from updated bookmark");
   }
@@ -1537,8 +1532,8 @@ add_task(async function test_move_orphans() {
     let tbId = await syncIdToId(tbBmk.syncId);
     PlacesUtils.bookmarks.moveItem(tbId, PlacesUtils.toolbarFolderId,
       PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids, [],
       "Should remove orphan annos from moved bookmark");
   }
@@ -1570,8 +1565,8 @@ add_task(async function test_reorder_orphans() {
 
   do_print("Verify synced orphan annos match");
   {
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids.sort(), [
       fxBmk.syncId,
       tbBmk.syncId,
@@ -1583,8 +1578,8 @@ add_task(async function test_reorder_orphans() {
   {
     await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
       [tbBmk.syncId, fxBmk.syncId]);
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids, [mozBmk.syncId],
       "Should remove orphan annos from explicitly reordered bookmarks");
   }
@@ -1610,8 +1605,8 @@ add_task(async function test_set_orphan_indices() {
 
   do_print("Verify synced orphan annos match");
   {
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids.sort(), [fxBmk.syncId, tbBmk.syncId].sort(),
       "Orphaned bookmarks should match before changing indices");
   }
@@ -1625,8 +1620,8 @@ add_task(async function test_set_orphan_indices() {
       PlacesUtils.bookmarks.setItemIndex(tbId, 0);
     }, null);
     await PlacesTestUtils.promiseAsyncUpdates();
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids, [],
       "Should remove orphan annos after updating indices");
   }
@@ -1662,8 +1657,8 @@ add_task(async function test_unsynced_orphans() {
     let unknownId = await syncIdToId(unknownBmk.syncId);
     PlacesUtils.bookmarks.moveItem(unknownId, PlacesUtils.toolbarFolderId,
       PlacesUtils.bookmarks.DEFAULT_INDEX);
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids.sort(), [newBmk.syncId].sort(),
       "Should remove orphan annos from moved unsynced bookmark");
   }
@@ -1672,8 +1667,8 @@ add_task(async function test_unsynced_orphans() {
   {
     await PlacesUtils.bookmarks.reorder(PlacesUtils.bookmarks.unfiledGuid,
       [newBmk.syncId]);
-    let orphanGuids = await fetchGuidsWithAnno(SYNC_PARENT_ANNO,
-      nonexistentSyncId);
+    let orphanGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      SYNC_PARENT_ANNO, nonexistentSyncId);
     deepEqual(orphanGuids, [],
       "Should remove orphan annos from reordered unsynced bookmarks");
   }

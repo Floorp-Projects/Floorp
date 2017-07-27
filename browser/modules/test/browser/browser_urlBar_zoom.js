@@ -7,7 +7,8 @@
 var initialPageZoom = ZoomManager.zoom;
 const kTimeoutInMS = 20000;
 
-add_task(async function() {
+async function testZoomButtonAppearsAndDisappearsBasedOnZoomChanges(zoomEventType) {
+  info("Running this test with " + zoomEventType.substring(0, 9));
   info("Confirm whether the browser zoom is set to the default level");
   is(initialPageZoom, 1, "Page zoom is set to default (100%)");
   let zoomResetButton = document.getElementById("urlbar-zoom-button");
@@ -24,13 +25,20 @@ add_task(async function() {
   let buttonZoomLevel = parseInt(zoomResetButton.getAttribute("label"), 10);
   is(buttonZoomLevel, expectedZoomLevel, ("Button label updated successfully to " + Math.floor(ZoomManager.zoom * 100) + "%"));
 
-  let zoomResetPromise = BrowserTestUtils.waitForEvent(window, "FullZoomChange");
+  let zoomResetPromise = BrowserTestUtils.waitForEvent(window, zoomEventType);
   zoomResetButton.click();
   await zoomResetPromise;
   pageZoomLevel = Math.floor(ZoomManager.zoom * 100);
   expectedZoomLevel = 100;
   is(pageZoomLevel, expectedZoomLevel, "Clicking zoom button successfully resets browser zoom to 100%");
   is(zoomResetButton.hidden, true, "Zoom reset button returns to being hidden");
+}
+
+add_task(async function() {
+  await testZoomButtonAppearsAndDisappearsBasedOnZoomChanges("FullZoomChange");
+  await SpecialPowers.pushPrefEnv({"set": [["browser.zoom.full", false]]});
+  await testZoomButtonAppearsAndDisappearsBasedOnZoomChanges("TextZoomChange");
+  await SpecialPowers.pushPrefEnv({"set": [["browser.zoom.full", true]]});
 });
 
 add_task(async function() {

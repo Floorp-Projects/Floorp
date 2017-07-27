@@ -27,6 +27,7 @@
 #include "Classifier.h"
 
 using namespace mozilla::safebrowsing;
+using namespace mozilla;
 
 #define DEFAULT_RESPONSE_TIMEOUT_MS 15 * 1000
 #define DEFAULT_TIMEOUT_MS 60 * 1000
@@ -284,7 +285,10 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Already updating, queueing update %s from %s", aRequestPayload.Data(),
          aUpdateUrl.Data()));
     *_retval = false;
-    PendingRequest *request = mPendingRequests.AppendElement();
+    PendingRequest *request = mPendingRequests.AppendElement(fallible);
+    if (!request) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     request->mTables = aRequestTables;
     request->mRequestPayload = aRequestPayload;
     request->mIsPostRequest = aIsPostRequest;
@@ -324,7 +328,10 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     LOG(("Service busy, already updating, queuing update %s from %s",
          aRequestPayload.Data(), aUpdateUrl.Data()));
     *_retval = false;
-    PendingRequest *request = mPendingRequests.AppendElement();
+    PendingRequest *request = mPendingRequests.AppendElement(fallible);
+    if (!request) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     request->mTables = aRequestTables;
     request->mRequestPayload = aRequestPayload;
     request->mIsPostRequest = aIsPostRequest;
@@ -379,9 +386,10 @@ nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
 {
   LOG(("Queuing requested update from %s\n", PromiseFlatCString(aUrl).get()));
 
-  PendingUpdate *update = mPendingUpdates.AppendElement();
-  if (!update)
+  PendingUpdate *update = mPendingUpdates.AppendElement(fallible);
+  if (!update) {
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Allow data: and file: urls for unit testing purposes, otherwise assume http
   if (StringBeginsWith(aUrl, NS_LITERAL_CSTRING("data:")) ||
@@ -767,6 +775,17 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
       NS_ENSURE_SUCCESS(rv, rv);
       mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_UPDATE_REMOTE_STATUS2,
                                      mTelemetryProvider, HTTPStatusToBucket(requestStatus));
+      if (requestStatus == 400) {
+        nsCOMPtr<nsIURI> uri;
+        nsAutoCString spec;
+        rv = httpChannel->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          uri->GetAsciiSpec(spec);
+        }
+        printf_stderr("Safe Browsing server returned a 400 during update: request = %s \n",
+                      spec.get());
+      }
+
       LOG(("nsUrlClassifierStreamUpdater::OnStartRequest %s (%d)", succeeded ?
            "succeeded" : "failed", requestStatus));
       if (!succeeded) {

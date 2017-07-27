@@ -23,9 +23,17 @@
   height: 10px;
   display: block;
 }
+#none {
+  display: none;
+}
+#none::before,
+#none::after {
+  content: "Foo";
+}
 </style>
 <div id="test">
   <div id="contents"></div>
+  <div id="none"></div>
 </div>
 <script>
 test(function() {
@@ -49,4 +57,11 @@ test(function() {
                   "the same style as the originating element");
   });
 }, "Resolution of nonexistent pseudo-element styles");
+test(function() {
+  var none = document.getElementById('none');
+  [":before", ":after"].forEach(function(pseudo) {
+    assert_equals(getComputedStyle(none, pseudo).content, "\"Foo\"",
+                  "Pseudo-styles of display: none elements should be correct");
+  });
+}, "Resolution of pseudo-element styles in display: none elements");
 </script>

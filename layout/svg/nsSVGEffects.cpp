@@ -19,6 +19,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "SVGGeometryElement.h"
 #include "SVGUseElement.h"
+#include "ImageLoader.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -392,6 +393,7 @@ nsSVGMarkerProperty::DoUpdate()
 NS_IMPL_ISUPPORTS(nsSVGMaskProperty, nsISupports)
 
 nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
+ : mFrame(aFrame)
 {
   const nsStyleSVGReset *svgReset = aFrame->StyleSVGReset();
 
@@ -412,6 +414,27 @@ nsSVGMaskProperty::nsSVGMaskProperty(nsIFrame* aFrame)
       new nsSVGPaintingProperty(hasRef ? maskUri.get() : nullptr,
                                 aFrame, false);
     mProperties.AppendElement(prop);
+  }
+}
+
+void
+nsSVGMaskProperty::ResolveImage(uint32_t aIndex)
+{
+  const nsStyleSVGReset* svgReset = mFrame->StyleSVGReset();
+  MOZ_ASSERT(aIndex < svgReset->mMask.mImageCount);
+
+  nsStyleImage& image =
+    const_cast<nsStyleImage&>(svgReset->mMask.mLayers[aIndex].mImage);
+
+  if (!image.IsResolved()) {
+    MOZ_ASSERT(image.GetType() == nsStyleImageType::eStyleImageType_Image);
+    image.ResolveImage(mFrame->PresContext());
+
+    mozilla::css::ImageLoader* imageLoader =
+      mFrame->PresContext()->Document()->StyleImageLoader();
+    if (imgRequestProxy* req = image.GetImageData()) {
+      imageLoader->AssociateRequestToFrame(req, mFrame);
+    }
   }
 }
 
@@ -671,6 +694,15 @@ nsSVGEffects::EffectProperties::GetMaskFrames()
     nsSVGMaskFrame* maskFrame = static_cast<nsSVGMaskFrame*>(
       props[i]->GetReferencedFrame(LayoutFrameType::SVGMask, &ok));
     MOZ_ASSERT(!maskFrame || ok);
+    if (!ok) {
+      // We can not find the specific SVG mask resource in the downloaded SVG
+      // document. There are two possibilities:
+      // 1. The given resource id is invalid.
+      // 2. The given resource id refers to a viewbox.
+      //
+      // Hand it over to the style image.
+      mMask->ResolveImage(i);
+    }
     result.AppendElement(maskFrame);
   }
 

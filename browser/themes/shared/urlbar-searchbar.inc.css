@@ -86,6 +86,7 @@
   color: inherit;
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
 @keyframes bookmark-animation {
   from {
     transform: translateX(0);
@@ -107,6 +108,7 @@
 #star-button-box[animationsenabled] {
   position: relative;
 }
+%endif /* MOZ_PHOTON_ANIMATIONS */
 
 #star-button {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
@@ -118,6 +120,7 @@
   fill: var(--toolbarbutton-icon-fill-attention);
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
 /* Preload the bookmark animations to prevent a flicker during the first playing
    of the animations. */
 #star-button[preloadanimations] + #star-button-animatable-box > #star-button-animatable-image {
@@ -162,6 +165,7 @@
 #star-button-box[animationsenabled] > #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {
   animation-name: bookmark-animation-rtl;
 }
+%endif /* MOZ_PHOTON_ANIMATIONS */
 
 /* Page action popup */
 #page-action-bookmark-button {
@@ -195,7 +199,7 @@
 #page-action-sendToDevice-fxa-button {
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
-%endif
+%endif /* MOZ_PHOTON_THEME */
 
 /* Zoom button */
 #urlbar-zoom-button {

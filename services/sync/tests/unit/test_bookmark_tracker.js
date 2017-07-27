@@ -1,11 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {
-  // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
-  // backstage pass.
-  fetchGuidsWithAnno,
-} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm", {});
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
@@ -361,17 +356,15 @@ add_task(async function test_batch_tracking() {
       PlacesUtils.bookmarks.createFolder(
         PlacesUtils.bookmarks.bookmarksMenuFolder,
         "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
-      // `runBatched` runs within a transaction that commits when
-      // `runInBatchMode` returns. Since `promiseChangedIDs` uses a read-only
-      // connection to fetch changes, it won't see the folder or its parent
-      // until we're out of batch mode.
-      Async.promiseSpinningly(verifyTrackedCount(0));
+      // We should be tracking the new folder and its parent (and need to jump
+      // through blocking hoops...)
+      Async.promiseSpinningly(verifyTrackedCount(2));
+      // But not have bumped the score.
       do_check_eq(tracker.score, 0);
     }
   }, null);
 
-  // Out of batch mode - now we should be tracking the new folder and its
-  // parent, and the score should be up.
+  // Out of batch mode - tracker should be the same, but score should be up.
   await verifyTrackedCount(2);
   do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   await cleanup();
@@ -390,19 +383,21 @@ add_task(async function test_nested_batch_tracking() {
           PlacesUtils.bookmarks.createFolder(
             PlacesUtils.bookmarks.bookmarksMenuFolder,
             "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
-          Async.promiseSpinningly(verifyTrackedCount(0));
+          // We should be tracking the new folder and its parent (and need to jump
+          // through blocking hoops...)
+          Async.promiseSpinningly(verifyTrackedCount(2));
+          // But not have bumped the score.
           do_check_eq(tracker.score, 0);
         }
       }, null);
       _("inner batch complete.");
       // should still not have a score as the outer batch is pending.
-      Async.promiseSpinningly(verifyTrackedCount(0));
+      Async.promiseSpinningly(verifyTrackedCount(2));
       do_check_eq(tracker.score, 0);
     }
   }, null);
 
-  // Out of both batches - now we should be tracking the new folder and its
-  // parent, and the score should be up.
+  // Out of both batches - tracker should be the same, but score should be up.
   await verifyTrackedCount(2);
   do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   await cleanup();
@@ -1708,15 +1703,15 @@ add_task(async function test_mobile_query() {
     let leftPaneId = PlacesUIUtils.leftPaneFolderId;
     _(`Left pane root ID: ${leftPaneId}`);
 
-    let allBookmarksGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
-                                                     "AllBookmarks");
+    let allBookmarksGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      "PlacesOrganizer/OrganizerQuery", "AllBookmarks");
     equal(allBookmarksGuids.length, 1, "Should create folder with all bookmarks queries");
     let allBookmarkGuid = allBookmarksGuids[0];
 
     _("Try creating query after organizer is ready");
     tracker._ensureMobileQuery();
-    let queryGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
-                                              "MobileBookmarks");
+    let queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
     equal(queryGuids.length, 0, "Should not create query without any mobile bookmarks");
 
     _("Insert mobile bookmark, then create query");
@@ -1725,8 +1720,8 @@ add_task(async function test_mobile_query() {
       url: "https://mozilla.org",
     });
     tracker._ensureMobileQuery();
-    queryGuids = await fetchGuidsWithAnno("PlacesOrganizer/OrganizerQuery",
-                                          "MobileBookmarks");
+    queryGuids = await PlacesSyncUtils.bookmarks.fetchGuidsWithAnno(
+      "PlacesOrganizer/OrganizerQuery", "MobileBookmarks");
     equal(queryGuids.length, 1, "Should create query once mobile bookmarks exist");
 
     let queryGuid = queryGuids[0];

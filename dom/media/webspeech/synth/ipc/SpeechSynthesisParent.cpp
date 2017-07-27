@@ -36,9 +36,10 @@ SpeechSynthesisParent::AllocPSpeechSynthesisRequestParent(const nsString& aText,
                                                           const nsString& aUri,
                                                           const float& aVolume,
                                                           const float& aRate,
-                                                          const float& aPitch)
+                                                          const float& aPitch,
+                                                          const bool& aIsChrome)
 {
-  RefPtr<SpeechTaskParent> task = new SpeechTaskParent(aVolume, aText);
+  RefPtr<SpeechTaskParent> task = new SpeechTaskParent(aVolume, aText, aIsChrome);
   SpeechSynthesisRequestParent* actor = new SpeechSynthesisRequestParent(task);
   return actor;
 }
@@ -57,7 +58,8 @@ SpeechSynthesisParent::RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRe
                                                               const nsString& aUri,
                                                               const float& aVolume,
                                                               const float& aRate,
-                                                              const float& aPitch)
+                                                              const float& aPitch,
+                                                              const bool& aIsChrome)
 {
   MOZ_ASSERT(aActor);
   SpeechSynthesisRequestParent* actor =

@@ -1806,7 +1806,9 @@ var BookmarkingUI = {
         this.button.setAttribute("label", this._starButtonOverflowedStarredLabel);
       }
     } else {
-      this.star.removeAttribute("animate");
+      if (AppConstants.MOZ_PHOTON_ANIMATIONS) {
+        this.star.removeAttribute("animate");
+      }
       this.broadcaster.removeAttribute("starred");
       this.broadcaster.setAttribute("buttontooltiptext", this._unstarredTooltip);
       this.broadcaster.setAttribute("tooltiptext", this._unstarredTooltip);

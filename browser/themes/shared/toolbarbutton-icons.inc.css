@@ -434,6 +434,7 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   list-style-image: url("chrome://browser/skin/library.svg");
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
 @keyframes library-bookmark-animation {
   from {
     transform: translateX(0);
@@ -519,3 +520,4 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   animation-duration: 2s;
   animation-timing-function: ease-out;
 }
+%endif

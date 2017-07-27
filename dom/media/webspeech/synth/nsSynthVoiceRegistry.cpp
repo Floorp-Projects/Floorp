@@ -679,9 +679,14 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
     }
   }
 
+  nsCOMPtr<nsPIDOMWindowInner> window = aUtterance.GetOwner();
+  nsCOMPtr<nsIDocument> doc = window ? window->GetDoc() : nullptr;
+
+  bool isChrome = nsContentUtils::IsChromeDoc(doc);
+
   RefPtr<nsSpeechTask> task;
   if (XRE_IsContentProcess()) {
-    task = new SpeechTaskChild(&aUtterance);
+    task = new SpeechTaskChild(&aUtterance, isChrome);
     SpeechSynthesisRequestChild* actor =
       new SpeechSynthesisRequestChild(static_cast<SpeechTaskChild*>(task.get()));
     mSpeechSynthChild->SendPSpeechSynthesisRequestConstructor(actor,
@@ -690,9 +695,10 @@ nsSynthVoiceRegistry::SpeakUtterance(SpeechSynthesisUtterance& aUtterance,
                                                               uri,
                                                               volume,
                                                               aUtterance.Rate(),
-                                                              aUtterance.Pitch());
+                                                              aUtterance.Pitch(),
+                                                              isChrome);
   } else {
-    task = new nsSpeechTask(&aUtterance);
+    task = new nsSpeechTask(&aUtterance, isChrome);
     Speak(aUtterance.mText, lang, uri,
           volume, aUtterance.Rate(), aUtterance.Pitch(), task);
   }
@@ -711,11 +717,16 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 {
   MOZ_ASSERT(XRE_IsParentProcess());
 
+  if (!aTask->IsChrome() && nsContentUtils::ShouldResistFingerprinting()) {
+    aTask->ForceError(0, 0);
+    return;
+  }
+
   VoiceData* voice = FindBestMatch(aUri, aLang);
 
   if (!voice) {
     NS_WARNING("No voices found.");
-    aTask->DispatchError(0, 0);
+    aTask->ForceError(0, 0);
     return;
   }
 

@@ -270,8 +270,10 @@ var Settings = {
    */
   render() {
     let homeExplanation = document.getElementById("home-explanation");
-    let fhrEnabled = this.getStatusStringForSetting(this.SETTINGS[0]);
-    let extendedEnabled = this.getStatusStringForSetting(this.SETTINGS[1]);
+    let fhrEnabled = Preferences.get(this.SETTINGS[0].pref, this.SETTINGS[0].defaultPrefValue);
+    fhrEnabled = bundle.GetStringFromName(fhrEnabled ? "telemetryEnabled" : "telemetryDisabled");
+    let extendedEnabled = Preferences.get(this.SETTINGS[1].pref, this.SETTINGS[1].defaultPrefValue);
+    extendedEnabled = bundle.GetStringFromName(extendedEnabled ? "extendedTelemetryEnabled" : "extendedTelemetryDisabled");
     let parameters = [fhrEnabled, extendedEnabled].map(this.convertStringToLink);
 
     let explanation = bundle.formatStringFromName("homeExplanation", parameters, 2);
@@ -344,7 +346,7 @@ var PingPicker = {
 
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
-    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">&quot;" + pings + "&quot;</a>";
+    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
     let pingName = this._getSelectedPingName();
 
     let pingDate = document.getElementById("ping-date");
@@ -355,23 +357,26 @@ var PingPicker = {
     let pingType = document.getElementById("ping-type");
     let older = document.getElementById("older-ping");
     let newer = document.getElementById("newer-ping");
-    if (pingName !== "current") {
+    let explanation;
+    if (!this.viewCurrentPingData) {
+      let pingTypeText = this._getSelectedPingType();
       pingType.hidden = false;
       older.hidden = false;
       newer.hidden = false;
-      pingType.textContent = this._getSelectedPingType();
+      pingType.textContent = pingTypeText;
+      pingName = bundle.formatStringFromName("namedPing", [pingName, pingTypeText], 2);
+      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+      let parameters = [pingLink, pingNameHtml, pingTypeText];
+      explanation = bundle.formatStringFromName("pingDetails", parameters, 3);
     } else {
       pingType.hidden = true;
       older.hidden = true;
       newer.hidden = true;
+      pingDate.textContent = bundle.GetStringFromName("currentPingSidebar");
+      let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
+      explanation = bundle.formatStringFromName("pingDetailsCurrent", [pingLink, pingNameHtml], 2);
     }
 
-    if (pingName !== "current") {
-      pingName += ", " + this._getSelectedPingType();
-    }
-    let pingNameHtml = "<span class=\"change-ping\">" + pingName + "</span>";
-
-    let explanation = bundle.formatStringFromName("pingExplanation", [pingLink, pingNameHtml], 2);
     let pingExplanation = document.getElementById("ping-explanation");
 
     // eslint-disable-next-line no-unsanitized/property
@@ -541,7 +546,7 @@ var PingPicker = {
   },
 
   _getSelectedPingName() {
-    if (this.viewCurrentPingData) return "current";
+    if (this.viewCurrentPingData) return bundle.GetStringFromName("currentPing");
 
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);

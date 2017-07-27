@@ -15,7 +15,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 // users who disable/enable the address autofill feature.
 const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
-const MANAGE_PROFILES_URL = "chrome://formautofill/content/manageProfiles.xhtml";
+const MANAGE_ADDRESSES_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -68,10 +68,10 @@ FormAutofillPreferences.prototype = {
    */
   createPreferenceGroup(document) {
     let formAutofillGroup;
-    let profileAutofill = document.createElementNS(XUL_NS, "hbox");
-    let profileAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
+    let addressAutofill = document.createElementNS(XUL_NS, "hbox");
+    let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
     let spacer = document.createElementNS(XUL_NS, "spacer");
-    let savedProfilesBtn = document.createElementNS(XUL_NS, "button");
+    let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
 
     if (this.useOldOrganization) {
       let caption = document.createElementNS(XUL_NS, "caption");
@@ -86,31 +86,31 @@ FormAutofillPreferences.prototype = {
       captionLabel.textContent = this.bundle.GetStringFromName("preferenceGroupTitle");
     } else {
       formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
-      savedProfilesBtn.className = "accessory-button";
+      savedAddressesBtn.className = "accessory-button";
     }
 
     this.refs = {
       formAutofillGroup,
-      profileAutofillCheckbox,
-      savedProfilesBtn,
+      addressAutofillCheckbox,
+      savedAddressesBtn,
     };
 
     formAutofillGroup.id = "formAutofillGroup";
-    profileAutofill.id = "profileAutofill";
-    savedProfilesBtn.setAttribute("label", this.bundle.GetStringFromName("savedProfiles"));
-    profileAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableProfileAutofill"));
+    addressAutofill.id = "addressAutofill";
+    savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddresses"));
+    addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableAddressAutofill"));
 
     // Manually set the checked state
     if (this.isAutofillEnabled) {
-      profileAutofillCheckbox.setAttribute("checked", true);
+      addressAutofillCheckbox.setAttribute("checked", true);
     }
 
     spacer.flex = 1;
 
-    formAutofillGroup.appendChild(profileAutofill);
-    profileAutofill.appendChild(profileAutofillCheckbox);
-    profileAutofill.appendChild(spacer);
-    profileAutofill.appendChild(savedProfilesBtn);
+    formAutofillGroup.appendChild(addressAutofill);
+    addressAutofill.appendChild(addressAutofillCheckbox);
+    addressAutofill.appendChild(spacer);
+    addressAutofill.appendChild(savedAddressesBtn);
   },
 
   /**
@@ -123,11 +123,11 @@ FormAutofillPreferences.prototype = {
       case "command": {
         let target = event.target;
 
-        if (target == this.refs.profileAutofillCheckbox) {
+        if (target == this.refs.addressAutofillCheckbox) {
           // Set preference directly instead of relying on <Preference>
           Services.prefs.setBoolPref(PREF_AUTOFILL_ENABLED, target.checked);
-        } else if (target == this.refs.savedProfilesBtn) {
-          target.ownerGlobal.gSubDialog.open(MANAGE_PROFILES_URL);
+        } else if (target == this.refs.savedAddressesBtn) {
+          target.ownerGlobal.gSubDialog.open(MANAGE_ADDRESSES_URL);
         }
         break;
       }
