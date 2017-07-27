@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,37 +9,23 @@
 // VORG - Vertical Origin Table
 // http://www.microsoft.com/typography/otspec/vorg.htm
 
-#define TABLE_NAME "VORG"
-
-#define DROP_THIS_TABLE(...) \
-  do { \
-    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
-    OTS_FAILURE_MSG("Table discarded"); \
-    delete font->vorg; \
-    font->vorg = 0; \
-  } while (0)
-
 namespace ots {
 
-bool ots_vorg_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypeVORG::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
-  font->vorg = new OpenTypeVORG;
-  OpenTypeVORG * const vorg = font->vorg;
 
   uint16_t num_recs;
-  if (!table.ReadU16(&vorg->major_version) ||
-      !table.ReadU16(&vorg->minor_version) ||
-      !table.ReadS16(&vorg->default_vert_origin_y) ||
+  if (!table.ReadU16(&this->major_version) ||
+      !table.ReadU16(&this->minor_version) ||
+      !table.ReadS16(&this->default_vert_origin_y) ||
       !table.ReadU16(&num_recs)) {
-    return OTS_FAILURE_MSG("Failed to read header");
+    return Error("Failed to read header");
   }
-  if (vorg->major_version != 1) {
-    DROP_THIS_TABLE("bad major version: %u", vorg->major_version);
-    return true;
+  if (this->major_version != 1) {
+    return Drop("Unsupported majorVersion: %u", this->major_version);
   }
-  if (vorg->minor_version != 0) {
-    DROP_THIS_TABLE("bad minor version: %u", vorg->minor_version);
-    return true;
+  if (this->minor_version != 0) {
+    return Drop("Unsupported minorVersion: %u", this->minor_version);
   }
 
   // num_recs might be zero (e.g., DFHSMinchoPro5-W3-Demo.otf).
@@ -48,64 +34,50 @@ bool ots_vorg_parse(Font *font, const uint8_t *data, size_t length) {
   }
 
   uint16_t last_glyph_index = 0;
-  vorg->metrics.reserve(num_recs);
+  this->metrics.reserve(num_recs);
   for (unsigned i = 0; i < num_recs; ++i) {
     OpenTypeVORGMetrics rec;
 
     if (!table.ReadU16(&rec.glyph_index) ||
         !table.ReadS16(&rec.vert_origin_y)) {
-      return OTS_FAILURE_MSG("Failed to read record %d", i);
+      return Error("Failed to read record %d", i);
     }
     if ((i != 0) && (rec.glyph_index <= last_glyph_index)) {
-      DROP_THIS_TABLE("the table is not sorted");
-      return true;
+      return Drop("The table is not sorted");
     }
     last_glyph_index = rec.glyph_index;
 
-    vorg->metrics.push_back(rec);
+    this->metrics.push_back(rec);
   }
 
   return true;
 }
 
-bool ots_vorg_should_serialise(Font *font) {
-  if (!font->cff) return false;  // this table is not for fonts with TT glyphs.
-  return font->vorg != NULL;
-}
-
-bool ots_vorg_serialise(OTSStream *out, Font *font) {
-  OpenTypeVORG * const vorg = font->vorg;
-  
-  const uint16_t num_metrics = static_cast<uint16_t>(vorg->metrics.size());
-  if (num_metrics != vorg->metrics.size() ||
-      !out->WriteU16(vorg->major_version) ||
-      !out->WriteU16(vorg->minor_version) ||
-      !out->WriteS16(vorg->default_vert_origin_y) ||
+bool OpenTypeVORG::Serialize(OTSStream *out) {
+  const uint16_t num_metrics = static_cast<uint16_t>(this->metrics.size());
+  if (num_metrics != this->metrics.size() ||
+      !out->WriteU16(this->major_version) ||
+      !out->WriteU16(this->minor_version) ||
+      !out->WriteS16(this->default_vert_origin_y) ||
       !out->WriteU16(num_metrics)) {
-    return OTS_FAILURE_MSG("Failed to write table header");
+    return Error("Failed to write table header");
   }
 
   for (uint16_t i = 0; i < num_metrics; ++i) {
-    const OpenTypeVORGMetrics& rec = vorg->metrics[i];
+    const OpenTypeVORGMetrics& rec = this->metrics[i];
     if (!out->WriteU16(rec.glyph_index) ||
         !out->WriteS16(rec.vert_origin_y)) {
-      return OTS_FAILURE_MSG("Failed to write record %d", i);
+      return Error("Failed to write record %d", i);
     }
   }
 
   return true;
 }
 
-void ots_vorg_reuse(Font *font, Font *other) {
-  font->vorg = other->vorg;
-  font->vorg_reused = true;
-}
-
-void ots_vorg_free(Font *font) {
-  delete font->vorg;
+bool OpenTypeVORG::ShouldSerialize() {
+  return Table::ShouldSerialize() &&
+         // this table is not for fonts with TT glyphs.
+         GetFont()->GetTable(OTS_TAG_CFF) != NULL;
 }
 
 }  // namespace ots
-
-#undef TABLE_NAME
-#undef DROP_THIS_TABLE

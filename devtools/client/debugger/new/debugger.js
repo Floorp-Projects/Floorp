@@ -13401,7 +13401,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	const { isDevelopment } = __webpack_require__(828);
 	const { Services, PrefsHelper } = __webpack_require__(830);
 
-	const prefsSchemaVersion = "1.0.1";
+	const prefsSchemaVersion = "1.0.2";
 
 	const pref = Services.pref;
 
@@ -24238,7 +24238,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.cbPanel = null;
 	    var editor = this.setupEditor();
 
-	    var selectedSource = this.props.selectedSource;
+	    var _props = this.props,
+	        selectedSource = _props.selectedSource,
+	        selectedLocation = _props.selectedLocation;
 	    var shortcuts = this.context.shortcuts;
 
 
@@ -24250,6 +24252,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    shortcuts.on("Esc", this.onEscape);
 	    shortcuts.on(searchAgainPrevKey, this.onSearchAgain);
 	    shortcuts.on(searchAgainKey, this.onSearchAgain);
+
+	    if (selectedLocation && !!selectedLocation.line) {
+	      this.pendingJumpLocation = selectedLocation;
+	    }
 
 	    (0, _editor.updateDocument)(editor, selectedSource);
 	  }
@@ -24271,9 +24277,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // This is in `componentDidUpdate` so helper functions can expect
 	    // `this.props` to be the current props. This lifecycle method is
 	    // responsible for updating the editor annotations.
-	    var _props = this.props,
-	        selectedLocation = _props.selectedLocation,
-	        selectedSource = _props.selectedSource;
+	    var _props2 = this.props,
+	        selectedLocation = _props2.selectedLocation,
+	        selectedSource = _props2.selectedSource;
 
 	    // If the location is different and a new line is requested,
 	    // update the pending jump line. Note that if jumping to a line in
@@ -24352,9 +24358,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onSearchAgain(_, e) {
-	    var _props2 = this.props,
-	        query = _props2.query,
-	        searchModifiers = _props2.searchModifiers;
+	    var _props3 = this.props,
+	        query = _props3.query,
+	        searchModifiers = _props3.searchModifiers;
 	    var codeMirror = this.state.editor.editor.codeMirror;
 
 	    var ctx = { ed: this.state.editor, cm: codeMirror };
@@ -24368,21 +24374,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  inSelectedFrameSource() {
-	    var _props3 = this.props,
-	        selectedLocation = _props3.selectedLocation,
-	        selectedFrame = _props3.selectedFrame;
+	    var _props4 = this.props,
+	        selectedLocation = _props4.selectedLocation,
+	        selectedFrame = _props4.selectedFrame;
 
 	    return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
 	  }
 
 	  openMenu(event, codeMirror) {
-	    var _props4 = this.props,
-	        selectedSource = _props4.selectedSource,
-	        selectedLocation = _props4.selectedLocation,
-	        showSource = _props4.showSource,
-	        jumpToMappedLocation = _props4.jumpToMappedLocation,
-	        addExpression = _props4.addExpression,
-	        toggleBlackBox = _props4.toggleBlackBox;
+	    var _props5 = this.props,
+	        selectedSource = _props5.selectedSource,
+	        selectedLocation = _props5.selectedLocation,
+	        showSource = _props5.showSource,
+	        jumpToMappedLocation = _props5.jumpToMappedLocation,
+	        addExpression = _props5.addExpression,
+	        toggleBlackBox = _props5.toggleBlackBox;
 
 
 	    return (0, _EditorMenu2.default)({
@@ -24399,9 +24405,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onGutterClick(cm, line, gutter, ev) {
-	    var _props5 = this.props,
-	        selectedSource = _props5.selectedSource,
-	        toggleBreakpoint = _props5.toggleBreakpoint;
+	    var _props6 = this.props,
+	        selectedSource = _props6.selectedSource,
+	        toggleBreakpoint = _props6.toggleBreakpoint;
 
 	    // ignore right clicks in the gutter
 
@@ -24419,11 +24425,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  onGutterContextMenu(event) {
-	    var _props6 = this.props,
-	        selectedSource = _props6.selectedSource,
-	        breakpoints = _props6.breakpoints,
-	        toggleBreakpoint = _props6.toggleBreakpoint,
-	        toggleDisabledBreakpoint = _props6.toggleDisabledBreakpoint;
+	    var _props7 = this.props,
+	        selectedSource = _props7.selectedSource,
+	        breakpoints = _props7.breakpoints,
+	        toggleBreakpoint = _props7.toggleBreakpoint,
+	        toggleDisabledBreakpoint = _props7.toggleDisabledBreakpoint;
 
 
 	    if (selectedSource && selectedSource.get("isBlackBoxed")) {
@@ -24460,10 +24466,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return this.closeConditionalPanel();
 	    }
 
-	    var _props7 = this.props,
-	        selectedLocation = _props7.selectedLocation,
-	        setBreakpointCondition = _props7.setBreakpointCondition,
-	        breakpoints = _props7.breakpoints;
+	    var _props8 = this.props,
+	        selectedLocation = _props8.selectedLocation,
+	        setBreakpointCondition = _props8.setBreakpointCondition,
+	        breakpoints = _props8.breakpoints;
 
 	    var sourceId = selectedLocation ? selectedLocation.sourceId : "";
 
@@ -24495,9 +24501,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  clearDebugLine(selectedFrame) {
 	    if (this.state.editor && selectedFrame) {
-	      var _selectedFrame$locati = selectedFrame.location,
-	          sourceId = _selectedFrame$locati.sourceId,
-	          line = _selectedFrame$locati.line;
+	      var line = selectedFrame.location.line;
 
 	      if (debugExpression) {
 	        debugExpression.clear();
@@ -24509,9 +24513,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  setDebugLine(selectedFrame, selectedLocation) {
 	    if (this.state.editor && selectedFrame && selectedLocation && selectedFrame.location.sourceId === selectedLocation.sourceId) {
-	      var _selectedFrame$locati2 = selectedFrame.location,
-	          line = _selectedFrame$locati2.line,
-	          column = _selectedFrame$locati2.column;
+	      var _selectedFrame$locati = selectedFrame.location,
+	          line = _selectedFrame$locati.line,
+	          column = _selectedFrame$locati.column;
 
 	      this.state.editor.codeMirror.addLineClass(line - 1, "line", "new-debug-line");
 
@@ -24559,10 +24563,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  getInlineEditorStyles() {
-	    var _props8 = this.props,
-	        selectedSource = _props8.selectedSource,
-	        horizontal = _props8.horizontal,
-	        searchOn = _props8.searchOn;
+	    var _props9 = this.props,
+	        selectedSource = _props9.selectedSource,
+	        horizontal = _props9.horizontal,
+	        searchOn = _props9.searchOn;
 
 
 	    var subtractions = [];
@@ -24585,7 +24589,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var highlightedLineRange = this.props.highlightedLineRange;
 
 
-	    if (!highlightedLineRange) {
+	    if (!highlightedLineRange || !this.state.editor) {
 	      return;
 	    }
 
@@ -24596,9 +24600,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderHitCounts() {
-	    var _props9 = this.props,
-	        hitCount = _props9.hitCount,
-	        selectedSource = _props9.selectedSource;
+	    var _props10 = this.props,
+	        hitCount = _props10.hitCount,
+	        selectedSource = _props10.selectedSource;
 
 
 	    if (!selectedSource || selectedSource.get("loading") || !hitCount || !this.state.editor) {
@@ -24613,9 +24617,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderPreview() {
-	    var _props10 = this.props,
-	        selectedSource = _props10.selectedSource,
-	        selection = _props10.selection;
+	    var _props11 = this.props,
+	        selectedSource = _props11.selectedSource,
+	        selection = _props11.selection;
 
 	    if (!this.state.editor || !selectedSource) {
 	      return null;
@@ -24669,11 +24673,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  renderSearchBar() {
-	    var _props11 = this.props,
-	        selectSource = _props11.selectSource,
-	        selectedSource = _props11.selectedSource,
-	        highlightLineRange = _props11.highlightLineRange,
-	        clearHighlightLineRange = _props11.clearHighlightLineRange;
+	    var _props12 = this.props,
+	        selectSource = _props12.selectSource,
+	        selectedSource = _props12.selectedSource,
+	        highlightLineRange = _props12.highlightLineRange,
+	        clearHighlightLineRange = _props12.clearHighlightLineRange;
 
 
 	    if (!this.state.editor) {
@@ -24708,9 +24712,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  render() {
-	    var _props12 = this.props,
-	        coverageOn = _props12.coverageOn,
-	        pauseData = _props12.pauseData;
+	    var _props13 = this.props,
+	        coverageOn = _props13.coverageOn,
+	        pauseData = _props13.pauseData;
 
 
 	    return _react.DOM.div({
@@ -25318,7 +25322,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          ed = _props5.editor;
 
 
-	      if (!ed || !selectedSource || !selectedSource.get("text") || !modifiers) {
+	      if (!query || !ed || !selectedSource || !selectedSource.get("text") || !modifiers) {
 	        return;
 	      }
 
@@ -28089,7 +28093,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      "aria-label": breakpointsDisabled ? L10N.getStr("breakpoints.enable") : L10N.getStr("breakpoints.disable"),
 	      className: boxClassName,
 	      disabled: breakpointsLoading,
-	      onClick: e => {
+	      onChange: e => {
 	        e.stopPropagation();
 	        toggleAllBreakpoints(!breakpointsDisabled);
 	      },
@@ -45927,7 +45931,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	function forEachLine(codeMirror, iter) {
-	  codeMirror.doc.iter(0, codeMirror.lineCount(), iter);
+	  codeMirror.operation(() => {
+	    codeMirror.doc.iter(0, codeMirror.lineCount(), iter);
+	  });
 	}
 
 	function removeLineClass(codeMirror, line, className) {
@@ -45948,6 +45954,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return codeMirror.getCursor().line;
 	}
 
+	function getTokenLocation(codeMirror, tokenEl) {
+	  var lineOffset = 1;
+
+	  var _tokenEl$getBoundingC = tokenEl.getBoundingClientRect(),
+	      left = _tokenEl$getBoundingC.left,
+	      top = _tokenEl$getBoundingC.top;
+
+	  var _codeMirror$coordsCha = codeMirror.coordsChar({ left, top }),
+	      line = _codeMirror$coordsCha.line,
+	      ch = _codeMirror$coordsCha.ch;
+
+	  return {
+	    line: line + lineOffset,
+	    column: ch
+	  };
+	}
+
 	/**
 	 * Forces the breakpoint gutter to be the same size as the line
 	 * numbers gutter. Editor CSS will absolutely position the gutter
@@ -45958,8 +45981,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var gutters = editor.display.gutters;
 	  var lineNumbers = gutters.querySelector(".CodeMirror-linenumbers");
 	  var breakpoints = gutters.querySelector(".breakpoints");
-	  var width = lineNumbers.clientWidth;
-	  breakpoints.style.width = `${width}px`;
+	  breakpoints.style.width = `${lineNumbers.clientWidth}px`;
 	}
 
 	module.exports = {
@@ -45967,6 +45989,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  clearLineClass,
 	  getTextForLine,
 	  getCursorLine,
+	  getTokenLocation,
 	  resizeBreakpointGutter
 	};
 
@@ -46668,16 +46691,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	class Frames extends _react.Component {
 
-	  collapseFrames(frames) {
-	    var frameworkGroupingOn = this.props.frameworkGroupingOn;
-
-	    if (!frameworkGroupingOn) {
-	      return frames;
-	    }
-
-	    return (0, _frame.collapseFrames)(frames);
-	  }
-
 	  constructor() {
 	    super(...arguments);
 
@@ -46704,6 +46717,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.setState({
 	      showAllFrames: !this.state.showAllFrames
 	    });
+	  }
+
+	  collapseFrames(frames) {
+	    var frameworkGroupingOn = this.props.frameworkGroupingOn;
+
+	    if (!frameworkGroupingOn) {
+	      return frames;
+	    }
+
+	    return (0, _frame.collapseFrames)(frames);
 	  }
 
 	  truncateFrames(frames) {
@@ -46762,7 +46785,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  renderToggleButton(frames) {
 	    var buttonMessage = this.state.showAllFrames ? L10N.getStr("callStack.collapse") : L10N.getStr("callStack.expand");
 
-	    frames = (0, _frame.collapseFrames)(frames);
+	    frames = this.collapseFrames(frames);
 	    if (frames.length <= NUM_FRAMES_SHOWN) {
 	      return null;
 	    }
@@ -51720,8 +51743,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var _react = __webpack_require__(2);
 
-	var _devtoolsConfig = __webpack_require__(828);
-
 	var _Breakpoint2 = __webpack_require__(714);
 
 	var _Breakpoint3 = _interopRequireDefault(_Breakpoint2);
@@ -51763,7 +51784,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return null;
 	    }
 
-	    return _react.DOM.div({}, breakpoints.valueSeq().filter(b => (0, _devtoolsConfig.isEnabled)("columnBreakpoints") ? !b.location.column : true).map(bp => Breakpoint({
+	    return _react.DOM.div({}, breakpoints.valueSeq().map(bp => Breakpoint({
 	      key: (0, _breakpoint.makeLocationId)(bp.location),
 	      breakpoint: bp,
 	      selectedSource,

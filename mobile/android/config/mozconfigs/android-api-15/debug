@@ -5,7 +5,7 @@ ac_add_options --enable-debug
 ac_add_options --enable-marionette
 
 # Android
-ac_add_options --with-android-min-sdk=15
+ac_add_options --with-android-min-sdk=16
 ac_add_options --target=arm-linux-androideabi
 
 export MOZILLA_OFFICIAL=1

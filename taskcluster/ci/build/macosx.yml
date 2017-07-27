@@ -88,14 +88,17 @@ macosx64-dmd/opt:
         - linux64-libdmg
         - linux64-sccache
 
-macosx64-devedition/opt:
-    description: "MacOS X Dev Edition x64"
+macosx64-devedition-nightly/opt:
+    description: "MacOS X Dev Edition x64 Nightly"
+    attributes:
+        nightly: true
     index:
         product: devedition
-        job-name: macosx64-devedition-opt
+        job-name: macosx64-opt
+        type: nightly
     treeherder:
         platform: osx-cross-devedition/opt
-        symbol: tc(B)
+        symbol: tc(N)
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
@@ -107,9 +110,12 @@ macosx64-devedition/opt:
         actions: [get-secrets build update]
         config:
             - builds/releng_base_mac_64_cross_builds.py
+            - disable_signing.py
+            - taskcluster_nightly.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: internal
+        custom-build-variant-cfg: devedition
     run-on-projects: ['mozilla-beta',]
     toolchains:
         - linux64-cctools-port

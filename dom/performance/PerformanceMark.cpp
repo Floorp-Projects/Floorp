@@ -29,3 +29,9 @@ PerformanceMark::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return PerformanceMarkBinding::Wrap(aCx, this, aGivenProto);
 }
+
+size_t
+PerformanceMark::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}

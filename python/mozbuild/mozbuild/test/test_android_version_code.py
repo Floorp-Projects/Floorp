@@ -23,10 +23,10 @@ class TestAndroidVersionCode(unittest.TestCase):
 
     def test_android_version_code_v1(self):
         buildid = '20150825141628'
-        arm_api15 =   0b01111000001000000001001001110001
+        arm_api16 =   0b01111000001000000001001001110001
         arm64_api21 = 0b01111000001000000001001001110100
         x86_api9  =   0b01111000001000000001001001110100
-        self.assertEqual(android_version_code_v1(buildid, cpu_arch='armeabi-v7a', min_sdk=15, max_sdk=None), arm_api15)
+        self.assertEqual(android_version_code_v1(buildid, cpu_arch='armeabi-v7a', min_sdk=16, max_sdk=None), arm_api16)
         self.assertEqual(android_version_code_v1(buildid, cpu_arch='arm64-v8a', min_sdk=21, max_sdk=None), arm64_api21)
         self.assertEqual(android_version_code_v1(buildid, cpu_arch='x86', min_sdk=9, max_sdk=None), x86_api9)
 
