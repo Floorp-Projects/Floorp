@@ -765,7 +765,7 @@ StackTrace::Get(Thread* aT)
     // frame pointer, and GetStackTop() for the stack end.
     CONTEXT context;
     RtlCaptureContext(&context);
-    void* fp = reinterpret_cast<void*>(context.Ebp);
+    void** fp = reinterpret_cast<void**>(context.Ebp);
 
     // Offset 0x18 from the FS segment register gives a pointer to the thread
     // information block for the current thread.
@@ -785,8 +785,7 @@ StackTrace::Get(Thread* aT)
 #endif
     void* stackEnd = static_cast<void*>(pTib->StackBase);
     bool ok = FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0,
-                                    MaxFrames, &tmp,
-                                    reinterpret_cast<void**>(fp), stackEnd);
+                                    MaxFrames, &tmp, fp, stackEnd);
 #elif defined(XP_MACOSX)
     // This avoids MozStackWalk(), which has become unusably slow on Mac due to
     // changes in libunwind.
@@ -794,7 +793,7 @@ StackTrace::Get(Thread* aT)
     // This code is cribbed from the Gecko Profiler, which also uses
     // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
     // pointer, and GetStackTop() for the stack end.
-    void* fp;
+    void** fp;
     asm (
         // Dereference %rbp to get previous %rbp
         "movq (%%rbp), %0\n\t"
@@ -803,8 +802,7 @@ StackTrace::Get(Thread* aT)
     );
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
     bool ok = FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0,
-                                    MaxFrames, &tmp,
-                                    reinterpret_cast<void**>(fp), stackEnd);
+                                    MaxFrames, &tmp, fp, stackEnd);
 #else
 #if defined(XP_WIN) && defined(_M_X64)
     int skipFrames = 1;
