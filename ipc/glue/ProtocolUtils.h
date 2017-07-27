@@ -597,14 +597,12 @@ public:
              mozilla::ipc::Transport::Mode aMode,
              TransportDescriptor aTransport,
              ProcessId aMyPid,
-             ProcessId aOtherPid,
-             ProtocolId aProtocolId)
+             ProcessId aOtherPid)
       : mValid(true)
       , mMode(aMode)
       , mTransport(aTransport)
       , mMyPid(aMyPid)
       , mOtherPid(aOtherPid)
-      , mProtocolId(aProtocolId)
     {}
 
     Endpoint(Endpoint&& aOther)
@@ -613,7 +611,6 @@ public:
       , mTransport(aOther.mTransport)
       , mMyPid(aOther.mMyPid)
       , mOtherPid(aOther.mOtherPid)
-      , mProtocolId(aOther.mProtocolId)
     {
         aOther.mValid = false;
     }
@@ -625,7 +622,6 @@ public:
         mTransport = aOther.mTransport;
         mMyPid = aOther.mMyPid;
         mOtherPid = aOther.mOtherPid;
-        mProtocolId = aOther.mProtocolId;
 
         aOther.mValid = false;
         return *this;
@@ -675,7 +671,6 @@ private:
     mozilla::ipc::Transport::Mode mMode;
     TransportDescriptor mTransport;
     ProcessId mMyPid, mOtherPid;
-    ProtocolId mProtocolId;
 };
 
 #if defined(MOZ_CRASHREPORTER) && defined(XP_MACOSX)
@@ -692,8 +687,6 @@ nsresult
 CreateEndpoints(const PrivateIPDLInterface& aPrivate,
                 base::ProcessId aParentDestPid,
                 base::ProcessId aChildDestPid,
-                ProtocolId aProtocol,
-                ProtocolId aChildProtocol,
                 Endpoint<PFooParent>* aParentEndpoint,
                 Endpoint<PFooChild>* aChildEndpoint)
 {
@@ -708,10 +701,10 @@ CreateEndpoints(const PrivateIPDLInterface& aPrivate,
   }
 
   *aParentEndpoint = Endpoint<PFooParent>(aPrivate, mozilla::ipc::Transport::MODE_SERVER,
-                                          parentTransport, aParentDestPid, aChildDestPid, aProtocol);
+                                          parentTransport, aParentDestPid, aChildDestPid);
 
   *aChildEndpoint = Endpoint<PFooChild>(aPrivate, mozilla::ipc::Transport::MODE_CLIENT,
-                                        childTransport, aChildDestPid, aParentDestPid, aChildProtocol);
+                                        childTransport, aChildDestPid, aParentDestPid);
 
   return NS_OK;
 }
@@ -822,7 +815,6 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>>
 
         IPC::WriteParam(aMsg, aParam.mMyPid);
         IPC::WriteParam(aMsg, aParam.mOtherPid);
-        IPC::WriteParam(aMsg, static_cast<uint32_t>(aParam.mProtocolId));
     }
 
     static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -837,16 +829,14 @@ struct ParamTraits<mozilla::ipc::Endpoint<PFooSide>>
             return true;
         }
 
-        uint32_t mode, protocolId;
+        uint32_t mode;
         if (!IPC::ReadParam(aMsg, aIter, &mode) ||
             !IPC::ReadParam(aMsg, aIter, &aResult->mTransport) ||
             !IPC::ReadParam(aMsg, aIter, &aResult->mMyPid) ||
-            !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid) ||
-            !IPC::ReadParam(aMsg, aIter, &protocolId)) {
+            !IPC::ReadParam(aMsg, aIter, &aResult->mOtherPid)) {
             return false;
         }
         aResult->mMode = Channel::Mode(mode);
-        aResult->mProtocolId = mozilla::ipc::ProtocolId(protocolId);
         return true;
     }
 
