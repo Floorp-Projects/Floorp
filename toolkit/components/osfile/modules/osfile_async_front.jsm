@@ -1169,22 +1169,31 @@ File.exists = function exists(path) {
  * @resolves {number} The number of bytes actually written.
  */
 File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
+  const useNativeImplementation = nativeWheneverAvailable &&
+                                  !options.compression &&
+                                  !(isTypedArray(buffer) && "byteOffset" in buffer && buffer.byteOffset > 0);
   // Copy |options| to avoid modifying the original object but preserve the
   // reference to |outExecutionDuration|, |outSerializationDuration| option if it is passed.
   options = clone(options, ["outExecutionDuration", "outSerializationDuration"]);
-  // As options.tmpPath is a path, we need to encode it as |Type.path| message
-  if ("tmpPath" in options) {
+  // As options.tmpPath is a path, we need to encode it as |Type.path| message, but only
+  // if we are not using the native implementation.
+  if ("tmpPath" in options && !useNativeImplementation) {
     options.tmpPath = Type.path.toMsg(options.tmpPath);
   }
   if (isTypedArray(buffer) && (!("bytes" in options))) {
     options.bytes = buffer.byteLength;
   }
   let refObj = {};
+  let promise;
   TelemetryStopwatch.start("OSFILE_WRITEATOMIC_JANK_MS", refObj);
-  let promise = Scheduler.post("writeAtomic",
+  if (useNativeImplementation) {
+    promise = Scheduler.push(() => Native.writeAtomic(path, buffer, options));
+  } else {
+  promise = Scheduler.post("writeAtomic",
     [Type.path.toMsg(path),
      Type.void_t.in_ptr.toMsg(buffer),
      options], [options, buffer, path]);
+  }
   TelemetryStopwatch.finish("OSFILE_WRITEATOMIC_JANK_MS", refObj);
   return promise;
 };
