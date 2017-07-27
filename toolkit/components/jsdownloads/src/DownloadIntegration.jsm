@@ -44,6 +44,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CloudStorage",
+                                  "resource://gre/modules/CloudStorage.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gDownloadPlatform",
                                    "@mozilla.org/toolkit/download-platform;1",
@@ -306,6 +308,14 @@ this.DownloadIntegration = {
                                                          Ci.nsIFile);
           directoryPath = directory.path;
           await OS.File.makeDir(directoryPath, { ignoreExisting: true });
+        } catch(ex) {
+          // Either the preference isn't set or the directory cannot be created.
+          directoryPath = await this.getSystemDownloadsDirectory();
+        }
+        break;
+      case 3: // Cloud Storage
+        try {
+          directoryPath = await CloudStorage.getDownloadFolder();
         } catch(ex) {
           // Either the preference isn't set or the directory cannot be created.
           directoryPath = await this.getSystemDownloadsDirectory();
