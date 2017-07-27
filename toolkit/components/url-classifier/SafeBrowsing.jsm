@@ -401,6 +401,7 @@ this.SafeBrowsing = {
     const phishURL    = "itisatrap.org/firefox/its-a-trap.html";
     const malwareURL  = "itisatrap.org/firefox/its-an-attack.html";
     const unwantedURL = "itisatrap.org/firefox/unwanted.html";
+    const harmfulURL  = "itisatrap.org/firefox/harmful.html";
     const trackerURLs = [
       "trackertest.org/",
       "itisatracker.org/",
@@ -417,6 +418,9 @@ this.SafeBrowsing = {
     update += "n:1000\ni:test-unwanted-simple\nad:1\n" +
               "a:1:32:" + unwantedURL.length + "\n" +
               unwantedURL + "\n";
+    update += "n:1000\ni:test-harmful-simple\nad:1\n" +
+              "a:1:32:" + harmfulURL.length + "\n" +
+              harmfulURL + "\n";
     update += "n:1000\ni:test-track-simple\n" +
               "ad:" + trackerURLs.length + "\n";
     trackerURLs.forEach((trackerURL, i) => {
@@ -449,7 +453,7 @@ this.SafeBrowsing = {
     };
 
     try {
-      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple";
+      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-harmful-simple,test-track-simple,test-trackwhite-simple,test-block-simple";
       db.beginUpdate(dummyListener, tables, "");
       db.beginStream("", "");
       db.updateStream(update);

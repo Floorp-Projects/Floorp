@@ -844,6 +844,7 @@ with modules["URILOADER"]:
     errors["NS_ERROR_TRACKING_URI"] = FAILURE(34)
     errors["NS_ERROR_UNWANTED_URI"] = FAILURE(35)
     errors["NS_ERROR_BLOCKED_URI"] = FAILURE(37)
+    errors["NS_ERROR_HARMFUL_URI"] = FAILURE(38)
     # Used when "Save Link As..." doesn't see the headers quickly enough to
     # choose a filename.  See nsContextMenu.js.
     errors["NS_ERROR_SAVE_LINK_AS_TIMEOUT"] = FAILURE(32)
