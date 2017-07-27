@@ -46,6 +46,7 @@ class SpliceableJSONWriter;
 namespace mozilla {
 class MallocAllocPolicy;
 template <class T, size_t MinInlineCapacity, class AllocPolicy> class Vector;
+class TimeStamp;
 } // namespace mozilla
 
 // When the profiler is disabled functions declared with these macros are
@@ -460,7 +461,8 @@ PROFILER_FUNC(
 // Returns false if the profiler is inactive.
 PROFILER_FUNC(
   bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
-                                             double aSinceTime = 0),
+                                             double aSinceTime = 0,
+                                             mozilla::TimeStamp* aOutFirstSampleTime = nullptr),
   false)
 
 // Get the profile and write it into a file. A no-op if the profile is
