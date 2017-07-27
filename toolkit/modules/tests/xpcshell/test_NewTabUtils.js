@@ -418,6 +418,33 @@ add_task(async function getTopFrencentSites_maxLimit() {
   Assert.ok(links.length > 6, "query default to more than visible count");
 });
 
+add_task(async function getTopFrencentSites_allowedProtocols() {
+  await setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+
+  // add a visit from a file:// site
+  let testURI = "file:///some/file/path.png";
+  await PlacesTestUtils.addVisits(testURI);
+
+  let links = await provider.getTopSites();
+  Assert.equal(links.length, 0, "don't get sites with the file:// protocol");
+
+  // now add a site with an allowed protocol
+  testURI = "http://www.mozilla.com";
+  await PlacesTestUtils.addVisits(testURI);
+
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 1, "http:// is an allowed protocol");
+
+  // and just to be sure, add a visit to a site with ftp:// protocol
+  testURI = "ftp://bad/example";
+  await PlacesTestUtils.addVisits(testURI);
+
+  links = await provider.getTopSites();
+  Assert.equal(links.length, 1, "we still only accept http:// and https:// for top sites");
+});
+
 add_task(async function getTopFrecentSites_order() {
   await setUpActivityStreamTest();
 
