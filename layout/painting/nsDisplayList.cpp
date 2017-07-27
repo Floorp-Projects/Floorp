@@ -6127,8 +6127,7 @@ nsDisplayOpacity::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuil
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
   uint64_t animationsId = 0;
 
-  if (gfxPrefs::WebRenderOMTAEnabled() &&
-      !animationInfo.GetAnimations().IsEmpty()) {
+  if (!animationInfo.GetAnimations().IsEmpty()) {
     animationsId = animationInfo.GetCompositorAnimationsId();
     opacityForSC = nullptr;
     OptionalOpacity opacityForCompositor = mOpacity;
@@ -7720,8 +7719,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
   animationInfo.StartPendingAnimations(aManager->GetAnimationReadyTime());
   uint64_t animationsId = 0;
 
-  if (gfxPrefs::WebRenderOMTAEnabled() &&
-      !animationInfo.GetAnimations().IsEmpty()) {
+  if (!animationInfo.GetAnimations().IsEmpty()) {
     animationsId = animationInfo.GetCompositorAnimationsId();
 
     // Update transfrom as nullptr in stacking context if there exists
