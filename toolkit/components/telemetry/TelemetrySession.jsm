@@ -1009,8 +1009,8 @@ var Impl = {
       return [];
     }
 
-    let snapshot = Telemetry.snapshotEvents(this.getDatasetType(),
-                                            clearSubsession);
+    let snapshot = Telemetry.snapshotBuiltinEvents(this.getDatasetType(),
+                                                   clearSubsession);
 
     // Don't return the test events outside of test environments.
     if (!this._testing) {
@@ -1322,9 +1322,6 @@ var Impl = {
         histograms: histograms["extension"],
         keyedHistograms: keyedHistograms["extension"],
         events: events["extension"] || [],
-      },
-      dynamic: {
-        events: events["dynamic"] || [],
       },
     };
 
