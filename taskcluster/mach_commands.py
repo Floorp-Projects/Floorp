@@ -118,6 +118,18 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--head-rev',
                      required=True,
                      help='Commit revision to use from head repository')
+    @CommandArgument('--comm-base-repository',
+                     required=False,
+                     help='URL for "base" comm-* repository to clone')
+    @CommandArgument('--comm-head-repository',
+                     required=False,
+                     help='URL for "head" comm-* repository to fetch revision from')
+    @CommandArgument('--comm-head-ref',
+                     required=False,
+                     help='comm-* Reference (this is same as rev usually for hg)')
+    @CommandArgument('--comm-head-rev',
+                     required=False,
+                     help='Commit revision to use from head comm-* repository')
     @CommandArgument('--message',
                      required=True,
                      help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
