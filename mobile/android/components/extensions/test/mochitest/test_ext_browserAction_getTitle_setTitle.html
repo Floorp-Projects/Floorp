@@ -49,6 +49,18 @@ add_task(async function test_setTitle_and_getTitle() {
       return tab;
     }
 
+    // Test on tabId 0
+    // Test that the default title is returned before the title is set for the tab.
+    let tabTitle = await browser.browserAction.getTitle({tabId: 0});
+    browser.test.assertEq("Browser Action", tabTitle,
+                          "Expected the default title to be returned for tabId 0");
+
+    // Set the title for the new tab and test that getTitle returns the correct title.
+    await browser.browserAction.setTitle({tabId: 0, title: "tab 0"});
+    tabTitle = await browser.browserAction.getTitle({tabId: 0});
+    browser.test.assertEq("tab 0", tabTitle,
+                          "Expected the new tab title to be returned for tabId 0");
+
     // Create and test 3 new tabs.
     let tab1 = await createAndTestNewTab("tab 1", "about:blank");
     let tab2 = await createAndTestNewTab("tab 2", "about:blank");
