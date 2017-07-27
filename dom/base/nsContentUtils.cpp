@@ -290,7 +290,7 @@ bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
 bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsUserTimingLoggingEnabled = false;
-bool nsContentUtils::sIsExperimentalAutocompleteEnabled = false;
+bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sIsWebComponentsEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
@@ -693,8 +693,8 @@ nsContentUtils::Init()
   Preferences::AddBoolVarCache(&sIsFrameTimingPrefEnabled,
                                "dom.enable_frame_timing", false);
 
-  Preferences::AddBoolVarCache(&sIsExperimentalAutocompleteEnabled,
-                               "dom.forms.autocomplete.experimental", false);
+  Preferences::AddBoolVarCache(&sIsFormAutofillAutocompleteEnabled,
+                               "dom.forms.autocomplete.formautofill", false);
 
   Preferences::AddBoolVarCache(&sIsWebComponentsEnabled,
                                "dom.webcomponents.enabled", false);
@@ -1184,9 +1184,9 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
       return eAutocompleteAttrState_Valid;
     }
 
-    // Only allow on/off if experimental @autocomplete values aren't enabled
+    // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsExperimentalAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
@@ -1196,9 +1196,9 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
     }
     category = eAutocompleteCategory_NORMAL;
   } else { // Check if the last token is of the contact category instead.
-    // Only allow on/off if experimental @autocomplete values aren't enabled
+    // Only allow on/off if form autofill @autocomplete values aren't enabled
     // and it doesn't grant all valid values.
-    if (!sIsExperimentalAutocompleteEnabled && !aGrantAllValidValue) {
+    if (!sIsFormAutofillAutocompleteEnabled && !aGrantAllValidValue) {
       return eAutocompleteAttrState_Invalid;
     }
 
