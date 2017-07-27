@@ -220,6 +220,15 @@ int32_t RTPSender::SetRID(const char* rid) {
   return 0;
 }
 
+int32_t RTPSender::SetMId(const char* mid) {
+  rtc::CritScope lock(&send_critsect_);
+  const size_t len = (mid && mid[0]) ? strlen(mid) : 0;
+  if (len) {
+    mId.Set(mid, len);
+  }
+  return 0;
+}
+
 int32_t RTPSender::RegisterRtpHeaderExtension(RTPExtensionType type,
                                               uint8_t id) {
   rtc::CritScope lock(&send_critsect_);
@@ -451,7 +460,7 @@ bool RTPSender::SendOutgoingData(FrameType frame_type,
     result = video_->SendVideo(video_type, frame_type, payload_type,
                                rtp_timestamp, capture_time_ms, payload_data,
                                payload_size, fragmentation, rtp_header,
-                               &rtpStreamId);
+                               &rtpStreamId, &mId);
   }
 
   rtc::CritScope cs(&statistics_crit_);

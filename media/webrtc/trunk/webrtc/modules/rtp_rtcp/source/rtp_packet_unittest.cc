@@ -65,6 +65,16 @@ constexpr uint8_t kPacketWithRsid[] = {
     'e',  'a',  'm',  'i',
     'd' , 0x00, 0x00, 0x00};
 
+constexpr uint8_t kMIdExtensionId = 0xb;
+constexpr char kMId[] = "midval";
+constexpr uint8_t kPacketWithMid[] = {
+    0x90, kPayloadType, kSeqNumFirstByte, kSeqNumSecondByte,
+    0x65, 0x43, 0x12, 0x78,
+    0x12, 0x34, 0x56, 0x78,
+    0xbe, 0xde, 0x00, 0x02,
+    0xb5, 'm',  'i',  'd',
+    'v',  'a',  'l',  0x00};
+
 constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
 constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
 constexpr uint8_t kPacketPaddingSize = 8;
@@ -140,6 +150,18 @@ TEST(RtpPacketTest, CreateWithDynamicSizedExtensions) {
   packet.SetSsrc(kSsrc);
   packet.SetExtension<RtpStreamId>(kStreamId);
   EXPECT_THAT(kPacketWithRsid, ElementsAreArray(packet.data(), packet.size()));
+}
+
+TEST(RtpPacketTest, CreateWithDynamicSizedExtensionMid) {
+  RtpPacketToSend::ExtensionManager extensions;
+  extensions.Register<RtpStreamId>(kMIdExtensionId);
+  RtpPacketToSend packet(&extensions);
+  packet.SetPayloadType(kPayloadType);
+  packet.SetSequenceNumber(kSeqNum);
+  packet.SetTimestamp(kTimestamp);
+  packet.SetSsrc(kSsrc);
+  packet.SetExtension<RtpStreamId>(kMId);
+  EXPECT_THAT(kPacketWithMid, ElementsAreArray(packet.data(), packet.size()));
 }
 
 TEST(RtpPacketTest, TryToCreateWithEmptyRsid) {
@@ -422,10 +444,20 @@ TEST(RtpPacketTest, ParseDynamicSizeExtension) {
     0xbe, 0xde, 0x00, 0x01,  // Extensions block of size 1x32bit words.
     0x11, 'H', 'D',          // Extension with id = 1, size = (1+1).
     0x00};  // Extension padding.
+  const uint8_t kPacket3[] = {
+    0x90, kPayloadType, kSeqNumFirstByte, kSeqNumSecondByte,
+    0x65, 0x43, 0x12, 0x78,  // Timestamp.
+    0x12, 0x34, 0x56, 0x78,  // Ssrc.
+    0xbe, 0xde, 0x00, 0x04,  // Extensions block of size 4x32bit words.
+    0x21, 'H', 'D',          // Extension with id = 2, size = (1+1).
+    0x12, 'r', 't', 'x',     // Extension with id = 1, size = (2+1).
+    0x35, 'm', 'i', 'd', 'v', 'a', 'l', // Extension with id = 3, size = (5+1).
+    0x00, 0x00};  // Extension padding.
   // clang-format on
   RtpPacketReceived::ExtensionManager extensions;
   extensions.Register<RtpStreamId>(1);
   extensions.Register<RepairedRtpStreamId>(2);
+  extensions.Register<MId>(3);
   RtpPacketReceived packet(&extensions);
   ASSERT_TRUE(packet.Parse(kPacket1, sizeof(kPacket1)));
 
@@ -442,6 +474,16 @@ TEST(RtpPacketTest, ParseDynamicSizeExtension) {
   EXPECT_TRUE(packet.GetExtension<RtpStreamId>(&rsid));
   EXPECT_EQ(rsid, "HD");
   EXPECT_FALSE(packet.GetExtension<RepairedRtpStreamId>(&repaired_rsid));
+
+  // Parse another packet with RtpStreamId, RepairedRtpStreamId, MId
+  ASSERT_TRUE(packet.Parse(kPacket3, sizeof(kPacket3)));
+  EXPECT_TRUE(packet.GetExtension<RtpStreamId>(&rsid));
+  EXPECT_EQ(rsid, "rtx");
+  EXPECT_TRUE(packet.GetExtension<RepairedRtpStreamId>(&repaired_rsid));
+  EXPECT_EQ(repaired_rsid, "HD");
+  std::string mid;
+  EXPECT_TRUE(packet.GetExtension<MId>(&mid));
+  EXPECT_EQ(mid, "midval");
 }
 
 TEST(RtpPacketTest, RawExtensionFunctionsAcceptZeroIdAndReturnFalse) {
