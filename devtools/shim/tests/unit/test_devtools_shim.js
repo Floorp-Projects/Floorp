@@ -4,8 +4,11 @@
 
 "use strict";
 
-const { DevToolsShim } =
+const { DevToolsShim: realDevToolsShim } =
     Components.utils.import("chrome://devtools-shim/content/DevToolsShim.jsm", {});
+
+// Create a copy of the DevToolsShim for the test.
+const DevToolsShim = Object.assign({}, realDevToolsShim);
 
 // Test the DevToolsShim
 
@@ -41,13 +44,11 @@ function createMockDevTools() {
   return mock;
 }
 
-let isInstalledMethodBackup = DevToolsShim.isInstalled;
 function mockDevToolsInstalled() {
   DevToolsShim.isInstalled = () => true;
 }
-
-function restoreDevToolsInstalled() {
-  DevToolsShim.isInstalled = isInstalledMethodBackup;
+function mockDevToolsUninstalled() {
+  DevToolsShim.isInstalled = () => false;
 }
 
 /**
@@ -71,8 +72,6 @@ function checkCalls(mock, method, length, lastArgs) {
 }
 
 function test_register_unregister() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   DevToolsShim.register(createMockDevTools());
@@ -80,8 +79,6 @@ function test_register_unregister() {
 
   DevToolsShim.unregister();
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
-
-  restoreDevToolsInstalled();
 }
 
 function test_on_is_forwarded_to_devtools() {
@@ -97,13 +94,9 @@ function test_on_is_forwarded_to_devtools() {
 
   DevToolsShim.on("other_event", cb2);
   checkCalls(mock, "on", 2, ["other_event", cb2]);
-
-  restoreDevToolsInstalled();
 }
 
 function test_off_called_before_registering_devtools() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
@@ -114,13 +107,9 @@ function test_off_called_before_registering_devtools() {
 
   DevToolsShim.register(mock);
   checkCalls(mock, "on", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_off_called_before_with_bad_callback() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
@@ -135,13 +124,9 @@ function test_off_called_before_with_bad_callback() {
   checkCalls(mock, "on", 1, ["test_event", cb1]);
   // Calls to off should not be held and forwarded.
   checkCalls(mock, "off", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_registering_tool() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let tool1 = {};
@@ -168,13 +153,9 @@ function test_registering_tool() {
   mock = createMockDevTools();
   DevToolsShim.register(mock);
   checkCalls(mock, "registerTool", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_registering_theme() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let theme1 = {};
@@ -201,13 +182,9 @@ function test_registering_theme() {
   mock = createMockDevTools();
   DevToolsShim.register(mock);
   checkCalls(mock, "registerTheme", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_events() {
-  mockDevToolsInstalled();
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let mock = createMockDevTools();
@@ -221,11 +198,11 @@ function test_events() {
   // Check emit is called once with the devtools-unregistered event.
   DevToolsShim.unregister();
   checkCalls(mock, "emit", 2, ["devtools-unregistered"]);
-
-  restoreDevToolsInstalled();
 }
 
 function test_scratchpad_apis() {
+  mockDevToolsUninstalled();
+
   ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
@@ -262,8 +239,6 @@ function test_scratchpad_apis() {
 
   DevToolsShim.getOpenedScratchpads();
   checkCalls(mock, "getOpenedScratchpads", 1, []);
-
-  restoreDevToolsInstalled();
 }
 
 function run_test() {
