@@ -32,6 +32,7 @@ USE_LIBS += [
     '/media/webrtc/trunk/third_party/gflags/gflags_gflags/gflags',
     '/testing/gtest/gtest',
     'media_libopus',
+    'mozglue',
     'speex',
     'webrtc',
     'webrtc_common_gn',
