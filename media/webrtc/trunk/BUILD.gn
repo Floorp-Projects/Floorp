@@ -12,9 +12,15 @@ group("default") {
   testonly = true
   deps = [
     "//webrtc",
-    "//webrtc/examples",
-    "//webrtc/tools",
   ]
+
+  if (!build_with_mozilla) {
+    deps += [
+      "//webrtc/examples",
+      "//webrtc/tools",
+    ]
+  }
+
   if (rtc_include_tests) {
     deps += [ "//webrtc:webrtc_tests" ]
   }

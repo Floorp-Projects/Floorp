@@ -39,8 +39,13 @@ config("x11") {
     "Xfixes",
     "Xi",
     "Xrender",
-    "Xtst",
   ]
+
+  if (!build_with_mozilla) {
+    libs += [
+      "Xtst",
+    ]
+  }
 }
 
 config("xcomposite") {
@@ -71,8 +76,10 @@ config("xi") {
   libs = [ "Xi" ]
 }
 
-config("xtst") {
-  libs = [ "Xtst" ]
+if (!build_with_mozilla) {
+  config("xtst") {
+    libs = [ "Xtst" ]
+  }
 }
 
 config("libresolv") {

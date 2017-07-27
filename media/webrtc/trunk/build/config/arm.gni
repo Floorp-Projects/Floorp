@@ -47,7 +47,7 @@ if (current_cpu == "arm" || v8_current_cpu == "arm") {
          arm_float_abi == "soft" || arm_float_abi == "softfp")
 
   if (arm_use_neon == "") {
-    if (current_os == "linux" && target_cpu != v8_target_cpu) {
+    if (current_os == "linux" && target_cpu != v8_target_cpu && !build_with_mozilla) {
       # Don't use neon on V8 simulator builds as a default.
       arm_use_neon = false
     } else {
