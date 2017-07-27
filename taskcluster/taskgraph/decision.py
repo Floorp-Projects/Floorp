@@ -17,7 +17,7 @@ from .generator import TaskGraphGenerator
 from .create import create_tasks
 from .parameters import Parameters
 from .taskgraph import TaskGraph
-from actions import render_actions_json
+from .actions import render_actions_json
 from . import GECKO
 
 from taskgraph.util.templates import Templates

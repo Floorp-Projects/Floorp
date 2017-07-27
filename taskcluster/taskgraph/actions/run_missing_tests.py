@@ -10,7 +10,7 @@ import logging
 from slugid import nice as slugid
 
 from .registry import register_callback_action
-from actions.util import create_task, find_decision_task
+from .util import create_task, find_decision_task
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.taskgraph import TaskGraph
