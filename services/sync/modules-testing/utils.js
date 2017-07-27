@@ -17,6 +17,7 @@ this.EXPORTED_SYMBOLS = [
   "MockFxaStorageManager",
   "AccountState", // from a module import
   "sumHistogram",
+  "getLoginTelemetryScalar",
 ];
 
 var {utils: Cu} = Components;
@@ -268,4 +269,10 @@ this.sumHistogram = function(name, options = {}) {
   }
   histogram.clear();
   return sum;
+}
+
+this.getLoginTelemetryScalar = function() {
+  let dataset = Services.telemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+  let snapshot = Services.telemetry.snapshotKeyedScalars(dataset, true);
+  return snapshot.parent ? snapshot.parent["services.sync.sync_login_state_transitions"] : {};
 }
