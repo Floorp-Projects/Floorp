@@ -481,7 +481,6 @@ private:
 
   DECL_GFX_PREF(Live, "gfx.vsync.collect-scroll-transforms",   CollectScrollTransforms, bool, false);
   DECL_GFX_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, int32_t, 10);
-  DECL_OVERRIDE_PREF(Live, "gfx.webrender.omta.enabled",       WebRenderOMTAEnabled, gfxPrefs::OverrideBase_WebRender());
   DECL_GFX_PREF(Live, "gfx.webrender.profiler.enabled",        WebRenderProfilerEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.layers-free",             WebRenderLayersFree, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrendest.enabled",                WebRendestEnabled, bool, false);
