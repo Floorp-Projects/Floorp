@@ -153,15 +153,15 @@ function testAutocomplete(aField, aType, aEnabled) {
 }
 
 // getAutocompleteInfo() should be able to parse all tokens as defined
-// in the spec regardless of whether dom.forms.autocomplete.experimental pref
+// in the spec regardless of whether dom.forms.autocomplete.formautofill pref
 // is on or off.
 add_task(async function testAutocompletePreferenceEnabled() {
-  await SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", true]]}, testInputTypes);
+  await SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.formautofill", true]]}, testInputTypes);
   testAutocompleteInfoValue(true);
 });
 
 add_task(async function testAutocompletePreferenceDisabled() {
-  await SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.experimental", false]]}, testInputTypes);
+  await SpecialPowers.pushPrefEnv({"set": [["dom.forms.autocomplete.formautofill", false]]}, testInputTypes);
   testAutocompleteInfoValue(false);
 });
 
