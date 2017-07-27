@@ -1258,12 +1258,12 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
     nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     MOZ_RELEASE_ASSERT(ww);
 
-    nsAdoptingCString url;
+    nsAutoCString url;
     if (aChromeURI) {
         url = aChromeURI->ToCString();
     } else {
-        url = Preferences::GetCString("toolkit.defaultChromeURI");
-        if (!url) {
+        nsresult rv = Preferences::GetCString("toolkit.defaultChromeURI", url);
+        if (NS_FAILED(rv)) {
             url = NS_LITERAL_CSTRING("chrome://geckoview/content/geckoview.xul");
         }
     }
@@ -1280,7 +1280,7 @@ nsWindow::GeckoViewSupport::Open(const jni::Class::LocalRef& aCls,
         chromeFlags += ",private";
     }
     nsCOMPtr<mozIDOMWindowProxy> domWindow;
-    ww->OpenWindow(nullptr, url, nullptr, chromeFlags.get(),
+    ww->OpenWindow(nullptr, url.get(), nullptr, chromeFlags.get(),
                    androidView, getter_AddRefs(domWindow));
     MOZ_RELEASE_ASSERT(domWindow);
 
