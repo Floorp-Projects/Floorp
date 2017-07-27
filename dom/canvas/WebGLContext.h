@@ -1476,18 +1476,14 @@ protected:
     uint32_t  mGLMaxTransformFeedbackSeparateAttribs;
     GLuint  mGLMaxUniformBufferBindings;
 
-    // What is supported:
     uint32_t mGLMaxColorAttachments;
     uint32_t mGLMaxDrawBuffers;
-    // What we're allowing:
-    uint32_t mImplMaxColorAttachments;
-    uint32_t mImplMaxDrawBuffers;
 
-    uint32_t mImplMaxViewportDims[2];
+    uint32_t mGLMaxViewportDims[2];
 
 public:
     GLenum LastColorAttachmentEnum() const {
-        return LOCAL_GL_COLOR_ATTACHMENT0 + mImplMaxColorAttachments - 1;
+        return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
     }
 
     const decltype(mOptions)& Options() const { return mOptions; }
@@ -1496,11 +1492,11 @@ protected:
 
     // Texture sizes are often not actually the GL values. Let's be explicit that these
     // are implementation limits.
-    uint32_t mImplMaxTextureSize;
-    uint32_t mImplMaxCubeMapTextureSize;
-    uint32_t mImplMax3DTextureSize;
-    uint32_t mImplMaxArrayTextureLayers;
-    uint32_t mImplMaxRenderbufferSize;
+    uint32_t mGLMaxTextureSize;
+    uint32_t mGLMaxCubeMapTextureSize;
+    uint32_t mGLMax3DTextureSize;
+    uint32_t mGLMaxArrayTextureLayers;
+    uint32_t mGLMaxRenderbufferSize;
 
 public:
     GLuint MaxVertexAttribs() const {
@@ -2077,6 +2073,8 @@ public:
 
 
     const decltype(mBound2DTextures)* TexListForElemType(GLenum elemType) const;
+
+    void UpdateMaxDrawBuffers();
 
     // Friend list
     friend class ScopedCopyTexImageSource;
