@@ -7,12 +7,10 @@
 EXPORTS += [
     'MP4Decoder.h',
     'MP4Demuxer.h',
-    'MP4Stream.h',
 ]
 
 UNIFIED_SOURCES += [
     'MP4Decoder.cpp',
-    'MP4Stream.cpp',
 ]
 
 SOURCES += [

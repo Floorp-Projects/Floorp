@@ -5,7 +5,6 @@
 
 #include "gtest/gtest.h"
 #include "MP4Demuxer.h"
-#include "MP4Stream.h"
 #include "mozilla/MozPromise.h"
 #include "MediaDataDemuxer.h"
 #include "mozilla/SharedThreadPool.h"
