@@ -157,11 +157,23 @@ UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
         "host/bin/mar",
         "host/bin/mbsdiff",
     ],
+    'macosx64-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+        "host/bin/mar",
+        "host/bin/mbsdiff",
+    ],
     'win32-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
         "host/bin/mar.exe",
         "host/bin/mbsdiff.exe",
     ],
+    'win32-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+        "host/bin/mar.exe",
+        "host/bin/mbsdiff.exe",
+    ],
     'win64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
+        "host/bin/mar.exe",
+        "host/bin/mbsdiff.exe",
+    ],
+    'win64-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
         "host/bin/mar.exe",
         "host/bin/mbsdiff.exe",
     ],
@@ -207,10 +219,20 @@ UPSTREAM_ARTIFACT_SIGNED_PATHS = {
         "target.dmg",
         "target.dmg.asc",
     ],
+    'macosx64-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
+        "target.dmg",
+        "target.dmg.asc",
+    ],
     'win32-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
         "target.zip",
     ],
+    'win32-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
+        "target.zip",
+    ],
     'win64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
+        "target.zip",
+    ],
+    'win64-devedition-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_EN_US + [
         "target.zip",
     ],
     'linux64-nightly-l10n': _DESKTOP_UPSTREAM_ARTIFACTS_SIGNED_L10N + [

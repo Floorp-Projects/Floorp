@@ -262,7 +262,7 @@ macosx64-nightly/opt:
         - macosx64-tests
 
 macosx64-devedition/opt:
-    build-platform: macosx64-devedition/opt
+    build-platform: macosx64-devedition-nightly/opt
     test-sets:
         - macosx64-tests
 
