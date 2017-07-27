@@ -294,7 +294,7 @@ config("compiler") {
 
     defines += [ "_FILE_OFFSET_BITS=64" ]
 
-    if (!is_android) {
+    if (!is_android && !build_with_mozilla) {
       defines += [
         "_LARGEFILE_SOURCE",
         "_LARGEFILE64_SOURCE",
@@ -1156,10 +1156,13 @@ config("chromium_code") {
 
     # In Chromium code, we define __STDC_foo_MACROS in order to get the
     # C99 macros on Mac and Linux.
-    defines = [
-      "__STDC_CONSTANT_MACROS",
-      "__STDC_FORMAT_MACROS",
-    ]
+    defines = []
+    if (!build_with_mozilla) {
+      defines += [
+        "__STDC_CONSTANT_MACROS",
+        "__STDC_FORMAT_MACROS",
+      ]
+    }
 
     if (!is_debug && !using_sanitizer &&
         (!is_linux || !is_clang || is_official_build) &&
