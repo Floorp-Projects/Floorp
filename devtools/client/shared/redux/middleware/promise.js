@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { generateUUID } = require("devtools/shared/generate-uuid");
+const uuidgen = require("sdk/util/uuid").uuid;
 const defer = require("devtools/shared/defer");
 const {
   entries, toObject, executeSoon
@@ -17,7 +17,7 @@ function promiseMiddleware({ dispatch, getState }) {
     }
 
     const promiseInst = action[PROMISE];
-    const seqId = generateUUID().toString();
+    const seqId = uuidgen().toString();
 
     // Create a new action that doesn't have the promise field and has
     // the `seqId` field that represents the sequence id
