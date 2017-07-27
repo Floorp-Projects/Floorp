@@ -599,6 +599,7 @@ ErrorHandler.prototype = {
     Svc.Obs.add("weave:service:login:error", this);
     Svc.Obs.add("weave:service:sync:error", this);
     Svc.Obs.add("weave:service:sync:finish", this);
+    Svc.Obs.add("weave:service:start-over:finish", this);
 
     this.initLogs();
   },
@@ -715,6 +716,10 @@ ErrorHandler.prototype = {
         }
         this.dontIgnoreErrors = false;
         this.notifyOnNextTick("weave:ui:sync:finish");
+        break;
+      case "weave:service:start-over:finish":
+        // ensure we capture any logs between the last sync and the reset completing.
+        this.resetFileLog();
         break;
     }
   },
