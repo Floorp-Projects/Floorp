@@ -334,6 +334,8 @@
 #  define MOZ_MAYBE_UNUSED
 #endif
 
+#ifdef __cplusplus
+
 /**
  * MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
  * cases that fall through without a break or return statement. MOZ_FALLTHROUGH
@@ -360,9 +362,14 @@
  *     return 5;
  * }
  */
-#if defined(__clang__) && __cplusplus >= 201103L
-   /* clang's fallthrough annotations are only available starting in C++11. */
+#ifndef __has_cpp_attribute
+#  define __has_cpp_attribute(x) 0
+#endif
+
+#if __has_cpp_attribute(clang::fallthrough)
 #  define MOZ_FALLTHROUGH [[clang::fallthrough]]
+#elif __has_cpp_attribute(gnu::fallthrough)
+#  define MOZ_FALLTHROUGH [[gnu::fallthrough]]
 #elif defined(_MSC_VER)
    /*
     * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):
@@ -373,8 +380,6 @@
 #else
 #  define MOZ_FALLTHROUGH /* FALLTHROUGH */
 #endif
-
-#ifdef __cplusplus
 
 /*
  * The following macros are attributes that support the static analysis plugin
