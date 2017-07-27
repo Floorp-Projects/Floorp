@@ -439,6 +439,7 @@ def get_browser_config(config):
                 'error_filename': None,
                 'no_upload_results': False,
                 'stylo': False,
+                'stylothreads': 0,
                 }
     browser_config = dict(title=config['title'])
     browser_config.update(dict([(i, config[i]) for i in required]))
