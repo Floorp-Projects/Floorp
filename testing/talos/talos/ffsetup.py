@@ -14,8 +14,6 @@ import mozrunner
 
 from mozprocess import ProcessHandlerMixin
 from mozprofile.profile import Profile
-from marionette_driver.marionette import Marionette
-from marionette_driver.addons import Addons
 from mozlog import get_proxy_logger
 
 from talos import utils
@@ -105,7 +103,26 @@ class FFSetup(object):
             restore=False)
 
         profile.set_preferences(preferences)
+
+        # installing addons
         profile.addon_manager.install_addons(extensions)
+
+        # installing webextensions
+        webextensions = self.test_config.get('webextensions', None)
+        if isinstance(webextensions, basestring):
+            webextensions = [webextensions]
+
+        if webextensions is not None:
+            for webext in webextensions:
+                filename = utils.interpolate(webext)
+                if mozinfo.os == 'win':
+                    filename = filename.replace('/', '\\')
+                if not filename.endswith('.xpi'):
+                    continue
+                if not os.path.exists(filename):
+                    continue
+
+                profile.addon_manager.install_from_path(filename)
 
     def _run_profile(self):
         runner_cls = mozrunner.runners.get(
@@ -113,67 +130,22 @@ class FFSetup(object):
                 'appname',
                 'firefox'),
             mozrunner.Runner)
+        args = [self.browser_config["extra_args"], self.browser_config["init_url"]]
+        runner = runner_cls(profile=self.profile_dir,
+                            binary=self.browser_config["browser_path"],
+                            cmdargs=args,
+                            env=self.env,
+                            process_class=ProcessHandlerMixin,
+                            process_args={})
 
-        if self.test_config.get('webextensions', None):
-            # bug 1272255 - marionette doesn't work with MOZ_DISABLE_NONLOCAL_CONNECTIONS
-            self.env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '0'
-
-            args = [self.browser_config["extra_args"], "-marionette"]
-            runner = runner_cls(profile=self.profile_dir,
-                                binary=self.browser_config["browser_path"],
-                                cmdargs=args,
-                                env=self.env,
-                                process_class=ProcessHandlerMixin,
-                                process_args={})
-
-            runner.start(outputTimeout=30)
-            proc = runner.process_handler
-            LOG.process_start(proc.pid, "%s %s" % (self.browser_config["browser_path"],
-                                                   ' '.join(args)))
-
-            try:
-                client = Marionette(host='localhost', port=2828)
-                client.start_session()
-                addons = Addons(client)
-            except Exception, e:
-                print e
-                raise TalosError("Failed to initialize Talos profile with Marionette")
-
-            extensions = self.test_config.get('webextensions', None)
-            if isinstance(extensions, str):
-                extensions = [self.test_config.get('webextensions', None)]
-            for ext in extensions:
-                filename = utils.interpolate(ext)
-                if mozinfo.os == 'win':
-                    filename = filename.replace('/', '\\')
-
-                if not filename.endswith('.xpi'):
-                    continue
-                if not os.path.exists(filename):
-                    continue
-
-                addons.install(filename)
-
-            # browse to init_url which will close the browser
-            client.navigate(self.browser_config["init_url"])
-            client.close()
-        else:
-            args = [self.browser_config["extra_args"], self.browser_config["init_url"]]
-            runner = runner_cls(profile=self.profile_dir,
-                                binary=self.browser_config["browser_path"],
-                                cmdargs=args,
-                                env=self.env,
-                                process_class=ProcessHandlerMixin,
-                                process_args={})
-
-            runner.start(outputTimeout=30)
-            proc = runner.process_handler
-            LOG.process_start(proc.pid, "%s %s" % (self.browser_config["browser_path"],
-                                                   ' '.join(args)))
+        runner.start(outputTimeout=30)
+        proc = runner.process_handler
+        LOG.process_start(proc.pid, "%s %s" % (self.browser_config["browser_path"],
+                                               ' '.join(args)))
 
         try:
             exit_code = proc.wait()
-        except Exception, e:
+        except Exception:
             proc.kill()
             raise TalosError("Browser Failed to close properly during warmup")
 
