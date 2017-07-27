@@ -59,6 +59,9 @@ public:
   void SetProfilerEnabled(bool aEnabled);
 
   /// This can be called on the render thread only.
+  void SetFrameStartTime(const TimeStamp& aTime);
+
+  /// This can be called on the render thread only.
   ~RendererOGL();
 
   /// This can be called on the render thread only.
@@ -91,6 +94,7 @@ protected:
   wr::Renderer* mRenderer;
   layers::CompositorBridgeParentBase* mBridge;
   wr::WindowId mWindowId;
+  TimeStamp mFrameStartTime;
 };
 
 } // namespace wr
