@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -94,14 +94,11 @@ bool ParseScriptTable(const ots::Font *font,
   }
 
   // The spec requires a script table for 'DFLT' tag must contain non-NULL
-  // |offset_default_lang_sys| and |lang_sys_count| == 0
+  // |offset_default_lang_sys|.
   // https://www.microsoft.com/typography/otspec/chapter2.htm
   if (tag == kScriptTableTagDflt) {
     if (offset_default_lang_sys == 0) {
       return OTS_FAILURE_MSG("DFLT script doesn't satisfy the spec. DefaultLangSys is NULL");
-    }
-    if (lang_sys_count != 0) {
-      return OTS_FAILURE_MSG("DFLT script doesn't satisfy the spec. LangSysCount is not zero: %d", lang_sys_count);
     }
   }
 
@@ -197,21 +194,24 @@ bool ParseLookupTable(ots::Font *font, const uint8_t *data,
     return OTS_FAILURE_MSG("Bad lookup type %d", lookup_type);
   }
 
+  ots::OpenTypeGDEF *gdef = static_cast<ots::OpenTypeGDEF*>(
+      font->GetTypedTable(OTS_TAG_GDEF));
+
   // Check lookup flags.
   if ((lookup_flag & kGdefRequiredFlags) &&
-      (!font->gdef || !font->gdef->has_glyph_class_def)) {
+      (!gdef || !gdef->has_glyph_class_def)) {
     return OTS_FAILURE_MSG("Lookup flags require GDEF table, "
                            "but none was found: %d", lookup_flag);
   }
   if ((lookup_flag & kMarkAttachmentTypeMask) &&
-      (!font->gdef || !font->gdef->has_mark_attachment_class_def)) {
+      (!gdef || !gdef->has_mark_attachment_class_def)) {
     return OTS_FAILURE_MSG("Lookup flags ask for mark attachment, "
                            "but there is no GDEF table or it has no "
                            "mark attachment classes: %d", lookup_flag);
   }
   bool use_mark_filtering_set = false;
   if (lookup_flag & kUseMarkFilteringSetBit) {
-    if (!font->gdef || !font->gdef->has_mark_glyph_sets_def) {
+    if (!gdef || !gdef->has_mark_glyph_sets_def) {
       return OTS_FAILURE_MSG("Lookup flags ask for mark filtering, "
                              "but there is no GDEF table or it has no "
                              "mark filtering sets: %d", lookup_flag);
@@ -248,8 +248,8 @@ bool ParseLookupTable(ots::Font *font, const uint8_t *data,
     if (!subtable.ReadU16(&mark_filtering_set)) {
       return OTS_FAILURE_MSG("Failed to read mark filtering set");
     }
-    if (font->gdef->num_mark_glyph_sets == 0 ||
-        mark_filtering_set >= font->gdef->num_mark_glyph_sets) {
+    if (gdef->num_mark_glyph_sets == 0 ||
+        mark_filtering_set >= gdef->num_mark_glyph_sets) {
       return OTS_FAILURE_MSG("Bad mark filtering set %d", mark_filtering_set);
     }
   }
