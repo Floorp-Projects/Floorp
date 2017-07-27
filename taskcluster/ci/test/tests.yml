@@ -71,6 +71,9 @@ crashtest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -426,6 +429,9 @@ mochitest:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -521,6 +527,9 @@ mochitest-browser-chrome:
             default: 3600
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -742,6 +751,9 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -790,6 +802,9 @@ mochitest-gpu:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -884,6 +899,9 @@ mochitest-media:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -983,6 +1001,9 @@ mochitest-webgl:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -1048,6 +1069,9 @@ reftest:
     docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             default: built-projects
     worker-type:
@@ -1163,6 +1187,9 @@ reftest-no-accel:
         by-test-platform:
             windows10.*: []
             linux64-qr/.*: ['mozilla-central', 'try']
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             default: built-projects
     worker-type:
         by-test-platform:
@@ -1793,6 +1820,9 @@ xpcshell:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
+            # Deactivate try on Buildbot, by default. We don't have enough machines
+            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
+            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             default: built-projects
     worker-type:
