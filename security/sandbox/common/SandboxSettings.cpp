@@ -40,10 +40,13 @@ static nsresult
 GetStringValueFromBundlePlist(const nsAString& aKey, nsAutoCString& aValue)
 {
   CFBundleRef mainBundle = CFBundleGetMainBundle();
+  if (mainBundle == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Read this app's bundle Info.plist as a dictionary
   CFDictionaryRef bundleInfoDict = CFBundleGetInfoDictionary(mainBundle);
-  if (bundleInfoDict == NULL) {
+  if (bundleInfoDict == nullptr) {
     return NS_ERROR_FAILURE;
   }
 
@@ -51,13 +54,43 @@ GetStringValueFromBundlePlist(const nsAString& aKey, nsAutoCString& aValue)
   CFStringRef key = CFStringCreateWithCString(kCFAllocatorDefault,
                                               keyAutoCString.get(),
                                               kCFStringEncodingUTF8);
+  if (key == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
 
   CFStringRef value = (CFStringRef)CFDictionaryGetValue(bundleInfoDict, key);
+  CFRelease(key);
+  if (value == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CFIndex valueLength = CFStringGetLength(value);
+  if (valueLength == 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   const char* valueCString = CFStringGetCStringPtr(value,
                                                    kCFStringEncodingUTF8);
-  aValue.Assign(valueCString);
-  CFRelease(key);
+  if (valueCString) {
+    aValue.Assign(valueCString);
+    return NS_OK;
+  }
 
+  CFIndex maxLength =
+    CFStringGetMaximumSizeForEncoding(valueLength, kCFStringEncodingUTF8) + 1;
+  char* valueBuffer = static_cast<char*>(moz_xmalloc(maxLength));
+  if (!valueBuffer) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!CFStringGetCString(value, valueBuffer, maxLength,
+                          kCFStringEncodingUTF8)) {
+    free(valueBuffer);
+    return NS_ERROR_FAILURE;
+  }
+
+  aValue.Assign(valueBuffer);
+  free(valueBuffer);
   return NS_OK;
 }
 
