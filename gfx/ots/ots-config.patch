@@ -1,0 +1,22 @@
+diff --git a/gfx/ots/src/ots.h b/gfx/ots/src/ots.h
+--- a/gfx/ots/src/ots.h
++++ b/gfx/ots/src/ots.h
+@@ -1,16 +1,17 @@
+ // Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef OTS_H_
+ #define OTS_H_
+ 
+-#include "config.h"
++// Not needed in the gecko build
++// #include "config.h"
+ 
+ #include <stddef.h>
+ #include <cstdarg>
+ #include <cstddef>
+ #include <cstdio>
+ #include <cstdlib>
+ #include <cstring>
+ #include <limits>

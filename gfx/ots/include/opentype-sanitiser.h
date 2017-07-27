@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -52,7 +52,7 @@ typedef unsigned __int64 uint64_t;
 #include <cstring>
 
 #define OTS_TAG(c1,c2,c3,c4) ((uint32_t)((((uint8_t)(c1))<<24)|(((uint8_t)(c2))<<16)|(((uint8_t)(c3))<<8)|((uint8_t)(c4))))
-#define OTS_UNTAG(tag)       ((uint8_t)((tag)>>24)), ((uint8_t)((tag)>>16)), ((uint8_t)((tag)>>8)), ((uint8_t)(tag))
+#define OTS_UNTAG(tag)       ((char)((tag)>>24)), ((char)((tag)>>16)), ((char)((tag)>>8)), ((char)(tag))
 
 namespace ots {
 
@@ -186,7 +186,7 @@ class OTS_API OTSContext {
     OTSContext() {}
     virtual ~OTSContext() {}
 
-    // Process a given OpenType file and write out a sanitised version
+    // Process a given OpenType file and write out a sanitized version
     //   output: a pointer to an object implementing the OTSStream interface. The
     //     sanitisied output will be written to this. In the even of a failure,
     //     partial output may have been written.

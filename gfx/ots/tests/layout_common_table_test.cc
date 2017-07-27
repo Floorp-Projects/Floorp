@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -254,9 +254,15 @@ class TableTest : public ::testing::Test {
  protected:
 
   virtual void SetUp() {
-    ots::OpenTypeFile *file = new ots::OpenTypeFile();
+    ots::FontFile *file = new ots::FontFile();
     file->context = new ots::OTSContext();
     font = new ots::Font(file);
+  }
+
+  virtual void TearDown() {
+    delete font->file->context;
+    delete font->file;
+    delete font;
   }
 
   TestStream out;

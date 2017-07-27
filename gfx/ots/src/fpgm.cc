@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,53 +7,36 @@
 // fpgm - Font Program
 // http://www.microsoft.com/typography/otspec/fpgm.htm
 
-#define TABLE_NAME "fpgm"
-
 namespace ots {
 
-bool ots_fpgm_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypeFPGM::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  OpenTypeFPGM *fpgm = new OpenTypeFPGM;
-  font->fpgm = fpgm;
-
   if (length >= 128 * 1024u) {
-    return OTS_FAILURE_MSG("length (%ld) > 120", length);  // almost all fpgm tables are less than 5k bytes.
+    return Error("length (%ld) > 120", length);  // almost all fpgm tables are less than 5k bytes.
   }
 
   if (!table.Skip(length)) {
-    return OTS_FAILURE_MSG("Bad fpgm length");
+    return Error("Bad table length");
   }
 
-  fpgm->data = data;
-  fpgm->length = length;
+  this->data = data;
+  this->length = length;
   return true;
 }
 
-bool ots_fpgm_should_serialise(Font *font) {
-  if (!font->glyf) return false;  // this table is not for CFF fonts.
-  return font->fpgm != NULL;
-}
-
-bool ots_fpgm_serialise(OTSStream *out, Font *font) {
-  const OpenTypeFPGM *fpgm = font->fpgm;
-
-  if (!out->Write(fpgm->data, fpgm->length)) {
-    return OTS_FAILURE_MSG("Failed to write fpgm");
+bool OpenTypeFPGM::Serialize(OTSStream *out) {
+  if (!out->Write(this->data, this->length)) {
+    return Error("Failed to write fpgm table");
   }
 
   return true;
 }
 
-void ots_fpgm_reuse(Font *font, Font *other) {
-  font->fpgm = other->fpgm;
-  font->fpgm_reused = true;
-}
-
-void ots_fpgm_free(Font *font) {
-  delete font->fpgm;
+bool OpenTypeFPGM::ShouldSerialize() {
+  return Table::ShouldSerialize() &&
+         // this table is not for CFF fonts.
+         GetFont()->GetTable(OTS_TAG_GLYF) != NULL;
 }
 
 }  // namespace ots
-
-#undef TABLE_NAME
