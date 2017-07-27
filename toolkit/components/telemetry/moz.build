@@ -63,6 +63,7 @@ SOURCES += [
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
+    'TelemetryIOInterposeObserver.cpp',
     'TelemetryScalar.cpp',
     'ThreadHangStats.cpp',
     'WebrtcTelemetry.cpp',

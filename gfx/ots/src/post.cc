@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,74 +9,73 @@
 // post - PostScript
 // http://www.microsoft.com/typography/otspec/post.htm
 
-#define TABLE_NAME "post"
-
 namespace ots {
 
-bool ots_post_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypePOST::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  OpenTypePOST *post = new OpenTypePOST;
-  font->post = post;
-
-  if (!table.ReadU32(&post->version) ||
-      !table.ReadU32(&post->italic_angle) ||
-      !table.ReadS16(&post->underline) ||
-      !table.ReadS16(&post->underline_thickness) ||
-      !table.ReadU32(&post->is_fixed_pitch)) {
-    return OTS_FAILURE_MSG("Failed to read post header");
+  if (!table.ReadU32(&this->version)) {
+    return Error("Failed to read table version");
   }
 
-  if (post->underline_thickness < 0) {
-    post->underline_thickness = 1;
-  }
-
-  if (post->version == 0x00010000) {
-    return true;
-  } else if (post->version == 0x00030000) {
-    return true;
-  } else if (post->version != 0x00020000) {
+  if (this->version != 0x00010000 &&
+      this->version != 0x00020000 &&
+      this->version != 0x00030000) {
     // 0x00025000 is deprecated. We don't accept it.
-    return OTS_FAILURE_MSG("Bad post version %x", post->version);
+    return Error("Unsupported table version 0x%x", this->version);
+  }
+
+  if (!table.ReadU32(&this->italic_angle) ||
+      !table.ReadS16(&this->underline) ||
+      !table.ReadS16(&this->underline_thickness) ||
+      !table.ReadU32(&this->is_fixed_pitch) ||
+      // We don't care about the memory usage fields. We'll set all these to
+      // zero when serialising
+      !table.Skip(16)) {
+    return Error("Failed to read table header");
+  }
+
+  if (this->underline_thickness < 0) {
+    this->underline_thickness = 1;
+  }
+
+  if (this->version == 0x00010000 || this->version == 0x00030000) {
+    return true;
   }
 
   // We have a version 2 table with a list of Pascal strings at the end
 
-  // We don't care about the memory usage fields. We'll set all these to zero
-  // when serialising
-  if (!table.Skip(16)) {
-    return OTS_FAILURE_MSG("Failed to skip memory usage in post table");
-  }
-
   uint16_t num_glyphs = 0;
   if (!table.ReadU16(&num_glyphs)) {
-    return OTS_FAILURE_MSG("Failed to read number of glyphs");
+    return Error("Failed to read numberOfGlyphs");
   }
 
-  if (!font->maxp) {
-    return OTS_FAILURE_MSG("No maxp table required by post table");
+  OpenTypeMAXP* maxp = static_cast<OpenTypeMAXP*>
+    (GetFont()->GetTable(OTS_TAG_MAXP));
+  if (!maxp) {
+    return Error("Missing required maxp table");
   }
 
   if (num_glyphs == 0) {
-    if (font->maxp->num_glyphs > 258) {
-      return OTS_FAILURE_MSG("Can't have no glyphs in the post table if there are more than 256 glyphs in the font");
+    if (maxp->num_glyphs > 258) {
+      return Error("Can't have no glyphs in the post table if there are more "
+                   "than 258 glyphs in the font");
     }
-    OTS_WARNING("table version is 1, but no glyf names are found");
     // workaround for fonts in http://www.fontsquirrel.com/fontface
     // (e.g., yataghan.ttf).
-    post->version = 0x00010000;
-    return true;
+    this->version = 0x00010000;
+    return Warning("Table version is 1, but no glyph names are found");
   }
 
-  if (num_glyphs != font->maxp->num_glyphs) {
+  if (num_glyphs != maxp->num_glyphs) {
     // Note: Fixedsys500c.ttf seems to have inconsistent num_glyphs values.
-    return OTS_FAILURE_MSG("Bad number of glyphs in post table %d", num_glyphs);
+    return Error("Bad number of glyphs: %d", num_glyphs);
   }
 
-  post->glyph_name_index.resize(num_glyphs);
+  this->glyph_name_index.resize(num_glyphs);
   for (unsigned i = 0; i < num_glyphs; ++i) {
-    if (!table.ReadU16(&post->glyph_name_index[i])) {
-      return OTS_FAILURE_MSG("Failed to read post information for glyph %d", i);
+    if (!table.ReadU16(&this->glyph_name_index[i])) {
+      return Error("Failed to read glyph name %d", i);
     }
     // Note: A strict interpretation of the specification requires name indexes
     // are less than 32768. This, however, excludes fonts like unifont.ttf
@@ -93,101 +92,85 @@ bool ots_post_parse(Font *font, const uint8_t *data, size_t length) {
     if (strings == strings_end) break;
     const unsigned string_length = *strings;
     if (strings + 1 + string_length > strings_end) {
-      return OTS_FAILURE_MSG("Bad string length %d", string_length);
+      return Error("Bad string length %d", string_length);
     }
     if (std::memchr(strings + 1, '\0', string_length)) {
-      return OTS_FAILURE_MSG("Bad string of length %d", string_length);
+      return Error("Bad string of length %d", string_length);
     }
-    post->names.push_back(
+    this->names.push_back(
         std::string(reinterpret_cast<const char*>(strings + 1), string_length));
     strings += 1 + string_length;
   }
-  const unsigned num_strings = post->names.size();
+  const unsigned num_strings = this->names.size();
 
   // check that all the references are within bounds
   for (unsigned i = 0; i < num_glyphs; ++i) {
-    unsigned offset = post->glyph_name_index[i];
+    unsigned offset = this->glyph_name_index[i];
     if (offset < 258) {
       continue;
     }
 
     offset -= 258;
     if (offset >= num_strings) {
-      return OTS_FAILURE_MSG("Bad string index %d", offset);
+      return Error("Bad string index %d", offset);
     }
   }
 
   return true;
 }
 
-bool ots_post_should_serialise(Font *font) {
-  return font->post != NULL;
-}
-
-bool ots_post_serialise(OTSStream *out, Font *font) {
-  const OpenTypePOST *post = font->post;
-
+bool OpenTypePOST::Serialize(OTSStream *out) {
   // OpenType with CFF glyphs must have v3 post table.
-  if (post && font->cff && post->version != 0x00030000) {
-    return OTS_FAILURE_MSG("Bad post version %x", post->version);
+  if (GetFont()->GetTable(OTS_TAG_CFF) && this->version != 0x00030000) {
+    return Error("Only version supported for fonts with CFF table is 0x00030000"
+                 " not 0x%x", this->version);
   }
 
-  if (!out->WriteU32(post->version) ||
-      !out->WriteU32(post->italic_angle) ||
-      !out->WriteS16(post->underline) ||
-      !out->WriteS16(post->underline_thickness) ||
-      !out->WriteU32(post->is_fixed_pitch) ||
+  if (!out->WriteU32(this->version) ||
+      !out->WriteU32(this->italic_angle) ||
+      !out->WriteS16(this->underline) ||
+      !out->WriteS16(this->underline_thickness) ||
+      !out->WriteU32(this->is_fixed_pitch) ||
       !out->WriteU32(0) ||
       !out->WriteU32(0) ||
       !out->WriteU32(0) ||
       !out->WriteU32(0)) {
-    return OTS_FAILURE_MSG("Failed to write post header");
+    return Error("Failed to write post header");
   }
 
-  if (post->version != 0x00020000) {
+  if (this->version != 0x00020000) {
     return true;  // v1.0 and v3.0 does not have glyph names.
   }
 
   const uint16_t num_indexes =
-      static_cast<uint16_t>(post->glyph_name_index.size());
-  if (num_indexes != post->glyph_name_index.size() ||
+      static_cast<uint16_t>(this->glyph_name_index.size());
+  if (num_indexes != this->glyph_name_index.size() ||
       !out->WriteU16(num_indexes)) {
-    return OTS_FAILURE_MSG("Failed to write number of indices");
+    return Error("Failed to write number of indices");
   }
 
   for (uint16_t i = 0; i < num_indexes; ++i) {
-    if (!out->WriteU16(post->glyph_name_index[i])) {
-      return OTS_FAILURE_MSG("Failed to write name index %d", i);
+    if (!out->WriteU16(this->glyph_name_index[i])) {
+      return Error("Failed to write name index %d", i);
     }
   }
 
   // Now we just have to write out the strings in the correct order
-  for (unsigned i = 0; i < post->names.size(); ++i) {
-    const std::string& s = post->names[i];
+  for (unsigned i = 0; i < this->names.size(); ++i) {
+    const std::string& s = this->names[i];
     const uint8_t string_length = static_cast<uint8_t>(s.size());
     if (string_length != s.size() ||
         !out->Write(&string_length, 1)) {
-      return OTS_FAILURE_MSG("Failed to write string %d", i);
+      return Error("Failed to write string %d", i);
     }
     // Some ttf fonts (e.g., frank.ttf on Windows Vista) have zero-length name.
     // We allow them.
     if (string_length > 0 && !out->Write(s.data(), string_length)) {
-      return OTS_FAILURE_MSG("Failed to write string length for string %d", i);
+      return Error("Failed to write string length for string %d", i);
     }
   }
 
   return true;
 }
 
-void ots_post_reuse(Font *font, Font *other) {
-  font->post = other->post;
-  font->post_reused = true;
-}
-
-void ots_post_free(Font *font) {
-  delete font->post;
-}
-
 }  // namespace ots
-
-#undef TABLE_NAME

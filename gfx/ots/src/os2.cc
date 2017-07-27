@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009-2017 The OTS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,77 +10,76 @@
 // OS/2 - OS/2 and Windows Metrics
 // http://www.microsoft.com/typography/otspec/os2.htm
 
-#define TABLE_NAME "OS/2"
-
 namespace ots {
 
-bool ots_os2_parse(Font *font, const uint8_t *data, size_t length) {
+bool OpenTypeOS2::Parse(const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
-  OpenTypeOS2 *os2 = new OpenTypeOS2;
-  font->os2 = os2;
-
-  if (!table.ReadU16(&os2->version) ||
-      !table.ReadS16(&os2->avg_char_width) ||
-      !table.ReadU16(&os2->weight_class) ||
-      !table.ReadU16(&os2->width_class) ||
-      !table.ReadU16(&os2->type) ||
-      !table.ReadS16(&os2->subscript_x_size) ||
-      !table.ReadS16(&os2->subscript_y_size) ||
-      !table.ReadS16(&os2->subscript_x_offset) ||
-      !table.ReadS16(&os2->subscript_y_offset) ||
-      !table.ReadS16(&os2->superscript_x_size) ||
-      !table.ReadS16(&os2->superscript_y_size) ||
-      !table.ReadS16(&os2->superscript_x_offset) ||
-      !table.ReadS16(&os2->superscript_y_offset) ||
-      !table.ReadS16(&os2->strikeout_size) ||
-      !table.ReadS16(&os2->strikeout_position) ||
-      !table.ReadS16(&os2->family_class)) {
-    return OTS_FAILURE_MSG("Error reading basic table elements");
+  if (!table.ReadU16(&this->table.version) ||
+      !table.ReadS16(&this->table.avg_char_width) ||
+      !table.ReadU16(&this->table.weight_class) ||
+      !table.ReadU16(&this->table.width_class) ||
+      !table.ReadU16(&this->table.type) ||
+      !table.ReadS16(&this->table.subscript_x_size) ||
+      !table.ReadS16(&this->table.subscript_y_size) ||
+      !table.ReadS16(&this->table.subscript_x_offset) ||
+      !table.ReadS16(&this->table.subscript_y_offset) ||
+      !table.ReadS16(&this->table.superscript_x_size) ||
+      !table.ReadS16(&this->table.superscript_y_size) ||
+      !table.ReadS16(&this->table.superscript_x_offset) ||
+      !table.ReadS16(&this->table.superscript_y_offset) ||
+      !table.ReadS16(&this->table.strikeout_size) ||
+      !table.ReadS16(&this->table.strikeout_position) ||
+      !table.ReadS16(&this->table.family_class)) {
+    return Error("Error reading basic table elements");
   }
 
-  if (os2->version > 5) {
-    return OTS_FAILURE_MSG("Unsupported table version: %u", os2->version);
+  if (this->table.version > 5) {
+    return Error("Unsupported table version: %u", this->table.version);
   }
 
   // Follow WPF Font Selection Model's advice.
-  if (1 <= os2->weight_class && os2->weight_class <= 9) {
-    OTS_WARNING("Bad usWeightClass: %u, changing it to: %u", os2->weight_class, os2->weight_class * 100);
-    os2->weight_class *= 100;
+  if (1 <= this->table.weight_class && this->table.weight_class <= 9) {
+    Warning("Bad usWeightClass: %u, changing it to %u",
+            this->table.weight_class, this->table.weight_class * 100);
+    this->table.weight_class *= 100;
   }
   // Ditto.
-  if (os2->weight_class > 999) {
-    OTS_WARNING("Bad usWeightClass: %u, changing it to: %d", os2->weight_class, 999);
-    os2->weight_class = 999;
+  if (this->table.weight_class > 999) {
+    Warning("Bad usWeightClass: %u, changing it to %d",
+             this->table.weight_class, 999);
+    this->table.weight_class = 999;
   }
 
-  if (os2->width_class < 1) {
-    OTS_WARNING("Bad usWidthClass: %u, changing it to: %d", os2->width_class, 1);
-    os2->width_class = 1;
-  } else if (os2->width_class > 9) {
-    OTS_WARNING("Bad usWidthClass: %u, changing it to: %d", os2->width_class, 9);
-    os2->width_class = 9;
+  if (this->table.width_class < 1) {
+    Warning("Bad usWidthClass: %u, changing it to %d",
+            this->table.width_class, 1);
+    this->table.width_class = 1;
+  } else if (this->table.width_class > 9) {
+    Warning("Bad usWidthClass: %u, changing it to %d",
+            this->table.width_class, 9);
+    this->table.width_class = 9;
   }
 
   // lowest 3 bits of fsType are exclusive.
-  if (os2->type & 0x2) {
+  if (this->table.type & 0x2) {
     // mask bits 2 & 3.
-    os2->type &= 0xfff3u;
-  } else if (os2->type & 0x4) {
+    this->table.type &= 0xfff3u;
+  } else if (this->table.type & 0x4) {
     // mask bits 1 & 3.
-    os2->type &= 0xfff4u;
-  } else if (os2->type & 0x8) {
+    this->table.type &= 0xfff4u;
+  } else if (this->table.type & 0x8) {
     // mask bits 1 & 2.
-    os2->type &= 0xfff9u;
+    this->table.type &= 0xfff9u;
   }
 
   // mask reserved bits. use only 0..3, 8, 9 bits.
-  os2->type &= 0x30f;
+  this->table.type &= 0x30f;
 
-#define SET_TO_ZERO(a, b)                                     \
-  if (os2->b < 0) {                                           \
-    OTS_WARNING("Bad " a ": %d, setting it to zero", os2->b); \
-    os2->b = 0;                                               \
+#define SET_TO_ZERO(a, b)                                                      \
+  if (this->table.b < 0) {                                                     \
+    Warning("Bad " a ": %d, setting it to zero", this->table.b);               \
+    this->table.b = 0;                                                         \
   }
 
   SET_TO_ZERO("ySubscriptXSize", subscript_x_size);
@@ -103,234 +102,221 @@ bool ots_os2_parse(Font *font, const uint8_t *data, size_t length) {
     "bXHeight",
   };
   for (unsigned i = 0; i < 10; ++i) {
-    if (!table.ReadU8(&os2->panose[i])) {
-      return OTS_FAILURE_MSG("Error reading PANOSE %s", panose_strings[i].c_str());
+    if (!table.ReadU8(&this->table.panose[i])) {
+      return Error("Failed to read PANOSE %s", panose_strings[i].c_str());
     }
   }
 
-  if (!table.ReadU32(&os2->unicode_range_1) ||
-      !table.ReadU32(&os2->unicode_range_2) ||
-      !table.ReadU32(&os2->unicode_range_3) ||
-      !table.ReadU32(&os2->unicode_range_4) ||
-      !table.ReadU32(&os2->vendor_id) ||
-      !table.ReadU16(&os2->selection) ||
-      !table.ReadU16(&os2->first_char_index) ||
-      !table.ReadU16(&os2->last_char_index) ||
-      !table.ReadS16(&os2->typo_ascender) ||
-      !table.ReadS16(&os2->typo_descender) ||
-      !table.ReadS16(&os2->typo_linegap) ||
-      !table.ReadU16(&os2->win_ascent) ||
-      !table.ReadU16(&os2->win_descent)) {
-    return OTS_FAILURE_MSG("Error reading more basic table fields");
+  if (!table.ReadU32(&this->table.unicode_range_1) ||
+      !table.ReadU32(&this->table.unicode_range_2) ||
+      !table.ReadU32(&this->table.unicode_range_3) ||
+      !table.ReadU32(&this->table.unicode_range_4) ||
+      !table.ReadU32(&this->table.vendor_id) ||
+      !table.ReadU16(&this->table.selection) ||
+      !table.ReadU16(&this->table.first_char_index) ||
+      !table.ReadU16(&this->table.last_char_index) ||
+      !table.ReadS16(&this->table.typo_ascender) ||
+      !table.ReadS16(&this->table.typo_descender) ||
+      !table.ReadS16(&this->table.typo_linegap) ||
+      !table.ReadU16(&this->table.win_ascent) ||
+      !table.ReadU16(&this->table.win_descent)) {
+    return Error("Error reading more basic table fields");
   }
 
   // If bit 6 is set, then bits 0 and 5 must be clear.
-  if (os2->selection & 0x40) {
-    os2->selection &= 0xffdeu;
+  if (this->table.selection & 0x40) {
+    this->table.selection &= 0xffdeu;
   }
 
   // the settings of bits 0 and 1 must be reflected in the macStyle bits
   // in the 'head' table.
-  if (!font->head) {
-    return OTS_FAILURE_MSG("Needed head table is missing from the font");
+  OpenTypeHEAD *head = static_cast<OpenTypeHEAD*>(
+      GetFont()->GetTypedTable(OTS_TAG_HEAD));
+
+  if ((this->table.selection & 0x1) &&
+      head && !(head->mac_style & 0x2)) {
+    Warning("Adjusting head.macStyle (italic) to match fsSelection");
+    head->mac_style |= 0x2;
   }
-  if ((os2->selection & 0x1) &&
-      !(font->head->mac_style & 0x2)) {
-    OTS_WARNING("adjusting Mac style (italic)");
-    font->head->mac_style |= 0x2;
-  }
-  if ((os2->selection & 0x2) &&
-      !(font->head->mac_style & 0x4)) {
-    OTS_WARNING("adjusting Mac style (underscore)");
-    font->head->mac_style |= 0x4;
+  if ((this->table.selection & 0x2) &&
+      head && !(head->mac_style & 0x4)) {
+    Warning("Adjusting head.macStyle (underscore) to match fsSelection");
+    head->mac_style |= 0x4;
   }
 
   // While bit 6 on implies that bits 0 and 1 of macStyle are clear,
   // the reverse is not true.
-  if ((os2->selection & 0x40) &&
-      (font->head->mac_style & 0x3)) {
-    OTS_WARNING("adjusting Mac style (regular)");
-    font->head->mac_style &= 0xfffcu;
+  if ((this->table.selection & 0x40) &&
+      head && (head->mac_style & 0x3)) {
+    Warning("Adjusting head.macStyle (regular) to match fsSelection");
+    head->mac_style &= 0xfffcu;
   }
 
-  if ((os2->version < 4) &&
-      (os2->selection & 0x300)) {
+  if ((this->table.version < 4) &&
+      (this->table.selection & 0x300)) {
     // bit 8 and 9 must be unset in OS/2 table versions less than 4.
-    return OTS_FAILURE_MSG("Version %d incompatible with selection %d", os2->version, os2->selection);
+    return Error("fSelection bits 8 and 9 must be unset for table version %d",
+                 this->table.version);
   }
 
   // mask reserved bits. use only 0..9 bits.
-  os2->selection &= 0x3ff;
+  this->table.selection &= 0x3ff;
 
-  if (os2->first_char_index > os2->last_char_index) {
-    return OTS_FAILURE_MSG("first char index %d > last char index %d in os2", os2->first_char_index, os2->last_char_index);
+  if (this->table.first_char_index > this->table.last_char_index) {
+    return Error("usFirstCharIndex %d > usLastCharIndex %d",
+                 this->table.first_char_index, this->table.last_char_index);
   }
-  if (os2->typo_linegap < 0) {
-    OTS_WARNING("bad linegap: %d", os2->typo_linegap);
-    os2->typo_linegap = 0;
+  if (this->table.typo_linegap < 0) {
+    Warning("Bad sTypoLineGap, setting it to 0: %d", this->table.typo_linegap);
+    this->table.typo_linegap = 0;
   }
 
-  if (os2->version < 1) {
+  if (this->table.version < 1) {
     // http://www.microsoft.com/typography/otspec/os2ver0.htm
     return true;
   }
 
-  if (length < offsetof(OpenTypeOS2, code_page_range_2)) {
-    OTS_WARNING("bad version number: %u", os2->version);
+  if (length < offsetof(OS2Data, code_page_range_2)) {
+    Warning("Bad version number, setting it to 0: %u", this->table.version);
     // Some fonts (e.g., kredit1.ttf and quinquef.ttf) have weird version
     // numbers. Fix them.
-    os2->version = 0;
+    this->table.version = 0;
     return true;
   }
 
-  if (!table.ReadU32(&os2->code_page_range_1) ||
-      !table.ReadU32(&os2->code_page_range_2)) {
-    return OTS_FAILURE_MSG("Failed to read codepage ranges");
+  if (!table.ReadU32(&this->table.code_page_range_1) ||
+      !table.ReadU32(&this->table.code_page_range_2)) {
+    return Error("Failed to read ulCodePageRange1 or ulCodePageRange2");
   }
 
-  if (os2->version < 2) {
+  if (this->table.version < 2) {
     // http://www.microsoft.com/typography/otspec/os2ver1.htm
     return true;
   }
 
-  if (length < offsetof(OpenTypeOS2, max_context)) {
-    OTS_WARNING("bad version number: %u", os2->version);
+  if (length < offsetof(OS2Data, max_context)) {
+    Warning("Bad version number, setting it to 1: %u", this->table.version);
     // some Japanese fonts (e.g., mona.ttf) have weird version number.
     // fix them.
-    os2->version = 1;
+    this->table.version = 1;
     return true;
   }
 
-  if (!table.ReadS16(&os2->x_height) ||
-      !table.ReadS16(&os2->cap_height) ||
-      !table.ReadU16(&os2->default_char) ||
-      !table.ReadU16(&os2->break_char) ||
-      !table.ReadU16(&os2->max_context)) {
-    return OTS_FAILURE_MSG("Failed to read version 2-specific fields");
+  if (!table.ReadS16(&this->table.x_height) ||
+      !table.ReadS16(&this->table.cap_height) ||
+      !table.ReadU16(&this->table.default_char) ||
+      !table.ReadU16(&this->table.break_char) ||
+      !table.ReadU16(&this->table.max_context)) {
+    return Error("Failed to read version 2-specific fields");
   }
 
-  if (os2->x_height < 0) {
-    OTS_WARNING("bad x_height: %d", os2->x_height);
-    os2->x_height = 0;
+  if (this->table.x_height < 0) {
+    Warning("Bad sxHeight settig it to 0: %d", this->table.x_height);
+    this->table.x_height = 0;
   }
-  if (os2->cap_height < 0) {
-    OTS_WARNING("bad cap_height: %d", os2->cap_height);
-    os2->cap_height = 0;
+  if (this->table.cap_height < 0) {
+    Warning("Bad sCapHeight setting it to 0: %d", this->table.cap_height);
+    this->table.cap_height = 0;
   }
 
-  if (os2->version < 5) {
+  if (this->table.version < 5) {
     // http://www.microsoft.com/typography/otspec/os2ver4.htm
     return true;
   }
 
-  if (!table.ReadU16(&os2->lower_optical_pointsize) ||
-      !table.ReadU16(&os2->upper_optical_pointsize)) {
-    return OTS_FAILURE_MSG("Failed to read version 5-specific fields");
+  if (!table.ReadU16(&this->table.lower_optical_pointsize) ||
+      !table.ReadU16(&this->table.upper_optical_pointsize)) {
+    return Error("Failed to read version 5-specific fields");
   }
 
-  if (os2->lower_optical_pointsize > 0xFFFE) {
-    OTS_WARNING("'usLowerOpticalPointSize' is bigger than 0xFFFE: %d", os2->lower_optical_pointsize);
-    os2->lower_optical_pointsize = 0xFFFE;
+  if (this->table.lower_optical_pointsize > 0xFFFE) {
+    Warning("usLowerOpticalPointSize is bigger than 0xFFFE: %d",
+            this->table.lower_optical_pointsize);
+    this->table.lower_optical_pointsize = 0xFFFE;
   }
 
-  if (os2->upper_optical_pointsize < 2) {
-    OTS_WARNING("'usUpperOpticalPointSize' is lower than 2: %d", os2->upper_optical_pointsize);
-    os2->upper_optical_pointsize = 2;
+  if (this->table.upper_optical_pointsize < 2) {
+    Warning("usUpperOpticalPointSize is lower than 2: %d",
+            this->table.upper_optical_pointsize);
+    this->table.upper_optical_pointsize = 2;
   }
 
   return true;
 }
 
-bool ots_os2_should_serialise(Font *font) {
-  return font->os2 != NULL;
-}
-
-bool ots_os2_serialise(OTSStream *out, Font *font) {
-  const OpenTypeOS2 *os2 = font->os2;
-
-  if (!out->WriteU16(os2->version) ||
-      !out->WriteS16(os2->avg_char_width) ||
-      !out->WriteU16(os2->weight_class) ||
-      !out->WriteU16(os2->width_class) ||
-      !out->WriteU16(os2->type) ||
-      !out->WriteS16(os2->subscript_x_size) ||
-      !out->WriteS16(os2->subscript_y_size) ||
-      !out->WriteS16(os2->subscript_x_offset) ||
-      !out->WriteS16(os2->subscript_y_offset) ||
-      !out->WriteS16(os2->superscript_x_size) ||
-      !out->WriteS16(os2->superscript_y_size) ||
-      !out->WriteS16(os2->superscript_x_offset) ||
-      !out->WriteS16(os2->superscript_y_offset) ||
-      !out->WriteS16(os2->strikeout_size) ||
-      !out->WriteS16(os2->strikeout_position) ||
-      !out->WriteS16(os2->family_class)) {
-    return OTS_FAILURE_MSG("Failed to write basic OS2 information");
+bool OpenTypeOS2::Serialize(OTSStream *out) {
+  if (!out->WriteU16(this->table.version) ||
+      !out->WriteS16(this->table.avg_char_width) ||
+      !out->WriteU16(this->table.weight_class) ||
+      !out->WriteU16(this->table.width_class) ||
+      !out->WriteU16(this->table.type) ||
+      !out->WriteS16(this->table.subscript_x_size) ||
+      !out->WriteS16(this->table.subscript_y_size) ||
+      !out->WriteS16(this->table.subscript_x_offset) ||
+      !out->WriteS16(this->table.subscript_y_offset) ||
+      !out->WriteS16(this->table.superscript_x_size) ||
+      !out->WriteS16(this->table.superscript_y_size) ||
+      !out->WriteS16(this->table.superscript_x_offset) ||
+      !out->WriteS16(this->table.superscript_y_offset) ||
+      !out->WriteS16(this->table.strikeout_size) ||
+      !out->WriteS16(this->table.strikeout_position) ||
+      !out->WriteS16(this->table.family_class)) {
+    return Error("Failed to write basic table data");
   }
 
   for (unsigned i = 0; i < 10; ++i) {
-    if (!out->Write(&os2->panose[i], 1)) {
-      return OTS_FAILURE_MSG("Failed to write os2 panose information");
+    if (!out->Write(&this->table.panose[i], 1)) {
+      return Error("Failed to write PANOSE data");
     }
   }
 
-  if (!out->WriteU32(os2->unicode_range_1) ||
-      !out->WriteU32(os2->unicode_range_2) ||
-      !out->WriteU32(os2->unicode_range_3) ||
-      !out->WriteU32(os2->unicode_range_4) ||
-      !out->WriteU32(os2->vendor_id) ||
-      !out->WriteU16(os2->selection) ||
-      !out->WriteU16(os2->first_char_index) ||
-      !out->WriteU16(os2->last_char_index) ||
-      !out->WriteS16(os2->typo_ascender) ||
-      !out->WriteS16(os2->typo_descender) ||
-      !out->WriteS16(os2->typo_linegap) ||
-      !out->WriteU16(os2->win_ascent) ||
-      !out->WriteU16(os2->win_descent)) {
-    return OTS_FAILURE_MSG("Failed to write version 1-specific fields");
+  if (!out->WriteU32(this->table.unicode_range_1) ||
+      !out->WriteU32(this->table.unicode_range_2) ||
+      !out->WriteU32(this->table.unicode_range_3) ||
+      !out->WriteU32(this->table.unicode_range_4) ||
+      !out->WriteU32(this->table.vendor_id) ||
+      !out->WriteU16(this->table.selection) ||
+      !out->WriteU16(this->table.first_char_index) ||
+      !out->WriteU16(this->table.last_char_index) ||
+      !out->WriteS16(this->table.typo_ascender) ||
+      !out->WriteS16(this->table.typo_descender) ||
+      !out->WriteS16(this->table.typo_linegap) ||
+      !out->WriteU16(this->table.win_ascent) ||
+      !out->WriteU16(this->table.win_descent)) {
+    return Error("Failed to write version 1-specific fields");
   }
 
-  if (os2->version < 1) {
+  if (this->table.version < 1) {
     return true;
   }
 
-  if (!out->WriteU32(os2->code_page_range_1) ||
-      !out->WriteU32(os2->code_page_range_2)) {
-    return OTS_FAILURE_MSG("Failed to write codepage ranges");
+  if (!out->WriteU32(this->table.code_page_range_1) ||
+      !out->WriteU32(this->table.code_page_range_2)) {
+    return Error("Failed to write codepage ranges");
   }
 
-  if (os2->version < 2) {
+  if (this->table.version < 2) {
     return true;
   }
 
-  if (!out->WriteS16(os2->x_height) ||
-      !out->WriteS16(os2->cap_height) ||
-      !out->WriteU16(os2->default_char) ||
-      !out->WriteU16(os2->break_char) ||
-      !out->WriteU16(os2->max_context)) {
-    return OTS_FAILURE_MSG("Failed to write version 2-specific fields");
+  if (!out->WriteS16(this->table.x_height) ||
+      !out->WriteS16(this->table.cap_height) ||
+      !out->WriteU16(this->table.default_char) ||
+      !out->WriteU16(this->table.break_char) ||
+      !out->WriteU16(this->table.max_context)) {
+    return Error("Failed to write version 2-specific fields");
   }
 
-  if (os2->version < 5) {
+  if (this->table.version < 5) {
     return true;
   }
 
-  if (!out->WriteU16(os2->lower_optical_pointsize) ||
-      !out->WriteU16(os2->upper_optical_pointsize)) {
-    return OTS_FAILURE_MSG("Failed to write version 5-specific fields");
+  if (!out->WriteU16(this->table.lower_optical_pointsize) ||
+      !out->WriteU16(this->table.upper_optical_pointsize)) {
+    return Error("Failed to write version 5-specific fields");
   }
 
   return true;
 }
 
-void ots_os2_reuse(Font *font, Font *other) {
-  font->os2 = other->os2;
-  font->os2_reused = true;
-}
-
-void ots_os2_free(Font *font) {
-  delete font->os2;
-}
-
 }  // namespace ots
-
-#undef TABLE_NAME

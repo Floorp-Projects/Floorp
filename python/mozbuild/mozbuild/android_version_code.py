@@ -68,7 +68,7 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     split in the future.
 
     At present, the bit labelled 'g' is 1 if the build is an ARM build
-    targeting API 15+, which will always be the case.
+    targeting API 16+, which will always be the case.
 
     We throw an explanatory exception when we are within one calendar year of
     running out of build events.  This gives lots of time to update the version
@@ -118,9 +118,9 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
         # 0 is interpreted as SDK 9.
         if not min_sdk or min_sdk == 9:
             pass
-        # This used to compare to 11. The 15+ APK directly supersedes 11+, so
+        # This used to compare to 11. The 16+ APK directly supersedes 11+, so
         # we reuse this check.
-        elif min_sdk == 15:
+        elif min_sdk == 16:
             version |= 1 << 0
         else:
             raise ValueError("Don't know how to compute android:versionCode "

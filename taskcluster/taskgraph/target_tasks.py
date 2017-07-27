@@ -233,9 +233,6 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if platform in ('linux64-pgo', 'linux-pgo', 'android-api-15-nightly',
                         'android-x86-nightly'):
             return False
-        if platform in ('macosx64-nightly', 'win64-nightly', 'win32-nightly'):
-            # Don't do some nightlies on-push until it's ready.
-            return False
         if platform in ('linux64', 'linux'):
             if task.attributes['build_type'] == 'opt' and \
                task.attributes.get('unittest_suite') != 'talos':
@@ -244,7 +241,8 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
         if task.kind in [
             'balrog', 'beetmover', 'beetmover-checksums', 'beetmover-l10n',
             'checksums-signing', 'nightly-l10n', 'nightly-l10n-signing',
-            'push-apk', 'push-apk-breakpoint',
+            'push-apk', 'push-apk-breakpoint', 'beetmover-repackage',
+            'beetmover-repackage-signing',
         ]:
             return False
         return True
@@ -291,9 +289,6 @@ def target_tasks_pine(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-# nightly_linux should be refactored to be nightly_all once
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1267425 dependent bugs are
-# implemented
 @_target_task('nightly_macosx')
 def target_tasks_nightly_macosx(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of macosx. The
@@ -306,11 +301,8 @@ def target_tasks_nightly_macosx(full_task_graph, parameters):
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
-# nightly_win should be refactored to be nightly_all once
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1267428 dependent bugs are
-# implemented
 @_target_task('nightly_win')
-def target_tasks_nightly_win64(full_task_graph, parameters):
+def target_tasks_nightly_win(full_task_graph, parameters):
     """Select the set of tasks required for a nightly build of win32 and win64.
     The nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
@@ -321,6 +313,18 @@ def target_tasks_nightly_win64(full_task_graph, parameters):
         if platform in ('win32-nightly', 'win64-nightly'):
             return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('nightly_desktop')
+def target_tasks_nightly_desktop(full_task_graph, parameters):
+    """Select the set of tasks required for a nightly build of linux, mac,
+    windows."""
+    # Avoid duplicate tasks.
+    return list(
+        set(target_tasks_nightly_win(full_task_graph, parameters))
+        | set(target_tasks_nightly_macosx(full_task_graph, parameters))
+        | set(target_tasks_nightly_linux(full_task_graph, parameters))
+    )
 
 
 # Opt DMD builds should only run nightly
