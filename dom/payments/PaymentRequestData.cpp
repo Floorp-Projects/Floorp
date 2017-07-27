@@ -44,9 +44,16 @@ PaymentMethodData::GetSupportedMethods(nsAString& aSupportedMethods)
 }
 
 NS_IMETHODIMP
-PaymentMethodData::GetData(nsAString& aData)
+PaymentMethodData::GetData(JSContext* aCx, JS::MutableHandleValue aData)
 {
-  aData = mData;
+  if (mData.IsEmpty()) {
+    aData.set(JS::NullValue());
+    return NS_OK;
+  }
+  nsresult rv = DeserializeToJSValue(mData, aCx ,aData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return NS_OK;
 }
 
@@ -222,9 +229,16 @@ PaymentDetailsModifier::GetAdditionalDisplayItems(nsIArray** aAdditionalDisplayI
 }
 
 NS_IMETHODIMP
-PaymentDetailsModifier::GetData(nsAString& aData)
+PaymentDetailsModifier::GetData(JSContext* aCx, JS::MutableHandleValue aData)
 {
-  aData = mData;
+  if (mData.IsEmpty()) {
+    aData.set(JS::NullValue());
+    return NS_OK;
+  }
+  nsresult rv = DeserializeToJSValue(mData, aCx ,aData);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return NS_OK;
 }
 

@@ -1122,8 +1122,7 @@ nsPresContext::Observe(nsISupports* aSubject,
     auto encoding = Encoding::ForName(NS_LossyConvertUTF16toASCII(aData));
     RefPtr<CharSetChangingRunnable> runnable =
       new CharSetChangingRunnable(this, encoding);
-    return Document()->Dispatch("CharSetChangingRunnable",
-                                TaskCategory::Other,
+    return Document()->Dispatch(TaskCategory::Other,
                                 runnable.forget());
   }
 
@@ -1813,8 +1812,7 @@ nsPresContext::ThemeChanged()
       NewRunnableMethod("nsPresContext::ThemeChangedInternal",
                         this,
                         &nsPresContext::ThemeChangedInternal);
-    nsresult rv = Document()->Dispatch("nsPresContext::ThemeChangedInternal",
-                                       TaskCategory::Other,
+    nsresult rv = Document()->Dispatch(TaskCategory::Other,
                                        ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPendingThemeChanged = true;
@@ -1878,8 +1876,7 @@ nsPresContext::SysColorChanged()
       NewRunnableMethod("nsPresContext::SysColorChangedInternal",
                         this,
                         &nsPresContext::SysColorChangedInternal);
-    nsresult rv = Document()->Dispatch("nsPresContext::SysColorChangedInternal",
-                                       TaskCategory::Other,
+    nsresult rv = Document()->Dispatch(TaskCategory::Other,
                                        ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPendingSysColorChanged = true;
@@ -1919,9 +1916,7 @@ nsPresContext::UIResolutionChanged()
                         this,
                         &nsPresContext::UIResolutionChangedInternal);
     nsresult rv =
-      Document()->Dispatch("nsPresContext::UIResolutionChangedInternal",
-                           TaskCategory::Other,
-                           ev.forget());
+      Document()->Dispatch(TaskCategory::Other, ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPendingUIResolutionChanged = true;
     }
@@ -2166,9 +2161,7 @@ nsPresContext::PostMediaFeatureValuesChangedEvent()
       NewRunnableMethod("nsPresContext::HandleMediaFeatureValuesChangedEvent",
                         this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
     nsresult rv =
-      Document()->Dispatch("nsPresContext::HandleMediaFeatureValuesChangedEvent",
-                           TaskCategory::Other,
-                           ev.forget());
+      Document()->Dispatch(TaskCategory::Other, ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPendingMediaFeatureValuesChanged = true;
       mShell->SetNeedStyleFlush();
@@ -2391,9 +2384,7 @@ nsPresContext::RebuildCounterStyles()
       NewRunnableMethod("nsPresContext::HandleRebuildCounterStyles",
                         this, &nsPresContext::HandleRebuildCounterStyles);
     nsresult rv =
-      Document()->Dispatch("nsPresContext::HandleRebuildCounterStyles",
-                           TaskCategory::Other,
-                           ev.forget());
+      Document()->Dispatch(TaskCategory::Other, ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPostedFlushCounterStyles = true;
     }
@@ -3440,8 +3431,7 @@ nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable)
 {
   if (!mWillPaintFallbackEvent.IsPending()) {
     mWillPaintFallbackEvent = new RunWillPaintObservers(this);
-    Document()->Dispatch("RunWillPaintObservers",
-                         TaskCategory::Other,
+    Document()->Dispatch(TaskCategory::Other,
                          do_AddRef(mWillPaintFallbackEvent.get()));
   }
   mWillPaintObservers.AppendElement(aRunnable);

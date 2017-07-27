@@ -36,7 +36,9 @@ extern nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
 
 // nsISupports Implementation
 
-NS_IMPL_ISUPPORTS(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener, nsIObserver, nsIRequestObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener,
+                  nsIObserver, nsIRequestObserver, nsISupportsWeakReference,
+                  nsINamed)
 
 nsAutoConfig::nsAutoConfig()
 {
@@ -170,6 +172,13 @@ NS_IMETHODIMP nsAutoConfig::Notify(nsITimer *timer)
 {
     downloadAutoConfig();
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoConfig::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsAutoConfig");
+  return NS_OK;
 }
 
 /* Observe() is called twice: once at the instantiation time and other

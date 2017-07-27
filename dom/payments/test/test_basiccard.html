@@ -1,0 +1,298 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1375345
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1375345</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript">
+
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  var gUrl = SimpleTest.getTestFileURL('BasiccardChromeScript.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+
+  function testFailHandler(message) {
+    ok(false, message);
+  }
+  gScript.addMessageListener("test-fail", testFailHandler);
+
+  const errorTypesMethods = [{
+    supportedMethods: "basic-card",
+    data: {
+      supportedTypes: ["myType"],
+    },
+  }];
+
+  const errorNetworksMethods = [{
+    supportedMethods: "basic-card",
+    data: {
+      supportedNetworks: ["myNetwork"],
+    },
+  }];
+
+  const nullDataMethods = [{
+    supportedMethods: "basic-card",
+  }];
+
+  const emptyDataMethods = [{
+    supportedMethods: "basic-card",
+    data: {},
+  }];
+
+  const unconvertableDataMethods = [{
+    supportedMethods: "basic-card",
+    data: "unconvertable data",
+  }];
+
+  const defaultMethods = [{
+    supportedMethods: "basic-card",
+    data: {
+      supportedNetworks: ["unionpay", "visa", "mastercard", "amex", "discover",
+                          "diners", "jcb", "mir",
+      ],
+      supportedTypes: ["prepaid", "debit", "credit"],
+    },
+  }];
+  const defaultDetails = {
+    id: "test payment",
+    total: {
+      label: "Total",
+      amount: {
+        currency: "USD",
+        value: "1.00"
+      }
+    },
+    shippingOptions: [
+      {
+        id: "NormalShipping",
+        label: "NormalShipping",
+        amount: {
+          currency: "USD",
+          value: "10.00"
+        },
+        selected: true,
+      },
+      {
+        id: "FastShipping",
+        label: "FastShipping",
+        amount: {
+          currency: "USD",
+          value: "30.00"
+        },
+        selected: false,
+      },
+    ],
+  };
+
+  const defaultOptions = {
+    requestPayerName: true,
+    requestPayerEmail: false,
+    reqeustPayerPhone: false,
+    requestShipping: true,
+    shippingType: "shipping"
+  };
+
+  function testBasicCardRequestWithErrorTypes() {
+    return new Promise((resolve, reject) => {
+      try {
+        const payRequest = new PaymentRequest(errorTypesMethods, defaultDetails, defaultOptions);
+        ok(false, "Expected 'TypeError', but got success construction.");
+        resolve();
+      } catch (e) {
+        is(e.name, "TypeError", "Expected TypeError, but got " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function testBasicCardRequestWithErrorNetworks() {
+    return new Promise((resolve, reject) => {
+      try {
+        const payRequest = new PaymentRequest(errorNetworksMethods, defaultDetails, defaultOptions);
+        ok(false, "Expected 'TypeError', but got success construction.");
+        resolve();
+      } catch (e) {
+        is(e.name, "TypeError", "Expected TypeError, but got " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function testBasicCardRequestWithUnconvertableData() {
+    return new Promise((resolve, reject) => {
+      try {
+        const payRequest = new PaymentRequest(unconvertableDataMethods, defaultDetails, defaultOptions);
+        ok(false, "Expected 'TypeError', but got success construction.");
+        resolve();
+      } catch (e) {
+        is(e.name, "TypeError", "Expected TypeError, but got " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function testBasicCardRequestWithNullData() {
+    return new Promise((resolve, reject) => {
+      try {
+        const payRequest = new PaymentRequest(nullDataMethods, defaultDetails, defaultOptions);
+        ok(payRequest, "PaymentRequest should be constructed with null data BasicCardRequest.");
+        resolve();
+      } catch (e) {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function testBasicCardRequestWithEmptyData() {
+    return new Promise((resolve, reject) => {
+      try {
+        const payRequest = new PaymentRequest(emptyDataMethods, defaultDetails, defaultOptions);
+        ok(payRequest, "PaymentRequest should be constructed with empty data BasicCardRequest.");
+        resolve();
+      } catch (e) {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      }
+    });
+  }
+
+  function testCanMakePaymentWithBasicCardRequest() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.canMakePayment().then( result => {
+        ok(result, "Should be resolved with true, but got false.");
+        resolve();
+      }).catch (e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testBasicCardSimpleResponse() {
+    gScript.sendAsyncMessage("set-simple-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then(response => {
+        ok(response.details, "basiccard response should exists.");
+        ok(!response.details.cardholderName, "response.details.cardholderName should not exist.");
+        is(response.details.cardNumber, "4916855166538720", "response.details.cardNumber should be '4916855166538720'.");
+        ok(!response.details.expiryMonth, "response.details.expiryMonth should not exist.");
+        ok(!response.details.expiryYear, "response.details.expiryYear should be '2024'.");
+        ok(!response.details.cardSecurityCode, "response.details.cardSecurityCode should not exist.");
+        ok(!response.details.billingAddress, "response.details.billingAddress should not exist.");
+        response.complete("success").then(() =>{
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testBasicCardDetailedResponse() {
+    gScript.sendAsyncMessage("set-detailed-ui-service");
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(defaultMethods, defaultDetails, defaultOptions);
+      payRequest.show().then(response => {
+        ok(response.details, "basiccard response should exists.");
+        is(response.details.cardholderName, "Bill A. Pacheco", "response.details.cardholderName should be 'Bill A. Pacheco'.");
+        is(response.details.cardNumber, "4916855166538720", "response.details.cardNumber should be '4916855166538720'.");
+        is(response.details.expiryMonth, "01", "response.details.expiryMonth should be '01'.");
+        is(response.details.expiryYear, "2024", "response.details.expiryYear should be '2024'.");
+        is(response.details.cardSecurityCode, "180", "response.details.cardSecurityCode should be '180'.");
+        const billingAddress = response.details.billingAddress;
+        is(billingAddress.country, "USA", "country should be 'USA'.");
+        is(billingAddress.addressLine.length, 1, "addressLine.length should be 1.");
+        is(billingAddress.addressLine[0], "Easton Ave", "addressLine[0] should be 'Easton Ave'.");
+        is(billingAddress.region, "CA", "region should be 'CA'.");
+        is(billingAddress.city, "San Bruno", "city should be 'San Bruno'.");
+        is(billingAddress.dependentLocality, "", "dependentLocality should be empty.");
+        is(billingAddress.postalCode, "94066", "postalCode should be '94066'.");
+        is(billingAddress.sortingCode, "123456", "sortingCode should be '123456'.");
+        is(billingAddress.languageCode, "en", "languageCode should be 'en'.");
+        is(billingAddress.organization, "", "organization should be empty." );
+        is(billingAddress.recipient, "Bill A. Pacheco", "recipient should be 'Bill A. Pacheco'.");
+        is(billingAddress.phone, "+14344413879", "phone should be '+14344413879'.");
+        response.complete("success").then(() =>{
+          resolve();
+        }).catch(e => {
+          ok(false, "Unexpected error: " + e.name);
+          resolve();
+        });
+      }).catch( e => {
+        ok(false, "Unexpected error: " + e.name);
+        resolve();
+      });
+    });
+  }
+
+  function testBasicCardErrorResponse() {
+    return new Promise((resolve, reject) => {
+      gScript.addMessageListener("error-response-complete",
+                                 function errorResponseCompleteHandler() {
+        gScript.removeMessageListener("error-response-complete",
+                                      errorResponseCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("error-response-test");
+    });
+  }
+
+  function teardown() {
+    gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
+      gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
+      gScript.removeMessageListener("test-fail", testFailHandler)
+      gScript.destroy();
+      SimpleTest.finish();
+    });
+    gScript.sendAsyncMessage("teardown");
+  }
+
+  function runTests() {
+    testBasicCardRequestWithErrorTypes()
+    .then(testBasicCardRequestWithErrorNetworks)
+    .then(testBasicCardRequestWithUnconvertableData)
+    .then(testBasicCardRequestWithNullData)
+    .then(testBasicCardRequestWithEmptyData)
+    .then(testCanMakePaymentWithBasicCardRequest)
+    .then(testBasicCardSimpleResponse)
+    .then(testBasicCardDetailedResponse)
+    .then(testBasicCardErrorResponse)
+    .then(teardown)
+    .catch( e => {
+      ok(false, "Unexpected error: " + e.name);
+      SimpleTest.finish();
+    });
+  }
+
+  window.addEventListener('load', function() {
+    SpecialPowers.pushPrefEnv({
+      'set': [
+        ['dom.payments.request.enabled', true],
+      ]
+    }, runTests);
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1375345">Mozilla Bug 1375345</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -114,8 +114,7 @@ FireImageDOMEvent(nsIContent* aContent, EventMessage aMessage)
                "invalid message");
 
   nsCOMPtr<nsIRunnable> event = new nsImageBoxFrameEvent(aContent, aMessage);
-  nsresult rv = aContent->OwnerDoc()->Dispatch("nsImageBoxFrameEvent",
-                                               TaskCategory::Other,
+  nsresult rv = aContent->OwnerDoc()->Dispatch(TaskCategory::Other,
                                                event.forget());
   if (NS_FAILED(rv)) {
     NS_WARNING("failed to dispatch image event");

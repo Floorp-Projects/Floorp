@@ -14,7 +14,9 @@ namespace mozilla {
 namespace dom {
 
 nsresult
-SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject, nsAString& aSerializedObject) {
+SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject, nsAString& aSerializedObject)
+{
+  MOZ_ASSERT(aCx);
   nsCOMPtr<nsIJSON> serializer = do_CreateInstance("@mozilla.org/dom/json;1");
   if (NS_WARN_IF(!serializer)) {
     return NS_ERROR_FAILURE;
@@ -24,7 +26,21 @@ SerializeFromJSObject(JSContext* aCx, JS::HandleObject aObject, nsAString& aSeri
 }
 
 nsresult
-DeserializeToJSObject(const nsAString& aSerializedObject, JSContext* aCx, JS::MutableHandleObject aObject) {
+SerializeFromJSVal(JSContext* aCx, JS::HandleValue aValue, nsAString& aSerializedValue)
+{
+  MOZ_ASSERT(aCx);
+  nsCOMPtr<nsIJSON> serializer = do_CreateInstance("@mozilla.org/dom/json;1");
+  if (NS_WARN_IF(!serializer)) {
+    return NS_ERROR_FAILURE;
+  }
+  JS::RootedValue value(aCx, aValue.get());
+  return serializer->EncodeFromJSVal(value.address(), aCx, aSerializedValue);
+}
+
+nsresult
+DeserializeToJSObject(const nsAString& aSerializedObject, JSContext* aCx, JS::MutableHandleObject aObject)
+{
+  MOZ_ASSERT(aCx);
   nsCOMPtr<nsIJSON> deserializer = do_CreateInstance("@mozilla.org/dom/json;1");
   if (NS_WARN_IF(!deserializer)) {
     return NS_ERROR_FAILURE;
@@ -39,6 +55,21 @@ DeserializeToJSObject(const nsAString& aSerializedObject, JSContext* aCx, JS::Mu
     aObject.set(&value.toObject());
   } else {
     aObject.set(nullptr);
+  }
+  return NS_OK;
+}
+
+nsresult
+DeserializeToJSValue(const nsAString& aSerializedObject, JSContext* aCx, JS::MutableHandleValue aValue)
+{
+  MOZ_ASSERT(aCx);
+  nsCOMPtr<nsIJSON> deserializer = do_CreateInstance("@mozilla.org/dom/json;1");
+  if (NS_WARN_IF(!deserializer)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = deserializer->DecodeToJSVal(aSerializedObject, aCx, aValue);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }

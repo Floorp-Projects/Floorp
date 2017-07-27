@@ -52,9 +52,15 @@ var doctypes = [
 'BackCompat' , '<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">',
 ];
 
-function test(mode,i){
+window.addEventListener("message", verifyResult);
+
+function verifyResult(event) {
+  let i = event.data.index;
+  let curFrame = document.getElementById("test" + i);
+  let mode = SpecialPowers.wrap(curFrame).contentDocument.compatMode;
   is(mode,doctypes[i],doctypes[i+1]);
   if (i == doctypes.length - 2) {
+    window.removeEventListener("message", verifyResult);
     SimpleTest.finish();
   }
 }
@@ -64,10 +70,11 @@ function test(mode,i){
 // containing the test doctype.  The iframe's onload
 // function is set to call the test's verification step.
 //
-function insert_iframe(doctype,expected) {
+function insert_iframe(index, doctype) {
   var elm = document.createElement('iframe');
+  elm.setAttribute("id", "test" + index);
   elm.setAttribute('src', 'data:text/html,' + doctype +
-    '<html><body onload="parent.test(document.compatMode,'+i+')"></body>');
+    '<html><body onload="parent.postMessage({index:'+index+'},\'*\');"></body>');
   elm.setAttribute('style', 'display:none');
   document.getElementsByTagName('body')[0].appendChild(elm);
 }
@@ -77,7 +84,7 @@ function insert_iframe(doctype,expected) {
 //
 function doTest() {
   for (i=0; i < doctypes.length; i+=2) {
-    insert_iframe(doctypes[i+1],doctypes[i]);
+    insert_iframe(i,doctypes[i+1]);
   }
 }
 

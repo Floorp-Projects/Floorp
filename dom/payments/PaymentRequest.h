@@ -36,7 +36,8 @@ public:
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
-  static bool IsValidMethodData(const Sequence<PaymentMethodData>& aMethodData,
+  static bool IsValidMethodData(JSContext* aCx,
+                                const Sequence<PaymentMethodData>& aMethodData,
                                 nsAString& aErrorMsg);
 
   static bool

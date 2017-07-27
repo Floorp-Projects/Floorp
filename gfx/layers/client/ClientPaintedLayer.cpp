@@ -185,7 +185,7 @@ ClientPaintedLayer::PaintThebes(nsTArray<ReadbackProcessor::Update>* aReadbackUp
 bool
 ClientPaintedLayer::PaintOffMainThread()
 {
-  mContentClient->BeginPaint();
+  mContentClient->BeginAsyncPaint();
 
   uint32_t flags = GetPaintFlags();
 

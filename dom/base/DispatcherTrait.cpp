@@ -14,11 +14,10 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 nsresult
-DispatcherTrait::Dispatch(const char* aName,
-                          TaskCategory aCategory,
+DispatcherTrait::Dispatch(TaskCategory aCategory,
                           already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return SchedulerGroup::UnlabeledDispatch(aName, aCategory, Move(aRunnable));
+  return SchedulerGroup::UnlabeledDispatch(aCategory, Move(aRunnable));
 }
 
 nsISerialEventTarget*

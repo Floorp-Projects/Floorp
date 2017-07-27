@@ -1047,7 +1047,7 @@ fuzzy-if(skiaContent,1,160000) == 424766-1.html 424766-1-ref.html
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-asserts(3) asserts-if(styloVsGecko,6) != 427017-1.xhtml about:blank # crash test (needs reftest-print). existing assertions are bug 457400.
+asserts(3) asserts-if(styloVsGecko,6) != 427017-1.xhtml about:blank # crash test (needs reftest-paged). existing assertions are bug 457400.
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html

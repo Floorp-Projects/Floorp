@@ -16,6 +16,7 @@
 
 #include "nsIMIMEInfo.h"
 #include "nsIMIMEService.h"
+#include "nsINamed.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -211,7 +212,8 @@ private:
 class nsExternalAppHandler final : public nsIStreamListener,
                                    public nsIHelperAppLauncher,
                                    public nsITimerCallback,
-                                   public nsIBackgroundFileSaverObserver
+                                   public nsIBackgroundFileSaverObserver,
+                                   public nsINamed
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -221,6 +223,7 @@ public:
   NS_DECL_NSICANCELABLE
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIBACKGROUNDFILESAVEROBSERVER
+  NS_DECL_NSINAMED
 
   /**
    * @param aMIMEInfo       MIMEInfo object, representing the type of the

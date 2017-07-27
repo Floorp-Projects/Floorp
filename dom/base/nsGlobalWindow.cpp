@@ -24,6 +24,7 @@
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/StorageNotifierService.h"
+#include "mozilla/dom/StorageUtils.h"
 #include "mozilla/dom/Timeout.h"
 #include "mozilla/dom/TimeoutHandler.h"
 #include "mozilla/dom/TimeoutManager.h"
@@ -498,7 +499,19 @@ public:
     }
   }
 
-  virtual nsIEventTarget*
+  nsIPrincipal*
+  GetPrincipal() const override
+  {
+    return mWindow ? mWindow->GetPrincipal() : nullptr;
+  }
+
+  bool
+  IsPrivateBrowsing() const override
+  {
+    return mWindow ? mWindow->IsPrivateBrowsing() : false;
+  }
+
+  nsIEventTarget*
   GetEventTarget() const override
   {
     return mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
@@ -678,12 +691,6 @@ IdleRequestExecutor::GetName(nsACString& aName)
 {
     aName.AssignASCII("IdleRequestExecutor");
     return NS_OK;
-}
-
-NS_IMETHODIMP
-IdleRequestExecutor::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -9242,7 +9249,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     return;
   }
 
-  aError = Dispatch("PostMessageEvent", TaskCategory::Other, event.forget());
+  aError = Dispatch(TaskCategory::Other, event.forget());
 }
 
 void
@@ -9294,7 +9301,7 @@ public:
   PostCloseEvent(nsGlobalWindow* aWindow, bool aIndirect) {
     nsCOMPtr<nsIRunnable> ev = new nsCloseEvent(aWindow, aIndirect);
     nsresult rv =
-      aWindow->Dispatch("nsCloseEvent", TaskCategory::Other, ev.forget());
+      aWindow->Dispatch(TaskCategory::Other, ev.forget());
     if (NS_SUCCEEDED(rv))
       aWindow->MaybeForgiveSpamCount();
     return rv;
@@ -9825,8 +9832,7 @@ void
 nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
 {
   nsCOMPtr<nsIRunnable> runnable = new WindowDestroyedEvent(this, mWindowID, aTopic);
-  nsresult rv =
-    Dispatch("WindowDestroyedEvent", TaskCategory::Other, runnable.forget());
+  nsresult rv = Dispatch(TaskCategory::Other, runnable.forget());
   if (NS_SUCCEEDED(rv)) {
     mNotifiedIDDestroyed = true;
   }
@@ -11094,7 +11100,7 @@ nsGlobalWindow::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
 
   nsCOMPtr<nsIRunnable> callback =
     new HashchangeCallback(oldWideSpec, newWideSpec, this);
-  return Dispatch("HashchangeCallback", TaskCategory::Other, callback.forget());
+  return Dispatch(TaskCategory::Other, callback.forget());
 }
 
 nsresult
@@ -11694,8 +11700,7 @@ nsGlobalWindow::NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
     new NotifyIdleObserverRunnable(aIdleObserverHolder->mIdleObserver,
                                    aIdleObserverHolder->mTimeInS,
                                    aCallOnidle, this);
-  if (NS_FAILED(Dispatch("NotifyIdleObserverRunnable", TaskCategory::Other,
-                         caller.forget()))) {
+  if (NS_FAILED(Dispatch(TaskCategory::Other, caller.forget()))) {
     NS_WARNING("Failed to dispatch thread for idle observer notification.");
   }
 }
@@ -12372,16 +12377,7 @@ nsGlobalWindow::ObserveStorageNotification(StorageEvent* aEvent,
 {
   MOZ_ASSERT(aEvent);
 
-  // Enforce that the source storage area's private browsing state matches
-  // this window's state.  These flag checks and their maintenance independent
-  // from the principal's OriginAttributes matter because chrome docshells
-  // that are part of private browsing windows can be private browsing without
-  // having their OriginAttributes set (because they have the system
-  // principal).
-  bool isPrivateBrowsing = IsPrivateBrowsing();
-  if (isPrivateBrowsing != aPrivateBrowsing) {
-    return;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(IsPrivateBrowsing() == aPrivateBrowsing);
 
   // LocalStorage can only exist on an inner window, and we don't want to
   // generate events on frozen or otherwise-navigated-away from windows.
@@ -12433,18 +12429,9 @@ nsGlobalWindow::ObserveStorageNotification(StorageEvent* aEvent,
 
   else {
     MOZ_ASSERT(!NS_strcmp(aStorageType, u"localStorage"));
-    nsIPrincipal* storagePrincipal = aEvent->GetPrincipal();
-    if (!storagePrincipal) {
-      return;
-    }
 
-    bool equals = false;
-    nsresult rv = storagePrincipal->Equals(principal, &equals);
-    NS_ENSURE_SUCCESS_VOID(rv);
-
-    if (!equals) {
-      return;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(StorageUtils::PrincipalsEqual(aEvent->GetPrincipal(),
+                                                        principal));
 
     fireMozStorageChanged = mLocalStorage == aEvent->GetStorageArea();
 
@@ -12896,8 +12883,7 @@ public:
     void (nsGlobalWindow::*run)() = &nsGlobalWindow::UnblockScriptedClosing;
     nsCOMPtr<nsIRunnable> caller = NewRunnableMethod(
       "AutoUnblockScriptClosing::~AutoUnblockScriptClosing", mWin, run);
-    mWin->Dispatch("nsGlobalWindow::UnblockScriptedClosing",
-                   TaskCategory::Other, caller.forget());
+    mWin->Dispatch(TaskCategory::Other, caller.forget());
   }
 };
 
@@ -15400,15 +15386,14 @@ nsPIDOMWindow<T>::GetDocGroup() const
 }
 
 nsresult
-nsGlobalWindow::Dispatch(const char* aName,
-                         TaskCategory aCategory,
+nsGlobalWindow::Dispatch(TaskCategory aCategory,
                          already_AddRefed<nsIRunnable>&& aRunnable)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (GetDocGroup()) {
-    return GetDocGroup()->Dispatch(aName, aCategory, Move(aRunnable));
+    return GetDocGroup()->Dispatch(aCategory, Move(aRunnable));
   }
-  return DispatcherTrait::Dispatch(aName, aCategory, Move(aRunnable));
+  return DispatcherTrait::Dispatch(aCategory, Move(aRunnable));
 }
 
 nsISerialEventTarget*

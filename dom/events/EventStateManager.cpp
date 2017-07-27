@@ -237,12 +237,6 @@ UITimerCallback::GetName(nsACString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-UITimerCallback::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /******************************************************************/
 /* mozilla::OverOutElementsWrapper                                */
 /******************************************************************/

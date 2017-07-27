@@ -39,6 +39,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
                                    "nsITelemetry");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
+                                  "resource://gre/modules/TelemetryHealthPing.jsm");
+
 
 const Utils = TelemetryUtils;
 
@@ -94,15 +97,6 @@ const XHR_ERROR_TYPE = [
   "eChannelOpen",
   "eRedirect",
 ];
-
-function monotonicNow() {
-  try {
-    return Telemetry.msSinceProcessStart();
-  } catch (ex) {
-    // If this fails fall back to the (non-monotonic) Date value.
-    return Date.now();
-  }
-}
 
 /**
  * This is a policy object used to override behavior within this module.
@@ -184,6 +178,14 @@ this.TelemetrySend = {
 
   get pendingPingCount() {
     return TelemetrySendImpl.pendingPingCount;
+  },
+
+  testSetTimeoutForPingSubmit(timeoutInMS) {
+    TelemetrySendImpl._pingSubmissionTimeout = timeoutInMS;
+  },
+
+  testResetTimeOutToDefault() {
+    TelemetrySendImpl._pingSubmissionTimeout = PING_SUBMIT_TIMEOUT_MS;
   },
 
   /**
@@ -591,6 +593,8 @@ var TelemetrySendImpl = {
   _isOSShutdown: false,
   // Count of pending pings that were overdue.
   _overduePingCount: 0,
+
+  _pingSubmissionTimeout: PING_SUBMIT_TIMEOUT_MS,
 
   OBSERVER_TOPICS: [
     TOPIC_IDLE_DAILY,
@@ -1007,7 +1011,7 @@ var TelemetrySendImpl = {
     let hsend = Telemetry.getHistogramById(sendId);
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
 
-    hsend.add(monotonicNow() - startTime);
+    hsend.add(Utils.monotonicNow() - startTime);
     hsuccess.add(success);
 
     if (!success) {
@@ -1076,7 +1080,7 @@ var TelemetrySendImpl = {
 
     let request = new ServiceRequest();
     request.mozBackgroundRequest = true;
-    request.timeout = PING_SUBMIT_TIMEOUT_MS;
+    request.timeout = this._pingSubmissionTimeout;
 
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
@@ -1088,7 +1092,7 @@ var TelemetrySendImpl = {
     // Prevent the request channel from running though URLClassifier (bug 1296802)
     request.channel.loadFlags &= ~Ci.nsIChannel.LOAD_CLASSIFY_URI;
 
-    const monotonicStartTime = monotonicNow();
+    const monotonicStartTime = Utils.monotonicNow();
     let deferred = PromiseUtils.defer();
 
     let onRequestFinished = (success, event) => {
@@ -1118,6 +1122,8 @@ var TelemetrySendImpl = {
       if (failure === "error") {
         failure = XHR_ERROR_TYPE[request.errorCode];
       }
+
+      TelemetryHealthPing.recordSendFailure(failure);
       Telemetry.getHistogramById("TELEMETRY_SEND_FAILURE_TYPE").add(failure);
 
       this._log.error("_doPing - error making request to " + url + ": " + failure);
@@ -1163,10 +1169,10 @@ var TelemetrySendImpl = {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
-    let startTime = monotonicNow();
+    let startTime = Utils.monotonicNow();
     let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(networkPayload));
     utf8Payload += converter.Finish();
-    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(monotonicNow() - startTime);
+    Telemetry.getHistogramById("TELEMETRY_STRINGIFY").add(Utils.monotonicNow() - startTime);
 
     // Check the size and drop pings which are too big.
     const pingSizeBytes = utf8Payload.length;
@@ -1177,16 +1183,18 @@ var TelemetrySendImpl = {
                .add(Math.floor(pingSizeBytes / 1024 / 1024));
       // We don't need to call |request.abort()| as it was not sent yet.
       this._pendingPingRequests.delete(id);
+
+      TelemetryHealthPing.recordDiscardedPing(ping.type);
       return TelemetryStorage.removePendingPing(id);
     }
 
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
-    startTime = monotonicNow();
+    startTime = Utils.monotonicNow();
     payloadStream.data = gzipCompressString(utf8Payload);
 
     const compressedPingSizeKB = Math.floor(payloadStream.data.length / 1024);
-    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(monotonicNow() - startTime);
+    Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(Utils.monotonicNow() - startTime);
     request.send(payloadStream);
 
     return deferred.promise;

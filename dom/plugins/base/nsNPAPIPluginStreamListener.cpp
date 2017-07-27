@@ -36,7 +36,7 @@ nsNPAPIStreamWrapper::~nsNPAPIStreamWrapper()
 
 // nsNPAPIPluginStreamListener Methods
 NS_IMPL_ISUPPORTS(nsNPAPIPluginStreamListener,
-                  nsITimerCallback, nsIHTTPHeaderListener)
+                  nsITimerCallback, nsIHTTPHeaderListener, nsINamed)
 
 nsNPAPIPluginStreamListener::nsNPAPIPluginStreamListener(nsNPAPIPluginInstance* inst,
                                                          void* notifyData,
@@ -770,6 +770,13 @@ nsNPAPIPluginStreamListener::Notify(nsITimer *aTimer)
       }
 
   MaybeRunStopBinding();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNPAPIPluginStreamListener::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsNPAPIPluginStreamListener");
   return NS_OK;
 }
 

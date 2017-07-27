@@ -173,6 +173,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mHasPresented(false)
   , mHasBeforeUnload(false)
   , mIsReadyToHandleInputEvents(false)
+  , mIsMouseEnterIntoWidgetEventSuppressed(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -1092,7 +1093,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
 void
 TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
@@ -1113,10 +1114,32 @@ TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
       mTabSetsCursor = false;
     }
   }
+  if (!mIsReadyToHandleInputEvents) {
+    if (eMouseEnterIntoWidget == aEvent.mMessage) {
+      MOZ_ASSERT(!mIsMouseEnterIntoWidgetEventSuppressed);
+      mIsMouseEnterIntoWidgetEventSuppressed = true;
+    } else if (eMouseExitFromWidget == aEvent.mMessage) {
+      MOZ_ASSERT(mIsMouseEnterIntoWidgetEventSuppressed);
+      mIsMouseEnterIntoWidgetEventSuppressed = false;
+    }
+    return;
+  }
 
   ScrollableLayerGuid guid;
   uint64_t blockId;
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
+
+  if (mIsMouseEnterIntoWidgetEventSuppressed) {
+    // In the case that the TabParent suppressed the eMouseEnterWidget event due
+    // to its corresponding TabChild wasn't ready to handle it, we have to
+    // resend it when the TabChild is ready.
+    mIsMouseEnterIntoWidgetEventSuppressed = false;
+    WidgetMouseEvent localEvent(aEvent);
+    localEvent.mMessage = eMouseEnterIntoWidget;
+    DebugOnly<bool> ret = SendRealMouseButtonEvent(localEvent, guid, blockId);
+    NS_WARNING_ASSERTION(ret, "SendRealMouseButtonEvent(eMouseEnterIntoWidget) failed");
+    MOZ_ASSERT(!ret || localEvent.HasBeenPostedToRemoteProcess());
+  }
 
   if (eMouseMove == aEvent.mMessage) {
     if (aEvent.mReason == WidgetMouseEvent::eSynthesized) {

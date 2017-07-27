@@ -44,6 +44,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     },
   }];
 
+  const nonBasicCardMethods = [{
+    supportedMethods: "testing-payment-method",
+    data: {
+      paymentId: "P3892940",
+      paymentType: "prepaid",
+    },
+  }];
+
   const complexDetails = {
     id: "payment details",
     total: {
@@ -177,6 +185,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     });
   }
 
+  function testWithNonBasicCardMethods() {
+    return new Promise((resolve, reject) => {
+      const payRequest = new PaymentRequest(nonBasicCardMethods, simplestDetails);
+      ok(payRequest, "PaymentRequest should be created");
+      gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+        gScript.removeMessageListener("check-complete", checkCompleteHandler);
+        resolve();
+      });
+      gScript.sendAsyncMessage("check-nonbasiccard-request");
+    });
+  }
+
   function testWithDuplicateShippingOptionsParameters() {
     return new Promise((resolve, reject) => {
       const payRequest = new PaymentRequest(simplestMethods, duplicateShippingOptionsDetails);
@@ -218,6 +238,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
   function runTests() {
     testWithSimplestParameters()
     .then(testWithComplexParameters)
+    .then(testWithNonBasicCardMethods)
     .then(testWithDuplicateShippingOptionsParameters)
     .then(testMultipleRequests)
     .then(teardown)

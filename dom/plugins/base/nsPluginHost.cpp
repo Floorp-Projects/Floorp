@@ -320,7 +320,8 @@ NS_IMPL_ISUPPORTS(nsPluginHost,
                   nsIPluginHost,
                   nsIObserver,
                   nsITimerCallback,
-                  nsISupportsWeakReference)
+                  nsISupportsWeakReference,
+                  nsINamed)
 
 already_AddRefed<nsPluginHost>
 nsPluginHost::GetInst()
@@ -3732,6 +3733,13 @@ NS_IMETHODIMP nsPluginHost::Notify(nsITimer* timer)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPluginHost::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("nsPluginHost");
+  return NS_OK;
 }
 
 #ifdef XP_WIN

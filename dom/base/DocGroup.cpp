@@ -56,11 +56,10 @@ DocGroup::~DocGroup()
 }
 
 nsresult
-DocGroup::Dispatch(const char* aName,
-                   TaskCategory aCategory,
+DocGroup::Dispatch(TaskCategory aCategory,
                    already_AddRefed<nsIRunnable>&& aRunnable)
 {
-  return mTabGroup->Dispatch(aName, aCategory, Move(aRunnable));
+  return mTabGroup->Dispatch(aCategory, Move(aRunnable));
 }
 
 nsISerialEventTarget*

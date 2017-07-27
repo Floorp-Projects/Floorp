@@ -22,6 +22,11 @@ EXTRA_JS_MODULES += [
     'DownloadUIHelper.jsm',
 ]
 
+if CONFIG['MOZ_PLACES']:
+    EXTRA_JS_MODULES += [
+        'DownloadHistory.jsm',
+    ]
+
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['TK_CFLAGS']

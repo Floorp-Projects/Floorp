@@ -93,7 +93,7 @@ private:
 template<class T>
 void DeleteOnMainThread(nsAutoPtr<T>& aObject) {
   nsCOMPtr<nsIRunnable> r = new DeleteObjectTask<T>(aObject);
-  SystemGroup::Dispatch("VideoUtils::DeleteObjectTask", TaskCategory::Other, r.forget());
+  SystemGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 LayersBackend
@@ -160,9 +160,7 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
     Telemetry::Accumulate(Telemetry::HistogramID::VIDEO_MFT_OUTPUT_NULL_SAMPLES,
                           telemetry);
   });
-  SystemGroup::Dispatch("~WMFVideoMFTManager::report_telemetry",
-                        TaskCategory::Other,
-                        task.forget());
+  SystemGroup::Dispatch(TaskCategory::Other, task.forget());
 }
 
 const GUID&
