@@ -126,15 +126,15 @@
 }
 
 #identity-box[sharing="camera"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#camera-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
 }
 
 #identity-box[sharing="microphone"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#microphone-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
 #identity-box[sharing="screen"] > #sharing-icon {
-  list-style-image: url("chrome://browser/skin/notification-icons.svg#screen-sharing");
+  list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
 }
 
 #identity-box[sharing] > #sharing-icon {
