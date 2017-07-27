@@ -41,6 +41,8 @@ public:
 private:
   friend class GMPContentChild;
 
+  bool ResolveLinks(nsCOMPtr<nsIFile>& aPath);
+
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
   mozilla::ipc::IPCResult AnswerStartPlugin(const nsString& aAdapter) override;
@@ -63,6 +65,8 @@ private:
   void ProcessingError(Result aCode, const char* aReason) override;
 
   GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI, uint32_t aDecryptorId = 0);
+
+  nsTArray<nsCString> MakeCDMHostVerificationPaths();
 
   nsTArray<UniquePtr<GMPContentChild>> mGMPContentChildren;
 
