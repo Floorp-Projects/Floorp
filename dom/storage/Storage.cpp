@@ -135,8 +135,7 @@ Storage::NotifyChange(Storage* aStorage, nsIPrincipal* aPrincipal,
   if (aImmediateDispatch) {
     Unused << r->Run();
   } else {
-    SystemGroup::Dispatch("Storage::NotifyChange", TaskCategory::Other,
-                          r.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 }
 

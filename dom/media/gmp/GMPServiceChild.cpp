@@ -397,7 +397,7 @@ GeckoMediaPluginServiceChild::GetServiceChild()
     if (mGetServiceChildPromises.Length() == 1) {
       nsCOMPtr<nsIRunnable> r = WrapRunnable(
         contentChild, &dom::ContentChild::SendCreateGMPService);
-      SystemGroup::Dispatch("SendCreateGMPService", TaskCategory::Other, r.forget());
+      SystemGroup::Dispatch(TaskCategory::Other, r.forget());
     }
     return promise;
   }

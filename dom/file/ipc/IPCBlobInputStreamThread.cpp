@@ -126,9 +126,7 @@ IPCBlobInputStreamThread::Initialize()
 {
   if (!NS_IsMainThread()) {
     RefPtr<Runnable> runnable = new ThreadInitializeRunnable();
-    SystemGroup::Dispatch("IPCBlobInputStreamThread::Initialize",
-                          TaskCategory::Other,
-                          runnable.forget());
+    SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
     return;
   }
 

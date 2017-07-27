@@ -378,8 +378,7 @@ public:
       // ref counted pointer off main thread.
       nsresult rvCopy = rv;
       nsCOMPtr<nsIFile> fileCopy(mFile);
-      SystemGroup::Dispatch("Preferences::WriterRunnable",
-                            TaskCategory::Other,
+      SystemGroup::Dispatch(TaskCategory::Other,
                             NS_NewRunnableFunction("Preferences::WriterRunnable", [fileCopy, rvCopy] {
         MOZ_RELEASE_ASSERT(NS_IsMainThread());
         if (NS_FAILED(rvCopy)) {

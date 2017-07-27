@@ -6,6 +6,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
+#include "nsINamed.h"
 
 class nsIGeolocationUpdate;
 class nsIGeolocationProvider;
@@ -28,10 +29,12 @@ class nsIGeolocationProvider;
  first when expected to do so.
 */
 class MLSFallback : public nsITimerCallback
+                  , public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   explicit MLSFallback(uint32_t delayMs = 2000);
   nsresult Startup(nsIGeolocationUpdate* aWatcher);

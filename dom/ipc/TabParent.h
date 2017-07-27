@@ -786,6 +786,11 @@ private:
   // True when the remote browser is created and ready to handle input events.
   bool mIsReadyToHandleInputEvents;
 
+  // True if we suppress the eMouseEnterIntoWidget event due to the TabChild was
+  // not ready to handle it. We will resend it when the next time we fire a
+  // mouse event and the TabChild is ready.
+  bool mIsMouseEnterIntoWidgetEventSuppressed;
+
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
 };

@@ -1659,9 +1659,3 @@ nsContentSink::GetName(nsACString& aName)
   aName.AssignASCII("nsContentSink_timer");
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsContentSink::SetName(const char* aName)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}

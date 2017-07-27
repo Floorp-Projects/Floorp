@@ -195,6 +195,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AlertImageRequest)
   NS_INTERFACE_MAP_ENTRY(imgINotificationObserver)
   NS_INTERFACE_MAP_ENTRY(nsICancelable)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, imgINotificationObserver)
 NS_INTERFACE_MAP_END
 
@@ -267,6 +268,13 @@ AlertImageRequest::Notify(nsITimer* aTimer)
 {
   MOZ_ASSERT(aTimer == mTimer);
   return NotifyMissing();
+}
+
+NS_IMETHODIMP
+AlertImageRequest::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("AlertImageRequest");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

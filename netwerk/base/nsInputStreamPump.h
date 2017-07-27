@@ -11,7 +11,7 @@
 #include "nsIThreadRetargetableRequest.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/RecursiveMutex.h"
 
 class nsIInputStream;
 class nsILoadGroup;
@@ -24,7 +24,8 @@ class nsInputStreamPump final : public nsIInputStreamPump
     ~nsInputStreamPump();
 
 public:
-    typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
+    typedef mozilla::RecursiveMutexAutoLock RecursiveMutexAutoLock;
+    typedef mozilla::RecursiveMutexAutoUnlock RecursiveMutexAutoUnlock;
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
@@ -103,7 +104,7 @@ protected:
     bool                          mCloseWhenDone;
     bool                          mRetargeting;
     // Protects state/member var accesses across multiple threads.
-    mozilla::ReentrantMonitor     mMonitor;
+    mozilla::RecursiveMutex       mMutex;
 };
 
 #endif // !nsInputStreamChannel_h__

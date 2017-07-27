@@ -211,6 +211,7 @@ namespace JS {
     _(CantInlineNativeNoTemplateObj)                                    \
     _(CantInlineBound)                                                  \
     _(CantInlineNativeNoSpecialization)                                 \
+    _(CantInlineNoObservedTypes)                                        \
     _(HasCommonInliningPath)                                            \
                                                                         \
     _(GenericSuccess)                                                   \

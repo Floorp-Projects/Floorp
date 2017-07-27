@@ -26,6 +26,9 @@ function checkSimplestRequest(payRequest) {
   if (supportedMethod != "basic-card") {
     emitTestFail("supported method should be 'basic-card'.");
   }
+  if (methodData.data) {
+    emitTestFail("methodData.data should not exist.");
+  }
 
   // checking the passed PaymentDetails parameter
   const details = payRequest.paymentDetails;
@@ -82,8 +85,34 @@ function checkComplexRequest(payRequest) {
     emitTestFail("supported method should be 'basic-card'.");
   }
   const data = methodData.data;
-  if (data != "{\"supportedNetworks\":[\"unionpay\",\"visa\",\"mastercard\",\"amex\",\"discover\",\"diners\",\"jcb\",\"mir\"],\"supportedTypes\":[\"prepaid\",\"debit\",\"credit\"]}") {
-    emitTestFail("method data should be '{\"supportedNetworks\":[\"unionpay\",\"visa\",\"mastercard\",\"amex\",\"discover\",\"diners\",\"jcb\",\"mir\"],\"supportedTypes\":[\"prepaid\",\"debit\",\"credit\"]}', but got '" + data + "'.");
+  const supportedNetworks = data.supportedNetworks;
+  const expectedSupportedNetworks = ["unionpay", "visa", "mastercard", "amex",
+                                     "discover", "diners", "jcb", "mir"];
+  if (supportedNetworks.length !=  expectedSupportedNetworks.length) {
+    emitTestFail("supportedNetworks.length should be " +
+                 expectedSupportedNetworks.length +
+                 ", but got " + supportedNetworks.length + ".");
+  }
+  for (let idx = 0; idx < supportedNetworks.length; idx++) {
+    if (supportedNetworks[idx] != expectedSupportedNetworks[idx]) {
+      emitTestFail("supportedNetworks[" + idx + "] should be '" +
+                   expectedSupportedNetworks[idx] + "', but got '" +
+                   supportedNetworks[idx] + "'.");
+    }
+  }
+  const supportedTypes = data.supportedTypes;
+  const expectedSupportedTypes = ["prepaid", "debit", "credit"];
+  if (supportedTypes.length != expectedSupportedTypes.length) {
+    emitTestFail("supportedTypes.length should be '" +
+                 expectedSupportedTypes.length + "', but got '" +
+                 supportedTypes.length + "'.");
+  }
+  for (let idx = 0; idx < supportedTypes.length; idx++) {
+    if (supportedTypes[idx] != expectedSupportedTypes[idx]) {
+      emitTestFail("supportedTypes[" + idx + "] should be '" +
+                   expectedSupportedTypes[idx] + "', but got '" +
+                   supportedTypes[idx] + "'.");
+    }
   }
   // checking the passed PaymentDetails parameter
   const details = payRequest.paymentDetails;
@@ -164,8 +193,9 @@ function checkComplexRequest(payRequest) {
   if (additionalItem.amount.value != "-10.00") {
     emitTestFail("additional item's value should be '-10.00'.");
   }
-  if (modifier.data != "{\"discountProgramParticipantId\":\"86328764873265\"}") {
-    emitTestFail("modifier's data should be '{\"discountProgramParticipantId\":\"86328764873265\"}'.");
+  if (modifier.data.discountProgramParticipantId != "86328764873265") {
+    emitTestFail("modifier's data should be '86328764873265', but got '" +
+                 modifier.data.discountProgramParticipantId + "'.");
   }
 
   const shippingOptions = details.shippingOptions;
@@ -221,6 +251,70 @@ function checkComplexRequest(payRequest) {
   }
   if (!paymentOptions.requestShipping) {
     emitTestFail("requestShipping option should be true.");
+  }
+  if (paymentOptions.shippingType != "shipping") {
+    emitTestFail("shippingType option should be 'shipping'.")
+  }
+}
+
+function checkNonBasicCardRequest(payRequest) {
+  if (payRequest.paymentMethods.length != 1) {
+    emitTestFail("paymentMethods' length should be 1.");
+  }
+
+  const methodData = payRequest.paymentMethods.queryElementAt(0, Ci.nsIPaymentMethodData);
+  if (!methodData) {
+    emitTestFail("Fail to get payment methodData.");
+  }
+  const supportedMethod = methodData.supportedMethods;
+  if (supportedMethod != "testing-payment-method") {
+    emitTestFail("supported method should be 'testing-payment-method'.");
+  }
+
+  const paymentId = methodData.data.paymentId;
+  if (paymentId != "P3892940") {
+    emitTestFail("methodData.data.paymentId should be 'P3892940', but got " + paymentId + ".");
+  }
+  const paymentType = methodData.data.paymentType;
+  if (paymentType != "prepaid") {
+    emitTestFail("methodData.data.paymentType should be 'prepaid', but got " + paymentType + ".");
+  }
+
+  // checking the passed PaymentDetails parameter
+  const details = payRequest.paymentDetails;
+  if (details.totalItem.label != "Total") {
+    emitTestFail("total item's label should be 'Total'.");
+  }
+  if (details.totalItem.amount.currency != "USD") {
+    emitTestFail("total item's currency should be 'USD'.");
+  }
+  if (details.totalItem.amount.value != "1.00") {
+    emitTestFail("total item's value should be '1.00'.");
+  }
+
+  if (details.displayItems) {
+    emitTestFail("details.displayItems should be undefined.");
+  }
+  if (details.modifiers) {
+    emitTestFail("details.displayItems should be undefined.");
+  }
+  if (details.shippingOptions) {
+    emitTestFail("details.shippingOptions should be undefined.");
+  }
+
+  // checking the default generated PaymentOptions parameter
+  const paymentOptions = payRequest.paymentOptions;
+  if (paymentOptions.requestPayerName) {
+    emitTestFail("requestPayerName option should be false.");
+  }
+  if (paymentOptions.requestPayerEmail) {
+    emitTestFail("requestPayerEmail option should be false.");
+  }
+  if (paymentOptions.requestPayerPhone) {
+    emitTestFail("requestPayerPhone option should be false.");
+  }
+  if (paymentOptions.requestShipping) {
+    emitTestFail("requestShipping option should be false.");
   }
   if (paymentOptions.shippingType != "shipping") {
     emitTestFail("shippingType option should be 'shipping'.")
@@ -322,6 +416,23 @@ function checkComplexRequestHandler() {
   sendAsyncMessage("check-complete");
 }
 
+function checkNonBasicCardRequestHandler() {
+  const paymentEnum = paymentSrv.enumerate();
+  if (!paymentEnum.hasMoreElements()) {
+    emitTestFail("PaymentRequestService should have at least one payment request.");
+  }
+  while (paymentEnum.hasMoreElements()) {
+    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+    if (!payRequest) {
+      emitTestFail("Fail to get existing payment request.");
+      break;
+    }
+    checkNonBasicCardRequest(payRequest);
+  }
+  paymentSrv.cleanup();
+  sendAsyncMessage("check-complete");
+}
+
 function checkDuplicateShippingOptionsRequestHandler() {
   const paymentEnum = paymentSrv.enumerate();
   if (!paymentEnum.hasMoreElements()) {
@@ -366,6 +477,7 @@ addMessageListener("check-simplest-request", checkSimplestRequestHandler);
 addMessageListener("check-complex-request", checkComplexRequestHandler);
 addMessageListener("check-duplicate-shipping-options-request", checkDuplicateShippingOptionsRequestHandler);
 addMessageListener("check-multiple-requests", checkMultipleRequestsHandler);
+addMessageListener("check-nonbasiccard-request", checkNonBasicCardRequestHandler);
 
 addMessageListener("teardown", function() {
   paymentSrv.cleanup();

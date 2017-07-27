@@ -34,6 +34,7 @@ const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
 
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
+const NEGATIVE_LINE_NUMBERS_PREF = "devtools.gridinspector.showNegativeLineNumbers";
 
 const DEFAULT_GRID_COLOR = "#4B0082";
 
@@ -352,11 +353,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     this.markup = new CanvasFrameAnonymousContentHelper(this.highlighterEnv,
       this._buildMarkup.bind(this));
 
-    this.onNavigate = this.onNavigate.bind(this);
     this.onPageHide = this.onPageHide.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
 
-    this.highlighterEnv.on("navigate", this.onNavigate);
     this.highlighterEnv.on("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
@@ -590,7 +589,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
   destroy() {
     let { highlighterEnv } = this;
-    highlighterEnv.off("navigate", this.onNavigate);
     highlighterEnv.off("will-navigate", this.onWillNavigate);
 
     let { pageListenerTarget } = highlighterEnv;
@@ -677,14 +675,6 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     return pattern;
   }
 
-  /**
-   * Called when the page navigates. Used to clear the cached gap patterns and avoid
-   * using DeadWrapper objects as gap patterns the next time.
-   */
-  onNavigate() {
-    this._clearCache();
-  }
-
   onPageHide({ target }) {
     // If a page hide event is triggered for current window's highlighter, hide the
     // highlighter.
@@ -693,7 +683,14 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     }
   }
 
+  /**
+   * Called when the page will-navigate. Used to hide the grid highlighter and clear
+   * the cached gap patterns and avoid using DeadWrapper obejcts as gap patterns the
+   * next time.
+   */
   onWillNavigate({ isTopLevel }) {
+    this._clearCache();
+
     if (isTopLevel) {
       this.hide();
     }
@@ -1145,6 +1142,35 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
                        this.getFirstRowLinePos(fragment));
       this.renderLineNumbers(fragment.rows, ROWS, "top", "left",
                        this.getFirstColLinePos(fragment));
+
+      if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
+        this.renderNegativeLineNumbers(fragment.cols, COLUMNS, "left", "top",
+                          this.getLastRowLinePos(fragment));
+        this.renderNegativeLineNumbers(fragment.rows, ROWS, "top", "left",
+                          this.getLastColLinePos(fragment));
+      }
+    }
+  }
+
+  /**
+   * Render the negative grid lines given the grid dimension information of the
+   * column or row lines.
+   *
+   * See @param for renderLines.
+   */
+  renderNegativeLineNumbers(gridDimension, dimensionType, mainSide, crossSide,
+            startPos) {
+    let lineStartPos = startPos;
+
+    const { lines } = gridDimension;
+
+    for (let i = 0, line = lines[i]; i < lines.length; line = lines[++i]) {
+      let linePos = line.start;
+
+      const negativeLineNumber = i - lines.length;
+
+      this.renderGridLineNumber(negativeLineNumber, linePos, lineStartPos, line.breadth,
+        dimensionType);
     }
   }
 
@@ -1331,6 +1357,9 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
               startPos) {
     let lineStartPos = startPos;
 
+    // Keep track of the number of collapsed lines per line position
+    let stackedLines = [];
+
     for (let i = 0; i < gridDimension.lines.length; i++) {
       let line = gridDimension.lines[i];
       let linePos = line.start;
@@ -1345,6 +1374,21 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       // For such lines the API returns always 0 as line's number.
       if (line.number === 0) {
         continue;
+      }
+
+      // Check for overlapping lines. We render a second box beneath the last overlapping
+      // line number to indicate there are lines beneath it.
+      const gridLine = gridDimension.tracks[line.number - 1];
+      if (gridLine) {
+        const { breadth }  = gridLine;
+        if (breadth === 0) {
+          stackedLines.push(gridDimension.lines[i].number);
+          if (stackedLines.length > 0) {
+            this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
+              dimensionType, 1);
+          }
+          continue;
+        }
       }
 
       this.renderGridLineNumber(line.number, linePos, lineStartPos, line.breadth,
@@ -1425,8 +1469,11 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
    *         The grid line breadth value.
    * @param  {String} dimensionType
    *         The grid dimension type which is either the constant COLUMNS or ROWS.
+   * @param  {Number||undefined} stackedLineIndex
+   *         The line index position of the stacked line.
    */
-  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType) {
+  renderGridLineNumber(lineNumber, linePos, startPos, breadth, dimensionType,
+    stackedLineIndex) {
     let displayPixelRatio = getDisplayPixelRatio(this.win);
     let { devicePixelRatio } = this.win;
     let offset = (displayPixelRatio / 2) % 1;
@@ -1463,6 +1510,18 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     // centered on the line, and in the middle of the gap if there is any.
     let x, y;
 
+    let startOffset = (boxHeight + 2) / devicePixelRatio;
+
+    if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
+      // If the line number is negative, offset it from the grid container edge,
+      // (downwards if its a column, rightwards if its a row).
+      if (lineNumber < 0) {
+        startPos += startOffset;
+      } else {
+        startPos -= startOffset;
+      }
+    }
+
     if (dimensionType === COLUMNS) {
       x = linePos + breadth / 2;
       y = startPos;
@@ -1475,6 +1534,15 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     x -= boxWidth / 2;
     y -= boxHeight / 2;
+
+    if (stackedLineIndex) {
+      // Offset the stacked line number by half of the box's width/height
+      const xOffset = boxWidth / 4;
+      const yOffset = boxHeight / 4;
+
+      x += xOffset;
+      y += yOffset;
+    }
 
     if (!this.hasNodeTransformations) {
       x = Math.max(x, padding);
@@ -1491,7 +1559,8 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
 
     // Write the line number inside of the rectangle.
     this.ctx.fillStyle = "black";
-    this.ctx.fillText(lineNumber, x + padding, y + textHeight + padding);
+    const numberText = stackedLineIndex ? "" : lineNumber;
+    this.ctx.fillText(numberText, x + padding, y + textHeight + padding);
 
     this.ctx.restore();
   }

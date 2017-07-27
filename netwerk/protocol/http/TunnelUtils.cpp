@@ -447,6 +447,13 @@ TLSFilterTransaction::Notify(nsITimer *timer)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TLSFilterTransaction::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("TLSFilterTransaction");
+  return NS_OK;
+}
+
 nsresult
 TLSFilterTransaction::StartTimerCallback()
 {
@@ -1623,7 +1630,7 @@ SocketTransportShim::SetFastOpenCallback(TCPFastOpen *aFastOpen)
   return mWrapped->SetFastOpenCallback(aFastOpen);
 }
 
-NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback)
+NS_IMPL_ISUPPORTS(TLSFilterTransaction, nsITimerCallback, nsINamed)
 NS_IMPL_ISUPPORTS(SocketTransportShim, nsISocketTransport, nsITransport)
 NS_IMPL_ISUPPORTS(InputStreamShim, nsIInputStream, nsIAsyncInputStream)
 NS_IMPL_ISUPPORTS(OutputStreamShim, nsIOutputStream, nsIAsyncOutputStream)

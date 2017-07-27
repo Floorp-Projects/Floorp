@@ -378,7 +378,8 @@ NS_IMPL_QUERY_INTERFACE(LazyIdleThread, nsIThread,
                         nsISerialEventTarget,
                         nsITimerCallback,
                         nsIThreadObserver,
-                        nsIObserver)
+                        nsIObserver,
+                        nsINamed)
 
 NS_IMETHODIMP
 LazyIdleThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
@@ -560,6 +561,13 @@ LazyIdleThread::Notify(nsITimer* aTimer)
     return rv;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LazyIdleThread::GetName(nsACString& aName)
+{
+  aName.AssignLiteral("LazyIdleThread");
   return NS_OK;
 }
 

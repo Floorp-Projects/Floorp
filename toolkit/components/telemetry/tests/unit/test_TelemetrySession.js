@@ -1408,7 +1408,7 @@ add_task(async function test_sendShutdownPing() {
   // Shutdown telemetry and wait for an incoming ping.
   let nextPing = PingServer.promiseNextPing();
   await TelemetryController.testShutdown();
-  const ping = await nextPing;
+  let ping = await nextPing;
 
   // Check that we received a shutdown ping.
   checkPingFormat(ping, ping.type, true, true);
@@ -1470,8 +1470,30 @@ add_task(async function test_sendShutdownPing() {
   await TelemetryController.testReset();
   await TelemetryController.testShutdown();
 
+  // Clear the state and prepare for the next test.
+  await TelemetryStorage.testClearPendingPings();
+  PingServer.clearRequests();
+  PingServer.resetPingHandler();
+
+  // Check that we're able to send the shutdown ping using the pingsender
+  // from the first session if the related pref is on.
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, true);
+  Preferences.set(TelemetryUtils.Preferences.FirstRun, true);
+  TelemetryReportingPolicy.testUpdateFirstRun();
+
+  // Restart/shutdown telemetry and wait for an incoming ping.
+  await TelemetryController.testReset();
+  await TelemetryController.testShutdown();
+  ping = await PingServer.promiseNextPing();
+
+  // Check that we received a shutdown ping.
+  checkPingFormat(ping, ping.type, true, true);
+  Assert.equal(ping.payload.info.reason, REASON_SHUTDOWN);
+  Assert.equal(ping.clientId, gClientID);
+
   // Reset the pref and restart Telemetry.
   Preferences.set(TelemetryUtils.Preferences.ShutdownPingSender, false);
+  Preferences.set(TelemetryUtils.Preferences.ShutdownPingSenderFirstSession, false);
   Preferences.reset(TelemetryUtils.Preferences.FirstRun);
   PingServer.resetPingHandler();
 });

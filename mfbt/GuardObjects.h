@@ -134,21 +134,21 @@ public:
 
 #ifdef DEBUG
 #  define MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER \
-     mozilla::detail::GuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
+     ::mozilla::detail::GuardObjectNotificationReceiver _mCheckNotUsedAsTemporary;
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM \
-     , mozilla::detail::GuardObjectNotifier&& _notifier = \
-         mozilla::detail::GuardObjectNotifier()
+     , ::mozilla::detail::GuardObjectNotifier&& _notifier = \
+         ::mozilla::detail::GuardObjectNotifier()
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM \
-     mozilla::detail::GuardObjectNotifier&& _notifier = \
-         mozilla::detail::GuardObjectNotifier()
+     ::mozilla::detail::GuardObjectNotifier&& _notifier = \
+         ::mozilla::detail::GuardObjectNotifier()
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL \
-     , mozilla::detail::GuardObjectNotifier&& _notifier
+     , ::mozilla::detail::GuardObjectNotifier&& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL \
-     mozilla::detail::GuardObjectNotifier&& _notifier
+     ::mozilla::detail::GuardObjectNotifier&& _notifier
 #  define MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT \
-     , mozilla::Move(_notifier)
+     , ::mozilla::Move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT \
-       mozilla::Move(_notifier)
+       ::mozilla::Move(_notifier)
 #  define MOZ_GUARD_OBJECT_NOTIFIER_INIT \
      do { _mCheckNotUsedAsTemporary.init(_notifier); } while (0)
 #else

@@ -242,8 +242,7 @@ nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
   if (mParser && mDocument) { // can mParser ever be null here?
     nsCOMPtr<nsIRunnable> terminator =
       NewRunnableMethod("nsHtml5Parser::Terminate", GetParser(), &nsHtml5Parser::Terminate);
-    if (NS_FAILED(mDocument->Dispatch("nsHtml5Parser::Terminate",
-                                      TaskCategory::Network,
+    if (NS_FAILED(mDocument->Dispatch(TaskCategory::Network,
                                       terminator.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
@@ -271,8 +270,7 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
 {
   if (!mDocument || !mDocument->IsInBackgroundWindow()) {
     nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);
-    if (NS_FAILED(mDocument->Dispatch("nsHtml5ExecutorReflusher",
-                                      TaskCategory::Network,
+    if (NS_FAILED(mDocument->Dispatch(TaskCategory::Network,
                                       flusher.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }

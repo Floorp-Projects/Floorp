@@ -4,7 +4,7 @@ Our reference repository is https://github.com/khaledhosny/ots/.
 
 Current revision: ba8417620956a920ed1f05a2f666fb6317fb10cb (5.1.0)
 
-Upstream files included: LICENSE, src/, include/
+Upstream files included: LICENSE, src/, include/, tests/*.cc
 
 Additional files: README.mozilla, src/moz.build
 

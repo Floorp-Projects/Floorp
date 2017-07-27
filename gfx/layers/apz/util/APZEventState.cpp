@@ -21,6 +21,7 @@
 #include "nsDocShell.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWindowUtils.h"
+#include "nsINamed.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
 #include "nsITimer.h"
@@ -124,6 +125,7 @@ APZEventState::~APZEventState()
 {}
 
 class DelayedFireSingleTapEvent final : public nsITimerCallback
+                                      , public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS
@@ -154,6 +156,13 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD
+  GetName(nsACString& aName) override
+  {
+    aName.AssignLiteral("DelayedFireSingleTapEvent");
+    return NS_OK;
+  }
+
   void ClearTimer() {
     mTimer = nullptr;
   }
@@ -171,7 +180,7 @@ private:
   RefPtr<nsIContent> mTouchRollup;
 };
 
-NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback)
+NS_IMPL_ISUPPORTS(DelayedFireSingleTapEvent, nsITimerCallback, nsINamed)
 
 void
 APZEventState::ProcessSingleTap(const CSSPoint& aPoint,

@@ -39,6 +39,17 @@ UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
     'TestScaling.cpp',
 ]]
 
+# not UNIFIED_SOURCES because layout_common_table_test.cc has classes
+# in an anonymous namespace which result in a GCC error when used in
+# tests (e g. "error: 'ScriptListTableTest_TestSuccess_Test' has a field
+# 'ScriptListTableTest_TestSuccess_Test::<anonymous>' whose type uses
+# the anonymous namespace").
+SOURCES += [ '/gfx/ots/tests/%s' % p for p in [
+    'cff_type2_charstring_test.cc',
+    'layout_common_table_test.cc',
+    'table_dependencies_test.cc',
+]]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
@@ -46,6 +57,7 @@ LOCAL_INCLUDES += [
     '/gfx/2d/unittest',
     '/gfx/config',
     '/gfx/layers',
+    '/gfx/ots/src',
     '/gfx/qcms',
 ]
 

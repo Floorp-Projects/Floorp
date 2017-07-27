@@ -177,10 +177,15 @@ function resetZoom() {
 
 function doPrintMode(contentRootElement) {
     // use getAttribute because className works differently in HTML and SVG
-    return contentRootElement &&
-           contentRootElement.hasAttribute('class') &&
-           contentRootElement.getAttribute('class').split(/\s+/)
-                             .indexOf("reftest-print") != -1;
+    if (contentRootElement &&
+        contentRootElement.hasAttribute('class')) {
+        var classList = contentRootElement.getAttribute('class').split(/\s+/);
+        if (classList.indexOf("reftest-print") != -1) {
+            SendException("reftest-print is obsolete, use reftest-paged instead");
+            return;
+        }
+        return classList.indexOf("reftest-paged") != -1;
+    }
 }
 
 function setupPrintMode() {

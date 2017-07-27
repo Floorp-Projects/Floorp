@@ -562,7 +562,7 @@ MessagePort::Dispatch()
 
   nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
   if (NS_IsMainThread() && global) {
-    MOZ_ALWAYS_SUCCEEDS(global->Dispatch("MessagePortMessage", TaskCategory::Other, do_AddRef(mPostMessageRunnable)));
+    MOZ_ALWAYS_SUCCEEDS(global->Dispatch(TaskCategory::Other, do_AddRef(mPostMessageRunnable)));
     return;
   }
 

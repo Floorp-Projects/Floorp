@@ -9,6 +9,7 @@
 #include "IHistory.h"
 #include "nsDataHashtable.h"
 #include "nsTPriorityQueue.h"
+#include "nsINamed.h"
 #include "nsIRunnable.h"
 #include "nsIURI.h"
 #include "nsITimer.h"
@@ -25,13 +26,15 @@
 
 class nsAndroidHistory final : public mozilla::IHistory,
                                public nsIRunnable,
-                               public nsITimerCallback
+                               public nsITimerCallback,
+                               public nsINamed
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IHISTORY
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   /**
    * Obtains a pointer that has had AddRef called on it.  Used by the service

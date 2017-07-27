@@ -256,5 +256,4 @@ private:
 
 } // namespace mozilla
 
-
 #endif // ifndef mozilla_ReentrantMonitor_h

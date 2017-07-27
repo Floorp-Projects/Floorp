@@ -26,8 +26,7 @@ class DispatcherTrait {
 public:
   // This method may or may not be safe off of the main thread. For nsIDocument
   // it is safe. For nsIGlobalWindow it is not safe.
-  virtual nsresult Dispatch(const char* aName,
-                            TaskCategory aCategory,
+  virtual nsresult Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
 
   // This method may or may not be safe off of the main thread. For nsIDocument
