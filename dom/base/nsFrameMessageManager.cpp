@@ -1713,6 +1713,10 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
   }
 
+  if (xpc::DOMStreamsEnabled()) {
+    options.creationOptions().setStreamsEnabled(true);
+  }
+
   nsCOMPtr<nsIXPConnectJSObjectHolder> globalHolder;
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
