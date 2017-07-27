@@ -4,16 +4,13 @@
 
 "use strict";
 
-const s4 = function () {
-  return Math.floor((1 + Math.random()) * 0x10000)
-             .toString(16)
-             .substring(1);
-};
+const { Cc, Ci } = require("chrome");
+const { generateUUID } =
+  Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
-let generateUUID = function () {
-  return "ss-s-s-s-sss".replace(/s/g, function () {
-    return s4();
-  });
-};
+/**
+ * Returns a new `uuid`.
+ *
+ */
 
 module.exports = { generateUUID };
