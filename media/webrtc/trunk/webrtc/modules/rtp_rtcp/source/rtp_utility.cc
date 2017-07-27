@@ -465,6 +465,10 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
               rtc::MakeArrayView(ptr, len + 1));
           break;
         }
+        case kRtpExtensionMId: {
+          header->extension.mId.Set(rtc::MakeArrayView(ptr, len + 1));
+          break;
+        }
         default:
         case kRtpExtensionNone:
         case kRtpExtensionNumberOfExtensions: {
