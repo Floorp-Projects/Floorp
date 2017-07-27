@@ -59,6 +59,7 @@ DevToolsModules(
     'event-emitter.js',
     'extend.js',
     'flags.js',
+    'generate-uuid.js',
     'indentation.js',
     'l10n.js',
     'loader-plugin-raw.jsm',
