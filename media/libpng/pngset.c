@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.6.26 [October 20, 2016]
- * Copyright (c) 1998-2016 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.30 [June 28, 2017]
+ * Copyright (c) 1998-2017 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -133,6 +133,39 @@ png_set_cHRM_XYZ(png_const_structrp png_ptr, png_inforp info_ptr, double red_X,
 #  endif /* FLOATING_POINT */
 
 #endif /* cHRM */
+
+#ifdef PNG_eXIf_SUPPORTED
+void PNGAPI
+png_set_eXIf(png_const_structrp png_ptr, png_inforp info_ptr,
+    const png_bytep eXIf_buf)
+{
+   int i;
+
+   png_debug1(1, "in %s storage function", "eXIf");
+
+   if (png_ptr == NULL || info_ptr == NULL)
+      return;
+
+   png_free_data(png_ptr, info_ptr, PNG_FREE_EXIF, 0);
+
+   info_ptr->exif = png_voidcast(png_bytep, png_malloc_warn(png_ptr,
+       info_ptr->num_exif));
+
+   if (info_ptr->exif == NULL)
+   {
+      png_warning(png_ptr, "Insufficient memory for eXIf chunk data");
+
+      return;
+   }
+
+   info_ptr->free_me |= PNG_FREE_EXIF;
+
+   for (i = 0; i < info_ptr->num_exif; i++)
+      info_ptr->exif[i] = eXIf_buf[i];
+
+   info_ptr->valid |= PNG_INFO_eXIf;
+}
+#endif /* eXIf */
 
 #ifdef PNG_gAMA_SUPPORTED
 void PNGFAPI
@@ -1107,8 +1140,9 @@ png_set_sPLT(png_const_structrp png_ptr,
       info_ptr->valid |= PNG_INFO_sPLT;
       ++(info_ptr->splt_palettes_num);
       ++np;
+      ++entries;
    }
-   while (++entries, --nentries);
+   while (--nentries);
 
    if (nentries > 0)
       png_chunk_report(png_ptr, "sPLT out of memory", PNG_CHUNK_WRITE_ERROR);
@@ -1841,14 +1875,16 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
       png_byte ch = (png_byte)*key++;
 
       if ((ch > 32 && ch <= 126) || (ch >= 161 /*&& ch <= 255*/))
-         *new_key++ = ch, ++key_len, space = 0;
+      {
+         *new_key++ = ch; ++key_len; space = 0;
+      }
 
       else if (space == 0)
       {
          /* A space or an invalid character when one wasn't seen immediately
           * before; output just a space.
           */
-         *new_key++ = 32, ++key_len, space = 1;
+         *new_key++ = 32; ++key_len; space = 1;
 
          /* If the character was not a space then it is invalid. */
          if (ch != 32)
@@ -1861,7 +1897,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
 
    if (key_len > 0 && space != 0) /* trailing space */
    {
-      --key_len, --new_key;
+      --key_len; --new_key;
       if (bad_character == 0)
          bad_character = 32;
    }
