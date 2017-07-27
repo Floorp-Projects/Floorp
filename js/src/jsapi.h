@@ -2325,6 +2325,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         cloneSingletons_(false),
         experimentalNumberFormatFormatToPartsEnabled_(false),
         sharedMemoryAndAtomics_(false),
+        streamsEnabled_(false),
         secureContext_(false)
     {}
 
@@ -2408,6 +2409,9 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     bool getSharedMemoryAndAtomicsEnabled() const;
     CompartmentCreationOptions& setSharedMemoryAndAtomicsEnabled(bool flag);
 
+    bool getStreamsEnabled() const;
+    CompartmentCreationOptions& setStreamsEnabled(bool flag);
+
     // This flag doesn't affect JS engine behavior.  It is used by Gecko to
     // mark whether content windows and workers are "Secure Context"s. See
     // https://w3c.github.io/webappsec-secure-contexts/
@@ -2429,6 +2433,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     bool cloneSingletons_;
     bool experimentalNumberFormatFormatToPartsEnabled_;
     bool sharedMemoryAndAtomics_;
+    bool streamsEnabled_;
     bool secureContext_;
 };
 

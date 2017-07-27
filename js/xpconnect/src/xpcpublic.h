@@ -484,6 +484,9 @@ bool
 SharedMemoryEnabled();
 
 bool
+DOMStreamsEnabled();
+
+bool
 SetAddonInterposition(const nsACString& addonId, nsIAddonInterposition* interposition);
 
 bool

@@ -545,9 +545,11 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
            .extraWarningsOverride().set(extraWarnings);
 
   const bool sharedMemoryEnabled = xpc::SharedMemoryEnabled();
+  const bool domStreamsEnabled = xpc::DOMStreamsEnabled();
 
   JS::CompartmentCreationOptions& creationOptions = options.creationOptions();
   creationOptions.setSharedMemoryAndAtomicsEnabled(sharedMemoryEnabled);
+  creationOptions.setStreamsEnabled(domStreamsEnabled);
 
   return DedicatedWorkerGlobalScopeBinding::Wrap(aCx, this, this,
                                                  options,
