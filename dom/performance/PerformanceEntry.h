@@ -84,7 +84,11 @@ public:
     return nullptr;
   }
 
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 protected:
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   nsCOMPtr<nsISupports> mParent;
   nsString mName;
   nsString mEntryType;

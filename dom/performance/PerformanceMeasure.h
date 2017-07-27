@@ -33,6 +33,8 @@ public:
     return mDuration;
   }
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 protected:
   virtual ~PerformanceMeasure();
   DOMHighResTimeStamp mStartTime;
