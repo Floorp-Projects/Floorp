@@ -80,6 +80,13 @@ bool GetSubFontName(CFX_ByteString* name) {
 }
 
 bool IsGDIEnabled() {
+  // In Chromium, PDFium runs in sandboxed process which can't get the screen
+  // DC. Therefore, we |return false| here to avoid using the GDIPlusExt class
+  // within PDFium in order to take the same code paths as Chromium.
+  // This avoids an issue where PDFium can render some garbage to EMF
+  // (see bug 1367948).
+  return false;
+
   // If GDI is disabled then GetDC for the desktop will fail.
   HDC hdc = ::GetDC(nullptr);
   if (!hdc)
