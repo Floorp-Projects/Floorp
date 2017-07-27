@@ -1466,15 +1466,19 @@ protected:
     webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
     // some GL constants
+    uint32_t mGLMaxTextureUnits;
+
     uint32_t mGLMaxVertexAttribs;
-    int32_t mGLMaxTextureUnits;
-    int32_t mGLMaxTextureImageUnits;
-    int32_t mGLMaxVertexTextureImageUnits;
-    int32_t mGLMaxVaryingVectors;
-    int32_t mGLMaxFragmentUniformVectors;
-    int32_t mGLMaxVertexUniformVectors;
-    uint32_t  mGLMaxTransformFeedbackSeparateAttribs;
-    GLuint  mGLMaxUniformBufferBindings;
+    uint32_t mGLMaxFragmentUniformVectors;
+    uint32_t mGLMaxVertexUniformVectors;
+    uint32_t mGLMaxVaryingVectors;
+
+    uint32_t mGLMaxTransformFeedbackSeparateAttribs;
+    uint32_t mGLMaxUniformBufferBindings;
+
+    uint32_t mGLMaxVertexTextureImageUnits;
+    uint32_t mGLMaxFragmentTextureImageUnits;
+    uint32_t mGLMaxCombinedTextureImageUnits;
 
     uint32_t mGLMaxColorAttachments;
     uint32_t mGLMaxDrawBuffers;

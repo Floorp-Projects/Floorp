@@ -29,7 +29,7 @@ WebGL2Context::DeleteSampler(WebGLSampler* sampler)
     if (!ValidateDeleteObject("deleteSampler", sampler))
         return;
 
-    for (int n = 0; n < mGLMaxTextureUnits; n++) {
+    for (uint32_t n = 0; n < mGLMaxTextureUnits; n++) {
         if (mBoundSamplers[n] == sampler) {
             mBoundSamplers[n] = nullptr;
 
@@ -59,8 +59,8 @@ WebGL2Context::BindSampler(GLuint unit, WebGLSampler* sampler)
     if (sampler && !ValidateObject("bindSampler", *sampler))
         return;
 
-    if (GLint(unit) >= mGLMaxTextureUnits)
-        return ErrorInvalidValue("bindSampler: unit must be < %d", mGLMaxTextureUnits);
+    if (unit >= mGLMaxTextureUnits)
+        return ErrorInvalidValue("bindSampler: unit must be < %u", mGLMaxTextureUnits);
 
     ////
 
