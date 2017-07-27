@@ -41,7 +41,6 @@ add_task(async function setup() {
   await TelemetryController.testSetup();
   PingServer.start();
   TelemetrySend.setServer("http://localhost:" + PingServer.port);
-  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 });
 
 add_task(async function test_sendImmediately() {
@@ -178,38 +177,6 @@ add_task(async function test_sendOnlyTopTenDiscardedPings() {
       [PING_TYPE + 2]: 1
     }
   });
-});
-
-add_task(async function test_usePingSenderOnShutdown() {
-  TelemetryHealthPing.testReset();
-  PingServer.clearRequests();
-
-  // This first failure should immediately trigger a ping.
-  // After this, subsequent failures should be throttled.
-  await TelemetryHealthPing.recordSendFailure("testFailure");
-  await PingServer.promiseNextPing();
-
-  TelemetryHealthPing.recordSendFailure("testFailure");
-  let nextRequest = PingServer.promiseNextRequest();
-
-  await TelemetryController.testReset();
-  await TelemetryController.testShutdown();
-  let request = await nextRequest;
-  let ping = decodeRequestPayload(request);
-
-  checkHealthPingStructure(ping, {
-    [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
-      "testFailure": 1
-    },
-    "os": TelemetryHealthPing.OsInfo,
-    "reason": TelemetryHealthPing.Reason.SHUT_DOWN
-  });
-
-  // Check that the health ping is sent at shutdown using the pingsender.
-  Assert.equal(request.getHeader("User-Agent"), "pingsender/1.0",
-    "Should have received the correct user agent string.");
-  Assert.equal(request.getHeader("X-PingSender-Version"), "1.0",
-    "Should have received the correct PingSender version string.");
 });
 
 add_task(async function cleanup() {
