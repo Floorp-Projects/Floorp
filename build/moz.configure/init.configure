@@ -353,6 +353,39 @@ def hg_version(hg):
 
     return Version(match.group(1))
 
+# Resolve Mercurial config items so other checks have easy access.
+# Do NOT set this in the config because it may contain sensitive data
+# like API keys.
+@depends_all(check_build_environment, hg, hg_version)
+@imports('os')
+def hg_config(build_env, hg, version):
+    env = dict(os.environ)
+    env['HGPLAIN'] = '1'
+
+    # Warnings may get sent to stderr. But check_cmd_output() ignores
+    # stderr if exit code is 0. And the command should always succeed if
+    # `hg version` worked.
+    out = check_cmd_output(hg, 'config', env=env, cwd=build_env.topsrcdir)
+
+    # out is bytes. However, unicode literals are in effect, so implicit
+    # type coercion can occur. The underlying Mercurial config file may be
+    # in a user-defined encoding. However, HGPLAIN both overrides the decoding
+    # inside Mercurial *and* ensures output is utf-8. Because moz.configure
+    # is using unicode literals, our returned config object uses unicode
+    # keys and values to limit potential for coercion.
+
+    # Mercurial should emit utf-8. But be paranoid and ignore invalid utf-8
+    # byte sequences.
+    out = out.decode('utf-8', 'replace')
+
+    config = {}
+
+    for line in out.strip().splitlines():
+        key, value = [s.strip() for s in line.split('=', 1)]
+        config[key] = value
+
+    return config
+
 @depends_if(git)
 @checking('for Git version')
 @imports('re')
