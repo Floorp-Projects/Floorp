@@ -7,7 +7,6 @@
 #include "gc/Tracer.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jsapi.h"
 #include "jsfun.h"
@@ -96,7 +95,7 @@ JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
         return;
     }
     if (contextIndex_ != InvalidIndex) {
-        snprintf(buffer, bufferSize, "%s[%" PRIuSIZE "]", contextName_, contextIndex_);
+        snprintf(buffer, bufferSize, "%s[%zu]", contextName_, contextIndex_);
         return;
     }
     snprintf(buffer, bufferSize, "%s", contextName_);
@@ -424,7 +423,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
           case JS::TraceKind::Script:
           {
             JSScript* script = static_cast<JSScript*>(thing);
-            snprintf(buf, bufsize, " %s:%" PRIuSIZE, script->filename(), script->lineno());
+            snprintf(buf, bufsize, " %s:%zu", script->filename(), script->lineno());
             break;
           }
 
@@ -439,7 +438,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                 bool willFit = str->length() + strlen("<length > ") + strlen(header) +
                                CountDecimalDigits(str->length()) < bufsize;
 
-                n = snprintf(buf, bufsize, "<%slength %" PRIuSIZE "%s> ",
+                n = snprintf(buf, bufsize, "<%slength %zu%s> ",
                              header, str->length(),
                              willFit ? "" : " (truncated)");
                 buf += n;
@@ -447,7 +446,7 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
 
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
             } else {
-                snprintf(buf, bufsize, "<rope: length %" PRIuSIZE ">", str->length());
+                snprintf(buf, bufsize, "<rope: length %zu>", str->length());
             }
             break;
           }

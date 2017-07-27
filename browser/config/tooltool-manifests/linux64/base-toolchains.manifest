@@ -1,13 +1,5 @@
 [
   {
-    "version": "gcc 4.9.4 + PR64905",
-    "size": 101297752,
-    "digest": "42aa2e3fdd232b5e390472a788e7f7db71a1fee4221e260b6cb58c9a1d73e6cdd10afcbac137f7844290169cd6b561b424ecc92b159e9726b0ad5de3f478a8be",
-    "algorithm": "sha512",
-    "filename": "gcc.tar.xz",
-    "unpack": true
-  },
-  {
     "size": 12072532,
     "digest": "3915f8ec396c56a8a92e6f9695b70f09ce9d1582359d1258e37e3fd43a143bc974410e4cfc27f500e095f34a8956206e0ebf799b7287f0f38def0d5e34ed71c9",
     "algorithm": "sha512",
@@ -21,23 +13,6 @@
     "digest": "8ce3d979c169af6c6e2bf393aa2bd4825371e87d42ebdfd7d7f06c0e3e69c0d68a3dcd39d9a85bcaa9fe5c6d6fe86e881fc8413d74c2a240204f2bafca781b9d",
     "algorithm": "sha512",
     "filename": "rustc.tar.xz",
-    "unpack": true
-  },
-  {
-    "version": "sccache rev 69334a26ba65fc88e3934271a2ce6781c51b445e",
-    "algorithm": "sha512",
-    "visibility": "public",
-    "filename": "sccache2.tar.xz",
-    "unpack": true,
-    "digest": "7bbe53cda3f608826dc6a0266e648cd2ea09c88ef93edf87d582b41185b72740667e2c7bf6e9b2b911fb2915cbfb985e528598c7b3153092ad27d5e937342df7",
-    "size": 2191380
-  },
-  {
-    "version": "clang + llvm 3.9.0, built from SVN r290136",
-    "size": 166261192,
-    "digest": "52f3fc23f0f5c98050f8b0ac7c92a6752d067582a16f712a5a58074be98975d594f9e36249fc2be7f1cc2ca6d509c663faaf2bea66f949243cc1f41651638ba6",
-    "algorithm": "sha512",
-    "filename": "clang.tar.xz",
     "unpack": true
   }
 ]

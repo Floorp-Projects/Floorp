@@ -395,7 +395,13 @@ nsDisplayRemote::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuild
   visible += mozilla::layout::GetContentRectLayerOffset(mFrame, aDisplayListBuilder);
 
   aBuilder.PushIFrame(aSc.ToRelativeLayoutRect(visible),
-      mozilla::wr::AsPipelineId(mRemoteFrame->GetLayersId()));
+      mozilla::wr::AsPipelineId(GetRemoteLayersId()));
 
   return true;
+}
+
+uint64_t
+nsDisplayRemote::GetRemoteLayersId() const
+{
+  return mRemoteFrame->GetLayersId();
 }

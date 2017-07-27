@@ -234,6 +234,12 @@ class BaseFile(object):
         '''
         return None
 
+    def inputs(self):
+        '''
+        Return an iterable of the input file paths that impact this output file.
+        '''
+        raise NotImplementedError('BaseFile.inputs() not implemented.')
+
 
 class File(BaseFile):
     '''
@@ -260,6 +266,9 @@ class File(BaseFile):
 
     def size(self):
         return os.stat(self.path).st_size
+
+    def inputs(self):
+        return (self.path,)
 
 
 class ExecutableFile(File):
@@ -474,6 +483,9 @@ class ExistingFile(BaseFile):
             errors.fatal("Required existing file doesn't exist: %s" %
                 dest.path)
 
+    def inputs(self):
+        return ()
+
 
 class PreprocessedFile(BaseFile):
     '''
@@ -489,6 +501,17 @@ class PreprocessedFile(BaseFile):
         self.extra_depends = list(extra_depends or [])
         self.silence_missing_directive_warnings = \
             silence_missing_directive_warnings
+
+    def inputs(self):
+        pp = Preprocessor(defines=self.defines, marker=self.marker)
+        pp.setSilenceDirectiveWarnings(self.silence_missing_directive_warnings)
+
+        with open(self.path, 'rU') as input:
+            with open(os.devnull, 'w') as output:
+                pp.processFile(input=input, output=output)
+
+        # This always yields at least self.path.
+        return pp.includes
 
     def copy(self, dest, skip_if_older=True):
         '''
@@ -564,6 +587,9 @@ class GeneratedFile(BaseFile):
 
     def size(self):
         return len(self.content)
+
+    def inputs(self):
+        return ()
 
 
 class DeflatedFile(BaseFile):

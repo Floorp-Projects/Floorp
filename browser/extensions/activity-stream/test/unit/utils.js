@@ -125,9 +125,9 @@ FakePerformance.prototype = {
   now() {
     return window.performance.now();
   },
-  timing: {navigationStart: 222222},
+  timing: {navigationStart: 222222.123},
   get timeOrigin() {
-    return 10000;
+    return 10000.234;
   },
   // XXX assumes type == "mark"
   getEntriesByName(name, type) {

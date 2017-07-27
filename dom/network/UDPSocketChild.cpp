@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UDPSocketChild.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -381,7 +380,7 @@ mozilla::ipc::IPCResult
 UDPSocketChild::RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
                                          InfallibleTArray<uint8_t>&& aData)
 {
-  UDPSOCKET_LOG(("%s: %s:%u length %" PRIuSIZE, __FUNCTION__,
+  UDPSOCKET_LOG(("%s: %s:%u length %zu", __FUNCTION__,
                  aAddressInfo.addr().get(), aAddressInfo.port(), aData.Length()));
   nsresult rv = mSocket->CallListenerReceivedData(aAddressInfo.addr(), aAddressInfo.port(),
                                                   aData.Elements(), aData.Length());

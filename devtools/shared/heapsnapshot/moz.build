@@ -10,7 +10,11 @@ with Files('**'):
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
-XPCSHELL_TESTS_MANIFESTS += [ 'tests/unit/xpcshell.ini' ]
+XPCSHELL_TESTS_MANIFESTS += [
+    'tests/unit/xpcshell.ini',
+    'tests/unit/xpcshell_ipc.ini',
+]
+
 MOCHITEST_MANIFESTS += [ 'tests/mochitest/mochitest.ini' ]
 MOCHITEST_CHROME_MANIFESTS += [ 'tests/mochitest/chrome.ini' ]
 

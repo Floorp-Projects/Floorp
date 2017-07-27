@@ -9,7 +9,6 @@
 #include "MediaPrefs.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 namespace mozilla {
 
@@ -416,7 +415,7 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
     img->mFrameID = frame->mFrameID;
     img->mProducerID = mProducerID;
 
-    VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%" PRIuSIZE ")",
+    VSINK_LOG_V("playing video frame %" PRId64 " (id=%x) (vq-queued=%zu)",
                 frame->mTime.ToMicroseconds(), frame->mFrameID,
                 VideoQueue().GetSize());
   }
@@ -511,7 +510,7 @@ VideoSink::GetDebugInfo()
   AssertOwnerThread();
   return nsPrintfCString(
     "VideoSink Status: IsStarted=%d IsPlaying=%d VideoQueue(finished=%d "
-    "size=%" PRIuSIZE ") mVideoFrameEndTime=%" PRId64 " mHasVideo=%d "
+    "size=%zu) mVideoFrameEndTime=%" PRId64 " mHasVideo=%d "
     "mVideoSinkEndRequest.Exists()=%d mEndPromiseHolder.IsEmpty()=%d\n",
     IsStarted(), IsPlaying(), VideoQueue().IsFinished(),
     VideoQueue().GetSize(), mVideoFrameEndTime.ToMicroseconds(), mHasVideo,

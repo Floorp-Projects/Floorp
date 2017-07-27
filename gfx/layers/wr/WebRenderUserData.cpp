@@ -148,12 +148,13 @@ WebRenderImageData::CreateExternalImageIfNeeded()
   }
 }
 
-WebRenderFallbackData::~WebRenderFallbackData()
+WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager)
+  : WebRenderImageData(aWRManager)
+  , mInvalid(false)
 {
 }
 
-WebRenderFallbackData::WebRenderFallbackData(WebRenderLayerManager* aWRManager)
-  : WebRenderImageData(aWRManager)
+WebRenderFallbackData::~WebRenderFallbackData()
 {
 }
 

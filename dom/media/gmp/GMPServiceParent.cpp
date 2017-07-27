@@ -17,7 +17,6 @@
 #include "GeckoChildProcessHost.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/Services.h"
@@ -478,7 +477,7 @@ GeckoMediaPluginServiceParent::UnloadPlugins()
     }
   }
 
-  LOGD(("%s::%s plugins:%" PRIuSIZE, __CLASS__, __FUNCTION__,
+  LOGD(("%s::%s plugins:%zu", __CLASS__, __FUNCTION__,
         plugins.Length()));
 #ifdef DEBUG
   for (const auto& plugin : plugins) {

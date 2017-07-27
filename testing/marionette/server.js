@@ -37,6 +37,8 @@ const logger = Log.repository.getLogger("Marionette");
 const {KeepWhenOffline, LoopbackOnly} = Ci.nsIServerSocket;
 
 this.EXPORTED_SYMBOLS = ["server"];
+
+/** @namespace */
 this.server = {};
 
 const PROTOCOL_VERSION = 3;
@@ -548,7 +550,7 @@ server.TCPConnection = class {
   /**
    * Fail-safe creation of a new instance of |message.Response|.
    *
-   * @param {?} msgID
+   * @param {number} msgID
    *     Message ID to respond to.  If it is not a number, -1 is used.
    *
    * @return {message.Response}
@@ -591,7 +593,7 @@ server.TCPConnection = class {
    * Whilst responses to commands are synchronous and must be sent in the
    * correct order.
    *
-   * @param {Command,Response} msg
+   * @param {Message} msg
    *     The command or response to send.
    */
   send(msg) {
@@ -620,7 +622,7 @@ server.TCPConnection = class {
   /**
    * Marshal message to the Marionette message format and send it.
    *
-   * @param {Command,Response} msg
+   * @param {Message} msg
    *     The message to send.
    */
   sendMessage(msg) {
@@ -633,7 +635,7 @@ server.TCPConnection = class {
    * Send the given payload over the debugger transport socket to the
    * connected client.
    *
-   * @param {Object} payload
+   * @param {Object.<string, ?>} payload
    *     The payload to ship.
    */
   sendRaw(payload) {

@@ -43,6 +43,10 @@ jobs:
             files-changed:
                 - js/public/**
                 - js/src/**
+        toolchains:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-sccache
 
     linux64-haz/debug:
         description: "Browser Hazard Analysis Linux"
@@ -61,3 +65,7 @@ jobs:
             command: >
                 cd /home/worker/checkouts/gecko/taskcluster/scripts/builder
                 && ./build-haz-linux.sh --project browser $HOME/workspace
+        toolchains:
+            - linux64-clang
+            - linux64-gcc
+            - linux64-sccache

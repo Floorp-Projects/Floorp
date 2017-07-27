@@ -70,7 +70,17 @@ _PerfService.prototype = {
   },
 
   /**
-   * This returns the startTime from the most recen!t performance.mark()
+   * Returns the "absolute" version of performance.now(), i.e. one that
+   * based on the timeOrigin of the XUL hiddenwindow.
+   *
+   * @return {Number}
+   */
+  absNow: function absNow() {
+    return this.timeOrigin + this._perf.now();
+  },
+
+  /**
+   * This returns the absolute startTime from the most recent performance.mark()
    * with the given name.
    *
    * @param  {String} name  the name to lookup the start time for
@@ -78,6 +88,14 @@ _PerfService.prototype = {
    * @return {Number}       the returned start time, as a DOMHighResTimeStamp
    *
    * @throws {Error}        "No Marks with the name ..." if none are available
+   *
+   * @note Always surround calls to this by try/catch.  Otherwise your code
+   * may fail when the `privacy.resistFingerprinting` pref is true.  When
+   * this pref is set, all attempts to get marks will likely fail, which will
+   * cause this method to throw.
+   *
+   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
+   * for more info.
    */
   getMostRecentAbsMarkStartByName(name) {
     let entries = this.getEntriesByName(name, "mark");

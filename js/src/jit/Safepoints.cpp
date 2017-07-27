@@ -7,7 +7,6 @@
 #include "jit/Safepoints.h"
 
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jit/BitSet.h"
 #include "jit/JitSpewer.h"
@@ -32,7 +31,7 @@ SafepointWriter::init(TempAllocator& alloc)
 uint32_t
 SafepointWriter::startEntry()
 {
-    JitSpew(JitSpew_Safepoints, "Encoding safepoint (position %" PRIuSIZE "):", stream_.length());
+    JitSpew(JitSpew_Safepoints, "Encoding safepoint (position %zu):", stream_.length());
     return uint32_t(stream_.length());
 }
 

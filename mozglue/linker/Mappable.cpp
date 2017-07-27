@@ -14,7 +14,6 @@
 #include "Mappable.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef ANDROID

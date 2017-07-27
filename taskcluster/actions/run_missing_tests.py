@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
     """,
     order=100,  # Useful for sheriffs, but not top of the list
     context=[],  # Applies to any task
-    schema={},
 )
 def run_missing_tests(parameters, input, task_group_id, task_id, task):
     decision_task_id = find_decision_task(parameters)

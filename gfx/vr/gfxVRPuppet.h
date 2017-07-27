@@ -10,7 +10,11 @@
 #include "mozilla/RefPtr.h"
 
 #include "gfxVR.h"
+#include "VRDisplayHost.h"
 
+#if defined(XP_MACOSX)
+class MacIOSurface;
+#endif
 namespace mozilla {
 namespace gfx {
 namespace impl {
@@ -32,12 +36,12 @@ protected:
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect) override;
-#else
-  virtual bool SubmitFrame(mozilla::layers::TextureSourceOGL* aSource,
+#elif defined(XP_MACOSX)
+  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface,
                            const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
-                           const gfx::Rect& aRightEyeRect);
-#endif // XP_WIN
+                           const gfx::Rect& aRightEyeRect) override;
+#endif
 
 public:
   explicit VRDisplayPuppet();

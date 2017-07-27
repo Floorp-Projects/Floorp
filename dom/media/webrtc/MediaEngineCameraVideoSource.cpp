@@ -5,7 +5,6 @@
 #include "MediaEngineCameraVideoSource.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include <limits>
 
@@ -227,7 +226,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
          aPrefs.mFPS, aPrefs.mMinFPS));
     LogConstraints(aConstraints);
     if (aConstraints.mAdvanced.size()) {
-      LOG(("Advanced array[%" PRIuSIZE "]:", aConstraints.mAdvanced.size()));
+      LOG(("Advanced array[%zu]:", aConstraints.mAdvanced.size()));
       for (auto& advanced : aConstraints.mAdvanced) {
         LogConstraints(advanced);
       }
@@ -257,7 +256,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
   }
 
   if (!candidateSet.Length()) {
-    LOG(("failed to find capability match from %" PRIuSIZE " choices",num));
+    LOG(("failed to find capability match from %zu choices",num));
     return false;
   }
 

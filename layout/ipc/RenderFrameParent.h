@@ -167,6 +167,7 @@ public:
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
+  uint64_t GetRemoteLayersId() const;
 
   NS_DISPLAY_DECL_NAME("Remote", TYPE_REMOTE)
 

@@ -76,12 +76,12 @@ class FasterMakeBackend(CommonBackend, PartialBackend):
                         prefix = ''.join(_prefix(f.full_path))
 
                         self._install_manifests[obj.install_target] \
-                            .add_pattern_symlink(
+                            .add_pattern_link(
                                 prefix,
                                 f.full_path[len(prefix):],
                                 mozpath.join(path, f.target_basename))
                     else:
-                        self._install_manifests[obj.install_target].add_symlink(
+                        self._install_manifests[obj.install_target].add_link(
                             f.full_path,
                             mozpath.join(path, f.target_basename)
                         )

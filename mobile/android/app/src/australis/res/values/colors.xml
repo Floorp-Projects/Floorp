@@ -144,7 +144,6 @@
 
   <color name="action_bar_bg_color">@color/toolbar_grey</color>
 
-  <color name="activity_stream_divider">#FFD2D2D2</color>
   <color name="activity_stream_subtitle">#FF919191</color>
   <color name="activity_stream_timestamp">#FFD3D3D3</color>
   <color name="activity_stream_icon">#FF919191</color>

@@ -47,5 +47,5 @@ function run_test() {
   } catch (ex) {
     err = ex;
   }
-  do_check_eq(err, "Unknown character in base32: 0");
+  do_check_eq(err.message, "Unknown character in base32: 0");
 }

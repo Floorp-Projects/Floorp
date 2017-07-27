@@ -234,6 +234,16 @@ interface nsIZipReaderCache : nsISupports
     nsIZipReader getZip(in nsIFile zipFile);
 
     /**
+     * Like getZip(), returns a (possibly shared) nsIZipReader for an nsIFile,
+     * but if a zip reader for the given file is not in the cache, returns
+     * error NS_ERROR_CACHE_KEY_NOT_FOUND rather than creating a new reader.
+     *
+     * @note If someone called close() on the shared nsIZipReader, this method
+     *       will return the closed zip reader.
+     */
+    nsIZipReader getZipIfCached(in nsIFile zipFile);
+
+    /**
      * returns true if this zipreader already has this file cached
      */
     bool isCached(in nsIFile zipFile);

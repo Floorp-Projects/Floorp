@@ -104,7 +104,6 @@
 #include "FennecJNIWrappers.h"
 #endif
 
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ipc/URIUtils.h"
 
@@ -2034,7 +2033,7 @@ nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
         nsCOMPtr<nsIMutableArray> redirectChain =
           do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
-        LOG(("nsExternalAppHandler: Got %" PRIuSIZE " redirects\n",
+        LOG(("nsExternalAppHandler: Got %zu redirects\n",
              loadInfo->RedirectChain().Length()));
         for (nsIRedirectHistoryEntry* entry : loadInfo->RedirectChain()) {
           redirectChain->AppendElement(entry, false);

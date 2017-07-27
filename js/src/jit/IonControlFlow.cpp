@@ -7,7 +7,6 @@
 #include "jit/IonControlFlow.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/SizePrintfMacros.h"
 
 using namespace js;
 using namespace js::jit;
@@ -43,7 +42,7 @@ ControlFlowGraph::dump(GenericPrinter& print, JSScript* script)
 
     fprintf(stderr, "Dumping cfg:\n\n");
     for (size_t i = 0; i < blocks_.length(); i++) {
-        print.printf(" Block %" PRIuSIZE ", %" PRIuSIZE ":%" PRIuSIZE "\n",
+        print.printf(" Block %zu, %zu:%zu\n",
                      blocks_[i].id(),
                      script->pcToOffset(blocks_[i].startPc()),
                      script->pcToOffset(blocks_[i].stopPc()));
@@ -51,12 +50,12 @@ ControlFlowGraph::dump(GenericPrinter& print, JSScript* script)
         jsbytecode* pc = blocks_[i].startPc();
         for ( ; pc < blocks_[i].stopPc(); pc += CodeSpec[JSOp(*pc)].length) {
             MOZ_ASSERT(pc < script->codeEnd());
-            print.printf("  %" PRIuSIZE ": %s\n", script->pcToOffset(pc),
+            print.printf("  %zu: %s\n", script->pcToOffset(pc),
                                                   CodeName[JSOp(*pc)]);
         }
 
         if (blocks_[i].stopIns()->isGoto()) {
-            print.printf("  %s (popping:%" PRIuSIZE ") [",
+            print.printf("  %s (popping:%zu) [",
                          blocks_[i].stopIns()->Name(),
                          blocks_[i].stopIns()->toGoto()->popAmount());
         } else {
@@ -65,7 +64,7 @@ ControlFlowGraph::dump(GenericPrinter& print, JSScript* script)
         for (size_t j=0; j<blocks_[i].stopIns()->numSuccessors(); j++) {
             if (j!=0)
                 print.printf(", ");
-            print.printf("%" PRIuSIZE, blocks_[i].stopIns()->getSuccessor(j)->id());
+            print.printf("%zu", blocks_[i].stopIns()->getSuccessor(j)->id());
         }
         print.printf("]\n\n");
     }

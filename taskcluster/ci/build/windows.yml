@@ -17,6 +17,9 @@ win32/debug:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_32_debug.py
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win32/opt:
     description: "Win32 Opt"
@@ -37,6 +40,9 @@ win32/opt:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win32-dmd/opt:
     description: "Win32 DMD Opt"
@@ -59,6 +65,9 @@ win32-dmd/opt:
             - builds/taskcluster_firefox_windows_32_opt.py
         custom-build-variant-cfg: dmd
     run-on-projects: [ ]
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win32/pgo:
     description: "Win32 Opt PGO"
@@ -80,6 +89,9 @@ win32/pgo:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64/debug:
     description: "Win64 Debug"
@@ -100,6 +112,9 @@ win64/debug:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_64_debug.py
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win64/opt:
     description: "Win64 Opt"
@@ -120,6 +135,9 @@ win64/opt:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win64-dmd/opt:
     description: "Win64 DMD Opt"
@@ -142,6 +160,9 @@ win64-dmd/opt:
             - builds/taskcluster_firefox_windows_64_opt.py
         custom-build-variant-cfg: dmd
     run-on-projects: [ ]
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win32-devedition/opt:
     description: "Win32 Dev Edition Opt"
@@ -210,6 +231,9 @@ win32-nightly/opt:
             - builds/taskcluster_firefox_windows_32_opt.py
             - disable_signing.py
             - taskcluster_nightly.py
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64-nightly/opt:
     description: "Win64 Nightly"
@@ -236,6 +260,9 @@ win64-nightly/opt:
             - builds/taskcluster_firefox_windows_64_opt.py
             - disable_signing.py
             - taskcluster_nightly.py
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win64/pgo:
     description: "Win64 Opt PGO"
@@ -257,6 +284,9 @@ win64/pgo:
         script: mozharness/scripts/fx_desktop_build.py
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win32-add-on-devel/opt:
     description: "Windows32 add-on-devel"
@@ -279,6 +309,9 @@ win32-add-on-devel/opt:
             - builds/taskcluster_firefox_windows_32_addondevel.py
             - balrog/production.py
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64-add-on-devel/opt:
     description: "Windows64 add-on-devel"
@@ -301,6 +334,9 @@ win64-add-on-devel/opt:
             - builds/taskcluster_firefox_windows_64_addondevel.py
             - balrog/production.py
     run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win64-noopt/debug:
     description: "Win64 No-optimize Debug"
@@ -322,6 +358,9 @@ win64-noopt/debug:
         config:
             - builds/taskcluster_firefox_win64_noopt_debug.py
     run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win32-noopt/debug:
     description: "Win32 No-optimize Debug"
@@ -343,6 +382,9 @@ win32-noopt/debug:
         config:
             - builds/taskcluster_firefox_win32_noopt_debug.py
     run-on-projects: [ 'trunk', 'try' ]
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64-asan/debug:
     description: "Win64 Debug ASAN"
@@ -364,6 +406,9 @@ win64-asan/debug:
         config:
             - builds/taskcluster_firefox_win64_asan_debug.py
     run-on-projects: []
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win64-asan/opt:
     description: "Win64 Opt ASAN"
@@ -385,3 +430,6 @@ win64-asan/opt:
         config:
             - builds/taskcluster_firefox_win64_asan_opt.py
     run-on-projects: []
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache

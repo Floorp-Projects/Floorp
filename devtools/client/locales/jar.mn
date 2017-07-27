@@ -3,6 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-@AB_CD@.jar:
+[features/devtools@mozilla.org] chrome.jar:
 %   locale devtools @AB_CD@ %locale/@AB_CD@/devtools/client/
     locale/@AB_CD@/devtools/client/ (%*)

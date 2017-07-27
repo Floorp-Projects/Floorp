@@ -444,9 +444,9 @@ def _resolve_installs(paths, topobjdir, manifest):
         for install_info in installs:
             try:
                 if len(install_info) == 3:
-                    manifest.add_pattern_symlink(*install_info)
+                    manifest.add_pattern_link(*install_info)
                 if len(install_info) == 2:
-                    manifest.add_symlink(*install_info)
+                    manifest.add_link(*install_info)
             except ValueError:
                 # A duplicate value here is pretty likely when running
                 # multiple directories at once, and harmless.
@@ -495,9 +495,9 @@ def install_test_files(topsrcdir, topobjdir, tests_root, test_objs):
     for source, dest in set(install_info.installs):
         if dest in install_info.external_installs:
             continue
-        manifest.add_symlink(source, dest)
+        manifest.add_link(source, dest)
     for base, pattern, dest in install_info.pattern_installs:
-        manifest.add_pattern_symlink(base, pattern, dest)
+        manifest.add_pattern_link(base, pattern, dest)
 
     _resolve_installs(install_info.deferred_installs, topobjdir, manifest)
 

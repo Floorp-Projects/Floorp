@@ -33,6 +33,7 @@ var ownPriorityGetterTrap = {
   },
 };
 
+/** @namespace */
 this.proxy = {};
 
 /**
@@ -222,6 +223,7 @@ proxy.AsyncMessageChannel = class {
    *
    * Usage:
    *
+   * <pre><code>
    *     let channel = proxy.AsyncMessageChannel(
    *         messageManager, sendAsyncMessage.bind(this));
    *
@@ -233,10 +235,11 @@ proxy.AsyncMessageChannel = class {
    *
    *     // returns with undefined:
    *     channel.reply(uuid);
+   * </pre></code>
    *
    * @param {UUID} uuid
    *     Unique identifier of the request.
-   * @param {?=} obj
+   * @param {*} obj
    *     Message data to reply with.
    */
   reply(uuid, obj = undefined) {
@@ -353,7 +356,7 @@ class AsyncChromeSender {
    * @param {string} name
    *     Function to call in the chrome, e.g. for "Marionette:foo", use
    *     "foo".
-   * @param {?} args
+   * @param {*} args
    *     Argument list to pass the function.  Must be JSON serialisable.
    *
    * @return {Promise}

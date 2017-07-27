@@ -463,6 +463,7 @@ BookmarksEngine.prototype = {
         throw ex;
       }
       this._log.warn("Error while building GUID map, skipping all other incoming items", ex);
+      // eslint-disable-next-line no-throw-literal
       throw {code: Engine.prototype.eEngineAbortApplyIncoming,
              cause: ex};
     }
@@ -677,7 +678,8 @@ BookmarksStore.prototype = {
     // Figure out the local id of the parent GUID if available
     let parentGUID = record.parentid;
     if (!parentGUID) {
-      throw "Record " + record.id + " has invalid parentid: " + parentGUID;
+      throw new Error(
+          `Record ${record.id} has invalid parentid: ${parentGUID}`);
     }
     this._log.debug("Remote parent is " + parentGUID);
 
