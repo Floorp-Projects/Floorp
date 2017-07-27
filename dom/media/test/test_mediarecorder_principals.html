@@ -89,9 +89,9 @@ function testPrincipals(resource) {
       hasStopped = new Promise(resolve => rec.onstop = resolve);
       video.play();
     })
-    .then(() => ok(true, msgNoThrow), e => is(e.name, null, msgNoThrow))
+    .then(() => ok(true, msgNoThrow), e => is(e.error.name, null, msgNoThrow))
     .then(() => Promise.race([
-      new Promise((_, reject) => rec.onerror = e => reject(new DOMException("", e.name))),
+      new Promise((_, reject) => rec.onerror = e => reject(e.error)),
       hasEnded
     ]))
     .then(() => ok(false, msgSecErr), e => is(e.name, "SecurityError", msgSecErr))
