@@ -5,39 +5,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/MozPromise.h"
-#include "MediaDecoderReaderWrapper.h"
 #include "MediaFormatReader.h"
+#include "ReaderProxy.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 
-MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(
-  AbstractThread* aOwnerThread,
-  MediaFormatReader* aReader)
+ReaderProxy::ReaderProxy(AbstractThread* aOwnerThread,
+                         MediaFormatReader* aReader)
   : mOwnerThread(aOwnerThread)
   , mReader(aReader)
   , mWatchManager(this, aReader->OwnerThread())
   , mDuration(aReader->OwnerThread(),
-              NullableTimeUnit(),
-              "MediaDecoderReaderWrapper::mDuration (Mirror)")
+              media::NullableTimeUnit(),
+              "ReaderProxy::mDuration (Mirror)")
 {
   // Must support either heuristic buffering or WaitForData().
   MOZ_ASSERT(mReader->UseBufferingHeuristics() ||
              mReader->IsWaitForDataSupported());
 }
 
-MediaDecoderReaderWrapper::~MediaDecoderReaderWrapper()
+ReaderProxy::~ReaderProxy()
 {}
 
 media::TimeUnit
-MediaDecoderReaderWrapper::StartTime() const
+ReaderProxy::StartTime() const
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
   return mStartTime.ref();
 }
 
-RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
-MediaDecoderReaderWrapper::ReadMetadata()
+RefPtr<ReaderProxy::MetadataPromise>
+ReaderProxy::ReadMetadata()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
@@ -48,12 +48,12 @@ MediaDecoderReaderWrapper::ReadMetadata()
     ->Then(mOwnerThread,
            __func__,
            this,
-           &MediaDecoderReaderWrapper::OnMetadataRead,
-           &MediaDecoderReaderWrapper::OnMetadataNotRead);
+           &ReaderProxy::OnMetadataRead,
+           &ReaderProxy::OnMetadataNotRead);
 }
 
-RefPtr<MediaDecoderReaderWrapper::AudioDataPromise>
-MediaDecoderReaderWrapper::RequestAudioData()
+RefPtr<ReaderProxy::AudioDataPromise>
+ReaderProxy::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
@@ -74,8 +74,8 @@ MediaDecoderReaderWrapper::RequestAudioData()
            });
 }
 
-RefPtr<MediaDecoderReaderWrapper::VideoDataPromise>
-MediaDecoderReaderWrapper::RequestVideoData(const media::TimeUnit& aTimeThreshold)
+RefPtr<ReaderProxy::VideoDataPromise>
+ReaderProxy::RequestVideoData(const media::TimeUnit& aTimeThreshold)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
@@ -102,8 +102,8 @@ MediaDecoderReaderWrapper::RequestVideoData(const media::TimeUnit& aTimeThreshol
            });
 }
 
-RefPtr<MediaDecoderReaderWrapper::SeekPromise>
-MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
+RefPtr<ReaderProxy::SeekPromise>
+ReaderProxy::Seek(const SeekTarget& aTarget)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   SeekTarget adjustedTarget = aTarget;
@@ -115,8 +115,8 @@ MediaDecoderReaderWrapper::Seek(const SeekTarget& aTarget)
                      Move(adjustedTarget));
 }
 
-RefPtr<MediaDecoderReaderWrapper::WaitForDataPromise>
-MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
+RefPtr<ReaderProxy::WaitForDataPromise>
+ReaderProxy::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(mReader->IsWaitForDataSupported());
@@ -128,7 +128,7 @@ MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 }
 
 void
-MediaDecoderReaderWrapper::ReleaseResources()
+ReaderProxy::ReleaseResources()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
@@ -139,7 +139,7 @@ MediaDecoderReaderWrapper::ReleaseResources()
 }
 
 void
-MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
+ReaderProxy::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
@@ -151,11 +151,11 @@ MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 }
 
 RefPtr<ShutdownPromise>
-MediaDecoderReaderWrapper::Shutdown()
+ReaderProxy::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mShutdown = true;
-  RefPtr<MediaDecoderReaderWrapper> self = this;
+  RefPtr<ReaderProxy> self = this;
   return InvokeAsync(mReader->OwnerThread(), __func__, [self]() {
     self->mDuration.DisconnectIfConnected();
     self->mWatchManager.Shutdown();
@@ -163,8 +163,8 @@ MediaDecoderReaderWrapper::Shutdown()
   });
 }
 
-RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
-MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder&& aMetadata)
+RefPtr<ReaderProxy::MetadataPromise>
+ReaderProxy::OnMetadataRead(MetadataHolder&& aMetadata)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   if (mShutdown) {
@@ -178,14 +178,14 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder&& aMetadata)
   return MetadataPromise::CreateAndResolve(Move(aMetadata), __func__);
 }
 
-RefPtr<MediaDecoderReaderWrapper::MetadataPromise>
-MediaDecoderReaderWrapper::OnMetadataNotRead(const MediaResult& aError)
+RefPtr<ReaderProxy::MetadataPromise>
+ReaderProxy::OnMetadataNotRead(const MediaResult& aError)
 {
   return MetadataPromise::CreateAndReject(aError, __func__);
 }
 
 void
-MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
+ReaderProxy::SetVideoBlankDecode(bool aIsBlankDecode)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   nsCOMPtr<nsIRunnable> r =
@@ -197,25 +197,23 @@ MediaDecoderReaderWrapper::SetVideoBlankDecode(bool aIsBlankDecode)
 }
 
 void
-MediaDecoderReaderWrapper::UpdateDuration()
+ReaderProxy::UpdateDuration()
 {
   MOZ_ASSERT(mReader->OwnerThread()->IsCurrentThreadIn());
   mReader->UpdateDuration(mDuration.Ref().ref());
 }
 
 void
-MediaDecoderReaderWrapper::SetCanonicalDuration(
+ReaderProxy::SetCanonicalDuration(
   AbstractCanonical<media::NullableTimeUnit>* aCanonical)
 {
   using DurationT = AbstractCanonical<media::NullableTimeUnit>;
-  RefPtr<MediaDecoderReaderWrapper> self = this;
+  RefPtr<ReaderProxy> self = this;
   RefPtr<DurationT> canonical = aCanonical;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-    "MediaDecoderReaderWrapper::SetCanonicalDuration",
-    [this, self, canonical]() {
+    "ReaderProxy::SetCanonicalDuration", [this, self, canonical]() {
       mDuration.Connect(canonical);
-      mWatchManager.Watch(mDuration,
-                          &MediaDecoderReaderWrapper::UpdateDuration);
+      mWatchManager.Watch(mDuration, &ReaderProxy::UpdateDuration);
     });
   mReader->OwnerThread()->Dispatch(r.forget());
 }
