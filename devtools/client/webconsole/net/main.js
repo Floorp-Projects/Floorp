@@ -38,7 +38,7 @@ var styleSheets = [
 // on the right CSS strategy FIXME.
 // It would also be nice to include them using @import.
 styleSheets.forEach(url => {
-  loadSheet(window, url, "author");
+  loadSheet(this, url, "author");
 });
 
 // Localization API used by React components
