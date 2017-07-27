@@ -837,9 +837,9 @@ nsWindowMemoryReporter::CheckForGhostWindows(
       } else if ((now - timeStamp).ToSeconds() > ghostTimeout) {
         // This definitely is a ghost window, so add it to aOutGhostIDs, if
         // that is not null.
+        mGhostWindowCount++;
         if (aOutGhostIDs && window) {
           aOutGhostIDs->PutEntry(window->WindowID());
-          mGhostWindowCount++;
         }
       }
     }
