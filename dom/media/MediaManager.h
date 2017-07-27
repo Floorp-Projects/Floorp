@@ -334,7 +334,6 @@ private:
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
-  nsTArray<nsString> mDeviceIDs;
 public:
   media::CoatCheck<media::Pledge<nsCString>> mGetPrincipalKeyPledges;
   RefPtr<media::Parent<media::NonE10s>> mNonE10sParent;
