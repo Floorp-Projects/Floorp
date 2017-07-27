@@ -27,7 +27,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Tuple.h"
@@ -3277,7 +3276,7 @@ MediaDecoderStateMachine::RequestAudioData()
   MOZ_ASSERT(IsAudioDecoding());
   MOZ_ASSERT(!IsRequestingAudioData());
   MOZ_ASSERT(!IsWaitingAudioData());
-  LOGV("Queueing audio task - queued=%" PRIuSIZE ", decoder-queued=%" PRIuSIZE,
+  LOGV("Queueing audio task - queued=%zu, decoder-queued=%zu",
        AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
   RefPtr<MediaDecoderStateMachine> self = this;
@@ -3320,7 +3319,7 @@ MediaDecoderStateMachine::RequestVideoData(const media::TimeUnit& aCurrentTime)
   MOZ_ASSERT(IsVideoDecoding());
   MOZ_ASSERT(!IsRequestingVideoData());
   MOZ_ASSERT(!IsWaitingVideoData());
-  LOGV("Queueing video task - queued=%" PRIuSIZE ", decoder-queued=%" PRIoSIZE
+  LOGV("Queueing video task - queued=%zu, decoder-queued=%zo"
        ", stime=%" PRId64,
        VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(),
        aCurrentTime.ToMicroseconds());

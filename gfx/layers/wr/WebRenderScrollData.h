@@ -41,6 +41,9 @@ public:
   void Initialize(WebRenderScrollData& aOwner,
                   Layer* aLayer,
                   int32_t aDescendantCount);
+  void InitializeRoot(int32_t aDescendantCount);
+  void Initialize(WebRenderScrollData& aOwner,
+                  nsDisplayItem* aItem);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
@@ -64,6 +67,8 @@ public:
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
+
+  void Dump(const WebRenderScrollData& aOwner) const;
 
   friend struct IPC::ParamTraits<WebRenderLayerScrollData>;
 
@@ -112,6 +117,9 @@ public:
   // Add a new empty WebRenderLayerScrollData and return the index that can be
   // used to look it up via GetLayerData.
   size_t AddNewLayerData();
+  // Add the provided WebRenderLayerScrollData and return the index that can
+  // be used to look it up via GetLayerData.
+  size_t AddLayerData(const WebRenderLayerScrollData& aData);
 
   size_t GetLayerCount() const;
 
@@ -131,6 +139,8 @@ public:
   uint32_t GetPaintSequenceNumber() const;
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
+
+  void Dump() const;
 
 private:
   // Internal data structure used to maintain uniqueness of mScrollMetadatas.

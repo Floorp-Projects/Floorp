@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-webide.jar:
+[features/devtools@mozilla.org] webide.jar:
 % skin webide classic/1.0 %skin/
-* skin/webide.css              (webide.css)
+  skin/webide.css              (webide.css)
   skin/icons.png               (icons.png)
   skin/details.css             (details.css)
   skin/newapp.css              (newapp.css)
@@ -15,7 +15,6 @@ webide.jar:
   skin/monitor.css             (monitor.css)
   skin/config-view.css         (config-view.css)
   skin/wifi-auth.css           (wifi-auth.css)
-  skin/logs.css                (logs.css)
   skin/panel-listing.css       (panel-listing.css)
   skin/simulator.css           (simulator.css)
   skin/rocket.svg              (rocket.svg)

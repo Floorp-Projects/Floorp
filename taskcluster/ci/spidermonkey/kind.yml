@@ -58,6 +58,10 @@ job-defaults:
             - test.mozbuild
             - toolkit/mozapps/installer/package-name.mk
             - toolkit/mozapps/installer/upload-files.mk
+    toolchains:
+        - linux64-clang
+        - linux64-gcc
+        - linux64-sccache
 
 jobs:
     sm-package/opt:

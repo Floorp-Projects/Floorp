@@ -610,7 +610,7 @@ CheckHeapTracer::check(AutoLockForExclusiveAccess& lock)
         return;
 
     if (failures)
-        fprintf(stderr, "Heap check: %" PRIuSIZE " failure(s)\n", failures);
+        fprintf(stderr, "Heap check: %zu failure(s)\n", failures);
     MOZ_RELEASE_ASSERT(failures == 0);
 }
 

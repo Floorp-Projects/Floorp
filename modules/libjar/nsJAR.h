@@ -214,6 +214,8 @@ protected:
   uint32_t              mZipSyncMisses;
 #endif
 
+private:
+  nsresult GetZip(nsIFile* zipFile, nsIZipReader* *result, bool failOnMiss);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

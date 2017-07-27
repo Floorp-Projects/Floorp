@@ -1,0 +1,189 @@
+<h1>Marionette</h1>
+
+<p>Marionette is the remote protocol that lets OOP programs
+ communicate with, instrument, and control Gecko.
+
+
+<h2>Description</h2>
+
+<p>Marionette is an automation driver for Mozilla’s Gecko engine.
+ It can remotely control either the UI
+ or the internal JavaScript of the Gecko platform, such as Firefox.
+ It can control both the chrome and the content document,
+ giving a high level of control and ability to replicate user interaction.
+ In addition to performing actions on the browser,
+ Marionette can also read properties and attributes of the DOM.
+
+
+<h2>Usage</h2>
+
+<p>Marionette can be activated by passing the -marionette flag.
+ To start Firefox with the remote protocol turned on:
+
+<pre>
+% firefox -marionette
+…
+1491228343089	Marionette	INFO	Listening on port 2828
+</pre>
+
+<p>This binds to a TCP socket, over which <a href=#clients>clients</a>
+ can communicate with Marionette using the <a href=#protocol>protocol</a>.
+
+
+<h2 id=protocol>Protocol</h2>
+
+<p>Marionette provides an asynchronous,
+ parallel pipelining user-facing interface.
+ Message sequencing limits chances of payload race conditions
+ and provides a uniform way in which payloads are serialised.
+
+<p>Clients that deliver a blocking WebDriver interface
+ are still expected to not send further command requests
+ before the response from the last command has come back,
+ but if they still happen to do so because of programming error,
+ no harm will be done.
+ This guards against <a href=https://bugzil.la/1207125>mixing up responses</a>.
+
+<p>Schematic flow of messages:
+
+<pre>
+               client      server
+                 |            |
+      msgid=1    |----------->|
+                 |  command   |
+                 |            |
+      msgid=2    |<-----------|
+                 |  command   |
+                 |            |
+      msgid=2    |----------->|
+                 |  response  |
+                 |            |
+      msgid=1    |<-----------|
+                 |  response  |
+                 |            |
+</pre>
+
+<p>The protocol consists of a <a href=#command>command</a> message
+ and the corresponding <a href=#response>response</a> message.
+ A <a href=#response>response</a> message must always be sent
+ in reply to a <a href=#command>command</a> message.
+
+<p>This means that the server implementation does not need to send
+ the reply precisely in the order of the received commands:
+ if it receives multiple messages, the server may even reply in random order.
+ It is therefore strongly adviced that clients take this into account
+ when implementing the client end of this wire protocol.
+
+<p>This is required for pipelining messages.
+ On the server side, some functions are fast, and some less so.
+ If the server must reply in order, the slow functions delay the other replies
+ even if its execution is already completed.
+
+
+<h2 id=command>Command</h2>
+
+<p>The request, or command message,
+ is a four element JSON array as shown below,
+ that may originate from either the client- or server remote ends:
+
+<pre>[type, message ID, command, parameters]</pre>
+
+<dl>
+ <dt>type
+ <dd><p>Must be 0 (integer).
+  This indicates that the message
+  is the <a href=#command>command</a> message.
+
+ <dt>message ID
+ <dd><p>A 32-bit unsigned integer.
+  This number is used as sequencing number
+  that uniquely identifies a pair of <a href=#command>command</a>
+  and <a href=#response>response</a> messages.
+  The other remote part will reply
+  with a corresponding <a href=#response>response</a>
+  with the same message ID.
+
+ <dt>command
+ <dd><p>A string identifying the RPC method or command to execute.
+
+ <dt>parameters
+ <dd><p>An arbitrary JSON serialisable object.
+</dl>
+
+<h2 id=response>Response</h2>
+
+<p>The response message is also a four element array as shown below,
+ and must always be sent after receiving a <a href=#command>command</a>:
+
+<pre>[type, message ID, error, result]</pre>
+
+<dl>
+ <dt>type
+ <dd><p>Must be 1 (integer).
+  This indicates that the message is
+  the <a href=#response>response</a> message.
+
+ <dt>message ID
+ <dd><p>A 32-bit unsigned integer.
+  This corresponds to the <a href=#command>command</a> message’s
+  message ID.
+
+ <dt>error
+ <dd><p>If the command executed correctly, this field is null.
+  If the error occurred on the server-side,
+  then this field is an <a href=#error>error</a> object.
+
+ <dt>result
+ <dd><p>The result object associated with the <a href=#command>command</a>,
+  if it executed correctly.
+  If an error occurred on the server-side, this field is null.
+
+  <p>The structure of the result entry can vary,
+   but is documented individually for each command.
+</dl>
+
+
+<h3 id=error>Error object</h3>
+
+<p>An error object is a serialisation of JavaScript error types,
+ and is structured like this:
+
+<pre>
+{
+	"error": "invalid session id",
+	"message": "No active session with ID 1234",
+	"stacktrace": ""
+}
+</pre>
+
+<p>All the fields of the error object are required,
+ so the stacktrace and message fields may be empty strings.
+ The error field is on the other hand guaranteed
+ to be one of the JSON error codes
+ as laid out by the <a href=https://w3c.github.io/webdriver/webdriver-spec.html#handling-errors>WebDriver standard</a>.
+
+
+<h2 id=clients>Clients</h2>
+
+<p>Clients may be implemented in any language
+ that is capable of writing and receiving data over TCP socket.
+ A <a href=https://searchfox.org/mozilla-central/source/testing/marionette/client>reference client is provided</a>.
+ Clients may be implemented both synchronously and asynchronously,
+ although the latter is impossible in protocol levels 2 and earlier
+ due to the lack of message indexing.
+
+
+<h2 id=bugs>Bugs</h2>
+
+<p>Bugs are tracked
+ in various <a href=https://bugzilla.mozilla.org/>Bugzilla</a> components:
+
+<dl>
+ <dt>Marionette server
+ <dt>Marionette reference client
+ <dt>Marionette test harness
+ <dd><a href="https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=Marionette">Testing :: Marionette</a>
+
+ <dt>geckodriver
+ <dd><a href="https://bugzilla.mozilla.org/buglist.cgi?product=Testing&component=geckodriver">Testing :: geckodriver</a>
+</dl>

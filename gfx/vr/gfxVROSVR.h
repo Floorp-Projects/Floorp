@@ -18,6 +18,9 @@
 #include <osvr/ClientKit/ClientKitC.h>
 #include <osvr/ClientKit/DisplayC.h>
 
+#if defined(XP_MACOSX)
+class MacIOSurface;
+#endif
 namespace mozilla {
 namespace gfx {
 namespace impl {
@@ -33,10 +36,15 @@ protected:
   virtual void StopPresentation() override;
 
 #if defined(XP_WIN)
-  virtual bool SubmitFrame(TextureSourceD3D11* aSource,
-    const IntSize& aSize,
-    const gfx::Rect& aLeftEyeRect,
-    const gfx::Rect& aRightEyeRect) override;
+  virtual bool SubmitFrame(mozilla::layers::TextureSourceD3D11* aSource,
+                           const IntSize& aSize,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect) override;
+#elif defined(XP_MACOSX)
+  virtual bool SubmitFrame(MacIOSurface* aMacIOSurface,
+                           const IntSize& aSize,
+                           const gfx::Rect& aLeftEyeRect,
+                           const gfx::Rect& aRightEyeRect) override;
 #endif
 
 public:

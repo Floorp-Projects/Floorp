@@ -5482,8 +5482,13 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   // this case.
   let movable = toolbarItem && toolbarItem.parentNode &&
                 CustomizableUI.isWidgetRemovable(toolbarItem);
+  let isSpecial = toolbarItem && CustomizableUI.isSpecialWidget(toolbarItem.id);
   if (movable) {
-    moveToPanel.removeAttribute("disabled");
+    if (isSpecial) {
+      moveToPanel.setAttribute("disabled", true);
+    } else {
+      moveToPanel.removeAttribute("disabled");
+    }
     removeFromToolbar.removeAttribute("disabled");
   } else {
     moveToPanel.setAttribute("disabled", true);

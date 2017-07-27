@@ -35,7 +35,6 @@
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
@@ -189,7 +188,7 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
   // results that were found than fail.
   mClassifier->Check(spec, tables, *results);
 
-  LOG(("Found %" PRIuSIZE " results.", results->Length()));
+  LOG(("Found %zu results.", results->Length()));
   return NS_OK;
 }
 
@@ -246,7 +245,7 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
     return rv;
   }
 
-  LOG(("Found %" PRIuSIZE " results.", results->Length()));
+  LOG(("Found %zu results.", results->Length()));
 
 
   if (LOG_ENABLED()) {
@@ -1261,7 +1260,7 @@ nsUrlClassifierLookupCallback::HandleResults()
   MOZ_ASSERT(mPendingCompletions == 0, "HandleResults() should never be "
              "called while there are pending completions");
 
-  LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, %" PRIuSIZE " results]",
+  LOG(("nsUrlClassifierLookupCallback::HandleResults [%p, %zu results]",
        this, mResults->Length()));
 
   nsCOMPtr<nsIUrlClassifierClassifyCallback> classifyCallback =

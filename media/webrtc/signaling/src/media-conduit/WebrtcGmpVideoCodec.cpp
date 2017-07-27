@@ -10,7 +10,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/SyncRunnable.h"
 #include "VideoConduit.h"
 #include "AudioConduit.h"
@@ -887,7 +886,7 @@ WebrtcGmpVideoDecoder::Decode_g(const webrtc::EncodedImage& aInputImage,
   nsTArray<uint8_t> codecSpecificInfo;
   codecSpecificInfo.AppendElements((uint8_t*)&info, sizeof(GMPCodecSpecificInfo));
 
-  LOGD(("GMP Decode: %" PRIu64 ", len %" PRIuSIZE "%s", frame->TimeStamp(), aInputImage._length,
+  LOGD(("GMP Decode: %" PRIu64 ", len %zu%s", frame->TimeStamp(), aInputImage._length,
         ft == kGMPKeyFrame ? ", KeyFrame" : ""));
   nsresult rv = mGMP->Decode(Move(frame),
                              aMissingFrames,

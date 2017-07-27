@@ -138,8 +138,9 @@ devtools/shared/qrcode/tests/mochitest/test_decode.html
 devtools/shared/tests/mochitest/*.html
 devtools/shared/webconsole/test/test_*.html
 
-# Ignore devtools pre-processed files
+# Ignore devtools preferences files
 devtools/client/preferences/**
+devtools/shim/devtools-startup-prefs.js
 
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
@@ -299,8 +300,9 @@ services/sync/services-sync.js
 testing/marionette/test_*.js
 testing/marionette/atom.js
 testing/marionette/legacyaction.js
-testing/marionette/client/**
-testing/marionette/harness/**
+testing/marionette/client
+testing/marionette/doc
+testing/marionette/harness
 
 # other testing/ exclusions
 testing/mochitest/**

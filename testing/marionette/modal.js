@@ -14,8 +14,8 @@ const COMMON_DIALOG = "chrome://global/content/commonDialog.xul";
 
 const isFirefox = () => Services.appinfo.name == "Firefox";
 
-this.modal = {};
-modal = {
+/** @namespace */
+this.modal = {
   COMMON_DIALOG_LOADED: "common-dialog-loaded",
   TABMODAL_DIALOG_LOADED: "tabmodal-dialog-loaded",
   handlers: {

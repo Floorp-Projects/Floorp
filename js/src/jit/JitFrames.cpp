@@ -6,7 +6,6 @@
 
 #include "jit/JitFrames-inl.h"
 
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jsfun.h"
 #include "jsobj.h"
@@ -2335,7 +2334,7 @@ InlineFrameIterator::dump() const
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %" PRIuSIZE "\n",
+    fprintf(stderr, "  file %s line %zu\n",
             script()->filename(), script()->lineno());
 
     fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());

@@ -8,7 +8,6 @@
 
 #include "jit/CacheIRSpewer.h"
 
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Sprintf.h"
 
 #ifdef XP_WIN

@@ -13,6 +13,6 @@ DIRS += [
 # installed to previously defined locations.
 
 # Extra compatibility layer for old path after relocation in bug 1270173
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.server += [
+FINAL_TARGET_FILES.features['devtools@mozilla.org'].chrome.modules.server += [
     'protocol.js',
 ]

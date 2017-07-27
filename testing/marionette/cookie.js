@@ -18,9 +18,16 @@ this.EXPORTED_SYMBOLS = ["cookie"];
 
 const IPV4_PORT_EXPR = /:\d+$/;
 
+/** @namespace */
 this.cookie = {
   manager: Services.cookies,
 };
+
+/**
+ * @name Cookie
+ *
+ * @return {Object.<string, (number|boolean|string)>
+ */
 
 /**
  * Unmarshal a JSON Object to a cookie representation.
@@ -28,14 +35,16 @@ this.cookie = {
  * Effectively this will run validation checks on |json|, which will
  * produce the errors expected by WebDriver if the input is not valid.
  *
- * @param {Map.<string, (number|boolean|string)> json
- *     Cookie to be deserialised.  |name| and |value| are required fields
- *     which must be strings.  The |path| field is optional, but must
- *     be a string if provided.  The |secure|, |httpOnly|, and |session|
- *     fields are similarly optional, but must be booleans.  Likewise,
- *     the |expiry| field is optional but must be unsigned integer.
+ * @param {Object.<string, (number|boolean|string)>} json
+ *     Cookie to be deserialised.  <var>name</var> and <var>value</var>
+ *     are required fields which must be strings.  The <var>path</var>
+ *     field is optional, but must be a string if provided.
+ *     The <var>secure</var>, <var>httpOnly</var>, and
+ *     <var>session</var>fields are similarly optional, but must be
+ *     booleans.  Likewise, the <var>expiry</var> field is optional but
+ *     must be unsigned integer.
  *
- * @return {Map.<string, (number|boolean|string)>
+ * @return {Cookie}
  *     Valid cookie object.
  *
  * @throws {InvalidArgumentError}
@@ -71,21 +80,19 @@ cookie.fromJSON = function(json) {
 /**
  * Insert cookie to the cookie store.
  *
- * @param {Map.<string, (string|number|boolean)} newCookie
+ * @param {Cookie} newCookie
  *     Cookie to add.
- * @param {Map.<string, ?>} opts
- *     Optional parameters:
- *
- *       restrictToHost (string)
- *         Perform test that |newCookie|'s domain matches this.
+ * @param {string=} restrictToHost
+ *     Perform test that <var>newCookie</var>'s domain matches this.
  *
  * @throws {TypeError}
- *     If |name|, |value|, or |domain| are not present and of the
- *     correct type.
+ *     If <var>name</var>, <var>value</var>, or <var>domain</var> are
+ *     not present and of the correct type.
  * @throws {InvalidCookieDomainError}
- *     If |restrictToHost| is set and |newCookie|'s domain does not match.
+ *     If <var>restrictToHost</var> is set and <var>newCookie</var>'s
+ *     domain does not match.
  */
-cookie.add = function(newCookie, opts = {}) {
+cookie.add = function(newCookie, {restrictToHost = null} = {}) {
   assert.string(newCookie.name, "Cookie name must be string");
   assert.string(newCookie.value, "Cookie value must be string");
   assert.string(newCookie.domain, "Cookie domain must be string");
@@ -102,14 +109,11 @@ cookie.add = function(newCookie, opts = {}) {
     newCookie.expiry = date.getTime() / 1000;
   }
 
-  if (opts.restrictToHost) {
-    assert.in("restrictToHost", opts,
-        "Missing cookie domain for host restriction test");
-
-    if (newCookie.domain !== opts.restrictToHost) {
+  if (restrictToHost) {
+    if (newCookie.domain !== restrictToHost) {
       throw new InvalidCookieDomainError(
           `Cookies may only be set ` +
-          ` for the current domain (${opts.restrictToHost})`);
+          ` for the current domain (${restrictToHost})`);
     }
   }
 
@@ -133,7 +137,7 @@ cookie.add = function(newCookie, opts = {}) {
 /**
  * Remove cookie from the cookie store.
  *
- * @param {Map.<string, (string|number|boolean)} toDelete
+ * @param {Cookie} toDelete
  *     Cookie to remove.
  */
 cookie.remove = function(toDelete) {
@@ -146,17 +150,18 @@ cookie.remove = function(toDelete) {
 };
 
 /**
- * Iterates over the cookies for the current |host|.  You may optionally
- * filter for specific paths on that |host| by specifying a path in
- * |currentPath|.
+ * Iterates over the cookies for the current <var>host</var>.  You may
+ * optionally filter for specific paths on that <var>host</var> by
+ * specifying a path in <var>currentPath</var>.
  *
  * @param {string} host
  *     Hostname to retrieve cookies for.
- * @param {string=} currentPath
- *     Optionally filter the cookies for |host| for the specific path.
- *     Defautls to "/", meaning all cookies for |host| are included.
+ * @param {string=} [currentPath="/"] currentPath
+ *     Optionally filter the cookies for <var>host</var> for the
+ *     specific path.  Defaults to "<tt>/</tt>", meaning all cookies
+ *     for <var>host</var> are included.
  *
- * @return {[Symbol.Iterator]}
+ * @return {Iterable.<Cookie>}
  *     Iterator.
  */
 cookie.iter = function*(host, currentPath = "/") {

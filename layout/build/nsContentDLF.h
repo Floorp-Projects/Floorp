@@ -9,6 +9,7 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsMimeTypes.h"
 
+class nsDocShell;
 class nsIChannel;
 class nsIContentViewer;
 class nsILoadGroup;
@@ -45,6 +46,16 @@ public:
                              nsISupports* aExtraInfo,
                              nsIStreamListener** aDocListener,
                              nsIContentViewer** aContentViewer);
+
+  /**
+   * Create a blank document using the given loadgroup and given
+   * principal.  aPrincipal is allowed to be null, in which case the
+   * new document will get the about:blank codebase principal.
+   */
+  static already_AddRefed<nsIDocument>
+  CreateBlankDocument(nsILoadGroup* aLoadGroup,
+                      nsIPrincipal* aPrincipal,
+                      nsDocShell* aContainer);
 
 private:
   static nsresult EnsureUAStyleSheet();

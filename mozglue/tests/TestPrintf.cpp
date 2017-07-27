@@ -5,7 +5,6 @@
 
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include <cfloat>
 #include <stdarg.h>
@@ -109,7 +108,7 @@ TestPrintfFormats()
   MOZ_RELEASE_ASSERT(print_one("", "%.*lld", 0, 0ll));
   MOZ_RELEASE_ASSERT(print_one("0xF0F0", "0x%llX", 0xf0f0ull));
   MOZ_RELEASE_ASSERT(print_one("27270", "%zu", (size_t) 27270));
-  MOZ_RELEASE_ASSERT(print_one("27270", "%" PRIuSIZE, (size_t) 27270));
+  MOZ_RELEASE_ASSERT(print_one("27270", "%zu", (size_t) 27270));
   MOZ_RELEASE_ASSERT(print_one("hello", "he%so", "ll"));
   MOZ_RELEASE_ASSERT(print_one("(null)", "%s", zero()));
   MOZ_RELEASE_ASSERT(print_one("hello   ", "%-8s", "hello"));
@@ -157,7 +156,7 @@ TestPrintfFormats()
   MOZ_RELEASE_ASSERT(print_one("23 % 024", "%2$-3ld%%%1$4.3d", 24, 23l));
   MOZ_RELEASE_ASSERT(print_one("23 1.5", "%2$d %1$g", 1.5, 23));
   MOZ_RELEASE_ASSERT(print_one("ff number FF", "%3$llx %1$s %2$lX", "number", 255ul, 255ull));
-  MOZ_RELEASE_ASSERT(print_one("7799 9977", "%2$" PRIuSIZE " %1$" PRIuSIZE,
+  MOZ_RELEASE_ASSERT(print_one("7799 9977", "%2$zu %1$zu",
                                (size_t) 9977, (size_t) 7799));
 }
 

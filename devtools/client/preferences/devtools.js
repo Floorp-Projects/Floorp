@@ -47,8 +47,6 @@ pref("devtools.command-button-measure.enabled", false);
 pref("devtools.command-button-noautohide.enabled", false);
 
 // Inspector preferences
-// Enable the Inspector
-pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
 pref("devtools.inspector.activeSidebar", "ruleview");
 pref("devtools.inspector.remote", false);
@@ -231,13 +229,6 @@ pref("devtools.dom.enabled", false);
 // Web Audio Editor Inspector Width should be a preference
 pref("devtools.webaudioeditor.inspectorWidth", 300);
 
-// Default theme ("dark" or "light")
-#ifdef MOZ_DEV_EDITION
-sticky_pref("devtools.theme", "dark");
-#else
-sticky_pref("devtools.theme", "light");
-#endif
-
 // Web console filters
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);
@@ -312,8 +303,8 @@ pref("devtools.webconsole.timestampMessages", false);
 // to automatically trigger multiline editing (equivalent to shift + enter).
 pref("devtools.webconsole.autoMultiline", true);
 
-// Enable the experimental webconsole frontend
-#if defined(NIGHTLY_BUILD)
+// Enable the new webconsole frontend
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 pref("devtools.webconsole.new-frontend-enabled", true);
 #else
 pref("devtools.webconsole.new-frontend-enabled", false);
@@ -352,9 +343,6 @@ pref("devtools.editor.autocomplete", true);
 // opened developer tool. This allows us to ping telemetry just once per browser
 // version for each user.
 pref("devtools.telemetry.tools.opened.version", "{}");
-
-// Enable the JSON View tool (an inspector for application/json documents).
-pref("devtools.jsonview.enabled", true);
 
 // Enable the HTML responsive design mode for all channels.
 pref("devtools.responsive.html.enabled", true);

@@ -263,78 +263,65 @@ nsContentDLF::CreateInstanceForDocument(nsISupports* aContainer,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsContentDLF::CreateBlankDocument(nsILoadGroup *aLoadGroup,
+/* static */ already_AddRefed<nsIDocument>
+nsContentDLF::CreateBlankDocument(nsILoadGroup* aLoadGroup,
                                   nsIPrincipal* aPrincipal,
-                                  nsIDocument **aDocument)
+                                  nsDocShell* aContainer)
 {
-  *aDocument = nullptr;
-
-  nsresult rv = NS_ERROR_FAILURE;
-
   // create a new blank HTML document
   nsCOMPtr<nsIDocument> blankDoc(do_CreateInstance(kHTMLDocumentCID));
 
-  if (blankDoc) {
-    // initialize
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank"));
-    if (uri) {
-      blankDoc->ResetToURI(uri, aLoadGroup, aPrincipal);
-      rv = NS_OK;
-    }
+  if (!blankDoc) {
+    return nullptr;
   }
 
+  // initialize
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank"));
+  if (!uri) {
+    return nullptr;
+  }
+  blankDoc->ResetToURI(uri, aLoadGroup, aPrincipal);
+  blankDoc->SetContainer(aContainer);
+
   // add some simple content structure
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_ERROR_FAILURE;
+  nsNodeInfoManager *nim = blankDoc->NodeInfoManager();
 
-    nsNodeInfoManager *nim = blankDoc->NodeInfoManager();
+  RefPtr<mozilla::dom::NodeInfo> htmlNodeInfo;
 
-    RefPtr<mozilla::dom::NodeInfo> htmlNodeInfo;
+  // generate an html html element
+  htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_XHTML,
+                                  nsIDOMNode::ELEMENT_NODE);
+  nsCOMPtr<nsIContent> htmlElement =
+    NS_NewHTMLHtmlElement(htmlNodeInfo.forget());
 
-    // generate an html html element
-    htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::html, 0, kNameSpaceID_XHTML,
-                                    nsIDOMNode::ELEMENT_NODE);
-    nsCOMPtr<nsIContent> htmlElement =
-      NS_NewHTMLHtmlElement(htmlNodeInfo.forget());
+  // generate an html head element
+  htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::head, 0, kNameSpaceID_XHTML,
+                                  nsIDOMNode::ELEMENT_NODE);
+  nsCOMPtr<nsIContent> headElement =
+    NS_NewHTMLHeadElement(htmlNodeInfo.forget());
 
-    // generate an html head element
-    htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::head, 0, kNameSpaceID_XHTML,
-                                    nsIDOMNode::ELEMENT_NODE);
-    nsCOMPtr<nsIContent> headElement =
-      NS_NewHTMLHeadElement(htmlNodeInfo.forget());
+  // generate an html body elemment
+  htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::body, 0, kNameSpaceID_XHTML,
+                                  nsIDOMNode::ELEMENT_NODE);
+  nsCOMPtr<nsIContent> bodyElement =
+    NS_NewHTMLBodyElement(htmlNodeInfo.forget());
 
-    // generate an html body elemment
-    htmlNodeInfo = nim->GetNodeInfo(nsGkAtoms::body, 0, kNameSpaceID_XHTML,
-                                    nsIDOMNode::ELEMENT_NODE);
-    nsCOMPtr<nsIContent> bodyElement =
-      NS_NewHTMLBodyElement(htmlNodeInfo.forget());
-
-    // blat in the structure
-    if (htmlElement && headElement && bodyElement) {
-      NS_ASSERTION(blankDoc->GetChildCount() == 0,
-                   "Shouldn't have children");
-      rv = blankDoc->AppendChildTo(htmlElement, false);
-      if (NS_SUCCEEDED(rv)) {
-        rv = htmlElement->AppendChildTo(headElement, false);
-
-        if (NS_SUCCEEDED(rv)) {
-          // XXXbz Why not notifying here?
-          htmlElement->AppendChildTo(bodyElement, false);
-        }
-      }
-    }
+  // blat in the structure
+  NS_ASSERTION(blankDoc->GetChildCount() == 0,
+                "Shouldn't have children");
+  if (!htmlElement || !headElement || !bodyElement ||
+      NS_FAILED(blankDoc->AppendChildTo(htmlElement, false)) ||
+      NS_FAILED(htmlElement->AppendChildTo(headElement, false)) ||
+      // XXXbz Why not notifying here?
+      NS_FAILED(htmlElement->AppendChildTo(bodyElement, false))) {
+    return nullptr;
   }
 
   // add a nice bow
-  if (NS_SUCCEEDED(rv)) {
-    blankDoc->SetDocumentCharacterSetSource(kCharsetFromDocTypeDefault);
-    blankDoc->SetDocumentCharacterSet(UTF_8_ENCODING);
-
-    blankDoc.forget(aDocument);
-  }
-  return rv;
+  blankDoc->SetDocumentCharacterSetSource(kCharsetFromDocTypeDefault);
+  blankDoc->SetDocumentCharacterSet(UTF_8_ENCODING);
+  return blankDoc.forget();
 }
 
 

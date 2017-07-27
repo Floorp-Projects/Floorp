@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
@@ -202,7 +201,7 @@ JSString::dumpRepresentationHeader(FILE* fp, int indent, const char* subclass) c
     uint32_t flags = d.u1.flags;
     // Print the string's address as an actual C++ expression, to facilitate
     // copy-and-paste into a debugger.
-    fprintf(fp, "((%s*) %p) length: %" PRIuSIZE "  flags: 0x%x", subclass, this, length(), flags);
+    fprintf(fp, "((%s*) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
     if (flags & FLAT_BIT)               fputs(" FLAT", fp);
     if (flags & HAS_BASE_BIT)           fputs(" HAS_BASE", fp);
     if (flags & INLINE_CHARS_BIT)       fputs(" INLINE_CHARS", fp);
@@ -720,7 +719,7 @@ JSDependentString::dumpRepresentation(FILE* fp, int indent) const
     indent += 2;
 
     if (mozilla::Maybe<size_t> offset = baseOffset())
-        fprintf(fp, "%*soffset: %" PRIuSIZE "\n", indent, "", *offset);
+        fprintf(fp, "%*soffset: %zu\n", indent, "", *offset);
 
     fprintf(fp, "%*sbase: ", indent, "");
     base()->dumpRepresentation(fp, indent);
@@ -1493,7 +1492,7 @@ JSExtensibleString::dumpRepresentation(FILE* fp, int indent) const
     dumpRepresentationHeader(fp, indent, "JSExtensibleString");
     indent += 2;
 
-    fprintf(fp, "%*scapacity: %" PRIuSIZE "\n", indent, "", capacity());
+    fprintf(fp, "%*scapacity: %zu\n", indent, "", capacity());
     dumpRepresentationChars(fp, indent);
 }
 

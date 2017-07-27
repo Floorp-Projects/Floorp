@@ -121,7 +121,7 @@ function MockFxAccountsClient() {
     return Promise.resolve(sessionToken);
   };
 
-  this.signCertificate = function() { throw "no" };
+  this.signCertificate = function() { throw new Error("no"); };
 
   this.signOut = () => Promise.resolve();
   this.signOutAndDestroyDevice = () => Promise.resolve({});
@@ -1168,7 +1168,10 @@ add_task(async function test_sign_out_with_remote_error() {
   let fxa = new MockFxAccounts();
   let remoteSignOutCalled = false;
   // Force remote sign out to trigger an error
-  fxa.internal.deleteDeviceRegistration = function() { remoteSignOutCalled = true; throw "Remote sign out error"; };
+  fxa.internal.deleteDeviceRegistration = function() {
+    remoteSignOutCalled = true;
+    throw new Error("Remote sign out error");
+  };
   let promiseLogout = new Promise(resolve => {
     makeObserver(ONLOGOUT_NOTIFICATION, function() {
       log.debug("test_sign_out_with_remote_error observed onlogout");

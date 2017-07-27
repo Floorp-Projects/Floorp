@@ -30,6 +30,8 @@ const {pprint} = error;
 /**
  * Implements WebDriver Actions API: a low-level interface for providing
  * virtualised device input to the web browser.
+ *
+ * @namespace
  */
 this.action = {
   Pause: "pause",
@@ -346,15 +348,15 @@ action.PointerOrigin = {
 /**
  * Look up a PointerOrigin.
  *
- * @param {?} obj
+ * @param {(undefined|string|WebElement)} obj
  *     Origin for a pointerMove action.
  *
- * @return {?}
+ * @return {action.PointerOrigin}
  *     A pointer origin that is either "viewport" (default), "pointer", or a
  *     web-element reference.
  *
  * @throws {InvalidArgumentError}
- *     If |obj| is not a valid origin.
+ *     If <code>obj</code> is not a valid origin.
  */
 action.PointerOrigin.get = function(obj) {
   let origin = obj;
@@ -389,7 +391,7 @@ action.PointerType = {
  *     A pointer type for processing pointer parameters.
  *
  * @throws {InvalidArgumentError}
- *     If |str| is not a valid pointer type.
+ *     If <code>str</code> is not a valid pointer type.
  */
 action.PointerType.get = function(str) {
   let name = capitalize(str);
@@ -407,7 +409,7 @@ action.PointerType.get = function(str) {
 action.inputStateMap = undefined;
 
 /**
- * List of |action.Action| associated with current session.  Used to
+ * List of {@link action.Action} associated with current session.  Used to
  * manage dispatching events when resetting the state of the input sources.
  * Reset operations are assumed to be idempotent.
  *
@@ -426,10 +428,12 @@ class InputState {
   /**
    * Check equality of this InputState object with another.
    *
-   * @para{?} other
+   * @param {InputState} other
    *     Object representing an input state.
+   *
    * @return {boolean}
-   *     True if |this| has the same |type| as |other|.
+   *     True if <code>this</code> has the same <code>type</code>
+   *     as <code>other</code>.
    */
   is(other) {
     if (typeof other == "undefined") {
@@ -443,15 +447,17 @@ class InputState {
   }
 
   /**
-   * @param {?} obj
-   *     Object with property |type| and optionally |parameters| or
-   *     |pointerType|, representing an action sequence or an action item.
+   * @param {Object.<string, ?>} obj
+   *     Object with property <code>type</code> and optionally
+   *     <code>parameters</code> or <code>pointerType</code>,
+   *     representing an action sequence or an action item.
    *
    * @return {action.InputState}
-   *     An |action.InputState| object for the type of the |actionSequence|.
+   *     An {@link InputState} object for the type of the
+   *     {@link actionSequence}.
    *
    * @throws {InvalidArgumentError}
-   *     If |actionSequence.type| is not valid.
+   *     If {@link actionSequence.type} is not valid.
    */
   static fromJson(obj) {
     let type = obj.type;
@@ -628,8 +634,10 @@ action.InputState.Pointer = class Pointer extends InputState {
  * @param {string} type
  *     Action type: none, key, pointer.
  * @param {string} subtype
- *     Action subtype: pause, keyUp, keyDown, pointerUp, pointerDown,
- *     pointerMove, pointerCancel.
+ *     Action subtype: {@link action.Pause}, {@link action.KeyUp},
+ *     {@link action.KeyDown}, {@link action.PointerUp},
+ *     {@link action.PointerDown}, {@link action.PointerMove}, or
+ *     {@link action.PointerCancel}.
  *
  * @throws {InvalidArgumentError}
  *      If any parameters are undefined.
@@ -652,18 +660,19 @@ action.Action = class {
   }
 
   /**
-   * @param {?} actionSequence
+   * @param {action.Sequence} actionSequence
    *     Object representing sequence of actions from one input source.
-   * @param {?} actionItem
+   * @param {action.Action} actionItem
    *     Object representing a single action from |actionSequence|.
    *
    * @return {action.Action}
    *     An action that can be dispatched; corresponds to |actionItem|.
    *
    * @throws {InvalidArgumentError}
-   *     If any |actionSequence| or |actionItem| attributes are invalid.
+   *     If any <code>actionSequence</code> or <code>actionItem</code>
+   *     attributes are invalid.
    * @throws {UnsupportedOperationError}
-   *     If |actionItem.type| is |pointerCancel|.
+   *     If <code>actionItem.type</code> is {@link action.PointerCancel}.
    */
   static fromJson(actionSequence, actionItem) {
     let type = actionSequence.type;
@@ -790,7 +799,7 @@ action.Sequence = class extends Array {
   }
 
   /**
-   * @param {?} actionSequence
+   * @param {Object.<string, ?>} actionSequence
    *     Object that represents a sequence action items for one input source.
    *
    * @return {action.Sequence}
@@ -843,7 +852,7 @@ action.PointerParameters = class {
   }
 
   /**
-   * @param {?} parametersData
+   * @param {Object.<string, ?>} parametersData
    *     Object that represents pointer parameters.
    *
    * @return {action.PointerParameters}
@@ -954,8 +963,9 @@ action.Mouse = class {
  *     actions for one tick.
  * @param {element.Store} seenEls
  *     Element store.
- * @param {?} container
- *     Object with |frame| attribute of type |nsIDOMWindow|.
+ * @param {Object.<string, nsIDOMWindow>} container
+ *     Object with <code>frame</code> property of type
+ *     <code>nsIDOMWindow</code>.
  *
  * @return {Promise}
  *     Promise for dispatching all actions in |chain|.
@@ -990,8 +1000,9 @@ action.dispatch = function(chain, seenEls, container) {
  *     Duration in milliseconds of this tick.
  * @param {element.Store} seenEls
  *     Element store.
- * @param {?} container
- *     Object with |frame| attribute of type |nsIDOMWindow|.
+ * @param {Object.<string, nsIDOMWindow>} container
+ *     Object with <code>frame</code> property of type
+ *     <code>nsIDOMWindow</code>.
  *
  * @return {Promise}
  *     Promise for dispatching all tick-actions and pending DOM events.
@@ -1067,8 +1078,9 @@ action.computePointerDestination = function(
  *     Duration in milliseconds of this tick.
  * @param {element.Store} seenEls
  *     Element store.
- * @param {?} container
- *     Object with |frame| attribute of type |nsIDOMWindow|.
+ * @param {Object.<string, nsIDOMWindow>} container
+ *     Object with <code>frame</code> property of type
+ *     <code>nsIDOMWindow</code>.
  *
  * @return {function(action.Action): Promise}
  *     Function that takes an action and returns a Promise for dispatching
@@ -1268,8 +1280,9 @@ function dispatchPointerUp(a, inputState, win) {
  *     Input state for this action's input source.
  * @param {element.Store} seenEls
  *     Element store.
- * @param {?} container
- *     Object with |frame| attribute of type |nsIDOMWindow|.
+ * @param {Object.<string, nsIDOMWindow>} container
+ *     Object with <code>frame</code> property of type
+ *     <code>nsIDOMWindow</code>.
  *
  * @return {Promise}
  *     Promise to dispatch at least one pointermove event, as well as

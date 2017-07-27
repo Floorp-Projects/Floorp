@@ -52,9 +52,9 @@ describe("ActivityStreamMessageChannel", () => {
         assert.ok(mm.channel);
         assert.equal(mm.channel.url, mm.pageURL);
       });
-      it("should add 3 message listeners", () => {
+      it("should add 4 message listeners", () => {
         mm.createChannel();
-        assert.callCount(mm.channel.addMessageListener, 3);
+        assert.callCount(mm.channel.addMessageListener, 4);
       });
       it("should add the custom message listener to the channel", () => {
         mm.createChannel();
@@ -109,6 +109,14 @@ describe("ActivityStreamMessageChannel", () => {
         mm.createChannel();
         mm.channel.messagePorts.push(t);
         assert.equal(mm.getTargetById("bar"), null);
+      });
+    });
+    describe("#onNewTabInit", () => {
+      it("should dispatch a NEW_TAB_INIT action", () => {
+        const t = {portID: "foo"};
+        sinon.stub(mm, "onActionFromContent");
+        mm.onNewTabInit({target: t});
+        assert.calledWith(mm.onActionFromContent, {type: at.NEW_TAB_INIT}, "foo");
       });
     });
     describe("#onNewTabLoad", () => {

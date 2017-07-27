@@ -43,6 +43,8 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
+        toolchains:
+            - linux64-sccache
 
     linux64-st-an/opt:
         description: "Linux64 Opt Static Analysis"
@@ -65,6 +67,8 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             tooltool-downloads: public
             keep-artifacts: false
+        toolchains:
+            - linux64-sccache
 
     win32-st-an/debug:
         description: "Win32 Static Analysis Debug (clang-cl)"
@@ -85,6 +89,9 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/taskcluster_firefox_win32_clang_debug.py
+        toolchains:
+            - win32-clang-cl
+            - win64-sccache
 
     win32-st-an/opt:
         description: "Win32 Static Analysis Opt (clang-cl)"
@@ -105,6 +112,9 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/taskcluster_firefox_win32_clang.py
+        toolchains:
+            - win32-clang-cl
+            - win64-sccache
 
     win64-st-an/debug:
         description: "Win64 Static Analysis Debug (clang-cl)"
@@ -125,6 +135,9 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/taskcluster_firefox_win64_clang_debug.py
+        toolchains:
+            - win64-clang-cl
+            - win64-sccache
 
     win64-st-an/opt:
         description: "Win64 Static Analysis Opt (clang-cl)"
@@ -145,3 +158,6 @@ jobs:
             script: mozharness/scripts/fx_desktop_build.py
             config:
                 - builds/taskcluster_firefox_win64_clang.py
+        toolchains:
+            - win64-clang-cl
+            - win64-sccache

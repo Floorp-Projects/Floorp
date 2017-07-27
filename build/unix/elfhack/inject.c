@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <sys/mman.h>
 #include <elf.h>
 
 /* The Android NDK headers define those */
@@ -21,6 +23,10 @@ extern __attribute__((visibility("hidden"))) void original_init(int argc, char *
 
 extern __attribute__((visibility("hidden"))) Elf32_Rel relhack[];
 extern __attribute__((visibility("hidden"))) Elf_Ehdr elf_header;
+
+extern __attribute__((visibility("hidden"))) int (*mprotect_cb)(void *addr, size_t len, int prot);
+extern __attribute__((visibility("hidden"))) char relro_start[];
+extern __attribute__((visibility("hidden"))) char relro_end[];
 
 static inline __attribute__((always_inline))
 void do_relocations(void)
@@ -48,5 +54,42 @@ int init(int argc, char **argv, char **env)
     original_init(argc, argv, env);
     // Ensure there is no tail-call optimization, avoiding the use of the
     // B.W instruction in Thumb for the call above.
+    return 0;
+}
+
+static inline __attribute__((always_inline))
+void relro_pre()
+{
+    // By the time the injected code runs, the relro segment is read-only. But
+    // we want to apply relocations in it, so we set it r/w first. We'll restore
+    // it to read-only in relro_post.
+    mprotect_cb(relro_start, relro_end - relro_start, PROT_READ | PROT_WRITE);
+}
+
+static inline __attribute__((always_inline))
+void relro_post()
+{
+    mprotect_cb(relro_start, relro_end - relro_start, PROT_READ);
+    // mprotect_cb is a pointer allocated in .bss, so we need to restore it to
+    // a NULL value.
+    mprotect_cb = NULL;
+}
+
+__attribute__((section(".text._init_noinit_relro")))
+int init_noinit_relro(int argc, char **argv, char **env)
+{
+    relro_pre();
+    do_relocations();
+    relro_post();
+    return 0;
+}
+
+__attribute__((section(".text._init_relro")))
+int init_relro(int argc, char **argv, char **env)
+{
+    relro_pre();
+    do_relocations();
+    relro_post();
+    original_init(argc, argv, env);
     return 0;
 }

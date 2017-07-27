@@ -59,7 +59,7 @@ add_task(function* () {
   is(hud.jsterm.getInputValue(), "temp1", "Input was set");
 
   executedResult = yield hud.jsterm.execute();
-  ok(executedResult.textContent.includes("[ \"foo\", Object, 2 ]"),
+  ok(executedResult.textContent.includes(`[ "foo", {\u2026}, 2 ]`),
      "Correct variable assigned into console " + executedResult.textContent);
 
   info("Check store as global variable is enabled for nested object in nested messages");

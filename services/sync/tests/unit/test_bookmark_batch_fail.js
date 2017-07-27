@@ -9,7 +9,7 @@ add_task(async function run_test() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   engine._syncStartup = async function() {
-    throw "FAIL!";
+    throw new Error("FAIL!");
   };
 
   try {
@@ -18,6 +18,6 @@ add_task(async function run_test() {
     do_throw("Should have failed sync!");
   } catch (ex) {
     _("Making sure what we threw ended up as the exception:", ex);
-    do_check_eq(ex, "FAIL!");
+    do_check_eq(ex.message, "FAIL!");
   }
 });

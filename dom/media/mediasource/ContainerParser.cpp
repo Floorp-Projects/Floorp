@@ -10,7 +10,6 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/ErrorResult.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
@@ -46,7 +45,7 @@ ContainerParser::~ContainerParser() = default;
 MediaResult
 ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 {
-  MSE_DEBUG(ContainerParser, "aLength=%" PRIuSIZE " [%x%x%x%x]",
+  MSE_DEBUG(ContainerParser, "aLength=%zu [%x%x%x%x]",
             aData->Length(),
             aData->Length() > 0 ? (*aData)[0] : 0,
             aData->Length() > 1 ? (*aData)[1] : 0,
@@ -58,7 +57,7 @@ ContainerParser::IsInitSegmentPresent(MediaByteBuffer* aData)
 MediaResult
 ContainerParser::IsMediaSegmentPresent(MediaByteBuffer* aData)
 {
-  MSE_DEBUG(ContainerParser, "aLength=%" PRIuSIZE " [%x%x%x%x]",
+  MSE_DEBUG(ContainerParser, "aLength=%zu [%x%x%x%x]",
             aData->Length(),
             aData->Length() > 0 ? (*aData)[0] : 0,
             aData->Length() > 1 ? (*aData)[1] : 0,
@@ -333,7 +332,7 @@ public:
 
     MSE_DEBUG(WebMContainerParser,
               "[%" PRId64 ", %" PRId64 "] [fso=%" PRId64 ", leo=%" PRId64
-              ", l=%" PRIuSIZE " processedIdx=%u fs=%" PRId64 "]",
+              ", l=%zu processedIdx=%u fs=%" PRId64 "]",
               aStart,
               aEnd,
               mapping[0].mSyncOffset,

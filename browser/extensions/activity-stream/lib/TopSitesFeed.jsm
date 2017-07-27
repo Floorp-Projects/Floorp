@@ -88,10 +88,6 @@ this.TopSitesFeed = class TopSitesFeed {
     }
     this.lastUpdated = Date.now();
   }
-  openNewWindow(action, isPrivate = false) {
-    const win = action._target.browser.ownerGlobal;
-    win.openLinkIn(action.data.url, "window", {private: isPrivate});
-  }
   _getPinnedWithData() {
     // Augment the pinned links with any other extra data we have for them already in the store
     const links = this.store.getState().TopSites.rows;
@@ -133,12 +129,6 @@ this.TopSitesFeed = class TopSitesFeed {
         ) {
           this.refresh(action.meta.fromTarget);
         }
-        break;
-      case at.OPEN_NEW_WINDOW:
-        this.openNewWindow(action);
-        break;
-      case at.OPEN_PRIVATE_WINDOW:
-        this.openNewWindow(action, true);
         break;
       case at.PLACES_HISTORY_CLEARED:
         this.refresh();

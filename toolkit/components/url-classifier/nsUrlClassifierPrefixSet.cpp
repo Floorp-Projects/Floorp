@@ -20,7 +20,6 @@
 #include "nsIBufferedStreams.h"
 #include "nsIFileStreams.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Logging.h"
@@ -146,7 +145,7 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
 
   LOG(("Total number of indices: %d", aLength));
   LOG(("Total number of deltas: %d", totalDeltas));
-  LOG(("Total number of delta chunks: %" PRIuSIZE, mIndexDeltas.Length()));
+  LOG(("Total number of delta chunks: %zu", mIndexDeltas.Length()));
 
   return NS_OK;
 }

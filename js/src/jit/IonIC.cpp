@@ -7,7 +7,6 @@
 #include "jit/IonIC.h"
 
 #include "mozilla/Maybe.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jit/CacheIRCompiler.h"
 #include "jit/Linker.h"
@@ -154,7 +153,7 @@ IonGetPropertyIC::update(JSContext* cx, HandleScript outerScript, IonGetProperty
         // 2) There's no need to dynamically monitor the return type. This would
         //    be complicated since (due to GVN) there can be multiple pc's
         //    associated with a single idempotent cache.
-        JitSpew(JitSpew_IonIC, "Invalidating from idempotent cache %s:%" PRIuSIZE,
+        JitSpew(JitSpew_IonIC, "Invalidating from idempotent cache %s:%zu",
                 outerScript->filename(), outerScript->lineno());
 
         outerScript->setInvalidatedIdempotentCache();

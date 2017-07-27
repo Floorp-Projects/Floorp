@@ -6,26 +6,30 @@ package org.mozilla.gecko.activitystream.homepanel.menu;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Item;
+import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.widget.FaviconView;
 
-import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
+import java.lang.ref.WeakReference;
+import java.net.URI;
 
 /* package-private */ class BottomSheetContextMenu
         extends ActivityStreamContextMenu {
@@ -62,13 +66,14 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
 
         bottomSheetDialog.setContentView(content);
 
-        ((TextView) content.findViewById(R.id.title)).setText(item.getTitle());
+        final String pageTitle = item.getTitle();
+        final String sheetPageTitle = !TextUtils.isEmpty(pageTitle) ? pageTitle : item.getUrl();
+        ((TextView) content.findViewById(R.id.title)).setText(sheetPageTitle);
 
-        extractLabel(context, item.getUrl(), false, new ActivityStream.LabelCallback() {
-                public void onLabelExtracted(String label) {
-                    ((TextView) content.findViewById(R.id.url)).setText(label);
-                }
-        });
+        final TextView pageDomainView = (TextView) content.findViewById(R.id.url);
+        final UpdatePageDomainAsyncTask updateDomainAsyncTask = new UpdatePageDomainAsyncTask(context, pageDomainView,
+                item.getUrl());
+        updateDomainAsyncTask.execute();
 
         // Copy layouted parameters from the Highlights / TopSites items to ensure consistency
         final FaviconView faviconView = (FaviconView) content.findViewById(R.id.icon);
@@ -121,4 +126,55 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
         bottomSheetDialog.dismiss();
     }
 
+    /** Updates the given TextView's text to the page domain. */
+    private static class UpdatePageDomainAsyncTask extends AsyncTask<Void, Void, String> {
+        private final WeakReference<Context> contextWeakReference;
+        private final WeakReference<TextView> pageDomainViewWeakReference;
+
+        private final String uriString;
+        @Nullable private final URI uri;
+
+        private UpdatePageDomainAsyncTask(final Context context, final TextView pageDomainView, final String uriString) {
+            this.contextWeakReference = new WeakReference<>(context);
+            this.pageDomainViewWeakReference = new WeakReference<>(pageDomainView);
+
+            this.uriString = uriString;
+            this.uri = URIUtils.uriOrNull(uriString);
+        }
+
+        @Override
+        protected String doInBackground(final Void... params) {
+            final Context context = contextWeakReference.get();
+            if (context == null || uri == null) {
+                return null;
+            }
+
+            return URIUtils.getBaseDomain(context, uri);
+        }
+
+        @Override
+        protected void onPostExecute(final String baseDomain) {
+            super.onPostExecute(baseDomain);
+
+            final TextView pageDomainView = pageDomainViewWeakReference.get();
+            if (pageDomainView == null) {
+                return;
+            }
+
+            final String updateText;
+            if (!TextUtils.isEmpty(baseDomain)) {
+                updateText = baseDomain;
+
+            // In the unlikely error case, we leave the field blank (null) rather than setting it to the url because
+            // the page title view sets itself to the url on error.
+            } else if (uri != null) {
+                final String normalizedHost = StringUtils.stripCommonSubdomains(uri.getHost());
+                updateText = !TextUtils.isEmpty(normalizedHost) ? normalizedHost : null;
+            } else {
+                updateText = null;
+            }
+
+            pageDomainView.setText(updateText);
+        }
+    }
 }

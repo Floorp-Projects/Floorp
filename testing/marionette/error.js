@@ -47,6 +47,7 @@ const BUILTIN_ERRORS = new Set([
 
 this.EXPORTED_SYMBOLS = ["error", "error.pprint"].concat(Array.from(ERRORS));
 
+/** @namespace */
 this.error = {};
 
 /**
@@ -233,6 +234,10 @@ class WebDriverError extends Error {
     }
   }
 
+  /**
+   * @return {Object.<string, string>}
+   *     JSON serialisation of error prototype.
+   */
   toJSON() {
     return {
       error: this.status,
@@ -241,6 +246,16 @@ class WebDriverError extends Error {
     }
   }
 
+  /**
+   * Unmarshals a JSON error representation to the appropriate Marionette
+   * error type.
+   *
+   * @param {Object.<string, string>} json
+   *     Error object.
+   *
+   * @return {Error}
+   *     Error prototype.
+   */
   static fromJSON(json) {
     if (typeof json.error == "undefined") {
       let s = JSON.stringify(json);
@@ -262,6 +277,7 @@ class WebDriverError extends Error {
   }
 }
 
+/** The Gecko a11y API indicates that the element is not accessible. */
 class ElementNotAccessibleError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -310,6 +326,10 @@ class ElementClickInterceptedError extends WebDriverError {
   }
 }
 
+/**
+ * A command could not be completed because the element is not pointer-
+ * or keyboard interactable.
+ */
 class ElementNotInteractableError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -317,6 +337,10 @@ class ElementNotInteractableError extends WebDriverError {
   }
 }
 
+/**
+ * Navigation caused the user agent to hit a certificate warning, which
+ * is usually the result of an expired or invalid TLS certificate.
+ */
 class InsecureCertificateError extends WebDriverError {
   constructor(message) {
     super(message);
@@ -324,6 +348,7 @@ class InsecureCertificateError extends WebDriverError {
   }
 }
 
+/** The arguments passed to a command are either invalid or malformed. */
 class InvalidArgumentError extends WebDriverError {
   constructor(message) {
     super(message);

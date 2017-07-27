@@ -29,7 +29,10 @@ def DevToolsModules(*modules):
     # locations.  Instead of doing this, use this DevToolsModules syntax via
     # moz.build files to do the installation so that we can enforce correct
     # paths based on source tree location.
-    base = FINAL_TARGET_FILES.chrome.devtools.modules
-    for dir in RELATIVEDIR.split('/'):
+    base = FINAL_TARGET_FILES.features['devtools@mozilla.org'].chrome.modules
+    relative = RELATIVEDIR.split('/')
+    # Remove 'devtools' to got straight to client, shared or server folders
+    relative.pop(0)
+    for dir in relative:
         base = base[dir]
     base += [m for m in modules]

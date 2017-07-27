@@ -159,7 +159,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
     const BOGUS_GUID = "zzzzzzzzzzzz";
     let bogus_record = collection.insert(BOGUS_GUID, "I'm a bogus record!");
     bogus_record.get = function get() {
-      throw "Sync this!";
+      throw new Error("Sync this!");
     };
 
     // Make the 10 minutes old so it will only be synced in the toFetch phase.

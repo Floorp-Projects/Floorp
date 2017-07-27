@@ -14,7 +14,6 @@
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/SizePrintfMacros.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -5028,7 +5027,7 @@ CodeGenerator::maybeCreateScriptCounts()
                 JSScript* innerScript = block->info().script();
                 description = (char*) js_calloc(200);
                 if (description) {
-                    snprintf(description, 200, "%s:%" PRIuSIZE,
+                    snprintf(description, 200, "%s:%zu",
                              innerScript->filename(), innerScript->lineno());
                 }
             }
@@ -5384,7 +5383,7 @@ CodeGenerator::generateBody()
             columnNumber = current->mir()->columnIndex();
 #endif
         }
-        JitSpew(JitSpew_Codegen, "# block%" PRIuSIZE " %s:%" PRIuSIZE ":%u%s:",
+        JitSpew(JitSpew_Codegen, "# block%zu %s:%zu:%u%s:",
                 i, filename ? filename : "?", lineNumber, columnNumber,
                 current->mir()->isLoopHeader() ? " (loop header)" : "");
 #endif
@@ -9598,7 +9597,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
 bool
 CodeGenerator::generate()
 {
-    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%" PRIuSIZE,
+    JitSpew(JitSpew_Codegen, "# Emitting code for script %s:%zu",
             gen->info().script()->filename(),
             gen->info().script()->lineno());
 

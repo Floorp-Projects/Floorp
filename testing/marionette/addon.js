@@ -13,6 +13,7 @@ const {UnknownError} = Cu.import("chrome://marionette/content/error.js", {});
 
 this.EXPORTED_SYMBOLS = ["addon"];
 
+/** @namespace */
 this.addon = {};
 
 // from https://developer.mozilla.org/en-US/Add-ons/Add-on_Manager/AddonManager#AddonInstall_errors
@@ -43,7 +44,7 @@ function lookupError(code) {
  * @param {boolean=} temporary
  *     True to install the addon temporarily, false (default) otherwise.
  *
- * @return {Promise: string}
+ * @return {Promise.<string>}
  *     Addon ID.
  *
  * @throws {UnknownError}

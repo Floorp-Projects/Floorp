@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: interaction.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: interaction.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {utils: Cu} = Components;
+
+Cu.import("chrome://marionette/content/accessibility.js");
+Cu.import("chrome://marionette/content/atom.js");
+const {
+  error,
+  InvalidArgument,
+  ElementNotInteractableError,
+  ElementClickInterceptedError,
+  InvalidElementStateError,
+  InvalidArgumentError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/event.js");
+
+Cu.importGlobalProperties(["File"]);
+
+this.EXPORTED_SYMBOLS = ["interaction"];
+
+/** XUL elements that support disabled attribute. */
+const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([
+  "ARROWSCROLLBOX",
+  "BUTTON",
+  "CHECKBOX",
+  "COLORPICKER",
+  "COMMAND",
+  "DATEPICKER",
+  "DESCRIPTION",
+  "KEY",
+  "KEYSET",
+  "LABEL",
+  "LISTBOX",
+  "LISTCELL",
+  "LISTHEAD",
+  "LISTHEADER",
+  "LISTITEM",
+  "MENU",
+  "MENUITEM",
+  "MENULIST",
+  "MENUSEPARATOR",
+  "PREFERENCE",
+  "RADIO",
+  "RADIOGROUP",
+  "RICHLISTBOX",
+  "RICHLISTITEM",
+  "SCALE",
+  "TAB",
+  "TABS",
+  "TEXTBOX",
+  "TIMEPICKER",
+  "TOOLBARBUTTON",
+  "TREE",
+]);
+
+/** XUL elements that support checked property. */
+const CHECKED_PROPERTY_SUPPORTED_XUL = new Set([
+  "BUTTON",
+  "CHECKBOX",
+  "LISTITEM",
+  "TOOLBARBUTTON",
+]);
+
+/** XUL elements that support selected property. */
+const SELECTED_PROPERTY_SUPPORTED_XUL = new Set([
+  "LISTITEM",
+  "MENU",
+  "MENUITEM",
+  "MENUSEPARATOR",
+  "RADIO",
+  "RICHLISTITEM",
+  "TAB",
+]);
+
+/**
+ * Common form controls that user can change the value property
+ * interactively.
+ */
+const COMMON_FORM_CONTROLS = new Set([
+  "input",
+  "textarea",
+  "select",
+]);
+
+/**
+ * Input elements that do not fire &lt;tt>input&lt;/tt> and &lt;tt>change&lt;/tt>
+ * events when value property changes.
+ */
+const INPUT_TYPES_NO_EVENT = new Set([
+  "checkbox",
+  "radio",
+  "file",
+  "hidden",
+  "image",
+  "reset",
+  "button",
+  "submit",
+]);
+
+/** @namespace */
+this.interaction = {};
+
+/**
+ * Interact with an element by clicking it.
+ *
+ * The element is scrolled into view before visibility- or interactability
+ * checks are performed.
+ *
+ * Selenium-style visibility checks will be performed
+ * if &lt;var>specCompat&lt;/var> is false (default).  Otherwise
+ * pointer-interactability checks will be performed.  If either of these
+ * fail an {@link ElementNotInteractableError} is thrown.
+ *
+ * If &lt;var>strict&lt;/var> is enabled (defaults to disabled), further
+ * accessibility checks will be performed, and these may result in an
+ * {@link ElementNotAccessibleError} being returned.
+ *
+ * When &lt;var>el&lt;/var> is not enabled, an {@link InvalidElementStateError}
+ * is returned.
+ *
+ * @param {(DOMElement|XULElement)} el
+ *     Element to click.
+ * @param {boolean=} [strict=false] strict
+ *     Enforce strict accessibility tests.
+ * @param {boolean=} [specCompat=false] specCompat
+ *     Use WebDriver specification compatible interactability definition.
+ *
+ * @throws {ElementNotInteractableError}
+ *     If either Selenium-style visibility check or
+ *     pointer-interactability check fails.
+ * @throws {ElementClickInterceptedError}
+ *     If &lt;var>el&lt;/var> is obscured by another element and a click would
+ *     not hit, in &lt;var>specCompat&lt;/var> mode.
+ * @throws {ElementNotAccessibleError}
+ *     If &lt;var>strict&lt;/var> is true and element is not accessible.
+ * @throws {InvalidElementStateError}
+ *     If &lt;var>el&lt;/var> is not enabled.
+ */
+interaction.clickElement = function* (
+    el, strict = false, specCompat = false) {
+  const a11y = accessibility.get(strict);
+  if (element.isXULElement(el)) {
+    yield chromeClick(el, a11y);
+  } else if (specCompat) {
+    yield webdriverClickElement(el, a11y);
+  } else {
+    yield seleniumClickElement(el, a11y);
+  }
+};
+
+function* webdriverClickElement(el, a11y) {
+  const win = getWindow(el);
+
+  // step 3
+  if (el.localName == "input" &amp;&amp; el.type == "file") {
+    throw new InvalidArgumentError(
+        "Cannot click &lt;input type=file> elements");
+  }
+
+  let containerEl = element.getContainer(el);
+
+  // step 4
+  if (!element.isInView(containerEl)) {
+    element.scrollIntoView(containerEl);
+  }
+
+  // step 5
+  // TODO(ato): wait for containerEl to be in view
+
+  // step 6
+  // if we cannot bring the container element into the viewport
+  // there is no point in checking if it is pointer-interactable
+  if (!element.isInView(containerEl)) {
+    throw new ElementNotInteractableError(
+        error.pprint`Element ${el} could not be scrolled into view`);
+  }
+
+  // step 7
+  let rects = containerEl.getClientRects();
+  let clickPoint = element.getInViewCentrePoint(rects[0], win);
+
+  if (element.isObscured(containerEl)) {
+    throw new ElementClickInterceptedError(containerEl, clickPoint);
+  }
+
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
+
+  // step 8
+  if (el.localName == "option") {
+    interaction.selectOption(el);
+  } else {
+    event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
+  }
+
+  // step 9
+  yield interaction.flushEventLoop(win);
+
+  // step 10
+  // if the click causes navigation, the post-navigation checks are
+  // handled by the load listener in listener.js
+}
+
+function* chromeClick(el, a11y) {
+  if (!atom.isElementEnabled(el)) {
+    throw new InvalidElementStateError("Element is not enabled");
+  }
+
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
+
+  if (el.localName == "option") {
+    interaction.selectOption(el);
+  } else {
+    el.click();
+  }
+}
+
+function* seleniumClickElement(el, a11y) {
+  let win = getWindow(el);
+
+  let visibilityCheckEl  = el;
+  if (el.localName == "option") {
+    visibilityCheckEl = element.getContainer(el);
+  }
+
+  if (!element.isVisible(visibilityCheckEl)) {
+    throw new ElementNotInteractableError();
+  }
+
+  if (!atom.isElementEnabled(el)) {
+    throw new InvalidElementStateError("Element is not enabled");
+  }
+
+  yield a11y.getAccessible(el, true).then(acc => {
+    a11y.assertVisible(acc, el, true);
+    a11y.assertEnabled(acc, el, true);
+    a11y.assertActionable(acc, el);
+  });
+
+  if (el.localName == "option") {
+    interaction.selectOption(el);
+  } else {
+    let rects = el.getClientRects();
+    let centre = element.getInViewCentrePoint(rects[0], win);
+    let opts = {};
+    event.synthesizeMouseAtPoint(centre.x, centre.y, opts, win);
+  }
+}
+
+/**
+ * Select &lt;tt>&amp;lt;option&amp;gt;&lt;/tt> element in a &lt;tt>&amp;lt;select&amp;gt;&lt;/tt>
+ * list.
+ *
+ * Because the dropdown list of select elements are implemented using
+ * native widget technology, our trusted synthesised events are not able
+ * to reach them.  Dropdowns are instead handled mimicking DOM events,
+ * which for obvious reasons is not ideal, but at the current point in
+ * time considered to be good enough.
+ *
+ * @param {HTMLOptionElement} option
+ *     Option element to select.
+ *
+ * @throws {TypeError}
+ *     If &lt;var>el&lt;/var> is a XUL element or not an &lt;tt>&amp;lt;option&amp;gt;&lt;/tt>
+ *     element.
+ * @throws {Error}
+ *     If unable to find &lt;var>el&lt;/var>'s parent &lt;tt>&amp;lt;select&amp;gt;&lt;/tt>
+ *     element.
+ */
+interaction.selectOption = function(el) {
+  if (element.isXULElement(el)) {
+    throw new Error("XUL dropdowns not supported");
+  }
+  if (el.localName != "option") {
+    throw new TypeError("Invalid elements");
+  }
+
+  let containerEl = element.getContainer(el);
+
+  event.mouseover(containerEl);
+  event.mousemove(containerEl);
+  event.mousedown(containerEl);
+  event.focus(containerEl);
+  event.input(containerEl);
+
+  // toggle selectedness the way holding down control works
+  el.selected = !el.selected;
+
+  event.change(containerEl);
+  event.mouseup(containerEl);
+  event.click(containerEl);
+};
+
+/**
+ * Flushes the event loop by requesting an animation frame.
+ *
+ * This will wait for the browser to repaint before returning, typically
+ * flushing any queued events.
+ *
+ * If the document is unloaded during this request, the promise is
+ * rejected.
+ *
+ * @param {Window} win
+ *     Associated window.
+ *
+ * @return {Promise}
+ *     Promise is accepted once event queue is flushed, or rejected if
+ *     &lt;var>win&lt;/var> has closed or been unloaded before the queue can
+ *     be flushed.
+ */
+interaction.flushEventLoop = function* (win) {
+  return new Promise(resolve => {
+    let handleEvent = event => {
+      win.removeEventListener("beforeunload", this);
+      resolve();
+    };
+
+    if (win.closed) {
+      resolve();
+      return;
+    }
+
+    win.addEventListener("beforeunload", handleEvent);
+    win.requestAnimationFrame(handleEvent);
+  });
+};
+
+/**
+ * Appends &lt;var>path&lt;/var> to an &lt;tt>&amp;lt;input type=file&amp;gt;&lt;/tt>'s
+ * file list.
+ *
+ * @param {HTMLInputElement} el
+ *     An &lt;tt>&amp;lt;input type=file&amp;gt;&lt;/tt> element.
+ * @param {string} path
+ *     Full path to file.
+ */
+interaction.uploadFile = function* (el, path) {
+  let file = yield File.createFromFileName(path).then(file => {
+    return file;
+  }, () => {
+    return null;
+  });
+
+  if (!file) {
+    throw new InvalidArgumentError("File not found: " + path);
+  }
+
+  let fs = Array.prototype.slice.call(el.files);
+  fs.push(file);
+
+  // &lt;input type=file> opens OS widget dialogue
+  // which means the mousedown/focus/mouseup/click events
+  // occur before the change event
+  event.mouseover(el);
+  event.mousemove(el);
+  event.mousedown(el);
+  event.focus(el);
+  event.mouseup(el);
+  event.click(el);
+
+  el.mozSetFileArray(fs);
+
+  event.change(el);
+};
+
+/**
+ * Sets a form element's value.
+ *
+ * @param {DOMElement} el
+ *     An form element, e.g. input, textarea, etc.
+ * @param {string} value
+ *     The value to be set.
+ *
+ * @throws {TypeError}
+ *     If &lt;var>el&lt;/var> is not an supported form element.
+ */
+interaction.setFormControlValue = function* (el, value) {
+  if (!COMMON_FORM_CONTROLS.has(el.localName)) {
+    throw new TypeError("This function is for form elements only");
+  }
+
+  el.value = value;
+
+  if (INPUT_TYPES_NO_EVENT.has(el.type)) {
+    return;
+  }
+
+  event.input(el);
+  event.change(el);
+};
+
+/**
+ * Send keys to element.
+ *
+ * @param {DOMElement|XULElement} el
+ *     Element to send key events to.
+ * @param {Array.&lt;string>} value
+ *     Sequence of keystrokes to send to the element.
+ * @param {boolean} ignoreVisibility
+ *     Flag to enable or disable element visibility tests.
+ * @param {boolean=} [strict=false] strict
+ *     Enforce strict accessibility tests.
+ */
+interaction.sendKeysToElement = function(
+    el, value, ignoreVisibility, strict = false) {
+  let win = getWindow(el);
+  let a11y = accessibility.get(strict);
+  return a11y.getAccessible(el, true).then(acc => {
+    a11y.assertActionable(acc, el);
+    event.sendKeysToElement(value, el, {ignoreVisibility: false}, win);
+  });
+};
+
+/**
+ * Determine the element displayedness of an element.
+ *
+ * @param {DOMElement|XULElement} el
+ *     Element to determine displayedness of.
+ * @param {boolean=} [strict=false] strict
+ *     Enforce strict accessibility tests.
+ *
+ * @return {boolean}
+ *     True if element is displayed, false otherwise.
+ */
+interaction.isElementDisplayed = function(el, strict = false) {
+  let win = getWindow(el);
+  let displayed = atom.isElementDisplayed(el, win);
+
+  let a11y = accessibility.get(strict);
+  return a11y.getAccessible(el).then(acc => {
+    a11y.assertVisible(acc, el, displayed);
+    return displayed;
+  });
+};
+
+/**
+ * Check if element is enabled.
+ *
+ * @param {DOMElement|XULElement} el
+ *     Element to test if is enabled.
+ *
+ * @return {boolean}
+ *     True if enabled, false otherwise.
+ */
+interaction.isElementEnabled = function(el, strict = false) {
+  let enabled = true;
+  let win = getWindow(el);
+
+  if (element.isXULElement(el)) {
+    // check if XUL element supports disabled attribute
+    if (DISABLED_ATTRIBUTE_SUPPORTED_XUL.has(el.tagName.toUpperCase())) {
+      let disabled = atom.getElementAttribute(el, "disabled", win);
+      if (disabled &amp;&amp; disabled === "true") {
+        enabled = false;
+      }
+    }
+  } else {
+    enabled = atom.isElementEnabled(el, {frame: win});
+  }
+
+  let a11y = accessibility.get(strict);
+  return a11y.getAccessible(el).then(acc => {
+    a11y.assertEnabled(acc, el, enabled);
+    return enabled;
+  });
+};
+
+/**
+ * Determines if the referenced element is selected or not.
+ *
+ * This operation only makes sense on input elements of the Checkbox-
+ * and Radio Button states, or option elements.
+ *
+ * @param {DOMElement|XULElement} el
+ *     Element to test if is selected.
+ * @param {boolean=} [strict=false] strict
+ *     Enforce strict accessibility tests.
+ *
+ * @return {boolean}
+ *     True if element is selected, false otherwise.
+ */
+interaction.isElementSelected = function(el, strict = false) {
+  let selected = true;
+  let win = getWindow(el);
+
+  if (element.isXULElement(el)) {
+    let tagName = el.tagName.toUpperCase();
+    if (CHECKED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
+      selected = el.checked;
+    }
+    if (SELECTED_PROPERTY_SUPPORTED_XUL.has(tagName)) {
+      selected = el.selected;
+    }
+  } else {
+    selected = atom.isElementSelected(el, win);
+  }
+
+  let a11y = accessibility.get(strict);
+  return a11y.getAccessible(el).then(acc => {
+    a11y.assertSelected(acc, el, selected);
+    return selected;
+  });
+};
+
+function getWindow(el) {
+  return el.ownerGlobal;
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Wed Jul 26 2017 14:55:00 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

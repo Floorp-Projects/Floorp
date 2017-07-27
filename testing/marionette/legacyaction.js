@@ -18,6 +18,7 @@ this.EXPORTED_SYMBOLS = ["legacyaction"];
 
 const logger = Log.repository.getLogger("Marionette");
 
+/** @namespace */
 this.legacyaction = this.action = {};
 
 /**

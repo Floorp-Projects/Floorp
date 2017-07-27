@@ -186,7 +186,7 @@ var HistoryEntry = {
         endDate: new Date(msSinceEpoch + (item.end * 60 * 60 * 1000))
       };
       PlacesUtils.history.removeVisitsByFilter(filter)
-      .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex))
+      .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex.message))
       .then(result => { cb(null, result) }, err => { cb(err) });
       Async.waitForSyncCallback(cb);
     } else {
