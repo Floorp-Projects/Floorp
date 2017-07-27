@@ -35,9 +35,9 @@ struct CommonEventInfo {
   mozilla::Telemetry::Common::RecordedProcessType record_in_processes;
 
   // Convenience functions for accessing event strings.
-  const nsCString expiration_version() const;
-  const nsCString category() const;
-  const nsCString extra_key(uint32_t index) const;
+  const char* expiration_version() const;
+  const char* category() const;
+  const char* extra_key(uint32_t index) const;
 };
 
 struct EventInfo {
@@ -48,8 +48,8 @@ struct EventInfo {
   uint32_t method_offset;
   uint32_t object_offset;
 
-  const nsCString method() const;
-  const nsCString object() const;
+  const char* method() const;
+  const char* object() const;
 };
 
 } // namespace
