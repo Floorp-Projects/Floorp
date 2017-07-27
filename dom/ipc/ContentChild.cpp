@@ -985,12 +985,10 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // Handle the error which we got back from the parent process, if we got
   // one.
   if (NS_FAILED(rv)) {
-    PRenderFrameChild::Send__delete__(renderFrame);
     return rv;
   }
 
   if (!*aWindowIsNew) {
-    PRenderFrameChild::Send__delete__(renderFrame);
     return NS_ERROR_ABORT;
   }
 
@@ -1000,7 +998,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   }
 
   if (layersId == 0) { // if renderFrame is invalid.
-    PRenderFrameChild::Send__delete__(renderFrame);
     renderFrame = nullptr;
   }
 
