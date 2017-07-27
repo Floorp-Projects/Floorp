@@ -41,32 +41,35 @@ add_task(async function test_telemetry() {
     },
   });
 
-  let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
-  histogram.clear();
-  equal(histogram.snapshot().sum, 0,
-        `No data recorded for histogram: ${HISTOGRAM}.`);
+  clearHistograms();
+
+  let process = IS_OOP ? "content" : "parent";
+  ok(!(HISTOGRAM in getSnapshots(process)), `No data recorded for histogram: ${HISTOGRAM}.`);
 
   await extension1.startup();
-  equal(histogram.snapshot().sum, 0,
-        `No data recorded for histogram after startup: ${HISTOGRAM}.`);
+  ok(!(HISTOGRAM in getSnapshots(process)),
+     `No data recorded for histogram after startup: ${HISTOGRAM}.`);
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
   await extension1.awaitMessage("content-script-run");
-  let histogramSum = histogram.snapshot().sum;
-  ok(histogramSum > 0,
-     `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
+  await promiseTelemetryRecorded(HISTOGRAM, process, 1);
+
+  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 1,
+        `Data recorded for histogram: ${HISTOGRAM}.`);
 
   await contentPage.close();
   await extension1.unload();
 
   await extension2.startup();
-  equal(histogram.snapshot().sum, histogramSum,
+  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 1,
         `No data recorded for histogram after startup: ${HISTOGRAM}.`);
 
   contentPage = await ExtensionTestUtils.loadContentPage(`${BASE_URL}/file_sample.html`);
   await extension2.awaitMessage("content-script-run");
-  ok(histogram.snapshot().sum > histogramSum,
-     `Data recorded for second extension for histogram: ${HISTOGRAM}.`);
+  await promiseTelemetryRecorded(HISTOGRAM, process, 2);
+
+  equal(arraySum(getSnapshots(process)[HISTOGRAM].counts), 2,
+        `Data recorded for histogram: ${HISTOGRAM}.`);
 
   await contentPage.close();
   await extension2.unload();

@@ -57,7 +57,6 @@ public final class CodecProxy {
 
     private class CallbacksForwarder extends ICodecCallbacks.Stub {
         private final Callbacks mCallbacks;
-        private boolean mEndOfInput;
         private boolean mCodecProxyReleased;
 
         CallbacksForwarder(Callbacks callbacks) {
@@ -66,14 +65,14 @@ public final class CodecProxy {
 
         @Override
         public synchronized void onInputQueued(long timestamp) throws RemoteException {
-            if (!mEndOfInput && !mCodecProxyReleased) {
+            if (!mCodecProxyReleased) {
                 mCallbacks.onInputStatus(timestamp, true /* processed */);
             }
         }
 
         @Override
         public synchronized void onInputPending(long timestamp) throws RemoteException {
-            if (!mEndOfInput && !mCodecProxyReleased) {
+            if (!mCodecProxyReleased) {
                 mCallbacks.onInputStatus(timestamp, false /* processed */);
             }
         }
@@ -116,10 +115,6 @@ public final class CodecProxy {
             if (!mCodecProxyReleased) {
                 mCallbacks.onError(fatal);
             }
-        }
-
-        private void setEndOfInput(boolean end) {
-            mEndOfInput = end;
         }
 
         private synchronized void setCodecProxyReleased() {
@@ -203,7 +198,6 @@ public final class CodecProxy {
         }
 
         boolean eos = info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM;
-        mCallbacks.setEndOfInput(eos);
 
         if (eos) {
             return sendInput(Sample.EOS);

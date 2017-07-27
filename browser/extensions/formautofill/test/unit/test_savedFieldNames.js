@@ -24,18 +24,15 @@ add_task(async function test_profileSavedFieldNames_observe() {
 
   await formAutofillParent.init();
 
-  // profile added => Need to trigger updateValidFields
-  formAutofillParent.observe(null, "formautofill-storage-changed", "add");
-  do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
+  // profile changed => Need to trigger updateValidFields
+  ["add", "update", "remove", "reconcile", "merge"].forEach(event => {
+    formAutofillParent.observe(null, "formautofill-storage-changed", "add");
+    do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
+  });
 
-  // profile removed => Need to trigger updateValidFields
+  // profile metadata updated => no need to trigger updateValidFields
   formAutofillParent._updateSavedFieldNames.reset();
-  formAutofillParent.observe(null, "formautofill-storage-changed", "remove");
-  do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
-
-  // profile updated => no need to trigger updateValidFields
-  formAutofillParent._updateSavedFieldNames.reset();
-  formAutofillParent.observe(null, "formautofill-storage-changed", "update");
+  formAutofillParent.observe(null, "formautofill-storage-changed", "notifyUsed");
   do_check_eq(formAutofillParent._updateSavedFieldNames.called, false);
 });
 

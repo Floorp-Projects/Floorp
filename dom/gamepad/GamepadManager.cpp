@@ -641,27 +641,29 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
                               double aIntensity, double aDuration,
                               nsIGlobalObject* aGlobal, ErrorResult& aRv)
 {
+  const char* kGamepadHapticEnabledPref = "dom.gamepad.haptic_feedback.enabled";
   RefPtr<Promise> promise = Promise::Create(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-
-  if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
-    if (gfx::VRManagerChild::IsCreated()) {
-      const uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
-      gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
-      vm->AddPromise(mPromiseID, promise);
-      vm->SendVibrateHaptic(index, aHapticIndex,
-                            aIntensity, aDuration,
-                            mPromiseID);
-    }
-  } else {
-    for (const auto& channelChild: mChannelChildren) {
-      channelChild->AddPromise(mPromiseID, promise);
-      channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
-                                      aIntensity, aDuration,
-                                      mPromiseID);
+  if (Preferences::GetBool(kGamepadHapticEnabledPref)) {
+    if (aControllerIdx >= VR_GAMEPAD_IDX_OFFSET) {
+      if (gfx::VRManagerChild::IsCreated()) {
+        const uint32_t index = aControllerIdx - VR_GAMEPAD_IDX_OFFSET;
+        gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
+        vm->AddPromise(mPromiseID, promise);
+        vm->SendVibrateHaptic(index, aHapticIndex,
+                              aIntensity, aDuration,
+                              mPromiseID);
+      }
+    } else {
+      for (const auto& channelChild: mChannelChildren) {
+        channelChild->AddPromise(mPromiseID, promise);
+        channelChild->SendVibrateHaptic(aControllerIdx, aHapticIndex,
+                                        aIntensity, aDuration,
+                                        mPromiseID);
+      }
     }
   }
 
@@ -672,6 +674,11 @@ GamepadManager::VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
 void
 GamepadManager::StopHaptics()
 {
+  const char* kGamepadHapticEnabledPref = "dom.gamepad.haptic_feedback.enabled";
+  if (!Preferences::GetBool(kGamepadHapticEnabledPref)) {
+    return;
+  }
+
   for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
     const uint32_t gamepadIndex = iter.UserData()->HashKey();
     if (gamepadIndex >= VR_GAMEPAD_IDX_OFFSET) {

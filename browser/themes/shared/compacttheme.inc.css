@@ -19,6 +19,9 @@
 }
 
 :root:-moz-lwtheme-brighttext {
+
+%ifndef MOZ_PHOTON_THEME
+
   /* Chrome */
   --chrome-background-color: #272b35;
   --chrome-color: #F5F7FA;
@@ -37,12 +40,40 @@
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #5675B9;
   --tab-selection-box-shadow: none;
-%ifndef MOZ_PHOTON_THEME
+
   --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
+
+
+%else
+
+  /* Chrome */
+  --chrome-background-color: hsl(240, 5%, 5%);
+  --chrome-color: #F5F7FA;
+  --chrome-secondary-background-color: hsl(240, 1%, 20%);
+  --chrome-navigator-toolbox-separator-color: hsla(240, 5%, 5%, .1);
+  --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
+  --chrome-nav-buttons-background: hsla(240, 5%, 5%, .1);
+  --chrome-nav-buttons-hover-background: hsla(240, 5%, 5%, .15);
+  --chrome-nav-bar-controls-border-color: hsla(240, 5%, 5%, .3);
+  --chrome-selection-color: #fff;
+  --chrome-selection-background-color: #5675B9;
+
+  /* Tabs */
+  --tab-hover-background-color: hsla(240, 9%, 98%, .1);
+  --tab-selection-color: #f5f7fa;
+  --tab-selection-background-color: hsl(240, 1%, 20%);
+  --tab-selection-box-shadow: none;
+
+  --toolbarbutton-icon-fill-inverted: rgba(249, 249, 250, .7);
+
 %endif
 
   /* Url and search bars */
+%ifndef MOZ_PHOTON_THEME
   --url-and-searchbar-background-color: #171B1F;
+%else
+  --url-and-searchbar-background-color: hsla(0, 0%, 100%, .1);
+%endif
   --urlbar-separator-color: #5F6670;
   --urlbar-dropmarker-url: url("chrome://browser/skin/compacttheme/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
