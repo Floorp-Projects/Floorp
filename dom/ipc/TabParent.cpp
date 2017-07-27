@@ -180,7 +180,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   // When the input event queue is disabled, we don't need to handle the case
   // that some input events are dispatched before PBrowserConstructor.
   mIsReadyToHandleInputEvents =
-    !Preferences::GetBool("prioritized_input_events.enabled", false);
+    !Preferences::GetBool("input_event_queue.supported", false);
 }
 
 TabParent::~TabParent()
