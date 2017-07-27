@@ -46,7 +46,7 @@ typedef float nscoord;
 #define nscoord_MAX NS_IEEEPositiveInfinity()
 #else
 typedef int32_t nscoord;
-#define nscoord_MAX nscoord((1 << 30) - 1)
+#define nscoord_MAX nscoord(1 << 30)
 #endif
 
 #define nscoord_MIN (-nscoord_MAX)
@@ -132,8 +132,8 @@ inline nscoord _nscoordSaturatingMultiply(nscoord aCoord, float aScale,
 #else
   float product = aCoord * aScale;
   if (requireNotNegative ? aCoord > 0 : (aCoord > 0) == (aScale > 0))
-    return NSToCoordRoundWithClamp(std::min<float>((float)nscoord_MAX, product));
-  return NSToCoordRoundWithClamp(std::max<float>((float)nscoord_MIN, product));
+    return NSToCoordRoundWithClamp(std::min<float>(nscoord_MAX, product));
+  return NSToCoordRoundWithClamp(std::max<float>(nscoord_MIN, product));
 #endif
 }
 
