@@ -210,6 +210,9 @@ function checkPopup(popup, notifyObj) {
        "main action label matches");
     is(notification.getAttribute("buttonaccesskey"),
        notifyObj.mainAction.accessKey, "main action accesskey matches");
+    is(notification.getAttribute("buttonhighlight"),
+       (!notifyObj.mainAction.disableHighlight).toString(),
+       "main action highlight matches");
   }
   if (notifyObj.secondaryActions && notifyObj.secondaryActions.length > 0) {
     let secondaryAction = notifyObj.secondaryActions[0];
