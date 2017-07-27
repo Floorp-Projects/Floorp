@@ -362,7 +362,7 @@ private:
 class MP4Stream : public mp4_demuxer::Stream
 {
 public:
-  explicit MP4Stream(MediaResource* aResource);
+  explicit MP4Stream(SourceBufferResource* aResource);
   virtual ~MP4Stream();
   bool ReadAt(int64_t aOffset,
               void* aBuffer,
@@ -375,10 +375,10 @@ public:
   bool Length(int64_t* aSize) override;
 
 private:
-  MediaResourceIndex mResource;
+  RefPtr<SourceBufferResource> mResource;
 };
 
-MP4Stream::MP4Stream(MediaResource* aResource)
+MP4Stream::MP4Stream(SourceBufferResource* aResource)
   : mResource(aResource)
 {
   MOZ_COUNT_CTOR(MP4Stream);
@@ -405,7 +405,7 @@ MP4Stream::CachedReadAt(int64_t aOffset,
                         size_t aCount,
                         size_t* aBytesRead)
 {
-  nsresult rv = mResource.GetResource()->ReadFromCache(
+  nsresult rv = mResource->ReadFromCache(
     reinterpret_cast<char*>(aBuffer), aOffset, aCount);
   if (NS_FAILED(rv)) {
     *aBytesRead = 0;
@@ -418,9 +418,9 @@ MP4Stream::CachedReadAt(int64_t aOffset,
 bool
 MP4Stream::Length(int64_t* aSize)
 {
-  if (mResource.GetLength() < 0)
+  if (mResource->GetLength() < 0)
     return false;
-  *aSize = mResource.GetLength();
+  *aSize = mResource->GetLength();
   return true;
 }
 
