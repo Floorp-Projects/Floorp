@@ -96,6 +96,10 @@ class TTest(object):
         if browser_config['stylo']:
             setup.env['STYLO_FORCE_ENABLED'] = 1
 
+        # During the Stylo transition, measure different number of threads
+        if browser_config.get('stylothreads', 0) > 0:
+            setup.env['STYLO_THREADS'] = browser_config['stylothreads']
+
         test_config['url'] = utils.interpolate(
             test_config['url'],
             profile=setup.profile_dir,
