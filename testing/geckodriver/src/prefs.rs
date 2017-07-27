@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 78] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -17,10 +17,6 @@ lazy_static! {
         //
         // (bug 1176798, bug 1177018, bug 1210465)
         ("apz.content_response_timeout", Pref::new(60000)),
-
-        // Enable the dump function, which sends messages to the system
-        // console
-        ("browser.dom.window.dump.enabled", Pref::new(true)),
 
         // Indicate that the download panel has been shown once so
         // that whichever download test runs first does not show the popup
