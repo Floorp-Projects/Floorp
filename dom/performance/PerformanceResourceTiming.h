@@ -168,8 +168,14 @@ public:
     mDecodedBodySize = aDecodedBodySize;
   }
 
+  size_t
+  SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
 protected:
   virtual ~PerformanceResourceTiming();
+
+  size_t
+  SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
   nsString mInitiatorType;
   nsString mNextHopProtocol;
