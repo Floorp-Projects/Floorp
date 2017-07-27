@@ -41,7 +41,7 @@ declare_args() {
   # safe browsing feature. Safe browsing can be compiled in 3 different levels:
   # 0 disables it, 1 enables it fully, and 2 enables mobile protection via an
   # external API.
-  if (is_ios || is_chromecast) {
+  if (is_ios || is_chromecast || build_with_mozilla) {
     safe_browsing_mode = 0
   } else if (is_android) {
     safe_browsing_mode = 2
@@ -55,7 +55,7 @@ declare_args() {
   fieldtrial_testing_like_official_build = is_chrome_branded
 
   # libudev usage. This currently only affects the content layer.
-  use_udev = is_linux && !is_chromecast
+  use_udev = is_linux && !is_chromecast && !build_with_mozilla
 
   use_dbus = is_linux && !is_chromecast
 

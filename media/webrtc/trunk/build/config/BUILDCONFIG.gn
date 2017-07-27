@@ -122,6 +122,11 @@ if (current_os == "") {
 # - Don't call exec_script inside declare_args. This will execute the script
 #   even if the value is overridden, which is wasteful. See first bullet.
 
+# Enable to use the Mozilla internal settings.
+declare_args() {
+  build_with_mozilla = true
+}
+
 declare_args() {
   # Set to enable the official build level of optimization. This has nothing
   # to do with branding, but enables an additional level of optimization above
@@ -165,7 +170,7 @@ declare_args() {
   # For more information see
   # https://chromium.googlesource.com/chromium/src/+/master/docs/component_build.md
   is_component_build =
-      is_debug && current_os != "ios" && current_os != "fuchsia"
+      is_debug && current_os != "ios" && current_os != "fuchsia" && !build_with_mozilla
 }
 
 assert(!(is_debug && is_official_build), "Can't do official debug builds")
