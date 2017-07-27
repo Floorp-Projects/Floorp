@@ -136,6 +136,7 @@ private:
 
     nsresult InitializeSocketTransportService();
     nsresult InitializeNetworkLinkService();
+    nsresult InitializeProtocolProxyService();
 
     // consolidated helper function
     void LookupProxyInfo(nsIURI *aURI, nsIURI *aProxyURI, uint32_t aProxyFlags,
