@@ -12,7 +12,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/InputEventStatistics.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Preferences.h"
 #ifdef MOZ_CANARY
@@ -376,14 +375,6 @@ nsThreadManager::SpinEventLoopUntilEmpty()
     (void)NS_ProcessNextEvent(thread, false);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThreadManager::GetSystemGroupEventTarget(nsIEventTarget** aTarget)
-{
-  nsCOMPtr<nsIEventTarget> target = SystemGroup::EventTargetFor(TaskCategory::Other);
-  target.forget(aTarget);
   return NS_OK;
 }
 
