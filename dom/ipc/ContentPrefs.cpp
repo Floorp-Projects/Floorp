@@ -105,6 +105,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "javascript.options.native_regexp",
   "javascript.options.parallel_parsing",
   "javascript.options.shared_memory",
+  "javascript.options.streams",
   "javascript.options.strict",
   "javascript.options.strict.debug",
   "javascript.options.throw_on_asmjs_validation_failure",
