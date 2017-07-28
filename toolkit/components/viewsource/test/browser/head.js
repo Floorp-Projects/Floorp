@@ -3,7 +3,7 @@
  */
 
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm", this);
 
 const WINDOW_TYPE = "navigator:view-source";
 
