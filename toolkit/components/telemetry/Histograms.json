@@ -13621,5 +13621,48 @@
     "bug_numbers": [1274919],
     "description": "Measure the time how long the cursor is hovering before opening the unselcted tab. Only record the data if someone requests for sending unselected tab hover msg.",
     "releaseChannelCollection": "opt-out"
+  },
+  "WEBVR_USERS_VIEW_IN": {
+    "record_in_processes": ["main", "gpu", "content"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1306156],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 3,
+    "releaseChannelCollection": "opt-out",
+    "description": "The amount of users who view VR content in: 2D=0, Oculus=1, OpenVR=2."
+  },
+  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_2D": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1306156],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The amount of time spend(ms) for users who view VR content in 2D."
+  },
+  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_OCULUS": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1306156],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The amount of time spend(ms) for users who view VR content in Oculus."
+  },
+  "WEBVR_TIME_SPEND_FOR_VIEWING_IN_OPENVR": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1306156],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The amount of time spend(ms) for users who view VR content in OpenVR."
   }
 }

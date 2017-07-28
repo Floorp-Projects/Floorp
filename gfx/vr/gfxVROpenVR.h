@@ -62,6 +62,7 @@ protected:
   ::vr::IVRChaperone *mVRChaperone;
   ::vr::IVRCompositor *mVRCompositor;
 
+  TimeStamp mPresentationStart;
   bool mIsPresenting;
 
   void UpdateStageParameters();
