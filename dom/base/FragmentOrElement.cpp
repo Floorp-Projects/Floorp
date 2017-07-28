@@ -2497,15 +2497,15 @@ FragmentOrElement::FireNodeRemovedForChildren()
 }
 
 size_t
-FragmentOrElement::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+FragmentOrElement::SizeOfExcludingThis(SizeOfState& aState) const
 {
   size_t n = 0;
-  n += nsIContent::SizeOfExcludingThis(aMallocSizeOf);
-  n += mAttrsAndChildren.SizeOfExcludingThis(aMallocSizeOf);
+  n += nsIContent::SizeOfExcludingThis(aState);
+  n += mAttrsAndChildren.SizeOfExcludingThis(aState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
-    n += slots->SizeOfIncludingThis(aMallocSizeOf);
+    n += slots->SizeOfIncludingThis(aState.mMallocSizeOf);
   }
 
   return n;

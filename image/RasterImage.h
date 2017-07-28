@@ -167,7 +167,7 @@ public:
   // Methods inherited from Image
   virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override;
 
-  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
+  virtual size_t SizeOfSourceWithComputedFallback(SizeOfState& aState)
     const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
                                      MallocSizeOf aMallocSizeOf) const override;
