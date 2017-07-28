@@ -200,7 +200,7 @@ var IdentityHandler = {
         this._overrideService.hasMatchingOverride(lastLocation.hostname,
                                                   (lastLocation.port || 443),
                                                   cert, {}, {})) {
-      result.security_exception = true;
+      result.securityException = true;
     }
     return result;
   },
@@ -297,7 +297,6 @@ class GeckoViewProgress extends GeckoViewModule {
 
     let message = {
       type: "GeckoView:SecurityChanged",
-      status: aState,
       identity: identity
     };
 
