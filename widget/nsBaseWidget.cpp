@@ -1286,6 +1286,23 @@ nsBaseWidget::CreateCompositorSession(int aWidth,
       gfx::IntSize(aWidth, aHeight),
       &retry);
 
+    if (lm->AsWebRenderLayerManager() && mCompositorSession) {
+      TextureFactoryIdentifier textureFactoryIdentifier;
+      lm->AsWebRenderLayerManager()->Initialize(mCompositorSession->GetCompositorBridgeChild(),
+                                                wr::AsPipelineId(mCompositorSession->RootLayerTreeId()),
+                                                &textureFactoryIdentifier);
+      if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
+        retry = true;
+        DestroyCompositor();
+        // Disable WebRender
+        gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
+          gfx::FeatureStatus::Unavailable,
+          "WebRender initialization failed",
+          NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_INITIALIZE"));
+        gfx::gfxVars::SetUseWebRender(false);
+      }
+    }
+
     // We need to retry in a loop because the act of failing to create the
     // compositor can change our state (e.g. disable WebRender).
     if (mCompositorSession || !retry) {
@@ -1347,10 +1364,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   if (lm->AsWebRenderLayerManager()) {
-    TextureFactoryIdentifier textureFactoryIdentifier;
-    lm->AsWebRenderLayerManager()->Initialize(mCompositorBridgeChild,
-                                              wr::AsPipelineId(mCompositorSession->RootLayerTreeId()),
-                                              &textureFactoryIdentifier);
+    TextureFactoryIdentifier textureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
+    MOZ_ASSERT(textureFactoryIdentifier.mParentBackend == LayersBackend::LAYERS_WR);
     ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
     gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
   }
