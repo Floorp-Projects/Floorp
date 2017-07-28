@@ -305,8 +305,7 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
     """
     cb = get_callbacks().get(callback, None)
     if not cb:
-        raise Exception('Unknown callback: {}. Known callbacks: {}'.format(
-            callback, get_callbacks().keys()))
+        raise Exception('Unknown callback: {}'.format(callback))
 
     if test:
         util.testing = True
