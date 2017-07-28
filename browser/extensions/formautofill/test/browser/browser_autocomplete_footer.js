@@ -21,7 +21,7 @@ add_task(async function setup_storage() {
 
 add_task(async function test_click_on_footer() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
-    const {autoCompletePopup, autoCompletePopup: {richlistbox: itemsBox}} = browser;
+    const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
 
     await openPopupOn(browser, "#organization");
     // Click on the footer
@@ -31,17 +31,13 @@ add_task(async function test_click_on_footer() {
     await BrowserTestUtils.removeTab(await prefTabPromise);
     ok(true, "Tab: preferences#privacy was successfully opened by clicking on the footer");
 
-    // Ensure the popup is closed before entering the next test.
-    await ContentTask.spawn(browser, {}, async function() {
-      content.document.getElementById("organization").blur();
-    });
-    await BrowserTestUtils.waitForCondition(() => !autoCompletePopup.popupOpen);
+    await closePopup(browser);
   });
 });
 
 add_task(async function test_press_enter_on_footer() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
-    const {autoCompletePopup, autoCompletePopup: {richlistbox: itemsBox}} = browser;
+    const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
 
     await openPopupOn(browser, "#organization");
     // Navigate to the footer and press enter.
@@ -54,17 +50,13 @@ add_task(async function test_press_enter_on_footer() {
     await BrowserTestUtils.removeTab(await prefTabPromise);
     ok(true, "Tab: preferences#privacy was successfully opened by pressing enter on the footer");
 
-    // Ensure the popup is closed before entering the next test.
-    await ContentTask.spawn(browser, {}, async function() {
-      content.document.getElementById("organization").blur();
-    });
-    await BrowserTestUtils.waitForCondition(() => !autoCompletePopup.popupOpen);
+    await closePopup(browser);
   });
 });
 
 add_task(async function test_phishing_warning() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async function(browser) {
-    const {autoCompletePopup, autoCompletePopup: {richlistbox: itemsBox}} = browser;
+    const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
 
     await openPopupOn(browser, "#street-address");
     const warningBox = itemsBox.querySelector(".autocomplete-richlistitem:last-child")._warningTextBox;
@@ -78,10 +70,6 @@ add_task(async function test_phishing_warning() {
     await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
     await expectWarningText(browser, "Also autofills company, phone, email");
 
-    // Ensure the popup is closed before entering the next test.
-    await ContentTask.spawn(browser, {}, async function() {
-      content.document.getElementById("street-address").blur();
-    });
-    await BrowserTestUtils.waitForCondition(() => !autoCompletePopup.popupOpen);
+    await closePopup(browser);
   });
 });
