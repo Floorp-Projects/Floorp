@@ -1021,7 +1021,9 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
 nsresult
 HTMLFormElement::WalkFormElements(HTMLFormSubmission* aFormSubmission)
 {
-  nsTArray<nsGenericHTMLFormElement*> sortedControls;
+  // This shouldn't be called recursively, so use a rather large value
+  // for the preallocated buffer.
+  AutoTArray<nsGenericHTMLFormElement*, 100> sortedControls;
   nsresult rv = mControls->GetSortedControls(sortedControls);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1868,7 +1870,9 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
 {
   bool ret = true;
 
-  nsTArray<nsGenericHTMLFormElement*> sortedControls;
+  // This shouldn't be called recursively, so use a rather large value
+  // for the preallocated buffer.
+  AutoTArray<nsGenericHTMLFormElement*, 100> sortedControls;
   if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
     return false;
   }
