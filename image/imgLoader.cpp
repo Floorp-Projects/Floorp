@@ -140,8 +140,7 @@ public:
         // memory.  This function's measurement is secondary -- the result doesn't
         // go in the "explicit" tree -- so we use moz_malloc_size_of instead of
         // ImagesMallocSizeOf to prevent DMD from seeing it reported twice.
-        SizeOfState state(moz_malloc_size_of);
-        ImageMemoryCounter counter(image, state, /* aIsUsed = */ true);
+        ImageMemoryCounter counter(image, moz_malloc_size_of, /* aIsUsed = */ true);
 
         n += counter.Values().DecodedHeap();
         n += counter.Values().DecodedNonHeap();
@@ -410,8 +409,7 @@ private:
       return;
     }
 
-    SizeOfState state(ImagesMallocSizeOf);
-    ImageMemoryCounter counter(image, state, aIsUsed);
+    ImageMemoryCounter counter(image, ImagesMallocSizeOf, aIsUsed);
 
     aArray->AppendElement(Move(counter));
   }

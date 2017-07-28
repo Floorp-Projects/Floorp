@@ -42,8 +42,7 @@ public:
     mDeathGrip = nullptr;
   }
 
-  virtual size_t SizeOfExcludingThis(mozilla::SizeOfState& aState)
-    const override
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
   {
     return 0;   // the value shouldn't matter
   }

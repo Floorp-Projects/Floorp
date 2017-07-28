@@ -144,9 +144,10 @@ public:
   bool Contains(KeyType aKey) const { return !!GetEntry(aKey); }
 
   /**
-   * Infallibly get the entry associated with a key, or create a new entry,
+   * Get the entry associated with a key, or create a new entry,
    * @param     aKey the key to retrieve
-   * @return    pointer to the entry retrieved; never nullptr
+   * @return    pointer to the entry class retreived; nullptr only if memory
+                can't be allocated
    */
   EntryType* PutEntry(KeyType aKey)
   {
@@ -154,12 +155,6 @@ public:
     return static_cast<EntryType*>(mTable.Add(EntryType::KeyToPointer(aKey)));
   }
 
-  /**
-   * Fallibly get the entry associated with a key, or create a new entry,
-   * @param     aKey the key to retrieve
-   * @return    pointer to the entry retrieved; nullptr only if memory can't
-   *            be allocated
-   */
   MOZ_MUST_USE
   EntryType* PutEntry(KeyType aKey, const fallible_t&)
   {

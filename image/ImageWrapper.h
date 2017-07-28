@@ -26,7 +26,7 @@ public:
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
 
   virtual size_t
-    SizeOfSourceWithComputedFallback(SizeOfState& aState) const override;
+    SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const override;
   virtual void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
                                      MallocSizeOf aMallocSizeOf) const override;
 
