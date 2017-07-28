@@ -16,8 +16,9 @@
 #include "jsstr.h"
 
 #include "gc/Barrier.h"
-#include "gc/Heap.h"
 #include "gc/Cell.h"
+#include "gc/Heap.h"
+#include "gc/Nursery.h"
 #include "gc/Rooting.h"
 #include "js/CharacterEncoding.h"
 #include "js/RootingAPI.h"
@@ -545,13 +546,17 @@ class JSString : public js::gc::Cell
     static const JS::TraceKind TraceKind = JS::TraceKind::String;
 
     JS::Zone* zone() const {
+        if (isTenured())
             return asTenured().zone();
+        return js::Nursery::getStringZone(this);
     }
 
     // Implement TenuredZone members needed for template instantiations.
 
     JS::Zone* zoneFromAnyThread() const {
+        if (isTenured())
             return asTenured().zoneFromAnyThread();
+        return js::Nursery::getStringZone(this);
     }
 
     void fixupAfterMovingGC() {}
@@ -601,20 +606,33 @@ class JSString : public js::gc::Cell
     void traceChildren(JSTracer* trc);
 
     static MOZ_ALWAYS_INLINE void readBarrier(JSString* thing) {
-        if (thing->isPermanentAtom())
+        if (thing->isPermanentAtom() || js::gc::IsInsideNursery(thing))
             return;
-
         js::gc::TenuredCell::readBarrier(&thing->asTenured());
     }
 
     static MOZ_ALWAYS_INLINE void writeBarrierPre(JSString* thing) {
-        if (!thing || thing->isPermanentAtom())
+        if (!thing || thing->isPermanentAtom() || js::gc::IsInsideNursery(thing))
             return;
 
         js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
     }
 
-    static void writeBarrierPost(void* ptr, JSString* prev, JSString* next) {};
+    static void writeBarrierPost(void* cellp, JSString* prev, JSString* next) {
+        // See JSObject::writeBarrierPost for a description of the logic here.
+        MOZ_ASSERT(cellp);
+
+        js::gc::StoreBuffer* buffer;
+        if (next && (buffer = next->storeBuffer())) {
+            if (prev && prev->storeBuffer())
+                return;
+            buffer->putCell(static_cast<js::gc::Cell**>(cellp));
+            return;
+        }
+
+        if (prev && (buffer = prev->storeBuffer()))
+            buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
+    }
 
   private:
     JSString() = delete;
