@@ -230,9 +230,8 @@ public class FormHistoryRepositorySession extends
            DeletedFormHistory.TIME_DELETED + " <= " + Long.toString(end); // Milliseconds.
   }
 
-  @Override
-  public void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
-    Logger.trace(LOG_TAG, "Running fetchSince(" + timestamp + ").");
+  private void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
+    Logger.trace(LOG_TAG, "Running fetchSince(" + timestamp + ")");
 
     /*
      * We need to be careful about the timestamp we complete the fetch with. If
@@ -245,14 +244,14 @@ public class FormHistoryRepositorySession extends
     Callable<Cursor> regularCallable = new Callable<Cursor>() {
       @Override
       public Cursor call() throws Exception {
-        return regularHelper.safeQuery(formsProvider, ".fetchSince(regular)", null, regularBetween(timestamp, sharedEnd), null, null);
+        return regularHelper.safeQuery(formsProvider, ".fetchModified(regular)", null, regularBetween(timestamp, sharedEnd), null, null);
       }
     };
 
     Callable<Cursor> deletedCallable = new Callable<Cursor>() {
       @Override
       public Cursor call() throws Exception {
-        return deletedHelper.safeQuery(formsProvider, ".fetchSince(deleted)", null, deletedBetween(timestamp, sharedEnd), null, null);
+        return deletedHelper.safeQuery(formsProvider, ".fetchModified(deleted)", null, deletedBetween(timestamp, sharedEnd), null, null);
       }
     };
 
@@ -263,9 +262,14 @@ public class FormHistoryRepositorySession extends
   }
 
   @Override
+  public void fetchModified(final RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
+  }
+
+  @Override
   public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
     Logger.trace(LOG_TAG, "Running fetchAll.");
-    fetchSince(0, delegate);
+    this.fetchSince(-1, delegate);
   }
 
   @Override

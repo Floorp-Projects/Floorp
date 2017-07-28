@@ -118,9 +118,7 @@ public class FennecTabsRepository extends Repository {
       return null;
     }
 
-    @Override
-    public void fetchSince(final long timestamp,
-                           final RepositorySessionFetchRecordsDelegate delegate) {
+    private void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
       if (tabsProvider == null) {
         throw new IllegalArgumentException("tabsProvider was null.");
       }
@@ -140,8 +138,8 @@ public class FennecTabsRepository extends Repository {
           // but only process the record if the timestamp is sufficiently
           // recent, or if the client data has been modified.
           try {
-            final Cursor cursor = tabsHelper.safeQuery(tabsProvider, ".fetchSince()", null,
-                localClientSelection, localClientSelectionArgs, positionAscending);
+            final Cursor cursor = tabsHelper.safeQuery(tabsProvider, ".fetchModified()", null,
+                    localClientSelection, localClientSelectionArgs, positionAscending);
             try {
               final String localClientGuid = clientsDataDelegate.getAccountGUID();
               final String localClientName = clientsDataDelegate.getClientName();
@@ -151,7 +149,7 @@ public class FennecTabsRepository extends Repository {
               final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, localClientGuid, localClientName, localClientLastModified);
 
               if (tabsRecord.lastModified >= timestamp ||
-                  clientsDataDelegate.getLastModifiedTimestamp() >= timestamp) {
+                      clientsDataDelegate.getLastModifiedTimestamp() >= timestamp) {
                 delegate.onFetchedRecord(tabsRecord);
               }
             } finally {
@@ -166,6 +164,16 @@ public class FennecTabsRepository extends Repository {
       };
 
       delegateQueue.execute(command);
+    }
+
+    @Override
+    public void fetchModified(final RepositorySessionFetchRecordsDelegate delegate) {
+      this.fetchSince(getLastSyncTimestamp(), delegate);
+    }
+
+    @Override
+    public void fetchAll(final RepositorySessionFetchRecordsDelegate delegate) {
+      this.fetchSince(-1, delegate);
     }
 
     private long getLocalClientLastModified() {
@@ -198,11 +206,6 @@ public class FennecTabsRepository extends Repository {
           delegate.onFetchCompleted(now());
         }
       });
-    }
-
-    @Override
-    public void fetchAll(final RepositorySessionFetchRecordsDelegate delegate) {
-      fetchSince(0, delegate);
     }
 
     private static final String TABS_CLIENT_GUID_IS = BrowserContract.Tabs.CLIENT_GUID + " = ?";

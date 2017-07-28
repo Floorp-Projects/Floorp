@@ -59,7 +59,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
   public void testFetchSinceOneRecord() {
     RepositorySession session = createAndBeginSession();
 
-    // Passwords fetchSince checks timePasswordChanged, not insertion time.
+    // Passwords fetchModified checks timePasswordChanged, not insertion time.
     PasswordRecord record1 = PasswordHelpers.createPassword1();
     long timeModified1 = updatePassword(NEW_PASSWORD1, record1);
     performWait(storeRunnable(session, record1));
@@ -423,7 +423,7 @@ public class TestPasswordsRepository extends AndroidSyncTestCase {
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, new ExpectFetchSinceDelegate(timestamp, expected));
+        session.fetchModified(new ExpectFetchSinceDelegate(timestamp, expected));
       }
     };
   }

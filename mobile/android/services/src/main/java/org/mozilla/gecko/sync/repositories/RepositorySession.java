@@ -27,7 +27,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
  * <li>Populate with saved information by calling {@link #unbundle(RepositorySessionBundle)}.</li>
  * <li>Begin a sync by calling {@link #begin(RepositorySessionBeginDelegate)}. <code>begin()</code>
  *   is an appropriate place to initialize expensive resources.</li>
- * <li>Perform operations such as {@link #fetchSince(long, RepositorySessionFetchRecordsDelegate)} and
+ * <li>Perform operations such as {@link #fetchModified(RepositorySessionFetchRecordsDelegate)} and
  *   {@link #store(Record)}.</li>
  * <li>Finish by calling {@link #finish(RepositorySessionFinishDelegate)}, retrieving and storing
  *   the current bundle.</li>
@@ -83,7 +83,12 @@ public abstract class RepositorySession {
     this.repository = repository;
   }
 
-  public abstract void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate);
+  /**
+   * Fetch modified records, letting repositories define what "modified" means to them.
+   *
+   * @param delegate
+   */
+  public abstract void fetchModified(RepositorySessionFetchRecordsDelegate delegate);
   public abstract void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException;
   public abstract void fetchAll(RepositorySessionFetchRecordsDelegate delegate);
 

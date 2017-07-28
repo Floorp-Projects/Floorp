@@ -6,7 +6,6 @@ package org.mozilla.gecko.sync.synchronizer;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.VisibleForTesting;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -194,7 +193,7 @@ public class RecordsChannel implements
     this.consumer = new ConcurrentRecordConsumer(this);
     ThreadPool.run(this.consumer);
     waitingForQueueDone = true;
-    source.fetchSince(source.getLastSyncTimestamp(), this);
+    source.fetchModified(this);
   }
 
   /**

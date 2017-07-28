@@ -148,7 +148,7 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, new ExpectFetchDelegate(expectedRecords));
+        session.fetchModified(new ExpectFetchDelegate(expectedRecords));
       }
     };
   }

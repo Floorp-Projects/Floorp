@@ -46,17 +46,20 @@ public class Server15RepositorySession extends RepositorySession {
             serverRepository.authHeaderProvider);
   }
 
-  @Override
-  public void fetchSince(long sinceTimestamp,
-                         RepositorySessionFetchRecordsDelegate delegate) {
+  private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
     BatchingDownloaderController.resumeFetchSinceIfPossible(
             this.downloader,
             this.serverRepository.stateProvider,
             delegate,
-            sinceTimestamp,
+            timestamp,
             serverRepository.getBatchLimit(),
             serverRepository.getSortOrder()
     );
+  }
+
+  @Override
+  public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
   }
 
   @Override

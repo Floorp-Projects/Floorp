@@ -196,7 +196,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, preparedExpectFetchSinceDelegate(timestamp, expected));
+        session.fetchModified(preparedExpectFetchSinceDelegate(timestamp, expected));
       }
     };
   }
@@ -311,7 +311,7 @@ public abstract class AndroidBrowserRepositoryTestCase extends AndroidSyncTestCa
   }
 
   /*
-   * Tests for fetchSince
+   * Tests for fetchModified
    */
   protected void fetchSinceOneRecord(Record record0, Record record1) {
     RepositorySession session = createAndBeginSession();
