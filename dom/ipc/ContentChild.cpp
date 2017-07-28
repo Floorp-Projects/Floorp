@@ -1203,9 +1203,6 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
   GfxInfoBase::SetFeatureStatus(aXPCOMInit.gfxFeatureStatus());
 
   DataStorage::SetCachedStorageEntries(aXPCOMInit.dataStorage());
-
-  // Enable input event prioritization.
-  nsThreadManager::get().EnableMainThreadEventPrioritization();
 }
 
 mozilla::ipc::IPCResult
@@ -3597,6 +3594,34 @@ ContentChild::RecvResetCodeCoverageCounters()
   NS_RUNTIMEABORT("Shouldn't receive this message in non-code coverage builds!");
   return IPC_FAIL_NO_REASON(this);
 #endif
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvSetInputEventQueueEnabled()
+{
+  nsThreadManager::get().EnableMainThreadEventPrioritization();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvFlushInputEventQueue()
+{
+  nsThreadManager::get().FlushInputEventPrioritization();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvSuspendInputEventQueue()
+{
+  nsThreadManager::get().SuspendInputEventPrioritization();
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentChild::RecvResumeInputEventQueue()
+{
+  nsThreadManager::get().ResumeInputEventPrioritization();
+  return IPC_OK();
 }
 
 already_AddRefed<nsIEventTarget>
