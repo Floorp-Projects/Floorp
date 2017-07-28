@@ -351,8 +351,7 @@ DriverCrashGuard::CheckAndUpdatePref(const char* aPrefName, const nsAString& aCu
 {
   std::string pref = GetFullPrefName(aPrefName);
 
-  nsAutoString oldValue;
-  Preferences::GetString(pref.c_str(), oldValue);
+  nsAdoptingString oldValue = Preferences::GetString(pref.c_str());
   if (oldValue == aCurrentValue) {
     return false;
   }

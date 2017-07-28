@@ -163,8 +163,7 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
       // XXX "font.name.variable."?  There is no such pref...
       MAKE_FONT_PREF_KEY(pref, "font.name.variable.", langGroup);
 
-      nsAutoString value;
-      Preferences::GetString(pref.get(), value);
+      nsAdoptingString value = Preferences::GetString(pref.get());
       if (!value.IsEmpty()) {
         FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
         FontFamilyType defaultType = defaultVariableName.mType;
@@ -175,7 +174,7 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
       }
       else {
         MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
-        Preferences::GetString(pref.get(), value);
+        value = Preferences::GetString(pref.get());
         if (!value.IsEmpty()) {
           FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
           FontFamilyType defaultType = defaultVariableName.mType;

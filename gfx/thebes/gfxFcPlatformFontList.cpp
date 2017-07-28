@@ -1698,21 +1698,17 @@ gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
     if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
         aLanguage == nsGkAtoms::x_math) {
         nsIAtom* langGroup = GetLangGroup(aLanguage);
-        nsAutoString fontlistValue;
-        Preferences::GetString(NamePref(generic, langGroup).get(),
-                               fontlistValue);
-        nsresult rv;
+        nsAdoptingString fontlistValue =
+            Preferences::GetString(NamePref(generic, langGroup).get());
         if (fontlistValue.IsEmpty()) {
             // The font name list may have two or more family names as comma
             // separated list.  In such case, not matching with generic font
             // name is fine because if the list prefers specific font, we
             // should try to use the pref with complicated path.
-            rv = Preferences::GetString(NameListPref(generic, langGroup).get(),
-                                        fontlistValue);
-        } else {
-            rv = NS_OK;
+            fontlistValue =
+                 Preferences::GetString(NameListPref(generic, langGroup).get());
         }
-        if (NS_SUCCEEDED(rv)) {
+        if (fontlistValue) {
             if (!fontlistValue.EqualsLiteral("serif") &&
                 !fontlistValue.EqualsLiteral("sans-serif") &&
                 !fontlistValue.EqualsLiteral("monospace")) {

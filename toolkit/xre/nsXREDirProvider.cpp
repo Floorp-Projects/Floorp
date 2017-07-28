@@ -779,9 +779,8 @@ CreateContentProcessSandboxTempDir()
 
   // Get (and create if blank) temp directory suffix pref.
   nsresult rv;
-  nsAutoString tempDirSuffix;
-  Preferences::GetString("security.sandbox.content.tempDirSuffix",
-                         tempDirSuffix);
+  nsAdoptingString tempDirSuffix =
+    Preferences::GetString("security.sandbox.content.tempDirSuffix");
   if (tempDirSuffix.IsEmpty()) {
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);
