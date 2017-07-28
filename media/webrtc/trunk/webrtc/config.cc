@@ -64,10 +64,6 @@ const char* RtpExtension::kTransportSequenceNumberUri =
     "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
 const int RtpExtension::kTransportSequenceNumberDefaultId = 5;
 
-const char* RtpExtension::kRtpStreamIdUri =
-  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
-const int RtpExtension::kRtpStreamIdDefaultId = 6;
-
 // This extension allows applications to adaptively limit the playout delay
 // on frames as per the current needs. For example, a gaming application
 // has very different needs on end-to-end delay compared to a video-conference
@@ -76,10 +72,19 @@ const char* RtpExtension::kPlayoutDelayUri =
     "http://www.webrtc.org/experiments/rtp-hdrext/playout-delay";
 const int RtpExtension::kPlayoutDelayDefaultId = 6;
 
+const char* RtpExtension::kRtpStreamIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+const int RtpExtension::kRtpStreamIdDefaultId = 7;
+
+const char* RtpExtension::kRepairedRtpStreamIdUri =
+    "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id";
+const int RtpExtension::kRepairedRtpStreamIdDefaultId = 8;
+
 bool RtpExtension::IsSupportedForAudio(const std::string& uri) {
   return uri == webrtc::RtpExtension::kAudioLevelUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
-         uri == webrtc::RtpExtension::kRtpStreamIdUri;
+         uri == webrtc::RtpExtension::kRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri;
 }
 
 bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
@@ -88,7 +93,8 @@ bool RtpExtension::IsSupportedForVideo(const std::string& uri) {
          uri == webrtc::RtpExtension::kVideoRotationUri ||
          uri == webrtc::RtpExtension::kTransportSequenceNumberUri ||
          uri == webrtc::RtpExtension::kPlayoutDelayUri ||
-         uri == webrtc::RtpExtension::kRtpStreamIdUri;
+         uri == webrtc::RtpExtension::kRtpStreamIdUri ||
+         uri == webrtc::RtpExtension::kRepairedRtpStreamIdUri;
 }
 
 VideoStream::VideoStream()
