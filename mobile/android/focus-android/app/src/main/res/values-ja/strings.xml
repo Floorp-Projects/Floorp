@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">他の追跡コンテンツをブロック</string>
   <string name="preference_privacy_block_content_summary">動画やウェブページが正常に表示されない場合があります</string>
   <string name="preference_privacy_secure_mode">ステルス</string>
-  <string name="preference_privacy_secure_mode_summary">スクリーンショットの撮影や %1$s を使って訪れたサイトを最近使ったアプリ一覧に表示するには、ステルスモードを無効化してください</string>
   <string name="preference_category_performance">パフォーマンス</string>
   <string name="preference_performance_block_webfonts">ウェブフォントをブロック</string>
   <string name="preference_performance_block_webfonts_summary">アイコンや画像が正常に表示されない場合があります</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Andere Inhaltsverfolgung blockieren</string>
   <string name="preference_privacy_block_content_summary">Kann einige Videos und Webseiten stören</string>
   <string name="preference_privacy_secure_mode">Tarnung</string>
-  <string name="preference_privacy_secure_mode_summary">Deaktivieren Sie den Tarnmodus, um Bildschirmfotos zuzulassen und mit %1$s besuchte Websites in der Liste Ihrer zuletzt verwendeten Apps anzuzeigen.</string>
   <string name="preference_category_performance">Leistung</string>
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
   <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>

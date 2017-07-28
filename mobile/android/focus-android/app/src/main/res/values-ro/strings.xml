@@ -32,7 +32,6 @@
   <string name="preference_privacy_block_content">Blochează alți urmăritori de conținut</string>
   <string name="preference_privacy_block_content_summary">Poate afecta funcționalitatea unor videouri sau pagini web</string>
   <string name="preference_privacy_secure_mode">Discret</string>
-  <string name="preference_privacy_secure_mode_summary">Oprește modul discret pentru a realiza capturi de ecran și a vedea site-urile pe care le vizitezi folosind %1$s în lista de Aplicații recente</string>
   <string name="preference_category_performance">Performanță</string>
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
   <string name="preference_performance_block_webfonts_summary">Poate duce la pictograme și imagini lipsă</string>

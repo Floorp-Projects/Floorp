@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Druge wopśimjeśowe pśeslědowaki blokěrowaś</string>
   <string name="preference_privacy_block_content_summary">Kazy snaź někotare wideo a webboki</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
-  <string name="preference_privacy_secure_mode_summary">Wušaltujśo tarnowański modus, aby wobrazowku fotografěrował a se sedła woglědował, ku kótarymž sćo se z %1$s w swójej lisćinje aktualnych nałoženjow woglědał</string>
   <string name="preference_category_performance">Wugbaśe</string>
   <string name="preference_performance_block_webfonts">Webpisma blokěrowaś</string>
   <string name="preference_performance_block_webfonts_summary">Móžo k tomu wjasć, až symbole abo wobraze feluju</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">دیگر مواد کے ٹڑیکرز بلاک کریں</string>
   <string name="preference_privacy_block_content_summary">شاید کچھ وڈیوز اور ویب صفحات کو توڑ دے</string>
   <string name="preference_privacy_secure_mode">سٹلتھ</string>
-  <string name="preference_privacy_secure_mode_summary">سٹلتھ موڈ کو بند کرے اسکرین شاٹ لینے اور اپکی دورہ کی ہوئ سائٹ دیکھنے کے لئے %1$s استعمال کردہ اپنی حالیہ ایپ فہرست میں سے</string>
   <string name="preference_category_performance">کارکردگی</string>
   <string name="preference_performance_block_webfonts">ویب فونٹس بلاک کریں</string>
   <string name="preference_performance_block_webfonts_summary">نتیجتن اسکی شاید آئیکن یا تصاویر گایب ہو سکتی ہے</string>

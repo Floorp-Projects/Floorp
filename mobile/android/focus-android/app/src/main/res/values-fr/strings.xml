@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloquer les autres traqueurs de contenu</string>
   <string name="preference_privacy_block_content_summary">Peut empêcher certaines vidéos et pages web de s’afficher correctement</string>
   <string name="preference_privacy_secure_mode">Mode furtif</string>
-  <string name="preference_privacy_secure_mode_summary">Désactivez le mode furtif pour effectuer des captures d’écran et afficher les sites récemment visités avec %1$s dans l’écran Applications récentes.</string>
   <string name="preference_category_performance">Performances</string>
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>

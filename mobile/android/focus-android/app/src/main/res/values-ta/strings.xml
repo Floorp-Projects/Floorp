@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">உள்ளடக்க பின்தொடரிகளைத் தடு</string>
   <string name="preference_privacy_block_content_summary">சில காணொளிகளும் வலைப்பக்கங்களும் முறியலாம்</string>
   <string name="preference_privacy_secure_mode">போரியல்</string>
-  <string name="preference_privacy_secure_mode_summary">போராளி முறைமையை முடக்கி திரைப்பிடிப்புகள் எடுத்து அதில் %1$s உலாவியைப் பாவித்து பார்த்த தளங்கள் அண்மைய செயலிகள் பட்டியலில் தோன்றுகிறதா எனப் பார்க்கவும்</string>
   <string name="preference_category_performance">செயல்திறன்</string>
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Andere inhoudstrackers blokkeren</string>
   <string name="preference_privacy_block_content_summary">Kan sommige video’s en webpagina’s verstoren</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
-  <string name="preference_privacy_secure_mode_summary">Zet stealthmodus uit om schermafbeeldingen te maken en websites te zien die u met %1$s in uw lijst Recente apps hebt bezocht</string>
   <string name="preference_category_performance">Prestaties</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkeren</string>
   <string name="preference_performance_block_webfonts_summary">Kan tot ontbrekende pictogrammen of afbeeldingen leiden</string>

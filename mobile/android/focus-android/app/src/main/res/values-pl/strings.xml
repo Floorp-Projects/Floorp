@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blokowanie pozostałych śledzących</string>
   <string name="preference_privacy_block_content_summary">Może uniemożliwiać oglądanie niektórych filmów i stron</string>
   <string name="preference_privacy_secure_mode">Tryb ukryty</string>
-  <string name="preference_privacy_secure_mode_summary">Wyłączenie trybu ukrytego umożliwia wykonywanie zrzutów ekranu i wyświetlanie stron odwiedzonych w programie %1$s na liście ostatnio używanych aplikacji</string>
   <string name="preference_category_performance">Wydajność</string>
   <string name="preference_performance_block_webfonts">Blokowanie czcionek sieciowych</string>
   <string name="preference_performance_block_webfonts_summary">Może spowodować, że niektóre ikony lub obrazy będą niewidoczne</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blokir pelacak konten lainnya</string>
   <string name="preference_privacy_block_content_summary">Mungkin menghentikan beberapa video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Mode Siluman</string>
-  <string name="preference_privacy_secure_mode_summary">Nonaktifkan mode siluman untuk mengambil tangkapan layar dan melihat situs yang Anda kunjungi menggunakan %1$s di daftar Aplikasi Terakhir</string>
   <string name="preference_category_performance">Kinerja</string>
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>

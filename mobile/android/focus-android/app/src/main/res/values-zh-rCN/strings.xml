@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">拦截其他内容跟踪器</string>
   <string name="preference_privacy_block_content_summary">可能对某些网页与视频有影响</string>
   <string name="preference_privacy_secure_mode">隐形</string>
-  <string name="preference_privacy_secure_mode_summary">关闭隐形模式才能截图、并在“最近应用列表”中看到您用 %1$s 访问过的网站</string>
   <string name="preference_category_performance">性能</string>
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
   <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>

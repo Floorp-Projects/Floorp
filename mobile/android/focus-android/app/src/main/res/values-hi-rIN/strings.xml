@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रैकर्स को अवरुद्ध करें</string>
   <string name="preference_privacy_block_content_summary">कुछ वीडियो और वेब पृष्ठ भंग हो सकते हैं</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
-  <string name="preference_privacy_secure_mode_summary">स्क्रीनशॉट लेने के लिए गुप्त मोड को बंद करें और अपनी हाल की एप्स सूची में %1$s का उपयोग करके अपने द्वारा देखी गई साइटें देखें</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
   <string name="preference_performance_block_webfonts_summary">अनुपस्थित प्रतीकों या छवियों के रूप में परिणाम हो सकता है</string>

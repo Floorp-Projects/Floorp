@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Спиране на следене през друго съдържание</string>
   <string name="preference_privacy_block_content_summary">Видео и някои уеб страници може да не работят</string>
   <string name="preference_privacy_secure_mode">Невидим</string>
-  <string name="preference_privacy_secure_mode_summary">Изключете невидимия режим, за да правите снимки на екрана и за да виждате посетените с %1$s сайтове в списъка с последни приложения</string>
   <string name="preference_category_performance">Производителност</string>
   <string name="preference_performance_block_webfonts">Спиране на уебшрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>

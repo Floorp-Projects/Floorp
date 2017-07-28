@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
   <string name="preference_privacy_block_content_summary">Tio povas misfunkciigi kelkajn filmetojn kaj retpaĝojn</string>
   <string name="preference_privacy_secure_mode">Kaŝreĝimo</string>
-  <string name="preference_privacy_secure_mode_summary">Malŝaltu kaŝreĝimon por fari ekrankopiojn kaj por vidi retejojn, kiujn vi vizitis per %1$s, en via listo de ĵusaj programoj</string>
   <string name="preference_category_performance">Efikeco</string>
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>

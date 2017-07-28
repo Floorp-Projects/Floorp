@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content_summary">შესაძლოა ზოგიერთმა საიტმა ან ვიდეომ, არ იმუშაოს გამართულად</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
-  <string name="preference_privacy_secure_mode_summary">გამორთეთ ფარული რეჟიმი, თუ ეკრანისთვის სურათის გადაღება, ან %1$s-ით მონახულებული საიტების, ბოლოს გამოყენებული პროგრამების სიაში გამოჩენა გსურთ</string>
   <string name="preference_category_performance">წარმადობა</string>
   <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
   <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>

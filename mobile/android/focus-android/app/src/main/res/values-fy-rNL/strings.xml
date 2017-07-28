@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Oare ynhâldstrackers blokkearje</string>
   <string name="preference_privacy_block_content_summary">Kin guon fideo’s en websiden fersteure</string>
   <string name="preference_privacy_secure_mode">Stealth</string>
-  <string name="preference_privacy_secure_mode_summary">Set stealthmodus út om skermôfbyldingen te meitsjen en websites te sjen dy\'t jo mei %1$s yn jo list Resinte apps besocht hawwe</string>
   <string name="preference_category_performance">Prestaasjes</string>
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>

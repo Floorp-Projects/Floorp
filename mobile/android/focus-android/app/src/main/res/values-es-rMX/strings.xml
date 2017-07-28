@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloquear rastreadores de otros contenidos</string>
   <string name="preference_privacy_block_content_summary">Puede ser que algunos videos y páginas web no funcionen correctamente</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_secure_mode_summary">Desactiva el modo invisible para tomar capturas de pantalla y ver los sitios que has visitado con %1$s en la lista de las aplicaciones recientes</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en pérdida de íconos o imágenes</string>

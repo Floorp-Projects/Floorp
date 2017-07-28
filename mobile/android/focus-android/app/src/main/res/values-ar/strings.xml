@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
   <string name="preference_privacy_block_content_summary">قد يعطل بعض الڤديو و صفحات الوب</string>
   <string name="preference_privacy_secure_mode">التخفّي</string>
-  <string name="preference_privacy_secure_mode_summary">عطّل وضع التخفّي لأخذ لقطات شاشة و رؤية المواقع التي زرتها باستخدام %1$s في قائمة التطبيقات الحديثة</string>
   <string name="preference_category_performance">الأداء</string>
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>

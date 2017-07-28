@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blokker andre innholdssporere</string>
   <string name="preference_privacy_block_content_summary">Kan ødelegge noen videoer og nettsider</string>
   <string name="preference_privacy_secure_mode">Usynlig</string>
-  <string name="preference_privacy_secure_mode_summary">Slå av usynlig modus for å ta skjermbilder og se nettsteder du har besøkt ved hjelp av %1$s i siste apper-listen</string>
   <string name="preference_category_performance">Ytelse</string>
   <string name="preference_performance_block_webfonts">Blokker nettfonter</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilder mangler</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
   <string name="preference_privacy_block_content_summary">Boleh mengganggu beberapa video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
-  <string name="preference_privacy_secure_mode_summary">Tutup mod halimunan untuk mengambil skrinsyot dan melihat laman yang dilawati menggunakan %1$s dalam senarai Apps Terkini</string>
   <string name="preference_category_performance">Prestasi</string>
   <string name="preference_performance_block_webfonts">Sekat fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>

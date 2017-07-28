@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
   <string name="preference_privacy_block_content_summary">Gall dorri rhai fideos a thudalennau Gwe</string>
   <string name="preference_privacy_secure_mode">Dirgel</string>
-  <string name="preference_privacy_secure_mode_summary">Diffoddwch y modd dirgel er mwyn cymryd lluniau sgrin a gweld gwefannau rydych yn ymweld â nhw gan ddefnyddio %1$s yn eich rhestr Apiau Diweddar</string>
   <string name="preference_category_performance">Perfformiad</string>
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>

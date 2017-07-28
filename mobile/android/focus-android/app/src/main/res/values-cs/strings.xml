@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blokovat ostatní sledující prvky</string>
   <string name="preference_privacy_block_content_summary">Může rozbít některá videa a webové stránky</string>
   <string name="preference_privacy_secure_mode">Nenápadnost</string>
-  <string name="preference_privacy_secure_mode_summary">Vypněte režim nenápadnosti pro vytváření snímků obrazovky a zobrazení stránek, které navštěvujete v aplikaci %1$s v seznamu nedávno použitých aplikacích</string>
   <string name="preference_category_performance">Výkon</string>
   <string name="preference_performance_block_webfonts">Blokovat webové fonty</string>
   <string name="preference_performance_block_webfonts_summary">Některé ikony nebo obrázky se nemusí zobrazovat</string>

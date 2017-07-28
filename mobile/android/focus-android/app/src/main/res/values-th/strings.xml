@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">ปิดกั้นตัวติดตามของเนื้อหาอื่น ๆ</string>
   <string name="preference_privacy_block_content_summary">อาจทำให้วิดีโอและหน้าเว็บบางส่วนไม่สมบูรณ์</string>
   <string name="preference_privacy_secure_mode">พรางตัว</string>
-  <string name="preference_privacy_secure_mode_summary">ปิดโหมดพรางตัวเพื่อจับภาพหน้าจอและดูไซต์ที่คุณเคยเยี่ยมชมโดยใช้ %1$s ในรายการแอปเมื่อเร็ว ๆ นี้ของคุณ</string>
   <string name="preference_category_performance">ประสิทธิภาพ</string>
   <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
   <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>

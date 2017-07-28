@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenidos</string>
   <string name="preference_privacy_block_content_summary">Algunos videos y páginas web pueden fallar</string>
   <string name="preference_privacy_secure_mode">Cautela</string>
-  <string name="preference_privacy_secure_mode_summary">Deshabilita el modo Cautela para tomar capturas de pantalla y ver los sitios que visitaste en %1$s en la lista de Aplicaciones Recientes</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>

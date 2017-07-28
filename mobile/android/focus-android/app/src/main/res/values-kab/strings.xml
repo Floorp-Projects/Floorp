@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Sewḥel ineḍfaṛen-nniḍen n ugbur</string>
   <string name="preference_privacy_block_content_summary">Yezmer ad isewḥel kra n tvidyutin akked kra n isebtar Web ad d-banen akken iwata</string>
   <string name="preference_privacy_secure_mode">Tusligt</string>
-  <string name="preference_privacy_secure_mode_summary">Kkes askar uslig akken ad teṭfeḍ agdil u ad twaliḍ ismal i γer terziḍ s useqdec n %1$s deg tebdart-ik taneggarut n isnasen</string>
   <string name="preference_category_performance">Tamellit</string>
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
   <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>

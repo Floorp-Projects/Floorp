@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">기타 콘텐츠 추적기 차단</string>
   <string name="preference_privacy_block_content_summary">동영상이나 웹 페이지가 제대로 표시되지 않을 수 있음</string>
   <string name="preference_privacy_secure_mode">스텔스</string>
-  <string name="preference_privacy_secure_mode_summary">최근 앱 목록에서 %1$s를 통해 방문한 페이지를 보거나 스크린샷을 찍으시려면 스텔스 모드를 해제하세요</string>
   <string name="preference_category_performance">성능</string>
   <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
   <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>

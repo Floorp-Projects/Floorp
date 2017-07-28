@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Diğer içerik takipçilerini engelle</string>
   <string name="preference_privacy_block_content_summary">Bazı videolar ve web sayfaları bozulabilir</string>
   <string name="preference_privacy_secure_mode">Görünmezlik</string>
-  <string name="preference_privacy_secure_mode_summary">Ekran görüntüsü almak ve %1$s ile ziyaret ettiğiniz siteleri Son Uygulamalar listenizde görmek isterseniz görünmezlik modunu kapatın</string>
   <string name="preference_category_performance">Performans</string>
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>

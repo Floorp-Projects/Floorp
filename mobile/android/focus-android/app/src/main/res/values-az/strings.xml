@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Digər məzmun izləyicilərini əngəllə</string>
   <string name="preference_privacy_block_content_summary">Bəzi video və saytları işlənməz hala gətirə bilər</string>
   <string name="preference_privacy_secure_mode">Görünməzlik</string>
-  <string name="preference_privacy_secure_mode_summary">Ekran görüntülərini almaq və %1$s ilə gəzilən saytları Son Tətbiqlər siyahısında görmək üçün Görünməzlik rejimini söndürün</string>
   <string name="preference_category_performance">Məhsuldarlıq</string>
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>

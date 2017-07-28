@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">封鎖其他內容追蹤器</string>
   <string name="preference_privacy_block_content_summary">可能會影響網頁與影片載入</string>
   <string name="preference_privacy_secure_mode">秘密行動</string>
-  <string name="preference_privacy_secure_mode_summary">關閉秘密模式，您就可以拍攝畫面擷圖，並在「應用程式切換清單」中，看到您曾使用 %1$s 造訪過的網站。</string>
   <string name="preference_category_performance">效能</string>
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
   <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>

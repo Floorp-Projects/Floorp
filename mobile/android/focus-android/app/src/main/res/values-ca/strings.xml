@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloca altres elements de seguiment de contingut</string>
   <string name="preference_privacy_block_content_summary">Pot causar problemes amb alguns vídeos i pàgines web</string>
   <string name="preference_privacy_secure_mode">Invisible</string>
-  <string name="preference_privacy_secure_mode_summary">Desactiveu el mode invisible per fer captures de pantalla i veure els llocs que heu visitat amb el %1$s a la llista d\'aplicacions recents</string>
   <string name="preference_category_performance">Rendiment</string>
   <string name="preference_performance_block_webfonts">Bloca tipus de lletra web</string>
   <string name="preference_performance_block_webfonts_summary">Pot fer que no es vegin algunes icones o imatges</string>

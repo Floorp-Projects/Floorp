@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Druhe wobsahowe přesćěhowaki blokować</string>
   <string name="preference_privacy_block_content_summary">Haći snano někotrym widejam a webstronam</string>
   <string name="preference_privacy_secure_mode">Tarnowanje</string>
-  <string name="preference_privacy_secure_mode_summary">Wupińće tarnowanski modus, zo byšće wobrazowku fotografował a sej sydła wobhladował, kotrež sće z %1$s w swojej lisćinje aktualnych nałoženjow wopytał</string>
   <string name="preference_category_performance">Wukon</string>
   <string name="preference_performance_block_webfonts">Webpisma blokować</string>
   <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Bloquear otros rastreadores de contenido</string>
   <string name="preference_privacy_block_content_summary">Puede interferir con algunos videos y páginas Web</string>
   <string name="preference_privacy_secure_mode">Sigilo</string>
-  <string name="preference_privacy_secure_mode_summary">Desactiva el modo sigilo para tomar capturas y ver los sitios que visitaste usando %1$s en tu lista de aplicaciones recientes</string>
   <string name="preference_category_performance">Rendimiento</string>
   <string name="preference_performance_block_webfonts">Bloquear fuentes Web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en íconos o imágenes faltantes</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">مسدود کردن سایر ردیاب‌های محتوا</string>
   <string name="preference_privacy_block_content_summary">ممکن است بعضی از ویدئوها یا صفحات وب را دچار مشکل کند</string>
   <string name="preference_privacy_secure_mode">حالت پنهان</string>
-  <string name="preference_privacy_secure_mode_summary">برای گرفتن تصویر از صفحه و دیدن سایت‌ها در فهرست برنامه‌های اخیرتان که با استفاده از %1$s بازدید کرده‌اید، «حالت پنهان» را خاموش کنید</string>
   <string name="preference_category_performance">کارایی</string>
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>

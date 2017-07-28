@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Блокировать другие трекеры содержимого</string>
   <string name="preference_privacy_block_content_summary">Может нарушить работу некоторых видео и веб-страниц</string>
   <string name="preference_privacy_secure_mode">Невидимка</string>
-  <string name="preference_privacy_secure_mode_summary">Выключите режим невидимки, чтобы делать скриншоты и видеть сайты, которые вы посещали, используя %1$s, в вашем списке последних приложений</string>
   <string name="preference_category_performance">Производительность</string>
   <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
   <string name="preference_performance_block_webfonts_summary">Может привести к отсутствию значков или изображений</string>

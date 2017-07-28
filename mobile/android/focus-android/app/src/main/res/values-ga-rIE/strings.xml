@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Cuir cosc ar lorgairí ábhair eile</string>
   <string name="preference_privacy_block_content_summary">Seans go mbrisfidh seo físeáin agus leathanaigh Ghréasáin áirithe</string>
   <string name="preference_privacy_secure_mode">Mód Rúnda</string>
-  <string name="preference_privacy_secure_mode_summary">Múch an mód rúnda chun pictiúir a thógáil de na suímh a thugann tú cuairt orthu in %1$s sna hAipeanna is déanaí</string>
   <string name="preference_category_performance">Feidhmíocht</string>
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>

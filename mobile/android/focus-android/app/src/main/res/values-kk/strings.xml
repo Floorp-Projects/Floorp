@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Басқа құрама трекерлерін блоктау</string>
   <string name="preference_privacy_block_content_summary">Кейбір видео және веб парақтарының жұмысына кері әсерін тигізуі мүмкін</string>
   <string name="preference_privacy_secure_mode">Жасырын</string>
-  <string name="preference_privacy_secure_mode_summary">Скриншоттарды түсіру және %1$s көмегімен шолған сайттарды жуырдағы қолданбалар тізімінен көру үшін жасырын режимін сөндіріңіз</string>
   <string name="preference_category_performance">Өнімділік</string>
   <string name="preference_performance_block_webfonts">Веб қаріптерін блоктау</string>
   <string name="preference_performance_block_webfonts_summary">Жоқ болып тұрған таңбашалар немесе суреттерге әкеп соғуы мүмкін</string>

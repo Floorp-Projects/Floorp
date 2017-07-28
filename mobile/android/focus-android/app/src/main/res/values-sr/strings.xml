@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Блокирај трагаче осталог садржаја</string>
   <string name="preference_privacy_block_content_summary">Може пореметити неке видео клипове и веб странице</string>
   <string name="preference_privacy_secure_mode">Потајни</string>
-  <string name="preference_privacy_secure_mode_summary">Искључите потајни режим да снимите екране и видите сајтове у вашој скорашњој листи апликација које сте посетили користећи %1$s</string>
   <string name="preference_category_performance">Перформансе</string>
   <string name="preference_performance_block_webfonts">Блокирај веб фонтове</string>
   <string name="preference_performance_block_webfonts_summary">Иконице и слике се можда неће приказивати</string>

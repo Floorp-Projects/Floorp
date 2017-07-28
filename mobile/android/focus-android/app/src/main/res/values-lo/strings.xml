@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
   <string name="preference_privacy_block_content_summary">ອາດຈະເຮັດໃຫ້ບາງວິດີໂອ ແລະ ຫນ້າເວັບບໍ່ສົມບູນ</string>
   <string name="preference_privacy_secure_mode">ອຳພາງຕົວຕົນ</string>
-  <string name="preference_privacy_secure_mode_summary">ປິດໂຫມດອຳພາງຕົວຕົນເພື່ອຈັບພາບຫນ້າຈໍ ແລະ ເບິງເວັບໄຊທ໌ທີ່ທ່ານໄດ້ເຂົ້າໄປເບິງໂດຍໃຊ້ %1$s ໃນລາຍຊື່ແອັບຂອງທ່ານ</string>
   <string name="preference_category_performance">ປະສິດທິພາບ</string>
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
   <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>

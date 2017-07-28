@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blokker andre innhaldssporarar</string>
   <string name="preference_privacy_block_content_summary">Kan øydelegge nokre videoar og nettsider</string>
   <string name="preference_privacy_secure_mode">Løyndemodus</string>
-  <string name="preference_privacy_secure_mode_summary">Skru av løyndemodus for å ta skjermbilde og sjå nettsider du har besøkt med %1$s i den nylege applista di</string>
   <string name="preference_category_performance">Yting</string>
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilde manglar</string>

@@ -32,7 +32,6 @@
   <string name="preference_privacy_block_content">အခြားသော အကြောင်းအရာနောက်ယောက်ခံကိရိယာများကို ပိတ်ပင်ပါ</string>
   <string name="preference_privacy_block_content_summary">အချို့သော ဗီဒီယိုများနှင့် ဝဘ်စာမျက်နှာများကို ထိခိုက်စေသည်</string>
   <string name="preference_privacy_secure_mode">တိတ်တဆိတ်အသုံးပြုမှု</string>
-  <string name="preference_privacy_secure_mode_summary">မျက်နှာပြင်ပုံဖမ်းရန်နှင့် %1$s ကို အသုံးပြုပြီး လည်ပတ်ခဲ့သော ဝဘ်ဆိုက်များကို မကြာသေးမီက အသုံးပြုခဲ့သော အက်ပ်များစာရင်းတွင် ကြည့်ရှုနိုင်ရန် တိတ်တဆိတ်အသုံးပြုမှုကို ပိတ်ပါ။</string>
   <string name="preference_category_performance">လုပ်ဆောင်မှု</string>
   <string name="preference_performance_block_webfonts">ဝဘ်ဖောင့်များကို ပိတ်ပင်ပါ</string>
   <string name="preference_performance_block_webfonts_summary">အိုင်ကွန်များ သို့မဟုတ် ရုပ်ပုံများမပေါ်ခြင်း ဖြစ်စေနိုင်သည်</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blockera andra innehållstrackers</string>
   <string name="preference_privacy_block_content_summary">Kan få vissa videor och webbsidor att sluta fungera</string>
   <string name="preference_privacy_secure_mode">Dolt läge</string>
-  <string name="preference_privacy_secure_mode_summary">Stäng av dolt läge för att ta skärmdumpar och se webbplatser du har besökt med hjälp av %1$s i listan över senaste appar</string>
   <string name="preference_category_performance">Prestanda</string>
   <string name="preference_performance_block_webfonts">Blockera webbtypsnitt</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultera i att ikoner eller bilder saknas</string>

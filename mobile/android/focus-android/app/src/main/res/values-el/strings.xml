@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Φραγή trackers άλλου περιεχομένου</string>
   <string name="preference_privacy_block_content_summary">Ίσως χαλάσει μερικά βίντεο και ιστοσελίδες</string>
   <string name="preference_privacy_secure_mode">Αορατότητα</string>
-  <string name="preference_privacy_secure_mode_summary">Απενεργοποιήστε την αόρατη λειτουργία για λήψη στιγμιότυπων και προβολή ιστοσελίδων που έχετε επισκεφθεί μέσω του %1$s στη λίστα πρόσφατων εφαρμογών</string>
   <string name="preference_category_performance">Απόδοση</string>
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>

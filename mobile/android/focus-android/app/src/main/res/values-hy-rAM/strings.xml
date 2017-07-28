@@ -32,7 +32,6 @@
   <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
   <string name="preference_privacy_block_content_summary">Կարող է ընդհատել որոշ տեսանյութեր և վեբ էջեր</string>
   <string name="preference_privacy_secure_mode">Թաքնված</string>
-  <string name="preference_privacy_secure_mode_summary">Անջատեք թաքնված կերպը՝ էկրանի հանույթը ստանալու և %1$s-ով ձեր այցելած կայքերը տեսնելու համար ձեր Վերջին հավելվածները ցանկում</string>
   <string name="preference_category_performance">Արդյունավետություն</string>
   <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
   <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>

@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Zavračaj druge vsebinske sledilce</string>
   <string name="preference_privacy_block_content_summary">Lahko pokvari nekatere videoposnetke in strani</string>
   <string name="preference_privacy_secure_mode">Skrivni način</string>
-  <string name="preference_privacy_secure_mode_summary">Izklopite skrivni način za zajemanje zaslona in prikaz strani, obiskanih v %1$su, na seznamu nedavnih aplikacij</string>
   <string name="preference_category_performance">Učinkovitost</string>
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
   <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>

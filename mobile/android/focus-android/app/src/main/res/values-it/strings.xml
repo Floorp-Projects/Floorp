@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Blocca altri contenuti traccianti</string>
   <string name="preference_privacy_block_content_summary">Alcuni video e pagine web potrebbero non funzionare</string>
   <string name="preference_privacy_secure_mode">Invisibile</string>
-  <string name="preference_privacy_secure_mode_summary">Disattiva la modalità invisibile per poter salvare screenshot e visualizzare i siti visitati con %1$s nell’elenco delle app recenti.</string>
   <string name="preference_category_performance">Prestazioni</string>
   <string name="preference_performance_block_webfonts">Blocca web font</string>
   <string name="preference_performance_block_webfonts_summary">Alcune immagini e icone potrebbero non essere visualizzate</string>

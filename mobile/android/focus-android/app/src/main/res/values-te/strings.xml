@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">ఇతర ట్రాకర్లను నిరోధించండి</string>
   <string name="preference_privacy_block_content_summary">కొన్ని వీడియోలను మరియు వెబ్ పేజీలను విచ్ఛిన్నం చేయవచ్చు</string>
   <string name="preference_privacy_secure_mode">గోప్య విహరణ</string>
-  <string name="preference_privacy_secure_mode_summary">మీరు %1$s ని వాడుకొని సందర్శించిన వెబ్ సైట్లు రీసెంట్ యాప్స్ పట్టికలొ చూడాలన్నా లేదా తెరను బంధించాలన్నా గోప్య విహరణ ఆపవలసి ఉంటుంది</string>
   <string name="preference_category_performance">పనితనం</string>
   <string name="preference_performance_block_webfonts">వెబ్ ఖతులను (ఫాంట్స్) ఆపుము</string>
   <string name="preference_performance_block_webfonts_summary">తప్పిపోయిన చిహ్నాలు లేదా చిత్రాలు ఫలితంగా ఉండవచ్చు</string>

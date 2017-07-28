@@ -33,7 +33,6 @@
   <string name="preference_privacy_block_content">Más tartalomkövetők blokkolása</string>
   <string name="preference_privacy_block_content_summary">Néhány videó és weblap eltörhet</string>
   <string name="preference_privacy_secure_mode">Rejtőzködés</string>
-  <string name="preference_privacy_secure_mode_summary">Kapcsolja ki a rejtőzködés módot, hogy képernyőképeket készítsen, és lássa a %1$sban megtekintett oldalakat az Előző alkalmazások listájában</string>
   <string name="preference_category_performance">Teljesítmény</string>
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
