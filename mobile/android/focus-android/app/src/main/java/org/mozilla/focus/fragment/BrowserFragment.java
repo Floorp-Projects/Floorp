@@ -526,7 +526,18 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         final DialogFragment downloadDialogFragment = DownloadDialogFragment.newInstance(download);
         downloadDialogFragment.setTargetFragment(BrowserFragment.this, 300);
-        downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG);
+
+        try {
+            downloadDialogFragment.show(fragmentManager, DownloadDialogFragment.FRAGMENT_TAG);
+        } catch (IllegalStateException e) {
+            // It can happen that at this point in time the activity is already in the background
+            // and onSaveInstanceState() has already been called. Fragment transactions are not
+            // allowed after that anymore. It's probably safe to guess that the user might not
+            // be interested in the download at this point. So we could just *not* show the dialog.
+            // Unfortunately we can't call commitAllowingStateLoss() because committing the
+            // transaction is happening inside the DialogFragment code. Therefore we just swallow
+            // the exception here. Gulp!
+        }
     }
 
     @Override
