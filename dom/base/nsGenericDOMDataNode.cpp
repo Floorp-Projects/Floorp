@@ -1110,10 +1110,10 @@ nsGenericDOMDataNode::GetAttributeChangeHint(const nsIAtom* aAttribute,
 }
 
 size_t
-nsGenericDOMDataNode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+nsGenericDOMDataNode::SizeOfExcludingThis(SizeOfState& aState) const
 {
-  size_t n = nsIContent::SizeOfExcludingThis(aMallocSizeOf);
-  n += mText.SizeOfExcludingThis(aMallocSizeOf);
+  size_t n = nsIContent::SizeOfExcludingThis(aState);
+  n += mText.SizeOfExcludingThis(aState.mMallocSizeOf);
   return n;
 }
 
