@@ -124,7 +124,7 @@ OSXVersion::GetVersionNumber()
 
 namespace mozilla {
 
-bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
+bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage)
 {
   std::vector<const char *> params;
   char *profile = NULL;
