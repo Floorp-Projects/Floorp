@@ -66,6 +66,17 @@
                 "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
                 "--firstNonBlankPaint"
             ]
+        },
+        "tp6-stylo-threads-e10s": {
+            "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
+            "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
+            "talos_options": [
+                "--stylo",
+                "--stylo-threads=1",
+                "--mitmproxy",
+                "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
+                "--firstNonBlankPaint"
+            ]
         }
     }
 }

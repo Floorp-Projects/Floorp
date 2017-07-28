@@ -1957,7 +1957,7 @@ CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipe
   }
 
   if (mWrBridge->PipelineId() == aPipelineId) {
-    uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
+    uint64_t transactionId = mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
     Unused << SendDidComposite(0, transactionId, aCompositeStart, aCompositeEnd);
 
     nsTArray<ImageCompositeNotificationInfo> notifications;
@@ -1974,7 +1974,7 @@ CompositorBridgeParent::NotifyDidCompositeToPipeline(const wr::PipelineId& aPipe
         lts->mWrBridge &&
         lts->mWrBridge->PipelineId() == aPipelineId) {
       CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
-      uint64_t transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch);
+      uint64_t transactionId = lts->mWrBridge->FlushTransactionIdsForEpoch(aEpoch, aCompositeEnd);
       Unused << cpcp->SendDidComposite(aLayersId, transactionId, aCompositeStart, aCompositeEnd);
     }
   });

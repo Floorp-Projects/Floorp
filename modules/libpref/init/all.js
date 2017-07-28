@@ -4771,8 +4771,8 @@ pref("layers.bench.enabled", false);
 #if defined(XP_WIN)
 pref("layers.gpu-process.enabled", true);
 pref("media.gpu-process-decoder", true);
-#ifdef NIGHTLY_BUILD
 pref("layers.gpu-process.allow-software", true);
+#ifdef NIGHTLY_BUILD
 pref("layers.gpu-process.max_restarts", 3);
 #endif
 #endif

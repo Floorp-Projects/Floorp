@@ -1585,7 +1585,7 @@ talos-quantum-pageload:
     description: "Talos quantum-pageload"
     suite: talos
     try-name: quantum-pageload
-    treeherder-symbol: tc-T(q)
+    treeherder-symbol: tc-T(tp6)
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
@@ -1611,8 +1611,8 @@ talos-quantum-pageload:
 talos-quantum-pageload-stylo:
     description: "Talos Quantum Pageload Stylo"
     suite: talos
-    try-name: q1s
-    treeherder-symbol: tc-T(q1s)
+    try-name: quantum-pageload-stylo
+    treeherder-symbol: tc-T(tp6s)
     virtualization: hardware
     run-on-projects:
         by-test-platform:

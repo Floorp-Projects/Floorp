@@ -95,6 +95,7 @@ function initializeDefaultPreferences() {
   "renderer": "canvas",
   "renderInteractiveForms": false,
   "enablePrintAutoRotate": false,
+  "disablePageMode": false,
   "disablePageLabels": false
 }
 

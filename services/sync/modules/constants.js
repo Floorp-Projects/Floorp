@@ -1,4 +1,3 @@
-#filter substitution
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +6,9 @@
 this.EXPORTED_SYMBOLS = [];
 for (let [key, val] of Object.entries({
 
-WEAVE_VERSION:                         "@weave_version@",
+// Don't manually modify this line, as it is automatically replaced on merge day
+// by the gecko_migration.py script.
+WEAVE_VERSION: "1.58.0",
 
 // Sync Server API version that the client supports.
 SYNC_API_VERSION:                      "1.5",
