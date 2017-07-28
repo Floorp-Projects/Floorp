@@ -63,11 +63,10 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
                     final String localUri = uriString.startsWith(FILE_SCHEME) ? uriString.substring(FILE_SCHEME.length()) : uriString;
                     final String fileExtension = MimeTypeMap.getFileExtensionFromUrl(localUri);
                     final String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension);
-                    final String fileName = URLUtil.guessFileName(localUri, null, mimeType);
+                    final String fileName = URLUtil.guessFileName(Uri.decode(localUri), null, mimeType);
 
-                    final File file = new File(localUri);
+                    final File file = new File(Uri.decode(localUri));
                     final Uri uriForFile = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + FILE_PROVIDER_EXTENSION, file);
-
                     final Intent openFileIntent = IntentUtils.createOpenFileIntent(uriForFile, mimeType);
                     showSnackbarForFilename(openFileIntent, context, fileName);
                 }
