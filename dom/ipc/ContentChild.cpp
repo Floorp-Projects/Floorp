@@ -1514,15 +1514,13 @@ StartMacOSContentSandbox()
   // These paths are used to whitelist certain directories used by the testing
   // system. They should not be considered a public API, and are only intended
   // for use in automation.
-  nsAutoCString testingReadPath1;
-  Preferences::GetCString("security.sandbox.content.mac.testing_read_path1",
-                          testingReadPath1);
+  nsAdoptingCString testingReadPath1 =
+    Preferences::GetCString("security.sandbox.content.mac.testing_read_path1");
   if (!testingReadPath1.IsEmpty()) {
     info.testingReadPath1.assign(testingReadPath1.get());
   }
-  nsAutoCString testingReadPath2;
-  Preferences::GetCString("security.sandbox.content.mac.testing_read_path2",
-                          testingReadPath2);
+  nsAdoptingCString testingReadPath2 =
+    Preferences::GetCString("security.sandbox.content.mac.testing_read_path2");
   if (!testingReadPath2.IsEmpty()) {
     info.testingReadPath2.assign(testingReadPath2.get());
   }
@@ -1610,12 +1608,11 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
     }
     // Allow user overrides of seccomp-bpf syscall filtering
     std::vector<int> syscallWhitelist;
-    nsAutoCString extraSyscalls;
-    nsresult rv =
-      Preferences::GetCString("security.sandbox.content.syscall_whitelist",
-                              extraSyscalls);
-    if (NS_SUCCEEDED(rv)) {
+    nsAdoptingCString extraSyscalls =
+      Preferences::GetCString("security.sandbox.content.syscall_whitelist");
+    if (extraSyscalls) {
       for (const nsACString& callNrString : extraSyscalls.Split(',')) {
+        nsresult rv;
         int callNr = PromiseFlatCString(callNrString).ToInteger(&rv);
         if (NS_SUCCEEDED(rv)) {
           syscallWhitelist.push_back(callNr);

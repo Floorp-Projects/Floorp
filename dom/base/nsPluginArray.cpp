@@ -333,9 +333,7 @@ operator<(const RefPtr<nsPluginElement>& lhs,
 static bool
 PluginShouldBeHidden(const nsCString& aName) {
   // This only supports one hidden plugin
-  nsAutoCString value;
-  Preferences::GetCString("plugins.navigator.hidden_ctp_plugin", value);
-  return value.Equals(aName);
+  return Preferences::GetCString("plugins.navigator.hidden_ctp_plugin").Equals(aName);
 }
 
 void

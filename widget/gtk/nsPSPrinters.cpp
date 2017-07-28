@@ -89,7 +89,7 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
 
     nsAutoCString list(PR_GetEnv("MOZILLA_POSTSCRIPT_PRINTER_LIST"));
     if (list.IsEmpty()) {
-        Preferences::GetCString("print.printer_list", list);
+        list = Preferences::GetCString("print.printer_list");
     }
     if (!list.IsEmpty()) {
         // For each printer (except "default" which was already added),

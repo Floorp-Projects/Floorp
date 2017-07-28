@@ -1344,13 +1344,12 @@ imgLoader::Observe(nsISupports* aSubject, const char* aTopic,
 
 void imgLoader::ReadAcceptHeaderPref()
 {
-  nsAutoCString accept;
-  nsresult rv = Preferences::GetCString("image.http.accept", accept);
-  if (NS_SUCCEEDED(rv)) {
+  nsAdoptingCString accept = Preferences::GetCString("image.http.accept");
+  if (accept) {
     mAcceptHeader = accept;
   } else {
     mAcceptHeader =
-      IMAGE_PNG "," IMAGE_WILDCARD ";q=0.8," ANY_WILDCARD ";q=0.5";
+        IMAGE_PNG "," IMAGE_WILDCARD ";q=0.8," ANY_WILDCARD ";q=0.5";
   }
 }
 

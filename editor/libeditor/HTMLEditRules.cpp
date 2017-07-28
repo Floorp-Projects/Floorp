@@ -276,8 +276,8 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
   // cache any prefs we care about
   static const char kPrefName[] =
     "editor.html.typing.returnInEmptyListItemClosesList";
-  nsAutoCString returnInEmptyLIKillsList;
-  Preferences::GetCString(kPrefName, returnInEmptyLIKillsList);
+  nsAdoptingCString returnInEmptyLIKillsList =
+    Preferences::GetCString(kPrefName);
 
   // only when "false", becomes FALSE.  Otherwise (including empty), TRUE.
   // XXX Why was this pref designed as a string and not bool?

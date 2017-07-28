@@ -1554,8 +1554,8 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
 
   mFakePlugins.AppendElement(newTag);
 
-  nsAutoCString disableFullPage;
-  Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
+  nsAdoptingCString disableFullPage =
+    Preferences::GetCString(kPrefDisableFullPage);
   for (uint32_t i = 0; i < newTag->MimeTypes().Length(); i++) {
     if (!IsTypeInList(newTag->MimeTypes()[i], disableFullPage)) {
       RegisterWithCategoryManager(newTag->MimeTypes()[i],
@@ -1822,9 +1822,8 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
 
   // The java mime pref may well not be one of these,
   // e.g. application/x-java-test used in the test suite
-  nsAutoCString javaMIME;
-  Preferences::GetCString(kPrefJavaMIME, javaMIME);
-  if ((!javaMIME.IsEmpty() && noParam.LowerCaseEqualsASCII(javaMIME.get())) ||
+  nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
+  if ((!javaMIME.IsEmpty() && noParam.LowerCaseEqualsASCII(javaMIME)) ||
       noParam.LowerCaseEqualsASCII("application/x-java-vm") ||
       noParam.LowerCaseEqualsASCII("application/x-java-applet") ||
       noParam.LowerCaseEqualsASCII("application/x-java-bean")) {
@@ -2014,8 +2013,8 @@ nsPluginHost::AddPluginTag(nsPluginTag* aPluginTag)
   mPlugins = aPluginTag;
 
   if (aPluginTag->IsActive()) {
-    nsAutoCString disableFullPage;
-    Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
+    nsAdoptingCString disableFullPage =
+      Preferences::GetCString(kPrefDisableFullPage);
     for (uint32_t i = 0; i < aPluginTag->MimeTypes().Length(); i++) {
       if (!IsTypeInList(aPluginTag->MimeTypes()[i], disableFullPage)) {
         RegisterWithCategoryManager(aPluginTag->MimeTypes()[i],
@@ -2408,8 +2407,8 @@ nsPluginHost::SetPluginsInContent(uint32_t aPluginEpoch,
                                                       tag.extensions(),
                                                       tag.niceName(),
                                                       tag.sandboxScript()));
-      nsAutoCString disableFullPage;
-      Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
+      nsAdoptingCString disableFullPage =
+        Preferences::GetCString(kPrefDisableFullPage);
       for (uint32_t i = 0; i < pluginTag->MimeTypes().Length(); i++) {
         if (!IsTypeInList(pluginTag->MimeTypes()[i], disableFullPage)) {
           RegisterWithCategoryManager(pluginTag->MimeTypes()[i],
@@ -2656,8 +2655,8 @@ nsPluginHost::UpdateInMemoryPluginInfo(nsPluginTag* aPluginTag)
   }
 
   // Update types with category manager
-  nsAutoCString disableFullPage;
-  Preferences::GetCString(kPrefDisableFullPage, disableFullPage);
+  nsAdoptingCString disableFullPage =
+    Preferences::GetCString(kPrefDisableFullPage);
   for (uint32_t i = 0; i < aPluginTag->MimeTypes().Length(); i++) {
     nsRegisterType shouldRegister;
 
@@ -2695,9 +2694,8 @@ nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag)
 /* static */ bool
 nsPluginHost::IsTypeWhitelisted(const char *aMimeType)
 {
-  nsAutoCString whitelist;
-  Preferences::GetCString(kPrefWhitelist, whitelist);
-  if (whitelist.IsEmpty()) {
+  nsAdoptingCString whitelist = Preferences::GetCString(kPrefWhitelist);
+  if (!whitelist.Length()) {
     return true;
   }
   nsDependentCString wrap(aMimeType);

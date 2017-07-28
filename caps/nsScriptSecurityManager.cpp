@@ -1642,8 +1642,7 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
     //
 
     mFileURIWhitelist.emplace();
-    nsAutoCString policies;
-    mozilla::Preferences::GetCString("capability.policy.policynames", policies);
+    auto policies = mozilla::Preferences::GetCString("capability.policy.policynames");
     for (uint32_t base = SkipPast<IsWhitespaceOrComma>(policies, 0), bound = 0;
          base < policies.Length();
          base = SkipPast<IsWhitespaceOrComma>(policies, bound))
@@ -1666,8 +1665,7 @@ nsScriptSecurityManager::EnsureFileURIWhitelist()
         nsCString domainPrefName = NS_LITERAL_CSTRING("capability.policy.") +
                                    policyName +
                                    NS_LITERAL_CSTRING(".sites");
-        nsAutoCString siteList;
-        Preferences::GetCString(domainPrefName.get(), siteList);
+        auto siteList = Preferences::GetCString(domainPrefName.get());
         AddSitesToFileURIWhitelist(siteList);
     }
 

@@ -1699,16 +1699,16 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
   RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
   uint32_t id = mOutstandingPledges.Append(*p);
 
-  nsAutoCString audioLoopDev, videoLoopDev;
+  nsAdoptingCString audioLoopDev, videoLoopDev;
   if (!aFake) {
     // Fake stream not requested. The entire device stack is available.
     // Loop in loopback devices if they are set, and their respective type is
     // requested. This is currently used for automated media tests only.
     if (aVideoType == MediaSourceEnum::Camera) {
-      Preferences::GetCString("media.video_loopback_dev", videoLoopDev);
+      videoLoopDev = Preferences::GetCString("media.video_loopback_dev");
     }
     if (aAudioType == MediaSourceEnum::Microphone) {
-      Preferences::GetCString("media.audio_loopback_dev", audioLoopDev);
+      audioLoopDev = Preferences::GetCString("media.audio_loopback_dev");
     }
   }
 
@@ -1735,8 +1735,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     if (hasVideo) {
       nsTArray<RefPtr<VideoDevice>> videos;
       GetSources(fakeCams? fakeBackend : realBackend, aVideoType,
-                 &MediaEngine::EnumerateVideoDevices, videos,
-                 videoLoopDev.get());
+                 &MediaEngine::EnumerateVideoDevices, videos, videoLoopDev);
       for (auto& source : videos) {
         result->AppendElement(source);
       }
@@ -1744,8 +1743,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
     if (hasAudio) {
       nsTArray<RefPtr<AudioDevice>> audios;
       GetSources(fakeMics? fakeBackend : realBackend, aAudioType,
-                 &MediaEngine::EnumerateAudioDevices, audios,
-                 audioLoopDev.get());
+                 &MediaEngine::EnumerateAudioDevices, audios, audioLoopDev);
       for (auto& source : audios) {
         result->AppendElement(source);
       }

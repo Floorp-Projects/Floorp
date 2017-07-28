@@ -1605,9 +1605,7 @@ static nsresult pref_InitInitialObjects()
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
     prerelease = true;
 #else
-    nsAutoCString prefValue;
-    Preferences::GetDefaultCString(kChannelPref, prefValue);
-    if (prefValue.EqualsLiteral("beta")) {
+    if (Preferences::GetDefaultCString(kChannelPref).EqualsLiteral("beta")) {
       prerelease = true;
     }
 #endif
@@ -1668,14 +1666,23 @@ Preferences::GetFloat(const char* aPref, float* aResult)
 }
 
 // static
+nsAdoptingCString
+Preferences::GetCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  PREF_CopyCharPref(aPref, getter_Copies(result), false);
+  return result;
+}
+
+// static
 nsresult
 Preferences::GetCString(const char* aPref, nsACString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  char* result;
-  nsresult rv = PREF_CopyCharPref(aPref, &result, false);
+  nsAutoCString result;
+  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), false);
   if (NS_SUCCEEDED(rv)) {
-    aResult.Adopt(result);
+    aResult = result;
   }
   return rv;
 }
@@ -1691,6 +1698,15 @@ Preferences::GetString(const char* aPref, nsAString& aResult)
     CopyUTF8toUTF16(result, aResult);
   }
   return rv;
+}
+
+// static
+nsAdoptingCString
+Preferences::GetLocalizedCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  GetLocalizedCString(aPref, result);
+  return result;
 }
 
 // static
@@ -2163,10 +2179,10 @@ nsresult
 Preferences::GetDefaultCString(const char* aPref, nsACString& aResult)
 {
   NS_ENSURE_TRUE(InitStaticMembers(), NS_ERROR_NOT_AVAILABLE);
-  char* result;
-  nsresult rv = PREF_CopyCharPref(aPref, &result, true);
+  nsAutoCString result;
+  nsresult rv = PREF_CopyCharPref(aPref, getter_Copies(result), true);
   if (NS_SUCCEEDED(rv)) {
-    aResult.Adopt(result);
+    aResult = result;
   }
   return rv;
 }
@@ -2213,6 +2229,24 @@ Preferences::GetDefaultLocalizedString(const char* aPref,
     prefLocalString->GetData(getter_Copies(aResult));
   }
   return rv;
+}
+
+// static
+nsAdoptingCString
+Preferences::GetDefaultCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  PREF_CopyCharPref(aPref, getter_Copies(result), true);
+  return result;
+}
+
+// static
+nsAdoptingCString
+Preferences::GetDefaultLocalizedCString(const char* aPref)
+{
+  nsAdoptingCString result;
+  GetDefaultLocalizedCString(aPref, result);
+  return result;
 }
 
 // static
