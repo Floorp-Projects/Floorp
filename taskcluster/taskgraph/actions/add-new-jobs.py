@@ -52,8 +52,7 @@ def add_new_jobs_action(parameters, input, task_group_id, task_id, task):
                             for name, label in task.dependencies.iteritems()}
             task_def = resolve_task_references(task.label, task.task, dependencies)
             task_def.setdefault('dependencies', []).extend(dependencies.itervalues())
-            task_def['schedulerId'] = 'gecko-level-{}'.format(parameters['level'])
             # actually create the new task
-            create_task(slugid(), task_def)
+            create_task(slugid(), task_def, parameters['level'])
         else:
             raise Exception('{} was not found in the task-graph'.format(elem))
