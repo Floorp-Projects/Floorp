@@ -42,8 +42,6 @@ script:
 after_success:
   - test "$TRAVIS_PULL_REQUEST" == "false" &&
     test "$TRAVIS_BRANCH" == "master" &&
-    test "$BINDGEN_FEATURES" == "" &&
-    test "$LLVM_VERSION" == "3.9.0" &&
     ./ci/deploy-book.sh
 
 notifications:

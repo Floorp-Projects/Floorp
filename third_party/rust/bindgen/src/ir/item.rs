@@ -1,16 +1,20 @@
 //! Bindgen's core intermediate representation type.
 
+use super::super::codegen::CONSTIFIED_ENUM_MODULE_REPR_NAME;
 use super::annotations::Annotations;
+use super::comment;
+use super::comp::MethodKind;
 use super::context::{BindgenContext, ItemId, PartialType};
 use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
 use super::dot::DotAttributes;
-use super::function::Function;
+use super::function::{Function, FunctionKind};
 use super::item_kind::ItemKind;
 use super::layout::Opaque;
 use super::module::Module;
 use super::template::{AsTemplateParam, TemplateParameters};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::{Type, TypeKind};
+use super::analysis::HasVtable;
 use clang;
 use clang_sys;
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
@@ -58,6 +62,17 @@ pub trait ItemCanonicalPath {
 
     /// Get the canonical path for this item.
     fn canonical_path(&self, ctx: &BindgenContext) -> Vec<String>;
+}
+
+/// A trait for determining if some IR thing is opaque or not.
+pub trait IsOpaque {
+    /// Extra context the IR thing needs to determine if it is opaque or not.
+    type Extra;
+
+    /// Returns `true` if the thing is opaque, and `false` otherwise.
+    ///
+    /// May only be called when `ctx` is in the codegen phase.
+    fn is_opaque(&self, ctx: &BindgenContext, extra: &Self::Extra) -> bool;
 }
 
 /// A trait for iterating over an item and its parents and up its ancestor chain
@@ -230,7 +245,7 @@ impl Trace for Item {
                 // don't want to stop collecting types even though they may be
                 // opaque.
                 if ty.should_be_traced_unconditionally() ||
-                   !self.is_opaque(ctx) {
+                   !self.is_opaque(ctx, &()) {
                     ty.trace(ctx, tracer, self);
                 }
             }
@@ -256,47 +271,24 @@ impl Trace for Item {
 }
 
 impl CanDeriveDebug for Item {
-    type Extra = ();
-
-    fn can_derive_debug(&self, ctx: &BindgenContext, _: ()) -> bool {
-        if self.detect_derive_debug_cycle.get() {
-            return true;
-        }
-
-        self.detect_derive_debug_cycle.set(true);
-
-        let result = ctx.options().derive_debug &&
-                     match self.kind {
-            ItemKind::Type(ref ty) => {
-                if self.is_opaque(ctx) {
-                    ty.layout(ctx)
-                        .map_or(true, |l| l.opaque().can_derive_debug(ctx, ()))
-                } else {
-                    ty.can_derive_debug(ctx, ())
-                }
-            }
-            _ => false,
-        };
-
-        self.detect_derive_debug_cycle.set(false);
-
-        result
+    fn can_derive_debug(&self, ctx: &BindgenContext) -> bool {
+        ctx.options().derive_debug && ctx.lookup_item_id_can_derive_debug(self.id())
     }
 }
 
-impl CanDeriveDefault for Item {
+impl<'a> CanDeriveDefault<'a> for Item {
     type Extra = ();
 
     fn can_derive_default(&self, ctx: &BindgenContext, _: ()) -> bool {
         ctx.options().derive_default &&
         match self.kind {
             ItemKind::Type(ref ty) => {
-                if self.is_opaque(ctx) {
+                if self.is_opaque(ctx, &()) {
                     ty.layout(ctx)
                         .map_or(false,
                                 |l| l.opaque().can_derive_default(ctx, ()))
                 } else {
-                    ty.can_derive_default(ctx, ())
+                    ty.can_derive_default(ctx, self)
                 }
             }
             _ => false,
@@ -316,7 +308,7 @@ impl<'a> CanDeriveCopy<'a> for Item {
 
         let result = match self.kind {
             ItemKind::Type(ref ty) => {
-                if self.is_opaque(ctx) {
+                if self.is_opaque(ctx, &()) {
                     ty.layout(ctx)
                         .map_or(true, |l| l.opaque().can_derive_copy(ctx, ()))
                 } else {
@@ -334,7 +326,7 @@ impl<'a> CanDeriveCopy<'a> for Item {
     fn can_derive_copy_in_array(&self, ctx: &BindgenContext, _: ()) -> bool {
         match self.kind {
             ItemKind::Type(ref ty) => {
-                if self.is_opaque(ctx) {
+                if self.is_opaque(ctx, &()) {
                     ty.layout(ctx)
                         .map_or(true, |l| {
                             l.opaque().can_derive_copy_in_array(ctx, ())
@@ -467,9 +459,35 @@ impl Item {
         self.parent_id = id;
     }
 
-    /// Get this `Item`'s comment, if it has any.
-    pub fn comment(&self) -> Option<&str> {
-        self.comment.as_ref().map(|c| &**c)
+    /// Returns the depth this item is indented to.
+    ///
+    /// FIXME(emilio): This may need fixes for the enums within modules stuff.
+    pub fn codegen_depth(&self, ctx: &BindgenContext) -> usize {
+        if !ctx.options().enable_cxx_namespaces {
+            return 0;
+        }
+
+        self.ancestors(ctx)
+            .filter(|id| {
+                ctx.resolve_item(*id).as_module().map_or(false, |module| {
+                    !module.is_inline() ||
+                        ctx.options().conservative_inline_namespaces
+                })
+            })
+            .count() + 1
+    }
+
+
+    /// Get this `Item`'s comment, if it has any, already preprocessed and with
+    /// the right indentation.
+    pub fn comment(&self, ctx: &BindgenContext) -> Option<String> {
+        if !ctx.options().generate_comments {
+            return None;
+        }
+
+        self.comment.as_ref().map(|comment| {
+            comment::preprocess(comment, self.codegen_depth(ctx))
+        })
     }
 
     /// What kind of item is this?
@@ -592,15 +610,6 @@ impl Item {
         ctx.hidden_by_name(&self.canonical_path(ctx), self.id)
     }
 
-    /// Is this item opaque?
-    pub fn is_opaque(&self, ctx: &BindgenContext) -> bool {
-        debug_assert!(ctx.in_codegen_phase(),
-                      "You're not supposed to call this yet");
-        self.annotations.opaque() ||
-        self.as_type().map_or(false, |ty| ty.is_opaque()) ||
-        ctx.opaque_by_name(&self.canonical_path(ctx))
-    }
-
     /// Is this a reference to another type?
     pub fn is_type_ref(&self) -> bool {
         self.as_type().map_or(false, |ty| ty.is_type_ref())
@@ -647,6 +656,33 @@ impl Item {
                     }
                 }
                 _ => return item.id(),
+            }
+        }
+    }
+
+    /// Create a fully disambiguated name for an item, including template
+    /// parameters if it is a type
+    pub fn full_disambiguated_name(&self, ctx: &BindgenContext) -> String {
+        let mut s = String::new();
+        let level = 0;
+        self.push_disambiguated_name(ctx, &mut s, level);
+        s
+    }
+
+    /// Helper function for full_disambiguated_name
+    fn push_disambiguated_name(&self, ctx: &BindgenContext, to: &mut String, level: u8) {
+        to.push_str(&self.canonical_name(ctx));
+        if let ItemKind::Type(ref ty) = *self.kind() {
+            if let TypeKind::TemplateInstantiation(ref inst) = *ty.kind() {
+                to.push_str(&format!("_open{}_", level));
+                for arg in inst.template_arguments() {
+                    arg.into_resolver()
+                       .through_type_refs()
+                       .resolve(ctx)
+                       .push_disambiguated_name(ctx, to, level + 1);
+                    to.push_str("_");
+                }
+                to.push_str(&format!("close{}", level));
             }
         }
     }
@@ -765,8 +801,18 @@ impl Item {
             .ancestors(ctx)
             .filter(|id| *id != ctx.root_module())
             .take_while(|id| {
-                // Stop iterating ancestors once we reach a namespace.
+                // Stop iterating ancestors once we reach a non-inline namespace
+                // when opt.within_namespaces is set.
                 !opt.within_namespaces || !ctx.resolve_item(*id).is_module()
+            })
+            .filter(|id| {
+                if !ctx.options().conservative_inline_namespaces {
+                    if let ItemKind::Module(ref module) = *ctx.resolve_item(*id).kind() {
+                        return !module.is_inline();
+                    }
+                }
+
+                true
             })
             .map(|id| {
                 let item = ctx.resolve_item(id);
@@ -825,6 +871,91 @@ impl Item {
             _ => None,
         }
     }
+
+    /// Returns whether the item is a constified module enum
+    fn is_constified_enum_module(&self, ctx: &BindgenContext) -> bool {
+        // Do not jump through aliases, except for aliases that point to a type
+        // with the same name, since we dont generate coe for them.
+        let item = self.id.into_resolver().through_type_refs().resolve(ctx);
+        let type_ = match *item.kind() {
+            ItemKind::Type(ref type_) => type_,
+            _ => return false,
+        };
+
+        match *type_.kind() {
+            TypeKind::Enum(ref enum_) => {
+                enum_.is_constified_enum_module(ctx, self)
+            }
+            TypeKind::Alias(inner_id) => {
+                // TODO(emilio): Make this "hop through type aliases that aren't
+                // really generated" an option in `ItemResolver`?
+                let inner_item = ctx.resolve_item(inner_id);
+                let name = item.canonical_name(ctx);
+
+                if inner_item.canonical_name(ctx) == name {
+                    inner_item.is_constified_enum_module(ctx)
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
+    }
+
+    /// Is this item of a kind that is enabled for code generation?
+    pub fn is_enabled_for_codegen(&self, ctx: &BindgenContext) -> bool {
+        let cc = &ctx.options().codegen_config;
+        match *self.kind() {
+            ItemKind::Module(..) => true,
+            ItemKind::Var(_) => cc.vars,
+            ItemKind::Type(_) => cc.types,
+            ItemKind::Function(ref f) => {
+                match f.kind() {
+                    FunctionKind::Function => cc.functions,
+                    FunctionKind::Method(MethodKind::Constructor) => cc.constructors,
+                    FunctionKind::Method(MethodKind::Destructor) |
+                    FunctionKind::Method(MethodKind::VirtualDestructor) => cc.destructors,
+                    FunctionKind::Method(MethodKind::Static) |
+                    FunctionKind::Method(MethodKind::Normal) |
+                    FunctionKind::Method(MethodKind::Virtual) => cc.methods,
+                }
+            }
+        }
+    }
+}
+
+impl IsOpaque for ItemId {
+    type Extra = ();
+
+    fn is_opaque(&self, ctx: &BindgenContext, _: &()) -> bool {
+        debug_assert!(ctx.in_codegen_phase(),
+                      "You're not supposed to call this yet");
+        ctx.resolve_item(*self).is_opaque(ctx, &())
+    }
+}
+
+impl IsOpaque for Item {
+    type Extra = ();
+
+    fn is_opaque(&self, ctx: &BindgenContext, _: &()) -> bool {
+        debug_assert!(ctx.in_codegen_phase(),
+                      "You're not supposed to call this yet");
+        self.annotations.opaque() ||
+            self.as_type().map_or(false, |ty| ty.is_opaque(ctx, self)) ||
+            ctx.opaque_by_name(&self.canonical_path(ctx))
+    }
+}
+
+impl HasVtable for ItemId {
+    fn has_vtable(&self, ctx: &BindgenContext) -> bool {
+        ctx.lookup_item_id_has_vtable(self)
+    }
+}
+
+impl HasVtable for Item {
+    fn has_vtable(&self, ctx: &BindgenContext) -> bool {
+        ctx.lookup_item_id_has_vtable(&self.id())
+    }
 }
 
 /// A set of items.
@@ -843,7 +974,7 @@ impl DotAttributes for Item {
                       self.id,
                       self.name(ctx).get()));
 
-        if self.is_opaque(ctx) {
+        if self.is_opaque(ctx, &()) {
             writeln!(out, "<tr><td>opaque</td><td>true</td></tr>")?;
         }
 
@@ -1443,14 +1574,25 @@ impl ItemCanonicalPath for Item {
     fn namespace_aware_canonical_path(&self,
                                       ctx: &BindgenContext)
                                       -> Vec<String> {
-        let path = self.canonical_path(ctx);
-        if ctx.options().enable_cxx_namespaces {
-            return path;
-        }
+        let mut path = self.canonical_path(ctx);
+
+        // ASSUMPTION: (disable_name_namespacing && cxx_namespaces)
+        // is equivalent to
+        // disable_name_namespacing
         if ctx.options().disable_name_namespacing {
-            return vec![path.last().unwrap().clone()];
+            // Only keep the last item in path
+            let split_idx = path.len() - 1;
+            path = path.split_off(split_idx);
+        } else if !ctx.options().enable_cxx_namespaces {
+            // Ignore first item "root"
+            path = vec![path[1..].join("_")];
         }
-        return vec![path[1..].join("_")];
+
+        if self.is_constified_enum_module(ctx) {
+            path.push(CONSTIFIED_ENUM_MODULE_REPR_NAME.into());
+        }
+
+        return path;
     }
 
     fn canonical_path(&self, ctx: &BindgenContext) -> Vec<String> {

@@ -114,9 +114,9 @@ properly!
 
 ```bash
 $ cargo test
-   Compiling libbindgen-tutorial-bzip2-sys v0.1.0
+   Compiling bindgen-tutorial-bzip2-sys v0.1.0
     Finished debug [unoptimized + debuginfo] target(s) in 0.54 secs
-     Running target/debug/deps/libbindgen_tutorial_bzip2_sys-1c5626bbc4401c3a
+     Running target/debug/deps/bindgen_tutorial_bzip2_sys-1c5626bbc4401c3a
 
 running 15 tests
 test bindgen_test_layout___darwin_pthread_handler_rec ... ok
@@ -161,7 +161,7 @@ test tests::round_trip_compression_decompression ... ok
 
 test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured
 
-   Doc-tests libbindgen-tutorial-bzip2-sys
+   Doc-tests bindgen-tutorial-bzip2-sys
 
 running 0 tests
 

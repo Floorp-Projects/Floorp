@@ -33,6 +33,15 @@ pub fn builder_from_flags<I>
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
+            Arg::with_name("constified-enum-module")
+                .long("constified-enum-module")
+                .help("Mark any enum whose name matches <regex> as a module of \
+                       constants instead of an enumeration. This option \
+                       implies \"--constified-enum.\"")
+                .value_name("regex")
+                .takes_value(true)
+                .multiple(true)
+                .number_of_values(1),
             Arg::with_name("blacklist-type")
                 .long("blacklist-type")
                 .help("Mark <type> as hidden.")
@@ -56,7 +65,7 @@ pub fn builder_from_flags<I>
             Arg::with_name("no-doc-comments")
                 .long("no-doc-comments")
                 .help("Avoid including doc comments in the output, see: \
-                      https://github.com/servo/rust-bindgen/issues/426"),
+                      https://github.com/rust-lang-nursery/rust-bindgen/issues/426"),
             Arg::with_name("no-recursive-whitelist")
                 .long("no-recursive-whitelist")
                 .help("Avoid whitelisting types recursively."),
@@ -205,6 +214,12 @@ pub fn builder_from_flags<I>
             Arg::with_name("verbose")
                 .long("verbose")
                 .help("Print verbose error messages."),
+            Arg::with_name("dump-preprocessed-input")
+                .long("dump-preprocessed-input")
+                .help("Preprocess and dump the input header files to disk. \
+                       Useful when debugging bindgen, using C-Reduce, or when \
+                       filing issues. The resulting file will be named \
+                       something like `__bindgen.i` or `__bindgen.ii`.")
         ]) // .args()
         .get_matches_from(args);
 
@@ -222,12 +237,17 @@ pub fn builder_from_flags<I>
         }
     }
 
-    if let Some(bitfields) = matches.values_of("constified-enum") {
-        for regex in bitfields {
+    if let Some(constifieds) = matches.values_of("constified-enum") {
+        for regex in constifieds {
             builder = builder.constified_enum(regex);
         }
     }
 
+    if let Some(constified_mods) = matches.values_of("constified-enum-module") {
+        for regex in constified_mods {
+            builder = builder.constified_enum_module(regex);
+        }
+    }
     if let Some(hidden_types) = matches.values_of("blacklist-type") {
         for ty in hidden_types {
             builder = builder.hide_type(ty);
@@ -282,9 +302,10 @@ pub fn builder_from_flags<I>
                 "methods" => config.methods = true,
                 "constructors" => config.constructors = true,
                 "destructors" => config.destructors = true,
-                _ => {
+                otherwise => {
                     return Err(Error::new(ErrorKind::Other,
-                                          "Unknown generate item"));
+                                          format!("Unknown generate item: {}",
+                                                  otherwise)));
                 }
             }
         }
@@ -409,6 +430,10 @@ pub fn builder_from_flags<I>
     } else {
         Box::new(io::BufWriter::new(io::stdout())) as Box<io::Write>
     };
+
+    if matches.is_present("dump-preprocessed-input") {
+        builder.dump_preprocessed_input()?;
+    }
 
     let verbose = matches.is_present("verbose");
 

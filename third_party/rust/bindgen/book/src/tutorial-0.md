@@ -9,4 +9,4 @@ systems) on-the-fly.
 [**TL;DR?** The full tutorial code is available here.][example]
 
 [tutorial]: http://fitzgeraldnick.com/2016/12/14/using-libbindgen-in-build-rs.html
-[example]: https://github.com/fitzgen/libbindgen-tutorial-bzip2-sys
+[example]: https://github.com/fitzgen/bindgen-tutorial-bzip2-sys

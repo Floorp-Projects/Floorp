@@ -5,5 +5,5 @@ Declare a build-time dependency on `bindgen` by adding it to the
 
 ```toml
 [build-dependencies]
-bindgen = "0.23"
+bindgen = "0.26.3"
 ```
