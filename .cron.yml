@@ -46,12 +46,7 @@ jobs:
       run-on-projects:
           - mozilla-central
           - date
-      when:
-          by-project:
-            # Match buildbot starts for now
-            date: [{hour: 15, minute: 0}]
-            mozilla-central: [{hour: 10, minute: 0}]
-            # No default
+      when: [] # never (hook only)
 
     - name: nightly-android
       job:

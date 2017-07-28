@@ -11,10 +11,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AbstractThread.h"
-#include "mozilla/InputEventStatistics.h"
-#include "mozilla/SystemGroup.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/Preferences.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
 #include <unistd.h>
@@ -330,7 +327,7 @@ NS_IMETHODIMP
 nsThreadManager::GetCurrentThread(nsIThread** aResult)
 {
   // Keep this functioning during Shutdown
-  if (!mMainThread) {
+  if (NS_WARN_IF(!mMainThread)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
   *aResult = GetCurrentThread();
@@ -379,14 +376,6 @@ nsThreadManager::SpinEventLoopUntilEmpty()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThreadManager::GetSystemGroupEventTarget(nsIEventTarget** aTarget)
-{
-  nsCOMPtr<nsIEventTarget> target = SystemGroup::EventTargetFor(TaskCategory::Other);
-  target.forget(aTarget);
-  return NS_OK;
-}
-
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {
@@ -395,7 +384,7 @@ nsThreadManager::GetHighestNumberOfThreads()
 }
 
 NS_IMETHODIMP
-nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent, uint32_t aPriority)
+nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent)
 {
   // Note: C++ callers should instead use NS_DispatchToMainThread.
   MOZ_ASSERT(NS_IsMainThread());
@@ -404,31 +393,8 @@ nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent, uint32_t aPriority)
   if (NS_WARN_IF(!mMainThread)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  if (aPriority != nsIRunnablePriority::PRIORITY_NORMAL) {
-    nsCOMPtr<nsIRunnable> event(aEvent);
-    return mMainThread->DispatchFromScript(
-             new PrioritizableRunnable(event.forget(), aPriority), 0);
-  }
+
   return mMainThread->DispatchFromScript(aEvent, 0);
-}
-
-void
-nsThreadManager::EnableMainThreadEventPrioritization()
-{
-  static bool sIsInitialized = false;
-  if (sIsInitialized) {
-    return;
-  }
-  sIsInitialized = true;
-  MOZ_ASSERT(Preferences::IsServiceAvailable());
-  bool enable =
-    Preferences::GetBool("prioritized_input_events.enabled", false);
-
-  if (!enable) {
-    return;
-  }
-  InputEventStatistics::Get().SetEnable(true);
-  mMainThread->EnableEventPrioritization();
 }
 
 NS_IMETHODIMP
