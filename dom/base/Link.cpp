@@ -830,14 +830,14 @@ Link::SetHrefAttribute(nsIURI *aURI)
 }
 
 size_t
-Link::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
 {
   size_t n = 0;
 
   if (mCachedURI) {
     nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mCachedURI);
     if (iface) {
-      n += iface->SizeOfIncludingThis(aMallocSizeOf);
+      n += iface->SizeOfIncludingThis(aState.mMallocSizeOf);
     }
   }
 

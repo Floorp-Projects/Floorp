@@ -32,7 +32,7 @@ DynamicImage::GetProgressTracker()
 }
 
 size_t
-DynamicImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
+DynamicImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
 {
   return 0;
 }
