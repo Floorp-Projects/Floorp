@@ -135,6 +135,10 @@ typedef GenericFlingAnimation FlingAnimation;
  * a single input block. If set to false, a single input block can only
  * scroll one APZC.
  *
+ * \li\b apz.autoscroll.enabled
+ * If set to true, autoscrolling is driven by APZ rather than the content
+ * process main thread.
+ *
  * \li\b apz.axis_lock.mode
  * The preferred axis locking style. See AxisLockMode for possible values.
  *

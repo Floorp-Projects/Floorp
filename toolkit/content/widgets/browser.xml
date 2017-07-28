@@ -1091,7 +1091,8 @@
                 return false;
               }
               this.startScroll(data.scrolldir, data.screenX, data.screenY);
-              if (this.isRemoteBrowser && data.scrollId != null) {
+              if (this.isRemoteBrowser && data.scrollId != null &&
+                  this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)) {
                 let { tabParent } = this.frameLoader;
                 if (tabParent) {
                   tabParent.startApzAutoscroll(data.screenX, data.screenY,
@@ -1219,7 +1220,7 @@
               window.removeEventListener("keyup", this, true);
               this.messageManager.sendAsyncMessage("Autoscroll:Stop");
 
-              if (this.isRemoteBrowser) {
+              if (this.isRemoteBrowser && this._autoScrollScrollId != null) {
                 let { tabParent } = this.frameLoader;
                 if (tabParent) {
                   tabParent.stopApzAutoscroll(this._autoScrollScrollId,
