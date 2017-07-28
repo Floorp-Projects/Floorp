@@ -671,7 +671,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
 
         }
       };
-      session.fetchSince(0, fetchDelegate);
+      session.fetchModified(fetchDelegate);
     }
   }
 

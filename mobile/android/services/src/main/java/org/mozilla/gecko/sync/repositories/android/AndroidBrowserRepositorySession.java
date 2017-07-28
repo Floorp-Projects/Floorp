@@ -273,9 +273,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     }
   }
 
-  @Override
-  public void fetchSince(long timestamp,
-                         RepositorySessionFetchRecordsDelegate delegate) {
+  private void fetchSince(long timestamp, RepositorySessionFetchRecordsDelegate delegate) {
     if (this.storeTracker == null) {
       throw new IllegalStateException("Store tracker not yet initialized!");
     }
@@ -283,6 +281,16 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
     Logger.debug(LOG_TAG, "Running fetchSince(" + timestamp + ").");
     FetchSinceRunnable command = new FetchSinceRunnable(timestamp, now(), this.storeTracker.getFilter(), delegate);
     delegateQueue.execute(command);
+  }
+
+  @Override
+  public void fetchModified(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
+  }
+
+  @Override
+  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(-1, delegate);
   }
 
   class FetchSinceRunnable extends FetchingRunnable {
@@ -315,11 +323,6 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
         return;
       }
     }
-  }
-
-  @Override
-  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-    this.fetchSince(0, delegate);
   }
 
   protected int storeCount = 0;
