@@ -13,7 +13,10 @@ class nsISupports;
 class nsCycleCollectionNoteRootCallback
 {
 public:
-  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot) = 0;
+  // aRoot must be canonical (ie the result of QIing to nsCycleCollectionISupports).
+  NS_IMETHOD_(void) NoteXPCOMRoot(nsISupports* aRoot,
+                                  nsCycleCollectionParticipant* aParticipant) = 0;
+
   NS_IMETHOD_(void) NoteJSRoot(JSObject* aRoot) = 0;
   NS_IMETHOD_(void) NoteNativeRoot(void* aRoot,
                                    nsCycleCollectionParticipant* aParticipant) = 0;
