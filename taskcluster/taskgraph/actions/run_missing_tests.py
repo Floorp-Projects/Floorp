@@ -61,7 +61,7 @@ def run_missing_tests(parameters, input, task_group_id, task_id, task):
                         for name, label in task.dependencies.iteritems()}
         task_def = resolve_task_references(task.label, task.task, dependencies)
         task_def.setdefault('dependencies', []).extend(dependencies.itervalues())
-        create_task(slugid(), task_def)
+        create_task(slugid(), task_def, parameters['level'])
 
     logger.info('Out of {} test tasks, {} already existed and the action created {}'.format(
         already_run + len(to_run), already_run, len(to_run)))
