@@ -11,6 +11,7 @@
 #include "jsgc.h"
 
 #include "gc/Heap.h"
+#include "gc/Nursery.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "vm/ArrayObject.h"
@@ -521,13 +522,16 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
 
       case JS::TraceKind::String: {
         JSString* str = static_cast<JSString*>(thing);
+        size_t size = thingSize;
+        if (!str->isTenured())
+            size += Nursery::stringHeaderSize();
 
         JS::StringInfo info;
         if (str->hasLatin1Chars()) {
-            info.gcHeapLatin1 = thingSize;
+            info.gcHeapLatin1 = size;
             info.mallocHeapLatin1 = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         } else {
-            info.gcHeapTwoByte = thingSize;
+            info.gcHeapTwoByte = size;
             info.mallocHeapTwoByte = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         }
         info.numCopies = 1;
