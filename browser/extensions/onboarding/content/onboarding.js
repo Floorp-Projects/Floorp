@@ -162,8 +162,8 @@ var onboardingTourset = {
     },
     getPage(win, bundle) {
       let div = win.document.createElement("div");
-      let defaultBrowserButtonId = win.matchMedia("(-moz-os-version: windows-win7)").matches ?
-        "onboarding.tour-default-browser.win7.button" : "onboarding.tour-default-browser.button";
+      let setFromBackGround = bundle.formatStringFromName("onboarding.tour-default-browser.win7.button", [BRAND_SHORT_NAME], 1);
+      let setFromPanel = bundle.GetStringFromName("onboarding.tour-default-browser.button");
       let isDefaultMessage = bundle.GetStringFromName("onboarding.tour-default-browser.is-default.message");
       let isDefault2ndMessage = bundle.formatStringFromName("onboarding.tour-default-browser.is-default.2nd-message", [BRAND_SHORT_NAME], 1);
       // eslint-disable-next-line no-unsanitized/property
@@ -176,10 +176,15 @@ var onboardingTourset = {
           <img src="resource://onboarding/img/figure_default.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
-          <button id="onboarding-tour-default-browser-button" class="onboarding-tour-action-button" data-l10n-id="${defaultBrowserButtonId}"></button>
+          <button id="onboarding-tour-default-browser-button" class="onboarding-tour-action-button"
+            data-bg="${setFromBackGround}" data-panel="${setFromPanel}"></button>
           <div id="onboarding-tour-is-default-browser-msg" class="onboarding-hidden">${isDefaultMessage}<br/>${isDefault2ndMessage}</div>
         </aside>
       `;
+
+      div.addEventListener("beforeshow", () => {
+        win.document.dispatchEvent(new Event("Agent:CanSetDefaultBrowserInBackground"));
+      });
       return div;
     },
   },

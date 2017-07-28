@@ -6,8 +6,17 @@
 
 "use strict";
 
+document.addEventListener("Agent:CanSetDefaultBrowserInBackground", () => {
+  Mozilla.UITour.getConfiguration("appinfo", config => {
+    let canSetInBackGround = config.canSetDefaultBrowserInBackground;
+    let btn = document.getElementById("onboarding-tour-default-browser-button");
+    btn.setAttribute("data-cansetbg", canSetInBackGround);
+    btn.textContent = canSetInBackGround ? btn.getAttribute("data-bg") : btn.getAttribute("data-panel");
+  });
+});
+
 document.getElementById("onboarding-overlay")
-                        .addEventListener("click", evt => {
+  .addEventListener("click", evt => {
   switch (evt.target.id) {
     case "onboarding-tour-addons-button":
       Mozilla.UITour.showHighlight("addons");
@@ -20,9 +29,13 @@ document.getElementById("onboarding-overlay")
         let isDefaultBrowser = config.defaultBrowser;
         let btn = document.getElementById("onboarding-tour-default-browser-button");
         let msg = document.getElementById("onboarding-tour-is-default-browser-msg");
-        if (isDefaultBrowser) {
+        let canSetInBackGround = btn.getAttribute("data-cansetbg") === "true";
+        if (isDefaultBrowser || canSetInBackGround) {
           btn.classList.add("onboarding-hidden");
           msg.classList.remove("onboarding-hidden");
+          if (canSetInBackGround) {
+            Mozilla.UITour.setConfiguration("defaultBrowser");
+          }
         } else {
           btn.disabled = true;
           Mozilla.UITour.setConfiguration("defaultBrowser");
