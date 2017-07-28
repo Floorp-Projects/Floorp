@@ -34,7 +34,9 @@ async function do_test(test) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   info("Moving mouse out of the way.");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 300, 300);
+  await new Promise(resolve => {
+    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 300, 300, resolve);
+  });
 
   info("creating input field");
   await ContentTask.spawn(tab.linkedBrowser, test, async function(test) {
@@ -90,11 +92,15 @@ async function do_test(test) {
     }, {once: true});
   });
   info("Initial mouse move");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 50, 5);
+  await new Promise(resolve => {
+    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 50, 5, resolve);
+  });
   info("Waiting");
   await new Promise(resolve => setTimeout(resolve, 400));
   info("Second mouse move");
-  await EventUtils.synthesizeAndWaitNativeMouseMove(tab.linkedBrowser, 70, 5);
+  await new Promise(resolve => {
+    EventUtils.synthesizeNativeMouseMove(tab.linkedBrowser, 70, 5, resolve);
+  });
   info("Waiting for tooltip to open");
   let tooltip = await awaitTooltipOpen;
 
