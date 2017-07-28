@@ -571,7 +571,16 @@ class JSString : public js::gc::Cell
         else
             kind = AllocKind::STRING;
 
-        MOZ_ASSERT_IF(isTenured(), kind == asTenured().getAllocKind());
+#if DEBUG
+        if (isTenured()) {
+            // Normally, the kinds should match, but an EXTERNAL_STRING arena
+            // may contain strings that have been flattened (see
+            // JSExternalString::ensureFlat).
+            AllocKind tenuredKind = asTenured().getAllocKind();
+            MOZ_ASSERT(kind == tenuredKind ||
+                       (tenuredKind == AllocKind::EXTERNAL_STRING && kind == AllocKind::STRING));
+        }
+#endif
         return kind;
     }
 
@@ -1048,6 +1057,11 @@ class JSExternalString : public JSLinearString
 
     inline void finalize(js::FreeOp* fop);
 
+    /*
+     * Free the external chars and allocate a new buffer, converting this to a
+     * flat string (which still lives in an AllocKind::EXTERNAL_STRING
+     * arena).
+     */
     JSFlatString* ensureFlat(JSContext* cx);
 
 #ifdef DEBUG
