@@ -61,7 +61,9 @@
 }
 
 #onboarding-overlay-dialog,
-.onboarding-hidden {
+.onboarding-hidden,
+#onboarding-tour-sync-page[data-login-state=logged-in] .show-on-logged-out,
+#onboarding-tour-sync-page[data-login-state=logged-out] .show-on-logged-in {
   display: none;
 }
 

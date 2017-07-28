@@ -60,6 +60,68 @@ function setPrefs(prefs) {
 }
 
 /**
+ * syncTourChecker listens to and maintains the login status inside, and can be
+ * queried at any time once initialized.
+ */
+let syncTourChecker = {
+  _registered: false,
+  _loggedIn: false,
+
+  isLoggedIn() {
+    return this._loggedIn;
+  },
+
+  observe(subject, topic) {
+    switch (topic) {
+      case "fxaccounts:onlogin":
+        this.setComplete();
+        break;
+      case "fxaccounts:onlogout":
+        this._loggedIn = false;
+        break;
+    }
+  },
+
+  init() {
+    // Check if we've already logged in at startup.
+    fxAccounts.getSignedInUser().then(user => {
+      if (user) {
+        this.setComplete();
+      }
+      // Observe for login action if we haven't logged in yet.
+      this.register();
+    });
+  },
+
+  register() {
+    if (this._registered) {
+      return;
+    }
+    Services.obs.addObserver(this, "fxaccounts:onlogin");
+    Services.obs.addObserver(this, "fxaccounts:onlogout");
+    this._registered = true;
+  },
+
+  setComplete() {
+    this._loggedIn = true;
+    Services.prefs.setBoolPref("browser.onboarding.tour.onboarding-tour-sync.completed", true);
+  },
+
+  unregister() {
+    if (!this._registered) {
+      return;
+    }
+    Services.obs.removeObserver(this, "fxaccounts:onlogin");
+    Services.obs.removeObserver(this, "fxaccounts:onlogout");
+    this._registered = false;
+  },
+
+  uninit() {
+    this.unregister();
+  },
+}
+
+/**
  * Listen and process events from content.
  */
 function initContentMessageListener() {
@@ -68,56 +130,13 @@ function initContentMessageListener() {
       case "set-prefs":
         setPrefs(msg.data.params);
         break;
+      case "get-login-status":
+        msg.target.messageManager.sendAsyncMessage("Onboarding:ResponseLoginStatus", {
+          isLoggedIn: syncTourChecker.isLoggedIn()
+        });
+        break;
     }
   });
-}
-
-let syncTourChecker = {
-  registered: false,
-
-  observe() {
-    this.setComplete();
-  },
-
-  init() {
-    if (Services.prefs.getBoolPref("browser.onboarding.tour.onboarding-tour-sync.completed", false)) {
-      return;
-    }
-    // Check if we've already logged in at startup.
-    fxAccounts.getSignedInUser().then(user => {
-      if (user) {
-        this.setComplete();
-        return;
-      }
-      // Observe for login action if we haven't logged in yet.
-      this.register();
-    });
-  },
-
-  register() {
-    if (this.registered) {
-      return;
-    }
-    Services.obs.addObserver(this, "fxaccounts:onverified");
-    this.registered = true;
-  },
-
-  setComplete() {
-    Services.prefs.setBoolPref("browser.onboarding.tour.onboarding-tour-sync.completed", true);
-    this.unregister();
-  },
-
-  unregister() {
-    if (!this.registered) {
-      return;
-    }
-    Services.obs.removeObserver(this, "fxaccounts:onverified");
-    this.registered = false;
-  },
-
-  uninit() {
-    this.unregister();
-  },
 }
 
 /**
