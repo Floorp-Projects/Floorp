@@ -22,6 +22,7 @@
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WeakPtr.h"
 
 #include "nsIFrameLoader.h"
 #include "nsIHangReport.h"
@@ -208,10 +209,13 @@ private:
 
 class HangMonitorParent
   : public PProcessHangMonitorParent
+  , public SupportsWeakPtr<HangMonitorParent>
 {
 public:
   explicit HangMonitorParent(ProcessHangMonitor* aMonitor);
   ~HangMonitorParent() override;
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(HangMonitorParent)
 
   void Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint);
 
@@ -693,11 +697,19 @@ HangMonitorParent::SendHangNotification(const HangData& aHangData,
     // content process dumps.
     const PluginHangData& phd = aHangData.get_PluginHangData();
 
+    WeakPtr<HangMonitorParent> self = this;
     std::function<void(nsString)> callback =
-      [this, aHangData](nsString aResult) {
-        this->UpdateMinidump(aHangData.get_PluginHangData().pluginId(),
+      [self, aHangData](nsString aResult) {
+        MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+        if (!self) {
+          // Don't report hang since the process has already shut down.
+          return;
+        }
+
+        self->UpdateMinidump(aHangData.get_PluginHangData().pluginId(),
                        aResult);
-        this->OnTakeFullMinidumpComplete(aHangData, aResult);
+        self->OnTakeFullMinidumpComplete(aHangData, aResult);
       };
 
     plugins::TakeFullMinidump(phd.pluginId(),
