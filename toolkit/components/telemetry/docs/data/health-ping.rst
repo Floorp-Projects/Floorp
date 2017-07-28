@@ -47,7 +47,7 @@ After recording the data, ping will be sent:
 
 * immediately, with the reason ``immediate`` , if it is first ping in the session or it passed at least one hour from the previous submission.
 * after 1 hour minus the time passed from previous submission, with the reason ``delayed`` , if less than an hour passed from the previous submission.
-* on shutdown, with the reason ``shutdown`` , if recorded data is not empty.
+* on shutdown, with the reason ``shutdown`` using :doc:`../internals/pingsender`, if recorded data is not empty.
 
 Field details
 -------------
