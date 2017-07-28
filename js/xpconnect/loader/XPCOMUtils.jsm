@@ -384,7 +384,32 @@ this.XPCOMUtils = {
 
     function lazyGetter() {
       if (observer.value === undefined) {
-        observer.value = aTransform(Preferences.get(aPreference, aDefaultValue));
+        let prefValue;
+        switch (Services.prefs.getPrefType(aPreference)) {
+          case Ci.nsIPrefBranch.PREF_STRING:
+            prefValue = Services.prefs.getStringPref(aPreference);
+            break;
+
+          case Ci.nsIPrefBranch.PREF_INT:
+            prefValue = Services.prefs.getIntPref(aPreference);
+            break;
+
+          case Ci.nsIPrefBranch.PREF_BOOL:
+            prefValue = Services.prefs.getBoolPref(aPreference);
+            break;
+
+          case Ci.nsIPrefBranch.PREF_INVALID:
+            prefValue = aDefaultValue;
+            break;
+
+          default:
+            // This should never happen.
+            throw new Error(`Error getting pref ${aPreference}; its value's type is ` +
+                            `${Services.prefs.getPrefType(aPreference)}, which I don't ` +
+                            `know how to handle.`);
+        }
+
+        observer.value = aTransform(prefValue);
       }
       return observer.value;
     }
@@ -500,8 +525,6 @@ this.XPCOMUtils = {
   },
 };
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
