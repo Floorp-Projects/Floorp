@@ -608,7 +608,8 @@
 <hbox id="dataCollectionCategory"
       class="subcategory"
       hidden="true"
-      data-category="panePrivacy">
+      data-category="panePrivacy"
+      data-subcategory="reports">
   <label class="header-name" flex="1">&dataCollection.label;</label>
 </hbox>
 
