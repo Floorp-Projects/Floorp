@@ -37,20 +37,23 @@ add_task(async function speculative_connect_restore_on_demand() {
 
   let e = new MouseEvent("mouseover");
 
-  // First tab should be ignore, since it's the default blank tab when we open a new window.
+  // First tab should be ignored, since it's the default blank tab when we open a new window.
 
   // Trigger a mouse enter on second tab.
   tabs[1].dispatchEvent(e);
   is(tabs[1].__test_connection_prepared, false, "Second tab doesn't have a connection prepared");
   is(tabs[1].__test_connection_url, TEST_URLS[0], "Second tab has correct url");
+  is(tabs[1].__SS_connectionPrepared, true, "Second tab should have __SS_connectionPrepared flag after hovered");
 
   // Trigger a mouse enter on third tab.
   tabs[2].dispatchEvent(e);
   is(tabs[2].__test_connection_prepared, true, "Third tab has a connection prepared");
   is(tabs[2].__test_connection_url, TEST_URLS[1], "Third tab has correct url");
+  is(tabs[2].__SS_connectionPrepared, true, "Third tab should have __SS_connectionPrepared flag after hovered");
 
   // Last tab is the previously selected tab.
   tabs[3].dispatchEvent(e);
+  is(tabs[3].__SS_connectionPrepared, undefined, "Previous selected tab shouldn't have __SS_connectionPrepared flag");
   is(tabs[3].__test_connection_prepared, undefined, "Previous selected tab should not have a connection prepared");
   is(tabs[3].__test_connection_url, undefined, "Previous selected tab should not have a connection prepared");
 
@@ -78,7 +81,7 @@ add_task(async function speculative_connect_restore_automatically() {
   let tabs = newWin.gBrowser.tabs;
   is(tabs.length, TEST_URLS.length + 1, "Restored right number of tabs");
 
-  // First tab is ignore, since it's the default tab open when we open new window
+  // First tab is ignored, since it's the default tab open when we open new window
 
   // Second tab.
   is(tabs[1].__test_connection_prepared, false, "Second tab doesn't have a connection prepared");

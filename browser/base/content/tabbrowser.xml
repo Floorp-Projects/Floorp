@@ -7547,6 +7547,9 @@
             this.linkedBrowser.unselectedTabHover(true);
             this.startUnselectedTabHoverTimer();
           }
+
+          // Prepare connection to host beforehand.
+          SessionStore.speculativeConnectOnTabHover(this);
         ]]></body>
       </method>
 
