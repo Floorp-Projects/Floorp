@@ -1089,8 +1089,7 @@ gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aL
         uint32_t tempLen = 0;
 
         // Add the CJK pref fonts from accept languages, the order should be same order
-        nsAutoCString list;
-        Preferences::GetLocalizedCString("intl.accept_languages", list);
+        nsAdoptingCString list = Preferences::GetLocalizedCString("intl.accept_languages");
         if (!list.IsEmpty()) {
             const char kComma = ',';
             const char *p, *p_end;
@@ -1216,8 +1215,8 @@ gfxPlatformFontList::GetDefaultGeneric(eFontPrefLang aLang)
         for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); i++) {
             nsAutoCString prefDefaultFontType("font.default.");
             prefDefaultFontType.Append(GetPrefLangName(eFontPrefLang(i)));
-            nsAutoCString serifOrSans;
-            Preferences::GetCString(prefDefaultFontType.get(), serifOrSans);
+            nsAdoptingCString serifOrSans =
+                Preferences::GetCString(prefDefaultFontType.get());
             if (serifOrSans.EqualsLiteral("sans-serif")) {
                 mDefaultGenericsLangGroup[i] = eFamily_sans_serif;
             } else {

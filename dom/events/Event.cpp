@@ -900,8 +900,7 @@ Event::PopupAllowedEventsChanged()
     free(sPopupAllowedEvents);
   }
 
-  nsAutoCString str;
-  Preferences::GetCString("dom.popup_allowed_events", str);
+  nsAdoptingCString str = Preferences::GetCString("dom.popup_allowed_events");
 
   // We'll want to do this even if str is empty to avoid looking up
   // this pref all the time if it's not set.

@@ -114,10 +114,9 @@ nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate)
 
 #ifdef XP_MACOSX
   uint32_t    chromeMask = 0;
-  nsAutoCString prefVal;
-  rv = Preferences::GetCString("browser.hiddenWindowChromeURL", prefVal);
-  const char* hiddenWindowURL =
-    NS_SUCCEEDED(rv) ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
+  nsAdoptingCString prefVal =
+      Preferences::GetCString("browser.hiddenWindowChromeURL");
+  const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
   if (aIsPrivate) {
     hiddenWindowURL = DEFAULT_HIDDENWINDOW_URL;
   } else {

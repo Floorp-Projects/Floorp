@@ -120,18 +120,14 @@ CachedPrefs::OnPrefsChange(const char* aPref, void* aClosure)
   CachedPrefs* prefs = static_cast<CachedPrefs*> (aClosure);
 
   if (!strcmp(aPref, URLCLASSIFIER_SKIP_HOSTNAMES)) {
-    nsCString skipHostnames;
-    Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES, skipHostnames);
+    nsCString skipHostnames = Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES);
     ToLowerCase(skipHostnames);
     prefs->SetSkipHostnames(skipHostnames);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_WHITELIST)) {
-    nsCString trackingWhitelist;
-    Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST,
-                            trackingWhitelist);
+    nsCString trackingWhitelist = Preferences::GetCString(URLCLASSIFIER_TRACKING_WHITELIST);
     prefs->SetTrackingWhiteList(trackingWhitelist);
   } else if (!strcmp(aPref, URLCLASSIFIER_TRACKING_TABLE)) {
-    nsCString trackingBlacklist;
-    Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE, trackingBlacklist);
+    nsCString trackingBlacklist = Preferences::GetCString(URLCLASSIFIER_TRACKING_TABLE);
     prefs->SetTrackingBlackList(trackingBlacklist);
   }
 }

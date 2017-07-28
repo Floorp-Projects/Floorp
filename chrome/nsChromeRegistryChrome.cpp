@@ -251,12 +251,11 @@ nsChromeRegistryChrome::OverrideLocalePackage(const nsACString& aPackage,
                                               nsACString& aOverride)
 {
   const nsACString& pref = NS_LITERAL_CSTRING(PACKAGE_OVERRIDE_BRANCH) + aPackage;
-  nsAutoCString override;
-  nsresult rv =
-    mozilla::Preferences::GetCString(PromiseFlatCString(pref).get(), override);
-  if (NS_SUCCEEDED(rv)) {
+  nsAdoptingCString override = mozilla::Preferences::GetCString(PromiseFlatCString(pref).get());
+  if (override) {
     aOverride = override;
-  } else {
+  }
+  else {
     aOverride = aPackage;
   }
   return NS_OK;

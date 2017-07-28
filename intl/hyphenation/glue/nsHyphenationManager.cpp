@@ -305,9 +305,8 @@ nsHyphenationManager::LoadAliases()
                                              &prefCount, &prefNames);
   if (NS_SUCCEEDED(rv) && prefCount > 0) {
     for (uint32_t i = 0; i < prefCount; ++i) {
-      nsAutoCString value;
-      rv = Preferences::GetCString(prefNames[i], value);
-      if (NS_SUCCEEDED(rv)) {
+      nsAdoptingCString value = Preferences::GetCString(prefNames[i]);
+      if (value) {
         nsAutoCString alias(prefNames[i]);
         alias.Cut(0, sizeof(kIntlHyphenationAliasPrefix) - 1);
         ToLowerCase(alias);

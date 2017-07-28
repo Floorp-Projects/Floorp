@@ -103,8 +103,8 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
   enum {eUnit_unknown = -1, eUnit_px, eUnit_pt};
   int32_t unit = eUnit_px;
 
-  nsAutoCString cvalue;
-  Preferences::GetCString("font.size.unit", cvalue);
+  nsAdoptingCString cvalue =
+    Preferences::GetCString("font.size.unit");
 
   if (!cvalue.IsEmpty()) {
     if (cvalue.EqualsLiteral("px")) {
@@ -222,7 +222,7 @@ LangGroupFontPrefs::Initialize(nsIAtom* aLangGroupAtom)
     // get font.size-adjust.[generic].[langGroup]
     // XXX only applicable on GFX ports that handle |font-size-adjust|
     MAKE_FONT_PREF_KEY(pref, "font.size-adjust", generic_dot_langGroup);
-    Preferences::GetCString(pref.get(), cvalue);
+    cvalue = Preferences::GetCString(pref.get());
     if (!cvalue.IsEmpty()) {
       font->sizeAdjust = (float)atof(cvalue.get());
     }

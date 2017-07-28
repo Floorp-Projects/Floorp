@@ -745,13 +745,10 @@ BackgroundHangMonitor::IsDisabled() {
 
 bool
 BackgroundHangMonitor::DisableOnBeta() {
-  nsAutoCString clientID;
-  nsresult rv =
-    Preferences::GetCString("toolkit.telemetry.cachedClientID", clientID);
+  nsAdoptingCString clientID = Preferences::GetCString("toolkit.telemetry.cachedClientID");
   bool telemetryEnabled = Preferences::GetBool("toolkit.telemetry.enabled");
 
-  if (!telemetryEnabled || NS_FAILED(rv) ||
-      BackgroundHangMonitor::ShouldDisableOnBeta(clientID)) {
+  if (!telemetryEnabled || !clientID || BackgroundHangMonitor::ShouldDisableOnBeta(clientID)) {
     if (XRE_IsParentProcess()) {
       BackgroundHangMonitor::Shutdown();
     } else {
