@@ -31,9 +31,12 @@
       <caption label="&defaultSearchEngine.label;"/>
       <label>&chooseYourDefaultSearchEngine2.label;</label>
       <hbox>
-        <menulist id="defaultEngine">
-          <menupopup/>
-        </menulist>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="defaultEngine">
+            <menupopup/>
+          </menulist>
+        </hbox>
       </hbox>
       <checkbox id="suggestionsInSearchFieldsCheckbox"
                 label="&provideSearchSuggestions.label;"

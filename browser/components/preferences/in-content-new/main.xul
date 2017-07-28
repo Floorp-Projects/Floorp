@@ -432,13 +432,16 @@
         &browserContainersLearnMore.label;
       </label>
       <spacer flex="1"/>
-      <button id="browserContainersSettings"
-              class="accessory-button"
-              label="&browserContainersSettings.label;"
-              accesskey="&browserContainersSettings.accesskey;"
-              searchkeywords="&addButton.label;
-                              &preferencesButton.label;
-                              &removeButton.label;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="browserContainersSettings"
+                class="accessory-button"
+                label="&browserContainersSettings.label;"
+                accesskey="&browserContainersSettings.accesskey;"
+                searchkeywords="&addButton.label;
+                                &preferencesButton.label;
+                                &removeButton.label;"/>
+      </hbox>
     </hbox>
 </groupbox>
 
@@ -457,120 +460,132 @@
     <hbox id="fontSettings">
       <hbox align="center" flex="1">
         <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
-        <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox flex="1">
+          <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        </hbox>
         <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
-        <menulist id="defaultFontSize" delayprefsave="true">
-          <menupopup>
-            <menuitem value="9" label="9"/>
-            <menuitem value="10" label="10"/>
-            <menuitem value="11" label="11"/>
-            <menuitem value="12" label="12"/>
-            <menuitem value="13" label="13"/>
-            <menuitem value="14" label="14"/>
-            <menuitem value="15" label="15"/>
-            <menuitem value="16" label="16"/>
-            <menuitem value="17" label="17"/>
-            <menuitem value="18" label="18"/>
-            <menuitem value="20" label="20"/>
-            <menuitem value="22" label="22"/>
-            <menuitem value="24" label="24"/>
-            <menuitem value="26" label="26"/>
-            <menuitem value="28" label="28"/>
-            <menuitem value="30" label="30"/>
-            <menuitem value="32" label="32"/>
-            <menuitem value="34" label="34"/>
-            <menuitem value="36" label="36"/>
-            <menuitem value="40" label="40"/>
-            <menuitem value="44" label="44"/>
-            <menuitem value="48" label="48"/>
-            <menuitem value="56" label="56"/>
-            <menuitem value="64" label="64"/>
-            <menuitem value="72" label="72"/>
-          </menupopup>
-        </menulist>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="defaultFontSize" delayprefsave="true">
+            <menupopup>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
+            </menupopup>
+          </menulist>
+        </hbox>
       </hbox>
       <spacer flex="1" />
-      <button id="advancedFonts"
-              class="accessory-button"
-              icon="select-font"
-              label="&advancedFonts.label;"
-              accesskey="&advancedFonts.accesskey;"
-              searchkeywords="&fontsDialog.title;
-                              &language.label;
-                              &size.label;
-                              &proportional.label;
-                              &serif.label;
-                              &sans-serif.label;
-                              &monospace.label;
-                              &font.langGroup.latin;
-                              &font.langGroup.japanese;
-                              &font.langGroup.trad-chinese;
-                              &font.langGroup.simpl-chinese;
-                              &font.langGroup.trad-chinese-hk;
-                              &font.langGroup.korean;
-                              &font.langGroup.cyrillic;
-                              &font.langGroup.el;
-                              &font.langGroup.other;
-                              &font.langGroup.thai;
-                              &font.langGroup.hebrew;
-                              &font.langGroup.arabic;
-                              &font.langGroup.devanagari;
-                              &font.langGroup.tamil;
-                              &font.langGroup.armenian;
-                              &font.langGroup.bengali;
-                              &font.langGroup.canadian;
-                              &font.langGroup.ethiopic;
-                              &font.langGroup.georgian;
-                              &font.langGroup.gujarati;
-                              &font.langGroup.gurmukhi;
-                              &font.langGroup.khmer;
-                              &font.langGroup.malayalam;
-                              &font.langGroup.math;
-                              &font.langGroup.odia;
-                              &font.langGroup.telugu;
-                              &font.langGroup.kannada;
-                              &font.langGroup.sinhala;
-                              &font.langGroup.tibetan;
-                              &minSize.label;
-                              &minSize.none;
-                              &useDefaultFontSerif.label;
-                              &useDefaultFontSansSerif.label;
-                              &allowPagesToUseOwn.label;
-                              &languages.customize.Fallback2.grouplabel;
-                              &languages.customize.Fallback2.label;
-                              &languages.customize.Fallback2.desc;
-                              &languages.customize.Fallback.auto;
-                              &languages.customize.Fallback.arabic;
-                              &languages.customize.Fallback.baltic;
-                              &languages.customize.Fallback.ceiso;
-                              &languages.customize.Fallback.cewindows;
-                              &languages.customize.Fallback.simplified;
-                              &languages.customize.Fallback.traditional;
-                              &languages.customize.Fallback.cyrillic;
-                              &languages.customize.Fallback.greek;
-                              &languages.customize.Fallback.hebrew;
-                              &languages.customize.Fallback.japanese;
-                              &languages.customize.Fallback.korean;
-                              &languages.customize.Fallback.thai;
-                              &languages.customize.Fallback.turkish;
-                              &languages.customize.Fallback.vietnamese;
-                              &languages.customize.Fallback.other;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="advancedFonts"
+                class="accessory-button"
+                icon="select-font"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"
+                searchkeywords="&fontsDialog.title;
+                                &language.label;
+                                &size.label;
+                                &proportional.label;
+                                &serif.label;
+                                &sans-serif.label;
+                                &monospace.label;
+                                &font.langGroup.latin;
+                                &font.langGroup.japanese;
+                                &font.langGroup.trad-chinese;
+                                &font.langGroup.simpl-chinese;
+                                &font.langGroup.trad-chinese-hk;
+                                &font.langGroup.korean;
+                                &font.langGroup.cyrillic;
+                                &font.langGroup.el;
+                                &font.langGroup.other;
+                                &font.langGroup.thai;
+                                &font.langGroup.hebrew;
+                                &font.langGroup.arabic;
+                                &font.langGroup.devanagari;
+                                &font.langGroup.tamil;
+                                &font.langGroup.armenian;
+                                &font.langGroup.bengali;
+                                &font.langGroup.canadian;
+                                &font.langGroup.ethiopic;
+                                &font.langGroup.georgian;
+                                &font.langGroup.gujarati;
+                                &font.langGroup.gurmukhi;
+                                &font.langGroup.khmer;
+                                &font.langGroup.malayalam;
+                                &font.langGroup.math;
+                                &font.langGroup.odia;
+                                &font.langGroup.telugu;
+                                &font.langGroup.kannada;
+                                &font.langGroup.sinhala;
+                                &font.langGroup.tibetan;
+                                &minSize.label;
+                                &minSize.none;
+                                &useDefaultFontSerif.label;
+                                &useDefaultFontSansSerif.label;
+                                &allowPagesToUseOwn.label;
+                                &languages.customize.Fallback2.grouplabel;
+                                &languages.customize.Fallback2.label;
+                                &languages.customize.Fallback2.desc;
+                                &languages.customize.Fallback.auto;
+                                &languages.customize.Fallback.arabic;
+                                &languages.customize.Fallback.baltic;
+                                &languages.customize.Fallback.ceiso;
+                                &languages.customize.Fallback.cewindows;
+                                &languages.customize.Fallback.simplified;
+                                &languages.customize.Fallback.traditional;
+                                &languages.customize.Fallback.cyrillic;
+                                &languages.customize.Fallback.greek;
+                                &languages.customize.Fallback.hebrew;
+                                &languages.customize.Fallback.japanese;
+                                &languages.customize.Fallback.korean;
+                                &languages.customize.Fallback.thai;
+                                &languages.customize.Fallback.turkish;
+                                &languages.customize.Fallback.vietnamese;
+                                &languages.customize.Fallback.other;"/>
+      </hbox>
     </hbox>
     <hbox id="colorsSettings">
       <spacer flex="1" />
-      <button id="colors"
-              class="accessory-button"
-              icon="select-color"
-              label="&colors.label;"
-              accesskey="&colors.accesskey;"
-              searchkeywords="&overrideDefaultPageColors.label;
-                              &overrideDefaultPageColors.always.label;
-                              &overrideDefaultPageColors.auto.label;
-                              &overrideDefaultPageColors.never.label;
-                              &useSystemColors.label;
-                              &underlineLinks.label;
-                              &linkColor.label;
-                              &visitedLinkColor.label;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="colors"
+                class="accessory-button"
+                icon="select-color"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"
+                searchkeywords="&overrideDefaultPageColors.label;
+                                &overrideDefaultPageColors.always.label;
+                                &overrideDefaultPageColors.auto.label;
+                                &overrideDefaultPageColors.never.label;
+                                &useSystemColors.label;
+                                &underlineLinks.label;
+                                &linkColor.label;
+                                &visitedLinkColor.label;"/>
+      </hbox>
     </hbox>
   </vbox>
 </groupbox>
@@ -581,17 +596,20 @@
 
   <hbox id="languagesBox" align="center">
     <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
-    <button id="chooseLanguage"
-            class="accessory-button"
-            label="&chooseButton.label;"
-            accesskey="&chooseButton.accesskey;"
-            searchkeywords="&languages.customize.Header;
-                            &languages.customize.description;
-                            &languages.customize.moveUp.label;
-                            &languages.customize.moveDown.label;
-                            &languages.customize.deleteButton.label;
-                            &languages.customize.selectLanguage.label;
-                            &languages.customize.addButton.label;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="chooseLanguage"
+              class="accessory-button"
+              label="&chooseButton.label;"
+              accesskey="&chooseButton.accesskey;"
+              searchkeywords="&languages.customize.Header;
+                              &languages.customize.description;
+                              &languages.customize.moveUp.label;
+                              &languages.customize.moveDown.label;
+                              &languages.customize.deleteButton.label;
+                              &languages.customize.selectLanguage.label;
+                              &languages.customize.addButton.label;"/>
+    </hbox>
   </hbox>
 
   <hbox id="translationBox" hidden="true">
@@ -745,6 +763,7 @@
     </vbox>
 #ifdef MOZ_UPDATER
     <spacer flex="1"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
     <vbox>
       <button id="showUpdateHistory"
               class="accessory-button"
@@ -962,28 +981,31 @@
 <groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
   <hbox align="center">
     <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
-    <button id="connectionSettings"
-            class="accessory-button"
-            icon="network"
-            label="&connectionSettings.label;"
-            accesskey="&connectionSettings.accesskey;"
-            searchkeywords="&connectionsDialog.title;
-                            &noProxyTypeRadio.label;
-                            &WPADTypeRadio.label;
-                            &systemTypeRadio.label;
-                            &manualTypeRadio.label;
-                            &http.label;
-                            &ssl.label;
-                            &ftp.label;
-                            &socks.label;
-                            &socks4.label;
-                            &socks5.label;
-                            &noproxy.label;
-                            &noproxyExplain.label;
-                            &shareproxy.label;
-                            &autoTypeRadio.label;
-                            &reload.label;
-                            &autologinproxy.label;
-                            &socksRemoteDNS.label2;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="connectionSettings"
+              class="accessory-button"
+              icon="network"
+              label="&connectionSettings.label;"
+              accesskey="&connectionSettings.accesskey;"
+              searchkeywords="&connectionsDialog.title;
+                              &noProxyTypeRadio.label;
+                              &WPADTypeRadio.label;
+                              &systemTypeRadio.label;
+                              &manualTypeRadio.label;
+                              &http.label;
+                              &ssl.label;
+                              &ftp.label;
+                              &socks.label;
+                              &socks4.label;
+                              &socks5.label;
+                              &noproxy.label;
+                              &noproxyExplain.label;
+                              &shareproxy.label;
+                              &autoTypeRadio.label;
+                              &reload.label;
+                              &autologinproxy.label;
+                              &socksRemoteDNS.label2;"/>
+    </hbox>
   </hbox>
 </groupbox>
