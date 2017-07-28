@@ -894,6 +894,8 @@ pref("gfx.webrender.enabled", false);
 pref("gfx.webrender.force-angle", true);
 #endif
 
+pref("gfx.webrender.highlight-painted-layers", false);
+pref("gfx.webrender.layers-free", false);
 pref("gfx.webrender.profiler.enabled", false);
 
 // Whether webrender should be used as much as possible.
@@ -4906,9 +4908,6 @@ pref("layers.force-active", false);
 // Never use gralloc surfaces, even when they're available on this
 // platform and are the optimal surface type.
 pref("layers.gralloc.disable", false);
-
-pref("webrender.highlight-painted-layers", false);
-pref("gfx.webrender.layers-free", false);
 
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
