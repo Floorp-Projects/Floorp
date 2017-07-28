@@ -41,7 +41,7 @@ function onMaybeOpenPopup(evt) {
 }
 
 function startup() {
-  if (!Services.prefs.getBoolPref("extensions.formautofill.experimental")) {
+  if (Services.prefs.getStringPref("extensions.formautofill.available") != "on") {
     return;
   }
 
