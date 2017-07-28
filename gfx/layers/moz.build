@@ -291,6 +291,7 @@ UNIFIED_SOURCES += [
     'apz/public/IAPZCTreeManager.cpp',
     'apz/src/APZCTreeManager.cpp',
     'apz/src/AsyncPanZoomController.cpp',
+    'apz/src/AutoscrollAnimation.cpp',
     'apz/src/Axis.cpp',
     'apz/src/CheckerboardEvent.cpp',
     'apz/src/DragTracker.cpp',

@@ -9,6 +9,7 @@
 #include <sys/types.h>                  // for int32_t
 #include <algorithm>                    // for max, min
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController, etc
+#include "AutoscrollAnimation.h"        // for AutoscrollAnimation
 #include "Axis.h"                       // for AxisX, AxisY, Axis, etc
 #include "CheckerboardEvent.h"          // for CheckerboardEvent
 #include "Compositor.h"                 // for Compositor
@@ -1070,6 +1071,22 @@ void AsyncPanZoomController::HandleTouchVelocity(uint32_t aTimesampMs, float aSp
   mY.HandleTouchVelocity(aTimesampMs, aSpeedY);
 }
 
+void AsyncPanZoomController::StartAutoscroll(const ScreenPoint& aPoint)
+{
+  // Cancel any existing animation.
+  CancelAnimation();
+
+  SetState(AUTOSCROLL);
+  StartAnimation(new AutoscrollAnimation(*this, aPoint));
+}
+
+void AsyncPanZoomController::StopAutoscroll()
+{
+  if (mState == AUTOSCROLL) {
+    CancelAnimation();
+  }
+}
+
 nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-start in state %d\n", this, mState);
   mPanDirRestricted = false;
@@ -1083,6 +1100,7 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case WHEEL_SCROLL:
     case KEYBOARD_SCROLL:
     case PAN_MOMENTUM:
+    case AUTOSCROLL:
       MOZ_ASSERT(GetCurrentTouchBlock());
       GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll);
       MOZ_FALLTHROUGH;
@@ -1159,6 +1177,7 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
     case WHEEL_SCROLL:
     case KEYBOARD_SCROLL:
     case OVERSCROLL_ANIMATION:
+    case AUTOSCROLL:
       // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
       // as touch blocks that begin in an overscrolled state cancel the
       // animation. The same is true for wheel scroll animations.
@@ -1240,6 +1259,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
   case WHEEL_SCROLL:
   case KEYBOARD_SCROLL:
   case OVERSCROLL_ANIMATION:
+  case AUTOSCROLL:
     // Should not receive a touch-end in the OVERSCROLL_ANIMATION state
     // as touch blocks that begin in an overscrolled state cancel the
     // animation. The same is true for WHEEL_SCROLL.
