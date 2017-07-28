@@ -278,6 +278,10 @@ jsreftest:
         by-test-platform:
             android.*: 7200
             default: 3600
+    worker-type:
+        by-test-platform:
+            windows8-64.*: buildbot-bridge/buildbot-bridge
+            default: null
     mozharness:
         by-test-platform:
             android.*:
@@ -309,6 +313,7 @@ jsreftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            windows10.*: 3
             default: default
 
 marionette:
