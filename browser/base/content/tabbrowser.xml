@@ -1211,6 +1211,11 @@
 
               this.mCurrentTab.removeAttribute("titlechanged");
               this.mCurrentTab.removeAttribute("attention");
+
+              // The tab has been selected, it's not unselected anymore.
+              // (1) Call the current tab's finishUnselectedTabHoverTimer()
+              //     to save a telemetry record.
+              this.mCurrentTab.finishUnselectedTabHoverTimer();
             }
 
             // If the new tab is busy, and our current state is not busy, then
@@ -7499,11 +7504,6 @@
           this.parentNode.tabbrowser._tabAttrModified(this, ["visuallyselected"]);
 
           this._setPositionAttributes(val);
-
-          // Tab becomes visible, it's not unselected anymore.
-          if (val) {
-            this.finishUnselectedTabHoverTimer();
-          }
 
           return val;
           ]]>
