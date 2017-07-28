@@ -924,7 +924,7 @@ CSSCompleter.prototype = {
     }
 
     while (high > low) {
-      if (arr[low][0] <= line && arr[low [0] + 1] > line) {
+      if (arr[low][0] <= line && arr[low[0] + 1] > line) {
         return low;
       }
       if (arr[high][0] > line && arr[high - 1][0] <= line) {

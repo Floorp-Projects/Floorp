@@ -181,7 +181,7 @@ add_task(function* () {
       case "xml": {
         checkVisibility("textarea");
 
-        let text = document .querySelector(".CodeMirror-line").textContent;
+        let text = document.querySelector(".CodeMirror-line").textContent;
 
         is(text, "<label value='greeting'>Hello XML!</label>",
           "The text shown in the source editor is incorrect for the xml request.");
