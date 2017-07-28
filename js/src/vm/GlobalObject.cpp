@@ -27,7 +27,6 @@
 #include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/Stream.h"
 #include "builtin/SymbolObject.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
@@ -101,25 +100,18 @@ GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key)
     if (key == JSProto_WebAssembly)
         return !wasm::HasSupport(cx);
 
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
     // Return true if the given constructor has been disabled at run-time.
     switch (key) {
-#if defined(ENABLE_SHARED_ARRAY_BUFFER)
       case JSProto_Atomics:
       case JSProto_SharedArrayBuffer:
         return !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled();
-#endif
-#if defined(ENABLE_STREAMS)
-      case JSProto_ReadableStream:
-      case JSProto_ReadableStreamDefaultReader:
-      case JSProto_ReadableStreamBYOBReader:
-      case JSProto_ReadableStreamDefaultController:
-      case JSProto_ReadableByteStreamController:
-      case JSProto_ReadableStreamBYOBRequest:
-        return !cx->compartment()->creationOptions().getStreamsEnabled();
-#endif
       default:
         return false;
     }
+#else
+    return false;
+#endif
 }
 
 /* static */ bool
