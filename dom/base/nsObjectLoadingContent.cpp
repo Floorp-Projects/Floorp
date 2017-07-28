@@ -960,8 +960,7 @@ nsObjectLoadingContent::BuildParametersArray()
       NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsAutoCString wmodeOverride;
-  Preferences::GetCString("plugins.force.wmode", wmodeOverride);
+  nsAdoptingCString wmodeOverride = Preferences::GetCString("plugins.force.wmode");
   for (uint32_t i = 0; i < mCachedAttributes.Length(); i++) {
     if (!wmodeOverride.IsEmpty() && mCachedAttributes[i].mName.EqualsIgnoreCase("wmode")) {
       CopyASCIItoUTF16(wmodeOverride, mCachedAttributes[i].mValue);
@@ -1664,7 +1663,8 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
   ///
 
   if (aJavaURI || thisContent->NodeInfo()->Equals(nsGkAtoms::applet)) {
-    Preferences::GetCString(kPrefJavaMIME, newMime);
+    nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
+    newMime = javaMIME;
     NS_ASSERTION(IsJavaMIME(newMime),
                  "plugin.mime.java should be recognized as java");
     isJava = true;
@@ -1687,8 +1687,7 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classIDAttr);
     if (!classIDAttr.IsEmpty()) {
       // Our classid support is limited to 'java:' ids
-      nsAutoCString javaMIME;
-      Preferences::GetCString(kPrefJavaMIME, javaMIME);
+      nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
       NS_ASSERTION(IsJavaMIME(javaMIME),
                    "plugin.mime.java should be recognized as java");
       RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();

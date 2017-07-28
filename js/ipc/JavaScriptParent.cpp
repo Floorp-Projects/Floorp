@@ -73,11 +73,9 @@ ForbidCPOWsInCompatibleAddon(const nsACString& aAddonId)
         return false;
     }
 
-    nsAutoCString allow;
+    nsCString allow;
     allow.Assign(',');
-    nsAutoCString pref;
-    Preferences::GetCString("dom.ipc.cpows.allow-cpows-in-compat-addons", pref);
-    allow.Append(pref);
+    allow.Append(Preferences::GetCString("dom.ipc.cpows.allow-cpows-in-compat-addons"));
     allow.Append(',');
 
     nsCString searchString(",");

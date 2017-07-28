@@ -235,12 +235,12 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   // Now read any extra paths, this requires accessing user preferences
   // so we can only do it now. Our constructor is initialized before
   // user preferences are read in.
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.read_path_whitelist",
-                     rdonly);
-  AddDynamicPathList(policy.get(),
-                     "security.sandbox.content.write_path_whitelist",
-                     rdwr);
+  nsAdoptingCString extraReadPathString =
+    Preferences::GetCString("security.sandbox.content.read_path_whitelist");
+  AddDynamicPathList(policy.get(), extraReadPathString, rdonly);
+  nsAdoptingCString extraWritePathString =
+    Preferences::GetCString("security.sandbox.content.write_path_whitelist");
+  AddDynamicPathList(policy.get(), extraWritePathString, rdwr);
 
   // file:// processes get global read permissions
   if (aFileProcess) {
@@ -254,12 +254,9 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
 
 void
 SandboxBrokerPolicyFactory::AddDynamicPathList(SandboxBroker::Policy *policy,
-                                               const char* aPathListPref,
-                                               int perms)
-{
-  nsAutoCString pathList;
-  nsresult rv = Preferences::GetCString(aPathListPref, pathList);
-  if (NS_SUCCEEDED(rv)) {
+                                               nsAdoptingCString& pathList,
+                                               int perms) {
+ if (pathList) {
     for (const nsACString& path : pathList.Split(',')) {
       nsCString trimPath(path);
       trimPath.Trim(" ", true, true);

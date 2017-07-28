@@ -72,8 +72,8 @@ GetSpeechRecognitionService(const nsAString& aLang)
 {
   nsAutoCString speechRecognitionServiceCID;
 
-  nsAutoCString prefValue;
-  Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE, prefValue);
+  nsAdoptingCString prefValue =
+    Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
   nsAutoCString speechRecognitionService;
 
   if (!aLang.IsEmpty()) {
