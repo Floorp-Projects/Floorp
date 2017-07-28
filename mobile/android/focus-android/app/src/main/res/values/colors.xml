@@ -37,4 +37,9 @@
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
     <color name="download_dialog_text">#FF00A4DC</color>
+
+    <color name="add_to_homescreen_button_text">#FF00A4DC</color>
+    <color name="add_to_homescreen_text">#FFFFFF</color>
+
+    <color name="inactive_text">#5FFFFFFF</color>
 </resources>

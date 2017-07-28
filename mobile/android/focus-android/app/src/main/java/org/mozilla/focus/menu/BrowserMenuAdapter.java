@@ -8,6 +8,7 @@ package org.mozilla.focus.menu;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.res.Resources;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -85,7 +86,9 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
                     R.string.menu_open_with_a_browser)));
         }
 
-        items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
+            items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
+        }
 
         items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
 

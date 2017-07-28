@@ -85,6 +85,8 @@ public final class TelemetryWrapper {
         private static final String CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu";
         private static final String FIRSTRUN = "firstrun";
         private static final String DOWNLOAD_DIALOG = "download_dialog";
+        private static final String ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog";
+        private static final String HOMESCREEN_SHORTCUT = "homescreen_shortcut";
     }
 
     private static class Value {
@@ -102,9 +104,10 @@ public final class TelemetryWrapper {
         private static final String FINISH = "finish";
         private static final String OPEN = "open";
         private static final String DOWNLOAD = "download";
-        private static final String CANCEL_DOWNLOAD = "cancel_download";
         private static final String URL = "url";
         private static final String SEARCH = "search";
+        private static final String CANCEL = "cancel";
+        private static final String ADD_TO_HOMESCREEN = "add_to_homescreen";
     }
 
     private static class Extra {
@@ -263,7 +266,7 @@ public final class TelemetryWrapper {
         if (sentToDownload) {
             TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.DOWNLOAD).queue();
         } else {
-            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.CANCEL_DOWNLOAD).queue();
+            TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.DOWNLOAD_DIALOG, Value.CANCEL).queue();
         }
     }
 
@@ -331,6 +334,18 @@ public final class TelemetryWrapper {
 
     public static void openNotificationActionEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.OPEN).queue();
+    }
+
+    public static void openHomescreenShortcutEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.HOMESCREEN_SHORTCUT, Value.OPEN).queue();
+    }
+
+    public static void addToHomescreenShortcutEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ADD_TO_HOMESCREEN_DIALOG, Value.ADD_TO_HOMESCREEN).queue();
+    }
+
+    public static void cancelAddToHomescreenShortcutEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ADD_TO_HOMESCREEN_DIALOG, Value.CANCEL).queue();
     }
 
     public static void eraseShortcutEvent() {

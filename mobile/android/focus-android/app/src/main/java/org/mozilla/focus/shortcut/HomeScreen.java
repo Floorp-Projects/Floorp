@@ -18,13 +18,12 @@ import org.mozilla.focus.utils.UrlUtils;
 
 public class HomeScreen {
     private static final String BROADCAST_INSTALL_SHORTCUT = "com.android.launcher.action.INSTALL_SHORTCUT";
+    public static final String ADD_TO_HOMESCREEN_TAG = "add_to_homescreen";
 
     /**
      * Create a shortcut for the given website on the device's home screen.
      */
-    public static void installShortCut(Context context, Bitmap bitmap, String url, String title) {
-        final Bitmap icon = IconGenerator.generateLauncherIcon(context, bitmap, url);
-
+    public static void installShortCut(Context context, Bitmap icon, String url, String title) {
         if (TextUtils.isEmpty(title.trim())) {
             title = generateTitleFromUrl(url);
         }
@@ -42,7 +41,7 @@ public class HomeScreen {
      * This works for Android versions up to 7.
      */
     private static void installShortCutViaBroadcast(Context context, Bitmap bitmap, String url, String title) {
-        final Intent shortcutIntent = createShortcutIntent(context);
+        final Intent shortcutIntent = createShortcutIntent(context, url);
 
         final Intent addIntent = new Intent();
         addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
@@ -65,9 +64,11 @@ public class HomeScreen {
         // TODO: For this we need to compile with Android SDK 26 (See issue #863)
     }
 
-    private static Intent createShortcutIntent(Context context) {
+    private static Intent createShortcutIntent(Context context, String url) {
         final Intent shortcutIntent = new Intent(context, MainActivity.class);
-        shortcutIntent.setAction(Intent.ACTION_MAIN);
+        shortcutIntent.setAction(Intent.ACTION_VIEW);
+        shortcutIntent.setData(Uri.parse(url));
+        shortcutIntent.putExtra(ADD_TO_HOMESCREEN_TAG, ADD_TO_HOMESCREEN_TAG);
         return shortcutIntent;
     }
 
