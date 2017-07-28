@@ -67,8 +67,7 @@ public class PasswordsRepositorySession extends
   private static final String WHERE_GUID_IS = Passwords.GUID + " = ?";
   private static final String WHERE_DELETED_GUID_IS = DeletedPasswords.GUID + " = ?";
 
-  @Override
-  public void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
+  private void fetchSince(final long timestamp, final RepositorySessionFetchRecordsDelegate delegate) {
     final RecordFilter filter = this.storeTracker.getFilter();
     final Runnable fetchSinceRunnable = new Runnable() {
       @Override
@@ -81,19 +80,19 @@ public class PasswordsRepositorySession extends
         final long end = now();
         try {
           // Fetch from data table.
-          Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".fetchSince",
-                                                  getAllColumns(),
-                                                  dateModifiedWhere(timestamp),
-                                                  null, null);
+          Cursor data = passwordsHelper.safeQuery(passwordsProvider, ".fetchModified",
+                  getAllColumns(),
+                  dateModifiedWhere(timestamp),
+                  null, null);
           if (!fetchAndCloseCursorDeleted(data, false, filter, delegate)) {
             return;
           }
 
           // Fetch from deleted table.
-          Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".fetchSince",
-                                                            getAllDeletedColumns(),
-                                                            dateModifiedWhereDeleted(timestamp),
-                                                            null, null);
+          Cursor deleted = deletedPasswordsHelper.safeQuery(passwordsProvider, ".fetchModified",
+                  getAllDeletedColumns(),
+                  dateModifiedWhereDeleted(timestamp),
+                  null, null);
           if (!fetchAndCloseCursorDeleted(deleted, true, filter, delegate)) {
             return;
           }
@@ -114,6 +113,16 @@ public class PasswordsRepositorySession extends
     };
 
     delegateQueue.execute(fetchSinceRunnable);
+  }
+
+  @Override
+  public void fetchModified(final RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(getLastSyncTimestamp(), delegate);
+  }
+
+  @Override
+  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
+    this.fetchSince(-1, delegate);
   }
 
   @Override
@@ -171,11 +180,6 @@ public class PasswordsRepositorySession extends
     };
 
     delegateQueue.execute(fetchRunnable);
-  }
-
-  @Override
-  public void fetchAll(RepositorySessionFetchRecordsDelegate delegate) {
-    fetchSince(0, delegate);
   }
 
   @Override

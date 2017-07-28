@@ -221,7 +221,7 @@ public class TestFormHistoryRepositorySession extends AndroidSyncTestCase {
     return new Runnable() {
       @Override
       public void run() {
-        session.fetchSince(timestamp, new ExpectFetchSinceDelegate(timestamp, expectedGuids));
+        session.fetchModified(new ExpectFetchSinceDelegate(timestamp, expectedGuids));
       }
     };
   }
