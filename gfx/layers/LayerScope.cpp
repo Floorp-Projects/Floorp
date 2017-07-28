@@ -628,7 +628,7 @@ public:
                     size_t aRects,
                     const gfx::Rect* aLayerRects,
                     const gfx::Rect* aTextureRects,
-                    const std::list<GLuint> aTexIDs,
+                    const std::list<GLuint>& aTexIDs,
                     void* aLayerRef)
         : DebugGLData(Packet::DRAW),
           mOffsetX(aOffsetX),
