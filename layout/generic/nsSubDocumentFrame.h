@@ -153,7 +153,7 @@ protected:
   void ShowViewer();
 
   /* Obtains the frame we should use for intrinsic size information if we are
-   * an HTML <object>, <embed> or <applet> (a replaced element - not <iframe>)
+   * an HTML <object> or <embed>  (a replaced element - not <iframe>)
    * and our sub-document has an intrinsic size. The frame returned is the
    * frame for the document element of the document we're embedding.
    *

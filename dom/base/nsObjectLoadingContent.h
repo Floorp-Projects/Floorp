@@ -7,7 +7,7 @@
 /*
  * A base class implementing nsIObjectLoadingContent for use by
  * various content nodes that want to provide plugin/document/image
- * loading functionality (eg <embed>, <object>, <applet>, etc).
+ * loading functionality (eg <embed>, <object>, etc).
  */
 
 #ifndef NSOBJECTLOADINGCONTENT_H_
@@ -262,8 +262,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Begins loading the object when called
      *
      * Attributes of |this| QI'd to nsIContent will be inspected, depending on
-     * the node type. This function currently assumes it is a <applet>,
-     * <object>, or <embed> tag.
+     * the node type. This function currently assumes it is a <object> or
+     * <embed> tag.
      *
      * The instantiated plugin depends on:
      * - The URI (<embed src>, <object data>)
