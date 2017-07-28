@@ -310,6 +310,36 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
+    description: "Has alternative \"country-name\"",
+    address: {
+      "country-name": "america",
+    },
+    expectedResult: {
+      "country": "US",
+      "country-name": "United States",
+    },
+  },
+  {
+    description: "Has \"country-name\" as a substring",
+    address: {
+      "country-name": "test america test",
+    },
+    expectedResult: {
+      "country": "US",
+      "country-name": "United States",
+    },
+  },
+  {
+    description: "Has \"country-name\" as part of a word",
+    address: {
+      "country-name": "TRUST",
+    },
+    expectedResult: {
+      "country": undefined,
+      "country-name": "",
+    },
+  },
+  {
     description: "Has unknown \"country-name\"",
     address: {
       "country-name": "unknown country name",

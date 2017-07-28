@@ -252,9 +252,10 @@ const TESTCASES_INPUT_UNCHANGED = [
   },
 ];
 
-const TESTCASES_US_STATES = [
+const TESTCASES_FILL_SELECT = [
+  // US States
   {
-    description: "Form with US states select elements; with lower case state key",
+    description: "Form with US states select elements",
     document: `<form><select id="state" autocomplete="shipping address-level1">
                  <option value=""></option>
                  <option value="CA">California</option>
@@ -265,10 +266,28 @@ const TESTCASES_US_STATES = [
     profileData: {
       "guid": "123",
       "country": "US",
-      "address-level1": "ca",
+      "address-level1": "CA",
     },
     expectedResult: {
       "state": "CA",
+    },
+  },
+  {
+    description: "Form with US states select elements; with lower case state key",
+    document: `<form><select id="state" autocomplete="shipping address-level1">
+                 <option value=""></option>
+                 <option value="ca">ca</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level1", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+      "address-level1": "CA",
+    },
+    expectedResult: {
+      "state": "ca",
     },
   },
   {
@@ -305,6 +324,93 @@ const TESTCASES_US_STATES = [
     },
     expectedResult: {
       "state": "US-WA",
+    },
+  },
+
+  // Country
+  {
+    description: "Form with country select elements",
+    document: `<form><select id="country" autocomplete="country">
+                 <option value=""></option>
+                 <option value="US">United States</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+    },
+    expectedResult: {
+      "country": "US",
+    },
+  },
+  {
+    description: "Form with country select elements; with lower case key",
+    document: `<form><select id="country" autocomplete="country">
+                 <option value=""></option>
+                 <option value="us">us</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+    },
+    expectedResult: {
+      "country": "us",
+    },
+  },
+  {
+    description: "Form with country select elements; with alternative name 1",
+    document: `<form><select id="country" autocomplete="country">
+                 <option value=""></option>
+                 <option value="XX">United States</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+    },
+    expectedResult: {
+      "country": "XX",
+    },
+  },
+  {
+    description: "Form with country select elements; with alternative name 2",
+    document: `<form><select id="country" autocomplete="country">
+                 <option value=""></option>
+                 <option value="XX">America</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+    },
+    expectedResult: {
+      "country": "XX",
+    },
+  },
+  {
+    description: "Form with country select elements; with partial matching value",
+    document: `<form><select id="country" autocomplete="country">
+                 <option value=""></option>
+                 <option value="XX">Ship to America</option>
+               </select></form>`,
+    addressFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country", "element": {}},
+    ],
+    profileData: {
+      "guid": "123",
+      "country": "US",
+    },
+    expectedResult: {
+      "country": "XX",
     },
   },
 ];
@@ -388,7 +494,7 @@ do_test(TESTCASES_INPUT_UNCHANGED, (testcase, element) => {
   ];
 });
 
-do_test(TESTCASES_US_STATES, (testcase, element) => {
+do_test(TESTCASES_FILL_SELECT, (testcase, element) => {
   let id = element.id;
   return [
     new Promise(resolve => {
