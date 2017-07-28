@@ -1825,8 +1825,8 @@ gfxPlatform::GetContentBackendPref(uint32_t &aBackendBitmask)
 gfxPlatform::GetBackendPref(const char* aBackendPrefName, uint32_t &aBackendBitmask)
 {
     nsTArray<nsCString> backendList;
-    nsAutoCString prefString;
-    if (NS_SUCCEEDED(Preferences::GetCString(aBackendPrefName, prefString))) {
+    nsCString prefString;
+    if (NS_SUCCEEDED(Preferences::GetCString(aBackendPrefName, &prefString))) {
         ParseString(prefString, ',', backendList);
     }
 
