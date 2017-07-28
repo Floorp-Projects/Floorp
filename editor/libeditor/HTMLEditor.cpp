@@ -3488,7 +3488,7 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
 
     if (NS_SUCCEEDED(rv)) {
       // Save it so we can remove before applying the next one
-      mLastStyleSheetURL.AssignWithConversion(spec.get());
+      CopyASCIItoUTF16(spec, mLastStyleSheetURL);
 
       // Also save in our arrays of urls and sheets
       AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);

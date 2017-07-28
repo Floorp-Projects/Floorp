@@ -37,8 +37,8 @@ static void Check(const char* s1, const char* s2, int n)
   int clib_n = PL_strncmp(s1, s2, n);
 
   nsAutoString t1,t2;
-  t1.AssignWithConversion(s1);
-  t2.AssignWithConversion(s2);
+  CopyASCIItoUTF16(s1, t1);
+  CopyASCIItoUTF16(s2, t2);
   const char16_t* us1 = t1.get();
   const char16_t* us2 = t2.get();
 

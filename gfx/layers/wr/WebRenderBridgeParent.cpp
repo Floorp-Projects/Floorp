@@ -404,7 +404,8 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
                                  const wr::ByteBuffer& dl,
                                  const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
-                                 const uint32_t& aIdNameSpace)
+                                 const uint32_t& aIdNameSpace,
+                                 const TimeStamp& aFwdTime)
 {
   AutoProfilerTracing tracing("Paint", "DPTransaction");
   UpdateFwdTransactionId(aFwdTransactionId);
@@ -423,7 +424,7 @@ WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
   uint32_t wrEpoch = GetNextWrEpoch();
   ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
                            aContentSize, dl, dlDesc, aIdNameSpace);
-  HoldPendingTransactionId(wrEpoch, aTransactionId);
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aFwdTime);
 
   mScrollData = aScrollData;
   UpdateAPZ();
@@ -517,13 +518,14 @@ WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
                                  const wr::ByteBuffer& dl,
                                  const wr::BuiltDisplayListDescriptor& dlDesc,
                                  const WebRenderScrollData& aScrollData,
-                                 const uint32_t& aIdNameSpace)
+                                 const uint32_t& aIdNameSpace,
+                                 const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNameSpace);
+              aContentSize, dl, dlDesc, aScrollData, aIdNameSpace, aFwdTime);
   return IPC_OK();
 }
 
@@ -537,13 +539,14 @@ WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
                                      const wr::ByteBuffer& dl,
                                      const wr::BuiltDisplayListDescriptor& dlDesc,
                                      const WebRenderScrollData& aScrollData,
-                                     const uint32_t& aIdNameSpace)
+                                     const uint32_t& aIdNameSpace,
+                                     const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNameSpace);
+              aContentSize, dl, dlDesc, aScrollData, aIdNameSpace, aFwdTime);
   return IPC_OK();
 }
 
@@ -1121,6 +1124,11 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 
   wr::RenderThread::Get()->IncPendingFrameCount(mApi->GetId());
 
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  auto startTime = TimeStamp::Now();
+  mApi->SetFrameStartTime(startTime);
+#endif
+
   if (!transformArray.IsEmpty() || !opacityArray.IsEmpty()) {
     mApi->GenerateFrame(opacityArray, transformArray);
   } else {
@@ -1137,7 +1145,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
 }
 
 void
-WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId)
+WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId, const TimeStamp& aFwdTime)
 {
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -1147,7 +1155,7 @@ WebRenderBridgeParent::HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTra
   if (aTransactionId == 1) {
     FlushPendingTransactionIds();
   }
-  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId));
+  mPendingTransactionIds.push(PendingTransactionId(wr::NewEpoch(aWrEpoch), aTransactionId, aFwdTime));
 }
 
 uint64_t
@@ -1172,7 +1180,7 @@ WebRenderBridgeParent::FlushPendingTransactionIds()
 }
 
 uint64_t
-WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
+WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime)
 {
   uint64_t id = 0;
   while (!mPendingTransactionIds.empty()) {
@@ -1181,6 +1189,13 @@ WebRenderBridgeParent::FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch)
     if (diff < 0) {
       break;
     }
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+    if (mPendingTransactionIds.front().mFwdTime) {
+      uint32_t latencyMs = round((aEndTime - mPendingTransactionIds.front().mFwdTime).ToMilliseconds());
+      printf_stderr("From EndTransaction to end of generate frame latencyMs %d this %p\n", latencyMs, this);
+    }
+#endif
+
     id = mPendingTransactionIds.front().mId;
     mPendingTransactionIds.pop();
     if (diff == 0) {

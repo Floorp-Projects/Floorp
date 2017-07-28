@@ -112,12 +112,17 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   aBuilder.Finalize(contentSize, dl);
   ByteBuffer dlData(Move(dl.dl));
 
+  TimeStamp fwdTime;
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  fwdTime = TimeStamp::Now();
+#endif
+
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace);
+                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace,fwdTime);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace);
+                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, fwdTime);
   }
 
   mParentCommands.Clear();

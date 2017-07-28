@@ -1153,7 +1153,7 @@ HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
                                          &len))) {
     AutoTransactionsConserveSelection dontSpazMySelection(this);
     nsAutoString flavor;
-    flavor.AssignWithConversion(bestFlavor);
+    CopyASCIItoUTF16(bestFlavor, flavor);
     nsAutoString stuffToPaste;
     bool isSafe = IsSafeToInsertData(aSourceDoc);
 

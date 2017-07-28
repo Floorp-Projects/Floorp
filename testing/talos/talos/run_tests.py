@@ -198,6 +198,10 @@ def run_tests(config, browser_config):
     if config['stylo']:
         talos_results.add_extra_option('stylo')
 
+    # measuring the difference of a a certain thread level
+    if config.get('stylothreads', 0) > 0:
+        talos_results.add_extra_option('%s_thread' % config['stylothreads'])
+
     if config['gecko_profile']:
         talos_results.add_extra_option('geckoProfile')
 

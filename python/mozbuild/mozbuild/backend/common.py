@@ -14,6 +14,7 @@ from mozbuild.backend.base import BuildBackend
 
 from mozbuild.frontend.context import (
     Context,
+    ObjDirPath,
     Path,
     RenamedSourcePath,
     VARIABLES,
@@ -23,10 +24,12 @@ from mozbuild.frontend.data import (
     ChromeManifestEntry,
     ConfigFileSubstitution,
     ExampleWebIDLInterface,
+    Exports,
     IPDLFile,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     GeneratedEventWebIDLFile,
+    GeneratedSources,
     GeneratedWebIDLFile,
     PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
@@ -179,6 +182,7 @@ class CommonBackend(BuildBackend):
         self._binaries = BinariesCollection()
         self._configs = set()
         self._ipdl_sources = set()
+        self._generated_sources = set()
 
     def consume_object(self, obj):
         self._configs.add(obj.config)
@@ -277,6 +281,16 @@ class CommonBackend(BuildBackend):
             self._binaries.shared_libraries.append(obj)
             return False
 
+        elif isinstance(obj, GeneratedSources):
+            self._handle_generated_sources(obj.files)
+            return False
+
+        elif isinstance(obj, Exports):
+            objdir_files = [f.full_path for path, files in obj.files.walk() for f in files if isinstance(f, ObjDirPath)]
+            if objdir_files:
+                self._handle_generated_sources(objdir_files)
+            return False
+
         else:
             return False
 
@@ -285,6 +299,7 @@ class CommonBackend(BuildBackend):
     def consume_finished(self):
         if len(self._idl_manager.idls):
             self._handle_idl_manager(self._idl_manager)
+            self._handle_generated_sources(mozpath.join(self.environment.topobjdir, 'dist/include/%s.h' % idl['root']) for idl in self._idl_manager.idls.values())
 
         self._handle_webidl_collection(self._webidls)
 
@@ -305,6 +320,7 @@ class CommonBackend(BuildBackend):
         ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
 
         ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+        self._handle_generated_sources(mozpath.join(ipdl_dir, f) for f in ipdl_cppsrcs)
         unified_source_mapping = list(group_unified_files(ipdl_cppsrcs,
                                                           unified_prefix='UnifiedProtocols',
                                                           unified_suffix='cpp',
@@ -324,6 +340,16 @@ class CommonBackend(BuildBackend):
                 'programs': [p.to_dict() for p in self._binaries.programs],
             }
             json.dump(d, fh, sort_keys=True, indent=4)
+
+        # Write out a file listing generated sources.
+        with self._write_file(mozpath.join(topobjdir, 'generated-sources.json')) as fh:
+            d = {
+                'sources': sorted(self._generated_sources),
+            }
+            json.dump(d, fh, sort_keys=True, indent=4)
+
+    def _handle_generated_sources(self, files):
+        self._generated_sources.update(mozpath.relpath(f, self.environment.topobjdir) for f in files)
 
     def _handle_webidl_collection(self, webidls):
         if not webidls.all_stems():
@@ -358,7 +384,7 @@ class CommonBackend(BuildBackend):
             self.environment.topobjdir,
             mozpath.join(self.environment.topobjdir, 'dist')
         )
-
+        self._handle_generated_sources(manager.expected_build_output_files())
         # Bindings are compiled in unified mode to speed up compilation and
         # to reduce linker memory size. Note that test bindings are separated
         # from regular ones so tests bindings aren't shipped.

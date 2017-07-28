@@ -5119,8 +5119,11 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
 
   if (gfxPrefs::LayersAllowTextLayers() &&
       CanUseAdvancedLayer(aBuilder->GetWidgetLayerManager())) {
+    RefPtr<DrawTarget> screenTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
     RefPtr<DrawTargetCapture> capture =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreateCaptureDT(IntSize());
+      Factory::CreateCaptureDrawTarget(screenTarget->GetBackendType(),
+                                       IntSize(),
+                                       screenTarget->GetFormat());
     RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(capture);
 
     // TODO: Paint() checks mDisableSubpixelAA, we should too.

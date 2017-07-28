@@ -275,6 +275,10 @@ function isApzEnabled() {
   return enabled;
 }
 
+function isKeyApzEnabled() {
+  return isApzEnabled() && SpecialPowers.getBoolPref("apz.keyboard.enabled");
+}
+
 // Despite what this function name says, this does not *directly* run the
 // provided continuation testFunction. Instead, it returns a function that
 // can be used to run the continuation. The extra level of indirection allows

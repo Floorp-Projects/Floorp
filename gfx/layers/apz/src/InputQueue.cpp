@@ -578,7 +578,7 @@ InputQueue::FindBlockForId(uint64_t aInputBlockId,
     }
   }
 
-  CancelableBlockState* block = nullptr;
+  InputBlockState* block = nullptr;
   if (mActiveTouchBlock && mActiveTouchBlock->GetBlockId() == aInputBlockId) {
     block = mActiveTouchBlock.get();
   } else if (mActiveWheelBlock && mActiveWheelBlock->GetBlockId() == aInputBlockId) {
@@ -587,6 +587,8 @@ InputQueue::FindBlockForId(uint64_t aInputBlockId,
     block = mActiveDragBlock.get();
   } else if (mActivePanGestureBlock && mActivePanGestureBlock->GetBlockId() == aInputBlockId) {
     block = mActivePanGestureBlock.get();
+  } else if (mActiveKeyboardBlock && mActiveKeyboardBlock->GetBlockId() == aInputBlockId) {
+    block = mActiveKeyboardBlock.get();
   }
   // Since we didn't encounter this block while iterating through mQueuedInputs,
   // it must have no events associated with it at the moment.
@@ -749,6 +751,9 @@ InputQueue::ProcessQueue() {
   if (CanDiscardBlock(mActivePanGestureBlock)) {
     mActivePanGestureBlock = nullptr;
   }
+  if (CanDiscardBlock(mActiveKeyboardBlock)) {
+    mActiveKeyboardBlock = nullptr;
+  }
 }
 
 bool
@@ -788,6 +793,7 @@ InputQueue::Clear()
   mActiveWheelBlock = nullptr;
   mActiveDragBlock = nullptr;
   mActivePanGestureBlock = nullptr;
+  mActiveKeyboardBlock = nullptr;
   mLastActiveApzc = nullptr;
 }
 
