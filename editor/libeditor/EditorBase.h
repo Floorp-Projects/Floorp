@@ -1126,8 +1126,8 @@ protected:
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   nsCOMPtr<nsIDOMEventListener> mEventListener;
-  // Weak reference to placeholder for begin/end batch purposes.
-  WeakPtr<PlaceholderTransaction> mPlaceholderTransactionWeak;
+  // Strong reference to placeholder for begin/end batch purposes.
+  RefPtr<PlaceholderTransaction> mPlaceholderTransaction;
   // Name of placeholder transaction.
   nsIAtom* mPlaceholderName;
   // Saved selection state for placeholder transaction batching.
