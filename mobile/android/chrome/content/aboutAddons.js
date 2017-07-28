@@ -346,12 +346,17 @@ var Addons = {
     let addonItem = document.querySelector("#addons-details > .addon-item");
     let optionsBox = addonItem.querySelector(".options-box");
     let optionsURL = aListItem.getAttribute("optionsURL");
+
+    // Always clean the options content before rendering the options of the
+    // newly selected extension.
+    optionsBox.innerHTML = "";
+
     switch (parseInt(addon.optionsType)) {
       case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
         this.createWebExtensionOptions(optionsBox, optionsURL, addon.optionsBrowserStyle);
         break;
       case AddonManager.OPTIONS_TYPE_INLINE:
-        this.createInlineOptions(optionsBox, optionsURL);
+        this.createInlineOptions(optionsBox, optionsURL, aListItem);
         break;
     }
 
@@ -359,8 +364,6 @@ var Addons = {
   },
 
   createWebExtensionOptions: async function(destination, optionsURL, browserStyle) {
-    destination.innerHTML = "";
-
     let frame = document.createElement("iframe");
     frame.setAttribute("id", "addon-options");
     frame.setAttribute("mozbrowser", "true");
@@ -370,9 +373,7 @@ var Addons = {
     frame.contentWindow.location.replace(optionsURL);
   },
 
-  createInlineOptions(destination, optionsURL) {
-    destination.innerHTML = "";
-
+  createInlineOptions(destination, optionsURL, aListItem) {
     // This function removes and returns the text content of aNode without
     // removing any child elements. Removing the text nodes ensures any XBL
     // bindings apply properly.
