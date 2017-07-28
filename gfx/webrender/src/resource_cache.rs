@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
@@ -17,10 +16,10 @@ use std::hash::Hash;
 use std::mem;
 use std::sync::Arc;
 use texture_cache::{TextureCache, TextureCacheItemId};
-use api::{Epoch, FontKey, FontTemplate, GlyphKey, ImageKey, ImageRendering};
-use api::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
-use api::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor, ColorF};
-use api::{GlyphOptions, GlyphInstance, SubpixelPoint, TileOffset, TileSize};
+use api::{Epoch, FontInstanceKey, FontKey, FontTemplate, GlyphKey, ImageKey, ImageRendering};
+use api::{ImageData, GlyphDimensions, WebGLContextId, IdNamespace};
+use api::{DevicePoint, DeviceIntSize, DeviceUintRect, ImageDescriptor};
+use api::{GlyphInstance, SubpixelPoint, TileOffset, TileSize};
 use api::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest, BlobImageData};
 use api::BlobImageResources;
 use api::{ExternalImageData, ExternalImageType, LayoutPoint};
@@ -28,7 +27,6 @@ use rayon::ThreadPool;
 use glyph_rasterizer::{GlyphRasterizer, GlyphCache, GlyphRequest};
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
-const BLACK: ColorF = ColorF { r: 0.0, b: 0.0, g: 0.0, a: 1.0 };
 
 // These coordinates are always in texels.
 // They are converted to normalized ST
@@ -138,18 +136,37 @@ impl<K,V> ResourceClassCache<K,V> where K: Clone + Hash + Eq + Debug, V: Resourc
     }
 
     fn expire_old_resources(&mut self, texture_cache: &mut TextureCache, frame_id: FrameId) {
-        let mut resources_to_destroy = vec![];
-        for (key, this_frame_id) in &self.last_access_times {
-            if *this_frame_id < frame_id {
-                resources_to_destroy.push((*key).clone())
-            }
-        }
+        //TODO: use retain when available
+        let resources_to_destroy = self.last_access_times.iter()
+            .filter_map(|(key, this_frame_id)| {
+                if *this_frame_id < frame_id {
+                    Some(key.clone())
+                } else {
+                    None
+                }
+            }).collect::<Vec<_>>();
+
         for key in resources_to_destroy {
             let resource =
                 self.resources
                     .remove(&key)
                     .expect("Resource was in `last_access_times` but not in `resources`!");
             self.last_access_times.remove(&key);
+            if let Some(texture_cache_item_id) = resource.texture_cache_item_id() {
+                texture_cache.free(texture_cache_item_id)
+            }
+        }
+    }
+
+    fn clear_keys<F>(&mut self, texture_cache: &mut TextureCache, key_fun: F)
+    where for<'r> F: Fn(&'r &K) -> bool
+    {
+        let resources_to_destroy = self.resources.keys()
+            .filter(&key_fun)
+            .cloned()
+            .collect::<Vec<_>>();
+        for key in resources_to_destroy {
+            let resource = self.resources.remove(&key).unwrap();
             if let Some(texture_cache_item_id) = resource.texture_cache_item_id() {
                 texture_cache.free(texture_cache_item_id)
             }
@@ -207,7 +224,7 @@ pub struct ResourceCache {
     texture_cache: TextureCache,
 
     // TODO(gw): We should expire (parts of) this cache semi-regularly!
-    cached_glyph_dimensions: HashMap<GlyphKey, Option<GlyphDimensions>, BuildHasherDefault<FnvHasher>>,
+    cached_glyph_dimensions: HashMap<GlyphRequest, Option<GlyphDimensions>, BuildHasherDefault<FnvHasher>>,
     pending_image_requests: Vec<ImageRequest>,
     glyph_rasterizer: GlyphRasterizer,
 
@@ -446,30 +463,15 @@ impl ResourceCache {
     }
 
     pub fn request_glyphs(&mut self,
-                          key: FontKey,
-                          size: Au,
-                          mut color: ColorF,
-                          glyph_instances: &[GlyphInstance],
-                          render_mode: FontRenderMode,
-                          glyph_options: Option<GlyphOptions>) {
+                          font: FontInstanceKey,
+                          glyph_instances: &[GlyphInstance]) {
         debug_assert_eq!(self.state, State::AddResources);
-
-        // In alpha/mono mode, the color of the font is irrelevant.
-        // Forcing it to black in those cases saves rasterizing glyphs
-        // of different colors when not needed.
-        if render_mode != FontRenderMode::Subpixel {
-            color = BLACK;
-        }
 
         self.glyph_rasterizer.request_glyphs(
             &mut self.cached_glyphs,
             self.current_frame_id,
-            key,
-            size,
-            color,
+            font,
             glyph_instances,
-            render_mode,
-            glyph_options,
             &mut self.requested_glyphs,
         );
     }
@@ -479,33 +481,20 @@ impl ResourceCache {
     }
 
     pub fn get_glyphs<F>(&self,
-                         font_key: FontKey,
-                         size: Au,
-                         mut color: ColorF,
+                         font: FontInstanceKey,
                          glyph_instances: &[GlyphInstance],
-                         render_mode: FontRenderMode,
-                         glyph_options: Option<GlyphOptions>,
                          mut f: F) -> SourceTexture where F: FnMut(usize, &GpuCacheHandle) {
-        // Color when retrieving glyphs must match that of the request,
-        // otherwise the hash keys won't match.
-        if render_mode != FontRenderMode::Subpixel {
-            color = BLACK;
-        }
-
         debug_assert_eq!(self.state, State::QueryResources);
         let mut glyph_request = GlyphRequest::new(
-            font_key,
-            size,
-            color,
+            font,
             0,
             LayoutPoint::zero(),
-            render_mode,
-            glyph_options
         );
         let mut texture_id = None;
         for (loop_index, glyph_instance) in glyph_instances.iter().enumerate() {
             glyph_request.key.index = glyph_instance.index;
-            glyph_request.key.subpixel_point = SubpixelPoint::new(glyph_instance.point, render_mode);
+            glyph_request.key.subpixel_point = SubpixelPoint::new(glyph_instance.point,
+                                                                  glyph_request.font.render_mode);
 
             let image_id = self.cached_glyphs.get(&glyph_request, self.current_frame_id);
             let cache_item = image_id.map(|image_id| self.texture_cache.get(image_id));
@@ -520,13 +509,24 @@ impl ResourceCache {
         texture_id.map_or(SourceTexture::Invalid, SourceTexture::TextureCache)
     }
 
-    pub fn get_glyph_dimensions(&mut self, glyph_key: &GlyphKey) -> Option<GlyphDimensions> {
-        match self.cached_glyph_dimensions.entry(glyph_key.clone()) {
+    pub fn get_glyph_dimensions(&mut self,
+                                font: &FontInstanceKey,
+                                glyph_key: &GlyphKey) -> Option<GlyphDimensions> {
+        let key = GlyphRequest {
+            font: font.clone(),
+            key: glyph_key.clone(),
+        };
+
+        match self.cached_glyph_dimensions.entry(key.clone()) {
             Occupied(entry) => *entry.get(),
             Vacant(entry) => {
-                *entry.insert(self.glyph_rasterizer.get_glyph_dimensions(glyph_key))
+                *entry.insert(self.glyph_rasterizer.get_glyph_dimensions(&key.font, &key.key))
             }
         }
+    }
+
+    pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
+        self.glyph_rasterizer.get_glyph_index(font_key, ch)
     }
 
     #[inline]
@@ -782,6 +782,28 @@ impl ResourceCache {
     pub fn end_frame(&mut self) {
         debug_assert_eq!(self.state, State::QueryResources);
         self.state = State::Idle;
+    }
+
+    pub fn clear_namespace(&mut self, namespace: IdNamespace) {
+        //TODO: use `retain` when we are on Rust-1.18
+        let image_keys: Vec<_> = self.resources.image_templates.images.keys()
+                                                                      .filter(|&key| key.0 == namespace)
+                                                                      .cloned()
+                                                                      .collect();
+        for key in &image_keys {
+            self.resources.image_templates.images.remove(key);
+        }
+
+        let font_keys: Vec<_> = self.resources.font_templates.keys()
+                                                             .filter(|&key| key.0 == namespace)
+                                                             .cloned()
+                                                             .collect();
+        for key in &font_keys {
+            self.resources.font_templates.remove(key);
+        }
+
+        self.cached_images.clear_keys(&mut self.texture_cache, |request| request.key.0 == namespace);
+        self.cached_glyphs.clear_keys(&mut self.texture_cache, |request| request.font.font_key.0 == namespace);
     }
 }
 
