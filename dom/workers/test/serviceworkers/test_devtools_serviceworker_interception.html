@@ -91,7 +91,13 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
 
   function observer(aSubject) {
     var channel = aSubject.QueryInterface(Ci.nsIChannel);
-    ok(channel.URI.spec.endsWith(aURL));
+
+    // Since we cannot make sure that the network event triggered by the fetch()
+    // in this testcase is the very next event processed by ObserverService, we
+    // have to wait until we catch the one we want.
+    if (!channel.URI.spec.endsWith(aURL)) {
+      return;
+    }
 
     var tc = aSubject.QueryInterface(Ci.nsITimedChannel);
 
@@ -114,8 +120,8 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
       });
     } else {
       serviceWorkerTimings.forEach(aTimings => {
-        is(aTimings.start, 0);
-        is(aTimings.end, 0);
+        is(aTimings.start, 0, "SW timings should be 0.");
+        is(aTimings.end, 0, "SW timings should be 0.");
       });
     }
 
@@ -129,11 +135,12 @@ function fetchAndCheckTimedChannel(aWindow, aIntercepted, aFetch, aURL) {
                           tc.responseEndTime];
     if (aFetch) {
       networkTimings.reduce((aPreviousTiming, aCurrentTiming) => {
-        ok(aPreviousTiming <= aCurrentTiming);
+        ok(aPreviousTiming <= aCurrentTiming, "Checking network timings");
         return aCurrentTiming;
       });
     } else {
-      networkTimings.forEach(aTiming => is(aTiming, 0));
+      networkTimings.forEach(aTiming => is(aTiming, 0,
+                                           "Network timings should be 0."));
     }
 
     SpecialPowers.removeObserver(observer, topic);
