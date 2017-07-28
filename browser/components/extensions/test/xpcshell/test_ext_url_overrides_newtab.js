@@ -20,11 +20,13 @@ Cu.import("resource://testing-common/AddonTestUtils.jsm");
 
 const {
   createAppInfo,
+  promiseRestartManager,
   promiseShutdownManager,
   promiseStartupManager,
 } = AddonTestUtils;
 
 AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
@@ -119,5 +121,63 @@ add_task(async function test_multiple_extensions_overriding_newtab_page() {
   equal(aboutNewTabService.newTabURL, "about:newtab",
      "Newtab url is reset to about:newtab");
 
+  await promiseShutdownManager();
+});
+
+// Tests that we handle the upgrade/downgrade process correctly
+// when an extension is installed temporarily on top of a permanently
+// installed one.
+add_task(async function test_temporary_installation() {
+  const ID = "newtab@tests.mozilla.org";
+  const PAGE1 = "page1.html";
+  const PAGE2 = "page2.html";
+
+  equal(aboutNewTabService.newTabURL, "about:newtab",
+        "Default newtab url is about:newtab");
+
+  await promiseStartupManager();
+
+  let permanent = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {id: ID},
+      },
+      chrome_url_overrides: {
+        newtab: PAGE1,
+      },
+    },
+    useAddonManager: "permanent",
+  });
+
+  await permanent.startup();
+  ok(aboutNewTabService.newTabURL.endsWith(PAGE1),
+     "newtab url is overridden by permanent extension");
+
+  let temporary = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {
+        gecko: {id: ID},
+      },
+      chrome_url_overrides: {
+        newtab: PAGE2,
+      },
+    },
+    useAddonManager: "temporary",
+  });
+
+  await temporary.startup();
+  ok(aboutNewTabService.newTabURL.endsWith(PAGE2),
+     "newtab url is overridden by temporary extension");
+
+  await promiseRestartManager();
+  await permanent.awaitStartup();
+
+  ok(aboutNewTabService.newTabURL.endsWith(PAGE1),
+     "newtab url is back to the value set by permanent extension");
+
+  await permanent.unload();
+
+  equal(aboutNewTabService.newTabURL, "about:newtab",
+        "newtab url is back to default about:newtab");
   await promiseShutdownManager();
 });
