@@ -10,19 +10,72 @@
 const container = {
     async asyncMethod() {},
     *genMethod() {},
-    method() {}
+    method() {},
+    get getterMethod() {},
+    set setterMethod(x) {},
 };
 
-[
+function* genDecl(){}
+async function asyncDecl(){}
+class classDecl {}
+class extClassDecl extends Object {}
+class classDeclExplicitCtor { constructor(){} }
+class extClassDeclExplicitCtor extends Object { constructor(){} }
+
+const functions = [
+    // Declarations
+    genDecl,
+    asyncDecl,
+    classDecl,
+    extClassDecl,
+    classDeclExplicitCtor,
+    extClassDeclExplicitCtor,
+
+    // Expressions
     async function(){},
     function*(){},
     () => {},
     async () => {},
+    class {},
+    class extends Object {},
+    class { constructor(){} },
+    class extends Object { constructor(){} },
 
+    // Methods
     container.asyncMethod,
     container.genMethod,
-    container.method
-].forEach(f => {
+    container.method,
+    Object.getOwnPropertyDescriptor(container, "getterMethod").get,
+    Object.getOwnPropertyDescriptor(container, "setterMethod").set,
+
+    // Bound functions
+    function(){}.bind(),
+
+    // Built-ins (native and self-hosted)
+    Function,
+    Function.prototype.bind,
+];
+
+const supportsAsyncGenerator = (function() {
+    try {
+        eval("async function* f(){}");
+        return true;
+    } catch (e) {
+        return false;
+    }
+});
+
+if (supportsAsyncGenerator) {
+eval(`
+    async function* asyncGenDecl(){}
+
+    functions.push(asyncGenDecl);
+    functions.push(async function*(){});
+    functions.push({async* asyncGenerator(){}}.asyncGenerator);
+`);
+}
+
+functions.forEach(f => {
     checkArgumentsAccess(f);
     checkCallerAccess(f);
 });
@@ -38,6 +91,4 @@ function checkCallerAccess(f) {
 }
 
 if (typeof reportCompare === "function")
-  reportCompare(true, true);
-
-print("Tests complete");
+    reportCompare(true, true);
