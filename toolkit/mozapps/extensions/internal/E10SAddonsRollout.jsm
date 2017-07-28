@@ -7,7 +7,6 @@
 this.EXPORTED_SYMBOLS = [ "isAddonPartOfE10SRollout" ];
 
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const PREF_E10S_ADDON_BLOCKLIST = "extensions.e10s.rollout.blocklist";
@@ -36,8 +35,8 @@ Object.defineProperty(this, "isAddonPartOfE10SRollout", {
   enumerable: false,
   writable: false,
   value: function isAddonPartOfE10SRollout(aAddon) {
-    let blocklist = Preferences.get(PREF_E10S_ADDON_BLOCKLIST, "");
-    let policyId = Preferences.get(PREF_E10S_ADDON_POLICY, "");
+    let blocklist = Services.prefs.getStringPref(PREF_E10S_ADDON_BLOCKLIST, "");
+    let policyId = Services.prefs.getStringPref(PREF_E10S_ADDON_POLICY, "");
 
     if (!policyId || !RolloutPolicy.hasOwnProperty(policyId)) {
       return false;
