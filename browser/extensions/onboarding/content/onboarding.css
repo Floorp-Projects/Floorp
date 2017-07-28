@@ -24,6 +24,7 @@
 }
 
 #onboarding-overlay-button {
+  z-index: 20998;
   padding: 0;
   position: absolute;
   cursor: pointer;
@@ -32,6 +33,14 @@
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
+}
+
+/* Keyboard focus styling */
+#onboarding-overlay-button:-moz-focusring {
+  outline: solid 2px rgba(0, 0, 0, 0.1);
+  -moz-outline-radius: 5px;
+  outline-offset: 5px;
+  transition: outline-offset 150ms;
 }
 
 #onboarding-overlay-button-icon {
@@ -311,7 +320,8 @@
 }
 
 /* Remove default dotted outline around buttons' text */
-.onboarding-tour-action-button::-moz-focus-inner {
+.onboarding-tour-action-button::-moz-focus-inner,
+#onboarding-overlay-button::-moz-focus-inner {
   border: 0;
 }
 
