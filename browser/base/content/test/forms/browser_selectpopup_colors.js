@@ -130,21 +130,12 @@ const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT =
   "  select.addEventListener('focus', () => select.style.color = 'red');" +
   "</script></html>";
 
-const SELECT_COLOR_OF_OPTION_CHANGES_AFTER_TRANSITIONEND =
+const SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND =
   "<html><head><style>" +
   "  select { transition: all .1s; }" +
   "  select:focus { background-color: orange; }" +
   "</style></head><body><select id='one'>" +
   '  <option>{"color": "rgb(0, 0, 0)", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
-  '  <option selected="true">{"end": "true"}</option>' +
-  "</select></body></html>";
-
-const SELECT_TEXTSHADOW_OF_OPTION_CHANGES_AFTER_TRANSITIONEND =
-  "<html><head><style>" +
-  "  select { transition: all .1s; }" +
-  "  select:focus { text-shadow: 0 0 0 #303030; }" +
-  "</style></head><body><select id='one'>" +
-  '  <option>{"text-shadow": "none"}</option>' +
   '  <option selected="true">{"end": "true"}</option>' +
   "</select></body></html>";
 
@@ -415,7 +406,7 @@ add_task(async function test_style_of_options_is_dependent_on_focus_of_select_af
   await testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_FOCUS_EVENT, 2, options);
 });
 
-add_task(async function test_color_of_options_is_dependent_on_transitionend() {
+add_task(async function test_style_of_options_is_dependent_on_transitionend() {
   let options = {
     selectColor: "rgb(0, 0, 0)",
     selectBgColor: "rgb(255, 165, 0)",
@@ -425,19 +416,7 @@ add_task(async function test_color_of_options_is_dependent_on_transitionend() {
     }
   };
 
-  await testSelectColors(SELECT_COLOR_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
-});
-
-add_task(async function test_textshadow_of_options_is_dependent_on_transitionend() {
-  let options = {
-    skipSelectColorTest: true,
-    waitForComputedStyle: {
-      property: "text-shadow",
-      value: "rgb(48, 48, 48) 0px 0px 0px"
-    }
-  };
-
-  await testSelectColors(SELECT_TEXTSHADOW_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
+  await testSelectColors(SELECT_STYLE_OF_OPTION_CHANGES_AFTER_TRANSITIONEND, 2, options);
 });
 
 add_task(async function test_transparent_color_with_text_shadow() {
