@@ -8,7 +8,6 @@
 
 [ptr] native PRThread(PRThread);
 
-interface nsIEventTarget;
 interface nsIRunnable;
 interface nsIThread;
 
@@ -93,7 +92,7 @@ interface nsIThreadManager : nsISupports
    *   .currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
    * C++ callers should instead use NS_DispatchToMainThread.
    */
-  void dispatchToMainThread(in nsIRunnable event, [optional] in uint32_t priority);
+  void dispatchToMainThread(in nsIRunnable event);
 
   /**
    * This queues a runnable to the main thread's idle queue.
@@ -127,9 +126,4 @@ interface nsIThreadManager : nsISupports
    * moving away from.
    */
   void spinEventLoopUntilEmpty();
-
-  /**
-   * Return the SchedulerEventTarget for the SystemGroup.
-   */
-  readonly attribute nsIEventTarget systemGroupEventTarget;
 };

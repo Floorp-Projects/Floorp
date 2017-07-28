@@ -172,8 +172,6 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mPreserveLayers(false)
   , mHasPresented(false)
   , mHasBeforeUnload(false)
-  , mIsReadyToHandleInputEvents(false)
-  , mIsMouseEnterIntoWidgetEventSuppressed(false)
 {
   MOZ_ASSERT(aManager);
 }
@@ -1083,7 +1081,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
                         int32_t aModifiers,
                         bool aPreventDefault)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
   Unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
@@ -1114,32 +1112,10 @@ TabParent::SendRealMouseEvent(WidgetMouseEvent& aEvent)
       mTabSetsCursor = false;
     }
   }
-  if (!mIsReadyToHandleInputEvents) {
-    if (eMouseEnterIntoWidget == aEvent.mMessage) {
-      MOZ_ASSERT(!mIsMouseEnterIntoWidgetEventSuppressed);
-      mIsMouseEnterIntoWidgetEventSuppressed = true;
-    } else if (eMouseExitFromWidget == aEvent.mMessage) {
-      MOZ_ASSERT(mIsMouseEnterIntoWidgetEventSuppressed);
-      mIsMouseEnterIntoWidgetEventSuppressed = false;
-    }
-    return;
-  }
 
   ScrollableLayerGuid guid;
   uint64_t blockId;
   ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
-
-  if (mIsMouseEnterIntoWidgetEventSuppressed) {
-    // In the case that the TabParent suppressed the eMouseEnterWidget event due
-    // to its corresponding TabChild wasn't ready to handle it, we have to
-    // resend it when the TabChild is ready.
-    mIsMouseEnterIntoWidgetEventSuppressed = false;
-    WidgetMouseEvent localEvent(aEvent);
-    localEvent.mMessage = eMouseEnterIntoWidget;
-    DebugOnly<bool> ret = SendRealMouseButtonEvent(localEvent, guid, blockId);
-    NS_WARNING_ASSERTION(ret, "SendRealMouseButtonEvent(eMouseEnterIntoWidget) failed");
-    MOZ_ASSERT(!ret || localEvent.HasBeenPostedToRemoteProcess());
-  }
 
   if (eMouseMove == aEvent.mMessage) {
     if (aEvent.mReason == WidgetMouseEvent::eSynthesized) {
@@ -1175,7 +1151,7 @@ void
 TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
                              uint32_t aDropEffect)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
@@ -1194,7 +1170,7 @@ TabParent::AdjustTapToChildWidget(const LayoutDevicePoint& aPoint)
 void
 TabParent::SendMouseWheelEvent(WidgetWheelEvent& aEvent)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
 
@@ -1473,7 +1449,7 @@ TabParent::RecvClearNativeTouchSequence(const uint64_t& aObserverId)
 void
 TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
@@ -1494,7 +1470,7 @@ TabParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent)
 void
 TabParent::SendRealTouchEvent(WidgetTouchEvent& aEvent)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return;
   }
 
@@ -1555,7 +1531,7 @@ TabParent::SendHandleTap(TapType aType,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId)
 {
-  if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
+  if (mIsDestroyed) {
     return false;
   }
   if ((aType == TapType::eSingleTap || aType == TapType::eSecondTap) &&
@@ -2957,18 +2933,6 @@ TabParent::RecvRemotePaintIsReady()
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
   bool dummy;
   mFrameElement->DispatchEvent(event, &dummy);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-TabParent::RecvRemoteIsReadyToHandleInputEvents()
-{
-  // When enabling input event prioritization, input events may preempt other
-  // normal priority IPC messages. To prevent the input events preempt
-  // PBrowserConstructor, we use an IPC 'RemoteIsReadyToHandleInputEvents' to
-  // notify the parent that TabChild is created and ready to handle input
-  // events.
-  SetReadyToHandleInputEvents();
   return IPC_OK();
 }
 
