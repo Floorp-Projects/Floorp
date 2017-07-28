@@ -20,7 +20,7 @@
   <string name="shortcut_erase_short_label">Padam</string>
   <string name="shortcut_erase_long_label">Padam sejarah pelayaran</string>
   <string name="text_selection_search_action">Cari secara Rahsia</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk hapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s membolehkan anda mengawal.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Gunakannya sebagai pelayar peribadi:\n  "<ul>"\n    "<li>Cari dan melayar terus dalam app</li>"\n    "<li>Sekat penjejak (atau kemaskini tetapan untuk izinkan penjejak)</li>"\n    "<li>Padam untuk menghapuskan kuki serta sejarah carian dan pelayaran</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s dihasilkan oleh Mozilla. Misi kami adalah untuk memupuk internet yang sihat dan terbuka.<br/>\n<a href="%2$s">Ketahui selanjutnya</a></p>]]></string>
   <string name="preference_category_search">Carian</string>
   <string name="preference_search_engine_default">Piawai</string>
   <string name="preference_language">Bahasa</string>
@@ -33,7 +33,7 @@
   <string name="preference_privacy_block_content">Sekat penjejak kandungan lain</string>
   <string name="preference_privacy_block_content_summary">Boleh mengganggu beberapa video dan laman Web</string>
   <string name="preference_privacy_secure_mode">Halimunan</string>
-  <string name="preference_privacy_secure_mode_summary">Tutup mod halimunan untuk mengambil skrinshot dan melihat laman yang dilawati menggunakan %1$s dalam senarai Apps Terkini</string>
+  <string name="preference_privacy_secure_mode_summary">Tutup mod halimunan untuk mengambil skrinsyot dan melihat laman yang dilawati menggunakan %1$s dalam senarai Apps Terkini</string>
   <string name="preference_category_performance">Prestasi</string>
   <string name="preference_performance_block_webfonts">Sekat fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Boleh menyebabkan imej atau ikon hilang</string>
@@ -65,7 +65,7 @@
   <string name="external_multiple_apps_matched_exit">Tamatkan Pelayaran Peribadi?</string>
   <string name="download_snackbar_finished">%1$s sudah siap</string>
   <string name="download_snackbar_open">Buka</string>
-  <string name="download_dialog_warning"><![CDATA["Fail yang dimuat turun "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="download_dialog_warning"><![CDATA["Fail yang dimuat turun "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda padam sejarah %1$s."]]></string>
   <string name="download_dialog_title">Muat Turun Fail</string>
   <string name="download_dialog_action_cancel">Batal</string>
   <string name="download_dialog_action_download">Muat turun</string>
@@ -91,7 +91,7 @@
   <string name="contextmenu_image_share">Kongsi imej</string>
   <string name="contextmenu_image_copy">Salin alamat imej</string>
   <string name="contextmenu_image_save">Simpan imej</string>
-  <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" apabila anda padam sejarah %1$s."]]></string>
+  <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda padam sejarah %1$s."]]></string>
   <string name="firstrun_tracking_title">Layari seperti tiada yang memerhati</string>
   <string name="firstrun_tracking_text">Secara automatik menyekat penjejakan dalam talian semasa anda melayar. Kemudian, padamkan halaman dan kuki yang dilawati dengan menyentuh ikon sampah di dalam aplikasi atau di dalam notifikasi anda.</string>
   <string name="firstrun_defaultbrowser_title">Tingkatkan privasi anda</string>

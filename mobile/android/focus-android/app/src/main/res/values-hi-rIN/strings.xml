@@ -16,6 +16,7 @@
   <string name="menu_trackers_blocked_title">ट्रैकर्स अवरुद्ध</string>
   <string name="share_dialog_title">इसके माध्यम से साझा करें</string>
   <string name="notification_erase_text">ब्राउज़िंग इतिहास मिटाएँ</string>
+  <string name="notification_action_open">खोलें</string>
   <string name="shortcut_erase_short_label">मिटाएँ</string>
   <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मिटाएँ</string>
   <string name="text_selection_search_action">निजी तौर पर खोज</string>
@@ -62,6 +63,12 @@
   <string name="external_app_prompt_no_app_title">एक ऐप ढूंढें जो लिंक खोल सकता है</string>
   <string name="external_app_prompt_no_app">आपके डिवाइस पर मौजूद कोई ऐप इस लिंक को खोलने में सक्षम नहीं है. आप एक एप के लिए %2$s की खोज हेतु %1$s को छोड़ सकते हैं जो कर सकता है.</string>
   <string name="external_multiple_apps_matched_exit">निजी ब्राउज़िंग से बाहर निकलें?</string>
+  <string name="download_snackbar_finished">%1$s खत्म हुआ</string>
+  <string name="download_snackbar_open">खोले</string>
+  <string name="download_dialog_warning"><![CDATA["%1$s इतिहास मिटाने के बाद भी डाउनलोड किया हुआ फाइल "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2344;&#2361;&#2368; &#2350;&#2367;&#2335;&#2375;&#2327;&#2366;</b>.]]></string>
+  <string name="download_dialog_title">फाइल डाउनलोड करे</string>
+  <string name="download_dialog_action_cancel">रद्द</string>
+  <string name="download_dialog_action_download">डाउनलोड</string>
   <string name="errorpage_title">पृष्ठ की लोडिंग में समस्या</string>
   <string name="errorpage_refresh">पुन: प्रयास करें</string>
   <string name="error_connectionfailure_title">संपर्क करने में असमर्थ</string>
@@ -94,4 +101,5 @@
   <string name="firstrun_close_button">ठीक है, समझ गया!</string>
   <string name="firstrun_skip_button">छोड़ें</string>
   <string name="firstrun_next_button">अगला</string>
+  <string name="content_blocking_disabled">-</string>
 </resources>

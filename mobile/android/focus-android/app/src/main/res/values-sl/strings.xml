@@ -13,7 +13,7 @@
   <string name="menu_about">Predstavitev</string>
   <string name="menu_help">Pomoč</string>
   <string name="menu_rights">Vaše pravice</string>
-  <string name="menu_trackers_blocked_title">Sledilci zavrnjeni</string>
+  <string name="menu_trackers_blocked_title">Zavrnjeni sledilci</string>
   <string name="share_dialog_title">Deli preko</string>
   <string name="notification_erase_text">Počisti zgodovino brskanja</string>
   <string name="notification_action_open">Odpri</string>
