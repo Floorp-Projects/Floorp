@@ -385,29 +385,12 @@ var FormAutofillContent = {
       return true;
     }
 
-    let {addressRecord, creditCardRecord} = handler.createRecords();
-
-    if (!addressRecord && !creditCardRecord) {
+    let records = handler.createRecords();
+    if (!Object.keys(records).length) {
       return true;
     }
 
-    let data = {};
-    if (addressRecord) {
-      data.address = {
-        guid: handler.address.filledRecordGUID,
-        record: addressRecord,
-      };
-    }
-
-    if (creditCardRecord) {
-      data.creditCard = {
-        guid: handler.creditCard.filledRecordGUID,
-        record: creditCardRecord,
-      };
-    }
-
-    this._onFormSubmit(data, domWin);
-
+    this._onFormSubmit(records, domWin);
     return true;
   },
 

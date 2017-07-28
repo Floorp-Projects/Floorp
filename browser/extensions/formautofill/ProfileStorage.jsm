@@ -1375,10 +1375,25 @@ class Addresses extends AutofillRecords {
     let hasMatchingField = false;
 
     for (let field of this.VALID_FIELDS) {
-      if (addressToMerge[field] !== undefined && addressFound[field] !== undefined) {
-        if (addressToMerge[field] != addressFound[field]) {
-          this.log.debug("Conflicts: field", field, "has different value.");
-          return false;
+      let existingField = addressFound[field];
+      let incomingField = addressToMerge[field];
+      if (incomingField !== undefined && existingField !== undefined) {
+        if (incomingField != existingField) {
+          // Treat "street-address" as mergeable if their single-line versions
+          // match each other.
+          if (field == "street-address" &&
+              FormAutofillUtils.toOneLineAddress(existingField) == FormAutofillUtils.toOneLineAddress(incomingField)) {
+            // Keep the value in storage if its amount of lines is greater than
+            // or equal to the incoming one.
+            if (existingField.split("\n").length >= incomingField.split("\n").length) {
+              // Replace the incoming field with the one in storage so it will
+              // be further merged back to storage.
+              addressToMerge[field] = existingField;
+            }
+          } else {
+            this.log.debug("Conflicts: field", field, "has different value.");
+            return false;
+          }
         }
         hasMatchingField = true;
       }

@@ -286,6 +286,14 @@ FormAutofillParent.prototype = {
     let {address} = data;
 
     if (address.guid) {
+      // Avoid updating the fields that users don't modify.
+      let originalAddress = this.profileStorage.addresses.get(address.guid);
+      for (let field in address.record) {
+        if (address.untouchedFields.includes(field) && originalAddress[field]) {
+          address.record[field] = originalAddress[field];
+        }
+      }
+
       if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
         FormAutofillDoorhanger.show(target, "update").then((state) => {
           let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
