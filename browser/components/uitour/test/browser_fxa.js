@@ -38,7 +38,7 @@ var tests = [
     await setSignedInUser();
     let userData = await fxAccounts.getSignedInUser();
     isnot(userData, null, "Logged in now");
-    gSync.updateAllUI({ status: UIState. STATUS_SIGNED_IN, email: "foo@example.com" });
+    gSync.updateAllUI({ status: UIState.STATUS_SIGNED_IN, email: "foo@example.com" });
     await showMenuPromise("appMenu");
     await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");

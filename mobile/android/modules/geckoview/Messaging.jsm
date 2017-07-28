@@ -248,7 +248,7 @@ var EventDispatcher = {
     }
 
     if (aMsg.data.global) {
-      this.instance.dispatch(aMsg.data.event, aMsg.data.data. callback);
+      this.instance.dispatch(aMsg.data.event, aMsg.data.data.callback);
       return;
     }
 
