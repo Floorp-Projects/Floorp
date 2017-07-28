@@ -249,6 +249,7 @@ windows8-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-media
+    - jsreftest
     - reftest
     - reftest-no-accel
     - mochitest-gpu
