@@ -46,7 +46,6 @@ private:
 
 private:
     nsCOMPtr<nsIWebProgressListener> mListener;
-    nsCOMPtr<nsIEventTarget>         mTarget;
     nsCOMPtr<nsITimer>               mTimer;
 
     // delayed values
