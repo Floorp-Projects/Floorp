@@ -476,13 +476,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
 
-    js::UnprotectedData<JS::RequestReadableStreamDataCallback> readableStreamDataRequestCallback;
-    js::UnprotectedData<JS::WriteIntoReadRequestBufferCallback> readableStreamWriteIntoReadRequestCallback;
-    js::UnprotectedData<JS::CancelReadableStreamCallback> readableStreamCancelCallback;
-    js::UnprotectedData<JS::ReadableStreamClosedCallback> readableStreamClosedCallback;
-    js::UnprotectedData<JS::ReadableStreamErroredCallback> readableStreamErroredCallback;
-    js::UnprotectedData<JS::ReadableStreamFinalizeCallback> readableStreamFinalizeCallback;
-
     /* Had an out-of-memory error which did not populate an exception. */
     mozilla::Atomic<bool> hadOutOfMemory;
 
