@@ -1435,8 +1435,6 @@ XRE_XPCShellMain(int argc, char** argv, char** envp,
         options.creationOptions().setNewZoneInSystemZoneGroup();
         if (xpc::SharedMemoryEnabled())
             options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-        if (xpc::DOMStreamsEnabled())
-            options.creationOptions().setStreamsEnabled(true);
         options.behaviors().setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = nsXPConnect::XPConnect()->

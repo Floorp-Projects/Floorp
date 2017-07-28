@@ -180,8 +180,6 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     aOptions.creationOptions().setTrace(XPCWrappedNative::Trace);
     if (xpc::SharedMemoryEnabled())
         aOptions.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
-    if (xpc::DOMStreamsEnabled())
-        aOptions.creationOptions().setStreamsEnabled(true);
     RootedObject global(cx, xpc::CreateGlobalObject(cx, clasp, principal, aOptions));
     if (!global)
         return NS_ERROR_FAILURE;

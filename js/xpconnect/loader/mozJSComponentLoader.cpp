@@ -473,9 +473,6 @@ mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
     if (xpc::SharedMemoryEnabled())
         options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 
-    if (xpc::DOMStreamsEnabled())
-        options.creationOptions().setStreamsEnabled(true);
-
     // Defer firing OnNewGlobalObject until after the __URI__ property has
     // been defined so the JS debugger can tell what module the global is
     // for
