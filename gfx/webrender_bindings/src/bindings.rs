@@ -920,7 +920,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
         match c_filter.filter_type {
-            WrFilterOpType::Blur => FilterOp::Blur(Au::from_f32_px(c_filter.argument)),
+            WrFilterOpType::Blur => FilterOp::Blur(c_filter.argument),
             WrFilterOpType::Brightness => FilterOp::Brightness(c_filter.argument),
             WrFilterOpType::Contrast => FilterOp::Contrast(c_filter.argument),
             WrFilterOpType::Grayscale => FilterOp::Grayscale(c_filter.argument),
