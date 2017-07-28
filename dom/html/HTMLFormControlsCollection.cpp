@@ -261,7 +261,7 @@ HTMLFormControlsCollection::RemoveElementFromTable(
 
 nsresult
 HTMLFormControlsCollection::GetSortedControls(
-  nsTArray<nsGenericHTMLFormElement*>& aControls) const
+  nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const
 {
 #ifdef DEBUG
   HTMLFormElement::AssertDocumentOrder(mElements, mForm);
