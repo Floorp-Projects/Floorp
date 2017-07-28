@@ -103,6 +103,11 @@ function processFlagFilter(type, value) {
 }
 
 function isFlagFilterMatch(item, { type, value, negative }) {
+  // Ensures when filter token is exactly a flag ie. "remote-ip:", all values are shown
+  if (value.length < 1) {
+    return true;
+  }
+
   let match = true;
   let { responseCookies = { cookies: [] } } = item;
   responseCookies = responseCookies.cookies || responseCookies;
@@ -185,7 +190,7 @@ function isFlagFilterMatch(item, { type, value, negative }) {
         let host = item.urlDetails.host;
         let i = responseCookies.findIndex(c => {
           let domain = c.hasOwnProperty("domain") ? c.domain : host;
-          return domain === value;
+          return domain.includes(value);
         });
         match = i > -1;
       } else {
@@ -193,10 +198,12 @@ function isFlagFilterMatch(item, { type, value, negative }) {
       }
       break;
     case "set-cookie-name":
-      match = responseCookies.findIndex(c => c.name.toLowerCase() === value) > -1;
+      match = responseCookies.findIndex(c =>
+        c.name.toLowerCase().includes(value)) > -1;
       break;
     case "set-cookie-value":
-      match = responseCookies.findIndex(c => c.value.toLowerCase() === value) > -1;
+      match = responseCookies.findIndex(c =>
+        c.value.toLowerCase().includes(value)) > -1;
       break;
   }
   if (negative) {
@@ -242,50 +249,6 @@ function isFreetextMatch(item, text) {
   return match;
 }
 
-/**
- * Generates an autocomplete list for the search-box for network monitor
- *
- * It expects an entire string of the searchbox ie "is:cached pr".
- * The string is then tokenized into "is:cached" and "pr"
- *
- * @param {string} filter - The entire search string of the search box
- * @return {Array} - The output is an array of objects as below
- * [{value: "is:cached protocol", displayValue: "protocol"}[, ...]]
- * `value` is used to update the search-box input box for given item
- * `displayValue` is used to render the autocomplete list
- */
-function autocompleteProvider(filter) {
-  if (!filter) {
-    return [];
-  }
-
-  let negativeAutocompleteList = FILTER_FLAGS.map((item) => `-${item}`);
-  let baseList = [...FILTER_FLAGS, ...negativeAutocompleteList]
-    .map((item) => `${item}:`);
-
-  // The last token is used to filter the base autocomplete list
-  let tokens = filter.split(/\s+/g);
-  let lastToken = tokens[tokens.length - 1];
-  let previousTokens = tokens.slice(0, tokens.length - 1);
-
-  // Autocomplete list is not generated for empty lastToken
-  if (!lastToken) {
-    return [];
-  }
-
-  return baseList
-    .filter((item) => {
-      return item.toLowerCase().startsWith(lastToken.toLowerCase())
-        && item.toLowerCase() !== lastToken.toLowerCase();
-    })
-    .sort()
-    .map(item => ({
-      value: [...previousTokens, item].join(" "),
-      displayValue: item,
-    }));
-}
-
 module.exports = {
   isFreetextMatch,
-  autocompleteProvider,
 };
