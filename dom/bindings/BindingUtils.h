@@ -3106,9 +3106,6 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
   if (xpc::SharedMemoryEnabled()) {
     aOptions.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
   }
-  if (xpc::DOMStreamsEnabled()) {
-    aOptions.creationOptions().setStreamsEnabled(true);
-  }
 
   aGlobal.set(JS_NewGlobalObject(aCx, aClass, aPrincipal,
                                  JS::DontFireOnNewGlobalHook, aOptions));
