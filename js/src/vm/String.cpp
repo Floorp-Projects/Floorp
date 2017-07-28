@@ -1102,7 +1102,9 @@ JSExternalString::ensureFlat(JSContext* cx)
     // Release the external chars.
     finalize(cx->runtime()->defaultFreeOp());
 
-    // Transform the string into a non-external, flat string.
+    // Transform the string into a non-external, flat string. Note that the
+    // resulting string will still be in an AllocKind::EXTERNAL_STRING arena,
+    // but will no longer be an external string.
     setNonInlineChars<char16_t>(s);
     d.u1.flags = INIT_FLAT_FLAGS;
 
