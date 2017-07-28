@@ -371,24 +371,20 @@ ServoStyleSet::PrepareAndTraverseSubtree(
     EffectCompositor::AnimationRestyleType::Throttled;
   if (forReconstruct ? compositor->PreTraverseInSubtree(root, restyleType)
                      : compositor->PreTraverse(restyleType)) {
-    if (Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags)) {
-      MOZ_ASSERT(!forReconstruct);
-      if (isInitial) {
-        // We're doing initial styling, and the additional animation
-        // traversal changed the styles that were set by the first traversal.
-        // This would normally require a post-traversal to update the style
-        // contexts, and the DOM now has dirty descendant bits and RestyleData
-        // in expectation of that post-traversal. But since this is actually
-        // the initial styling, there are no style contexts to update and no
-        // frames to apply the change hints to, so we don't need to do that
-        // post-traversal. Instead, just drop this state and tell the caller
-        // that no post-traversal is required.
-        MOZ_ASSERT(!postTraversalRequired);
-        ServoRestyleManager::ClearRestyleStateFromSubtree(root);
-      } else {
-        postTraversalRequired = true;
-      }
+    if (isInitial) {
+      // We're doing initial styling, and the additional animation
+      // traversal will change the styles that were set by the first traversal.
+      // This would normally require a post-traversal to update the style
+      // contexts, but since this is actually the initial styling, there are
+      // no style contexts to update and no frames to apply the change hints to,
+      // so we just do a forgetful traversal and clear the flags on the way.
+      aFlags |= ServoTraversalFlags::Forgetful |
+                ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
     }
+
+    postTraversalRequired =
+      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, aFlags);
+    MOZ_ASSERT_IF(isInitial || forReconstruct, !postTraversalRequired);
   }
 
   return postTraversalRequired;
