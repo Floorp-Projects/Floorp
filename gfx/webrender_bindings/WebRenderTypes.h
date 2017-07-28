@@ -107,26 +107,26 @@ inline uint64_t AsUint64(const WindowId& aId) {
 
 // Whenever possible, use wr::ImageKey instead of manipulating uint64_t.
 inline uint64_t AsUint64(const ImageKey& aId) {
-  return (static_cast<uint64_t>(aId.mNamespace) << 32)
+  return (static_cast<uint64_t>(aId.mNamespace.mHandle) << 32)
         + static_cast<uint64_t>(aId.mHandle);
 }
 
 inline ImageKey AsImageKey(const uint64_t& aId) {
   ImageKey imageKey;
-  imageKey.mNamespace = aId >> 32;
+  imageKey.mNamespace.mHandle = aId >> 32;
   imageKey.mHandle = aId;
   return imageKey;
 }
 
 // Whenever possible, use wr::FontKey instead of manipulating uint64_t.
 inline uint64_t AsUint64(const FontKey& aId) {
-  return (static_cast<uint64_t>(aId.mNamespace) << 32)
+  return (static_cast<uint64_t>(aId.mNamespace.mHandle) << 32)
         + static_cast<uint64_t>(aId.mHandle);
 }
 
 inline FontKey AsFontKey(const uint64_t& aId) {
   FontKey fontKey;
-  fontKey.mNamespace = aId >> 32;
+  fontKey.mNamespace.mHandle = aId >> 32;
   fontKey.mHandle = aId;
   return fontKey;
 }
