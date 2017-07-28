@@ -1698,7 +1698,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<AsyncImagePipelineManager> asyncMgr =
     new AsyncImagePipelineManager(WebRenderBridgeParent::AllocIdNameSpace());
   if (!api) {
-    mWrBridge = WebRenderBridgeParent::CeateDestroyed();
+    mWrBridge = WebRenderBridgeParent::CreateDestroyed();
     *aIdNamespace = mWrBridge->GetIdNameSpace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return mWrBridge;
