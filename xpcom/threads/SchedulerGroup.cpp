@@ -203,11 +203,14 @@ SchedulerGroup::MarkVsyncRan()
   gEarliestUnprocessedVsync = 0;
 }
 
-SchedulerGroup* SchedulerGroup::sRunningDispatcher;
+MOZ_THREAD_LOCAL(bool) SchedulerGroup::sTlsValidatingAccess;
 
 SchedulerGroup::SchedulerGroup()
- : mAccessValid(false)
+ : mIsRunning(false)
 {
+  if (NS_IsMainThread()) {
+    sTlsValidatingAccess.infallibleInit();
+  }
 }
 
 nsresult
@@ -336,15 +339,15 @@ SchedulerGroup::InternalUnlabeledDispatch(TaskCategory aCategory,
   return rv;
 }
 
-void
+/* static */ void
 SchedulerGroup::SetValidatingAccess(ValidationType aType)
 {
-  sRunningDispatcher = aType == StartValidation ? this : nullptr;
-  mAccessValid = aType == StartValidation;
+  bool validating = aType == StartValidation;
+  sTlsValidatingAccess.set(validating);
 
   dom::AutoJSAPI jsapi;
   jsapi.Init();
-  js::EnableAccessValidation(jsapi.cx(), !!sRunningDispatcher);
+  js::EnableAccessValidation(jsapi.cx(), validating);
 }
 
 SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
@@ -384,8 +387,6 @@ SchedulerGroup::Runnable::Run()
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  mGroup->SetValidatingAccess(StartValidation);
-
   nsresult result;
 
   {
@@ -416,23 +417,3 @@ NS_IMPL_ISUPPORTS_INHERITED(SchedulerGroup::Runnable,
                             nsIRunnablePriority,
                             nsILabelableRunnable,
                             SchedulerGroup::Runnable)
-
-SchedulerGroup::AutoProcessEvent::AutoProcessEvent()
- : mPrevRunningDispatcher(SchedulerGroup::sRunningDispatcher)
-{
-  SchedulerGroup* prev = sRunningDispatcher;
-  if (prev) {
-    MOZ_ASSERT(prev->mAccessValid);
-    prev->SetValidatingAccess(EndValidation);
-  }
-}
-
-SchedulerGroup::AutoProcessEvent::~AutoProcessEvent()
-{
-  MOZ_ASSERT(!sRunningDispatcher);
-
-  SchedulerGroup* prev = mPrevRunningDispatcher;
-  if (prev) {
-    prev->SetValidatingAccess(StartValidation);
-  }
-}
