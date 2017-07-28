@@ -903,7 +903,8 @@ TextEditRules::WillSetText(Selection& aSelection,
 
   // Even if empty text, we don't remove text node and set empty text
   // for performance
-  nsresult rv = textEditor->SetTextImpl(tString, *curNode->GetAsText());
+  nsresult rv = textEditor->SetTextImpl(aSelection, tString,
+                                        *curNode->GetAsText());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

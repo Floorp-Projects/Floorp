@@ -690,6 +690,12 @@ EditorBase::GetSelection(SelectionType aSelectionType)
 NS_IMETHODIMP
 EditorBase::DoTransaction(nsITransaction* aTxn)
 {
+  return DoTransaction(nullptr, aTxn);
+}
+
+nsresult
+EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
+{
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
     mPlaceholderTransaction =
       new PlaceholderTransaction(*this, mPlaceholderName, Move(mSelState));
@@ -736,7 +742,7 @@ EditorBase::DoTransaction(nsITransaction* aTxn)
     // XXX: re-entry during initial reflow. - kin
 
     // get the selection and start a batch change
-    RefPtr<Selection> selection = GetSelection();
+    RefPtr<Selection> selection = aSelection ? aSelection : GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
     selection->StartBatchChanges();
@@ -2714,7 +2720,8 @@ EditorBase::NotifyDocumentListeners(
 }
 
 nsresult
-EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData)
+EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
+                        Text& aCharData)
 {
   RefPtr<SetTextTransaction> transaction =
     CreateTxnForSetText(aString, aCharData);
@@ -2744,7 +2751,7 @@ EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData)
     }
   }
 
-  nsresult rv = DoTransaction(transaction);
+  nsresult rv = DoTransaction(&aSelection, transaction);
 
   // Let listeners know what happened
   {
