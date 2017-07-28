@@ -587,7 +587,7 @@ nsMultiStateCommand::DoCommandParams(const char *aCommandName,
         nsXPIDLCString s;
         rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
         if (NS_SUCCEEDED(rv))
-          tString.AssignWithConversion(s);
+          CopyASCIItoUTF16(s, tString);
         else
           rv = aParams->GetStringValue(STATE_ATTRIBUTE, tString);
       }
@@ -630,7 +630,7 @@ nsParagraphStateCommand::GetCurrentState(nsIEditor *aEditor,
   nsresult rv = htmlEditor->GetParagraphState(&outMixed, outStateString);
   if (NS_SUCCEEDED(rv)) {
     nsAutoCString tOutStateString;
-    tOutStateString.AssignWithConversion(outStateString);
+    LossyCopyUTF16toASCII(outStateString, tOutStateString);
     aParams->SetBooleanValue(STATE_MIXED,outMixed);
     aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   }
@@ -707,8 +707,6 @@ nsFontSizeStateCommand::nsFontSizeStateCommand()
 {
 }
 
-//  nsAutoCString tOutStateString;
-//  tOutStateString.AssignWithConversion(outStateString);
 nsresult
 nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
                                         nsICommandParams *aParams)
@@ -728,7 +726,7 @@ nsFontSizeStateCommand::GetCurrentState(nsIEditor *aEditor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString tOutStateString;
-  tOutStateString.AssignWithConversion(outStateString);
+  LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, anyHas && !allHas);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   aParams->SetBooleanValue(STATE_ENABLED, true);
@@ -791,7 +789,7 @@ nsFontColorStateCommand::GetCurrentState(nsIEditor *aEditor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString tOutStateString;
-  tOutStateString.AssignWithConversion(outStateString);
+  LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   return NS_OK;
@@ -832,7 +830,7 @@ nsHighlightColorStateCommand::GetCurrentState(nsIEditor *aEditor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString tOutStateString;
-  tOutStateString.AssignWithConversion(outStateString);
+  LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   return NS_OK;
@@ -889,7 +887,7 @@ nsBackgroundColorStateCommand::GetCurrentState(nsIEditor *aEditor,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString tOutStateString;
-  tOutStateString.AssignWithConversion(outStateString);
+  LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED, outMixed);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   return NS_OK;
@@ -945,7 +943,7 @@ nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
       break;
   }
   nsAutoCString tOutStateString;
-  tOutStateString.AssignWithConversion(outStateString);
+  LossyCopyUTF16toASCII(outStateString, tOutStateString);
   aParams->SetBooleanValue(STATE_MIXED,outMixed);
   aParams->SetCStringValue(STATE_ATTRIBUTE, tOutStateString.get());
   return NS_OK;
@@ -1408,7 +1406,8 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   nsXPIDLCString s;
   nsresult rv = aParams->GetCStringValue(STATE_ATTRIBUTE, getter_Copies(s));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoString attrib; attrib.AssignWithConversion(s);
+  nsAutoString attrib;
+  CopyASCIItoUTF16(s, attrib);
 
   if (attrib.IsEmpty())
     return NS_ERROR_INVALID_ARG;

@@ -871,6 +871,7 @@ let PDFViewerApplication = {
     pdfBugEnabled: false,
     showPreviousViewOnLoad: true,
     defaultZoomValue: '',
+    disablePageMode: false,
     disablePageLabels: false,
     renderer: 'canvas',
     enhanceTextSelection: false,
@@ -950,6 +951,8 @@ let PDFViewerApplication = {
       viewerPrefs['renderer'] = value;
     }), preferences.get('renderInteractiveForms').then(function resolved(value) {
       viewerPrefs['renderInteractiveForms'] = value;
+    }), preferences.get('disablePageMode').then(function resolved(value) {
+      viewerPrefs['disablePageMode'] = value;
     }), preferences.get('disablePageLabels').then(function resolved(value) {
       viewerPrefs['disablePageLabels'] = value;
     }), preferences.get('enablePrintAutoRotate').then(function resolved(value) {
@@ -1354,6 +1357,7 @@ let PDFViewerApplication = {
         this.eventBus.dispatch('documentload', { source: this });
       });
     });
+    let pageModePromise = pdfDocument.getPageMode().catch(function () {});
     this.toolbar.setPagesCount(pdfDocument.numPages, false);
     this.secondaryToolbar.setPagesCount(pdfDocument.numPages);
     let id = this.documentFingerprint = pdfDocument.fingerprint;
@@ -1387,35 +1391,34 @@ let PDFViewerApplication = {
         bookmark: this.initialBookmark,
         hash: null
       };
-      let storedHash = this.viewerPrefs['defaultZoomValue'] ? 'zoom=' + this.viewerPrefs['defaultZoomValue'] : null;
-      let sidebarView = this.viewerPrefs['sidebarViewOnLoad'];
-      new Promise((resolve, reject) => {
-        if (!this.viewerPrefs['showPreviousViewOnLoad']) {
-          resolve();
-          return;
+      let storePromise = store.getMultiple({
+        exists: false,
+        page: '1',
+        zoom: _ui_utils.DEFAULT_SCALE_VALUE,
+        scrollLeft: '0',
+        scrollTop: '0',
+        sidebarView: _pdf_sidebar.SidebarView.NONE
+      }).catch(() => {});
+      Promise.all([storePromise, pageModePromise]).then(([values = {}, pageMode]) => {
+        let hash = this.viewerPrefs['defaultZoomValue'] ? 'zoom=' + this.viewerPrefs['defaultZoomValue'] : null;
+        let sidebarView = this.viewerPrefs['sidebarViewOnLoad'];
+        if (values.exists && this.viewerPrefs['showPreviousViewOnLoad']) {
+          hash = 'page=' + values.page + '&zoom=' + (this.viewerPrefs['defaultZoomValue'] || values.zoom) + ',' + values.scrollLeft + ',' + values.scrollTop;
+          sidebarView = sidebarView || values.sidebarView | 0;
         }
-        store.getMultiple({
-          exists: false,
-          page: '1',
-          zoom: _ui_utils.DEFAULT_SCALE_VALUE,
-          scrollLeft: '0',
-          scrollTop: '0',
-          sidebarView: _pdf_sidebar.SidebarView.NONE
-        }).then(values => {
-          if (!values.exists) {
-            resolve();
-            return;
-          }
-          storedHash = 'page=' + values.page + '&zoom=' + (this.viewerPrefs['defaultZoomValue'] || values.zoom) + ',' + values.scrollLeft + ',' + values.scrollTop;
-          sidebarView = this.viewerPrefs['sidebarViewOnLoad'] || values.sidebarView | 0;
-          resolve();
-        }).catch(resolve);
-      }).then(() => {
-        this.setInitialView(storedHash, {
+        if (pageMode && !this.viewerPrefs['disablePageMode']) {
+          sidebarView = sidebarView || apiPageModeToSidebarView(pageMode);
+        }
+        return {
+          hash,
+          sidebarView
+        };
+      }).then(({ hash, sidebarView }) => {
+        this.setInitialView(hash, {
           sidebarView,
           scale
         });
-        initialParams.hash = storedHash;
+        initialParams.hash = hash;
         if (!this.isViewerEmbedded) {
           pdfViewer.focus();
         }
@@ -2328,6 +2331,20 @@ function webViewerKeyDown(evt) {
   if (handled) {
     evt.preventDefault();
   }
+}
+function apiPageModeToSidebarView(mode) {
+  switch (mode) {
+    case 'UseNone':
+      return _pdf_sidebar.SidebarView.NONE;
+    case 'UseThumbs':
+      return _pdf_sidebar.SidebarView.THUMBS;
+    case 'UseOutlines':
+      return _pdf_sidebar.SidebarView.OUTLINE;
+    case 'UseAttachments':
+      return _pdf_sidebar.SidebarView.ATTACHMENTS;
+    case 'UseOC':
+  }
+  return _pdf_sidebar.SidebarView.NONE;
 }
 let PDFPrintServiceFactory = {
   instance: {
@@ -7076,6 +7093,7 @@ function getDefaultPreferences() {
       "renderer": "canvas",
       "renderInteractiveForms": false,
       "enablePrintAutoRotate": false,
+      "disablePageMode": false,
       "disablePageLabels": false
     });
   }

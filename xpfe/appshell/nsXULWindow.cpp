@@ -1655,7 +1655,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_POSITION) && gotRestoredBounds) {
     if (persistString.Find("screenX") >= 0) {
       SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.x / posScale.scale));
-      sizeString.AssignWithConversion(sizeBuf);
+      CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENX_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, SCREENX_ATTRIBUTE);
@@ -1663,7 +1663,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     }
     if (persistString.Find("screenY") >= 0) {
       SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.y / posScale.scale));
-      sizeString.AssignWithConversion(sizeBuf);
+      CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(SCREENY_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, SCREENY_ATTRIBUTE);
@@ -1674,7 +1674,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
   if ((mPersistentAttributesDirty & PAD_SIZE) && gotRestoredBounds) {
     if (persistString.Find("width") >= 0) {
       SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.width / sizeScale.scale));
-      sizeString.AssignWithConversion(sizeBuf);
+      CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(WIDTH_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, WIDTH_ATTRIBUTE);
@@ -1682,7 +1682,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     }
     if (persistString.Find("height") >= 0) {
       SprintfLiteral(sizeBuf, "%d", NSToIntRound(rect.height / sizeScale.scale));
-      sizeString.AssignWithConversion(sizeBuf);
+      CopyASCIItoUTF16(sizeBuf, sizeString);
       docShellElement->SetAttribute(HEIGHT_ATTRIBUTE, sizeString, rv);
       if (shouldPersist) {
         ownerXULDoc->Persist(windowElementId, HEIGHT_ATTRIBUTE);
@@ -1711,7 +1711,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
       if (mediator) {
         mediator->GetZLevel(this, &zLevel);
         SprintfLiteral(sizeBuf, "%" PRIu32, zLevel);
-        sizeString.AssignWithConversion(sizeBuf);
+        CopyASCIItoUTF16(sizeBuf, sizeString);
         docShellElement->SetAttribute(ZLEVEL_ATTRIBUTE, sizeString, rv);
         if (shouldPersist) {
           ownerXULDoc->Persist(windowElementId, ZLEVEL_ATTRIBUTE);

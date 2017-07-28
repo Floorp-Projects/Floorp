@@ -102,7 +102,8 @@ public:
                                     const wr::ByteBuffer& dl,
                                     const wr::BuiltDisplayListDescriptor& dlDesc,
                                     const WebRenderScrollData& aScrollData,
-                                    const uint32_t& aIdNameSpace) override;
+                                    const uint32_t& aIdNameSpace,
+                                    const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                         InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -112,7 +113,8 @@ public:
                                         const wr::ByteBuffer& dl,
                                         const wr::BuiltDisplayListDescriptor& dlDesc,
                                         const WebRenderScrollData& aScrollData,
-                                        const uint32_t& aIdNameSpace) override;
+                                        const uint32_t& aIdNameSpace,
+                                        const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
@@ -167,10 +169,10 @@ public:
   void SendPendingAsyncMessages() override;
   void SetAboutToSendAsyncMessages() override;
 
-  void HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId);
+  void HoldPendingTransactionId(uint32_t aWrEpoch, uint64_t aTransactionId, const TimeStamp& aFwdTime);
   uint64_t LastPendingTransactionId();
   uint64_t FlushPendingTransactionIds();
-  uint64_t FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch);
+  uint64_t FlushTransactionIdsForEpoch(const wr::Epoch& aEpoch, const TimeStamp& aEndTime);
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
@@ -233,7 +235,8 @@ private:
                    const wr::ByteBuffer& dl,
                    const wr::BuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData,
-                   const uint32_t& aIdNameSpace);
+                   const uint32_t& aIdNameSpace,
+                   const TimeStamp& aFwdTime);
   mozilla::ipc::IPCResult HandleShutdown();
 
   void AdvanceAnimations();
@@ -256,12 +259,14 @@ private:
 
 private:
   struct PendingTransactionId {
-    PendingTransactionId(wr::Epoch aEpoch, uint64_t aId)
+    PendingTransactionId(wr::Epoch aEpoch, uint64_t aId, const TimeStamp& aFwdTime)
       : mEpoch(aEpoch)
       , mId(aId)
+      , mFwdTime(aFwdTime)
     {}
     wr::Epoch mEpoch;
     uint64_t mId;
+    TimeStamp mFwdTime;
   };
 
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;

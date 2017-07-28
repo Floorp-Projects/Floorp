@@ -510,6 +510,39 @@ WebRenderAPI::SetProfilerEnabled(bool aEnabled)
   RunOnRenderThread(Move(event));
 }
 
+class FrameStartTime : public RendererEvent
+{
+public:
+  explicit FrameStartTime(const TimeStamp& aTime)
+    : mTime(aTime)
+  {
+    MOZ_COUNT_CTOR(FrameStartTime);
+  }
+
+  ~FrameStartTime()
+  {
+    MOZ_COUNT_DTOR(FrameStartTime);
+  }
+
+  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+  {
+    auto renderer = aRenderThread.GetRenderer(aWindowId);
+    if (renderer) {
+      renderer->SetFrameStartTime(mTime);
+    }
+  }
+
+private:
+  TimeStamp mTime;
+};
+
+void
+WebRenderAPI::SetFrameStartTime(const TimeStamp& aTime)
+{
+  auto event = MakeUnique<FrameStartTime>(aTime);
+  RunOnRenderThread(Move(event));
+}
+
 void
 WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 {
