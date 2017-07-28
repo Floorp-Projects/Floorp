@@ -9,6 +9,7 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.SystemClock;
+import android.support.annotation.WorkerThread;
 import android.support.v4.content.AsyncTaskLoader;
 
 import org.mozilla.gecko.Telemetry;
@@ -16,6 +17,7 @@ import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,12 +64,25 @@ import java.util.List;
             enableContentUpdates();
 
             final List<Highlight> highlights = HighlightsRanking.rank(candidatesCursor, highlightsLimit);
+            forceLoadHighlightMetadata(highlights); // force load now that we have a short list of the data.
 
             addToPerformanceHistogram(startTime);
 
             return highlights;
         } finally {
             candidatesCursor.close();
+        }
+    }
+
+    /**
+     * Optimization: we force the lazily-loaded metadata to load while we're running on this background thread
+     * rather than letting it block the UI thread when this data is being used in the UI.
+     */
+    @WorkerThread
+    private static void forceLoadHighlightMetadata(final List<Highlight> highlights) {
+        ThreadUtils.assertNotOnUiThread();
+        for (final Highlight highlight : highlights) {
+            highlight.getMetadataSlow();
         }
     }
 
