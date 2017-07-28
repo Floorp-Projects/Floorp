@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 const {
   PushCrypto,
@@ -34,7 +33,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
   });
 });
 
-const prefs = new Preferences("dom.push.");
+const prefs = Services.prefs.getBranch("dom.push.");
 
 const kPUSHHTTP2DB_DB_NAME = "pushHttp2";
 const kPUSHHTTP2DB_DB_VERSION = 5; // Change this if the IndexedDB format changes
@@ -257,7 +256,7 @@ SubscriptionListener.prototype = {
     var statusCode = aRequest.QueryInterface(Ci.nsIHttpChannel).responseStatus;
 
     if (Math.floor(statusCode / 100) == 5) {
-      if (this._subInfo.retries < prefs.get("http2.maxRetries")) {
+      if (this._subInfo.retries < prefs.getIntPref("http2.maxRetries")) {
         this._subInfo.retries++;
         var retryAfter = retryAfterParser(aRequest);
         this._retryTimeoutID = setTimeout(_ =>
@@ -432,7 +431,7 @@ this.PushServiceHttp2 = {
 
   validServerURI: function(serverURI) {
     if (serverURI.scheme == "http") {
-      return !!prefs.get("testing.allowInsecureServerURL");
+      return !!prefs.getBoolPref("testing.allowInsecureServerURL", false);
     }
     return serverURI.scheme == "https";
   },
@@ -582,14 +581,14 @@ this.PushServiceHttp2 = {
   _retryAfterBackoff: function(aSubscriptionUri, retryAfter) {
     console.debug("retryAfterBackoff()");
 
-    var resetRetryCount = prefs.get("http2.reset_retry_count_after_ms");
+    var resetRetryCount = prefs.getIntPref("http2.reset_retry_count_after_ms");
     // If it was running for some time, reset retry counter.
     if ((Date.now() - this._conns[aSubscriptionUri].lastStartListening) >
         resetRetryCount) {
       this._conns[aSubscriptionUri].countUnableToConnect = 0;
     }
 
-    let maxRetries = prefs.get("http2.maxRetries");
+    let maxRetries = prefs.getIntPref("http2.maxRetries");
     if (this._conns[aSubscriptionUri].countUnableToConnect >= maxRetries) {
       this._shutdownSubscription(aSubscriptionUri);
       this._resubscribe(aSubscriptionUri);
@@ -604,7 +603,7 @@ this.PushServiceHttp2 = {
       return;
     }
 
-    retryAfter = prefs.get("http2.retryInterval") *
+    retryAfter = prefs.getIntPref("http2.retryInterval") *
       Math.pow(2, this._conns[aSubscriptionUri].countUnableToConnect);
 
     retryAfter = retryAfter * (0.8 + Math.random() * 0.4); // add +/-20%.
