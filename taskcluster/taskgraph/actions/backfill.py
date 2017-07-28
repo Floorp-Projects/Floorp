@@ -86,7 +86,6 @@ def backfill_action(parameters, input, task_group_id, task_id, task):
                             for name, label in task.dependencies.iteritems()}
             task_def = resolve_task_references(task.label, task.task, dependencies)
             task_def.setdefault('dependencies', []).extend(dependencies.itervalues())
-            task_def['schedulerId'] = 'gecko-level-{}'.format(parameters['level'])
-            create_task(slugid(), task_def)
+            create_task(slugid(), task_def, parameters['level'])
         else:
             logging.info('Could not find {} on {}. Skipping.'.format(label, push))
