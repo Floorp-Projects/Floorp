@@ -37,7 +37,6 @@ to mochitest command.
 * Animation support:
   * SMIL Animation
     * test_restyles_in_smil_animation.html [2]
-* test_font_feature_values_parsing.html: \@font-feature-values support bug 1355721 [3]
 * Unsupported values
   * SVG-in-OpenType values not supported servo/servo#15211 bug 1338764
     * test_value_storage.html `context-` [7]
