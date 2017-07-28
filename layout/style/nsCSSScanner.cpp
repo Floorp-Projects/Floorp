@@ -1165,6 +1165,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   // aToken.mIdent may be "url" at this point; clear that out
   aToken.mIdent.Truncate();
 
+  bool hasString = false;
   int32_t ch = Peek();
   // Do we have a string?
   if (ch == '"' || ch == '\'') {
@@ -1174,7 +1175,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
       return;
     }
     MOZ_ASSERT(aToken.mType == eCSSToken_String, "unexpected token type");
-
+    hasString = true;
   } else {
     // Otherwise, this is the start of a non-quoted url (which may be empty).
     aToken.mSymbol = char16_t(0);
@@ -1194,6 +1195,25 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   } else {
     mSeenBadToken = true;
     aToken.mType = eCSSToken_Bad_URL;
+    if (!hasString) {
+      // Consume until before the next right parenthesis, which follows
+      // how <bad-url-token> is consumed in CSS Syntax 3 spec.
+      // Note that, we only do this when "url(" is not followed by a
+      // string, because in the spec, "url(" followed by a string is
+      // handled as a url function rather than a <url-token>, so the
+      // rest of content before ")" should be consumed in balance,
+      // which will be done by the parser.
+      // The closing ")" is not consumed here. It is left to the parser
+      // so that the parser can handle both cases.
+      do {
+        if (IsVertSpace(ch)) {
+          AdvanceLine();
+        } else {
+          Advance();
+        }
+        ch = Peek();
+      } while (ch >= 0 && ch != ')');
+    }
   }
 }
 
