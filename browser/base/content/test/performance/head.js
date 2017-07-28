@@ -5,10 +5,6 @@
  * @param testFn (async function)
  *        The async function that will exercise the browser activity that is
  *        being tested for reflows.
- *
- *        The testFn will be passed a single argument, which is a frame dirtying
- *        function that can be called if the test needs to trigger frame
- *        dirtying outside of the normal mechanism.
  * @param expectedReflows (Array, optional)
  *        An Array of Objects representing reflows.
  *
@@ -125,7 +121,7 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
 
   try {
     dirtyFrameFn();
-    await testFn(dirtyFrameFn);
+    await testFn();
   } finally {
     for (let remainder of expectedReflows) {
       Assert.ok(false,
