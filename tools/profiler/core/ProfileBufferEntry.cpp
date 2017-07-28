@@ -590,20 +590,26 @@ private:
   const int mEntrySize;
 };
 
-// Each sample is made up of multiple ProfileBuffer entries. The following
-// grammar shows legal sequences.
+// The following grammar shows legal sequences of profile buffer entries.
+// The sequences beginning with a ThreadId entry are known as "samples".
 //
 // (
-//   ThreadId
-//   Time
-//   ( NativeLeafAddr
-//   | Label DynamicStringFragment* LineNumber? Category?
-//   | JitReturnAddr
-//   )+
-//   Marker*
-//   Responsiveness?
-//   ResidentMemory?
-//   UnsharedMemory?
+//   (
+//     ThreadId
+//     Time
+//     ( NativeLeafAddr
+//     | Label DynamicStringFragment* LineNumber? Category?
+//     | JitReturnAddr
+//     )+
+//     Marker*
+//     Responsiveness?
+//     ResidentMemory?
+//     UnsharedMemory?
+//   )
+//   | CollectionStart
+//   | CollectionEnd
+//   | Pause
+//   | Resume
 // )*
 //
 // The most complicated part is the stack entry sequence that begins with
@@ -705,42 +711,47 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
   // Because this is a format entirely internal to the Profiler, any parsing
   // error indicates a bug in the ProfileBuffer writing or the parser itself,
   // or possibly flaky hardware.
-  #define ERROR_AND_SKIP_TO_NEXT_SAMPLE(msg) \
-    do { \
+  #define ERROR_AND_CONTINUE(msg) \
+    { \
       fprintf(stderr, "ProfileBuffer parse error: %s", msg); \
       MOZ_ASSERT(false, msg); \
-      goto skip_to_next_sample; \
-    } while (0)
+      continue; \
+    }
 
   EntryGetter e(*this);
   bool seenFirstSample = false;
 
-  // This block skips entries until we find the start of the next sample. This
-  // is useful in two situations.
-  //
-  // - The circular buffer overwrites old entries, so when we start parsing we
-  //   might be in the middle of a sample, and we must skip forward to the
-  //   start of the next sample.
-  //
-  // - We skip samples that don't have an appropriate ThreadId or Time.
-  //
-skip_to_next_sample:
-  while (e.Has()) {
-    if (e.Get().IsThreadId()) {
-      break;
-    } else {
-      e.Next();
+  for (;;) {
+    // This block skips entries until we find the start of the next sample.
+    // This is useful in three situations.
+    //
+    // - The circular buffer overwrites old entries, so when we start parsing
+    //   we might be in the middle of a sample, and we must skip forward to the
+    //   start of the next sample.
+    //
+    // - We skip samples that don't have an appropriate ThreadId or Time.
+    //
+    // - We skip range Pause, Resume, CollectionStart, and CollectionEnd
+    //   entries between samples.
+    while (e.Has()) {
+      if (e.Get().IsThreadId()) {
+        break;
+      } else {
+        e.Next();
+      }
     }
-  }
 
-  while (e.Has()) {
+    if (!e.Has()) {
+      break;
+    }
+
     if (e.Get().IsThreadId()) {
       int threadId = e.Get().u.mInt;
       e.Next();
 
       // Ignore samples that are for the wrong thread.
       if (threadId != aThreadId) {
-        goto skip_to_next_sample;
+        continue;
       }
     } else {
       // Due to the skip_to_next_sample block above, if we have an entry here
@@ -756,7 +767,7 @@ skip_to_next_sample:
 
       // Ignore samples that are too old.
       if (sample.mTime < aSinceTime) {
-        goto skip_to_next_sample;
+        continue;
       }
 
       if (!seenFirstSample) {
@@ -766,7 +777,7 @@ skip_to_next_sample:
         seenFirstSample = true;
       }
     } else {
-      ERROR_AND_SKIP_TO_NEXT_SAMPLE("expected a Time entry");
+      ERROR_AND_CONTINUE("expected a Time entry");
     }
 
     UniqueStacks::Stack stack =
@@ -862,7 +873,7 @@ skip_to_next_sample:
     }
 
     if (numFrames == 0) {
-      ERROR_AND_SKIP_TO_NEXT_SAMPLE("expected one or more frame entries");
+      ERROR_AND_CONTINUE("expected one or more frame entries");
     }
 
     sample.mStack = stack.GetOrAddIndex();
@@ -894,7 +905,7 @@ skip_to_next_sample:
     WriteSample(aWriter, sample);
   }
 
-  #undef ERROR_AND_SKIP_TO_NEXT_SAMPLE
+  #undef ERROR_AND_CONTINUE
 }
 
 void
@@ -920,6 +931,61 @@ ProfileBuffer::StreamMarkersToJSON(SpliceableJSONWriter& aWriter,
       }
     }
     e.Next();
+  }
+}
+
+static void
+AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
+               const Maybe<double> aStartTime, const Maybe<double> aEndTime)
+{
+  aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
+  if (aStartTime) {
+    aWriter.DoubleProperty("startTime", *aStartTime);
+  } else {
+    aWriter.NullProperty("startTime");
+  }
+  if (aEndTime) {
+    aWriter.DoubleProperty("endTime", *aEndTime);
+  } else {
+    aWriter.NullProperty("endTime");
+  }
+  aWriter.StringProperty("reason", aReason);
+  aWriter.End();
+}
+
+void
+ProfileBuffer::StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
+                                        double aSinceTime) const
+{
+  EntryGetter e(*this);
+
+  Maybe<double> currentPauseStartTime;
+  Maybe<double> currentCollectionStartTime;
+
+  while (e.Has()) {
+    if (e.Get().IsPause()) {
+      currentPauseStartTime = Some(e.Get().u.mDouble);
+    } else if (e.Get().IsResume()) {
+      AddPausedRange(aWriter, "profiler-paused",
+                     currentPauseStartTime, Some(e.Get().u.mDouble));
+      currentPauseStartTime = Nothing();
+    } else if (e.Get().IsCollectionStart()) {
+      currentCollectionStartTime = Some(e.Get().u.mDouble);
+    } else if (e.Get().IsCollectionEnd()) {
+      AddPausedRange(aWriter, "collecting",
+                     currentCollectionStartTime, Some(e.Get().u.mDouble));
+      currentCollectionStartTime = Nothing();
+    }
+    e.Next();
+  }
+
+  if (currentPauseStartTime) {
+    AddPausedRange(aWriter, "profiler-paused",
+                   currentPauseStartTime, Nothing());
+  }
+  if (currentCollectionStartTime) {
+    AddPausedRange(aWriter, "collecting",
+                   currentCollectionStartTime, Nothing());
   }
 }
 
@@ -975,6 +1041,10 @@ ProfileBuffer::DuplicateLastSample(int aThreadId,
        readPos != mWritePos;
        readPos = (readPos + 1) % mEntrySize) {
     switch (mEntries[readPos].GetKind()) {
+      case ProfileBufferEntry::Kind::Pause:
+      case ProfileBufferEntry::Kind::Resume:
+      case ProfileBufferEntry::Kind::CollectionStart:
+      case ProfileBufferEntry::Kind::CollectionEnd:
       case ProfileBufferEntry::Kind::ThreadId:
         // We're done.
         return true;
