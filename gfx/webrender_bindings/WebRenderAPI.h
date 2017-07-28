@@ -87,11 +87,21 @@ public:
                         const ImageDescriptor& aDescriptor,
                         ExternalImageId aExtID,
                         WrExternalImageBufferType aBufferType,
-                        uint8_t aChannelIndex);
+                        uint8_t aChannelIndex = 0);
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
                          Range<uint8_t> aBytes);
+
+  void UpdateBlobImage(wr::ImageKey aKey,
+                       const ImageDescriptor& aDescriptor,
+                       Range<uint8_t> aBytes);
+
+  void UpdateExternalImage(ImageKey aKey,
+                           const ImageDescriptor& aDescriptor,
+                           ExternalImageId aExtID,
+                           wr::WrExternalImageBufferType aBufferType,
+                           uint8_t aChannelIndex = 0);
 
   void DeleteImage(wr::ImageKey aKey);
 
