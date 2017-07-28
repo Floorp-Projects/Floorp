@@ -189,19 +189,25 @@
                 preference="signon.rememberSignons"
                 onsyncfrompreference="return gPrivacyPane.readSavePasswords();"
                 flex="1" />
-      <button id="passwordExceptions"
-              class="accessory-button"
-              label="&passwordExceptions.label;"
-              accesskey="&passwordExceptions.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords_exceptions"
-              searchkeywords="&address.label;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="passwordExceptions"
+                class="accessory-button"
+                label="&passwordExceptions.label;"
+                accesskey="&passwordExceptions.accesskey;"
+                preference="pref.privacy.disable_button.view_passwords_exceptions"
+                searchkeywords="&address.label;"/>
+      </hbox>
     </hbox>
     <hbox id="showPasswordBox" pack="end">
-      <button id="showPasswords"
-              class="accessory-button"
-              label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
-              preference="pref.privacy.disable_button.view_passwords"
-              searchkeywords="&savedLogins.title;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="showPasswords"
+                class="accessory-button"
+                label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
+                preference="pref.privacy.disable_button.view_passwords"
+                searchkeywords="&savedLogins.title;"/>
+      </hbox>
     </hbox>
   </vbox>
   <hbox id="masterPasswordRow">
@@ -209,10 +215,13 @@
               label="&useMasterPassword.label;"
               accesskey="&useMasterPassword.accesskey;"
               flex="1"/>
-    <button id="changeMasterPassword"
-            class="accessory-button"
-            label="&changeMasterPassword.label;"
-            accesskey="&changeMasterPassword.accesskey;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="changeMasterPassword"
+              class="accessory-button"
+              label="&changeMasterPassword.label;"
+              accesskey="&changeMasterPassword.accesskey;"/>
+    </hbox>
   </hbox>
 </groupbox>
 
@@ -224,35 +233,38 @@
            control="historyMode"
            accesskey="&historyHeader2.pre.accesskey;">&historyHeader2.pre.label;
     </label>
-    <menulist id="historyMode">
-      <menupopup>
-        <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;
-                                                                                          &rememberActions.pre.label;
-                                                                                          &rememberActions.clearHistory.label;
-                                                                                          &rememberActions.middle.label;
-                                                                                          &rememberActions.removeCookies.label;
-                                                                                          &rememberActions.post.label;"/>
-        <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;
-                                                                                                  &dontrememberActions.pre.label;
-                                                                                                  &dontrememberActions.clearHistory.label;
-                                                                                                  &dontrememberActions.post.label;"/>
-        <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
-                                                                                      &rememberHistory2.label;
-                                                                                      &rememberSearchForm.label;
-                                                                                      &acceptCookies.label;
-                                                                                      &cookieExceptions.label;
-                                                                                      &acceptThirdParty.pre.label;
-                                                                                      &acceptThirdParty.always.label;
-                                                                                      &acceptThirdParty.visited.label;
-                                                                                      &acceptThirdParty.never.label;
-                                                                                      &keepUntil.label;
-                                                                                      &expire.label;
-                                                                                      &close.label;
-                                                                                      &showCookies.label;
-                                                                                      &clearOnClose.label;
-                                                                                      &clearOnCloseSettings.label;"/>
-      </menupopup>
-    </menulist>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <menulist id="historyMode">
+        <menupopup>
+          <menuitem label="&historyHeader.remember.label;" value="remember" searchkeywords="&rememberDescription.label;
+                                                                                            &rememberActions.pre.label;
+                                                                                            &rememberActions.clearHistory.label;
+                                                                                            &rememberActions.middle.label;
+                                                                                            &rememberActions.removeCookies.label;
+                                                                                            &rememberActions.post.label;"/>
+          <menuitem label="&historyHeader.dontremember.label;" value="dontremember" searchkeywords="&dontrememberDescription.label;
+                                                                                                    &dontrememberActions.pre.label;
+                                                                                                    &dontrememberActions.clearHistory.label;
+                                                                                                    &dontrememberActions.post.label;"/>
+          <menuitem label="&historyHeader.custom.label;" value="custom" searchkeywords="&privateBrowsingPermanent2.label;
+                                                                                        &rememberHistory2.label;
+                                                                                        &rememberSearchForm.label;
+                                                                                        &acceptCookies.label;
+                                                                                        &cookieExceptions.label;
+                                                                                        &acceptThirdParty.pre.label;
+                                                                                        &acceptThirdParty.always.label;
+                                                                                        &acceptThirdParty.visited.label;
+                                                                                        &acceptThirdParty.never.label;
+                                                                                        &keepUntil.label;
+                                                                                        &expire.label;
+                                                                                        &close.label;
+                                                                                        &showCookies.label;
+                                                                                        &clearOnClose.label;
+                                                                                        &clearOnCloseSettings.label;"/>
+        </menupopup>
+      </menulist>
+    </hbox>
     <label>&historyHeader.post.label;</label>
   </hbox>
   <deck id="historyPane">
@@ -477,22 +489,28 @@
         </hbox>
       </vbox>
       <vbox id="trackingProtectionAdvancedSettings">
-        <button id="trackingProtectionExceptions"
-                class="accessory-button"
-                hidden="true"
-                label="&trackingProtectionExceptions.label;"
-                accesskey="&trackingProtectionExceptions.accesskey;"
-                preference="pref.privacy.disable_button.tracking_protection_exceptions"
-                searchkeywords="&removepermission.label;
-                                &removeallpermissions.label;
-                                &button.cancel.label;
-                                &button.ok.label;"/>
-        <button id="changeBlockList"
-                class="accessory-button"
-                label="&changeBlockList2.label;"
-                accesskey="&changeBlockList2.accesskey;"
-                preference="pref.privacy.disable_button.change_blocklist"
-                searchkeywords="&button.cancel.label; &button.ok.label;"/>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <button id="trackingProtectionExceptions"
+                  class="accessory-button"
+                  hidden="true"
+                  label="&trackingProtectionExceptions.label;"
+                  accesskey="&trackingProtectionExceptions.accesskey;"
+                  preference="pref.privacy.disable_button.tracking_protection_exceptions"
+                  searchkeywords="&removepermission.label;
+                                  &removeallpermissions.label;
+                                  &button.cancel.label;
+                                  &button.ok.label;"/>
+        </hbox>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <button id="changeBlockList"
+                  class="accessory-button"
+                  label="&changeBlockList2.label;"
+                  accesskey="&changeBlockList2.accesskey;"
+                  preference="pref.privacy.disable_button.change_blocklist"
+                  searchkeywords="&button.cancel.label; &button.ok.label;"/>
+        </hbox>
       </vbox>
     </hbox>
     <vbox id="doNotTrackLearnMoreBox">
@@ -554,11 +572,14 @@
               onsyncfrompreference="return gPrivacyPane.updateButtons('popupPolicyButton',
                                          'dom.disable_open_during_load');"
               flex="1" />
-    <button id="popupPolicyButton"
-            class="accessory-button"
-            label="&popupExceptions.label;"
-            accesskey="&popupExceptions.accesskey;"
-            searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="popupPolicyButton"
+              class="accessory-button"
+              label="&popupExceptions.label;"
+              accesskey="&popupExceptions.accesskey;"
+              searchkeywords="&address.label; &button.cancel.label; &button.ok.label;"/>
+    </hbox>
   </hbox>
 
   <hbox id="addonInstallBox">
@@ -568,16 +589,19 @@
               preference="xpinstall.whitelist.required"
               onsyncfrompreference="return gPrivacyPane.readWarnAddonInstall();"
               flex="1" />
-    <button id="addonExceptions"
-            class="accessory-button"
-            label="&addonExceptions.label;"
-            accesskey="&addonExceptions.accesskey;"
-            searchkeywords="&address.label;
-                            &allow.label;
-                            &removepermission.label;
-                            &removeallpermissions.label;
-                            &button.cancel.label;
-                            &button.ok.label;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="addonExceptions"
+              class="accessory-button"
+              label="&addonExceptions.label;"
+              accesskey="&addonExceptions.accesskey;"
+              searchkeywords="&address.label;
+                              &allow.label;
+                              &removepermission.label;
+                              &removeallpermissions.label;
+                              &button.cancel.label;
+                              &button.ok.label;"/>
+    </hbox>
   </hbox>
 </groupbox>
 
@@ -672,40 +696,46 @@
               preference="security.OCSP.enabled"
               flex="1" />
     <vbox>
-      <button id="viewCertificatesButton"
-              class="accessory-button"
-              label="&viewCerts2.label;"
-              accesskey="&viewCerts2.accesskey;"
-              preference="security.disable_button.openCertManager"
-              searchkeywords="&certmgr.tab.mine;
-                              &certmgr.tab.others2;
-                              &certmgr.tab.websites3;
-                              &certmgr.tab.ca;
-                              &certmgr.tab.orphan2;
-                              &certmgr.mine;
-                              &certmgr.others;
-                              &certmgr.websites2;
-                              &certmgr.cas;
-                              &certmgr.orphans;
-                              &certmgr.certname;
-                              &certmgr.tokenname;
-                              &certmgr.view2.label;
-                              &certmgr.export.label;
-                              &certmgr.delete2.label;"/>
-      <button id="viewSecurityDevicesButton"
-              class="accessory-button"
-              label="&viewSecurityDevices2.label;"
-              accesskey="&viewSecurityDevices2.accesskey;"
-              preference="security.disable_button.openDeviceManager"
-              searchkeywords="&devmgr.title;
-                              &devmgr.devlist.label;
-                              &devmgr.details.title;
-                              &devmgr.details.title2;
-                              &devmgr.button.login.label;
-                              &devmgr.button.logout.label;
-                              &devmgr.button.changepw.label;
-                              &devmgr.button.load.label;
-                              &devmgr.button.unload.label;"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="viewCertificatesButton"
+                class="accessory-button"
+                label="&viewCerts2.label;"
+                accesskey="&viewCerts2.accesskey;"
+                preference="security.disable_button.openCertManager"
+                searchkeywords="&certmgr.tab.mine;
+                                &certmgr.tab.others2;
+                                &certmgr.tab.websites3;
+                                &certmgr.tab.ca;
+                                &certmgr.tab.orphan2;
+                                &certmgr.mine;
+                                &certmgr.others;
+                                &certmgr.websites2;
+                                &certmgr.cas;
+                                &certmgr.orphans;
+                                &certmgr.certname;
+                                &certmgr.tokenname;
+                                &certmgr.view2.label;
+                                &certmgr.export.label;
+                                &certmgr.delete2.label;"/>
+      </hbox>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="viewSecurityDevicesButton"
+                class="accessory-button"
+                label="&viewSecurityDevices2.label;"
+                accesskey="&viewSecurityDevices2.accesskey;"
+                preference="security.disable_button.openDeviceManager"
+                searchkeywords="&devmgr.title;
+                                &devmgr.devlist.label;
+                                &devmgr.details.title;
+                                &devmgr.details.title2;
+                                &devmgr.button.login.label;
+                                &devmgr.button.logout.label;
+                                &devmgr.button.changepw.label;
+                                &devmgr.button.load.label;
+                                &devmgr.button.unload.label;"/>
+      </hbox>
     </vbox>
   </hbox>
 </groupbox>
@@ -716,10 +746,13 @@
 
   <hbox align="center">
     <label id="actualAppCacheSize" flex="1"/>
-    <button id="clearOfflineAppCacheButton"
-            class="accessory-button"
-            icon="clear"
-            label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="clearOfflineAppCacheButton"
+              class="accessory-button"
+              icon="clear"
+              label="&clearOfflineAppCacheNow.label;" accesskey="&clearOfflineAppCacheNow.accesskey;"/>
+    </hbox>
   </hbox>
   <hbox align="center">
     <checkbox id="offlineNotify"
@@ -727,10 +760,13 @@
               preference="browser.offline-apps.notify"
               onsyncfrompreference="return gPrivacyPane.readOfflineNotify();"
               flex="1" />
-    <button id="offlineNotifyExceptions"
-            class="accessory-button"
-            label="&offlineStorageNotifyExceptions.label;"
-            accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="offlineNotifyExceptions"
+              class="accessory-button"
+              label="&offlineStorageNotifyExceptions.label;"
+              accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
+    </hbox>
   </hbox>
   <hbox>
     <vbox flex="1">
