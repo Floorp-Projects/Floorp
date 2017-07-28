@@ -1,0 +1,27 @@
+{
+  "Dropbox": {
+    "displayName": "Dropbox",
+    "relativeDownloadPath": ["homeDir", "Dropbox"],
+    "relativeDiscoveryPath": {
+      "linux": ["homeDir", ".dropbox", "info.json"],
+      "macosx": ["homeDir", ".dropbox", "info.json"],
+      "win": ["LocalAppData", "Dropbox", "info.json"]
+    },
+    "typeSpecificData": {
+      "default": "Downloads",
+      "screenshot": "Screenshots"
+    }
+  },
+
+  "GDrive": {
+    "displayName": "Google Drive",
+    "relativeDownloadPath": ["homeDir", "Google Drive"],
+    "relativeDiscoveryPath": {
+      "macosx": ["homeDir", "Library", "Application Support", "Google", "Drive"],
+      "win": ["LocalAppData", "Google", "Drive"]
+    },
+    "typeSpecificData": {
+      "default": "Downloads"
+    }
+  }
+}

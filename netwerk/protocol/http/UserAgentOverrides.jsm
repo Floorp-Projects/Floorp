@@ -67,6 +67,7 @@ this.UserAgentOverrides = {
       // UA override might not work correctly.
     }
 
+    Services.obs.notifyObservers(null, "useragentoverrides-initialized");
     gInitialized = true;
   },
 

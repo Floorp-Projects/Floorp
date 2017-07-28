@@ -123,6 +123,19 @@ public:
                                     nsRestyleHint aRestyleHint);
   void ProcessPendingRestyles();
 
+  /**
+   * Performs a Servo animation-only traversal to compute style for all nodes
+   * with the animation-only dirty bit in the document.
+   *
+   * This processes just the traversal for animation-only restyles and skips the
+   * normal traversal for other restyles unrelated to animations.
+   * This is used to bring throttled animations up-to-date such as when we need
+   * to get correct position for transform animations that are throttled because
+   * they are running on the compositor.
+   *
+   * This will traverse all of the document's style roots (that is, its document
+   * element, and the roots of the document-level native anonymous content).
+   */
   void UpdateOnlyAnimationStyles();
 
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
@@ -191,7 +204,7 @@ private:
   bool ProcessPostTraversal(Element* aElement,
                             ServoStyleContext* aParentContext,
                             ServoRestyleState& aRestyleState,
-                            TraversalRestyleBehavior aRestyleBehavior);
+                            ServoTraversalFlags aFlags);
 
   struct TextPostTraversalState;
   bool ProcessPostTraversalForText(nsIContent* aTextNode,
@@ -212,7 +225,7 @@ private:
                                       int32_t aNameSpaceID,
                                       nsIAtom* aAttribute);
 
-  void DoProcessPendingRestyles(TraversalRestyleBehavior aRestyleBehavior);
+  void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be

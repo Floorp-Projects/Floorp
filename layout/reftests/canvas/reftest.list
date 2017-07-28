@@ -28,7 +28,7 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
 == text-horzline-with-bottom.html text-horzline.html
-fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
+fails-if(azureSkia&&OSX&&!styloVsGecko) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html

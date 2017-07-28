@@ -103,7 +103,7 @@ private:
 
   Image *CreateNV12Image()
   {
-    PlanarYCbCrImage *image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
+    NVImage* image = new NVImage();
     PlanarYCbCrData data;
     data.mPicSize = mImageSize;
 
@@ -134,13 +134,13 @@ private:
     data.mCbCrSize.width = halfWidth;
     data.mCbCrSize.height = halfHeight;
 
-    image->CopyData(data);
+    image->SetData(data);
     return image;
   }
 
   Image *CreateNV21Image()
   {
-    PlanarYCbCrImage *image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
+    NVImage* image = new NVImage();
     PlanarYCbCrData data;
     data.mPicSize = mImageSize;
 
@@ -171,7 +171,7 @@ private:
     data.mCbCrSize.width = halfWidth;
     data.mCbCrSize.height = halfHeight;
 
-    image->CopyData(data);
+    image->SetData(data);
     return image;
   }
 

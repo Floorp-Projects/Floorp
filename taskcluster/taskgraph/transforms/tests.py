@@ -66,6 +66,11 @@ WINDOWS_WORKER_TYPES = {
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
       'hardware': 'releng-hardware/gecko-t-win7-32-hw',
     },
+    'windows7-32-stylo': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win7-32',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win7-32-gpu',
+      'hardware': 'releng-hardware/gecko-t-win7-32-hw',
+    },
     'windows10-64': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
@@ -82,6 +87,11 @@ WINDOWS_WORKER_TYPES = {
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
     'windows10-64-nightly': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows10-64-stylo': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
@@ -487,8 +497,18 @@ def set_treeherder_machine_platform(config, tests):
         'android-api-15-gradle/opt': 'android-api-15-gradle/opt',
     }
     for test in tests:
-        test['treeherder-machine-platform'] = translation.get(
-            test['build-platform'], test['test-platform'])
+        # For most desktop platforms, the above table is not used for "regular"
+        # builds, so we'll always pick the test platform here.
+        # On macOS though, the regular builds are in the table.  This causes a
+        # conflict in `verify_task_graph_symbol` once you add a new test
+        # platform based on regular macOS builds, such as for Stylo.
+        # Since it's unclear if the regular macOS builds can be removed from
+        # the table, workaround the issue for Stylo.
+        if '-stylo' in test['test-platform']:
+            test['treeherder-machine-platform'] = test['test-platform']
+        else:
+            test['treeherder-machine-platform'] = translation.get(
+                test['build-platform'], test['test-platform'])
         yield test
 
 
@@ -765,32 +785,18 @@ def enable_stylo(config, tests):
 
 
 @transforms.add
-def parallel_stylo_tests(config, tests):
-    """Ensure that any stylo tests running with e10s enabled also test
-    parallel traversal in the style system."""
+def single_stylo_traversal_tests(config, tests):
+    """Enable single traversal for all tests on the sequential Stylo platform."""
 
     for test in tests:
-        if (not test['test-platform'].startswith('linux64-stylo/')) and \
-           (not test['test-platform'].startswith('linux64-stylo-sequential/')):
-            yield test
-            continue
-
-        e10s = test['e10s']
-        # We should have already handled 'both' in an earlier transform.
-        assert e10s != 'both'
-        if not e10s:
+        if not test['test-platform'].startswith('linux64-stylo-sequential/'):
             yield test
             continue
 
         # Bug 1356122 - Run Stylo tests in sequential mode
-        if test['test-platform'].startswith('linux64-stylo-sequential/'):
-            yield test
-
-        if test['test-platform'].startswith('linux64-stylo/'):
-            # add parallel stylo tests
-            test['mozharness'].setdefault('extra-options', [])\
-                              .append('--parallel-stylo-traversal')
-            yield test
+        test['mozharness'].setdefault('extra-options', [])\
+                          .append('--single-stylo-traversal')
+        yield test
 
 
 @transforms.add

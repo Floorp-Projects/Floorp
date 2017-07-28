@@ -327,7 +327,7 @@ random-if(d2d) == 299837-3.xul 299837-3-ref.xul # bug 587631
 == 301726-1.html 301726-1-ref.html
 fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 302379.html 302379-ref.html
-== 306630-1.html 306630-1-ref.html
+skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 306630-1.html 306630-1-ref.html # Bug 1383845
 == 306660-1.html 306660-1-ref.html
 == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html
@@ -836,7 +836,7 @@ random-if(gtkWidget) == 399636-standards-html.html 399636-standards-ref.html # b
 random-if(gtkWidget) == 399636-quirks-css.html 399636-quirks-ref.html # bug 429022
 # We can't rely on this test working on platforms other than Windows and
 # Mac because they need not have a font called "Symbol".
-fails-if(winWidget) fails-if(cocoaWidget) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
+fails-if(winWidget&&!styloVsGecko) fails-if(cocoaWidget&&!styloVsGecko) random-if(!cocoaWidget&&!winWidget) != 399636-quirks-html.html 399636-quirks-ref.html # windows failure bug 429017, mac failure bug 429019
 == 400081-1.html about:blank
 == 400171-1a.html 400171-1-ref.html
 == 400171-1b.html 400171-1-ref.html
@@ -1174,11 +1174,11 @@ fails-if(usesRepeatResampling) fails-if(Android) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) == 448193.html 448193-ref.html
-fails-if(styloVsGecko) != 449149-1a.html about:blank
-fails-if(styloVsGecko) != 449149-1b.html about:blank
+fails-if((cocoaWidget||gtkWidget)&&styloVsGecko) != 449149-1a.html about:blank
+fails-if((cocoaWidget||gtkWidget)&&styloVsGecko) != 449149-1b.html about:blank
 # Retry the above with XBL scopes
-test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if(styloVsGecko) != 449149-1a.html about:blank
-test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if(styloVsGecko) != 449149-1b.html about:blank
+test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if((cocoaWidget||gtkWidget)&&styloVsGecko) != 449149-1a.html about:blank
+test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if((cocoaWidget||gtkWidget)&&styloVsGecko) != 449149-1b.html about:blank
 == 449149-2.html 449149-2-ref.html
 == 449171-1.html 449171-ref.html
 == 449362-1.html 449362-1-ref.html
@@ -1195,7 +1195,7 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) fails-if(styloVsGecko) != 4491
 == 455171-5.html 455171-5-ref.html
 == 455280-1.xhtml 455280-1-ref.xhtml
 == 455826-1.html 455826-1-ref.html
-fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047
+fails-if(cocoaWidget&&!styloVsGecko) fails-if(Android) == 456147.xul 456147-ref.html # bug 458047
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) == 456219-1a.html 456219-1-ref.html # bug 1128229
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,24-24,155-155) == 456219-1b.html 456219-1-ref.html # bug 1128229
 fuzzy-if(Android,11,41) fuzzy-if(winWidget||gtkWidget,4,6) fuzzy-if(d2d,4,69) fuzzy-if(skiaContent,42,150) fuzzy-if(webrender,24-24,155-155) == 456219-1c.html 456219-1-ref.html # bug 1128229
@@ -1580,7 +1580,7 @@ fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,6436) =
 == 582037-1b.html 582037-1-ref.html
 fuzzy-if(Android,3,256) == 582037-2a.html 582037-2-ref.html
 fuzzy-if(Android,3,256) == 582037-2b.html 582037-2-ref.html
-asserts(1-2) asserts-if(styloVsGecko,4) == 582146-1.html about:blank
+asserts(1-2) asserts-if(styloVsGecko,3) == 582146-1.html about:blank
 == 582476-1.svg 582476-1-ref.svg
 == 584400-dash-length.svg 584400-dash-length-ref.svg
 == 584699-1.html 584699-1-ref.html
@@ -1988,7 +1988,7 @@ fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1a.html 1316719-1-ref.
 fuzzy(2,40000) fuzzy-if(webrender,1-2,349-349) == 1316719-1b.html 1316719-1-ref.html
 fuzzy(2,40000) fuzzy-if(webrender,1-1,323-323) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
-fails-if(styloVsGecko) == 1322512-1.html 1322512-1-ref.html
+fails-if((cocoaWidget||gtkWidget)&&styloVsGecko) == 1322512-1.html 1322512-1-ref.html
 == 1330051.svg 1330051-ref.svg
 == 1348481-1.html 1348481-ref.html
 == 1348481-2.html 1348481-ref.html

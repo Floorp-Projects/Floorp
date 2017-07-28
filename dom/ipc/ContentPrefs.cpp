@@ -49,7 +49,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "dom.enable_resource_timing",
   "dom.event.handling-user-input-time-limit",
   "dom.event.touch.coalescing.enabled",
-  "dom.forms.autocomplete.experimental",
+  "dom.forms.autocomplete.formautofill",
   "dom.ipc.processPriorityManager.backgroundGracePeriodMS",
   "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS",
   "dom.max_chrome_script_run_time",

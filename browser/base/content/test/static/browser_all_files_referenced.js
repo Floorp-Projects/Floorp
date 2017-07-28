@@ -84,9 +84,6 @@ var whitelist = [
   {file: "resource://app/modules/NewTabSearchProvider.jsm"},
   {file: "resource://app/modules/NewTabWebChannel.jsm"},
 
-  // Activity Stream currently needs this file in all channels except Nightly
-  {file: "resource://app/modules/PreviewProvider.jsm", skipNightly: true},
-
   // layout/mathml/nsMathMLChar.cpp
   {file: "resource://gre/res/fonts/mathfontSTIXGeneral.properties"},
   {file: "resource://gre/res/fonts/mathfontUnicode.properties"},

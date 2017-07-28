@@ -194,3 +194,5 @@ load font-face-truncated-src.html
 load large_border_image_width.html
 load link-transition-before.html
 load long-url-list-stack-overflow.html
+load 1383981.html
+load 1383981-2.html

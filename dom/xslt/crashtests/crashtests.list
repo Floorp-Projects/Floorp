@@ -13,7 +13,7 @@ load 528963.xml
 load 545927.html
 load 601543.html
 load 602115.html
-load 603844.html
+skip-if(stylo&&isDebugBuild&&winWidget) load 603844.html # Bug 1383845
 load 667315.xml
 load 1089049.html
 load 1205163.xml

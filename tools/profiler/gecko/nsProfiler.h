@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/TimeStamp.h"
 #include "nsServiceManagerUtils.h"
 #include "ProfileJSONWriter.h"
 
@@ -46,8 +47,13 @@ private:
 
   bool mLockedForPrivateBrowsing;
 
+  struct ExitProfile {
+    nsCString mJSON;
+    mozilla::TimeStamp mGatherTime;
+  };
+
   // These fields are all related to profile gathering.
-  nsTArray<nsCString> mExitProfiles;
+  nsTArray<ExitProfile> mExitProfiles;
   mozilla::Maybe<mozilla::MozPromiseHolder<GatheringPromise>> mPromiseHolder;
   mozilla::Maybe<SpliceableChunkedJSONWriter> mWriter;
   uint32_t mPendingProfiles;

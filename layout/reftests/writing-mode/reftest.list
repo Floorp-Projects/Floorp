@@ -69,7 +69,7 @@ fuzzy-if(Android,1,18) == ua-style-sheet-checkbox-radio-1.html ua-style-sheet-ch
 skip-if(Android) fuzzy-if(skiaContent&&!Android,2,6) == ua-style-sheet-button-1.html ua-style-sheet-button-1a-ref.html
 skip-if(!(Android)) == ua-style-sheet-button-1.html ua-style-sheet-button-1b-ref.html
 == ua-style-sheet-input-color-1.html ua-style-sheet-input-color-1-ref.html
-fuzzy-if(gtkWidget,1,15) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
+fuzzy-if(gtkWidget,1,15) skip-if(stylo&&isDebugBuild) == ua-style-sheet-input-number-1.html ua-style-sheet-input-number-1-ref.html
 
 HTTP(..) == 1127488-align-default-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
 HTTP(..) == 1127488-align-start-horizontal-tb-ltr.html 1127488-align-top-left-ref.html
@@ -139,7 +139,7 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1158549-1-vertical-block-size-constraints.html 1158549-1-vertical-block-size-constraints-ref.html
 == 1163238-orthogonal-auto-margins.html 1163238-orthogonal-auto-margins-ref.html
 == 1174450-intrinsic-sizing.html 1174450-intrinsic-sizing-ref.html
-== 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html
+fails-if((stylo||styloVsGecko)&&cocoaWidget) == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html
 == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html
 == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
 

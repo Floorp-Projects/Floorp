@@ -31,6 +31,7 @@ use style::gecko_bindings::bindings::{RawGeckoElementBorrowed, RawGeckoElementBo
 use style::gecko_bindings::bindings::{RawGeckoKeyframeListBorrowed, RawGeckoKeyframeListBorrowedMut};
 use style::gecko_bindings::bindings::{RawServoDeclarationBlockBorrowed, RawServoDeclarationBlockStrong};
 use style::gecko_bindings::bindings::{RawServoDocumentRule, RawServoDocumentRuleBorrowed};
+use style::gecko_bindings::bindings::{RawServoFontFeatureValuesRule, RawServoFontFeatureValuesRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoImportRule, RawServoImportRuleBorrowed};
 use style::gecko_bindings::bindings::{RawServoKeyframe, RawServoKeyframeBorrowed, RawServoKeyframeStrong};
 use style::gecko_bindings::bindings::{RawServoKeyframesRule, RawServoKeyframesRuleBorrowed};
@@ -77,6 +78,7 @@ use style::gecko_bindings::structs::MallocSizeOf;
 use style::gecko_bindings::structs::RawGeckoGfxMatrix4x4;
 use style::gecko_bindings::structs::RawGeckoPresContextOwned;
 use style::gecko_bindings::structs::ServoElementSnapshotTable;
+use style::gecko_bindings::structs::ServoTraversalFlags;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::URLExtraData;
 use style::gecko_bindings::structs::nsCSSValueSharedList;
@@ -92,7 +94,7 @@ use style::gecko_properties::{self, style_structs};
 use style::invalidation::element::restyle_hints::{self, RestyleHint};
 use style::media_queries::{MediaList, parse_media_query_list};
 use style::parallel;
-use style::parser::ParserContext;
+use style::parser::{ParserContext, self};
 use style::properties::{ComputedValues, Importance};
 use style::properties::{IS_FIELDSET_CONTENT, LonghandIdSet};
 use style::properties::{PropertyDeclaration, PropertyDeclarationBlock, PropertyId, ShorthandId};
@@ -107,7 +109,7 @@ use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard
 use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, DocumentRule};
-use style::stylesheets::{ImportRule, KeyframesRule, MallocSizeOfWithGuard, MediaRule};
+use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocSizeOfWithGuard, MediaRule};
 use style::stylesheets::{NamespaceRule, Origin, PageRule, StyleRule, SupportsRule};
 use style::stylesheets::StylesheetContents;
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
@@ -116,9 +118,9 @@ use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylist::RuleInclusion;
 use style::thread_state;
 use style::timer::Timer;
-use style::traversal::{ANIMATION_ONLY, DomTraversal, FOR_CSS_RULE_CHANGES, FOR_RECONSTRUCT};
-use style::traversal::{TraversalDriver, TraversalFlags, UNSTYLED_CHILDREN_ONLY};
+use style::traversal::{DomTraversal, TraversalDriver};
 use style::traversal::resolve_style;
+use style::traversal_flags::{TraversalFlags, self};
 use style::values::{CustomIdent, KeyframesName};
 use style::values::animated::ToAnimatedZero;
 use style::values::computed::Context;
@@ -140,8 +142,6 @@ static mut DUMMY_URL_DATA: *mut URLExtraData = 0 as *mut URLExtraData;
 
 #[no_mangle]
 pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
-    use style::parser::assert_parsing_mode_match;
-
     // Initialize logging.
     let mut builder = LogBuilder::new();
     let default_level = if cfg!(debug_assertions) { "warn" } else { "error" };
@@ -155,7 +155,8 @@ pub extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
 
     // Perform some debug-only runtime assertions.
     restyle_hints::assert_restyle_hints_match();
-    assert_parsing_mode_match();
+    parser::assert_parsing_mode_match();
+    traversal_flags::assert_traversal_flags_match();
 
     // Initialize some static data.
     gecko_properties::initialize();
@@ -259,32 +260,16 @@ fn traverse_subtree(element: GeckoElement,
 pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                                         raw_data: RawServoStyleSetBorrowed,
                                         snapshots: *const ServoElementSnapshotTable,
-                                        root_behavior: structs::TraversalRootBehavior,
-                                        restyle_behavior: structs::TraversalRestyleBehavior)
+                                        raw_flags: ServoTraversalFlags)
                                         -> bool {
-    use self::structs::TraversalRestyleBehavior as Restyle;
-    use self::structs::TraversalRootBehavior as Root;
+    let traversal_flags = TraversalFlags::from_bits_truncate(raw_flags);
     debug_assert!(!snapshots.is_null());
 
     let element = GeckoElement(root);
-    debug!("Servo_TraverseSubtree: {:?} {:?}", element, restyle_behavior);
-
-    let traversal_flags = match (root_behavior, restyle_behavior) {
-        (Root::Normal, Restyle::Normal) |
-        (Root::Normal, Restyle::ForNewlyBoundElement) |
-        (Root::Normal, Restyle::ForThrottledAnimationFlush)
-            => TraversalFlags::empty(),
-        (Root::UnstyledChildrenOnly, Restyle::Normal) |
-        (Root::UnstyledChildrenOnly, Restyle::ForNewlyBoundElement)
-            => UNSTYLED_CHILDREN_ONLY,
-        (Root::Normal, Restyle::ForCSSRuleChanges) => FOR_CSS_RULE_CHANGES,
-        (Root::Normal, Restyle::ForReconstruct) => FOR_RECONSTRUCT,
-        _ => panic!("invalid combination of TraversalRootBehavior and TraversalRestyleBehavior"),
-    };
 
     // It makes no sense to do an animation restyle when we're restyling
     // newly-inserted content.
-    if !traversal_flags.contains(UNSTYLED_CHILDREN_ONLY) {
+    if !traversal_flags.contains(traversal_flags::UnstyledChildrenOnly) {
         let needs_animation_only_restyle =
             element.has_animation_only_dirty_descendants() ||
             element.has_animation_restyle_hints();
@@ -292,12 +277,12 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
         if needs_animation_only_restyle {
             traverse_subtree(element,
                              raw_data,
-                             traversal_flags | ANIMATION_ONLY,
+                             traversal_flags | traversal_flags::AnimationOnly,
                              unsafe { &*snapshots });
         }
     }
 
-    if restyle_behavior == Restyle::ForThrottledAnimationFlush {
+    if traversal_flags.for_animation_only() {
         return element.has_animation_only_dirty_descendants() ||
                element.borrow_data().unwrap().restyle.is_restyle();
     }
@@ -306,14 +291,6 @@ pub extern "C" fn Servo_TraverseSubtree(root: RawGeckoElementBorrowed,
                      raw_data,
                      traversal_flags,
                      unsafe { &*snapshots });
-
-    if restyle_behavior == Restyle::ForNewlyBoundElement {
-        // In this mode, we only ever restyle new elements, so there is no
-        // need for a post-traversal, and the borrow_data().unwrap() call below
-        // could panic, so we don't bother computing whether a post-traversal
-        // is required.
-        return false;
-    }
 
     element.has_dirty_descendants() ||
     element.has_animation_only_dirty_descendants() ||
@@ -1233,6 +1210,12 @@ impl_group_rule_funcs! { (Document, DocumentRule, RawServoDocumentRule),
     to_css: Servo_DocumentRule_GetCssText,
 }
 
+impl_basic_rule_funcs! { (FontFeatureValues, FontFeatureValuesRule, RawServoFontFeatureValuesRule),
+    getter: Servo_CssRules_GetFontFeatureValuesRuleAt,
+    debug: Servo_FontFeatureValuesRule_Debug,
+    to_css: Servo_FontFeatureValuesRule_GetCssText,
+}
+
 macro_rules! impl_getter_for_embedded_rule {
     ($getter:ident: $name:ident -> $ty:ty) => {
         #[no_mangle]
@@ -1520,6 +1503,22 @@ pub extern "C" fn Servo_DocumentRule_GetConditionText(rule: RawServoDocumentRule
                                                       result: *mut nsAString) {
     read_locked_arc(rule, |rule: &DocumentRule| {
         rule.condition.to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(rule: RawServoFontFeatureValuesRuleBorrowed,
+                                                            result: *mut nsAString) {
+    read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
+        rule.font_family_to_css(unsafe { result.as_mut().unwrap() }).unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFeatureValuesRule_GetValueText(rule: RawServoFontFeatureValuesRuleBorrowed,
+                                                           result: *mut nsAString) {
+    read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
+        rule.value_to_css(unsafe { result.as_mut().unwrap() }).unwrap();
     })
 }
 
@@ -2767,9 +2766,10 @@ pub extern "C" fn Servo_NoteExplicitHints(element: RawGeckoElementBorrowed,
 
 #[no_mangle]
 pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
-                                       restyle_behavior: structs::TraversalRestyleBehavior,
+                                       raw_flags: ServoTraversalFlags,
                                        was_restyled: *mut bool) -> nsChangeHint
 {
+    let flags = TraversalFlags::from_bits_truncate(raw_flags);
     let mut was_restyled =  unsafe { was_restyled.as_mut().unwrap() };
     let element = GeckoElement(element);
 
@@ -2778,7 +2778,7 @@ pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
             *was_restyled = data.restyle.is_restyle();
 
             let damage = data.restyle.damage;
-            if restyle_behavior == structs::TraversalRestyleBehavior::ForThrottledAnimationFlush {
+            if flags.for_animation_only() {
                 if !*was_restyled {
                     // Don't touch elements if the element was not restyled
                     // in throttled animation flush.
@@ -2813,11 +2813,10 @@ pub extern "C" fn Servo_TakeChangeHint(element: RawGeckoElementBorrowed,
 #[no_mangle]
 pub extern "C" fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
                                      _raw_data: RawServoStyleSetBorrowed,
-                                     restyle_behavior: structs::TraversalRestyleBehavior)
+                                     raw_flags: ServoTraversalFlags)
                                      -> ServoStyleContextStrong
 {
-    use self::structs::TraversalRestyleBehavior as Restyle;
-
+    let flags = TraversalFlags::from_bits_truncate(raw_flags);
     let element = GeckoElement(element);
     debug!("Servo_ResolveStyle: {:?}", element);
     let data =
@@ -2827,13 +2826,20 @@ pub extern "C" fn Servo_ResolveStyle(element: RawGeckoElementBorrowed,
     assert!(data.has_styles(), "Resolving style on unstyled element");
     // In the case where we process for throttled animation, there remaings
     // restyle hints other than animation hints.
-    let flags = if restyle_behavior == Restyle::ForThrottledAnimationFlush {
-        ANIMATION_ONLY
-    } else {
-        TraversalFlags::empty()
-    };
     debug_assert!(element.has_current_styles_for_traversal(&*data, flags),
                   "Resolving style on {:?} without current styles: {:?}", element, data);
+    data.styles.primary().clone().into()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ResolveStyleAllowStale(element: RawGeckoElementBorrowed)
+                                               -> ServoStyleContextStrong
+{
+    let element = GeckoElement(element);
+    debug!("Servo_ResolveStyleAllowStale: {:?}", element);
+    let data =
+        element.borrow_data().expect("Resolving style on unstyled element");
+    assert!(data.has_styles(), "Resolving style on unstyled element");
     data.styles.primary().clone().into()
 }
 

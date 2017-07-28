@@ -37,11 +37,16 @@ def filter_target_tasks(graph, parameters):
 
 @filter_task('check_servo')
 def filter_servo(graph, parameters):
-    """bug 1339542 When Servo vcs sync service lands Servo commits in
-    autoland repo, run linux64-stylo tests but skip other
-    platforms (to  reduce test load)."""
+    """Filter out tasks for Servo vendoring changesets.
 
-    SERVO_PLATFORMS = {
+    If the change triggering is related to Servo vendoring, impact is minimal
+    because not all platforms use Servo code.
+
+    We filter out tests on platforms that don't run Servo tests because running
+    tests will accomplish little for these changes.
+    """
+
+    SERVO_TEST_PLATFORMS = {
         'linux64',
         'linux64-stylo',
     }
@@ -49,6 +54,14 @@ def filter_servo(graph, parameters):
     def fltr(task):
         if parameters.get('owner') != "servo-vcs-sync@mozilla.com":
             return True
-        return task.attributes.get('build_platform') in SERVO_PLATFORMS
+
+        # This is a Servo vendor change.
+
+        # Servo code is compiled. So we at least need to build. Resource
+        # savings come from pruning tests. So that's where we filter.
+        if task.attributes.get('kind') != 'test':
+            return True
+
+        return task.attributes.get('build_platform') in SERVO_TEST_PLATFORMS
 
     return [l for l, t in graph.tasks.iteritems() if fltr(t)]

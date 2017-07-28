@@ -961,6 +961,7 @@ var ActivityStreamProvider = {
                       LEFT JOIN moz_bookmarks
                       on moz_places.id = moz_bookmarks.fk
                       WHERE hidden = 0 AND last_visit_date NOTNULL
+                      AND (SUBSTR(moz_places.url, 1, 6) == "https:" OR SUBSTR(moz_places.url, 1, 5) == "http:")
                       ORDER BY frecency, last_visit_date, moz_places.url DESC
                     ) GROUP BY rev_host)
                     GROUP BY rev_nowww

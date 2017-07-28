@@ -12,9 +12,6 @@ const {insertPinned} = Cu.import("resource://activity-stream/common/Reducers.jsm
 
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
   "resource://gre/modules/NewTabUtils.jsm");
-// Keep a reference to PreviewProvider.jsm until it's good to remove. See #2849
-XPCOMUtils.defineLazyModuleGetter(this, "PreviewProvider",
-  "resource://app/modules/PreviewProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Screenshots",
   "resource://activity-stream/lib/Screenshots.jsm");
 
