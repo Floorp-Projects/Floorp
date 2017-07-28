@@ -1,7 +1,15 @@
+# -*- coding: utf-8 -*-
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import absolute_import, print_function, unicode_literals
+
 from .registry import register_callback_action
 from slugid import nice as slugid
 
-from actions.util import create_task
+from .util import (create_task, find_decision_task)
 from taskgraph.util.taskcluster import get_artifact
 from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.taskgraph import TaskGraph
@@ -28,9 +36,11 @@ from taskgraph.taskgraph import TaskGraph
     }
 )
 def add_new_jobs_action(parameters, input, task_group_id, task_id, task):
-    full_task_graph = get_artifact(task_id, "public/full-task-graph.json")
+    decision_task_id = find_decision_task(parameters)
+
+    full_task_graph = get_artifact(decision_task_id, "public/full-task-graph.json")
     _, full_task_graph = TaskGraph.from_json(full_task_graph)
-    label_to_taskid = get_artifact(task_id, "public/label-to-taskid.json")
+    label_to_taskid = get_artifact(decision_task_id, "public/label-to-taskid.json")
 
     for elem in input['tasks']:
         if elem in full_task_graph.tasks:
