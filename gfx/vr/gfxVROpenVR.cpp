@@ -29,6 +29,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/Telemetry.h"
 
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
@@ -268,6 +269,7 @@ VRDisplayOpenVR::StartPresentation()
     return;
   }
   mIsPresenting = true;
+  mPresentationStart = TimeStamp::Now();
 }
 
 void
@@ -280,6 +282,10 @@ VRDisplayOpenVR::StopPresentation()
   mVRCompositor->ClearLastSubmittedFrame();
 
   mIsPresenting = false;
+  Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 2);
+  Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPEND_FOR_VIEWING_IN_OPENVR,
+                        static_cast<uint32_t>((TimeStamp::Now() - mPresentationStart)
+                        .ToMilliseconds()));
 }
 
 bool
@@ -321,7 +327,6 @@ VRDisplayOpenVR::SubmitFrame(void* aTextureHandle,
   }
 
   mVRCompositor->PostPresentHandoff();
-
   return true;
 }
 
