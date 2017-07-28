@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use api::{FontKey, FontRenderMode, GlyphDimensions};
-use api::{NativeFontHandle, GlyphOptions};
+use api::{FontInstanceKey, FontKey, FontRenderMode, GlyphDimensions};
+use api::{NativeFontHandle};
 use api::{GlyphKey};
 
 use freetype::freetype::{FT_Render_Mode, FT_Pixel_Mode};
@@ -13,7 +13,7 @@ use freetype::freetype::{FT_Library, FT_Set_Char_Size};
 use freetype::freetype::{FT_Face, FT_Long, FT_UInt, FT_F26Dot6};
 use freetype::freetype::{FT_Init_FreeType, FT_Load_Glyph, FT_Render_Glyph};
 use freetype::freetype::{FT_New_Memory_Face, FT_GlyphSlot, FT_LcdFilter};
-use freetype::freetype::{FT_Done_Face, FT_Error, FT_Int32};
+use freetype::freetype::{FT_Done_Face, FT_Error, FT_Int32, FT_Get_Char_Index};
 
 use std::{cmp, mem, ptr, slice};
 use std::collections::HashMap;
@@ -155,27 +155,46 @@ impl FontContext {
                 top: top as i32,
                 width: (right - left) as u32,
                 height: (bottom - top) as u32,
+                advance: metrics.horiAdvance as f32 / 64.0,
             })
         }
     }
 
+    pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
+        let face = self.faces
+                       .get(&font_key)
+                       .expect("Unknown font key!");
+        unsafe {
+            let idx = FT_Get_Char_Index(face.face, ch as _);
+            if idx != 0 {
+                Some(idx)
+            } else {
+                None
+            }
+        }
+    }
+
     pub fn get_glyph_dimensions(&mut self,
+                                font: &FontInstanceKey,
                                 key: &GlyphKey) -> Option<GlyphDimensions> {
-        self.load_glyph(key.font_key, key.size, key.index)
+        self.load_glyph(font.font_key,
+                        font.size,
+                        key.index)
             .and_then(Self::get_glyph_dimensions_impl)
     }
 
     pub fn rasterize_glyph(&mut self,
-                           key: &GlyphKey,
-                           render_mode: FontRenderMode,
-                           _glyph_options: Option<GlyphOptions>)
+                           font: &FontInstanceKey,
+                           key: &GlyphKey)
                            -> Option<RasterizedGlyph> {
 
-        let slot = match self.load_glyph(key.font_key, key.size, key.index) {
+        let slot = match self.load_glyph(font.font_key,
+                                         font.size,
+                                         key.index) {
             Some(slot) => slot,
             None => return None,
         };
-        let render_mode = match render_mode {
+        let render_mode = match font.render_mode {
             FontRenderMode::Mono => FT_Render_Mode::FT_RENDER_MODE_MONO,
             FontRenderMode::Alpha => FT_Render_Mode::FT_RENDER_MODE_NORMAL,
             FontRenderMode::Subpixel => FT_Render_Mode::FT_RENDER_MODE_LCD,

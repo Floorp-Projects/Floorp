@@ -6,7 +6,7 @@ use api::{BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntS
 use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize, TextShadow};
 use api::{LayerToWorldTransform, TileOffset, WebGLContextId, YuvColorSpace, YuvFormat};
-use api::{device_length, LayerVector2D};
+use api::{device_length, FontInstanceKey, LayerVector2D, LineOrientation, LineStyle};
 use app_units::Au;
 use border::BorderCornerInstance;
 use euclid::{Size2D};
@@ -16,7 +16,7 @@ use renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use render_task::{RenderTask, RenderTaskLocation};
 use resource_cache::{ImageProperties, ResourceCache};
 use std::{mem, usize};
-use util::{TransformedRect, recycle_vec};
+use util::{pack_as_float, TransformedRect, recycle_vec};
 
 
 pub const CLIP_DATA_GPU_BLOCKS: usize = 10;
@@ -116,6 +116,7 @@ pub enum PrimitiveKind {
     RadialGradient,
     BoxShadow,
     TextShadow,
+    Line,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -177,6 +178,24 @@ pub struct RectanglePrimitive {
 impl ToGpuBlocks for RectanglePrimitive {
     fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
         request.push(self.color);
+    }
+}
+
+#[derive(Debug, Clone)]
+#[repr(C)]
+pub struct LinePrimitive {
+    pub color: ColorF,
+    pub style: LineStyle,
+    pub orientation: LineOrientation,
+}
+
+impl ToGpuBlocks for LinePrimitive {
+    fn write_gpu_blocks(&self, mut request: GpuDataRequest) {
+        request.push(self.color);
+        request.push([pack_as_float(self.style as u32),
+                      pack_as_float(self.orientation as u32),
+                      0.0,
+                      0.0]);
     }
 }
 
@@ -539,12 +558,13 @@ impl TextRunPrimitiveCpu {
             TextRunMode::Shadow => self.shadow_render_mode,
         };
 
-        resource_cache.request_glyphs(self.font_key,
-                                      font_size_dp,
-                                      self.color,
-                                      &self.glyph_instances,
-                                      render_mode,
-                                      self.glyph_options);
+        let font = FontInstanceKey::new(self.font_key,
+                                        font_size_dp,
+                                        self.color,
+                                        render_mode,
+                                        self.glyph_options);
+
+        resource_cache.request_glyphs(font, &self.glyph_instances);
     }
 
     fn write_gpu_blocks(&self,
@@ -735,6 +755,7 @@ pub enum PrimitiveContainer {
     RadialGradient(RadialGradientPrimitiveCpu),
     BoxShadow(BoxShadowPrimitiveCpu),
     TextShadow(TextShadowPrimitiveCpu),
+    Line(LinePrimitive),
 }
 
 pub struct PrimitiveStore {
@@ -750,6 +771,7 @@ pub struct PrimitiveStore {
     pub cpu_metadata: Vec<PrimitiveMetadata>,
     pub cpu_borders: Vec<BorderPrimitiveCpu>,
     pub cpu_box_shadows: Vec<BoxShadowPrimitiveCpu>,
+    pub cpu_lines: Vec<LinePrimitive>,
 }
 
 impl PrimitiveStore {
@@ -766,6 +788,7 @@ impl PrimitiveStore {
             cpu_radial_gradients: Vec::new(),
             cpu_borders: Vec::new(),
             cpu_box_shadows: Vec::new(),
+            cpu_lines: Vec::new(),
         }
     }
 
@@ -782,6 +805,7 @@ impl PrimitiveStore {
             cpu_radial_gradients: recycle_vec(self.cpu_radial_gradients),
             cpu_borders: recycle_vec(self.cpu_borders),
             cpu_box_shadows: recycle_vec(self.cpu_box_shadows),
+            cpu_lines: recycle_vec(self.cpu_lines),
         }
     }
 
@@ -811,6 +835,23 @@ impl PrimitiveStore {
 
                 self.cpu_rectangles.push(rect);
 
+                metadata
+            }
+            PrimitiveContainer::Line(line) => {
+                let metadata = PrimitiveMetadata {
+                    opacity: PrimitiveOpacity::translucent(),
+                    clips,
+                    clip_cache_info: clip_info,
+                    prim_kind: PrimitiveKind::Line,
+                    cpu_prim_index: SpecificPrimitiveIndex(self.cpu_lines.len()),
+                    gpu_location: GpuCacheHandle::new(),
+                    render_task: None,
+                    clip_task: None,
+                    local_rect: *local_rect,
+                    local_clip_rect: *local_clip_rect,
+                };
+
+                self.cpu_lines.push(line);
                 metadata
             }
             PrimitiveContainer::TextRun(text_cpu) => {
@@ -1079,7 +1120,8 @@ impl PrimitiveStore {
 
         match metadata.prim_kind {
             PrimitiveKind::Rectangle |
-            PrimitiveKind::Border  => {}
+            PrimitiveKind::Border |
+            PrimitiveKind::Line => {}
             PrimitiveKind::BoxShadow => {
                 // TODO(gw): Account for zoom factor!
                 // Here, we calculate the size of the patch required in order
@@ -1162,6 +1204,10 @@ impl PrimitiveStore {
                 PrimitiveKind::Rectangle => {
                     let rect = &self.cpu_rectangles[cpu_prim_index.0];
                     rect.write_gpu_blocks(request);
+                }
+                PrimitiveKind::Line => {
+                    let line = &self.cpu_lines[metadata.cpu_prim_index.0];
+                    line.write_gpu_blocks(request);
                 }
                 PrimitiveKind::Border => {
                     let border = &self.cpu_borders[cpu_prim_index.0];
