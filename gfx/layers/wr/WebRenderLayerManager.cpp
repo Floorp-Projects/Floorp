@@ -371,7 +371,13 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   aDT->ClearRect(aImageRect.ToUnknownRect());
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
   MOZ_ASSERT(context);
-  aItem->Paint(aDisplayListBuilder, context);
+
+  if (aItem->GetType() == nsDisplayItem::TYPE_MASK) {
+    context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
+    static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
+  } else {
+    aItem->Paint(aDisplayListBuilder, context);
+  }
 
   if (gfxPrefs::WebRenderHighlightPaintedLayers()) {
     aDT->SetTransform(Matrix());
@@ -490,6 +496,28 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
   MOZ_ASSERT(fallbackData->GetKey());
 
   return fallbackData.forget();
+}
+
+Maybe<wr::WrImageMask>
+WebRenderLayerManager::BuildWrMaskImage(nsDisplayItem* aItem,
+                                        wr::DisplayListBuilder& aBuilder,
+                                        const StackingContextHelper& aSc,
+                                        nsDisplayListBuilder* aDisplayListBuilder,
+                                        const LayerRect& aBounds)
+{
+  LayerRect imageRect;
+  LayerPoint offset;
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+                                                                    imageRect, offset);
+  if (!fallbackData) {
+    return Nothing();
+  }
+
+  wr::WrImageMask imageMask;
+  imageMask.image = fallbackData->GetKey().value();
+  imageMask.rect = aSc.ToRelativeLayoutRect(aBounds);
+  imageMask.repeat = false;
+  return Some(imageMask);
 }
 
 bool
