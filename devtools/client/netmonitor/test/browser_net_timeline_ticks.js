@@ -124,13 +124,13 @@ add_task(function* () {
   function isPixelBrighterAtThan(x1, x2) {
     let i = (x1 | 0) * 4;
     let j = (x2 | 0) * 4;
-    return data[i + 3] > data [j + 3];
+    return data[i + 3] > data[j + 3];
   }
 
   function isPixelEquallyBright(x1, x2) {
     let i = (x1 | 0) * 4;
     let j = (x2 | 0) * 4;
-    return data[i + 3] == data [j + 3];
+    return data[i + 3] == data[j + 3];
   }
 
   return teardown(monitor);

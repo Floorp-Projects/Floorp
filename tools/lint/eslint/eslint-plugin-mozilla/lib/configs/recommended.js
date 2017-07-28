@@ -331,6 +331,9 @@ module.exports = {
     // Disallow redundant return statements
     "no-useless-return": "error",
 
+    // Disallow whitespace before properties.
+    "no-whitespace-before-property": "error",
+
     // No using with
     "no-with": "error",
 

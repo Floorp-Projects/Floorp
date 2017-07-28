@@ -250,7 +250,7 @@ function checkScalars(processes) {
   const scalars = parentProcess.scalars;
   for (let name in scalars) {
     Assert.equal(typeof name, "string", "Scalar names must be strings.");
-    checkScalar(scalars [name]);
+    checkScalar(scalars[name]);
   }
 
   // Check that we have valid keyed scalar entries.
