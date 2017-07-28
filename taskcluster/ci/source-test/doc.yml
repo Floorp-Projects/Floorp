@@ -1,10 +1,11 @@
-sphinx:
+doc-generate:
     description: Generate the Sphinx documentation
     platform: lint/opt
     treeherder:
         symbol: tc(Doc)
         kind: test
         tier: 1
+    run-on-projects: [try]
     worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
     worker:
         docker-image: {in-tree: "lint"}
@@ -21,6 +22,31 @@ sphinx:
             rm -rf docs-out/html/Mozilla_Source_Tree_Docs/_venv &&
             mv docs-out/html/Mozilla_Source_Tree_Docs docs &&
             tar -czf docs.tar.gz docs
+    when:
+        files-changed:
+            - '**/*.py'
+            - '**/*.rst'
+            - 'tools/docs/**'
+
+doc-upload:
+    description: Generate and upload the Sphinx documentation
+    platform: lint/opt
+    treeherder:
+        symbol: tc(DocUp)
+        kind: test
+        tier: 3
+    run-on-projects: [mozilla-central]
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: run-task
+        command: >
+            cd /home/worker/checkouts/gecko &&
+            ./mach upload-doc --bucket gecko-docs.mozilla.org --region us-west-2
+    scopes:
+        - secrets:get:project/releng/gecko/build/level-3/gecko-docs-upload
     when:
         files-changed:
             - '**/*.py'
