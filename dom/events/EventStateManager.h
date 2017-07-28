@@ -109,7 +109,7 @@ public:
                            nsEventStatus* aStatus);
 
   void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
-                               nsIFrame* aTargetFrame, nsEventStatus& aStatus);
+                               nsEventStatus& aStatus);
 
   /**
    * DispatchLegacyMouseScrollEvents() dispatches eLegacyMouseLineOrPageScroll

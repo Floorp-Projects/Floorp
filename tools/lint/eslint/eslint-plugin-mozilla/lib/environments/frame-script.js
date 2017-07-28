@@ -22,7 +22,6 @@ module.exports = {
     removeWeakMessageListener: false,
     sendAsyncMessage: false,
     sendSyncMessage: false,
-    sendRpcMessage: false,
-    tabEventTarget: false
+    sendRpcMessage: false
   }
 };
