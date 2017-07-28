@@ -516,13 +516,15 @@ nsPresContext::GetDocumentColorPreferences()
     mBackgroundColor = LookAndFeel::GetColorUsingStandins(
         LookAndFeel::eColorID_window, NS_RGB(0xff, 0xff, 0xff));
   } else if (usePrefColors) {
-    nsAutoString colorStr;
-    Preferences::GetString("browser.display.foreground_color", colorStr);
+    nsAdoptingString colorStr =
+      Preferences::GetString("browser.display.foreground_color");
+
     if (!colorStr.IsEmpty()) {
       mDefaultColor = MakeColorPref(colorStr);
     }
 
-    Preferences::GetString("browser.display.background_color", colorStr);
+    colorStr = Preferences::GetString("browser.display.background_color");
+
     if (!colorStr.IsEmpty()) {
       mBackgroundColor = MakeColorPref(colorStr);
     }
@@ -581,18 +583,20 @@ nsPresContext::GetUserPreferences()
   mUnderlineLinks =
     Preferences::GetBool("browser.underline_anchors", mUnderlineLinks);
 
-  nsAutoString colorStr;
-  Preferences::GetString("browser.anchor_color", colorStr);
+  nsAdoptingString colorStr = Preferences::GetString("browser.anchor_color");
+
   if (!colorStr.IsEmpty()) {
     mLinkColor = MakeColorPref(colorStr);
   }
 
-  Preferences::GetString("browser.active_color", colorStr);
+  colorStr = Preferences::GetString("browser.active_color");
+
   if (!colorStr.IsEmpty()) {
     mActiveLinkColor = MakeColorPref(colorStr);
   }
 
-  Preferences::GetString("browser.visited_color", colorStr);
+  colorStr = Preferences::GetString("browser.visited_color");
+
   if (!colorStr.IsEmpty()) {
     mVisitedLinkColor = MakeColorPref(colorStr);
   }
@@ -603,12 +607,14 @@ nsPresContext::GetUserPreferences()
   mFocusTextColor = mDefaultColor;
   mFocusBackgroundColor = mBackgroundColor;
 
-  Preferences::GetString("browser.display.focus_text_color", colorStr);
+  colorStr = Preferences::GetString("browser.display.focus_text_color");
+
   if (!colorStr.IsEmpty()) {
     mFocusTextColor = MakeColorPref(colorStr);
   }
 
-  Preferences::GetString("browser.display.focus_background_color", colorStr);
+  colorStr = Preferences::GetString("browser.display.focus_background_color");
+
   if (!colorStr.IsEmpty()) {
     mFocusBackgroundColor = MakeColorPref(colorStr);
   }

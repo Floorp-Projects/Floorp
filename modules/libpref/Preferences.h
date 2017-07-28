@@ -21,6 +21,7 @@
 #include "mozilla/MemoryReporting.h"
 
 class nsIFile;
+class nsAdoptingString;
 class nsAdoptingCString;
 
 #ifndef have_PrefChangedFunc_typedef
@@ -169,7 +170,9 @@ public:
    * when you need to check whether it was failure or not.
    */
   static nsAdoptingCString GetCString(const char* aPref);
+  static nsAdoptingString GetString(const char* aPref);
   static nsAdoptingCString GetLocalizedCString(const char* aPref);
+  static nsAdoptingString GetLocalizedString(const char* aPref);
 
   /**
    * Gets int, float, or bool type pref value with raw return value of
@@ -384,7 +387,9 @@ public:
    * See the comment at definition at GetString() and GetCString() for more
    * details of the result.
    */
+  static nsAdoptingString GetDefaultString(const char* aPref);
   static nsAdoptingCString GetDefaultCString(const char* aPref);
+  static nsAdoptingString GetDefaultLocalizedString(const char* aPref);
   static nsAdoptingCString GetDefaultLocalizedCString(const char* aPref);
 
   static nsresult GetDefaultCString(const char* aPref, nsACString& aResult);

@@ -2764,9 +2764,8 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   // Note that when the content signing becomes a standard, we might have
   // to restrict this enforcement to "remote content" only.
   if (applySignedContentCSP) {
-    nsAutoString signedContentCSP;
-    Preferences::GetString("security.signed_content.CSP.default",
-                           signedContentCSP);
+    nsAdoptingString signedContentCSP =
+      Preferences::GetString("security.signed_content.CSP.default");
     csp->AppendPolicy(signedContentCSP, false, false);
   }
 

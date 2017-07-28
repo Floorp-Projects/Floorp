@@ -138,7 +138,7 @@ public:
         nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames->GetElements());
         nsCOMPtr<nsIObserverService> obsServ;
         nsCOMPtr<nsIWritableVariant> value;
-        nsAutoString strVal;
+        nsAdoptingString strVal;
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
@@ -159,15 +159,14 @@ public:
                     intVal = Preferences::GetInt(name.get());
                     break;
 
-                case nsIPrefBranch::PREF_STRING: {
+                case nsIPrefBranch::PREF_STRING:
                     type = java::PrefsHelper::PREF_STRING;
-                    nsresult rv =
-                      Preferences::GetLocalizedString(name.get(), strVal);
-                    if (NS_FAILED(rv)) {
-                        Preferences::GetString(name.get(), strVal);
+                    strVal = Preferences::GetLocalizedString(name.get());
+                    if (!strVal) {
+                        strVal = Preferences::GetString(name.get());
                     }
                     break;
-                }
+
                 default:
                     // Pref not found; try to find it.
                     if (!obsServ) {
@@ -289,7 +288,7 @@ public:
         int32_t type = -1;
         bool boolVal = false;
         int32_t intVal = false;
-        nsAutoString strVal;
+        nsAdoptingString strVal;
 
         switch (Preferences::GetType(name.get())) {
             case nsIPrefBranch::PREF_BOOL:
@@ -300,15 +299,13 @@ public:
                 type = java::PrefsHelper::PREF_INT;
                 intVal = Preferences::GetInt(name.get());
                 break;
-            case nsIPrefBranch::PREF_STRING: {
+            case nsIPrefBranch::PREF_STRING:
                 type = java::PrefsHelper::PREF_STRING;
-                nsresult rv =
-                  Preferences::GetLocalizedString(name.get(), strVal);
-                if (NS_FAILED(rv)) {
-                    Preferences::GetString(name.get(), strVal);
+                strVal = Preferences::GetLocalizedString(name.get());
+                if (!strVal) {
+                    strVal = Preferences::GetString(name.get());
                 }
                 break;
-            }
             default:
                 NS_WARNING(nsPrintfCString("Invalid pref %s",
                                            name.get()).get());
