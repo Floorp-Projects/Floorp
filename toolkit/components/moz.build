@@ -21,6 +21,7 @@ DIRS += [
     'apppicker',
     'asyncshutdown',
     'browser',
+    'cloudstorage',
     'commandlines',
     'contentprefs',
     'contextualidentity',

@@ -44,11 +44,11 @@
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
 #include "MediaDecoder.h"
-#include "MediaDecoderReaderWrapper.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaPrefs.h"
 #include "MediaTimer.h"
+#include "ReaderProxy.h"
 #include "TimeUnits.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
@@ -258,7 +258,7 @@ protected:
   explicit StateObject(Master* aPtr) : mMaster(aPtr) { }
   TaskQueue* OwnerThread() const { return mMaster->mTaskQueue; }
   MediaResource* Resource() const { return mMaster->mResource; }
-  MediaDecoderReaderWrapper* Reader() const { return mMaster->mReader; }
+  ReaderProxy* Reader() const { return mMaster->mReader; }
   const MediaInfo& Info() const { return mMaster->Info(); }
   bool IsExpectingMoreData() const
   {
@@ -1000,7 +1000,7 @@ public:
     // Disconnect MediaDecoder.
     mSeekJob.RejectIfExists(__func__);
 
-    // Disconnect MediaDecoderReaderWrapper.
+    // Disconnect ReaderProxy.
     mSeekRequest.DisconnectIfExists();
 
     mWaitRequest.DisconnectIfExists();
@@ -2720,7 +2720,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDelayedScheduler(mTaskQueue),
   mCurrentFrameID(0),
   INIT_WATCHABLE(mObservedDuration, TimeUnit()),
-  mReader(new MediaDecoderReaderWrapper(mTaskQueue, aReader)),
+  mReader(new ReaderProxy(mTaskQueue, aReader)),
   mPlaybackRate(1.0),
   mAmpleAudioThreshold(detail::AMPLE_AUDIO_THRESHOLD),
   mAudioCaptured(false),

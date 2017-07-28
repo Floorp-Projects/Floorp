@@ -424,15 +424,9 @@ var ControllerCommands = {
 ControllerCommands.init()
 
 addEventListener("DOMTitleChanged", function(aEvent) {
-  let document = content.document;
-  switch (aEvent.type) {
-  case "DOMTitleChanged":
-    if (!aEvent.isTrusted || aEvent.target.defaultView != content)
-      return;
-
-    sendAsyncMessage("DOMTitleChanged", { title: document.title });
-    break;
-  }
+  if (!aEvent.isTrusted || aEvent.target.defaultView != content)
+    return;
+  sendAsyncMessage("DOMTitleChanged", { title: content.document.title });
 }, false);
 
 addEventListener("DOMWindowClose", function(aEvent) {

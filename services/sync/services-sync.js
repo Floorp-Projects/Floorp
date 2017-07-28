@@ -82,10 +82,15 @@ pref("services.sync.fxa.privacyURL", "https://accounts.firefox.com/legal/privacy
 pref("services.sync.telemetry.submissionInterval", 43200); // 12 hours in seconds
 pref("services.sync.telemetry.maxPayloadCount", 500);
 
-#ifndef RELEASE_OR_BETA
-// Enable the (fairly costly) client/server validation on nightly/aurora only.
+#ifdef EARLY_BETA_OR_EARLIER
+// Enable the (fairly costly) client/server validation through early Beta, but
+// not release candidates or Release.
 pref("services.sync.engine.bookmarks.validation.enabled", true);
-// Enable repair of bookmarks - requires validation also be enabled.
+#endif
+
+#if defined(NIGHTLY_BUILD)
+// Enable repair of bookmarks on Nightly only - requires validation also be
+// enabled.
 pref("services.sync.engine.bookmarks.repair.enabled", true);
 #endif
 

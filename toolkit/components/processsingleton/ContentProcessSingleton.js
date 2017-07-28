@@ -59,8 +59,8 @@ ContentProcessSingleton.prototype = {
         level: consoleMsg.level,
         filename: consoleMsg.filename.substring(0, MSG_MGR_CONSOLE_INFO_MAX),
         lineNumber: consoleMsg.lineNumber,
-        functionName: consoleMsg.functionName.substring(0,
-          MSG_MGR_CONSOLE_INFO_MAX),
+        functionName: consoleMsg.functionName &&
+          consoleMsg.functionName.substring(0, MSG_MGR_CONSOLE_INFO_MAX),
         timeStamp: consoleMsg.timeStamp,
         addonId: consoleMsg.addonId,
         arguments: [],

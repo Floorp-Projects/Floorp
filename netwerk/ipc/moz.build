@@ -29,6 +29,7 @@ IPDL_SOURCES = [
     'PNecko.ipdl',
     'PRtspChannel.ipdl',
     'PRtspController.ipdl',
+    'PSimpleChannel.ipdl',
 ]
 
 # needed so --disable-webrtc builds work (yes, a bit messy)

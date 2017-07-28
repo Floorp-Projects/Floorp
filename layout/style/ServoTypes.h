@@ -49,41 +49,30 @@ enum class LazyComputeBehavior {
   Assert,
 };
 
-// Indicates whether the Servo style system should perform normal processing or
-// whether it should only process unstyled children of the root and their
-// descendants.
-enum class TraversalRootBehavior {
-  Normal,
-  UnstyledChildrenOnly,
+// Various flags for the servo traversal.
+enum class ServoTraversalFlags : uint32_t {
+  Empty = 0,
+  // Perform animation processing but not regular styling.
+  AnimationOnly = 1 << 0,
+  // Traverses as normal mode but tries to update all CSS animations.
+  ForCSSRuleChanges = 1 << 1,
+  // Traverse only unstyled children of the root (and their descendants).
+  UnstyledChildrenOnly = 1 << 2,
+  // A forgetful traversal ignores the previous state of the frame tree, and
+  // thus does not compute damage or maintain other state describing the styles
+  // pre-traversal. A forgetful traversal is usually the right thing if you
+  // aren't going to do a post-traversal.
+  Forgetful = 1 << 3,
+  // Actively seeks out and clears change hints that may have been posted into
+  // the tree. Nonsensical without also passing Forgetful.
+  AggressivelyForgetful = 1 << 4,
+  // Clears the dirty descendants bit in the subtree.
+  ClearDirtyDescendants = 1 << 5,
+  // Clears the animation-only dirty descendants bit in the subtree.
+  ClearAnimationOnlyDirtyDescendants = 1 << 6,
 };
 
-// Indicates whether the Servo style system should perform normal processing,
-// animation-only processing (so we can flush any throttled animation styles),
-// or whether it should traverse in a mode that doesn't generate any change
-// hints, which is what's required when handling frame reconstruction.
-// The change hints in this case are unneeded, since the old frames have
-// already been destroyed.
-// Indicates how the Servo style system should perform.
-enum class TraversalRestyleBehavior {
-  // Normal processing.
-  Normal,
-  // Normal processing, but tolerant to calls to restyle elements in unstyled
-  // or display:none subtrees (which can occur when styling elements with
-  // newly applied XBL bindings).
-  ForNewlyBoundElement,
-  // Traverses in a mode that doesn't generate any change hints, which is what's
-  // required when handling frame reconstruction.  The change hints in this case
-  // are unneeded, since the old frames have already been destroyed.
-  ForReconstruct,
-  // Processes just the traversal for animation-only restyles and skips the
-  // normal traversal for other restyles unrelated to animations.
-  // This is used to bring throttled animations up-to-date such as when we need
-  // to get correct position for transform animations that are throttled because
-  // they are running on the compositor.
-  ForThrottledAnimationFlush,
-  // Traverses as normal mode but tries to update all CSS animations.
-  ForCSSRuleChanges,
-};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoTraversalFlags)
 
 // Indicates which rules should be included when performing selecting matching
 // on an element.  DefaultOnly is used to exclude all rules except for those

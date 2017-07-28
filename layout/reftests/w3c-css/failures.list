@@ -62,14 +62,14 @@ fails-if(!styloVsGecko) css-writing-modes-3/float-rgt-orthog-vrl-in-htb-003.xht
 fails-if(!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-001.xht
 fails-if(!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-004.xht
 fails-if(!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-013.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht
+fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-003.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-009.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-015.xht
@@ -202,7 +202,7 @@ fuzzy(87,180) css-multicol-1/multicol-columns-005.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-006.xht
 fuzzy(87,180) css-multicol-1/multicol-columns-007.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-columns-invalid-001.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-columns-invalid-002.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-columns-invalid-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-columns-toolong-001.xht
 fuzzy(135,530) css-multicol-1/multicol-containing-001.xht
 fuzzy(215,241) css-multicol-1/multicol-containing-002.xht
@@ -244,7 +244,7 @@ fuzzy(243,3322) fuzzy-if(skiaContent,244,3322) css-multicol-1/multicol-margin-ch
 fuzzy(255,4008) css-multicol-1/multicol-nested-002.xht
 fuzzy(255,4109) css-multicol-1/multicol-nested-005.xht
 fuzzy(204,2463) fuzzy-if(skiaContent,208,2463) css-multicol-1/multicol-nested-margin-001.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-nested-margin-002.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-nested-margin-002.xht
 fuzzy(204,2371) fuzzy-if(skiaContent,208,2371) css-multicol-1/multicol-nested-margin-003.xht
 fuzzy(225,2529) css-multicol-1/multicol-nested-margin-004.xht
 fuzzy(225,2529) css-multicol-1/multicol-nested-margin-005.xht
@@ -254,13 +254,13 @@ fuzzy-if(OSX,61,2) fuzzy-if(skiaContent,64,2) css-multicol-1/multicol-reduce-000
 fuzzy-if(OSX,8,20) css-multicol-1/multicol-rule-000.xht
 fuzzy(135,1584) css-multicol-1/multicol-rule-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-rule-002.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-rule-003.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-rule-color-001.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-rule-003.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-rule-color-001.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dashed-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-dotted-000.xht
 fuzzy(106,354) css-multicol-1/multicol-rule-double-000.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-001.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-rule-fraction-002.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-rule-fraction-001.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-rule-fraction-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-rule-fraction-003.xht
 fuzzy(127,500) fails-if(webrender) css-multicol-1/multicol-rule-groove-000.xht
 fuzzy(94,256) css-multicol-1/multicol-rule-hidden-000.xht
@@ -280,7 +280,7 @@ fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-003.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-child-001.xht
-fails-if(OSX||winWidget) css-multicol-1/multicol-span-all-child-002.xht
+fails-if((OSX||winWidget)&&!styloVsGecko) css-multicol-1/multicol-span-all-child-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-margin-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-margin-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-span-all-margin-bottom-001.xht

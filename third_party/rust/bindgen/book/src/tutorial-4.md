@@ -18,7 +18,7 @@ We can run `cargo build` again to check that the bindings themselves compile:
 
 ```bash
 $ cargo build
-   Compiling libbindgen-tutorial-bzip2-sys v0.1.0
+   Compiling bindgen-tutorial-bzip2-sys v0.1.0
     Finished debug [unoptimized + debuginfo] target(s) in 62.8 secs
 ```
 
@@ -27,7 +27,7 @@ our generated Rust FFI structs match what `bindgen` thinks they should be:
 
 ```bash
 $ cargo test
-   Compiling libbindgen-tutorial-bzip2-sys v0.1.0
+   Compiling bindgen-tutorial-bzip2-sys v0.1.0
     Finished debug [unoptimized + debuginfo] target(s) in 0.0 secs
      Running target/debug/deps/bzip2_sys-10413fc2af207810
 
@@ -49,7 +49,7 @@ test bindgen_test_layout__opaque_pthread_t ... ok
 
 test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured
 
-   Doc-tests libbindgen-tutorial-bzip2-sys
+   Doc-tests bindgen-tutorial-bzip2-sys
 
 running 0 tests
 

@@ -5,7 +5,7 @@ This can be used to generate code at compile time.
 And of course in our case, we will be generating Rust FFI
 bindings to `bzip2` at compile time. The resulting bindings will be written to
 `$OUT_DIR/bindings.rs` where `$OUT_DIR` is chosen by `cargo` and is something
-like `./target/debug/build/libbindgen-tutorial-bzip2-sys-afc7747d7eafd720/out/`.
+like `./target/debug/build/bindgen-tutorial-bzip2-sys-afc7747d7eafd720/out/`.
 
 ```rust,ignore
 extern crate bindgen;

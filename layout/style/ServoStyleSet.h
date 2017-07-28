@@ -264,23 +264,13 @@ public:
    * This will traverse all of the document's style roots (that is, its document
    * element, and the roots of the document-level native anonymous content).
    *
-   * |aRestyleBehavior| should be `Normal` or `ForCSSRuleChanges`.
-   * We need to specify |ForCSSRuleChanges| to try to update all CSS animations
+   * We specify |ForCSSRuleChanges| to try to update all CSS animations
    * when we call this function due to CSS rule changes since @keyframes rules
    * may have changed.
    *
    * Returns true if a post-traversal is required.
    */
-  bool StyleDocument(TraversalRestyleBehavior aRestyleBehavior);
-
-  /**
-   * Performs a Servo animation-only traversal to compute style for all nodes
-   * with the animation-only dirty bit in the document.
-   *
-   * This will traverse all of the document's style roots (that is, its document
-   * element, and the roots of the document-level native anonymous content).
-   */
-  bool StyleDocumentForThrottledAnimationFlush();
+  bool StyleDocument(ServoTraversalFlags aFlags);
 
   /**
    * Eagerly styles a subtree of unstyled nodes that was just appended to the
@@ -339,6 +329,15 @@ public:
    */
   void MaybeGCRuleTree();
 
+  /**
+   * Returns true if the given element may be used as the root of a style
+   * traversal. Reasons for false include having an unstyled parent, or having
+   * a parent that is display:none.
+   *
+   * Most traversal callsites don't need to check this, but some do.
+   */
+  bool MayTraverseFrom(dom::Element* aElement);
+
 #ifdef DEBUG
   void AssertTreeIsClean();
 #else
@@ -364,8 +363,7 @@ public:
    * FIXME(emilio): Is there a point in this after bug 1367904?
    */
   already_AddRefed<ServoStyleContext>
-  ResolveServoStyle(dom::Element* aElement,
-                    TraversalRestyleBehavior aRestyleBehavior);
+  ResolveServoStyle(dom::Element* aElement, ServoTraversalFlags aFlags);
 
   bool GetKeyframesForName(const nsString& aName,
                            const nsTimingFunction& aTimingFunction,
@@ -507,8 +505,7 @@ private:
    * Returns whether a post-traversal is required.
    */
   bool PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
-                                 TraversalRootBehavior aRootBehavior,
-                                 TraversalRestyleBehavior aRestyleBehavior);
+                                 ServoTraversalFlags aFlags);
 
   /**
    * Clear our cached mNonInheritingStyleContexts.

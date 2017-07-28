@@ -365,6 +365,42 @@ def tup_progs(build_backends):
 
 tup = check_prog('TUP', tup_progs)
 
+# watchman detection
+# ==============================================================
+
+watchman = check_prog('WATCHMAN', ('watchman',), allow_missing=True)
+
+@depends_if(watchman)
+@checking('for watchman version')
+@imports('json')
+def watchman_version(watchman):
+    out = check_cmd_output(watchman, 'version')
+    res = json.loads(out)
+    return Version(res['version'])
+
+@depends_all(hg_version, hg_config, watchman)
+@checking('for watchman Mercurial integration')
+@imports('os')
+def watchman_hg(hg_version, hg_config, watchman):
+    if hg_version < Version('3.8'):
+        return 'no (Mercurial 3.8+ required)'
+
+    ext_enabled = False
+    mode_disabled = False
+
+    for k in ('extensions.fsmonitor', 'extensions.hgext.fsmonitor'):
+        if k in hg_config and hg_config[k] != '!':
+            ext_enabled = True
+
+    mode_disabled = hg_config.get('fsmonitor.mode') == 'off'
+
+    if not ext_enabled:
+        return 'no (fsmonitor extension not enabled)'
+    if mode_disabled:
+        return 'no (fsmonitor.mode=off disables fsmonitor)'
+
+    return True
+
 # Miscellaneous programs
 # ==============================================================
 check_prog('DOXYGEN', ('doxygen',), allow_missing=True)

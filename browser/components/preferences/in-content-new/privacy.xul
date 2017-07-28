@@ -366,8 +366,8 @@
           hidden="true">
   <caption><label>&addressBar.label;</label></caption>
   <label id="locationBarSuggestionLabel">&addressBar.suggest.label;</label>
-  <checkbox id="historySuggestion" label="&locbar.history.label;"
-            accesskey="&locbar.history.accesskey;"
+  <checkbox id="historySuggestion" label="&locbar.history2.label;"
+            accesskey="&locbar.history2.accesskey;"
             preference="browser.urlbar.suggest.history"/>
   <checkbox id="bookmarkSuggestion" label="&locbar.bookmarks.label;"
             accesskey="&locbar.bookmarks.accesskey;"
@@ -489,8 +489,8 @@
                                 &button.ok.label;"/>
         <button id="changeBlockList"
                 class="accessory-button"
-                label="&changeBlockList.label;"
-                accesskey="&changeBlockList.accesskey;"
+                label="&changeBlockList2.label;"
+                accesskey="&changeBlockList2.accesskey;"
                 preference="pref.privacy.disable_button.change_blocklist"
                 searchkeywords="&button.cancel.label; &button.ok.label;"/>
       </vbox>
@@ -674,8 +674,8 @@
     <vbox>
       <button id="viewCertificatesButton"
               class="accessory-button"
-              label="&viewCerts.label;"
-              accesskey="&viewCerts.accesskey;"
+              label="&viewCerts2.label;"
+              accesskey="&viewCerts2.accesskey;"
               preference="security.disable_button.openCertManager"
               searchkeywords="&certmgr.tab.mine;
                               &certmgr.tab.others2;
@@ -694,8 +694,8 @@
                               &certmgr.delete2.label;"/>
       <button id="viewSecurityDevicesButton"
               class="accessory-button"
-              label="&viewSecurityDevices.label;"
-              accesskey="&viewSecurityDevices.accesskey;"
+              label="&viewSecurityDevices2.label;"
+              accesskey="&viewSecurityDevices2.accesskey;"
               preference="security.disable_button.openDeviceManager"
               searchkeywords="&devmgr.title;
                               &devmgr.devlist.label;

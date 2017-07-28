@@ -3233,7 +3233,7 @@ private:
   static bool sIsResourceTimingEnabled;
   static bool sIsUserTimingLoggingEnabled;
   static bool sIsFrameTimingPrefEnabled;
-  static bool sIsExperimentalAutocompleteEnabled;
+  static bool sIsFormAutofillAutocompleteEnabled;
   static bool sIsWebComponentsEnabled;
   static bool sIsCustomElementsEnabled;
   static bool sSendPerformanceTimingNotifications;

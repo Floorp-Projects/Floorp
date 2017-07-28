@@ -25,8 +25,7 @@ class TestMainTabScalars(TelemetryTestCase):
             self.browser.tabbar.close_tab(tab2, force=True)
             wait.until(lambda m: len(self.browser.tabbar.tabs) == 1)
             self.browser.tabbar.switch_to(tab1)
-        self.restart_browser()
-        ping = self.wait_for_ping(lambda p: p['type'] == 'main'
+        ping = self.wait_for_ping(self.restart_browser, lambda p: p['type'] == 'main'
                                   and p['payload']['info']['reason'] == 'shutdown')
         assert ping['type'] == 'main'
         assert ping['clientId'] == self.client_id

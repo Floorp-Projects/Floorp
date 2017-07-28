@@ -137,6 +137,7 @@ BASIC_RULE_FUNCS(Namespace)
 BASIC_RULE_FUNCS(Page)
 GROUP_RULE_FUNCS(Supports)
 GROUP_RULE_FUNCS(Document)
+BASIC_RULE_FUNCS(FontFeatureValues)
 #undef GROUP_RULE_FUNCS
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
@@ -211,6 +212,12 @@ SERVO_BINDING_FUNC(Servo_SupportsRule_GetConditionText, void,
                    RawServoSupportsRuleBorrowed rule, nsAString* result)
 SERVO_BINDING_FUNC(Servo_DocumentRule_GetConditionText, void,
                    RawServoDocumentRuleBorrowed rule, nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetFontFamily, void,
+                   RawServoFontFeatureValuesRuleBorrowed rule,
+                   nsAString* result)
+SERVO_BINDING_FUNC(Servo_FontFeatureValuesRule_GetValueText, void,
+                   RawServoFontFeatureValuesRuleBorrowed rule,
+                   nsAString* result)
 
 // Animations API
 SERVO_BINDING_FUNC(Servo_ParseProperty,
@@ -495,12 +502,14 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
 SERVO_BINDING_FUNC(Servo_TakeChangeHint,
                    nsChangeHint,
                    RawGeckoElementBorrowed element,
-                   mozilla::TraversalRestyleBehavior restyle_behavior,
+                   mozilla::ServoTraversalFlags flags,
                    bool* was_restyled)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    RawServoStyleSetBorrowed set,
-                   mozilla::TraversalRestyleBehavior restyle_behavior)
+                   mozilla::ServoTraversalFlags flags)
+SERVO_BINDING_FUNC(Servo_ResolveStyleAllowStale, ServoStyleContextStrong,
+                   RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoStyleContextStrong,
                    RawGeckoElementBorrowed element,
                    mozilla::CSSPseudoElementType pseudo_type,
@@ -537,8 +546,7 @@ SERVO_BINDING_FUNC(Servo_TraverseSubtree,
                    RawGeckoElementBorrowed root,
                    RawServoStyleSetBorrowed set,
                    const mozilla::ServoElementSnapshotTable* snapshots,
-                   mozilla::TraversalRootBehavior root_behavior,
-                   mozilla::TraversalRestyleBehavior restyle_behavior)
+                   mozilla::ServoTraversalFlags flags)
 
 // Assert that the tree has no pending or unconsumed restyles.
 SERVO_BINDING_FUNC(Servo_AssertTreeIsClean, void, RawGeckoElementBorrowed root)
@@ -572,8 +580,6 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertiesCount, uint32_t,
 SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    ServoStyleContextBorrowed, uint32_t index,
                    nsAString* name)
-
-SERVO_BINDING_FUNC(Servo_GetEmptyVariables, const nsStyleVariables*)
 
 
 // AddRef / Release functions

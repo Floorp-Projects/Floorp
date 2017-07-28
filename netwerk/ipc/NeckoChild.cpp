@@ -261,6 +261,20 @@ NeckoChild::DeallocPFileChannelChild(PFileChannelChild* child)
   return true;
 }
 
+PSimpleChannelChild*
+NeckoChild::AllocPSimpleChannelChild(const uint32_t& channelId)
+{
+  MOZ_ASSERT_UNREACHABLE("Should never get here");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPSimpleChannelChild(PSimpleChannelChild* child)
+{
+  // NB: See SimpleChannelChild::ActorDestroy.
+  return true;
+}
+
 PRtspControllerChild*
 NeckoChild::AllocPRtspControllerChild()
 {

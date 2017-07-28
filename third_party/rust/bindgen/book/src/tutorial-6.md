@@ -10,4 +10,4 @@ Check out the [full code on Github!][example]
 
 [bz-sys]: https://crates.io/crates/bzip2-sys
 [bz]: https://crates.io/crates/bzip2
-[example]: https://github.com/fitzgen/libbindgen-tutorial-bzip2-sys
+[example]: https://github.com/fitzgen/bindgen-tutorial-bzip2-sys

@@ -695,7 +695,9 @@ private:
 //
 void
 ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
-                                   double aSinceTime, JSContext* aContext,
+                                   double aSinceTime,
+                                   double* aOutFirstSampleTime,
+                                   JSContext* aContext,
                                    UniqueStacks& aUniqueStacks) const
 {
   UniquePtr<char[]> strbuf = MakeUnique<char[]>(kMaxFrameKeyLength);
@@ -711,6 +713,7 @@ ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,
     } while (0)
 
   EntryGetter e(*this);
+  bool seenFirstSample = false;
 
   // This block skips entries until we find the start of the next sample. This
   // is useful in two situations.
@@ -754,6 +757,13 @@ skip_to_next_sample:
       // Ignore samples that are too old.
       if (sample.mTime < aSinceTime) {
         goto skip_to_next_sample;
+      }
+
+      if (!seenFirstSample) {
+        if (aOutFirstSampleTime) {
+          *aOutFirstSampleTime = sample.mTime;
+        }
+        seenFirstSample = true;
       }
     } else {
       ERROR_AND_SKIP_TO_NEXT_SAMPLE("expected a Time entry");
