@@ -57,10 +57,10 @@ this.RecipeRunner = {
       // Run once immediately after the UI is available. Do this before adding the
       // timer so we can't end up racing it.
       const observer = {
-        observe: (subject, topic, data) => {
+        observe: async (subject, topic, data) => {
           Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION);
 
-          this.run();
+          await this.run();
           this.registerTimer();
           prefs.setBoolPref(FIRST_RUN_PREF, false);
 
