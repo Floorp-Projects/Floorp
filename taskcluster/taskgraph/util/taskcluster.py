@@ -35,16 +35,6 @@ def _do_request(url):
     return response
 
 
-def _handle_artifact(path, response):
-    if path.endswith('.json'):
-        return response.json()
-    if path.endswith('.yml'):
-        return yaml.load(response.text)
-    response.raw.read = functools.partial(response.raw.read,
-                                          decode_content=True)
-    return response.raw
-
-
 def get_artifact_url(task_id, path, use_proxy=False):
     if use_proxy:
         ARTIFACT_URL = 'http://taskcluster/queue/v1/task/{}/artifacts/{}'
@@ -63,7 +53,13 @@ def get_artifact(task_id, path, use_proxy=False):
     For other types of content, a file-like object is returned.
     """
     response = _do_request(get_artifact_url(task_id, path, use_proxy))
-    return _handle_artifact(path, response)
+    if path.endswith('.json'):
+        return response.json()
+    if path.endswith('.yml'):
+        return yaml.load(response.text)
+    response.raw.read = functools.partial(response.raw.read,
+                                          decode_content=True)
+    return response.raw
 
 
 def list_artifacts(task_id, use_proxy=False):
@@ -82,12 +78,6 @@ def get_index_url(index_path, use_proxy=False):
 def find_task_id(index_path, use_proxy=False):
     response = _do_request(get_index_url(index_path, use_proxy))
     return response.json()['taskId']
-
-
-def get_artifact_from_index(index_path, artifact_path, use_proxy=False):
-    full_path = index_path + '/artifacts/' + artifact_path
-    response = _do_request(get_index_url(full_path, use_proxy))
-    return _handle_artifact(full_path, response)
 
 
 def get_task_url(task_id, use_proxy=False):
