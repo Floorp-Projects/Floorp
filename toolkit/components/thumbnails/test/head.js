@@ -221,7 +221,7 @@ function whenFileExists(aURL, aCallback = next) {
     callback = () => whenFileExists(aURL, aCallback);
   }
 
-  executeSoon(callback);
+  setTimeout(callback, 0);
 }
 
 /**
