@@ -54,7 +54,8 @@ static const char contentSandboxRules[] = R"(
   (define sandbox-level-1 (param "SANDBOX_LEVEL_1"))
   (define sandbox-level-2 (param "SANDBOX_LEVEL_2"))
   (define sandbox-level-3 (param "SANDBOX_LEVEL_3"))
-  (define macosMinorVersion (string->number (param "MAC_OS_MINOR")))
+  (define macosMinorVersion-9 (param "MAC_OS_MINOR_9"))
+  (define macosMinorVersion-min13 (param "MAC_OS_MINOR_MIN_13"))
   (define appPath (param "APP_PATH"))
   (define appBinaryPath (param "APP_BINARY_PATH"))
   (define appdir-path (param "APP_DIR"))
@@ -109,7 +110,7 @@ static const char contentSandboxRules[] = R"(
 
   ; macOS 10.9 does not support the |sysctl-name| predicate, so unfortunately
   ; we need to allow all sysctl-reads there.
-  (if (= macosMinorVersion 9)
+  (if (string=? macosMinorVersion-9 "TRUE")
     (allow sysctl-read)
     (allow sysctl-read
       (sysctl-name-regex #"^sysctl\.")
@@ -203,11 +204,11 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.DesktopServicesHelper"))
 
 ; bug 1376163
-  (if (>= macosMinorVersion 13)
+  (if (string=? macosMinorVersion-min13 "TRUE")
     (allow mach-lookup (global-name "com.apple.audio.AudioComponentRegistrar")))
 
 ; bug 1312273
-  (if (= macosMinorVersion 9)
+  (if (string=? macosMinorVersion-9 "TRUE")
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
   (allow iokit-open
