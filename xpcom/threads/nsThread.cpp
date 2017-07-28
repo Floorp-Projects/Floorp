@@ -28,6 +28,7 @@
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/Scheduler.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 #include "mozilla/SystemGroup.h"
@@ -928,10 +929,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // and repeat the nested event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
-  Maybe<SchedulerGroup::AutoProcessEvent> ape;
+  Maybe<Scheduler::EventLoopActivation> activation;
   if (mIsMainThread == MAIN_THREAD) {
     DoMainThreadSpecificProcessing(reallyWait);
-    ape.emplace();
+    activation.emplace();
   }
 
   ++mNestedEventLoopDepth;
@@ -964,6 +965,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     // also do work.
     EventPriority priority;
     nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait, &priority);
+
+    if (activation.isSome()) {
+      activation.ref().SetEvent(event, priority);
+    }
 
     *aResult = (event.get() != nullptr);
 
