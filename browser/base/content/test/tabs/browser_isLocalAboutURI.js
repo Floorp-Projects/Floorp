@@ -11,13 +11,19 @@
 add_task(function test_URI() {
   const check = (spec, expect, description) => {
     const URI = Services.io.newURI(spec);
-    is(gBrowser._isLocalAboutURI(URI), expect, description);
+    try {
+      is(gBrowser._isLocalAboutURI(URI), expect, description);
+    } catch (ex) {
+      ok(false, "_isLocalAboutURI should not throw");
+    }
   };
   check("https://www.mozilla.org/", false, "https is not about");
   check("http://www.mozilla.org/", false, "http is not about");
   check("about:blank", true, "about:blank is local");
   check("about:about", true, "about:about is local");
   check("about:newtab", true, "about:newtab is local");
+  check("about:random-invalid-uri", false,
+        "about:random-invalid-uri is invalid but should not throw");
 });
 
 add_task(function test_URI_with_resolved() {
