@@ -61,11 +61,6 @@ public class SettingsFragment extends PreferenceFragment implements SharedPrefer
         if (preference != null) {
             preference.update();
         }
-
-        final Preference secureModePreference = findPreference(getString(R.string.pref_key_secure));
-        if (secureModePreference != null) {
-            secureModePreference.setSummary(getString(R.string.preference_privacy_secure_mode_summary, getString(R.string.app_name)));
-        }
     }
 
     @Override

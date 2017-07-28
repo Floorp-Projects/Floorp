@@ -50,7 +50,7 @@
         <SwitchPreference
             android:key="@string/pref_key_secure"
             android:title="@string/preference_privacy_secure_mode"
-            android:summary="@string/preference_privacy_secure_mode_summary"
+            android:summary="@string/preference_privacy_stealth_summary"
             android:defaultValue="true" />
 
     </PreferenceCategory>

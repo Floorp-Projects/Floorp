@@ -116,10 +116,11 @@
     <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
          and prevents the user from taking screenshots or casting the app to other displays. -->
     <string name="preference_privacy_secure_mode">Stealth</string>
-    <!-- Preference Summary: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
-     and prevents the user from taking screenshots or casting the app to other displays. %1$s will be replaced with the
-     name of the app (e.g. Firefox Focus). -->
-    <string name="preference_privacy_secure_mode_summary">Hide webpages when switching apps</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. However we try to keep this description short and brief to avoid confusion. -->
+    <string name="preference_privacy_stealth_summary">Hide webpages when switching apps</string>
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
