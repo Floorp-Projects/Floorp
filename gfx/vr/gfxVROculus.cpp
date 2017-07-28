@@ -31,6 +31,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
+#include "mozilla/Telemetry.h"
 
 /** XXX The DX11 objects and quad blitting could be encapsulated
  *    into a separate object if either Oculus starts supporting
@@ -232,6 +233,7 @@ VROculusSession::StartPresentation(const IntSize& aSize)
     mPresenting = true;
     mPresentationSize = aSize;
     Refresh();
+    mPresentationStart = TimeStamp::Now();
   }
 }
 
@@ -241,6 +243,10 @@ VROculusSession::StopPresentation()
   if (mPresenting) {
     mLastPresentationEnd = TimeStamp::Now();
     mPresenting = false;
+    Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 1);
+    Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPEND_FOR_VIEWING_IN_OCULUS,
+                          static_cast<uint32_t>((TimeStamp::Now() - mPresentationStart)
+                          .ToMilliseconds()));
     Refresh();
   }
 }

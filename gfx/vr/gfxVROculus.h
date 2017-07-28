@@ -63,6 +63,7 @@ private:
   TimeStamp mLastShouldQuit;
   // The timestamp of the last ending presentation
   TimeStamp mLastPresentationEnd;
+  TimeStamp mPresentationStart;
 
   ~VROculusSession();
   void Uninitialize(bool aUnloadLib);
