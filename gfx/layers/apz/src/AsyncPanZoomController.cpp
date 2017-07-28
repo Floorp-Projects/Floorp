@@ -582,10 +582,9 @@ public:
       // offset to end up being a bit off from the destination, we can get
       // artefacts like "scroll to the next snap point in this direction"
       // scrolling to the snap point we're already supposed to be at.
-      aFrameMetrics.SetScrollOffset(
-          aFrameMetrics.CalculateScrollRange().ClampPoint(
-              CSSPoint::FromAppUnits(nsPoint(mXAxisModel.GetDestination(),
-                                             mYAxisModel.GetDestination()))));
+      aFrameMetrics.ClampAndSetScrollOffset(
+          CSSPoint::FromAppUnits(nsPoint(mXAxisModel.GetDestination(),
+                                         mYAxisModel.GetDestination())));
       return false;
     }
 
@@ -3789,9 +3788,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const ScrollMetadata& aScrollMe
       // Even if we didn't accept a new scroll offset from content, the
       // scrollable rect may have changed in a way that makes our local
       // scroll offset out of bounds, so re-clamp it.
-      mFrameMetrics.SetScrollOffset(
-          mFrameMetrics.CalculateScrollRange().ClampPoint(
-              mFrameMetrics.GetScrollOffset()));
+      mFrameMetrics.ClampAndSetScrollOffset(mFrameMetrics.GetScrollOffset());
     }
   }
 
