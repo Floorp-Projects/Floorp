@@ -1012,7 +1012,9 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         let content_rect: LayoutRect = content_rect.into();
         let clip_rect: LayoutRect = clip_rect.into();
 
-        state.frame_builder.dl_builder.define_scroll_frame(Some(clip_id), content_rect, clip_rect, vec![], None);
+        state.frame_builder.dl_builder.define_scroll_frame(
+            Some(clip_id), content_rect, clip_rect, vec![], None,
+            ScrollSensitivity::Script);
         state.frame_builder.scroll_clips_defined.insert(clip_id);
     }
     state.frame_builder.dl_builder.push_clip_id(clip_id);
