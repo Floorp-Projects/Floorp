@@ -1892,7 +1892,8 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
 
 nsRect
 nsDisplayList::GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
-                                                const ActiveScrolledRoot* aASR) const {
+                                                const ActiveScrolledRoot* aASR,
+                                                nsRect* aVisibleRect) const {
   nsRect bounds;
   for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
     nsRect r = i->GetClippedBounds(aBuilder);
@@ -1907,6 +1908,9 @@ nsDisplayList::GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
       if (clip) {
         r = clip->GetClipRect();
       }
+    }
+    if (aVisibleRect) {
+      aVisibleRect->UnionRect(*aVisibleRect, i->GetVisibleRect());
     }
     bounds.UnionRect(bounds, r);
   }
