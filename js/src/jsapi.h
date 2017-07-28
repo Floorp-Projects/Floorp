@@ -1973,6 +1973,23 @@ typedef enum JSGCParamKey {
      * Default: RefreshFrameSlicesEnabled
      */
     JSGC_REFRESH_FRAME_SLICES_ENABLED = 24,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD
+     *
+     * Default: ZoneAllocThresholdFactorDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR = 25,
+
+    /**
+     * Factor for triggering a GC based on JSGC_ALLOCATION_THRESHOLD.
+     * Used if another GC (in different zones) is already running.
+     *
+     * Default: ZoneAllocThresholdFactorAvoidInterruptDefault
+     * Pref: None
+     */
+    JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT = 26,
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
