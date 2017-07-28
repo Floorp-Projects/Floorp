@@ -24,12 +24,11 @@ def find_decision_task(parameters):
         parameters['pushlog_id']))
 
 
-def create_task(task_id, task_def, level):
+def create_task(task_id, task_def):
     """Create a new task.  The task definition will have {relative-datestamp':
     '..'} rendered just like in a decision task.  Action callbacks should use
     this function to create new tasks, as it has the additional advantage of
     allowing easy debugging with `mach taskgraph action-callback --test`."""
-    task_def['schedulerId'] = 'gecko-level-{}'.format(level)
     if testing:
         json.dump([task_id, task_def], sys.stdout,
                   sort_keys=True, indent=4, separators=(',', ': '))
