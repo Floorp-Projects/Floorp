@@ -12389,7 +12389,12 @@ nsGlobalWindow::ObserveStorageNotification(StorageEvent* aEvent,
 {
   MOZ_ASSERT(aEvent);
 
-  MOZ_DIAGNOSTIC_ASSERT(IsPrivateBrowsing() == aPrivateBrowsing);
+  // The private browsing check must be done here again because this window
+  // could have changed its state before the notification check and now. This
+  // happens in case this window did have a docShell at that time.
+  if (aPrivateBrowsing != IsPrivateBrowsing()) {
+    return;
+  }
 
   // LocalStorage can only exist on an inner window, and we don't want to
   // generate events on frozen or otherwise-navigated-away from windows.
