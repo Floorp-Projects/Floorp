@@ -46,10 +46,10 @@ SVGPathElement::SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeIn
 // memory reporting methods
 
 size_t
-SVGPathElement::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
+SVGPathElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return SVGPathElementBase::SizeOfExcludingThis(aState) +
-         mD.SizeOfExcludingThis(aState.mMallocSizeOf);
+  return SVGPathElementBase::SizeOfExcludingThis(aMallocSizeOf) +
+         mD.SizeOfExcludingThis(aMallocSizeOf);
 }
 
 //----------------------------------------------------------------------

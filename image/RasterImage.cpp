@@ -705,10 +705,9 @@ RasterImage::UpdateImageContainer()
 }
 
 size_t
-RasterImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
+RasterImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
-  return mSourceBuffer->SizeOfIncludingThisWithComputedFallback(
-    aState.mMallocSizeOf);
+  return mSourceBuffer->SizeOfIncludingThisWithComputedFallback(aMallocSizeOf);
 }
 
 void

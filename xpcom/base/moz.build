@@ -111,7 +111,6 @@ EXPORTS.mozilla += [
     'nsMemoryInfoDumper.h',
     'NSPRLogModulesParser.h',
     'OwningNonNull.h',
-    'SizeOfState.h',
     'StaticMutex.h',
     'StaticPtr.h',
     'SystemMemoryReporter.h',
