@@ -294,7 +294,7 @@ class MachCommands(MachCommandBase):
     @SubCommand('taskgraph', 'action-callback',
                 description='Run action callback used by action tasks')
     def action_callback(self, **options):
-        import actions
+        import taskgraph.actions
         try:
             self.setup_logging()
 
@@ -305,7 +305,7 @@ class MachCommands(MachCommandBase):
             callback = os.environ.get('ACTION_CALLBACK', None)
             parameters = json.loads(os.environ.get('ACTION_PARAMETERS', '{}'))
 
-            return actions.trigger_action_callback(
+            return taskgraph.actions.trigger_action_callback(
                     task_group_id=task_group_id,
                     task_id=task_id,
                     task=task,
@@ -336,7 +336,7 @@ class MachCommands(MachCommandBase):
     def test_action_callback(self, **options):
         import taskgraph.parameters
         from taskgraph.util.taskcluster import get_task_definition
-        import actions
+        import taskgraph.actions
         import yaml
 
         def load_data(filename):
@@ -366,7 +366,7 @@ class MachCommands(MachCommandBase):
             parameters = taskgraph.parameters.load_parameters_file(options['parameters'])
             parameters.check()
 
-            return actions.trigger_action_callback(
+            return taskgraph.actions.trigger_action_callback(
                     task_group_id=options['task_group_id'],
                     task_id=task_id,
                     task=task,
