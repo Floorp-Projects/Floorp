@@ -1897,25 +1897,6 @@ JS::CompartmentCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
     return *this;
 }
 
-bool
-JS::CompartmentCreationOptions::getStreamsEnabled() const
-{
-#if defined(ENABLE_STREAMS)
-    return streamsEnabled_;
-#else
-    return false;
-#endif
-}
-
-JS::CompartmentCreationOptions&
-JS::CompartmentCreationOptions::setStreamsEnabled(bool flag)
-{
-#if defined(ENABLE_STREAMS)
-    streamsEnabled_ = flag;
-#endif
-    return *this;
-}
-
 JS::CompartmentBehaviors&
 JS::CompartmentBehaviorsRef(JSCompartment* compartment)
 {

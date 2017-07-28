@@ -599,11 +599,6 @@ static mozilla::Atomic<bool> sSharedMemoryEnabled(false);
 bool
 xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
 
-static mozilla::Atomic<bool> sDOMStreamsEnabled(false);
-
-bool
-xpc::DOMStreamsEnabled() { return sDOMStreamsEnabled; }
-
 static void
 ReloadPrefsCallback(const char* pref, void* data)
 {
@@ -653,7 +648,6 @@ ReloadPrefsCallback(const char* pref, void* data)
     bool extraWarnings = Preferences::GetBool(JS_OPTIONS_DOT_STR "strict");
 
     sSharedMemoryEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
-    sDOMStreamsEnabled = Preferences::GetBool("dom.streams.enabled");
 
 #ifdef DEBUG
     sExtraWarningsForSystemJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "strict.debug");

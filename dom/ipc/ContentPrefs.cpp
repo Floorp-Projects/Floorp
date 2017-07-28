@@ -58,7 +58,6 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "dom.performance.enable_notify_performance_timing",
   "dom.performance.enable_user_timing_logging",
   "dom.storage.testing",
-  "dom.streams.enabled",
   "dom.url.encode_decode_hash",
   "dom.url.getters_decode_hash",
   "dom.use_watchdog",

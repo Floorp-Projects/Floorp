@@ -265,7 +265,6 @@ static bool enableWasm = false;
 static bool enableNativeRegExp = false;
 static bool enableUnboxedArrays = false;
 static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
-static bool enableStreams = true;
 static bool enableWasmAlwaysBaseline = false;
 static bool enableAsyncStacks = false;
 #ifdef JS_GC_ZEAL
@@ -3147,7 +3146,6 @@ SetStandardCompartmentOptions(JS::CompartmentOptions& options)
 {
     options.behaviors().setVersion(JSVERSION_DEFAULT);
     options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory);
-    options.creationOptions().setStreamsEnabled(enableStreams);
 }
 
 static JSObject*
@@ -8032,17 +8030,6 @@ SetContextOptions(JSContext* cx, const OptionParser& op)
     }
 #endif
 
-#ifdef ENABLE_STREAMS
-    if (const char* str = op.getStringOption("streams")) {
-        if (strcmp(str, "off") == 0)
-            enableStreams = false;
-        else if (strcmp(str, "on") == 0)
-            enableStreams = true;
-        else
-            return OptionFailure("streams", str);
-    }
-#endif
-
 #if defined(JS_CODEGEN_ARM)
     if (const char* str = op.getStringOption("arm-hwcap"))
         jit::ParseARMHwCapFlags(str);
@@ -8325,12 +8312,6 @@ main(int argc, char** argv, char** envp)
 #  else
                                "(default: off, on to enable)"
 #  endif
-            )
-#endif
-#ifdef ENABLE_STREAMS
-        || !op.addStringOption('\0', "streams", "on/off",
-                               "WHATWG Streams "
-                               "(default: on, off to disable)"
             )
 #endif
         || !op.addStringOption('\0', "cache-ir-stubs", "on/off",
