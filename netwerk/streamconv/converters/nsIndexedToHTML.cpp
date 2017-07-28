@@ -858,9 +858,11 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
                                         nsISupports *aCtxt,
                                         const nsAString& aInfo) {
     nsAutoCString pushBuffer;
-    nsAdoptingString escaped(nsEscapeHTML2(PromiseFlatString(aInfo).get()));
-    if (!escaped)
+    char16_t* str = nsEscapeHTML2(PromiseFlatString(aInfo).get());
+    if (!str)
         return NS_ERROR_OUT_OF_MEMORY;
+    nsString escaped;
+    escaped.Adopt(str);
     pushBuffer.AppendLiteral("<tr>\n <td>");
     // escaped is provided in Unicode, so write hex NCRs as necessary
     // to prevent the HTML parser from applying a character set.
