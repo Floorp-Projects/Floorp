@@ -199,14 +199,6 @@ nsInProcessTabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInProcessTabChildGlobal::GetTabEventTarget(nsIEventTarget** aTarget)
-{
-  nsCOMPtr<nsIEventTarget> target = GetMainThreadEventTarget();
-  target.forget(aTarget);
-  return NS_OK;
-}
-
 void
 nsInProcessTabChildGlobal::FireUnloadEvent()
 {

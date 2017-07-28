@@ -11,7 +11,6 @@ requestLongerTimeout(2);
 // Test toggling the toolbox quickly and see if there is any race breaking it.
 
 const URL = "data:text/html;charset=utf-8,Toggling devtools quickly";
-const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
 
 add_task(function* () {
   // Make sure this test starts with the selectedTool pref cleared. Previous
@@ -81,10 +80,5 @@ add_task(function* () {
 });
 
 function toggle() {
-  // When enabling the input event prioritization, we'll reserve some time to
-  // process input events in each frame. In that case, the synthesized input
-  // events may delay the normal events. Replace synthesized key events by
-  // toggleToolboxCommand to prevent the synthesized input events jam the
-  // content process and cause the test timeout.
-  gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
+  EventUtils.synthesizeKey("VK_F12", {});
 }
