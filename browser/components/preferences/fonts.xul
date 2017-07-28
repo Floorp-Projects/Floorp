@@ -44,40 +44,43 @@
         <hbox align="center">
           <label accesskey="&language.accesskey;" control="selectLangs">&language.label;</label>
         </hbox>
-        <menulist id="selectLangs" preference="font.language.group"
-                  onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
-          <menupopup>
-            <menuitem value="ar"              label="&font.langGroup.arabic;"/>
-            <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
-            <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
-            <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
-            <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
-            <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>
-            <menuitem value="x-cyrillic"      label="&font.langGroup.cyrillic;"/>
-            <menuitem value="x-devanagari"    label="&font.langGroup.devanagari;"/>
-            <menuitem value="x-ethi"          label="&font.langGroup.ethiopic;"/>
-            <menuitem value="x-geor"          label="&font.langGroup.georgian;"/>
-            <menuitem value="el"              label="&font.langGroup.el;"/>
-            <menuitem value="x-gujr"          label="&font.langGroup.gujarati;"/>
-            <menuitem value="x-guru"          label="&font.langGroup.gurmukhi;"/>
-            <menuitem value="he"              label="&font.langGroup.hebrew;"/>
-            <menuitem value="ja"              label="&font.langGroup.japanese;"/>
-            <menuitem value="x-knda"          label="&font.langGroup.kannada;"/>
-            <menuitem value="x-khmr"          label="&font.langGroup.khmer;"/>
-            <menuitem value="ko"              label="&font.langGroup.korean;"/>
-            <menuitem value="x-western"       label="&font.langGroup.latin;"/>
-            <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
-            <menuitem value="x-math"          label="&font.langGroup.math;"/>
-            <menuitem value="x-orya"          label="&font.langGroup.odia;"/>
-            <menuitem value="x-sinh"          label="&font.langGroup.sinhala;"/>
-            <menuitem value="x-tamil"         label="&font.langGroup.tamil;"/>
-            <menuitem value="x-telu"          label="&font.langGroup.telugu;"/>
-            <menuitem value="th"              label="&font.langGroup.thai;"/>
-            <menuitem value="x-tibt"          label="&font.langGroup.tibetan;"/>
-            <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
-            <menuitem value="x-unicode"       label="&font.langGroup.other;"/>
-          </menupopup>
-        </menulist>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="selectLangs" preference="font.language.group"
+                    onsyncfrompreference="return gFontsDialog.readFontLanguageGroup();">
+            <menupopup>
+              <menuitem value="ar"              label="&font.langGroup.arabic;"/>
+              <menuitem value="x-armn"          label="&font.langGroup.armenian;"/>
+              <menuitem value="x-beng"          label="&font.langGroup.bengali;"/>
+              <menuitem value="zh-CN"           label="&font.langGroup.simpl-chinese;"/>
+              <menuitem value="zh-HK"           label="&font.langGroup.trad-chinese-hk;"/>
+              <menuitem value="zh-TW"           label="&font.langGroup.trad-chinese;"/>
+              <menuitem value="x-cyrillic"      label="&font.langGroup.cyrillic;"/>
+              <menuitem value="x-devanagari"    label="&font.langGroup.devanagari;"/>
+              <menuitem value="x-ethi"          label="&font.langGroup.ethiopic;"/>
+              <menuitem value="x-geor"          label="&font.langGroup.georgian;"/>
+              <menuitem value="el"              label="&font.langGroup.el;"/>
+              <menuitem value="x-gujr"          label="&font.langGroup.gujarati;"/>
+              <menuitem value="x-guru"          label="&font.langGroup.gurmukhi;"/>
+              <menuitem value="he"              label="&font.langGroup.hebrew;"/>
+              <menuitem value="ja"              label="&font.langGroup.japanese;"/>
+              <menuitem value="x-knda"          label="&font.langGroup.kannada;"/>
+              <menuitem value="x-khmr"          label="&font.langGroup.khmer;"/>
+              <menuitem value="ko"              label="&font.langGroup.korean;"/>
+              <menuitem value="x-western"       label="&font.langGroup.latin;"/>
+              <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
+              <menuitem value="x-math"          label="&font.langGroup.math;"/>
+              <menuitem value="x-orya"          label="&font.langGroup.odia;"/>
+              <menuitem value="x-sinh"          label="&font.langGroup.sinhala;"/>
+              <menuitem value="x-tamil"         label="&font.langGroup.tamil;"/>
+              <menuitem value="x-telu"          label="&font.langGroup.telugu;"/>
+              <menuitem value="th"              label="&font.langGroup.thai;"/>
+              <menuitem value="x-tibt"          label="&font.langGroup.tibetan;"/>
+              <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
+              <menuitem value="x-unicode"       label="&font.langGroup.other;"/>
+            </menupopup>
+          </menulist>
+        </hbox>
       </caption>
 
       <grid>
@@ -214,36 +217,39 @@
         <spacer flex="1"/>
         <hbox align="center" pack="end">
           <label accesskey="&minSize.accesskey;" control="minSize">&minSize.label;</label>
-          <menulist id="minSize">
-            <menupopup>
-              <menuitem value="0" label="&minSize.none;"/>
-              <menuitem value="9" label="9"/>
-              <menuitem value="10" label="10"/>
-              <menuitem value="11" label="11"/>
-              <menuitem value="12" label="12"/>
-              <menuitem value="13" label="13"/>
-              <menuitem value="14" label="14"/>
-              <menuitem value="15" label="15"/>
-              <menuitem value="16" label="16"/>
-              <menuitem value="17" label="17"/>
-              <menuitem value="18" label="18"/>
-              <menuitem value="20" label="20"/>
-              <menuitem value="22" label="22"/>
-              <menuitem value="24" label="24"/>
-              <menuitem value="26" label="26"/>
-              <menuitem value="28" label="28"/>
-              <menuitem value="30" label="30"/>
-              <menuitem value="32" label="32"/>
-              <menuitem value="34" label="34"/>
-              <menuitem value="36" label="36"/>
-              <menuitem value="40" label="40"/>
-              <menuitem value="44" label="44"/>
-              <menuitem value="48" label="48"/>
-              <menuitem value="56" label="56"/>
-              <menuitem value="64" label="64"/>
-              <menuitem value="72" label="72"/>
-            </menupopup>
-          </menulist>
+          <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+          <hbox>
+            <menulist id="minSize">
+              <menupopup>
+                <menuitem value="0" label="&minSize.none;"/>
+                <menuitem value="9" label="9"/>
+                <menuitem value="10" label="10"/>
+                <menuitem value="11" label="11"/>
+                <menuitem value="12" label="12"/>
+                <menuitem value="13" label="13"/>
+                <menuitem value="14" label="14"/>
+                <menuitem value="15" label="15"/>
+                <menuitem value="16" label="16"/>
+                <menuitem value="17" label="17"/>
+                <menuitem value="18" label="18"/>
+                <menuitem value="20" label="20"/>
+                <menuitem value="22" label="22"/>
+                <menuitem value="24" label="24"/>
+                <menuitem value="26" label="26"/>
+                <menuitem value="28" label="28"/>
+                <menuitem value="30" label="30"/>
+                <menuitem value="32" label="32"/>
+                <menuitem value="34" label="34"/>
+                <menuitem value="36" label="36"/>
+                <menuitem value="40" label="40"/>
+                <menuitem value="44" label="44"/>
+                <menuitem value="48" label="48"/>
+                <menuitem value="56" label="56"/>
+                <menuitem value="64" label="64"/>
+                <menuitem value="72" label="72"/>
+              </menupopup>
+            </menulist>
+          </hbox>
         </hbox>
       </hbox>
       <separator/>
@@ -264,28 +270,31 @@
       <hbox align="center">
         <label accesskey="&languages.customize.Fallback2.accesskey;"
                control="DefaultCharsetList">&languages.customize.Fallback2.label;</label>
-        <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
-          <menupopup>
-            <menuitem label="&languages.customize.Fallback.auto;"        value=""/>
-            <menuitem label="&languages.customize.Fallback.arabic;"      value="windows-1256"/>
-            <menuitem label="&languages.customize.Fallback.baltic;"      value="windows-1257"/>
-            <menuitem label="&languages.customize.Fallback.ceiso;"       value="ISO-8859-2"/>
-            <menuitem label="&languages.customize.Fallback.cewindows;"   value="windows-1250"/>
-            <!-- Using gbk instead of GBK for compat with previously-stored prefs.
-                 The value gets normalized in dom/encoding/FallbackEncoding.cpp. -->
-            <menuitem label="&languages.customize.Fallback.simplified;"  value="gbk"/>
-            <menuitem label="&languages.customize.Fallback.traditional;" value="Big5"/>
-            <menuitem label="&languages.customize.Fallback.cyrillic;"    value="windows-1251"/>
-            <menuitem label="&languages.customize.Fallback.greek;"       value="ISO-8859-7"/>
-            <menuitem label="&languages.customize.Fallback.hebrew;"      value="windows-1255"/>
-            <menuitem label="&languages.customize.Fallback.japanese;"    value="Shift_JIS"/>
-            <menuitem label="&languages.customize.Fallback.korean;"      value="EUC-KR"/>
-            <menuitem label="&languages.customize.Fallback.thai;"        value="windows-874"/>
-            <menuitem label="&languages.customize.Fallback.turkish;"     value="windows-1254"/>
-            <menuitem label="&languages.customize.Fallback.vietnamese;"  value="windows-1258"/>
-            <menuitem label="&languages.customize.Fallback.other;"       value="windows-1252"/>
-          </menupopup>
-        </menulist>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="DefaultCharsetList" preference="intl.charset.fallback.override">
+            <menupopup>
+              <menuitem label="&languages.customize.Fallback.auto;"        value=""/>
+              <menuitem label="&languages.customize.Fallback.arabic;"      value="windows-1256"/>
+              <menuitem label="&languages.customize.Fallback.baltic;"      value="windows-1257"/>
+              <menuitem label="&languages.customize.Fallback.ceiso;"       value="ISO-8859-2"/>
+              <menuitem label="&languages.customize.Fallback.cewindows;"   value="windows-1250"/>
+              <!-- Using gbk instead of GBK for compat with previously-stored prefs.
+                  The value gets normalized in dom/encoding/FallbackEncoding.cpp. -->
+              <menuitem label="&languages.customize.Fallback.simplified;"  value="gbk"/>
+              <menuitem label="&languages.customize.Fallback.traditional;" value="Big5"/>
+              <menuitem label="&languages.customize.Fallback.cyrillic;"    value="windows-1251"/>
+              <menuitem label="&languages.customize.Fallback.greek;"       value="ISO-8859-7"/>
+              <menuitem label="&languages.customize.Fallback.hebrew;"      value="windows-1255"/>
+              <menuitem label="&languages.customize.Fallback.japanese;"    value="Shift_JIS"/>
+              <menuitem label="&languages.customize.Fallback.korean;"      value="EUC-KR"/>
+              <menuitem label="&languages.customize.Fallback.thai;"        value="windows-874"/>
+              <menuitem label="&languages.customize.Fallback.turkish;"     value="windows-1254"/>
+              <menuitem label="&languages.customize.Fallback.vietnamese;"  value="windows-1258"/>
+              <menuitem label="&languages.customize.Fallback.other;"       value="windows-1252"/>
+            </menupopup>
+          </menulist>
+        </hbox>
       </hbox>
     </groupbox>
   </prefpane>

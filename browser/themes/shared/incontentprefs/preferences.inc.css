@@ -668,6 +668,7 @@ groupbox {
   background-color: #ffe900;
   border: 1px solid #d7b600;
   -moz-user-select: none;
+  bottom: 35px;
 }
 
 .search-tooltip:hover,
