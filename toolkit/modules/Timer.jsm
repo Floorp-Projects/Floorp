@@ -8,10 +8,12 @@
  * JS module implementation of setTimeout and clearTimeout.
  */
 
-this.EXPORTED_SYMBOLS = ["setTimeout", "clearTimeout", "setInterval", "clearInterval"];
+this.EXPORTED_SYMBOLS = ["setTimeout", "setTimeoutWithTarget", "clearTimeout",
+                         "setInterval", "setIntervalWithTarget", "clearInterval"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -21,29 +23,63 @@ var gNextId = 1; // setTimeout and setInterval must return a positive integer
 
 var gTimerTable = new Map(); // int -> nsITimer
 
-this.setTimeout = function setTimeout(aCallback, aMilliseconds) {
+function _setTimeoutOrIsInterval(aCallback, aMilliseconds, aIsInterval,
+                                 aTarget, aArgs) {
   let id = gNextId++;
-  let args = Array.slice(arguments, 2);
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(function setTimeout_timer() {
-    gTimerTable.delete(id);
-    aCallback.apply(null, args);
-  }, aMilliseconds, timer.TYPE_ONE_SHOT);
+
+  if (aTarget) {
+    timer.target = aTarget;
+  }
+
+  let callback = {
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback,
+                                           Ci.nsINamed]),
+
+    // nsITimerCallback
+    notify() {
+      if (!aIsInterval) {
+        gTimerTable.delete(id);
+      }
+      aCallback.apply(null, aArgs);
+    },
+
+    // nsINamed
+    name: aIsInterval ? "setInterval() in Timer.jsm"
+                      : "setTimeout() in Timer.jsm",
+  };
+
+  timer.initWithCallback(callback, aMilliseconds,
+    aIsInterval ? timer.TYPE_REPEATING_SLACK : timer.TYPE_ONE_SHOT);
 
   gTimerTable.set(id, timer);
   return id;
 }
 
-this.setInterval = function setInterval(aCallback, aMilliseconds) {
-  let id = gNextId++;
-  let args = Array.slice(arguments, 2);
-  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(function setInterval_timer() {
-    aCallback.apply(null, args);
-  }, aMilliseconds, timer.TYPE_REPEATING_SLACK);
+this.setTimeout = function setTimeout(aCallback, aMilliseconds, ...aArgs) {
+  return _setTimeoutOrIsInterval(
+    aCallback, aMilliseconds, false, null, aArgs);
+}
 
-  gTimerTable.set(id, timer);
-  return id;
+this.setTimeoutWithTarget = function setTimeoutWithTarget(aCallback,
+                                                          aMilliseconds,
+                                                          aTarget,
+                                                          ...aArgs) {
+  return _setTimeoutOrIsInterval(
+    aCallback, aMilliseconds, false, aTarget, aArgs);
+}
+
+this.setInterval = function setInterval(aCallback, aMilliseconds, ...aArgs) {
+  return _setTimeoutOrIsInterval(
+    aCallback, aMilliseconds, true, null, aArgs);
+}
+
+this.setIntervalWithTarget = function setIntervalWithTarget(aCallback,
+                                                            aMilliseconds,
+                                                            aTarget,
+                                                            ...aArgs) {
+  return _setTimeoutOrIsInterval(
+    aCallback, aMilliseconds, true, aTarget, aArgs);
 }
 
 this.clearInterval = this.clearTimeout = function clearTimeout(aId) {
