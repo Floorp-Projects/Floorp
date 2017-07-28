@@ -122,7 +122,13 @@ function onPopState(aEvent) {
   // Called when back/forward is used to change the state of the page
   if (aEvent.state) {
     // Show the detail page for an addon
-    Addons.showDetails(Addons._getElementForAddon(aEvent.state.id));
+    const listItem = Addons._getElementForAddon(aEvent.state.id);
+    if (listItem) {
+      Addons.showDetails(listItem);
+    } else {
+      // If the addon doesn't exist anymore, go back in the history.
+      history.back();
+    }
   } else {
     // Clear any previous detail addon
     let detailItem = document.querySelector("#addons-details > .addon-item");
