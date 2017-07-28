@@ -107,7 +107,7 @@ public class ActionBarPresenter {
      * @param url Url String to display
      */
     public void displayUrlOnly(@NonNull final String url) {
-        updateCustomView(null, url, GeckoView.ProgressListener.STATE_IS_INSECURE);
+        updateCustomView(null, url, /* isSecure */ false);
     }
 
     /**
@@ -115,16 +115,16 @@ public class ActionBarPresenter {
      *
      * @param title          Title for current website. Could be null if don't want to show title.
      * @param url            URL for current website. At least Custom will show this url.
-     * @param securityStatus Security status, possible values given in GeckoView.ProgressListener
+     * @param isSecure       A boolean representing whether or not the site is secure.
      */
-    public void update(final String title, final String url, final int securityStatus) {
+    public void update(final String title, final String url, final boolean isSecure) {
         // Do not update CustomView immediately. If this method be invoked rapidly several times,
         // only apply last one.
         mHandler.removeCallbacks(mUpdateAction);
         mUpdateAction = new Runnable() {
             @Override
             public void run() {
-                updateCustomView(title, url, securityStatus);
+                updateCustomView(title, url, isSecure);
             }
         };
         mHandler.postDelayed(mUpdateAction, CUSTOM_VIEW_UPDATE_DELAY);
@@ -213,13 +213,13 @@ public class ActionBarPresenter {
     /**
      * To update appearance of CustomView of ActionBar, includes its icon, title and url text.
      *
-     * @param identity SiteIdentity for current website. Could be null if don't want to show icon.
      * @param title    Title for current website. Could be null if don't want to show title.
      * @param url      URL for current website. At least Custom will show this url.
+     * @param isSecure A boolean representing whether or not the site is secure.
      */
     @UiThread
-    private void updateCustomView(final String title, final String url, final int securityStatus) {
-        if (securityStatus == GeckoView.ProgressListener.STATE_IS_SECURE) {
+    private void updateCustomView(final String title, final String url, final boolean isSecure) {
+        if (isSecure) {
             mIconView.setVisibility(View.VISIBLE);
             mIconView.setImageLevel(SecurityModeUtil.getImageLevel(SecurityModeUtil.IconType.LOCK_SECURE));
             // Lock-Secure is special case. Keep its original green color.
