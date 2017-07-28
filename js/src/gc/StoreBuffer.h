@@ -405,6 +405,8 @@ class StoreBuffer
 
     void clear();
 
+    const Nursery& nursery() const { return nursery_; }
+
     /* Get the overflowed status. */
     bool isAboutToOverflow() const { return aboutToOverflow_; }
 

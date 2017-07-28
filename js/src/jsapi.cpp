@@ -7751,6 +7751,12 @@ JS::GetObjectZone(JSObject* obj)
     return obj->zone();
 }
 
+JS_PUBLIC_API(Zone*)
+JS::GetStringZone(JSString* str)
+{
+    return str->zone();
+}
+
 JS_PUBLIC_API(JS::TraceKind)
 JS::GCThingTraceKind(void* thing)
 {
