@@ -122,7 +122,7 @@ JSRope::new_(JSContext* cx,
 {
     if (!validateLength(cx, length))
         return nullptr;
-    JSRope* str = js::Allocate<JSRope, allowGC>(cx, js::gc::TenuredHeap);
+    JSRope* str = js::Allocate<JSRope, allowGC>(cx, js::gc::DefaultHeap);
     if (!str)
         return nullptr;
     str->init(cx, left, right, length);
@@ -182,7 +182,7 @@ JSDependentString::new_(JSContext* cx, JSLinearString* baseArg, size_t start,
     if (baseArg->isExternal() && !baseArg->ensureFlat(cx))
         return nullptr;
 
-    JSDependentString* str = js::Allocate<JSDependentString, js::NoGC>(cx, js::gc::TenuredHeap);
+    JSDependentString* str = js::Allocate<JSDependentString, js::NoGC>(cx, js::gc::DefaultHeap);
     if (str) {
         str->init(cx, baseArg, start, length);
         return str;
@@ -190,7 +190,7 @@ JSDependentString::new_(JSContext* cx, JSLinearString* baseArg, size_t start,
 
     js::RootedLinearString base(cx, baseArg);
 
-    str = js::Allocate<JSDependentString>(cx, js::gc::TenuredHeap);
+    str = js::Allocate<JSDependentString>(cx, js::gc::DefaultHeap);
     if (!str)
         return nullptr;
     str->init(cx, base, start, length);
@@ -226,7 +226,7 @@ JSFlatString::new_(JSContext* cx, const CharT* chars, size_t length)
     if (cx->compartment()->isAtomsCompartment())
         str = js::Allocate<js::NormalAtom, allowGC>(cx);
     else
-        str = js::Allocate<JSFlatString, allowGC>(cx, js::gc::TenuredHeap);
+        str = js::Allocate<JSFlatString, allowGC>(cx, js::gc::DefaultHeap);
     if (!str)
         return nullptr;
 
@@ -270,7 +270,7 @@ JSThinInlineString::new_(JSContext* cx)
     if (cx->compartment()->isAtomsCompartment())
         return (JSThinInlineString*)(js::Allocate<js::NormalAtom, allowGC>(cx));
 
-    return js::Allocate<JSThinInlineString, allowGC>(cx, js::gc::TenuredHeap);
+    return js::Allocate<JSThinInlineString, allowGC>(cx, js::gc::DefaultHeap);
 }
 
 template <js::AllowGC allowGC>
@@ -280,7 +280,7 @@ JSFatInlineString::new_(JSContext* cx)
     if (cx->compartment()->isAtomsCompartment())
         return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, allowGC>(cx));
 
-    return js::Allocate<JSFatInlineString, allowGC>(cx, js::gc::TenuredHeap);
+    return js::Allocate<JSFatInlineString, allowGC>(cx, js::gc::DefaultHeap);
 }
 
 template<>
