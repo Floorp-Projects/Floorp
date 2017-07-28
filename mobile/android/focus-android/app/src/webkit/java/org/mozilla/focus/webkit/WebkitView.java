@@ -8,10 +8,12 @@ package org.mozilla.focus.webkit;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
@@ -34,6 +36,7 @@ import org.mozilla.focus.web.WebViewProvider;
 import java.util.UUID;
 
 public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
+    private static final String TAG = "WebkitView";
     private static final String KEY_CURRENTURL = "currenturl";
     private static final String KEY_STATE_UUID = "state_uuid";
 
@@ -259,6 +262,15 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
             @Override
             public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
                 if (!AppConstants.supportsDownloadingFiles()) {
+                    return;
+                }
+
+                final String scheme = Uri.parse(url).getScheme();
+                if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+                    // We are ignoring everything that is not http or https. This is a limitation of
+                    // Android's download manager. There's no reason to show a download dialog for
+                    // something we can't download anyways.
+                    Log.w(TAG, "Ignoring download from non http(s) URL: " + url);
                     return;
                 }
 
