@@ -359,7 +359,11 @@ var Addons = {
 
     switch (parseInt(addon.optionsType)) {
       case AddonManager.OPTIONS_TYPE_INLINE_BROWSER:
-        this.createWebExtensionOptions(optionsBox, optionsURL, addon.optionsBrowserStyle);
+        // WebExtensions are loaded asynchronously and the optionsURL
+        // may not be available via listitem when the add-on has just been
+        // installed, but it is available on the addon if one is set.
+        detailItem.setAttribute("optionsURL", addon.optionsURL);
+        this.createWebExtensionOptions(optionsBox, addon.optionsURL, addon.optionsBrowserStyle);
         break;
       case AddonManager.OPTIONS_TYPE_INLINE:
         this.createInlineOptions(optionsBox, optionsURL, aListItem);
