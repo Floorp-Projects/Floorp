@@ -180,27 +180,31 @@ function* nextTest()
     $("bottomright").removeAttribute("right");
   }
 
-  function transitionEnded(event) {
-    if ($("animatepanel").state != "open") {
-      is($("animatepanel").state, "showing", "state is showing during transitionend");
-      ok(!animatedPopupShown, "popupshown not fired yet")
-    } else {
-      is($("animatepanel").state, "open", "state is open after transitionend");
-      ok(animatedPopupShown, "popupshown now fired")
-      SimpleTest.executeSoon(() => runNextTest.next());
+  // Test that a transition occurs when opening or closing the popup. The transition is
+  // disabled on Linux.
+  if (navigator.platform.indexOf("Linux") == -1) {
+    function transitionEnded(event) {
+      if ($("animatepanel").state != "open") {
+        is($("animatepanel").state, "showing", "state is showing during transitionend");
+        ok(!animatedPopupShown, "popupshown not fired yet")
+      } else {
+        is($("animatepanel").state, "open", "state is open after transitionend");
+        ok(animatedPopupShown, "popupshown now fired")
+        SimpleTest.executeSoon(() => runNextTest.next());
+      }
     }
+
+    // Check that the transition occurs for an arrow panel with animate="true"
+    window.addEventListener("transitionend", transitionEnded, false);
+    $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
+    is($("animatepanel").state, "showing", "state is showing");
+    yield;
+    window.removeEventListener("transitionend", transitionEnded, false);
+
+    synthesizeKey("VK_ESCAPE", { });
+    ok(!animatedPopupHidden, "animated popup not hidden yet");
+    yield;
   }
-
-  // Check that the transition occurs for an arrow panel with animate="true"
-  window.addEventListener("transitionend", transitionEnded, false);
-  $("animatepanel").openPopup($("topleft"), "after_start", 0, 0, false, false, null, "start");
-  is($("animatepanel").state, "showing", "state is showing");
-  yield;
-  window.removeEventListener("transitionend", transitionEnded, false);
-
-  synthesizeKey("VK_ESCAPE", { });
-  ok(!animatedPopupHidden, "animated popup not hidden yet");
-  yield;
 
   SimpleTest.finish()
 }
