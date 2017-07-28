@@ -115,7 +115,7 @@ import java.lang.annotation.RetentionPolicy;
                 FEATURE_DOMAIN_FREQUENCY,
                 Math.log(1 + domainCountSize / occurrences));
 
-        candidate.imageUrl = candidate.highlight.getMetadata().getImageUrl();
+        candidate.imageUrl = candidate.highlight.getFastImageURLForComparison();
 
         // The desktop add-on used the number of images returned form Embed.ly here. This is not the
         // same as total images on the page (think of small icons or the famous spacer.gif). So for
@@ -124,13 +124,13 @@ import java.lang.annotation.RetentionPolicy;
         // At this point we can try to find a fathom rule for determining a good value here.
         candidate.features.put(
                 FEATURE_IMAGE_COUNT,
-                candidate.highlight.getMetadata().hasImageUrl() ? 1d : 0d);
+                candidate.highlight.hasFastImageURL() ? 1d : 0d);
 
         // TODO: We do not store the size of the main image (Bug 1335819).
         // The desktop add-on calculates: Math.min(image.width * image.height, 1e5)
         candidate.features.put(
                 FEATURE_IMAGE_SIZE,
-                candidate.highlight.getMetadata().hasImageUrl() ? 1d : 0d
+                candidate.highlight.hasFastImageURL() ? 1d : 0d
         );
 
         // Historical note: before Bug 1335198, this value was not really the time at which the
@@ -152,7 +152,7 @@ import java.lang.annotation.RetentionPolicy;
 
         candidate.features.put(
                 FEATURE_DESCRIPTION_LENGTH,
-                (double) candidate.highlight.getMetadata().getDescriptionLength());
+                (double) candidate.highlight.getFastDescriptionLength());
 
         final Uri uri = Uri.parse(candidate.highlight.getUrl());
 
@@ -194,8 +194,12 @@ import java.lang.annotation.RetentionPolicy;
         return host;
     }
 
+    /**
+     * Gets an estimate of the actual image url that should only be used to compare against other return
+     * values of this method. See {@link Highlight#getFastImageURLForComparison()} for more details.
+     */
     @Nullable
-    /* package-private */ String getImageUrl() {
+    /* package-private */ String getFastImageUrlForComparison() {
         return imageUrl;
     }
 
