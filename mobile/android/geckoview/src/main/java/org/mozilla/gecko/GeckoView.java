@@ -168,9 +168,8 @@ public class GeckoView extends LayerView {
                     listener.onPageStop(GeckoView.this,
                                         message.getBoolean("success"));
                 } else if ("GeckoView:SecurityChanged".equals(event)) {
-                    final int state = message.getInt("status") & ProgressListener.STATE_ALL;
                     final GeckoBundle identity = message.getBundle("identity");
-                    listener.onSecurityChange(GeckoView.this, state, identity);
+                    listener.onSecurityChange(GeckoView.this, new ProgressListener.SecurityInformation(identity));
                 }
             }
         };
@@ -1222,10 +1221,83 @@ public class GeckoView extends LayerView {
     }
 
     public interface ProgressListener {
-        static final int STATE_IS_BROKEN = 1;
-        static final int STATE_IS_SECURE = 2;
-        static final int STATE_IS_INSECURE = 4;
-        /* package */ final int STATE_ALL = STATE_IS_BROKEN | STATE_IS_SECURE | STATE_IS_INSECURE;
+        /**
+         * Class representing security information for a site.
+         */
+        public class SecurityInformation {
+            /**
+             * Indicates whether or not the site is secure.
+             */
+            public final boolean isSecure;
+            /**
+             * Indicates whether or not the site is a security exception.
+             */
+            public final boolean isException;
+            /**
+             * Contains the origin of the certificate.
+             */
+            public final String origin;
+            /**
+             * Contains the host associated with the certificate.
+             */
+            public final String host;
+            /**
+             * Contains the human-readable name of the certificate subject.
+             */
+            public final String organization;
+            /**
+             * Contains the full name of the certificate subject, including location.
+             */
+            public final String subjectName;
+            /**
+             * Contains the common name of the issuing authority.
+             */
+            public final String issuerCommonName;
+            /**
+             * Contains the full/proper name of the issuing authority.
+             */
+            public final String issuerOrganization;
+            /**
+             * Indicates the security level of the site; possible values are "unknown",
+             * "identified", and "verified". "identified" indicates domain validation only,
+             * while "verified" indicates extended validation.
+             */
+            public final String securityMode;
+            /**
+             * Indicates the presence of passive mixed content; possible values are
+             * "unknown", "blocked", and "loaded".
+             */
+            public final String mixedModePassive;
+            /**
+             * Indicates the presence of active mixed content; possible values are
+             * "unknown", "blocked", and "loaded".
+             */
+            public final String mixedModeActive;
+            /**
+             * Indicates the status of tracking protection; possible values are
+             * "unknown", "blocked", and "loaded".
+             */
+            public final String trackingMode;
+
+            /* package */ SecurityInformation(GeckoBundle identityData) {
+                final GeckoBundle mode = identityData.getBundle("mode");
+
+                mixedModePassive = mode.getString("mixed_display");
+                mixedModeActive = mode.getString("mixed_active");
+                trackingMode = mode.getString("tracking");
+
+                securityMode = mode.getString("identity");
+
+                isSecure = identityData.getBoolean("secure");
+                isException = identityData.getBoolean("securityException");
+                origin = identityData.getString("origin");
+                host = identityData.getString("host");
+                organization = identityData.getString("organization");
+                subjectName = identityData.getString("subjectName");
+                issuerCommonName = identityData.getString("issuerCommonName");
+                issuerOrganization = identityData.getString("issuerOrganization");
+            }
+        }
 
         /**
         * A View has started loading content from the network.
@@ -1244,27 +1316,9 @@ public class GeckoView extends LayerView {
         /**
         * The security status has been updated.
         * @param view The GeckoView that initiated the callback.
-        * @param status The new security status.
-        * @param identity A bundle containing the most up-to-date security information, with keys:
-        *          "origin": A string containing the origin of the cert, should always be present
-        *          "secure": A boolean indicating whether or not the site is secure
-        *          "host": A string containing the host associated with the certificate
-        *          "security_exception": A boolean indicating if the site is a security exception
-        *          "organization": A string containing the human readable name of the subject
-        *          "subjectName": A string containing the full subject name (including location data)
-        *          "issuerCommonName": A string containing the common name of the issuing authority
-        *          "issuerOrganization": A string containing the proper name of the issuing authority
-        *          "mode": A GeckoBundle containing information about the security mode, with keys:
-        *            "identity": A string indicating the security level of the site, should always be
-        *                        present. Possible values are "unknown", "identified", and "verified"
-        *            "mixed_display": A string indicating if passive mixed content is present, possible
-        *                             values are: "unknown", "blocked", "loaded"
-        *            "mixed_active": A string indicating if active mixed content is present, possible
-        *                            values are: "unknown", "blocked", "loaded"
-        *            "tracking": A string indicating the status of tracking protection, possible values
-        *                        are: "unknown", "blocked", "loaded"
+        * @param securityInfo The new security information.
         */
-        void onSecurityChange(GeckoView view, int status, GeckoBundle identity);
+        void onSecurityChange(GeckoView view, SecurityInformation securityInfo);
     }
 
     public interface ContentListener {
