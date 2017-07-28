@@ -1216,9 +1216,7 @@ class Addresses extends AutofillRecords {
     // Compute tel
     if (!("tel-national" in address)) {
       if (address.tel) {
-        // Set "US" as the default region as we only support "en-US" for now.
-        let browserCountryCode = Services.prefs.getCharPref("browser.search.countryCode", "US");
-        let tel = PhoneNumber.Parse(address.tel, address.country || browserCountryCode);
+        let tel = PhoneNumber.Parse(address.tel, address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE);
         if (tel) {
           if (tel.countryCode) {
             address["tel-country-code"] = tel.countryCode;
@@ -1301,22 +1299,21 @@ class Addresses extends AutofillRecords {
   }
 
   _normalizeCountry(address) {
+    let country;
+
     if (address.country) {
-      let country = address.country.toUpperCase();
-      // Only values included in the region list will be saved.
-      if (REGION_NAMES[country]) {
-        address.country = country;
-      } else {
-        delete address.country;
-      }
+      country = address.country.toUpperCase();
     } else if (address["country-name"]) {
-      for (let region in REGION_NAMES) {
-        if (REGION_NAMES[region].toLowerCase() == address["country-name"].toLowerCase()) {
-          address.country = region;
-          break;
-        }
-      }
+      country = FormAutofillUtils.identifyCountryCode(address["country-name"]);
     }
+
+    // Only values included in the region list will be saved.
+    if (country && REGION_NAMES[country]) {
+      address.country = country;
+    } else {
+      delete address.country;
+    }
+
     delete address["country-name"];
   }
 
@@ -1325,9 +1322,7 @@ class Addresses extends AutofillRecords {
       return;
     }
 
-    // Set "US" as the default region as we only support "en-US" for now.
-    let browserCountryCode = Services.prefs.getCharPref("browser.search.countryCode", "US");
-    let region = address["tel-country-code"] || address.country || browserCountryCode;
+    let region = address["tel-country-code"] || address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
     let number;
 
     if (address.tel) {
