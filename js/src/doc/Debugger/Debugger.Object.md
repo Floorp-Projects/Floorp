@@ -175,6 +175,22 @@ from its prototype:
     arrow function; `false` otherwise. If the referent is not a debuggee
     function, or not a function at all, returns `undefined` instead.
 
+`isGeneratorFunction`
+:   If the referent is a debuggee function, returns `true` if the referent was
+    created with a `function*` expression or statement, or false if it is some
+    other sort of function. If the referent is not a debuggee function, or not a
+    function at all, this is `undefined`. (This is always equal to
+    `obj.script.isGeneratorFunction`, assuming `obj.script` is a
+    `Debugger.Script`.)
+
+`isAsyncFunction`
+:   If the referent is a debuggee function, returns `true` if the referent is an
+    async function, defined with an `async function` expression or statement, or
+    false if it is some other sort of function. If the referent is not a
+    debuggee function, or not a function at all, this is `undefined`. (This is
+    always equal to `obj.script.isAsyncFunction`, assuming `obj.script` is a
+    `Debugger.Script`.)
+
 `isPromise`
 :   `true` if the referent is a Promise; `false` otherwise.
 

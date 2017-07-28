@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Async key scrolling test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+    if (isKeyApzEnabled()) {
+      SimpleTest.waitForExplicitFinish();
+
+      // Run the actual test in its own window, because it requires that the
+      // root APZC be scrollable. Mochitest pages themselves often run
+      // inside an iframe which means we have no control over the root APZC.
+      var w = null;
+      window.onload = function() {
+        pushPrefs([["apz.test.logging_enabled", true],
+                   ["test.events.async.enabled", true]]).then(function() {
+          w = window.open("helper_key_scroll.html", "_blank");
+        });
+      };
+    } else {
+      SimpleTest.ok(true, "Keyboard APZ is disabled");
+    }
+
+    function finishTest() {
+      w.close();
+      SimpleTest.finish();
+    };
+
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1383365">Async key scrolling test</a>
+</body>
+</html>

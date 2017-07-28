@@ -263,8 +263,8 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
 #ifdef DEBUG
       if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
         nsAutoCString eventsC, targetsC, aeventsC, atargetsC;
-        eventsC.AssignWithConversion(updater->mEvents);
-        targetsC.AssignWithConversion(updater->mTargets);
+        LossyCopyUTF16toASCII(updater->mEvents, eventsC);
+        LossyCopyUTF16toASCII(updater->mTargets, targetsC);
         CopyUTF16toUTF8(aEvents, aeventsC);
         CopyUTF16toUTF8(aTargets, atargetsC);
         MOZ_LOG(gCommandLog, LogLevel::Debug,
@@ -322,8 +322,8 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 #ifdef DEBUG
       if (MOZ_LOG_TEST(gCommandLog, LogLevel::Debug)) {
         nsAutoCString eventsC, targetsC;
-        eventsC.AssignWithConversion(updater->mEvents);
-        targetsC.AssignWithConversion(updater->mTargets);
+        LossyCopyUTF16toASCII(updater->mEvents, eventsC);
+        LossyCopyUTF16toASCII(updater->mTargets, targetsC);
         MOZ_LOG(gCommandLog, LogLevel::Debug,
                ("xulcmd[%p] remove  %p(events=%s targets=%s)",
                 this, aElement,

@@ -737,6 +737,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mAPZCId(sAsyncPanZoomControllerCount++),
      mSharedLock(nullptr),
      mAsyncTransformAppliedToContent(false),
+     mTestHasAsyncKeyScrolled(false),
      mCheckerboardEventLock("APZCBELock")
 {
   if (aGestures == USE_GESTURE_DETECTOR) {
@@ -1702,6 +1703,9 @@ AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent)
 {
   // Report the type of scroll action to telemetry
   ReportKeyboardScrollAction(aEvent.mAction);
+
+  // Mark that this APZC has async key scrolled
+  mTestHasAsyncKeyScrolled = true;
 
   // Calculate the destination for this keyboard scroll action
   CSSPoint destination = GetKeyboardDestination(aEvent.mAction);

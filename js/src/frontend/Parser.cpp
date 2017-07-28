@@ -2929,6 +2929,10 @@ Parser<ParseHandler, CharT>::matchOrInsertSemicolonHelper(TokenStream::Modifier 
             error(JSMSG_AWAIT_OUTSIDE_ASYNC);
             return false;
         }
+        if (!yieldExpressionsSupported() && tokenStream.currentToken().type == TOK_YIELD) {
+            error(JSMSG_YIELD_OUTSIDE_GENERATOR);
+            return false;
+        }
 
         /* Advance the scanner for proper error location reporting. */
         tokenStream.consumeKnownToken(tt, modifier);

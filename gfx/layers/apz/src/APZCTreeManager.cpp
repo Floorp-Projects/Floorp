@@ -852,6 +852,8 @@ APZCTreeManager::PrepareNodeForLayer(const ScrollNode& aLayer,
       // Note that the async scroll offset is in ParentLayer pixels
       aState.mPaintLogger.LogTestData(aMetrics.GetScrollId(), "asyncScrollOffset",
           apzc->GetCurrentAsyncScrollOffset(AsyncPanZoomController::eForHitTesting));
+      aState.mPaintLogger.LogTestData(aMetrics.GetScrollId(), "hasAsyncKeyScrolled",
+          apzc->TestHasAsyncKeyScrolled());
     }
 
     if (newApzc) {

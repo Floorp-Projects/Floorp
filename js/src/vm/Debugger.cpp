@@ -5653,6 +5653,22 @@ DebuggerScript_checkThis(JSContext* cx, const CallArgs& args, const char* fnname
     RootedScript script(cx, GetScriptReferent(obj).as<JSScript*>())
 
 static bool
+DebuggerScript_getIsGeneratorFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isGeneratorFunction)", args, obj, script);
+    args.rval().setBoolean(script->isLegacyGenerator() || script->isStarGenerator());
+    return true;
+}
+
+static bool
+DebuggerScript_getIsAsyncFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get isAsyncFunction)", args, obj, script);
+    args.rval().setBoolean(script->isAsync());
+    return true;
+}
+
+static bool
 DebuggerScript_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get displayName)", args, obj, script);
@@ -7120,6 +7136,8 @@ DebuggerScript_construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSPropertySpec DebuggerScript_properties[] = {
+    JS_PSG("isGeneratorFunction", DebuggerScript_getIsGeneratorFunction, 0),
+    JS_PSG("isAsyncFunction", DebuggerScript_getIsAsyncFunction, 0),
     JS_PSG("displayName", DebuggerScript_getDisplayName, 0),
     JS_PSG("url", DebuggerScript_getUrl, 0),
     JS_PSG("startLine", DebuggerScript_getStartLine, 0),
@@ -9174,6 +9192,34 @@ DebuggerObject::isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
+DebuggerObject::isAsyncFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isAsyncFunction", args, object)
+
+    if (!object->isDebuggeeFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setBoolean(object->isAsyncFunction());
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::isGeneratorFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isGeneratorFunction", args, object)
+
+    if (!object->isDebuggeeFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setBoolean(object->isGeneratorFunction());
+    return true;
+}
+
+/* static */ bool
 DebuggerObject::protoGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get proto", args, object)
@@ -10085,6 +10131,8 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_PSG("callable", DebuggerObject::callableGetter, 0),
     JS_PSG("isBoundFunction", DebuggerObject::isBoundFunctionGetter, 0),
     JS_PSG("isArrowFunction", DebuggerObject::isArrowFunctionGetter, 0),
+    JS_PSG("isGeneratorFunction", DebuggerObject::isGeneratorFunctionGetter, 0),
+    JS_PSG("isAsyncFunction", DebuggerObject::isAsyncFunctionGetter, 0),
     JS_PSG("proto", DebuggerObject::protoGetter, 0),
     JS_PSG("class", DebuggerObject::classGetter, 0),
     JS_PSG("name", DebuggerObject::nameGetter, 0),
@@ -10214,6 +10262,23 @@ DebuggerObject::isArrowFunction() const
     MOZ_ASSERT(isDebuggeeFunction());
 
     return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isArrow();
+}
+
+bool
+DebuggerObject::isAsyncFunction() const
+{
+    MOZ_ASSERT(isDebuggeeFunction());
+
+    return RemoveAsyncWrapper(&referent()->as<JSFunction>())->isAsync();
+}
+
+bool
+DebuggerObject::isGeneratorFunction() const
+{
+    MOZ_ASSERT(isDebuggeeFunction());
+
+    JSFunction* fun = RemoveAsyncWrapper(&referent()->as<JSFunction>());
+    return fun->isLegacyGenerator() || fun->isStarGenerator();
 }
 
 bool

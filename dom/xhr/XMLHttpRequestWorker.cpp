@@ -448,7 +448,7 @@ public:
     , mReceivedLoadStart(false)
   {
     AssertIsOnMainThread();
-    mEventType.AssignWithConversion(sEventStrings[STRING_loadstart]);
+    CopyASCIItoUTF16(sEventStrings[STRING_loadstart], mEventType);
   }
 
   NS_DECL_ISUPPORTS_INHERITED

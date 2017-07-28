@@ -948,7 +948,7 @@ nsCocoaUtils::ConvertGeckoNameToMacCharCode(const nsAString& aKeyCodeName)
   }
 
   nsAutoCString keyCodeName;
-  keyCodeName.AssignWithConversion(aKeyCodeName);
+  LossyCopyUTF16toASCII(aKeyCodeName, keyCodeName);
   // We want case-insensitive comparison with data stored as uppercase.
   ToUpperCase(keyCodeName);
 

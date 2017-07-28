@@ -172,6 +172,9 @@ def create_parser(mach_interface=False):
             dest='stylo',
             help='If given, enable Stylo via Environment variables and '
                  'upload results with Stylo options.')
+    add_arg('--stylo-threads', type=int,
+            dest='stylothreads',
+            help='If given, run stylo with a certain number of threads')
 
     add_logging_group(parser)
     return parser

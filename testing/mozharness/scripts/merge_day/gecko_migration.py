@@ -310,9 +310,9 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
                 "static const unsigned int kVersion = %s;" % next_version
             )
             self.replace(
-                os.path.join(cwd, "services/sync/moz.build"),
-                "DEFINES['weave_version'] = '1.%s.0'" % curr_weave_version,
-                "DEFINES['weave_version'] = '1.%s.0'" % next_weave_version
+                os.path.join(cwd, "services/sync/modules/constants.js"),
+                'WEAVE_VERSION: "1.%s.0"' % curr_weave_version,
+                'WEAVE_VERSION: "1.%s.0"' % next_weave_version
             )
 
     # Branch-specific workflow helper methods {{{1

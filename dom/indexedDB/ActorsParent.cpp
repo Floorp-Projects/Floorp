@@ -4420,7 +4420,7 @@ struct StorageOpenTraits<nsIFile*>
     nsString path;
     MOZ_ALWAYS_SUCCEEDS(aFile->GetPath(path));
 
-    aPath.AssignWithConversion(path);
+    LossyCopyUTF16toASCII(path, aPath);
   }
 #endif
 };
@@ -22201,7 +22201,7 @@ OpenDatabaseOp::UpdateLocaleAwareIndex(mozIStorageConnection* aConnection,
   }
 
   nsString locale;
-  locale.AssignWithConversion(aLocale);
+  CopyASCIItoUTF16(aLocale, locale);
   rv = metaStmt->BindStringByName(NS_LITERAL_CSTRING("locale"), locale);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

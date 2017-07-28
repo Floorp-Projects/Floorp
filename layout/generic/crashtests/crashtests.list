@@ -545,7 +545,7 @@ load 862947-1.html
 load 863935.html
 load 866547-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
-asserts(0-5) load 876074-1.html # bug 876749
+load 876074-1.html
 load 876155.html
 load 883514-1.html
 load 883514-2.html
@@ -582,6 +582,7 @@ load 1039454-1.html
 load 1042489.html
 load 1054010-1.html
 load 1058954-1.html
+pref(dom.webcomponents.enabled,true) load 1059138-1.html
 load 1134531.html
 load 1134667.html
 load 1137723-1.html

@@ -426,23 +426,25 @@ class InvertedDesktopFrame : public DesktopFrame {
 
 ScreenCapturerMac::ScreenCapturerMac(
     rtc::scoped_refptr<DesktopConfigurationMonitor> desktop_config_monitor)
-    : screen_callback_data_(new ScreenCallbackData(this))
-    , desktop_config_monitor_(desktop_config_monitor) {
+    : desktop_config_monitor_(desktop_config_monitor) {
 #if defined(MAC_OS_X_VERSION_10_8) && \
   (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
   display_stream_manager_ = new DisplayStreamManager;
+#else
+  screen_callback_data_ = new ScreenCallbackData(this);
 #endif
 }
 
 ScreenCapturerMac::~ScreenCapturerMac() {
   ReleaseBuffers();
+#if defined(MAC_OS_X_VERSION_10_8) && \
+  (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
+  display_stream_manager_->PrepareForSelfDestruction();
+#else
   {
     rtc::CritScope lock(&screen_callback_data_->crit_sect_);
     screen_callback_data_->capturer = nullptr;
   }
-#if defined(MAC_OS_X_VERSION_10_8) && \
-  (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
-  display_stream_manager_->PrepareForSelfDestruction();
 #endif
   dlclose(app_services_library_);
   dlclose(opengl_library_);
