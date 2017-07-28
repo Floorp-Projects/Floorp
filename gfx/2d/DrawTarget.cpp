@@ -175,19 +175,6 @@ ComputeLinearRGBLuminanceMask(const uint8_t *aSourceData,
   }
 }
 
-already_AddRefed<DrawTargetCapture>
-DrawTarget::CreateCaptureDT(const IntSize& aSize)
-{
-  RefPtr<DrawTargetCaptureImpl> dt = new DrawTargetCaptureImpl();
-
-  if (!dt->Init(aSize, this)) {
-    gfxWarning() << "Failed to initialize Capture DrawTarget!";
-    return nullptr;
-  }
-
-  return dt.forget();
-}
-
 void
 DrawTarget::DrawCapturedDT(DrawTargetCapture *aCaptureDT,
                            const Matrix& aTransform)

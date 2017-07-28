@@ -164,7 +164,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     NS_ENSURE_TRUE(global, NS_OK);
 
     nsString unicodeMsg;
-    unicodeMsg.AssignWithConversion(msg);
+    CopyASCIItoUTF16(msg, unicodeMsg);
     JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, unicodeMsg.get());
     NS_ENSURE_TRUE(jsMsgStr, NS_ERROR_OUT_OF_MEMORY);
 
@@ -407,7 +407,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
     nsCOMPtr<nsIRDFLiteral> lit;
     nsString str;
 
-    str.AssignWithConversion(entryuriC.get());
+    CopyASCIItoUTF16(entryuriC, str);
 
     rv = mDirRDF->GetLiteral(str.get(), getter_AddRefs(lit));
 

@@ -242,10 +242,14 @@ private:
     return AdvanceFromLocalBuffer(aRequestedBytes);
   }
 
-  State SetWaiting()
+  State SetWaiting(bool aHasConsumer)
   {
     MOZ_ASSERT(mState != COMPLETE);
-    MOZ_ASSERT(mState != WAITING, "Did we get a spurious wakeup somehow?");
+    // Without a consumer, we won't know when to wake up precisely. Caller
+    // convention should mean that we don't try to advance unless we have
+    // written new data, but that doesn't mean we got enough.
+    MOZ_ASSERT(mState != WAITING || !aHasConsumer,
+               "Did we get a spurious wakeup somehow?");
     return mState = WAITING;
   }
 

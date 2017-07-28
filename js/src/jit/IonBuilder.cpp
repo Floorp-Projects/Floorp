@@ -419,22 +419,11 @@ IonBuilder::canInlineTarget(JSFunction* target, CallInfo& callInfo)
                 return DontInline(nullptr, "Empty TypeSet for argument");
             }
         }
-
-        // If we're going to add a TypeBarrier that always fails, it's not
-        // worth inlining this call as the script will be invalidated
-        // immediately.
-        if ((CodeSpec[*pc].format & JOF_TYPESET) &&
-            !BytecodeIsPopped(pc) &&
-            bytecodeTypes(pc)->empty())
-        {
-            trackOptimizationOutcome(TrackedOutcome::CantInlineNoObservedTypes);
-            return DontInline(nullptr, "Empty type barrier");
-        }
     }
 
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
-    if (info().analysisMode() == Analysis_DefiniteProperties) {
+    if (target->isInterpreted() && info().analysisMode() == Analysis_DefiniteProperties) {
         RootedFunction fun(analysisContext, target);
         RootedScript script(analysisContext, JSFunction::getOrCreateScript(analysisContext, fun));
         if (!script)

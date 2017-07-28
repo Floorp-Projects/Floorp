@@ -772,7 +772,7 @@ static const keyCodeData gKeyCodes[] = {
 int32_t nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAString& aKeyName)
 {
   nsAutoCString keyName;
-  keyName.AssignWithConversion(aKeyName);
+  LossyCopyUTF16toASCII(aKeyName, keyName);
   ToUpperCase(keyName); // We want case-insensitive comparison with data
                         // stored as uppercase.
 

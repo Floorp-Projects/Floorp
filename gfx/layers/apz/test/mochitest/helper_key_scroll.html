@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1383365
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Async key scrolling test, helper page</title>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript">
+    var SimpleTest = window.opener.SimpleTest;
+
+    SimpleTest.waitForFocus(runTests, window);
+
+    // --------------------------------------------------------------------
+    // Async key scrolling test
+    //
+    // This test checks that a key scroll occurs asynchronously.
+    //
+    // The page contains a <div> that is large enough to make the page
+    // scrollable. We first synthesize a page down to scroll to the bottom
+    // of the page. Once we have reached the bottom of the page, we synthesize
+    // a page up to get us back to the top of the page.
+    //
+    // Once at the top, we request test data from APZ, rebuild the APZC tree
+    // structure, and use it to check that async key scrolling happened.
+    // --------------------------------------------------------------------
+
+    function runTests() {
+      // Sanity check
+      SimpleTest.is(checkHasAsyncKeyScrolled(false), false, "expected no async key scrolling before test");
+
+      // Send a key to initiate a page scroll to take us to the bottom of the
+      // page. This scroll is done synchronously because APZ doesn't have
+      // current focus state at page load.
+      window.addEventListener("scroll", waitForScrollBottom);
+      window.synthesizeKey("VK_END", {});
+    };
+
+    function waitForScrollBottom() {
+      if (window.scrollY < window.scrollYMax) {
+        return;
+      }
+      window.removeEventListener("scroll", waitForScrollBottom);
+
+      // Wait for scrolling to finish before dispatching the next key input or
+      // the default action won't occur.
+      waitForApzFlushedRepaints(function () {
+        // This scroll should be asynchronous now that the focus state is up to date.
+        window.addEventListener("scroll", waitForScrollTop);
+        window.synthesizeKey("VK_HOME", {});
+      });
+    };
+
+    function waitForScrollTop() {
+      if (window.scrollY > 0) {
+        return;
+      }
+      window.removeEventListener("scroll", waitForScrollTop);
+
+      // Wait for APZ to settle and then check that async scrolling happened.
+      waitForApzFlushedRepaints(function () {
+        SimpleTest.is(checkHasAsyncKeyScrolled(true), true, "expected async key scrolling after test");
+        window.opener.finishTest();
+      });
+    };
+
+    function checkHasAsyncKeyScrolled(requirePaints) {
+      // Get the compositor-side test data from nsIDOMWindowUtils.
+      var utils = SpecialPowers.getDOMWindowUtils(window);
+      var compositorTestData = utils.getCompositorAPZTestData();
+
+      if (requirePaints) {
+        SimpleTest.ok(compositorTestData.paints.length > 0,
+                      "expected at least one paint in compositor test data");
+      }
+
+      // Get the sequence number of the last paint on the compositor side.
+      // We do this before converting the APZ test data because the conversion
+      // loses the order of the paints.
+      var lastPaint = compositorTestData.paints[compositorTestData.paints.length - 1];
+      var lastPaintSeqNo = lastPaint.sequenceNumber;
+
+      // Convert the test data into a representation that's easier to navigate.
+      compositorTestData = convertTestData(compositorTestData);
+
+      // Reconstruct the APZC tree structure in the last paint.
+      var apzcTree = buildApzcTree(compositorTestData.paints[lastPaintSeqNo]);
+      var rcd = findRcdNode(apzcTree);
+
+      if (rcd) {
+        return rcd.hasAsyncKeyScrolled === "1";
+      } else {
+        SimpleTest.info("Last paint rcd is null");
+        return false;
+      }
+    }
+  </script>
+</head>
+<body style="height: 500px; overflow: scroll">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1383365">Async key scrolling test</a>
+  <!-- Put enough content into the page to make it have a nonzero scroll range -->
+  <div style="height: 5000px"></div>
+</body>
+</html>

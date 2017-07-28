@@ -752,7 +752,7 @@ private:
     GetTransactionPendingQHelper(nsConnectionEntry *ent, nsAHttpTransaction *trans);
 
     // This is only a diagnostic check end it will e removed soon.
-    void CheckConnEntryMustBeInmCT(nsHttpConnectionInfo *ci);
+    void CheckConnEntryMustBeInmCT(nsConnectionEntry *ent);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnectionMgr::nsHalfOpenSocket, NS_HALFOPENSOCKET_IID)

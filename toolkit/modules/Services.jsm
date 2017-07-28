@@ -113,11 +113,11 @@ var initTable = [
   ["qms", "@mozilla.org/dom/quota-manager-service;1", "nsIQuotaManagerService"],
 ];
 
-initTable.forEach(([name, contract, intf, enabled = true]) => {
+for (let [name, contract, intf, enabled = true] of initTable) {
   if (enabled) {
     XPCOMUtils.defineLazyServiceGetter(Services, name, contract, intf);
   }
-});
+}
 
 
 initTable = undefined;

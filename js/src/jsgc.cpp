@@ -3087,8 +3087,7 @@ GCRuntime::triggerFullGCForAtoms(JSContext* cx)
     MOZ_ASSERT(fullGCForAtomsRequested_);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
     MOZ_ASSERT(!JS::CurrentThreadIsHeapCollecting());
-    MOZ_ASSERT(!cx->keepAtoms);
-    MOZ_ASSERT(!rt->hasHelperThreadZones());
+    MOZ_ASSERT(cx->canCollectAtoms());
     fullGCForAtomsRequested_ = false;
     MOZ_RELEASE_ASSERT(triggerGC(JS::gcreason::DELAYED_ATOMS_GC));
 }
@@ -7386,6 +7385,15 @@ GCRuntime::gcIfRequested()
         minorGC(nursery().minorGCTriggerReason());
 
     if (majorGCRequested()) {
+        if (majorGCTriggerReason == JS::gcreason::DELAYED_ATOMS_GC &&
+            !TlsContext.get()->canCollectAtoms())
+        {
+            // A GC was requested to collect the atoms zone, but it's no longer
+            // possible. Skip this collection.
+            majorGCTriggerReason = JS::gcreason::NO_REASON;
+            return false;
+        }
+
         if (!isIncrementalGCInProgress())
             startGC(GC_NORMAL, majorGCTriggerReason);
         else

@@ -132,6 +132,15 @@ RendererOGL::Render()
   mGL->SwapBuffers();
   mWidget->PostRender(&widgetContext);
 
+#if defined(ENABLE_FRAME_LATENCY_LOG)
+  if (mFrameStartTime) {
+    uint32_t latencyMs = round((TimeStamp::Now() - mFrameStartTime).ToMilliseconds());
+    printf_stderr("generate frame latencyMs latencyMs %d\n", latencyMs);
+  }
+  // Clear frame start time
+  mFrameStartTime = TimeStamp();
+#endif
+
   // TODO: Flush pending actions such as texture deletions/unlocks and
   //       textureHosts recycling.
 
@@ -168,6 +177,17 @@ void
 RendererOGL::SetProfilerEnabled(bool aEnabled)
 {
   wr_renderer_set_profiler_enabled(mRenderer, aEnabled);
+}
+
+void
+RendererOGL::SetFrameStartTime(const TimeStamp& aTime)
+{
+  if (mFrameStartTime) {
+    // frame start time is already set. This could happen when multiple
+    // generate frame requests are merged by webrender.
+    return;
+  }
+  mFrameStartTime = aTime;
 }
 
 wr::WrRenderedEpochs*

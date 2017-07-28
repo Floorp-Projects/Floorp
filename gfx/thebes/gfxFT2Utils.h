@@ -20,6 +20,13 @@
 
 typedef struct FT_FaceRec_* FT_Face;
 
+/**
+ * BEWARE: Recursively locking with gfxFT2LockedFace is not supported.
+ * Do not instantiate gfxFT2LockedFace within the scope of another instance.
+ * Do not attempt to call into Cairo within the scope of gfxFT2LockedFace,
+ * as that may accidentally try to re-lock the face within Cairo itself
+ * and thus deadlock.
+ */
 class gfxFT2LockedFace {
 public:
     explicit gfxFT2LockedFace(gfxFT2FontBase *aFont) :
