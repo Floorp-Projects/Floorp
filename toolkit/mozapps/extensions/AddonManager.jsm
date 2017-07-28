@@ -77,16 +77,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
                                   "resource://gre/modules/addons/AddonRepository.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromptUtils",
                                   "resource://gre/modules/SharedPromptUtils.jsm");
 
@@ -2842,7 +2838,7 @@ var AddonManagerInternal = {
           } catch (e) {}
         }
 
-        if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+        if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
           this.installNotifyObservers("addon-install-confirmation",
                                       browser, url, proxy);
           return;
@@ -3046,7 +3042,7 @@ var AddonManagerInternal = {
 
       return state.installPromise.then(addon => new Promise(resolve => {
         let callback = () => resolve(result);
-        if (Preferences.get(PREF_WEBEXT_PERM_PROMPTS, false)) {
+        if (Services.prefs.getBoolPref(PREF_WEBEXT_PERM_PROMPTS, false)) {
           let subject = {wrappedJSObject: {target, addon, callback}};
           Services.obs.notifyObservers(subject, "webextension-install-notify")
         } else {
