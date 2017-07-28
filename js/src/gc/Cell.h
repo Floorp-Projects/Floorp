@@ -242,7 +242,11 @@ Cell::storeBuffer() const
 inline JS::TraceKind
 Cell::getTraceKind() const
 {
-    return isTenured() ? asTenured().getTraceKind() : JS::TraceKind::Object;
+    if (isTenured())
+        return asTenured().getTraceKind();
+    if (js::shadow::String::nurseryCellIsString(this))
+        return JS::TraceKind::String;
+    return JS::TraceKind::Object;
 }
 
 /* static */ MOZ_ALWAYS_INLINE bool
@@ -416,7 +420,8 @@ static MOZ_ALWAYS_INLINE void
 AssertValidToSkipBarrier(TenuredCell* thing)
 {
     MOZ_ASSERT(!IsInsideNursery(thing));
-    MOZ_ASSERT_IF(thing, MapAllocToTraceKind(thing->getAllocKind()) != JS::TraceKind::Object);
+    MOZ_ASSERT_IF(thing, MapAllocToTraceKind(thing->getAllocKind()) != JS::TraceKind::Object &&
+                         MapAllocToTraceKind(thing->getAllocKind()) != JS::TraceKind::String);
 }
 
 /* static */ MOZ_ALWAYS_INLINE void

@@ -82,13 +82,9 @@ NewInlineString(JSContext* cx, HandleLinearString base, size_t start, size_t len
 }
 
 static inline void
-StringWriteBarrierPost(JSContext* maybecx, JSString** strp)
+StringWriteBarrierPost(JSContext* maybecx, JSString** strp, JSString* prev, JSString* next)
 {
-}
-
-static inline void
-StringWriteBarrierPostRemove(JSContext* maybecx, JSString** strp)
-{
+    js::BarrierMethods<JSString*>::postBarrier(strp, prev, next);
 }
 
 } /* namespace js */
@@ -113,8 +109,8 @@ JSRope::init(JSContext* cx, JSString* left, JSString* right, size_t length)
         d.u1.flags |= LATIN1_CHARS_BIT;
     d.s.u2.left = left;
     d.s.u3.right = right;
-    js::StringWriteBarrierPost(cx, &d.s.u2.left);
-    js::StringWriteBarrierPost(cx, &d.s.u3.right);
+    js::BarrierMethods<JSString*>::postBarrier(&d.s.u2.left, nullptr, left);
+    js::BarrierMethods<JSString*>::postBarrier(&d.s.u3.right, nullptr, right);
 }
 
 template <js::AllowGC allowGC>
@@ -148,7 +144,7 @@ JSDependentString::init(JSContext* cx, JSLinearString* base, size_t start,
         d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
     }
     d.s.u3.base = base;
-    js::StringWriteBarrierPost(cx, reinterpret_cast<JSString**>(&d.s.u3.base));
+    js::BarrierMethods<JSString*>::postBarrier(reinterpret_cast<JSString**>(&d.s.u3.base), nullptr, base);
 }
 
 MOZ_ALWAYS_INLINE JSLinearString*
