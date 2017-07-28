@@ -2,19 +2,18 @@
 
 use super::comp::CompInfo;
 use super::context::{BindgenContext, ItemId};
-use super::derive::{CanDeriveCopy, CanDeriveDebug, CanDeriveDefault};
+use super::derive::{CanDeriveCopy, CanDeriveDefault};
 use super::dot::DotAttributes;
 use super::enum_ty::Enum;
 use super::function::FunctionSig;
 use super::int::IntKind;
-use super::item::Item;
+use super::item::{IsOpaque, Item};
 use super::layout::{Layout, Opaque};
 use super::objc::ObjCInterface;
 use super::template::{AsTemplateParam, TemplateInstantiation, TemplateParameters};
 use super::traversal::{EdgeKind, Trace, Tracer};
 use clang::{self, Cursor};
 use parse::{ClangItemParser, ParseError, ParseResult};
-use std::cell::Cell;
 use std::io;
 use std::mem;
 
@@ -33,9 +32,6 @@ pub struct Type {
     kind: TypeKind,
     /// Whether this type is const-qualified.
     is_const: bool,
-    /// Don't go into an infinite loop when detecting if we have a vtable or
-    /// not.
-    detect_has_vtable_cycle: Cell<bool>,
 }
 
 /// The maximum number of items in an array for which Rust implements common
@@ -75,7 +71,6 @@ impl Type {
             layout: layout,
             kind: kind,
             is_const: is_const,
-            detect_has_vtable_cycle: Cell::new(false),
         }
     }
 
@@ -98,14 +93,6 @@ impl Type {
     pub fn is_comp(&self) -> bool {
         match self.kind {
             TypeKind::Comp(..) => true,
-            _ => false,
-        }
-    }
-
-    /// Is this type of kind `TypeKind::Opaque`?
-    pub fn is_opaque(&self) -> bool {
-        match self.kind {
-            TypeKind::Opaque => true,
             _ => false,
         }
     }
@@ -250,29 +237,6 @@ impl Type {
         })
     }
 
-    /// Whether this type has a vtable.
-    pub fn has_vtable(&self, ctx: &BindgenContext) -> bool {
-        if self.detect_has_vtable_cycle.get() {
-            return false;
-        }
-
-        self.detect_has_vtable_cycle.set(true);
-
-        // FIXME: Can we do something about template parameters? Huh...
-        let result = match self.kind {
-            TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) |
-            TypeKind::ResolvedTypeRef(t) => ctx.resolve_type(t).has_vtable(ctx),
-            TypeKind::Comp(ref info) => info.has_vtable(ctx),
-            TypeKind::TemplateInstantiation(ref inst) => inst.has_vtable(ctx),
-            _ => false,
-        };
-
-        self.detect_has_vtable_cycle.set(false);
-
-        result
-    }
-
     /// Returns whether this type has a destructor.
     pub fn has_destructor(&self, ctx: &BindgenContext) -> bool {
         match self.kind {
@@ -369,6 +333,20 @@ impl Type {
             TypeKind::Reference(..) |
             TypeKind::TemplateInstantiation(..) |
             TypeKind::ResolvedTypeRef(..) => true,
+            _ => false,
+        }
+    }
+}
+
+impl IsOpaque for Type {
+    type Extra = Item;
+
+    fn is_opaque(&self, ctx: &BindgenContext, item: &Item) -> bool {
+        match self.kind {
+            TypeKind::Opaque => true,
+            TypeKind::TemplateInstantiation(ref inst) => inst.is_opaque(ctx, item),
+            TypeKind::Comp(ref comp) => comp.is_opaque(ctx, &()),
+            TypeKind::ResolvedTypeRef(to) => to.is_opaque(ctx, &()),
             _ => false,
         }
     }
@@ -548,40 +526,10 @@ impl TemplateParameters for TypeKind {
     }
 }
 
-impl CanDeriveDebug for Type {
-    type Extra = ();
+impl<'a> CanDeriveDefault<'a> for Type {
+    type Extra = &'a Item;
 
-    fn can_derive_debug(&self, ctx: &BindgenContext, _: ()) -> bool {
-        match self.kind {
-            TypeKind::Array(t, len) => {
-                len <= RUST_DERIVE_IN_ARRAY_LIMIT && t.can_derive_debug(ctx, ())
-            }
-            TypeKind::ResolvedTypeRef(t) |
-            TypeKind::TemplateAlias(t, _) |
-            TypeKind::Alias(t) => t.can_derive_debug(ctx, ()),
-            TypeKind::Comp(ref info) => {
-                info.can_derive_debug(ctx, self.layout(ctx))
-            }
-            TypeKind::Pointer(inner) => {
-                let inner = ctx.resolve_type(inner);
-                if let TypeKind::Function(ref sig) =
-                    *inner.canonical_type(ctx).kind() {
-                    return sig.can_derive_debug(ctx, ());
-                }
-                return true;
-            }
-            TypeKind::TemplateInstantiation(ref inst) => {
-                inst.can_derive_debug(ctx, self.layout(ctx))
-            }
-            _ => true,
-        }
-    }
-}
-
-impl CanDeriveDefault for Type {
-    type Extra = ();
-
-    fn can_derive_default(&self, ctx: &BindgenContext, _: ()) -> bool {
+    fn can_derive_default(&self, ctx: &BindgenContext, item: &Item) -> bool {
         match self.kind {
             TypeKind::Array(t, len) => {
                 len <= RUST_DERIVE_IN_ARRAY_LIMIT &&
@@ -591,7 +539,7 @@ impl CanDeriveDefault for Type {
             TypeKind::TemplateAlias(t, _) |
             TypeKind::Alias(t) => t.can_derive_default(ctx, ()),
             TypeKind::Comp(ref info) => {
-                info.can_derive_default(ctx, self.layout(ctx))
+                info.can_derive_default(ctx, (&item, self.layout(ctx)))
             }
             TypeKind::Opaque => {
                 self.layout
@@ -776,23 +724,24 @@ impl Type {
     /// derive whether we should generate a dummy `_address` field for structs,
     /// to comply to the C and C++ layouts, that specify that every type needs
     /// to be addressable.
-    pub fn is_unsized(&self, ctx: &BindgenContext) -> bool {
+    pub fn is_unsized(&self, ctx: &BindgenContext, itemid: &ItemId) -> bool {
         debug_assert!(ctx.in_codegen_phase(), "Not yet");
 
         match self.kind {
             TypeKind::Void => true,
-            TypeKind::Comp(ref ci) => ci.is_unsized(ctx),
+            TypeKind::Comp(ref ci) => ci.is_unsized(ctx, itemid),
             TypeKind::Opaque => self.layout.map_or(true, |l| l.size == 0),
             TypeKind::Array(inner, size) => {
-                size == 0 || ctx.resolve_type(inner).is_unsized(ctx)
+                size == 0 || ctx.resolve_type(inner).is_unsized(ctx, &inner)
             }
             TypeKind::ResolvedTypeRef(inner) |
             TypeKind::Alias(inner) |
             TypeKind::TemplateAlias(inner, _) => {
-                ctx.resolve_type(inner).is_unsized(ctx)
+                ctx.resolve_type(inner).is_unsized(ctx, &inner)
             }
             TypeKind::TemplateInstantiation(ref inst) => {
-                ctx.resolve_type(inst.template_definition()).is_unsized(ctx)
+                let definition = inst.template_definition();
+                ctx.resolve_type(definition).is_unsized(ctx, &definition)
             }
             TypeKind::Named |
             TypeKind::Int(..) |

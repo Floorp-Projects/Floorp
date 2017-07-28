@@ -789,157 +789,157 @@ cenum! {
 
 bitflags! {
     #[repr(C)]
-    pub flags CXCodeComplete_Flags: c_uint {
-        const CXCodeComplete_IncludeMacros = 1,
-        const CXCodeComplete_IncludeCodePatterns = 2,
-        const CXCodeComplete_IncludeBriefComments = 4,
+    pub struct CXCodeComplete_Flags: c_uint {
+        const CXCodeComplete_IncludeMacros = 1;
+        const CXCodeComplete_IncludeCodePatterns = 2;
+        const CXCodeComplete_IncludeBriefComments = 4;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXCompletionContext: c_uint {
-        const CXCompletionContext_Unexposed = 0,
-        const CXCompletionContext_AnyType = 1,
-        const CXCompletionContext_AnyValue = 2,
-        const CXCompletionContext_ObjCObjectValue = 4,
-        const CXCompletionContext_ObjCSelectorValue = 8,
-        const CXCompletionContext_CXXClassTypeValue = 16,
-        const CXCompletionContext_DotMemberAccess = 32,
-        const CXCompletionContext_ArrowMemberAccess = 64,
-        const CXCompletionContext_ObjCPropertyAccess = 128,
-        const CXCompletionContext_EnumTag = 256,
-        const CXCompletionContext_UnionTag = 512,
-        const CXCompletionContext_StructTag = 1024,
-        const CXCompletionContext_ClassTag = 2048,
-        const CXCompletionContext_Namespace = 4096,
-        const CXCompletionContext_NestedNameSpecifier = 8192,
-        const CXCompletionContext_ObjCInterface = 16384,
-        const CXCompletionContext_ObjCProtocol = 32768,
-        const CXCompletionContext_ObjCCategory = 65536,
-        const CXCompletionContext_ObjCInstanceMessage = 131072,
-        const CXCompletionContext_ObjCClassMessage = 262144,
-        const CXCompletionContext_ObjCSelectorName = 524288,
-        const CXCompletionContext_MacroName = 1048576,
-        const CXCompletionContext_NaturalLanguage = 2097152,
-        const CXCompletionContext_Unknown = 4194303,
+    pub struct CXCompletionContext: c_uint {
+        const CXCompletionContext_Unexposed = 0;
+        const CXCompletionContext_AnyType = 1;
+        const CXCompletionContext_AnyValue = 2;
+        const CXCompletionContext_ObjCObjectValue = 4;
+        const CXCompletionContext_ObjCSelectorValue = 8;
+        const CXCompletionContext_CXXClassTypeValue = 16;
+        const CXCompletionContext_DotMemberAccess = 32;
+        const CXCompletionContext_ArrowMemberAccess = 64;
+        const CXCompletionContext_ObjCPropertyAccess = 128;
+        const CXCompletionContext_EnumTag = 256;
+        const CXCompletionContext_UnionTag = 512;
+        const CXCompletionContext_StructTag = 1024;
+        const CXCompletionContext_ClassTag = 2048;
+        const CXCompletionContext_Namespace = 4096;
+        const CXCompletionContext_NestedNameSpecifier = 8192;
+        const CXCompletionContext_ObjCInterface = 16384;
+        const CXCompletionContext_ObjCProtocol = 32768;
+        const CXCompletionContext_ObjCCategory = 65536;
+        const CXCompletionContext_ObjCInstanceMessage = 131072;
+        const CXCompletionContext_ObjCClassMessage = 262144;
+        const CXCompletionContext_ObjCSelectorName = 524288;
+        const CXCompletionContext_MacroName = 1048576;
+        const CXCompletionContext_NaturalLanguage = 2097152;
+        const CXCompletionContext_Unknown = 4194303;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXDiagnosticDisplayOptions: c_uint {
-        const CXDiagnostic_DisplaySourceLocation = 1,
-        const CXDiagnostic_DisplayColumn = 2,
-        const CXDiagnostic_DisplaySourceRanges = 4,
-        const CXDiagnostic_DisplayOption = 8,
-        const CXDiagnostic_DisplayCategoryId = 16,
-        const CXDiagnostic_DisplayCategoryName = 32,
+    pub struct CXDiagnosticDisplayOptions: c_uint {
+        const CXDiagnostic_DisplaySourceLocation = 1;
+        const CXDiagnostic_DisplayColumn = 2;
+        const CXDiagnostic_DisplaySourceRanges = 4;
+        const CXDiagnostic_DisplayOption = 8;
+        const CXDiagnostic_DisplayCategoryId = 16;
+        const CXDiagnostic_DisplayCategoryName = 32;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXGlobalOptFlags: c_uint {
-        const CXGlobalOpt_None = 0,
-        const CXGlobalOpt_ThreadBackgroundPriorityForIndexing = 1,
-        const CXGlobalOpt_ThreadBackgroundPriorityForEditing = 2,
-        const CXGlobalOpt_ThreadBackgroundPriorityForAll = 3,
+    pub struct CXGlobalOptFlags: c_uint {
+        const CXGlobalOpt_None = 0;
+        const CXGlobalOpt_ThreadBackgroundPriorityForIndexing = 1;
+        const CXGlobalOpt_ThreadBackgroundPriorityForEditing = 2;
+        const CXGlobalOpt_ThreadBackgroundPriorityForAll = 3;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXIdxDeclInfoFlags: c_uint {
-        const CXIdxDeclFlag_Skipped = 1,
+    pub struct CXIdxDeclInfoFlags: c_uint {
+        const CXIdxDeclFlag_Skipped = 1;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXIndexOptFlags: c_uint {
-        const CXIndexOptNone = 0,
-        const CXIndexOptSuppressRedundantRefs = 1,
-        const CXIndexOptIndexFunctionLocalSymbols = 2,
-        const CXIndexOptIndexImplicitTemplateInstantiations = 4,
-        const CXIndexOptSuppressWarnings = 8,
-        const CXIndexOptSkipParsedBodiesInSession = 16,
+    pub struct CXIndexOptFlags: c_uint {
+        const CXIndexOptNone = 0;
+        const CXIndexOptSuppressRedundantRefs = 1;
+        const CXIndexOptIndexFunctionLocalSymbols = 2;
+        const CXIndexOptIndexImplicitTemplateInstantiations = 4;
+        const CXIndexOptSuppressWarnings = 8;
+        const CXIndexOptSkipParsedBodiesInSession = 16;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXNameRefFlags: c_uint {
-        const CXNameRange_WantQualifier = 1,
-        const CXNameRange_WantTemplateArgs = 2,
-        const CXNameRange_WantSinglePiece = 4
+    pub struct CXNameRefFlags: c_uint {
+        const CXNameRange_WantQualifier = 1;
+        const CXNameRange_WantTemplateArgs = 2;
+        const CXNameRange_WantSinglePiece = 4;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXObjCDeclQualifierKind: c_uint {
-        const CXObjCDeclQualifier_None = 0,
-        const CXObjCDeclQualifier_In = 1,
-        const CXObjCDeclQualifier_Inout = 2,
-        const CXObjCDeclQualifier_Out = 4,
-        const CXObjCDeclQualifier_Bycopy = 8,
-        const CXObjCDeclQualifier_Byref = 16,
-        const CXObjCDeclQualifier_Oneway = 32,
+    pub struct CXObjCDeclQualifierKind: c_uint {
+        const CXObjCDeclQualifier_None = 0;
+        const CXObjCDeclQualifier_In = 1;
+        const CXObjCDeclQualifier_Inout = 2;
+        const CXObjCDeclQualifier_Out = 4;
+        const CXObjCDeclQualifier_Bycopy = 8;
+        const CXObjCDeclQualifier_Byref = 16;
+        const CXObjCDeclQualifier_Oneway = 32;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXObjCPropertyAttrKind: c_uint {
-        const CXObjCPropertyAttr_noattr = 0,
-        const CXObjCPropertyAttr_readonly = 1,
-        const CXObjCPropertyAttr_getter = 2,
-        const CXObjCPropertyAttr_assign = 4,
-        const CXObjCPropertyAttr_readwrite = 8,
-        const CXObjCPropertyAttr_retain = 16,
-        const CXObjCPropertyAttr_copy = 32,
-        const CXObjCPropertyAttr_nonatomic = 64,
-        const CXObjCPropertyAttr_setter = 128,
-        const CXObjCPropertyAttr_atomic = 256,
-        const CXObjCPropertyAttr_weak = 512,
-        const CXObjCPropertyAttr_strong = 1024,
-        const CXObjCPropertyAttr_unsafe_unretained = 2048,
+    pub struct CXObjCPropertyAttrKind: c_uint {
+        const CXObjCPropertyAttr_noattr = 0;
+        const CXObjCPropertyAttr_readonly = 1;
+        const CXObjCPropertyAttr_getter = 2;
+        const CXObjCPropertyAttr_assign = 4;
+        const CXObjCPropertyAttr_readwrite = 8;
+        const CXObjCPropertyAttr_retain = 16;
+        const CXObjCPropertyAttr_copy = 32;
+        const CXObjCPropertyAttr_nonatomic = 64;
+        const CXObjCPropertyAttr_setter = 128;
+        const CXObjCPropertyAttr_atomic = 256;
+        const CXObjCPropertyAttr_weak = 512;
+        const CXObjCPropertyAttr_strong = 1024;
+        const CXObjCPropertyAttr_unsafe_unretained = 2048;
         #[cfg(feature="gte_clang_3_9")]
-        const CXObjCPropertyAttr_class = 4096,
+        const CXObjCPropertyAttr_class = 4096;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXReparse_Flags: c_uint {
-        const CXReparse_None = 0,
+    pub struct CXReparse_Flags: c_uint {
+        const CXReparse_None = 0;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXSaveTranslationUnit_Flags: c_uint {
-        const CXSaveTranslationUnit_None = 0,
+    pub struct CXSaveTranslationUnit_Flags: c_uint {
+        const CXSaveTranslationUnit_None = 0;
     }
 }
 
 bitflags! {
     #[repr(C)]
-    pub flags CXTranslationUnit_Flags: c_uint {
-        const CXTranslationUnit_None = 0,
-        const CXTranslationUnit_DetailedPreprocessingRecord = 1,
-        const CXTranslationUnit_Incomplete = 2,
-        const CXTranslationUnit_PrecompiledPreamble = 4,
-        const CXTranslationUnit_CacheCompletionResults = 8,
-        const CXTranslationUnit_ForSerialization = 16,
-        const CXTranslationUnit_CXXChainedPCH = 32,
-        const CXTranslationUnit_SkipFunctionBodies = 64,
-        const CXTranslationUnit_IncludeBriefCommentsInCodeCompletion = 128,
+    pub struct CXTranslationUnit_Flags: c_uint {
+        const CXTranslationUnit_None = 0;
+        const CXTranslationUnit_DetailedPreprocessingRecord = 1;
+        const CXTranslationUnit_Incomplete = 2;
+        const CXTranslationUnit_PrecompiledPreamble = 4;
+        const CXTranslationUnit_CacheCompletionResults = 8;
+        const CXTranslationUnit_ForSerialization = 16;
+        const CXTranslationUnit_CXXChainedPCH = 32;
+        const CXTranslationUnit_SkipFunctionBodies = 64;
+        const CXTranslationUnit_IncludeBriefCommentsInCodeCompletion = 128;
         #[cfg(feature="gte_clang_3_8")]
-        const CXTranslationUnit_CreatePreambleOnFirstParse = 256,
+        const CXTranslationUnit_CreatePreambleOnFirstParse = 256;
         #[cfg(feature="gte_clang_3_9")]
-        const CXTranslationUnit_KeepGoing = 512,
+        const CXTranslationUnit_KeepGoing = 512;
     }
 }
 

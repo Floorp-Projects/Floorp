@@ -72,6 +72,8 @@ pub fn generate_dummy_uses<W>(ctx: &mut BindgenContext,
         try!(writeln!(dest, ""));
 
         let type_items = ctx.whitelisted_items()
+            .iter()
+            .cloned()
             .map(|id| ctx.resolve_item(id))
             .filter(|item| {
                 // We only want type items.

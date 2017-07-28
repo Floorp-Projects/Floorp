@@ -9,7 +9,7 @@ use std::collections::{BTreeMap, VecDeque};
 ///
 ///   from --> to
 ///
-/// The `from` is left implicit: it is the concrete `Trace` implementor which
+/// The `from` is left implicit: it is the concrete `Trace` implementer which
 /// yielded this outgoing edge.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Edge {
@@ -58,7 +58,7 @@ pub enum EdgeKind {
     /// template<typename T>
     /// class Foo { };
     ///
-    /// using Bar = Foo<int>;
+    /// using Bar = Foo<ant>;
     /// ```
     TemplateDeclaration,
 
@@ -139,6 +139,19 @@ pub enum EdgeKind {
     /// ```
     Constructor,
 
+    /// An edge from a class or struct type to its destructor function. For
+    /// example, the edge from `Doggo` to `Doggo::~Doggo()`:
+    ///
+    /// ```C++
+    /// struct Doggo {
+    ///     char* wow;
+    ///
+    ///   public:
+    ///     ~Doggo();
+    /// };
+    /// ```
+    Destructor,
+
     /// An edge from a function declaration to its return type. For example, the
     /// edge from `foo` to `int`:
     ///
@@ -172,27 +185,55 @@ pub enum EdgeKind {
 pub trait TraversalPredicate {
     /// Should the traversal follow this edge, and visit everything that is
     /// reachable through it?
-    fn should_follow(&self, edge: Edge) -> bool;
+    fn should_follow(&self, ctx: &BindgenContext, edge: Edge) -> bool;
 }
 
-impl TraversalPredicate for fn(Edge) -> bool {
-    fn should_follow(&self, edge: Edge) -> bool {
-        (*self)(edge)
+impl TraversalPredicate for for<'a> fn(&'a BindgenContext, Edge) -> bool {
+    fn should_follow(&self, ctx: &BindgenContext, edge: Edge) -> bool {
+        (*self)(ctx, edge)
     }
 }
 
 /// A `TraversalPredicate` implementation that follows all edges, and therefore
 /// traversals using this predicate will see the whole IR graph reachable from
 /// the traversal's roots.
-pub fn all_edges(_: Edge) -> bool {
+pub fn all_edges(_: &BindgenContext, _: Edge) -> bool {
     true
 }
 
 /// A `TraversalPredicate` implementation that never follows any edges, and
 /// therefore traversals using this predicate will only visit the traversal's
 /// roots.
-pub fn no_edges(_: Edge) -> bool {
+pub fn no_edges(_: &BindgenContext, _: Edge) -> bool {
     false
+}
+
+/// A `TraversalPredicate` implementation that only follows edges to items that
+/// are enabled for code generation. This lets us skip considering items for
+/// which are not reachable from code generation.
+pub fn codegen_edges(ctx: &BindgenContext, edge: Edge) -> bool {
+    let cc = &ctx.options().codegen_config;
+    match edge.kind {
+        EdgeKind::Generic => ctx.resolve_item(edge.to).is_enabled_for_codegen(ctx),
+
+        // We statically know the kind of item that non-generic edges can point
+        // to, so we don't need to actually resolve the item and check
+        // `Item::is_enabled_for_codegen`.
+        EdgeKind::TemplateParameterDefinition |
+        EdgeKind::TemplateArgument |
+        EdgeKind::TemplateDeclaration |
+        EdgeKind::BaseMember |
+        EdgeKind::Field |
+        EdgeKind::InnerType |
+        EdgeKind::FunctionReturn |
+        EdgeKind::FunctionParameter |
+        EdgeKind::VarType |
+        EdgeKind::TypeReference => cc.types,
+        EdgeKind::InnerVar => cc.vars,
+        EdgeKind::Method => cc.methods,
+        EdgeKind::Constructor => cc.constructors,
+        EdgeKind::Destructor => cc.destructors,
+    }
 }
 
 /// The storage for the set of items that have been seen (although their
@@ -350,7 +391,7 @@ pub struct ItemTraversal<'ctx, 'gen, Storage, Queue, Predicate>
     /// The set of items that we have seen, but have yet to traverse.
     queue: Queue,
 
-    /// The predicate that determins which edges this traversal will follow.
+    /// The predicate that determines which edges this traversal will follow.
     predicate: Predicate,
 
     /// The item we are currently traversing.
@@ -401,7 +442,7 @@ impl<'ctx, 'gen, Storage, Queue, Predicate> Tracer
 {
     fn visit_kind(&mut self, item: ItemId, kind: EdgeKind) {
         let edge = Edge::new(item, kind);
-        if !self.predicate.should_follow(edge) {
+        if !self.predicate.should_follow(self.ctx, edge) {
             return;
         }
 
@@ -451,7 +492,7 @@ pub type AssertNoDanglingItemsTraversal<'ctx, 'gen> =
                   'gen,
                   Paths<'ctx, 'gen>,
                   VecDeque<ItemId>,
-                  fn(Edge) -> bool>;
+                  for<'a> fn(&'a BindgenContext, Edge) -> bool>;
 
 #[cfg(test)]
 mod tests {

@@ -59,10 +59,10 @@ pub struct Clang {
 impl Clang {
     //- Constructors -----------------------------
 
-    fn new(path: PathBuf) -> Clang {
+    fn new(path: PathBuf, args: &[String]) -> Clang {
         let version = parse_version(&path);
-        let c_search_paths = parse_search_paths(&path, "c");
-        let cpp_search_paths = parse_search_paths(&path, "c++");
+        let c_search_paths = parse_search_paths(&path, "c", args);
+        let cpp_search_paths = parse_search_paths(&path, "c++", args);
         Clang {
             path: path,
             version: version,
@@ -78,9 +78,9 @@ impl Clang {
     /// first directory searched. Then, the directory returned by `llvm-config --bindir` is
     /// searched. On OS X systems, `xcodebuild -find clang` will next be queried. Last, the
     /// directories in the system's `PATH` are searched.
-    pub fn find(path: Option<&Path>) -> Option<Clang> {
+    pub fn find(path: Option<&Path>, args: &[String]) -> Option<Clang> {
         if let Ok(path) = env::var("CLANG_PATH") {
-            return Some(Clang::new(path.into()));
+            return Some(Clang::new(path.into(), args));
         }
 
         let mut paths = vec![];
@@ -102,7 +102,7 @@ impl Clang {
         let patterns = &[&default[..], &versioned[..]];
         for path in paths {
             if let Some(path) = find(&path, patterns) {
-                return Some(Clang::new(path));
+                return Some(Clang::new(path, args));
             }
         }
         None
@@ -179,8 +179,10 @@ fn parse_version(path: &Path) -> Option<CXVersion> {
 }
 
 /// Parses the search paths from the output of a `clang` executable if possible.
-fn parse_search_paths(path: &Path, language: &str) -> Option<Vec<PathBuf>> {
-    let output = run_clang(path, &["-E", "-x", language, "-", "-v"]).1;
+fn parse_search_paths(path: &Path, language: &str, args: &[String]) -> Option<Vec<PathBuf>> {
+    let mut clang_args = vec!["-E", "-x", language, "-", "-v"];
+    clang_args.extend(args.iter().map(|s| &**s));
+    let output = run_clang(path, &clang_args).1;
     let start = try_opt!(output.find("#include <...> search starts here:")) + 34;
     let end = try_opt!(output.find("End of search list."));
     let paths = output[start..end].replace("(framework directory)", "");
