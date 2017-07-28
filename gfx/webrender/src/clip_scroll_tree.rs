@@ -93,7 +93,7 @@ impl ClipScrollTree {
             }
 
             match node.node_type {
-                NodeType::ScrollFrame(..) => {},
+                NodeType::ScrollFrame(state) if state.sensitive_to_input_events() => {},
                 _ => return None,
             }
 
@@ -303,12 +303,9 @@ impl ClipScrollTree {
         // TODO(gw): These are all independent - can be run through thread pool if it shows up
         // in the profile!
         for (clip_id, node) in &mut self.nodes {
-            let scrolling_state = match old_states.get(clip_id) {
-                Some(old_scrolling_state) => *old_scrolling_state,
-                None => ScrollingState::new(),
-            };
-
-            node.finalize(&scrolling_state);
+            if let Some(scrolling_state) = old_states.get(clip_id) {
+                node.apply_old_scrolling_state(scrolling_state);
+            }
 
             if let Some((pending_offset, clamping)) = self.pending_scroll_offsets.remove(clip_id) {
                 node.set_scroll_origin(&pending_offset, clamping);

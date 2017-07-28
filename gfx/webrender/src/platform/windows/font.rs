@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use api::{FontKey, FontRenderMode, GlyphDimensions};
-use api::{GlyphKey, GlyphOptions};
+use api::{FontInstanceKey, GlyphKey, GlyphOptions};
 use gamma_lut::{GammaLut, Color as ColorLut};
 
 use dwrote;
@@ -86,28 +86,6 @@ fn dwrite_render_mode(font_face: &dwrote::FontFace,
     dwrite_render_mode
 }
 
-fn get_glyph_dimensions_with_analysis(analysis: dwrote::GlyphRunAnalysis,
-                                      texture_type: dwrote::DWRITE_TEXTURE_TYPE)
-                                      -> Option<GlyphDimensions> {
-    let bounds = analysis.get_alpha_texture_bounds(texture_type);
-
-    let width = (bounds.right - bounds.left) as u32;
-    let height = (bounds.bottom - bounds.top) as u32;
-
-    // Alpha texture bounds can sometimes return an empty rect
-    // Such as for spaces
-    if width == 0 || height == 0 {
-        return None
-    }
-
-    Some(GlyphDimensions {
-        left: bounds.left,
-        top: -bounds.top,
-        width,
-        height,
-    })
-}
-
 impl FontContext {
     pub fn new() -> FontContext {
         // These are the default values we use in Gecko.
@@ -175,18 +153,18 @@ impl FontContext {
         }
     }
 
-    fn create_glyph_analysis(&self, key: &GlyphKey,
-                            render_mode: FontRenderMode,
-                            options: Option<GlyphOptions>) ->
+    fn create_glyph_analysis(&self,
+                             font: &FontInstanceKey,
+                             key: &GlyphKey) ->
                             dwrote::GlyphRunAnalysis {
-        let face = self.fonts.get(&key.font_key).unwrap();
+        let face = self.fonts.get(&font.font_key).unwrap();
         let glyph = key.index as u16;
         let advance = 0.0f32;
         let offset = dwrote::GlyphOffset { advanceOffset: 0.0, ascenderOffset: 0.0 };
 
         let glyph_run = dwrote::DWRITE_GLYPH_RUN {
             fontFace: unsafe { face.as_ptr() },
-            fontEmSize: key.size.to_f32_px(), // size in DIPs (1/96", same as CSS pixels)
+            fontEmSize: font.size.to_f32_px(), // size in DIPs (1/96", same as CSS pixels)
             glyphCount: 1,
             glyphIndices: &glyph,
             glyphAdvances: &advance,
@@ -195,12 +173,13 @@ impl FontContext {
             bidiLevel: 0,
         };
 
-        let dwrite_measure_mode = dwrite_measure_mode(render_mode, options);
+        let dwrite_measure_mode = dwrite_measure_mode(font.render_mode,
+                                                      font.glyph_options);
         let dwrite_render_mode = dwrite_render_mode(face,
-                                                    render_mode,
-                                                    key.size.to_f32_px(),
+                                                    font.render_mode,
+                                                    font.size.to_f32_px(),
                                                     dwrite_measure_mode,
-                                                    options);
+                                                    font.glyph_options);
 
         let (x_offset, y_offset) = key.subpixel_point.to_f64();
         let transform = Some(
@@ -214,16 +193,51 @@ impl FontContext {
                                          0.0, 0.0)
     }
 
+    pub fn get_glyph_index(&mut self, font_key: FontKey, ch: char) -> Option<u32> {
+        let face = self.fonts.get(&font_key).unwrap();
+        let indices = face.get_glyph_indices(&[ch as u32]);
+        indices.first().map(|idx| *idx as u32)
+    }
+
     // TODO: Pipe GlyphOptions into glyph_dimensions too
     pub fn get_glyph_dimensions(&self,
+                                font: &FontInstanceKey,
                                 key: &GlyphKey)
                                 -> Option<GlyphDimensions> {
         // Probably have to default to something else here.
         let render_mode = FontRenderMode::Subpixel;
-        let analysis = self.create_glyph_analysis(key, render_mode, None);
+        let analysis = self.create_glyph_analysis(font, key);
 
         let texture_type = dwrite_texture_type(render_mode);
-        get_glyph_dimensions_with_analysis(analysis, texture_type)
+
+        let bounds = analysis.get_alpha_texture_bounds(texture_type);
+
+        let width = (bounds.right - bounds.left) as u32;
+        let height = (bounds.bottom - bounds.top) as u32;
+
+        // Alpha texture bounds can sometimes return an empty rect
+        // Such as for spaces
+        if width == 0 || height == 0 {
+            return None
+        }
+
+        let face = self.fonts.get(&font.font_key).unwrap();
+        face.get_design_glyph_metrics(&[key.index as u16], false)
+            .first()
+            .map(|metrics| {
+                let em_size = font.size.to_f32_px() / 16.;
+                let design_units_per_pixel = face.metrics().designUnitsPerEm as f32 / 16. as f32;
+                let scaled_design_units_to_pixels = em_size / design_units_per_pixel;
+                let advance = metrics.advanceWidth as f32 * scaled_design_units_to_pixels;
+
+                GlyphDimensions {
+                    left: bounds.left,
+                    top: -bounds.top,
+                    width,
+                    height,
+                    advance: advance,
+                }
+            })
     }
 
     // DWRITE gives us values in RGB. WR doesn't really touch it after. Note, CG returns in BGR
@@ -268,14 +282,11 @@ impl FontContext {
     }
 
     pub fn rasterize_glyph(&mut self,
-                           key: &GlyphKey,
-                           render_mode: FontRenderMode,
-                           glyph_options: Option<GlyphOptions>)
+                           font: &FontInstanceKey,
+                           key: &GlyphKey)
                            -> Option<RasterizedGlyph> {
-        let analysis = self.create_glyph_analysis(key,
-                                                  render_mode,
-                                                  glyph_options);
-        let texture_type = dwrite_texture_type(render_mode);
+        let analysis = self.create_glyph_analysis(font, key);
+        let texture_type = dwrite_texture_type(font.render_mode);
 
         let bounds = analysis.get_alpha_texture_bounds(texture_type);
         let width = (bounds.right - bounds.left) as usize;
@@ -289,8 +300,8 @@ impl FontContext {
 
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 
-        if render_mode != FontRenderMode::Mono {
-            let lut_correction = match glyph_options {
+        if font.render_mode != FontRenderMode::Mono {
+            let lut_correction = match font.glyph_options {
                 Some(option) => {
                     if option.force_gdi_rendering {
                         &self.gdi_gamma_lut
@@ -302,13 +313,13 @@ impl FontContext {
             };
 
             lut_correction.preblend_rgb(&mut pixels, width, height,
-                                        ColorLut::new(key.color.r,
-                                                      key.color.g,
-                                                      key.color.b,
-                                                      key.color.a));
+                                        ColorLut::new(font.color.r,
+                                                      font.color.g,
+                                                      font.color.b,
+                                                      font.color.a));
         }
 
-        let rgba_pixels = self.convert_to_rgba(&mut pixels, render_mode);
+        let rgba_pixels = self.convert_to_rgba(&mut pixels, font.render_mode);
 
         Some(RasterizedGlyph {
             left: bounds.left as f32,
