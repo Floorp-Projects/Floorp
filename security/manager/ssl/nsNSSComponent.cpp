@@ -1950,11 +1950,11 @@ nsNSSComponent::InitializeNSS()
 
     // ensure we have initial values for various root hashes
 #ifdef DEBUG
-    Preferences::GetString("security.test.built_in_root_hash",
-                           mTestBuiltInRootHash);
+    mTestBuiltInRootHash =
+      Preferences::GetString("security.test.built_in_root_hash");
 #endif
-    Preferences::GetString("security.content.signature.root_hash",
-                           mContentSigningRootHash);
+    mContentSigningRootHash =
+      Preferences::GetString("security.content.signature.root_hash");
 
     mNSSInitialized = true;
   }
@@ -2122,15 +2122,14 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
 #ifdef DEBUG
     } else if (prefName.EqualsLiteral("security.test.built_in_root_hash")) {
       MutexAutoLock lock(mMutex);
-      Preferences::GetString("security.test.built_in_root_hash",
-                             mTestBuiltInRootHash);
+      mTestBuiltInRootHash = Preferences::GetString("security.test.built_in_root_hash");
 #endif // DEBUG
     } else if (prefName.Equals(kFamilySafetyModePref)) {
       MaybeEnableFamilySafetyCompatibility();
     } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
       MutexAutoLock lock(mMutex);
-      Preferences::GetString("security.content.signature.root_hash",
-                             mContentSigningRootHash);
+      mContentSigningRootHash =
+        Preferences::GetString("security.content.signature.root_hash");
     } else if (prefName.Equals(kEnterpriseRootModePref)) {
       MaybeImportEnterpriseRoots();
     } else {

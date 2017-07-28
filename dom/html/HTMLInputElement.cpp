@@ -484,7 +484,7 @@ UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason)
   nsAutoString prefStr;
 
   if (aReason == nsIContentPrefCallback2::COMPLETE_ERROR || !mResult) {
-    Preferences::GetString("dom.input.fallbackUploadDir", prefStr);
+    prefStr = Preferences::GetString("dom.input.fallbackUploadDir");
   }
 
   if (prefStr.IsEmpty() && mResult) {

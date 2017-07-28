@@ -1323,8 +1323,8 @@ AppNameOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 {
   AssertIsOnMainThread();
 
-  nsAutoString override;
-  Preferences::GetString("general.appname.override", override);
+  const nsAdoptingString& override =
+    mozilla::Preferences::GetString("general.appname.override");
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
@@ -1337,8 +1337,8 @@ AppVersionOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 {
   AssertIsOnMainThread();
 
-  nsAutoString override;
-  Preferences::GetString("general.appversion.override", override);
+  const nsAdoptingString& override =
+    mozilla::Preferences::GetString("general.appversion.override");
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
@@ -1351,8 +1351,8 @@ PlatformOverrideChanged(const char* /* aPrefName */, void* /* aClosure */)
 {
   AssertIsOnMainThread();
 
-  nsAutoString override;
-  Preferences::GetString("general.platform.override", override);
+  const nsAdoptingString& override =
+    mozilla::Preferences::GetString("general.platform.override");
 
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {

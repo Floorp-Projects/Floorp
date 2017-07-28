@@ -563,8 +563,7 @@ AudioChannelService::GetAudioChannel(const nsAString& aChannel)
 /* static */ AudioChannel
 AudioChannelService::GetDefaultAudioChannel()
 {
-  nsAutoString audioChannel;
-  Preferences::GetString("media.defaultAudioChannel", audioChannel);
+  nsAutoString audioChannel(Preferences::GetString("media.defaultAudioChannel"));
   if (audioChannel.IsEmpty()) {
     return AudioChannel::Normal;
   }

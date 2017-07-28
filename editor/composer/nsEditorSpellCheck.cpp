@@ -904,7 +904,7 @@ nsEditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher)
 
   // Get the preference value.
   nsAutoString preferredDict;
-  Preferences::GetLocalizedString("spellchecker.dictionary", preferredDict);
+  preferredDict = Preferences::GetLocalizedString("spellchecker.dictionary");
 
   if (!dictName.IsEmpty()) {
     // RFC 5646 explicitly states that matches should be case-insensitive.

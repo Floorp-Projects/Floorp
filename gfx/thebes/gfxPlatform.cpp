@@ -570,9 +570,9 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
 {
   if (Preferences::GetBool("gfx.2d.recording", false)) {
     nsAutoCString fileName;
-    nsAutoString prefFileName;
-    nsresult rv = Preferences::GetString("gfx.2d.recordingfile", prefFileName);
-    if (NS_SUCCEEDED(rv)) {
+    nsAdoptingString prefFileName = Preferences::GetString("gfx.2d.recordingfile");
+
+    if (prefFileName) {
       fileName.Append(NS_ConvertUTF16toUTF8(prefFileName));
     } else {
       nsCOMPtr<nsIFile> tmpFile;

@@ -65,8 +65,8 @@ PDFiumEngineShim::Init()
   }
 
 #ifdef USE_EXTERNAL_PDFIUM
-  nsAutoString PDFiumPath;
-  mozilla::Preferences::GetString("print.load_external_pdfium", PDFiumPath);
+  const nsAdoptingString& PDFiumPath =
+    mozilla::Preferences::GetString("print.load_external_pdfium");
   NS_ENSURE_FALSE(PDFiumPath.IsEmpty(), false);
 
   nsAutoCString filePath = NS_ConvertUTF16toUTF8(PDFiumPath);
