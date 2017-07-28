@@ -1329,7 +1329,10 @@ class RunProgram(MachCommandBase):
             no_profile_option_given = \
                 all(p not in params for p in ['-profile', '--profile', '-P'])
             if no_profile_option_given and not noprofile:
-                prefs = { }
+                prefs = {
+                   'browser.shell.checkDefaultBrowser': False,
+                   'general.warnOnAboutConfig': False,
+                }
                 prefs.update(self._mach_context.settings.runprefs)
                 prefs.update([p.split('=', 1) for p in setpref])
                 for pref in prefs:
