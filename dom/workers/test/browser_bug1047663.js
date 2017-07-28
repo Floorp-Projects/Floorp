@@ -9,14 +9,10 @@ const WORKER_URL = EXAMPLE_URL + "bug1047663_worker.sjs";
 function test() {
   waitForExplicitFinish();
 
-  // Disable rcwn to make cache behavior deterministic.
-  let rcwnEnabled = Preferences.get("network.http.rcwn.enabled");
-  Preferences.set("network.http.rcwn.enabled", false);
-  registerCleanupFunction(()=>{
-    Preferences.set("network.http.rcwn.enabled", rcwnEnabled);
-  });
-
   (async function() {
+    // Disable rcwn to make cache behavior deterministic.
+    await SpecialPowers.pushPrefEnv({set: [["network.http.rcwn.enabled", false]]});
+
     let tab = await addTab(TAB_URL);
 
     // Create a worker. Post a message to it, and check the reply. Since the
