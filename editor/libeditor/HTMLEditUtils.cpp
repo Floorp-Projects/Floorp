@@ -594,6 +594,10 @@ static const ElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(acronym, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(address, true, true, GROUP_BLOCK,
        GROUP_INLINE_ELEMENT | GROUP_P),
+  // While applet is no longer a valid tag, removing it here breaks the editor
+  // (compiles, but causes many tests to fail in odd ways). This list is tracked
+  // against the main HTML Tag list, so any changes will require more than just
+  // removing entries.
   ELEM(applet, true, true, GROUP_SPECIAL | GROUP_BLOCK,
        GROUP_FLOW_ELEMENT | GROUP_OBJECT_CONTENT),
   ELEM(area, false, false, GROUP_MAP_CONTENT, GROUP_NONE),

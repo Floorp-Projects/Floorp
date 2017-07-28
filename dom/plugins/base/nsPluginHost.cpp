@@ -745,7 +745,6 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
   }
 
   if (tagType != nsPluginTagType_Embed &&
-      tagType != nsPluginTagType_Applet &&
       tagType != nsPluginTagType_Object) {
     instanceOwner->Destroy();
     return NS_ERROR_FAILURE;

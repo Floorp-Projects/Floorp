@@ -1109,9 +1109,8 @@ HTMLTableAccessible::IsProbablyLayoutTable()
 
   if (HasDescendant(NS_LITERAL_STRING("embed")) ||
       HasDescendant(NS_LITERAL_STRING("object")) ||
-      HasDescendant(NS_LITERAL_STRING("applet")) ||
       HasDescendant(NS_LITERAL_STRING("iframe"))) {
-    RETURN_LAYOUT_ANSWER(true, "Has no borders, and has iframe, object, applet or iframe, typical of advertisements");
+    RETURN_LAYOUT_ANSWER(true, "Has no borders, and has iframe, object, or iframe, typical of advertisements");
   }
 
   RETURN_LAYOUT_ANSWER(false, "no layout factor strong enough, so will guess data");
