@@ -9,8 +9,10 @@
 // http://wiki.mozilla.org/Gecko:Effective_TLD_Service
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "MainThreadUtils.h"
 #include "nsEffectiveTLDService.h"
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
@@ -210,6 +212,20 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   if (result == PR_SUCCESS)
     return NS_ERROR_HOST_IS_IP_ADDRESS;
 
+  // Lookup in the cache if this is a normal query.
+  TLDCacheEntry* entry = nullptr;
+  if (aAdditionalParts == 1) {
+    if (LookupForAdd(aHostname, &entry)) {
+      // There was a match, just return the cached value.
+      aBaseDomain = entry->mBaseDomain;
+      if (trailingDot) {
+        aBaseDomain.Append('.');
+      }
+
+      return NS_OK;
+    }
+  }
+
   // Walk up the domain tree, most specific to least specific,
   // looking for matches at each level.  Note that a given level may
   // have multiple attributes (e.g. IsWild() and IsNormal()).
@@ -290,6 +306,13 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
     return NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS;
 
   aBaseDomain = Substring(iter, end);
+
+  // Update the MRU table if in use.
+  if (entry) {
+    entry->mHost = aHostname;
+    entry->mBaseDomain = aBaseDomain;
+  }
+
   // add on the trailing dot, if applicable
   if (trailingDot)
     aBaseDomain.Append('.');
@@ -311,4 +334,14 @@ nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname)
 
   ToLowerCase(aHostname);
   return NS_OK;
+}
+
+bool
+nsEffectiveTLDService::LookupForAdd(const nsACString& aHost, TLDCacheEntry** aEntry)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const uint32_t hash = HashString(aHost.BeginReading(), aHost.Length());
+  *aEntry = &mMruTable[hash % kTableSize];
+  return (*aEntry)->mHost == aHost;
 }
