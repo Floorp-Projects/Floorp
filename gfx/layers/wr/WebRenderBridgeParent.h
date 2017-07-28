@@ -55,7 +55,7 @@ public:
                         RefPtr<AsyncImagePipelineManager>&& aImageMgr,
                         RefPtr<CompositorAnimationStorage>&& aAnimStorage);
 
-  static WebRenderBridgeParent* CeateDestroyed();
+  static WebRenderBridgeParent* CreateDestroyed();
 
   wr::PipelineId PipelineId() { return mPipelineId; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
