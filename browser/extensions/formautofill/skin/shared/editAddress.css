@@ -12,7 +12,8 @@ body {
 
 form,
 label,
-div {
+div,
+p {
   display: flex;
 }
 
@@ -20,7 +21,8 @@ form {
   flex-wrap: wrap;
 }
 
-label {
+label,
+p {
   margin: 0 0 0.5em;
 }
 
@@ -49,7 +51,10 @@ textarea {
 }
 
 button {
+  font-size: 1.2em;
   padding: 3px 2em;
+  margin-inline-start: 10px;
+  margin-inline-end: 0;
 }
 
 #given-name-container,
@@ -77,11 +82,19 @@ button {
 #family-name,
 #organization,
 #address-level2,
-#tel{
+#tel {
   flex: 0 0 auto;
 }
 
 #street-address,
 #email {
   flex: 1 0 auto;
+}
+
+#country-warning-message {
+  flex: 1;
+  align-items: center;
+  text-align: start;
+  color: #737373;
+  padding-inline-start: 1em;
 }
