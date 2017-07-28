@@ -34,7 +34,7 @@
     <string name="menu_open_with_a_browser">Open with…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">Add to Home Screen</string>
+    <string name="menu_add_to_home_screen">Add to Home screen</string>
 
     <string name="menu_settings">Settings</string>
     <string name="menu_about">About</string>
@@ -60,6 +60,10 @@
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Open</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Erase and Open</string>
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
@@ -115,7 +119,7 @@
     <!-- Preference Summary: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
      and prevents the user from taking screenshots or casting the app to other displays. %1$s will be replaced with the
      name of the app (e.g. Firefox Focus). -->
-    <string name="preference_privacy_secure_mode_summary">Turn off stealth mode to take screenshots and see sites you’ve visited using %1$s in your Recent Apps list</string>
+    <string name="preference_privacy_secure_mode_summary">Hide webpages when switching apps</string>
 
     <string name="preference_category_performance">Performance</string>
     <string name="preference_performance_block_webfonts">Block Web fonts</string>
@@ -318,4 +322,12 @@ be temporary, and you can try again later.</li>
     <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
     <string name="content_blocking_disabled">-</string>
 
+    <!-- The title of a dialog we show when the user selected a menu action to add the current website as a shortcut to the home screen. -->
+    <string name="dialog_addtohomescreen_title">Add to Home screen</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Add</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Cancel</string>
 </resources>
