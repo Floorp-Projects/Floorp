@@ -184,7 +184,7 @@ xpc::ErrorBase::Init(JSErrorBase* aReport)
     if (!aReport->filename)
         mFileName.SetIsVoid(true);
     else
-        mFileName.AssignWithConversion(aReport->filename);
+        CopyASCIItoUTF16(aReport->filename, mFileName);
 
     mLineNumber = aReport->lineno;
     mColumn = aReport->column;
