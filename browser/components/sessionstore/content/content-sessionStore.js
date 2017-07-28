@@ -536,7 +536,7 @@ var SessionStorageListener = {
   observe() {
     // Collect data on the next tick so that any other observer
     // that needs to purge data can do its work first.
-    setTimeout(() => this.collect(), 0);
+    setTimeoutWithTarget(() => this.collect(), 0, tabEventTarget);
   },
 
   // We don't want to send all the session storage data for all the frames
@@ -733,7 +733,8 @@ var MessageQueue = {
 
     if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
-      this._timeout = setTimeout(() => this.send(), this.BATCH_DELAY_MS);
+      this._timeout = setTimeoutWithTarget(
+        () => this.send(), this.BATCH_DELAY_MS, tabEventTarget);
     }
   },
 
