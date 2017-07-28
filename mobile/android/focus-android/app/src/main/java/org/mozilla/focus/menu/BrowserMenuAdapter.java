@@ -89,9 +89,7 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
                     R.string.menu_open_with_a_browser)));
         }
 
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
-            items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
-        }
+        items.add(new MenuItem(R.id.add_to_homescreen, resources.getString(R.string.menu_add_to_home_screen)));
 
         items.add(new MenuItem(R.id.settings, resources.getString(R.string.menu_settings)));
 

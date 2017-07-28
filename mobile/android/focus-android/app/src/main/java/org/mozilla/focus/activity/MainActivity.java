@@ -5,8 +5,11 @@
 
 package org.mozilla.focus.activity;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
@@ -14,7 +17,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.architecture.NonNullObserver;
@@ -241,5 +243,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
         }
 
         super.onBackPressed();
+    }
+
+    @TargetApi(26)
+    public static void requestShortcut(ShortcutManager shortcutManager, ShortcutInfo shortcut) {
+        shortcutManager.requestPinShortcut(shortcut, null);
     }
 }
