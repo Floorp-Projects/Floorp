@@ -232,7 +232,7 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
   }
 
   // Check if key is obsoleted.
-  if (aImageKey.mNamespace != mIdNameSpace) {
+  if (aImageKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -259,7 +259,7 @@ WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
   }
 
   // Check if key is obsoleted.
-  if (aImageKey.mNamespace != mIdNameSpace) {
+  if (aImageKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -284,7 +284,7 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
   }
 
   // Check if key is obsoleted.
-  if (aFontKey.mNamespace != mIdNameSpace) {
+  if (aFontKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -307,7 +307,7 @@ WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
   MOZ_ASSERT(mApi);
 
   // Check if key is obsoleted.
-  if (aFontKey.mNamespace != mIdNameSpace) {
+  if (aFontKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -333,7 +333,7 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
   MOZ_ASSERT(mApi);
 
   // Check if key is obsoleted.
-  if (aImageKey.mNamespace != mIdNameSpace) {
+  if (aImageKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -352,7 +352,7 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
   MOZ_ASSERT(mApi);
 
   // Check if key is obsoleted.
-  if (aImageKey.mNamespace != mIdNameSpace) {
+  if (aImageKey.mNamespace.mHandle != mIdNameSpace) {
     return IPC_OK();
   }
 
@@ -567,7 +567,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
         const OpAddExternalImage& op = cmd.get_OpAddExternalImage();
         Range<const wr::ImageKey> keys(&op.key(), 1);
         // Check if key is obsoleted.
-        if (keys[0].mNamespace != mIdNameSpace) {
+        if (keys[0].mNamespace.mHandle != mIdNameSpace) {
           break;
         }
         MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());

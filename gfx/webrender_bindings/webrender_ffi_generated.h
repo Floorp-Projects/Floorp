@@ -162,8 +162,22 @@ typedef Vec_u8 VecU8;
 
 typedef Arc_VecU8 ArcVecU8;
 
+struct IdNamespace {
+  uint32_t mHandle;
+
+  bool operator==(const IdNamespace& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  bool operator<(const IdNamespace& aOther) const {
+    return mHandle < aOther.mHandle;
+  }
+  bool operator<=(const IdNamespace& aOther) const {
+    return mHandle <= aOther.mHandle;
+  }
+};
+
 struct ImageKey {
-  uint32_t mNamespace;
+  IdNamespace mNamespace;
   uint32_t mHandle;
 
   bool operator==(const ImageKey& aOther) const {
@@ -211,7 +225,7 @@ struct WrExternalImageId {
 typedef ExternalImageType WrExternalImageBufferType;
 
 struct FontKey {
-  uint32_t mNamespace;
+  IdNamespace mNamespace;
   uint32_t mHandle;
 
   bool operator==(const FontKey& aOther) const {
@@ -267,10 +281,12 @@ typedef LayerSize LayoutSize;
 struct BuiltDisplayListDescriptor {
   uint64_t builder_start_time;
   uint64_t builder_finish_time;
+  uint64_t send_start_time;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
     return builder_start_time == aOther.builder_start_time &&
-           builder_finish_time == aOther.builder_finish_time;
+           builder_finish_time == aOther.builder_finish_time &&
+           send_start_time == aOther.send_start_time;
   }
 };
 
@@ -341,20 +357,6 @@ typedef TypedTransform3D_f32__LayoutPixel__LayoutPixel LayoutTransform;
 struct WrTransformProperty {
   uint64_t id;
   LayoutTransform transform;
-};
-
-struct IdNamespace {
-  uint32_t mHandle;
-
-  bool operator==(const IdNamespace& aOther) const {
-    return mHandle == aOther.mHandle;
-  }
-  bool operator<(const IdNamespace& aOther) const {
-    return mHandle < aOther.mHandle;
-  }
-  bool operator<=(const IdNamespace& aOther) const {
-    return mHandle <= aOther.mHandle;
-  }
 };
 
 typedef IdNamespace WrIdNamespace;
@@ -449,20 +451,6 @@ struct GradientStop {
   }
 };
 
-struct SideOffsets2D_u32 {
-  uint32_t top;
-  uint32_t right;
-  uint32_t bottom;
-  uint32_t left;
-
-  bool operator==(const SideOffsets2D_u32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
-
 struct SideOffsets2D_f32 {
   float top;
   float right;
@@ -470,6 +458,20 @@ struct SideOffsets2D_f32 {
   float left;
 
   bool operator==(const SideOffsets2D_f32& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
+  }
+};
+
+struct SideOffsets2D_u32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
+
+  bool operator==(const SideOffsets2D_u32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
