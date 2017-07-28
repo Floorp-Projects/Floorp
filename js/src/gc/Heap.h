@@ -48,10 +48,6 @@ extern bool
 CurrentThreadIsIonCompiling();
 #endif
 
-// The return value indicates if anything was unmarked.
-extern bool
-UnmarkGrayCellRecursively(gc::Cell* cell, JS::TraceKind kind);
-
 extern void
 TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, gc::Cell** thingp, const char* name);
 
@@ -1386,7 +1382,7 @@ TenuredCell::readBarrier(TenuredCell* thing)
         // There shouldn't be anything marked grey unless we're on the active thread.
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(thing->runtimeFromAnyThread()));
         if (!RuntimeFromActiveCooperatingThreadIsHeapMajorCollecting(shadowZone))
-            UnmarkGrayCellRecursively(thing, thing->getTraceKind());
+            JS::UnmarkGrayGCThingRecursively(JS::GCCellPtr(thing, thing->getTraceKind()));
     }
 }
 
