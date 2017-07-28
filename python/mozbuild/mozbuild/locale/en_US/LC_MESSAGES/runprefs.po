@@ -1,0 +1,10 @@
+#
+msgid ""
+msgstr ""
+
+msgid "runprefs.*.short"
+msgstr "Pass a pref into Firefox when using `mach run`"
+
+msgid "runprefs.*.full"
+msgstr ""
+"Pass a pref into Firefox when using `mach run`, of the form foo.bar=value"

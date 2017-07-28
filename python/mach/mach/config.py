@@ -300,6 +300,7 @@ class ConfigSettings(collections.Mapping):
 
     def __init__(self):
         self._config = RawConfigParser()
+        self._config.optionxform = str
 
         self._settings = {}
         self._sections = {}
