@@ -621,7 +621,7 @@ SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
   if (MOZ_UNLIKELY(mChunks.Length() == 0)) {
     // We haven't gotten an initial chunk yet.
     AddWaitingConsumer(aConsumer);
-    return aIterator.SetWaiting();
+    return aIterator.SetWaiting(!!aConsumer);
   }
 
   uint32_t iteratorChunkIdx = aIterator.mData.mIterating.mChunk;
@@ -659,7 +659,7 @@ SourceBuffer::AdvanceIteratorOrScheduleResume(SourceBufferIterator& aIterator,
   // We're not complete, but there's no more data right now. Arrange to wake up
   // the consumer when we get more data.
   AddWaitingConsumer(aConsumer);
-  return aIterator.SetWaiting();
+  return aIterator.SetWaiting(!!aConsumer);
 }
 
 nsresult
