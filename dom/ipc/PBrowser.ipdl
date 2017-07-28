@@ -655,6 +655,11 @@ child:
     prio(input) async RealMouseMoveEvent(WidgetMouseEvent event,
                                          ScrollableLayerGuid aGuid,
                                          uint64_t aInputBlockId) compress;
+
+    async NormalPriorityRealMouseMoveEvent(WidgetMouseEvent event,
+                                           ScrollableLayerGuid aGuid,
+                                           uint64_t aInputBlockId) compress;
+
     /**
      * Mouse move events with |reason == eSynthesized| are sent via a separate
      * message because they do not generate DOM 'mousemove' events, and the
@@ -665,26 +670,59 @@ child:
     prio(input) async SynthMouseMoveEvent(WidgetMouseEvent event,
                                           ScrollableLayerGuid aGuid,
                                           uint64_t aInputBlockId);
+    async NormalPrioritySynthMouseMoveEvent(WidgetMouseEvent event,
+                                            ScrollableLayerGuid aGuid,
+                                            uint64_t aInputBlockId);
+
     prio(input) async RealMouseButtonEvent(WidgetMouseEvent event,
                                            ScrollableLayerGuid aGuid,
                                            uint64_t aInputBlockId);
+    async NormalPriorityRealMouseButtonEvent(WidgetMouseEvent event,
+                                             ScrollableLayerGuid aGuid,
+                                             uint64_t aInputBlockId);
+
     prio(input) async RealKeyEvent(WidgetKeyboardEvent event);
+    async NormalPriorityRealKeyEvent(WidgetKeyboardEvent event);
+
     prio(input) async MouseWheelEvent(WidgetWheelEvent event,
                                       ScrollableLayerGuid aGuid,
                                       uint64_t aInputBlockId);
+    async NormalPriorityMouseWheelEvent(WidgetWheelEvent event,
+                                        ScrollableLayerGuid aGuid,
+                                        uint64_t aInputBlockId);
+
     prio(input) async RealTouchEvent(WidgetTouchEvent aEvent,
                                      ScrollableLayerGuid aGuid,
                                      uint64_t aInputBlockId,
                                      nsEventStatus aApzResponse);
+    async NormalPriorityRealTouchEvent(WidgetTouchEvent aEvent,
+                                       ScrollableLayerGuid aGuid,
+                                       uint64_t aInputBlockId,
+                                       nsEventStatus aApzResponse);
+
     prio(input) async HandleTap(TapType aType, LayoutDevicePoint point,
                                 Modifiers aModifiers, ScrollableLayerGuid aGuid,
                                 uint64_t aInputBlockId);
+    async NormalPriorityHandleTap(TapType aType, LayoutDevicePoint point,
+                                  Modifiers aModifiers, ScrollableLayerGuid aGuid,
+                                  uint64_t aInputBlockId);
+
     prio(input) async RealTouchMoveEvent(WidgetTouchEvent aEvent,
                                          ScrollableLayerGuid aGuid,
                                          uint64_t aInputBlockId,
                                          nsEventStatus aApzResponse);
-    prio(input) async RealDragEvent(WidgetDragEvent aEvent,
-                                    uint32_t aDragAction, uint32_t aDropEffect);
+    async NormalPriorityRealTouchMoveEvent(WidgetTouchEvent aEvent,
+                                           ScrollableLayerGuid aGuid,
+                                           uint64_t aInputBlockId,
+                                           nsEventStatus aApzResponse);
+
+    /*
+     * We disable the input event queue when there is an active dnd session. We
+     * don't need support RealDragEvent with input priority.
+     */
+    async RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction,
+                        uint32_t aDropEffect);
+
     async PluginEvent(WidgetPluginEvent aEvent);
 
     /**
