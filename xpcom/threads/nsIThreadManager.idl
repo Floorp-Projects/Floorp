@@ -8,7 +8,6 @@
 
 [ptr] native PRThread(PRThread);
 
-interface nsIEventTarget;
 interface nsIRunnable;
 interface nsIThread;
 
@@ -127,9 +126,4 @@ interface nsIThreadManager : nsISupports
    * moving away from.
    */
   void spinEventLoopUntilEmpty();
-
-  /**
-   * Return the SchedulerEventTarget for the SystemGroup.
-   */
-  readonly attribute nsIEventTarget systemGroupEventTarget;
 };
