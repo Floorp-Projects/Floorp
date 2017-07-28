@@ -386,11 +386,12 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   }
 }
 
-bool
-WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
-                                       wr::DisplayListBuilder& aBuilder,
-                                       const StackingContextHelper& aSc,
-                                       nsDisplayListBuilder* aDisplayListBuilder)
+already_AddRefed<WebRenderFallbackData>
+WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
+                                            wr::DisplayListBuilder& aBuilder,
+                                            nsDisplayListBuilder* aDisplayListBuilder,
+                                            LayerRect& aImageRect,
+                                            LayerPoint& aOffset)
 {
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
@@ -409,14 +410,13 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       PixelCastJustification::WebRenderHasUnitResolution);
 
   LayerIntSize imageSize = RoundedToInt(bounds.Size());
-  LayerRect imageRect;
-  imageRect.SizeTo(LayerSize(imageSize));
+  aImageRect = LayerRect(LayerPoint(0, 0), LayerSize(imageSize));
   if (imageSize.width == 0 || imageSize.height == 0) {
-    return true;
+    return nullptr;
   }
 
   nsPoint shift = clippedBounds.TopLeft() - itemBounds.TopLeft();
-  LayerPoint offset = ViewAs<LayerPixel>(
+  aOffset = ViewAs<LayerPixel>(
       LayoutDevicePoint::FromAppUnits(aItem->ToReferenceFrame() + shift, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
@@ -448,7 +448,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
-      PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+      PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
       recorder->Finish();
 
       wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
@@ -464,10 +464,10 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
         UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize());
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
-          PaintItemByDrawTarget(aItem, dt, imageRect, offset, aDisplayListBuilder);
+          PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
         }
         if (!helper.UpdateImage()) {
-          return false;
+          return nullptr;
         }
       }
 
@@ -475,7 +475,7 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
       // If not force update, fallbackData may reuse the original key because it
       // doesn't know UpdateImageHelper already updated the image container.
       if (!fallbackData->UpdateImageKey(imageContainer, true)) {
-        return false;
+        return nullptr;
       }
     }
 
@@ -488,6 +488,23 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
   fallbackData->SetBounds(clippedBounds);
 
   MOZ_ASSERT(fallbackData->GetKey());
+
+  return fallbackData.forget();
+}
+
+bool
+WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
+                                       wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsDisplayListBuilder* aDisplayListBuilder)
+{
+  LayerRect imageRect;
+  LayerPoint offset;
+  RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aDisplayListBuilder,
+                                                                    imageRect, offset);
+  if (!fallbackData) {
+    return false;
+  }
 
   wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect + offset);
   aBuilder.PushImage(dest,
