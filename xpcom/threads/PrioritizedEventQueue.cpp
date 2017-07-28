@@ -114,25 +114,16 @@ PrioritizedEventQueue<InnerQueueT>::GetIdleDeadline()
 }
 
 template<class InnerQueueT>
-already_AddRefed<nsIRunnable>
-PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
-                                             const MutexAutoLock& aProofOfLock)
+EventPriority
+PrioritizedEventQueue<InnerQueueT>::SelectQueue(bool aUpdateState,
+                                                const MutexAutoLock& aProofOfLock)
 {
-  MakeScopeExit([&] {
-    mHasPendingEventsPromisedIdleEvent = false;
-  });
-
-#ifndef RELEASE_OR_BETA
-  // Clear mNextIdleDeadline so that it is possible to determine that
-  // we're running an idle runnable in ProcessNextEvent.
-  *mNextIdleDeadline = TimeStamp();
-#endif
-
-  bool highPending = mHighQueue->HasPendingEvent(aProofOfLock);
-  bool normalPending = mNormalQueue->HasPendingEvent(aProofOfLock);
+  bool highPending = !mHighQueue->IsEmpty(aProofOfLock);
+  bool normalPending = !mNormalQueue->IsEmpty(aProofOfLock);
   size_t inputCount = mInputQueue->Count(aProofOfLock);
 
-  if (mInputQueueState == STATE_ENABLED && mInputHandlingStartTime.IsNull() && inputCount > 0) {
+  if (aUpdateState && mInputQueueState == STATE_ENABLED &&
+      mInputHandlingStartTime.IsNull() && inputCount > 0) {
     mInputHandlingStartTime =
       InputEventStatistics::Get()
       .GetInputHandlingStartTime(inputCount);
@@ -183,7 +174,29 @@ PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
   MOZ_ASSERT_IF(queue == EventPriority::Input,
                 mInputQueueState != STATE_DISABLED && mInputQueueState != STATE_SUSPEND);
 
-  mProcessHighPriorityQueue = highPending;
+  if (aUpdateState) {
+    mProcessHighPriorityQueue = highPending;
+  }
+
+  return queue;
+}
+
+template<class InnerQueueT>
+already_AddRefed<nsIRunnable>
+PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
+                                             const MutexAutoLock& aProofOfLock)
+{
+  MakeScopeExit([&] {
+    mHasPendingEventsPromisedIdleEvent = false;
+  });
+
+#ifndef RELEASE_OR_BETA
+  // Clear mNextIdleDeadline so that it is possible to determine that
+  // we're running an idle runnable in ProcessNextEvent.
+  *mNextIdleDeadline = TimeStamp();
+#endif
+
+  EventPriority queue = SelectQueue(true, aProofOfLock);
 
   if (aPriority) {
     *aPriority = queue;
@@ -211,7 +224,7 @@ PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
   // If we get here, then all queues except idle are empty.
   MOZ_ASSERT(queue == EventPriority::Idle);
 
-  if (!mIdleQueue->HasPendingEvent(aProofOfLock)) {
+  if (mIdleQueue->IsEmpty(aProofOfLock)) {
     MOZ_ASSERT(!mHasPendingEventsPromisedIdleEvent);
     return nullptr;
   }
@@ -240,29 +253,47 @@ PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
 
 template<class InnerQueueT>
 bool
-PrioritizedEventQueue<InnerQueueT>::HasPendingEvent(const MutexAutoLock& aProofOfLock)
+PrioritizedEventQueue<InnerQueueT>::IsEmpty(const MutexAutoLock& aProofOfLock)
+{
+  // Just check IsEmpty() on the sub-queues. Don't bother checking the idle
+  // deadline since that only determines whether an idle event is ready or not.
+  return mHighQueue->IsEmpty(aProofOfLock)
+      && mInputQueue->IsEmpty(aProofOfLock)
+      && mNormalQueue->IsEmpty(aProofOfLock)
+      && mIdleQueue->IsEmpty(aProofOfLock);
+}
+
+template<class InnerQueueT>
+bool
+PrioritizedEventQueue<InnerQueueT>::HasReadyEvent(const MutexAutoLock& aProofOfLock)
 {
   mHasPendingEventsPromisedIdleEvent = false;
 
-  if (mHighQueue->HasPendingEvent(aProofOfLock) ||
-      mInputQueue->HasPendingEvent(aProofOfLock) ||
-      mNormalQueue->HasPendingEvent(aProofOfLock)) {
+  EventPriority queue = SelectQueue(false, aProofOfLock);
+
+  if (queue == EventPriority::High) {
+    return mHighQueue->HasReadyEvent(aProofOfLock);
+  } else if (queue == EventPriority::Input) {
+    return mIdleQueue->HasReadyEvent(aProofOfLock);
+  } else if (queue == EventPriority::Normal) {
+    return mNormalQueue->HasReadyEvent(aProofOfLock);
+  }
+
+  MOZ_ASSERT(queue == EventPriority::Idle);
+
+  // If we get here, then both the high and normal queues are empty.
+
+  if (mIdleQueue->IsEmpty(aProofOfLock)) {
+    return false;
+  }
+
+  TimeStamp idleDeadline = GetIdleDeadline();
+  if (idleDeadline && mIdleQueue->HasReadyEvent(aProofOfLock)) {
+    mHasPendingEventsPromisedIdleEvent = true;
     return true;
   }
 
-  bool hasPendingIdleEvent = false;
-
-  // Note that GetIdleDeadline() checks mHasPendingEventsPromisedIdleEvent,
-  // but that's OK since we set it to false in the beginning of this method!
-  TimeStamp idleDeadline = GetIdleDeadline();
-
-  // Only examine the idle queue if we are in an idle period.
-  if (idleDeadline) {
-    hasPendingIdleEvent = mIdleQueue->HasPendingEvent(aProofOfLock);
-    mHasPendingEventsPromisedIdleEvent = hasPendingIdleEvent;
-  }
-
-  return hasPendingIdleEvent;
+  return false;
 }
 
 template<class InnerQueueT>

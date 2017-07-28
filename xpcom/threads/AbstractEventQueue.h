@@ -45,12 +45,18 @@ public:
 
   // Get an event from the front of the queue. aPriority is an out param. If the
   // implementation supports priorities, then this should be the same priority
-  // that the event was pushed with. aPriority may be null.
+  // that the event was pushed with. aPriority may be null. This should return
+  // null if the queue is non-empty but the event in front is not ready to run.
   virtual already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
                                                  const MutexAutoLock& aProofOfLock) = 0;
 
-  // Returns true if the queue is non-empty.
-  virtual bool HasPendingEvent(const MutexAutoLock& aProofOfLock) = 0;
+  // Returns true if the queue is empty. Implies !HasReadyEvent().
+  virtual bool IsEmpty(const MutexAutoLock& aProofOfLock) = 0;
+
+  // Returns true if the queue is non-empty and if the event in front is ready
+  // to run. Implies !IsEmpty(). This should return true iff GetEvent returns a
+  // non-null value.
+  virtual bool HasReadyEvent(const MutexAutoLock& aProofOfLock) = 0;
 
   // Returns the number of events in the queue.
   virtual size_t Count(const MutexAutoLock& aProofOfLock) const = 0;

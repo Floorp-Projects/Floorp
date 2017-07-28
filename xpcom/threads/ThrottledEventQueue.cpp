@@ -170,7 +170,7 @@ class ThrottledEventQueue::Inner final : public nsIObserver
       // executor.  We do this now, before running the event, because
       // the event might spin the event loop and we don't want to stall
       // the queue.
-      if (mEventQueue.HasPendingEvent(lock)) {
+      if (mEventQueue.HasReadyEvent(lock)) {
         // Dispatch the next base target runnable to attempt to execute
         // the next throttled event.  We must do this before executing
         // the event in case the event spins the event loop.
