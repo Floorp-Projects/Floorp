@@ -1710,19 +1710,21 @@ var Scalars = {
       return;
     }
 
-    let scalars = aPayload.processes[selectedProcess].scalars;
-    const hasData = scalars && Object.keys(scalars).length > 0;
-    setHasData("scalars-section", hasData || processesSelect.options.length);
-    if (!hasData) {
-      return;
+    let scalars = aPayload.processes[selectedProcess].scalars || {};
+    let hasData = Array.from(processesSelect.options).some((option) => {
+      let value = option.getAttribute("value");
+      let sclrs = aPayload.processes[value].scalars;
+      return sclrs && Object.keys(sclrs).length > 0;
+    });
+    setHasData("scalars-section", hasData);
+    if (Object.keys(scalars).length > 0) {
+      const headings = [
+        "namesHeader",
+        "valuesHeader",
+      ].map(h => bundle.GetStringFromName(h));
+      const table = GenericTable.render(explodeObject(scalars), headings);
+      scalarsSection.appendChild(table);
     }
-
-    const headings = [
-      "namesHeader",
-      "valuesHeader",
-    ].map(h => bundle.GetStringFromName(h));
-    const table = GenericTable.render(explodeObject(scalars), headings);
-    scalarsSection.appendChild(table);
   },
 };
 
@@ -1744,10 +1746,14 @@ var KeyedScalars = {
       return;
     }
 
-    let keyedScalars = aPayload.processes[selectedProcess].keyedScalars;
-    const hasData = keyedScalars && Object.keys(keyedScalars).length > 0;
-    setHasData("keyed-scalars-section", hasData || processesSelect.options.length);
-    if (!hasData) {
+    let keyedScalars = aPayload.processes[selectedProcess].keyedScalars || {};
+    let hasData = Array.from(processesSelect.options).some((option) => {
+      let value = option.getAttribute("value");
+      let keyedS = aPayload.processes[value].keyedScalars;
+      return keyedS && Object.keys(keyedS).length > 0;
+    });
+    setHasData("keyed-scalars-section", hasData);
+    if (!Object.keys(keyedScalars).length > 0) {
       return;
     }
 
@@ -1780,10 +1786,6 @@ var Events = {
     let eventsSection = document.getElementById("events");
     removeAllChildNodes(eventsSection);
 
-    if (!aPayload.processes || !aPayload.processes.parent) {
-      return;
-    }
-
     let processesSelect = document.getElementById("processes");
     let selectedProcess = processesSelect.selectedOptions.item(0).getAttribute("value");
 
@@ -1793,24 +1795,26 @@ var Events = {
       return;
     }
 
-    let events = aPayload.processes[selectedProcess].events;
-    const hasData = events && Object.keys(events).length > 0;
+    let events = aPayload.processes[selectedProcess].events || {};
+    let hasData = Array.from(processesSelect.options).some((option) => {
+      let value = option.getAttribute("value");
+      let evts = aPayload.processes[value].events;
+      return evts && Object.keys(evts).length > 0;
+    });
     setHasData("events-section", hasData);
-    if (!hasData) {
-      return;
+    if (Object.keys(events).length > 0) {
+      const headings = [
+        "timestampHeader",
+        "categoryHeader",
+        "methodHeader",
+        "objectHeader",
+        "valuesHeader",
+        "extraHeader",
+      ].map(h => bundle.GetStringFromName(h));
+
+      const table = GenericTable.render(events, headings);
+      eventsSection.appendChild(table);
     }
-
-    const headings = [
-      "timestampHeader",
-      "categoryHeader",
-      "methodHeader",
-      "objectHeader",
-      "valuesHeader",
-      "extraHeader",
-    ].map(h => bundle.GetStringFromName(h));
-
-    const table = GenericTable.render(events, headings);
-    eventsSection.appendChild(table);
   },
 };
 
@@ -2082,30 +2086,31 @@ var HistogramSection = {
     let hgramDiv = document.getElementById("histograms");
     removeAllChildNodes(hgramDiv);
 
-    let histograms = aPayload.histograms;
-
+    let histograms = {};
     let hgramsSelect = document.getElementById("processes");
     let hgramsOption = hgramsSelect.selectedOptions.item(0);
     let hgramsProcess = hgramsOption.getAttribute("value");
-    // "parent" histograms/keyedHistograms aren't under "parent". Fix that up.
+
     if (hgramsProcess === "parent") {
-      hgramsProcess = "";
-    }
-    if (hgramsProcess &&
-        "processes" in aPayload &&
-        hgramsProcess in aPayload.processes) {
+      histograms = aPayload.histograms;
+    } else if ("processes" in aPayload && hgramsProcess in aPayload.processes) {
       histograms = aPayload.processes[hgramsProcess].histograms;
     }
 
-    let hasData = Object.keys(histograms).length > 0;
-    setHasData("histograms-section", hasData || hgramsSelect.options.length);
+    let hasData = Array.from(hgramsSelect.options).some((option) => {
+      if (option == "parent") {
+        return Object.keys(aPayload.histograms).length > 0;
+      }
+      let value = option.getAttribute("value");
+      let histos = aPayload.processes[value].histograms;
+      return histos && Object.keys(histos).length > 0;
+    });
+    setHasData("histograms-section", hasData);
 
-    if (hasData) {
+    if (Object.keys(histograms).length > 0) {
       for (let [name, hgram] of Object.entries(histograms)) {
         Histogram.render(hgramDiv, name, hgram, {unpacked: true});
       }
-
-      setHasData("histograms-section", true);
     }
   },
 }
@@ -2115,31 +2120,31 @@ var KeyedHistogramSection = {
     let keyedDiv = document.getElementById("keyed-histograms");
     removeAllChildNodes(keyedDiv);
 
-    let keyedHistograms = aPayload.keyedHistograms;
-
+    let keyedHistograms = {};
     let keyedHgramsSelect = document.getElementById("processes");
     let keyedHgramsOption = keyedHgramsSelect.selectedOptions.item(0);
     let keyedHgramsProcess = keyedHgramsOption.getAttribute("value");
-    // "parent" histograms/keyedHistograms aren't under "parent". Fix that up.
     if (keyedHgramsProcess === "parent") {
-      keyedHgramsProcess = "";
-    }
-    if (keyedHgramsProcess &&
-        "processes" in aPayload &&
-        keyedHgramsProcess in aPayload.processes) {
+      keyedHistograms = aPayload.keyedHistograms;
+    } else if ("processes" in aPayload && keyedHgramsProcess in aPayload.processes) {
       keyedHistograms = aPayload.processes[keyedHgramsProcess].keyedHistograms;
     }
 
-    setHasData("keyed-histograms-section", keyedHgramsSelect.options.length);
-    if (keyedHistograms) {
-      let hasData = false;
+    let hasData = Array.from(keyedHgramsSelect.options).some((option) => {
+      if (option == "parent") {
+        return Object.keys(aPayload.keyedHistograms).length > 0;
+      }
+      let value = option.getAttribute("value");
+      let keyedHistos = aPayload.processes[value].keyedHistograms;
+      return keyedHistos && Object.keys(keyedHistos).length > 0;
+    });
+    setHasData("keyed-histograms-section", hasData);
+    if (Object.keys(keyedHistograms).length > 0) {
       for (let [id, keyed] of Object.entries(keyedHistograms)) {
         if (Object.keys(keyed).length > 0) {
-          hasData = true;
           KeyedHistogram.render(keyedDiv, id, keyed, {unpacked: true});
         }
       }
-      setHasData("keyed-histograms-section", hasData || keyedHgramsSelect.options.length);
     }
   },
 }
