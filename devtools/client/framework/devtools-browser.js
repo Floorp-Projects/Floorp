@@ -303,7 +303,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         gDevToolsBrowser.toggleToolboxCommand(window.gBrowser);
         break;
       case "toggleToolbar":
-        window.DeveloperToolbar.focusToggle();
+        gDevToolsBrowser.getDeveloperToolbar(window).focusToggle();
         break;
       case "webide":
         gDevToolsBrowser.openWebIDE();
