@@ -163,21 +163,19 @@ Statistics::lookupChildPhase(PhaseKind phaseKind) const
 
     MOZ_ASSERT(phaseKind < PhaseKind::LIMIT);
 
-    // Most phases only correspond to a single expanded phase so check for that
-    // first.
-    Phase phase = phaseKinds[phaseKind].firstPhase;
-    if (phases[phase].nextInPhase == Phase::NONE) {
-        MOZ_ASSERT(phases[phase].parent == currentPhase());
-        return phase;
+    // Search all expanded phases that correspond to the required
+    // phase to find the one whose parent is the current expanded phase.
+    Phase phase;
+    for (phase = phaseKinds[phaseKind].firstPhase;
+         phase != Phase::NONE;
+         phase = phases[phase].nextInPhase)
+    {
+        if (phases[phase].parent == currentPhase())
+            break;
     }
 
-    // Otherwise search all expanded phases that correspond to the required
-    // phase to find the one whose parent is the current expanded phase.
-    Phase parent = currentPhase();
-    while (phases[phase].parent != parent) {
-        phase = phases[phase].nextInPhase;
-        MOZ_ASSERT(phase != Phase::NONE);
-    }
+    MOZ_RELEASE_ASSERT(phase != Phase::NONE,
+                       "Requested child phase not found under current phase");
 
     return phase;
 }
