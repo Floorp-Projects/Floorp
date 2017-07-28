@@ -102,6 +102,101 @@ const MERGE_TESTCASES = [
       country: "US",
     },
   },
+  {
+    description: "Merge an address with multi-line street-address in storage and single-line incoming one",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn Avenue Line2",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with 3-line street-address in storage and 2-line incoming one",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn Avenue\nLine2 Line3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with single-line street-address in storage and multi-line incoming one",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue Line2",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn Avenue\nLine2",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with 2-line street-address in storage and 3-line incoming one",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2 Line3",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
+  {
+    description: "Merge an address with the same amount of lines",
+    addressInStorage: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+    },
+    addressToMerge: {
+      "street-address": "331 E. Evelyn\nAvenue Line2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+    expectedAddress: {
+      "given-name": "Timothy",
+      "street-address": "331 E. Evelyn Avenue\nLine2\nLine3",
+      "tel": "+16509030800",
+      country: "US",
+    },
+  },
 ];
 
 let do_check_record_matches = (recordWithMeta, record) => {
