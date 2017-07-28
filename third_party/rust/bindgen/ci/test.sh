@@ -5,6 +5,9 @@ cd "$(dirname "$0")/.."
 
 export RUST_BACKTRACE=1
 
+# Disallow system header file includes in our test suite.
+./ci/no-includes.sh
+
 # Regenerate the test headers' bindings in debug and release modes, and assert
 # that we always get the expected generated bindings.
 
@@ -17,15 +20,19 @@ cargo test --features "$BINDGEN_FEATURES testing_only_extra_assertions"
 cargo test --release --features "$BINDGEN_FEATURES testing_only_extra_assertions"
 ./ci/assert-no-diff.sh
 
-# Now test the expectations' size and alignment tests.
+if [ -v "${TRAVIS_OS_NAME}" ]; then
 
-pushd tests/expectations
-cargo test
-cargo test --release
-popd
+    # Now test the expectations' size and alignment tests.
 
-# And finally, test our example bindgen + build.rs integration template project.
+    pushd tests/expectations
+    cargo test
+    cargo test --release
+    popd
 
-cd bindgen-integration
-cargo test --features "$BINDGEN_FEATURES"
-cargo test --release --features "$BINDGEN_FEATURES"
+    # And finally, test our example bindgen + build.rs integration template project.
+
+    cd bindgen-integration
+    cargo test --features "$BINDGEN_FEATURES"
+    cargo test --release --features "$BINDGEN_FEATURES"
+
+fi

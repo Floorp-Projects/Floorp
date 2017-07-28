@@ -84,11 +84,14 @@ describe("EvaluationResult component:", () => {
     let wrapper = render(EvaluationResult({
       message: Object.assign({}, message, {indent}),
     }));
-    expect(wrapper.find(".indent").prop("style").width)
-        .toBe(`${indent * INDENT_WIDTH}px`);
+    let indentEl = wrapper.find(".indent");
+    expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
+    expect(indentEl.prop("data-indent")).toBe(`${indent}`);
 
     wrapper = render(EvaluationResult({ message}));
-    expect(wrapper.find(".indent").prop("style").width).toBe(`0`);
+    indentEl = wrapper.find(".indent");
+    expect(indentEl.prop("style").width).toBe(`0`);
+    expect(indentEl.prop("data-indent")).toBe(`0`);
   });
 
   it("has location information", () => {

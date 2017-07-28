@@ -550,6 +550,7 @@ groupbox {
 }
 
 .fxaMobilePromo {
+  line-height: 28px;
   margin-bottom: 20px;
   margin-top: 25px;
 }
@@ -565,21 +566,18 @@ groupbox {
 }
 
 .androidLink {
-  background-image: url("chrome://browser/skin/fxa/android.png");
+  list-style-image: url("chrome://browser/skin/fxa/android.png");
 }
 
 .iOSLink {
-  background-image: url("chrome://browser/skin/fxa/ios.png");
+  list-style-image: url("chrome://browser/skin/fxa/ios.png");
 }
 
 .androidLink,
 .iOSLink {
-  margin: 0 0 0 2px;
-  padding-left: 28px;
-  padding-top: 6px;
+  vertical-align: bottom;
+  padding: 0 5px;
   height: 28px;
-  background-repeat: no-repeat;
-  background-size: 24px 28px;
 }
 
 #tosPP-small {
@@ -589,10 +587,10 @@ groupbox {
 
 @media (min-resolution: 1.1dppx) {
   .androidLink {
-    background-image: url("chrome://browser/skin/fxa/android@2x.png");
+    list-style-image: url("chrome://browser/skin/fxa/android@2x.png");
   }
   .iOSLink {
-    background-image: url("chrome://browser/skin/fxa/ios@2x.png");
+    list-style-image: url("chrome://browser/skin/fxa/ios@2x.png");
   }
   .fxaFirefoxLogo {
     list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);

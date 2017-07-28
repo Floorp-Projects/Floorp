@@ -228,7 +228,8 @@ config = {
         "reftest-no-accel": {
             "options": ["--suite=reftest",
                         "--setpref=layers.acceleration.force-enabled=disabled"],
-            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]},
+            "tests": ["tests/reftest/tests/layout/reftests/reftest.list"]
+        },
         "reftest-stylo": {
             "options": ["--suite=reftest",
                         "--setpref=reftest.compareStyloToGecko=true"],

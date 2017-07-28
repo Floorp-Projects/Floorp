@@ -76,6 +76,7 @@ private:
   int32_t mUseAccessibilityTheme;
   int32_t mUseDefaultTheme; // is the current theme a known default?
   int32_t mNativeThemeId; // see LookAndFeel enum 'WindowsTheme'
+  int32_t mCaretBlinkTime;
 
   struct CachedSystemFont {
     CachedSystemFont()

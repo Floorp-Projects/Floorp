@@ -47,9 +47,9 @@ issue, provide us with:
 
 ## Looking to Start Contributing to `bindgen`?
 
-* [Issues labeled "easy"](https://github.com/servo/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-easy)
-* [Issues labeled "less easy"](https://github.com/servo/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-less-easy)
-* Still can't find something to work on? [Drop a comment here](https://github.com/servo/rust-bindgen/issues/747)
+* [Issues labeled "easy"](https://github.com/rust-lang-nursery/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-easy)
+* [Issues labeled "less easy"](https://github.com/rust-lang-nursery/rust-bindgen/issues?q=is%3Aopen+is%3Aissue+label%3AE-less-easy)
+* Still can't find something to work on? [Drop a comment here](https://github.com/rust-lang-nursery/rust-bindgen/issues/747)
 
 ## Building
 
@@ -272,14 +272,16 @@ With those two things in hand, running `creduce` looks like this:
 
 ### Isolating Your Test Case
 
-Use the `-save-temps` flag to make Clang spit out its intermediate
-representations when compiling the test case into an object file.
+If you're using `bindgen` as a command line tool, pass
+`--dump-preprocessed-input` flag.
 
-    $ clang[++ -x c++ --std=c++14] -save-temps -c my_test_case.h
+If you're using `bindgen` as a Rust library, invoke the
+`bindgen::Builder::dump_preprocessed_input` method where you call
+`bindgen::Builder::generate`.
 
-There should now be a `my_test_case.ii` file, which is the results after the C
-pre-processor has processed all the `#include`s, `#define`s, and `#ifdef`s. This
-is generally what we're looking for.
+Afterwards, there should be a `__bindgen.i` or `__bindgen.ii` file containing
+the combined and preprocessed input headers, which is usable as an isolated,
+standalone test case.
 
 ### Writing a Predicate Script
 

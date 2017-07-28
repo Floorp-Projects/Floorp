@@ -30,8 +30,8 @@ pub mod attributes {
         aster::AstBuilder::new().attr().word("inline")
     }
 
-    pub fn doc(comment: &str) -> ast::Attribute {
-        aster::AstBuilder::new().attr().doc(comment)
+    pub fn doc(comment: String) -> ast::Attribute {
+        aster::AstBuilder::new().attr().doc(&*comment)
     }
 
     pub fn link_name(name: &str) -> ast::Attribute {

@@ -435,8 +435,10 @@ WebAuthnManager::MakeCredential(nsPIDOMWindowInner* aParent,
     return promise.forget();
   }
 
+  // WD-05 vs. WD-06: In WD-06, the first parameter should be "origin". Fix
+  // this in Bug 1384776
   nsAutoCString clientDataJSON;
-  srv = AssembleClientData(origin, challenge, clientDataJSON);
+  srv = AssembleClientData(NS_ConvertUTF8toUTF16(rpId), challenge, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
@@ -588,7 +590,9 @@ WebAuthnManager::GetAssertion(nsPIDOMWindowInner* aParent,
   }
 
   nsAutoCString clientDataJSON;
-  srv = AssembleClientData(origin, challenge, clientDataJSON);
+  // WD-05 vs. WD-06: In WD-06, the first parameter should be "origin". Fix
+  // this in Bug 1384776
+  srv = AssembleClientData(NS_ConvertUTF8toUTF16(rpId), challenge, clientDataJSON);
   if (NS_WARN_IF(NS_FAILED(srv))) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();

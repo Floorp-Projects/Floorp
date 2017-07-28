@@ -16,19 +16,19 @@ async function waitForSearchBarFocus() {
 
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", true]]});
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
-  is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
+  is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
 
-  let shownPanelPromise = promisePanelShown(window);
+  let shownPanelPromise = promiseOverflowShown(window);
   sendWebSearchKeyCommand();
   await shownPanelPromise;
 
   await waitForSearchBarFocus();
 
-  let hiddenPanelPromise = promisePanelHidden(window);
+  let hiddenPanelPromise = promiseOverflowHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   await hiddenPanelPromise;
   CustomizableUI.reset();
@@ -39,17 +39,15 @@ add_task(async function() {
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
-  is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
+  is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
 
-  let shownPanelPromise = promisePanelShown(window);
-  PanelUI.toggle({type: "command"});
-  await shownPanelPromise;
+  await document.getElementById("nav-bar").overflowable.show();
 
   sendWebSearchKeyCommand();
 
   await waitForSearchBarFocus();
 
-  let hiddenPanelPromise = promisePanelHidden(window);
+  let hiddenPanelPromise = promiseOverflowHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
   await hiddenPanelPromise;
   CustomizableUI.reset();

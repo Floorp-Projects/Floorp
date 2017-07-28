@@ -593,17 +593,27 @@ id_and_secret_keyfile('Leanplum SDK')
 option('--enable-stylo', nargs='?', choices=('build',),
        help='Include Stylo in the build and/or enable it at runtime')
 
-@depends('--enable-stylo', '--help')
-def stylo_config(value, _):
+@depends('--enable-stylo', '--help', target)
+def stylo_config(value, _, target):
     build_stylo = None
     enable_stylo = None
 
-    # The default is to not build Stylo at all.
+    # If nothing is specified, default to building stylo where possible.
     if value.origin == 'default':
-        pass
+        if target.os == 'GNU' and target.bitness == 32:
+            # The clang setup we use in automation is a little unusual, and
+            # doesn't play well with bindgen on 32-bit Linux.
+            pass
+        elif target.os == 'Android':
+            # Stylo on Android is happening Later(tm).
+            pass
+        else:
+            build_stylo = True
     elif len(value) and value[0] == 'build':
+        # Build but disable by request.
         build_stylo = True
     elif bool(value):
+        # Build and enable.
         build_stylo = True
         enable_stylo = True
 

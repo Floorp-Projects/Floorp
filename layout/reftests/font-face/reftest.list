@@ -133,7 +133,7 @@ HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html
 # Tests for bug 523717
 HTTP(..) == underline-offset-change-1.html underline-offset-change-1-ref.html
 HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
-fails-if(cocoaWidget) fails-if(winWidget) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
+fails-if(cocoaWidget&&!styloVsGecko) fails-if(winWidget&&!styloVsGecko) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
 
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 HTTP(..) == bug533251.html bug533251-ref.html

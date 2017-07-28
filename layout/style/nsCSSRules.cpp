@@ -1265,21 +1265,14 @@ nsCSSFontFeatureValuesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSFontFeatureValuesRule, mozilla::css::Rule)
-NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, mozilla::css::Rule)
+NS_IMPL_ADDREF_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, dom::CSSFontFeatureValuesRule)
 
 // QueryInterface implementation for nsCSSFontFeatureValuesRule
 // If this ever gets its own cycle-collection bits, reevaluate our IsCCLeaf
 // implementation.
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
-NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-bool
-nsCSSFontFeatureValuesRule::IsCCLeaf() const
-{
-  return Rule::IsCCLeaf();
-}
+NS_INTERFACE_MAP_END_INHERITING(dom::CSSFontFeatureValuesRule)
 
 static void
 FeatureValuesToString(
@@ -1363,49 +1356,11 @@ nsCSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-/* virtual */ int32_t
-nsCSSFontFeatureValuesRule::GetType() const
-{
-  return Rule::FONT_FEATURE_VALUES_RULE;
-}
-
-uint16_t
-nsCSSFontFeatureValuesRule::Type() const
-{
-  return nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE;
-}
-
-void
-nsCSSFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
-{
-  FontFeatureValuesRuleToString(mFamilyList, mFeatureValues, aCssText);
-}
-
-void
-nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFamily,
-                                          ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-void
-nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aFamily,
-                                         ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
 NS_IMETHODIMP
 nsCSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
 {
   nsStyleUtil::AppendEscapedCSSFontFamilyList(mFamilyList, aFamilyListStr);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -1416,9 +1371,21 @@ nsCSSFontFeatureValuesRule::GetValueText(nsAString& aValueText)
 }
 
 NS_IMETHODIMP
+nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFontFamily)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aValueText)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsCSSFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
+{
+  FontFeatureValuesRuleToString(mFamilyList, mFeatureValues, aCssText);
 }
 
 struct MakeFamilyArray {
@@ -1481,13 +1448,6 @@ nsCSSFontFeatureValuesRule::SizeOfIncludingThis(
   MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
-}
-
-/* virtual */ JSObject*
-nsCSSFontFeatureValuesRule::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto)
-{
-  return CSSFontFeatureValuesRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 // -------------------------------------------

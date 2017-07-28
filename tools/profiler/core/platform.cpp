@@ -1583,7 +1583,7 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 }
 #endif
 
-static void
+static TimeStamp
 locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                                              SpliceableJSONWriter& aWriter,
                                              double aSinceTime)
@@ -1611,6 +1611,8 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
     aWriter.EndObject();
   }
 
+  double firstSampleTime = INFINITY;
+
   // Lists the samples for each thread profile
   aWriter.StartArrayProperty("threads");
   {
@@ -1620,16 +1622,20 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       if (!info->IsBeingProfiled()) {
         continue;
       }
-      info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
-                       CorePS::ProcessStartTime(), aSinceTime);
+      double thisThreadFirstSampleTime =
+        info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
+                         CorePS::ProcessStartTime(), aSinceTime);
+      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
     }
 
     const CorePS::ThreadVector& deadThreads = CorePS::DeadThreads(aLock);
     for (size_t i = 0; i < deadThreads.size(); i++) {
       ThreadInfo* info = deadThreads.at(i);
       MOZ_ASSERT(info->IsBeingProfiled());
-      info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
-                       CorePS::ProcessStartTime(), aSinceTime);
+      double thisThreadFirstSampleTime =
+        info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
+                        CorePS::ProcessStartTime(), aSinceTime);
+      firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
     }
 
 #if defined(GP_OS_android)
@@ -1647,10 +1653,19 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
 #endif
   }
   aWriter.EndArray();
+
+  if (firstSampleTime != INFINITY) {
+    return CorePS::ProcessStartTime() +
+           TimeDuration::FromMilliseconds(firstSampleTime);
+  }
+
+  return TimeStamp();
 }
 
 bool
-profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSinceTime)
+profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
+                                      double aSinceTime,
+                                      TimeStamp* aOutFirstSampleTime)
 {
   LOG("profiler_stream_json_for_this_process");
 
@@ -1662,7 +1677,13 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter, double aSin
     return false;
   }
 
-  locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime);
+  TimeStamp firstSampleTime =
+    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime);
+
+  if (aOutFirstSampleTime) {
+    *aOutFirstSampleTime = firstSampleTime;
+  }
+
   return true;
 }
 

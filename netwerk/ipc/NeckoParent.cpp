@@ -18,6 +18,7 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
 #include "mozilla/net/DataChannelParent.h"
+#include "mozilla/net/SimpleChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/FileChannelParent.h"
@@ -527,6 +528,29 @@ NeckoParent::RecvPDataChannelConstructor(PDataChannelParent* actor,
   DataChannelParent* p = static_cast<DataChannelParent*>(actor);
   DebugOnly<bool> rv = p->Init(channelId);
   MOZ_ASSERT(rv);
+  return IPC_OK();
+}
+
+PSimpleChannelParent*
+NeckoParent::AllocPSimpleChannelParent(const uint32_t &channelId)
+{
+  RefPtr<SimpleChannelParent> p = new SimpleChannelParent();
+  return p.forget().take();
+}
+
+bool
+NeckoParent::DeallocPSimpleChannelParent(PSimpleChannelParent* actor)
+{
+  RefPtr<SimpleChannelParent> p = dont_AddRef(actor).downcast<SimpleChannelParent>();
+  return true;
+}
+
+mozilla::ipc::IPCResult
+NeckoParent::RecvPSimpleChannelConstructor(PSimpleChannelParent* actor,
+                                           const uint32_t& channelId)
+{
+  SimpleChannelParent* p = static_cast<SimpleChannelParent*>(actor);
+  MOZ_ALWAYS_TRUE(p->Init(channelId));
   return IPC_OK();
 }
 

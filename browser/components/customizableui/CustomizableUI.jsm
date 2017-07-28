@@ -330,6 +330,7 @@ var CustomizableUIInternal = {
       this.registerArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, {
         type: CustomizableUI.TYPE_MENU_PANEL,
         defaultPlacements: [],
+        anchor: "nav-bar-overflow-button",
       }, true);
     } else {
       if (gAreas.has(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL)) {

@@ -1,0 +1,22 @@
+<!doctype html>
+<style>
+div { padding: 1px; }
+.test div { padding: 2px; }
+.test div div { padding: 3px; }
+.test div div div { background: orange; }
+.test div div div div { background: white; }
+.test div div div div div { background: red; }
+</style>
+<body>
+<script>
+let root = document.createElement('div');
+let p = root;
+for (let i = 0; i < 1000; ++i) {
+  p = p.appendChild(document.createElement('div'));
+  p.appendChild(document.createTextNode(i));
+}
+document.body.appendChild(root);
+document.body.offsetTop;
+root.className = 'test';
+</script>
+</body>

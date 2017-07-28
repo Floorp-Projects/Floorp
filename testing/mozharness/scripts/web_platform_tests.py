@@ -62,11 +62,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
             "default": False,
             "help": "Tries to enable the WebRender compositor."}
          ],
-        [["--parallel-stylo-traversal"], {
+        [["--single-stylo-traversal"], {
             "action": "store_true",
-            "dest": "parallel_stylo_traversal",
+            "dest": "single_stylo_traversal",
             "default": False,
-            "help": "Forcibly enable parallel traversal in Stylo with STYLO_THREADS=4"}
+            "help": "Forcibly enable single thread traversal in Stylo with STYLO_THREADS=1"}
          ],
         [["--enable-stylo"], {
             "action": "store_true",
@@ -182,7 +182,9 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         if not c["e10s"]:
             cmd.append("--disable-e10s")
 
-        if c["parallel_stylo_traversal"]:
+        if c["single_stylo_traversal"]:
+            cmd.append("--stylo-threads=1")
+        else:
             cmd.append("--stylo-threads=4")
 
         for opt in ["total_chunks", "this_chunk"]:
@@ -262,7 +264,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin, CodeCovera
         if self.config['enable_webrender']:
             env['MOZ_WEBRENDER'] = '1'
 
-        env['STYLO_THREADS'] = '4' if self.config['parallel_stylo_traversal'] else '1'
+        if self.config['single_stylo_traversal']:
+            env['STYLO_THREADS'] = '1'
+        else:
+            env['STYLO_THREADS'] = '4'
         if self.config['enable_stylo']:
             env['STYLO_FORCE_ENABLED'] = '1'
 

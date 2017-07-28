@@ -15,9 +15,9 @@ load 428489-1.html
 load 429586-1.html
 load 430624-1.html
 load 431086-1.xhtml
-load 448329-1.html
+skip-if(stylo&&isDebugBuild&&winWidget) load 448329-1.html # Bug 1383845
 load 448329-2.html
-load 448329-3.html
+skip-if(stylo&&isDebugBuild&&winWidget) load 448329-3.html # Bug 1383845
 load 456727-1.html
 load 456727-2.html
 load 459613.html

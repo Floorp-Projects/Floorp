@@ -55,6 +55,15 @@ pub fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
         if let Some(err) = err {
             return err;
         }
+
+        if let Some(module) = item.as_module() {
+            for child in module.children() {
+                try!(writeln!(&mut dot_file,
+                              "{} -> {} [style=dotted]",
+                              item.id().as_usize(),
+                              child.as_usize()));
+            }
+        }
     }
 
     try!(writeln!(&mut dot_file, "}}"));

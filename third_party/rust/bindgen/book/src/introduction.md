@@ -1,6 +1,6 @@
 # Introduction
 
-**[`bindgen`](https://github.com/servo/rust-bindgen) automatically generates Rust
+**[`bindgen`](https://github.com/rust-lang-nursery/rust-bindgen) automatically generates Rust
 FFI bindings to C and C++ libraries.**
 
 For example, given the C header `cool.h`:

@@ -31,6 +31,13 @@ const whitelist = [
     photon: true,
   },
 
+  // Non-Photon-only entries
+  {
+    file: "chrome://browser/skin/toolbarbutton-dropdown-arrow.png",
+    platforms: ["linux", "win", "macosx"],
+    photon: false,
+  },
+
   // Shared entries
   {
     file: "chrome://browser/skin/arrow-left.svg",
