@@ -41,6 +41,6 @@ fn test() {
 
 #[test]
 fn test_support() {
-    let clang = support::Clang::find(None).unwrap();
+    let clang = support::Clang::find(None, &[]).unwrap();
     println!("{:?}", clang);
 }

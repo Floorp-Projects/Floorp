@@ -28,7 +28,7 @@ Download and install the official pre-built binary from
 If you use Homebrew:
 
 ```bash
-$ brew install llvm@3.9
+$ brew install llvm
 ```
 
 If you use MacPorts:
