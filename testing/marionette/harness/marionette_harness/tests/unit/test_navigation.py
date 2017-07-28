@@ -258,6 +258,7 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.switch_to_window(self.new_tab)
         self.marionette.navigate(self.test_page_remote)
 
+    @skip("Bug 1369923 - Disabling as keystrokes don't trigger page loads")
     @skip_if_mobile("Interacting with chrome elements not available for Fennec")
     def test_type_to_non_remote_tab(self):
         self.marionette.navigate(self.test_page_not_remote)
