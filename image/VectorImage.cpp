@@ -380,7 +380,7 @@ VectorImage::Init(const char* aMimeType,
 }
 
 size_t
-VectorImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
+VectorImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   if (!mSVGDocumentWrapper) {
     return 0; // No document, so no memory used for the document.
@@ -391,7 +391,7 @@ VectorImage::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
     return 0; // No document, so no memory used for the document.
   }
 
-  nsWindowSizes windowSizes(aState);
+  nsWindowSizes windowSizes(aMallocSizeOf);
   doc->DocAddSizeOfIncludingThis(&windowSizes);
 
   if (windowSizes.getTotalSize() == 0) {

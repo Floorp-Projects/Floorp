@@ -220,10 +220,10 @@ HTMLAreaElement::IntrinsicState() const
 }
 
 size_t
-HTMLAreaElement::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
+HTMLAreaElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return nsGenericHTMLElement::SizeOfExcludingThis(aState) +
-         Link::SizeOfExcludingThis(aState);
+  return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
+         Link::SizeOfExcludingThis(aMallocSizeOf);
 }
 
 JSObject*

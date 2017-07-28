@@ -205,8 +205,6 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ELEMENT_IID)
 
-  NS_DECL_SIZEOF_EXCLUDING_THIS
-
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   /**

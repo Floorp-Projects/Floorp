@@ -13778,13 +13778,13 @@ nsGlobalWindow::DisableTimeChangeNotifications()
 void
 nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 {
-  aWindowSizes->mDOMOtherSize += aWindowSizes->mState.mMallocSizeOf(this);
+  aWindowSizes->mDOMOtherSize += aWindowSizes->mMallocSizeOf(this);
 
   if (IsInnerWindow()) {
     EventListenerManager* elm = GetExistingListenerManager();
     if (elm) {
       aWindowSizes->mDOMOtherSize +=
-        elm->SizeOfIncludingThis(aWindowSizes->mState.mMallocSizeOf);
+        elm->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
       aWindowSizes->mDOMEventListenersCount +=
         elm->ListenerCount();
     }
@@ -13801,19 +13801,17 @@ nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const
 
   if (mNavigator) {
     aWindowSizes->mDOMOtherSize +=
-      mNavigator->SizeOfIncludingThis(aWindowSizes->mState.mMallocSizeOf);
+      mNavigator->SizeOfIncludingThis(aWindowSizes->mMallocSizeOf);
   }
 
   aWindowSizes->mDOMEventTargetsSize +=
-    mEventTargetObjects.ShallowSizeOfExcludingThis(
-      aWindowSizes->mState.mMallocSizeOf);
+    mEventTargetObjects.ShallowSizeOfExcludingThis(aWindowSizes->mMallocSizeOf);
 
   for (auto iter = mEventTargetObjects.ConstIter(); !iter.Done(); iter.Next()) {
     DOMEventTargetHelper* et = iter.Get()->GetKey();
     if (nsCOMPtr<nsISizeOfEventTarget> iSizeOf = do_QueryObject(et)) {
       aWindowSizes->mDOMEventTargetsSize +=
-        iSizeOf->SizeOfEventTargetIncludingThis(
-          aWindowSizes->mState.mMallocSizeOf);
+        iSizeOf->SizeOfEventTargetIncludingThis(aWindowSizes->mMallocSizeOf);
     }
     if (EventListenerManager* elm = et->GetExistingListenerManager()) {
       aWindowSizes->mDOMEventListenersCount += elm->ListenerCount();

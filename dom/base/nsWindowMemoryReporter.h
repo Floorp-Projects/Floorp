@@ -39,7 +39,7 @@ class nsWindowSizes {
   macro(Other, mPropertyTablesSize) \
 
 public:
-  explicit nsWindowSizes(mozilla::SizeOfState& aState)
+  explicit nsWindowSizes(mozilla::MallocSizeOf aMallocSizeOf)
     :
       #define ZERO_SIZE(kind, mSize)  mSize(0),
       FOR_EACH_SIZE(ZERO_SIZE)
@@ -47,7 +47,7 @@ public:
       mDOMEventTargetsCount(0),
       mDOMEventListenersCount(0),
       mArenaStats(),
-      mState(aState)
+      mMallocSizeOf(aMallocSizeOf)
   {}
 
   void addToTabSizes(nsTabSizes *sizes) const {
@@ -75,7 +75,7 @@ public:
   uint32_t mDOMEventListenersCount;
 
   nsArenaMemoryStats mArenaStats;
-  mozilla::SizeOfState& mState;
+  mozilla::MallocSizeOf mMallocSizeOf;
 
 #undef FOR_EACH_SIZE
 };

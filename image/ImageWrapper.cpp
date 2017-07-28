@@ -30,9 +30,9 @@ ImageWrapper::GetProgressTracker()
 }
 
 size_t
-ImageWrapper::SizeOfSourceWithComputedFallback(SizeOfState& aState) const
+ImageWrapper::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
-  return mInnerImage->SizeOfSourceWithComputedFallback(aState);
+  return mInnerImage->SizeOfSourceWithComputedFallback(aMallocSizeOf);
 }
 
 void
