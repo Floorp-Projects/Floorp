@@ -81,7 +81,7 @@ public:
     MOZ_ASSERT(IsSafeToRun());
   }
 
-  class Runnable final : public mozilla::Runnable, public nsIRunnablePriority
+  class Runnable final : public mozilla::Runnable
   {
   public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
@@ -95,7 +95,6 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRUNNABLE
-    NS_DECL_NSIRUNNABLEPRIORITY
 
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_SCHEDULERGROUPRUNNABLE_IID);
 

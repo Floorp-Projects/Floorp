@@ -7,7 +7,6 @@
 #ifndef TabGroup_h
 #define TabGroup_h
 
-#include "nsHashKeys.h"
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
 #include "nsTHashtable.h"
@@ -44,7 +43,6 @@ class TabChild;
 // window.opener. A DocGroup is a member of exactly one TabGroup.
 
 class DocGroup;
-class TabChild;
 
 class TabGroup final : public SchedulerGroup
 {
