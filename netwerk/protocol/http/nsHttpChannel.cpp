@@ -7794,18 +7794,6 @@ nsHttpChannel::GetCacheTokenFetchCount(int32_t *_retval)
 }
 
 NS_IMETHODIMP
-nsHttpChannel::GetCacheTokenLastFetched(uint32_t *_retval)
-{
-    NS_ENSURE_ARG_POINTER(_retval);
-    nsCOMPtr<nsICacheEntry> cacheEntry = mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
-    if (!cacheEntry) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    return cacheEntry->GetLastFetched(_retval);
-}
-
-NS_IMETHODIMP
 nsHttpChannel::GetCacheTokenExpirationTime(uint32_t *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);

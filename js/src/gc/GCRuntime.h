@@ -850,11 +850,6 @@ class GCRuntime
     void setFullCompartmentChecks(bool enable);
 
     JS::Zone* getCurrentSweepGroup() { return currentSweepGroup; }
-    void setFoundBlackGrayEdges(TenuredCell& target) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!foundBlackGrayEdges.ref().append(&target))
-            oomUnsafe.crash("OOM|small: failed to insert into foundBlackGrayEdges");
-    }
 
     uint64_t gcNumber() const { return number; }
 
@@ -1251,9 +1246,6 @@ class GCRuntime
 
     /* Whether observed type information is being released in the current GC. */
     ActiveThreadData<bool> releaseObservedTypes;
-
-    /* Whether any black->gray edges were found during marking. */
-    ActiveThreadData<BlackGrayEdgeVector> foundBlackGrayEdges;
 
     /* Singly linked list of zones to be swept in the background. */
     ActiveThreadOrGCTaskData<ZoneList> backgroundSweepZones;

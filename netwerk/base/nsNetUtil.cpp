@@ -2836,27 +2836,6 @@ NS_IsOffline()
     return offline || !connectivity;
 }
 
-nsresult
-NS_NotifyCurrentTopLevelOuterContentWindowId(uint64_t aWindowId)
-{
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (!obs) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsISupportsPRUint64> wrapper =
-    do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
-  if (!wrapper) {
-    return NS_ERROR_FAILURE;
-  }
-
-  wrapper->SetData(aWindowId);
-  return obs->NotifyObservers(wrapper,
-                              "net:current-toplevel-outer-content-windowid",
-                              nullptr);
-}
-
 namespace mozilla {
 namespace net {
 

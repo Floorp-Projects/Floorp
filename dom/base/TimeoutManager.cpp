@@ -205,7 +205,8 @@ TimeoutManager::MinSchedulingDelay() const
   TimeDuration unthrottled =
     isBackground ? TimeDuration::FromMilliseconds(gMinBackgroundTimeoutValue)
                  : TimeDuration();
-  if (BudgetThrottlingEnabled() && mExecutionBudget < TimeDuration()) {
+  if (BudgetThrottlingEnabled(isBackground) &&
+      mExecutionBudget < TimeDuration()) {
     // Only throttle if execution budget is less than 0
     double factor = 1.0 / GetRegenerationFactor(mWindow.IsBackgroundInternal());
     return TimeDuration::Min(
@@ -332,8 +333,8 @@ TimeoutManager::UpdateBudget(const TimeStamp& aNow, const TimeDuration& aDuratio
   // window is active or not. If throttling is enabled and the window
   // is active and then becomes inactive, an overdrawn budget will
   // still be counted against the minimum delay.
-  if (BudgetThrottlingEnabled()) {
-    bool isBackground = mWindow.IsBackgroundInternal();
+  bool isBackground = mWindow.IsBackgroundInternal();
+  if (BudgetThrottlingEnabled(isBackground)) {
     double factor = GetRegenerationFactor(isBackground);
     TimeDuration regenerated = (aNow - mLastBudgetUpdate).MultDouble(factor);
     // Clamp the budget to the maximum allowed budget.
@@ -1143,6 +1144,8 @@ TimeoutManager::Thaw()
 void
 TimeoutManager::UpdateBackgroundState()
 {
+  mExecutionBudget = GetMaxBudget(mWindow.IsBackgroundInternal());
+
   // When the window moves to the background or foreground we should
   // reschedule the TimeoutExecutor in case the MinSchedulingDelay()
   // changed.  Only do this if the window is not suspended and we
@@ -1208,7 +1211,7 @@ ThrottleTimeoutsCallback::Notify(nsITimer* aTimer)
 }
 
 bool
-TimeoutManager::BudgetThrottlingEnabled() const
+TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const
 {
   // A window can be throttled using budget if
   // * It isn't active
@@ -1216,10 +1219,14 @@ TimeoutManager::BudgetThrottlingEnabled() const
   // * If it isn't using WebRTC
   // * If it hasn't got open WebSockets
   // * If it hasn't got active IndexedDB databases
-  //
+
   // Note that we allow both foreground and background to be
   // considered for budget throttling. What determines if they are if
-  // budget throttling is enabled is the regeneration factor.
+  // budget throttling is enabled is the max budget.
+  if ((aIsBackground ? gBackgroundThrottlingMaxBudget
+       : gForegroundThrottlingMaxBudget) < 0) {
+    return false;
+  }
 
   if (!mBudgetThrottleTimeouts || IsActive()) {
     return false;

@@ -19,13 +19,21 @@
   var framesToLoad = 2;
   function frameLoaded(id) {
     var frame = document.getElementById('testframe' + id);
-    if (!frame.contentDocument.body.innerHTML.length)
+    // We have to use SpecialPowers because nptest.cpp prepends
+    // data: whichs makes the frame cross origin with the including page.
+    var wrappedDoc = SpecialPowers.wrap(frame).contentDocument;
+
+    if (!wrappedDoc.body.innerHTML.length)
       return;
 
     --framesToLoad;
     if (0 == framesToLoad) {
-      is(document.getElementById('testframe1').contentDocument.body.innerHTML,
-         document.getElementById('testframe2').contentDocument.body.innerHTML,
+      var frame1 = document.getElementById('testframe1');
+      var frame2 = document.getElementById('testframe2');
+      var wrappedDocFrame1 = SpecialPowers.wrap(frame1).contentDocument;
+      var wrappedDocFrame2 = SpecialPowers.wrap(frame2).contentDocument;
+
+      is(wrappedDocFrame1.body.innerHTML, wrappedDocFrame2.body.innerHTML,
          "Frame contents should match");
       SimpleTest.finish();
     }

@@ -644,22 +644,6 @@ pub extern "C" fn wr_api_add_external_image(api: &mut RenderApi,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_external_image_buffer(api: &mut RenderApi,
-                                                   image_key: WrImageKey,
-                                                   descriptor: &WrImageDescriptor,
-                                                   external_image_id: WrExternalImageId) {
-    assert!(unsafe { is_in_compositor_thread() });
-    api.add_image(image_key,
-                  descriptor.into(),
-                  ImageData::External(ExternalImageData {
-                                          id: external_image_id.into(),
-                                          channel_index: 0,
-                                          image_type: ExternalImageType::ExternalBuffer,
-                                      }),
-                  None);
-}
-
-#[no_mangle]
 pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
                                       key: WrImageKey,
                                       descriptor: &WrImageDescriptor,
@@ -668,6 +652,43 @@ pub extern "C" fn wr_api_update_image(api: &mut RenderApi,
     let copied_bytes = bytes.as_slice().to_owned();
 
     api.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_update_external_image(
+    api: &mut RenderApi,
+    key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    external_image_id: WrExternalImageId,
+    image_type: WrExternalImageBufferType,
+    channel_index: u8
+) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    let data = ImageData::External(
+        ExternalImageData {
+            id: external_image_id.into(),
+            channel_index,
+            image_type,
+        }
+    );
+
+    api.update_image(key, descriptor.into(), data, None);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_update_blob_image(api: &mut RenderApi,
+                                           image_key: WrImageKey,
+                                           descriptor: &WrImageDescriptor,
+                                           bytes: ByteSlice) {
+    assert!(unsafe { is_in_compositor_thread() });
+    let copied_bytes = bytes.as_slice().to_owned();
+    api.update_image(
+        image_key,
+        descriptor.into(),
+        ImageData::new_blob_image(copied_bytes),
+        None
+    );
 }
 
 #[no_mangle]
