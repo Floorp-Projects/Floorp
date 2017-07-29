@@ -901,6 +901,9 @@ TextEditRules::WillSetText(Selection& aSelection,
     return NS_OK;
   }
 
+  // don't spaz my selection in subtransactions
+  AutoTransactionsConserveSelection dontSpazMySelection(textEditor);
+
   // Even if empty text, we don't remove text node and set empty text
   // for performance
   nsresult rv = textEditor->SetTextImpl(aSelection, tString,
