@@ -733,7 +733,7 @@ protected:
     }
   }
   void RemoveFromNameTable() {
-    if (CanHaveName(NodeInfo()->NameAtom()) && HasName()) {
+    if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
       nsIDocument* doc = GetUncomposedDoc();
       if (doc) {
         doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
