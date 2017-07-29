@@ -1,9 +1,9 @@
 # basic functionality
-fails-if(styloVsGecko||stylo) == basic-1.html basic-ref.html
+== basic-1.html basic-ref.html
 
 # handling of out-of-flows when ::first-line happens
 == out-of-flow-1a.html out-of-flow-1-ref.html
-fails-if(styloVsGecko||stylo) == out-of-flow-1b.html out-of-flow-1-ref.html
+== out-of-flow-1b.html out-of-flow-1-ref.html
 == out-of-flow-1c.html out-of-flow-1-ref.html
 fails-if(!stylo) fails-if(styloVsGecko) == out-of-flow-1d.html out-of-flow-1-ref.html # bug 396645
 
@@ -26,15 +26,15 @@ load stress-10.html # crash test
 == stress-11.xhtml stress-11-ref.xhtml
 
 == border-not-apply.html border-not-apply-ref.html
-fails-if(styloVsGecko||stylo) == 287088-1.html 287088-1-ref.html
-fails-if(styloVsGecko||stylo) == 287088-2.html 287088-2-ref.html
-fails-if(styloVsGecko) == 403177-1.html 403177-1-ref.html
+== 287088-1.html 287088-1-ref.html
+== 287088-2.html 287088-2-ref.html
+== 403177-1.html 403177-1-ref.html
 == 469227-2.html 469227-2-ref.html
 == 469227-3.html 469227-3-ref.html
 
 fails-if(styloVsGecko||stylo) == restyle-inside-first-line.html restyle-inside-first-line-ref.html
-fails-if(styloVsGecko||stylo) == font-styles.html font-styles-ref.html
-fuzzy-if(OSX==1010,1,2) fails-if(styloVsGecko||stylo) == font-styles-nooverflow.html font-styles-ref.html
+== font-styles.html font-styles-ref.html
+fuzzy-if(OSX==1010,1,2) == font-styles-nooverflow.html font-styles-ref.html
 
 fails-if(!stylo) == ib-split-1.html ib-split-1-ref.html
 

@@ -539,6 +539,17 @@ SERVO_BINDING_FUNC(Servo_ResolveStyleLazily, ServoStyleContextStrong,
                    const mozilla::ServoElementSnapshotTable* snapshots,
                    RawServoStyleSetBorrowed set)
 
+// Reparents style to the new parents.
+SERVO_BINDING_FUNC(Servo_ReparentStyle, ServoStyleContextStrong,
+                   ServoStyleContextBorrowed style_to_reparent,
+                   ServoStyleContextBorrowed parent_style,
+                   ServoStyleContextBorrowed parent_style_ignoring_first_line,
+                   ServoStyleContextBorrowed layout_parent_style,
+                   // element is null if there is no content node involved, or
+                   // if it's not an element.
+                   RawGeckoElementBorrowedOrNull element,
+                   RawServoStyleSetBorrowed set);
+
 // Use ServoStyleSet::PrepareAndTraverseSubtree instead of calling this
 // directly
 SERVO_BINDING_FUNC(Servo_TraverseSubtree,
