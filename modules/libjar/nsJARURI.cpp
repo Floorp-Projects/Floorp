@@ -443,7 +443,7 @@ nsJARURI::SetPort(int32_t aPort)
 }
 
 NS_IMETHODIMP
-nsJARURI::GetPath(nsACString &aPath)
+nsJARURI::GetPathQueryRef(nsACString &aPath)
 {
     nsAutoCString entrySpec;
     mJAREntry->GetSpec(entrySpec);
@@ -451,7 +451,7 @@ nsJARURI::GetPath(nsACString &aPath)
 }
 
 NS_IMETHODIMP
-nsJARURI::SetPath(const nsACString &aPath)
+nsJARURI::SetPathQueryRef(const nsACString &aPath)
 {
     return NS_ERROR_FAILURE;
 }

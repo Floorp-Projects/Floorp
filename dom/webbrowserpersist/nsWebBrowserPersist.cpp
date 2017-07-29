@@ -1285,7 +1285,7 @@ nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
     NS_ENSURE_ARG_POINTER(aURI);
 
     nsAutoCString newPath;
-    nsresult rv = aURI->GetPath(newPath);
+    nsresult rv = aURI->GetPathQueryRef(newPath);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Append a forward slash if necessary
@@ -1297,7 +1297,7 @@ nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath)
 
     // Store the path back on the URI
     AppendUTF16toUTF8(aPath, newPath);
-    aURI->SetPath(newPath);
+    aURI->SetPathQueryRef(newPath);
 
     return NS_OK;
 }

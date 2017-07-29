@@ -94,7 +94,7 @@ PageIconProtocolHandler.prototype = {
       channel.contentStream = pipe.inputStream;
       channel.loadInfo = loadInfo;
 
-      let pageURI = NetUtil.newURI(uri.path.replace(/[&#]size=[^&]+$/, ""));
+      let pageURI = NetUtil.newURI(uri.pathQueryRef.replace(/[&#]size=[^&]+$/, ""));
       let preferredSize = PlacesUtils.favicons.preferredSizeFromURI(uri);
       PlacesUtils.favicons.getFaviconDataForPage(pageURI, (iconURI, len, data, mimeType) => {
         if (len == 0) {

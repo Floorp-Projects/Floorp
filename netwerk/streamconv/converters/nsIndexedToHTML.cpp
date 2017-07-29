@@ -193,7 +193,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         }
 
         nsAutoCString path;
-        rv = uri->GetPath(path);
+        rv = uri->GetPathQueryRef(path);
         if (NS_FAILED(rv)) return rv;
 
         if (!path.EqualsLiteral("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
@@ -226,7 +226,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
     } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &isScheme)) && isScheme) {
         nsAutoCString path;
-        rv = uri->GetPath(path);
+        rv = uri->GetPathQueryRef(path);
         if (NS_FAILED(rv)) return rv;
 
         // a top-level jar directory URL is of the form jar:foo.zip!/
@@ -244,12 +244,12 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         // default behavior for other protocols is to assume the channel's
         // URL references a directory ending in '/' -- fixup if necessary.
         nsAutoCString path;
-        rv = uri->GetPath(path);
+        rv = uri->GetPathQueryRef(path);
         if (NS_FAILED(rv)) return rv;
         if (baseUri.Last() != '/') {
             baseUri.Append('/');
             path.Append('/');
-            uri->SetPath(path);
+            uri->SetPathQueryRef(path);
         }
         if (!path.EqualsLiteral("/")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);

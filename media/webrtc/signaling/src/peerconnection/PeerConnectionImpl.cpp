@@ -499,7 +499,7 @@ PeerConnectionConfiguration::AddIceServer(const RTCIceServer &aServer)
       uint32_t hostPos;
       int32_t hostLen;
       nsAutoCString path;
-      rv = url->GetPath(path);
+      rv = url->GetPathQueryRef(path);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Tolerate query-string + parse 'transport=[udp|tcp]' by hand.

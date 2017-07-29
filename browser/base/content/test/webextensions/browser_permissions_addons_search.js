@@ -24,7 +24,7 @@ async function installSearch(filename) {
   let item = null;
   for (let child of list.childNodes) {
     if (child.nodeName == "richlistitem" &&
-        child.mAddon.install.sourceURI.path.endsWith(filename)) {
+        child.mAddon.install.sourceURI.pathQueryRef.endsWith(filename)) {
           item = child;
           break;
     }

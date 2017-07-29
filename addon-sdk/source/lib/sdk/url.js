@@ -135,15 +135,15 @@ function URL(url, base) {
     }
   }
 
-  let uriData = [uri.path, uri.path.length, {}, {}, {}, {}, {}, {}];
+  let uriData = [uri.pathQueryRef, uri.pathQueryRef.length, {}, {}, {}, {}, {}, {}];
   URLParser.parsePath.apply(URLParser, uriData);
   let [{ value: filepathPos }, { value: filepathLen },
     { value: queryPos }, { value: queryLen },
     { value: refPos }, { value: refLen }] = uriData.slice(2);
 
   let hash = uri.ref ? "#" + uri.ref : "";
-  let pathname = uri.path.substr(filepathPos, filepathLen);
-  let search = uri.path.substr(queryPos, queryLen);
+  let pathname = uri.pathQueryRef.substr(filepathPos, filepathLen);
+  let search = uri.pathQueryRef.substr(queryPos, queryLen);
   search = search ? "?" + search : "";
 
   this.__defineGetter__("fileName", () => fileName);
@@ -152,7 +152,7 @@ function URL(url, base) {
   this.__defineGetter__("host", () => host);
   this.__defineGetter__("hostname", () => host);
   this.__defineGetter__("port", () => port);
-  this.__defineGetter__("path", () => uri.path);
+  this.__defineGetter__("path", () => uri.pathQueryRef);
   this.__defineGetter__("pathname", () => pathname);
   this.__defineGetter__("hash", () => hash);
   this.__defineGetter__("href", () => uri.spec);
