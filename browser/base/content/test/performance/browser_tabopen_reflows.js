@@ -15,11 +15,9 @@
 const EXPECTED_REFLOWS = [
   // selection change notification may cause querying the focused editor content
   // by IME and that will cause reflow.
-  {
-    stack: [
-      "select@chrome://global/content/bindings/textbox.xml",
-    ],
-  }
+  [
+    "select@chrome://global/content/bindings/textbox.xml",
+  ],
 ];
 
 /*
