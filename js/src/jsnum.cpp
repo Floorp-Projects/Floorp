@@ -959,7 +959,7 @@ num_toFixed_impl(JSContext* cx, const CallArgs& args)
         if (!ToInteger(cx, args[0], &prec))
             return false;
 
-        if (!ComputePrecisionInRange(cx, -20, MAX_PRECISION, prec, &precision))
+        if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, prec, &precision))
             return false;
     }
 
