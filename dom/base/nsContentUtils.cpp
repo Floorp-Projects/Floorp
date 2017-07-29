@@ -2706,9 +2706,7 @@ GetCommonAncestorInternal(Node* aNode1,
                           Node* aNode2,
                           GetParentFunc aGetParentFunc)
 {
-  if (aNode1 == aNode2) {
-    return aNode1;
-  }
+  MOZ_ASSERT(aNode1 != aNode2);
 
   // Build the chain of parents
   AutoTArray<Node*, 30> parents1, parents2;
@@ -2740,7 +2738,7 @@ GetCommonAncestorInternal(Node* aNode1,
 
 /* static */
 nsINode*
-nsContentUtils::GetCommonAncestor(nsINode* aNode1, nsINode* aNode2)
+nsContentUtils::GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2)
 {
   return GetCommonAncestorInternal(aNode1, aNode2, [](nsINode* aNode) {
     return aNode->GetParentNode();
@@ -2749,8 +2747,8 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1, nsINode* aNode2)
 
 /* static */
 nsIContent*
-nsContentUtils::GetCommonFlattenedTreeAncestor(nsIContent* aContent1,
-                                               nsIContent* aContent2)
+nsContentUtils::GetCommonFlattenedTreeAncestorHelper(nsIContent* aContent1,
+                                                     nsIContent* aContent2)
 {
   return GetCommonAncestorInternal(aContent1, aContent2, [](nsIContent* aContent) {
     return aContent->GetFlattenedTreeParent();
