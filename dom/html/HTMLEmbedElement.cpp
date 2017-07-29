@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventStates.h"
-#include "mozilla/dom/HTMLSharedObjectElement.h"
+#include "mozilla/dom/HTMLEmbedElement.h"
 #include "mozilla/dom/HTMLEmbedElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
 
@@ -23,15 +23,14 @@
 #include "mozilla/dom/HTMLObjectElement.h"
 
 
-NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
+NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Embed)
 
 namespace mozilla {
 namespace dom {
 
-HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                                                 FromParser aFromParser)
-  : nsGenericHTMLElement(aNodeInfo),
-    mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
+HTMLEmbedElement::HTMLEmbedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
+                                   FromParser aFromParser)
+  : nsGenericHTMLElement(aNodeInfo)
 {
   RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
@@ -40,7 +39,7 @@ HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<mozilla::dom::
   AddStatesSilently(NS_EVENT_STATE_LOADING);
 }
 
-HTMLSharedObjectElement::~HTMLSharedObjectElement()
+HTMLEmbedElement::~HTMLEmbedElement()
 {
 #ifdef XP_MACOSX
   HTMLObjectElement::OnFocusBlurPlugin(this, false);
@@ -49,56 +48,36 @@ HTMLSharedObjectElement::~HTMLSharedObjectElement()
   DestroyImageLoadingContent();
 }
 
-bool
-HTMLSharedObjectElement::IsDoneAddingChildren()
-{
-  return mIsDoneAddingChildren;
-}
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLEmbedElement)
 
-void
-HTMLSharedObjectElement::DoneAddingChildren(bool aHaveNotified)
-{
-  if (!mIsDoneAddingChildren) {
-    mIsDoneAddingChildren = true;
-
-    // If we're already in a document, we need to trigger the load
-    // Otherwise, BindToTree takes care of that.
-    if (IsInComposedDoc()) {
-      StartObjectLoad(aHaveNotified, false);
-    }
-  }
-}
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLSharedObjectElement)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLSharedObjectElement,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEmbedElement,
                                                   nsGenericHTMLElement)
-  nsObjectLoadingContent::Traverse(tmp, cb);
+nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLSharedObjectElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLSharedObjectElement, Element)
+NS_IMPL_ADDREF_INHERITED(HTMLEmbedElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLEmbedElement, Element)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLSharedObjectElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLSharedObjectElement,
-                               nsIRequestObserver,
-                               nsIStreamListener,
-                               nsIFrameLoaderOwner,
-                               nsIObjectLoadingContent,
-                               imgINotificationObserver,
-                               nsIImageLoadingContent,
-                               imgIOnloadBlocker,
-                               nsIChannelEventSink)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLEmbedElement)
+NS_INTERFACE_TABLE_INHERITED(HTMLEmbedElement,
+                             nsIRequestObserver,
+                             nsIStreamListener,
+                             nsIFrameLoaderOwner,
+                             nsIObjectLoadingContent,
+                             imgINotificationObserver,
+                             nsIImageLoadingContent,
+                             imgIOnloadBlocker,
+                             nsIChannelEventSink)
+NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLEmbedElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
-NS_IMPL_ELEMENT_CLONE(HTMLSharedObjectElement)
+NS_IMPL_ELEMENT_CLONE(HTMLEmbedElement)
 
 #ifdef XP_MACOSX
 
 NS_IMETHODIMP
-HTMLSharedObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
+HTMLEmbedElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   HTMLObjectElement::HandleFocusBlurPlugin(this, aVisitor.mEvent);
   return NS_OK;
@@ -107,16 +86,16 @@ HTMLSharedObjectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 #endif // #ifdef XP_MACOSX
 
 void
-HTMLSharedObjectElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
+HTMLEmbedElement::AsyncEventRunning(AsyncEventDispatcher* aEvent)
 {
   nsImageLoadingContent::AsyncEventRunning(aEvent);
 }
 
 nsresult
-HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
-                                    nsIContent *aParent,
-                                    nsIContent *aBindingParent,
-                                    bool aCompileEventHandlers)
+HTMLEmbedElement::BindToTree(nsIDocument *aDocument,
+                             nsIContent *aParent,
+                             nsIContent *aBindingParent,
+                             bool aCompileEventHandlers)
 {
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -133,20 +112,18 @@ HTMLSharedObjectElement::BindToTree(nsIDocument *aDocument,
   // initial load.
   nsCOMPtr<nsIPluginDocument> pluginDoc = do_QueryInterface(aDocument);
 
-  // If we already have all the children, start the load.
-  if (mIsDoneAddingChildren && !pluginDoc) {
-    void (HTMLSharedObjectElement::*start)() =
-      &HTMLSharedObjectElement::StartObjectLoad;
+  if (!pluginDoc) {
+    void (HTMLEmbedElement::*start)() = &HTMLEmbedElement::StartObjectLoad;
     nsContentUtils::AddScriptRunner(NewRunnableMethod(
-      "dom::HTMLSharedObjectElement::BindToTree", this, start));
+                                      "dom::HTMLEmbedElement::BindToTree", this, start));
   }
 
   return NS_OK;
 }
 
 void
-HTMLSharedObjectElement::UnbindFromTree(bool aDeep,
-                                        bool aNullParent)
+HTMLEmbedElement::UnbindFromTree(bool aDeep,
+                                 bool aNullParent)
 {
 #ifdef XP_MACOSX
   // When a page is reloaded (when an nsIDocument's content is removed), the
@@ -161,10 +138,10 @@ HTMLSharedObjectElement::UnbindFromTree(bool aDeep,
 }
 
 nsresult
-HTMLSharedObjectElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                      const nsAttrValue* aValue,
-                                      const nsAttrValue* aOldValue,
-                                      bool aNotify)
+HTMLEmbedElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                               const nsAttrValue* aValue,
+                               const nsAttrValue* aOldValue,
+                               bool aNotify)
 {
   if (aValue) {
     nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
@@ -176,10 +153,10 @@ HTMLSharedObjectElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
 }
 
 nsresult
-HTMLSharedObjectElement::OnAttrSetButNotChanged(int32_t aNamespaceID,
-                                                nsIAtom* aName,
-                                                const nsAttrValueOrString& aValue,
-                                                bool aNotify)
+HTMLEmbedElement::OnAttrSetButNotChanged(int32_t aNamespaceID,
+                                         nsIAtom* aName,
+                                         const nsAttrValueOrString& aValue,
+                                         bool aNotify)
 {
   nsresult rv = AfterMaybeChangeAttr(aNamespaceID, aName, aNotify);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -189,20 +166,20 @@ HTMLSharedObjectElement::OnAttrSetButNotChanged(int32_t aNamespaceID,
 }
 
 nsresult
-HTMLSharedObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
-                                              nsIAtom* aName,
-                                              bool aNotify)
+HTMLEmbedElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
+                                       nsIAtom* aName,
+                                       bool aNotify)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::src) {
       // If aNotify is false, we are coming from the parser or some such place;
       // we'll get bound after all the attributes have been set, so we'll do the
-      // object load from BindToTree/DoneAddingChildren.
+      // object load from BindToTree.
       // Skip the LoadObject call in that case.
       // We also don't want to start loading the object when we're not yet in
       // a document, just in case that the caller wants to set additional
       // attributes before inserting the node into the document.
-      if (aNotify && IsInComposedDoc() && mIsDoneAddingChildren &&
+      if (aNotify && IsInComposedDoc() &&
           !BlockEmbedOrObjectContentLoading()) {
         nsresult rv = LoadObject(aNotify, true);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -214,28 +191,24 @@ HTMLSharedObjectElement::AfterMaybeChangeAttr(int32_t aNamespaceID,
 }
 
 bool
-HTMLSharedObjectElement::IsHTMLFocusable(bool aWithMouse,
-                                         bool *aIsFocusable,
-                                         int32_t *aTabIndex)
+HTMLEmbedElement::IsHTMLFocusable(bool aWithMouse,
+                                  bool *aIsFocusable,
+                                  int32_t *aTabIndex)
 {
-  if (mNodeInfo->Equals(nsGkAtoms::embed) || Type() == eType_Plugin) {
-    // Has plugin content: let the plugin decide what to do in terms of
-    // internal focus from mouse clicks
-    if (aTabIndex) {
-      *aTabIndex = TabIndex();
-    }
-
-    *aIsFocusable = true;
-
-    // Let the plugin decide, so override.
-    return true;
+  // Has plugin content: let the plugin decide what to do in terms of
+  // internal focus from mouse clicks
+  if (aTabIndex) {
+    *aTabIndex = TabIndex();
   }
 
-  return nsGenericHTMLElement::IsHTMLFocusable(aWithMouse, aIsFocusable, aTabIndex);
+  *aIsFocusable = true;
+
+  // Let the plugin decide, so override.
+  return true;
 }
 
 nsIContent::IMEState
-HTMLSharedObjectElement::GetDesiredIMEState()
+HTMLEmbedElement::GetDesiredIMEState()
 {
   if (Type() == eType_Plugin) {
     return IMEState(IMEState::PLUGIN);
@@ -245,16 +218,16 @@ HTMLSharedObjectElement::GetDesiredIMEState()
 }
 
 int32_t
-HTMLSharedObjectElement::TabIndexDefault()
+HTMLEmbedElement::TabIndexDefault()
 {
   return -1;
 }
 
 bool
-HTMLSharedObjectElement::ParseAttribute(int32_t aNamespaceID,
-                                        nsIAtom *aAttribute,
-                                        const nsAString &aValue,
-                                        nsAttrValue &aResult)
+HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID,
+                                 nsIAtom *aAttribute,
+                                 const nsAString &aValue,
+                                 nsAttrValue &aResult)
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::align) {
@@ -288,15 +261,15 @@ MapAttributesIntoRuleExceptHidden(const nsMappedAttributes *aAttributes,
 }
 
 void
-HTMLSharedObjectElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                                               GenericSpecifiedValues* aData)
+HTMLEmbedElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
+                                        GenericSpecifiedValues* aData)
 {
   MapAttributesIntoRuleBase(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP_(bool)
-HTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
+HTMLEmbedElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 {
   static const MappedAttributeEntry* const map[] = {
     sCommonAttributeMap,
@@ -310,17 +283,13 @@ HTMLSharedObjectElement::IsAttributeMapped(const nsIAtom *aAttribute) const
 
 
 nsMapRuleToAttributesFunc
-HTMLSharedObjectElement::GetAttributeMappingFunction() const
+HTMLEmbedElement::GetAttributeMappingFunction() const
 {
-  if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    return &MapAttributesIntoRuleExceptHidden;
-  }
-
-  return &MapAttributesIntoRule;
+  return &MapAttributesIntoRuleExceptHidden;
 }
 
 void
-HTMLSharedObjectElement::StartObjectLoad(bool aNotify, bool aForceLoad)
+HTMLEmbedElement::StartObjectLoad(bool aNotify, bool aForceLoad)
 {
   // BindToTree can call us asynchronously, and we may be removed from the tree
   // in the interim
@@ -334,47 +303,41 @@ HTMLSharedObjectElement::StartObjectLoad(bool aNotify, bool aForceLoad)
 }
 
 EventStates
-HTMLSharedObjectElement::IntrinsicState() const
+HTMLEmbedElement::IntrinsicState() const
 {
   return nsGenericHTMLElement::IntrinsicState() | ObjectState();
 }
 
 uint32_t
-HTMLSharedObjectElement::GetCapabilities() const
+HTMLEmbedElement::GetCapabilities() const
 {
-  uint32_t capabilities = eSupportPlugins | eAllowPluginSkipChannel;
-  if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    capabilities |= eSupportImages | eSupportDocuments;
-  }
-
-  return capabilities;
+  return eSupportPlugins | eAllowPluginSkipChannel | eSupportImages | eSupportDocuments;
 }
 
 void
-HTMLSharedObjectElement::DestroyContent()
+HTMLEmbedElement::DestroyContent()
 {
   nsObjectLoadingContent::DestroyContent();
   nsGenericHTMLElement::DestroyContent();
 }
 
 nsresult
-HTMLSharedObjectElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
+HTMLEmbedElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 {
   nsresult rv = nsGenericHTMLElement::CopyInnerTo(aDest, aPreallocateChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDest->OwnerDoc()->IsStaticDocument()) {
-    CreateStaticClone(static_cast<HTMLSharedObjectElement*>(aDest));
+    CreateStaticClone(static_cast<HTMLEmbedElement*>(aDest));
   }
 
   return rv;
 }
 
 JSObject*
-HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+HTMLEmbedElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   JSObject* obj;
-  MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::embed));
   obj = HTMLEmbedElementBinding::Wrap(aCx, this, aGivenProto);
 
   if (!obj) {
@@ -386,17 +349,17 @@ HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenPr
 }
 
 nsContentPolicyType
-HTMLSharedObjectElement::GetContentPolicyType() const
+HTMLEmbedElement::GetContentPolicyType() const
 {
   return nsIContentPolicy::TYPE_INTERNAL_EMBED;
 }
 
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Align, align)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Width, width)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Height, height)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Name, name)
-NS_IMPL_URI_ATTR(HTMLSharedObjectElement, Src, src)
-NS_IMPL_STRING_ATTR(HTMLSharedObjectElement, Type, type)
+NS_IMPL_STRING_ATTR(HTMLEmbedElement, Align, align)
+NS_IMPL_STRING_ATTR(HTMLEmbedElement, Width, width)
+NS_IMPL_STRING_ATTR(HTMLEmbedElement, Height, height)
+NS_IMPL_STRING_ATTR(HTMLEmbedElement, Name, name)
+NS_IMPL_URI_ATTR(HTMLEmbedElement, Src, src)
+NS_IMPL_STRING_ATTR(HTMLEmbedElement, Type, type)
 
 } // namespace dom
 } // namespace mozilla
