@@ -29,7 +29,12 @@ describe("SnippetsFeed", () => {
   it("should dispatch a SNIPPETS_DATA action with the right data on INIT", async () => {
     const url = "foo.com/%STARTPAGE_VERSION%";
     sandbox.stub(global.Services.prefs, "getStringPref").returns(url);
-    sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+    sandbox.stub(global.Services.prefs, "getBoolPref")
+      .withArgs("datareporting.healthreport.uploadEnabled")
+      .returns(true)
+      .withArgs("browser.onboarding.notification.finished")
+      .returns(false);
+
     const feed = new SnippetsFeed();
     feed.store = {dispatch: sandbox.stub()};
 
@@ -47,6 +52,7 @@ describe("SnippetsFeed", () => {
     assert.propertyVal(action.data, "profileCreatedWeeksAgo", 2);
     assert.propertyVal(action.data, "profileResetWeeksAgo", 1);
     assert.propertyVal(action.data, "telemetryEnabled", true);
+    assert.propertyVal(action.data, "onboardingFinished", false);
   });
   it("should call .init on an INIT aciton", () => {
     const feed = new SnippetsFeed();
