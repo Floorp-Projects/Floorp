@@ -31,12 +31,11 @@ const MULTI_EXPERIMENT = {
             // at all.
             addonsDisableExperiment(prefix) { return getAddonsDisqualifyForMulti(); } },
 
-  "release": { buckets: { 1: .99, 4: 1 }, // 1 process: 99%, 4 processes: 1%
+  "release": { buckets: { 1: .5, 4: 1 }, // 1 process: 50%, 4 processes: 50%
 
-               // We don't want to allow users with any extension
-               // (webextension or otherwise in the experiment). prefix will
-               // be non-empty if there is any addon.
-               addonsDisableExperiment(prefix) { return !!prefix; } }
+               // See above for an explanation of this: we only allow users
+               // with no extensions or users with WebExtensions.
+               addonsDisableExperiment(prefix) { return getAddonsDisqualifyForMulti(); } }
 };
 
 const ADDON_ROLLOUT_POLICY = {

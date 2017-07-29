@@ -10,10 +10,10 @@ const s4 = function () {
              .substring(1);
 };
 
-let uuid = function () {
+let generateUUID = function () {
   return "ss-s-s-s-sss".replace(/s/g, function () {
     return s4();
   });
 };
 
-module.exports = { uuid };
+module.exports = { generateUUID };

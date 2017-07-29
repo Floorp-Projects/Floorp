@@ -35,7 +35,7 @@ wr::WrImageKey
 WebRenderLayer::GetImageKey()
 {
   wr::WrImageKey key;
-  key.mNamespace = WrBridge()->GetNamespace();
+  key.mNamespace.mHandle = WrBridge()->GetNamespace();
   key.mHandle = WrBridge()->GetNextResourceId();
   return key;
 }

@@ -314,6 +314,13 @@ var gSyncPane = {
     }).then(data => {
       let fxaLoginStatus = document.getElementById("fxaLoginStatus");
       if (data) {
+        if (data.email) {
+          // A hack to handle that the user's email address may have changed.
+          // This can probably be removed as part of bug 1383663.
+          fxaEmailAddress1Label.textContent = data.email;
+          document.getElementById("fxaEmailAddress2").textContent = data.email;
+          document.getElementById("fxaEmailAddress3").textContent = data.email;
+        }
         if (data.displayName) {
           fxaLoginStatus.setAttribute("hasName", true);
           displayNameLabel.hidden = false;

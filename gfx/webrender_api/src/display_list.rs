@@ -11,11 +11,12 @@ use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShado
 use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ColorF, ComplexClipRegion, DisplayItem};
 use {ExtendMode, FilterOp, FontKey, GlyphInstance, GlyphOptions, Gradient, GradientDisplayItem};
 use {GradientStop, IframeDisplayItem, ImageDisplayItem, ImageKey, ImageMask, ImageRendering};
-use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, LocalClip};
-use {MixBlendMode, PipelineId, PropertyBinding, PushStackingContextDisplayItem, RadialGradient};
-use {RadialGradientDisplayItem, RectangleDisplayItem, ScrollPolicy, SpecificDisplayItem};
-use {StackingContext, TextDisplayItem, TextShadow, TransformStyle, WebGLContextId, WebGLDisplayItem};
-use {YuvColorSpace, YuvData, YuvImageDisplayItem};
+use {LayoutPoint, LayoutRect, LayoutSize, LayoutTransform, LayoutVector2D, LineDisplayItem};
+use {LineOrientation, LineStyle, LocalClip, MixBlendMode, PipelineId, PropertyBinding};
+use {PushStackingContextDisplayItem, RadialGradient, RadialGradientDisplayItem};
+use {RectangleDisplayItem, ScrollFrameDisplayItem, ScrollPolicy, ScrollSensitivity};
+use {SpecificDisplayItem, StackingContext, TextDisplayItem, TextShadow, TransformStyle};
+use {WebGLContextId, WebGLDisplayItem, YuvColorSpace, YuvData, YuvImageDisplayItem};
 use std::marker::PhantomData;
 
 #[repr(C)]
@@ -58,6 +59,8 @@ pub struct BuiltDisplayListDescriptor {
     builder_start_time: u64,
     /// The second IPC time stamp: after serialization
     builder_finish_time: u64,
+    /// The third IPC time stamp: just before sending
+    send_start_time: u64,
 }
 
 pub struct BuiltDisplayListIter<'a> {
@@ -100,7 +103,8 @@ impl BuiltDisplayList {
         }
     }
 
-    pub fn into_data(self) -> (Vec<u8>, BuiltDisplayListDescriptor) {
+    pub fn into_data(mut self) -> (Vec<u8>, BuiltDisplayListDescriptor) {
+        self.descriptor.send_start_time = precise_time_ns();
         (self.data, self.descriptor)
     }
 
@@ -112,8 +116,10 @@ impl BuiltDisplayList {
         &self.descriptor
     }
 
-    pub fn times(&self) -> (u64, u64) {
-      (self.descriptor.builder_start_time, self.descriptor.builder_finish_time)
+    pub fn times(&self) -> (u64, u64, u64) {
+      (self.descriptor.builder_start_time,
+       self.descriptor.builder_finish_time,
+       self.descriptor.send_start_time)
     }
 
     pub fn iter(&self) -> BuiltDisplayListIter {
@@ -274,6 +280,10 @@ impl<'a, 'b> DisplayItemRef<'a, 'b> {
 
     pub fn local_clip(&self) -> &LocalClip {
         &self.iter.cur_item.local_clip
+    }
+
+    pub fn local_clip_with_offset(&self, offset: &LayoutVector2D) -> LocalClip {
+        self.iter.cur_item.local_clip.create_with_offset(offset)
     }
 
     pub fn clip_and_scroll(&self) -> ClipAndScrollInfo {
@@ -492,6 +502,23 @@ impl DisplayListBuilder {
         });
 
         self.push_item(item, rect, local_clip);
+    }
+
+    pub fn push_line(&mut self,
+                     local_clip: Option<LocalClip>,
+                     baseline: f32,
+                     start: f32,
+                     end: f32,
+                     orientation: LineOrientation,
+                     width: f32,
+                     color: ColorF,
+                     style: LineStyle) {
+        let item = SpecificDisplayItem::Line(LineDisplayItem {
+            baseline, start, end, orientation,
+            width, color, style,
+        });
+
+        self.push_item(item, LayoutRect::zero(), local_clip);
     }
 
     pub fn push_image(&mut self,
@@ -846,15 +873,17 @@ impl DisplayListBuilder {
                                   content_rect: LayoutRect,
                                   clip_rect: LayoutRect,
                                   complex_clips: I,
-                                  image_mask: Option<ImageMask>)
+                                  image_mask: Option<ImageMask>,
+                                  scroll_sensitivity: ScrollSensitivity)
                                   -> ClipId
                                   where I: IntoIterator<Item = ComplexClipRegion>,
                                         I::IntoIter: ExactSizeIterator {
         let id = self.generate_clip_id(id);
-        let item = SpecificDisplayItem::ScrollFrame(ClipDisplayItem {
+        let item = SpecificDisplayItem::ScrollFrame(ScrollFrameDisplayItem {
             id: id,
             parent_id: self.clip_stack.last().unwrap().scroll_node_id,
             image_mask: image_mask,
+            scroll_sensitivity,
         });
 
         self.push_item(item, content_rect, Some(LocalClip::from(clip_rect)));
@@ -937,6 +966,7 @@ impl DisplayListBuilder {
             descriptor: BuiltDisplayListDescriptor {
                 builder_start_time: self.builder_start_time,
                 builder_finish_time: end_time,
+                send_start_time: 0,
             },
             data: self.data,
          })
