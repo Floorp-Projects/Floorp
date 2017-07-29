@@ -631,7 +631,7 @@ function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
       {key: "ScrollLock", attr: "scrollLockKey"},
       {key: "SymbolLock", attr: "symbolLockKey"},
     ],
-  }
+  };
 
   for (let i = 0; i < modifiers.normal.length; i++) {
     if (!keyEvent[modifiers.normal[i].attr]) {
@@ -642,7 +642,7 @@ function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
     }
     let event = new KeyboardEvent("", {key: modifiers.normal[i].key});
     TIP.keydown(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     modifiers.normal[i].activated = true;
   }
 
@@ -655,9 +655,9 @@ function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
     }
     let event = new KeyboardEvent("", {key: modifiers.lockable[j].key});
     TIP.keydown(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     TIP.keyup(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     modifiers.lockable[j].activated = true;
   }
 
@@ -675,7 +675,7 @@ function emulateToInactivateModifiers_(TIP, modifiers, win = window) {
     }
     let event = new KeyboardEvent("", {key: modifiers.normal[i].key});
     TIP.keyup(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
   }
   for (let j = 0; j < modifiers.lockable.length; j++) {
     if (!modifiers.lockable[j].activated) {
@@ -686,9 +686,9 @@ function emulateToInactivateModifiers_(TIP, modifiers, win = window) {
     }
     let event = new KeyboardEvent("", {key: modifiers.lockable[j].key});
     TIP.keydown(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
     TIP.keyup(event,
-      TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
+        TIP.KEY_NON_PRINTABLE_KEY | TIP.KEY_DONT_DISPATCH_MODIFIER_KEY_EVENT);
   }
 }
 

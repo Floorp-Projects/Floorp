@@ -100,10 +100,11 @@ reftest.Runner = class {
   *openWindow() {
     let reftestWin;
     yield new Promise(resolve => {
-      reftestWin = this.parentWindow.openDialog("chrome://marionette/content/reftest.xul",
-                                                "reftest",
-                                                "chrome,dialog,height=600,width=600,all",
-                                                () => resolve());
+      reftestWin = this.parentWindow.openDialog(
+          "chrome://marionette/content/reftest.xul",
+          "reftest",
+          "chrome,dialog,height=600,width=600,all",
+          () => resolve());
     });
 
     let browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
