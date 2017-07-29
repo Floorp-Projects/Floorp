@@ -7576,6 +7576,37 @@ nsBlockFrame::UpdatePseudoElementStyles(ServoRestyleState& aRestyleState)
       ResolveBulletStyle(type, &aRestyleState.StyleSet());
     UpdateStyleOfOwnedChildFrame(bullet, newBulletStyle, aRestyleState);
   }
+
+  if (nsIFrame* firstLineFrame = GetFirstLineFrame()) {
+    nsIFrame* styleParent =
+      CorrectStyleParentFrame(firstLineFrame->GetParent(),
+                              nsCSSPseudoElements::firstLine);
+
+    ServoStyleContext* parentStyle = styleParent->StyleContext()->AsServo();
+    RefPtr<ServoStyleContext> firstLineStyle =
+      aRestyleState.StyleSet()
+                   .ResolvePseudoElementStyle(mContent->AsElement(),
+                                              CSSPseudoElementType::firstLine,
+                                              parentStyle,
+                                              nullptr);
+
+    // FIXME(bz): Can we make first-line continuations be non-inheriting anon
+    // boxes?
+    RefPtr<ServoStyleContext> continuationStyle = aRestyleState.StyleSet().
+      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame,
+                                         parentStyle);
+
+    UpdateStyleOfOwnedChildFrame(firstLineFrame, firstLineStyle, aRestyleState,
+                                 Some(continuationStyle.get()));
+
+    // We also want to update the styles of the first-line's descendants.  We
+    // don't need to compute a changehint for this, though, since any changes to
+    // them are handled by the first-line anyway.
+    ServoRestyleManager* manager = PresContext()->RestyleManager()->AsServo();
+    for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
+      manager->ReparentStyleContext(kid);
+    }
+  }
 }
 
 already_AddRefed<nsStyleContext>
