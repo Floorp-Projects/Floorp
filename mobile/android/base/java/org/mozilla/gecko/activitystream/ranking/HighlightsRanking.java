@@ -90,6 +90,9 @@ public class HighlightsRanking {
 
     /**
      * Create a list of highlights based on the candidates provided by the input cursor.
+     *
+     * THIS METHOD IS CRITICAL FOR HIGHLIGHTS PERFORMANCE AND HAS BEEN OPTIMIZED (bug 1369604):
+     * please be careful what you add to it!
      */
     public static List<Highlight> rank(Cursor cursor, int limit) {
         List<HighlightCandidate> highlights = extractFeatures(cursor);
