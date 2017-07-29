@@ -589,7 +589,7 @@ const menuTracker = {
   },
 
   onWindowOpen(window) {
-    for (const id of this.menuIds) {
+    for (const id of menuTracker.menuIds) {
       const menu = window.document.getElementById(id);
       menu.addEventListener("popupshowing", menuTracker);
     }
