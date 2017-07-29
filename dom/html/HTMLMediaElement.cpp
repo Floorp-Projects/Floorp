@@ -3535,6 +3535,11 @@ HTMLMediaElement::CaptureAudio(ErrorResult& aRv,
 {
   MOZ_RELEASE_ASSERT(aGraph);
 
+  if (!CanBeCaptured(true)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   RefPtr<DOMMediaStream> stream =
     CaptureStreamInternal(false, true, aGraph);
   if (!stream) {

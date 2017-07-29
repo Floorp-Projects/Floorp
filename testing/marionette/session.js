@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -267,6 +267,7 @@ session.Capabilities = class extends Map {
       ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
       ["moz:accessibilityChecks", false],
+      ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
     ]);
   }
 
