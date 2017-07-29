@@ -530,16 +530,21 @@
             return true;
           }
 
-          // Use the passed in resolvedURI if we have one
-          const resolvedURI = aResolvedURI || Services.io.newChannelFromURI2(
-            aURI,
-            null, // loadingNode
-            Services.scriptSecurityManager.getSystemPrincipal(), // loadingPrincipal
-            null, // triggeringPrincipal
-            Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, // securityFlags
-            Ci.nsIContentPolicy.TYPE_OTHER // contentPolicyType
-          ).URI;
-          return resolvedURI.schemeIs("jar") || resolvedURI.schemeIs("file");
+          try {
+            // Use the passed in resolvedURI if we have one
+            const resolvedURI = aResolvedURI || Services.io.newChannelFromURI2(
+              aURI,
+              null, // loadingNode
+              Services.scriptSecurityManager.getSystemPrincipal(), // loadingPrincipal
+              null, // triggeringPrincipal
+              Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL, // securityFlags
+              Ci.nsIContentPolicy.TYPE_OTHER // contentPolicyType
+            ).URI;
+            return resolvedURI.schemeIs("jar") || resolvedURI.schemeIs("file");
+          } catch (ex) {
+            // aURI might be invalid.
+            return false;
+          }
         ]]></body>
       </method>
 

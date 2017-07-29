@@ -179,6 +179,7 @@
            *        Used to determine if it has the extra categories other than the focued category. If
            *        the value is true, we show "Also fill ...", otherwise, show "Fill ..." only.
            */
+          const namespace = "category.";
           this._updateText = (categories = this._allFieldCategories, hasExtraCategories = true) => {
             let warningTextTmplKey = hasExtraCategories ? "phishingWarningMessage" : "phishingWarningMessage2";
             let sep = this._stringBundle.GetStringFromName("fieldNameSeparator");
@@ -187,7 +188,7 @@
             let showCategories = hasExtraCategories ?
               orderedCategoryList.filter(category => categories.includes(category) && category != this._focusedCategory) :
               [this._focusedCategory];
-            let categoriesText = showCategories.map(this._stringBundle.GetStringFromName).join(sep);
+            let categoriesText = showCategories.map(category => this._stringBundle.GetStringFromName(namespace + category)).join(sep);
 
             this._warningTextBox.textContent = this._stringBundle.formatStringFromName(warningTextTmplKey,
               [categoriesText], 1);

@@ -141,7 +141,7 @@
                                  .innerHTML;
 
         // Inform the test harness that we're done loading the page
-        var event = new CustomEvent("AboutBlockedLoaded");
+        var event = new CustomEvent("AboutBlockedLoaded", { bubbles: true });
         document.dispatchEvent(event);
       }
     ]]></script>
@@ -173,7 +173,12 @@
           <p id="errorLongDescText_malware">&safeb.blocked.malwarePage.longDesc;</p>
           <p id="errorLongDescText_unwanted">&safeb.blocked.unwantedPage.longDesc;</p>
         </div>
-        
+
+        <!-- Advisory -->
+        <div id="advisoryDesc">
+          <p id="advisoryDescText">&safeb.palm.advisory.desc;</p>
+        </div>
+
         <!-- Action buttons -->
         <div id="buttons">
           <!-- Commands handled in browser.js -->

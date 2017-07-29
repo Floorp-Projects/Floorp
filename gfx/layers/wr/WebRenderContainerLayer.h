@@ -27,9 +27,7 @@ public:
 protected:
   virtual ~WebRenderContainerLayer()
   {
-
-    if (gfxPrefs::WebRenderOMTAEnabled() &&
-        !GetAnimations().IsEmpty()) {
+    if (!GetAnimations().IsEmpty()) {
       mManager->AsWebRenderLayerManager()->
         AddCompositorAnimationsIdForDiscard(GetCompositorAnimationsId());
     }

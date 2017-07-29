@@ -4,16 +4,21 @@
 
 use std::sync::Arc;
 use {DeviceUintRect, DevicePoint};
+use {IdNamespace};
 use {TileOffset, TileSize};
 use font::{FontKey, FontTemplate};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct ImageKey(pub u32, pub u32);
+pub struct ImageKey(pub IdNamespace, pub u32);
 
 impl ImageKey {
-    pub fn new(key0: u32, key1: u32) -> ImageKey {
-        ImageKey(key0, key1)
+    pub fn new(namespace: IdNamespace, key: u32) -> ImageKey {
+        ImageKey(namespace, key)
+    }
+
+    pub fn dummy() -> ImageKey {
+        ImageKey(IdNamespace(0), 0)
     }
 }
 

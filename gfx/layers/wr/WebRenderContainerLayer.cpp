@@ -43,8 +43,7 @@ WebRenderContainerLayer::RenderLayer(wr::DisplayListBuilder& aBuilder,
   float* opacityForSC = &opacity;
   uint64_t animationsId = 0;
 
-  if (gfxPrefs::WebRenderOMTAEnabled() &&
-      !GetAnimations().IsEmpty()) {
+  if (!GetAnimations().IsEmpty()) {
     MOZ_ASSERT(GetCompositorAnimationsId());
 
     OptionalOpacity opacityForCompositor = void_t();

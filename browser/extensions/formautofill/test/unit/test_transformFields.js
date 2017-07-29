@@ -391,6 +391,15 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     },
   },
   {
+    description: "Has a valid tel-local format \"tel\"",
+    address: {
+      "tel": "1234567",
+    },
+    expectedResult: {
+      "tel": "1234567",
+    },
+  },
+  {
     description: "Has \"tel-national\" and \"tel-country-code\"",
     address: {
       "tel-national": "0212345678",
