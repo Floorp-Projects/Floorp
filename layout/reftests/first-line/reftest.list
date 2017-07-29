@@ -32,7 +32,7 @@ load stress-10.html # crash test
 == 469227-2.html 469227-2-ref.html
 == 469227-3.html 469227-3-ref.html
 
-fails-if(styloVsGecko||stylo) == restyle-inside-first-line.html restyle-inside-first-line-ref.html
+== restyle-inside-first-line.html restyle-inside-first-line-ref.html
 == font-styles.html font-styles-ref.html
 fuzzy-if(OSX==1010,1,2) == font-styles-nooverflow.html font-styles-ref.html
 

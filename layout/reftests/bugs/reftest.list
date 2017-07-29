@@ -1696,7 +1696,7 @@ fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.x
 != 669015-1.xul 669015-1-notref.xul
 skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
-fails-if(styloVsGecko||stylo) == 670467-2.html 670467-2-ref.html
+== 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
 == 690643-1.html 690643-1-ref.html
 != 691087-1.html 691087-1-ref.html

@@ -58,6 +58,16 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     return aFrame.GetParent();
   }
 
+  if (aFrame.IsLineFrame()) {
+    // A ::first-line always ends up here via its block, which is therefore the
+    // right expected owner.  That block can be an
+    // anonymous box.  For example, we could have a ::first-line on a columnated
+    // block; the blockframe is the column-content anonymous box in that case.
+    // So we don't want to end up in the code below, which steps out of anon
+    // boxes.  Just return the parent of the line frame, which is the block.
+    return aFrame.GetParent();
+  }
+
   const nsIFrame* parent = FirstContinuationOrPartOfIBSplit(aFrame.GetParent());
 
   if (aFrame.IsTableFrame()) {
@@ -711,8 +721,30 @@ ServoRestyleManager::ProcessPostTraversal(
   // kids, because some of those updates (::first-line/::first-letter) need to
   // modify the styles of the kids, and the child traversal above would just
   // clobber those modifications.
-  if (wasRestyled && styleFrame) {
-    UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
+  if (styleFrame) {
+    if (wasRestyled) {
+      UpdateFramePseudoElementStyles(styleFrame, childrenRestyleState);
+    } else if (traverseElementChildren &&
+               styleFrame->IsFrameOfType(nsIFrame::eBlockFrame)) {
+      // Even if we were not restyled, if we're a block with a first-line and
+      // one of our descendant elements which is on the first line was restyled,
+      // we need to update the styles of things on the first line, because
+      // they're wrong now.
+      //
+      // FIXME(bz) Could we do better here?  For example, could we keep track of
+      // frames that are "block with a ::first-line so we could avoid
+      // IsFrameOfType() and digging about for the first-line frame if not?
+      // Could we keep track of whether the element children we actually restyle
+      // are affected by first-line?  Something else?  Bug 1385443 tracks making
+      // this better.
+      nsIFrame* firstLineFrame =
+        static_cast<nsBlockFrame*>(styleFrame)->GetFirstLineFrame();
+      if (firstLineFrame) {
+        for (nsIFrame* kid : firstLineFrame->PrincipalChildList()) {
+          ReparentStyleContext(kid);
+        }
+      }
+    }
   }
 
   if (!forThrottledAnimationFlush) {
