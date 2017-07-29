@@ -343,6 +343,7 @@ class GeckoInputConnection
                             getComposingSpanEnd(editable));
     }
 
+    @TargetApi(21)
     @Override
     public void updateCompositionRects(final RectF[] aRects) {
         if (!(Build.VERSION.SDK_INT >= 21)) {
