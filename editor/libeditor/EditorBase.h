@@ -433,9 +433,6 @@ protected:
     CreateTxnForInsertText(const nsAString& aStringToInsert, Text& aTextNode,
                            int32_t aOffset);
 
-  already_AddRefed<SetTextTransaction>
-    CreateTxnForSetText(const nsAString& aString, Text& aTextNode);
-
   /**
    * Never returns null.
    */
