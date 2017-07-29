@@ -490,14 +490,14 @@ JOB_DETAILS = {
                                       r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
     'macosx64-debug': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg|public/build/target\.dmg',
                                         r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
-    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32.zip',
-                                   r'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32.zip',
-                                     r'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64.zip',
-                                   r'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64.zip',
-                                     r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.zip|public/build/target\.zip',
+                                   r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32\.zip|public/build/target\.zip',
+                                     r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.zip|public/build/target\.zip',
+                                   r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
+    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64\.zip|public/build/target\.zip',
+                                     r'public/build/firefox-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
 }
 
 
