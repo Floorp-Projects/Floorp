@@ -1582,7 +1582,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   if (NS_FAILED(rv)) return rv;
   if (match) {
     nsAutoCString path;
-    rv = referrer->GetPath(path);
+    rv = referrer->GetPathQueryRef(path);
     if (NS_FAILED(rv)) return rv;
 
     uint32_t pathLength = path.Length();
@@ -1829,7 +1829,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
       case 2: // scheme+host+port+/
         spec.AppendLiteral("/");
         // This nukes any query/ref present as well in the case of nsStandardURL
-        rv = clone->SetPath(EmptyCString());
+        rv = clone->SetPathQueryRef(EmptyCString());
         if (NS_FAILED(rv)) return rv;
         break;
     }

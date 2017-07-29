@@ -857,8 +857,8 @@ function findProjectPath(file, branch) {
  *         object with 'branch' and 'origBranch' array of path parts for branch
  */
 function findUnsharedBranches(origUri, uri) {
-  origUri = OS.Path.split(origUri.path).components;
-  uri = OS.Path.split(uri.path).components;
+  origUri = OS.Path.split(origUri.pathQueryRef).components;
+  uri = OS.Path.split(uri.pathQueryRef).components;
 
   for (let i = 0; i < uri.length - 1; i++) {
     if (uri[i] != origUri[i]) {

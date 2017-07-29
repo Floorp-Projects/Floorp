@@ -108,7 +108,7 @@ SingleMatchPattern.prototype = {
       this.schemes.includes(uri.scheme) &&
       this.hostMatch(uri) &&
       (ignorePath || (
-        this.pathMatch(uri.cloneIgnoringRef().path)
+        this.pathMatch(uri.cloneIgnoringRef().pathQueryRef)
       ))
     );
   },

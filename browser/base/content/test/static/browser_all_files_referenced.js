@@ -525,7 +525,7 @@ add_task(async function checkAllTheFiles() {
   // so that all chrome paths can be recorded.
   let manifestPromises = [];
   uris = uris.filter(uri => {
-    let path = uri.path;
+    let path = uri.pathQueryRef;
     if (path.endsWith(".manifest")) {
       manifestPromises.push(parseManifest(uri));
       return false;
@@ -542,7 +542,7 @@ add_task(async function checkAllTheFiles() {
   let allPromises = [];
 
   for (let uri of uris) {
-    let path = uri.path;
+    let path = uri.pathQueryRef;
     if (path.endsWith(".css"))
       allPromises.push(parseCSSFile(uri));
     else if (kCodeExtensions.some(ext => path.endsWith(ext)))

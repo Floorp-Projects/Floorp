@@ -33,7 +33,7 @@ AboutModule.prototype = {
 
   getURIFlags(aURI) {
     for (let module of TEST_MODULES) {
-      if (aURI.path.startsWith(module.path)) {
+      if (aURI.pathQueryRef.startsWith(module.path)) {
         return module.flags;
       }
     }

@@ -859,8 +859,8 @@ nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx, int line
     }
     if (chromeSkinOnly) {
       nsAutoCString chromePath, resolvedPath;
-      chromeuri->GetPath(chromePath);
-      resolveduri->GetPath(resolvedPath);
+      chromeuri->GetPathQueryRef(chromePath);
+      resolveduri->GetPathQueryRef(resolvedPath);
       chromeSkinOnly = StringBeginsWith(chromePath, NS_LITERAL_CSTRING("/skin/")) &&
                        StringBeginsWith(resolvedPath, NS_LITERAL_CSTRING("/skin/"));
     }

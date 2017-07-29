@@ -6510,7 +6510,7 @@ nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin)
 
       if (isBlobURL) {
         nsAutoCString path;
-        rv = aURI->GetPath(path);
+        rv = aURI->GetPathQueryRef(path);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIURI> uri;

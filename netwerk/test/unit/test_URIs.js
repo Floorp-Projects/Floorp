@@ -26,82 +26,82 @@ var gTests = [
   { spec:    "about:blank",
     scheme:  "about",
     prePath: "about:",
-    path:    "blank",
+    pathQueryRef: "blank",
     ref:     "",
     nsIURL:  false, nsINestedURI: true, immutable: true },
   { spec:    "about:foobar",
     scheme:  "about",
     prePath: "about:",
-    path:    "foobar",
+    pathQueryRef: "foobar",
     ref:     "",
     nsIURL:  false, nsINestedURI: false, immutable: true },
   { spec:    "chrome://foobar/somedir/somefile.xml",
     scheme:  "chrome",
     prePath: "chrome://foobar",
-    path:    "/somedir/somefile.xml",
+    pathQueryRef: "/somedir/somefile.xml",
     ref:     "",
     nsIURL:  true, nsINestedURI: false, immutable: true },
   { spec:    "data:text/html;charset=utf-8,<html></html>",
     scheme:  "data",
     prePath: "data:",
-    path:    "text/html;charset=utf-8,<html></html>",
+    pathQueryRef: "text/html;charset=utf-8,<html></html>",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "data:text/html;charset=utf-8,<html>\r\n\t</html>",
     scheme:  "data",
     prePath: "data:",
-    path:    "text/html;charset=utf-8,<html></html>",
+    pathQueryRef: "text/html;charset=utf-8,<html></html>",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "data:text/plain,hello world",
     scheme:  "data",
     prePath: "data:",
-    path:    "text/plain,hello%20world",
+    pathQueryRef: "text/plain,hello%20world",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "file:///dir/afile",
     scheme:  "data",
     prePath: "data:",
-    path:    "text/plain,2",
+    pathQueryRef: "text/plain,2",
     ref:     "",
     relativeURI: "data:te\nxt/plain,2",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "file://",
     scheme:  "file",
     prePath: "file://",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "file:///",
     scheme:  "file",
     prePath: "file://",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "file:///myFile.html",
     scheme:  "file",
     prePath: "file://",
-    path:    "/myFile.html",
+    pathQueryRef: "/myFile.html",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "file:///dir/afile",
     scheme:  "file",
     prePath: "file://",
-    path:    "/dir/data/text/plain,2",
+    pathQueryRef: "/dir/data/text/plain,2",
     ref:     "",
     relativeURI: "data/text/plain,2",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "file:///dir/dir2/",
     scheme:  "file",
     prePath: "file://",
-    path:    "/dir/dir2/data/text/plain,2",
+    pathQueryRef: "/dir/dir2/data/text/plain,2",
     ref:     "",
     relativeURI: "data/text/plain,2",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "ftp://ftp.mozilla.org/pub/mozilla.org/README",
     scheme:  "ftp",
     prePath: "ftp://ftp.mozilla.org",
-    path:    "/pub/mozilla.org/README",
+    pathQueryRef: "/pub/mozilla.org/README",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "ftp://foo:bar@ftp.mozilla.org:100/pub/mozilla.org/README",
@@ -110,7 +110,7 @@ var gTests = [
     port:    100,
     username: "foo",
     password: "bar",
-    path:    "/pub/mozilla.org/README",
+    pathQueryRef: "/pub/mozilla.org/README",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "ftp://foo:@ftp.mozilla.org:100/pub/mozilla.org/README",
@@ -119,40 +119,40 @@ var gTests = [
     port:    100,
     username: "foo",
     password: "",
-    path:    "/pub/mozilla.org/README",
+    pathQueryRef: "/pub/mozilla.org/README",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   //Bug 706249
   { spec:    "gopher://mozilla.org/",
     scheme:  "gopher",
     prePath: "gopher:",
-    path:    "//mozilla.org/",
+    pathQueryRef: "//mozilla.org/",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "http://www.example.com/",
     scheme:  "http",
     prePath: "http://www.example.com",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "http://www.exa\nmple.com/",
     scheme:  "http",
     prePath: "http://www.example.com",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "http://10.32.4.239/",
     scheme:  "http",
     prePath: "http://10.32.4.239",
     host:    "10.32.4.239",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "http://[::192.9.5.5]/ipng",
     scheme:  "http",
     prePath: "http://[::c009:505]",
     host:    "::c009:505",
-    path:    "/ipng",
+    pathQueryRef: "/ipng",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:8888/index.html",
@@ -160,7 +160,7 @@ var gTests = [
     prePath: "http://[fedc:ba98:7654:3210:fedc:ba98:7654:3210]:8888",
     host:    "fedc:ba98:7654:3210:fedc:ba98:7654:3210",
     port:    8888,
-    path:    "/index.html",
+    pathQueryRef: "/index.html",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "http://bar:foo@www.mozilla.org:8080/pub/mozilla.org/README.html",
@@ -170,55 +170,55 @@ var gTests = [
     username: "bar",
     password: "foo",
     host:    "www.mozilla.org",
-    path:    "/pub/mozilla.org/README.html",
+    pathQueryRef: "/pub/mozilla.org/README.html",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "jar:resource://!/",
     scheme:  "jar",
     prePath: "jar:",
-    path:    "resource:///!/",
+    pathQueryRef: "resource:///!/",
     ref:     "",
     nsIURL:  true, nsINestedURI: true },
   { spec:    "jar:resource://gre/chrome.toolkit.jar!/",
     scheme:  "jar",
     prePath: "jar:",
-    path:    "resource://gre/chrome.toolkit.jar!/",
+    pathQueryRef: "resource://gre/chrome.toolkit.jar!/",
     ref:     "",
     nsIURL:  true, nsINestedURI: true },
   { spec:    "mailto:webmaster@mozilla.com",
     scheme:  "mailto",
     prePath: "mailto:",
-    path:    "webmaster@mozilla.com",
+    pathQueryRef: "webmaster@mozilla.com",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "javascript:new Date()",
     scheme:  "javascript",
     prePath: "javascript:",
-    path:    "new%20Date()",
+    pathQueryRef: "new%20Date()",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "blob:123456",
     scheme:  "blob",
     prePath: "blob:",
-    path:    "123456",
+    pathQueryRef: "123456",
     ref:     "",
     nsIURL:  false, nsINestedURI: false, immutable: true },
   { spec:    "place:sort=8&maxResults=10",
     scheme:  "place",
     prePath: "place:",
-    path:    "sort=8&maxResults=10",
+    pathQueryRef: "sort=8&maxResults=10",
     ref:     "",
     nsIURL:  false, nsINestedURI: false },
   { spec:    "resource://gre/",
     scheme:  "resource",
     prePath: "resource://gre",
-    path:    "/",
+    pathQueryRef: "/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
   { spec:    "resource://gre/components/",
     scheme:  "resource",
     prePath: "resource://gre",
-    path:    "/components/",
+    pathQueryRef: "/components/",
     ref:     "",
     nsIURL:  true, nsINestedURI: false },
 
@@ -333,9 +333,9 @@ function do_test_uri_basic(aTest) {
       }
       do_throw(e.result);
     }
-    do_info("relURI.path = " + relURI.path + ", was " + URI.path);
+    do_info("relURI.pathQueryRef = " + relURI.pathQueryRef + ", was " + URI.pathQueryRef);
     URI = relURI;
-    do_info("URI.path now = " + URI.path);
+    do_info("URI.pathQueryRef now = " + URI.pathQueryRef);
   }
 
   // Sanity-check
@@ -365,7 +365,8 @@ function do_test_uri_basic(aTest) {
   // Check the various components
   do_check_property(aTest, URI, "scheme");
   do_check_property(aTest, URI, "prePath");
-  do_check_property(aTest, URI, "path");
+  do_check_property(aTest, URI, "pathQueryRef");
+  do_check_property(aTest, URI, "query");
   do_check_property(aTest, URI, "ref");
   do_check_property(aTest, URI, "port");
   do_check_property(aTest, URI, "username");
@@ -444,7 +445,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
   do_check_property(aTest, testURI, "prePath");
   if (!origURI.ref) {
     // These don't work if it's a ref already because '+' doesn't give the right result
-    do_check_property(aTest, testURI, "path",
+    do_check_property(aTest, testURI, "pathQueryRef",
                       function(aStr) { return aStr + aSuffix; });
     do_check_property(aTest, testURI, "ref",
                       function(aStr) { return aSuffix.substr(1); });
@@ -499,23 +500,23 @@ function do_test_mutate_ref(aTest, aSuffix) {
 
     // XXX nsIJARURI throws an exception in SetPath(), so skip it for next part.
     if (!(testURI instanceof Ci.nsIJARURI)) {
-      // Now try setting .path directly (including suffix) and then clearing .ref
-      // (same as above, but with now with .path instead of .spec)
+      // Now try setting .pathQueryRef directly (including suffix) and then clearing .ref
+      // (same as above, but with now with .pathQueryRef instead of .spec)
       testURI = NetUtil.newURI(aTest.spec);
 
-      var pathWithSuffix = aTest.path + aSuffix;
+      var pathWithSuffix = aTest.pathQueryRef + aSuffix;
       do_info("testing that setting path to " +
               pathWithSuffix + " and then clearing ref does what we expect");
-      testURI.path = pathWithSuffix;
+      testURI.pathQueryRef = pathWithSuffix;
       testURI.ref = "";
       do_check_uri_eq(testURI, refURIWithoutSuffix);
       do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
-      // Also: make sure that clearing .path also clears .ref
-      testURI.path = pathWithSuffix;
+      // Also: make sure that clearing .pathQueryRef also clears .ref
+      testURI.pathQueryRef = pathWithSuffix;
       do_info("testing that clearing path from " + 
               pathWithSuffix + " also clears .ref");
-      testURI.path = "";
+      testURI.pathQueryRef = "";
       do_check_eq(testURI.ref, "");
     }
   }
@@ -529,7 +530,7 @@ function do_test_immutable(aTest) {
   var URI = NetUtil.newURI(aTest.spec);
   // All the non-readonly attributes on nsIURI.idl:
   var propertiesToCheck = ["spec", "scheme", "userPass", "username", "password",
-                           "hostPort", "host", "port", "path", "ref"];
+                           "hostPort", "host", "port", "pathQueryRef", "query", "ref"];
 
   propertiesToCheck.forEach(function(aProperty) {
     var threw = false;

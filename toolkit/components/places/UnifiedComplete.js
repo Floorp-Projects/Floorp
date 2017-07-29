@@ -1698,7 +1698,7 @@ Search.prototype = {
     // By default we won't provide an icon, but for the subset of urls with a
     // host we'll check for a typed slash and set favicon for the host part.
     if (hostExpected &&
-        (this._trimmedOriginalSearchString.endsWith("/") || uri.path.length > 1)) {
+        (this._trimmedOriginalSearchString.endsWith("/") || uri.pathQueryRef.length > 1)) {
       match.icon = `page-icon:${uri.prePath}/`;
     }
 
