@@ -7,6 +7,23 @@ function findBreakpoint(dbg, url, line) {
   return getBreakpoint(getState(), { sourceId: source.id, line });
 }
 
+function getLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
+}
+
+function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const exists = getLineEl(dbg, line).classList.contains("has-condition");
+
+  ok(
+    exists === shouldExist,
+    "Breakpoint " +
+      (shouldExist ? "exists" : "does not exist") +
+      " on line " +
+      line
+  );
+}
+
 function setConditionalBreakpoint(dbg, index, condition) {
   return Task.spawn(function*() {
     rightClickElement(dbg, "gutter", index);
@@ -29,18 +46,21 @@ add_task(function*() {
   yield waitForDispatch(dbg, "ADD_BREAKPOINT");
   let bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
+  assertEditorBreakpoint(dbg, 5, true);
 
   // Editing a conditional Breakpoint
   yield setConditionalBreakpoint(dbg, 5, "2");
   yield waitForDispatch(dbg, "SET_BREAKPOINT_CONDITION");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "12", "breakpoint is created with the condition");
+  assertEditorBreakpoint(dbg, 5, true);
 
   // Removing a conditional breakpoint
   clickElement(dbg, "gutter", 5);
   yield waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp, null, "breakpoint was removed");
+  assertEditorBreakpoint(dbg, 5, false);
 
   // Adding a condition to a breakpoint
   clickElement(dbg, "gutter", 5);
@@ -50,4 +70,5 @@ add_task(function*() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.condition, "1", "breakpoint is created with the condition");
+  assertEditorBreakpoint(dbg, 5, true);
 });
