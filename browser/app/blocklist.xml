@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1483471392954" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1484867614757" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -929,10 +929,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i1493" id="{de71f09a-3342-48c5-95c1-4b0f17567554}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="1.3.9" severity="3"/>
-    </emItem>
     <emItem blockID="i652" id="garg_sms@yahoo.in">
       <prefs/>
       <versionRange minVersion="67.9" maxVersion="67.9" severity="3"/>
@@ -1809,6 +1805,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="28736359-700e-4b61-9c50-0b533a6bac55" id="xdict@www.iciba.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="2.3.1" severity="1"/>
+    </emItem>
     <emItem blockID="i539" id="ScorpionSaver@jetpack">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -2090,6 +2090,10 @@
     <emItem blockID="i107" id="{ABDE892B-13A8-4d1b-88E6-365A6E755758}" os="WINNT">
       <prefs/>
       <versionRange minVersion="0" maxVersion="15.0.5" severity="1"/>
+    </emItem>
+    <emItem blockID="i1493" id="{de71f09a-3342-48c5-95c1-4b0f17567554}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.3.9" severity="3"/>
     </emItem>
   </emItems>
   <pluginItems>
