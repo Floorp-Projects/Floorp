@@ -189,7 +189,7 @@ const validator = {
     obj[prop] = val;
     return true;
   },
-}
+};
 
 /**
  * The response body is exposed as an argument to commands.
