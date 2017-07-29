@@ -8,15 +8,17 @@ package org.mozilla.gecko.activitystream.homepanel.model;
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
+import org.mozilla.gecko.db.BrowserContract;
 
 public class Metadata {
     private static final String LOGTAG = "GeckoMetadata";
 
-    public static Metadata fromCursor(final Cursor cursor, final HighlightCandidateCursorIndices cursorIndices) {
-        return new Metadata(cursor.getString(cursorIndices.metadataColumnIndex));
+    public static Metadata fromCursor(Cursor cursor) {
+        return new Metadata(
+                cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.METADATA)));
     }
 
     private String provider;

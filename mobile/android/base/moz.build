@@ -525,7 +525,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'activitystream/homepanel/topsites/TopSitesPageAdapter.java',
     'activitystream/homepanel/topsites/TopSitesPagerAdapter.java',
     'activitystream/ranking/HighlightCandidate.java',
-    'activitystream/ranking/HighlightCandidateCursorIndices.java',
     'activitystream/ranking/HighlightsRanking.java',
     'activitystream/ranking/RankingUtils.java',
     'activitystream/Utils.java',
