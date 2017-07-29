@@ -119,6 +119,9 @@ HttpBackgroundChannelChild::OnChannelClosed()
 
   // HttpChannelChild is not going to handle any incoming message.
   mChannelChild = nullptr;
+
+  // Remove pending IPC messages as well.
+  mQueuedRunnables.Clear();
 }
 
 void

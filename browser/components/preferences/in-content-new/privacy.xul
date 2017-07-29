@@ -598,7 +598,7 @@
   <vbox>
     <description flex="1">
       <checkbox id="submitHealthReportBox" label="&enableHealthReport1.label;"
-                accesskey="&enableHealthReport1.accesskey;" flex="1" />
+                accesskey="&enableHealthReport1.accesskey;"/>
       <label id="FHRLearnMore"
              class="learnMore text-link">&healthReportLearnMore.label;</label>
     </description>
@@ -611,7 +611,7 @@
     <checkbox id="automaticallySubmitCrashesBox"
               preference="browser.crashReports.unsubmittedCheck.autoSubmit"
               label="&alwaysSubmitCrashReports1.label;"
-              accesskey="&alwaysSubmitCrashReports1.accesskey;" flex="1" />
+              accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
     <label id="crashReporterLearnMore"
            class="learnMore text-link">&crashReporterLearnMore.label;</label>
   </hbox>

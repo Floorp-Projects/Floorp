@@ -21,6 +21,7 @@ ServoImportRule::ServoImportRule(RefPtr<RawServoImportRule> aRawRule,
   const auto* sheet = Servo_ImportRule_GetSheet(mRawRule.get());
   MOZ_ASSERT(sheet);
   mChildSheet = const_cast<ServoStyleSheet*>(sheet);
+  mChildSheet->SetOwnerRule(this);
 }
 
 ServoImportRule::~ServoImportRule()

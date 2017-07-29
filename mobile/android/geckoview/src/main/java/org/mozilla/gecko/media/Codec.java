@@ -264,7 +264,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
         private boolean isValidBuffer(final int index) {
             try {
-                return mCodec.getOutputBuffer(index) != null;
+                return (mCodec.getOutputBuffer(index) != null) || mRenderToSurface;
             } catch (IllegalStateException e) {
                 if (DEBUG) { Log.e(LOGTAG, "invalid buffer#" + index, e); }
                 return false;

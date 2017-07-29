@@ -29,6 +29,11 @@ var HeuristicsRegExp = {
     ),
 
     // ==== Telephone ====
+    "tel-extension": new RegExp(
+      "\\bext|ext\\b|extension" +
+      "|ramal",                     // pt-BR, pt-PT
+      "iu"
+    ),
     "tel": new RegExp(
       "phone|mobile|contact.?number" +
       "|telefonnummer" +                             // de-DE
@@ -155,6 +160,17 @@ var HeuristicsRegExp = {
     ),
 
     // ==== Name Fields ====
+    "name": new RegExp(
+      "^name|full.?name|your.?name|customer.?name|bill.?name|ship.?name" +
+      "|name.*first.*last|firstandlastname" +
+      "|nombre.*y.*apellidos" + // es
+      "|^nom" +                 // fr-FR
+      "|お名前|氏名" +          // ja-JP
+      "|^nome" +                // pt-BR, pt-PT
+      "|姓名" +                 // zh-CN
+      "|성명",                  // ko-KR
+      "iu"
+    ),
     "given-name": new RegExp(
       "first.*name|initials|fname|first$|given.*name" +
       "|vorname" +                // de-DE
@@ -184,17 +200,6 @@ var HeuristicsRegExp = {
       "|morada|apelidos|surename|sobrenome" + // pt-BR, pt-PT
       "|Фамилия" +                            // ru
       "|\\b성(?:[^명]|\\b)",                  // ko-KR
-      "iu"
-    ),
-    "name": new RegExp(
-      "^name|full.?name|your.?name|customer.?name|bill.?name|ship.?name" +
-      "|name.*first.*last|firstandlastname" +
-      "|nombre.*y.*apellidos" + // es
-      "|^nom" +                 // fr-FR
-      "|お名前|氏名" +          // ja-JP
-      "|^nome" +                // pt-BR, pt-PT
-      "|姓名" +                 // zh-CN
-      "|성명",                  // ko-KR
       "iu"
     ),
   },

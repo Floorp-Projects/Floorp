@@ -1341,7 +1341,7 @@ class Addresses extends AutofillRecords {
     }
 
     let tel = PhoneNumber.Parse(number, region);
-    if (tel) {
+    if (tel && tel.internationalNumber) {
       // Force to save numbers in E.164 format if parse success.
       address.tel = tel.internationalNumber;
     } else if (!address.tel) {

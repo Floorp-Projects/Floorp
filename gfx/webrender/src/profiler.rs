@@ -8,7 +8,7 @@ use euclid::{Point2D, Size2D, Rect, vec2};
 use std::collections::vec_deque::VecDeque;
 use std::f32;
 use std::mem;
-use api::ColorF;
+use api::{ColorF, ColorU};
 use time::precise_time_ns;
 
 const GRAPH_WIDTH: f32 = 1024.0;
@@ -329,13 +329,20 @@ pub struct IpcProfileCounters {
 }
 
 impl IpcProfileCounters {
-    pub fn set(&mut self, build_start: u64, build_end: u64, 
-                              consume_start: u64, consume_end: u64,
-                              display_len: usize) {
-        self.build_time.inc(build_end - build_start);
-        self.consume_time.inc(consume_end - consume_start);
-        self.send_time.inc(consume_start - build_end);
-        self.total_time.inc(consume_end - build_start);
+    pub fn set(&mut self,
+               build_start: u64,
+               build_end: u64,
+               send_start: u64,
+               consume_start: u64,
+               consume_end: u64,
+               display_len: usize) {
+        let build_time = build_end - build_start;
+        let consume_time = consume_end - consume_start;
+        let send_time = consume_start - send_start;
+        self.build_time.inc(build_time);
+        self.consume_time.inc(consume_time);
+        self.send_time.inc(send_time);
+        self.total_time.inc(build_time + consume_time + send_time);
         self.display_lists.inc(display_len);
     }
 }
@@ -468,32 +475,32 @@ impl ProfileGraph {
         let mut rect = Rect::new(Point2D::new(x, y), size);
         let stats = self.stats();
 
-        let text_color = ColorF::new(1.0, 1.0, 0.0, 1.0);
+        let text_color = ColorU::new(255, 255, 0, 255);
         let text_origin = rect.origin + vec2(rect.size.width, 20.0);
         debug_renderer.add_text(text_origin.x,
                                 text_origin.y,
                                 description,
-                                &ColorF::new(0.0, 1.0, 0.0, 1.0));
+                                ColorU::new(0, 255, 0, 255));
         debug_renderer.add_text(text_origin.x,
                                 text_origin.y + line_height,
                                 &format!("Min: {:.2} ms", stats.min_value),
-                                &text_color);
+                                text_color);
         debug_renderer.add_text(text_origin.x,
                                 text_origin.y + line_height * 2.0,
                                 &format!("Mean: {:.2} ms", stats.mean_value),
-                                &text_color);
+                                text_color);
         debug_renderer.add_text(text_origin.x,
                                 text_origin.y + line_height * 3.0,
                                 &format!("Max: {:.2} ms", stats.max_value),
-                                &text_color);
+                                text_color);
 
         rect.size.width += 140.0;
         debug_renderer.add_quad(rect.origin.x,
                                 rect.origin.y,
                                 rect.origin.x + rect.size.width + 10.0,
                                 rect.origin.y + rect.size.height,
-                                &ColorF::new(0.1, 0.1, 0.1, 0.8),
-                                &ColorF::new(0.2, 0.2, 0.2, 0.8));
+                                ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
+                                ColorF::new(0.2, 0.2, 0.2, 0.8).into());
 
         let bx0 = x + 10.0;
         let by0 = y + 10.0;
@@ -503,14 +510,14 @@ impl ProfileGraph {
         let w = (bx1 - bx0) / self.max_samples as f32;
         let h = by1 - by0;
 
-        let color_t0 = ColorF::new(0.0, 1.0, 0.0, 1.0);
-        let color_b0 = ColorF::new(0.0, 0.7, 0.0, 1.0);
+        let color_t0 = ColorU::new(0, 255, 0, 255);
+        let color_b0 = ColorU::new(0, 180, 0, 255);
 
-        let color_t1 = ColorF::new(0.0, 1.0, 0.0, 1.0);
-        let color_b1 = ColorF::new(0.0, 0.7, 0.0, 1.0);
+        let color_t1 = ColorU::new(0, 255, 0, 255);
+        let color_b1 = ColorU::new(0, 180, 0, 255);
 
-        let color_t2 = ColorF::new(1.0, 0.0, 0.0, 1.0);
-        let color_b2 = ColorF::new(0.7, 0.0, 0.0, 1.0);
+        let color_t2 = ColorU::new(255, 0, 0, 255);
+        let color_b2 = ColorU::new(180, 0, 0, 255);
 
         for (index, sample) in self.values.iter().enumerate() {
             let sample = *sample;
@@ -521,11 +528,11 @@ impl ProfileGraph {
             let y1 = by1;
 
             let (color_top, color_bottom) = if sample < 1000.0 / 60.0 {
-                (&color_t0, &color_b0)
+                (color_t0, color_b0)
             } else if sample < 1000.0 / 30.0 {
-                (&color_t1, &color_b1)
+                (color_t1, color_b1)
             } else {
-                (&color_t2, &color_b2)
+                (color_t2, color_b2)
             };
 
             debug_renderer.add_quad(x0, y0, x1, y1, color_top, color_bottom);
@@ -576,8 +583,8 @@ impl GpuFrameCollection {
                                 bounding_rect.origin.y,
                                 bounding_rect.origin.x + bounding_rect.size.width,
                                 bounding_rect.origin.y + bounding_rect.size.height,
-                                &ColorF::new(0.1, 0.1, 0.1, 0.8),
-                                &ColorF::new(0.2, 0.2, 0.2, 0.8));
+                                ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
+                                ColorF::new(0.2, 0.2, 0.2, 0.8).into());
 
         let w = graph_rect.size.width;
         let mut y0 = graph_rect.origin.y;
@@ -604,8 +611,8 @@ impl GpuFrameCollection {
                                         y0,
                                         x1,
                                         y1,
-                                        &sample.tag.color,
-                                        &bottom_color);
+                                        sample.tag.color.into(),
+                                        bottom_color.into());
             }
 
             y0 = y1;
@@ -657,15 +664,15 @@ impl Profiler {
         let line_height = debug_renderer.line_height();
 
         let colors = [
-            ColorF::new(1.0, 1.0, 1.0, 1.0),
-            ColorF::new(1.0, 1.0, 0.0, 1.0),
+            ColorU::new(255, 255, 255, 255),
+            ColorU::new(255, 255, 0, 255),
         ];
 
         for counter in counters {
             let rect = debug_renderer.add_text(current_x,
                                                current_y,
                                                counter.description(),
-                                               &colors[color_index]);
+                                               colors[color_index]);
             color_index = (color_index+1) % colors.len();
 
             label_rect = label_rect.union(&rect);
@@ -684,7 +691,7 @@ impl Profiler {
             let rect = debug_renderer.add_text(current_x,
                                                     current_y,
                                                     &counter.value(),
-                                                    &colors[color_index]);
+                                                    colors[color_index]);
             color_index = (color_index+1) % colors.len();
 
             value_rect = value_rect.union(&rect);
@@ -696,8 +703,8 @@ impl Profiler {
                                 total_rect.origin.y,
                                 total_rect.origin.x + total_rect.size.width,
                                 total_rect.origin.y + total_rect.size.height,
-                                &ColorF::new(0.1, 0.1, 0.1, 0.8),
-                                &ColorF::new(0.2, 0.2, 0.2, 0.8));
+                                ColorF::new(0.1, 0.1, 0.1, 0.8).into(),
+                                ColorF::new(0.2, 0.2, 0.2, 0.8).into());
         let new_y = total_rect.origin.y + total_rect.size.height + 30.0;
         if left {
             self.y_left = new_y;

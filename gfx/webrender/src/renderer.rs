@@ -63,9 +63,11 @@ pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
 const GPU_TAG_CACHE_BOX_SHADOW: GpuProfileTag = GpuProfileTag { label: "C_BoxShadow", color: debug_colors::BLACK };
 const GPU_TAG_CACHE_CLIP: GpuProfileTag = GpuProfileTag { label: "C_Clip", color: debug_colors::PURPLE };
 const GPU_TAG_CACHE_TEXT_RUN: GpuProfileTag = GpuProfileTag { label: "C_TextRun", color: debug_colors::MISTYROSE };
+const GPU_TAG_CACHE_LINE: GpuProfileTag = GpuProfileTag { label: "C_Line", color: debug_colors::BROWN };
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag { label: "target", color: debug_colors::SLATEGREY };
 const GPU_TAG_SETUP_DATA: GpuProfileTag = GpuProfileTag { label: "data init", color: debug_colors::LIGHTGREY };
 const GPU_TAG_PRIM_RECT: GpuProfileTag = GpuProfileTag { label: "Rect", color: debug_colors::RED };
+const GPU_TAG_PRIM_LINE: GpuProfileTag = GpuProfileTag { label: "Line", color: debug_colors::DARKRED };
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag { label: "Image", color: debug_colors::GREEN };
 const GPU_TAG_PRIM_YUV_IMAGE: GpuProfileTag = GpuProfileTag { label: "YuvImage", color: debug_colors::DARKGREEN };
 const GPU_TAG_PRIM_BLEND: GpuProfileTag = GpuProfileTag { label: "Blend", color: debug_colors::LIGHTBLUE };
@@ -163,16 +165,19 @@ impl GpuProfile {
 #[derive(Debug)]
 pub struct CpuProfile {
     pub frame_id: FrameId,
+    pub backend_time_ns: u64,
     pub composite_time_ns: u64,
     pub draw_calls: usize,
 }
 
 impl CpuProfile {
     fn new(frame_id: FrameId,
+           backend_time_ns: u64,
            composite_time_ns: u64,
            draw_calls: usize) -> CpuProfile {
         CpuProfile {
             frame_id,
+            backend_time_ns,
             composite_time_ns,
             draw_calls,
         }
@@ -623,7 +628,9 @@ pub struct Renderer {
     // of these shaders are then used by the primitive shaders.
     cs_box_shadow: LazilyCompiledShader,
     cs_text_run: LazilyCompiledShader,
+    cs_line: LazilyCompiledShader,
     cs_blur: LazilyCompiledShader,
+
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
     /// of these shaders are also used by the primitive shaders.
@@ -651,6 +658,7 @@ pub struct Renderer {
     ps_radial_gradient: PrimitiveShader,
     ps_box_shadow: PrimitiveShader,
     ps_cache_image: PrimitiveShader,
+    ps_line: PrimitiveShader,
 
     ps_blend: LazilyCompiledShader,
     ps_hw_composite: LazilyCompiledShader,
@@ -796,6 +804,14 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
+        let cs_line = try!{
+            LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::Triangles),
+                                      "ps_line",
+                                      &["CACHE"],
+                                      &mut device,
+                                      options.precache_shaders)
+        };
+
         let cs_blur = try!{
             LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::Blur),
                                      "cs_blur",
@@ -839,6 +855,13 @@ impl Renderer {
             PrimitiveShader::new("ps_rectangle",
                                  &mut device,
                                  &[ CLIP_FEATURE ],
+                                 options.precache_shaders)
+        };
+
+        let ps_line = try!{
+            PrimitiveShader::new("ps_line",
+                                 &mut device,
+                                 &[],
                                  options.precache_shaders)
         };
 
@@ -1137,6 +1160,7 @@ impl Renderer {
         let workers = options.workers.take().unwrap_or_else(||{
             Arc::new(ThreadPool::new(worker_config).unwrap())
         });
+        let enable_render_on_scroll = options.enable_render_on_scroll;
 
         let blob_image_renderer = options.blob_image_renderer.take();
         try!{ thread::Builder::new().name("RenderBackend".to_string()).spawn(move || {
@@ -1154,7 +1178,8 @@ impl Renderer {
                                                  backend_main_thread_dispatcher,
                                                  blob_image_renderer,
                                                  backend_vr_compositor,
-                                                 initial_window_size);
+                                                 initial_window_size,
+                                                 enable_render_on_scroll);
             backend.run(backend_profile_counters);
         })};
 
@@ -1171,6 +1196,7 @@ impl Renderer {
             pending_shader_updates: Vec::new(),
             cs_box_shadow,
             cs_text_run,
+            cs_line,
             cs_blur,
             cs_clip_rectangle,
             cs_clip_border,
@@ -1192,6 +1218,7 @@ impl Renderer {
             ps_hw_composite,
             ps_split_composite,
             ps_composite,
+            ps_line,
             notifier,
             debug: debug_renderer,
             render_target_debug,
@@ -1409,6 +1436,7 @@ impl Renderer {
                         self.cpu_profiles.pop_front();
                     }
                     let cpu_profile = CpuProfile::new(cpu_frame_id,
+                                                      self.backend_profile_counters.total_time.get(),
                                                       profile_timers.cpu_time.get(),
                                                       self.profile_counters.draw_calls.get());
                     self.cpu_profiles.push_back(cpu_profile);
@@ -1664,6 +1692,10 @@ impl Renderer {
                 };
                 (GPU_TAG_PRIM_RECT, shader)
             }
+            AlphaBatchKind::Line => {
+                let shader = self.ps_line.get(&mut self.device, transform_kind);
+                (GPU_TAG_PRIM_LINE, shader)
+            }
             AlphaBatchKind::TextRun => {
                 let shader = match batch.key.blend_mode {
                     BlendMode::Subpixel(..) => self.ps_text_run_subpixel.get(&mut self.device, transform_kind),
@@ -1876,6 +1908,22 @@ impl Renderer {
                                       vao,
                                       shader,
                                       &target.text_run_textures,
+                                      &projection);
+        }
+        if !target.line_cache_prims.is_empty() {
+            // TODO(gw): Technically, we don't need blend for solid
+            //           lines. We could check that here?
+            self.device.set_blend(true);
+            self.device.set_blend_mode_alpha();
+
+            let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_LINE);
+            let vao = self.prim_vao_id;
+            let shader = self.cs_line.get(&mut self.device).unwrap();
+
+            self.draw_instanced_batch(&target.line_cache_prims,
+                                      vao,
+                                      shader,
+                                      &BatchTextures::no_texture(),
                                       &projection);
         }
 
@@ -2392,6 +2440,7 @@ pub struct RendererOptions {
     pub workers: Option<Arc<ThreadPool>>,
     pub blob_image_renderer: Option<Box<BlobImageRenderer>>,
     pub recorder: Option<Box<ApiRecordingReceiver>>,
+    pub enable_render_on_scroll: bool,
 }
 
 impl Default for RendererOptions {
@@ -2418,6 +2467,7 @@ impl Default for RendererOptions {
             workers: None,
             blob_image_renderer: None,
             recorder: None,
+            enable_render_on_scroll: true,
         }
     }
 }

@@ -19,6 +19,8 @@ class nsIWidget;
 namespace mozilla {
 namespace widget {
 
+class PuppetWidget;
+
 /**
  * TextEventDispatcher is a helper class for dispatching widget events defined
  * in TextEvents.h.  Currently, this is a helper for dispatching
@@ -58,6 +60,13 @@ public:
   nsresult BeginTestInputTransaction(TextEventDispatcherListener* aListener,
                                      bool aIsAPZAware);
   nsresult BeginNativeInputTransaction();
+
+  /**
+   * BeginInputTransactionFor() should be used when aPuppetWidget dispatches
+   * a composition or keyboard event coming from its parent process.
+   */
+  nsresult BeginInputTransactionFor(const WidgetGUIEvent* aEvent,
+                                    PuppetWidget* aPuppetWidget);
 
   /**
    * EndInputTransaction() should be called when the listener stops using
@@ -368,6 +377,10 @@ private:
     eNoInputTransaction,
     // Input transaction for native IME or keyboard event handler.  Note that
     // keyboard events may be dispatched via parent process if there is.
+    // In remote processes, this is also used when events come from the parent
+    // process and are not for tests because we cannot distinguish if
+    // TextEventDispatcher has which type of transaction when it dispatches
+    // (eNativeInputTransaction or eSameProcessSyncInputTransaction).
     eNativeInputTransaction,
     // Input transaction for automated tests which are APZ-aware.  Note that
     // keyboard events may be dispatched via parent process if there is.
@@ -375,6 +388,10 @@ private:
     // Input transaction for automated tests which assume events are fired
     // synchronously.  I.e., keyboard events are always dispatched in the
     // current process.
+    // In remote processes, this is also used when events come from the parent
+    // process and are not dispatched by the instance itself for APZ-aware
+    // tests because this instance won't dispatch the events via the parent
+    // process again.
     eSameProcessSyncTestInputTransaction,
     // Input transaction for Others (must be IME on B2G).  Events are fired
     // synchronously because TextInputProcessor which is the only user of

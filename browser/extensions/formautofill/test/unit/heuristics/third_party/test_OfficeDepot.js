@@ -16,12 +16,10 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
 
-        // TODO: telphone relative fields should be fixed:
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
 
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       ],
@@ -42,12 +40,10 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // state
 
-        // TODO: telphone relative fields should be fixed:
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
 
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
       ],

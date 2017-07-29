@@ -105,7 +105,7 @@ module.exports = envConfig => {
         "method": path.join(__dirname, "../../../addon-sdk/source/lib/method"),
         "modules/libpref/init/all":
           path.join(__dirname, "../../../modules/libpref/init/all.js"),
-        "sdk/util/uuid":
+        "devtools/shared/generate-uuid":
           path.join(__dirname, "./webpack/uuid-sham.js"),
         "sdk": path.join(__dirname, "../../../addon-sdk/source/lib/sdk"),
         "Services": path.join(__dirname, "../shared/shim/Services.js"),

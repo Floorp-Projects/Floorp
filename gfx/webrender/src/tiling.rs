@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use border::{BorderCornerInstance, BorderCornerSide};
 use device::TextureId;
 use fnv::FnvHasher;
 use gpu_cache::{GpuCache, GpuCacheHandle, GpuCacheUpdateList};
-use internal_types::{ANGLE_FLOAT_TO_FIXED, BatchTextures, CacheTextureId, LowLevelFilterOp};
+use internal_types::{BatchTextures, CacheTextureId};
 use internal_types::SourceTexture;
 use mask_cache::MaskCacheInfo;
 use prim_store::{CLIP_DATA_GPU_BLOCKS, DeferredResolve, ImagePrimitiveKind, PrimitiveCacheKey};
@@ -25,9 +24,9 @@ use std::hash::BuildHasherDefault;
 use texture_cache::TexturePage;
 use util::{TransformedRect, TransformedRectKind};
 use api::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
-use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
-use api::{ExternalImageType, FontRenderMode, ImageRendering, LayerRect};
-use api::{LayerToWorldTransform, MixBlendMode, PipelineId, TransformStyle};
+use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize, FontInstanceKey};
+use api::{ExternalImageType, FilterOp, FontRenderMode, ImageRendering, LayerRect};
+use api::{LayerToWorldTransform, MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
 use api::{TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
 
 // Special sentinel value recognized by the shader. It is considered to be
@@ -284,15 +283,17 @@ impl AlphaRenderItem {
                 let src_task_index = render_tasks.get_static_task_index(&src_id);
 
                 let (filter_mode, amount) = match filter {
-                    LowLevelFilterOp::Blur(..) => (0, 0.0),
-                    LowLevelFilterOp::Contrast(amount) => (1, amount.to_f32_px()),
-                    LowLevelFilterOp::Grayscale(amount) => (2, amount.to_f32_px()),
-                    LowLevelFilterOp::HueRotate(angle) => (3, (angle as f32) / ANGLE_FLOAT_TO_FIXED),
-                    LowLevelFilterOp::Invert(amount) => (4, amount.to_f32_px()),
-                    LowLevelFilterOp::Saturate(amount) => (5, amount.to_f32_px()),
-                    LowLevelFilterOp::Sepia(amount) => (6, amount.to_f32_px()),
-                    LowLevelFilterOp::Brightness(amount) => (7, amount.to_f32_px()),
-                    LowLevelFilterOp::Opacity(amount) => (8, amount.to_f32_px()),
+                    // TODO: Implement blur filter #1351
+                    FilterOp::Blur(..) => (0, 0.0),
+                    FilterOp::Contrast(amount) => (1, amount),
+                    FilterOp::Grayscale(amount) => (2, amount),
+                    FilterOp::HueRotate(angle) => (3, angle),
+                    FilterOp::Invert(amount) => (4, amount),
+                    FilterOp::Saturate(amount) => (5, amount),
+                    FilterOp::Sepia(amount) => (6, amount),
+                    FilterOp::Brightness(amount) => (7, amount),
+                    FilterOp::Opacity(PropertyBinding::Value(amount)) => (8, amount),
+                    FilterOp::Opacity(_) => unreachable!(),
                 };
 
                 let amount = (amount * 65535.0).round() as i32;
@@ -427,6 +428,11 @@ impl AlphaRenderItem {
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
                         batch.add_instance(base_instance.build(0, 0, 0));
                     }
+                    PrimitiveKind::Line => {
+                        let key = AlphaBatchKey::new(AlphaBatchKind::Line, flags, blend_mode, no_textures);
+                        let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
+                        batch.add_instance(base_instance.build(0, 0, 0));
+                    }
                     PrimitiveKind::Image => {
                         let image_cpu = &ctx.prim_store.cpu_images[prim_metadata.cpu_prim_index.0];
 
@@ -483,12 +489,15 @@ impl AlphaRenderItem {
                         // TODO(gw): avoid / recycle this allocation in the future.
                         let mut instances = Vec::new();
 
-                        let texture_id = ctx.resource_cache.get_glyphs(text_cpu.font_key,
-                                                                       font_size_dp,
-                                                                       text_cpu.color,
+                        let font = FontInstanceKey::new(text_cpu.font_key,
+                                                        font_size_dp,
+                                                        text_cpu.color,
+                                                        text_cpu.normal_render_mode,
+                                                        text_cpu.glyph_options);
+
+                        let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                        &text_cpu.glyph_instances,
-                                                                       text_cpu.normal_render_mode,
-                                                                       text_cpu.glyph_options, |index, handle| {
+                                                                       |index, handle| {
                             let uv_address = handle.as_int(gpu_cache);
                             instances.push(base_instance.build(index as i32,
                                                                text_cpu.normal_render_mode as i32,
@@ -932,6 +941,7 @@ pub struct ColorRenderTarget {
     //           cache changes land, this restriction will
     //           be removed anyway.
     pub text_run_cache_prims: Vec<PrimitiveInstance>,
+    pub line_cache_prims: Vec<PrimitiveInstance>,
     pub text_run_textures: BatchTextures,
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurCommand>,
@@ -950,6 +960,7 @@ impl RenderTarget for ColorRenderTarget {
             alpha_batcher: AlphaBatcher::new(),
             box_shadow_cache_prims: Vec::new(),
             text_run_cache_prims: Vec::new(),
+            line_cache_prims: Vec::new(),
             text_run_textures: BatchTextures::no_texture(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
@@ -1040,28 +1051,30 @@ impl RenderTarget for ColorRenderTarget {
 
                         for sub_prim_index in &prim.primitives {
                             let sub_metadata = ctx.prim_store.get_metadata(*sub_prim_index);
+                            let sub_prim_address = sub_metadata.gpu_location.as_int(gpu_cache);
+                            let instance = SimplePrimitiveInstance::new(sub_prim_address,
+                                                                        task_index,
+                                                                        RenderTaskIndex(0),
+                                                                        PackedLayerIndex(0),
+                                                                        0);     // z is disabled for rendering cache primitives
+
                             match sub_metadata.prim_kind {
                                 PrimitiveKind::TextRun => {
                                     // Add instances that reference the text run GPU location. Also supply
                                     // the parent text-shadow prim address as a user data field, allowing
                                     // the shader to fetch the text-shadow parameters.
-                                    let sub_prim_address = sub_metadata.gpu_location.as_int(gpu_cache);
                                     let text = &ctx.prim_store.cpu_text_runs[sub_metadata.cpu_prim_index.0];
-
-                                    let instance = SimplePrimitiveInstance::new(sub_prim_address,
-                                                                                task_index,
-                                                                                RenderTaskIndex(0),
-                                                                                PackedLayerIndex(0),
-                                                                                0);     // z is disabled for rendering cache primitives
-
                                     let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
-                                    let texture_id = ctx.resource_cache.get_glyphs(text.font_key,
-                                                                                   font_size_dp,
-                                                                                   text.color,
+                                    let font = FontInstanceKey::new(text.font_key,
+                                                                    font_size_dp,
+                                                                    text.color,
+                                                                    text.shadow_render_mode,
+                                                                    text.glyph_options);
+
+                                    let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                                    &text.glyph_instances,
-                                                                                   text.shadow_render_mode,
-                                                                                   text.glyph_options, |index, handle| {
+                                                                                   |index, handle| {
                                         let uv_address = handle.as_int(gpu_cache);
                                         instances.push(instance.build(index as i32,
                                                                       uv_address,
@@ -1081,6 +1094,9 @@ impl RenderTarget for ColorRenderTarget {
                                                       self.text_run_textures.colors[0] == textures.colors[0]);
                                         self.text_run_textures = textures;
                                     }
+                                }
+                                PrimitiveKind::Line => {
+                                    self.line_cache_prims.push(instance.build(prim_address, 0, 0));
                                 }
                                 _ => {
                                     unreachable!("Unexpected sub primitive type");
@@ -1287,6 +1303,7 @@ pub enum AlphaBatchKind {
     CacheImage,
     BorderCorner,
     BorderEdge,
+    Line,
 }
 
 bitflags! {
@@ -1545,7 +1562,6 @@ pub struct StackingContext {
     pub isolated_items_bounds: LayerRect,
 
     pub composite_ops: CompositeOps,
-    pub clip_scroll_groups: Vec<ClipScrollGroupIndex>,
 
     /// Type of the isolation of the content.
     pub isolation: ContextIsolation,
@@ -1578,31 +1594,14 @@ impl StackingContext {
             screen_bounds: DeviceIntRect::zero(),
             isolated_items_bounds: LayerRect::zero(),
             composite_ops,
-            clip_scroll_groups: Vec::new(),
             isolation,
             is_page_root,
             is_visible: false,
         }
     }
 
-    pub fn clip_scroll_group(&self, clip_and_scroll: ClipAndScrollInfo) -> ClipScrollGroupIndex {
-        // Currently there is only one scrolled stacking context per context,
-        // but eventually this will be selected from the vector based on the
-        // scroll layer of this primitive.
-        for group in &self.clip_scroll_groups {
-            if group.1 == clip_and_scroll {
-                return *group;
-            }
-        }
-        unreachable!("Looking for non-existent ClipScrollGroup");
-    }
-
     pub fn can_contribute_to_scene(&self) -> bool {
         !self.composite_ops.will_make_invisible()
-    }
-
-    pub fn has_clip_scroll_group(&self, clip_and_scroll: ClipAndScrollInfo) -> bool {
-        self.clip_scroll_groups.iter().rev().any(|index| index.1 == clip_and_scroll)
     }
 }
 
@@ -1611,7 +1610,6 @@ pub struct ClipScrollGroupIndex(pub usize, pub ClipAndScrollInfo);
 
 #[derive(Debug)]
 pub struct ClipScrollGroup {
-    pub stacking_context_index: StackingContextIndex,
     pub scroll_node_id: ClipId,
     pub clip_node_id: ClipId,
     pub packed_layer_index: PackedLayerIndex,
@@ -1673,14 +1671,14 @@ impl PackedLayer {
 #[derive(Debug, Clone, Default)]
 pub struct CompositeOps {
     // Requires only a single texture as input (e.g. most filters)
-    pub filters: Vec<LowLevelFilterOp>,
+    pub filters: Vec<FilterOp>,
 
     // Requires two source textures (e.g. mix-blend-mode)
     pub mix_blend_mode: Option<MixBlendMode>,
 }
 
 impl CompositeOps {
-    pub fn new(filters: Vec<LowLevelFilterOp>, mix_blend_mode: Option<MixBlendMode>) -> CompositeOps {
+    pub fn new(filters: Vec<FilterOp>, mix_blend_mode: Option<MixBlendMode>) -> CompositeOps {
         CompositeOps {
             filters,
             mix_blend_mode: mix_blend_mode
@@ -1693,7 +1691,7 @@ impl CompositeOps {
 
     pub fn will_make_invisible(&self) -> bool {
         for op in &self.filters {
-            if op == &LowLevelFilterOp::Opacity(Au(0)) {
+            if op == &FilterOp::Opacity(PropertyBinding::Value(0.0)) {
                 return true;
             }
         }

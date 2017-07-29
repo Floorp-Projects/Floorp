@@ -96,29 +96,12 @@ const TESTCASES = [
     },
   },
   {
-    description: "2 address line inputs",
+    description: "address line input",
     document: `<label for="targetElement">street</label>
                <input id="targetElement" type="text">`,
     elementId: "targetElement",
-    addressFieldDetails: [{fieldName: "address-line1"}],
     expectedReturnValue: {
-      fieldName: "address-line2",
-      section: "",
-      addressType: "",
-      contactType: "",
-    },
-  },
-  {
-    description: "3 address line inputs",
-    document: `<label for="targetElement">street</label>
-               <input id="targetElement" type="text">`,
-    elementId: "targetElement",
-    addressFieldDetails: [
-      {fieldName: "address-line1"},
-      {fieldName: "address-line2"},
-    ],
-    expectedReturnValue: {
-      fieldName: "address-line3",
+      fieldName: "address-line1",
       section: "",
       addressType: "",
       contactType: "",
@@ -218,7 +201,7 @@ TESTCASES.forEach(testcase => {
       "http://localhost:8080/test/", testcase.document);
 
     let element = doc.getElementById(testcase.elementId);
-    let value = FormAutofillHeuristics.getInfo(element, testcase.addressFieldDetails);
+    let value = FormAutofillHeuristics.getInfo(element);
 
     Assert.deepEqual(value, testcase.expectedReturnValue);
   });

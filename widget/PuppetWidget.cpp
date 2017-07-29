@@ -361,6 +361,32 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     mNativeIMEContext = compositionEvent->mNativeIMEContext;
   }
 
+  // If the event is a composition event or a keyboard event, it should be
+  // dispatched with TextEventDispatcher if we could do that with current
+  // design.  However, we cannot do that without big changes and the behavior
+  // is not so complicated for now.  Therefore, we should just notify it
+  // of dispatching events and TextEventDispatcher should emulate the state
+  // with events here.
+  if (aEvent->mClass == eCompositionEventClass ||
+      aEvent->mClass == eKeyboardEventClass) {
+    TextEventDispatcher* dispatcher = GetTextEventDispatcher();
+    // However, if the event is being dispatched by the text event dispatcher
+    // or, there is native text event dispatcher listener, that means that
+    // native text input event handler is in this process like on Android,
+    // and the event is not synthesized for tests, the event is coming from
+    // the TextEventDispatcher.  In these cases, we shouldn't notify
+    // TextEventDispatcher of dispatching the event.
+    if (!dispatcher->IsDispatchingEvent() &&
+        !(mNativeTextEventDispatcherListener &&
+          !aEvent->mFlags.mIsSynthesizedForTests)) {
+      DebugOnly<nsresult> rv =
+        dispatcher->BeginInputTransactionFor(aEvent, this);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+        "The text event dispatcher should always succeed to start input "
+        "transaction for the event");
+    }
+  }
+
   aStatus = nsEventStatus_eIgnore;
 
   if (GetCurrentWidgetListener()) {
@@ -662,37 +688,6 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 
   // NOTE: PuppetWidget might be destroyed already.
   return NS_OK;
-}
-
-nsresult
-PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
-{
-  if (mNativeTextEventDispatcherListener) {
-    // Use mNativeTextEventDispatcherListener for IME notifications.
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  switch (aIMENotification.mMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      return RequestIMEToCommitComposition(false);
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      return RequestIMEToCommitComposition(true);
-    case NOTIFY_IME_OF_FOCUS:
-    case NOTIFY_IME_OF_BLUR:
-      return NotifyIMEOfFocusChange(aIMENotification);
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      return NotifyIMEOfSelectionChange(aIMENotification);
-    case NOTIFY_IME_OF_TEXT_CHANGE:
-      return NotifyIMEOfTextChange(aIMENotification);
-    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
-      return NotifyIMEOfCompositionUpdate(aIMENotification);
-    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
-      return NotifyIMEOfMouseButtonEvent(aIMENotification);
-    case NOTIFY_IME_OF_POSITION_CHANGE:
-      return NotifyIMEOfPositionChange(aIMENotification);
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
 }
 
 nsresult
@@ -1466,9 +1461,40 @@ PuppetWidget::OnWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
 
 NS_IMETHODIMP
 PuppetWidget::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
-                        const IMENotification& aNotification)
+                        const IMENotification& aIMENotification)
 {
   MOZ_ASSERT(aTextEventDispatcher == mTextEventDispatcher);
+
+  // If there is different text event dispatcher listener for handling
+  // text event dispatcher, that means that native keyboard events and
+  // IME events are handled in this process.  Therefore, we don't need
+  // to send any requests and notifications to the parent process.
+  if (mNativeTextEventDispatcherListener) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  switch (aIMENotification.mMessage) {
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      return RequestIMEToCommitComposition(false);
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      return RequestIMEToCommitComposition(true);
+    case NOTIFY_IME_OF_FOCUS:
+    case NOTIFY_IME_OF_BLUR:
+      return NotifyIMEOfFocusChange(aIMENotification);
+    case NOTIFY_IME_OF_SELECTION_CHANGE:
+      return NotifyIMEOfSelectionChange(aIMENotification);
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      return NotifyIMEOfTextChange(aIMENotification);
+    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
+      return NotifyIMEOfCompositionUpdate(aIMENotification);
+    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
+      return NotifyIMEOfMouseButtonEvent(aIMENotification);
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      return NotifyIMEOfPositionChange(aIMENotification);
+    default:
+      return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

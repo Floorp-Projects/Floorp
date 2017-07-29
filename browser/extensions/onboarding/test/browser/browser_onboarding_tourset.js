@@ -3,17 +3,15 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 add_task(async function test_onboarding_default_new_tourset() {
   resetOnboardingDefaultState();
-  let tabs = [];
-  for (let url of URLs) {
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
-    await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
-    await promiseOnboardingOverlayOpened(tab.linkedBrowser);
-    tabs.push(tab);
-  }
+
+  let tab = await openTab(ABOUT_NEWTAB_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
@@ -22,10 +20,7 @@ add_task(async function test_onboarding_default_new_tourset() {
     is(TOUR_IDs[idx], dom.id, "contain defined onboarding id");
   });
 
-  for (let i = tabs.length - 1; i >= 0; --i) {
-    let tab = tabs[i];
-    await BrowserTestUtils.removeTab(tab);
-  }
+  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_onboarding_custom_new_tourset() {
@@ -43,15 +38,10 @@ add_task(async function test_onboarding_custom_new_tourset() {
     ["browser.onboarding.newtour", "private,addons,customize"],
   ]});
 
-  let tabs = [];
-  for (let url of URLs) {
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
-    await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
-    await promiseOnboardingOverlayOpened(tab.linkedBrowser);
-    tabs.push(tab);
-  }
+  let tab = await openTab(ABOUT_NEWTAB_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
@@ -60,10 +50,7 @@ add_task(async function test_onboarding_custom_new_tourset() {
     is(CUSTOM_NEW_TOURs[idx], dom.id, "contain defined onboarding id");
   });
 
-  for (let i = tabs.length - 1; i >= 0; --i) {
-    let tab = tabs[i];
-    await BrowserTestUtils.removeTab(tab);
-  }
+  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_onboarding_custom_update_tourset() {
@@ -80,15 +67,10 @@ add_task(async function test_onboarding_custom_update_tourset() {
     ["browser.onboarding.updatetour", "customize,private,addons"],
   ]});
 
-  let tabs = [];
-  for (let url of URLs) {
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
-    await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-    await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
-    await promiseOnboardingOverlayOpened(tab.linkedBrowser);
-    tabs.push(tab);
-  }
+  let tab = await openTab(ABOUT_NEWTAB_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
   let doc = content && content.document;
   let doms = doc.querySelectorAll(".onboarding-tour-item");
@@ -97,8 +79,5 @@ add_task(async function test_onboarding_custom_update_tourset() {
     is(CUSTOM_UPDATE_TOURs[idx], dom.id, "contain defined onboarding id");
   });
 
-  for (let i = tabs.length - 1; i >= 0; --i) {
-    let tab = tabs[i];
-    await BrowserTestUtils.removeTab(tab);
-  }
+  await BrowserTestUtils.removeTab(tab);
 });

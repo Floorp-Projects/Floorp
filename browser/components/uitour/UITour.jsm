@@ -1140,16 +1140,11 @@ this.UITour = {
       /* The "overlap" position anchors from the top-left but we want to centre highlights at their
          minimum size. */
       let highlightWindow = aChromeWindow;
-      let containerStyle = highlightWindow.getComputedStyle(highlighter.parentElement);
-      let paddingTopPx = 0 - parseFloat(containerStyle.paddingTop);
-      let paddingLeftPx = 0 - parseFloat(containerStyle.paddingLeft);
       let highlightStyle = highlightWindow.getComputedStyle(highlighter);
       let highlightHeightWithMin = Math.max(highlightHeight, parseFloat(highlightStyle.minHeight));
       let highlightWidthWithMin = Math.max(highlightWidth, parseFloat(highlightStyle.minWidth));
-      let offsetX = paddingTopPx
-                      - (Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
-      let offsetY = paddingLeftPx
-                      - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
+      let offsetX = -(Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
+      let offsetY = -(Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
       this._addAnnotationPanelMutationObserver(highlighter.parentElement);
       highlighter.parentElement.openPopup(highlightAnchor, "overlap", offsetX, offsetY);
     }

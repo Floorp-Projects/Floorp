@@ -14,6 +14,8 @@
   /* This is a buffer to compensate for the movement in the "wobble" effect,
      and for the box-shadow of #UITourHighlight. */
   padding: 4px;
+  /* Compensate the displacement caused by padding. */
+  margin: -4px;
 }
 
 #UITourHighlight {

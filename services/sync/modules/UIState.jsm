@@ -161,6 +161,9 @@ const UIStateInternal = {
   _populateWithProfile(state, profile) {
     state.displayName = profile.displayName;
     state.avatarURL = profile.avatar;
+    // A hack to handle that the user's email address may have changed.
+    // This can probably be removed as part of bug 1383663.
+    state.email = profile.email;
   },
 
   async _getUserData() {

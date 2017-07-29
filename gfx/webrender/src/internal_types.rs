@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use profiler::BackendProfileCounters;
@@ -14,7 +13,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tiling;
 use renderer::BlendMode;
-use api::{ClipId, ColorF, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
+use api::{ClipId, ColorU, DeviceUintRect, Epoch, ExternalImageData, ExternalImageId};
 use api::{DevicePoint, ImageData, ImageFormat, PipelineId};
 
 // An ID for a texture that is owned by the
@@ -45,9 +44,6 @@ pub enum SourceTexture {
     /// main context and the WebGL context.
     WebGL(u32),
 }
-
-const COLOR_FLOAT_TO_FIXED: f32 = 255.0;
-pub const ANGLE_FLOAT_TO_FIXED: f32 = 65535.0;
 
 pub const ORTHO_NEAR_PLANE: f32 = -1000000.0;
 pub const ORTHO_FAR_PLANE: f32 = 1000000.0;
@@ -129,28 +125,6 @@ pub enum ClipAttribute {
     ResourceAddress,
 }
 
-// A packed RGBA8 color ordered for vertex data or similar.
-
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct PackedColor {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: u8,
-}
-
-impl PackedColor {
-    pub fn from_color(color: &ColorF) -> PackedColor {
-        PackedColor {
-            r: (0.5 + color.r * COLOR_FLOAT_TO_FIXED).floor() as u8,
-            g: (0.5 + color.g * COLOR_FLOAT_TO_FIXED).floor() as u8,
-            b: (0.5 + color.b * COLOR_FLOAT_TO_FIXED).floor() as u8,
-            a: (0.5 + color.a * COLOR_FLOAT_TO_FIXED).floor() as u8,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct PackedVertex {
@@ -162,13 +136,13 @@ pub struct PackedVertex {
 pub struct DebugFontVertex {
     pub x: f32,
     pub y: f32,
-    pub color: PackedColor,
+    pub color: ColorU,
     pub u: f32,
     pub v: f32,
 }
 
 impl DebugFontVertex {
-    pub fn new(x: f32, y: f32, u: f32, v: f32, color: PackedColor) -> DebugFontVertex {
+    pub fn new(x: f32, y: f32, u: f32, v: f32, color: ColorU) -> DebugFontVertex {
         DebugFontVertex {
             x,
             y,
@@ -183,11 +157,11 @@ impl DebugFontVertex {
 pub struct DebugColorVertex {
     pub x: f32,
     pub y: f32,
-    pub color: PackedColor,
+    pub color: ColorU,
 }
 
 impl DebugColorVertex {
-    pub fn new(x: f32, y: f32, color: PackedColor) -> DebugColorVertex {
+    pub fn new(x: f32, y: f32, color: ColorU) -> DebugColorVertex {
         DebugColorVertex {
             x,
             y,
@@ -292,13 +266,6 @@ pub enum ResultMsg {
     NewFrame(RendererFrame, TextureUpdateList, BackendProfileCounters),
 }
 
-#[repr(u32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum AxisDirection {
-    Horizontal,
-    Vertical,
-}
-
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 pub struct StackingContextIndex(pub usize);
 
@@ -306,20 +273,6 @@ pub struct StackingContextIndex(pub usize);
 pub struct UvRect {
     pub uv0: DevicePoint,
     pub uv1: DevicePoint,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum LowLevelFilterOp {
-    Blur(Au, AxisDirection),
-    Brightness(Au),
-    Contrast(Au),
-    Grayscale(Au),
-    /// Fixed-point in `ANGLE_FLOAT_TO_FIXED` units.
-    HueRotate(i32),
-    Invert(Au),
-    Opacity(Au),
-    Saturate(Au),
-    Sepia(Au),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]

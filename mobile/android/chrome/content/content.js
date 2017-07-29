@@ -16,6 +16,56 @@ var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.b
 
 var global = this;
 
+var AboutBlockedSiteListener = {
+  init(chromeGlobal) {
+    addEventListener("AboutBlockedLoaded", this, false, true);
+  },
+
+  get isBlockedSite() {
+    return content.document.documentURI.startsWith("about:blocked");
+  },
+
+  handleEvent(aEvent) {
+    if (!this.isBlockedSite) {
+      return;
+    }
+
+    if (aEvent.type != "AboutBlockedLoaded") {
+      return;
+    }
+
+    let provider = "";
+    if (docShell.failedChannel) {
+      let classifiedChannel = docShell.failedChannel.
+                              QueryInterface(Ci.nsIClassifiedChannel);
+      if (classifiedChannel) {
+        provider = classifiedChannel.matchedProvider;
+      }
+    }
+
+    let advisoryUrl = Services.prefs.getCharPref(
+      "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
+    if (!advisoryUrl) {
+      let el = content.document.getElementById("advisoryDesc");
+      el.remove();
+      return;
+    }
+
+    let advisoryLinkText = Services.prefs.getCharPref(
+      "browser.safebrowsing.provider." + provider + ".advisoryName", "");
+    if (!advisoryLinkText) {
+      let el = content.document.getElementById("advisoryDesc");
+      el.remove();
+      return;
+    }
+
+    let anchorEl = content.document.getElementById("advisory_provider");
+    anchorEl.setAttribute("href", advisoryUrl);
+    anchorEl.textContent = advisoryLinkText;
+  },
+}
+AboutBlockedSiteListener.init();
+
 // This is copied from desktop's tab-content.js. See bug 1153485 about sharing this code somehow.
 var AboutReaderListener = {
 

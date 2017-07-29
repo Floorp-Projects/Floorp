@@ -7,9 +7,9 @@ use device::{Device, GpuMarker, ProgramId, VAOId, TextureId, VertexFormat};
 use device::{TextureFilter, VertexUsageHint, TextureTarget};
 use euclid::{Transform3D, Point2D, Size2D, Rect};
 use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
-use internal_types::{DebugFontVertex, DebugColorVertex, RenderTargetMode, PackedColor};
+use internal_types::{DebugFontVertex, DebugColorVertex, RenderTargetMode};
 use std::f32;
-use api::{ColorF, ImageFormat, DeviceUintSize};
+use api::{ColorU, ImageFormat, DeviceUintSize};
 
 pub struct DebugRenderer {
     font_vertices: Vec<DebugFontVertex>,
@@ -67,11 +67,10 @@ impl DebugRenderer {
                     x: f32,
                     y: f32,
                     text: &str,
-                    color: &ColorF) -> Rect<f32> {
+                    color: ColorU) -> Rect<f32> {
         let mut x_start = x;
         let ipw = 1.0 / debug_font_data::BMP_WIDTH as f32;
         let iph = 1.0 / debug_font_data::BMP_HEIGHT as f32;
-        let color = PackedColor::from_color(color);
 
         let mut min_x = f32::MAX;
         let mut max_x = -f32::MAX;
@@ -125,10 +124,8 @@ impl DebugRenderer {
                     y0: f32,
                     x1: f32,
                     y1: f32,
-                    color_top: &ColorF,
-                    color_bottom: &ColorF) {
-        let color_top = PackedColor::from_color(color_top);
-        let color_bottom = PackedColor::from_color(color_bottom);
+                    color_top: ColorU,
+                    color_bottom: ColorU) {
         let vertex_count = self.tri_vertices.len() as u32;
 
         self.tri_vertices.push(DebugColorVertex::new(x0, y0, color_top));
@@ -148,12 +145,10 @@ impl DebugRenderer {
     pub fn add_line(&mut self,
                     x0: i32,
                     y0: i32,
-                    color0: &ColorF,
+                    color0: ColorU,
                     x1: i32,
                     y1: i32,
-                    color1: &ColorF) {
-        let color0 = PackedColor::from_color(color0);
-        let color1 = PackedColor::from_color(color1);
+                    color1: ColorU) {
         self.line_vertices.push(DebugColorVertex::new(x0 as f32, y0 as f32, color0));
         self.line_vertices.push(DebugColorVertex::new(x1 as f32, y1 as f32, color1));
     }

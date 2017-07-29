@@ -6,15 +6,17 @@ use api::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipAndScrollInfo
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
 use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize};
-use api::{LayerToScrollTransform, LayerVector2D, LocalClip, PipelineId, RepeatMode, TextShadow};
-use api::{TileOffset, TransformStyle, WebGLContextId, WorldPixel, YuvColorSpace, YuvData};
+use api::{LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation, LineStyle};
+use api::{LocalClip, PipelineId, RepeatMode, ScrollSensitivity, TextShadow, TileOffset};
+use api::{TransformStyle, WebGLContextId, WorldPixel, YuvColorSpace, YuvData};
 use app_units::Au;
+use fnv::FnvHasher;
 use frame::FrameId;
 use gpu_cache::GpuCache;
 use internal_types::HardwareCompositeOp;
 use mask_cache::{ClipMode, ClipRegion, ClipSource, MaskCacheInfo};
 use plane_split::{BspSplitter, Polygon, Splitter};
-use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, PrimitiveKind};
+use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{ImagePrimitiveKind, PrimitiveContainer, PrimitiveIndex};
 use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, TextRunMode};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextShadowPrimitiveCpu};
@@ -27,6 +29,7 @@ use clip_scroll_node::{ClipInfo, ClipScrollNode, NodeType};
 use clip_scroll_tree::ClipScrollTree;
 use std::{cmp, f32, i32, mem, usize};
 use std::collections::HashMap;
+use std::hash::BuildHasherDefault;
 use euclid::{SideOffsets2D, vec2, vec3};
 use tiling::{ContextIsolation, StackingContextIndex};
 use tiling::{ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, DisplayListMap, Frame};
@@ -115,6 +118,9 @@ pub struct FrameBuilder {
 
     stacking_context_store: Vec<StackingContext>,
     clip_scroll_group_store: Vec<ClipScrollGroup>,
+    clip_scroll_group_indices: HashMap<ClipAndScrollInfo,
+                                       ClipScrollGroupIndex,
+                                       BuildHasherDefault<FnvHasher>>,
     packed_layers: Vec<PackedLayer>,
 
     // A stack of the current text-shadow primitives.
@@ -145,6 +151,7 @@ impl FrameBuilder {
                 FrameBuilder {
                     stacking_context_store: recycle_vec(prev.stacking_context_store),
                     clip_scroll_group_store: recycle_vec(prev.clip_scroll_group_store),
+                    clip_scroll_group_indices: HashMap::default(),
                     cmds: recycle_vec(prev.cmds),
                     packed_layers: recycle_vec(prev.packed_layers),
                     shadow_prim_stack: recycle_vec(prev.shadow_prim_stack),
@@ -162,6 +169,7 @@ impl FrameBuilder {
                 FrameBuilder {
                     stacking_context_store: Vec::new(),
                     clip_scroll_group_store: Vec::new(),
+                    clip_scroll_group_indices: HashMap::default(),
                     cmds: Vec::new(),
                     packed_layers: Vec::new(),
                     shadow_prim_stack: Vec::new(),
@@ -178,16 +186,13 @@ impl FrameBuilder {
         }
     }
 
-    pub fn create_clip_scroll_group_if_necessary(&mut self,
-                                                 stacking_context_index: StackingContextIndex,
-                                                 info: ClipAndScrollInfo) {
-        if self.stacking_context_store[stacking_context_index.0].has_clip_scroll_group(info) {
+    pub fn create_clip_scroll_group_if_necessary(&mut self, info: ClipAndScrollInfo) {
+        if self.clip_scroll_group_indices.contains_key(&info) {
             return;
         }
 
-        let group_index = self.create_clip_scroll_group(stacking_context_index, info);
-        let stacking_context = &mut self.stacking_context_store[stacking_context_index.0];
-        stacking_context.clip_scroll_groups.push(group_index);
+        let group_index = self.create_clip_scroll_group(info);
+        self.clip_scroll_group_indices.insert(info, group_index);
     }
 
     /// Create a primitive and add it to the prim store. This method doesn't
@@ -199,9 +204,7 @@ impl FrameBuilder {
                         local_clip: &LocalClip,
                         extra_clips: &[ClipSource],
                         container: PrimitiveContainer) -> PrimitiveIndex {
-        let stacking_context_index = *self.stacking_context_stack.last().unwrap();
-
-        self.create_clip_scroll_group_if_necessary(stacking_context_index, clip_and_scroll);
+        self.create_clip_scroll_group_if_necessary(clip_and_scroll);
 
         let mut clip_sources = extra_clips.to_vec();
         if let &LocalClip::RoundedRect(_, _) = local_clip {
@@ -261,15 +264,11 @@ impl FrameBuilder {
         prim_index
     }
 
-    pub fn create_clip_scroll_group(&mut self,
-                                    stacking_context_index: StackingContextIndex,
-                                    info: ClipAndScrollInfo)
-                                    -> ClipScrollGroupIndex {
+    pub fn create_clip_scroll_group(&mut self, info: ClipAndScrollInfo) -> ClipScrollGroupIndex {
         let packed_layer_index = PackedLayerIndex(self.packed_layers.len());
         self.packed_layers.push(PackedLayer::empty());
 
         self.clip_scroll_group_store.push(ClipScrollGroup {
-            stacking_context_index,
             scroll_node_id: info.scroll_node_id,
             clip_node_id: info.clip_node_id(),
             packed_layer_index,
@@ -390,6 +389,7 @@ impl FrameBuilder {
                               pipeline_id,
                               &viewport_rect,
                               content_size,
+                              ScrollSensitivity::ScriptAndInputEvents,
                               clip_scroll_tree);
 
         topmost_scrolling_node_id
@@ -413,11 +413,13 @@ impl FrameBuilder {
                             pipeline_id: PipelineId,
                             frame_rect: &LayerRect,
                             content_size: &LayerSize,
+                            scroll_sensitivity: ScrollSensitivity,
                             clip_scroll_tree: &mut ClipScrollTree) {
         let node = ClipScrollNode::new_scroll_frame(pipeline_id,
                                                     parent_id,
                                                     frame_rect,
-                                                    content_size);
+                                                    content_size,
+                                                    scroll_sensitivity);
 
         clip_scroll_tree.add_node(node, new_node_id);
     }
@@ -469,52 +471,94 @@ impl FrameBuilder {
                                local_clip: &LocalClip,
                                color: &ColorF,
                                flags: PrimitiveFlags) {
-        // TODO(gw): This is here as a temporary measure to allow
-        //           solid rectangles to be drawn into an
-        //           (unblurred) text-shadow. Supporting this allows
-        //           a WR update in Servo, since the tests rely
-        //           on this functionality. Once the complete
-        //           text decoration support is added (via the
-        //           Line display item) this can be removed, so that
-        //           rectangles don't participate in text shadows.
-        let mut trivial_shadows = Vec::new();
+        let prim = RectanglePrimitive {
+            color: *color,
+        };
+
+        let prim_index = self.add_primitive(clip_and_scroll,
+                                            rect,
+                                            local_clip,
+                                            &[],
+                                            PrimitiveContainer::Rectangle(prim));
+
+        match flags {
+            PrimitiveFlags::None => {}
+            PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
+                self.scrollbar_prims.push(ScrollbarPrimitive {
+                    prim_index,
+                    clip_id,
+                    border_radius,
+                });
+            }
+        }
+    }
+
+    pub fn add_line(&mut self,
+                    clip_and_scroll: ClipAndScrollInfo,
+                    local_clip: &LocalClip,
+                    baseline: f32,
+                    start: f32,
+                    end: f32,
+                    orientation: LineOrientation,
+                    width: f32,
+                    color: &ColorF,
+                    style: LineStyle) {
+        let new_rect = match orientation {
+            LineOrientation::Horizontal => {
+                LayerRect::new(LayerPoint::new(start, baseline),
+                               LayerSize::new(end - start, width))
+            }
+            LineOrientation::Vertical => {
+                LayerRect::new(LayerPoint::new(baseline, start),
+                               LayerSize::new(width, end - start))
+            }
+        };
+
+        let line = LinePrimitive {
+            color: *color,
+            style: style,
+            orientation: orientation,
+        };
+
+        let mut fast_text_shadow_prims = Vec::new();
         for shadow_prim_index in &self.shadow_prim_stack {
             let shadow_metadata = &self.prim_store.cpu_metadata[shadow_prim_index.0];
             let shadow_prim = &self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
             if shadow_prim.shadow.blur_radius == 0.0 {
-                trivial_shadows.push(shadow_prim.shadow);
+                fast_text_shadow_prims.push(shadow_prim.shadow);
             }
         }
-        for shadow in trivial_shadows {
+        for shadow in fast_text_shadow_prims {
+            let mut line = line.clone();
+            line.color = shadow.color;
             self.add_primitive(clip_and_scroll,
-                               &rect.translate(&shadow.offset),
+                               &new_rect.translate(&shadow.offset),
                                local_clip,
                                &[],
-                               PrimitiveContainer::Rectangle(RectanglePrimitive {
-                                   color: shadow.color,
-                               }));
+                               PrimitiveContainer::Line(line));
         }
 
+        let prim_index = self.create_primitive(clip_and_scroll,
+                                               &new_rect,
+                                               local_clip,
+                                               &[],
+                                               PrimitiveContainer::Line(line));
+
         if color.a > 0.0 {
-            let prim = RectanglePrimitive {
-                color: *color,
-            };
+            self.add_primitive_to_draw_list(prim_index, clip_and_scroll);
+        }
 
-            let prim_index = self.add_primitive(clip_and_scroll,
-                                                rect,
-                                                local_clip,
-                                                &[],
-                                                PrimitiveContainer::Rectangle(prim));
+        for shadow_prim_index in &self.shadow_prim_stack {
+            let shadow_metadata = &mut self.prim_store.cpu_metadata[shadow_prim_index.0];
+            debug_assert_eq!(shadow_metadata.prim_kind, PrimitiveKind::TextShadow);
+            let shadow_prim = &mut self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
 
-            match flags {
-                PrimitiveFlags::None => {}
-                PrimitiveFlags::Scrollbar(clip_id, border_radius) => {
-                    self.scrollbar_prims.push(ScrollbarPrimitive {
-                        prim_index,
-                        clip_id,
-                        border_radius,
-                    });
-                }
+            // Only run real blurs here (fast path zero blurs are handled above).
+            if shadow_prim.shadow.blur_radius > 0.0 {
+                let shadow_rect = new_rect.inflate(shadow_prim.shadow.blur_radius,
+                                                   shadow_prim.shadow.blur_radius);
+                shadow_metadata.local_rect = shadow_metadata.local_rect.union(&shadow_rect);
+                shadow_prim.primitives.push(prim_index);
             }
         }
     }
@@ -823,6 +867,7 @@ impl FrameBuilder {
 
     pub fn add_text(&mut self,
                     clip_and_scroll: ClipAndScrollInfo,
+                    run_offset: LayoutVector2D,
                     rect: LayerRect,
                     local_clip: &LocalClip,
                     font_key: FontKey,
@@ -877,7 +922,7 @@ impl FrameBuilder {
             glyph_options,
             normal_render_mode,
             shadow_render_mode,
-            offset: LayerVector2D::zero(),
+            offset: run_offset,
             color: *color,
         };
 
@@ -896,7 +941,7 @@ impl FrameBuilder {
             if shadow_prim.shadow.blur_radius == 0.0 {
                 let mut text_prim = prim.clone();
                 text_prim.color = shadow_prim.shadow.color;
-                text_prim.offset = shadow_prim.shadow.offset;
+                text_prim.offset += shadow_prim.shadow.offset;
                 fast_text_shadow_prims.push(text_prim);
             }
         }
@@ -1206,11 +1251,11 @@ impl FrameBuilder {
                          image_rendering: ImageRendering) {
         let format = yuv_data.get_format();
         let yuv_key = match yuv_data {
-            YuvData::NV12(plane_0, plane_1) => [plane_0, plane_1, ImageKey::new(0, 0)],
+            YuvData::NV12(plane_0, plane_1) => [plane_0, plane_1, ImageKey::dummy()],
             YuvData::PlanarYCbCr(plane_0, plane_1, plane_2) =>
                 [plane_0, plane_1, plane_2],
             YuvData::InterleavedYCbCr(plane_0) =>
-                [plane_0, ImageKey::new(0, 0), ImageKey::new(0, 0)],
+                [plane_0, ImageKey::dummy(), ImageKey::dummy()],
         };
 
         let prim_cpu = YuvImagePrimitiveCpu {
@@ -1465,15 +1510,11 @@ impl FrameBuilder {
                 }
                 PrimitiveRunCmd::PrimitiveRun(first_prim_index, prim_count, clip_and_scroll) => {
                     let stacking_context_index = *sc_stack.last().unwrap();
-                    let stacking_context = &self.stacking_context_store[stacking_context_index.0];
-
-                    if !stacking_context.is_visible {
+                    if !self.stacking_context_store[stacking_context_index.0].is_visible {
                         continue;
                     }
 
-                    let stacking_context_index = *sc_stack.last().unwrap();
-                    let group_index = self.stacking_context_store[stacking_context_index.0]
-                                          .clip_scroll_group(clip_and_scroll);
+                    let group_index = *self.clip_scroll_group_indices.get(&clip_and_scroll).unwrap();
                     if self.clip_scroll_group_store[group_index.0].screen_bounding_rect.is_none() {
                         debug!("\tcs-group {:?} screen rect is None", group_index);
                         continue
@@ -1664,7 +1705,6 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
     fn run(&mut self) {
         self.recalculate_clip_scroll_nodes();
         self.recalculate_clip_scroll_groups();
-        self.compute_stacking_context_visibility();
 
         debug!("processing commands...");
         let commands = mem::replace(&mut self.frame_builder.cmds, Vec::new());
@@ -1738,22 +1778,16 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
     fn recalculate_clip_scroll_groups(&mut self) {
         debug!("recalculate_clip_scroll_groups");
         for ref mut group in &mut self.frame_builder.clip_scroll_group_store {
-            let stacking_context_index = group.stacking_context_index;
-            let stacking_context = &mut self.frame_builder
-                                            .stacking_context_store[stacking_context_index.0];
-
             let scroll_node = &self.clip_scroll_tree.nodes[&group.scroll_node_id];
             let clip_node = &self.clip_scroll_tree.nodes[&group.clip_node_id];
             let packed_layer = &mut self.frame_builder.packed_layers[group.packed_layer_index.0];
 
-            // The world content transform is relative to the containing reference frame,
-            // so we translate into the origin of the stacking context itself.
-            let transform = scroll_node.world_content_transform
-                .pre_translate(stacking_context.reference_frame_offset.to_3d());
+            debug!("\tProcessing group scroll={:?}, clip={:?}",
+                   group.scroll_node_id, group.clip_node_id);
 
-            if !packed_layer.set_transform(transform) || !stacking_context.can_contribute_to_scene() {
-                debug!("\t{:?} unable to set transform or contribute with {:?}",
-                    stacking_context_index, transform);
+            let transform = scroll_node.world_content_transform;
+            if !packed_layer.set_transform(transform) {
+                debug!("\t\tUnable to set transform {:?}", transform);
                 return;
             }
 
@@ -1762,29 +1796,15 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             let local_viewport_rect = clip_node.combined_local_viewport_rect
                 .translate(&clip_node.reference_frame_relative_scroll_offset)
                 .translate(&-scroll_node.reference_frame_relative_scroll_offset)
-                .translate(&-stacking_context.reference_frame_offset)
                 .translate(&-scroll_node.scroll_offset());
 
             group.screen_bounding_rect = packed_layer.set_rect(&local_viewport_rect,
                                                                self.screen_rect,
                                                                self.device_pixel_ratio);
 
-            debug!("\t{:?} local viewport {:?} screen bound {:?}",
-                stacking_context_index, local_viewport_rect, group.screen_bounding_rect);
-        }
-    }
-
-    fn compute_stacking_context_visibility(&mut self) {
-        for context_index in 0..self.frame_builder.stacking_context_store.len() {
-            let is_visible = {
-                // We don't take into account visibility of children here, so we must
-                // do that later.
-                let stacking_context = &self.frame_builder.stacking_context_store[context_index];
-                stacking_context.clip_scroll_groups.iter().any(|group_index| {
-                    self.frame_builder.clip_scroll_group_store[group_index.0].is_visible()
-                })
-            };
-            self.frame_builder.stacking_context_store[context_index].is_visible = is_visible;
+            debug!("\t\tlocal viewport {:?} screen bound {:?}",
+                   local_viewport_rect,
+                   group.screen_bounding_rect);
         }
     }
 
@@ -1813,8 +1833,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 let child_bounds = reference_frame_bounds.translate(&-parent.reference_frame_offset);
                 parent.isolated_items_bounds = parent.isolated_items_bounds.union(&child_bounds);
             }
-            // The previous compute_stacking_context_visibility pass did not take into
-            // account visibility of children, so we do that now.
+            // Per-primitive stacking context visibility checks do not take into account
+            // visibility of child stacking contexts, so do that now.
             parent.is_visible = parent.is_visible || is_visible;
         }
     }
@@ -1904,18 +1924,26 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
         let stacking_context_index = *self.stacking_context_stack.last().unwrap();
         let (packed_layer_index, pipeline_id) = {
             let stacking_context =
-                &self.frame_builder.stacking_context_store[stacking_context_index.0];
+                &mut self.frame_builder.stacking_context_store[stacking_context_index.0];
+            if !stacking_context.can_contribute_to_scene() {
+                return;
+            }
 
-            if !stacking_context.is_visible {
+            let group_index =
+                self.frame_builder.clip_scroll_group_indices.get(&clip_and_scroll).unwrap();
+            let clip_scroll_group = &self.frame_builder.clip_scroll_group_store[group_index.0];
+            if !clip_scroll_group.is_visible() {
                 debug!("{:?} of invisible {:?}", base_prim_index, stacking_context_index);
                 return;
             }
 
-            let group_index = stacking_context.clip_scroll_group(clip_and_scroll);
-            let clip_scroll_group = &self.frame_builder.clip_scroll_group_store[group_index.0];
-            (clip_scroll_group.packed_layer_index,
-             stacking_context.pipeline_id)
+            // At least one primitive in this stacking context is visible, so the stacking
+            // context is visible.
+            stacking_context.is_visible = true;
+
+            (clip_scroll_group.packed_layer_index, stacking_context.pipeline_id)
         };
+
 
         debug!("\t{:?} of {:?} at {:?}", base_prim_index, stacking_context_index, packed_layer_index);
         let clip_bounds = match self.rebuild_clip_info_stack_if_necessary(clip_and_scroll.clip_node_id()) {

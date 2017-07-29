@@ -139,25 +139,15 @@ body {
   position: relative;
 }
 
+section:not(.active) {
+  display: none;
+}
+
 #page-description {
   border: 1px solid threedshadow;
   margin: 0px;
   padding: 10px;
   line-height: 1.2;
-}
-
-#settings {
-  border: 1px solid lightgrey;
-  padding: 5px;
-}
-
-.change-data-choices-link {
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-}
-
-.change-data-choices-link:hover {
-  text-decoration: none;
 }
 
 #ping-explanation > span {
@@ -198,31 +188,6 @@ body {
 #ping-source-picker {
   margin-left: 5px;
   margin-bottom: 10px;
-}
-
-.data-section:not(.has-data),
-.data-subsection:not(.has-subdata) {
-  color: gray;
-}
-
-.section-name {
-  font-size: x-large;
-  display: inline;
-}
-
-.has-data .section-name {
-  cursor: pointer;
-}
-
-.data,
-.subdata {
-  margin: 15px;
-  display: none;
-}
-
-.has-data.expanded .data,
-.has-subdata.expanded .subdata {
-  display: block;
 }
 
 .stack-title {
@@ -354,47 +319,8 @@ body[dir="rtl"] .copy-node {
   visibility: visible;
 }
 
-.statebox {
-  display: none;
-}
-
-.filter-ui {
-  padding-inline-start: 10em;
-  display: none;
-}
-
-.has-data.expanded .filter-ui {
-  display: inline;
-}
-
-.processes-ui {
-  display: none;
-}
-
-.has-data.expanded .processes-ui {
-  display: initial;
-}
-
-.filter-blocked {
-  display: none;
-}
-
-#raw-ping-data-section {
-  width: 100%;
-  height: 100%;
-}
-
 #raw-ping-data {
-  margin: 0px;
   font-size: 15px;
-}
-
-#hide-raw-ping {
-  float: right;
-  cursor: pointer;
-  font-size: 20px;
-  background-color:#d8d8d8;
-  padding: 5px 10px;
 }
 
 caption {
