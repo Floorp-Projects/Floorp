@@ -7,18 +7,9 @@
 #ifndef mozilla_SetTextTransaction_h
 #define mozilla_SetTextTransaction_h
 
-#include "mozilla/EditTransactionBase.h"  // base class
-#include "nsCycleCollectionParticipant.h" // various macros
-#include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
-#include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED
+#include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
 #include "nsString.h"                   // nsString members
 #include "nscore.h"                     // NS_IMETHOD, nsAString
-
-class nsITransaction;
-
-#define NS_SETTEXTTXN_IID \
-{ 0x568bac0b, 0xa42a, 0x4150, \
-  { 0xbd, 0x90, 0x34, 0xd0, 0x2f, 0x32, 0x74, 0x2e } }
 
 namespace mozilla {
 
@@ -30,13 +21,13 @@ class Text;
 } // namespace dom
 
 /**
- * A transaction that inserts text into a content node.
+ * A fake transaction that inserts text into a content node.
+ *
+ * This class mimics a transaction class but it is not intended to be used as one.
  */
-class SetTextTransaction final : public EditTransactionBase
+class MOZ_STACK_CLASS SetTextTransaction final
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SETTEXTTXN_IID)
-
   /**
    * @param aTextNode       The text content node.
    * @param aString         The new text to insert.
@@ -47,17 +38,9 @@ public:
                      const nsAString& aString, EditorBase& aEditorBase,
                      RangeUpdater* aRangeUpdater);
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SetTextTransaction,
-                                           EditTransactionBase)
-
-  NS_DECL_EDITTRANSACTIONBASE
-
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+  nsresult DoTransaction();
 
 private:
-  virtual ~SetTextTransaction();
-
   // The Text node to operate upon.
   RefPtr<dom::Text> mTextNode;
 
@@ -68,12 +51,10 @@ private:
   nsString mPreviousData;
 
   // The editor, which we'll need to get the selection.
-  RefPtr<EditorBase> mEditorBase;
+  EditorBase* MOZ_NON_OWNING_REF mEditorBase;
 
   RangeUpdater* mRangeUpdater;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(SetTextTransaction, NS_SETTEXTTXN_IID)
 
 } // namespace mozilla
 
