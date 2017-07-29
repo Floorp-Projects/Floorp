@@ -18,6 +18,7 @@ config = {
         "L10NBASEDIR": "../../l10n",
         "MOZ_MAKE_COMPLETE_MAR": "1",
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
+        'EN_US_PACKAGE_NAME': 'target.dmg',
     },
     "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",

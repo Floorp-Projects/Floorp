@@ -331,6 +331,11 @@ this.AppConstants = Object.freeze({
 
   DEBUG_JS_MODULES: "@DEBUG_JS_MODULES@",
 
+  MOZ_BING_API_CLIENTID: "@MOZ_BING_API_CLIENTID@",
+  MOZ_BING_API_KEY: "@MOZ_BING_API_KEY@",
+  MOZ_GOOGLE_API_KEY: "@MOZ_GOOGLE_API_KEY@",
+  MOZ_MOZILLA_API_KEY: "@MOZ_MOZILLA_API_KEY@",
+
   // URL to the hg revision this was built from (e.g.
   // "https://hg.mozilla.org/mozilla-central/rev/6256ec9113c1")
   // On unofficial builds, this is an empty string.

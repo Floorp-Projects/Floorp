@@ -2164,6 +2164,13 @@ js::str_indexOf(JSContext* cx, unsigned argc, Value* vp)
     // Step 9
     uint32_t start = Min(Max(pos, 0U), textLen);
 
+    if (str == searchStr) {
+        // AngularJS often invokes "false".indexOf("false"). This check should
+        // be cheap enough to not hurt anything else.
+        args.rval().setInt32(start == 0 ? 0 : -1);
+        return true;
+    }
+
     // Steps 10 and 11
     JSLinearString* text = str->ensureLinear(cx);
     if (!text)
@@ -2246,6 +2253,11 @@ js::str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp)
                     start = int(d);
             }
         }
+    }
+
+    if (str == searchStr) {
+        args.rval().setInt32(0);
+        return true;
     }
 
     if (searchLen > len) {

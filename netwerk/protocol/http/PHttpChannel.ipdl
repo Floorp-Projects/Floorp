@@ -99,7 +99,6 @@ child:
                        bool                isFromCache,
                        bool                cacheEntryAvailable,
                        int32_t             cacheFetchCount,
-                       uint32_t            cacheLastFetched,
                        uint32_t            cacheExpirationTime,
                        nsCString           cachedCharset,
                        nsCString           securityInfoSerialization,

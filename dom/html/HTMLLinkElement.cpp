@@ -509,10 +509,10 @@ HTMLLinkElement::IntrinsicState() const
 }
 
 size_t
-HTMLLinkElement::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+HTMLLinkElement::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
 {
-  return nsGenericHTMLElement::SizeOfExcludingThis(aMallocSizeOf) +
-         Link::SizeOfExcludingThis(aMallocSizeOf);
+  return nsGenericHTMLElement::SizeOfExcludingThis(aState) +
+         Link::SizeOfExcludingThis(aState);
 }
 
 JSObject*

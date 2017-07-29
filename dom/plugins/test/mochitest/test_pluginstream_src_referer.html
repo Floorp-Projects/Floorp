@@ -15,7 +15,10 @@
 
   function frameLoaded() {
     var testframe = document.getElementById('pluginframe');
-    var content = testframe.contentDocument.body.innerHTML;
+    // We have to use SpecialPowers because nptest.cpp prepends
+    // data: whichs makes the frame cross origin with the including page.
+    var wrappedDoc = SpecialPowers.wrap(testframe).contentDocument;
+    var content = wrappedDoc.body.innerHTML;
     if (!content.length)
       return;
 

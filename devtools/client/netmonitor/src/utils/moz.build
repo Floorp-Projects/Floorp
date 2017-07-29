@@ -5,6 +5,7 @@
 
 DevToolsModules(
     'create-store.js',
+    'filter-autocomplete-provider.js',
     'filter-predicates.js',
     'filter-text-utils.js',
     'format-utils.js',

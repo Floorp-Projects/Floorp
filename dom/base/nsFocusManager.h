@@ -542,10 +542,6 @@ private:
 
   void SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow);
 
-  // Notify the change of content window ID
-  // belonging to the top level outer window.
-  void NotifyCurrentTopLevelContentWindowChange(nsPIDOMWindowOuter* aWindow);
-
   // the currently active and front-most top-most window
   nsCOMPtr<nsPIDOMWindowOuter> mActiveWindow;
 

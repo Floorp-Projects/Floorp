@@ -133,7 +133,6 @@ protected:
                                              const bool& isFromCache,
                                              const bool& cacheEntryAvailable,
                                              const int32_t& cacheFetchCount,
-                                             const uint32_t& cacheLastFetched,
                                              const uint32_t& cacheExpirationTime,
                                              const nsCString& cachedCharset,
                                              const nsCString& securityInfoSerialization,
@@ -279,7 +278,6 @@ private:
   bool mCacheEntryAvailable;
   bool mAltDataCacheEntryAvailable;
   int32_t      mCacheFetchCount;
-  uint32_t     mCacheLastFetched;
   uint32_t     mCacheExpirationTime;
   nsCString    mCachedCharset;
 
@@ -378,7 +376,6 @@ private:
                       const bool& isFromCache,
                       const bool& cacheEntryAvailable,
                       const int32_t& cacheFetchCount,
-                      const uint32_t& cacheLastFetched,
                       const uint32_t& cacheExpirationTime,
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,
