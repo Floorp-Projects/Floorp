@@ -225,7 +225,7 @@ public class HighlightsRanking {
                         && next.features.get(FEATURE_IMAGE_COUNT) > 0;
 
                 boolean similar = previous.getHost().equals(next.getHost());
-                similar |= hasImage && next.getFastImageUrlForComparison().equals(previous.getFastImageUrlForComparison());
+                similar |= hasImage && next.getImageUrl().equals(previous.getImageUrl());
 
                 if (similar) {
                     next.updateScore(next.getScore() * penalty[0]);
