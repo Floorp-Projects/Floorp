@@ -38,21 +38,7 @@ protected:
   bool Map();
   void Unmap();
 
-  uint8_t* GetBufferPointer(size_t aBytes, ptrdiff_t* aOutOffset, RefPtr<MLGBuffer>* aOutBuffer) {
-    if (!EnsureMappedBuffer(aBytes)) {
-      return nullptr;
-    }
-
-    ptrdiff_t newPos = mCurrentPosition + aBytes;
-    MOZ_ASSERT(size_t(newPos) <= mMaxSize);
-
-    *aOutOffset = mCurrentPosition;
-    *aOutBuffer = mBuffer;
-
-    uint8_t* ptr = reinterpret_cast<uint8_t*>(mMap.mData) + mCurrentPosition;
-    mCurrentPosition = newPos;
-    return ptr;
-  }
+  uint8_t* GetBufferPointer(size_t aBytes, ptrdiff_t* aOutOffset, RefPtr<MLGBuffer>* aOutBuffer);
 
 protected:
   // Note: RefPtr here would cause a cycle. Only MLGDevice should own
@@ -81,11 +67,7 @@ class VertexBufferSection final
 {
   friend class SharedVertexBuffer;
 public:
-  VertexBufferSection()
-   : mOffset(-1),
-     mNumVertices(0),
-     mStride(0)
-  {}
+  VertexBufferSection();
 
   uint32_t Stride() const {
     return mStride;
@@ -105,12 +87,7 @@ public:
   }
 
 protected:
-  void Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aNumVertices, size_t aStride) {
-    mBuffer = aBuffer;
-    mOffset = aOffset;
-    mNumVertices = aNumVertices;
-    mStride = aStride;
-  }
+  void Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aNumVertices, size_t aStride);
 
 protected:
   RefPtr<MLGBuffer> mBuffer;
@@ -124,9 +101,7 @@ class ConstantBufferSection final
   friend class SharedConstantBuffer;
 
 public:
-  ConstantBufferSection()
-   : mOffset(-1)
-  {}
+  ConstantBufferSection();
 
   uint32_t NumConstants() const {
     return NumConstantsForBytes(mNumBytes);
@@ -153,12 +128,7 @@ protected:
     return (aBytes + ((256 - (aBytes % 256)) % 256)) / 16;
   }
 
-  void Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aBytes, size_t aNumItems) {
-    mBuffer = aBuffer;
-    mOffset = aOffset;
-    mNumBytes = aBytes;
-    mNumItems = aNumItems;
-  }
+  void Init(MLGBuffer* aBuffer, ptrdiff_t aOffset, size_t aBytes, size_t aNumItems);
 
 protected:
   RefPtr<MLGBuffer> mBuffer;
@@ -189,20 +159,7 @@ public:
   bool Allocate(VertexBufferSection* aHolder,
                 size_t aNumItems,
                 size_t aSizeOfItem,
-                const void* aData)
-  {
-    RefPtr<MLGBuffer> buffer;
-    ptrdiff_t offset;
-    size_t bytes = aSizeOfItem * aNumItems;
-    uint8_t* ptr = GetBufferPointer(bytes, &offset, &buffer);
-    if (!ptr) {
-      return false;
-    }
-
-    memcpy(ptr, aData, bytes);
-    aHolder->Init(buffer, offset, aNumItems, aSizeOfItem);
-    return true;
-  }
+                const void* aData);
 
   template <typename T>
   bool Allocate(VertexBufferSection* aHolder, const T& aItem) {
@@ -218,23 +175,14 @@ public:
 class MOZ_STACK_CLASS AutoBufferUploadBase
 {
 public:
-  AutoBufferUploadBase() : mPtr(nullptr) {}
-  ~AutoBufferUploadBase() {
-    if (mBuffer) {
-      UnmapBuffer();
-    }
-  }
+  AutoBufferUploadBase();
+  ~AutoBufferUploadBase();
 
   void Init(void* aPtr) {
     MOZ_ASSERT(!mPtr && aPtr);
     mPtr = aPtr;
   }
-  void Init(void* aPtr, MLGDevice* aDevice, MLGBuffer* aBuffer) {
-    MOZ_ASSERT(!mPtr && aPtr);
-    mPtr = aPtr;
-    mDevice = aDevice;
-    mBuffer = aBuffer;
-  }
+  void Init(void* aPtr, MLGDevice* aDevice, MLGBuffer* aBuffer);
   void* get() {
     return const_cast<void*>(mPtr);
   }
@@ -312,26 +260,7 @@ private:
   bool Allocate(ConstantBufferSection* aHolder,
                 AutoBufferUploadBase* aPtr,
                 size_t aNumItems,
-                size_t aSizeOfItem)
-  {
-    MOZ_ASSERT(aSizeOfItem % 16 == 0, "Items must be padded to 16 bytes");
-
-    size_t bytes = aNumItems * aSizeOfItem;
-    if (bytes > mMaxConstantBufferBindSize) {
-      gfxWarning() << "Attempted to allocate too many bytes into a constant buffer";
-      return false;
-    }
-
-
-    RefPtr<MLGBuffer> buffer;
-    ptrdiff_t offset;
-    if (!GetBufferPointer(aPtr, bytes, &offset, &buffer)) {
-      return false;
-    }
-
-    aHolder->Init(buffer, offset, bytes, aNumItems);
-    return true;
-  }
+                size_t aSizeOfItem);
 
   bool GetBufferPointer(AutoBufferUploadBase* aPtr,
                         size_t aBytes,
