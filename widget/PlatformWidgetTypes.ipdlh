@@ -17,10 +17,5 @@ union CompositorWidgetInitData
   HeadlessCompositorWidgetInitData;
 };
 
-struct HeadlessCompositorWidgetInitData
-{
-  LayoutDeviceIntSize InitialClientSize;
-};
-
 } // namespace widget
 } // namespace mozilla
