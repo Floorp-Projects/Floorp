@@ -89,7 +89,10 @@ ServoRestyleState::AssertOwner(const ServoRestyleState& aParent) const
 {
   MOZ_ASSERT(mOwner);
   MOZ_ASSERT(!mOwner->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
-  MOZ_ASSERT(ExpectedOwnerForChild(*mOwner) == aParent.mOwner);
+  // We allow aParent.mOwner to be null, for cases when we're not starting at
+  // the root of the tree.
+  MOZ_ASSERT_IF(aParent.mOwner,
+                ExpectedOwnerForChild(*mOwner) == aParent.mOwner);
 }
 
 nsChangeHint
@@ -1182,8 +1185,197 @@ ServoRestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 nsresult
 ServoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 {
-  NS_WARNING("stylo: ServoRestyleManager::ReparentStyleContext not implemented");
+  // This is only called when moving frames in or out of the first-line
+  // pseudo-element (or one of its inline descendants).  So aFrame's ancestors
+  // must all be inline frames up until we find a first-line frame.  Note that
+  // the first-line frame may not actually be the one that corresponds to
+  // ::first-line; when we're moving _out_ of the first-line it will be one of
+  // the continuations instead.
+#ifdef DEBUG
+  {
+    nsIFrame* f = aFrame->GetParent();
+    while (f && !f->IsLineFrame()) {
+      MOZ_ASSERT(f->IsInlineFrame(),
+                 "Must only have inline frames between us and the first-line "
+                 "frame");
+      f = f->GetParent();
+    }
+    MOZ_ASSERT(f, "Must have found a first-line frame");
+  }
+#endif
+
+  DoReparentStyleContext(aFrame, *StyleSet());
+
   return NS_OK;
+}
+
+void
+ServoRestyleManager::DoReparentStyleContext(nsIFrame* aFrame,
+                                            ServoStyleSet& aStyleSet)
+{
+  if (aFrame->IsBackdropFrame()) {
+    // Style context of backdrop frame has no parent style context, and
+    // thus we do not need to reparent it.
+    return;
+  }
+
+  if (aFrame->IsPlaceholderFrame()) {
+    // Also reparent the out-of-flow and all its continuations.  We're doing
+    // this to match Gecko for now, but it's not clear that this behavior is
+    // correct per spec.  It's certainly pretty odd for out-of-flows whose
+    // containing block is not within the first line.
+    //
+    // Right now we're somewhat inconsistent in this testcase:
+    //
+    //  <style>
+    //    div { color: orange; clear: left; }
+    //    div::first-line { color: blue; }
+    //  </style>
+    //  <div>
+    //    <span style="float: left">What color is this text?</span>
+    //  </div>
+    //  <div>
+    //    <span><span style="float: left">What color is this text?</span></span>
+    //  </div>
+    //
+    // We make the first float orange and the second float blue.  On the other
+    // hand, if the float were within an inline-block that was on the first
+    // line, arguably it _should_ inherit from the ::first-line...
+    nsIFrame* outOfFlow =
+      nsPlaceholderFrame::GetRealFrameForPlaceholder(aFrame);
+    MOZ_ASSERT(outOfFlow, "no out-of-flow frame");
+    for (; outOfFlow; outOfFlow = outOfFlow->GetNextContinuation()) {
+      DoReparentStyleContext(outOfFlow, aStyleSet);
+    }
+  }
+
+  nsIFrame* providerFrame;
+  nsStyleContext* newParentContext =
+    aFrame->GetParentStyleContext(&providerFrame);
+  if (!newParentContext) {
+    // No need to do anything here.
+#ifdef DEBUG
+    // Make sure we have no children, so we really know there is nothing to do.
+    nsIFrame::ChildListIterator lists(aFrame);
+    for (; !lists.IsDone(); lists.Next()) {
+      MOZ_ASSERT(lists.CurrentList().IsEmpty(),
+                 "Failing to reparent style context for child of "
+                 "non-inheriting anon box");
+    }
+#endif // DEBUG
+    return;
+  }
+
+  // If our provider is our child, we want to reparent it first, because we
+  // inherit style from it.
+  bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
+  nsIFrame* providerChild = nullptr;
+  if (isChild) {
+    DoReparentStyleContext(providerFrame, aStyleSet);
+    // Get the style context again after ReparentStyleContext() which might have
+    // changed it.
+    newParentContext = providerFrame->StyleContext();
+    providerChild = providerFrame;
+    MOZ_ASSERT(!providerFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
+               "Out of flow provider?");
+  }
+
+  bool isElement = aFrame->GetContent()->IsElement();
+
+  // We probably don't want to initiate transitions from
+  // ReparentStyleContext, since we call it during frame
+  // construction rather than in response to dynamic changes.
+  // Also see the comment at the start of
+  // nsTransitionManager::ConsiderInitiatingTransition.
+  //
+  // We don't try to do the fancy copying from previous continuations that
+  // GeckoRestyleManager does here, because that relies on knowing the parents
+  // of style contexts, and we don't know those.
+  ServoStyleContext* oldContext = aFrame->StyleContext()->AsServo();
+  Element* ourElement =
+    oldContext->GetPseudoType() == CSSPseudoElementType::NotPseudo &&
+    isElement ?
+      aFrame->GetContent()->AsElement() :
+      nullptr;
+  ServoStyleContext* newParent = newParentContext->AsServo();
+
+  ServoStyleContext* newParentIgnoringFirstLine;
+  if (newParent->GetPseudoType() == CSSPseudoElementType::firstLine) {
+    MOZ_ASSERT(providerFrame && providerFrame->GetParent()->
+               IsFrameOfType(nsIFrame::eBlockFrame),
+               "How could we get a ::first-line parent style without having "
+               "a ::first-line provider frame?");
+    // If newParent is a ::first-line style, get the parent blockframe, and then
+    // correct it for our pseudo as needed (e.g. stepping out of anon boxes).
+    // Use the resulting style for the "parent style ignoring ::first-line".
+    nsIFrame* blockFrame = providerFrame->GetParent();
+    nsIFrame* correctedFrame =
+      nsFrame::CorrectStyleParentFrame(blockFrame, oldContext->GetPseudo());
+    newParentIgnoringFirstLine = correctedFrame->StyleContext()->AsServo();
+  } else {
+    newParentIgnoringFirstLine = newParent;
+  }
+
+  if (!providerFrame) {
+    // No providerFrame means we inherited from a display:contents thing.  Our
+    // layout parent style is the style of our nearest ancestor frame.
+    providerFrame = nsFrame::CorrectStyleParentFrame(aFrame->GetParent(),
+                                                     oldContext->GetPseudo());
+  }
+  ServoStyleContext* layoutParent = providerFrame->StyleContext()->AsServo();
+
+  RefPtr<ServoStyleContext> newContext =
+    aStyleSet.ReparentStyleContext(oldContext,
+                                   newParent,
+                                   newParentIgnoringFirstLine,
+                                   layoutParent,
+                                   ourElement);
+  aFrame->SetStyleContext(newContext);
+
+  // This logic somewhat mirrors the logic in
+  // ServoRestyleManager::ProcessPostTraversal.
+  if (isElement) {
+    // We can't use UpdateAdditionalStyleContexts as-is because it needs a
+    // ServoRestyleState and maintaining one of those during a _frametree_
+    // traversal is basically impossible.
+    uint32_t index = 0;
+    while (nsStyleContext* oldAdditionalContext =
+             aFrame->GetAdditionalStyleContext(index)) {
+      RefPtr<ServoStyleContext> newAdditionalContext =
+        aStyleSet.ReparentStyleContext(oldAdditionalContext->AsServo(),
+                                       newContext,
+                                       newContext,
+                                       newContext,
+                                       nullptr);
+      aFrame->SetAdditionalStyleContext(index, newAdditionalContext);
+      ++index;
+    }
+  }
+
+  // Generally, owned anon boxes are our descendants.  The only exceptions are
+  // tables (for the table wrapper) and inline frames (for the block part of the
+  // block-in-inline split).  We're going to update our descendants when looping
+  // over kids, and we don't want to update the block part of a block-in-inline
+  // split if the inline is on the first line but the block is not (and if the
+  // block is, it's the child of something else on the first line and will get
+  // updated as a child).  And given how this method ends up getting called, if
+  // we reach here for a table frame, we are already in the middle of
+  // reparenting the table wrapper frame.  So no need to
+  // UpdateStyleOfOwnedAnonBoxes() here.
+
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    for (nsIFrame* child : lists.CurrentList()) {
+      // only do frames that are in flow
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+          child != providerChild) {
+        DoReparentStyleContext(child, aStyleSet);
+      }
+    }
+  }
+
+  // We do not need to do the equivalent of UpdateFramePseudoElementStyles,
+  // because those are hadled by our descendant walk.
 }
 
 } // namespace mozilla

@@ -35,3 +35,7 @@ fails-if(styloVsGecko) == 403177-1.html 403177-1-ref.html
 fails-if(styloVsGecko||stylo) == restyle-inside-first-line.html restyle-inside-first-line-ref.html
 fails-if(styloVsGecko||stylo) == font-styles.html font-styles-ref.html
 fuzzy-if(OSX==1010,1,2) fails-if(styloVsGecko||stylo) == font-styles-nooverflow.html font-styles-ref.html
+
+fails-if(!stylo) == ib-split-1.html ib-split-1-ref.html
+
+== first-line-in-columnset-1.html first-line-in-columnset-1-ref.html

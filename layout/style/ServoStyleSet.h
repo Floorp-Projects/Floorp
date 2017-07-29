@@ -454,6 +454,21 @@ public:
   bool HasStateDependency(const dom::Element& aElement,
                           EventStates aState) const;
 
+  /**
+   * Get a new style context that uses the same rules as the given style context
+   * but has a different parent.
+   *
+   * aElement is non-null if this is a style context for a frame whose mContent
+   * is an element and which has no pseudo on its style context (so it's the
+   * actual style for the element being passed).
+   */
+  already_AddRefed<ServoStyleContext>
+  ReparentStyleContext(ServoStyleContext* aStyleContext,
+                       ServoStyleContext* aNewParent,
+                       ServoStyleContext* aNewParentIgnoringFirstLine,
+                       ServoStyleContext* aNewLayoutParent,
+                       Element* aElement);
+
 private:
   // On construction, sets sInServoTraversal to the given ServoStyleSet.
   // On destruction, clears sInServoTraversal and calls RunPostTraversalTasks.
