@@ -12,6 +12,7 @@
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
 #include "nsView.h"
+#include "PuppetWidget.h"
 
 namespace mozilla {
 namespace widget {
@@ -106,6 +107,80 @@ TextEventDispatcher::BeginInputTransactionInternal(
   return NS_OK;
 }
 
+nsresult
+TextEventDispatcher::BeginInputTransactionFor(const WidgetGUIEvent* aEvent,
+                                              PuppetWidget* aPuppetWidget)
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(!IsDispatchingEvent());
+
+  switch (aEvent->mMessage) {
+    case eKeyDown:
+    case eKeyPress:
+    case eKeyUp:
+      MOZ_ASSERT(aEvent->mClass == eKeyboardEventClass);
+      break;
+    case eCompositionStart:
+    case eCompositionChange:
+    case eCompositionCommit:
+    case eCompositionCommitAsIs:
+      MOZ_ASSERT(aEvent->mClass == eCompositionEventClass);
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aEvent->mFlags.mIsSynthesizedForTests) {
+    // If the event is for an automated test and this instance dispatched
+    // an event to the parent process, we can assume that this is already
+    // initialized properly.
+    if (mInputTransactionType == eAsyncTestInputTransaction) {
+      return NS_OK;
+    }
+    // Even if the event coming from the parent process is synthesized for
+    // tests, this process should treat it as "sync" test here because
+    // it won't be go back to the parent process.
+    nsresult rv =
+      BeginInputTransactionInternal(
+        static_cast<TextEventDispatcherListener*>(aPuppetWidget),
+        eSameProcessSyncTestInputTransaction);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    nsresult rv = BeginNativeInputTransaction();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  // Emulate modifying members which indicate the state of composition.
+  // If we need to manage more states and/or more complexly, we should create
+  // internal methods which are called by both here and each event dispatcher
+  // method of this class.
+  switch (aEvent->mMessage) {
+    case eKeyDown:
+    case eKeyPress:
+    case eKeyUp:
+      return NS_OK;
+    case eCompositionStart:
+      MOZ_ASSERT(!mIsComposing);
+      mIsComposing = true;
+      return NS_OK;
+    case eCompositionChange:
+      MOZ_ASSERT(mIsComposing);
+      mIsComposing = true;
+      return NS_OK;
+    case eCompositionCommit:
+    case eCompositionCommitAsIs:
+      MOZ_ASSERT(mIsComposing);
+      mIsComposing = false;
+      return NS_OK;
+    default:
+      MOZ_ASSERT_UNREACHABLE("You forgot to handle the event");
+      return NS_ERROR_UNEXPECTED;
+  }
+}
 void
 TextEventDispatcher::EndInputTransaction(TextEventDispatcherListener* aListener)
 {
@@ -235,6 +310,8 @@ TextEventDispatcher::StartComposition(nsEventStatus& aStatus,
     return NS_ERROR_FAILURE;
   }
 
+  // When you change some members from here, you may need same change in
+  // BeginInputTransactionFor().
   mIsComposing = true;
   WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
                                                mWidget);
@@ -314,6 +391,9 @@ TextEventDispatcher::CommitComposition(nsEventStatus& aStatus,
   if (aStatus == nsEventStatus_eConsumeNoDefault) {
     return NS_OK;
   }
+
+  // When you change some members from here, you may need same change in
+  // BeginInputTransactionFor().
 
   // End current composition and make this free for other IMEs.
   mIsComposing = false;

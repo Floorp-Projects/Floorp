@@ -45,7 +45,8 @@ fn body(_api: &RenderApi,
                                                   (0, 0).by(1000, 1000),
                                                   scrollbox,
                                                   vec![],
-                                                  None);
+                                                  None,
+                                                  ScrollSensitivity::ScriptAndInputEvents);
         builder.push_clip_id(clip_id);
 
         // now put some content into it.
@@ -68,7 +69,8 @@ fn body(_api: &RenderApi,
                                                          (0, 100).to(300, 400),
                                                          (0, 100).to(200, 300),
                                                          vec![],
-                                                         None);
+                                                         None,
+                                                         ScrollSensitivity::ScriptAndInputEvents);
         builder.push_clip_id(nested_clip_id);
 
         // give it a giant gray background just to distinguish it and to easily

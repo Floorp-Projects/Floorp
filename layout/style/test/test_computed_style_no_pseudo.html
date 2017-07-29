@@ -10,6 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=505515
   <style type="text/css">
 
   #display { color: black; background: white; }
+  #display span { position: relative; display: inline-block; }
   #display:first-line { color: blue; }
 
   </style>
@@ -30,10 +31,18 @@ function run() {
 
   isnot(span.offsetWidth, 0,
         "span should have width (and we flushed layout)");
-  is(getComputedStyle(span, "").color, "rgb(0, 0, 0)",
-     "span should be black");
   is(getComputedStyle(p, "").color, "rgb(0, 0, 0)",
      "p should be black too");
+
+  let spanStyle = getComputedStyle(span, "");
+  let width = spanStyle.width;
+
+  isnot(width.indexOf("px"), -1,
+        "should be able to get the used value")
+  is(width, spanStyle.width,
+     "shouldn't lose track of the frame");
+  is(spanStyle.color, "rgb(0, 0, 0)",
+     "span should be black");
 
   SimpleTest.finish();
 }

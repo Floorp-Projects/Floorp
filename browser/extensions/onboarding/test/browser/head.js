@@ -37,27 +37,43 @@ function setTourCompletedState(tourId, state) {
   Preferences.set(`browser.onboarding.tour.${tourId}.completed`, state);
 }
 
+async function openTab(url) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let loadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+  await loadedPromise;
+  return tab;
+}
+
+function reloadTab(tab) {
+  let reloadPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  tab.linkedBrowser.reload();
+  return reloadPromise;
+}
+
 function promiseOnboardingOverlayLoaded(browser) {
-  // The onboarding overlay is init inside window.requestIdleCallback, not immediately,
-  // so we use check conditions here.
-  let condition = () => {
-    return ContentTask.spawn(browser, {}, function() {
-      return new Promise(resolve => {
-        let doc = content && content.document;
-        if (doc && doc.querySelector("#onboarding-overlay")) {
-          resolve(true);
-          return;
-        }
-        resolve(false);
+  function isLoaded() {
+    let doc = content && content.document;
+    if (doc.querySelector("#onboarding-overlay")) {
+      ok(true, "Should load onboarding overlay");
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      let observer = new content.MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          let overlay = Array.from(mutation.addedNodes)
+                             .find(node => node.id == "onboarding-overlay");
+          if (overlay) {
+            observer.disconnect();
+            ok(true, "Should load onboarding overlay");
+            resolve();
+          }
+        });
       });
-    })
-  };
-  return BrowserTestUtils.waitForCondition(
-    condition,
-    "Should load onboarding overlay",
-    100,
-    50 // Bug 1381335 increased retries, so debug builds can trigger idle in time
-  );
+      observer.observe(doc.body, { childList: true });
+    });
+  }
+  return ContentTask.spawn(browser, {}, isLoaded);
 }
 
 function promiseOnboardingOverlayOpened(browser) {
@@ -93,24 +109,29 @@ function promisePrefUpdated(name, expectedValue) {
 }
 
 function promiseTourNotificationOpened(browser) {
-  let condition = () => {
-    return ContentTask.spawn(browser, {}, function() {
-      return new Promise(resolve => {
-        let bar = content.document.querySelector("#onboarding-notification-bar");
-        if (bar && bar.classList.contains("onboarding-opened")) {
-          resolve(true);
-          return;
-        }
-        resolve(false);
+  function isOpened() {
+    let doc = content && content.document;
+    let notification = doc.querySelector("#onboarding-notification-bar");
+    if (notification && notification.classList.contains("onboarding-opened")) {
+      ok(true, "Should open tour notification");
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      let observer = new content.MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          let bar = Array.from(mutation.addedNodes)
+                         .find(node => node.id == "onboarding-notification-bar");
+          if (bar && bar.classList.contains("onboarding-opened")) {
+            observer.disconnect();
+            ok(true, "Should open tour notification");
+            resolve();
+          }
+        });
       });
-    })
-  };
-  return BrowserTestUtils.waitForCondition(
-    condition,
-    "Should open tour notification",
-    100,
-    30
-  );
+      observer.observe(doc.body, { childList: true });
+    });
+  }
+  return ContentTask.spawn(browser, {}, isOpened);
 }
 
 function promiseTourNotificationClosed(browser) {

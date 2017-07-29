@@ -36,6 +36,22 @@ struct ParamTraits<mozilla::wr::ByteBuffer>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::IdNamespace>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::IdNamespace& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::IdNamespace* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::wr::ImageKey>
 {
   static void

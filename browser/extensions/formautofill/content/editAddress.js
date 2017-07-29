@@ -5,6 +5,8 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
+const REGIONS_BUNDLE_URI = "chrome://global/locale/regionNames.properties";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
@@ -15,18 +17,54 @@ function EditDialog() {
 }
 
 EditDialog.prototype = {
-  init() {
-    this._elements = {
+  get _elements() {
+    if (this._elementRefs) {
+      return this._elementRefs;
+    }
+    this._elementRefs = {
+      title: document.querySelector("title"),
+      addressLevel1Label: document.querySelector("#address-level1-container > span"),
+      postalCodeLabel: document.querySelector("#postal-code-container > span"),
+      country: document.getElementById("country"),
       controlsContainer: document.getElementById("controls-container"),
       cancel: document.getElementById("cancel"),
       save: document.getElementById("save"),
     };
+    return this._elementRefs;
+  },
+
+  set _elements(refs) {
+    this._elementRefs = refs;
+  },
+
+  init() {
     this.attachEventListeners();
   },
 
   uninit() {
     this.detachEventListeners();
     this._elements = null;
+  },
+
+  /**
+   * Format the form based on country. The address-level1 and postal-code labels
+   * should be specific to the given country.
+   * @param  {string} country
+   */
+  formatForm(country) {
+    // TODO: Use fmt to show/hide and order fields (Bug 1383687)
+    const {addressLevel1Label, postalCodeLabel} = FormAutofillUtils.getFormFormat(country);
+    this._elements.addressLevel1Label.dataset.localization = addressLevel1Label;
+    this._elements.postalCodeLabel.dataset.localization = postalCodeLabel;
+    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
+  },
+
+  localizeDocument() {
+    if (this._address) {
+      this._elements.title.dataset.localization = "editDialogTitle";
+    }
+    FormAutofillUtils.localizeMarkup(REGIONS_BUNDLE_URI, this._elements.country);
+    this.formatForm(this._address && this._address.country);
   },
 
   /**
@@ -77,7 +115,6 @@ EditDialog.prototype = {
       case "DOMContentLoaded": {
         this.init();
         if (this._address) {
-          document.title = "Edit Address";
           this.loadInitialValues(this._address);
         }
         break;
@@ -161,4 +198,4 @@ EditDialog.prototype = {
   },
 };
 
-new EditDialog();
+window.dialog = new EditDialog();

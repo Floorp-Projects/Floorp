@@ -158,13 +158,18 @@ this.TelemetryHealthPing = {
     this._clearData();
     this._lastSendTime = Utils.monotonicNow();
 
+    let options = {
+      addClientId: true,
+      usePingSender: reason === this.Reason.SHUT_DOWN
+    };
+
     return new Promise(r =>
       // If we submit the health ping immediately, the send task would be triggered again
       // before discarding oversized pings from the queue.
       // To work around this, we send the ping on the next tick.
       Services.tm.dispatchToMainThread(() => r(
         TelemetryController
-          .submitExternalPing(this.HEALTH_PING_TYPE, payload, {addClientId: true}))));
+          .submitExternalPing(this.HEALTH_PING_TYPE, payload, options))));
   },
 
   /**

@@ -68,6 +68,8 @@ pub struct RenderBackend {
 
     vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
 
+    enable_render_on_scroll: bool,
+
     // A helper switch to prevent any frames rendering triggered by scrolling
     // messages between `SetDisplayList` and `GenerateFrame`.
     // If we allow them, then a reftest that scrolls a few layers before generating
@@ -91,7 +93,8 @@ impl RenderBackend {
                main_thread_dispatcher: Arc<Mutex<Option<Box<RenderDispatcher>>>>,
                blob_image_renderer: Option<Box<BlobImageRenderer>>,
                vr_compositor_handler: Arc<Mutex<Option<Box<VRCompositorHandler>>>>,
-               initial_window_size: DeviceUintSize) -> RenderBackend {
+               initial_window_size: DeviceUintSize,
+               enable_render_on_scroll: bool) -> RenderBackend {
 
         let resource_cache = ResourceCache::new(texture_cache, workers, blob_image_renderer);
 
@@ -121,6 +124,7 @@ impl RenderBackend {
             vr_compositor_handler,
             window_size: initial_window_size,
             inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), initial_window_size),
+            enable_render_on_scroll,
             render_on_scroll: false,
         }
     }
@@ -160,13 +164,21 @@ impl RenderBackend {
                         ApiMsg::DeleteFont(id) => {
                             self.resource_cache.delete_font_template(id);
                         }
-                        ApiMsg::GetGlyphDimensions(glyph_keys, tx) => {
+                        ApiMsg::GetGlyphDimensions(font, glyph_keys, tx) => {
                             let mut glyph_dimensions = Vec::with_capacity(glyph_keys.len());
                             for glyph_key in &glyph_keys {
-                                let glyph_dim = self.resource_cache.get_glyph_dimensions(glyph_key);
+                                let glyph_dim = self.resource_cache.get_glyph_dimensions(&font, glyph_key);
                                 glyph_dimensions.push(glyph_dim);
                             };
                             tx.send(glyph_dimensions).unwrap();
+                        }
+                        ApiMsg::GetGlyphIndices(font_key, text, tx) => {
+                            let mut glyph_indices = Vec::new();
+                            for ch in text.chars() {
+                                let index = self.resource_cache.get_glyph_index(font_key, ch);
+                                glyph_indices.push(index);
+                            };
+                            tx.send(glyph_indices).unwrap();
                         }
                         ApiMsg::AddImage(id, descriptor, data, tiling) => {
                             if let ImageData::Raw(ref bytes) = data {
@@ -237,7 +249,7 @@ impl RenderBackend {
                             }
 
                             let display_list_len = built_display_list.data().len();
-                            let (builder_start_time, builder_finish_time) = built_display_list.times();
+                            let (builder_start_time, builder_finish_time, send_start_time) = built_display_list.times();
 
                             let display_list_received_time = precise_time_ns();
 
@@ -258,8 +270,11 @@ impl RenderBackend {
                             // really simple and cheap to access, so it's not a big deal.
                             let display_list_consumed_time = precise_time_ns();
 
-                            profile_counters.ipc.set(builder_start_time, builder_finish_time,
-                                                     display_list_received_time, display_list_consumed_time,
+                            profile_counters.ipc.set(builder_start_time,
+                                                     builder_finish_time,
+                                                     send_start_time,
+                                                     display_list_received_time,
+                                                     display_list_consumed_time,
                                                      display_list_len);
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
@@ -425,7 +440,7 @@ impl RenderBackend {
                                 });
                             }
 
-                            self.render_on_scroll = true;
+                            self.render_on_scroll = self.enable_render_on_scroll;
 
                             let frame = {
                                 let counters = &mut profile_counters.resources.texture_cache;
@@ -445,6 +460,9 @@ impl RenderBackend {
                                     .as_mut()
                                     .unwrap()
                                     .external_event(evt);
+                        }
+                        ApiMsg::ClearNamespace(namespace) => {
+                            self.resource_cache.clear_namespace(namespace);
                         }
                         ApiMsg::ShutDown => {
                             let notifier = self.notifier.lock();

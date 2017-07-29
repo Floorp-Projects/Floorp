@@ -6,6 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
+const AUTOFILL_BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -55,6 +56,10 @@ ManageAddressDialog.prototype = {
     log.debug("uninit");
     this.detachEventListeners();
     this._elements = null;
+  },
+
+  localizeDocument() {
+    FormAutofillUtils.localizeMarkup(AUTOFILL_BUNDLE_URI, document);
   },
 
   /**
@@ -302,4 +307,4 @@ ManageAddressDialog.prototype = {
   },
 };
 
-new ManageAddressDialog();
+window.dialog = new ManageAddressDialog();
