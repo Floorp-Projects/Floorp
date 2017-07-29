@@ -153,7 +153,7 @@ proxy.AsyncMessageChannel = class {
             resolve();
             break;
         }
-      }
+      };
 
       // A modal or tab modal dialog has been opened. To be able to handle it,
       // the active command has to be aborted. Therefore remove all handlers,

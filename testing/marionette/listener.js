@@ -356,7 +356,7 @@ var loadListener = {
         if (this.seenBeforeUnload) {
           this.seenBeforeUnload = null;
           this.timerPageUnload.initWithCallback(
-              this, 5000, Ci.nsITimer.TYPE_ONE_SHOT)
+              this, 5000, Ci.nsITimer.TYPE_ONE_SHOT);
 
         // If no page unload has been detected, ensure to properly stop
         // the load listener, and return from the currently active command.
@@ -470,7 +470,7 @@ var loadListener = {
 
     });
   },
-}
+};
 
 /**
  * Called when listener is first started up.  The listener sends its
@@ -988,14 +988,14 @@ function emitMultiEvents(type, touch, touches) {
   // Create the event object
   let event = doc.createEvent("TouchEvent");
   event.initTouchEvent(type,
-                       true,
-                       true,
-                       win,
-                       0,
-                       false, false, false, false,
-                       documentTouches,
-                       targetTouches,
-                       changedTouches);
+      true,
+      true,
+      win,
+      0,
+      false, false, false, false,
+      documentTouches,
+      targetTouches,
+      changedTouches);
   target.dispatchEvent(event);
 }
 
@@ -1366,9 +1366,9 @@ function clickElement(msg) {
 
     loadListener.navigate(() => {
       return interaction.clickElement(
-        seenEls.get(id, curContainer),
-        capabilities.get("moz:accessibilityChecks"),
-        capabilities.get("specificationLevel") >= 1
+          seenEls.get(id, curContainer),
+          capabilities.get("moz:accessibilityChecks"),
+          capabilities.get("specificationLevel") >= 1
       );
     }, command_id, pageTimeout, loadEventExpected, true);
 
