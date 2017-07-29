@@ -343,10 +343,10 @@ private:
   nsChangeHint mComputedHint;
 };
 
-// Find the first-letter frame for the given element, if any.  Returns null to
-// indicate there isn't one.
-static nsIFrame*
-FindFirstLetterFrameForElement(const Element* aElement)
+// Get the nsBlockFrame which might contain ::first-letter/::first-line for the
+// given element.  Will return null if there is no such blockframe.
+static nsBlockFrame*
+GetBlockForElement(const Element* aElement)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();
   if (!frame) {
@@ -364,7 +364,25 @@ FindFirstLetterFrameForElement(const Element* aElement)
     return nullptr;
   }
 
-  return static_cast<nsBlockFrame*>(frame)->GetFirstLetter();
+  return static_cast<nsBlockFrame*>(frame);
+}
+
+// Find the first-letter frame for the given element, if any.  Returns null to
+// indicate there isn't one.
+static nsIFrame*
+FindFirstLetterFrameForElement(const Element* aElement)
+{
+  nsBlockFrame* f = GetBlockForElement(aElement);
+  return f ? f->GetFirstLetter() : nullptr;
+}
+
+// Find the first-line frame for the given element, if any.  Returns null to
+// indicate there isn't one.
+static nsIFrame*
+FindFirstLineFrameForElement(const Element* aElement)
+{
+  nsBlockFrame* f = GetBlockForElement(aElement);
+  return f ? f->GetFirstLineFrame() : nullptr;
 }
 
 static void
@@ -803,8 +821,7 @@ ServoRestyleManager::FrameForPseudoElement(const Element* aElement,
   }
 
   if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine) {
-    // TODO(emilio, bz): Figure out the best way to diff these styles.
-    return nullptr;
+    return FindFirstLineFrameForElement(aElement);
   }
 
   MOZ_CRASH("Unkown pseudo-element given to "
