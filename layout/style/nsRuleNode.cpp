@@ -3488,19 +3488,11 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
              NS_STYLE_FONT_SIZE_SMALLER == value) {
       aConditions.SetUncacheable();
 
-      // Un-zoom so we use the tables correctly.  We'll then rezoom due
-      // to the |zoom = true| above.
-      // Note that relative units here use the parent's size unadjusted
-      // for scriptlevel changes. A scriptlevel change between us and the parent
-      // is simply ignored.
-      nscoord parentSize = aParentSize;
-      if (aParentFont->mAllowZoom) {
-        parentSize = nsStyleFont::UnZoomText(aPresContext, parentSize);
-      }
-
       float factor = (NS_STYLE_FONT_SIZE_LARGER == value) ? 1.2f : (1.0f / 1.2f);
 
-      *aSize = parentSize * factor;
+      *aSize = NSToCoordFloorClamped(aParentSize * factor);
+
+      sizeIsZoomedAccordingToParent = true;
 
     } else {
       NS_NOTREACHED("unexpected value");
