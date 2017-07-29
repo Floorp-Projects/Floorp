@@ -605,7 +605,6 @@ mozilla::ServoStyleSheet* Gecko_StyleSheet_Clone(
 void Gecko_StyleSheet_AddRef(const mozilla::ServoStyleSheet* aSheet);
 void Gecko_StyleSheet_Release(const mozilla::ServoStyleSheet* aSheet);
 
-const nsMediaFeature* Gecko_GetMediaFeatures();
 nsCSSKeyword Gecko_LookupCSSKeyword(const uint8_t* string, uint32_t len);
 const char* Gecko_CSSKeywordString(nsCSSKeyword keyword, uint32_t* len);
 
