@@ -39,7 +39,7 @@ public class Highlight implements Item {
 
     private long historyId;
 
-    private @Nullable Metadata metadata;
+    private @Nullable Metadata metadata; // lazily-loaded.
     private @Nullable final String metadataJSON;
     private @Nullable String fastImageURL;
     private int fastDescriptionLength;
