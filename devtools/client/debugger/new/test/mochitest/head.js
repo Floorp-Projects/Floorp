@@ -653,9 +653,9 @@ const selectors = {
   callStackHeader: ".call-stack-pane ._header",
   callStackBody: ".call-stack-pane .pane",
   expressionNode: i =>
-    `.expressions-list .tree-node:nth-child(${i}) .object-label`,
+    `.expressions-list .expression-container:nth-child(${i}) .object-label`,
   expressionValue: i =>
-    `.expressions-list .tree-node:nth-child(${i}) .object-value`,
+    `.expressions-list .expression-container:nth-child(${i}) .object-value`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
   expressionNodes: ".expressions-list .tree-node",

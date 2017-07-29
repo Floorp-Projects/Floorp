@@ -20,6 +20,10 @@ function getValue(dbg, index) {
   return findElement(dbg, "expressionValue", index).innerText;
 }
 
+function toggleExpression(dbg, index) {
+  findElement(dbg, "expressionNode", index).click();
+}
+
 async function addExpression(dbg, input) {
   info("Adding an expression");
   findElementWithSelector(dbg, expressionSelectors.input).focus();
@@ -53,6 +57,15 @@ add_task(function*() {
   is(getLabel(dbg, 1), "foo()");
   is(getValue(dbg, 1), "");
 
+  yield addExpression(dbg, "location");
+  is(getLabel(dbg, 2), "location");
+  ok(getValue(dbg, 2).includes("Location"), "has a value");
+
+  // can expand an expression
+  toggleExpression(dbg, 2);
+  yield waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
+
   yield deleteExpression(dbg, "foo");
+  yield deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
 });
