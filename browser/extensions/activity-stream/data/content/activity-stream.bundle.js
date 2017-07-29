@@ -816,7 +816,7 @@ class SnippetsMap extends Map {
     return this._dbTransaction(db => db.put(value, key));
   }
 
-  delete(key, value) {
+  delete(key) {
     super.delete(key);
     return this._dbTransaction(db => db.delete(key));
   }
@@ -824,6 +824,28 @@ class SnippetsMap extends Map {
   clear() {
     super.clear();
     return this._dbTransaction(db => db.clear());
+  }
+
+  get blockList() {
+    return this.get("blockList") || [];
+  }
+
+  /**
+   * blockSnippetById - Blocks a snippet given an id
+   *
+   * @param  {str|int} id   The id of the snippet
+   * @return {Promise}      Resolves when the id has been written to indexedDB,
+   *                        or immediately if the snippetMap is not connected
+   */
+  async blockSnippetById(id) {
+    if (!id) {
+      return;
+    }
+    let blockList = this.blockList;
+    if (!blockList.includes(id)) {
+      blockList.push(id);
+    }
+    await this.set("blockList", blockList);
   }
 
   /**
@@ -980,7 +1002,6 @@ class SnippetsProvider {
 
   _showRemoteSnippets() {
     const snippetsEl = document.getElementById(this.elementId);
-    const containerEl = document.getElementById(this.containerElementId);
     const payload = this.snippetsMap.get("snippets");
 
     if (!snippetsEl) {
@@ -1002,11 +1023,6 @@ class SnippetsProvider {
       relocatedScript.text = scriptEl.text;
       scriptEl.parentNode.replaceChild(relocatedScript, scriptEl);
     }
-
-    // Unhide the container if everything went OK
-    if (containerEl) {
-      containerEl.style.display = "block";
-    }
   }
 
   /**
@@ -1016,14 +1032,12 @@ class SnippetsProvider {
    * @param  {str} options.appData.snippetsURL  The URL from which we fetch snippets
    * @param  {int} options.appData.version  The current snippets version
    * @param  {str} options.elementId  The id of the element in which to inject snippets
-   * @param  {str} options.containerElementId  The id of the element of element containing the snippets element
    * @param  {bool} options.connect  Should gSnippetsMap connect to indexedDB?
    */
   async init(options) {
     Object.assign(this, {
       appData: {},
       elementId: "snippets",
-      containerElementId: "snippets-container",
       connect: true
     }, options);
 
@@ -1054,9 +1068,35 @@ class SnippetsProvider {
   }
 }
 
-module.exports.SnippetsMap = SnippetsMap;
-module.exports.SnippetsProvider = SnippetsProvider;
-module.exports.SNIPPETS_UPDATE_INTERVAL_MS = SNIPPETS_UPDATE_INTERVAL_MS;
+/**
+ * addSnippetsSubscriber - Creates a SnippetsProvider that Initializes
+ *                         when the store has received the appropriate
+ *                         Snippet data.
+ *
+ * @param  {obj} store   The redux store
+ * @return {obj}        Returns the snippets instance and unsubscribe function
+ */
+function addSnippetsSubscriber(store) {
+  const snippets = new SnippetsProvider();
+  const unsubscribe = store.subscribe(() => {
+    const state = store.getState();
+    if (state.Snippets.initialized) {
+      if (state.Snippets.onboardingFinished) {
+        snippets.init({ appData: state.Snippets });
+      }
+      unsubscribe();
+    }
+  });
+  // These values are returned for testing purposes
+  return snippets;
+}
+
+module.exports = {
+  addSnippetsSubscriber,
+  SnippetsMap,
+  SnippetsProvider,
+  SNIPPETS_UPDATE_INTERVAL_MS
+};
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(24)))
 
 /***/ }),
@@ -1430,7 +1470,8 @@ class Card extends React.Component {
     const index = _props.index,
           link = _props.link,
           dispatch = _props.dispatch,
-          contextMenuOptions = _props.contextMenuOptions;
+          contextMenuOptions = _props.contextMenuOptions,
+          eventSource = _props.eventSource;
 
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
     const hostname = shortURL(link);
@@ -1503,6 +1544,7 @@ class Card extends React.Component {
       React.createElement(LinkMenu, {
         dispatch: dispatch,
         index: index,
+        source: eventSource,
         onUpdate: this.onMenuUpdate,
         options: link.context_menu_options || contextMenuOptions,
         site: link,
@@ -1942,7 +1984,7 @@ class PreferencesPane extends React.Component {
               titleStringId: "settings_pane_search_header", descStringId: "settings_pane_search_body" }),
             React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handleChange,
               titleStringId: "settings_pane_topsites_header", descStringId: "settings_pane_topsites_body" }),
-            this.topStoriesOptions && React.createElement(PreferencesInput, { className: "showTopStories", prefName: "feeds.section.topstories",
+            this.topStoriesOptions && !this.topStoriesOptions.hidden && React.createElement(PreferencesInput, { className: "showTopStories", prefName: "feeds.section.topstories",
               value: prefs["feeds.section.topstories"], onChange: this.handleChange,
               titleStringId: "header_recommended_by", titleStringValues: { provider: this.topStoriesOptions.provider_name },
               descStringId: this.topStoriesOptions.provider_description })
@@ -2655,7 +2697,7 @@ const DetectUserSessionStart = __webpack_require__(8);
 
 var _require3 = __webpack_require__(10);
 
-const SnippetsProvider = _require3.SnippetsProvider;
+const addSnippetsSubscriber = _require3.addSnippetsSubscriber;
 
 
 new DetectUserSessionStart().sendEventOrAddListener();
@@ -2668,15 +2710,7 @@ ReactDOM.render(React.createElement(
   React.createElement(Base, null)
 ), document.getElementById("root"));
 
-// Trigger snippets when snippets data has been received.
-const snippets = new SnippetsProvider();
-const unsubscribe = store.subscribe(() => {
-  const state = store.getState();
-  if (state.Snippets.initialized) {
-    snippets.init({ appData: state.Snippets });
-    unsubscribe();
-  }
-});
+addSnippetsSubscriber(store);
 
 /***/ })
 /******/ ]);
