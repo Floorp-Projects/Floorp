@@ -487,7 +487,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (aDocument) {
     RegAccessKey();
-    if (CanHaveName(NodeInfo()->NameAtom()) && HasName()) {
+    if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
       aDocument->
         AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
     }
