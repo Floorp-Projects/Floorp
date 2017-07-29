@@ -5,20 +5,27 @@
 
 package org.mozilla.gecko.activitystream.homepanel.model;
 
-import android.support.annotation.Nullable;
+import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.db.BrowserContract;
 
 public class Metadata {
     private static final String LOGTAG = "GeckoMetadata";
+
+    public static Metadata fromCursor(Cursor cursor) {
+        return new Metadata(
+                cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.METADATA)));
+    }
 
     private String provider;
     private String imageUrl;
     private int descriptionLength;
 
-    /* package-private */ Metadata(String json) {
+    private Metadata(String json) {
         if (TextUtils.isEmpty(json)) {
             // Just use default values. It's better to have an empty Metadata object instead of
             // juggling with null values.
@@ -42,9 +49,14 @@ public class Metadata {
 
     /**
      * Returns the URL of an image representing this site. Returns null if no image could be found.
+     * Use hasImageUrl() to avoid dealing with null values.
      */
-    public @Nullable String getImageUrl() {
+    public String getImageUrl() {
         return imageUrl;
+    }
+
+    public boolean hasImageUrl() {
+        return imageUrl != null;
     }
 
     public String getProvider() {
