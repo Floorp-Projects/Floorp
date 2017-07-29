@@ -15,9 +15,9 @@ describe("Top Stories Feed", () => {
 
   beforeEach(() => {
     FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
-      "stories_endpoint": "https://somedomain.org/stories?key=$apiKey",
+      "stories_endpoint": "https://somedomain.org/stories?key=$apiKey&locale=$locale",
       "stories_referrer": "https://somedomain.org/referrer",
-      "topics_endpoint": "https://somedomain.org/topics?key=$apiKey",
+      "topics_endpoint": "https://somedomain.org/topics?key=$apiKey&locale=$locale",
       "survey_link": "https://www.surveymonkey.com/r/newtabffx",
       "api_key_pref": "apiKeyPref",
       "provider_name": "test-provider",
@@ -27,6 +27,7 @@ describe("Top Stories Feed", () => {
     FakePrefs.prototype.prefs.apiKeyPref = "test-api-key";
 
     globals = new GlobalOverrider();
+    globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}});
     clock = sinon.useFakeTimers();
 
     ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID} = injector({"lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs}}));
@@ -43,9 +44,9 @@ describe("Top Stories Feed", () => {
     });
     it("should initialize endpoints based on prefs", () => {
       instance.onAction({type: at.INIT});
-      assert.equal("https://somedomain.org/stories?key=test-api-key", instance.stories_endpoint);
+      assert.equal("https://somedomain.org/stories?key=test-api-key&locale=en-CA", instance.stories_endpoint);
       assert.equal("https://somedomain.org/referrer", instance.stories_referrer);
-      assert.equal("https://somedomain.org/topics?key=test-api-key", instance.topics_endpoint);
+      assert.equal("https://somedomain.org/topics?key=test-api-key&locale=en-CA", instance.topics_endpoint);
     });
     it("should register section", () => {
       const expectedSectionOptions = {
@@ -105,12 +106,24 @@ describe("Top Stories Feed", () => {
       assert.called(Components.utils.reportError);
     });
     it("should report error for missing api key", () => {
-      let fakeServices = {prefs: {getCharPref: sinon.spy()}};
+      let fakeServices = {prefs: {getCharPref: sinon.spy()}, locale: {getRequestedLocale: sinon.spy()}};
       globals.set("Services", fakeServices);
       globals.sandbox.spy(global.Components.utils, "reportError");
       FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
         "stories_endpoint": "https://somedomain.org/stories?key=$apiKey",
         "topics_endpoint": "https://somedomain.org/topics?key=$apiKey"
+      }`;
+      instance.init();
+
+      assert.called(Components.utils.reportError);
+    });
+    it("should report error for missing locale", () => {
+      let fakeServices = {locale: {getRequestedLocale: sinon.spy()}};
+      globals.set("Services", fakeServices);
+      globals.sandbox.spy(global.Components.utils, "reportError");
+      FakePrefs.prototype.prefs["feeds.section.topstories.options"] = `{
+        "stories_endpoint": "https://somedomain.org/stories?locale=$locale",
+        "topics_endpoint": "https://somedomain.org/topics?locale=$locale"
       }`;
       instance.init();
 

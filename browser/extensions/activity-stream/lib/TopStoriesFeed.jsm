@@ -28,8 +28,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
       const prefs = new Prefs();
       const options = JSON.parse(prefs.get("feeds.section.topstories.options"));
       const apiKey = this._getApiKeyFromPref(options.api_key_pref);
-      this.stories_endpoint = this._produceUrlWithApiKey(options.stories_endpoint, apiKey);
-      this.topics_endpoint = this._produceUrlWithApiKey(options.topics_endpoint, apiKey);
+      const locale = Services.locale.getRequestedLocale();
+      this.stories_endpoint = this._produceFinalEndpointUrl(options.stories_endpoint, apiKey, locale);
+      this.topics_endpoint = this._produceFinalEndpointUrl(options.topics_endpoint, apiKey, locale);
+
       this.read_more_endpoint = options.read_more_endpoint;
       this.stories_referrer = options.stories_referrer;
 
@@ -138,16 +140,17 @@ this.TopStoriesFeed = class TopStoriesFeed {
     return new Prefs().get(apiKeyPref) || Services.prefs.getCharPref(apiKeyPref);
   }
 
-  _produceUrlWithApiKey(url, apiKey) {
+  _produceFinalEndpointUrl(url, apiKey, locale) {
     if (!url) {
       return url;
     }
-
     if (url.includes("$apiKey") && !apiKey) {
       throw new Error(`An API key was specified but none configured: ${url}`);
     }
-
-    return url.replace("$apiKey", apiKey);
+    if (url.includes("$locale") && !locale) {
+      throw new Error(`A locale was specified but none detected: ${url}`);
+    }
+    return url.replace("$apiKey", apiKey).replace("$locale", locale);
   }
 
   // Need to remove parenthesis from image URLs as React will otherwise

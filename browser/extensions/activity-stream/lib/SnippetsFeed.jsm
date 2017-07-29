@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
 // Url to fetch snippets, in the urlFormatter service format.
 const SNIPPETS_URL_PREF = "browser.aboutHomeSnippets.updateUrl";
 const TELEMETRY_PREF = "datareporting.healthreport.uploadEnabled";
+const ONBOARDING_FINISHED_PREF = "browser.onboarding.notification.finished";
 
 // Should be bumped up if the snippets content format changes.
 const STARTPAGE_VERSION = 5;
@@ -47,20 +48,23 @@ this.SnippetsFeed = class SnippetsFeed {
       version: STARTPAGE_VERSION,
       profileCreatedWeeksAgo: profileInfo.createdWeeksAgo,
       profileResetWeeksAgo: profileInfo.resetWeeksAgo,
-      telemetryEnabled: Services.prefs.getBoolPref(TELEMETRY_PREF)
+      telemetryEnabled: Services.prefs.getBoolPref(TELEMETRY_PREF),
+      onboardingFinished: Services.prefs.getBoolPref(ONBOARDING_FINISHED_PREF)
     };
 
     this.store.dispatch(ac.BroadcastToContent({type: at.SNIPPETS_DATA, data}));
   }
   async init() {
     await this._refresh();
+    Services.prefs.addObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.addObserver(SNIPPETS_URL_PREF, this._refresh);
     Services.prefs.addObserver(TELEMETRY_PREF, this._refresh);
   }
   uninit() {
-    this.store.dispatch({type: at.SNIPPETS_RESET});
+    Services.prefs.removeObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.removeObserver(SNIPPETS_URL_PREF, this._refresh);
     Services.prefs.removeObserver(TELEMETRY_PREF, this._refresh);
+    this.store.dispatch({type: at.SNIPPETS_RESET});
   }
   onAction(action) {
     switch (action.type) {
