@@ -277,6 +277,11 @@ public:
    */
   nsIFrame* GetFirstLetter() const;
 
+  /**
+   * @return the ::first-line frame or nullptr if we don't have one.
+   */
+  nsIFrame* GetFirstLineFrame() const;
+
   void MarkIntrinsicISizesDirty() override;
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();

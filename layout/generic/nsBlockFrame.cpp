@@ -7602,6 +7602,26 @@ nsBlockFrame::GetFirstLetter() const
   return GetProperty(FirstLetterProperty());
 }
 
+nsIFrame*
+nsBlockFrame::GetFirstLineFrame() const
+{
+  // Our ::first-line frame is either the first thing on our principal child
+  // list, or the second one if we have an inside bullet.
+  nsIFrame* bullet = GetInsideBullet();
+  nsIFrame* maybeFirstLine;
+  if (bullet) {
+    maybeFirstLine = bullet->GetNextSibling();
+  } else {
+    maybeFirstLine = PrincipalChildList().FirstChild();
+  }
+
+  if (maybeFirstLine && maybeFirstLine->IsLineFrame()) {
+    return maybeFirstLine;
+  }
+
+  return nullptr;
+}
+
 #ifdef DEBUG
 void
 nsBlockFrame::VerifyLines(bool aFinalCheckOK)
