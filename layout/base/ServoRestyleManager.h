@@ -150,6 +150,9 @@ public:
                         nsIAtom* aAttribute, int32_t aModType,
                         const nsAttrValue* aOldValue);
 
+  // This is only used to reparent things when moving them in/out of the
+  // ::first-line.  Once we get rid of the Gecko style system, we should rename
+  // this method accordingly (e.g. to ReparentStyleContextForFirstLine).
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
   /**
@@ -226,6 +229,11 @@ private:
                                       nsIAtom* aAttribute);
 
   void DoProcessPendingRestyles(ServoTraversalFlags aFlags);
+
+  // Function to do the actual (recursive) work of ReparentStyleContext, once we
+  // have asserted the invariants that only hold on the initial call.
+  void DoReparentStyleContext(nsIFrame* aFrame,
+                              ServoStyleSet& aStyleSet);
 
   // We use a separate data structure from nsStyleChangeList because we need a
   // frame to create nsStyleChangeList entries, and the primary frame may not be
