@@ -423,7 +423,6 @@ structs-types = [
     "nsIAtom",
     "nsIURI",
     "nsCompatibility",
-    "nsMediaFeature",
     "nsRestyleHint",
     "nsStyleBackground",
     "nsStyleBorder",

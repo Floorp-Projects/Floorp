@@ -2529,12 +2529,6 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
   return sheet.forget().take();
 }
 
-const nsMediaFeature*
-Gecko_GetMediaFeatures()
-{
-  return nsMediaFeatures::features;
-}
-
 nsCSSKeyword
 Gecko_LookupCSSKeyword(const uint8_t* aString, uint32_t aLength)
 {
