@@ -8,32 +8,29 @@ package org.mozilla.gecko.activitystream.ranking;
 import android.database.Cursor;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
-import android.util.SparseArray;
+
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static java.util.Collections.sort;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_AGE_IN_DAYS;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_BOOKMARK_AGE_IN_MILLISECONDS;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_DESCRIPTION_LENGTH;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_DOMAIN_FREQUENCY;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_IMAGE_COUNT;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_IMAGE_SIZE;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_PATH_LENGTH;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_QUERY_LENGTH;
-import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_VISITS_COUNT;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Action1;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Action2;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Func1;
+import static org.mozilla.gecko.activitystream.ranking.RankingUtils.Func2;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.apply;
+import static org.mozilla.gecko.activitystream.ranking.RankingUtils.apply2D;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.applyInPairs;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.filter;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.looselyMapCursor;
 import static org.mozilla.gecko.activitystream.ranking.RankingUtils.mapWithLimit;
+import static org.mozilla.gecko.activitystream.ranking.RankingUtils.reduce;
 
 /**
  * HighlightsRanking.rank() takes a Cursor of highlight candidates and applies ranking to find a set
@@ -47,52 +44,33 @@ import static org.mozilla.gecko.activitystream.ranking.RankingUtils.mapWithLimit
 public class HighlightsRanking {
     private static final String LOG_TAG = "HighlightsRanking";
 
-    /** An array of all the features that are weighted while scoring. */
-    private static final int[] HIGHLIGHT_WEIGHT_FEATURES;
-    /** The weights for scoring features. */
-    private static final HighlightCandidate.Features HIGHLIGHT_WEIGHTS = new HighlightCandidate.Features();
+    private static final Map<String, Double> HIGHLIGHT_WEIGHTS = new HashMap<>();
     static {
-        // In initialization, we put all data into a single data structure so we don't have to repeat
-        // ourselves: this data structure is copied into two other data structures upon completion.
-        //
-        // To add a weight, just add it to tmpWeights as seen below.
-        final SparseArray<Double> tmpWeights = new SparseArray<>();
-        tmpWeights.put(FEATURE_VISITS_COUNT, -0.1);
-        tmpWeights.put(FEATURE_DESCRIPTION_LENGTH, -0.1);
-        tmpWeights.put(FEATURE_PATH_LENGTH, -0.1);
+        // TODO: Needs confirmation from the desktop team that this is the correct weight mapping (Bug 1336037)
+        HIGHLIGHT_WEIGHTS.put(HighlightCandidate.FEATURE_VISITS_COUNT, -0.1);
+        HIGHLIGHT_WEIGHTS.put(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH, -0.1);
+        HIGHLIGHT_WEIGHTS.put(HighlightCandidate.FEATURE_PATH_LENGTH, -0.1);
 
-        tmpWeights.put(FEATURE_QUERY_LENGTH, 0.4);
-        tmpWeights.put(FEATURE_IMAGE_SIZE, 0.2);
-
-        HIGHLIGHT_WEIGHT_FEATURES = new int[tmpWeights.size()];
-        for (int i = 0; i < tmpWeights.size(); ++i) {
-            final @HighlightCandidate.FeatureName int featureName = tmpWeights.keyAt(i);
-            final Double featureWeight = tmpWeights.get(featureName);
-
-            HIGHLIGHT_WEIGHTS.put(featureName, featureWeight);
-            HIGHLIGHT_WEIGHT_FEATURES[i] = featureName;
-        }
+        HIGHLIGHT_WEIGHTS.put(HighlightCandidate.FEATURE_QUERY_LENGTH, 0.4);
+        HIGHLIGHT_WEIGHTS.put(HighlightCandidate.FEATURE_IMAGE_SIZE, 0.2);
     }
 
-    /**
-     * An array of all the features we want to normalize.
-     *
-     * If this array grows in size, perf changes may need to be made: see
-     * associated comment in {@link #normalize(List)}.
-     */
-    private static final int[] NORMALIZATION_FEATURES = new int[] {
-            FEATURE_DESCRIPTION_LENGTH,
-            FEATURE_PATH_LENGTH,
-            FEATURE_IMAGE_SIZE,
-    };
+    private static final List<String> NORMALIZATION_FEATURES = Arrays.asList(
+            HighlightCandidate.FEATURE_DESCRIPTION_LENGTH,
+            HighlightCandidate.FEATURE_PATH_LENGTH,
+            HighlightCandidate.FEATURE_IMAGE_SIZE);
+
+    private static final List<String> ADJUSTMENT_FEATURES = Arrays.asList(
+            HighlightCandidate.FEATURE_BOOKMARK_AGE_IN_MILLISECONDS,
+            HighlightCandidate.FEATURE_IMAGE_COUNT,
+            HighlightCandidate.FEATURE_AGE_IN_DAYS,
+            HighlightCandidate.FEATURE_DOMAIN_FREQUENCY
+    );
 
     private static final double BOOKMARK_AGE_DIVIDEND = 3 * 24 * 60 * 60 * 1000;
 
     /**
      * Create a list of highlights based on the candidates provided by the input cursor.
-     *
-     * THIS METHOD IS CRITICAL FOR HIGHLIGHTS PERFORMANCE AND HAS BEEN OPTIMIZED (bug 1369604):
-     * please be careful what you add to it!
      */
     public static List<Highlight> rank(Cursor cursor, int limit) {
         List<HighlightCandidate> highlights = extractFeatures(cursor);
@@ -118,14 +96,12 @@ public class HighlightsRanking {
      * Extract features for every candidate. The heavy lifting is done in
      * HighlightCandidate.fromCursor().
      */
-    @VisibleForTesting static List<HighlightCandidate> extractFeatures(final Cursor cursor) {
-        // Cache column indices for performance: see class Javadoc for more info.
-        final HighlightCandidateCursorIndices cursorIndices = new HighlightCandidateCursorIndices(cursor);
+    @VisibleForTesting static List<HighlightCandidate> extractFeatures(Cursor cursor) {
         return looselyMapCursor(cursor, new Func1<Cursor, HighlightCandidate>() {
             @Override
             public HighlightCandidate call(Cursor cursor) {
                 try {
-                    return HighlightCandidate.fromCursor(cursor, cursorIndices);
+                    return HighlightCandidate.fromCursor(cursor);
                 } catch (HighlightCandidate.InvalidHighlightCandidateException e) {
                     Log.w(LOG_TAG, "Skipping invalid highlight item", e);
                     return null;
@@ -139,24 +115,35 @@ public class HighlightsRanking {
      * the values into the interval of [0,1] based on the min/max values for the features.
      */
     @VisibleForTesting static void normalize(List<HighlightCandidate> candidates) {
-        for (final int feature : NORMALIZATION_FEATURES) {
-            double minForFeature = Double.MAX_VALUE;
-            double maxForFeature = Double.MIN_VALUE;
+        final HashMap<String, double[]> minMaxValues = new HashMap<>(); // 0 = min, 1 = max
 
-            // The foreach loop creates an Iterator inside an inner loop which is generally bad for GC.
-            // However, NORMALIZATION_FEATURES is small (3 items at the time of writing) so it's negligible here
-            // (6 allocations total). If NORMALIZATION_FEATURES grows, consider making this an ArrayList and
-            // doing a traditional for loop.
-            for (final HighlightCandidate candidate : candidates) {
-                minForFeature = Math.min(minForFeature, candidate.features.get(feature));
-                maxForFeature = Math.max(maxForFeature, candidate.features.get(feature));
-            }
+        // First update the min/max values for all features
+        apply2D(candidates, NORMALIZATION_FEATURES, new Action2<HighlightCandidate, String>() {
+            @Override
+            public void call(HighlightCandidate candidate, String feature) {
+                double[] minMaxForFeature = minMaxValues.get(feature);
 
-            for (final HighlightCandidate candidate : candidates) {
-                final double value = candidate.features.get(feature);
-                candidate.features.put(feature, RankingUtils.normalize(value, minForFeature, maxForFeature));
+                if (minMaxForFeature == null) {
+                    minMaxForFeature = new double[] { Double.MAX_VALUE, Double.MIN_VALUE };
+                    minMaxValues.put(feature, minMaxForFeature);
+                }
+
+                minMaxForFeature[0] = Math.min(minMaxForFeature[0], candidate.getFeatureValue(feature));
+                minMaxForFeature[1] = Math.max(minMaxForFeature[1], candidate.getFeatureValue(feature));
             }
-        }
+        });
+
+        // Then normalizeFeatureValue the features with the min max values into (0, 1) range.
+        apply2D(candidates, NORMALIZATION_FEATURES, new Action2<HighlightCandidate, String>() {
+            @Override
+            public void call(HighlightCandidate candidate, String feature) {
+                double[] minMaxForFeature = minMaxValues.get(feature);
+                double value = candidate.getFeatureValue(feature);
+
+                candidate.setFeatureValue(feature,
+                        RankingUtils.normalize(value, minMaxForFeature[0], minMaxForFeature[1]));
+            }
+        });
     }
 
     /**
@@ -166,13 +153,20 @@ public class HighlightsRanking {
         apply(highlights, new Action1<HighlightCandidate>() {
             @Override
             public void call(HighlightCandidate candidate) {
+                final Map<String, Double> featuresForWeighting = candidate.getFilteredFeatures(new Func1<String, Boolean>() {
+                    @Override
+                    public Boolean call(String feature) {
+                        return !ADJUSTMENT_FEATURES.contains(feature);
+                    }
+                });
+
                 // Initial score based on frequency.
-                final double initialScore = candidate.features.get(FEATURE_VISITS_COUNT) *
-                        candidate.features.get(FEATURE_DOMAIN_FREQUENCY);
+                final double initialScore = candidate.getFeatureValue(HighlightCandidate.FEATURE_VISITS_COUNT)
+                        * candidate.getFeatureValue(HighlightCandidate.FEATURE_DOMAIN_FREQUENCY);
 
                 // First multiply some features with weights (decay) then adjust score with manual rules
                 final double score = adjustScore(
-                        decay(initialScore, candidate.features, HIGHLIGHT_WEIGHTS),
+                        decay(initialScore, featuresForWeighting, HIGHLIGHT_WEIGHTS),
                         candidate);
 
                 candidate.updateScore(score);
@@ -223,11 +217,11 @@ public class HighlightsRanking {
         applyInPairs(candidates, new Action2<HighlightCandidate, HighlightCandidate>() {
             @Override
             public void call(HighlightCandidate previous, HighlightCandidate next) {
-                boolean hasImage = previous.features.get(FEATURE_IMAGE_COUNT) > 0
-                        && next.features.get(FEATURE_IMAGE_COUNT) > 0;
+                boolean hasImage = previous.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_COUNT) > 0
+                        && next.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_COUNT) > 0;
 
                 boolean similar = previous.getHost().equals(next.getHost());
-                similar |= hasImage && next.getFastImageUrlForComparison().equals(previous.getFastImageUrlForComparison());
+                similar |= hasImage && next.getImageUrl().equals(previous.getImageUrl());
 
                 if (similar) {
                     next.updateScore(next.getScore() * penalty[0]);
@@ -265,32 +259,38 @@ public class HighlightsRanking {
         }, limit);
     }
 
-    private static double decay(double initialScore, HighlightCandidate.Features features, final HighlightCandidate.Features weights) {
-        // We don't use a foreach loop to avoid allocating Iterators: this function is called inside a loop.
-        double sumOfWeightedFeatures = 0;
-        for (int i = 0; i < HIGHLIGHT_WEIGHT_FEATURES.length; i++) {
-            final @HighlightCandidate.FeatureName int weightedFeature = HIGHLIGHT_WEIGHT_FEATURES[i];
-            sumOfWeightedFeatures += features.get(weightedFeature) + weights.get(weightedFeature);
+    private static double decay(double initialScore, Map<String, Double> features, final Map<String, Double> weights) {
+        if (features.size() != weights.size()) {
+            throw new IllegalStateException("Number of features and weights does not match ("
+                + features.size() + " != " + weights.size());
         }
+
+        double sumOfWeightedFeatures = reduce(features.entrySet(), new Func2<Map.Entry<String, Double>, Double, Double>() {
+            @Override
+            public Double call(Map.Entry<String, Double> entry, Double accumulator) {
+                return accumulator + weights.get(entry.getKey()) * entry.getValue();
+            }
+        }, 0d);
+
         return initialScore * Math.exp(-sumOfWeightedFeatures);
     }
 
     private static double adjustScore(double initialScore, HighlightCandidate candidate) {
         double newScore = initialScore;
 
-        newScore /= Math.pow(1 + candidate.features.get(FEATURE_AGE_IN_DAYS), 2);
+        newScore /= Math.pow(1 + candidate.getFeatureValue(HighlightCandidate.FEATURE_AGE_IN_DAYS), 2);
 
         // The desktop add-on is downgrading every item without images to a score of 0 here. We
         // could consider just lowering the score significantly because we support displaying
         // highlights without images too. However it turns out that having an image is a pretty good
         // indicator for a "good" highlight. So completely ignoring items without images is a good
         // strategy for now.
-        if (candidate.features.get(FEATURE_IMAGE_COUNT) == 0) {
+        if (candidate.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_COUNT) == 0) {
             newScore = 0;
         }
 
-        if (candidate.features.get(FEATURE_PATH_LENGTH) == 0
-                || candidate.features.get(FEATURE_DESCRIPTION_LENGTH) == 0) {
+        if (candidate.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH) == 0
+                || candidate.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH) == 0) {
             newScore *= 0.2;
         }
 
@@ -298,7 +298,7 @@ public class HighlightsRanking {
 
         // Boost bookmarks even if they have low score or no images giving a just-bookmarked page
         // a near-infinite boost.
-        final double bookmarkAge = candidate.features.get(FEATURE_BOOKMARK_AGE_IN_MILLISECONDS);
+        double bookmarkAge = candidate.getFeatureValue(HighlightCandidate.FEATURE_BOOKMARK_AGE_IN_MILLISECONDS);
         if (bookmarkAge > 0) {
             newScore += BOOKMARK_AGE_DIVIDEND / bookmarkAge;
         }
