@@ -7,67 +7,37 @@ package org.mozilla.gecko.activitystream.ranking;
 
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringDef;
 import android.support.annotation.VisibleForTesting;
+
+import org.mozilla.gecko.activitystream.ranking.RankingUtils.Func1;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A highlight candidate (Highlight object + features). Ranking will determine whether this is an
  * actual highlight.
  */
 /* package-private */ class HighlightCandidate {
+    /* package-private */ static final String FEATURE_AGE_IN_DAYS = "ageInDays";
+    /* package-private */ static final String FEATURE_IMAGE_COUNT = "imageCount";
+    /* package-private */ static final String FEATURE_DOMAIN_FREQUENCY = "domainFrequency";
+    /* package-private */ static final String FEATURE_VISITS_COUNT = "visitsCount";
+    /* package-private */ static final String FEATURE_BOOKMARK_AGE_IN_MILLISECONDS = "bookmarkageInDays";
+    /* package-private */ static final String FEATURE_DESCRIPTION_LENGTH = "descriptionLength";
+    /* package-private */ static final String FEATURE_PATH_LENGTH = "pathLength";
+    /* package-private */ static final String FEATURE_QUERY_LENGTH = "queryLength";
+    /* package-private */ static final String FEATURE_IMAGE_SIZE = "imageSize";
 
-    // Features we score over for Highlight results - see Features class for more details & usage.
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({FEATURE_AGE_IN_DAYS, FEATURE_BOOKMARK_AGE_IN_MILLISECONDS, FEATURE_DESCRIPTION_LENGTH,
-            FEATURE_DOMAIN_FREQUENCY, FEATURE_IMAGE_COUNT, FEATURE_IMAGE_SIZE, FEATURE_PATH_LENGTH,
-            FEATURE_QUERY_LENGTH, FEATURE_VISITS_COUNT})
-    /* package-private */ @interface FeatureName {}
+    @StringDef({FEATURE_AGE_IN_DAYS, FEATURE_IMAGE_COUNT, FEATURE_DOMAIN_FREQUENCY, FEATURE_VISITS_COUNT,
+            FEATURE_BOOKMARK_AGE_IN_MILLISECONDS, FEATURE_DESCRIPTION_LENGTH, FEATURE_PATH_LENGTH,
+            FEATURE_QUERY_LENGTH, FEATURE_IMAGE_SIZE})
+    public @interface Feature {}
 
-    // IF YOU ADD A FIELD, INCREMENT `FEATURE_COUNT`! For a perf boost, we use these ints to index into an array and
-    // FEATURE_COUNT tracks the number of features we have and thus how big the array needs to be.
-    private static final int FEATURE_COUNT = 9; // = the-greatest-feature-index + 1.
-    /* package-private */ static final int FEATURE_AGE_IN_DAYS = 0;
-    /* package-private */ static final int FEATURE_BOOKMARK_AGE_IN_MILLISECONDS = 1;
-    /* package-private */ static final int FEATURE_DESCRIPTION_LENGTH = 2;
-    /* package-private */ static final int FEATURE_DOMAIN_FREQUENCY = 3;
-    /* package-private */ static final int FEATURE_IMAGE_COUNT = 4;
-    /* package-private */ static final int FEATURE_IMAGE_SIZE = 5;
-    /* package-private */ static final int FEATURE_PATH_LENGTH = 6;
-    /* package-private */ static final int FEATURE_QUERY_LENGTH = 7;
-    /* package-private */ static final int FEATURE_VISITS_COUNT = 8;
-
-    /**
-     * A data class for accessing Features values. It acts as a map from FeatureName -> value:
-     * <pre>
-     *   Features features = new Features();
-     *   features.put(FEATURE_AGE_IN_DAYS, 30);
-     *   double value = features.get(FEATURE_AGE_IN_DAYS);
-     * </pre>
-     *
-     * This data is accessed frequently and needs to be performant. As such, the implementation is a little fragile
-     * (e.g. we could increase type safety with enums and index into the backing array with Enum.ordinal(), but it
-     * gets called enough that it's not worth the performance trade-off).
-     */
-    /* package-private */ static class Features {
-        private final double[] values = new double[FEATURE_COUNT];
-
-        Features() {}
-
-        /* package-private */ double get(final @FeatureName int featureName) {
-            return values[featureName];
-        }
-
-        /* package-private */ void put(final @FeatureName int featureName, final double value) {
-            values[featureName] = value;
-        }
-    }
-
-    @VisibleForTesting final Features features = new Features();
+    @VisibleForTesting final Map<String, Double> features;
     private Highlight highlight;
     private @Nullable String imageUrl;
     private String host;
@@ -176,6 +146,7 @@ import java.lang.annotation.RetentionPolicy;
     }
 
     @VisibleForTesting HighlightCandidate() {
+        features = new HashMap<>();
     }
 
     /* package-private */ double getScore() {
@@ -201,6 +172,30 @@ import java.lang.annotation.RetentionPolicy;
 
     /* package-private */ Highlight getHighlight() {
         return highlight;
+    }
+
+    /* package-private */ double getFeatureValue(@Feature String feature) {
+        if (!features.containsKey(feature)) {
+            throw new IllegalStateException("No value for feature " + feature);
+        }
+
+        return features.get(feature);
+    }
+
+    /* package-private */ void setFeatureValue(@Feature String feature, double value) {
+        features.put(feature, value);
+    }
+
+    /* package-private */ Map<String, Double> getFilteredFeatures(Func1<String, Boolean> filter) {
+        Map<String, Double> filteredFeatures = new HashMap<>();
+
+        for (Map.Entry<String, Double> entry : features.entrySet()) {
+            if (filter.call(entry.getKey())) {
+                filteredFeatures.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return filteredFeatures;
     }
 
     /* package-private */ static class InvalidHighlightCandidateException extends Exception {
