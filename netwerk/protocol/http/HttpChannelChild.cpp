@@ -1761,8 +1761,8 @@ HttpChannelChild::ProcessNotifyTrackingProtectionDisabled()
   MOZ_ASSERT(OnSocketThread());
 
   RefPtr<HttpChannelChild> self = this;
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
     NS_NewRunnableFunction(
       "nsChannelClassifier::NotifyTrackingProtectionDisabled",
       [self]() {
@@ -1777,12 +1777,7 @@ HttpChannelChild::ProcessNotifyTrackingResource()
   LOG(("HttpChannelChild::ProcessNotifyTrackingResource [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
-    NewRunnableMethod(
-      "HttpChannelChild::SetIsTrackingResource",
-      this, &HttpChannelChild::SetIsTrackingResource),
-    NS_DISPATCH_NORMAL);
+  SetIsTrackingResource();
 }
 
 void
@@ -1807,8 +1802,8 @@ HttpChannelChild::ProcessSetClassifierMatchedInfo(const nsCString& aList,
   LOG(("HttpChannelChild::ProcessSetClassifierMatchedInfo [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
-  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadEventTarget();
-  mainTarget->Dispatch(
+  nsCOMPtr<nsIEventTarget> neckoTarget = GetNeckoTarget();
+  neckoTarget->Dispatch(
     NewRunnableMethod<const nsCString, const nsCString, const nsCString>
       ("HttpChannelChild::SetMatchedInfo",
        this, &HttpChannelChild::SetMatchedInfo,
@@ -3588,6 +3583,19 @@ HttpChannelChild::RecvSetPriority(const int16_t& aPriority)
 {
   mPriority = aPriority;
   return IPC_OK();
+}
+
+void
+HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // OnStartRequest might be dropped if IPDL is destroyed abnormally
+  // and BackgroundChild might have pending IPC messages.
+  // Clean up BackgroundChild at this time to prevent memleak.
+  if (aWhy != Deletion) {
+    CleanupBackgroundChannel();
+  }
 }
 
 } // namespace net

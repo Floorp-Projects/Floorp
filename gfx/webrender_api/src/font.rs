@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use app_units::Au;
-use {ColorU, ColorF, LayoutPoint};
+use {ColorU, ColorF, IdNamespace, LayoutPoint};
 use std::sync::Arc;
 
 #[cfg(target_os = "macos")] use core_foundation::string::CFString;
@@ -52,15 +52,16 @@ pub struct GlyphDimensions {
     pub top: i32,
     pub width: u32,
     pub height: u32,
+    pub advance: f32,
 }
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, Ord, PartialOrd)]
-pub struct FontKey(pub u32, pub u32);
+pub struct FontKey(pub IdNamespace, pub u32);
 
 impl FontKey {
-    pub fn new(key0: u32, key1: u32) -> FontKey {
-        FontKey(key0, key1)
+    pub fn new(namespace: IdNamespace, key: u32) -> FontKey {
+        FontKey(namespace, key)
     }
 }
 
@@ -152,8 +153,15 @@ impl SubpixelPoint {
     }
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct GlyphOptions {
+    // These are currently only used on windows for dwrite fonts.
+    pub use_embedded_bitmap: bool,
+    pub force_gdi_rendering: bool,
+}
+
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
-pub struct GlyphKey {
+pub struct FontInstanceKey {
     pub font_key: FontKey,
     // The font size is in *device* pixels, not logical pixels.
     // It is stored as an Au since we need sub-pixel sizes, but
@@ -161,22 +169,45 @@ pub struct GlyphKey {
     // TODO(gw): Perhaps consider having LogicalAu and DeviceAu
     //           or something similar to that.
     pub size: Au,
-    pub index: u32,
     pub color: ColorU,
+    pub render_mode: FontRenderMode,
+    pub glyph_options: Option<GlyphOptions>,
+}
+
+impl FontInstanceKey {
+    pub fn new(font_key: FontKey,
+               size: Au,
+               mut color: ColorF,
+               render_mode: FontRenderMode,
+               glyph_options: Option<GlyphOptions>) -> FontInstanceKey {
+        // In alpha/mono mode, the color of the font is irrelevant.
+        // Forcing it to black in those cases saves rasterizing glyphs
+        // of different colors when not needed.
+        if render_mode != FontRenderMode::Subpixel {
+            color = ColorF::new(0.0, 0.0, 0.0, 1.0);
+        }
+
+        FontInstanceKey {
+            font_key,
+            size,
+            color: color.into(),
+            render_mode,
+            glyph_options,
+        }
+    }
+}
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug, Deserialize, Serialize, Ord, PartialOrd)]
+pub struct GlyphKey {
+    pub index: u32,
     pub subpixel_point: SubpixelPoint,
 }
 
 impl GlyphKey {
-    pub fn new(font_key: FontKey,
-               size: Au,
-               color: ColorF,
-               index: u32,
+    pub fn new(index: u32,
                point: LayoutPoint,
                render_mode: FontRenderMode) -> GlyphKey {
         GlyphKey {
-            font_key,
-            size,
-            color: ColorU::from(color),
             index,
             subpixel_point: SubpixelPoint::new(point, render_mode),
         }

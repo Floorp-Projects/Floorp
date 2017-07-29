@@ -30,9 +30,11 @@
     <groupbox id="defaultEngineGroup" data-category="paneSearch">
       <caption label="&defaultSearchEngine.label;"/>
       <label>&chooseYourDefaultSearchEngine2.label;</label>
-      <menulist id="defaultEngine">
-        <menupopup/>
-      </menulist>
+      <hbox>
+        <menulist id="defaultEngine">
+          <menupopup/>
+        </menulist>
+      </hbox>
       <checkbox id="suggestionsInSearchFieldsCheckbox"
                 label="&provideSearchSuggestions.label;"
                 accesskey="&provideSearchSuggestions.accesskey;"

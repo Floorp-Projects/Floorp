@@ -346,6 +346,15 @@
               <textbox id="security-identity-verifier-value"
                        class="fieldValue" readonly="true" />
             </row>
+            <!-- Certificate Validity -->
+            <row id="security-identity-validity-row">
+              <label id="security-identity-validity-label"
+                     class="fieldLabel"
+                     value="&securityView.identity.validity;"
+                     control="security-identity-validity-value"/>
+              <textbox id="security-identity-validity-value"
+                       class="fieldValue" readonly="true" />
+            </row>
           </rows>
         </grid>
         <spacer flex="1"/>

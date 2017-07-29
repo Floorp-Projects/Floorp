@@ -583,6 +583,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
       EnsureMenuItemIsVisible(mCurrentMenu);
     }
 
+#ifndef MOZ_WIDGET_GTK
     // If the animate attribute is set to open, check for a transition and wait
     // for it to finish before firing the popupshown event.
     if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::animate,
@@ -593,6 +594,7 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
                                        mPopupShownDispatcher, false, false);
       return;
     }
+#endif
 
     // If there are no transitions, fire the popupshown event right away.
     nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);

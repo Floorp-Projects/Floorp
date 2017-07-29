@@ -4,7 +4,7 @@
 
 use api::{ClipId, DeviceIntRect, LayerPixel, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerToWorldTransform, LayerVector2D, PipelineId};
-use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, WorldPoint};
+use api::{ScrollClamping, ScrollEventPhase, ScrollLocation, ScrollSensitivity, WorldPoint};
 use geometry::ray_intersects_rect;
 use mask_cache::{ClipRegion, ClipSource, MaskCacheInfo};
 use spring::{DAMPING, STIFFNESS, Spring};
@@ -122,7 +122,8 @@ impl ClipScrollNode {
     pub fn new_scroll_frame(pipeline_id: PipelineId,
                             parent_id: ClipId,
                             frame_rect: &LayerRect,
-                            content_size: &LayerSize)
+                            content_size: &LayerSize,
+                            scroll_sensitivity: ScrollSensitivity)
                             -> ClipScrollNode {
         ClipScrollNode {
             content_size: *content_size,
@@ -135,7 +136,7 @@ impl ClipScrollNode {
             parent: Some(parent_id),
             children: Vec::new(),
             pipeline_id,
-            node_type: NodeType::ScrollFrame(ScrollingState::new()),
+            node_type: NodeType::ScrollFrame(ScrollingState::new(scroll_sensitivity)),
         }
     }
 
@@ -180,14 +181,18 @@ impl ClipScrollNode {
         self.children.push(child);
     }
 
-    pub fn finalize(&mut self, new_scrolling: &ScrollingState) {
+    pub fn apply_old_scrolling_state(&mut self, new_scrolling: &ScrollingState) {
         match self.node_type {
             NodeType::ReferenceFrame(_) | NodeType::Clip(_) => {
                 if new_scrolling.offset != LayerVector2D::zero() {
                     warn!("Tried to scroll a non-scroll node.");
                 }
             }
-            NodeType::ScrollFrame(ref mut scrolling) => *scrolling = *new_scrolling,
+            NodeType::ScrollFrame(ref mut scrolling) => {
+                let scroll_sensitivity = scrolling.scroll_sensitivity;
+                *scrolling = *new_scrolling;
+                scrolling.scroll_sensitivity = scroll_sensitivity;
+            }
         }
     }
 
@@ -404,18 +409,27 @@ pub struct ScrollingState {
     pub spring: Spring,
     pub started_bouncing_back: bool,
     pub bouncing_back: bool,
-    pub should_handoff_scroll: bool
+    pub should_handoff_scroll: bool,
+    pub scroll_sensitivity: ScrollSensitivity,
 }
 
 /// Manages scrolling offset, overscroll state, etc.
 impl ScrollingState {
-    pub fn new() -> ScrollingState {
+    pub fn new(scroll_sensitivity: ScrollSensitivity) -> ScrollingState {
         ScrollingState {
             offset: LayerVector2D::zero(),
             spring: Spring::at(LayerPoint::zero(), STIFFNESS, DAMPING),
             started_bouncing_back: false,
             bouncing_back: false,
-            should_handoff_scroll: false
+            should_handoff_scroll: false,
+            scroll_sensitivity,
+        }
+    }
+
+    pub fn sensitive_to_input_events(&self) -> bool {
+        match self.scroll_sensitivity {
+            ScrollSensitivity::ScriptAndInputEvents => true,
+            ScrollSensitivity::Script => false,
         }
     }
 

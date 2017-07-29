@@ -1180,7 +1180,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > #downloads-
   -moz-window-transform-origin: calc(100% - 20px) bottom;
 }
 
-%else
+%elifndef MOZ_WIDGET_GTK
 
 #BMB_bookmarksPopup {
   transform: scale(.4);

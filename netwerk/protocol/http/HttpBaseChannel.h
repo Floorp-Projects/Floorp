@@ -631,7 +631,7 @@ protected:
   int64_t   mAltDataLength;
 
   bool mForceMainDocumentChannel;
-  bool mIsTrackingResource;
+  Atomic<bool, ReleaseAcquire> mIsTrackingResource;
 
   uint64_t mChannelId;
 

@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title>Saved Addresses</title>
+  <title data-localization="manageDialogTitle"/>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
   <link rel="stylesheet" href="chrome://formautofill/content/manageAddresses.css" />
   <script src="chrome://formautofill/content/manageAddresses.js"></script>
@@ -17,13 +17,18 @@
     <a href="https://luke-chang.github.io/autofill-demo/basic.html" target="_blank">Demo page</a>
   </p>
   <fieldset>
-    <legend>Addresses</legend>
+    <legend data-localization="addressListHeader"/>
     <select id="addresses" size="9" multiple="multiple"/>
   </fieldset>
   <div id="controls-container">
-    <button id="remove" disabled="disabled">Remove</button>
-    <button id="add">Add…</button>
-    <button id="edit" disabled="disabled">Edit…</button>
+    <button id="remove" disabled="disabled" data-localization="remove"/>
+    <button id="add" data-localization="add"/>
+    <button id="edit" disabled="disabled" data-localization="edit"/>
   </div>
+  <script type="application/javascript">
+    "use strict";
+    // Localize strings before DOMContentLoaded to prevent flash
+    window.dialog.localizeDocument();
+  </script>
 </body>
 </html>
