@@ -35,7 +35,7 @@ HTTP(..) == 10209-3.html 10209-3-ref.html
 == 18217-zorder-3.html 18217-zorder-ref-inline.html
 == 18217-zorder-4.html 18217-zorder-ref-inline-table.html
 == 18217-zorder-5.html 18217-zorder-ref-inline-table.html
-fails-if(styloVsGecko) == 23604-1.html 23604-1-ref.html
+== 23604-1.html 23604-1-ref.html
 == 23604-2.html 23604-2-ref.html
 != 24998-1.html 24998-1-ref.html
 == 25888-1l.html 25888-1l-ref.html
@@ -789,7 +789,7 @@ skip-if(!winWidget) == 391045.html 391045-ref.html # windows-specific Uniscribe 
 skip-if(Android) == 391979.html 391979-ref.html
 == 391994-1.html 391994-1-ref.html
 == 392047.html 392047-ref.html
-fails-if(styloVsGecko||stylo) == 392435-1.html 392435-1-ref.html
+== 392435-1.html 392435-1-ref.html
 == 393330-1.html 393330-1-ref.html
 == 393490-1.html 393490-1-ref.html
 == 393517-1.xhtml about:blank  # crash test
@@ -846,7 +846,7 @@ fails-if(winWidget&&!styloVsGecko) fails-if(cocoaWidget&&!styloVsGecko) random-i
 == 400171-2c.html 400171-2-ref.html
 == 400421-1.html 400421-1-ref.html
 == 400813-1.html 400813-1-ref.html
-fails-if(styloVsGecko||stylo) == 400826-1.html 400826-1-ref.html
+== 400826-1.html 400826-1-ref.html
 == 401946-1.xul about:blank
 == 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
@@ -1245,7 +1245,7 @@ fuzzy-if(skiaContent,1,12000) == 461512-1.html 461512-1-ref.html
 == 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
 == 468473-1.xul 468473-1-ref.xul
-fails-if(styloVsGecko) == 468546-1.xhtml 468546-1-ref.xhtml
+== 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
 == 471594-1.xhtml 471594-1-ref.html
 fuzzy(255,15) == 472020-1a.xul 472020-1-ref.xul
@@ -1383,8 +1383,8 @@ pref(dom.use_xbl_scopes_for_remote_xul,true) == 495385-2f.xhtml 495385-2-ref.htm
 == 495385-2i.html 495385-2-ref.html
 == 495385-3.html 495385-3-ref.html
 == 495385-4.html 495385-4-ref.html
-fails-if(styloVsGecko) == 495385-5.html 495385-5-ref.html
-fails-if(styloVsGecko||stylo) == 496032-1.html 496032-1-ref.html
+fails-if(styloVsGecko||stylo) == 495385-5.html 495385-5-ref.html
+== 496032-1.html 496032-1-ref.html
 == 496840-1.html 496840-1-ref.html
 fuzzy-if(skiaContent,1,17000) == 498228-1.xul 498228-1-ref.xul
 == 501037.html 501037-ref.html
@@ -1696,7 +1696,7 @@ fuzzy-if(d2d,1,256) skip-if(Android) fuzzy-if(skiaContent,1,68000) == 664127-1.x
 != 669015-1.xul 669015-1-notref.xul
 skip-if(azureSkiaGL) == 670442-1.html 670442-1-ref.html
 == 670467-1.html 670467-1-ref.html
-fails-if(styloVsGecko) == 670467-2.html 670467-2-ref.html
+fails-if(styloVsGecko||stylo) == 670467-2.html 670467-2-ref.html
 == 690164-1.html 690164-1-ref.html
 == 690643-1.html 690643-1-ref.html
 != 691087-1.html 691087-1-ref.html
