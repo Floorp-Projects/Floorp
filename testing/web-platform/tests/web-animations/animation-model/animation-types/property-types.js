@@ -903,6 +903,16 @@ const transformListType = {
                                    0,   0,   0.5, 1] }]);
     }, property + ': mismatched 3D transforms');
 
+    test(function(t) {
+      var idlName = propertyToIDL(property);
+      var target = createTestElement(t, setup);
+      var animation =
+        target.animate({ [idlName]: ['rotateY(60deg)', 'none' ] }, 1000);
+
+      testAnimationSampleMatrices(animation, idlName,
+                   // rotateY(30deg) == rotate3D(0, 1, 0, 30deg)
+        [{ time: 500, expected: rotate3dToMatrix(0, 1, 0, Math.PI / 6) }]);
+    }, property + ': rotateY');
   },
 
   testAddition: function(property, setup) {
