@@ -1980,7 +1980,7 @@ this.XPIProvider = {
         return this._resolveURIToFile(aURI);
 
       case "view-source":
-        aURI = Services.io.newURI(aURI.path);
+        aURI = Services.io.newURI(aURI.pathQueryRef);
         return this._resolveURIToFile(aURI);
 
       case "about":

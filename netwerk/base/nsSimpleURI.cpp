@@ -306,7 +306,7 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     ToLowerCase(mScheme);
 
     // This sets mPath, mQuery and mRef.
-    return SetPath(Substring(spec, colonPos + 1));
+    return SetPathQueryRef(Substring(spec, colonPos + 1));
 }
 
 NS_IMETHODIMP
@@ -437,7 +437,7 @@ nsSimpleURI::SetPort(int32_t port)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::GetPath(nsACString &result)
+nsSimpleURI::GetPathQueryRef(nsACString &result)
 {
     result = mPath;
     if (mIsQueryValid) {
@@ -451,7 +451,7 @@ nsSimpleURI::GetPath(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsSimpleURI::SetPath(const nsACString &aPath)
+nsSimpleURI::SetPathQueryRef(const nsACString &aPath)
 {
     NS_ENSURE_STATE(mMutable);
 

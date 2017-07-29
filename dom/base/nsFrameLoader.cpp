@@ -2661,7 +2661,7 @@ nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI)
   nsAutoCString buffer;
   rv = aURI->GetScheme(buffer);
   if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("about")) {
-    rv = aURI->GetPath(buffer);
+    rv = aURI->GetPathQueryRef(buffer);
     if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("srcdoc")) {
       // Duplicates allowed up to depth limits
       return NS_OK;

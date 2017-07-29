@@ -9191,7 +9191,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     }
 
     if (NS_FAILED(originURI->SetUserPass(EmptyCString())) ||
-        NS_FAILED(originURI->SetPath(EmptyCString()))) {
+        NS_FAILED(originURI->SetPathQueryRef(EmptyCString()))) {
       return;
     }
 

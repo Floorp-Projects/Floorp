@@ -103,7 +103,7 @@ NullPrincipal::Init(const OriginAttributes& aOriginAttributes, bool aIsFirstPart
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   nsAutoCString path;
-  rv = mURI->GetPath(path);
+  rv = mURI->GetPathQueryRef(path);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   OriginAttributes attrs(aOriginAttributes);
@@ -192,7 +192,7 @@ NS_IMETHODIMP
 NullPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 {
   // For a null principal, we use our unique uuid as the base domain.
-  return mURI->GetPath(aBaseDomain);
+  return mURI->GetPathQueryRef(aBaseDomain);
 }
 
 NS_IMETHODIMP
