@@ -56,7 +56,6 @@ public class HighlightsRanking {
         // ourselves: this data structure is copied into two other data structures upon completion.
         //
         // To add a weight, just add it to tmpWeights as seen below.
-        // TODO: Needs confirmation from the desktop team that this is the correct weight mapping (Bug 1336037)
         final SparseArray<Double> tmpWeights = new SparseArray<>();
         tmpWeights.put(FEATURE_VISITS_COUNT, -0.1);
         tmpWeights.put(FEATURE_DESCRIPTION_LENGTH, -0.1);
