@@ -2751,7 +2751,10 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
     }
   }
 
-  nsresult rv = DoTransaction(&aSelection, transaction);
+  // We don't support undo here, so we don't really need all of the transaction
+  // machinery, therefore we can run our transaction directly, breaking all of
+  // the rules!
+  nsresult rv = transaction->DoTransaction();
 
   // Let listeners know what happened
   {
