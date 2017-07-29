@@ -87,7 +87,7 @@ private:
   wr::ImageKey GenerateImageKey()
   {
     wr::ImageKey key;
-    key.mNamespace = GetNamespace();
+    key.mNamespace.mHandle = GetNamespace();
     key.mHandle = GetNextResourceId();
     return key;
   }

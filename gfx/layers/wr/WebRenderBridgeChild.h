@@ -98,7 +98,7 @@ public:
 
   wr::WrImageKey GetNextImageKey()
   {
-    return wr::WrImageKey{ GetNamespace(), GetNextResourceId() };
+    return wr::WrImageKey{ wr::WrIdNamespace { GetNamespace() }, GetNextResourceId() };
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,

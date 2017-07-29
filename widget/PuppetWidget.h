@@ -315,10 +315,6 @@ public:
                       uint32_t aIndexOfKeypress,
                       void* aData) override;
 
-protected:
-  virtual nsresult NotifyIMEInternal(
-                     const IMENotification& aIMENotification) override;
-
 private:
   nsresult Paint();
 

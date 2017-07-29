@@ -53,13 +53,38 @@ add_task(async function test_refreshState_signedin() {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" })
+    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "foo@bar.com" })
   }
 
   let state = await UIState.refresh();
 
   equal(state.status, UIState.STATUS_SIGNED_IN);
   equal(state.email, "foo@bar.com");
+  equal(state.displayName, "Foo Bar");
+  equal(state.avatarURL, "https://foo/bar");
+  equal(state.lastSync, now);
+  equal(state.syncing, false);
+
+  UIStateInternal.fxAccounts = fxAccountsOrig;
+});
+
+add_task(async function test_refreshState_preferProfileEmail() {
+  UIState.reset();
+  const fxAccountsOrig = UIStateInternal.fxAccounts;
+
+  const now = new Date().toString();
+  Services.prefs.setCharPref("services.sync.lastSync", now);
+  UIStateInternal.syncing = false;
+
+  UIStateInternal.fxAccounts = {
+    getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
+    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "bar@foo.com" })
+  }
+
+  let state = await UIState.refresh();
+
+  equal(state.status, UIState.STATUS_SIGNED_IN);
+  equal(state.email, "bar@foo.com");
   equal(state.displayName, "Foo Bar");
   equal(state.avatarURL, "https://foo/bar");
   equal(state.lastSync, now);

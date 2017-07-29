@@ -941,7 +941,7 @@ pub extern "C" fn wr_dp_push_stacking_context(state: &mut WrState,
     let c_filters = make_slice(filters, filter_count);
     let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
         match c_filter.filter_type {
-            WrFilterOpType::Blur => FilterOp::Blur(Au::from_f32_px(c_filter.argument)),
+            WrFilterOpType::Blur => FilterOp::Blur(c_filter.argument),
             WrFilterOpType::Brightness => FilterOp::Brightness(c_filter.argument),
             WrFilterOpType::Contrast => FilterOp::Contrast(c_filter.argument),
             WrFilterOpType::Grayscale => FilterOp::Grayscale(c_filter.argument),
@@ -1033,7 +1033,9 @@ pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
         let content_rect: LayoutRect = content_rect.into();
         let clip_rect: LayoutRect = clip_rect.into();
 
-        state.frame_builder.dl_builder.define_scroll_frame(Some(clip_id), content_rect, clip_rect, vec![], None);
+        state.frame_builder.dl_builder.define_scroll_frame(
+            Some(clip_id), content_rect, clip_rect, vec![], None,
+            ScrollSensitivity::Script);
         state.frame_builder.scroll_clips_defined.insert(clip_id);
     }
     state.frame_builder.dl_builder.push_clip_id(clip_id);

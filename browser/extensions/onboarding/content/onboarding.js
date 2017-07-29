@@ -48,7 +48,7 @@ var onboardingTourset = {
     getNotificationStrings(bundle) {
       return {
         title: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.title"),
-        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.message"),
+        message: bundle.GetStringFromName("onboarding.notification.onboarding-tour-private-browsing.message2"),
         button: bundle.GetStringFromName("onboarding.button.learnMore"),
       };
     },
@@ -57,7 +57,7 @@ var onboardingTourset = {
       div.innerHTML = `
         <section class="onboarding-tour-description">
           <h1 data-l10n-id="onboarding.tour-private-browsing.title2"></h1>
-          <p data-l10n-id="onboarding.tour-private-browsing.description2"></p>
+          <p data-l10n-id="onboarding.tour-private-browsing.description3"></p>
         </section>
         <section class="onboarding-tour-content">
           <img src="resource://onboarding/img/figure_private.svg" role="presentation"/>
@@ -683,8 +683,6 @@ class Onboarding {
     // Show the target tour notification
     this._notificationBar = this._renderNotificationBar();
     this._notificationBar.addEventListener("click", this);
-    this._window.document.body.appendChild(this._notificationBar);
-
     this._notificationBar.dataset.targetTourId = targetTour.id;
     let notificationStrings = targetTour.getNotificationStrings(this._bundle);
     let actionBtn = this._notificationBar.querySelector("#onboarding-notification-action-btn");
@@ -694,6 +692,7 @@ class Onboarding {
     let tourMessage = this._notificationBar.querySelector("#onboarding-notification-tour-message");
     tourMessage.textContent = notificationStrings.message;
     this._notificationBar.classList.add("onboarding-opened");
+    this._window.document.body.appendChild(this._notificationBar);
 
     let params = [];
     if (startQueueLength != queue.length) {
@@ -748,6 +747,10 @@ class Onboarding {
                                  "onboarding.notification-icon-tooltip-updated",
       [BRAND_SHORT_NAME], 1);
     div.querySelector("#onboarding-notification-icon").setAttribute("data-tooltip", toolTip);
+
+    let closeBtn = div.querySelector("#onboarding-notification-close-btn");
+    closeBtn.setAttribute("title",
+      this._bundle.GetStringFromName("onboarding.notification-close-button-tooltip"));
     return div;
   }
 
@@ -784,9 +787,12 @@ class Onboarding {
     `;
 
     div.querySelector("label[for='onboarding-tour-hidden-checkbox']").textContent =
-       this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
+      this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
     div.querySelector("#onboarding-header").textContent =
-       this._bundle.GetStringFromName("onboarding.overlay-title2");
+      this._bundle.GetStringFromName("onboarding.overlay-title2");
+    let closeBtn = div.querySelector("#onboarding-overlay-close-btn");
+    closeBtn.setAttribute("title",
+      this._bundle.GetStringFromName("onboarding.overlay-close-button-tooltip"));
     return div;
   }
 
@@ -882,6 +888,12 @@ if (Services.prefs.getBoolPref("browser.onboarding.enabled", false) &&
     let window = evt.target.defaultView;
     let location = window.location.href;
     if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
+      // We just want to run tests as quick as possible
+      // so in the automation test, we don't do `requestIdleCallback`.
+      if (Cu.isInAutomation) {
+        new Onboarding(window);
+        return;
+      }
       window.requestIdleCallback(() => {
         new Onboarding(window);
       });

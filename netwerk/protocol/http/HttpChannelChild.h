@@ -164,6 +164,8 @@ protected:
 
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
   MOZ_MUST_USE bool
   GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
