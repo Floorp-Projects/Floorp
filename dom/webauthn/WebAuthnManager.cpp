@@ -239,14 +239,25 @@ WebAuthnManager::~WebAuthnManager()
   MaybeClearTransaction();
 }
 
-already_AddRefed<MozPromise<nsresult, nsresult, false>>
+RefPtr<WebAuthnManager::BackgroundActorPromise>
 WebAuthnManager::GetOrCreateBackgroundActor()
 {
-  bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-  if (NS_WARN_IF(!ok)) {
-    ActorFailed();
+  MOZ_ASSERT(NS_IsMainThread());
+
+  PBackgroundChild *actor = BackgroundChild::GetForCurrentThread();
+  RefPtr<WebAuthnManager::BackgroundActorPromise> promise =
+    mPBackgroundCreationPromise.Ensure(__func__);
+
+  if (actor) {
+    ActorCreated(actor);
+  } else {
+    bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
+    if (NS_WARN_IF(!ok)) {
+      ActorFailed();
+    }
   }
-  return mPBackgroundCreationPromise.Ensure(__func__);
+
+  return promise;
 }
 
 //static
@@ -875,7 +886,12 @@ WebAuthnManager::Cancel(const nsresult& aError)
 void
 WebAuthnManager::ActorCreated(PBackgroundChild* aActor)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
+
+  if (mChild) {
+    return;
+  }
 
   RefPtr<WebAuthnTransactionChild> mgr(new WebAuthnTransactionChild());
   PWebAuthnTransactionChild* constructedMgr =

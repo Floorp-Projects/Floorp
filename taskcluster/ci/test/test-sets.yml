@@ -24,6 +24,7 @@ common-tests:
     - jittest
     - jsreftest
     - marionette
+    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -63,9 +64,6 @@ talos:
 
 awsy:
     - awsy
-
-headless:
-    - marionette-headless
 
 ##
 # Limited test sets for specific platforms
@@ -114,6 +112,7 @@ windows-tests:
     - jittest
     - jsreftest
     - marionette
+    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome
@@ -156,6 +155,7 @@ macosx64-tests:
     - jittest
     - jsreftest
     - marionette
+    - marionette-headless
     - mochitest
     - mochitest-a11y
     - mochitest-browser-chrome

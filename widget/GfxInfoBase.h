@@ -62,6 +62,7 @@ public:
   NS_IMETHOD GetContentBackend(nsAString & aContentBackend) override;
   NS_IMETHOD GetUsingGPUProcess(bool *aOutValue) override;
   NS_IMETHOD GetWebRenderEnabled(bool* aWebRenderEnabled) override;
+  NS_IMETHOD GetIsHeadless(bool* aIsHeadless) override;
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.

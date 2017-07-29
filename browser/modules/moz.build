@@ -112,6 +112,9 @@ with Files("WindowsPreviewPerTab.jsm"):
 with Files("offlineAppCache.jsm"):
     BUG_COMPONENT = ("Firefox", "Preferences")
 
+with Files("UpdateTopLevelContentWindowIDHelper.jsm"):
+    BUG_COMPONENT = ("Core", "Networking")
+
 with Files("webrtcUI.jsm"):
     BUG_COMPONENT = ("Firefox", "Device Permissions")
 
@@ -157,6 +160,7 @@ EXTRA_JS_MODULES += [
     'Social.jsm',
     'SocialService.jsm',
     'TransientPrefs.jsm',
+    'UpdateTopLevelContentWindowIDHelper.jsm',
     'webrtcUI.jsm',
     'ZoomUI.jsm',
 ]

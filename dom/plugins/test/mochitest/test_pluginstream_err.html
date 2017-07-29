@@ -88,11 +88,14 @@ var tests = [
 ];
 
 function iframeonload(evt) {
-  var contentLength = evt.target.contentDocument.body.innerHTML.length;
+  // We have to use SpecialPowers because nptest.cpp prepends
+  // data: whichs makes the frame cross origin with the including page.
+  var wrappedDoc = SpecialPowers.wrap(evt.target).contentDocument;
+  var contentLength = wrappedDoc.body.innerHTML.length;
   var plugin = gTestWindow.document.getElementById("embedtest");
   var functionToFail = plugin.getAttribute("functiontofail");
   if (contentLength > 0) {
-    is(evt.target.contentDocument.body.innerHTML, "pass",
+    is(wrappedDoc.body.innerHTML, "pass",
       "test frame has unexpected content");
     setTimeout(function() {
       // This verifies that the plugin hasn't been unloaded, and that

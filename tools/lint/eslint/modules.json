@@ -219,6 +219,7 @@
   "Translation.jsm": ["Translation", "TranslationTelemetry"],
   "Traversal.jsm": ["TraversalRules", "TraversalHelper"],
   "UpdateTelemetry.jsm": ["AUSTLMY"],
+  "UpdateTopLevelContentWindowIDHelper.jsm": ["trackBrowserWindow"],
   "util.js": ["getChromeWindow", "Utils", "Svc"],
   "utils.js": ["applicationName", "assert", "Copy", "getBrowserObject", "getChromeWindow", "getWindows", "getWindowByTitle", "getWindowByType", "getWindowId", "getMethodInWindows", "getPreference", "saveDataURL", "setPreference", "sleep", "startTimer", "stopTimer", "takeScreenshot", "unwrapNode", "waitFor", "btoa", "encryptPayload", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "Promise", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils", "promiseZeroTimer", "promiseNamedTimer"],
   "Utils.jsm": ["Utils", "Logger", "PivotContext", "PrefCache"],

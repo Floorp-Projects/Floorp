@@ -242,8 +242,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(const uint64_t& rcid) override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWindowId) override;
-
   /* WebExtensions */
   virtual mozilla::ipc::IPCResult
     RecvGetExtensionStream(const URIParams& aURI,
