@@ -639,13 +639,6 @@ void wr_api_add_external_image(RenderApi *aApi,
 WR_FUNC;
 
 WR_INLINE
-void wr_api_add_external_image_buffer(RenderApi *aApi,
-                                      WrImageKey aImageKey,
-                                      const WrImageDescriptor *aDescriptor,
-                                      WrExternalImageId aExternalImageId)
-WR_FUNC;
-
-WR_INLINE
 void wr_api_add_image(RenderApi *aApi,
                       WrImageKey aImageKey,
                       const WrImageDescriptor *aDescriptor,
@@ -730,6 +723,22 @@ WR_INLINE
 void wr_api_set_window_parameters(RenderApi *aApi,
                                   int32_t aWidth,
                                   int32_t aHeight)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_update_blob_image(RenderApi *aApi,
+                              WrImageKey aImageKey,
+                              const WrImageDescriptor *aDescriptor,
+                              ByteSlice aBytes)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_update_external_image(RenderApi *aApi,
+                                  WrImageKey aKey,
+                                  const WrImageDescriptor *aDescriptor,
+                                  WrExternalImageId aExternalImageId,
+                                  WrExternalImageBufferType aImageType,
+                                  uint8_t aChannelIndex)
 WR_FUNC;
 
 WR_INLINE

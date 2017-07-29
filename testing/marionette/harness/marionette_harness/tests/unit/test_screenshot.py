@@ -174,7 +174,8 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
+    # @skip_if_mobile("Fennec doesn't support other chrome windows")
+    @skip("Bug 1329424 - AssertionError: u'iVBORw0KGgoA... (images unexpectedly equal)")
     def test_capture_flags(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)

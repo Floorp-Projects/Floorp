@@ -501,6 +501,9 @@ nsWebShellWindow::WindowDeactivated()
 #ifdef USE_NATIVE_MENUS
 static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 {
+  if (gfxPlatform::IsHeadless()) {
+    return;
+  }
   nsCOMPtr<nsINativeMenuService> nms = do_GetService("@mozilla.org/widget/nativemenuservice;1");
   if (!nms) {
     return;

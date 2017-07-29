@@ -17,10 +17,11 @@ const { FILTER_SEARCH_DELAY } = require("../constants");
 const {
   getDisplayedRequestsSummary,
   getRequestFilterTypes,
+  getTypeFilteredRequests,
   isNetworkDetailsToggleButtonDisabled,
 } = require("../selectors/index");
 
-const { autocompleteProvider } = require("../utils/filter-text-utils");
+const { autocompleteProvider } = require("../utils/filter-autocomplete-provider");
 const { L10N } = require("../utils/l10n");
 
 // Components
@@ -54,6 +55,7 @@ const Toolbar = createClass({
     toggleBrowserCache: PropTypes.func.isRequired,
     browserCacheDisabled: PropTypes.bool.isRequired,
     toggleRequestFilterType: PropTypes.func.isRequired,
+    filteredRequests: PropTypes.object.isRequired,
   },
 
   toggleRequestFilterType(evt) {
@@ -73,6 +75,7 @@ const Toolbar = createClass({
       toggleNetworkDetails,
       toggleBrowserCache,
       browserCacheDisabled,
+      filteredRequests,
     } = this.props;
 
     let toggleButtonClassName = [
@@ -132,7 +135,8 @@ const Toolbar = createClass({
             placeholder: SEARCH_PLACE_HOLDER,
             type: "filter",
             onChange: setRequestFilterText,
-            autocompleteProvider,
+            autocompleteProvider: filter =>
+              autocompleteProvider(filter, filteredRequests),
           }),
           button({
             className: toggleButtonClassName.join(" "),
@@ -168,6 +172,7 @@ module.exports = connect(
     networkDetailsOpen: state.ui.networkDetailsOpen,
     browserCacheDisabled: state.ui.browserCacheDisabled,
     requestFilterTypes: getRequestFilterTypes(state),
+    filteredRequests: getTypeFilteredRequests(state),
     summary: getDisplayedRequestsSummary(state),
   }),
   (dispatch) => ({

@@ -617,7 +617,8 @@ imgRequest::UpdateCacheEntrySize()
   }
 
   RefPtr<Image> image = GetImage();
-  size_t size = image->SizeOfSourceWithComputedFallback(moz_malloc_size_of);
+  SizeOfState state(moz_malloc_size_of);
+  size_t size = image->SizeOfSourceWithComputedFallback(state);
   mCacheEntry->SetDataSize(size);
 }
 

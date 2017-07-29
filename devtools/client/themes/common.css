@@ -83,6 +83,9 @@ html|button, html|select {
   border-radius: 4px;
   padding: 1px 0;
   cursor: default;
+  text-overflow: ellipsis;
+  white-space: pre;
+  overflow: hidden;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .initial-value,

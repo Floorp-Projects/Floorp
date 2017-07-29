@@ -19,15 +19,6 @@ interface nsICacheInfoChannel : nsISupports
   readonly attribute int32_t cacheTokenFetchCount;
 
   /**
-   * Get the last time the cache entry was opened from cache token. This
-   * attribute is equivalent to nsICachingChannel.cacheToken.lastFetched.
-   *
-   * @throws NS_ERROR_NOT_AVAILABLE if the cache entry or the alternate data
-   *         cache entry cannot be read.
-   */
-  readonly attribute uint32_t cacheTokenLastFetched;
-
-  /**
    * Get expiration time from cache token. This attribute is equivalent to
    * nsICachingChannel.cacheToken.expirationTime.
    */

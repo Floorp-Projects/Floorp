@@ -94,9 +94,7 @@ private:
 
 struct ImageMemoryCounter
 {
-  ImageMemoryCounter(Image* aImage,
-                     MallocSizeOf aMallocSizeOf,
-                     bool aIsUsed);
+  ImageMemoryCounter(Image* aImage, SizeOfState& aState, bool aIsUsed);
 
   nsCString& URI() { return mURI; }
   const nsCString& URI() const { return mURI; }
@@ -167,7 +165,7 @@ public:
    * ensure that something reasonable is always returned.
    */
   virtual size_t
-    SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const = 0;
+    SizeOfSourceWithComputedFallback(SizeOfState& aState) const = 0;
 
   /**
    * Collect an accounting of the memory occupied by the image's surfaces (which

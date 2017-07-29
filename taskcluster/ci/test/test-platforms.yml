@@ -40,7 +40,6 @@ linux64/debug:
     test-sets:
         - common-tests
         - web-platform-tests
-        - headless
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
@@ -50,7 +49,6 @@ linux64/opt:
         - desktop-screenshot-capture
         - talos
         - awsy
-        - headless
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
     test-sets:
@@ -58,7 +56,6 @@ linux64-nightly/opt:
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
-        - headless
 linux64-devedition/opt:
     build-platform: linux64-devedition-nightly/opt
     test-sets:
@@ -66,7 +63,6 @@ linux64-devedition/opt:
         - web-platform-tests
         - opt-only-tests
         - desktop-screenshot-capture
-        - headless
 
 # TODO: use 'pgo' and 'asan' labels here, instead of -pgo/opt
 linux64-pgo/opt:
@@ -75,13 +71,11 @@ linux64-pgo/opt:
         - common-tests
         - web-platform-tests
         - talos
-        - headless
 
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - common-tests
-        - headless
 
 # Stylo builds only run a subset of tests for the moment. So give them
 # their own test set.
@@ -157,7 +151,6 @@ linux64-ccov/opt:
         - web-platform-tests
         - awsy
         - talos
-        - headless
 linux64-jsdcov/opt:
     build-platform: linux64-jsdcov/opt
     test-sets:
@@ -170,14 +163,12 @@ linux64-jsdcov/opt:
 windows7-32/debug:
     build-platform: win32/debug
     test-sets:
-        - headless
         - windows-tests
 windows7-32/opt:
     build-platform: win32/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-talos
         - windows-tests
 
@@ -186,7 +177,6 @@ windows7-32-pgo/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-tests
         - windows-talos
 
@@ -195,7 +185,6 @@ windows7-32-nightly/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-tests
 
 windows7-32-devedition/opt:
@@ -203,14 +192,12 @@ windows7-32-devedition/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-tests
 
 # win64
 windows10-64/debug:
     build-platform: win64/debug
     test-sets:
-        - headless
         - windows-tests
 
 windows10-64/opt:
@@ -218,7 +205,6 @@ windows10-64/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-talos
         - windows-tests
 
@@ -227,7 +213,6 @@ windows10-64-pgo/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-talos
         - windows-tests
 
@@ -236,7 +221,6 @@ windows10-64-nightly/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-tests
 
 windows10-64-devedition/opt:
@@ -244,7 +228,6 @@ windows10-64-devedition/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        - headless
         - windows-tests
 
 windows10-64-asan/opt:

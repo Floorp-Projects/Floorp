@@ -16,9 +16,9 @@
             "choices": [{
               "type": "string",
               "enum": [
-                "bitcoin", "geo", "im", "irc", "ircs", "magnet", "mailto",
-                "mms", "news", "nntp", "sip", "sms", "smsto", "ssh", "tel",
-                "urn", "webcal", "wtai", "xmpp"
+                "bitcoin", "geo", "gopher", "im", "irc", "ircs", "magnet",
+                "mailto", "mms", "news", "nntp", "sip", "sms", "smsto", "ssh",
+                "tel", "urn", "webcal", "wtai", "xmpp"
               ]
             }, {
               "type": "string",

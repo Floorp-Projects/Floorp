@@ -28,15 +28,15 @@ class CompositorVsyncScheduler;
 class WebRenderImageHost;
 class WebRenderTextureHost;
 
-class WebRenderCompositableHolder final
+class AsyncImagePipelineManager final
 {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderCompositableHolder)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncImagePipelineManager)
 
-  explicit WebRenderCompositableHolder(uint32_t aIdNamespace);
+  explicit AsyncImagePipelineManager(uint32_t aIdNamespace);
 
 protected:
-  ~WebRenderCompositableHolder();
+  ~AsyncImagePipelineManager();
 
 public:
   void Destroy(wr::WebRenderAPI* aApi);
@@ -84,14 +84,14 @@ private:
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
   uint32_t GetNamespace() { return mIdNamespace; }
-  wr::ImageKey GetImageKey()
+  wr::ImageKey GenerateImageKey()
   {
     wr::ImageKey key;
     key.mNamespace.mHandle = GetNamespace();
     key.mHandle = GetNextResourceId();
     return key;
   }
-  bool GetImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
+  bool GenerateImageKeyForTextureHost(wr::WebRenderAPI* aApi, TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
@@ -108,8 +108,8 @@ private:
     Maybe<wr::Epoch> mDestroyedEpoch;
   };
 
-  struct AsyncImagePipelineHolder {
-    AsyncImagePipelineHolder();
+  struct AsyncImagePipeline {
+    AsyncImagePipeline();
 
     bool mInitialised;
     bool mIsChanged;
@@ -126,7 +126,7 @@ private:
 
   bool UpdateImageKeys(wr::WebRenderAPI* aApi,
                        bool& aUseExternalImage,
-                       AsyncImagePipelineHolder* aHolder,
+                       AsyncImagePipeline* aImageMgr,
                        nsTArray<wr::ImageKey>& aKeys,
                        nsTArray<wr::ImageKey>& aKeysToDelete);
 
@@ -134,7 +134,7 @@ private:
   uint32_t mResourceId;
 
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
-  nsClassHashtable<nsUint64HashKey, AsyncImagePipelineHolder> mAsyncImagePipelineHolders;
+  nsClassHashtable<nsUint64HashKey, AsyncImagePipeline> mAsyncImagePipelines;
   uint32_t mAsyncImageEpoch;
   nsTArray<wr::ImageKey> mKeysToDelete;
   bool mDestroyed;

@@ -18,6 +18,8 @@ config = {
                 '%s' % (os.environ.get('path')),
         'TOOLTOOL_CACHE': 'c:/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
+        'EN_US_PACKAGE_NAME': 'target.zip',
+        'EN_US_PKG_INST_BASENAME': 'target.installer',
     },
     "ssh_key_dir": "~/.ssh",
     "log_name": "single_locale",

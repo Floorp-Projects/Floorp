@@ -114,7 +114,7 @@ public:
   virtual bool HasDeferredDNSPrefetchRequest() { return true; }
 
   virtual size_t
-    SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+    SizeOfExcludingThis(mozilla::SizeOfState& aState) const;
 
   virtual bool ElementHasHref() const;
 
