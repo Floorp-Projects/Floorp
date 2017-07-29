@@ -429,6 +429,7 @@ public class ToolbarEditText extends CustomEditText
 
         if (isPrivateMode()) {
             outAttrs.inputType |= InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS;
+            outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
         }
 
         return new InputConnectionWrapper(ic, false) {
