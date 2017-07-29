@@ -77,12 +77,12 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
 {
   MOZ_ASSERT(aListID == kPrincipalList, "Principal child list is the only "
              "list that nsFirstLetterFrame should set via this function");
-  RestyleManager* restyleManager = PresContext()->RestyleManager();
-
-  for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
-    NS_ASSERTION(e.get()->GetParent() == this, "Unexpected parent");
-    restyleManager->ReparentStyleContext(e.get());
-    nsLayoutUtils::MarkDescendantsDirty(e.get());
+  for (nsIFrame* f : aChildList) {
+    MOZ_ASSERT(f->GetParent() == this, "Unexpected parent");
+    MOZ_ASSERT(f->IsTextFrame(), "We should not have kids that are containers!");
+    MOZ_ASSERT_IF(f->StyleContext()->IsGecko(),
+                  f->StyleContext()->AsGecko()->GetParent() == StyleContext());
+    nsLayoutUtils::MarkDescendantsDirty(f); // Drops cached textruns
   }
 
   mFrames.SetFrames(aChildList);
