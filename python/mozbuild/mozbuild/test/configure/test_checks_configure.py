@@ -483,7 +483,7 @@ class TestChecksConfigure(unittest.TestCase):
 
         def mock_valid_javac(_, args):
             if len(args) == 1 and args[0] == '-version':
-                return 0, '1.7', ''
+                return 0, '1.8', ''
             self.fail("Unexpected arguments to mock_valid_javac: %s" % args)
 
         # A valid set of tools in a standard location.
@@ -520,7 +520,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for jarsigner... %s
              checking for keytool... %s
              checking for javac... %s
-             checking for javac version... 1.7
+             checking for javac version... 1.8
         ''' % (java, javah, jar, jarsigner, keytool, javac)))
 
         # An alternative valid set of tools referred to by JAVA_HOME.
@@ -563,7 +563,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for jarsigner... %s
              checking for keytool... %s
              checking for javac... %s
-             checking for javac version... 1.7
+             checking for javac version... 1.8
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
                alt_keytool, alt_javac)))
 
@@ -592,7 +592,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for jarsigner... %s
              checking for keytool... %s
              checking for javac... %s
-             checking for javac version... 1.7
+             checking for javac version... 1.8
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
                alt_keytool, alt_javac)))
 
@@ -622,7 +622,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for jarsigner... %s
              checking for keytool... %s
              checking for javac... %s
-             checking for javac version... 1.7
+             checking for javac version... 1.8
         ''' % (alt_java, alt_javah, alt_jar, alt_jarsigner,
                alt_keytool, alt_javac)))
 
@@ -655,7 +655,7 @@ class TestChecksConfigure(unittest.TestCase):
              checking for keytool... %s
              checking for javac... %s
              checking for javac version... 
-             ERROR: javac 1.7 or higher is required (found 1.6.9)
+             ERROR: javac 1.8 or higher is required (found 1.6.9)
         ''' % (java, javah, jar, jarsigner, keytool, javac)))
 
         # Any missing tool is fatal when these checks run.
