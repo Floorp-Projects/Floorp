@@ -116,8 +116,8 @@ add_task(async function testExperiments() {
 add_task(async function isFirstRun() {
   let environment = ClientEnvironment.getEnvironment();
 
-  // isFirstRun is initially set to true.
-  ok(environment.isFirstRun, "isFirstRun has a default value");
+  // isFirstRun is set to false after the recipe client runs
+  ok(!environment.isFirstRun, "isFirstRun has a default value");
 
   // isFirstRun is read from a preference
   await SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.first_run", true]]});
