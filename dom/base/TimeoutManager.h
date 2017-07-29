@@ -148,7 +148,7 @@ private:
   void UpdateBudget(const TimeStamp& aNow,
                     const TimeDuration& aDuration = TimeDuration());
 
-  bool BudgetThrottlingEnabled() const;
+  bool BudgetThrottlingEnabled(bool aIsBackground) const;
 
 private:
   struct Timeouts {

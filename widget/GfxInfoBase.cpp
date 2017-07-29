@@ -1473,6 +1473,13 @@ GfxInfoBase::GetWebRenderEnabled(bool* aWebRenderEnabled)
 }
 
 NS_IMETHODIMP
+GfxInfoBase::GetIsHeadless(bool* aIsHeadless)
+{
+  *aIsHeadless = gfxPlatform::IsHeadless();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 GfxInfoBase::GetContentBackend(nsAString & aContentBackend)
 {
   BackendType backend = gfxPlatform::GetPlatform()->GetDefaultContentBackend();

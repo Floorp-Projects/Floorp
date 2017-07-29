@@ -128,8 +128,6 @@ parent:
 
   async PStunAddrsRequest();
 
-  prio(high) async NotifyCurrentTopLevelOuterContentWindowId(uint64_t windowId);
-
   /**
    * WebExtension-specific remote resource loading
    */

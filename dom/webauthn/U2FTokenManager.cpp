@@ -158,17 +158,6 @@ U2FTokenManager::Get()
 }
 
 void
-U2FTokenManager::MaybeAbortTransaction(uint64_t aTransactionId,
-                                       const nsresult& aError)
-{
-  if (mTransactionId != aTransactionId) {
-    return;
-  }
-
-  AbortTransaction(aError);
-}
-
-void
 U2FTokenManager::AbortTransaction(const nsresult& aError)
 {
   Unused << mTransactionParent->SendCancel(aError);
@@ -191,16 +180,18 @@ U2FTokenManager::ClearTransaction()
   mTransactionParent = nullptr;
   // Drop managers at the end of all transactions
   mTokenManagerImpl = nullptr;
-  // Drop promises.
-  mRegisterPromise = nullptr;
-  mSignPromise = nullptr;
-  // Increase in case we're called by the WebAuthnTransactionParent.
+  // Forget promises, if necessary.
+  mRegisterPromise.DisconnectIfExists();
+  mSignPromise.DisconnectIfExists();
+  // Bump transaction id.
   mTransactionId++;
 }
 
 RefPtr<U2FTokenTransport>
 U2FTokenManager::GetTokenManagerImpl()
 {
+  MOZ_ASSERT(U2FPrefManager::Get());
+
   if (mTokenManagerImpl) {
     return mTokenManagerImpl;
   }
@@ -231,9 +222,8 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
                           const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthRegister"));
-  MOZ_ASSERT(U2FPrefManager::Get());
 
-  uint64_t tid = ++mTransactionId;
+  ClearTransaction();
   mTransactionParent = aTransactionParent;
   mTokenManagerImpl = GetTokenManagerImpl();
 
@@ -252,12 +242,12 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  mRegisterPromise = mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
-                                                 aTransactionInfo.RpIdHash(),
-                                                 aTransactionInfo.ClientDataHash(),
-                                                 aTransactionInfo.TimeoutMS());
-
-  mRegisterPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+  uint64_t tid = mTransactionId;
+  mTokenManagerImpl->Register(aTransactionInfo.Descriptors(),
+                              aTransactionInfo.RpIdHash(),
+                              aTransactionInfo.ClientDataHash(),
+                              aTransactionInfo.TimeoutMS())
+                   ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                          [tid](U2FRegisterResult&& aResult) {
                            U2FTokenManager* mgr = U2FTokenManager::Get();
                            mgr->MaybeConfirmRegister(tid, aResult);
@@ -265,8 +255,9 @@ U2FTokenManager::Register(WebAuthnTransactionParent* aTransactionParent,
                          [tid](nsresult rv) {
                            MOZ_ASSERT(NS_FAILED(rv));
                            U2FTokenManager* mgr = U2FTokenManager::Get();
-                           mgr->MaybeAbortTransaction(tid, rv);
-                         });
+                           mgr->MaybeAbortRegister(tid, rv);
+                         })
+                   ->Track(mRegisterPromise);
 }
 
 void
@@ -277,6 +268,8 @@ U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
     return;
   }
 
+  mRegisterPromise.Complete();
+
   nsTArray<uint8_t> registration;
   aResult.ConsumeRegistration(registration);
 
@@ -285,13 +278,24 @@ U2FTokenManager::MaybeConfirmRegister(uint64_t aTransactionId,
 }
 
 void
+U2FTokenManager::MaybeAbortRegister(uint64_t aTransactionId,
+                                    const nsresult& aError)
+{
+  if (mTransactionId != aTransactionId) {
+    return;
+  }
+
+  mRegisterPromise.Complete();
+  AbortTransaction(aError);
+}
+
+void
 U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
                       const WebAuthnTransactionInfo& aTransactionInfo)
 {
   MOZ_LOG(gU2FTokenManagerLog, LogLevel::Debug, ("U2FAuthSign"));
-  MOZ_ASSERT(U2FPrefManager::Get());
 
-  uint64_t tid = ++mTransactionId;
+  ClearTransaction();
   mTransactionParent = aTransactionParent;
   mTokenManagerImpl = GetTokenManagerImpl();
 
@@ -306,12 +310,12 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
     return;
   }
 
-  mSignPromise = mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
-                                         aTransactionInfo.RpIdHash(),
-                                         aTransactionInfo.ClientDataHash(),
-                                         aTransactionInfo.TimeoutMS());
-
-  mSignPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+  uint64_t tid = mTransactionId;
+  mTokenManagerImpl->Sign(aTransactionInfo.Descriptors(),
+                          aTransactionInfo.RpIdHash(),
+                          aTransactionInfo.ClientDataHash(),
+                          aTransactionInfo.TimeoutMS())
+                   ->Then(GetCurrentThreadSerialEventTarget(), __func__,
                      [tid](U2FSignResult&& aResult) {
                        U2FTokenManager* mgr = U2FTokenManager::Get();
                        mgr->MaybeConfirmSign(tid, aResult);
@@ -319,8 +323,9 @@ U2FTokenManager::Sign(WebAuthnTransactionParent* aTransactionParent,
                      [tid](nsresult rv) {
                        MOZ_ASSERT(NS_FAILED(rv));
                        U2FTokenManager* mgr = U2FTokenManager::Get();
-                       mgr->MaybeAbortTransaction(tid, rv);
-                     });
+                       mgr->MaybeAbortSign(tid, rv);
+                     })
+                   ->Track(mSignPromise);
 }
 
 void
@@ -330,6 +335,8 @@ U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
   if (mTransactionId != aTransactionId) {
     return;
   }
+
+  mSignPromise.Complete();
 
   nsTArray<uint8_t> keyHandle;
   aResult.ConsumeKeyHandle(keyHandle);
@@ -341,12 +348,25 @@ U2FTokenManager::MaybeConfirmSign(uint64_t aTransactionId,
 }
 
 void
+U2FTokenManager::MaybeAbortSign(uint64_t aTransactionId, const nsresult& aError)
+{
+  if (mTransactionId != aTransactionId) {
+    return;
+  }
+
+  mSignPromise.Complete();
+  AbortTransaction(aError);
+}
+
+void
 U2FTokenManager::Cancel(WebAuthnTransactionParent* aParent)
 {
-  if (mTransactionParent == aParent) {
-    mTokenManagerImpl->Cancel();
-    ClearTransaction();
+  if (mTransactionParent != aParent) {
+    return;
   }
+
+  mTokenManagerImpl->Cancel();
+  ClearTransaction();
 }
 
 }

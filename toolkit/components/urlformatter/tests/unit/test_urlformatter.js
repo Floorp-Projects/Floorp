@@ -57,4 +57,12 @@ function run_test() {
   do_check_eq(formatter.formatURL(encodedUrl), encodedUrlRef);
 
   do_check_eq(formatter.formatURL(advancedUrl), advancedUrlRef);
+
+  for (let val of ["MOZILLA_API_KEY", "GOOGLE_API_KEY", "BING_API_CLIENTID", "BING_API_KEY"]) {
+    let url = "http://test.mozilla.com/?val=%" + val + "%";
+    do_check_neq(formatter.formatURL(url), url);
+  }
+
+  let url = "http://test.mozilla.com/%GOOGLE_API_KEY%/?val=%GOOGLE_API_KEY%";
+  do_check_eq(formatter.trimSensitiveURLs(formatter.formatURL(url)), "http://test.mozilla.com/[trimmed-google-api-key]/?val=[trimmed-google-api-key]");
 }

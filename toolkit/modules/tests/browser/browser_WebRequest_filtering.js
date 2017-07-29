@@ -110,3 +110,11 @@ function waitForLoad(browser = gBrowser.selectedBrowser) {
     }, {capture: true, once: true});
   });
 }
+
+// Disable rcwn to make cache behavior deterministic.
+let rcwnEnabled = Preferences.get("network.http.rcwn.enabled");
+Preferences.set("network.http.rcwn.enabled", false);
+
+registerCleanupFunction(() => {
+  Preferences.set("network.http.rcwn.enabled", rcwnEnabled);
+});

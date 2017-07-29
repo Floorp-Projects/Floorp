@@ -67,6 +67,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/SizeOfState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "nsNodeUtils.h"
@@ -4137,3 +4138,14 @@ Element::SetCustomElementData(CustomElementData* aData)
   MOZ_ASSERT(!slots->mCustomElementData, "Custom element data may not be changed once set.");
   slots->mCustomElementData = aData;
 }
+
+size_t
+Element::SizeOfExcludingThis(SizeOfState& aState) const
+{
+  size_t n = FragmentOrElement::SizeOfExcludingThis(aState);
+
+  // XXX: measure mServoData.
+
+  return n;
+}
+

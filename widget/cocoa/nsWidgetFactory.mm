@@ -20,6 +20,8 @@
 
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
+#include "HeadlessClipboard.h"
+#include "gfxPlatform.h"
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
@@ -43,6 +45,26 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
+static nsresult
+nsClipboardConstructor(nsISupports *aOuter, REFNSIID aIID,
+                            void **aResult)
+{
+  nsCOMPtr<nsIClipboard> inst;
+
+  *aResult = nullptr;
+  if (aOuter != nullptr) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  if (gfxPlatform::IsHeadless()) {
+    inst = new HeadlessClipboard();
+  } else {
+    inst = new nsClipboard();
+  }
+
+  return inst->QueryInterface(aIID, aResult);
+}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -50,7 +72,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsColorPicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)

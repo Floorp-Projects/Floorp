@@ -975,16 +975,6 @@ NeckoParent::RecvRemoveRequestContext(const uint64_t& rcid)
 }
 
 mozilla::ipc::IPCResult
-NeckoParent::RecvNotifyCurrentTopLevelOuterContentWindowId(const uint64_t& aWindowId)
-{
-  if (NS_FAILED(NS_NotifyCurrentTopLevelOuterContentWindowId(aWindowId))) {
-    NS_WARNING("NS_NotifyCurrentTopLevelOuterContentWindowId failed!");
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 NeckoParent::RecvGetExtensionStream(const URIParams& aURI,
                                     GetExtensionStreamResolver&& aResolve)
 {

@@ -1622,6 +1622,9 @@ var gBrowserInit = {
     if (!getBoolPref("ui.click_hold_context_menus", false))
       SetClickAndHoldHandlers();
 
+    Cu.import("resource:///modules/UpdateTopLevelContentWindowIDHelper.jsm", {})
+      .trackBrowserWindow(window);
+
     PlacesToolbarHelper.init();
 
     ctrlTab.readPref();
