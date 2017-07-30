@@ -110,6 +110,9 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdonly, "/sys/devices/cpu");
   policy->AddDir(rdonly, "/sys/devices/system/cpu");
 
+  // Bug 1384178: mesa driver loader
+  policy->AddPrefix(rdonly, "/sys/dev/char/226:");
+
   // Configuration dirs in the homedir that we want to allow read
   // access to.
   mozilla::Array<const char*, 3> confDirs = {

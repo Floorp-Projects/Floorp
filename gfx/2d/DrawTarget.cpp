@@ -218,9 +218,17 @@ already_AddRefed<SourceSurface>
 DrawTarget::IntoLuminanceSource(LuminanceType aMaskType, float aOpacity)
 {
   RefPtr<SourceSurface> surface = Snapshot();
+  if (!surface) {
+    return nullptr;
+  }
+
   IntSize size = surface->GetSize();
 
   RefPtr<DataSourceSurface> maskSurface = surface->GetDataSurface();
+  if (!maskSurface) {
+    return nullptr;
+  }
+
   DataSourceSurface::MappedSurface map;
   if (!maskSurface->Map(DataSourceSurface::MapType::READ, &map)) {
     return nullptr;

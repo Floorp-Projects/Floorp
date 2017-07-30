@@ -911,6 +911,7 @@ var RefreshBlocker = {
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
     this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
+    this._filter.target = tabEventTarget;
 
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);

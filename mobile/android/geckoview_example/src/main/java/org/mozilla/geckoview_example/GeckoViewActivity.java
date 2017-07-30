@@ -159,18 +159,8 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onSecurityChange(GeckoView view, int status, GeckoBundle identity) {
-            String statusString;
-            if ((status & STATE_IS_BROKEN) != 0) {
-                statusString = "broken";
-            } else if ((status & STATE_IS_SECURE) != 0) {
-                statusString = "secure";
-            } else if ((status & STATE_IS_INSECURE) != 0) {
-                statusString = "insecure";
-            } else {
-                statusString = "unknown";
-            }
-            Log.i(LOGTAG, "Security status changed to " + statusString);
+        public void onSecurityChange(GeckoView view, SecurityInformation securityInfo) {
+            Log.i(LOGTAG, "Security status changed to " + securityInfo.securityMode);
         }
     }
 

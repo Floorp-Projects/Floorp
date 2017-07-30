@@ -583,7 +583,7 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
             const char* className = GetObjectClassName(cx, obj);
             StringBuffer sb(cx);
             if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
-                !sb.append("]"))
+                !sb.append(']'))
             {
                 return false;
             }
@@ -599,7 +599,7 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 17.
     StringBuffer sb(cx);
-    if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append("]"))
+    if (!sb.append("[object ") || !sb.append(tag.toString()) || !sb.append(']'))
         return false;
 
     JSString* str = sb.finishAtom();

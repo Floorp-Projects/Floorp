@@ -1021,17 +1021,13 @@ HTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
 nsresult
 HTMLFormElement::WalkFormElements(HTMLFormSubmission* aFormSubmission)
 {
-  nsTArray<nsGenericHTMLFormElement*> sortedControls;
+  // This shouldn't be called recursively, so use a rather large value
+  // for the preallocated buffer.
+  AutoTArray<RefPtr<nsGenericHTMLFormElement>, 100> sortedControls;
   nsresult rv = mControls->GetSortedControls(sortedControls);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t len = sortedControls.Length();
-
-  // Hold a reference to the elements so they can't be deleted while
-  // calling SubmitNamesValues().
-  for (uint32_t i = 0; i < len; ++i) {
-    static_cast<nsGenericHTMLElement*>(sortedControls[i])->AddRef();
-  }
 
   //
   // Walk the list of nodes and call SubmitNamesValues() on the controls
@@ -1039,11 +1035,6 @@ HTMLFormElement::WalkFormElements(HTMLFormSubmission* aFormSubmission)
   for (uint32_t i = 0; i < len; ++i) {
     // Tell the control to submit its name/value pairs to the submission
     sortedControls[i]->SubmitNamesValues(aFormSubmission);
-  }
-
-  // Release the references.
-  for (uint32_t i = 0; i < len; ++i) {
-    static_cast<nsGenericHTMLElement*>(sortedControls[i])->Release();
   }
 
   return NS_OK;
@@ -1123,6 +1114,32 @@ HTMLFormElement::CompareFormControlPosition(Element* aElement1,
 /* static */ void
 HTMLFormElement::AssertDocumentOrder(
   const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm)
+{
+  // TODO: remove the return statement with bug 598468.
+  // This is done to prevent asserts in some edge cases.
+  return;
+
+  // Only iterate if aControls is not empty, since otherwise
+  // |aControls.Length() - 1| will be a very large unsigned number... not what
+  // we want here.
+  if (!aControls.IsEmpty()) {
+    for (uint32_t i = 0; i < aControls.Length() - 1; ++i) {
+      NS_ASSERTION(CompareFormControlPosition(aControls[i], aControls[i + 1],
+                                              aForm) < 0,
+                   "Form controls not ordered correctly");
+    }
+  }
+}
+
+/**
+ * Copy of the above function, but with RefPtrs.
+ *
+ * @param aControls List of form controls to check.
+ * @param aForm Parent form of the controls.
+ */
+/* static */ void
+HTMLFormElement::AssertDocumentOrder(
+  const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls, nsIContent* aForm)
 {
   // TODO: remove the return statement with bug 598468.
   // This is done to prevent asserts in some edge cases.
@@ -1868,18 +1885,14 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
 {
   bool ret = true;
 
-  nsTArray<nsGenericHTMLFormElement*> sortedControls;
+  // This shouldn't be called recursively, so use a rather large value
+  // for the preallocated buffer.
+  AutoTArray<RefPtr<nsGenericHTMLFormElement>, 100> sortedControls;
   if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
     return false;
   }
 
   uint32_t len = sortedControls.Length();
-
-  // Hold a reference to the elements so they can't be deleted while calling
-  // the invalid events.
-  for (uint32_t i = 0; i < len; ++i) {
-    sortedControls[i]->AddRef();
-  }
 
   for (uint32_t i = 0; i < len; ++i) {
     nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(sortedControls[i]);
@@ -1899,11 +1912,6 @@ HTMLFormElement::CheckFormValidity(nsIMutableArray* aInvalidElements) const
                                         false);
       }
     }
-  }
-
-  // Release the references.
-  for (uint32_t i = 0; i < len; ++i) {
-    static_cast<nsGenericHTMLElement*>(sortedControls[i])->Release();
   }
 
   return ret;

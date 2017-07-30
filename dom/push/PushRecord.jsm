@@ -10,7 +10,6 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -25,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 this.EXPORTED_SYMBOLS = ["PushRecord"];
 
-const prefs = new Preferences("dom.push.");
+const prefs = Services.prefs.getBranch("dom.push.");
 
 /**
  * The push subscription record, stored in IndexedDB.
@@ -50,7 +49,7 @@ PushRecord.prototype = {
   setQuota(suggestedQuota) {
     if (this.quotaApplies()) {
       let quota = +suggestedQuota;
-      this.quota = quota >= 0 ? quota : prefs.get("maxQuotaPerSubscription");
+      this.quota = quota >= 0 ? quota : prefs.getIntPref("maxQuotaPerSubscription");
     } else {
       this.quota = Infinity;
     }
@@ -58,7 +57,7 @@ PushRecord.prototype = {
 
   resetQuota() {
     this.quota = this.quotaApplies() ?
-                 prefs.get("maxQuotaPerSubscription") : Infinity;
+                 prefs.getIntPref("maxQuotaPerSubscription") : Infinity;
   },
 
   updateQuota(lastVisit) {
@@ -81,7 +80,7 @@ PushRecord.prototype = {
         Math.max(0, (Date.now() - lastVisit) / 24 / 60 / 60 / 1000);
       this.quota = Math.min(
         Math.round(8 * Math.pow(daysElapsed, -0.8)),
-        prefs.get("maxQuotaPerSubscription")
+        prefs.getIntPref("maxQuotaPerSubscription")
       );
     }
   },
@@ -106,7 +105,7 @@ PushRecord.prototype = {
     // Drop older message IDs from the end of the list.
     let maxRecentMessageIDs = Math.min(
       this.recentMessageIDs.length,
-      Math.max(prefs.get("maxRecentMessageIDsPerSubscription"), 0)
+      Math.max(prefs.getIntPref("maxRecentMessageIDsPerSubscription"), 0)
     );
     this.recentMessageIDs.length = maxRecentMessageIDs || 0;
   },
@@ -214,7 +213,7 @@ PushRecord.prototype = {
    * permission check.
    */
   hasPermission() {
-    if (this.systemRecord || prefs.get("testing.ignorePermission")) {
+    if (this.systemRecord || prefs.getBoolPref("testing.ignorePermission", false)) {
       return true;
     }
     let permission = Services.perms.testExactPermissionFromPrincipal(

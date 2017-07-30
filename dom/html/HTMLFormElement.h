@@ -410,6 +410,9 @@ public:
   static void
   AssertDocumentOrder(const nsTArray<nsGenericHTMLFormElement*>& aControls,
                       nsIContent* aForm);
+  static void
+  AssertDocumentOrder(const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
+                      nsIContent* aForm);
 #endif
 
   js::ExpandoAndGeneration mExpandoAndGeneration;

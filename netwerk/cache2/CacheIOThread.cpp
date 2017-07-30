@@ -595,7 +595,7 @@ bool CacheIOThread::EventsPending(uint32_t aLastLevel)
   return mLowestLevelWaiting < aLastLevel || mHasXPCOMEvents;
 }
 
-NS_IMETHODIMP CacheIOThread::OnDispatchedEvent(nsIThreadInternal *thread)
+NS_IMETHODIMP CacheIOThread::OnDispatchedEvent()
 {
   MonitorAutoLock lock(mMonitor);
   mHasXPCOMEvents = true;

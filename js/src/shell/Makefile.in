@@ -10,5 +10,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+# Install versioned binary for parallel installability in Linux distributions
 install:: $(PROGRAM)
-	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
+	cp $^ $^$(MOZJS_MAJOR_VERSION)
+	$(SYSINSTALL) $^$(MOZJS_MAJOR_VERSION) $(DESTDIR)$(bindir)

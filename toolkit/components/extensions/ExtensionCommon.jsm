@@ -18,8 +18,6 @@ this.EXPORTED_SYMBOLS = ["ExtensionCommon"];
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Locale",
-                                  "resource://gre/modules/Locale.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
@@ -1242,8 +1240,7 @@ LocaleData.prototype = {
     if (message == "@@ui_locale") {
       return this.uiLocale;
     } else if (message.startsWith("@@bidi_")) {
-      let registry = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-      let rtl = registry.isLocaleRTL("global");
+      let rtl = Services.locale.isAppLocaleRTL;
 
       if (message == "@@bidi_dir") {
         return rtl ? "rtl" : "ltr";
@@ -1348,7 +1345,7 @@ LocaleData.prototype = {
   get uiLocale() {
     // Return the browser locale, but convert it to a Chrome-style
     // locale code.
-    return Locale.getLocale().replace(/-/g, "_");
+    return Services.locale.getAppLocaleAsBCP47().replace(/-/g, "_");
   },
 };
 

@@ -437,7 +437,7 @@ private:
   // proves to be a performance concern, then an interval tree may be a
   // possible solution, allowing the calculation of the overlap interval in
   // O(log n) time, though this would require rebalancing and other overhead.
-  nsTArray<RangeData> mRanges;
+  AutoTArray<RangeData, 1> mRanges;
 
   RefPtr<nsRange> mAnchorFocusRange;
   RefPtr<nsFrameSelection> mFrameSelection;

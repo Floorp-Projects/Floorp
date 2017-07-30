@@ -23,45 +23,39 @@ SimpleTest.waitForExplicitFinish();
 
 var gTestId = -1;
 
-var prefix = "data:application/vnd.mozilla.xul+xml,<?xml-stylesheet href='chrome://global/skin' type='text/css'?><window " +
-             "xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' " +
-             "align='start' pack='start' style='-moz-appearance: none; margin: 0; padding: 0; border: 0; ";
-var suffix = "><resizer dir='bottomright' flex='1' width='150' height='150' style='-moz-appearance: none; margin: 0; border: 0; padding: 0;'/></window>";
-var titledpanel = "<panel noautohide='true' titlebar='normal' minwidth='120' minheight='140'/><label value='Test'/>";
-
 // width and height in the tests below specify the expected size of the window.
 // note, win8 has a minimum inner window size of around 122 pixels. Don't go below this on min-width tests.
 var tests = [
   { testname: "unconstrained",
-    style: "", attrs: "",
+    src: "windowminmaxsize1.xul",
     width: 150, height: 150 },
   { testname: "constraint min style",
-    style: "min-width: 180px; min-height: 210px;", attrs: "",
+    src: "windowminmaxsize2.xul",
     width: 180, height: 210 },
   { testname: "constraint max style",
-    style: "max-width: 125px; max-height: 140px;", attrs: "",
+    src: "windowminmaxsize3.xul",
     width: 125, height: 140 },
   { testname: "constraint min attributes",
-    style: "", attrs: "minwidth='240' minheight='220'",
+    src: "windowminmaxsize4.xul",
     width: 240, height: 220 },
   { testname: "constraint min attributes with width and height set",
-    style: "", attrs: "width='190' height='220' minwidth='215' minheight='235'",
+    src: "windowminmaxsize5.xul",
     width: 215, height: 235 },
   { testname: "constraint max attributes",
-    style: "", attrs: "maxwidth='125' maxheight='95'",
+    src: "windowminmaxsize6.xul",
     width: 125, height: 95 },
   // this gets the inner width as <window minwidth='210'> makes the box 210 pixels wide
   { testname: "constraint min width attribute only",
-    style: "", attrs: "minwidth='210'",
+    src: "windowminmaxsize7.xul",
     width: 210, height: 150 },
   { testname: "constraint max width attribute only",
-    style: "", attrs: "maxwidth='128'",
+    src: "windowminmaxsize8.xul",
     width: 128, height: 150 },
   { testname: "constraint max width attribute with minheight",
-    style: "", attrs: "maxwidth='195' width='230' height='120' minheight='180'",
+    src: "windowminmaxsize9.xul",
     width: 195, height: 180 },
   { testname: "constraint minwidth, minheight, maxwidth and maxheight set",
-    style: "", attrs: "minwidth='120' maxwidth='480' minheight='110' maxheight='470'",
+    src: "windowminmaxsize10.xul",
     width: 150, height: 150, last: true }
 ];
 
@@ -94,7 +88,7 @@ function nextTest()
     SimpleTest.waitForFocus(function () { nextPopupTest(document.getElementById("panel")) } );
   }
   else {
-    tests[gTestId].window = window.open(prefix + tests[gTestId].style + "' " + tests[gTestId].attrs + suffix, "_blank", "chrome,resizable=yes");
+    tests[gTestId].window = window.open(tests[gTestId].src, "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(windowOpened, tests[gTestId].window);
   }
 }
@@ -177,7 +171,7 @@ function nextPopupTest(panel)
   if (++gTestId >= popupTests.length) {
     // Next, check a panel that has a titlebar to ensure that it is accounted for
     // properly in the size.
-    var titledPanelWindow = window.open(prefix + "'>" + titledpanel + "</window>", "_blank", "chrome,resizable=yes");
+    var titledPanelWindow = window.open("titledpanelwindow.xul", "_blank", "chrome,resizable=yes");
     SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
   }
   else {
