@@ -901,7 +901,7 @@
                        class="urlbar-icon"
                        tooltiptext="&pageActionButton.tooltip;"
                        onclick="BrowserPageActions.mainButtonClicked(event);"/>
-                <hbox id="star-button-box">
+                <hbox id="star-button-box" hidden="true">
                   <image id="star-button"
                          class="urlbar-icon"
                          onclick="BookmarkingUI.onStarCommand(event);">

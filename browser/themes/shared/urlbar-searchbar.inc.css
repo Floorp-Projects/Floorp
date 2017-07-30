@@ -113,6 +113,11 @@
 }
 
 /* Page action urlbar buttons */
+#urlbar-icons {
+  /* Add more space between the last icon and the urlbar's edge. */
+  margin-inline-end: 3px;
+}
+
 .urlbar-icon {
   width: 22px;
   height: 16px;
