@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -69,7 +68,7 @@ this.TelemetryUtils = {
    * it correctly evaluates to a boolean type.
    */
   get isTelemetryEnabled() {
-    return Preferences.get(PREF_TELEMETRY_ENABLED, false) === true;
+    return Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED, false) === true;
   },
 
   /**

@@ -8,12 +8,12 @@
 
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://testing-common/ContentTaskUtils.jsm", this);
+Cu.import("resource://testing-common/MockRegistrar.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
@@ -83,7 +83,7 @@ add_task(async function test_setup() {
   // Make sure we don't generate unexpected pings due to pref changes.
   await setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
-  Preferences.set(TelemetryUtils.Preferences.HealthPingEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.HealthPingEnabled, true);
 });
 
 // Test the ping sending logic.
@@ -141,7 +141,7 @@ add_task(async function test_sendPendingPings() {
   // Now enable sending to the ping server.
   now = fakeNow(futureDate(now, MS_IN_A_MINUTE));
   PingServer.start();
-  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
+  Services.prefs.setStringPref(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 
   let timerPromise = waitForTimer();
   await TelemetryController.testReset();
@@ -443,7 +443,7 @@ add_task(async function test_sendCheckOverride() {
 
   // Enable the ping server.
   PingServer.start();
-  Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
+  Services.prefs.setStringPref(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 
   // Start Telemetry and disable the test-mode so pings don't get
   // sent unless we enable the override.
@@ -460,7 +460,7 @@ add_task(async function test_sendCheckOverride() {
   }
 
   // Enable the override and try to send again.
-  Preferences.set(TelemetryUtils.Preferences.OverrideOfficialCheck, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.OverrideOfficialCheck, true);
   PingServer.resetPingHandler();
   await TelemetrySend.reset();
   await TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
@@ -471,7 +471,7 @@ add_task(async function test_sendCheckOverride() {
 
   // Restore the test mode and disable the override.
   TelemetrySend.setTestModeEnabled(true);
-  Preferences.reset(TelemetryUtils.Preferences.OverrideOfficialCheck);
+  Services.prefs.clearUserPref(TelemetryUtils.Preferences.OverrideOfficialCheck);
 });
 
 add_task(async function test_measurePingsSize() {
@@ -522,6 +522,66 @@ add_task(async function test_measurePingsSize() {
     "Should have recorded 1 failed ping into histogram.");
 });
 
+add_task(async function test_pref_observer() {
+  await TelemetrySend.setup(true);
+
+  let origTelemetryEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.TelemetryEnabled);
+  let origFhrUploadEnabled = Services.prefs.getBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled);
+
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true);
+
+  function waitAnnotateCrashReport(expectedValue, trigger) {
+    return new Promise(function(resolve, reject) {
+      let keys = new Set(["TelemetryClientId", "TelemetryServerURL"]);
+
+      let crs = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsICrashReporter]),
+        annotateCrashReport(key, value) {
+          if (!keys.delete(key)) {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error(`Crash report annotation with unexpected key: "${key}".`));
+          }
+
+          if (expectedValue && value == "") {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error("Crash report annotation without expected value."));
+          }
+
+          if (!expectedValue && value != "") {
+            MockRegistrar.unregister(gMockCrs);
+            reject(Error(`Crash report annotation ("${key}") with unexpected value: "${value}".`));
+          }
+
+          if (keys.size == 0) {
+            MockRegistrar.unregister(gMockCrs);
+            resolve();
+          }
+        },
+        UpdateCrashEventsDir() {
+        },
+      };
+
+      let gMockCrs = MockRegistrar.register("@mozilla.org/toolkit/crash-reporter;1", crs);
+      do_register_cleanup(function() {
+        MockRegistrar.unregister(gMockCrs);
+      });
+
+      trigger();
+    });
+  }
+
+  await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
+
+  await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true));
+
+  await waitAnnotateCrashReport(false, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
+
+  await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true));
+
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, origTelemetryEnabled);
+  Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, origFhrUploadEnabled);
+});
 
 add_task(async function cleanup() {
   await PingServer.stop();
