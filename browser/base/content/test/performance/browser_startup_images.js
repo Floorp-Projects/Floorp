@@ -30,6 +30,11 @@ const whitelist = [
     platforms: ["linux", "win", "macosx"],
     photon: true,
   },
+  {
+    file: "chrome://browser/skin/page-action.svg",
+    platforms: ["linux", "win", "macosx"],
+    photon: true,
+  },
 
   // Non-Photon-only entries
   {
