@@ -442,7 +442,8 @@
       </hbox>
     </panel>
 
-    <panel id="page-action-panel"
+#ifdef MOZ_PHOTON_THEME
+    <panel id="pageActionPanel"
            class="cui-widget-panel"
            role="group"
            type="arrow"
@@ -450,45 +451,32 @@
            flip="slide"
            position="bottomcenter topright"
            tabspecific="true"
-           noautofocus="true">
-      <photonpanelmultiview id="page-action-multiView"
-                            mainViewId="page-action-mainView">
-        <panelview id="page-action-mainView"
+           noautofocus="true"
+           context="pageActionPanelContextMenu"
+           oncontextmenu="BrowserPageActions.onContextMenu(event);"
+           copyURL-title="&copyURLCmd.label;"
+           emailLink-title="&emailPageCmd.label;"
+           sendToDevice-title="&sendToDevice.label2;"
+           sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
+      <photonpanelmultiview id="pageActionPanelMultiView"
+                            mainViewId="pageActionPanelMainView"
+                            viewCacheId="appMenu-viewCache">
+        <panelview id="pageActionPanelMainView"
                    class="PanelUI-subView">
-          <vbox class="panel-subview-body">
-            <toolbarbutton id="page-action-bookmark-button"
-                           class="subviewbutton subviewbutton-iconic"
-                           observes="bookmarkThisPageBroadcaster"
-                           command="Browser:AddBookmarkAs"
-                           onclick="gPageActionButton.panel.hidePopup();"/>
-            <toolbarseparator/>
-            <toolbarbutton id="page-action-copy-url-button"
-                           class="subviewbutton subviewbutton-iconic"
-                           label="&copyURLCmd.label;"
-                           command="PageAction:copyURL"/>
-            <toolbarbutton id="page-action-email-link-button"
-                           class="subviewbutton subviewbutton-iconic"
-                           label="&emailPageCmd.label;"
-                           command="PageAction:emailLink"/>
-            <toolbarbutton id="page-action-send-to-device-button"
-                           class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                           label="&sendToDevice.label2;"
-                           closemenu="none"
-                           oncommand="gPageActionButton.showSendToDeviceView(this);"/>
-          </vbox>
-        </panelview>
-        <panelview id="page-action-sendToDeviceView"
-                   class="PanelUI-subView"
-                   title="&sendToDevice.viewTitle;">
-          <vbox id="page-action-sendToDeviceView-body" class="panel-subview-body">
-            <toolbarbutton id="page-action-sync-not-ready-button"
-                           class="subviewbutton"
-                           label="&sendToDevice.syncNotReady.label;"
-                           disabled="true"/>
-          </vbox>
+          <vbox class="panel-subview-body"/>
         </panelview>
       </photonpanelmultiview>
     </panel>
+
+    <menupopup id="pageActionPanelContextMenu"
+               onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">
+      <menuitem id="pageActionPanelContextMenu-toggleUrlbar"
+                add-label="&pageAction.addToUrlbar.label;"
+                remove-label="&pageAction.removeFromUrlbar.label;"
+                label="&pageAction.addToUrlbar.label;"
+                oncommand="BrowserPageActions.toggleShownInUrlbarForContextAction();"/>
+    </menupopup>
+#endif
 
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
@@ -904,7 +892,15 @@
                        class="urlbar-icon"
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
+                <toolbarbutton id="urlbar-zoom-button"
+                       onclick="FullZoom.reset();"
+                       tooltip="dynamic-shortcut-tooltip"
+                       hidden="true"/>
 #ifdef MOZ_PHOTON_THEME
+                <image id="pageActionButton"
+                       class="urlbar-icon"
+                       tooltiptext="&pageActionButton.tooltip;"
+                       onclick="BrowserPageActions.mainButtonClicked(event);"/>
                 <hbox id="star-button-box">
                   <image id="star-button"
                          class="urlbar-icon"
@@ -918,10 +914,6 @@
                   </hbox>
                 </hbox>
 #endif
-                <toolbarbutton id="urlbar-zoom-button"
-                       onclick="FullZoom.reset();"
-                       tooltip="dynamic-shortcut-tooltip"
-                       hidden="true"/>
               </hbox>
               <hbox id="userContext-icons" hidden="true">
                 <label id="userContext-label"/>
@@ -941,11 +933,6 @@
                              class="chromeclass-toolbar-additional"
                              command="Browser:Stop"
                              tooltip="dynamic-shortcut-tooltip"/>
-#else
-              <toolbarbutton id="urlbar-page-action-button"
-                             class="chromeclass-toolbar-additional"
-                             tooltiptext="&pageActionButton.tooltip;"
-                             onclick="gPageActionButton.onEvent(event);"/>
 #endif
             </textbox>
           </hbox>
