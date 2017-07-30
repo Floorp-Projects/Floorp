@@ -220,7 +220,7 @@
 .customizationmode-button > .box-inherit > .button-menu-dropmarker {
   margin-inline-end: 0;
   padding-inline-end: 0;
-  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
+  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
 }
 
 .customizationmode-button:-moz-any(:focus,:active,:hover):not([disabled]),
