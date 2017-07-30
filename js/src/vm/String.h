@@ -546,8 +546,12 @@ class JSString : public js::gc::Cell
     static const JS::TraceKind TraceKind = JS::TraceKind::String;
 
     JS::Zone* zone() const {
-        if (isTenured())
+        if (isTenured()) {
+            // Allow permanent atoms to be accessed across zones and runtimes.
+            if (isPermanentAtom())
+                return zoneFromAnyThread();
             return asTenured().zone();
+        }
         return js::Nursery::getStringZone(this);
     }
 
