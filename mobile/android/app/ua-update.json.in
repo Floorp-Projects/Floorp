@@ -1,6 +1,9 @@
 #filter slashslash
 // Everything after the first // on a line will be removed by the preproccesor.
 // Send these sites a custom user-agent. Bugs should be included with an entry.
+// Format:
+// "example.org": "regex_string#new_string"
+// "#" hash sign is the separator. If no hash sign, the full string is used as replacement.
 // NOTE: trailing commas are not valid JSON and will prevent the CDN from syncing.
 {
   "weather.yahoo.co.jp": "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36",
