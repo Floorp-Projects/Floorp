@@ -2992,14 +2992,13 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
     return false;
   }
 
-  // XXXbholley: This could be done more directly with Servo's style system.
   StyleSetHandle styleSet = aPresShell->StyleSet();
   RefPtr<nsStyleContext> sc;
-  for (int32_t i = elementsToCheck.Length() - 1; i >= 0; --i) {
+  for (auto* element : Reversed(elementsToCheck)) {
     if (sc) {
-      sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc, LazyComputeBehavior::Assert);
+      sc = styleSet->ResolveStyleFor(element, sc, LazyComputeBehavior::Assert);
     } else {
-      sc = nsComputedDOMStyle::GetStyleContextNoFlush(elementsToCheck[i],
+      sc = nsComputedDOMStyle::GetStyleContextNoFlush(element,
                                                       nullptr, aPresShell);
     }
     if (sc->StyleDisplay()->mDisplay == StyleDisplay::None) {
