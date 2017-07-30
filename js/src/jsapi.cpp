@@ -7714,8 +7714,9 @@ JS::GetObjectZone(JSObject* obj)
 }
 
 JS_PUBLIC_API(Zone*)
-JS::GetStringZone(JSString* str)
+JS::GetNurseryStringZone(JSString* str)
 {
+    MOZ_ASSERT(!str->isTenured());
     return str->zone();
 }
 
