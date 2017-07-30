@@ -54,7 +54,7 @@ const whitelist = [
     platforms: ["linux", "win", "macosx"],
   },
   {
-    file: "chrome://browser/skin/arrow-dropdown.svg",
+    file: "chrome://browser/skin/arrow-dropdown-16.svg",
     platforms: ["linux", "win", "macosx"],
   },
   {

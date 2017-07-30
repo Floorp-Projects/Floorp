@@ -117,7 +117,8 @@
 
 
   skin/classic/browser/addons.svg                     (../shared/icons/addons.svg)
-  skin/classic/browser/arrow-dropdown.svg             (../shared/icons/arrow-dropdown.svg)
+  skin/classic/browser/arrow-dropdown-12.svg          (../shared/icons/arrow-dropdown-12.svg)
+  skin/classic/browser/arrow-dropdown-16.svg          (../shared/icons/arrow-dropdown-16.svg)
   skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
 #ifndef MOZ_PHOTON_THEME
