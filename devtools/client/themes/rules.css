@@ -56,15 +56,10 @@
 .ruleview-reveal-panel {
   display: flex;
   overflow: hidden;
-  transition: height 150ms ease;
 }
 
 .ruleview-reveal-panel[hidden] {
-  height: 0px;
-}
-
-#pseudo-class-panel:not([hidden]) {
-  height: 24px;
+  display: none;
 }
 
 .ruleview-reveal-panel label {
