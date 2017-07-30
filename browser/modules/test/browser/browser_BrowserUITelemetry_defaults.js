@@ -23,13 +23,8 @@ function test() {
     Assert.deepEqual(result.defaultMoved, []);
   }
   Assert.deepEqual(result.nondefaultAdded, []);
-  // This one is a bit weird - the "social-share-button" is dynamically added
-  // to the toolbar as the feature is first used - but it's listed as being in
-  // the toolbar by default so it doesn't end up in nondefaultAdded once it
-  // is created. The end result is that it ends up in defaultRemoved before
-  // the feature has been activated.
-  // Bug 1273358 exists to fix this.
-  Assert.deepEqual(result.defaultRemoved, ["social-share-button"]);
+
+  Assert.deepEqual(result.defaultRemoved, []);
 
   // And mochi insists there's only a single window with a single tab when
   // starting a test, so check that for good measure.

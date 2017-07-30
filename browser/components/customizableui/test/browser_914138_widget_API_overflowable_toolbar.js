@@ -10,7 +10,7 @@ var overflowList = document.getElementById(navbar.getAttribute("overflowtarget")
 const kTestBtn1 = "test-addWidgetToArea-overflow";
 const kTestBtn2 = "test-removeWidgetFromArea-overflow";
 const kTestBtn3 = "test-createWidget-overflow";
-const kHomeBtn = "home-button";
+const kSidebarBtn = "sidebar-button";
 const kDownloadsBtn = "downloads-button";
 const kSearchBox = "search-container";
 
@@ -26,26 +26,26 @@ add_task(async function() {
   window.resizeTo(400, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
-  let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
-  ok(homeBtnNode, "Home button should be overflowing");
-  ok(homeBtnNode && homeBtnNode.getAttribute("overflowedItem") == "true", "Home button should have overflowedItem attribute");
+  ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");
+  let sidebarBtnNode = overflowList.querySelector("#" + kSidebarBtn);
+  ok(sidebarBtnNode, "Sidebar button should be overflowing");
+  ok(sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true", "Sidebar button should have overflowedItem attribute");
 
-  let placementOfHomeButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kHomeBtn);
-  CustomizableUI.addWidgetToArea(kTestBtn1, navbar.id, placementOfHomeButton);
+  let placementOfSidebarButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kSidebarBtn);
+  CustomizableUI.addWidgetToArea(kTestBtn1, navbar.id, placementOfSidebarButton);
   ok(!navbar.querySelector("#" + kTestBtn1), "New button should not be in the navbar");
   let newButtonNode = overflowList.querySelector("#" + kTestBtn1);
   ok(newButtonNode, "New button should be overflowing");
   ok(newButtonNode && newButtonNode.getAttribute("overflowedItem") == "true", "New button should have overflowedItem attribute");
   let nextEl = newButtonNode && newButtonNode.nextSibling;
-  is(nextEl && nextEl.id, kHomeBtn, "Test button should be next to home button.");
+  is(nextEl && nextEl.id, kSidebarBtn, "Test button should be next to sidebar button.");
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
   await waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
-  ok(navbar.querySelector("#" + kHomeBtn), "Home button should be in the navbar");
-  ok(homeBtnNode && (homeBtnNode.getAttribute("overflowedItem") != "true"), "Home button should no longer have overflowedItem attribute");
-  ok(!overflowList.querySelector("#" + kHomeBtn), "Home button should no longer be overflowing");
+  ok(navbar.querySelector("#" + kSidebarBtn), "Sidebar button should be in the navbar");
+  ok(sidebarBtnNode && (sidebarBtnNode.getAttribute("overflowedItem") != "true"), "Sidebar button should no longer have overflowedItem attribute");
+  ok(!overflowList.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be overflowing");
   ok(navbar.querySelector("#" + kTestBtn1), "Test button should be in the navbar");
   ok(!overflowList.querySelector("#" + kTestBtn1), "Test button should no longer be overflowing");
   ok(newButtonNode && (newButtonNode.getAttribute("overflowedItem") != "true"), "New button should no longer have overflowedItem attribute");
@@ -97,10 +97,10 @@ add_task(async function() {
   window.resizeTo(400, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
-  ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
-  let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
-  ok(homeBtnNode, "Home button should be overflowing");
-  ok(homeBtnNode && homeBtnNode.getAttribute("overflowedItem") == "true", "Home button should have overflowedItem class");
+  ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");
+  let sidebarBtnNode = overflowList.querySelector("#" + kSidebarBtn);
+  ok(sidebarBtnNode, "Sidebar button should be overflowing");
+  ok(sidebarBtnNode && sidebarBtnNode.getAttribute("overflowedItem") == "true", "Sidebar button should have overflowedItem class");
 
   let testBtnSpec = {id: kTestBtn3, label: "Overflowable widget test", defaultArea: "nav-bar"};
   CustomizableUI.createWidget(testBtnSpec);
