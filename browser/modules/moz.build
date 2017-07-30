@@ -149,6 +149,7 @@ EXTRA_JS_MODULES += [
     'FormValidationHandler.jsm',
     'LaterRun.jsm',
     'offlineAppCache.jsm',
+    'PageActions.jsm',
     'PermissionUI.jsm',
     'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
