@@ -450,7 +450,7 @@
 /* All tabs button and menupopup */
 
 #alltabs-button {
-  list-style-image: url(chrome://browser/skin/arrow-dropdown.svg);
+  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
