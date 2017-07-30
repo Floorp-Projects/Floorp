@@ -27,7 +27,7 @@ async function openPermissionsDialog() {
 
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     let doc = content.document;
-    let settingsButton = doc.getElementById("notificationsPolicyButton");
+    let settingsButton = doc.getElementById("notificationSettingsButton");
     settingsButton.click();
   });
 
