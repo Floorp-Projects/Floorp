@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = [
   // PageActions.Button
   // PageActions.Subview
   // PageActions.ACTION_ID_BOOKMARK_SEPARATOR
+  // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
 ];
 
 const { utils: Cu } = Components;
@@ -24,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
 const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 
-const PREF_ACTION_IDS_IN_URLBAR = "browser.pageActions.actionIDsInUrlbar";
+const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 
 
 this.PageActions = {
@@ -35,8 +36,7 @@ this.PageActions = {
     let callbacks = this._deferredAddActionCalls;
     delete this._deferredAddActionCalls;
 
-    let actionIDsInUrlbar = this._loadActionIDsInUrlbar();
-    this._actionIDsInUrlbar = actionIDsInUrlbar || [];
+    this._loadPersistedActions();
 
     // Add the built-in actions, which are defined below in this file.
     for (let options of gBuiltInActions) {
@@ -50,26 +50,19 @@ this.PageActions = {
     while (callbacks && callbacks.length) {
       callbacks.shift()();
     }
-
-    if (!actionIDsInUrlbar) {
-      // The action IDs in the urlbar haven't been stored yet.  Compute them and
-      // store them now.  From now on, these stored IDs will determine the
-      // actions that are shown in the urlbar and the order they're shown in.
-      this._actionIDsInUrlbar =
-        this.actions.filter(a => a.shownInUrlbar).map(a => a.id);
-      this._storeActionIDsInUrlbar();
-    }
   },
 
   _deferredAddActionCalls: [],
 
   /**
    * The list of Action objects, sorted in the order in which they should be
-   * placed in the page action panel.  Not live.  (array of Action objects)
+   * placed in the page action panel.  If there are both built-in and non-built-
+   * in actions, then the list will include the separator between the two.  The
+   * list is not live.  (array of Action objects)
    */
   get actions() {
-    let actions = this._builtInActions.slice();
-    if (this._nonBuiltInActions.length) {
+    let actions = this.builtInActions;
+    if (this.nonBuiltInActions.length) {
       // There are non-built-in actions, so include them too.  Add a separator
       // between the built-ins and non-built-ins so that the returned array
       // looks like: [...built-ins, separator, ...non-built-ins]
@@ -77,9 +70,23 @@ this.PageActions = {
         id: ACTION_ID_BUILT_IN_SEPARATOR,
         _isSeparator: true,
       }));
-      actions.push(...this._nonBuiltInActions);
+      actions.push(...this.nonBuiltInActions);
     }
     return actions;
+  },
+
+  /**
+   * The list of built-in actions.  Not live.  (array of Action objects)
+   */
+  get builtInActions() {
+    return this._builtInActions.slice();
+  },
+
+  /**
+   * The list of non-built-in actions.  Not live.  (array of Action objects)
+   */
+  get nonBuiltInActions() {
+    return this._nonBuiltInActions.slice();
   },
 
   /**
@@ -179,11 +186,23 @@ this.PageActions = {
         this._nonBuiltInActions.splice(index, 0, action);
       }
 
-      if (this._actionIDsInUrlbar.includes(action.id)) {
-        // The action should be shown in the urlbar.  Set its shownInUrlbar to
-        // true, but set the private version so that onActionToggledShownInUrlbar
-        // isn't called, which happens when the public version is set.
-        action._shownInUrlbar = true;
+      if (this._persistedActions.ids[action.id]) {
+        // The action has been seen before.  Override its shownInUrlbar value
+        // with the persisted value.  Set the private version of that property
+        // so that onActionToggledShownInUrlbar isn't called, which happens when
+        // the public version is set.
+        action._shownInUrlbar =
+          this._persistedActions.idsInUrlbar.includes(action.id);
+      } else {
+        // The action is new.  Store it in the persisted actions.
+        this._persistedActions.ids[action.id] = true;
+        if (action.shownInUrlbar) {
+          this._persistedActions.idsInUrlbar.push(action.id);
+        }
+        this._storePersistedActions();
+      }
+
+      if (action.shownInUrlbar) {
         urlbarInsertBeforeID = this.insertBeforeActionIDInUrlbar(action);
       }
     }
@@ -218,15 +237,16 @@ this.PageActions = {
    */
   insertBeforeActionIDInUrlbar(action) {
     // First, find the index of the given action.
-    let index = this._actionIDsInUrlbar.findIndex(a => a.id == action.id);
+    let idsInUrlbar = this._persistedActions.idsInUrlbar;
+    let index = idsInUrlbar.indexOf(action.id);
     if (index < 0) {
       return null;
     }
     // Now start at the next index and find the ID of the first action that's
-    // currently registered.  Remember that IDs in _actionIDsInUrlbar may belong
-    // to actions that aren't currently registered.
-    for (let i = index + 1; i < this._actionIDsInUrlbar.length; i++) {
-      let id = this._actionIDsInUrlbar[i];
+    // currently registered.  Remember that IDs in idsInUrlbar may belong to
+    // actions that aren't currently registered.
+    for (let i = index + 1; i < idsInUrlbar.length; i++) {
+      let id = idsInUrlbar[i];
       if (this.actionForID(id)) {
         return id;
       }
@@ -245,6 +265,7 @@ this.PageActions = {
       // The action isn't present.  Not an error.
       return;
     }
+
     this._actionsByID.delete(action.id);
     for (let list of [this._nonBuiltInActions, this._builtInActions]) {
       let index = list.findIndex(a => a.id == action.id);
@@ -253,7 +274,15 @@ this.PageActions = {
         break;
       }
     }
-    this._updateActionIDsInUrlbar(action.id, false);
+
+    // Remove the action from persisted storage.
+    delete this._persistedActions.ids[action.id];
+    let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
+    if (index >= 0) {
+      this._persistedActions.idsInUrlbar.splice(index, 1);
+    }
+    this._storePersistedActions();
+
     for (let win of browserWindows()) {
       browserPageActions(win).removeAction(action);
     }
@@ -302,51 +331,42 @@ this.PageActions = {
       // This may be called before the action has been added.
       return;
     }
-    this._updateActionIDsInUrlbar(action.id, action.shownInUrlbar);
+
+    // Update persisted storage.
+    let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
+    if (action.shownInUrlbar) {
+      if (index < 0) {
+        this._persistedActions.idsInUrlbar.push(action.id);
+      }
+    } else if (index >= 0) {
+      this._persistedActions.idsInUrlbar.splice(index, 1);
+    }
+    this._storePersistedActions();
+
     let insertBeforeID = this.insertBeforeActionIDInUrlbar(action);
     for (let win of browserWindows()) {
       browserPageActions(win).placeActionInUrlbar(action, insertBeforeID);
     }
   },
 
-  /**
-   * Adds or removes the given action ID to or from _actionIDsInUrlbar.
-   *
-   * @param  actionID (string, required)
-   *         The action ID to add or remove.
-   * @param  shownInUrlbar (bool, required)
-   *         If true, the ID is added if it's not already present.  If false,
-   *         the ID is removed if it's not already absent.
-   */
-  _updateActionIDsInUrlbar(actionID, shownInUrlbar) {
-    let index = this._actionIDsInUrlbar.indexOf(actionID);
-    if (shownInUrlbar) {
-      if (index < 0) {
-        this._actionIDsInUrlbar.push(actionID);
-      }
-    } else if (index >= 0) {
-      this._actionIDsInUrlbar.splice(index, 1);
-    }
-    this._storeActionIDsInUrlbar();
+  _storePersistedActions() {
+    let json = JSON.stringify(this._persistedActions);
+    Services.prefs.setStringPref(PREF_PERSISTED_ACTIONS, json);
   },
 
-  _storeActionIDsInUrlbar() {
-    let json = JSON.stringify(this._actionIDsInUrlbar);
-    Services.prefs.setStringPref(PREF_ACTION_IDS_IN_URLBAR, json);
-  },
-
-  _loadActionIDsInUrlbar() {
+  _loadPersistedActions() {
     try {
-      let json = Services.prefs.getStringPref(PREF_ACTION_IDS_IN_URLBAR);
-      let obj = JSON.parse(json);
-      if (Array.isArray(obj)) {
-        return obj;
-      }
+      let json = Services.prefs.getStringPref(PREF_PERSISTED_ACTIONS);
+      this._persistedActions = JSON.parse(json);
     } catch (ex) {}
-    return null;
   },
 
-  _actionIDsInUrlbar: []
+  _persistedActions: {
+    // action ID => true, for actions that have ever been seen and not removed
+    ids: {},
+    // action IDs ordered by position in urlbar
+    idsInUrlbar: [],
+  },
 };
 
 /**
@@ -595,9 +615,12 @@ Action.prototype = {
   },
 
   /**
-   * Unregisters the action and removes its DOM nodes from all browser windows.
-   * Call this when your action lives in an extension and your extension is
-   * unloaded, for example.
+   * Makes PageActions forget about this action and removes its DOM nodes from
+   * all browser windows.  Call this when the user removes your action, like
+   * when your extension is uninstalled.  You probably don't want to call it
+   * simply when your extension is disabled or the app quits, because then
+   * PageActions won't remember it the next time your extension is enabled or
+   * the app starts.
    */
   remove() {
     PageActions.onActionRemoved(this);
@@ -754,9 +777,12 @@ Button.prototype = {
 this.PageActions.Button = Button;
 
 
-// This is only necessary so that Pocket can specify it for
+// This is only necessary so that Pocket and the test can specify it for
 // action._insertBeforeActionID.
 this.PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
+
+// This is only necessary so that the test can access it.
+this.PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
 
 
 // Sorted in the order in which they should appear in the page action panel.
