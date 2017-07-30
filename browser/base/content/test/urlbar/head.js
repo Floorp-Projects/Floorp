@@ -200,10 +200,10 @@ function promiseNewSearchEngine(basename) {
   });
 }
 
-let gPageActionPanel = document.getElementById("page-action-panel");
+let gPageActionPanel = document.getElementById("pageActionPanel");
 
 function promisePageActionPanelOpen() {
-  let button = document.getElementById("urlbar-page-action-button");
+  let button = document.getElementById("pageActionButton");
   let shownPromise = promisePageActionPanelShown();
   EventUtils.synthesizeMouseAtCenter(button, {});
   return shownPromise;
