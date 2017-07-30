@@ -15,3 +15,39 @@ add_task(async function() {
   evaluateSearchResults("updates have been installed", "updateApp");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+/**
+ * Test for searching for the "Location Permissions" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  evaluateSearchResults("set location permissions", "permissionsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for searching for the "Camera Permissions" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  evaluateSearchResults("set camera permissions", "permissionsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for searching for the "Microphone Permissions" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  evaluateSearchResults("set microphone permissions", "permissionsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+/**
+ * Test for searching for the "Notification Permissions" subdialog.
+ */
+add_task(async function() {
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
+  evaluateSearchResults("set notifications permissions", "permissionsGroup");
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
