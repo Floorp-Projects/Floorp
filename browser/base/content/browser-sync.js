@@ -351,7 +351,7 @@ var gSync = {
         this.remoteClients.map(client => client.id);
 
       clients.forEach(clientId => this.sendTabToDevice(url, clientId, title));
-      gPageActionButton.panel.hidePopup();
+      BrowserPageActions.panelNode.hidePopup();
     }
 
     function addTargetDevice(clientId, name, clientType) {
@@ -384,7 +384,7 @@ var gSync = {
     const learnMore = this.fxaStrings.GetStringFromName("sendTabToDevice.singledevice");
     this._appendSendTabInfoItems(fragment, createDeviceNodeFn, noDevices, learnMore, () => {
       this.openSendToDevicePromo();
-      gPageActionButton.panel.hidePopup();
+      BrowserPageActions.panelNode.hidePopup();
     });
   },
 
@@ -393,7 +393,7 @@ var gSync = {
     const verifyAccount = this.fxaStrings.GetStringFromName("sendTabToDevice.verify");
     this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notVerified, verifyAccount, () => {
       this.openPrefs("sendtab");
-      gPageActionButton.panel.hidePopup();
+      BrowserPageActions.panelNode.hidePopup();
     });
   },
 
@@ -402,7 +402,7 @@ var gSync = {
     const learnMore = this.fxaStrings.GetStringFromName("sendTabToDevice.unconfigured");
     this._appendSendTabInfoItems(fragment, createDeviceNodeFn, notConnected, learnMore, () => {
       this.openSendToDevicePromo();
-      gPageActionButton.panel.hidePopup();
+      BrowserPageActions.panelNode.hidePopup();
     });
   },
 
