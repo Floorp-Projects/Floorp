@@ -366,7 +366,7 @@ NetworkResponseListener.prototype = {
   bodySize: null,
 
   /**
-   * Response body size on the wire, potentially compressed / encoded.
+   * Response size on the wire, potentially compressed / encoded.
    */
   transferredSize: null,
 
@@ -593,7 +593,7 @@ NetworkResponseListener.prototype = {
     };
 
     response.size = this.bodySize;
-    response.transferredSize = this.transferredSize;
+    response.transferredSize = this.transferredSize + this.httpActivity.headersSize;
 
     try {
       response.mimeType = this.request.contentType;
@@ -1337,6 +1337,7 @@ NetworkMonitor.prototype = {
     response.headersSize = extraStringData.length;
 
     httpActivity.responseStatus = response.status;
+    httpActivity.headersSize = response.headersSize;
 
     // Discard the response body for known response statuses.
     switch (parseInt(response.status, 10)) {
