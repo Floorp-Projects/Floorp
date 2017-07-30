@@ -2979,7 +2979,9 @@ static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
   AutoTArray<Element*, 10> elementsToCheck;
-  for (Element* e = aElement; e; e = e->GetParentElement()) {
+  // Style and layout work on the flattened tree, so this is what we need to
+  // check in order to figure out whether we're in a display: none subtree.
+  for (Element* e = aElement; e; e = e->GetFlattenedTreeParentElement()) {
     if (e->GetPrimaryFrame()) {
       // e definitely isn't display:none and doesn't have a display:none
       // ancestor.
