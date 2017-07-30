@@ -65,25 +65,66 @@
 }
 
 %ifdef MOZ_PHOTON_THEME
-/* Page action button */
-#urlbar-page-action-button {
-  -moz-appearance: none;
-  border-style: none;
-  list-style-image: url("chrome://browser/skin/page-action.svg");
-  margin: 0;
-  padding: 0 6px;
-}
-
-#urlbar-page-action-button > .toolbarbutton-icon {
+/* Page action panel */
+.pageAction-panel-button > .toolbarbutton-icon {
   width: 16px;
+  height: 16px;
 }
 
-#urlbar-page-action-button,
+#pageAction-panel-bookmark,
+#star-button {
+  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+#pageAction-panel-bookmark[starred],
+#star-button[starred] {
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
+}
+#star-button[starred] {
+  fill-opacity: 1;
+  fill: var(--toolbarbutton-icon-fill-attention);
+}
+
+#pageAction-panel-copyURL,
+#pageAction-urlbar-copyURL {
+  list-style-image: url("chrome://browser/skin/link.svg");
+}
+
+#pageAction-panel-emailLink,
+#pageAction-urlbar-emailLink {
+  list-style-image: url("chrome://browser/skin/email-link.svg");
+}
+
+#pageAction-panel-sendToDevice,
+#pageAction-urlbar-sendToDevice {
+  list-style-image: url("chrome://browser/skin/device-mobile.svg");
+}
+
+.pageAction-sendToDevice-device[clientType=mobile] {
+  list-style-image: url("chrome://browser/skin/device-mobile.svg");
+}
+
+.pageAction-sendToDevice-device[clientType=desktop] {
+  list-style-image: url("chrome://browser/skin/device-desktop.svg");
+}
+
+#pageAction-panel-sendToDevice-fxa,
+#pageAction-urlbar-sendToDevice-fxa {
+  list-style-image: url("chrome://browser/skin/sync.svg");
+}
+
+/* Page action urlbar buttons */
 .urlbar-icon {
+  width: 22px;
+  height: 16px;
+  margin-inline-start: 6px;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
   color: inherit;
+}
+
+#pageActionButton {
+  list-style-image: url("chrome://browser/skin/page-action.svg");
 }
 
 %ifdef MOZ_PHOTON_ANIMATIONS
@@ -108,19 +149,7 @@
 #star-button-box[animationsenabled] {
   position: relative;
 }
-%endif /* MOZ_PHOTON_ANIMATIONS */
 
-#star-button {
-  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-#star-button[starred] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-  fill-opacity: 1;
-  fill: var(--toolbarbutton-icon-fill-attention);
-}
-
-%ifdef MOZ_PHOTON_ANIMATIONS
 /* Preload the bookmark animations to prevent a flicker during the first playing
    of the animations. */
 #star-button[preloadanimations] + #star-button-animatable-box > #star-button-animatable-image {
@@ -139,8 +168,9 @@
   overflow: hidden;
   top: calc(50% - 16.5px); /* 16.5px is half the height of the sprite */
   /* .urlbar-icon has width 22px. Each frame is 33px wide. Set margin-inline-start
-     to be half the difference. */
-  margin-inline-start: -5.5px;
+     to be half the difference, -5.5px, plus the 6px margin-inline-start of
+     .urlbar-icon, 6px. */
+  margin-inline-start: 0.5px;
   /* Set the height to equal the height of each frame of the SVG. Must use
      min- and max- width and height due to bug 1379332. */
   min-width: 33px;
@@ -166,39 +196,6 @@
   animation-name: bookmark-animation-rtl;
 }
 %endif /* MOZ_PHOTON_ANIMATIONS */
-
-/* Page action popup */
-#page-action-bookmark-button {
-  list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-#page-action-bookmark-button[starred] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-}
-
-#page-action-copy-url-button {
-  list-style-image: url("chrome://browser/skin/link.svg");
-}
-
-#page-action-email-link-button {
-  list-style-image: url("chrome://browser/skin/email-link.svg");
-}
-
-#page-action-send-to-device-button {
-  list-style-image: url("chrome://browser/skin/device-mobile.svg");
-}
-
-.page-action-sendToDevice-device[clientType=mobile] {
-  list-style-image: url("chrome://browser/skin/device-mobile.svg");
-}
-
-.page-action-sendToDevice-device[clientType=desktop] {
-  list-style-image: url("chrome://browser/skin/device-desktop.svg");
-}
-
-#page-action-sendToDevice-fxa-button {
-  list-style-image: url("chrome://browser/skin/sync.svg");
-}
 %endif /* MOZ_PHOTON_THEME */
 
 /* Zoom button */
