@@ -2978,7 +2978,7 @@ nsGenericHTMLElement::NewURIFromString(const nsAString& aURISpec,
 static bool
 IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
 {
-  nsTArray<Element*> elementsToCheck;
+  AutoTArray<Element*, 10> elementsToCheck;
   for (Element* e = aElement; e; e = e->GetParentElement()) {
     if (e->GetPrimaryFrame()) {
       // e definitely isn't display:none and doesn't have a display:none
