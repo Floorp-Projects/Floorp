@@ -326,8 +326,6 @@ protected:
 
   void DetachFromTopLevelWidget();
 
-  void SetPrintRelated();
-
   // IMPORTANT: The ownership implicit in the following member
   // variables has been explicitly checked and set using nsCOMPtr
   // for owning pointers and raw COM interface pointers for weak
@@ -408,9 +406,6 @@ protected:
   bool mIsPageMode;
   bool mInitializedForPrintPreview;
   bool mHidden;
-  bool mPrintRelated; // Only use for asserts.
-  bool mPresShellDestroyed; // Only use for asserts.
-  bool mDestroyWasFull; // Only use for asserts.
 };
 
 namespace mozilla {
@@ -546,23 +541,9 @@ nsDocumentViewer::nsDocumentViewer()
     mForceCharacterSet(nullptr),
     mIsPageMode(false),
     mInitializedForPrintPreview(false),
-    mHidden(false),
-    mPrintRelated(false),
-    mPresShellDestroyed(true),
-    mDestroyWasFull(false)
+    mHidden(false)
 {
   PrepareToStartLoad();
-}
-
-void
-nsDocumentViewer::SetPrintRelated()
-{
-  if (!mPrintRelated) {
-    if (mViewManager) {
-      mViewManager->SetPrintRelated();
-    }
-  }
-  mPrintRelated = true;
 }
 
 NS_IMPL_ADDREF(nsDocumentViewer)
@@ -586,30 +567,15 @@ nsDocumentViewer::~nsDocumentViewer()
     mDocument->Destroy();
   }
 
-  nsIFrame* vmRootFrame =
-    mViewManager && mViewManager->GetRootView()
-      ? mViewManager->GetRootView()->GetFrame()
-      : nullptr;
-  nsIFrame* psRootFrame = mPresShell ? mPresShell->GetRootFrame() : nullptr;
-  MOZ_RELEASE_ASSERT(vmRootFrame == psRootFrame);
-
   NS_ASSERTION(!mPresShell && !mPresContext,
                "User did not call nsIContentViewer::Destroy");
   if (mPresShell || mPresContext) {
     // Make sure we don't hand out a reference to the content viewer to
     // the SHEntry!
     mSHEntry = nullptr;
-    mDestroyWasFull = false;
+
     Destroy();
-    MOZ_RELEASE_ASSERT(mDestroyWasFull);
   }
-
-  MOZ_RELEASE_ASSERT(mPresShellDestroyed);
-
-  MOZ_RELEASE_ASSERT(!mPresShell || !mPresShell->GetRootFrame());
-  MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView() ||
-    (!mViewManager->GetRootView()->GetFrame() &&
-     !mViewManager->GetRootView()->GetFirstChild()));
 
   if (mSelectionListener) {
     mSelectionListener->Disconnect();
@@ -738,7 +704,6 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
     styleSet->Delete();
     return NS_ERROR_FAILURE;
   }
-  mPresShellDestroyed = false;
 
   // We're done creating the style set
   styleSet->EndUpdate();
@@ -1844,8 +1809,6 @@ nsDocumentViewer::Destroy()
   mViewManager = nullptr;
   mContainer = WeakPtr<nsDocShell>();
 
-  mDestroyWasFull = true;
-
   return NS_OK;
 }
 
@@ -2565,10 +2528,6 @@ nsDocumentViewer::MakeWindow(const nsSize& aSize, nsView* aContainerView)
   if (NS_FAILED(rv))
     return rv;
 
-  if (mPrintRelated) {
-    mViewManager->SetPrintRelated();
-  }
-
   // The root view is always at 0,0.
   nsRect tbounds(nsPoint(0, 0), aSize);
   // Create a view
@@ -2891,8 +2850,6 @@ nsDocumentViewer::Print(bool              aSilent,
                           nsIPrintSettings* aPrintSettings)
 {
 #ifdef NS_PRINTING
-  SetPrintRelated();
-
   nsCOMPtr<nsIPrintSettings> printSettings;
 
 #ifdef DEBUG
@@ -3952,8 +3909,6 @@ NS_IMETHODIMP
 nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
                           nsIWebProgressListener* aWebProgressListener)
 {
-  SetPrintRelated();
-
   // Printing XUL documents is not supported.
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
@@ -4063,8 +4018,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
                                mozIDOMWindowProxy* aChildDOMWin,
                                nsIWebProgressListener* aWebProgressListener)
 {
-  SetPrintRelated();
-
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
   NS_WARNING_ASSERTION(
     IsInitializedForPrintPreview(),
@@ -4163,8 +4116,6 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
 NS_IMETHODIMP
 nsDocumentViewer::PrintPreviewNavigate(int16_t aType, int32_t aPageNum)
 {
-  SetPrintRelated();
-
   if (!GetIsPrintPreview() ||
       mPrintEngine->GetIsCreatingPrintPreview())
     return NS_ERROR_FAILURE;
@@ -4507,9 +4458,6 @@ void
 nsDocumentViewer::SetIsPrinting(bool aIsPrinting)
 {
 #ifdef NS_PRINTING
-  if (aIsPrinting) {
-    SetPrintRelated();
-  }
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   nsCOMPtr<nsIDocShell> docShell(mContainer);
@@ -4547,9 +4495,6 @@ void
 nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
 {
 #ifdef NS_PRINTING
-  if (aIsPrintPreview) {
-    SetPrintRelated();
-  }
   // Set all the docShells in the docshell tree to be printing.
   // that way if anyone of them tries to "navigate" it can't
   nsCOMPtr<nsIDocShell> docShell(mContainer);
@@ -4584,7 +4529,6 @@ nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
 void
 nsDocumentViewer::IncrementDestroyRefCount()
 {
-  SetPrintRelated();
   ++mDestroyRefCount;
 }
 
@@ -4621,8 +4565,6 @@ void
 nsDocumentViewer::ReturnToGalleyPresentation()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  SetPrintRelated();
-
   if (!GetIsPrintPreview()) {
     NS_ERROR("Wow, we should never get here!");
     return;
@@ -4662,7 +4604,6 @@ void
 nsDocumentViewer::OnDonePrinting()
 {
 #if defined(NS_PRINTING) && defined(NS_PRINT_PREVIEW)
-  SetPrintRelated();
   // If Destroy() has been called during calling nsPrintEngine::Print() or
   // nsPrintEngine::PrintPreview(), mPrintEngine is already nullptr here.
   // So, the following clean up does nothing in such case.
@@ -4697,10 +4638,6 @@ nsDocumentViewer::OnDonePrinting()
 
 NS_IMETHODIMP nsDocumentViewer::SetPageMode(bool aPageMode, nsIPrintSettings* aPrintSettings)
 {
-  if (aPageMode) {
-    SetPrintRelated();
-  }
-
   // XXX Page mode is only partially working; it's currently used for
   // reftests that require a paginated context
   mIsPageMode = aPageMode;
@@ -4777,13 +4714,6 @@ nsDocumentViewer::DestroyPresShell()
   MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
              "DestroyPresShell must only be called when scripts are blocked");
 
-  nsIFrame* vmRootFrame =
-    mViewManager && mViewManager->GetRootView()
-      ? mViewManager->GetRootView()->GetFrame()
-      : nullptr;
-  nsIFrame* psRootFrame = mPresShell ? mPresShell->GetRootFrame() : nullptr;
-  MOZ_RELEASE_ASSERT(vmRootFrame == psRootFrame);
-
   // Break circular reference (or something)
   mPresShell->EndObservingDocument();
 
@@ -4791,18 +4721,7 @@ nsDocumentViewer::DestroyPresShell()
   if (selection && mSelectionListener)
     selection->RemoveSelectionListener(mSelectionListener);
 
-  bool hadRootFrame = !!mPresShell->GetRootFrame();
   mPresShell->Destroy();
-  mPresShellDestroyed = true;
-  MOZ_RELEASE_ASSERT(!mPresShell->GetRootFrame());
-  // destroying the frame tree via presshell destroy should have done this
-  if (hadRootFrame) {
-    MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView());
-  }
-  MOZ_RELEASE_ASSERT(!mViewManager || !mViewManager->GetRootView() ||
-    (!mViewManager->GetRootView()->GetFrame() &&
-     !mViewManager->GetRootView()->GetFirstChild()));
-
   mPresShell = nullptr;
 }
 
@@ -4822,7 +4741,6 @@ nsDocumentViewer::IsInitializedForPrintPreview()
 void
 nsDocumentViewer::InitializeForPrintPreview()
 {
-  SetPrintRelated();
   mInitializedForPrintPreview = true;
 }
 

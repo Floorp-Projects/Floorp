@@ -34,13 +34,13 @@ check:: check-vanilla-allocations
 endif
 endif
 
-SCRIPTS = $(JS_CONFIG_NAME)
-
 $(LIBRARY_NAME).pc: js.pc
 	cp $^ $@
 
+# Install versioned file, for parallel installability in Linux distributions
 install:: $(LIBRARY_NAME).pc
-	$(SYSINSTALL) $^ $(DESTDIR)$(libdir)/pkgconfig
+	cp $^ $(JS_LIBRARY_NAME).pc
+	$(SYSINSTALL) $(JS_LIBRARY_NAME).pc $(DESTDIR)$(libdir)/pkgconfig
 
 install:: ../js-config.h
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)
@@ -76,8 +76,10 @@ install::
 # END SpiderMonkey header installation
 #############################################
 
-install:: $(SCRIPTS)
-	$(SYSINSTALL) $^ $(DESTDIR)$(bindir)
+# Install versioned script, for parallel installability in Linux distributions
+install:: js-config
+	cp $^ js$(MOZJS_MAJOR_VERSION)-config
+	$(SYSINSTALL) js$(MOZJS_MAJOR_VERSION)-config $(DESTDIR)$(bindir)
 
 install:: $(REAL_LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifneq (,$(REAL_LIBRARY))

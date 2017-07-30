@@ -9,6 +9,7 @@
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
+#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -17,7 +18,8 @@ using namespace mozilla;
 //-----------------------------------------------------------------------------
 
 nsBrowserStatusFilter::nsBrowserStatusFilter()
-    : mCurProgress(0)
+    : mTarget(GetMainThreadEventTarget())
+    , mCurProgress(0)
     , mMaxProgress(0)
     , mStatusIsDirty(true)
     , mCurrentPercentage(0)
@@ -110,6 +112,21 @@ nsBrowserStatusFilter::GetLoadType(uint32_t *aLoadType)
     *aLoadType = 0;
     NS_NOTREACHED("nsBrowserStatusFilter::GetLoadType");
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsBrowserStatusFilter::GetTarget(nsIEventTarget** aTarget)
+{
+    nsCOMPtr<nsIEventTarget> target = mTarget;
+    target.forget(aTarget);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserStatusFilter::SetTarget(nsIEventTarget* aTarget)
+{
+    mTarget = aTarget;
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -362,9 +379,7 @@ nsBrowserStatusFilter::StartDelayTimer()
     if (!mTimer)
         return NS_ERROR_FAILURE;
 
-    // Use the system group. The browser status filter is always used by chrome
-    // code.
-    mTimer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
+    mTimer->SetTarget(mTarget);
     return mTimer->InitWithNamedFuncCallback(
         TimeoutHandler, this, 160, nsITimer::TYPE_ONE_SHOT,
         "nsBrowserStatusFilter::TimeoutHandler");

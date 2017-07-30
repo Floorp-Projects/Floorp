@@ -9,7 +9,6 @@ Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 
 function run_test() {
   do_get_profile();
@@ -21,7 +20,14 @@ add_task(async function() {
   const fhrDir  = OS.Path.join(OS.Constants.Path.profileDir, "healthreport");
   const fhrPath = OS.Path.join(fhrDir, "state.json");
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const invalidIDs = [-1, 0.5, "INVALID-UUID", true, "", "3d1e1560-682a-4043-8cf2-aaaaaaaaaaaZ"];
+  const invalidIDs = [
+    [-1, "setIntPref"],
+    [0.5, "setIntPref"],
+    ["INVALID-UUID", "setStringPref"],
+    [true, "setBoolPref"],
+    ["", "setStringPref"],
+    ["3d1e1560-682a-4043-8cf2-aaaaaaaaaaaZ", "setStringPref"],
+  ];
   const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
 
   await OS.File.makeDir(fhrDir);
@@ -73,7 +79,7 @@ add_task(async function() {
   Assert.ok(uuidRegex.test(clientID));
 
   // If both the FHR and DSR data are broken, we should end up with a new client ID.
-  for (let invalidID of invalidIDs) {
+  for (let [invalidID, ] of invalidIDs) {
     await ClientID._reset();
     await CommonUtils.writeJSON({clientID: invalidID}, fhrPath);
     await CommonUtils.writeJSON({clientID: invalidID}, drsPath);
@@ -83,12 +89,14 @@ add_task(async function() {
   }
 
   // Assure that cached IDs are being checked for validity.
-  for (let invalidID of invalidIDs) {
+  for (let [invalidID, prefFunc] of invalidIDs) {
     await ClientID._reset();
-    Preferences.set(PREF_CACHED_CLIENTID, invalidID);
+    Services.prefs[prefFunc](PREF_CACHED_CLIENTID, invalidID);
     let cachedID = ClientID.getCachedClientID();
     Assert.strictEqual(cachedID, null, "ClientID should ignore invalid cached IDs");
-    let prefID = Preferences.get(PREF_CACHED_CLIENTID, null);
-    Assert.strictEqual(prefID, null, "ClientID should reset invalid cached IDs");
+    Assert.ok(!Services.prefs.prefHasUserValue(PREF_CACHED_CLIENTID),
+              "ClientID should reset invalid cached IDs");
+    Assert.ok(Services.prefs.getPrefType(PREF_CACHED_CLIENTID) == Ci.nsIPrefBranch.PREF_INVALID,
+              "ClientID should reset invalid cached IDs");
   }
 });

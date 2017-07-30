@@ -14,7 +14,7 @@ Index: LICENSE
 +
  This code is released under the libpng license.
  
- libpng versions 1.0.7, July 1, 2000 through 1.6.29, March 16, 2017 are
+ libpng versions 1.0.7, July 1, 2000 through 1.6.31, July 27, 2017 are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -124,7 +124,7 @@ Index: pngget.c
 ===================================================================
 --- pngget.c
 +++ pngget.c
-@@ -1216,4 +1216,166 @@
+@@ -1234,4 +1234,166 @@
  #  endif
  #endif
  
@@ -295,12 +295,12 @@ Index: png.c
 ===================================================================
 --- png.c
 +++ png.c
-@@ -776,17 +776,21 @@
+@@ -806,17 +806,21 @@
  #else
  #  ifdef __STDC__
     return PNG_STRING_NEWLINE \
--      "libpng version 1.6.29 - March 16, 2017" PNG_STRING_NEWLINE \
-+      "libpng version 1.6.29+apng - March 16, 2017" PNG_STRING_NEWLINE \
+-      "libpng version 1.6.31 - July 27, 2017" PNG_STRING_NEWLINE \
++      "libpng version 1.6.31+apng - July 27, 2017" PNG_STRING_NEWLINE \
        "Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson" \
        PNG_STRING_NEWLINE \
        "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
@@ -310,8 +310,8 @@ Index: png.c
 +      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
 +      "Portions Copyright (c) 2008-2017 Max Stepin" PNG_STRING_NEWLINE ;
  #  else
--   return "libpng version 1.6.29 - March 16, 2017\
-+   return "libpng version 1.6.29+apng - March 16, 2017\
+-   return "libpng version 1.6.31 - July 27, 2017\
++   return "libpng version 1.6.31+apng - July 27, 2017\
        Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson\
        Copyright (c) 1996-1997 Andreas Dilger\
 -      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
@@ -337,16 +337,16 @@ Index: png.h
 + *
   * This code is released under the libpng license.
   *
-  * libpng versions 1.0.7, July 1, 2000 through 1.6.29, March 16, 2017 are
+  * libpng versions 1.0.7, July 1, 2000 through 1.6.31, July 27, 2017 are
 @@ -309,8 +315,9 @@
   */
  
  /* Version information for png.h - this should match the version in png.c */
--#define PNG_LIBPNG_VER_STRING "1.6.29"
--#define PNG_HEADER_VERSION_STRING " libpng version 1.6.29 - March 16, 2017\n"
-+#define PNG_LIBPNG_VER_STRING "1.6.29+apng"
+-#define PNG_LIBPNG_VER_STRING "1.6.31"
+-#define PNG_HEADER_VERSION_STRING " libpng version 1.6.31 - July 27, 2017\n"
++#define PNG_LIBPNG_VER_STRING "1.6.31+apng"
 +#define PNG_HEADER_VERSION_STRING \
-+     " libpng version 1.6.29+apng - March 16, 2017\n"
++     " libpng version 1.6.31+apng - July 27, 2017\n"
  
  #define PNG_LIBPNG_VER_SONUM   16
  #define PNG_LIBPNG_VER_DLLNUM  16
@@ -379,18 +379,18 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -776,6 +798,10 @@
- #define PNG_INFO_sPLT 0x2000U  /* ESR, 1.0.6 */
+@@ -777,6 +799,10 @@
  #define PNG_INFO_sCAL 0x4000U  /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000U  /* ESR, 1.0.6 */
+ #define PNG_INFO_eXIf 0x10000U /* GR-P, 1.6.31 */
 +#ifdef PNG_APNG_SUPPORTED
-+#define PNG_INFO_acTL 0x10000U
-+#define PNG_INFO_fcTL 0x20000U
++#define PNG_INFO_acTL 0x20000U
++#define PNG_INFO_fcTL 0x40000U
 +#endif
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -813,6 +839,10 @@
+@@ -814,6 +840,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -401,75 +401,75 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3245,6 +3275,75 @@
+@@ -3251,6 +3281,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
 +#ifdef PNG_APNG_SUPPORTED
-+PNG_EXPORT(246, png_uint_32, png_get_acTL, (png_structp png_ptr,
++PNG_EXPORT(248, png_uint_32, png_get_acTL, (png_structp png_ptr,
 +   png_infop info_ptr, png_uint_32 *num_frames, png_uint_32 *num_plays));
 +
-+PNG_EXPORT(247, png_uint_32, png_set_acTL, (png_structp png_ptr,
++PNG_EXPORT(249, png_uint_32, png_set_acTL, (png_structp png_ptr,
 +   png_infop info_ptr, png_uint_32 num_frames, png_uint_32 num_plays));
 +
-+PNG_EXPORT(248, png_uint_32, png_get_num_frames, (png_structp png_ptr,
++PNG_EXPORT(250, png_uint_32, png_get_num_frames, (png_structp png_ptr,
 +   png_infop info_ptr));
 +
-+PNG_EXPORT(249, png_uint_32, png_get_num_plays, (png_structp png_ptr,
++PNG_EXPORT(251, png_uint_32, png_get_num_plays, (png_structp png_ptr,
 +   png_infop info_ptr));
 +
-+PNG_EXPORT(250, png_uint_32, png_get_next_frame_fcTL,
++PNG_EXPORT(252, png_uint_32, png_get_next_frame_fcTL,
 +   (png_structp png_ptr, png_infop info_ptr, png_uint_32 *width,
 +   png_uint_32 *height, png_uint_32 *x_offset, png_uint_32 *y_offset,
 +   png_uint_16 *delay_num, png_uint_16 *delay_den, png_byte *dispose_op,
 +   png_byte *blend_op));
 +
-+PNG_EXPORT(251, png_uint_32, png_set_next_frame_fcTL,
++PNG_EXPORT(253, png_uint_32, png_set_next_frame_fcTL,
 +   (png_structp png_ptr, png_infop info_ptr, png_uint_32 width,
 +   png_uint_32 height, png_uint_32 x_offset, png_uint_32 y_offset,
 +   png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
 +   png_byte blend_op));
 +
-+PNG_EXPORT(252, png_uint_32, png_get_next_frame_width,
++PNG_EXPORT(254, png_uint_32, png_get_next_frame_width,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(253, png_uint_32, png_get_next_frame_height,
++PNG_EXPORT(255, png_uint_32, png_get_next_frame_height,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(254, png_uint_32, png_get_next_frame_x_offset,
++PNG_EXPORT(256, png_uint_32, png_get_next_frame_x_offset,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(255, png_uint_32, png_get_next_frame_y_offset,
++PNG_EXPORT(257, png_uint_32, png_get_next_frame_y_offset,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(256, png_uint_16, png_get_next_frame_delay_num,
++PNG_EXPORT(258, png_uint_16, png_get_next_frame_delay_num,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(257, png_uint_16, png_get_next_frame_delay_den,
++PNG_EXPORT(259, png_uint_16, png_get_next_frame_delay_den,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(258, png_byte, png_get_next_frame_dispose_op,
++PNG_EXPORT(260, png_byte, png_get_next_frame_dispose_op,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(259, png_byte, png_get_next_frame_blend_op,
++PNG_EXPORT(261, png_byte, png_get_next_frame_blend_op,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(260, png_byte, png_get_first_frame_is_hidden,
++PNG_EXPORT(262, png_byte, png_get_first_frame_is_hidden,
 +   (png_structp png_ptr, png_infop info_ptr));
-+PNG_EXPORT(261, png_uint_32, png_set_first_frame_is_hidden,
++PNG_EXPORT(263, png_uint_32, png_set_first_frame_is_hidden,
 +   (png_structp png_ptr, png_infop info_ptr, png_byte is_hidden));
 +
 +#ifdef PNG_READ_APNG_SUPPORTED
-+PNG_EXPORT(262, void, png_read_frame_head, (png_structp png_ptr,
++PNG_EXPORT(264, void, png_read_frame_head, (png_structp png_ptr,
 +   png_infop info_ptr));
 +#ifdef PNG_PROGRESSIVE_READ_SUPPORTED
-+PNG_EXPORT(263, void, png_set_progressive_frame_fn, (png_structp png_ptr,
++PNG_EXPORT(265, void, png_set_progressive_frame_fn, (png_structp png_ptr,
 +   png_progressive_frame_ptr frame_info_fn,
 +   png_progressive_frame_ptr frame_end_fn));
 +#endif /* PROGRESSIVE_READ */
 +#endif /* READ_APNG */
 +
 +#ifdef PNG_WRITE_APNG_SUPPORTED
-+PNG_EXPORT(264, void, png_write_frame_head, (png_structp png_ptr,
++PNG_EXPORT(266, void, png_write_frame_head, (png_structp png_ptr,
 +   png_infop info_ptr, png_bytepp row_pointers,
 +   png_uint_32 width, png_uint_32 height,
 +   png_uint_32 x_offset, png_uint_32 y_offset,
 +   png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
 +   png_byte blend_op));
 +
-+PNG_EXPORT(265, void, png_write_frame_tail, (png_structp png_ptr,
++PNG_EXPORT(267, void, png_write_frame_tail, (png_structp png_ptr,
 +   png_infop info_ptr));
 +#endif /* WRITE_APNG */
 +#endif /* APNG */
@@ -477,14 +477,14 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3253,7 +3352,11 @@
+@@ -3259,7 +3358,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
 +#ifdef PNG_APNG_SUPPORTED
-+  PNG_EXPORT_LAST_ORDINAL(265);
++  PNG_EXPORT_LAST_ORDINAL(267);
 +#else
-   PNG_EXPORT_LAST_ORDINAL(245);
+   PNG_EXPORT_LAST_ORDINAL(247);
 +#endif /* APNG */
  #endif
  
@@ -493,7 +493,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -616,6 +616,10 @@
+@@ -628,6 +628,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000U /* Have another chunk after IDAT */
                     /*             0x4000U (unused) */
  #define PNG_IS_READ_STRUCT        0x8000U /* Else is a write struct */
@@ -504,7 +504,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001U
-@@ -851,6 +855,16 @@
+@@ -864,6 +868,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -521,7 +521,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1589,6 +1603,49 @@
+@@ -1607,6 +1621,49 @@
  
  #endif /* PROGRESSIVE_READ */
  
@@ -575,7 +575,7 @@ Index: pnginfo.h
 ===================================================================
 --- pnginfo.h
 +++ pnginfo.h
-@@ -255,5 +255,18 @@
+@@ -260,5 +260,18 @@
     png_bytepp row_pointers;        /* the image bits */
  #endif
  
@@ -934,7 +934,7 @@ Index: pngset.c
 ===================================================================
 --- pngset.c
 +++ pngset.c
-@@ -241,6 +241,11 @@
+@@ -274,6 +274,11 @@
     info_ptr->pixel_depth = (png_byte)(info_ptr->channels * info_ptr->bit_depth);
  
     info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth, width);
@@ -946,7 +946,7 @@ Index: pngset.c
  }
  
  #ifdef PNG_oFFs_SUPPORTED
-@@ -1110,6 +1115,146 @@
+@@ -1144,6 +1149,146 @@
  }
  #endif /* sPLT */
  
@@ -1109,7 +1109,7 @@ Index: pngrutil.c
     /* Set internal variables */
     png_ptr->width = width;
     png_ptr->height = height;
-@@ -2761,6 +2766,180 @@
+@@ -2802,6 +2807,180 @@
  }
  #endif
  
@@ -1290,7 +1290,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -4023,6 +4202,38 @@
+@@ -4070,6 +4249,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1329,7 +1329,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -4034,6 +4245,7 @@
+@@ -4081,6 +4292,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1337,7 +1337,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4097,6 +4309,9 @@
+@@ -4144,6 +4356,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1347,7 +1347,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4535,4 +4750,80 @@
+@@ -4582,4 +4797,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1444,39 +1444,43 @@ Index: pngwutil.c
     if ((png_ptr->do_filter) == PNG_NO_FILTERS)
     {
        if (png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-@@ -1003,7 +1008,15 @@
-                optimize_cmf(data, png_image_size(png_ptr));
+@@ -1004,7 +1009,17 @@
  #endif
  
+          if (size > 0)
 +#ifdef PNG_WRITE_APNG_SUPPORTED
-+         if (png_ptr->num_frames_written == 0)
++         {
++            if (png_ptr->num_frames_written == 0)
 +#endif
-          png_write_complete_chunk(png_ptr, png_IDAT, data, size);
+             png_write_complete_chunk(png_ptr, png_IDAT, data, size);
 +#ifdef PNG_WRITE_APNG_SUPPORTED
-+         else
-+            png_write_fdAT(png_ptr, data, size);
++            else
++               png_write_fdAT(png_ptr, data, size);
++         }
 +#endif /* WRITE_APNG */
 +
           png_ptr->mode |= PNG_HAVE_IDAT;
  
           png_ptr->zstream.next_out = data;
-@@ -1049,7 +1062,15 @@
-             optimize_cmf(data, png_image_size(png_ptr));
+@@ -1051,7 +1066,17 @@
  #endif
  
+          if (size > 0)
 +#ifdef PNG_WRITE_APNG_SUPPORTED
-+         if (png_ptr->num_frames_written == 0)
++         {
++            if (png_ptr->num_frames_written == 0)
 +#endif
-          png_write_complete_chunk(png_ptr, png_IDAT, data, size);
+             png_write_complete_chunk(png_ptr, png_IDAT, data, size);
 +#ifdef PNG_WRITE_APNG_SUPPORTED
-+         else
-+            png_write_fdAT(png_ptr, data, size);
++            else
++               png_write_fdAT(png_ptr, data, size);
++         }
 +#endif /* WRITE_APNG */
 +
           png_ptr->zstream.avail_out = 0;
           png_ptr->zstream.next_out = NULL;
           png_ptr->mode |= PNG_HAVE_IDAT | PNG_AFTER_IDAT;
-@@ -1863,6 +1884,82 @@
+@@ -1896,6 +1921,82 @@
  }
  #endif
  
@@ -1559,7 +1563,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -2757,4 +2854,39 @@
+@@ -2790,4 +2891,39 @@
     }
  #endif /* WRITE_FLUSH */
  }
@@ -1603,27 +1607,27 @@ Index: scripts/symbols.def
 ===================================================================
 --- scripts/symbols.def
 +++ scripts/symbols.def
-@@ -250,3 +250,23 @@
-  png_get_palette_max @243
-  png_set_option @244
+@@ -252,3 +252,23 @@
   png_image_write_to_memory @245
-+ png_get_acTL @246
-+ png_set_acTL @247
-+ png_get_num_frames @248
-+ png_get_num_plays @249
-+ png_get_next_frame_fcTL @250
-+ png_set_next_frame_fcTL @251
-+ png_get_next_frame_width @252
-+ png_get_next_frame_height @253
-+ png_get_next_frame_x_offset @254
-+ png_get_next_frame_y_offset @255
-+ png_get_next_frame_delay_num @256
-+ png_get_next_frame_delay_den @257
-+ png_get_next_frame_dispose_op @258
-+ png_get_next_frame_blend_op @259
-+ png_get_first_frame_is_hidden @260
-+ png_set_first_frame_is_hidden @261
-+ png_read_frame_head @262
-+ png_set_progressive_frame_fn @263
-+ png_write_frame_head @264
-+ png_write_frame_tail @265
+  png_get_eXIf @246
+  png_set_eXIf @247
++ png_get_acTL @248
++ png_set_acTL @249
++ png_get_num_frames @250
++ png_get_num_plays @251
++ png_get_next_frame_fcTL @252
++ png_set_next_frame_fcTL @253
++ png_get_next_frame_width @254
++ png_get_next_frame_height @255
++ png_get_next_frame_x_offset @256
++ png_get_next_frame_y_offset @257
++ png_get_next_frame_delay_num @258
++ png_get_next_frame_delay_den @259
++ png_get_next_frame_dispose_op @260
++ png_get_next_frame_blend_op @261
++ png_get_first_frame_is_hidden @262
++ png_set_first_frame_is_hidden @263
++ png_read_frame_head @264
++ png_set_progressive_frame_fn @265
++ png_write_frame_head @266
++ png_write_frame_tail @267

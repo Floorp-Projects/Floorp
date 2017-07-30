@@ -120,23 +120,25 @@ ThrowTypeErrorBehavior(JSContext* cx)
 }
 
 static bool
-IsFunctionInStrictMode(JSFunction* fun)
+IsSloppyNormalFunction(JSFunction* fun)
 {
-    // Interpreted functions have a strict flag.
-    if (fun->isInterpreted() && fun->strict())
-        return true;
+    // FunctionDeclaration or FunctionExpression in sloppy mode.
+    if (fun->kind() == JSFunction::NormalFunction) {
+        if (fun->isBuiltin() || fun->isBoundFunction())
+            return false;
 
-    // Only asm.js functions can also be strict.
-    return IsAsmJSStrictModeModuleOrFunction(fun);
-}
+        if (fun->isStarGenerator() || fun->isLegacyGenerator() || fun->isAsync())
+            return false;
 
-static bool
-IsNewerTypeFunction(JSFunction* fun) {
-    return fun->isArrow() ||
-           fun->isStarGenerator() ||
-           fun->isLegacyGenerator() ||
-           fun->isAsync() ||
-           fun->isMethod();
+        MOZ_ASSERT(fun->isInterpreted());
+        return !fun->strict();
+    }
+
+    // Or asm.js function in sloppy mode.
+    if (fun->kind() == JSFunction::AsmJS)
+        return !IsAsmJSStrictModeModuleOrFunction(fun);
+
+    return false;
 }
 
 // Beware: this function can be invoked on *any* function! That includes
@@ -148,13 +150,10 @@ IsNewerTypeFunction(JSFunction* fun) {
 static bool
 ArgumentsRestrictions(JSContext* cx, HandleFunction fun)
 {
-    // Throw if the function is a builtin (note: this doesn't include asm.js),
-    // a strict mode function, or a bound function.
+    // Throw unless the function is a sloppy, normal function.
     // TODO (bug 1057208): ensure semantics are correct for all possible
     // pairings of callee/caller.
-    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) ||
-        fun->isBoundFunction() || IsNewerTypeFunction(fun))
-    {
+    if (!IsSloppyNormalFunction(fun)) {
         ThrowTypeErrorBehavior(cx);
         return false;
     }
@@ -237,13 +236,10 @@ ArgumentsSetter(JSContext* cx, unsigned argc, Value* vp)
 static bool
 CallerRestrictions(JSContext* cx, HandleFunction fun)
 {
-    // Throw if the function is a builtin (note: this doesn't include asm.js),
-    // a strict mode function, or a bound function.
+    // Throw unless the function is a sloppy, normal function.
     // TODO (bug 1057208): ensure semantics are correct for all possible
     // pairings of callee/caller.
-    if (fun->isBuiltin() || IsFunctionInStrictMode(fun) ||
-        fun->isBoundFunction() || IsNewerTypeFunction(fun))
-    {
+    if (!IsSloppyNormalFunction(fun)) {
         ThrowTypeErrorBehavior(cx);
         return false;
     }

@@ -107,11 +107,11 @@ function removeUnicodeExtensions(locale) {
     var left = callFunction(String_substring, locale, 0, pos);
     var right = callFunction(String_substring, locale, pos);
 
-    var extensions;
     var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
-    while ((extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left)) !== null) {
-        left = StringReplaceString(left, extensions[0], "");
-        unicodeLocaleExtensionSequenceRE.lastIndex = 0;
+    var extensions = regexp_exec_no_statics(unicodeLocaleExtensionSequenceRE, left);
+    if (extensions !== null) {
+        left = callFunction(String_substring, left, 0, extensions.index) +
+               callFunction(String_substring, left, extensions.index + extensions[0].length);
     }
 
     var combined = left + right;

@@ -70,11 +70,19 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TypeTraits.h"
 
 #include <string.h>
+
+#if defined(MOZILLA_INTERNAL_API)
+// For thread safety checking.
+#include "nsISupportsImpl.h"
+#endif
+
+#if defined(MOZILLA_INTERNAL_API) && defined(MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED)
 
 // Weak referencing is not implemeted as thread safe.  When a WeakPtr
 // is created or dereferenced on thread A but the real object is just
@@ -89,31 +97,21 @@
 // on a single thread.  The following macros implement assertions for
 // checking these conditions.
 //
-// We disable this on MinGW. MinGW has two threading models: win32
-// API based, which disables std::thread; and POSIX based which
-// enables it but requires an emulation library (winpthreads).
-// Rather than attempting to switch to pthread emulation at this point,
-// we are disabling the std::thread based assertion checking.
-//
-// In the future, to enable it we could
-// a. have libgcc/stdc++ support win32 threads natively
-// b. switch to POSIX-based threading in MinGW with pthread emulation
-// c. refactor it to not use std::thread
+// We re-use XPCOM's nsAutoOwningThread checks when they are available. This has
+// the advantage that it works with cooperative thread pools.
 
-#if !defined(__MINGW32__) && (defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING)))
-
-#include <thread>
 #define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
-  std::thread::id _owningThread; \
-  bool _empty; // If it was initialized as a placeholder with mPtr = nullptr.
+  /* Will be none if mPtr = nullptr. */ \
+  Maybe<nsAutoOwningThread> _owningThread;
 #define MOZ_WEAKPTR_INIT_THREAD_SAFETY_CHECK() \
   do { \
-    _owningThread = std::this_thread::get_id(); \
-    _empty = !p; \
+    if (p) { \
+      _owningThread.emplace(); \
+    } \
   } while (false)
 #define MOZ_WEAKPTR_ASSERT_THREAD_SAFETY() \
   do { \
-    if (!(_empty || _owningThread == std::this_thread::get_id())) { \
+    if (_owningThread.isSome() && !_owningThread.ref().IsCurrentThread()) { \
       WeakPtrTraits<T>::AssertSafeToAccessFromNonOwningThread(); \
     } \
   } while (false)

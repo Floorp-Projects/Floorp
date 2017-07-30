@@ -850,6 +850,13 @@ nsFrameMessageManager::GetDocShell(nsIDocShell** aDocShell)
 }
 
 NS_IMETHODIMP
+nsFrameMessageManager::GetTabEventTarget(nsIEventTarget** aTarget)
+{
+  *aTarget = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrameMessageManager::Btoa(const nsAString& aBinaryData,
                             nsAString& aAsciiBase64String)
 {

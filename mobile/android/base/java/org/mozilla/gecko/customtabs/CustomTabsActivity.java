@@ -76,7 +76,7 @@ public class CustomTabsActivity extends AppCompatActivity
     private boolean mCanStop = false;
     private String mCurrentUrl;
     private String mCurrentTitle;
-    private int mSecurityStatus = GeckoView.ProgressListener.STATE_IS_INSECURE;
+    private boolean mIsSecure = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -423,7 +423,7 @@ public class CustomTabsActivity extends AppCompatActivity
      * Update the state of the action bar
      */
     private void updateActionBar() {
-        actionBarPresenter.update(mCurrentTitle, mCurrentUrl, mSecurityStatus);
+        actionBarPresenter.update(mCurrentTitle, mCurrentUrl, mIsSecure);
     }
 
     /**
@@ -547,14 +547,8 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onSecurityChange(GeckoView view, int status, GeckoBundle identity) {
-        if ((status & STATE_IS_INSECURE) != 0) {
-            mSecurityStatus = STATE_IS_INSECURE;
-        } else if ((status & STATE_IS_BROKEN) != 0) {
-            mSecurityStatus = STATE_IS_BROKEN;
-        } else if ((status & STATE_IS_SECURE) != 0) {
-            mSecurityStatus = STATE_IS_SECURE;
-        }
+    public void onSecurityChange(GeckoView view, SecurityInformation securityInfo) {
+        mIsSecure = securityInfo.isSecure;
         updateActionBar();
     }
 

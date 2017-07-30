@@ -985,12 +985,10 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   // Handle the error which we got back from the parent process, if we got
   // one.
   if (NS_FAILED(rv)) {
-    PRenderFrameChild::Send__delete__(renderFrame);
     return rv;
   }
 
   if (!*aWindowIsNew) {
-    PRenderFrameChild::Send__delete__(renderFrame);
     return NS_ERROR_ABORT;
   }
 
@@ -1000,7 +998,6 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   }
 
   if (layersId == 0) { // if renderFrame is invalid.
-    PRenderFrameChild::Send__delete__(renderFrame);
     renderFrame = nullptr;
   }
 
@@ -2874,20 +2871,21 @@ ContentChild::RecvShutdown()
   CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("IPCShutdownState"),
                                      NS_LITERAL_CSTRING("RecvShutdown"));
 #endif
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_SUCCEEDED(rv) && thread) {
-    RefPtr<nsThread> mainThread(thread.forget().downcast<nsThread>());
-    if (mainThread->RecursionDepth() > 1) {
-      // We're in a nested event loop. Let's delay for an arbitrary period of
-      // time (100ms) in the hopes that the event loop will have finished by
-      // then.
-      MessageLoop::current()->PostDelayedTask(
-        NewRunnableMethod(
-          "dom::ContentChild::RecvShutdown", this, &ContentChild::RecvShutdown),
-        100);
-      return IPC_OK();
-    }
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<nsThread> mainThread = nsThreadManager::get().GetCurrentThread();
+  // Note that we only have to check the recursion count for the current
+  // cooperative thread. Since the Shutdown message is not labeled with a
+  // SchedulerGroup, there can be no other cooperative threads doing work while
+  // we're running.
+  if (mainThread && mainThread->RecursionDepth() > 1) {
+    // We're in a nested event loop. Let's delay for an arbitrary period of
+    // time (100ms) in the hopes that the event loop will have finished by
+    // then.
+    MessageLoop::current()->PostDelayedTask(
+      NewRunnableMethod(
+        "dom::ContentChild::RecvShutdown", this, &ContentChild::RecvShutdown),
+      100);
+    return IPC_OK();
   }
 
   mShuttingDown = true;

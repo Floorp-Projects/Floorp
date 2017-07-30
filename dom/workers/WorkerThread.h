@@ -43,6 +43,7 @@ class WorkerThread final
 {
   class Observer;
 
+  Mutex mLock;
   CondVar mWorkerPrivateCondVar;
 
   // Protected by nsThread::mLock.

@@ -69,6 +69,8 @@ public:
     AssertCurrentThreadOwnsMe(aMsg);
   }
 
+  bool IsCurrentThread() const;
+
 private:
   void AssertCurrentThreadOwnsMe(const char* aMsg) const;
 

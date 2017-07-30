@@ -783,6 +783,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var MAX_LENGTH = 100000;
+
 	function getMatches(query, text, modifiers) {
 	  if (!query || !text || !modifiers) {
 	    return [];
@@ -794,8 +796,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var lines = text.split("\n");
 	  for (var i = 0; i < lines.length; i++) {
 	    var singleMatch = void 0;
-	    while ((singleMatch = regexQuery.exec(lines[i])) !== null) {
-	      matchedLocations.push({ line: i, ch: singleMatch.index });
+	    var line = lines[i];
+	    if (line.length <= MAX_LENGTH) {
+	      while ((singleMatch = regexQuery.exec(line)) !== null) {
+	        matchedLocations.push({ line: i, ch: singleMatch.index });
+	      }
+	    } else {
+	      return [];
 	    }
 	  }
 	  return matchedLocations;
