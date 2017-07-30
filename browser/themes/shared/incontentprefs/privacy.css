@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.permission-icon {
+  max-height: 20px;
+  max-width: 20px;
+  vertical-align: middle;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.geo-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#geo-linux);
+}
+
+.camera-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#camera);
+}
+
+.microphone-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#microphone);
+}
+
+.desktop-notification-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons.svg#desktop-notification);
+}
