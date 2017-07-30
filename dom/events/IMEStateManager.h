@@ -260,6 +260,7 @@ protected:
                                         nsIContent* aContent,
                                         InputContextAction aAction);
   static void SetIMEState(const IMEState &aState,
+                          nsPresContext* aPresContext,
                           nsIContent* aContent,
                           nsIWidget* aWidget,
                           InputContextAction aAction,
