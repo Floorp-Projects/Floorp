@@ -4594,7 +4594,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
 "oomThreadTypes()",
 "  Get the number of thread types that can be used as an argument for\n"
-"oomAfterAllocations() and oomAtAllocation()."),
+"  oomAfterAllocations() and oomAtAllocation()."),
 
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 2, 0,
 "oomAfterAllocations(count [,threadType])",
@@ -4748,8 +4748,8 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
 "enableOsiPointRegisterChecks()",
-"Emit extra code to verify live regs at the start of a VM call are not\n"
-"modified before its OsiPoint."),
+"  Emit extra code to verify live regs at the start of a VM call are not\n"
+"  modified before its OsiPoint."),
 
     JS_FN_HELP("displayName", DisplayName, 1, 0,
 "displayName(fn)",
@@ -4768,7 +4768,7 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
 "getCompilerOptions()",
-"Return an object describing some of the JIT compiler options.\n"),
+"  Return an object describing some of the JIT compiler options.\n"),
 
     JS_FN_HELP("isAsmJSModule", IsAsmJSModule, 1, 0,
 "isAsmJSModule(fn)",
@@ -4821,7 +4821,7 @@ gc::ZealModeHelpText),
 
     JS_FN_HELP("isRelazifiableFunction", IsRelazifiableFunction, 1, 0,
 "isRelazifiableFunction(fun)",
-"  Ture if fun is a JSFunction with a relazifiable JSScript."),
+"  True if fun is a JSFunction with a relazifiable JSScript."),
 
     JS_FN_HELP("enableShellAllocationMetadataBuilder", EnableShellAllocationMetadataBuilder, 0, 0,
 "enableShellAllocationMetadataBuilder()",
@@ -4874,11 +4874,10 @@ gc::ZealModeHelpText),
 "  Serialize 'data' using JS_WriteStructuredClone. Returns a structured\n"
 "  clone buffer object. 'policy' may be an options hash. Valid keys:\n"
 "    'SharedArrayBuffer' - either 'allow' (the default) or 'deny'\n"
-"    to specify whether SharedArrayBuffers may be serialized.\n"
-"\n"
+"      to specify whether SharedArrayBuffers may be serialized.\n"
 "    'scope' - SameProcessSameThread, SameProcessDifferentThread, or\n"
-"    DifferentProcess. Determines how some values will be serialized.\n"
-"    Clone buffers may only be deserialized with a compatible scope."),
+"      DifferentProcess. Determines how some values will be serialized.\n"
+"      Clone buffers may only be deserialized with a compatible scope."),
 
     JS_FN_HELP("deserialize", Deserialize, 1, 0,
 "deserialize(clonebuffer[, opts])",
