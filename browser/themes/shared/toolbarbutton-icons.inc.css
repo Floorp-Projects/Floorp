@@ -20,7 +20,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
-#library-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -434,7 +433,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 @keyframes library-bookmark-animation-rtl {
   from {
-    transform: scaleX(-1) translateX(0);
+    transform: translateX(1056px);
     fill: inherit;
   }
   25% {
@@ -444,7 +443,7 @@ toolbar[brighttext] .toolbarbutton-1 {
     fill: var(--toolbarbutton-icon-fill-attention);
   }
   to {
-    transform: scaleX(-1) translateX(-1056px);
+    transform: translateX(0);
     fill: var(--toolbarbutton-icon-fill-attention);
   }
 }
@@ -499,7 +498,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 
 .toolbarbutton-animatable-box[animate="bookmark"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-image {
   animation-name: library-bookmark-animation-rtl;
-  transform: scaleX(-1);
 }
 
 .toolbarbutton-animatable-box[animate="bookmark"][fade] > .toolbarbutton-animatable-image {
