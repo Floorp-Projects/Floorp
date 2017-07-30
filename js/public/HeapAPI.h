@@ -461,7 +461,15 @@ GetTenuredGCThingZone(GCCellPtr thing)
 }
 
 extern JS_PUBLIC_API(Zone*)
-GetStringZone(JSString* str);
+GetNurseryStringZone(JSString* str);
+
+static MOZ_ALWAYS_INLINE Zone*
+GetStringZone(JSString* str)
+{
+    if (!js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(str)))
+        return js::gc::detail::GetGCThingZone(reinterpret_cast<uintptr_t>(str));
+    return GetNurseryStringZone(str);
+}
 
 extern JS_PUBLIC_API(Zone*)
 GetObjectZone(JSObject* obj);
