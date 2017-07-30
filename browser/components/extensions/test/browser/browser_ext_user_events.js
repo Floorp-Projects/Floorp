@@ -45,6 +45,9 @@ add_task(async function testSources() {
     is(result.result, true, `request() succeeded when called from ${what}`);
   }
 
+  // Remove Sidebar button to prevent pushing extension button to overflow menu
+  CustomizableUI.removeWidgetFromArea("sidebar-button");
+
   await extension.startup();
 
   await extension.awaitMessage("page-action-shown");
@@ -66,5 +69,7 @@ add_task(async function testSources() {
   await BrowserTestUtils.removeTab(tab);
 
   await extension.unload();
+
+  registerCleanupFunction(() => CustomizableUI.reset());
 });
 
