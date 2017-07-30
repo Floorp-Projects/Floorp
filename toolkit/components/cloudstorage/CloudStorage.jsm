@@ -398,6 +398,7 @@ var CloudStorageInternal = {
    *        type of data downloaded, options are 'default', 'screenshot'
    *        default value is 'default'
    * @return {Promise} which resolves to full path to download folder
+   * Resolves null if a valid download folder is not found.
    */
   async getDownloadFolder(dataType = "default") {
     // Wait for cloudstorage to initialize if providers metadata is not available
