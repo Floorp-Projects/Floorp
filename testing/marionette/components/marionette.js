@@ -92,7 +92,8 @@ function getPrefVal(pref) {
       break;
 
     default:
-      throw new TypeError(`Unexpected preference type (${prefType}) for ${pref}`);
+      throw new TypeError(`Unexpected preference type (${prefType}) for ` +
+                          `${pref}`);
   }
 
   return prefValue;
