@@ -256,14 +256,14 @@ add_task(function* () {
   testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
 
   // Test transferred
-  setFreetextFilter("transferred:0");
-  testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 1]);
+  setFreetextFilter("transferred:200");
+  testContents([0, 0, 0, 0, 1, 1, 1, 1, 0, 0]);
 
-  setFreetextFilter("transferred:1");
-  testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  setFreetextFilter("transferred:234");
+  testContents([1, 0, 1, 0, 0, 0, 0, 0, 0, 1]);
 
-  setFreetextFilter("transferred:34");
-  testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 0]);
+  setFreetextFilter("transferred:248");
+  testContents([0, 0, 1, 1, 0, 0, 0, 0, 0, 1]);
 
   // Test larger-than
   setFreetextFilter("larger-than:-1");
@@ -288,14 +288,14 @@ add_task(function* () {
   setFreetextFilter("transferred-larger-than:-1");
   testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
-  setFreetextFilter("transferred-larger-than:0");
-  testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
+  setFreetextFilter("transferred-larger-than:214");
+  testContents([1, 1, 1, 1, 0, 0, 0, 0, 1, 1]);
 
-  setFreetextFilter("transferred-larger-than:33");
-  testContents([0, 0, 1, 1, 0, 0, 0, 0, 1, 0]);
+  setFreetextFilter("transferred-larger-than:247");
+  testContents([0, 1, 1, 1, 0, 0, 0, 0, 1, 0]);
 
-  setFreetextFilter("transferred-larger-than:34");
-  testContents([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]);
+  setFreetextFilter("transferred-larger-than:248");
+  testContents([0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
 
   setFreetextFilter("transferred-larger-than:10.73k");
   testContents([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
