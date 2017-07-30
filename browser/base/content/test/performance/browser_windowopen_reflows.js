@@ -32,10 +32,8 @@ if (Services.appinfo.OS == "Linux") {
     EXPECTED_REFLOWS.push(
       [
         "handleEvent@chrome://browser/content/tabbrowser.xml",
-        "inferFromText/<@chrome://browser/content/browser.js",
-        "promiseReflowed/</<@resource://gre/modules/BrowserUtils.jsm",
-        "_onReflow@resource://gre/modules/BrowserUtils.jsm",
-        "reflowInterruptible@resource://gre/modules/BrowserUtils.jsm",
+        "inferFromText@chrome://browser/content/browser.js",
+        "handleEvent@chrome://browser/content/browser.js",
       ],
     );
   }
@@ -45,10 +43,8 @@ if (Services.appinfo.OS == "Darwin") {
   EXPECTED_REFLOWS.push(
     [
       "handleEvent@chrome://browser/content/tabbrowser.xml",
-      "inferFromText/<@chrome://browser/content/browser.js",
-      "promiseReflowed/</<@resource://gre/modules/BrowserUtils.jsm",
-      "_onReflow@resource://gre/modules/BrowserUtils.jsm",
-      "reflowInterruptible@resource://gre/modules/BrowserUtils.jsm",
+      "inferFromText@chrome://browser/content/browser.js",
+      "handleEvent@chrome://browser/content/browser.js",
     ],
   );
 }
@@ -71,10 +67,8 @@ if (Services.appinfo.OS == "WINNT") {
 
     [
       "handleEvent@chrome://browser/content/tabbrowser.xml",
-      "inferFromText/<@chrome://browser/content/browser.js",
-      "promiseReflowed/</<@resource://gre/modules/BrowserUtils.jsm",
-      "_onReflow@resource://gre/modules/BrowserUtils.jsm",
-      "reflowInterruptible@resource://gre/modules/BrowserUtils.jsm",
+      "inferFromText@chrome://browser/content/browser.js",
+      "handleEvent@chrome://browser/content/browser.js",
     ],
 
     [
