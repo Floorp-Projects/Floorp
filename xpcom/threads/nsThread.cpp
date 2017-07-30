@@ -751,7 +751,7 @@ nsThread::PutEvent(already_AddRefed<nsIRunnable> aEvent, nsNestedEventTarget* aT
   }
 
   if (obs) {
-    obs->OnDispatchedEvent(this);
+    obs->OnDispatchedEvent();
   }
 
   return NS_OK;

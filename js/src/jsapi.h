@@ -36,6 +36,7 @@
 #include "js/Realm.h"
 #include "js/RefCounted.h"
 #include "js/RootingAPI.h"
+#include "js/Stream.h"
 #include "js/TracingAPI.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -1218,6 +1219,16 @@ class JS_PUBLIC_API(ContextOptions) {
         return *this;
     }
 
+    bool streams() const { return streams_; }
+    ContextOptions& setStreams(bool flag) {
+        streams_ = flag;
+        return *this;
+    }
+    ContextOptions& toggleStreams() {
+        streams_ = !streams_;
+        return *this;
+    }
+
     bool wasmAlwaysBaseline() const { return wasmAlwaysBaseline_; }
     ContextOptions& setWasmAlwaysBaseline(bool flag) {
         wasmAlwaysBaseline_ = flag;
@@ -1328,6 +1339,7 @@ class JS_PUBLIC_API(ContextOptions) {
     bool strictMode_ : 1;
     bool extraWarnings_ : 1;
     bool forEachStatement_: 1;
+    bool streams_: 1;
 #ifdef FUZZING
     bool fuzzing_ : 1;
 #endif
@@ -4592,6 +4604,9 @@ JS_ResetInterruptCallback(JSContext* cx, bool enable);
 
 extern JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSContext* cx);
+
+extern JS_PUBLIC_API(void)
+JS_RequestInterruptCallbackCanWait(JSContext* cx);
 
 namespace JS {
 

@@ -647,6 +647,8 @@ ReloadPrefsCallback(const char* pref, void* data)
 
     bool extraWarnings = Preferences::GetBool(JS_OPTIONS_DOT_STR "strict");
 
+    bool streams = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
+
     sSharedMemoryEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
 
 #ifdef DEBUG
@@ -681,6 +683,7 @@ ReloadPrefsCallback(const char* pref, void* data)
 #ifdef FUZZING
                              .setFuzzing(fuzzingEnabled)
 #endif
+                             .setStreams(streams)
                              .setExtraWarnings(extraWarnings);
 
     JS_SetParallelParsingEnabled(cx, parallelParsing);

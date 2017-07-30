@@ -4411,7 +4411,7 @@ js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent)
 {
     MOZ_ASSERT(!fun->isArrow());
 
-    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent));
+    JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent);
     if (!clone)
         return nullptr;
 
@@ -4424,13 +4424,13 @@ js::LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent, HandleVa
 {
     MOZ_ASSERT(fun->isArrow());
 
-    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, nullptr,
-                                                             TenuredObject));
+    JSFunction* clone = CloneFunctionObjectIfNotSingleton(cx, fun, parent, nullptr,
+                                                          TenuredObject);
     if (!clone)
         return nullptr;
 
-    MOZ_ASSERT(clone->as<JSFunction>().isArrow());
-    clone->as<JSFunction>().setExtendedSlot(0, newTargetv);
+    MOZ_ASSERT(clone->isArrow());
+    clone->setExtendedSlot(0, newTargetv);
 
     MOZ_ASSERT(fun->global() == clone->global());
     return clone;

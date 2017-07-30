@@ -71,7 +71,7 @@ interface nsIThreadInternal : nsIThread
  *
  *   var NativeQueue;
  *   Observer = {
- *     onDispatchedEvent(thread) {
+ *     onDispatchedEvent() {
  *       NativeQueue.signal();
  *     }
  *     onProcessNextEvent(thread, mayWait) {
@@ -99,11 +99,8 @@ interface nsIThreadObserver : nsISupports
   /**
    * This method is called after an event has been dispatched to the thread.
    * This method may be called from any thread. 
-   *
-   * @param thread
-   *   The thread where the event is being dispatched.
    */
-  void onDispatchedEvent(in nsIThreadInternal thread);
+  void onDispatchedEvent();
 
   /**
    * This method is called when nsIThread::ProcessNextEvent is called.  It does

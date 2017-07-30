@@ -7,9 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Taskcluster', 'General')
 
-with Files('actions/**'):
-    BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
-
 with Files('ci/**'):
     BUG_COMPONENT = ('Taskcluster', 'Task Configuration')
 

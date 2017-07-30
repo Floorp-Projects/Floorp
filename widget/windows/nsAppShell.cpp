@@ -315,7 +315,7 @@ nsAppShell::DoProcessMoreGeckoEvents()
   // if we need it, which insures NS_ProcessPendingEvents gets called and all
   // gecko events get processed.
   if (mEventloopNestingLevel < 2) {
-    OnDispatchedEvent(nullptr);
+    OnDispatchedEvent();
     mNativeCallbackPending = false;
   } else {
     mNativeCallbackPending = true;

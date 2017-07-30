@@ -61,6 +61,7 @@ add_task(async function() {
     return extension.awaitMessage("manifest");
   }
 
+  Components.manager.addBootstrappedManifestLocation(do_get_file("data/locales/"));
 
   await extension.startup();
 
@@ -79,6 +80,7 @@ add_task(async function() {
 
 
   do_print("Change locale to 'fr' and restart");
+  Preferences.set("intl.locale.matchOS", false);
   Preferences.set("general.useragent.locale", "fr");
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();

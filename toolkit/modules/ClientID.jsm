@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ["ClientID"];
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -178,13 +178,18 @@ var ClientIDImpl = {
     }
 
     // Not yet loaded, return the cached client id if we have one.
-    let id = Preferences.get(PREF_CACHED_CLIENTID, null);
+    if (Services.prefs.getPrefType(PREF_CACHED_CLIENTID) != Ci.nsIPrefBranch.PREF_STRING) {
+      this._log.error("getCachedClientID - invalid client id type in preferences, resetting");
+      Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
+    }
+
+    let id = Services.prefs.getStringPref(PREF_CACHED_CLIENTID, null);
     if (id === null) {
       return null;
     }
     if (!isValidClientID(id)) {
       this._log.error("getCachedClientID - invalid client id in preferences, resetting", id);
-      Preferences.reset(PREF_CACHED_CLIENTID);
+      Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
       return null;
     }
     return id;
@@ -214,7 +219,7 @@ var ClientIDImpl = {
     }
 
     this._clientID = id;
-    Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+    Services.prefs.setStringPref(PREF_CACHED_CLIENTID, this._clientID);
     return true;
   },
 

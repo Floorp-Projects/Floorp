@@ -1,0 +1,4 @@
+<?xml-stylesheet href='chrome://global/skin' type='text/css'?>
+<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' align='start' pack='start' style='-moz-appearance: none; margin: 0; padding: 0; border: 0;' width='190' height='220' minwidth='215' minheight='235'>
+<resizer dir='bottomright' flex='1' width='150' height='150' style='-moz-appearance: none; margin: 0; border: 0; padding: 0;'/>
+</window>

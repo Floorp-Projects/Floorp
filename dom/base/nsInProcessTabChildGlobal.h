@@ -77,6 +77,7 @@ public:
   }
   NS_IMETHOD GetContent(mozIDOMWindowProxy** aContent) override;
   NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) override;
+  NS_IMETHOD GetTabEventTarget(nsIEventTarget** aTarget) override;
 
   NS_DECL_NSIINPROCESSCONTENTFRAMEMESSAGEMANAGER
 

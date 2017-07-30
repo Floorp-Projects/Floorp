@@ -959,7 +959,7 @@ num_toFixed_impl(JSContext* cx, const CallArgs& args)
         if (!ToInteger(cx, args[0], &prec))
             return false;
 
-        if (!ComputePrecisionInRange(cx, -20, MAX_PRECISION, prec, &precision))
+        if (!ComputePrecisionInRange(cx, 0, MAX_PRECISION, prec, &precision))
             return false;
     }
 
@@ -1118,6 +1118,12 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END
 };
 
+bool
+js::IsInteger(const Value& val)
+{
+    return val.isInt32() ||
+           (mozilla::IsFinite(val.toDouble()) && JS::ToInteger(val.toDouble()) == val.toDouble());
+}
 
 static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isFinite", "Number_isFinite", 1,0),

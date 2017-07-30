@@ -19521,12 +19521,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var dispatch = _ref.dispatch,
 	        client = _ref.client;
 
-	    // dispatch(evaluateExpressions(null));
-
-	    return dispatch({
+	    dispatch({
 	      type: "RESUME",
 	      value: undefined
 	    });
+
+	    dispatch((0, _expressions.evaluateExpressions)(null));
 	  };
 	}
 
@@ -22485,13 +22485,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.isExactUrlMatch = exports.getURL = exports.getDirectories = exports.createTree = exports.collapseTree = exports.addToTree = exports.isDirectory = exports.createParentMap = exports.nodeHasChildren = exports.createNode = undefined;
+	exports.formatTree = exports.isExactUrlMatch = exports.getURL = exports.getDirectories = exports.createTree = exports.collapseTree = exports.addToTree = exports.isDirectory = exports.createParentMap = exports.nodeHasChildren = exports.createNode = undefined;
 
 	var _url = __webpack_require__(334);
-
-	var _DevToolsUtils = __webpack_require__(222);
-
-	var _DevToolsUtils2 = _interopRequireDefault(_DevToolsUtils);
 
 	var _source = __webpack_require__(233);
 
@@ -22500,11 +22496,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _merge2 = _interopRequireDefault(_merge);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	/**
-	 * Utils for Sources Tree Component
-	 * @module utils/sources-tree
-	 */
 
 	var IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 
@@ -22522,6 +22513,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @static
 	 */
 
+
+	/**
+	 * Utils for Sources Tree Component
+	 * @module utils/sources-tree
+	 */
 
 	/**
 	 * @memberof utils/sources-tree
@@ -22691,7 +22687,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    //
 	    // TODO: Be smarter about this, which we'll probably do when we
 	    // are smarter about folders and collapsing empty ones.
-	    (0, _DevToolsUtils2.default)(nodeHasChildren(subtree), `${subtree.name} should have children`);
+
+	    if (!nodeHasChildren(subtree)) {
+	      return {
+	        v: void 0
+	      };
+	    }
+
 	    var children = subtree.contents;
 
 	    var index = determineFileSortOrder(children, part, isLastPart, i === 0 ? debuggeeUrl : "");
@@ -22715,7 +22717,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 
 	  for (var i = 0; i < parts.length; i++) {
-	    _loop(i);
+	    var _ret = _loop(i);
+
+	    if (typeof _ret === "object") return _ret.v;
 	  }
 
 	  // Overwrite the contents of the final node to store the source
@@ -22871,6 +22875,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 	}
 
+	function formatTree(tree) {
+	  var depth = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+	  var str = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "";
+
+	  var whitespace = new Array(depth * 2).join(" ");
+
+	  if (!tree.contents) {
+	    return str;
+	  }
+
+	  if (tree.contents.length > 0) {
+	    str += `${whitespace} - ${tree.name} path=${tree.path} \n`;
+	    tree.contents.forEach(t => {
+	      str = formatTree(t, depth + 1, str);
+	    });
+	  } else if (tree.contents.toJS) {
+	    var id = tree.contents.get("id");
+	    str += `${whitespace} - ${tree.name} path=${tree.path} source_id=${id} \n`;
+	  }
+
+	  return str;
+	}
+
 	exports.createNode = createNode;
 	exports.nodeHasChildren = nodeHasChildren;
 	exports.createParentMap = createParentMap;
@@ -22881,6 +22908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.getDirectories = getDirectories;
 	exports.getURL = getURL;
 	exports.isExactUrlMatch = isExactUrlMatch;
+	exports.formatTree = formatTree;
 
 /***/ },
 /* 392 */
@@ -24254,7 +24282,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    shortcuts.on(searchAgainKey, this.onSearchAgain);
 
 	    if (selectedLocation && !!selectedLocation.line) {
-	      this.pendingJumpLocation = selectedLocation;
+	      this.pendingJumpLine = selectedLocation.line;
 	    }
 
 	    (0, _editor.updateDocument)(editor, selectedSource);
@@ -24483,7 +24511,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      closePanel: this.closeConditionalPanel
 	    });
 
-	    this.cbPanel = this.state.editor.codeMirror.addLineWidget(line, panel, {
+	    var editorLine = line - 1;
+	    this.cbPanel = this.state.editor.codeMirror.addLineWidget(editorLine, panel, {
 	      coverGutter: true,
 	      noHScroll: false
 	    });
@@ -28097,6 +28126,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        e.stopPropagation();
 	        toggleAllBreakpoints(!breakpointsDisabled);
 	      },
+	      onClick: e => e.stopPropagation(),
 	      checked: !breakpointsDisabled && !isIndeterminate,
 	      ref: input => {
 	        if (input) {
@@ -28208,7 +28238,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  render() {
 	    return _react.DOM.div({
-	      className: "secondary-panes"
+	      className: "secondary-panes secondary-panes--sticky-commandbar"
 	    }, CommandBar(), this.props.horizontal ? this.renderHorizontalLayout() : this.renderVerticalLayout());
 	  }
 	}
@@ -28419,16 +28449,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      contents: { value }
 	    };
 
-	    return _react.DOM.div({
+	    return _react.DOM.li({
 	      className: "expression-container",
 	      key: `${path}/${input}`
-	    }, ObjectInspector({
+	    }, _react.DOM.div({ className: "expression-content" }, ObjectInspector({
 	      roots: [root],
 	      getObjectProperties: id => loadedObjects[id],
 	      autoExpandDepth: 0,
 	      onDoubleClick: (item, options) => this.editExpression(expression, options),
 	      loadObjectProperties
-	    }), CloseButton({ handleClick: e => this.deleteExpression(e, expression) }));
+	    }), _react.DOM.div({ className: "expression-container__close-btn" }, CloseButton({
+	      handleClick: e => this.deleteExpression(e, expression)
+	    }))));
 	  }
 
 	  componentDidUpdate() {
@@ -28452,7 +28484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      e.target.value = "";
 	      this.props.addExpression(value);
 	    };
-	    return _react.DOM.span({ className: "expression-input-container" }, _react.DOM.input({
+	    return _react.DOM.li({ className: "expression-input-container" }, _react.DOM.input({
 	      type: "text",
 	      className: "input-expression",
 	      placeholder: L10N.getStr("expressions.placeholder"),
@@ -28466,7 +28498,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  render() {
 	    var expressions = this.props.expressions;
 
-	    return _react.DOM.span({ className: "pane expressions-list" }, expressions.map(this.renderExpression), this.renderNewExpressionInput());
+	    return _react.DOM.ul({ className: "pane expressions-list" }, expressions.map(this.renderExpression), this.renderNewExpressionInput());
 	  }
 	}
 
@@ -45931,9 +45963,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 	function forEachLine(codeMirror, iter) {
-	  codeMirror.operation(() => {
-	    codeMirror.doc.iter(0, codeMirror.lineCount(), iter);
-	  });
+	  codeMirror.doc.iter(0, codeMirror.lineCount(), iter);
 	}
 
 	function removeLineClass(codeMirror, line, className) {
@@ -45954,23 +45984,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return codeMirror.getCursor().line;
 	}
 
-	function getTokenLocation(codeMirror, tokenEl) {
-	  var lineOffset = 1;
-
-	  var _tokenEl$getBoundingC = tokenEl.getBoundingClientRect(),
-	      left = _tokenEl$getBoundingC.left,
-	      top = _tokenEl$getBoundingC.top;
-
-	  var _codeMirror$coordsCha = codeMirror.coordsChar({ left, top }),
-	      line = _codeMirror$coordsCha.line,
-	      ch = _codeMirror$coordsCha.ch;
-
-	  return {
-	    line: line + lineOffset,
-	    column: ch
-	  };
-	}
-
 	/**
 	 * Forces the breakpoint gutter to be the same size as the line
 	 * numbers gutter. Editor CSS will absolutely position the gutter
@@ -45989,7 +46002,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  clearLineClass,
 	  getTextForLine,
 	  getCursorLine,
-	  getTokenLocation,
 	  resizeBreakpointGutter
 	};
 

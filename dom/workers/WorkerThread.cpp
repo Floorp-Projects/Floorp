@@ -66,6 +66,7 @@ private:
 
 WorkerThread::WorkerThread()
   : nsThread(nsThread::NOT_MAIN_THREAD, kWorkerStackSize)
+  , mLock("WorkerThread::mLock")
   , mWorkerPrivateCondVar(mLock, "WorkerThread::mWorkerPrivateCondVar")
   , mWorkerPrivate(nullptr)
   , mOtherThreadsDispatchingViaEventTarget(0)
@@ -313,7 +314,7 @@ WorkerThread::RecursionDepth(const WorkerThreadFriendKey& /* aKey */) const
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
 
 NS_IMETHODIMP
-WorkerThread::Observer::OnDispatchedEvent(nsIThreadInternal* /* aThread */)
+WorkerThread::Observer::OnDispatchedEvent()
 {
   MOZ_CRASH("OnDispatchedEvent() should never be called!");
 }

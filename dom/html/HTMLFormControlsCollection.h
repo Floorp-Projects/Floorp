@@ -15,6 +15,8 @@
 
 class nsGenericHTMLFormElement;
 class nsIFormControl;
+template <class T>
+class RefPtr;
 
 namespace mozilla {
 namespace dom {
@@ -75,7 +77,7 @@ public:
    * @param aControls The list of sorted controls[out].
    * @return NS_OK or NS_ERROR_OUT_OF_MEMORY.
    */
-  nsresult GetSortedControls(nsTArray<nsGenericHTMLFormElement*>& aControls) const;
+  nsresult GetSortedControls(nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls) const;
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;

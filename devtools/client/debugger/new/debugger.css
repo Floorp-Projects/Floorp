@@ -359,11 +359,13 @@ body {
 :root.theme-light,
 :root .theme-light {
   --search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
+  --popup-shadow-color: #d0d0d0;
 }
 
 :root.theme-dark,
 :root .theme-dark {
   --search-overlays-semitransparent: rgba(42, 46, 56, 0.66);
+  --popup-shadow-color: #5c667b;
 }
 .debugger {
   display: flex;
@@ -404,6 +406,7 @@ body {
   margin-top: 25px;
   margin-right: 20px;
 }
+
 menupopup {
   position: fixed;
   z-index: 10000;
@@ -1957,6 +1960,11 @@ html[dir="rtl"] .arrow svg,
   min-height: inherit;
   max-height: 200px;
   overflow: auto;
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
+}
+
+.theme-dark .popover .preview {
+  box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
 
 .popover .preview .header {
@@ -2395,7 +2403,7 @@ html[dir="rtl"] .editor-mount {
 .breakpoints-list .breakpoint {
   font-size: 12px;
   color: var(--theme-content-color1);
-  padding: 0.5em 12px 0.5em 5px;
+  padding: 0.5em 1em 0.5em 0.5em;
   line-height: 1em;
   position: relative;
   transition: all 0.25s ease;
@@ -2510,6 +2518,11 @@ html .breakpoints-list .breakpoint.paused {
   cursor: text;
 }
 
+.expressions-list {
+  /* TODO: add normalize */
+  margin: 0;
+  padding: 0.5em 0;
+}
 .expression-input-container {
   padding: 0.5em;
   display: flex;
@@ -2517,11 +2530,11 @@ html .breakpoints-list .breakpoint.paused {
 
 .expression-container {
   border: 1px;
-  padding: 8px 5px 0px 0px;
+  padding: 0.25em 1em 0.25em 0.5em;
   width: 100%;
   color: var(--theme-body-color);
   background-color: var(--theme-body-background);
-  display: flex;
+  display: block;
   position: relative;
 }
 
@@ -2538,10 +2551,14 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--search-overlays-semitransparent);
 }
 
-.expression-container .close-btn {
+.expression-container__close-btn {
   position: absolute;
-  offset-inline-end: 6px;
-  top: 6px;
+  offset-inline-end: 0px;
+  top: 4px;
+}
+
+.expression-content {
+  position: relative;
 }
 
 .expression-container .close-btn {
@@ -2956,6 +2973,17 @@ html .command-bar > button:disabled {
   white-space: nowrap;
 }
 
+/*
+  We apply overflow to the container with the commandbar.
+  This allows the commandbar to remain fixed when scrolling
+  until the content completely ends. Not just the height of
+  the wrapper.
+  Ref: https://github.com/devtools-html/debugger.html/issues/3426
+*/
+.secondary-panes--sticky-commandbar {
+  overflow-y: scroll;
+}
+
 .secondary-panes .accordion {
   flex: 1 0 auto;
 }
@@ -3197,8 +3225,12 @@ html[dir="rtl"] .dropdown {
   width: 500px;
   height: 230px;
   background-color: var(--theme-codemirror-gutter-background);
-  box-shadow: 2px 4px 6px #dde1e4;
+  box-shadow: 2px 4px 6px var(--popup-shadow-color);
   top: 30px;
+}
+
+.theme-dark .symbol-modal {
+  box-shadow: 2px 4px 6px var(--popup-shadow-color);
 }
 
 .symbol-modal .input-wrapper {

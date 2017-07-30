@@ -590,6 +590,7 @@ audiounit_set_device_info(cubeb_stream * stm, AudioDeviceID id, io_side side)
     type = CUBEB_DEVICE_TYPE_OUTPUT;
   }
   memset(info, 0, sizeof(device_info));
+  info->id = id;
 
   if (side == INPUT) {
     info->flags |= DEV_INPUT;
