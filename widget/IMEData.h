@@ -271,6 +271,7 @@ struct InputContext final
   InputContext()
     : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
     , mMayBeIMEUnaware(false)
+    , mInPrivateBrowsing(false)
   {
   }
 
@@ -307,6 +308,10 @@ struct InputContext final
    * composiion events. This enables a key-events-only mode on Android for
    * compatibility with webapps relying on key listeners. */
   bool mMayBeIMEUnaware;
+
+  /* Whether the owning document of the input element has been loaded
+   * in private browsing mode. */
+  bool mInPrivateBrowsing;
 
   bool IsOriginMainProcess() const
   {

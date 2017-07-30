@@ -738,6 +738,7 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
     aContext.mHTMLInputType,
     aContext.mHTMLInputInputmode,
     aContext.mActionHint,
+    aContext.mInPrivateBrowsing,
     static_cast<int32_t>(aAction.mCause),
     static_cast<int32_t>(aAction.mFocusChange));
 }

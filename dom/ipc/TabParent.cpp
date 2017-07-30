@@ -2339,6 +2339,7 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
                                const nsString& aType,
                                const nsString& aInputmode,
                                const nsString& aActionHint,
+                               const bool& aInPrivateBrowsing,
                                const int32_t& aCause,
                                const int32_t& aFocusChange)
 {
@@ -2349,6 +2350,7 @@ TabParent::RecvSetInputContext(const int32_t& aIMEEnabled,
   context.mHTMLInputInputmode.Assign(aInputmode);
   context.mActionHint.Assign(aActionHint);
   context.mOrigin = InputContext::ORIGIN_CONTENT;
+  context.mInPrivateBrowsing = aInPrivateBrowsing;
 
   InputContextAction action(
     static_cast<InputContextAction::Cause>(aCause),

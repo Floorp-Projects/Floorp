@@ -250,6 +250,7 @@ public:
                                                       const nsString& aType,
                                                       const nsString& aInputmode,
                                                       const nsString& aActionHint,
+                                                      const bool& aInPrivateBrowsing,
                                                       const int32_t& aCause,
                                                       const int32_t& aFocusChange) override;
 
