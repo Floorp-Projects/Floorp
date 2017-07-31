@@ -139,7 +139,6 @@ using mozilla::dom::FakePluginMimeEntry;
 static const char *kPrefWhitelist = "plugin.allowed_types";
 static const char *kPrefLoadInParentPrefix = "plugin.load_in_parent_process.";
 static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_types";
-static const char *kPrefJavaMIME = "plugin.java.mime";
 
 // How long we wait before unloading an idle plugin process.
 // Defaults to 30 seconds.
@@ -746,7 +745,6 @@ nsPluginHost::InstantiatePluginInstance(const nsACString& aMimeType, nsIURI* aUR
   }
 
   if (tagType != nsPluginTagType_Embed &&
-      tagType != nsPluginTagType_Applet &&
       tagType != nsPluginTagType_Object) {
     instanceOwner->Destroy();
     return NS_ERROR_FAILURE;
@@ -1816,21 +1814,6 @@ nsPluginHost::GetSpecialType(const nsACString & aMIMEType)
     return eSpecialType_Flash;
   }
 
-  // Java registers variants of its MIME with parameters, e.g.
-  // application/x-java-vm;version=1.3
-  const nsACString &noParam = Substring(aMIMEType, 0, aMIMEType.FindChar(';'));
-
-  // The java mime pref may well not be one of these,
-  // e.g. application/x-java-test used in the test suite
-  nsAutoCString javaMIME;
-  Preferences::GetCString(kPrefJavaMIME, javaMIME);
-  if ((!javaMIME.IsEmpty() && noParam.LowerCaseEqualsASCII(javaMIME.get())) ||
-      noParam.LowerCaseEqualsASCII("application/x-java-vm") ||
-      noParam.LowerCaseEqualsASCII("application/x-java-applet") ||
-      noParam.LowerCaseEqualsASCII("application/x-java-bean")) {
-    return eSpecialType_Java;
-  }
-
   return eSpecialType_None;
 }
 
@@ -1995,8 +1978,7 @@ ShouldAddPlugin(const nsPluginInfo& info, bool flashOnly)
     }
     if (info.fMimeTypeArray[i] &&
         (!strcmp(info.fMimeTypeArray[i], "application/x-test") ||
-         !strcmp(info.fMimeTypeArray[i], "application/x-Second-Test") ||
-         !strcmp(info.fMimeTypeArray[i], "application/x-java-test"))) {
+         !strcmp(info.fMimeTypeArray[i], "application/x-Second-Test"))) {
       return true;
     }
   }
@@ -2380,7 +2362,6 @@ nsPluginHost::SetPluginsInContent(uint32_t aPluginEpoch,
                                                nsTArray<nsCString>(tag.mimeTypes()),
                                                nsTArray<nsCString>(tag.mimeDescriptions()),
                                                nsTArray<nsCString>(tag.extensions()),
-                                               tag.isJavaPlugin(),
                                                tag.isFlashPlugin(),
                                                tag.supportsAsyncRender(),
                                                tag.lastModifiedTime(),
@@ -2626,7 +2607,6 @@ nsPluginHost::SendPluginsToContent()
                                        tag->MimeTypes(),
                                        tag->MimeDescriptions(),
                                        tag->Extensions(),
-                                       tag->mIsJavaPlugin,
                                        tag->mIsFlashPlugin,
                                        tag->mSupportsAsyncRender,
                                        tag->FileName(),
@@ -3964,8 +3944,7 @@ nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType)
       MimeTypeIsAllowedForFakePlugin(NS_ConvertUTF8toUTF16(aMIMEType)) ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-test") ||
       aMIMEType.LowerCaseEqualsLiteral("application/x-second-test") ||
-      aMIMEType.LowerCaseEqualsLiteral("application/x-third-test") ||
-      aMIMEType.LowerCaseEqualsLiteral("application/x-java-test")) {
+      aMIMEType.LowerCaseEqualsLiteral("application/x-third-test")) {
     return true;
   }
 

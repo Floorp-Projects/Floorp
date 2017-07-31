@@ -899,8 +899,9 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   // Some HTML nodes need DoneAddingChildren() called to initialize
   // properly (e.g. form state restoration).
   // XXX expose ElementName group here and do switch
-  if (aName == nsGkAtoms::object || aName == nsGkAtoms::applet ||
-      aName == nsGkAtoms::select || aName == nsGkAtoms::textarea ||
+  if (aName == nsGkAtoms::object ||
+      aName == nsGkAtoms::select ||
+      aName == nsGkAtoms::textarea ||
       aName == nsGkAtoms::output) {
     if (mBuilder) {
       nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement));

@@ -316,8 +316,8 @@ this.DownloadIntegration = {
       case 3: // Cloud Storage
         try {
           directoryPath = await CloudStorage.getDownloadFolder();
-        } catch(ex) {
-          // Either the preference isn't set or the directory cannot be created.
+        } catch(ex) {}
+        if (!directoryPath) {
           directoryPath = await this.getSystemDownloadsDirectory();
         }
         break;
