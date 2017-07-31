@@ -933,7 +933,9 @@ nsObjectLoadingContent::BuildParametersArray()
     mCachedAttributes.AppendElement(param);
   }
 
-  nsAdoptingCString wmodeOverride = Preferences::GetCString("plugins.force.wmode");
+  nsAutoCString wmodeOverride;
+  Preferences::GetCString("plugins.force.wmode", wmodeOverride);
+
   for (uint32_t i = 0; i < mCachedAttributes.Length(); i++) {
     if (!wmodeOverride.IsEmpty() && mCachedAttributes[i].mName.EqualsIgnoreCase("wmode")) {
       CopyASCIItoUTF16(wmodeOverride, mCachedAttributes[i].mValue);
