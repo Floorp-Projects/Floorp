@@ -180,6 +180,15 @@ class AddressResult extends ProfileAutoCompleteResult {
         "country",
         "country-name",
       ],
+      "tel": [
+        "tel",
+        "tel-country-code",
+        "tel-national",
+        "tel-area-code",
+        "tel-local",
+        "tel-local-prefix",
+        "tel-local-suffix",
+      ],
     };
 
     const secondaryLabelOrder = [

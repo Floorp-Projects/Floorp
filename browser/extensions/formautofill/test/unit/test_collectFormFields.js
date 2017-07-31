@@ -22,10 +22,15 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+    ],
     ids: ["given-name", "family-name", "street-addr", "city", "country", "email", "phone"],
   },
   {
@@ -58,10 +63,19 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
       {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
     ],
-    isValidForm: {
-      address: true,
-      creditCard: true,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+    ],
   },
   {
     description: "An address form with autocomplete properties and 2 tokens",
@@ -82,10 +96,15 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+    ],
   },
   {
     description: "Form with autocomplete properties and profile is partly matched",
@@ -106,10 +125,15 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "country"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+    ],
   },
   {
     description: "It's a valid address and credit card form.",
@@ -127,10 +151,12 @@ const TESTCASES = [
     creditCardFieldDetails: [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "cc-number"},
     ],
-    isValidForm: {
-      address: true,
-      creditCard: true,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "cc-number"},
+    ],
   },
   {
     description: "It's an invalid address and credit form.",
@@ -141,19 +167,9 @@ const TESTCASES = [
                <input id="cc-exp-month" autocomplete="cc-exp-month">
                <input id="cc-exp-year" autocomplete="cc-exp-year">
                </form>`,
-    addressFieldDetails: [
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
-      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "address-level2"},
-    ],
-    creditCardFieldDetails: [
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
-    ],
-    isValidForm: {
-      address: false,
-      creditCard: false,
-    },
+    addressFieldDetails: [],
+    creditCardFieldDetails: [],
+    validFieldDetails: [],
   },
   {
     description: "Three sets of adjacent phone number fields",
@@ -186,10 +202,19 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-extension"},
+      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "billing", "contactType": "", "fieldName": "tel-local-suffix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-country-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-local-suffix"},
+    ],
     ids: [
       "shippingAreaCode", "shippingPrefix", "shippingSuffix", "shippingTelExt",
       "billingAreaCode", "billingPrefix", "billingSuffix",
@@ -216,10 +241,13 @@ const TESTCASES = [
       {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
+    ],
     ids: ["i1", "i2", "i3", "i4", "homePhone"],
   },
   {
@@ -249,10 +277,16 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
     ],
     creditCardFieldDetails: [],
-    isValidForm: {
-      address: true,
-      creditCard: false,
-    },
+    validFieldDetails: [
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "given-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "family-name"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "street-address"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "email"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-area-code"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-prefix"},
+      {"section": "", "addressType": "shipping", "contactType": "", "fieldName": "tel-local-suffix"},
+    ],
     ids: ["i1", "i2", "i3", "i4", "singlePhone",
       "shippingAreaCode", "shippingPrefix", "shippingSuffix"],
   },
@@ -269,23 +303,27 @@ for (let tc of TESTCASES) {
       let form = doc.querySelector("form");
       let formLike = FormLikeFactory.createFromForm(form);
 
-      Array.of(
-        ...testcase.addressFieldDetails,
-        ...testcase.creditCardFieldDetails
-      ).forEach((detail, index) => {
-        let elementRef;
-        if (testcase.ids && testcase.ids[index]) {
-          elementRef = doc.getElementById(testcase.ids[index]);
-        } else {
-          elementRef = doc.querySelector("*[autocomplete*='" + detail.fieldName + "']");
+      function setElementWeakRef(details) {
+        if (!details) {
+          return;
         }
-        detail.elementWeakRef = Cu.getWeakReference(elementRef);
-      });
-      let handler = new FormAutofillHandler(formLike);
 
-      handler.collectFormFields();
+        details.forEach((detail, index) => {
+          let elementRef;
+          if (testcase.ids && testcase.ids[index]) {
+            elementRef = doc.getElementById(testcase.ids[index]);
+          } else {
+            elementRef = doc.querySelector("*[autocomplete*='" + detail.fieldName + "']");
+          }
+          detail.elementWeakRef = Cu.getWeakReference(elementRef);
+        });
+      }
 
       function verifyDetails(handlerDetails, testCaseDetails) {
+        if (handlerDetails === null) {
+          Assert.equal(handlerDetails, testCaseDetails);
+          return;
+        }
         Assert.equal(handlerDetails.length, testCaseDetails.length);
         handlerDetails.forEach((detail, index) => {
           Assert.equal(detail.fieldName, testCaseDetails[index].fieldName, "fieldName");
@@ -295,12 +333,18 @@ for (let tc of TESTCASES) {
           Assert.equal(detail.elementWeakRef.get(), testCaseDetails[index].elementWeakRef.get(), "DOM reference");
         });
       }
+      [
+        testcase.addressFieldDetails,
+        testcase.creditCardFieldDetails,
+        testcase.validFieldDetails,
+      ].forEach(details => setElementWeakRef(details));
 
-      verifyDetails(handler.addressFieldDetails, testcase.addressFieldDetails);
-      verifyDetails(handler.creditCardFieldDetails, testcase.creditCardFieldDetails);
+      let handler = new FormAutofillHandler(formLike);
+      let validFieldDetails = handler.collectFormFields();
 
-      Assert.equal(handler.isValidAddressForm, testcase.isValidForm.address, "Valid Address Form Checking");
-      Assert.equal(handler.isValidCreditCardForm, testcase.isValidForm.creditCard, "Valid Credit Card Form Checking");
+      verifyDetails(handler.address.fieldDetails, testcase.addressFieldDetails);
+      verifyDetails(handler.creditCard.fieldDetails, testcase.creditCardFieldDetails);
+      verifyDetails(validFieldDetails, testcase.validFieldDetails);
     });
   })();
 }

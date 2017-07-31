@@ -1091,6 +1091,17 @@
                 return false;
               }
               this.startScroll(data.scrolldir, data.screenX, data.screenY);
+              if (this.isRemoteBrowser && data.scrollId != null &&
+                  this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)) {
+                let { tabParent } = this.frameLoader;
+                if (tabParent) {
+                  tabParent.startApzAutoscroll(data.screenX, data.screenY,
+                                               data.scrollId, data.presShellId);
+                }
+                // Save the IDs for later
+                this._autoScrollScrollId = data.scrollId;
+                this._autoScrollPresShellId = data.presShellId;
+              }
               return true;
             }
             case "Autoscroll:Cancel":
@@ -1190,6 +1201,9 @@
       <field name="_startY">null</field>
       <field name="_autoScrollPopup">null</field>
       <field name="_autoScrollNeedsCleanup">false</field>
+      <!-- These IDs identify the scroll frame being autoscrolled. -->
+      <field name="_autoScrollScrollId">null</field>
+      <field name="_autoScrollPresShellId">null</field>
 
       <method name="stopScroll">
         <body>
@@ -1205,6 +1219,16 @@
               window.removeEventListener("keypress", this, true);
               window.removeEventListener("keyup", this, true);
               this.messageManager.sendAsyncMessage("Autoscroll:Stop");
+
+              if (this.isRemoteBrowser && this._autoScrollScrollId != null) {
+                let { tabParent } = this.frameLoader;
+                if (tabParent) {
+                  tabParent.stopApzAutoscroll(this._autoScrollScrollId,
+                                              this._autoScrollPresShellId);
+                }
+                this._autoScrollScrollId = null;
+                this._autoScrollPresShellId = null;
+              }
             }
          ]]>
        </body>

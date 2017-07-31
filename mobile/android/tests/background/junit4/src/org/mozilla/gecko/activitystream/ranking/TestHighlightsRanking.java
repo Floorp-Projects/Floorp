@@ -26,23 +26,23 @@ public class TestHighlightsRanking {
 
         HighlightsRanking.normalize(candidates);
 
-        Assert.assertEquals(0.15, candidate1.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
-        Assert.assertEquals(0.35, candidate2.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
-        Assert.assertEquals(0, candidate3.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
-        Assert.assertEquals(0.6, candidate4.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
-        Assert.assertEquals(1.0, candidate5.getFeatureValue(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
+        Assert.assertEquals(0.15, candidate1.features.get(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
+        Assert.assertEquals(0.35, candidate2.features.get(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
+        Assert.assertEquals(0, candidate3.features.get(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
+        Assert.assertEquals(0.6, candidate4.features.get(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
+        Assert.assertEquals(1.0, candidate5.features.get(HighlightCandidate.FEATURE_DESCRIPTION_LENGTH), 1e-6);
 
-        Assert.assertEquals(0, candidate1.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
-        Assert.assertEquals(0.1, candidate2.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
-        Assert.assertEquals(0.75, candidate3.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
-        Assert.assertEquals(1, candidate4.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
-        Assert.assertEquals(0.2, candidate5.getFeatureValue(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
+        Assert.assertEquals(0, candidate1.features.get(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
+        Assert.assertEquals(0.1, candidate2.features.get(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
+        Assert.assertEquals(0.75, candidate3.features.get(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
+        Assert.assertEquals(1, candidate4.features.get(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
+        Assert.assertEquals(0.2, candidate5.features.get(HighlightCandidate.FEATURE_PATH_LENGTH), 1e-6);
 
-        Assert.assertEquals(0.01, candidate1.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
-        Assert.assertEquals(0, candidate2.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
-        Assert.assertEquals(1.0, candidate3.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
-        Assert.assertEquals(0.025, candidate4.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
-        Assert.assertEquals(0.2, candidate5.getFeatureValue(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
+        Assert.assertEquals(0.01, candidate1.features.get(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
+        Assert.assertEquals(0, candidate2.features.get(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
+        Assert.assertEquals(1.0, candidate3.features.get(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
+        Assert.assertEquals(0.025, candidate4.features.get(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
+        Assert.assertEquals(0.2, candidate5.features.get(HighlightCandidate.FEATURE_IMAGE_SIZE), 1e-6);
     }
 
     @Test

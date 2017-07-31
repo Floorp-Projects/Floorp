@@ -74,6 +74,8 @@ public:
 
   virtual void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId) override;
 
+  virtual void NotifyAutoscrollHandledByAPZ(const FrameMetrics::ViewID& aScrollId) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void Destroy() override;

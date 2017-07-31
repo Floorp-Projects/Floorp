@@ -27,6 +27,8 @@ this.urlOverrides = class extends ExtensionAPI {
     let {extension} = this;
     let {manifest} = extension;
 
+    await ExtensionSettingsStore.initialize();
+
     if (manifest.chrome_url_overrides.newtab) {
       // Set up the shutdown code for the setting.
       extension.callOnClose({

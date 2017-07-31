@@ -183,6 +183,12 @@ public:
       const ScrollableLayerGuid& aGuid,
       const AsyncDragMetrics& aDragMetrics) = 0;
 
+  virtual void StartAutoscroll(
+      const ScrollableLayerGuid& aGuid,
+      const ScreenPoint& aAnchorLocation) = 0;
+
+  virtual void StopAutoscroll(const ScrollableLayerGuid& aGuid) = 0;
+
   /**
    * Function used to disable LongTap gestures.
    *

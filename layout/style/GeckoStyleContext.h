@@ -37,6 +37,15 @@ public:
   void AddChild(GeckoStyleContext* aChild);
   void RemoveChild(GeckoStyleContext* aChild);
 
+  GeckoStyleContext* GetParent() const {
+    return mParent ? mParent->AsGecko() : nullptr;
+  }
+
+  bool IsLinkContext() const {
+    return GetStyleIfVisited() &&
+           GetStyleIfVisited()->GetParent() == GetParent();
+  }
+
   /**
    * Moves this style context to a new parent.
    *

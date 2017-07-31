@@ -5885,7 +5885,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
       }
 
       if (resolveStyle) {
-        if (aContent->IsStyledByServo()) {
+        if (styleContext->IsServo()) {
           Element* element = aContent->AsElement();
           ServoStyleSet* styleSet = mPresShell->StyleSet()->AsServo();
 
@@ -5905,7 +5905,8 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
                                       LazyComputeBehavior::Assert);
         } else {
           styleContext =
-            ResolveStyleContext(styleContext->GetParent(), aContent, &aState);
+            ResolveStyleContext(styleContext->AsGecko()->GetParent(),
+                                aContent, &aState);
         }
 
         display = styleContext->StyleDisplay();
@@ -9647,7 +9648,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 
   // The parent has a frame, so try resolving a new context.
   RefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
-    ResolveStyleFor(aElement, oldContext->GetParent(),
+    ResolveStyleFor(aElement, oldContext->AsGecko()->GetParent(),
                     LazyComputeBehavior::Assert);
 
   if (oldDisplay == StyleDisplay::None) {
@@ -11701,9 +11702,12 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsIContent* aTextContent,
   nsIFrame* aTextFrame,
   nsContainerFrame* aParentFrame,
+  nsStyleContext* aParentStyleContext,
   nsStyleContext* aStyleContext,
   nsFrameItems& aResult)
 {
+  MOZ_ASSERT(aParentStyleContext);
+
   nsFirstLetterFrame* letterFrame =
     NS_NewFirstLetterFrame(mPresShell, aStyleContext);
   // We don't want to use a text content for a non-text frame (because we want
@@ -11735,13 +11739,9 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     // Create continuation
     nextTextFrame =
       CreateContinuingFrame(aState.mPresContext, aTextFrame, aParentFrame);
-    // Repair the continuations style context
-    nsStyleContext* parentStyleContext = aStyleContext->GetParentAllowServo();
-    if (parentStyleContext) {
-      RefPtr<nsStyleContext> newSC = styleSet->
-        ResolveStyleForText(aTextContent, parentStyleContext);
-      nextTextFrame->SetStyleContext(newSC);
-    }
+    RefPtr<nsStyleContext> newSC = styleSet->
+      ResolveStyleForText(aTextContent, aParentStyleContext);
+    nextTextFrame->SetStyleContext(newSC);
   }
 
   NS_ASSERTION(aResult.IsEmpty(), "aResult should be an empty nsFrameItems!");
@@ -11792,8 +11792,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
   nsIContent* blockContent = aBlockFrame->GetContent();
 
   // Create first-letter style rule
-  RefPtr<nsStyleContext> sc = GetFirstLetterStyle(blockContent,
-                                                    parentStyleContext);
+  RefPtr<nsStyleContext> sc =
+    GetFirstLetterStyle(blockContent, parentStyleContext);
   if (sc) {
     RefPtr<nsStyleContext> textSC = mPresShell->StyleSet()->
       ResolveStyleForText(aTextContent, sc);
@@ -11824,7 +11824,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsContainerFrame* aBlockFrame,
         !nsSVGUtils::IsInSVGTextSubtree(aParentFrame)) {
       // Make a floating first-letter frame
       letterFrame = CreateFloatingLetterFrame(state, aTextContent, textFrame,
-                                              aParentFrame, sc, aResult);
+                                              aParentFrame, parentStyleContext,
+                                              sc, aResult);
     }
     else {
       // Make an inflow first-letter frame
