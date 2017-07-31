@@ -7,14 +7,21 @@
 package org.mozilla.gecko.mma;
 
 import android.app.Activity;
+import android.app.Notification;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
+import com.leanplum.LeanplumPushNotificationCustomizer;
+import com.leanplum.LeanplumPushService;
+import com.leanplum.internal.Constants;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.MmaConstants;
+import org.mozilla.gecko.R;
 
 import java.util.Map;
 import java.util.UUID;
@@ -47,6 +54,15 @@ public class MmaLeanplumImp implements MmaInterface {
         }
         Leanplum.setDeviceId(deviceId);
 
+        LeanplumPushService.setGcmSenderId(AppConstants.MOZ_ANDROID_GCM_SENDERID);
+        LeanplumPushService.setCustomizer(new LeanplumPushNotificationCustomizer() {
+            @Override
+            public void customize(NotificationCompat.Builder builder, Bundle notificationPayload) {
+                builder.setSmallIcon(R.drawable.ic_status_logo);
+                builder.setDefaults(Notification.DEFAULT_SOUND);
+            }
+
+        });
         if (attributes != null) {
             Leanplum.start(activity, attributes);
         } else {
@@ -90,6 +106,15 @@ public class MmaLeanplumImp implements MmaInterface {
     @Override
     public void stop() {
         Leanplum.stop();
+    }
+
+    @Override
+    public boolean handleGcmMessage(Context context, Bundle bundle) {
+        if (bundle.containsKey(Constants.Keys.PUSH_MESSAGE_TEXT)) {
+            LeanplumPushService.handleNotification(context, bundle);
+            return true;
+        }
+        return false;
     }
 
 }

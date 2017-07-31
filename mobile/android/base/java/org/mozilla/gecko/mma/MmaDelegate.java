@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -153,6 +154,10 @@ public class MmaDelegate {
 
         final String packageName = info.activityInfo.packageName;
         return (TextUtils.equals(packageName, context.getPackageName()));
+    }
+
+    public static boolean handleGcmMessage(@NonNull Context context, @NonNull Bundle bundle) {
+        return mmaHelper.handleGcmMessage(context, bundle);
     }
 
 }

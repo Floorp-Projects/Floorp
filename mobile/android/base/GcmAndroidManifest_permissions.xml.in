@@ -2,3 +2,6 @@
     <!-- Avoid a linter warning by not double-including WAKE_LOCK.
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     -->
+    <permission android:name="@ANDROID_PACKAGE_NAME@.permission.C2D_MESSAGE"
+                android:protectionLevel="signature" />
+    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.C2D_MESSAGE" />
