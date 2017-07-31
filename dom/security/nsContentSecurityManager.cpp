@@ -714,8 +714,10 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
   // whitelist for network resources, i.e., those with scheme "http" or "ws".
   // The pref should contain a comma-separated list of hostnames.
   if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("ws")) {
-    nsAdoptingCString whitelist = Preferences::GetCString("dom.securecontext.whitelist");
-    if (whitelist) {
+    nsAutoCString whitelist;
+    nsresult rv =
+      Preferences::GetCString("dom.securecontext.whitelist", whitelist);
+    if (NS_SUCCEEDED(rv)) {
       nsCCharSeparatedTokenizer tokenizer(whitelist, ',');
       while (tokenizer.hasMoreTokens()) {
         const nsACString& allowedHost = tokenizer.nextToken();

@@ -2003,8 +2003,8 @@ nsHttpHandler::SetAcceptLanguages()
 {
     mAcceptLanguagesIsDirty = false;
 
-    const nsAdoptingCString& acceptLanguages =
-        Preferences::GetLocalizedCString(INTL_ACCEPT_LANGUAGES);
+    nsAutoCString acceptLanguages;
+    Preferences::GetLocalizedCString(INTL_ACCEPT_LANGUAGES, acceptLanguages);
 
     nsAutoCString buf;
     nsresult rv = PrepareAcceptLanguages(acceptLanguages.get(), buf);
