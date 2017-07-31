@@ -7,12 +7,14 @@
 const {Constructor: CC, interfaces: Ci, utils: Cu, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 
 const MARIONETTE_CONTRACT_ID = "@mozilla.org/remote/marionette;1";
 const MARIONETTE_CID = Components.ID("{786a1369-dca5-4adc-8486-33d23c88010a}");
@@ -67,13 +69,44 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
     "initSpecialConnection");
 
+const {PREF_STRING, PREF_BOOL, PREF_INT, PREF_INVALID} = Ci.nsIPrefBranch;
+
+function getPrefVal(pref) {
+  let prefType = Services.prefs.getPrefType(pref);
+  let prefValue;
+  switch (prefType) {
+    case PREF_STRING:
+      prefValue = Services.prefs.getStringPref(pref);
+      break;
+
+    case PREF_BOOL:
+      prefValue = Services.prefs.getBoolPref(pref);
+      break;
+
+    case PREF_INT:
+      prefValue = Services.prefs.getIntPref(pref);
+      break;
+
+    case PREF_INVALID:
+      prefValue = undefined;
+      break;
+
+    default:
+      throw new TypeError(`Unexpected preference type (${prefType}) for ` +
+                          `${pref}`);
+  }
+
+  return prefValue;
+}
+
 // Get preference value of |preferred|, falling back to |fallback|
 // if |preferred| is not user-modified and |fallback| exists.
 function getPref(preferred, fallback) {
-  if (!Preferences.isSet(preferred) && Preferences.has(fallback)) {
-    return Preferences.get(fallback, Preferences.get(preferred));
+  if (!Services.prefs.prefHasUserValue(preferred) &&
+      Services.prefs.getPrefType(fallback) != Ci.nsIPrefBranch.PREF_INVALID) {
+    return getPrefVal(fallback, getPrefVal(preferred));
   }
-  return Preferences.get(preferred);
+  return getPrefVal(preferred);
 }
 
 // Marionette preferences recently changed names.  This is an abstraction
