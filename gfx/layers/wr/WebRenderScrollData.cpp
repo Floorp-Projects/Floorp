@@ -69,14 +69,18 @@ WebRenderLayerScrollData::InitializeRoot(int32_t aDescendantCount)
 
 void
 WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
-                                     nsDisplayItem* aItem)
+                                     nsDisplayItem* aItem,
+                                     int32_t aDescendantCount,
+                                     const ActiveScrolledRoot* aStopAtAsr)
 {
-  mDescendantCount = 0;
+  MOZ_ASSERT(aDescendantCount >= 0); // Ensure value is valid
+  MOZ_ASSERT(mDescendantCount == -1); // Don't allow re-setting an already set value
+  mDescendantCount = aDescendantCount;
 
   MOZ_ASSERT(aItem);
   aItem->UpdateScrollData(&aOwner, this);
   for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
-       asr;
+       asr && asr != aStopAtAsr;
        asr = asr->mParent) {
     Maybe<ScrollMetadata> metadata = asr->mScrollableFrame->ComputeScrollMetadata(
         nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
