@@ -5,26 +5,26 @@
 /* globals  APP_STARTUP, ADDON_INSTALL */
 "use strict";
 
-const {utils: Cu} = Components;
+const {utils: Cu, interfaces: Ci} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OnboardingTourType",
   "resource://onboarding/modules/OnboardingTourType.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
 
+const {PREF_STRING, PREF_BOOL, PREF_INT} = Ci.nsIPrefBranch;
+
 const BROWSER_READY_NOTIFICATION = "browser-delayed-startup-finished";
 const BROWSER_SESSION_STORE_NOTIFICATION = "sessionstore-windows-restored";
 const PREF_WHITELIST = [
-  "browser.onboarding.enabled",
-  "browser.onboarding.hidden",
-  "browser.onboarding.notification.finished",
-  "browser.onboarding.notification.prompt-count",
-  "browser.onboarding.notification.last-time-of-changing-tour-sec",
-  "browser.onboarding.notification.tour-ids-queue"
+  ["browser.onboarding.enabled", PREF_BOOL],
+  ["browser.onboarding.hidden", PREF_BOOL],
+  ["browser.onboarding.notification.finished", PREF_BOOL],
+  ["browser.onboarding.notification.prompt-count", PREF_INT],
+  ["browser.onboarding.notification.last-time-of-changing-tour-sec", PREF_INT],
+  ["browser.onboarding.notification.tour-ids-queue", PREF_STRING],
 ];
 
 [
@@ -37,7 +37,7 @@ const PREF_WHITELIST = [
   "onboarding-tour-search",
   "onboarding-tour-singlesearch",
   "onboarding-tour-sync",
-].forEach(tourId => PREF_WHITELIST.push(`browser.onboarding.tour.${tourId}.completed`));
+].forEach(tourId => PREF_WHITELIST.push([`browser.onboarding.tour.${tourId}.completed`, PREF_BOOL]));
 
 let waitingForBrowserReady = true;
 
@@ -53,8 +53,28 @@ let waitingForBrowserReady = true;
  **/
 function setPrefs(prefs) {
   prefs.forEach(pref => {
-    if (PREF_WHITELIST.includes(pref.name)) {
-      Preferences.set(pref.name, pref.value);
+    let prefObj = PREF_WHITELIST.find(([name, ]) => name == pref.name);
+    if (!prefObj) {
+      return;
+    }
+
+    let [name, type] = prefObj;
+
+    switch (type) {
+      case PREF_BOOL:
+        Services.prefs.setBoolPref(name, pref.value);
+        break;
+
+      case PREF_INT:
+        Services.prefs.setIntPref(name, pref.value);
+        break;
+
+      case PREF_STRING:
+        Services.prefs.setStringPref(name, pref.value);
+        break;
+
+      default:
+        throw new TypeError(`Unexpected type (${type}) for preference ${name}.`)
     }
   });
 }
