@@ -176,17 +176,7 @@ public:
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier();
 
-  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
-  {
-    MOZ_ASSERT(mWidget);
-    mImageCompositeNotifications.AppendElement(aNotification);
-  }
-
-  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
-  {
-    MOZ_ASSERT(mWidget);
-    aNotifications->AppendElements(Move(mImageCompositeNotifications));
-  }
+  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications);
 
   uint32_t GetIdNameSpace()
   {
@@ -286,7 +276,6 @@ private:
   std::unordered_set<uint64_t> mActiveAnimations;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mAsyncCompositables;
   nsDataHashtable<nsUint64HashKey, RefPtr<WebRenderImageHost>> mExternalImageIds;
-  nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 
   TimeStamp mPreviousFrameTimeStamp;
   // These fields keep track of the latest layer observer epoch values in the child and the
