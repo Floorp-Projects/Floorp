@@ -9,12 +9,13 @@ const {utils: Cu} = Components;
 Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/atom.js");
 const {
+  ElementClickInterceptedError,
+  ElementNotInteractableError,
   error,
   InvalidArgument,
-  ElementNotInteractableError,
-  ElementClickInterceptedError,
-  InvalidElementStateError,
   InvalidArgumentError,
+  InvalidElementStateError,
+  pprint,
 } = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/event.js");
@@ -284,7 +285,7 @@ interaction.selectOption = function(el) {
     throw new Error("XUL dropdowns not supported");
   }
   if (el.localName != "option") {
-    throw new TypeError("Invalid elements");
+    throw new TypeError(pprint`Expected <option> element, got ${el}`);
   }
 
   let containerEl = element.getContainer(el);
