@@ -512,7 +512,7 @@
 #include ../../components/controlcenter/content/panel.inc.xul
 
     <hbox id="downloads-animation-container" mousethrough="always">
-      <vbox id="downloads-notification-anchor">
+      <vbox id="downloads-notification-anchor" hidden="true">
         <vbox id="downloads-indicator-notification"/>
       </vbox>
     </hbox>

@@ -150,11 +150,19 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
 /*** Download notifications ***/
 
 %ifdef MOZ_PHOTON_ANIMATIONS
-#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  animation-name: downloadsIndicatorStartDip;
+  /* Upon changing the duration_delay below, please keep the delay time of
+     setTimeout() identical in indicator.js for this animation.
+
+     Timing here needs to align with the animation on #downloads-indicator-notification
+  */
+  animation-duration: 360ms;
+  animation-delay: 400ms;
+  animation-iteration-count: 1;
+}
 %else
-#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer
-%endif
-{
+#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   animation-name: downloadsIndicatorStartJump;
   /* Upon changing the overall duration below, please keep the delay time of
      setTimeout() identical in indicator.js for this animation. */
@@ -162,6 +170,33 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   animation-delay: 1s;
   animation-iteration-count: 2;
 }
+%endif
+
+%ifdef MOZ_PHOTON_ANIMATIONS
+@keyframes downloadsIndicatorStartDip {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: ease-out;
+  }
+  88% {
+    transform: translateY(3px);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes downloadsIndicatorFinishPulse {
+  from  { transform: scale(1); }
+  37.5% { transform: scale(1.4); animation-timing-function: ease-out; }
+  to    { transform: scale(1); animation-timing-function: ease-in; }
+}
+%else
 
 @keyframes downloadsIndicatorStartJump {
   0% {
@@ -176,6 +211,16 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
     transform: translateY(0);
   }
 }
+%endif
+
+%ifdef MOZ_PHOTON_ANIMATIONS
+#downloads-button[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-icon {
+  animation-name: downloadsIndicatorFinishPulse;
+  animation-delay: 250ms;
+  animation-duration: 300ms;
+  animation-iteration-count: 2;
+}
+%endif
 
 #downloads-animation-container {
   min-height: 1px;
@@ -190,15 +235,48 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   z-index: 5;
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
+/* download start animation */
+
+#downloads-notification-anchor {
+  width: 42px;
+  /* Height is equal to height of each frame in the SVG animation
+     Use of min/max-height instead of height is to avoid an
+     assertion for `inline-size less than zero..` (bug 1379332). */
+  min-height: 98px;
+  max-height: 98px;
+  overflow: hidden;
+}
+%endif
+
 #downloads-indicator-notification {
   opacity: 0;
+%ifdef MOZ_PHOTON_ANIMATIONS
+  min-width: 1344px;
+  height: 98px; /* Height is equal to height of each frame in the SVG animation */
+  -moz-context-properties: fill;
+  /* Intentionally not using --toolbarbutton-icon-fill to get better contrast/balance
+     across default, dark and light themes */
+  fill: #737373;
+%else
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
   width: 16px;
   height: 16px;
+%endif
 }
 
+%ifdef MOZ_PHOTON_ANIMATIONS
+@keyframes downloadsIndicatorNotificationStart {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-1302px);
+  }
+}
+%else
 @keyframes downloadsIndicatorNotificationStartRight {
   from { opacity: 0; transform: translate(-128px, 128px) scale(8); }
   20%  { opacity: .85; animation-timing-function: ease-out; }
@@ -216,13 +294,25 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   20%  { opacity: .65; animation-timing-function: ease-in; }
   to   { opacity: 0; transform: scale(8); }
 }
+%endif
 
 #downloads-notification-anchor[notification="start"] > #downloads-indicator-notification {
+%ifdef MOZ_PHOTON_ANIMATIONS
+  opacity: 1;
+  background: url("chrome://browser/skin/downloads/notification-start-animation.svg") 0 center no-repeat;
+  transform: translateX(0px);
+  animation-name: downloadsIndicatorNotificationStart;
+  animation-duration: 540ms;
+  animation-delay: 64ms;
+  animation-timing-function: steps(31);
+%else
   background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
   animation-name: downloadsIndicatorNotificationStartRight;
   animation-duration: 1s;
+%endif
 }
 
+%ifndef MOZ_PHOTON_ANIMATIONS
 #downloads-notification-anchor[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-notification {
   animation-name: downloadsIndicatorNotificationStartLeft;
 }
@@ -232,3 +322,4 @@ toolbar[brighttext] #downloads-indicator-progress-inner {
   animation-name: downloadsIndicatorNotificationFinish;
   animation-duration: 1s;
 }
+%endif

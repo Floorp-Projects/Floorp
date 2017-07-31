@@ -1,0 +1,95 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1344" height="98">
+  <svg width="42" height="98"/>
+  <svg width="42" height="98" x="42"/>
+  <svg width="42" height="98" x="84">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" opacity=".333" transform="translate(21.018 22.854) scale(3.50932)"/>
+  </svg>
+  <svg width="42" height="98" x="126">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" opacity=".667" transform="translate(21.017 23.815) scale(3.41419)"/>
+  </svg>
+  <svg width="42" height="98" x="168">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.017 24.798) scale(3.31695)"/>
+  </svg>
+  <svg width="42" height="98" x="210">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.016 25.793) scale(3.21855)"/>
+  </svg>
+  <svg width="42" height="98" x="252">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.016 26.795) scale(3.11952)"/>
+  </svg>
+  <svg width="42" height="98" x="294">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.015 27.8) scale(3.02017)"/>
+  </svg>
+  <svg width="42" height="98" x="336">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.015 28.805) scale(2.92072)"/>
+  </svg>
+  <svg width="42" height="98" x="378">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.014 29.81) scale(2.82134)"/>
+  </svg>
+  <svg width="42" height="98" x="420">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.014 30.813) scale(2.72216)"/>
+  </svg>
+  <svg width="42" height="98" x="462">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.013 31.813) scale(2.6233)"/>
+  </svg>
+  <svg width="42" height="98" x="504">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.013 32.809) scale(2.52484)"/>
+  </svg>
+  <svg width="42" height="98" x="546">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.012 33.799) scale(2.42691)"/>
+  </svg>
+  <svg width="42" height="98" x="588">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.012 34.783) scale(2.32959)"/>
+  </svg>
+  <svg width="42" height="98" x="630">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.011 35.76) scale(2.23297)"/>
+  </svg>
+  <svg width="42" height="98" x="672">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.01 36.727) scale(2.13718)"/>
+  </svg>
+  <svg width="42" height="98" x="714">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.01 37.686) scale(2.0423)"/>
+  </svg>
+  <svg width="42" height="98" x="756">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.01 38.634) scale(1.94849)"/>
+  </svg>
+  <svg width="42" height="98" x="798">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.01 39.57) scale(1.85587)"/>
+  </svg>
+  <svg width="42" height="98" x="840">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.009 40.491) scale(1.76462)"/>
+  </svg>
+  <svg width="42" height="98" x="882">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.008 41.397) scale(1.67492)"/>
+  </svg>
+  <svg width="42" height="98" x="924">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.008 42.284) scale(1.58703)"/>
+  </svg>
+  <svg width="42" height="98" x="966">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.008 43.15) scale(1.50124)"/>
+  </svg>
+  <svg width="42" height="98" x="1008">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.007 43.99) scale(1.41793)"/>
+  </svg>
+  <svg width="42" height="98" x="1050">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.007 44.8) scale(1.33758)"/>
+  </svg>
+  <svg width="42" height="98" x="1092">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.006 45.573) scale(1.26087)"/>
+  </svg>
+  <svg width="42" height="98" x="1134">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.006 46.299) scale(1.18877)"/>
+  </svg>
+  <svg width="42" height="98" x="1176">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.006 46.963) scale(1.1227)"/>
+  </svg>
+  <svg width="42" height="98" x="1218">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.005 47.541) scale(1.0651)"/>
+  </svg>
+  <svg width="42" height="98" x="1260">
+    <path fill="context-fill" d="M-0.712 6.158a1 1 0 0 0 1.414 0l5 -5a1 1 0 0 0 -1.414 -1.413l-3.293 3.293v-8.586a1 1 0 0 0 -2 0v8.586l-3.293 -3.293a1 1 0 0 0 -1.414 0.025a0.999 0.999 0 0 0 0 1.388l5 5z" transform="translate(21.005 47.988) scale(1.02049)"/>
+  </svg>
+  <svg width="42" height="98" x="1302"/>
+</svg>
