@@ -274,7 +274,7 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
     }
 
     /* We don't try to verify signatures we don't know about */
-    if (signatureAlgorithmIDs[i] != 1) {
+    if (signatureAlgorithmIDs[i] != 2) {
       fprintf(stderr, "ERROR: Unknown signature algorithm ID.\n");
       for (i = 0; i < signatureCount; ++i) {
         free(extractedSignatures[i]);
