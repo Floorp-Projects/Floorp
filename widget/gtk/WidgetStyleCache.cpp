@@ -622,6 +622,20 @@ GetWidget(WidgetNodeType aWidgetType)
   GtkWidget* widget = sWidgetStorage[aWidgetType];
   if (!widget) {
     widget = CreateWidget(aWidgetType);
+    // In GTK versions prior to 3.18, automatic invalidation of style contexts
+    // for widgets was delayed until the next resize event.  Gecko however,
+    // typically uses the style context before the resize event runs and so an
+    // explicit invalidation may be required.  This is necessary if a style
+    // property was retrieved before all changes were made to the style
+    // context.  One such situation is where gtk_button_construct_child()
+    // retrieves the style property "image-spacing" during construction of the
+    // GtkButton, before its parent is set to provide inheritance of ancestor
+    // properties.  More recent GTK versions do not need this, but do not
+    // re-resolve until required and so invalidation does not trigger
+    // unnecessary resolution in general.
+    GtkStyleContext* style = gtk_widget_get_style_context(widget);
+    gtk_style_context_invalidate(style);
+
     sWidgetStorage[aWidgetType] = widget;
   }
   return widget;
