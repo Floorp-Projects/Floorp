@@ -421,9 +421,9 @@ var Scheduler = this.Scheduler = {
     Scheduler.Debugging.messagesQueued++;
     return this.push(async () => {
       if (this.shutdown) {
-	LOG("OS.File is not available anymore. The following request has been rejected.",
-	  method, args);
-	throw new Error("OS.File has been shut down. Rejecting request to " + method);
+        LOG("OS.File is not available anymore. The following request has been rejected.",
+          method, args);
+        throw new Error("OS.File has been shut down. Rejecting request to " + method);
       }
 
       // Update debugging information. As |args| may be quite
@@ -1223,7 +1223,7 @@ File.Info = function Info(value) {
       Object.defineProperty(this, k, {value: value[k]});
     }
   }
-  Object.defineProperty(this, "_deprecatedCreationDate", {value: value["creationDate"]});
+  Object.defineProperty(this, "_deprecatedCreationDate", {value: value.creationDate});
 };
 File.Info.prototype = SysAll.AbstractInfo.prototype;
 
