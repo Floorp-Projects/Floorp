@@ -19,8 +19,9 @@ namespace layers {
 using namespace gfx;
 
 ContainerLayerMLGPU::ContainerLayerMLGPU(LayerManagerMLGPU* aManager)
-  : ContainerLayer(aManager, nullptr)
-  , LayerMLGPU(aManager)
+ : ContainerLayer(aManager, nullptr),
+   LayerMLGPU(aManager),
+   mInvalidateEntireSurface(false)
 {
 }
 
@@ -35,6 +36,9 @@ bool
 ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
 {
   if (!UseIntermediateSurface()) {
+    // Set this so we invalidate the entire cached render target (if any)
+    // if our container uses an intermediate surface again later.
+    mInvalidateEntireSurface = true;
     return true;
   }
 
@@ -64,13 +68,19 @@ ContainerLayerMLGPU::OnPrepareToRender(FrameBuilder* aBuilder)
   }
 
   gfx::IntRect viewport(gfx::IntPoint(0, 0), mTargetSize);
-  if (!mRenderTarget || !gfxPrefs::AdvancedLayersUseInvalidation()) {
+  if (!mRenderTarget ||
+      !gfxPrefs::AdvancedLayersUseInvalidation() ||
+      mInvalidateEntireSurface)
+  {
     // Fine-grained invalidation is disabled, invalidate everything.
     mInvalidRect = viewport;
   } else {
     // Clamp the invalid rect to the viewport.
+    mInvalidRect -= mTargetOffset;
     mInvalidRect = mInvalidRect.Intersect(viewport);
   }
+
+  mInvalidateEntireSurface = false;
   return true;
 }
 
@@ -183,16 +193,16 @@ void
 ContainerLayerMLGPU::SetInvalidCompositeRect(const gfx::IntRect& aRect)
 {
   // For simplicity we only track the bounds of the invalid area, since regions
-  // are expensive. We can adjust this in the future if needed.
-  gfx::IntRect bounds = aRect;
-  bounds.MoveBy(-GetTargetOffset());
-
+  // are expensive.
+  //
   // Note we add the bounds to the invalid rect from the last frame, since we
-  // only clear the area that we actually paint.
-  if (Maybe<gfx::IntRect> result = mInvalidRect.SafeUnion(bounds)) {
+  // only clear the area that we actually paint. If this overflows we use the
+  // last render target size, since if that changes we'll invalidate everything
+  // anyway.
+  if (Maybe<gfx::IntRect> result = mInvalidRect.SafeUnion(aRect)) {
     mInvalidRect = result.value();
   } else {
-    mInvalidRect = gfx::IntRect(gfx::IntPoint(0, 0), GetTargetSize());
+    mInvalidateEntireSurface = true;
   }
 }
 
