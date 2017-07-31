@@ -1831,10 +1831,11 @@ public:
                 int32_t,
                 mozilla::jni::String::Param,
                 mozilla::jni::String::Param,
-                mozilla::jni::String::Param> Args;
+                mozilla::jni::String::Param,
+                bool> Args;
         static constexpr char name[] = "notifyIMEContext";
         static constexpr char signature[] =
-                "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
+                "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Z)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
@@ -1844,7 +1845,7 @@ public:
                 mozilla::jni::DispatchTarget::CURRENT;
     };
 
-    auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
+    auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param, bool) const -> void;
 
     struct OnDefaultKeyEvent_t {
         typedef GeckoEditableChild Owner;

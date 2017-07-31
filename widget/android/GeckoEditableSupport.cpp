@@ -1197,7 +1197,8 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
         mEditable->NotifyIMEContext(mInputContext.mIMEState.mEnabled,
                                     mInputContext.mHTMLInputType,
                                     mInputContext.mHTMLInputInputmode,
-                                    mInputContext.mActionHint);
+                                    mInputContext.mActionHint,
+                                    mInputContext.mInPrivateBrowsing);
     });
 }
 
