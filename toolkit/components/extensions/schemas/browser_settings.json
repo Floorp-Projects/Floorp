@@ -22,6 +22,10 @@
     "description": "Use the <code>browser.browserSettings</code> API to control global settings of the browser.",
     "permissions": ["browserSettings"],
     "properties": {
+      "allowPopupsForUserEvents": {
+        "$ref": "types.Setting",
+        "description": "Allows or disallows pop-up windows from opening in response to user events."
+      },
       "cacheEnabled": {
         "$ref": "types.Setting",
         "description": "Enables or disables the browser cache."
