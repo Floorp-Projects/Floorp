@@ -130,7 +130,6 @@ public:
               nsTArray<nsCString> aMimeTypes,
               nsTArray<nsCString> aMimeDescriptions,
               nsTArray<nsCString> aExtensions,
-              bool aIsJavaPlugin,
               bool aIsFlashPlugin,
               bool aSupportsAsyncRender,
               int64_t aLastModifiedTime,
@@ -168,7 +167,6 @@ public:
 
   PRLibrary     *mLibrary;
   RefPtr<nsNPAPIPlugin> mPlugin;
-  bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
   bool          mSupportsAsyncRender;
   nsCString     mFullPath; // UTF-8

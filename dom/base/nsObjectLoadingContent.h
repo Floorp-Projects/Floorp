@@ -7,7 +7,7 @@
 /*
  * A base class implementing nsIObjectLoadingContent for use by
  * various content nodes that want to provide plugin/document/image
- * loading functionality (eg <embed>, <object>, <applet>, etc).
+ * loading functionality (eg <embed>, <object>, etc).
  */
 
 #ifndef NSOBJECTLOADINGCONTENT_H_
@@ -262,8 +262,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Begins loading the object when called
      *
      * Attributes of |this| QI'd to nsIContent will be inspected, depending on
-     * the node type. This function currently assumes it is a <applet>,
-     * <object>, or <embed> tag.
+     * the node type. This function currently assumes it is a <object> or
+     * <embed> tag.
      *
      * The instantiated plugin depends on:
      * - The URI (<embed src>, <object data>)
@@ -301,7 +301,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportDocuments    = 1u << 2, // Documents are supported
                                         // (nsIDocumentLoaderFactory)
                                         // This flag always includes SVG
-      eSupportClassID      = 1u << 3, // The classid attribute is supported
+      eSupportClassID      = 1u << 3, // The classid attribute is supported. No
+                                      // longer used.
 
       // If possible to get a *plugin* type from the type attribute *or* file
       // extension, we can use that type and begin loading the plugin before
@@ -389,12 +390,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      *
      * @param aParameters     The array containing pairs of name/value strings
      *                        from nested <param> objects.
-     * @param aIgnoreCodebase Flag for ignoring the "codebase" param when
-     *                        building the array. This is useful when loading
-     *                        java.
      */
-    void GetNestedParams(nsTArray<mozilla::dom::MozPluginParameter>& aParameters,
-                         bool aIgnoreCodebase);
+    void GetNestedParams(nsTArray<mozilla::dom::MozPluginParameter>& aParameters);
 
     MOZ_MUST_USE nsresult BuildParametersArray();
 
@@ -425,7 +422,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * - mContentType         : The final content type, considering mChannel if
      *                          mChannelLoaded is set
      * - mBaseURI             : The object's base URI, which may be set by the
-     *                          object (codebase attribute)
+     *                          object
      * - mType                : The type the object is determined to be based
      *                          on the above
      *
@@ -436,13 +433,9 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * NOTE This function does not perform security checks, only determining the
      *      requested type and parameters of the object.
      *
-     * @param aJavaURI Specify that the URI will be consumed by java, which
-     *                 changes codebase parsing and URI construction. Used
-     *                 internally.
-     *
      * @return Returns a bitmask of ParameterUpdateFlags values
      */
-    ParameterUpdateFlags UpdateObjectParameters(bool aJavaURI = false);
+    ParameterUpdateFlags UpdateObjectParameters();
 
     /**
      * Queue a CheckPluginStopEvent and track it in mPendingCheckPluginStopEvent
@@ -500,11 +493,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * @param aIsPluginClickToPlay Whether this object instance is CTP.
      */
     bool PreferFallback(bool aIsPluginClickToPlay);
-
-    /*
-     * Helper to check if mBaseURI can be used by java as a codebase
-     */
-    bool CheckJavaCodebase();
 
     /**
      * Helper to check if our current URI passes policy
@@ -672,12 +660,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // a loaded type
     nsCOMPtr<nsIURI>            mURI;
 
-    // The original URI obtained from inspecting the element (codebase, and
-    // src/data). May differ from mURI due to redirects
+    // The original URI obtained from inspecting the element. May differ from
+    // mURI due to redirects
     nsCOMPtr<nsIURI>            mOriginalURI;
 
-    // The baseURI used for constructing mURI, and used by some plugins (java)
-    // as a root for other resource requests.
+    // The baseURI used for constructing mURI.
     nsCOMPtr<nsIURI>            mBaseURI;
 
 

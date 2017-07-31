@@ -730,7 +730,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
         // for the relocation.
         for (ElfSegment *segment = elf->getSegmentByType(PT_LOAD); segment;
              segment = elf->getSegmentByType(PT_LOAD, segment)) {
-            if (segment->getFlags() & PF_W == 0)
+            if ((segment->getFlags() & PF_W) == 0)
                 continue;
             size_t ptr_size = Elf_Addr::size(elf->getClass());
             size_t aligned_mem_end = (segment->getAddr() + segment->getMemSize() + ptr_size - 1) & ~(ptr_size - 1);

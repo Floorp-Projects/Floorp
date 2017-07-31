@@ -139,6 +139,52 @@ private:
   nsCOMPtr<nsINode> mRoot;
 };
 
+// Used for returning lists that will always be empty, such as the applets list
+// in HTML Documents
+class nsEmptyContentList: public nsBaseContentList,
+                          public nsIHTMLCollection
+{
+public:
+  explicit nsEmptyContentList(nsINode* aRoot) : nsBaseContentList(),
+                                                mRoot(aRoot)
+  {
+  }
+
+  // nsIDOMHTMLCollection
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsEmptyContentList,
+                                           nsBaseContentList)
+  NS_DECL_NSIDOMHTMLCOLLECTION
+
+  virtual nsINode* GetParentObject() override
+  {
+    return mRoot;
+  }
+
+  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
+
+  virtual JSObject* GetWrapperPreserveColorInternal() override
+  {
+    return nsWrapperCache::GetWrapperPreserveColor();
+  }
+  virtual void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override
+  {
+    nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
+  }
+
+  virtual nsIContent* Item(uint32_t aIndex) override;
+  virtual mozilla::dom::Element* GetElementAt(uint32_t index) override;
+  virtual mozilla::dom::Element*
+  GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
+  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
+
+protected:
+  virtual ~nsEmptyContentList() {}
+private:
+  // This has to be a strong reference, the root might go away before the list.
+  nsCOMPtr<nsINode> mRoot;
+};
+
 /**
  * Class that's used as the key to hash nsContentList implementations
  * for fast retrieval

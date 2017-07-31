@@ -1090,18 +1090,6 @@ _releaseobject(NPObject* npobj)
     return;
   }
 
-  // THIS IS A KNOWN LEAK. SEE BUG 1221448.
-  // If releaseobject is called off the main thread and we have a valid pointer,
-  // we at least know it was created on the main thread (see _createobject
-  // implementation). However, forwarding the deletion back to the main thread
-  // without careful checking could cause bad memory management races. So, for
-  // now, we leak by warning and then just returning early. But it should fix
-  // java 7 crashes.
-  if (!NS_IsMainThread()) {
-    NPN_PLUGIN_LOG(PLUGIN_LOG_ALWAYS,("NPN_releaseobject called from the wrong thread\n"));
-    return;
-  }
-
   int32_t refCnt = PR_ATOMIC_DECREMENT((int32_t*)&npobj->referenceCount);
   NS_LOG_RELEASE(npobj, refCnt, "BrowserNPObject");
 
@@ -1291,88 +1279,6 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
 
   if (!npobj->_class->getProperty(npobj, property, result))
     return false;
-
-  // If a Java plugin tries to get the document.URL or document.documentURI
-  // property from us, don't pass back a value that Java won't be able to
-  // understand -- one that will make the URL(String) constructor throw a
-  // MalformedURL exception.  Passing such a value causes Java Plugin2 to
-  // crash (to throw a RuntimeException in Plugin2Manager.getDocumentBase()).
-  // Also don't pass back a value that Java is likely to mishandle.
-
-  nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*) npp->ndata;
-  if (!inst)
-    return false;
-  nsNPAPIPlugin* plugin = inst->GetPlugin();
-  if (!plugin)
-    return false;
-  RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-  nsPluginTag* pluginTag = host->TagForPlugin(plugin);
-  if (!pluginTag->mIsJavaPlugin)
-    return true;
-
-  if (!NPVARIANT_IS_STRING(*result))
-    return true;
-
-  NPUTF8* propertyName = _utf8fromidentifier(property);
-  if (!propertyName)
-    return true;
-  bool notURL =
-    (PL_strcasecmp(propertyName, "URL") &&
-     PL_strcasecmp(propertyName, "documentURI"));
-  _memfree(propertyName);
-  if (notURL)
-    return true;
-
-  NPObject* window_obj = _getwindowobject(npp);
-  if (!window_obj)
-    return true;
-
-  NPVariant doc_v;
-  NPObject* document_obj = nullptr;
-  NPIdentifier doc_id = _getstringidentifier("document");
-  bool ok = npobj->_class->getProperty(window_obj, doc_id, &doc_v);
-  _releaseobject(window_obj);
-  if (ok) {
-    if (NPVARIANT_IS_OBJECT(doc_v)) {
-      document_obj = NPVARIANT_TO_OBJECT(doc_v);
-    } else {
-      _releasevariantvalue(&doc_v);
-      return true;
-    }
-  } else {
-    return true;
-  }
-  _releaseobject(document_obj);
-  if (document_obj != npobj)
-    return true;
-
-  NPString urlnp = NPVARIANT_TO_STRING(*result);
-  nsXPIDLCString url;
-  url.Assign(urlnp.UTF8Characters, urlnp.UTF8Length);
-
-  bool javaCompatible = false;
-  if (NS_FAILED(NS_CheckIsJavaCompatibleURLString(url, &javaCompatible)))
-    javaCompatible = false;
-  if (javaCompatible)
-    return true;
-
-  // If Java won't be able to interpret the original value of document.URL or
-  // document.documentURI, or is likely to mishandle it, pass back something
-  // that Java will understand but won't be able to use to access the network,
-  // and for which same-origin checks will always fail.
-
-  if (inst->mFakeURL.IsVoid()) {
-    // Abort (do an error return) if NS_MakeRandomInvalidURLString() fails.
-    if (NS_FAILED(NS_MakeRandomInvalidURLString(inst->mFakeURL))) {
-      _releasevariantvalue(result);
-      return false;
-    }
-  }
-
-  _releasevariantvalue(result);
-  char* fakeurl = (char *) _memalloc(inst->mFakeURL.Length() + 1);
-  strcpy(fakeurl, inst->mFakeURL);
-  STRINGZ_TO_NPVARIANT(fakeurl, *result);
 
   return true;
 }

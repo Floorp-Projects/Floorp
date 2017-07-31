@@ -14,7 +14,7 @@
       SimpleTest.waitForExplicitFinish();
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
       setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_DISABLED, "Second Test Plug-in");
-      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Java Test Plug-in");
+      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Shockwave Flash");
 
       function findPlugin(pluginName) {
           for (var i = 0; i < navigator.plugins.length; i++) {
@@ -48,19 +48,19 @@
 
         ok(navigator.plugins["Test Plug-in"], "Should have queried a plugin named 'Test Plug-in'");
         ok(!navigator.plugins["Second Test Plug-in"], "Should NOT have queried a disabled plugin named 'Second Test Plug-in'");
-        ok(navigator.plugins["Java Test Plug-in"], "Should have queried a click-to-play plugin named 'Java Test Plug-in'");
+        ok(navigator.plugins["Shockwave Flash"], "Should have queried a click-to-play plugin named 'Shockwave Flash'");
 
         ok(findPlugin("Test Plug-in"), "Should have found a plugin named 'Test Plug-in'");
         ok(!findPlugin("Second Test Plug-in"), "Should NOT found a disabled plugin named 'Second Test Plug-in'");
-        ok(findPlugin("Java Test Plug-in"), "Should have found a click-to-play plugin named 'Java Test Plug-in'");
+        ok(findPlugin("Shockwave Flash"), "Should have found a click-to-play plugin named 'Shockwave Flash'");
 
         ok(navigator.mimeTypes["application/x-test"], "Should have queried a MIME type named 'application/x-test'");
         ok(!navigator.mimeTypes["application/x-second-test"], "Should NOT have queried a disabled type named 'application/x-second-test'");
-        ok(navigator.mimeTypes["application/x-java-test"], "Should have queried a click-to-play MIME type named 'application/x-java-test'");
+        ok(navigator.mimeTypes["application/x-shockwave-flash-test"], "Should have queried a click-to-play MIME type named 'application/x-shockwave-flash-test'");
 
         ok(findMimeType("application/x-test"), "Should have found a MIME type named 'application/x-test'");
         ok(!findMimeType("application/x-second-test"), "Should NOT have found a disabled MIME type named 'application/x-second-test'");
-        ok(findMimeType("application/x-java-test"), "Should have found a click-to-play MIME type named 'application/x-java-test'");
+        ok(findMimeType("application/x-shockwave-flash-test"), "Should have found a click-to-play MIME type named 'application/x-shockwave-flash-test'");
 
         SimpleTest.finish();
       }
@@ -68,6 +68,6 @@
 
     <object id="plugin" type="application/x-test" width=200 height=200></object>
     <object id="disabledPlugin" type="application/x-second-test" width=200 height=200></object>
-    <object id="clickToPlayPlugin" type="application/x-java-test" width=200 height=200></object>
+    <object id="clickToPlayPlugin" type="application/x-shockwave-flash-test" width=200 height=200></object>
   </body>
 </html>

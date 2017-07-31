@@ -479,7 +479,7 @@ private:
         "ftyp", "moov", // init segment
         "pdin", "free", "sidx", // optional prior moov box
         "styp", "moof", "mdat", // media segment
-        "mfra", "skip", "meta", "meco", "ssix", "prft" // others.
+        "mfra", "skip", "meta", "meco", "ssix", "prft", // others.
         "pssh", // optional with encrypted EME, though ignored.
         "emsg", // ISO23009-1:2014 Section 5.10.3.3
         "bloc", "uuid" // boxes accepted by chrome.
