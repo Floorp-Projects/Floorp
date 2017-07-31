@@ -453,11 +453,8 @@ PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory,
 
 // Get the profile encoded as a JSON string. A no-op (returning nullptr) if the
 // profiler is inactive.
-// If aIsShuttingDown is true, the current time is included as the process
-// shutdown time in the JSON's "meta" object.
 PROFILER_FUNC(
-  mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0,
-                                                  bool aIsShuttingDown = false),
+  mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0),
   nullptr)
 
 // Write the profile for this process (excluding subprocesses) into aWriter.
@@ -465,7 +462,6 @@ PROFILER_FUNC(
 PROFILER_FUNC(
   bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                              double aSinceTime = 0,
-                                             bool aIsShuttingDown = false,
                                              mozilla::TimeStamp* aOutFirstSampleTime = nullptr),
   false)
 
