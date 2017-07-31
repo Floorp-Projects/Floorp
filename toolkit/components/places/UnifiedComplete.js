@@ -343,6 +343,11 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
   _conn: null,
   // Temporary queue used while the database connection is not available.
   _queue: new Map(),
+  // Whether we are in the process of updating the temp table.
+  _updatingLevel: 0,
+  get updating() {
+    return this._updatingLevel > 0;
+  },
   async initDatabase(conn) {
     // To reduce IO use an in-memory table for switch-to-tab tracking.
     // Note: this should be kept up-to-date with the definition in
@@ -372,7 +377,7 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
     // Populate the table with the current cache contents...
     for (let [userContextId, uris] of this._queue) {
       for (let uri of uris) {
-        this.add(uri, userContextId);
+        this.add(uri, userContextId).catch(Cu.reportError);
       }
     }
 
@@ -380,7 +385,7 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
     this._queue.clear();
   },
 
-  add(uri, userContextId) {
+  async add(uri, userContextId) {
     if (!this._conn) {
       if (!this._queue.has(userContextId)) {
         this._queue.set(userContextId, new Set());
@@ -388,23 +393,27 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
       this._queue.get(userContextId).add(uri);
       return;
     }
-    this._conn.executeCached(
-      `INSERT OR REPLACE INTO moz_openpages_temp (url, userContextId, open_count)
-         VALUES ( :url,
-                  :userContextId,
-                  IFNULL( ( SELECT open_count + 1
-                            FROM moz_openpages_temp
-                            WHERE url = :url
-                            AND userContextId = :userContextId ),
-                          1
-                        )
-                )`
-    , { url: uri.spec, userContextId });
+    try {
+      this._updatingLevel++;
+      await this._conn.executeCached(
+        `INSERT OR REPLACE INTO moz_openpages_temp (url, userContextId, open_count)
+          VALUES ( :url,
+                    :userContextId,
+                    IFNULL( ( SELECT open_count + 1
+                              FROM moz_openpages_temp
+                              WHERE url = :url
+                              AND userContextId = :userContextId ),
+                            1
+                          )
+                  )
+        `, { url: uri.spec, userContextId });
+    } finally {
+      this._updatingLevel--;
+    }
   },
 
-  delete(uri, userContextId) {
+  async delete(uri, userContextId) {
     if (!this._conn) {
-      // This should not happen.
       if (!this._queue.has(userContextId)) {
         throw new Error("Unknown userContextId!");
       }
@@ -415,12 +424,17 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
       }
       return;
     }
-    this._conn.executeCached(
-      `UPDATE moz_openpages_temp
-       SET open_count = open_count - 1
-       WHERE url = :url
-       AND userContextId = :userContextId`
-    , { url: uri.spec, userContextId });
+    try {
+      this._updatingLevel++;
+      await this._conn.executeCached(
+        `UPDATE moz_openpages_temp
+         SET open_count = open_count - 1
+         WHERE url = :url
+           AND userContextId = :userContextId
+        `, { url: uri.spec, userContextId });
+    } finally {
+      this._updatingLevel--;
+    }
   },
 
   shutdown() {
@@ -947,6 +961,9 @@ Search.prototype = {
       this._searchSuggestionController.stop();
       this._searchSuggestionController = null;
     }
+    if (typeof this.interrupt == "function") {
+      this.interrupt();
+    }
     this.pending = false;
   },
 
@@ -964,6 +981,14 @@ Search.prototype = {
     // A search might be canceled before it starts.
     if (!this.pending)
       return;
+
+    // Used by stop() to interrupt an eventual running statement.
+    this.interrupt = () => {
+      // Interrupt any ongoing statement to run the search sooner.
+      if (!SwitchToTabStorage.updating) {
+        conn.interrupt();
+      }
+    }
 
     TelemetryStopwatch.start(TELEMETRY_1ST_RESULT, this);
     if (this._searchString)
@@ -2289,11 +2314,11 @@ UnifiedComplete.prototype = {
   // mozIPlacesAutoComplete
 
   registerOpenPage(uri, userContextId) {
-    SwitchToTabStorage.add(uri, userContextId);
+    SwitchToTabStorage.add(uri, userContextId).catch(Cu.reportError);
   },
 
   unregisterOpenPage(uri, userContextId) {
-    SwitchToTabStorage.delete(uri, userContextId);
+    SwitchToTabStorage.delete(uri, userContextId).catch(Cu.reportError);
   },
 
   populatePreloadedSiteStorage(json) {
