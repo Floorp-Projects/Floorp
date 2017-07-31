@@ -19,13 +19,16 @@ namespace layers {
 class UpdateImageHelper
 {
 public:
-  UpdateImageHelper(ImageContainer* aImageContainer, ImageClient* aImageClient, gfx::IntSize aImageSize) :
+  UpdateImageHelper(ImageContainer* aImageContainer,
+                    ImageClient* aImageClient,
+                    gfx::IntSize aImageSize,
+                    gfx::SurfaceFormat aFormat) :
     mImageContainer(aImageContainer),
     mImageClient(aImageClient),
     mImageSize(aImageSize),
     mIsLocked(false)
   {
-    mTexture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(gfx::SurfaceFormat::B8G8R8A8,
+    mTexture = mImageClient->GetTextureClientRecycler()->CreateOrRecycle(aFormat,
                                                                          mImageSize,
                                                                          BackendSelector::Content,
                                                                          TextureFlags::DEFAULT);
