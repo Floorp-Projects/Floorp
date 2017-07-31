@@ -250,21 +250,21 @@ var gPrivacyPane = {
     let pkiBundle = document.getElementById("pkiBundle");
     appendSearchKeywords("passwordExceptions", [
       bundlePrefs.getString("savedLoginsExceptions_title"),
-      bundlePrefs.getString("savedLoginsExceptions_desc"),
+      bundlePrefs.getString("savedLoginsExceptions_desc2"),
     ]);
     appendSearchKeywords("showPasswords", [
       signonBundle.getString("loginsDescriptionAll"),
     ]);
     appendSearchKeywords("trackingProtectionExceptions", [
       bundlePrefs.getString("trackingprotectionpermissionstitle"),
-      bundlePrefs.getString("trackingprotectionpermissionstext"),
+      bundlePrefs.getString("trackingprotectionpermissionstext2"),
     ]);
     appendSearchKeywords("changeBlockList", [
       bundlePrefs.getString("blockliststitle"),
       bundlePrefs.getString("blockliststext"),
     ]);
     appendSearchKeywords("popupPolicyButton", [
-      bundlePrefs.getString("popuppermissionstitle"),
+      bundlePrefs.getString("popuppermissionstitle2"),
       bundlePrefs.getString("popuppermissionstext"),
     ]);
     appendSearchKeywords("notificationsPolicyButton", [
@@ -272,14 +272,14 @@ var gPrivacyPane = {
       bundlePrefs.getString("notificationspermissionstext4"),
     ]);
     appendSearchKeywords("addonExceptions", [
-      bundlePrefs.getString("addons_permissions_title"),
+      bundlePrefs.getString("addons_permissions_title2"),
       bundlePrefs.getString("addonspermissionstext"),
     ]);
     appendSearchKeywords("viewSecurityDevicesButton", [
       pkiBundle.getString("enable_fips"),
     ]);
     appendSearchKeywords("siteDataSettings", [
-      bundlePrefs.getString("siteDataSettings.description"),
+      bundlePrefs.getString("siteDataSettings2.description"),
       bundlePrefs.getString("removeAllCookies.label"),
       bundlePrefs.getString("removeSelectedCookies.label"),
     ]);
@@ -574,7 +574,7 @@ var gPrivacyPane = {
       permissionType: "trackingprotection",
       hideStatusColumn: true,
       windowTitle: bundlePreferences.getString("trackingprotectionpermissionstitle"),
-      introText: bundlePreferences.getString("trackingprotectionpermissionstext"),
+      introText: bundlePreferences.getString("trackingprotectionpermissionstext2"),
     };
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     null, params);
@@ -830,7 +830,7 @@ var gPrivacyPane = {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible: false, sessionVisible: false, allowVisible: true,
                    prefilledHost: "", permissionType: "popup" }
-    params.windowTitle = bundlePreferences.getString("popuppermissionstitle");
+    params.windowTitle = bundlePreferences.getString("popuppermissionstitle2");
     params.introText = bundlePreferences.getString("popuppermissionstext");
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
@@ -875,7 +875,7 @@ var gPrivacyPane = {
       prefilledHost: "",
       permissionType: "login-saving",
       windowTitle: bundlePrefs.getString("savedLoginsExceptions_title"),
-      introText: bundlePrefs.getString("savedLoginsExceptions_desc")
+      introText: bundlePrefs.getString("savedLoginsExceptions_desc2")
     };
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
@@ -1073,7 +1073,7 @@ var gPrivacyPane = {
 
     var params = this._addonParams;
     if (!params.windowTitle || !params.introText) {
-      params.windowTitle = bundlePrefs.getString("addons_permissions_title");
+      params.windowTitle = bundlePrefs.getString("addons_permissions_title2");
       params.introText = bundlePrefs.getString("addonspermissionstext");
     }
 
