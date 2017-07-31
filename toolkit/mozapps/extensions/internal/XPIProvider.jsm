@@ -451,6 +451,21 @@ function findMatchingStaticBlocklistItem(aAddon) {
 }
 
 /**
+ * Determine the reason to pass to an extension's bootstrap methods when
+ * switch between versions.
+ *
+ * @param {string} oldVersion The version of the existing extension instance.
+ * @param {string} newVersion The version of the extension being installed.
+ *
+ * @return {BOOSTRAP_REASONS.ADDON_UPGRADE|BOOSTRAP_REASONS.ADDON_DOWNGRADE}
+ */
+function newVersionReason(oldVersion, newVersion) {
+  return Services.vc.compare(oldVersion, newVersion) <= 0 ?
+         BOOTSTRAP_REASONS.ADDON_UPGRADE :
+         BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+}
+
+/**
  * Converts an iterable of addon objects into a map with the add-on's ID as key.
  */
 function addonMap(addons) {
@@ -1646,12 +1661,13 @@ this.XPIStates = {
    * Find the highest priority location of an add-on by ID and return the
    * location and the XPIState.
    * @param aId   The add-on ID
+   * @param aLocations If specified, the locations to search
    * @return {XPIState?}
    */
-  findAddon(aId) {
+  findAddon(aId, aLocations = this.db.values()) {
     // Fortunately the Map iterator returns in order of insertion, which is
     // also our highest -> lowest priority order.
-    for (let location of this.db.values()) {
+    for (let location of aLocations) {
       if (location.has(aId)) {
         return location.get(aId);
       }
@@ -2221,13 +2237,20 @@ this.XPIProvider = {
 
             // If the add-on was pending disable then shut it down and remove it
             // from the persisted data.
+            let reason = BOOTSTRAP_REASONS.APP_SHUTDOWN;
             if (addon.disable) {
-              XPIProvider.callBootstrapMethod(addonDetails, addon.file, "shutdown",
-                                              BOOTSTRAP_REASONS.ADDON_DISABLE);
-            } else {
-              XPIProvider.callBootstrapMethod(addonDetails, addon.file, "shutdown",
-                                              BOOTSTRAP_REASONS.APP_SHUTDOWN);
+              reason = BOOTSTRAP_REASONS.ADDON_DISABLE;
+            } else if (addon.location.name == KEY_APP_TEMPORARY) {
+              reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+              let locations = Array.from(XPIStates.db.values())
+                                   .filter(loc => loc.name != TemporaryInstallLocation.name);
+              let existing = XPIStates.findAddon(addon.id, locations);
+              if (existing) {
+                reason = newVersionReason(addon.version, existing.version);
+              }
             }
+            XPIProvider.callBootstrapMethod(addonDetails, addon.file,
+                                            "shutdown", reason);
           }
           Services.obs.removeObserver(this, "quit-application-granted");
         }
@@ -2313,21 +2336,28 @@ this.XPIProvider = {
       for (let [id, addon] of tempLocation.entries()) {
         tempLocation.delete(id);
 
+        let reason = BOOTSTRAP_REASONS.ADDON_UNINSTALL;
+
+        let locations = Array.from(XPIStates.db.values())
+                             .filter(loc => loc != tempLocation);
+        let existing = XPIStates.findAddon(id, locations);
+        if (existing) {
+          reason = newVersionReason(addon.version, existing.version);
+        }
+
         this.callBootstrapMethod(createAddonDetails(id, addon),
-                                 addon.file, "uninstall",
-                                 BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+                                 addon.file, "uninstall", reason);
         this.unloadBootstrapScope(id);
         TemporaryInstallLocation.uninstallAddon(id);
 
-        let state = XPIStates.findAddon(id);
-        if (state) {
-          let newAddon = XPIDatabase.makeAddonLocationVisible(id, state.location.name);
+        if (existing) {
+          let newAddon = XPIDatabase.makeAddonLocationVisible(id, existing.location.name);
 
           let file = new nsIFile(newAddon.path);
 
+          let data = {oldVersion: addon.version};
           this.callBootstrapMethod(createAddonDetails(id, newAddon),
-                                   file, "install",
-                                   BOOTSTRAP_REASONS.ADDON_INSTALL);
+                                   file, "install", reason, data);
         }
       }
     }
@@ -2822,9 +2852,7 @@ this.XPIProvider = {
               // call its uninstall method
               let newVersion = addon.version;
               let oldVersion = existingAddon;
-              let uninstallReason = Services.vc.compare(oldVersion, newVersion) < 0 ?
-                                    BOOTSTRAP_REASONS.ADDON_UPGRADE :
-                                    BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+              let uninstallReason = newVersionReason(oldVersion, newVersion);
 
               this.callBootstrapMethod(createAddonDetails(existingAddonID, existingAddon),
                                        file, "uninstall", uninstallReason,
@@ -3445,11 +3473,7 @@ this.XPIProvider = {
         let newVersion = addon.version;
         let oldVersion = oldAddon.version;
 
-        if (Services.vc.compare(newVersion, oldVersion) >= 0) {
-          installReason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
-        } else {
-          installReason = BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
-        }
+        installReason = newVersionReason(oldVersion, newVersion);
         let uninstallReason = installReason;
 
         extraParams.newVersion = newVersion;
