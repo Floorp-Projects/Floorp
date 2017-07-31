@@ -282,7 +282,7 @@ function* seleniumClickElement(el, a11y) {
  */
 interaction.selectOption = function(el) {
   if (element.isXULElement(el)) {
-    throw new Error("XUL dropdowns not supported");
+    throw new TypeError("XUL dropdowns not supported");
   }
   if (el.localName != "option") {
     throw new TypeError(pprint`Expected <option> element, got ${el}`);
