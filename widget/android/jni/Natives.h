@@ -423,10 +423,9 @@ class ProxyNativeCall
     Call(const typename Owner::LocalRef& inst,
          mozilla::IndexSequence<Indices...>) const
     {
-        if (Impl* const impl = NativePtr<Impl>::Get(inst)) {
-            MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-            (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
-        }
+        Impl* const impl = NativePtr<Impl>::Get(inst);
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
+        (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
     }
 
     template<bool Static, bool ThisArg, size_t... Indices>
@@ -434,10 +433,9 @@ class ProxyNativeCall
     Call(const typename Owner::LocalRef& inst,
          mozilla::IndexSequence<Indices...>) const
     {
-        if (Impl* const impl = NativePtr<Impl>::Get(inst)) {
-            MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-            (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
-        }
+        Impl* const impl = NativePtr<Impl>::Get(inst);
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
+        (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
     }
 
     template<size_t... Indices>
