@@ -179,7 +179,7 @@ AsyncExecuteStatements::executeAndProcessStatement(sqlite3_stmt *aStatement,
     hasResults = executeStatement(aStatement);
 
     // If we had an error, bail.
-    if (mState == ERROR)
+    if (mState == ERROR || mState == CANCELED)
       return false;
 
     // If we have been canceled, there is no point in going on...
@@ -255,6 +255,11 @@ AsyncExecuteStatements::executeStatement(sqlite3_stmt *aStatement)
       // Yield, and try again
       (void)::PR_Sleep(PR_INTERVAL_NO_WAIT);
       continue;
+    }
+
+    if (rc == SQLITE_INTERRUPT) {
+      mState = CANCELED;
+      return false;
     }
 
     // Set an error state.
