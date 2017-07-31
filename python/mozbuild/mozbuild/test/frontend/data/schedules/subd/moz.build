@@ -1,0 +1,2 @@
+with Files('yaml.py'):
+    SCHEDULES.inclusive += ['yaml-lint']
