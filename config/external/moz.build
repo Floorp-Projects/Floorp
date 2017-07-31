@@ -21,6 +21,8 @@ if CONFIG['MOZ_UPDATER']:
 external_dirs += ['modules/brotli']
 external_dirs += ['modules/woff2']
 
+external_dirs += ['modules/xz-embedded']
+
 if CONFIG['MOZ_VORBIS']:
     external_dirs += ['media/libvorbis']
 
@@ -63,8 +65,5 @@ external_dirs += [
     'media/libsoundtouch',
     'media/psshparser'
 ]
-
-if CONFIG['MOZ_LINKER']:
-    external_dirs += ['modules/xz-embedded']
 
 DIRS += ['../../' + i for i in external_dirs]

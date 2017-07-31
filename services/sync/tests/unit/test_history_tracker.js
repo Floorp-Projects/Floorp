@@ -144,7 +144,7 @@ add_task(async function test_track_delete() {
   // This isn't present because we weren't tracking when it was visited.
   await addVisit("track_delete");
   let uri = Utils.makeURI("http://getfirefox.com/track_delete");
-  let guid = engine._store.GUIDForUri(uri);
+  let guid = await engine._store.GUIDForUri(uri.spec);
   await verifyTrackerEmpty();
 
   await startTracking();
@@ -162,7 +162,7 @@ add_task(async function test_track_delete() {
 add_task(async function test_dont_track_expiration() {
   _("Expirations are not tracked.");
   let uriToRemove = await addVisit("to_remove");
-  let guidToRemove = engine._store.GUIDForUri(uriToRemove);
+  let guidToRemove = await engine._store.GUIDForUri(uriToRemove.spec);
 
   await resetTracker();
   await verifyTrackerEmpty();
@@ -216,19 +216,19 @@ add_task(async function test_filter_hidden() {
 
   _("Add visit; should be hidden by the redirect");
   let hiddenURI = await addVisit("hidden");
-  let hiddenGUID = engine._store.GUIDForUri(hiddenURI);
+  let hiddenGUID = await engine._store.GUIDForUri(hiddenURI.spec);
   _(`Hidden visit GUID: ${hiddenGUID}`);
 
   _("Add redirect visit; should be tracked");
-  let trackedURI = await addVisit("redirect", hiddenURI,
+  let trackedURI = await addVisit("redirect", hiddenURI.spec,
     PlacesUtils.history.TRANSITION_REDIRECT_PERMANENT);
-  let trackedGUID = engine._store.GUIDForUri(trackedURI);
+  let trackedGUID = await engine._store.GUIDForUri(trackedURI.spec);
   _(`Tracked visit GUID: ${trackedGUID}`);
 
   _("Add visit for framed link; should be ignored");
   let embedURI = await addVisit("framed_link", null,
     PlacesUtils.history.TRANSITION_FRAMED_LINK);
-  let embedGUID = engine._store.GUIDForUri(embedURI);
+  let embedGUID = await engine._store.GUIDForUri(embedURI.spec);
   _(`Framed link visit GUID: ${embedGUID}`);
 
   _("Run Places maintenance to mark redirect visit as hidden");

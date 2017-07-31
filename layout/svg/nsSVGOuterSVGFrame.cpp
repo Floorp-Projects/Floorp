@@ -930,8 +930,7 @@ nsSVGOuterSVGFrame::IsRootOfReplacedElementSubDoc(nsIFrame **aEmbeddingFrame)
       nsCOMPtr<nsIDOMHTMLIFrameElement> iframeElement =
         do_QueryInterface(frameElement);
       if (olc || iframeElement) {
-        // Our document is inside an HTML 'object', 'embed', 'applet'
-        // or 'iframe' element
+        // Our document is inside an HTML 'object', 'embed' or 'iframe' element
         if (aEmbeddingFrame) {
           nsCOMPtr<nsIContent> element = do_QueryInterface(frameElement);
           *aEmbeddingFrame = element->GetPrimaryFrame();

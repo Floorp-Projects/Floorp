@@ -237,23 +237,23 @@ this.pageAction = class extends ExtensionAPI {
         }).api(),
 
         show(tabId) {
-          let tab = tabId ? tabTracker.getTab(tabId) : null;
+          let tab = tabTracker.getTab(tabId);
           return pageActionMap.get(extension).setProperty(tab, "show", true);
         },
 
         hide(tabId) {
-          let tab = tabId ? tabTracker.getTab(tabId) : null;
+          let tab = tabTracker.getTab(tabId);
           pageActionMap.get(extension).setProperty(tab, "show", false);
         },
 
         setPopup(details) {
-          let tab = details.tabId ? tabTracker.getTab(details.tabId) : null;
+          let tab = tabTracker.getTab(details.tabId);
           let url = details.popup && context.uri.resolve(details.popup);
           pageActionMap.get(extension).setProperty(tab, "popup", url);
         },
 
         getPopup(details) {
-          let tab = details.tabId ? tabTracker.getTab(details.tabId) : null;
+          let tab = tabTracker.getTab(details.tabId);
           let popup = pageActionMap.get(extension).getProperty(tab, "popup");
           return Promise.resolve(popup);
         },

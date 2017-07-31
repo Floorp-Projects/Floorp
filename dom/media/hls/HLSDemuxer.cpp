@@ -253,13 +253,13 @@ HLSDemuxer::~HLSDemuxer()
 {
   HLS_DEBUG("HLSDemuxer", "~HLSDemuxer()");
   mCallbackSupport->Detach();
-  if (mJavaCallbacks) {
-    HLSDemuxerCallbacksSupport::DisposeNative(mJavaCallbacks);
-    mJavaCallbacks = nullptr;
-  }
   if (mHLSDemuxerWrapper) {
     mHLSDemuxerWrapper->Destroy();
     mHLSDemuxerWrapper = nullptr;
+  }
+  if (mJavaCallbacks) {
+      HLSDemuxerCallbacksSupport::DisposeNative(mJavaCallbacks);
+      mJavaCallbacks = nullptr;
   }
   mInitPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_CANCELED, __func__);
 }

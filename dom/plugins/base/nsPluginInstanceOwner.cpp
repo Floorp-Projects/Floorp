@@ -37,7 +37,6 @@ using mozilla::DefaultXDisplay;
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIAppShell.h"
-#include "nsIDOMHTMLAppletElement.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsObjectLoadingContent.h"
 #include "nsAttrName.h"
@@ -1305,9 +1304,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagType(nsPluginTagType *result)
   *result = nsPluginTagType_Unknown;
 
   nsCOMPtr<nsIContent> content = do_QueryReferent(mContent);
-  if (content->IsHTMLElement(nsGkAtoms::applet))
-    *result = nsPluginTagType_Applet;
-  else if (content->IsHTMLElement(nsGkAtoms::embed))
+  if (content->IsHTMLElement(nsGkAtoms::embed))
     *result = nsPluginTagType_Embed;
   else if (content->IsHTMLElement(nsGkAtoms::object))
     *result = nsPluginTagType_Object;

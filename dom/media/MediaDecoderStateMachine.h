@@ -530,18 +530,6 @@ private:
   // increasing.
   Watchable<media::TimeUnit> mObservedDuration;
 
-  // Returns true if we're logically playing, that is, if the Play() has
-  // been called and Pause() has not or we have not yet reached the end
-  // of media. This is irrespective of the seeking state; if the owner
-  // calls Play() and then Seek(), we still count as logically playing.
-  // The decoder monitor must be held.
-  bool IsLogicallyPlaying()
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    return mPlayState == MediaDecoder::PLAY_STATE_PLAYING
-           || mNextPlayState == MediaDecoder::PLAY_STATE_PLAYING;
-  }
-
   // Media Fragment end time.
   media::TimeUnit mFragmentEndTime = media::TimeUnit::Invalid();
 
@@ -685,9 +673,8 @@ private:
   // The duration explicitly set by JS, mirrored from the main thread.
   Mirror<Maybe<double>> mExplicitDuration;
 
-  // The current play state and next play state, mirrored from the main thread.
+  // The current play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
-  Mirror<MediaDecoder::PlayState> mNextPlayState;
 
   // Volume of playback. 0.0 = muted. 1.0 = full volume.
   Mirror<double> mVolume;

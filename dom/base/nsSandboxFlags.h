@@ -42,9 +42,8 @@ const unsigned long SANDBOXED_TOPLEVEL_NAVIGATION = 0x4;
 
 /**
  * This flag prevents content from instantiating plugins, whether using the
- * embed element, the object element, the applet element, or through
- * navigation of a nested browsing context, unless those plugins can be
- * secured.
+ * embed element, the object element, or through navigation of a nested browsing
+ * context, unless those plugins can be secured.
  */
 const unsigned long SANDBOXED_PLUGINS = 0x8;
 
