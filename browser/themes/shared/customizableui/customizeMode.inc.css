@@ -450,6 +450,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #customization-uidensity-menu > .panel-arrowcontainer > .panel-arrowcontent,
 #customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
   -moz-box-orient: vertical;
+  font: menu;
 }
 
 #customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
@@ -526,24 +527,24 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 #customization-lwtheme-menu-recommended {
   padding: 10px;
   margin-bottom: 5px;
+  text-align: center;
+  font-weight: 500;
+  border-bottom: 1px solid var(--panel-separator-color);
 }
 
 #customization-lwtheme-menu-header,
 #customization-lwtheme-menu-recommended,
 #customization-lwtheme-menu-footer {
-  background-color: var(--arrowpanel-dimmed);
   margin-right: -10px;
   margin-left: -10px;
 }
 
 #customization-lwtheme-menu-header {
   margin-top: -10px;
-  border-bottom: 1px solid var(--arrowpanel-dimmed);
 }
 
 #customization-lwtheme-menu-recommended {
-  border-top: 1px solid var(--arrowpanel-dimmed);
-  border-bottom: 1px solid var(--arrowpanel-dimmed);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #customization-lwtheme-menu-footer {
