@@ -1442,8 +1442,7 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 }
 
 static void
-StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
-                         const TimeStamp& aShutdownTime)
+StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
@@ -1455,15 +1454,6 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
   TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
     "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
-
-  // Write the shutdownTime field. Unlike startTime, shutdownTime is not an
-  // absolute time stamp: It's relative to startTime. This is consistent with
-  // all other (non-"startTime") times anywhere in the profile JSON.
-  if (aShutdownTime) {
-    aWriter.DoubleProperty("shutdownTime", profiler_time());
-  } else {
-    aWriter.NullProperty("shutdownTime");
-  }
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
@@ -1596,8 +1586,7 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 static TimeStamp
 locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                                              SpliceableJSONWriter& aWriter,
-                                             double aSinceTime,
-                                             bool aIsShuttingDown)
+                                             double aSinceTime)
 {
   LOG("locked_profiler_stream_json_for_this_process");
 
@@ -1611,8 +1600,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // Put meta data
   aWriter.StartObjectProperty("meta");
   {
-    StreamMetaJSCustomObject(aLock, aWriter,
-                             aIsShuttingDown ? TimeStamp::Now() : TimeStamp());
+    StreamMetaJSCustomObject(aLock, aWriter);
   }
   aWriter.EndObject();
 
@@ -1677,7 +1665,6 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
 bool
 profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                       double aSinceTime,
-                                      bool aIsShuttingDown,
                                       TimeStamp* aOutFirstSampleTime)
 {
   LOG("profiler_stream_json_for_this_process");
@@ -1691,8 +1678,7 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
   }
 
   TimeStamp firstSampleTime =
-    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
-                                                 aIsShuttingDown);
+    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime);
 
   if (aOutFirstSampleTime) {
     *aOutFirstSampleTime = firstSampleTime;
@@ -2363,8 +2349,7 @@ profiler_init(void* aStackTop)
 }
 
 static void
-locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename,
-                                     bool aIsShuttingDown);
+locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename);
 
 static SamplerThread*
 locked_profiler_stop(PSLockRef aLock);
@@ -2387,8 +2372,7 @@ profiler_shutdown()
     if (ActivePS::Exists(lock)) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename) {
-        locked_profiler_save_profile_to_file(lock, filename,
-                                             /* aIsShuttingDown */ true);
+        locked_profiler_save_profile_to_file(lock, filename);
       }
 
       samplerThread = locked_profiler_stop(lock);
@@ -2415,7 +2399,7 @@ profiler_shutdown()
 }
 
 UniquePtr<char[]>
-profiler_get_profile(double aSinceTime, bool aIsShuttingDown)
+profiler_get_profile(double aSinceTime)
 {
   LOG("profiler_get_profile");
 
@@ -2424,8 +2408,7 @@ profiler_get_profile(double aSinceTime, bool aIsShuttingDown)
   SpliceableChunkedJSONWriter b;
   b.Start(SpliceableJSONWriter::SingleLineStyle);
   {
-    if (!profiler_stream_json_for_this_process(b, aSinceTime,
-                                               aIsShuttingDown)) {
+    if (!profiler_stream_json_for_this_process(b, aSinceTime)) {
       return nullptr;
     }
 
@@ -2526,8 +2509,7 @@ AutoSetProfilerEnvVarsForChildProcess::~AutoSetProfilerEnvVarsForChildProcess()
 }
 
 static void
-locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename,
-                                     bool aIsShuttingDown = false)
+locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
 {
   LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
 
@@ -2539,8 +2521,7 @@ locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename,
     SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
     w.Start(SpliceableJSONWriter::SingleLineStyle);
     {
-      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,
-                                                   aIsShuttingDown);
+      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0);
 
       // Don't include profiles from other processes because this is a
       // synchronous function.
