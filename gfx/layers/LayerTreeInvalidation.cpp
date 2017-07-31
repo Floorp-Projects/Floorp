@@ -421,10 +421,22 @@ public:
     }
 
     if (container->UseIntermediateSurface()) {
-      IntRect bounds = invalidateWholeLayer
-                       ? mLayer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds()
-                       : result.GetBounds();
-      container->SetInvalidCompositeRect(bounds);
+      Maybe<IntRect> bounds;
+
+      if (!invalidateWholeLayer) {
+        bounds = Some(result.GetBounds());
+
+        // Process changes in the visible region.
+        IntRegion newVisible = mLayer->GetLocalVisibleRegion().ToUnknownRegion();
+        if (!newVisible.IsEqual(mVisibleRegion)) {
+          newVisible.XorWith(mVisibleRegion);
+          bounds = bounds->SafeUnion(newVisible.GetBounds());
+        }
+      }
+      if (!bounds) {
+        bounds = Some(mLayer->GetLocalVisibleRegion().GetBounds().ToUnknownRect());
+      }
+      container->SetInvalidCompositeRect(bounds.value());
     }
 
     if (!mLayer->Extend3DContext()) {
