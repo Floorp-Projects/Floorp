@@ -108,7 +108,7 @@ int mar_enum_items(MarFile *mar, MarItemCallback callback, void *data);
  * @return          The number of bytes written or a negative value if an
  *                  error occurs.
  */
-int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
+int mar_read(MarFile *mar, const MarItem *item, int offset, uint8_t *buf,
              int bufsize);
 
 /**

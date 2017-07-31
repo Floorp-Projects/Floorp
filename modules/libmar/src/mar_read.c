@@ -516,7 +516,7 @@ int mar_enum_items(MarFile *mar, MarItemCallback callback, void *closure) {
   return 0;
 }
 
-int mar_read(MarFile *mar, const MarItem *item, int offset, char *buf,
+int mar_read(MarFile *mar, const MarItem *item, int offset, uint8_t *buf,
              int bufsize) {
   int nr;
 

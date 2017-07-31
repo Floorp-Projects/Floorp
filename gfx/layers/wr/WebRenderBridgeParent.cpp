@@ -1441,5 +1441,12 @@ WebRenderBridgeParent::GetNextWrEpoch()
   return ++mWrEpoch;
 }
 
+void
+WebRenderBridgeParent::ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
+{
+  MOZ_ASSERT(mWidget);
+  mAsyncImageManager->FlushImageNotifications(aNotifications);
+}
+
 } // namespace layers
 } // namespace mozilla

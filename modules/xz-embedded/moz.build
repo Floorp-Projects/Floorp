@@ -33,4 +33,7 @@ elif '86' in CONFIG['TARGET_CPU']:
 
 DEFINES['XZ_USE_CRC64'] = 1
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_STATIC_LIBS = True
+
 Library('xz-embedded')
