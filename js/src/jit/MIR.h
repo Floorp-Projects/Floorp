@@ -7452,9 +7452,8 @@ class MFromCodePoint
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
-    bool possiblyCalls() const override {
-        return true;
-    }
+
+    ALLOW_CLONE(MFromCodePoint)
 };
 
 class MSinCos
