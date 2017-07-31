@@ -17,6 +17,14 @@ var ParentUtils = {
       let addresses = result.data;
       Services.cpmm.sendAsyncMessage("FormAutofill:RemoveAddresses",
                                      {guids: addresses.map(address => address.guid)});
+
+      let count = addresses.length;
+      Services.obs.addObserver(function observer(subject, topic, data) {
+        if (!--count) {
+          Services.obs.removeObserver(observer, topic);
+          sendAsyncMessage("FormAutofillTest:AddressCleanedUp");
+        }
+      }, "formautofill-storage-changed");
     });
 
     Services.cpmm.sendAsyncMessage("FormAutofill:GetRecords", {searchString: "", collectionName: "addresses"});
@@ -102,6 +110,10 @@ addMessageListener("FormAutofillTest:UpdateAddress", (msg) => {
 
 addMessageListener("FormAutofillTest:CheckAddresses", (msg) => {
   ParentUtils.checkAddresses(msg);
+});
+
+addMessageListener("FormAutofillTest:CleanUpAddress", (msg) => {
+  ParentUtils.cleanUpAddress();
 });
 
 addMessageListener("cleanup", () => {
