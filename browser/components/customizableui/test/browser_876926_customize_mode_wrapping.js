@@ -6,7 +6,7 @@
 
 const kXULWidgetId = "a-test-button"; // we'll create a button with this ID.
 const kAPIWidgetId = "feed-button";
-const kPanel = CustomizableUI.AREA_PANEL;
+const kPanel = CustomizableUI.AREA_FIXED_OVERFLOW_PANEL;
 const kToolbar = CustomizableUI.AREA_NAVBAR;
 const kVisiblePalette = "customization-palette";
 const kPlaceholderClass = "panel-customization-placeholder";
@@ -155,7 +155,10 @@ var otherWin;
 
 // Moving widgets in two windows, one with customize mode and one without, should work.
 add_task(async function MoveWidgetsInTwoWindows() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.photon.structure.enabled", false]]});
+  CustomizableUI.createWidget({
+    id: "cui-mode-wrapping-some-panel-item",
+    label: "Test panel wrapping",
+  });
   await startCustomizing();
   otherWin = await openAndLoadWindow(null, true);
   await otherWin.PanelUI.ensureReady();
@@ -168,10 +171,17 @@ add_task(async function MoveWidgetsInTwoWindows() {
     for (let method of ["API", "drag", "dragToItem"]) {
       info("Moving widget " + widgetId + " using " + method);
       checkToolbar(widgetId, method);
+      // We add an item to the panel because otherwise we can't test dragging
+      // to items that are already there. We remove it because
+      // 'checkPalette' checks that we leave the browser in the default state.
+      CustomizableUI.addWidgetToArea("cui-mode-wrapping-some-panel-item", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
       checkPanel(widgetId, method);
+      CustomizableUI.removeWidgetFromArea("cui-mode-wrapping-some-panel-item");
       checkPalette(widgetId, method);
+      CustomizableUI.addWidgetToArea("cui-mode-wrapping-some-panel-item", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
       checkPanel(widgetId, method);
       checkToolbar(widgetId, method);
+      CustomizableUI.removeWidgetFromArea("cui-mode-wrapping-some-panel-item");
       checkPalette(widgetId, method);
     }
   }
@@ -182,5 +192,6 @@ add_task(async function MoveWidgetsInTwoWindows() {
 });
 
 add_task(async function asyncCleanup() {
+  CustomizableUI.destroyWidget("cui-mode-wrapping-some-panel-item");
   await resetCustomization();
 });
