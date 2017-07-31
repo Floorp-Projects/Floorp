@@ -27,7 +27,7 @@ def lint(files, config, **kwargs):
         results.append(result.from_config(config, **data))
 
     path = os.path.join(tests_dir, "lint")
-    proc = ProcessHandler([path, "--json"], env=os.environ,
+    proc = ProcessHandler([path, "--json"] + files, env=os.environ,
                           processOutputLine=process_line)
     proc.run()
     try:
