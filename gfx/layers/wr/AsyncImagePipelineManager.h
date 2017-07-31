@@ -8,6 +8,7 @@
 
 #include <queue>
 
+#include "CompositableHost.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/Maybe.h"
@@ -79,6 +80,16 @@ public:
                                 const wr::MixBlendMode& aMixBlendMode);
   void ApplyAsyncImages(wr::WebRenderAPI* aApi);
 
+  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
+  {
+    mImageCompositeNotifications.AppendElement(aNotification);
+  }
+
+  void FlushImageNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
+  {
+    aNotifications->AppendElements(Move(mImageCompositeNotifications));
+  }
+
 private:
   void DeleteOldAsyncImages(wr::WebRenderAPI* aApi);
 
@@ -146,6 +157,8 @@ private:
   // change its rendering at this time. In order not to miss it, we composite
   // on every vsync until this time occurs (this is the latest such time).
   TimeStamp mCompositeUntilTime;
+
+  nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
 };
 
 } // namespace layers
