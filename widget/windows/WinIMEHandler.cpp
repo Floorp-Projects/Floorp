@@ -938,7 +938,7 @@ void
 IMEHandler::ShowOnScreenKeyboard()
 {
   nsAutoString cachedPath;
-  nsresult result = Preferences::GetString(kOskPathPrefName, &cachedPath);
+  nsresult result = Preferences::GetString(kOskPathPrefName, cachedPath);
   if (NS_FAILED(result) || cachedPath.IsEmpty()) {
     wchar_t path[MAX_PATH];
     // The path to TabTip.exe is defined at the following registry key.
