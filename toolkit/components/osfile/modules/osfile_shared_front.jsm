@@ -152,24 +152,30 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
       path: path,
       file: OS.File.open(path, mode)
     };
-  } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) {
-    for (let i = 0; i < maxAttempts; ++i) {
-      try {
-        if (humanReadable) {
-          uniquePath = Path.join(dirName, fileName + "-" + (i + 1) + suffix);
-        } else {
-          let hexNumber = Math.floor(Math.random() * MAX_HEX_NUMBER).toString(HEX_RADIX);
-          uniquePath = Path.join(dirName, fileName + "-" + hexNumber + suffix);
+  } catch (ex) {
+    if (ex instanceof OS.File.Error && ex.becauseExists) {
+      for (let i = 0; i < maxAttempts; ++i) {
+        try {
+          if (humanReadable) {
+            uniquePath = Path.join(dirName, fileName + "-" + (i + 1) + suffix);
+          } else {
+            let hexNumber = Math.floor(Math.random() * MAX_HEX_NUMBER).toString(HEX_RADIX);
+            uniquePath = Path.join(dirName, fileName + "-" + hexNumber + suffix);
+          }
+          return {
+            path: uniquePath,
+            file: OS.File.open(uniquePath, mode)
+          };
+        } catch (ex) {
+          if (ex instanceof OS.File.Error && ex.becauseExists) {
+            // keep trying ...
+          } else {
+            throw ex;
+          }
         }
-        return {
-          path: uniquePath,
-          file: OS.File.open(uniquePath, mode)
-        };
-      } catch (ex if ex instanceof OS.File.Error && ex.becauseExists) {
-        // keep trying ...
       }
+      throw OS.File.Error.exists("could not find an unused file name.", path);
     }
-    throw OS.File.Error.exists("could not find an unused file name.", path);
   }
 };
 
@@ -339,8 +345,12 @@ AbstractFile.read = function read(path, bytes, options = {}) {
     let decoder;
     try {
       decoder = new TextDecoder(options.encoding);
-    } catch (ex if ex instanceof RangeError) {
-      throw OS.File.Error.invalidArgument("Decode");
+    } catch (ex) {
+      if (ex instanceof RangeError) {
+        throw OS.File.Error.invalidArgument("Decode");
+      } else {
+        throw ex;
+      }
     }
     return decoder.decode(buffer);
   } finally {
@@ -425,8 +435,12 @@ AbstractFile.writeAtomic =
     if (options.backupTo) {
       try {
         OS.File.move(path, options.backupTo, {noCopy: true});
-      } catch (ex if ex.becauseNoSuchFile) {
-        // The file doesn't exist, nothing to backup.
+      } catch (ex) {
+        if (ex.becauseNoSuchFile) {
+          // The file doesn't exist, nothing to backup.
+        } else {
+          throw ex;
+        }
       }
     }
     // Just write, without any renaming trick
@@ -458,8 +472,12 @@ AbstractFile.writeAtomic =
   if (options.backupTo) {
     try {
       OS.File.move(path, options.backupTo, {noCopy: true});
-    } catch (ex if ex.becauseNoSuchFile) {
-      // The file doesn't exist, nothing to backup.
+    } catch (ex) {
+     if (ex.becauseNoSuchFile) {
+        // The file doesn't exist, nothing to backup.
+      } else {
+        throw ex;
+      }
     }
   }
 

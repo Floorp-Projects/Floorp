@@ -192,10 +192,13 @@ function test_passing_undefined()
                                             | OS.Constants.libc.O_CREAT
                                             | OS.Constants.libc.O_TRUNC,
                                             OS.Constants.libc.S_IRWXU);
-  } catch(e if e instanceof TypeError && e.message.indexOf("open") > -1) {
-    exceptionRaised = true;
+  } catch(e) {
+    if (e instanceof TypeError && e.message.indexOf("open") > -1) {
+      exceptionRaised = true;
+    } else {
+      throw e;
+    }
   }
 
   ok(exceptionRaised, "test_passing_undefined: exception gets thrown")
 }
-

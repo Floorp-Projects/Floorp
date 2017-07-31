@@ -59,8 +59,12 @@ add_task(async function system_shutdown() {
       try {
         await deferred.promise;
         resolved = true;
-      } catch (ex if ex == "timeout") {
-        resolved = false;
+      } catch (ex) {
+        if (ex == "timeout") {
+          resolved = false;
+        } else {
+          throw ex;
+        }
       }
       Services.console.unregisterListener(observer);
       Services.prefs.clearUserPref("toolkit.osfile.log");
