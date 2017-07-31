@@ -403,6 +403,10 @@ toolbar:not([brighttext]) #bookmarks-menu-button@attributeSelectorForToolbar@[st
   animation-timing-function: ease-out;
   animation-duration: 730ms;
 }
+
+#nav-bar-overflow-button[animate][fade]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+  transform: scaleX(-1);
+}
 %endif
 
 #email-link-button@attributeSelectorForToolbar@ {
