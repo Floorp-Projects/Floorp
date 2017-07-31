@@ -3132,13 +3132,11 @@ nsDisplaySVGText::Paint(nsDisplayListBuilder* aBuilder,
                    gfxMatrix::Translation(devPixelOffset);
 
   gfxContext* ctx = aCtx;
-  ctx->Save();
   imgDrawingParams imgParams(aBuilder->ShouldSyncDecodeImages()
                              ? imgIContainer::FLAG_SYNC_DECODE
                              : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   static_cast<SVGTextFrame*>(mFrame)->PaintSVG(*ctx, tm, imgParams);
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, imgParams.result);
-  ctx->Restore();
 }
 
 // ---------------------------------------------------------------------
