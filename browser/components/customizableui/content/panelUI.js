@@ -257,12 +257,6 @@ const PanelUI = {
           return;
         }
 
-        let personalBookmarksPlacement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-        if (personalBookmarksPlacement &&
-            personalBookmarksPlacement.area == CustomizableUI.AREA_PANEL) {
-          PlacesToolbarHelper.customizeChange();
-        }
-
         let anchor;
         let domEvent = null;
         if (!aEvent ||
