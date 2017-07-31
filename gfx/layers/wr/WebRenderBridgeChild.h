@@ -90,15 +90,15 @@ public:
   bool IsDestroyed() const { return mDestroyed; }
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
-  uint32_t GetNamespace() { return mIdNamespace; }
-  void SetNamespace(uint32_t aIdNamespace)
+  wr::IdNamespace GetNamespace() { return mIdNamespace; }
+  void SetNamespace(wr::IdNamespace aIdNamespace)
   {
     mIdNamespace = aIdNamespace;
   }
 
   wr::WrImageKey GetNextImageKey()
   {
-    return wr::WrImageKey{ wr::WrIdNamespace { GetNamespace() }, GetNextResourceId() };
+    return wr::WrImageKey{ GetNamespace(), GetNextResourceId() };
   }
 
   void PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArray<GlyphArray>& aGlyphs,
@@ -144,7 +144,7 @@ private:
 
   void ActorDestroy(ActorDestroyReason why) override;
 
-  virtual mozilla::ipc::IPCResult RecvWrUpdated(const uint32_t& aNewIdNameSpace) override;
+  virtual mozilla::ipc::IPCResult RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace) override;
 
   void AddIPDLReference() {
     MOZ_ASSERT(mIPCOpen == false);
@@ -166,7 +166,7 @@ private:
   uint64_t mReadLockSequenceNumber;
   bool mIsInTransaction;
   bool mIsInClearCachedResources;
-  uint32_t mIdNamespace;
+  wr::IdNamespace mIdNamespace;
   uint32_t mResourceId;
   wr::PipelineId mPipelineId;
 

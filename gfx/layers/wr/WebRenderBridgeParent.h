@@ -102,7 +102,7 @@ public:
                                     const wr::ByteBuffer& dl,
                                     const wr::BuiltDisplayListDescriptor& dlDesc,
                                     const WebRenderScrollData& aScrollData,
-                                    const uint32_t& aIdNameSpace,
+                                    const wr::IdNamespace& aIdNamespace,
                                     const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
                                         InfallibleTArray<WebRenderParentCommand>&& aCommands,
@@ -113,7 +113,7 @@ public:
                                         const wr::ByteBuffer& dl,
                                         const wr::BuiltDisplayListDescriptor& dlDesc,
                                         const WebRenderScrollData& aScrollData,
-                                        const uint32_t& aIdNameSpace,
+                                        const wr::IdNamespace& aIdNamespace,
                                         const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
@@ -178,16 +178,16 @@ public:
 
   void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications);
 
-  uint32_t GetIdNameSpace()
+  wr::IdNamespace GetIdNamespace()
   {
-    return mIdNameSpace;
+    return mIdNamespace;
   }
 
   void UpdateAPZ();
   const WebRenderScrollData& GetScrollData() const;
 
-  static uint32_t AllocIdNameSpace() {
-    return ++sIdNameSpace;
+  static wr::IdNamespace AllocIdNameSpace() {
+    return wr::IdNamespace { ++sIdNameSpace };
   }
 
   void FlushRendering(bool aIsSync);
@@ -212,7 +212,7 @@ private:
                                 const wr::LayoutSize& aContentSize,
                                 const wr::ByteBuffer& dl,
                                 const wr::BuiltDisplayListDescriptor& dlDesc,
-                                const uint32_t& aIdNameSpace);
+                                const wr::IdNamespace& aIdNamespace);
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
@@ -225,7 +225,7 @@ private:
                    const wr::ByteBuffer& dl,
                    const wr::BuiltDisplayListDescriptor& dlDesc,
                    const WebRenderScrollData& aScrollData,
-                   const uint32_t& aIdNameSpace,
+                   const wr::IdNamespace& aIdNamespace,
                    const TimeStamp& aFwdTime);
   mozilla::ipc::IPCResult HandleShutdown();
 
@@ -287,7 +287,7 @@ private:
 
   std::queue<PendingTransactionId> mPendingTransactionIds;
   uint32_t mWrEpoch;
-  uint32_t mIdNameSpace;
+  wr::IdNamespace mIdNamespace;
 
   bool mPaused;
   bool mDestroyed;

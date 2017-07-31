@@ -23,7 +23,7 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
  , mMixBlendMode(wr::MixBlendMode::Normal)
 {}
 
-AsyncImagePipelineManager::AsyncImagePipelineManager(uint32_t aIdNamespace)
+AsyncImagePipelineManager::AsyncImagePipelineManager(wr::IdNamespace aIdNamespace)
  : mIdNamespace(aIdNamespace)
  , mResourceId(0)
  , mAsyncImageEpoch(0)

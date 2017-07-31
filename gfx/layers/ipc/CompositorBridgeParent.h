@@ -459,7 +459,7 @@ public:
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                       const LayoutDeviceIntSize& aSize,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                      uint32_t* aIdNamespace) override;
+                                                      wr::IdNamespace* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
   RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
   Maybe<TimeStamp> GetTestingTimeStamp() const;

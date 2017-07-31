@@ -34,7 +34,7 @@ class AsyncImagePipelineManager final
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncImagePipelineManager)
 
-  explicit AsyncImagePipelineManager(uint32_t aIdNamespace);
+  explicit AsyncImagePipelineManager(wr::IdNamespace aIdNamespace);
 
 protected:
   ~AsyncImagePipelineManager();
@@ -94,11 +94,11 @@ private:
   void DeleteOldAsyncImages(wr::WebRenderAPI* aApi);
 
   uint32_t GetNextResourceId() { return ++mResourceId; }
-  uint32_t GetNamespace() { return mIdNamespace; }
+  wr::IdNamespace GetNamespace() { return mIdNamespace; }
   wr::ImageKey GenerateImageKey()
   {
     wr::ImageKey key;
-    key.mNamespace.mHandle = GetNamespace();
+    key.mNamespace = GetNamespace();
     key.mHandle = GetNextResourceId();
     return key;
   }
@@ -141,7 +141,7 @@ private:
                        nsTArray<wr::ImageKey>& aKeys,
                        nsTArray<wr::ImageKey>& aKeysToDelete);
 
-  uint32_t mIdNamespace;
+  wr::IdNamespace mIdNamespace;
   uint32_t mResourceId;
 
   nsClassHashtable<nsUint64HashKey, PipelineTexturesHolder> mPipelineTexturesHolders;
