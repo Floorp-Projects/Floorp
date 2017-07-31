@@ -58,6 +58,7 @@ else:
 
 USE_LIBS += [
     'mar',
+    'xz-embedded',
 ]
 
 if CONFIG['MOZ_SYSTEM_BZ2']:
