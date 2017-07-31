@@ -1,7 +1,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 
-Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/NormandyApi.jsm", this);
