@@ -181,7 +181,6 @@ static const char contentSandboxRules[] = R"(
       (ipc-posix-name-regex "^AudioIO"))
 
   (allow signal (target self))
-  (allow iokit-set-properties (iokit-property "IOAudioControlValue"))
 
   (allow mach-lookup
       (global-name "com.apple.coreservices.launchservicesd")
@@ -206,7 +205,6 @@ static const char contentSandboxRules[] = R"(
 
   (allow iokit-open
       (iokit-user-client-class "IOHIDParamUserClient")
-      (iokit-user-client-class "IOAudioControlUserClient")
       (iokit-user-client-class "IOAudioEngineUserClient")
       (iokit-user-client-class "IGAccelDevice")
       (iokit-user-client-class "nvDevice")
