@@ -305,7 +305,7 @@ function promisePanelHidden(win) {
 }
 
 function promiseOverflowHidden(win) {
-  let panelEl = document.getElementById("widget-overflow");
+  let panelEl = win.PanelUI.overflowPanel;
   return promisePanelElementHidden(win, panelEl);
 }
 
