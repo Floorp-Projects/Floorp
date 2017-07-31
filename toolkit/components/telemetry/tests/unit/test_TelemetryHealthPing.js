@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://testing-common/TelemetryArchiveTesting.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryHealthPing",
                                   "resource://gre/modules/TelemetryHealthPing.jsm");
@@ -28,6 +29,18 @@ function fakeHealthSchedulerTimer(set, clear) {
   let telemetryHealthPing = Cu.import("resource://gre/modules/TelemetryHealthPing.jsm", {});
   telemetryHealthPing.Policy.setSchedulerTickTimeout = set;
   telemetryHealthPing.Policy.clearSchedulerTickTimeout = clear;
+}
+
+async function waitForConditionWithPromise(promiseFn, timeoutMsg, tryCount = 30) {
+  const SINGLE_TRY_TIMEOUT = 100;
+  let tries = 0;
+  do {
+    try {
+      return await promiseFn();
+    } catch (ex) {}
+    await new Promise(resolve => do_timeout(SINGLE_TRY_TIMEOUT, resolve));
+  } while (++tries <= tryCount);
+  throw new Error(timeoutMsg);
 }
 
 add_task(async function setup() {
@@ -116,13 +129,23 @@ add_task(async function test_sendOnTimeout() {
   // Set up small ping submission timeout to always have timeout error.
   TelemetrySend.testSetTimeoutForPingSubmit(2);
 
-  // Reset the timeout after receiving the first ping to be able to send health ping.
   PingServer.registerPingHandler((request, result) => {
     PingServer.resetPingHandler();
-    TelemetrySend.testResetTimeOutToDefault();
   });
 
+  // Submit a ping which should time out.
   await TelemetryController.submitExternalPing(PING_TYPE, {});
+
+  let ac = new TelemetryArchiveTesting.Checker();
+  await ac.promiseInit();
+  await waitForConditionWithPromise(() => {
+    ac.promiseFindPing("health", []);
+  }, "Failed to find health ping");
+
+  TelemetrySend.testResetTimeOutToDefault();
+  PingServer.resetPingHandler();
+  TelemetryController.submitExternalPing(PING_TYPE, {});
+
   let ping = await PingServer.promiseNextPing();
   checkHealthPingStructure(ping, {
     [TelemetryHealthPing.FailureType.SEND_FAILURE]: {
