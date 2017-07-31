@@ -6688,6 +6688,18 @@ bool nsDisplayFixedPosition::TryMerge(nsDisplayItem* aItem) {
   return true;
 }
 
+bool
+nsDisplayFixedPosition::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                                         mozilla::layers::WebRenderLayerScrollData* aLayerData)
+{
+  if (aLayerData) {
+    FrameMetrics::ViewID id = nsLayoutUtils::ScrollIdForRootScrollFrame(
+        Frame()->PresContext());
+    aLayerData->SetFixedPositionScrollContainerId(id);
+  }
+  return true;
+}
+
 TableType
 GetTableTypeFromFrame(nsIFrame* aFrame)
 {

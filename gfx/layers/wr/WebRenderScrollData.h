@@ -74,6 +74,7 @@ public:
   const uint64_t& GetScrollbarAnimationId() const { return mScrollbarAnimationId; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
+  void SetFixedPositionScrollContainerId(FrameMetrics::ViewID aId) { mFixedPosScrollContainerId = aId; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
 
   void Dump(const WebRenderScrollData& aOwner) const;
