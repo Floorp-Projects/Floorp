@@ -238,19 +238,10 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
     savedItems.AppendToTop(item);
 
     if (apzEnabled) {
-      bool forceNewLayerData = false;
-
       // For some types of display items we want to force a new
       // WebRenderLayerScrollData object, to ensure we preserve the APZ-relevant
       // data that is in the display item.
-      switch (itemType) {
-      case nsDisplayItem::TYPE_SCROLL_INFO_LAYER:
-      case nsDisplayItem::TYPE_REMOTE:
-        forceNewLayerData = true;
-        break;
-      default:
-        break;
-      }
+      bool forceNewLayerData = item->UpdateScrollData(nullptr, nullptr);
 
       // Anytime the ASR changes we also want to force a new layer data because
       // the stack of scroll metadata is going to be different for this

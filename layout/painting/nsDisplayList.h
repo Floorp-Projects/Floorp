@@ -64,6 +64,8 @@ class StackingContextHelper;
 class WebRenderCommand;
 class WebRenderParentCommand;
 class WebRenderDisplayItemLayer;
+class WebRenderScrollData;
+class WebRenderLayerScrollData;
 } // namespace layers
 namespace wr {
 class DisplayListBuilder;
@@ -1965,6 +1967,25 @@ public:
                                        nsTArray<WebRenderParentCommand>& aParentCommands,
                                        mozilla::layers::WebRenderLayerManager* aManager,
                                        nsDisplayListBuilder* aDisplayListBuilder) { return false; }
+
+  /**
+   * Updates the provided aLayerData with any APZ-relevant scroll data
+   * that is specific to this display item. This is stuff that would normally
+   * be put on the layer during BuildLayer, but this is only called in
+   * layers-free webrender mode, where we don't have layers.
+   *
+   * This function returns true if and only if it has APZ-relevant scroll data
+   * to provide. Note that the arguments passed in may be nullptr, in which case
+   * the function should still return true if and only if it has APZ-relevant
+   * scroll data, but obviously in this case it can't actually put the
+   * data onto aLayerData, because there isn't one.
+   *
+   * This function assumes that aData and aLayerData will either both be null,
+   * or will both be non-null. The caller is responsible for enforcing this.
+   */
+  virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                                mozilla::layers::WebRenderLayerScrollData* aLayerData)
+  { return false; }
 
   /**
    * Builds a DisplayItemLayer and sets the display item to this.
@@ -4349,6 +4370,9 @@ public:
 
   mozilla::UniquePtr<ScrollMetadata> ComputeScrollMetadata(Layer* aLayer,
                                                            const ContainerLayerParameters& aContainerParameters);
+
+  virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                                mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
 
 protected:
   nsIFrame* mScrollFrame;
