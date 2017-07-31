@@ -335,9 +335,7 @@ internal_CanRecordExtended() {
 bool
 internal_IsEmpty(const Histogram *h)
 {
-  Histogram::SampleSet ss;
-  h->SnapshotSample(&ss);
-  return ss.counts(0) == 0 && ss.sum() == 0;
+  return h->is_empty();
 }
 
 bool
