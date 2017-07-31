@@ -1170,3 +1170,16 @@ def cubeb_remoting(value):
 
 set_config('MOZ_CUBEB_REMOTING', cubeb_remoting)
 set_define('MOZ_CUBEB_REMOTING', cubeb_remoting)
+
+# ASan Reporter Addon
+# ==============================================================
+option('--enable-address-sanitizer-reporter',
+       help='Enable Address Sanitizer Reporter Extension')
+
+@depends('--enable-address-sanitizer-reporter')
+def enable_asan_reporter(value):
+    if value:
+        return True
+
+set_config('MOZ_ASAN_REPORTER', enable_asan_reporter)
+set_define('MOZ_ASAN_REPORTER', enable_asan_reporter)
