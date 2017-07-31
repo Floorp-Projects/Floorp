@@ -41,7 +41,7 @@ class TestSelect(SelectTestCase):
         options[1].click()
         self.assertSelected(options[1])
 
-    def test_deselect(self):
+    def test_deselect_others(self):
         self.marionette.navigate(inline("""
           <select>
             <option>first
@@ -59,6 +59,22 @@ class TestSelect(SelectTestCase):
         self.assertSelected(options[2])
         options[0].click()
         self.assertSelected(options[0])
+
+    def test_select_self(self):
+        self.marionette.navigate(inline("""
+          <select>
+            <option>first
+            <option>second
+          </select>"""))
+        select = self.marionette.find_element(By.TAG_NAME, "select")
+        options = self.marionette.find_elements(By.TAG_NAME, "option")
+        self.assertSelected(options[0])
+        self.assertNotSelected(options[1])
+
+        options[1].click()
+        self.assertSelected(options[1])
+        options[1].click()
+        self.assertSelected(options[1])
 
     def test_out_of_view(self):
         self.marionette.navigate(inline("""

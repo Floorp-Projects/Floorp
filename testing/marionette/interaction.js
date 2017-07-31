@@ -296,8 +296,14 @@ interaction.selectOption = function(el) {
   event.focus(containerEl);
   event.input(containerEl);
 
-  // toggle selectedness the way holding down control works
-  el.selected = !el.selected;
+  // Clicking <option> in <select> should not be deselected if selected.
+  // However, clicking one in a <select multiple> should toggle
+  // selectedness the way holding down Control works.
+  if (containerEl.multiple) {
+    el.selected = !el.selected;
+  } else if (!el.selected) {
+    el.selected = true;
+  }
 
   event.change(containerEl);
   event.mouseup(containerEl);
