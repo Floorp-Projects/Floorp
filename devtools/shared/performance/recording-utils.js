@@ -3,9 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-loader.lazyRequireGetter(this, "extend",
-  "sdk/util/object", true);
-
 /**
  * Utility functions for managing recording models and their internal data,
  * such as filtering profile samples or offsetting timestamps.
