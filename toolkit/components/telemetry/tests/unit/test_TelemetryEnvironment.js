@@ -576,18 +576,18 @@ function checkSystemSection(data) {
 
   // Service pack is only available on Windows.
   if (gIsWindows) {
-    Assert.ok(Number.isFinite(osData.servicePackMajor),
+    Assert.ok(Number.isFinite(osData["servicePackMajor"]),
               "ServicePackMajor must be a number.");
-    Assert.ok(Number.isFinite(osData.servicePackMinor),
+    Assert.ok(Number.isFinite(osData["servicePackMinor"]),
               "ServicePackMinor must be a number.");
     if ("windowsBuildNumber" in osData) {
       // This might not be available on all Windows platforms.
-      Assert.ok(Number.isFinite(osData.windowsBuildNumber),
+      Assert.ok(Number.isFinite(osData["windowsBuildNumber"]),
                 "windowsBuildNumber must be a number.");
     }
     if ("windowsUBR" in osData) {
       // This might not be available on all Windows platforms.
-      Assert.ok((osData.windowsUBR === null) || Number.isFinite(osData.windowsUBR),
+      Assert.ok((osData["windowsUBR"] === null) || Number.isFinite(osData["windowsUBR"]),
                 "windowsUBR must be null or a number.");
     }
   } else if (gIsAndroid) {
@@ -1865,7 +1865,7 @@ add_task(async function test_experimentsAPI_limits() {
   const longType = "a0123456678901234567890123456789";
   TelemetryEnvironment.setExperimentActive("exp", "some-branch", {type: longType});
   data = TelemetryEnvironment.currentEnvironment;
-  Assert.equal(data.experiments.exp.type, longType.substring(0, 20));
+  Assert.equal(data.experiments["exp"].type, longType.substring(0, 20));
 });
 
 add_task(async function test_environmentShutdown() {

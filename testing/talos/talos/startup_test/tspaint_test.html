@@ -21,7 +21,7 @@ async function painted() {
 
   let startupInfo = await TalosPowersContent.getStartupInfo();
 
-  let startupTime = startupInfo.firstPaint - startupInfo.process;
+  let startupTime = startupInfo["firstPaint"] - startupInfo["process"];
 
   document.body.textContent = "Startup time = " + startupTime + " ms";
   if (window.dump) {

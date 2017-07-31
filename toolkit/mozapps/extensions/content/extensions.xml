@@ -1125,9 +1125,9 @@
         ]]></getter>
         <setter><![CDATA[
           if (val === true) {
-            gViewController.commands.cmd_disableItem.doCommand(this.mAddon);
+            gViewController.commands["cmd_disableItem"].doCommand(this.mAddon);
           } else if (val === false) {
-            gViewController.commands.cmd_enableItem.doCommand(this.mAddon);
+            gViewController.commands["cmd_enableItem"].doCommand(this.mAddon);
           } else {
             this.mAddon.userDisabled = val;
           }
@@ -1393,7 +1393,7 @@
           } else {
             this._stateMenulist.hidden = true;
 
-            let enableTooltip = gViewController.commands.cmd_enableItem
+            let enableTooltip = gViewController.commands["cmd_enableItem"]
                                                .getTooltip(this.mAddon);
             this._enableBtn.setAttribute("tooltiptext", enableTooltip);
             if (this.hasPermission("enable")) {
@@ -1402,7 +1402,7 @@
               this._enableBtn.hidden = true;
             }
 
-            let disableTooltip = gViewController.commands.cmd_disableItem
+            let disableTooltip = gViewController.commands["cmd_disableItem"]
                                                 .getTooltip(this.mAddon);
             this._disableBtn.setAttribute("tooltiptext", disableTooltip);
             if (this.hasPermission("disable")) {
@@ -1412,7 +1412,7 @@
             }
           }
 
-          let uninstallTooltip = gViewController.commands.cmd_uninstallItem
+          let uninstallTooltip = gViewController.commands["cmd_uninstallItem"]
                                                 .getTooltip(this.mAddon);
           this._removeBtn.setAttribute("tooltiptext", uninstallTooltip);
           if (this.hasPermission("uninstall")) {
@@ -1581,13 +1581,13 @@
 
       <method name="restart">
         <body><![CDATA[
-          gViewController.commands.cmd_restartApp.doCommand();
+          gViewController.commands["cmd_restartApp"].doCommand();
         ]]></body>
       </method>
 
       <method name="undo">
         <body><![CDATA[
-          gViewController.commands.cmd_cancelOperation.doCommand(this.mAddon);
+          gViewController.commands["cmd_cancelOperation"].doCommand(this.mAddon);
         ]]></body>
       </method>
 

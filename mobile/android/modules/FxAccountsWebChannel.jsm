@@ -98,12 +98,12 @@ this.FxAccountsWebChannel = function(options) {
   if (!options) {
     throw new Error("Missing configuration options");
   }
-  if (!options.content_uri) {
+  if (!options["content_uri"]) {
     throw new Error("Missing 'content_uri' option");
   }
   this._contentUri = options.content_uri;
 
-  if (!options.channel_id) {
+  if (!options["channel_id"]) {
     throw new Error("Missing 'channel_id' option");
   }
   this._webChannelId = options.channel_id;

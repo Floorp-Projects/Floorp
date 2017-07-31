@@ -1360,7 +1360,7 @@ this.PlacesUIUtils = {
     // ensure the left-pane root is initialized;
     this.leftPaneFolderId;
     delete this.allBookmarksFolderId;
-    return this.allBookmarksFolderId = this.leftPaneQueries.AllBookmarks;
+    return this.allBookmarksFolderId = this.leftPaneQueries["AllBookmarks"];
   },
 
   /**

@@ -57,8 +57,8 @@ function checkCookies(ignoreContext = null) {
     ok(enumerator.hasMoreElements(), "Cookies available");
 
     let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-    is(foundCookie.name, COOKIE_NAME, "Check cookie name");
-    is(foundCookie.value, USER_CONTEXTS[userContextId], "Check cookie value");
+    is(foundCookie["name"], COOKIE_NAME, "Check cookie name");
+    is(foundCookie["value"], USER_CONTEXTS[userContextId], "Check cookie value");
   }
 }
 
@@ -95,8 +95,8 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
     ok(enumerator.hasMoreElements(), "Cookies available");
 
     let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-    is(foundCookie.name, COOKIE_NAME, "Check cookie name");
-    is(foundCookie.value, USER_CONTEXTS[userContextId], "Check cookie value");
+    is(foundCookie["name"], COOKIE_NAME, "Check cookie name");
+    is(foundCookie["value"], USER_CONTEXTS[userContextId], "Check cookie value");
   }
   checkCookies();
 

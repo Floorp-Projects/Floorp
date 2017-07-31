@@ -51,18 +51,18 @@ function run_test() {
 
   // Check engine status
   Status.engines = ["testEng1", ENGINE_SUCCEEDED];
-  do_check_eq(Status.engines.testEng1, ENGINE_SUCCEEDED);
+  do_check_eq(Status.engines["testEng1"], ENGINE_SUCCEEDED);
   do_check_eq(Status.service, STATUS_OK);
 
   Status.engines = ["testEng2", ENGINE_DOWNLOAD_FAIL];
-  do_check_eq(Status.engines.testEng1, ENGINE_SUCCEEDED);
-  do_check_eq(Status.engines.testEng2, ENGINE_DOWNLOAD_FAIL);
+  do_check_eq(Status.engines["testEng1"], ENGINE_SUCCEEDED);
+  do_check_eq(Status.engines["testEng2"], ENGINE_DOWNLOAD_FAIL);
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
   Status.engines = ["testEng3", ENGINE_SUCCEEDED];
-  do_check_eq(Status.engines.testEng1, ENGINE_SUCCEEDED);
-  do_check_eq(Status.engines.testEng2, ENGINE_DOWNLOAD_FAIL);
-  do_check_eq(Status.engines.testEng3, ENGINE_SUCCEEDED);
+  do_check_eq(Status.engines["testEng1"], ENGINE_SUCCEEDED);
+  do_check_eq(Status.engines["testEng2"], ENGINE_DOWNLOAD_FAIL);
+  do_check_eq(Status.engines["testEng3"], ENGINE_SUCCEEDED);
   do_check_eq(Status.service, SYNC_FAILED_PARTIAL);
 
 

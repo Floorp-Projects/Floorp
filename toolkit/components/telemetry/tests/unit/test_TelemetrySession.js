@@ -525,7 +525,7 @@ add_task(async function test_expiredHistogram() {
 
   dummy.add(1);
 
-  do_check_eq(TelemetrySession.getPayload().histograms.TELEMETRY_TEST_EXPIRED, undefined);
+  do_check_eq(TelemetrySession.getPayload()["histograms"]["TELEMETRY_TEST_EXPIRED"], undefined);
 });
 
 // Sends a ping to a non existing server. If we remove this test, we won't get
@@ -840,8 +840,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.ok(KEYED_ID in classic.keyedHistograms);
   Assert.ok(KEYED_ID in subsession.keyedHistograms);
   Assert.equal(classic.histograms[COUNT_ID].sum, 1);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].b.sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
   checkHistograms(classic.histograms, subsession.histograms, "Added values should be picked up");
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Added values should be picked up by keyed");
@@ -872,8 +872,8 @@ add_task(async function test_checkSubsessionHistograms() {
   Assert.ok(KEYED_ID in classic.keyedHistograms);
   Assert.ok(KEYED_ID in subsession.keyedHistograms);
   Assert.equal(classic.histograms[COUNT_ID].sum, 1);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].b.sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
   checkHistograms(classic.histograms, subsession.histograms, "Adding values should be picked up again");
   checkKeyedHistograms(classic.keyedHistograms, subsession.keyedHistograms, "Adding values should be picked up by keyed again");
@@ -901,8 +901,8 @@ add_task(async function test_checkSubsessionHistograms() {
 
   Assert.ok(KEYED_ID in classic.keyedHistograms);
   Assert.ok(!(KEYED_ID in subsession.keyedHistograms));
-  Assert.equal(classic.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].b.sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
   // Adding values should get picked up in both again.
   count.add(1);
@@ -918,10 +918,10 @@ add_task(async function test_checkSubsessionHistograms() {
 
   Assert.ok(KEYED_ID in classic.keyedHistograms);
   Assert.ok(KEYED_ID in subsession.keyedHistograms);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].a.sum, 2);
-  Assert.equal(classic.keyedHistograms[KEYED_ID].b.sum, 2);
-  Assert.equal(subsession.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(subsession.keyedHistograms[KEYED_ID].b.sum, 1);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["a"].sum, 2);
+  Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 2);
+  Assert.equal(subsession.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(subsession.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
   await TelemetryController.testShutdown();
 });
@@ -1037,8 +1037,8 @@ add_task(async function test_dailyCollection() {
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
-  Assert.equal(ping.payload.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(ping.payload.keyedHistograms[KEYED_ID].b.sum, 2);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 2);
 
   // The daily ping is rescheduled for "tomorrow".
   expectedDate = futureDate(expectedDate, MS_IN_ONE_DAY);
@@ -1079,8 +1079,8 @@ add_task(async function test_dailyCollection() {
   Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
-  Assert.equal(ping.payload.keyedHistograms[KEYED_ID].a.sum, 1);
-  Assert.equal(ping.payload.keyedHistograms[KEYED_ID].b.sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 1);
 
   // Shutdown to cleanup the aborted-session if it gets created.
   await TelemetryController.testShutdown();
@@ -1243,7 +1243,7 @@ add_task(async function test_environmentChange() {
   Assert.equal(subsessionStartDate.toISOString(), startHour.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
-  Assert.equal(ping.payload.keyedHistograms[KEYED_ID].a.sum, 1);
+  Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
 
   // Trigger and collect another ping. The histograms should be reset.
   startHour = TelemetryUtils.truncateToHours(now);

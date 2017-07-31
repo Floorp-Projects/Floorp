@@ -557,7 +557,7 @@ add_test(function test_get_storage_405() {
   let error = doGetRequest(request);
   do_check_eq(error, null);
   do_check_eq(request.response.status, 405);
-  do_check_eq(request.response.headers.allow, "DELETE");
+  do_check_eq(request.response.headers["allow"], "DELETE");
 
   server.stop(run_next_test);
 });

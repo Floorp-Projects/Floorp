@@ -1370,10 +1370,10 @@ event.sendEvent = function(eventType, el, modifiers = {}, opts = {}) {
   let doc = el.ownerDocument || el.document;
   let ev = doc.createEvent("Event");
 
-  ev.shiftKey = modifiers.shift;
-  ev.metaKey = modifiers.meta;
-  ev.altKey = modifiers.alt;
-  ev.ctrlKey = modifiers.ctrl;
+  ev.shiftKey = modifiers["shift"];
+  ev.metaKey = modifiers["meta"];
+  ev.altKey = modifiers["alt"];
+  ev.ctrlKey = modifiers["ctrl"];
 
   ev.initEvent(eventType, opts.canBubble, true);
   el.dispatchEvent(ev);

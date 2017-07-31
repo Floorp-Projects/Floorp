@@ -33,5 +33,5 @@ add_task(async function async_init() {
 
   await commitPromise;
   let metadata = await promiseEngineMetadata();
-  do_check_eq(metadata.bug645970.alias, "lp");
+  do_check_eq(metadata["bug645970"].alias, "lp");
 });

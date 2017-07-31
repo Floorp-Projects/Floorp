@@ -669,11 +669,11 @@ Tart.prototype = {
     sequenceArray = [];
     for (var i in this._config.subtests) {
       for (var r = 0; r < this._config.repeat; r++) {
-        sequenceArray = sequenceArray.concat(subtests.init);
+        sequenceArray = sequenceArray.concat(subtests["init"]);
         sequenceArray = sequenceArray.concat(subtests[this._config.subtests[i]]);
       }
     }
-    sequenceArray = sequenceArray.concat(subtests.restore);
+    sequenceArray = sequenceArray.concat(subtests["restore"]);
 
     this._doSequence(sequenceArray, this._doneInternal);
   },

@@ -61,6 +61,6 @@ add_task(async function test_save_sorted_engines() {
   do_print("Commit complete after addEngineWithDetails");
 
   metadata = await promiseEngineMetadata();
-  do_check_eq(metadata.foo.alias, "foo");
-  do_check_true(metadata.foo.order > 0);
+  do_check_eq(metadata["foo"].alias, "foo");
+  do_check_true(metadata["foo"].order > 0);
 });

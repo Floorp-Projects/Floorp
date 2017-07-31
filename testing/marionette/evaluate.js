@@ -280,7 +280,7 @@ evaluate.toJSON = function(obj, seenEls) {
     return element.makeWebElement(uuid);
 
   // custom JSON representation
-  } else if (typeof obj.toJSON == "function") {
+  } else if (typeof obj["toJSON"] == "function") {
     let unsafeJSON = obj.toJSON();
     return evaluate.toJSON(unsafeJSON, seenEls);
   }

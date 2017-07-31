@@ -123,8 +123,8 @@ add_task(withMockNormandyApi(async function testRun(mockApi) {
   mockApi.recipes = [matchRecipe, noMatchRecipe, missingRecipe];
 
   await withMockActionSandboxManagers(mockApi.actions, async managers => {
-    const matchManager = managers.matchAction;
-    const noMatchManager = managers.noMatchAction;
+    const matchManager = managers["matchAction"];
+    const noMatchManager = managers["noMatchAction"];
 
     await RecipeRunner.run();
 
@@ -155,8 +155,8 @@ add_task(withMockNormandyApi(async function testRunPreExecutionFailure(mockApi) 
   mockApi.recipes = [passRecipe, failRecipe];
 
   await withMockActionSandboxManagers(mockApi.actions, async managers => {
-    const passManager = managers.passAction;
-    const failManager = managers.failAction;
+    const passManager = managers["passAction"];
+    const failManager = managers["failAction"];
     failManager.runAsyncCallback.returns(Promise.reject(new Error("oh no")));
 
     await RecipeRunner.run();
@@ -181,13 +181,13 @@ add_task(withMockNormandyApi(async function testLoadActionSandboxManagers(mockAp
     {name: "normalAction"},
     {name: "missingImpl"},
   ];
-  mockApi.implementations.normalAction = "window.scriptRan = true";
+  mockApi.implementations["normalAction"] = "window.scriptRan = true";
 
   const managers = await RecipeRunner.loadActionSandboxManagers();
   ok("normalAction" in managers, "Actions with implementations have managers");
   ok(!("missingImpl" in managers), "Actions without implementations are skipped");
 
-  const normalManager = managers.normalAction;
+  const normalManager = managers["normalAction"];
   ok(
     await normalManager.evalInSandbox("window.scriptRan"),
     "Implementations are run in the sandbox",

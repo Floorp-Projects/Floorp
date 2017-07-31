@@ -30,7 +30,7 @@ async function removeLoadPathHash() {
   let cache = await promiseCacheData();
   for (let engine of cache.engines) {
     if (engine._shortName == kTestEngineShortName) {
-      delete engine._metaData.loadPathHash;
+      delete engine._metaData["loadPathHash"];
       break;
     }
   }

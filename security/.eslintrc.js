@@ -17,6 +17,9 @@ module.exports = {
     // Require default case in switch statements.
     "default-case": "error",
 
+    // Require `foo.bar` dot notation instead of `foo["bar"]` notation.
+    "dot-notation": "error",
+
     // Require function* name()
     "generator-star-spacing": ["error", {"before": false, "after": true}],
 
