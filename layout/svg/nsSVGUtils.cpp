@@ -1734,13 +1734,6 @@ nsSVGUtils::SetupStrokeGeometry(nsIFrame* aFrame,
     return;
   aContext->SetLineWidth(width);
 
-  // Apply any stroke-specific transform
-  gfxMatrix outerSVGToUser;
-  if (GetNonScalingStrokeTransform(aFrame, &outerSVGToUser) &&
-      outerSVGToUser.Invert()) {
-    aContext->Multiply(outerSVGToUser);
-  }
-
   const nsStyleSVG* style = aFrame->StyleSVG();
 
   switch (style->mStrokeLinecap) {
