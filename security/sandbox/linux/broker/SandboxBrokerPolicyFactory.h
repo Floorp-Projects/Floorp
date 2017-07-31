@@ -22,7 +22,7 @@ public:
 private:
   UniquePtr<const SandboxBroker::Policy> mCommonContentPolicy;
   static void AddDynamicPathList(SandboxBroker::Policy *policy,
-                                 nsAdoptingCString& paths,
+                                 const char* aPathListPref,
                                  int perms);
 };
 
