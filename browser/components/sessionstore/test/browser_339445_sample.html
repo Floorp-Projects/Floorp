@@ -13,6 +13,6 @@ storageTestItem = <span id="storageTestItem">FAIL</span>
 
 <script type="application/javascript">
   document.getElementById("storageTestItem").textContent =
-    sessionStorage.storageTestItem || "PENDING";
-  sessionStorage.storageTestItem = "SUCCESS";
+    sessionStorage["storageTestItem"] || "PENDING";
+  sessionStorage["storageTestItem"] = "SUCCESS";
 </script>

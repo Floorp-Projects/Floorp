@@ -67,7 +67,7 @@ function test() {
     for (let i = gBrowser.tabs.length - 1; i >= 0; i--) {
       let tab = gBrowser.tabs[i];
       let actualUniq = ss.getTabValue(tab, "uniq");
-      let expectedUniq = state.windows[0].tabs[i].extData.uniq;
+      let expectedUniq = state.windows[0].tabs[i].extData["uniq"];
 
       if (wasLoaded[actualUniq]) {
         info("tab " + i + ": already restored");

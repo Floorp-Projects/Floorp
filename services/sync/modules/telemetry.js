@@ -445,7 +445,7 @@ class SyncTelemetryImpl {
 
   getPingJSON(reason) {
     return {
-      os: TelemetryEnvironment.currentEnvironment.system.os,
+      os: TelemetryEnvironment.currentEnvironment["system"]["os"],
       why: reason,
       discarded: this.discarded || undefined,
       version: PING_FORMAT_VERSION,

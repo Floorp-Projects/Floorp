@@ -1584,7 +1584,7 @@ this.UITour = {
       // Services.appinfo.distributionID (value of MOZ_DISTRIBUTION_ID is set at build time).
       let distribution =
           Services.prefs.getDefaultBranch("distribution.").getCharPref("id", "default");
-      appinfo.distribution = distribution;
+      appinfo["distribution"] = distribution;
 
       let isDefaultBrowser = null;
       try {
@@ -1593,7 +1593,7 @@ this.UITour = {
           isDefaultBrowser = shell.isDefaultBrowser(false);
         }
       } catch (e) {}
-      appinfo.defaultBrowser = isDefaultBrowser;
+      appinfo["defaultBrowser"] = isDefaultBrowser;
 
       let canSetDefaultBrowserInBackground = true;
       if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2") ||
@@ -1608,7 +1608,7 @@ this.UITour = {
         }
       }
 
-      appinfo.canSetDefaultBrowserInBackground =
+      appinfo["canSetDefaultBrowserInBackground"] =
         canSetDefaultBrowserInBackground;
 
       // Expose Profile creation and last reset dates in weeks.
@@ -1621,8 +1621,8 @@ this.UITour = {
       if (resetDate) {
         resetWeeksAgo = Math.floor((Date.now() - resetDate) / ONE_WEEK);
       }
-      appinfo.profileCreatedWeeksAgo = createdWeeksAgo;
-      appinfo.profileResetWeeksAgo = resetWeeksAgo;
+      appinfo["profileCreatedWeeksAgo"] = createdWeeksAgo;
+      appinfo["profileResetWeeksAgo"] = resetWeeksAgo;
 
       this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
     })().catch(err => {

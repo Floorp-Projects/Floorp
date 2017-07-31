@@ -26,7 +26,7 @@ add_task(async function test_create() {
              cleartext: { "foo": "bar" },
              modified: 1000};
   await store.applyIncoming(rec);
-  deepEqual(store._remoteClients.id1, { lastModified: 1000, foo: "bar" });
+  deepEqual(store._remoteClients["id1"], { lastModified: 1000, foo: "bar" });
 
   _("Create a second record");
   rec = {id: "id2",
@@ -34,7 +34,7 @@ add_task(async function test_create() {
          cleartext: { "foo2": "bar2" },
          modified: 2000};
   await store.applyIncoming(rec);
-  deepEqual(store._remoteClients.id2, { lastModified: 2000, foo2: "bar2" });
+  deepEqual(store._remoteClients["id2"], { lastModified: 2000, foo2: "bar2" });
 
   _("Create a third record");
   rec = {id: "id3",
@@ -42,7 +42,7 @@ add_task(async function test_create() {
          cleartext: { "foo3": "bar3" },
          modified: 3000};
   await store.applyIncoming(rec);
-  deepEqual(store._remoteClients.id3, { lastModified: 3000, foo3: "bar3" });
+  deepEqual(store._remoteClients["id3"], { lastModified: 3000, foo3: "bar3" });
 });
 
 add_task(async function test_getAllTabs() {

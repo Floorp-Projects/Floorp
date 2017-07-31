@@ -427,37 +427,37 @@ PlacesController.prototype = {
       // property way too often
       switch (nodeType) {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY:
-          nodeData.query = true;
+          nodeData["query"] = true;
           if (node.parent) {
             switch (PlacesUtils.asQuery(node.parent).queryOptions.resultType) {
               case Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY:
-                nodeData.host = true;
+                nodeData["host"] = true;
                 break;
               case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY:
               case Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY:
-                nodeData.day = true;
+                nodeData["day"] = true;
                 break;
             }
           }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT:
-          nodeData.folder = true;
+          nodeData["folder"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
-          nodeData.separator = true;
+          nodeData["separator"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_URI:
-          nodeData.link = true;
+          nodeData["link"] = true;
           uri = NetUtil.newURI(node.uri);
           if (PlacesUtils.nodeIsBookmark(node)) {
-            nodeData.bookmark = true;
+            nodeData["bookmark"] = true;
             var parentNode = node.parent;
             if (parentNode) {
               if (PlacesUtils.nodeIsTagQuery(parentNode))
-                nodeData.tagChild = true;
+                nodeData["tagChild"] = true;
               else if (this.hasCachedLivemarkInfo(parentNode))
-                nodeData.livemarkChild = true;
+                nodeData["livemarkChild"] = true;
             }
           }
           break;

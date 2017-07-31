@@ -83,7 +83,7 @@ var PermissionsHelper = {
           }
           // Get the strings that correspond to the permission type
           let typeStrings = this._permissionStrings[type];
-          let label = Strings.browser.GetStringFromName(typeStrings.label);
+          let label = Strings.browser.GetStringFromName(typeStrings["label"]);
 
           // Get the key to look up the appropriate string entity
           let valueKey = value == Services.perms.ALLOW_ACTION ?
@@ -122,7 +122,7 @@ var PermissionsHelper = {
 
         for (let i = 0; i < permissionsToClear.length; i++) {
           let indexToClear = permissionsToClear[i];
-          let permissionType = this._currentPermissions[indexToClear].type;
+          let permissionType = this._currentPermissions[indexToClear]["type"];
           this.clearPermission(uri, permissionType, privacyContext);
         }
         break;

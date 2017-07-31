@@ -446,8 +446,8 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
     case "extraStates":
     case "absentStates":
     case "absentExtraStates": {
-      testStates(acc, accTree.states, accTree.extraStates,
-                 accTree.absentStates, accTree.absentExtraStates);
+      testStates(acc, accTree["states"], accTree["extraStates"],
+                 accTree["absentStates"], accTree["absentExtraStates"]);
       break;
     }
 
@@ -483,7 +483,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
   }
 
   // Test children.
-  if ("children" in accTree && accTree.children instanceof Array) {
+  if ("children" in accTree && accTree["children"] instanceof Array) {
     var children = acc.children;
     var childCount = children.length;
 

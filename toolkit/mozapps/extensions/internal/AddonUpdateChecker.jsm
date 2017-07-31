@@ -468,7 +468,7 @@ function parseJSONManifest(aId, aUpdateKey, aRequest, aManifestData) {
 
   let manifest = aManifestData;
 
-  if (!TYPE_CHECK.object(manifest))
+  if (!TYPE_CHECK["object"](manifest))
     throw Components.Exception("Root element of update manifest must be a JSON object literal");
 
   // The set of add-ons this manifest has updates for

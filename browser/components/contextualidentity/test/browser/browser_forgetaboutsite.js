@@ -145,8 +145,8 @@ async function test_cookie_cleared() {
     ok(enumerator.hasMoreElements(), "Cookies available");
 
     let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-    Assert.equal(foundCookie.name, COOKIE_NAME, "Check cookie name");
-    Assert.equal(foundCookie.value, USER_CONTEXTS[userContextId], "Check cookie value");
+    Assert.equal(foundCookie["name"], COOKIE_NAME, "Check cookie name");
+    Assert.equal(foundCookie["value"], USER_CONTEXTS[userContextId], "Check cookie value");
   }
 
   // Forget the site.

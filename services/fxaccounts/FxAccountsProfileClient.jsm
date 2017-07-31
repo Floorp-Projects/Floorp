@@ -173,7 +173,7 @@ this.FxAccountsProfileClient.prototype = {
         if (request.response.success) {
           resolve({
             body,
-            etag: request.response.headers.etag
+            etag: request.response.headers["etag"]
           });
           return;
         }

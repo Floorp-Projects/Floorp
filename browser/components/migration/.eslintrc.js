@@ -5,6 +5,7 @@ module.exports = {
     "block-scoped-var": "error",
     "comma-dangle": "off",
     "complexity": ["error", {"max": 21}],
+    "dot-notation": "error",
     "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     "max-nested-callbacks": ["error", 3],
     "new-parens": "error",

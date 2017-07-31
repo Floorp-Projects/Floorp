@@ -132,7 +132,7 @@ function checkLoginItems(logins, items) {
  * Gets the list of expected logins for a hostname.
  */
 function getExpectedLogins(hostname) {
-  return Services.logins.getAllLogins().filter(entry => entry.hostname === hostname);
+  return Services.logins.getAllLogins().filter(entry => entry["hostname"] === hostname);
 }
 
 function loginList() {

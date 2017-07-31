@@ -9,8 +9,8 @@ const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 
 function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
   const scalars = aKeyed ?
-    Telemetry.snapshotKeyedScalars(aChannel, aClear).parent :
-    Telemetry.snapshotScalars(aChannel, aClear).parent;
+    Telemetry.snapshotKeyedScalars(aChannel, aClear)["parent"] :
+    Telemetry.snapshotScalars(aChannel, aClear)["parent"];
   return scalars || {};
 }
 
@@ -369,7 +369,7 @@ add_task(async function test_subsession() {
                STRING_SCALAR + " must contain the expected value.");
   Assert.equal(scalars[BOOLEAN_SCALAR], false,
                BOOLEAN_SCALAR + " must contain the expected value.");
-  Assert.equal(keyedScalars[KEYED_UINT_SCALAR].some_random_key, 12,
+  Assert.equal(keyedScalars[KEYED_UINT_SCALAR]["some_random_key"], 12,
                KEYED_UINT_SCALAR + " must contain the expected value.");
 
   // Get a new snapshot and reset the subsession again. Since no new value

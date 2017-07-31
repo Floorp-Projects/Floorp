@@ -388,7 +388,7 @@ add_task(async function test_expiration() {
 
   // Test that experiments that are cached locally but never ran are removed from cache
   // when they are removed from the manifest (this is cached data, not really history).
-  gManifestObject.experiments = gManifestObject.experiments.slice(1, 1);
+  gManifestObject["experiments"] = gManifestObject["experiments"].slice(1, 1);
   await experiments.updateManifest();
   validateCache([...experiments._experiments.keys()], [EXPERIMENT2_ID]);
 

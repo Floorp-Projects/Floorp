@@ -205,8 +205,8 @@ LoginManagerPrompter.prototype = {
         label: this._getLocalizedString("rememberButton"),
         callback: function(checked, response) {
           if (response) {
-            aLogin.username = response.username || aLogin.username;
-            aLogin.password = response.password || aLogin.password;
+            aLogin.username = response["username"] || aLogin.username;
+            aLogin.password = response["password"] || aLogin.password;
           }
           pwmgr.addLogin(aLogin);
           promptHistogram.add(PROMPT_ADD);
@@ -265,7 +265,7 @@ LoginManagerPrompter.prototype = {
       {
         label: this._getLocalizedString("updateButton"),
         callback:  function(checked, response) {
-          let password = response ? response.password : aNewPassword;
+          let password = response ? response["password"] : aNewPassword;
           self._updateLogin(aOldLogin, password);
 
           promptHistogram.add(PROMPT_UPDATE);

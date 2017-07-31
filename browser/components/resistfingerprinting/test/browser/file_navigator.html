@@ -8,20 +8,20 @@
   function collect() {
     let result = {};
 
-    result.appCodeName = navigator.appCodeName;
-    result.appName = navigator.appName;
-    result.appVersion = navigator.appVersion;
-    result.platform = navigator.platform;
-    result.userAgent = navigator.userAgent;
-    result.product = navigator.product;
-    result.productSub = navigator.productSub;
-    result.vendor = navigator.vendor;
-    result.vendorSub = navigator.vendorSub;
-    result.mimeTypesLength = navigator.mimeTypes.length;
-    result.pluginsLength = navigator.plugins.length;
-    result.oscpu = navigator.oscpu;
-    result.buildID = navigator.buildID;
-    result.hardwareConcurrency = navigator.hardwareConcurrency;
+    result["appCodeName"] = navigator.appCodeName;
+    result["appName"] = navigator.appName;
+    result["appVersion"] = navigator.appVersion;
+    result["platform"] = navigator.platform;
+    result["userAgent"] = navigator.userAgent;
+    result["product"] = navigator.product;
+    result["productSub"] = navigator.productSub;
+    result["vendor"] = navigator.vendor;
+    result["vendorSub"] = navigator.vendorSub;
+    result["mimeTypesLength"] = navigator.mimeTypes.length;
+    result["pluginsLength"] = navigator.plugins.length;
+    result["oscpu"] = navigator.oscpu;
+    result["buildID"] = navigator.buildID;
+    result["hardwareConcurrency"] = navigator.hardwareConcurrency;
 
     // eslint-disable-next-line no-unsanitized/property
     document.getElementById("result").innerHTML = JSON.stringify(result);

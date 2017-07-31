@@ -310,7 +310,7 @@
             if (/Win/.test(navigator.platform)) {
               var spacer = document.getAnonymousElementByAttribute(this, "anonid", "spacer");
               spacer.removeAttribute("hidden");
-              spacer.setAttribute("flex", shown.extra2 ? "1" : "0");
+              spacer.setAttribute("flex", shown["extra2"] ? "1" : "0");
             }
           }
         ]]>

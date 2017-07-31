@@ -66,8 +66,8 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
     ok(enumerator.hasMoreElements(), "Cookies available");
 
     let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-    is(foundCookie.name, cookieName, "Check cookie name");
-    is(foundCookie.value, USER_CONTEXTS[userContextId], "Check cookie value");
+    is(foundCookie["name"], cookieName, "Check cookie name");
+    is(foundCookie["value"], USER_CONTEXTS[userContextId], "Check cookie value");
   }
 
   // Using getCookiesWithOriginAttributes() to get all cookies for a certain

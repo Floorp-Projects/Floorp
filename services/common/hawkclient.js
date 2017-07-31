@@ -244,7 +244,7 @@ this.HawkClient.prototype = {
         return;
       }
 
-      self._updateClockOffset(restResponse.headers.date);
+      self._updateClockOffset(restResponse.headers["date"]);
 
       if (status === 401 && retryOK && !("retry-after" in restResponse.headers)) {
         // Retry once if we were rejected due to a bad timestamp.

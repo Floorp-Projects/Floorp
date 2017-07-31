@@ -492,7 +492,7 @@ add_task(async function test_currentPingData() {
     Assert.equal(ping.payload.histograms[id].sum, 1, "Test count value should match.");
     id = "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT";
     Assert.ok(id in ping.payload.keyedHistograms, "Payload should have keyed test histogram.");
-    Assert.equal(ping.payload.keyedHistograms[id].a.sum, 1, "Keyed test value should match.");
+    Assert.equal(ping.payload.keyedHistograms[id]["a"].sum, 1, "Keyed test value should match.");
   }
 });
 

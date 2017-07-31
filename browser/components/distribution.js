@@ -117,7 +117,7 @@ DistributionCustomizer.prototype = {
           items[itemIndex] = {};
         items[itemIndex][iprop] = this._ini.getString(section, key);
 
-        if (iprop == "type" && items[itemIndex].type == "default")
+        if (iprop == "type" && items[itemIndex]["type"] == "default")
           defaultIndex = itemIndex;
 
         if (maxIndex < itemIndex)
@@ -264,11 +264,11 @@ DistributionCustomizer.prototype = {
 
     // The global section, and several of its fields, is required
     // (we also check here to be consistent with applyPrefDefaults below)
-    if (!sections.Global)
+    if (!sections["Global"])
       return;
 
     let globalPrefs = enumToObject(this._ini.getKeys("Global"));
-    if (!(globalPrefs.id && globalPrefs.version && globalPrefs.about))
+    if (!(globalPrefs["id"] && globalPrefs["version"] && globalPrefs["about"]))
       return;
 
     let bmProcessedPref;
@@ -283,10 +283,10 @@ DistributionCustomizer.prototype = {
     let bmProcessed = this._prefs.getBoolPref(bmProcessedPref, false);
 
     if (!bmProcessed) {
-      if (sections.BookmarksMenu)
+      if (sections["BookmarksMenu"])
         await this._parseBookmarksSection(PlacesUtils.bookmarks.menuGuid,
                                           "BookmarksMenu");
-      if (sections.BookmarksToolbar)
+      if (sections["BookmarksToolbar"])
         await this._parseBookmarksSection(PlacesUtils.bookmarks.toolbarGuid,
                                           "BookmarksToolbar");
       this._prefs.setBoolPref(bmProcessedPref, true);
@@ -302,10 +302,10 @@ DistributionCustomizer.prototype = {
     let sections = enumToObject(this._ini.getSections());
 
     // The global section, and several of its fields, is required
-    if (!sections.Global)
+    if (!sections["Global"])
       return this._checkCustomizationComplete();
     let globalPrefs = enumToObject(this._ini.getKeys("Global"));
-    if (!(globalPrefs.id && globalPrefs.version && globalPrefs.about))
+    if (!(globalPrefs["id"] && globalPrefs["version"] && globalPrefs["about"]))
       return this._checkCustomizationComplete();
 
     let defaults = new Preferences({defaultBranch: true});
@@ -360,7 +360,7 @@ DistributionCustomizer.prototype = {
       }
     }
 
-    if (sections.Preferences) {
+    if (sections["Preferences"]) {
       for (let key of enumerate(this._ini.getKeys("Preferences"))) {
         if (usedPreferences.indexOf(key) > -1) {
           continue;
@@ -412,7 +412,7 @@ DistributionCustomizer.prototype = {
       }
     }
 
-    if (sections.LocalizablePreferences) {
+    if (sections["LocalizablePreferences"]) {
       for (let key of enumerate(this._ini.getKeys("LocalizablePreferences"))) {
         if (usedLocalizablePreferences.indexOf(key) > -1) {
           continue;
