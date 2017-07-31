@@ -8,7 +8,6 @@
 #define ThreadInfo_h
 
 #include "mozilla/NotNull.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "platform.h"
@@ -183,8 +182,6 @@ public:
   void StopProfiling();
   bool IsBeingProfiled() { return mIsBeingProfiled; }
 
-  void NotifyUnregistered() { mUnregisterTime = TimeStamp::Now(); }
-
   PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
@@ -194,8 +191,6 @@ public:
 
 private:
   mozilla::UniqueFreePtr<char> mName;
-  mozilla::TimeStamp mRegisterTime;
-  mozilla::TimeStamp mUnregisterTime;
   int mThreadId;
   const bool mIsMainThread;
 
@@ -380,8 +375,6 @@ StreamSamplesAndMarkers(const char* aName, int aThreadId,
                         const ProfileBuffer& aBuffer,
                         SpliceableJSONWriter& aWriter,
                         const mozilla::TimeStamp& aProcessStartTime,
-                        const TimeStamp& aRegisterTime,
-                        const TimeStamp& aUnregisterTime,
                         double aSinceTime,
                         double* aOutFirstSampleTime,
                         JSContext* aContext,
