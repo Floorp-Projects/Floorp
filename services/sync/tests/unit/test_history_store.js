@@ -137,7 +137,7 @@ add_task(async function test_store_create() {
   ]);
   await onVisitObserved;
   try {
-    do_check_attribute_count(Async.promiseSpinningly(store.getAllIDs()), 2);
+    do_check_attribute_count(await store.getAllIDs(), 2);
     let queryres = queryHistoryVisits(tburi);
     do_check_eq(queryres.length, 1);
     do_check_eq(queryres[0].time, TIMESTAMP3);

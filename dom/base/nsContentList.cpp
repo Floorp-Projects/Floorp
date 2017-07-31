@@ -152,6 +152,67 @@ nsSimpleContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto
   return NodeListBinding::Wrap(cx, this, aGivenProto);
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(nsEmptyContentList, nsBaseContentList, mRoot)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsEmptyContentList)
+NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
+
+
+NS_IMPL_ADDREF_INHERITED(nsEmptyContentList, nsBaseContentList)
+NS_IMPL_RELEASE_INHERITED(nsEmptyContentList, nsBaseContentList)
+
+JSObject*
+nsEmptyContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+{
+  return NodeListBinding::Wrap(cx, this, aGivenProto);
+}
+
+NS_IMETHODIMP
+nsEmptyContentList::GetLength(uint32_t* aLength)
+{
+  *aLength = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEmptyContentList::Item(uint32_t aIndex, nsIDOMNode** aReturn)
+{
+  *aReturn = nullptr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEmptyContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
+{
+  *aReturn = nullptr;
+  return NS_OK;
+}
+
+mozilla::dom::Element*
+nsEmptyContentList::GetElementAt(uint32_t index)
+{
+  return nullptr;
+}
+
+mozilla::dom::Element*
+nsEmptyContentList::GetFirstNamedElement(const nsAString& aName, bool& aFound)
+{
+  aFound = false;
+  return nullptr;
+}
+
+void
+nsEmptyContentList::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+}
+
+nsIContent*
+nsEmptyContentList::Item(uint32_t aIndex)
+{
+  return nullptr;
+}
+
 // Hashtable for storing nsContentLists
 static PLDHashTable* gContentListHashTable;
 

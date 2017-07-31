@@ -3705,7 +3705,6 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(textarea, NS_NewTextControlFrame),
     COMPLEX_TAG_CREATE(select, &nsCSSFrameConstructor::ConstructSelectFrame),
     SIMPLE_TAG_CHAIN(object, nsCSSFrameConstructor::FindObjectData),
-    SIMPLE_TAG_CHAIN(applet, nsCSSFrameConstructor::FindObjectData),
     SIMPLE_TAG_CHAIN(embed, nsCSSFrameConstructor::FindObjectData),
     COMPLEX_TAG_CREATE(fieldset,
                        &nsCSSFrameConstructor::ConstructFieldSetFrame),
@@ -3847,7 +3846,7 @@ nsCSSFrameConstructor::FindObjectData(Element* aElement,
   } else {
     nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(aElement));
     NS_ASSERTION(objContent,
-                 "applet, embed and object must implement "
+                 "embed and object must implement "
                  "nsIObjectLoadingContent!");
 
     objContent->GetDisplayedType(&type);

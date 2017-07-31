@@ -29,6 +29,7 @@ var PlacesSyncUtils = {};
 const { SOURCE_SYNC } = Ci.nsINavBookmarksService;
 
 const MICROSECONDS_PER_SECOND = 1000000;
+const SQLITE_MAX_VARIABLE_NUMBER = 999;
 
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 const ORGANIZER_ALL_BOOKMARKS_ANNO_VALUE = "AllBookmarks";
@@ -59,7 +60,27 @@ XPCOMUtils.defineLazyGetter(this, "ROOTS", () =>
   Object.keys(ROOT_SYNC_ID_TO_GUID)
 );
 
+/**
+ * Auxiliary generator function that yields an array in chunks
+ *
+ * @param array
+ * @param chunkLength
+ * @yields {Array} New Array with the next chunkLength elements of array. If the array has less than chunkLength elements, yields all of them
+ */
+function* chunkArray(array, chunkLength) {
+  let startIndex = 0;
+  while (startIndex < array.length) {
+    yield array.slice(startIndex, startIndex += chunkLength);
+  }
+}
+
 const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
+  /**
+   * Fetches the frecency for the URL provided
+   *
+   * @param url
+   * @returns {Number} The frecency of the given url
+   */
   async fetchURLFrecency(url) {
     let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(url);
 
@@ -71,7 +92,155 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
       LIMIT 1`,
       { url: canonicalURL.href }
     );
+
     return rows.length ? rows[0].getResultByName("frecency") : -1;
+  },
+
+  /**
+   * Filters syncable places from a collection of places guids.
+   *
+   * @param guids
+   *
+   * @returns {Array} new Array with the guids that aren't syncable
+   */
+  async determineNonSyncableGuids(guids) {
+    // Filter out hidden pages and `TRANSITION_FRAMED_LINK` visits. These are
+    // excluded when rendering the history menu, so we use the same constraints
+    // for Sync. We also don't want to sync `TRANSITION_EMBED` visits, but those
+    // aren't stored in the database.
+    let db = await PlacesUtils.promiseDBConnection();
+    let nonSyncableGuids = [];
+    for (let chunk of chunkArray(guids, SQLITE_MAX_VARIABLE_NUMBER)) {
+      let rows = await db.execute(`
+        SELECT DISTINCT p.guid FROM moz_places p
+        JOIN moz_historyvisits v ON p.id = v.place_id
+        WHERE p.guid IN (${new Array(chunk.length).fill("?").join(",")}) AND
+            (p.hidden = 1 OR v.visit_type IN (0,
+              ${PlacesUtils.history.TRANSITION_FRAMED_LINK}))
+      `, chunk);
+      nonSyncableGuids = nonSyncableGuids.concat(rows.map(row => row.getResultByName("guid")));
+    }
+    return nonSyncableGuids;
+  },
+
+  /**
+   * Change the guid of the given uri
+   *
+   * @param uri
+   * @param guid
+   */
+  changeGuid(uri, guid) {
+      let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(uri);
+      let validatedGuid = PlacesUtils.BOOKMARK_VALIDATORS.guid(guid);
+      return PlacesUtils.withConnectionWrapper("HistorySyncUtils: changeGuid",
+        async function(db) {
+          await db.executeCached(`
+            UPDATE moz_places
+            SET guid = :guid
+            WHERE url_hash = hash(:page_url) AND url = :page_url`,
+            {guid: validatedGuid, page_url: canonicalURL.href});
+        });
+  },
+
+  /**
+   * Fetch the last 20 visits (date and type of it) corresponding to a given url
+   *
+   * @param url
+   * @returns {Array} Each element of the Array is an object with members: date and type
+   */
+  async fetchVisitsForURL(url) {
+    let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(url);
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(`
+      SELECT visit_type type, visit_date date
+      FROM moz_historyvisits
+      JOIN moz_places h ON h.id = place_id
+      WHERE url_hash = hash(:url) AND url = :url
+      ORDER BY date DESC LIMIT 20`, { url: canonicalURL.href }
+    );
+    return rows.map(row => {
+      let visitDate = row.getResultByName("date");
+      let visitType = row.getResultByName("type");
+      return { date: visitDate, type: visitType };
+    });
+  },
+
+  /**
+   * Fetches the guid of a uri
+   *
+   * @param uri
+   * @returns {String} The guid of the given uri
+   */
+  async fetchGuidForURL(url) {
+      let canonicalURL = PlacesUtils.SYNC_BOOKMARK_VALIDATORS.url(url);
+      let db = await PlacesUtils.promiseDBConnection();
+      let rows = await db.executeCached(`
+        SELECT guid
+        FROM moz_places
+        WHERE url_hash = hash(:page_url) AND url = :page_url`,
+        { page_url: canonicalURL.href }
+      );
+      if (rows.length == 0) {
+        return null;
+      }
+      return rows[0].getResultByName("guid");
+  },
+
+  /**
+   * Fetch information about a guid (url, title and frecency)
+   *
+   * @param guid
+   * @returns {Object} Object with three members: url, title and frecency of the given guid
+   */
+  async fetchURLInfoForGuid(guid) {
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.executeCached(`
+      SELECT url, title, frecency
+      FROM moz_places
+      WHERE guid = :guid`,
+      { guid }
+    );
+    if (rows.length === 0) {
+      return null;
+    }
+    return {
+      url: rows[0].getResultByName("url"),
+      title: rows[0].getResultByName("title"),
+      frecency: rows[0].getResultByName("frecency"),
+    };
+  },
+
+  /**
+   * Get all URLs filtered by the limit and since members of the options object.
+   *
+   * @param options
+   *        Options object with two members, since and limit. Both of them must be provided
+   * @returns {Array} - Up to limit number of URLs starting from the date provided by since
+   */
+  async getAllURLs(options) {
+    // Check that the limit property is finite number.
+    if (!Number.isFinite(options.limit)) {
+      throw new Error("The number provided in options.limit is not finite.");
+    }
+    // Check that the since property is of type Date.
+    if (!options.since || Object.prototype.toString.call(options.since) != "[object Date]") {
+      throw new Error("The property since of the options object must be of type Date.");
+    }
+    let db = await PlacesUtils.promiseDBConnection();
+    let sinceInMicroseconds = PlacesUtils.toPRTime(options.since);
+    let rows = await db.executeCached(`
+      SELECT DISTINCT p.url
+      FROM moz_places p
+      JOIN moz_historyvisits v ON p.id = v.place_id
+      WHERE p.last_visit_date > :cutoff_date AND
+            p.hidden = 0 AND
+            v.visit_type NOT IN (0,
+              ${PlacesUtils.history.TRANSITION_FRAMED_LINK})
+      ORDER BY frecency DESC
+      LIMIT :max_results`,
+      { cutoff_date: sinceInMicroseconds, max_results: options.limit }
+    );
+    return rows.map(row => row.getResultByName("url"));
   },
 });
 

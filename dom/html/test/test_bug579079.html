@@ -22,7 +22,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=579079
 <script class="testbody" type="text/javascript">
 var img = document.img1;
 var form = document.form1;
-var applet = document.applet1;
 var embed = document.embed1;
 var object = document.object1;
 $("foo").innerHTML = $("foo").innerHTML;
@@ -30,8 +29,6 @@ isnot(document.img1, img);
 ok(document.img1 instanceof HTMLImageElement);
 isnot(document.form1, form);
 ok(document.form1 instanceof HTMLFormElement);
-isnot(document.applet1, applet);
-ok(document.applet1 instanceof HTMLAppletElement);
 isnot(document.embed1, embed);
 ok(document.embed1 instanceof HTMLEmbedElement);
 isnot(document.object1, object);

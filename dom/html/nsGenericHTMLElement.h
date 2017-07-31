@@ -696,7 +696,6 @@ public:
   {
     return aTag == nsGkAtoms::img ||
            aTag == nsGkAtoms::form ||
-           aTag == nsGkAtoms::applet ||
            aTag == nsGkAtoms::embed ||
            aTag == nsGkAtoms::object;
   }
@@ -709,8 +708,7 @@ public:
   static inline bool
   ShouldExposeIdAsHTMLDocumentProperty(Element* aElement)
   {
-    if (aElement->IsAnyOfHTMLElements(nsGkAtoms::applet,
-                                      nsGkAtoms::embed,
+    if (aElement->IsAnyOfHTMLElements(nsGkAtoms::embed,
                                       nsGkAtoms::object)) {
       return true;
     }
@@ -1519,7 +1517,6 @@ NS_NewHTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
 
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Anchor)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Area)
@@ -1535,6 +1532,7 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(DataList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Details)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Dialog)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Div)
+NS_DECLARE_NS_NEW_HTML_ELEMENT(Embed)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(FieldSet)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Font)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Form)

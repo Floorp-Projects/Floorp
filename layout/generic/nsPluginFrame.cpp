@@ -379,8 +379,7 @@ nsPluginFrame::GetMinISize(gfxContext *aRenderingContext)
   nscoord result = 0;
 
   if (!IsHidden(false)) {
-    if (mContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
-                                      nsGkAtoms::embed)) {
+    if (mContent->IsHTMLElement(nsGkAtoms::embed)) {
       bool vertical = GetWritingMode().IsVertical();
       result = nsPresContext::CSSPixelsToAppUnits(
         vertical ? EMBED_DEF_HEIGHT : EMBED_DEF_WIDTH);
@@ -441,9 +440,8 @@ nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
   aMetrics.Width() = aReflowInput.ComputedWidth();
   aMetrics.Height() = aReflowInput.ComputedHeight();
 
-  // for EMBED and APPLET, default to 240x200 for compatibility
-  if (mContent->IsAnyOfHTMLElements(nsGkAtoms::applet,
-                                    nsGkAtoms::embed)) {
+  // for EMBED, default to 240x200 for compatibility
+  if (mContent->IsHTMLElement(nsGkAtoms::embed)) {
     if (aMetrics.Width() == NS_UNCONSTRAINEDSIZE) {
       aMetrics.Width() = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
                                aReflowInput.ComputedMinWidth(),

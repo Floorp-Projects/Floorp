@@ -869,8 +869,7 @@ nsContextMenu.prototype = {
         }
       }
     } else if ((this.target instanceof HTMLEmbedElement ||
-              this.target instanceof HTMLObjectElement ||
-              this.target instanceof HTMLAppletElement) &&
+              this.target instanceof HTMLObjectElement) &&
              this.target.displayedType == HTMLObjectElement.TYPE_NULL &&
              this.target.pluginFallbackType == HTMLObjectElement.PLUGIN_CLICK_TO_PLAY) {
       this.onCTPPlugin = true;

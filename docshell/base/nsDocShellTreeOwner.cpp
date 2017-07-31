@@ -42,7 +42,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
-#include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLEmbedElement.h"
 #include "nsIDOMHTMLDocument.h"
@@ -1584,17 +1583,16 @@ ChromeContextMenuListener::HandleEvent(nsIDOMEvent* aMouseEvent)
       }
     }
 
-    // always consume events for plugins and Java who may throw their
-    // own context menus but not for image objects.  Document objects
-    // will never be targets or ancestors of targets, so that's OK.
+    // always consume events for plugins who may throw their own context menus
+    // but not for image objects. Document objects will never be targets or
+    // ancestors of targets, so that's OK.
     nsCOMPtr<nsIDOMHTMLObjectElement> objectElement;
     if (!(flags & nsIContextMenuListener::CONTEXT_IMAGE)) {
       objectElement = do_QueryInterface(node);
     }
     nsCOMPtr<nsIDOMHTMLEmbedElement> embedElement(do_QueryInterface(node));
-    nsCOMPtr<nsIDOMHTMLAppletElement> appletElement(do_QueryInterface(node));
 
-    if (objectElement || embedElement || appletElement) {
+    if (objectElement || embedElement) {
       return NS_OK;
     }
   }

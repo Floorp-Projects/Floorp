@@ -712,8 +712,7 @@ class Descriptor(DescriptorProvider):
         """
         return (self.interface.getExtendedAttribute("NeedResolve") and
                 self.interface.identifier.name not in ["HTMLObjectElement",
-                                                       "HTMLEmbedElement",
-                                                       "HTMLAppletElement"])
+                                                       "HTMLEmbedElement"])
     def needsXrayNamedDeleterHook(self):
         return self.operations["NamedDeleter"] is not None
 

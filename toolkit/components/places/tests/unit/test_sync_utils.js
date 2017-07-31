@@ -170,15 +170,188 @@ add_task(async function test_fetchURLFrecency() {
   }
   for (let url of arrayOfURLsToVisit) {
     let frecency = await PlacesSyncUtils.history.fetchURLFrecency(url);
-    equal(typeof frecency, "number");
-    notEqual(frecency, -1);
+    equal(typeof frecency, "number", "The frecency should be of type: number");
+    notEqual(frecency, -1, "The frecency of this url should be different than -1");
   }
   // Do not add visits to the following URLs, and then check if frecency for those URLs is -1.
   let arrayOfURLsNotVisited = ["https://bugzilla.org", "https://example.org"];
   for (let url of arrayOfURLsNotVisited) {
     let frecency = await PlacesSyncUtils.history.fetchURLFrecency(url);
-    equal(frecency, -1);
+    equal(frecency, -1, "The frecency of this url should be -1");
   }
+
+  // Remove the visits added during this test.
+ await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_determineNonSyncableGuids() {
+  // Add visits to the following URLs with different transition types.
+  let arrayOfVisits = [{ uri: "https://www.mozilla.org/en-US/", transition: TRANSITION_TYPED },
+                       { uri: "http://getfirefox.com/", transition: TRANSITION_LINK },
+                       { uri: "http://getthunderbird.com/", transition: TRANSITION_FRAMED_LINK }];
+  for (let visit of arrayOfVisits) {
+    await PlacesTestUtils.addVisits(visit);
+  }
+
+  // Fetch the guid for each visit.
+  let guids = [];
+  let dictURLGuid = {};
+  for (let visit of arrayOfVisits) {
+    let guid = await PlacesSyncUtils.history.fetchGuidForURL(visit.uri);
+    guids.push(guid);
+    dictURLGuid[visit.uri] = guid;
+  }
+
+  // Filter the visits.
+  let filteredGuids = await PlacesSyncUtils.history.determineNonSyncableGuids(guids);
+
+  // Check if the filtered visits are of type TRANSITION_FRAMED_LINK.
+  for (let visit of arrayOfVisits) {
+    if (visit.transition === TRANSITION_FRAMED_LINK) {
+      ok(filteredGuids.includes(dictURLGuid[visit.uri]), "This url should be one of the filtered guids.");
+    } else {
+      ok(!filteredGuids.includes(dictURLGuid[visit.uri]), "This url should not be one of the filtered guids.");
+    }
+  }
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_changeGuid() {
+  // Add some visits of the following URLs.
+  let arrayOfURLsToVisit = ["https://www.mozilla.org/en-US/", "http://getfirefox.com/", "http://getthunderbird.com/"];
+  for (let url of arrayOfURLsToVisit) {
+    await PlacesTestUtils.addVisits(url);
+  }
+
+  for (let url of arrayOfURLsToVisit) {
+    let originalGuid = await PlacesSyncUtils.history.fetchGuidForURL(url);
+    let newGuid = makeGuid();
+
+    // Change the original GUID for the new GUID.
+    await PlacesSyncUtils.history.changeGuid(url, newGuid);
+
+    // Fetch the GUID for this URL.
+    let newGuidFetched = await PlacesSyncUtils.history.fetchGuidForURL(url);
+
+    // Check that the URL has the new GUID as its GUID and not the original one.
+    equal(newGuid, newGuidFetched, "These should be equal since we changed the guid for the visit.");
+    notEqual(originalGuid, newGuidFetched, "These should be different since we changed the guid for the visit.");
+  }
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_fetchVisitsForURL() {
+  // Get the date for this moment and a date for a minute ago.
+  let now = new Date();
+  let aMinuteAgo = new Date(now.getTime() - (1 * 60000));
+
+  // Add some visits of the following URLs, specifying the transition and the visit date.
+  let arrayOfVisits = [{ uri: "https://www.mozilla.org/en-US/", transition: TRANSITION_TYPED, visitDate: aMinuteAgo },
+                       { uri: "http://getfirefox.com/", transition: TRANSITION_LINK, visitDate: aMinuteAgo },
+                       { uri: "http://getthunderbird.com/", transition: TRANSITION_LINK, visitDate: aMinuteAgo }];
+  for (let elem of arrayOfVisits) {
+    await PlacesTestUtils.addVisits(elem);
+  }
+
+  for (let elem of arrayOfVisits) {
+    // Fetch all the visits for this URL.
+    let visits = await PlacesSyncUtils.history.fetchVisitsForURL(elem.uri);
+    // Since the visit we added will be the last one in the collection of visits, we get the index of it.
+    let iLast = visits.length - 1;
+
+    // The date is saved in _micro_seconds, here we change it to milliseconds.
+    let dateInMilliseconds = visits[iLast].date * 0.001;
+
+    // Check that the info we provided for this URL is the same one retrieved.
+    equal(dateInMilliseconds, elem.visitDate.getTime(), "The date we provided should be the same we retrieved.");
+    equal(visits[iLast].type, elem.transition, "The transition type we provided should be the same we retrieved.");
+  }
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_fetchGuidForURL() {
+  // Add some visits of the following URLs.
+  let arrayOfURLsToVisit = ["https://www.mozilla.org/en-US/", "http://getfirefox.com/", "http://getthunderbird.com/"];
+  for (let url of arrayOfURLsToVisit) {
+    await PlacesTestUtils.addVisits(url);
+  }
+
+  // This tries to test fetchGuidForURL in two ways:
+  // 1- By fetching the GUID, and then using that GUID to retrieve the info of the visit.
+  //    It then compares the URL with the URL that is on the visits info.
+  // 2- By creating a new GUID, changing the GUID for the visit, fetching the GUID and comparing them.
+  for (let url of arrayOfURLsToVisit) {
+    let guid = await PlacesSyncUtils.history.fetchGuidForURL(url)
+    let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(guid);
+
+    let newGuid = makeGuid();
+    await PlacesSyncUtils.history.changeGuid(url, newGuid);
+    let newGuid2 = await PlacesSyncUtils.history.fetchGuidForURL(url);
+
+    equal(url, info.url, "The url provided and the url retrieved should be the same.");
+    equal(newGuid, newGuid2, "The changed guid and the retrieved guid should be the same.");
+  }
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_fetchURLInfoForGuid() {
+  // Add some visits of the following URLs. specifying the title.
+  let visits = [{ uri: "https://www.mozilla.org/en-US/", title: "mozilla" },
+                { uri: "http://getfirefox.com/", title: "firefox" },
+                { uri: "http://getthunderbird.com/", title: "thunderbird" }];
+  for (let visit of visits) {
+    await PlacesTestUtils.addVisits(visit);
+  }
+
+  for (let visit of visits) {
+    let guid = await PlacesSyncUtils.history.fetchGuidForURL(visit.uri);
+    let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(guid);
+
+    // Compare the info returned by fetchURLInfoForGuid,
+    // URL and title should match while frecency must be different than -1.
+    equal(info.url, visit.uri, "The url provided should be the same as the url retrieved.");
+    equal(info.title, visit.title, "The title provided should be the same as the title retrieved.");
+    notEqual(info.frecency, -1, "The frecency of the visit should be different than -1.");
+  }
+
+  // Create a "fake" GUID and check that the result of fetchURLInfoForGuid is null.
+  let guid = makeGuid();
+  let info = await PlacesSyncUtils.history.fetchURLInfoForGuid(guid);
+
+  equal(info, null, "The information object of a non-existent guid should be null.");
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
+});
+
+add_task(async function test_getAllURLs() {
+  // Add some visits of the following URLs.
+  let arrayOfURLsToVisit = ["https://www.mozilla.org/en-US/", "http://getfirefox.com/", "http://getthunderbird.com/"];
+  for (let url of arrayOfURLsToVisit) {
+    await PlacesTestUtils.addVisits(url);
+  }
+
+  // Get all URLs.
+  let allURLs = await PlacesSyncUtils.history.getAllURLs({ since: new Date(Date.now() - 2592000000), limit: 5000 });
+
+  // The amount of URLs must be the same in both collections.
+  equal(allURLs.length, arrayOfURLsToVisit.length, "The amount of urls retrived should match the amount of urls provided.");
+
+  // Check that the correct URLs were retrived.
+  for (let url of arrayOfURLsToVisit) {
+    ok(allURLs.includes(url), "The urls retrieved should match the ones used in this test.");
+  }
+
+  // Remove the visits added during this test.
+  await PlacesTestUtils.clearHistory();
 });
 
 add_task(async function test_order() {

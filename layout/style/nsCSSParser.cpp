@@ -59,6 +59,7 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StylePrefs.h"
 #include "nsRuleData.h"
 #include "mozilla/CSSVariableValues.h"
 #include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
@@ -69,14 +70,6 @@ using namespace mozilla;
 using namespace mozilla::css;
 
 typedef nsCSSProps::KTableEntry KTableEntry;
-
-// pref-backed bool values (hooked up in nsCSSParser::Startup)
-static bool sOpentypeSVGEnabled;
-static bool sWebkitPrefixedAliasesEnabled;
-static bool sWebkitDevicePixelRatioEnabled;
-static bool sMozGradientsEnabled;
-static bool sControlCharVisibility;
-static bool sFramesTimingFunctionEnabled;
 
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
@@ -3507,12 +3500,12 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   uint8_t satisfiedReqFlags = 0;
 
   // Strip off "-webkit-" prefix from featureString:
-  if (sWebkitPrefixedAliasesEnabled &&
+  if (StylePrefs::sWebkitPrefixedAliasesEnabled &&
       StringBeginsWith(featureString, NS_LITERAL_STRING("-webkit-"))) {
     satisfiedReqFlags |= nsMediaFeature::eHasWebkitPrefix;
     featureString.Rebind(featureString, 8);
   }
-  if (sWebkitDevicePixelRatioEnabled) {
+  if (StylePrefs::sWebkitDevicePixelRatioEnabled) {
     satisfiedReqFlags |= nsMediaFeature::eWebkitDevicePixelRatioPrefEnabled;
   }
 
@@ -7028,7 +7021,7 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
 {
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aKeywordStr);
 
-  if (!sWebkitPrefixedAliasesEnabled) {
+  if (!StylePrefs::sWebkitPrefixedAliasesEnabled) {
     // Not accepting webkit-prefixed keywords -> don't do anything special.
     return keyword;
   }
@@ -7053,7 +7046,7 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
       // display-value, via the CSS cascade. To prevent this problem, we treat
       // "display: -moz-box" & "-moz-inline-box" as if they were simply a
       // repetition of the webkit equivalent that we already parsed.
-      MOZ_ASSERT(sWebkitPrefixedAliasesEnabled,
+      MOZ_ASSERT(StylePrefs::sWebkitPrefixedAliasesEnabled,
                  "The only way mWebkitBoxUnprefixState can be eHaveUnprefixed "
                  "is if we're supporting webkit-prefixed aliases");
       return (keyword == eCSSKeyword__moz_box) ?
@@ -7648,7 +7641,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
         }
       }
       if ((aVariantMask & VARIANT_OPENTYPE_SVG_KEYWORD) != 0) {
-        if (sOpentypeSVGEnabled) {
+        if (StylePrefs::sOpentypeSVGEnabled) {
           aVariantMask |= VARIANT_KEYWORD;
         }
       }
@@ -7726,11 +7719,11 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     // a generated gradient
     nsDependentString tmp(tk->mIdent, 0);
     uint8_t gradientFlags = 0;
-    if (sMozGradientsEnabled &&
+    if (StylePrefs::sMozGradientsEnabled &&
         StringBeginsWith(tmp, NS_LITERAL_STRING("-moz-"))) {
       tmp.Rebind(tmp, 5);
       gradientFlags |= eGradient_MozLegacy;
-    } else if (sWebkitPrefixedAliasesEnabled &&
+    } else if (StylePrefs::sWebkitPrefixedAliasesEnabled &&
                StringBeginsWith(tmp, NS_LITERAL_STRING("-webkit-"))) {
       tmp.Rebind(tmp, 8);
       gradientFlags |= eGradient_WebkitLegacy;
@@ -7848,7 +7841,7 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
       }
       return CSSParseResult::Ok;
     }
-    if (sFramesTimingFunctionEnabled &&
+    if (StylePrefs::sFramesTimingFunctionEnabled &&
         tk->mIdent.LowerCaseEqualsLiteral("frames")) {
       if (!ParseTransitionFramesTimingFunctionValues(aValue)) {
         SkipUntil(')');
@@ -12216,7 +12209,7 @@ CSSParserImpl::IsFunctionTokenValidForImageLayerImage(
     funcName.LowerCaseEqualsLiteral("-moz-repeating-radial-gradient") ||
     funcName.LowerCaseEqualsLiteral("-moz-image-rect") ||
     funcName.LowerCaseEqualsLiteral("-moz-element") ||
-    (sWebkitPrefixedAliasesEnabled &&
+    (StylePrefs::sWebkitPrefixedAliasesEnabled &&
      (funcName.LowerCaseEqualsLiteral("-webkit-gradient") ||
       funcName.LowerCaseEqualsLiteral("-webkit-linear-gradient") ||
       funcName.LowerCaseEqualsLiteral("-webkit-radial-gradient") ||
@@ -17873,23 +17866,6 @@ CSSParserImpl::IsValueValidForProperty(const nsCSSPropertyID aPropID,
 
 static CSSParserImpl* gFreeList = nullptr;
 
-/* static */ void
-nsCSSParser::Startup()
-{
-  Preferences::AddBoolVarCache(&sOpentypeSVGEnabled,
-                               "gfx.font_rendering.opentype_svg.enabled");
-  Preferences::AddBoolVarCache(&sWebkitPrefixedAliasesEnabled,
-                               "layout.css.prefixes.webkit");
-  Preferences::AddBoolVarCache(&sWebkitDevicePixelRatioEnabled,
-                               "layout.css.prefixes.device-pixel-ratio-webkit");
-  Preferences::AddBoolVarCache(&sMozGradientsEnabled,
-                               "layout.css.prefixes.gradients");
-  Preferences::AddBoolVarCache(&sControlCharVisibility,
-                               "layout.css.control-characters.visible");
-  Preferences::AddBoolVarCache(&sFramesTimingFunctionEnabled,
-                               "layout.css.frames-timing.enabled");
-}
-
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
                          CSSStyleSheet* aSheet)
 {
@@ -18231,7 +18207,7 @@ nsCSSParser::IsValueValidForProperty(const nsCSSPropertyID aPropID,
 uint8_t
 nsCSSParser::ControlCharVisibilityDefault()
 {
-  return sControlCharVisibility
+  return StylePrefs::sControlCharVisibility
     ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
     : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
 }

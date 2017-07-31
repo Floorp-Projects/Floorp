@@ -47,7 +47,6 @@
 #include "nsIDOMGeoPositionError.h"
 #include "nsIDOMHistory.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsIDOMHTMLAppletElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLBaseElement.h"
 #include "nsIDOMHTMLBodyElement.h"
@@ -175,7 +174,6 @@
 #include "mozilla/dom/FormDataBinding.h"
 #include "mozilla/dom/HistoryBinding.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
-#include "mozilla/dom/HTMLAppletElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
 #include "mozilla/dom/HTMLBaseElementBinding.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
@@ -362,7 +360,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
   DEFINE_SHIM(History),
   DEFINE_SHIM(HTMLAnchorElement),
-  DEFINE_SHIM(HTMLAppletElement),
   DEFINE_SHIM(HTMLAreaElement),
   DEFINE_SHIM(HTMLBaseElement),
   DEFINE_SHIM(HTMLBodyElement),

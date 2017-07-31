@@ -70,7 +70,6 @@ static bool
 IsAllNamedElement(nsIContent* aContent)
 {
   return aContent->IsAnyOfHTMLElements(nsGkAtoms::a,
-                                       nsGkAtoms::applet,
                                        nsGkAtoms::button,
                                        nsGkAtoms::embed,
                                        nsGkAtoms::form,
