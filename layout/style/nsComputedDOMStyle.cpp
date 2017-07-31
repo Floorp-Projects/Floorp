@@ -569,7 +569,7 @@ MustReresolveStyle(const nsStyleContext* aContext)
     }
 
     return aContext->AsGecko()->GetParent() &&
-           aContext->HasPseudoElementData();
+           aContext->AsGecko()->GetParent()->HasPseudoElementData();
   }
 
   return false;
