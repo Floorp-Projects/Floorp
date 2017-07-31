@@ -691,6 +691,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
 %ifdef MOZ_PHOTON_THEME
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > #star-button-box > .urlbar-icon,
 .urlbar-go-button[pageproxystate="valid"],
 .urlbar-go-button:not([parentfocused="true"]),
 %else
