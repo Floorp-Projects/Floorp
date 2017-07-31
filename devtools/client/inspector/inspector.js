@@ -1049,13 +1049,9 @@ Inspector.prototype = {
    * into the current node's outer HTML, otherwise returns null.
    */
   _getClipboardContentForPaste: function () {
-    let flavors = clipboardHelper.getCurrentFlavors();
-    if (flavors.indexOf("text") != -1 ||
-        (flavors.indexOf("html") != -1 && flavors.indexOf("image") == -1)) {
-      let content = clipboardHelper.getData();
-      if (content && content.trim().length > 0) {
-        return content;
-      }
+    let content = clipboardHelper.getText();
+    if (content && content.trim().length > 0) {
+      return content;
     }
     return null;
   },
