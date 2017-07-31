@@ -1951,28 +1951,28 @@ public:
   { return nullptr; }
 
   /**
-    * Function to create the WebRenderCommands without
-    * Layer. For layers mode, aManager->IsLayersFreeTransaction()
-    * should be false to prevent doing GetLayerState again. For
-    * layers-free mode, we should check if the layer state is
-    * active first and have an early return if the layer state is
-    * not active.
-    *
-    * @return true if successfully creating webrender commands.
-    */
-   virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
-                                        const StackingContextHelper& aSc,
-                                        nsTArray<WebRenderParentCommand>& aParentCommands,
-                                        mozilla::layers::WebRenderLayerManager* aManager,
-                                        nsDisplayListBuilder* aDisplayListBuilder) { return false; }
+   * Function to create the WebRenderCommands without
+   * Layer. For layers mode, aManager->IsLayersFreeTransaction()
+   * should be false to prevent doing GetLayerState again. For
+   * layers-free mode, we should check if the layer state is
+   * active first and have an early return if the layer state is
+   * not active.
+   *
+   * @return true if successfully creating webrender commands.
+   */
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) { return false; }
 
   /**
    * Builds a DisplayItemLayer and sets the display item to this.
    */
-   already_AddRefed<Layer>
-   BuildDisplayItemLayer(nsDisplayListBuilder* aBuilder,
-                         LayerManager* aManager,
-                         const ContainerLayerParameters& aContainerParameters);
+  already_AddRefed<Layer>
+  BuildDisplayItemLayer(nsDisplayListBuilder* aBuilder,
+                        LayerManager* aManager,
+                        const ContainerLayerParameters& aContainerParameters);
 
   /**
    * On entry, aVisibleRegion contains the region (relative to ReferenceFrame())
