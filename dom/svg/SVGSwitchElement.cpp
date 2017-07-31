@@ -127,8 +127,8 @@ SVGSwitchElement::IsAttributeMapped(const nsIAtom* name) const
 nsIContent *
 SVGSwitchElement::FindActiveChild() const
 {
-  const nsAdoptingString& acceptLangs =
-    Preferences::GetLocalizedString("intl.accept_languages");
+  nsAutoString acceptLangs;
+  Preferences::GetLocalizedString("intl.accept_languages", acceptLangs);
 
   if (!acceptLangs.IsEmpty()) {
     int32_t bestLanguagePreferenceRank = -1;
