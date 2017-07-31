@@ -90,16 +90,8 @@ async function test_copymove(options = {}) {
     // 3. Check that the moved file was really moved.
     do_check_eq((await OS.File.exists(dest)), false);
   } finally {
-    try {
-      await OS.File.remove(dest);
-    } catch (ex if ex.becauseNoSuchFile) {
-      // ignore
-    }
-    try {
-      await OS.File.remove(dest2);
-    } catch (ex if ex.becauseNoSuchFile) {
-      // ignore
-    }
+    await removeTestFile(dest);
+    await removeTestFile(dest2);
   }
 }
 

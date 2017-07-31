@@ -339,7 +339,6 @@ toolkit/components/workerloader/tests/moduleF-syntax-error.js
 toolkit/modules/tests/xpcshell/test_task.js
 
 # Not yet updated
-toolkit/components/osfile/**
 toolkit/components/url-classifier/**
 
 # External code:
@@ -351,6 +350,7 @@ toolkit/components/reader/JSDOMParser.js
 # Uses preprocessing
 toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
+toolkit/components/osfile/osfile.jsm
 toolkit/components/urlformatter/nsURLFormatter.js
 toolkit/modules/AppConstants.jsm
 toolkit/mozapps/downloads/nsHelperAppDlg.js
