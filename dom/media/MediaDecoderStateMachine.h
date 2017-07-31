@@ -673,9 +673,8 @@ private:
   // The duration explicitly set by JS, mirrored from the main thread.
   Mirror<Maybe<double>> mExplicitDuration;
 
-  // The current play state and next play state, mirrored from the main thread.
+  // The current play state, mirrored from the main thread.
   Mirror<MediaDecoder::PlayState> mPlayState;
-  Mirror<MediaDecoder::PlayState> mNextPlayState;
 
   // Volume of playback. 0.0 = muted. 1.0 = full volume.
   Mirror<double> mVolume;
