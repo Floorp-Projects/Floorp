@@ -571,11 +571,13 @@ add_task(async function test_pref_observer() {
     });
   }
 
-  await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
+  const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
+
+  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY ? true : false, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
 
   await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true));
 
-  await waitAnnotateCrashReport(false, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
+  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY ? false : true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
 
   await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true));
 
