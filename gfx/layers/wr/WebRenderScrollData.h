@@ -48,6 +48,8 @@ public:
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
 
+  void AppendScrollMetadata(WebRenderScrollData& aOwner,
+                            const ScrollMetadata& aData);
   // Return the ScrollMetadata object that used to be on the original Layer
   // at the given index. Since we deduplicate the ScrollMetadata objects into
   // the array in the owning WebRenderScrollData object, we need to be passed
@@ -60,6 +62,7 @@ public:
   bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
   EventRegions GetEventRegions() const { return mEventRegions; }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
+  void SetReferentId(uint64_t aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
   const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }
