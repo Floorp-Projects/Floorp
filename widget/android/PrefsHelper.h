@@ -138,7 +138,7 @@ public:
         nsTArray<jni::Object::LocalRef> nameRefArray(aPrefNames->GetElements());
         nsCOMPtr<nsIObserverService> obsServ;
         nsCOMPtr<nsIWritableVariant> value;
-        nsAdoptingString strVal;
+        nsAutoString strVal;
 
         for (jni::Object::LocalRef& nameRef : nameRefArray) {
             jni::String::LocalRef nameStr(mozilla::Move(nameRef));
@@ -147,6 +147,7 @@ public:
             int32_t type = java::PrefsHelper::PREF_INVALID;
             bool boolVal = false;
             int32_t intVal = 0;
+            strVal.Truncate();
 
             switch (Preferences::GetType(name.get())) {
                 case nsIPrefBranch::PREF_BOOL:
@@ -159,14 +160,15 @@ public:
                     intVal = Preferences::GetInt(name.get());
                     break;
 
-                case nsIPrefBranch::PREF_STRING:
+                case nsIPrefBranch::PREF_STRING: {
                     type = java::PrefsHelper::PREF_STRING;
-                    strVal = Preferences::GetLocalizedString(name.get());
-                    if (!strVal) {
-                        strVal = Preferences::GetString(name.get());
+                    nsresult rv =
+                      Preferences::GetLocalizedString(name.get(), strVal);
+                    if (NS_FAILED(rv)) {
+                        Preferences::GetString(name.get(), strVal);
                     }
                     break;
-
+                }
                 default:
                     // Pref not found; try to find it.
                     if (!obsServ) {
@@ -288,7 +290,7 @@ public:
         int32_t type = -1;
         bool boolVal = false;
         int32_t intVal = false;
-        nsAdoptingString strVal;
+        nsAutoString strVal;
 
         switch (Preferences::GetType(name.get())) {
             case nsIPrefBranch::PREF_BOOL:
@@ -299,13 +301,15 @@ public:
                 type = java::PrefsHelper::PREF_INT;
                 intVal = Preferences::GetInt(name.get());
                 break;
-            case nsIPrefBranch::PREF_STRING:
+            case nsIPrefBranch::PREF_STRING: {
                 type = java::PrefsHelper::PREF_STRING;
-                strVal = Preferences::GetLocalizedString(name.get());
-                if (!strVal) {
-                    strVal = Preferences::GetString(name.get());
+                nsresult rv =
+                  Preferences::GetLocalizedString(name.get(), strVal);
+                if (NS_FAILED(rv)) {
+                    Preferences::GetString(name.get(), strVal);
                 }
                 break;
+            }
             default:
                 NS_WARNING(nsPrintfCString("Invalid pref %s",
                                            name.get()).get());

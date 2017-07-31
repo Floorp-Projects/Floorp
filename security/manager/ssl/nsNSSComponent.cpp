@@ -1950,11 +1950,13 @@ nsNSSComponent::InitializeNSS()
 
     // ensure we have initial values for various root hashes
 #ifdef DEBUG
-    mTestBuiltInRootHash =
-      Preferences::GetString("security.test.built_in_root_hash");
+    mTestBuiltInRootHash.Truncate();
+    Preferences::GetString("security.test.built_in_root_hash",
+                           mTestBuiltInRootHash);
 #endif
-    mContentSigningRootHash =
-      Preferences::GetString("security.content.signature.root_hash");
+    mContentSigningRootHash.Truncate();
+    Preferences::GetString("security.content.signature.root_hash",
+                           mContentSigningRootHash);
 
     mNSSInitialized = true;
   }
@@ -2122,14 +2124,17 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
 #ifdef DEBUG
     } else if (prefName.EqualsLiteral("security.test.built_in_root_hash")) {
       MutexAutoLock lock(mMutex);
-      mTestBuiltInRootHash = Preferences::GetString("security.test.built_in_root_hash");
+      mTestBuiltInRootHash.Truncate();
+      Preferences::GetString("security.test.built_in_root_hash",
+                             mTestBuiltInRootHash);
 #endif // DEBUG
     } else if (prefName.Equals(kFamilySafetyModePref)) {
       MaybeEnableFamilySafetyCompatibility();
     } else if (prefName.EqualsLiteral("security.content.signature.root_hash")) {
       MutexAutoLock lock(mMutex);
-      mContentSigningRootHash =
-        Preferences::GetString("security.content.signature.root_hash");
+      mContentSigningRootHash.Truncate();
+      Preferences::GetString("security.content.signature.root_hash",
+                             mContentSigningRootHash);
     } else if (prefName.Equals(kEnterpriseRootModePref)) {
       MaybeImportEnterpriseRoots();
     } else {

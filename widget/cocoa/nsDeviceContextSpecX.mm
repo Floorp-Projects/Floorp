@@ -80,9 +80,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
   mPrintSettings = settings->GetPMPrintSettings();
 
 #ifdef MOZ_ENABLE_SKIA_PDF
-  const nsAdoptingString& printViaPdf =
-    mozilla::Preferences::GetString("print.print_via_pdf_encoder");
-  if (printViaPdf == NS_LITERAL_STRING("skia-pdf")) {
+  nsAutoString printViaPdf;
+  mozilla::Preferences::GetString("print.print_via_pdf_encoder", printViaPdf);
+  if (printViaPdf.EqualsLiteral("skia-pdf")) {
     // Annoyingly, PMPrinterPrintWithFile does not pay attention to the
     // kPMDestination* value set in the PMPrintSession; it always sends the PDF
     // to the specified printer.  This means that if we create the PDF using
