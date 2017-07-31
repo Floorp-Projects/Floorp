@@ -1772,9 +1772,7 @@ class HashTable : private AllocPolicy
         if (!EnsureHash<HashPolicy>(l))
             return AddPtr();
         HashNumber keyHash = prepareHash(l);
-        Entry& entry = lookup(l, keyHash, sCollisionBit);
-        AddPtr p(entry, *this, keyHash);
-        return p;
+        return AddPtr(lookup(l, keyHash, sCollisionBit), *this, keyHash);
     }
 
     template <typename... Args>
