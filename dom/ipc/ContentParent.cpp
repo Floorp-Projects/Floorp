@@ -2040,7 +2040,8 @@ ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PR
       boolPrefs.Append(nsPrintfCString("%u:%d|", i, Preferences::GetBool(ContentPrefs::GetContentPref(i))));
       break;
     case nsIPrefBranch::PREF_STRING: {
-      nsAdoptingCString value(Preferences::GetCString(ContentPrefs::GetContentPref(i)));
+      nsAutoCString value;
+      Preferences::GetCString(ContentPrefs::GetContentPref(i), value);
       stringPrefs.Append(nsPrintfCString("%u:%d;%s|", i, value.Length(), value.get()));
 
     }

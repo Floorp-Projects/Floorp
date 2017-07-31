@@ -1174,8 +1174,9 @@ nsLookAndFeel::EnsureInit()
     // Allow content Gtk theme override by pref, it's useful when styled Gtk+
     // widgets break web content.
     if (XRE_IsContentProcess()) {
-        auto contentThemeName =
-            mozilla::Preferences::GetCString("widget.content.gtk-theme-override");
+        nsAutoCString contentThemeName;
+        mozilla::Preferences::GetCString("widget.content.gtk-theme-override",
+                                         contentThemeName);
         if (!contentThemeName.IsEmpty()) {
             g_object_set(settings, "gtk-theme-name", contentThemeName.get(), nullptr);
         }
