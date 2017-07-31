@@ -20,8 +20,6 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
  * Providers are different strategies for loading the devtools.
  */
 
-var sharedGlobalBlocklist = ["sdk/indexed-db"];
-
 /**
  * Used when the tools should be loaded from the Firefox package itself.
  * This is the default case.
@@ -73,7 +71,7 @@ BuiltinProvider.prototype = {
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
-      sharedGlobalBlocklist,
+      sharedGlobalBlocklist: [],
       sandboxName: "DevTools (Module loader)",
       noSandboxAddonId: true,
       requireHook: (id, require) => {
