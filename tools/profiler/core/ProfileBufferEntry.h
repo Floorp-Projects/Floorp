@@ -29,18 +29,14 @@ class ProfilerMarker;
 
 #define FOR_EACH_PROFILE_BUFFER_ENTRY_KIND(macro) \
   macro(Category,              int) \
-  macro(CollectionStart,       double) \
-  macro(CollectionEnd,         double) \
   macro(Label,                 const char*) \
   macro(DynamicStringFragment, char*) /* char[kNumChars], really */ \
   macro(JitReturnAddr,         void*) \
   macro(LineNumber,            int) \
   macro(NativeLeafAddr,        void*) \
   macro(Marker,                ProfilerMarker*) \
-  macro(Pause,                 double) \
   macro(ResidentMemory,        double) \
   macro(Responsiveness,        double) \
-  macro(Resume,                double) \
   macro(ThreadId,              int) \
   macro(Time,                  double) \
   macro(UnsharedMemory,        double)

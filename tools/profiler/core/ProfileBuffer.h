@@ -64,8 +64,6 @@ public:
                            const mozilla::TimeStamp& aProcessStartTime,
                            double aSinceTime,
                            UniqueStacks& aUniqueStacks) const;
-  void StreamPausedRangesToJSON(SpliceableJSONWriter& aWriter,
-                                double aSinceTime) const;
 
   // Find (via |aLS|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in |aProcessStartTime| as appropriate.
