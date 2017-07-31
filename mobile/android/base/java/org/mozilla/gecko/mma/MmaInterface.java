@@ -8,11 +8,14 @@ package org.mozilla.gecko.mma;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Bundle;
+import android.support.annotation.CheckResult;
 
 import java.util.Map;
 
 
 public interface MmaInterface {
+
     void init(Activity Activity, Map<String, ?> attributes);
 
     void start(Context context);
@@ -22,4 +25,7 @@ public interface MmaInterface {
     void event(String mmaEvent, double value);
 
     void stop();
+
+    @CheckResult boolean handleGcmMessage(Context context, Bundle bundle);
+
 }
