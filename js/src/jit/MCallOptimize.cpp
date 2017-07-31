@@ -236,6 +236,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // Object natives.
       case InlinableNative::ObjectCreate:
         return inlineObjectCreate(callInfo);
+      case InlinableNative::ObjectToString:
+        return inlineObjectToString(callInfo);
 
       // SIMD natives.
       case InlinableNative::SimdInt32x4:
@@ -2292,6 +2294,63 @@ IonBuilder::inlineObjectCreate(CallInfo& callInfo)
     MOZ_TRY(newObjectTryTemplateObject(&emitted, templateObject));
 
     MOZ_ASSERT(emitted);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineObjectToString(CallInfo& callInfo)
+{
+    if (callInfo.constructing() || callInfo.argc() != 0) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+        return InliningStatus_NotInlined;
+    }
+
+    if (getInlineReturnType() != MIRType::String)
+        return InliningStatus_NotInlined;
+
+    MDefinition* arg = callInfo.thisArg();
+    if (arg->type() != MIRType::Object)
+        return InliningStatus_NotInlined;
+
+    TemporaryTypeSet* types = arg->resultTypeSet();
+    if (!types || types->unknownObject())
+        return InliningStatus_NotInlined;
+
+    // Don't optimize if this might be a proxy.
+    using ForAllResult = TemporaryTypeSet::ForAllResult;
+    if (types->forAllClasses(constraints(), IsProxyClass) != ForAllResult::ALL_FALSE)
+        return InliningStatus_NotInlined;
+
+    // Make sure there's no Symbol.toStringTag property.
+    jsid toStringTag = SYMBOL_TO_JSID(compartment->runtime()->wellKnownSymbols().toStringTag);
+    bool res;
+    MOZ_TRY_VAR(res, testNotDefinedProperty(arg, toStringTag));
+    if (!res)
+        return InliningStatus_NotInlined;
+
+    // At this point we know we're going to inline this.
+    callInfo.setImplicitlyUsedUnchecked();
+
+    // Try to constant fold some common cases.
+    if (const Class* knownClass = types->getKnownClass(constraints())) {
+        if (knownClass == &PlainObject::class_ || knownClass == &UnboxedPlainObject::class_) {
+            pushConstant(StringValue(names().objectObject));
+            return InliningStatus_Inlined;
+        }
+        if (IsArrayClass(knownClass)) {
+            pushConstant(StringValue(names().objectArray));
+            return InliningStatus_Inlined;
+        }
+        if (knownClass == &JSFunction::class_) {
+            pushConstant(StringValue(names().objectFunction));
+            return InliningStatus_Inlined;
+        }
+    }
+
+    MObjectClassToString* toString = MObjectClassToString::New(alloc(), arg);
+    current->add(toString);
+    current->push(toString);
+
     return InliningStatus_Inlined;
 }
 

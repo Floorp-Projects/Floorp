@@ -8097,6 +8097,22 @@ class LHasClass : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LObjectClassToString : public LCallInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(ObjectClassToString);
+
+    explicit LObjectClassToString(const LAllocation& lhs) {
+        setOperand(0, lhs);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    MObjectClassToString* mir() const {
+        return mir_->toObjectClassToString();
+    }
+};
+
 template<size_t Defs, size_t Ops>
 class LWasmSelectBase : public LInstructionHelper<Defs, Ops, 0>
 {

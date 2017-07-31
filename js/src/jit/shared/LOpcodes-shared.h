@@ -396,6 +396,7 @@
     _(IsObject)                     \
     _(IsObjectAndBranch)            \
     _(HasClass)                     \
+    _(ObjectClassToString)          \
     _(RecompileCheck)               \
     _(MemoryBarrier)                \
     _(AssertRangeI)                 \
