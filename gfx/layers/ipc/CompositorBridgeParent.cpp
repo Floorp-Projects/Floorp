@@ -1695,8 +1695,6 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   RefPtr<widget::CompositorWidget> widget = mWidget;
   RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
     gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget), aSize);
-  RefPtr<AsyncImagePipelineManager> asyncMgr =
-    new AsyncImagePipelineManager(WebRenderBridgeParent::AllocIdNameSpace());
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed();
     mWrBridge.get()->AddRef(); // IPDL reference
@@ -1704,6 +1702,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return mWrBridge;
   }
+  RefPtr<AsyncImagePipelineManager> asyncMgr =
+    new AsyncImagePipelineManager(api->GetNamespace());
   api->SetRootPipeline(aPipelineId);
   RefPtr<CompositorAnimationStorage> animStorage = GetAnimationStorage();
   mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, nullptr, Move(api), Move(asyncMgr), Move(animStorage));
