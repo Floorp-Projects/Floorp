@@ -20,6 +20,9 @@
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
+
+struct ActiveScrolledRoot;
+
 namespace layers {
 
 class Layer;
@@ -43,7 +46,9 @@ public:
                   int32_t aDescendantCount);
   void InitializeRoot(int32_t aDescendantCount);
   void Initialize(WebRenderScrollData& aOwner,
-                  nsDisplayItem* aItem);
+                  nsDisplayItem* aItem,
+                  int32_t aDescendantCount,
+                  const ActiveScrolledRoot* aStopAtAsr);
 
   int32_t GetDescendantCount() const;
   size_t GetScrollMetadataCount() const;
