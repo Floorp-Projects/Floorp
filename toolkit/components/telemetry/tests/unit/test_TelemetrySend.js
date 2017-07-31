@@ -573,11 +573,11 @@ add_task(async function test_pref_observer() {
 
   const IS_UNIFIED_TELEMETRY = Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false);
 
-  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY ? true : false, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
+  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, false));
 
   await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.TelemetryEnabled, true));
 
-  await waitAnnotateCrashReport(IS_UNIFIED_TELEMETRY ? false : true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
+  await waitAnnotateCrashReport(!IS_UNIFIED_TELEMETRY, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, false));
 
   await waitAnnotateCrashReport(true, () => Services.prefs.setBoolPref(TelemetryUtils.Preferences.FhrUploadEnabled, true));
 
