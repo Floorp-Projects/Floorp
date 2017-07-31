@@ -735,10 +735,8 @@ protected:
   // OR on the main thread.
   Canonical<PlayState> mPlayState;
 
-  // This can only be changed on the main thread while holding the decoder
-  // monitor. Thus, it can be safely read while holding the decoder monitor
-  // OR on the main thread.
-  Canonical<PlayState> mNextState;
+  // This can only be changed on the main thread.
+  PlayState mNextState = PLAY_STATE_PAUSED;
 
   // True if the decoder is seeking.
   Canonical<bool> mLogicallySeeking;
@@ -788,7 +786,6 @@ public:
     return &mExplicitDuration;
   }
   AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
-  AbstractCanonical<PlayState>* CanonicalNextPlayState() { return &mNextState; }
   AbstractCanonical<bool>* CanonicalLogicallySeeking()
   {
     return &mLogicallySeeking;
