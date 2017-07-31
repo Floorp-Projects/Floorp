@@ -90,6 +90,8 @@ public:
 
   void FireTailDispatcher()
   {
+    AutoEnter context(this);
+
     MOZ_DIAGNOSTIC_ASSERT(mTailDispatcher.isSome());
     mTailDispatcher.ref().DrainDirectTasks();
     mTailDispatcher.reset();
@@ -315,7 +317,6 @@ AbstractThread::InitMainThread()
   if (!sCurrentThreadTLS.init()) {
     MOZ_CRASH();
   }
-  sCurrentThreadTLS.set(sMainThread);
 }
 
 void
