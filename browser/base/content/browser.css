@@ -691,6 +691,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 
 #urlbar[pageproxystate="invalid"] > #urlbar-icons > .urlbar-icon,
 %ifdef MOZ_PHOTON_THEME
+#urlbar[pageproxystate="invalid"] > #urlbar-icons > #star-button-box > .urlbar-icon,
 .urlbar-go-button[pageproxystate="valid"],
 .urlbar-go-button:not([parentfocused="true"]),
 %else
@@ -1494,9 +1495,12 @@ toolbarpaletteitem[place="palette"][hidden] {
   -moz-window-shadow: none;
 }
 
-/* Page action menu */
-#page-action-sendToDeviceView-body:not([state="notready"]) > #page-action-sync-not-ready-button {
+%ifdef MOZ_PHOTON_THEME
+/* Page action panel */
+#pageAction-panel-sendToDevice-subview-body:not([state="notready"]) > #pageAction-panel-sendToDevice-notReady,
+#pageAction-urlbar-sendToDevice-subview-body:not([state="notready"]) > #pageAction-urlbar-sendToDevice-notReady {
   display: none;
 }
+%endif
 
 %include theme-vars.inc.css

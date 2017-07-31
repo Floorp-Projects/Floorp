@@ -23,7 +23,7 @@ add_task(async function bookmark() {
     await promisePageActionPanelOpen();
 
     // The bookmark button should read "Bookmark This Page" and not be starred.
-    let bookmarkButton = document.getElementById("page-action-bookmark-button");
+    let bookmarkButton = document.getElementById("pageAction-panel-bookmark");
     Assert.equal(bookmarkButton.label, "Bookmark This Page");
     Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
@@ -88,35 +88,41 @@ add_task(async function bookmark() {
 });
 
 add_task(async function emailLink() {
-  // Replace the email-link entry point to check whether it's called.
-  let originalFn = MailIntegration.sendLinkForBrowser;
-  let fnCalled = false;
-  MailIntegration.sendLinkForBrowser = () => {
-    fnCalled = true;
-  };
-  registerCleanupFunction(() => {
-    MailIntegration.sendLinkForBrowser = originalFn;
+  // Open an actionable page so that the main page action button appears.  (It
+  // does not appear on about:blank for example.)
+  let url = "http://example.com/";
+  await BrowserTestUtils.withNewTab(url, async () => {
+    // Replace the email-link entry point to check whether it's called.
+    let originalFn = MailIntegration.sendLinkForBrowser;
+    let fnCalled = false;
+    MailIntegration.sendLinkForBrowser = () => {
+      fnCalled = true;
+    };
+    registerCleanupFunction(() => {
+      MailIntegration.sendLinkForBrowser = originalFn;
+    });
+
+    // Open the panel and click Email Link.
+    await promisePageActionPanelOpen();
+    let emailLinkButton =
+      document.getElementById("pageAction-panel-emailLink");
+    let hiddenPromise = promisePageActionPanelHidden();
+    EventUtils.synthesizeMouseAtCenter(emailLinkButton, {});
+    await hiddenPromise;
+
+    Assert.ok(fnCalled);
   });
-
-  // Open the panel and click Email Link.
-  await promisePageActionPanelOpen();
-  let emailLinkButton =
-    document.getElementById("page-action-email-link-button");
-  let hiddenPromise = promisePageActionPanelHidden();
-  EventUtils.synthesizeMouseAtCenter(emailLinkButton, {});
-  await hiddenPromise;
-
-  Assert.ok(fnCalled);
 });
 
 add_task(async function sendToDevice_nonSendable() {
-  // Open a tab that's not sendable.
-  await BrowserTestUtils.withNewTab("about:blank", async () => {
+  // Open a tab that's not sendable -- but that's also actionable so that the
+  // main page action button appears.
+  await BrowserTestUtils.withNewTab("about:home", async () => {
     await promiseSyncReady();
     // Open the panel.  Send to Device should be disabled.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(sendToDeviceButton.disabled);
     let hiddenPromise = promisePageActionPanelHidden();
     gPageActionPanel.hidePopup();
@@ -142,18 +148,18 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
     // Open the panel.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
     let viewPromise = promisePageActionViewShown();
     EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
     let view = await viewPromise;
-    Assert.equal(view.id, "page-action-sendToDeviceView");
+    Assert.equal(view.id, "pageAction-panel-sendToDevice-subview");
 
     let expectedItems = [
       {
-        id: "page-action-sync-not-ready-button",
+        id: "pageAction-panel-sendToDevice-notReady",
         display: "none",
         disabled: true,
       },
@@ -197,10 +203,10 @@ add_task(async function sendToDevice_syncNotReady_configured() {
       sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
     });
 
-    const setupSendToDeviceView = gPageActionButton.setupSendToDeviceView;
-    sandbox.stub(gPageActionButton, "setupSendToDeviceView").callsFake(() => {
+    let onShowingSubview = BrowserPageActions.sendToDevice.onShowingSubview;
+    sandbox.stub(BrowserPageActions.sendToDevice, "onShowingSubview").callsFake((...args) => {
       this.numCall++ || (this.numCall = 1);
-      setupSendToDeviceView.call(gPageActionButton);
+      onShowingSubview.call(BrowserPageActions.sendToDevice, ...args);
       testSendTabToDeviceMenu(this.numCall);
     });
 
@@ -212,21 +218,21 @@ add_task(async function sendToDevice_syncNotReady_configured() {
     // Open the panel.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
     let viewPromise = promisePageActionViewShown();
     EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
     let view = await viewPromise;
-    Assert.equal(view.id, "page-action-sendToDeviceView");
+    Assert.equal(view.id, "pageAction-panel-sendToDevice-subview");
 
     function testSendTabToDeviceMenu(numCall) {
       if (numCall == 1) {
         // "Syncing devices" should be shown.
         checkSendToDeviceItems([
           {
-            id: "page-action-sync-not-ready-button",
+            id: "pageAction-panel-sendToDevice-notReady",
             disabled: true,
           },
         ]);
@@ -234,7 +240,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
         // The devices should be shown in the subview.
         let expectedItems = [
           {
-            id: "page-action-sync-not-ready-button",
+            id: "pageAction-panel-sendToDevice-notReady",
             display: "none",
             disabled: true,
           },
@@ -278,18 +284,18 @@ add_task(async function sendToDevice_notSignedIn() {
     // Open the panel.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
     let viewPromise = promisePageActionViewShown();
     EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
     let view = await viewPromise;
-    Assert.equal(view.id, "page-action-sendToDeviceView");
+    Assert.equal(view.id, "pageAction-panel-sendToDevice-subview");
 
     let expectedItems = [
       {
-        id: "page-action-sync-not-ready-button",
+        id: "pageAction-panel-sendToDevice-notReady",
         display: "none",
         disabled: true,
       },
@@ -334,18 +340,18 @@ add_task(async function sendToDevice_noDevices() {
     // Open the panel.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
     let viewPromise = promisePageActionViewShown();
     EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
     let view = await viewPromise;
-    Assert.equal(view.id, "page-action-sendToDeviceView");
+    Assert.equal(view.id, "pageAction-panel-sendToDevice-subview");
 
     let expectedItems = [
       {
-        id: "page-action-sync-not-ready-button",
+        id: "pageAction-panel-sendToDevice-notReady",
         display: "none",
         disabled: true,
       },
@@ -394,19 +400,19 @@ add_task(async function sendToDevice_devices() {
     // Open the panel.
     await promisePageActionPanelOpen();
     let sendToDeviceButton =
-      document.getElementById("page-action-send-to-device-button");
+      document.getElementById("pageAction-panel-sendToDevice");
     Assert.ok(!sendToDeviceButton.disabled);
 
     // Click Send to Device.
     let viewPromise = promisePageActionViewShown();
     EventUtils.synthesizeMouseAtCenter(sendToDeviceButton, {});
     let view = await viewPromise;
-    Assert.equal(view.id, "page-action-sendToDeviceView");
+    Assert.equal(view.id, "pageAction-panel-sendToDevice-subview");
 
     // The devices should be shown in the subview.
     let expectedItems = [
       {
-        id: "page-action-sync-not-ready-button",
+        id: "pageAction-panel-sendToDevice-notReady",
         display: "none",
         disabled: true,
       },
@@ -450,7 +456,8 @@ function promiseSyncReady() {
 }
 
 function checkSendToDeviceItems(expectedItems) {
-  let body = document.getElementById("page-action-sendToDeviceView-body");
+  let body =
+    document.getElementById("pageAction-panel-sendToDevice-subview-body");
   Assert.equal(body.childNodes.length, expectedItems.length);
   for (let i = 0; i < expectedItems.length; i++) {
     let expected = expectedItems[i];

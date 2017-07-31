@@ -38,6 +38,8 @@ var ClickEventHandler = {
     this._screenX = null;
     this._screenY = null;
     this._lastFrame = null;
+    this._autoscrollHandledByApz = false;
+    this._scrollId = null;
     this.autoscrollLoop = this.autoscrollLoop.bind(this);
 
     Services.els.addSystemEventListener(global, "mousedown", this, true);
@@ -134,10 +136,26 @@ var ClickEventHandler = {
     if (!this._scrollable)
       return;
 
+    let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
+    let scrollable = this._scrollable;
+    if (scrollable instanceof Ci.nsIDOMWindow) {
+      // getViewId() needs an element to operate on.
+      scrollable = scrollable.document.documentElement;
+    }
+    this._scrollId = null;
+    try {
+      this._scrollId = domUtils.getViewId(scrollable);
+    } catch (e) {
+      // No view ID - leave this._scrollId as null. Receiving side will check.
+    }
+    let presShellId = domUtils.getPresShellId();
     let [enabled] = sendSyncMessage("Autoscroll:Start",
                                     {scrolldir: this._scrolldir,
                                      screenX: event.screenX,
-                                     screenY: event.screenY});
+                                     screenY: event.screenY,
+                                     scrollId: this._scrollId,
+                                     presShellId});
     if (!enabled) {
       this._scrollable = null;
       return;
@@ -145,6 +163,7 @@ var ClickEventHandler = {
 
     Services.els.addSystemEventListener(global, "mousemove", this, true);
     addEventListener("pagehide", this, true);
+    Services.obs.addObserver(this, "autoscroll-handled-by-apz");
 
     this._ignoreMouseEvents = true;
     this._startX = event.screenX;
@@ -153,6 +172,7 @@ var ClickEventHandler = {
     this._screenY = event.screenY;
     this._scrollErrorX = 0;
     this._scrollErrorY = 0;
+    this._autoscrollHandledByApz = false;
     this._lastFrame = content.performance.now();
 
     content.requestAnimationFrame(this.autoscrollLoop);
@@ -165,6 +185,7 @@ var ClickEventHandler = {
 
       Services.els.removeSystemEventListener(global, "mousemove", this, true);
       removeEventListener("pagehide", this, true);
+      Services.obs.removeObserver(this, "autoscroll-handled-by-apz");
     }
   },
 
@@ -188,6 +209,12 @@ var ClickEventHandler = {
   autoscrollLoop(timestamp) {
     if (!this._scrollable) {
       // Scrolling has been canceled
+      return;
+    }
+
+    if (this._autoscrollHandledByApz) {
+      // APZ is handling the autoscroll, so we don't need to keep running
+      // this callback.
       return;
     }
 
@@ -224,6 +251,7 @@ var ClickEventHandler = {
       top: actualScrollY,
       behavior: "instant"
     });
+
     content.requestAnimationFrame(this.autoscrollLoop);
   },
 
@@ -255,6 +283,15 @@ var ClickEventHandler = {
       case "Autoscroll:Stop": {
         this.stopScroll();
         break;
+      }
+    }
+  },
+
+  observe(subject, topic, data) {
+    if (topic === "autoscroll-handled-by-apz") {
+      // The caller passes in the scroll id via 'data'.
+      if (data == this._scrollId) {
+        this._autoscrollHandledByApz = true;
       }
     }
   },

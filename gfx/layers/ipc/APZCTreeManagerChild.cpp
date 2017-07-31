@@ -208,6 +208,20 @@ APZCTreeManagerChild::StartScrollbarDrag(
 }
 
 void
+APZCTreeManagerChild::StartAutoscroll(
+    const ScrollableLayerGuid& aGuid,
+    const ScreenPoint& aAnchorLocation)
+{
+  SendStartAutoscroll(aGuid, aAnchorLocation);
+}
+
+void
+APZCTreeManagerChild::StopAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  SendStopAutoscroll(aGuid);
+}
+
+void
 APZCTreeManagerChild::SetLongTapEnabled(bool aTapGestureEnabled)
 {
   SendSetLongTapEnabled(aTapGestureEnabled);
