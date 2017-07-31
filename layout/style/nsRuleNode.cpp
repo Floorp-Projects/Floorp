@@ -629,7 +629,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
           aFontSize = styleFont->mFont.size;
         }
         rootFontSize = aFontSize;
-      } else if (aStyleContext && !aStyleContext->GetParent()) {
+      // FIXME(emilio, bug 1384656): We can reach this from servo right now...
+      } else if (aStyleContext && !aStyleContext->AsGecko()->GetParent()) {
         // This is the root element (XXX we don't really know this, but
         // nsRuleNode::SetFont makes the same assumption!), so we should
         // use StyleFont on this context to get the root element's
@@ -642,7 +643,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         // NOTE: We should not call ResolveStyleFor() against the root element
         // to obtain the root style here because it may lead to reentrant call
         // of nsStyleSet::GetContext().
-        nsStyleContext* rootStyle = aStyleContext;
+        GeckoStyleContext* rootStyle = aStyleContext->AsGecko();
         while (rootStyle->GetParent()) {
           rootStyle = rootStyle->GetParent();
         }
@@ -1110,7 +1111,7 @@ SetPairCoords(const nsCSSValue& aValue,
 }
 
 static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
-                       nsPresContext* aPresContext, nsStyleContext *aContext,
+                       nsPresContext* aPresContext, nsStyleContext* aContext,
                        nscolor& aResult, RuleNodeCacheConditions& aConditions)
 {
   bool    result = false;
@@ -8659,20 +8660,27 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   // justify-items: enum, inherit, initial
   const auto& justifyItemsValue = *aRuleData->ValueForJustifyItems();
   if (MOZ_UNLIKELY(justifyItemsValue.GetUnit() == eCSSUnit_Inherit)) {
-    if (MOZ_LIKELY(parentContext)) {
-      pos->mJustifyItems =
-        parentPos->ComputedJustifyItems(parentContext->GetParent());
-    } else {
-      pos->mJustifyItems = NS_STYLE_JUSTIFY_NORMAL;
-    }
+    pos->mSpecifiedJustifyItems =
+      MOZ_LIKELY(parentContext)
+        ? parentPos->mJustifyItems
+        : NS_STYLE_JUSTIFY_NORMAL;
     conditions.SetUncacheable();
   } else {
     SetValue(justifyItemsValue,
-             pos->mJustifyItems, conditions,
+             pos->mSpecifiedJustifyItems, conditions,
              SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
-             parentPos->mJustifyItems, // unused, we handle 'inherit' above
+             parentPos->mSpecifiedJustifyItems, // unused, we handle 'inherit' above
              NS_STYLE_JUSTIFY_AUTO);
   }
+
+  // NOTE(emilio): Even though "auto" technically depends on the parent style
+  // context, most of the time it'll resolve to "normal".  So, we
+  // optimistically assume here that it does resolve to "normal", and we
+  // handle the other cases in ApplyStyleFixups. This way, position structs
+  // can be cached in the default/common case.
+  pos->mJustifyItems =
+    pos->mSpecifiedJustifyItems == NS_STYLE_JUSTIFY_AUTO
+      ? NS_STYLE_JUSTIFY_NORMAL : pos->mSpecifiedJustifyItems;
 
   // justify-self: enum, inherit, initial
   SetValue(*aRuleData->ValueForJustifySelf(),
@@ -10501,18 +10509,11 @@ nsRuleNode::GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
 }
 
 /* static */ bool
-nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
+nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
                                     uint32_t ruleTypeMask,
                                     bool aAuthorColorsAllowed)
 {
-#ifdef MOZ_STYLO
-  if (aStyleContext->IsServo()) {
-    NS_WARNING("stylo: nsRuleNode::HasAuthorSpecifiedRules not implemented");
-    return true;
-  }
-#endif
-
-  RefPtr<GeckoStyleContext> styleContext = aStyleContext->AsGecko();
+  RefPtr<GeckoStyleContext> styleContext = aStyleContext;
 
   uint32_t inheritBits = 0;
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND)

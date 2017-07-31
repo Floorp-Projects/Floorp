@@ -71,6 +71,15 @@ add_task(async function test_settings_store() {
 
   let expectedCallbackCount = 0;
 
+  await Assert.rejects(
+  ExtensionSettingsStore.getLevelOfControl(
+    1, TEST_TYPE, "key"),
+  /The ExtensionSettingsStore was accessed before the initialize promise resolved/,
+  "Accessing the SettingsStore before it is initialized throws an error.");
+
+  // Initialize the SettingsStore.
+  await ExtensionSettingsStore.initialize();
+
   // Add a setting for the second oldest extension, where it is the only setting for a key.
   for (let key of KEY_LIST) {
     let extensionIndex = 1;
@@ -419,6 +428,8 @@ add_task(async function test_settings_store() {
 });
 
 add_task(async function test_exceptions() {
+  await ExtensionSettingsStore.initialize();
+
   await Assert.rejects(
     ExtensionSettingsStore.addSetting(
       1, TEST_TYPE, "key_not_a_function", "val1", "not a function"),

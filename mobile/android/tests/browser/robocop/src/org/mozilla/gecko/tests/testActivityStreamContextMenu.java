@@ -17,6 +17,7 @@ import com.robotium.solo.Condition;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.DBUtils;
@@ -286,6 +287,7 @@ public class testActivityStreamContextMenu extends BaseTest {
         final Cursor cursor = db.getHighlightCandidates(getActivity().getContentResolver(), 20);
         mAsserter.isnot(cursor, null, "Highlights cursor is not null");
 
+        final HighlightCandidateCursorIndices indices = new HighlightCandidateCursorIndices(cursor);
         try {
             mAsserter.ok(cursor.getCount() > 0, "Highlights cursor has entries", null);
 
@@ -294,7 +296,7 @@ public class testActivityStreamContextMenu extends BaseTest {
             mAsserter.ok(cursor.moveToFirst(), "Move to beginning of cursor", null);
 
             do {
-                final Highlight highlight = Highlight.fromCursor(cursor);
+                final Highlight highlight = Highlight.fromCursor(cursor, indices);
                 if (url.equals(highlight.getUrl())) {
                     return highlight;
                 }

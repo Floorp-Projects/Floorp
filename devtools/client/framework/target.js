@@ -712,6 +712,26 @@ TabTarget.prototype = {
     let id = this._tab ? this._tab : (this._form && this._form.actor);
     return `TabTarget:${id}`;
   },
+
+  /**
+   * Log an error of some kind to the tab's console.
+   *
+   * @param {String} text
+   *                 The text to log.
+   * @param {String} category
+   *                 The category of the message.  @see nsIScriptError.
+   */
+  logErrorInPage: function (text, category) {
+    if (this.activeTab && this.activeTab.traits.logErrorInPage) {
+      let packet = {
+        to: this.form.actor,
+        type: "logErrorInPage",
+        text,
+        category,
+      };
+      this.client.request(packet);
+    }
+  },
 };
 
 /**
@@ -862,5 +882,9 @@ WorkerTarget.prototype = {
 
   makeRemote: function () {
     return Promise.resolve();
-  }
+  },
+
+  logErrorInPage: function () {
+    // No-op.  See bug 1368680.
+  },
 };

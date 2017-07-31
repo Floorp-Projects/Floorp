@@ -6,8 +6,11 @@
 #include "MozGTestBench.h"
 #include "mozilla/TimeStamp.h"
 #include <stdio.h>
+#include <string>
+#include <vector>
 
 #define MOZ_GTEST_BENCH_FRAMEWORK "platform_microbench"
+#define MOZ_GTEST_NUM_ITERATIONS 5
 
 using mozilla::TimeStamp;
 
@@ -21,19 +24,35 @@ void GTestBench(const char* aSuite, const char* aName,
   aTest();
 #else
   bool shouldAlert = bool(getenv("PERFHERDER_ALERTING_ENABLED"));
+  std::vector<int> durations;
 
-  mozilla::TimeStamp start = TimeStamp::Now();
+  for (int i=0; i<MOZ_GTEST_NUM_ITERATIONS; i++) {
+    mozilla::TimeStamp start = TimeStamp::Now();
 
-  aTest();
+    aTest();
 
-  int msDuration = (TimeStamp::Now() - start).ToMicroseconds();
+    durations.push_back((TimeStamp::Now() - start).ToMicroseconds());
+  }
+
+  std::string replicatesStr = "[" + std::to_string(durations[0]);
+  for (int i=1; i<MOZ_GTEST_NUM_ITERATIONS; i++) {
+    replicatesStr += "," + std::to_string(durations[i]);
+  }
+  replicatesStr += "]";
+
+  // median is at index floor(i/2) if number of replicates is odd,
+  // (i/2-1) if even
+  std::sort(durations.begin(), durations.end());
+  int medianIndex = (MOZ_GTEST_NUM_ITERATIONS / 2) + ((durations.size() % 2 == 0) ? (-1) : 0);
 
   // Print the result for each test. Let perfherder aggregate for us
   printf("PERFHERDER_DATA: {\"framework\": {\"name\": \"%s\"}, "
-                       "\"suites\": [{\"name\": \"%s\", \"subtests\": "
-                           "[{\"name\": \"%s\", \"value\": %i, \"lowerIsBetter\": true, \"shouldAlert\": %s}]"
-                       "}]}\n",
-                       MOZ_GTEST_BENCH_FRAMEWORK, aSuite, aName, msDuration, shouldAlert ? "true" : "false");
+         "\"suites\": [{\"name\": \"%s\", \"subtests\": "
+         "[{\"name\": \"%s\", \"value\": %i, \"replicates\": %s, "
+         "\"lowerIsBetter\": true, \"shouldAlert\": %s}]"
+         "}]}\n",
+         MOZ_GTEST_BENCH_FRAMEWORK, aSuite, aName, durations[medianIndex],
+         replicatesStr.c_str(), shouldAlert ? "true" : "false");
 #endif
 }
 

@@ -75,7 +75,9 @@
   skin/classic/browser/identity-icon-notice-hover.svg          (../shared/identity-block/identity-icon-notice-hover.svg)
 #endif
   skin/classic/browser/info.svg                                (../shared/info.svg)
+#ifndef MOZ_PHOTON_THEME
 * skin/classic/browser/menuPanel.svg                           (../shared/menuPanel.svg)
+#endif
 * skin/classic/browser/menuPanel-small.svg                     (../shared/menuPanel-small.svg)
   skin/classic/browser/notification-icons.svg                  (../shared/notification-icons.svg)
   skin/classic/browser/tracking-protection-16.svg              (../shared/identity-block/tracking-protection-16.svg)

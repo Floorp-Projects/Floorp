@@ -7,6 +7,7 @@
 #define mozilla_gfx_layers_mlgpu_BufferCache_h
 
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/RefPtr.h"
 #include <deque>
 #include <vector>
 

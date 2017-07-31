@@ -670,6 +670,23 @@ APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
 }
 
 void
+APZCTreeManager::StartAutoscroll(const ScrollableLayerGuid& aGuid,
+                                 const ScreenPoint& aAnchorLocation)
+{
+  if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
+    apzc->StartAutoscroll(aAnchorLocation);
+  }
+}
+
+void
+APZCTreeManager::StopAutoscroll(const ScrollableLayerGuid& aGuid)
+{
+  if (RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid)) {
+    apzc->StopAutoscroll();
+  }
+}
+
+void
 APZCTreeManager::NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const
 {
   const LayerTreeState* state = CompositorBridgeParent::GetIndirectShadowTree(aGuid.mLayersId);
@@ -985,6 +1002,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
     } case MOUSE_INPUT: {
       MouseInput& mouseInput = aEvent.AsMouseInput();
       mouseInput.mHandledByAPZ = true;
+
+      mCurrentMousePosition = mouseInput.mOrigin;
 
       bool startsDrag = DragTracker::StartsDrag(mouseInput);
       if (startsDrag) {
@@ -2476,6 +2495,12 @@ APZCTreeManager::GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) co
   }
 
   return ViewAs<ParentLayerToScreenMatrix4x4>(result);
+}
+
+ScreenPoint
+APZCTreeManager::GetCurrentMousePosition() const
+{
+  return mCurrentMousePosition;
 }
 
 already_AddRefed<AsyncPanZoomController>

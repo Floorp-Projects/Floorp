@@ -194,8 +194,11 @@ var onboardingTourset = {
       };
     },
     getPage(win, bundle) {
+      const STATE_LOGOUT = "logged-out";
+      const STATE_LOGIN = "logged-in";
       let div = win.document.createElement("div");
       div.classList.add("onboarding-no-button");
+      div.dataset.loginState = STATE_LOGOUT;
       // The email validation pattern used in the form comes from IETF rfc5321,
       // which is identical to server-side checker of Firefox Account. See
       // discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1378770#c6
@@ -203,11 +206,13 @@ var onboardingTourset = {
       let emailRegex = "^[\\w.!#$%&’*+\\/=?^`{|}~-]{1,64}@[a-z\\d](?:[a-z\\d-]{0,253}[a-z\\d])?(?:\\.[a-z\\d](?:[a-z\\d-]{0,253}[a-z\\d])?)+$";
       div.innerHTML = `
         <section class="onboarding-tour-description">
-          <h1 data-l10n-id="onboarding.tour-sync.title2"></h1>
-          <p data-l10n-id="onboarding.tour-sync.description2"></p>
+          <h1 data-l10n-id="onboarding.tour-sync.title2" class="show-on-logged-out"></h1>
+          <p data-l10n-id="onboarding.tour-sync.description2" class="show-on-logged-out"></p>
+          <h1 data-l10n-id="onboarding.tour-sync.logged-in.title" class="show-on-logged-in"></h1>
+          <p data-l10n-id="onboarding.tour-sync.logged-in.description" class="show-on-logged-in"></p>
         </section>
         <section class="onboarding-tour-content">
-          <form>
+          <form class="show-on-logged-out">
             <h3 data-l10n-id="onboarding.tour-sync.form.title"></h3>
             <p data-l10n-id="onboarding.tour-sync.form.description"></p>
             <input id="onboarding-tour-sync-email-input" type="email" required="true"></input><br />
@@ -220,6 +225,16 @@ var onboardingTourset = {
       emailInput.placeholder =
         bundle.GetStringFromName("onboarding.tour-sync.email-input.placeholder");
       emailInput.pattern = emailRegex;
+
+      div.addEventListener("beforeshow", () => {
+        function loginStatusListener(msg) {
+          removeMessageListener("Onboarding:ResponseLoginStatus", loginStatusListener);
+          div.dataset.loginState = msg.data.isLoggedIn ? STATE_LOGIN : STATE_LOGOUT;
+        }
+        sendMessageToChrome("get-login-status");
+        addMessageListener("Onboarding:ResponseLoginStatus", loginStatusListener);
+      });
+
       return div;
     },
   },
@@ -305,6 +320,15 @@ var onboardingTourset = {
   },
 };
 
+/**
+ * @param {String} action the action to ask the chrome to do
+ * @param {Array} params the parameters for the action
+ */
+function sendMessageToChrome(action, params) {
+  sendAsyncMessage("Onboarding:OnContentMessage", {
+    action, params
+  });
+}
 /**
  * The script won't be initialized if we turned off onboarding by
  * setting "browser.onboarding.enabled" to false.
@@ -434,16 +458,6 @@ class Onboarding {
     }
   }
 
-  /**
-   * @param {String} action the action to ask the chrome to do
-   * @param {Array} params the parameters for the action
-   */
-  sendMessageToChrome(action, params) {
-    sendAsyncMessage("Onboarding:OnContentMessage", {
-      action, params
-    });
-  }
-
   handleEvent(evt) {
     if (evt.type === "resize") {
       this._window.cancelIdleCallback(this._resizeTimerId);
@@ -525,7 +539,12 @@ class Onboarding {
   gotoPage(tourId) {
     let targetPageId = `${tourId}-page`;
     for (let page of this._tourPages) {
-      page.style.display = page.id != targetPageId ? "none" : "";
+      if (page.id === targetPageId) {
+        page.style.display = "";
+        page.dispatchEvent(new this._window.CustomEvent("beforeshow"));
+      } else {
+        page.style.display = "none";
+      }
     }
     for (let li of this._tourItems) {
       if (li.id == tourId) {
@@ -551,7 +570,7 @@ class Onboarding {
       }
     });
     if (params.length > 0) {
-      this.sendMessageToChrome("set-prefs", params);
+      sendMessageToChrome("set-prefs", params);
     }
   }
 
@@ -579,7 +598,7 @@ class Onboarding {
     // we try to prompt on the 1st session.
     let lastTime = 1000 * Preferences.get("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
     if (lastTime <= 0) {
-      this.sendMessageToChrome("set-prefs", [{
+      sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
         value: Math.floor(Date.now() / 1000)
       }]);
@@ -619,7 +638,7 @@ class Onboarding {
       name: "browser.onboarding.notification.prompt-count",
       value: 0
     });
-    this.sendMessageToChrome("set-prefs", params);
+    sendMessageToChrome("set-prefs", params);
   }
 
   _getNotificationQueue() {
@@ -636,7 +655,7 @@ class Onboarding {
       // until the queue is empty.
       let ids = this._tours.map(tour => tour.id).join(",");
       queue = `${ids},${ids}`;
-      this.sendMessageToChrome("set-prefs", [{
+      sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.tour-ids-queue",
         value: queue
       }]);
@@ -665,7 +684,7 @@ class Onboarding {
     }
 
     if (queue.length == 0) {
-      this.sendMessageToChrome("set-prefs", [
+      sendMessageToChrome("set-prefs", [
         {
           name: "browser.onboarding.notification.finished",
           value: true
@@ -716,7 +735,7 @@ class Onboarding {
         value: promptCount + 1
       });
     }
-    this.sendMessageToChrome("set-prefs", params);
+    sendMessageToChrome("set-prefs", params);
   }
 
   hideNotification() {
@@ -756,7 +775,7 @@ class Onboarding {
 
   hide() {
     this.setToursCompleted(this._tours.map(tour => tour.id));
-    this.sendMessageToChrome("set-prefs", [
+    sendMessageToChrome("set-prefs", [
       {
         name: "browser.onboarding.hidden",
         value: true
