@@ -480,6 +480,27 @@ class TestBuildReader(unittest.TestCase):
         with self.assertRaises(BuildReaderError):
             reader.files_info(['foo.js'])
 
+    def test_schedules(self):
+        reader = self.reader('schedules')
+        info = reader.files_info(['somefile', 'foo.win', 'foo.osx', 'subd/aa.py', 'subd/yaml.py'])
+        # default: all exclusive, no inclusive
+        self.assertEqual(info['somefile']['SCHEDULES'].inclusive, [])
+        self.assertEqual(info['somefile']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+        # windows-only
+        self.assertEqual(info['foo.win']['SCHEDULES'].inclusive, [])
+        self.assertEqual(info['foo.win']['SCHEDULES'].exclusive, ['windows'])
+        # osx-only
+        self.assertEqual(info['foo.osx']['SCHEDULES'].inclusive, [])
+        self.assertEqual(info['foo.osx']['SCHEDULES'].exclusive, ['macosx'])
+        # top-level moz.build specifies subd/**.py with an inclusive option
+        self.assertEqual(info['subd/aa.py']['SCHEDULES'].inclusive, ['py-lint'])
+        self.assertEqual(info['subd/aa.py']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+        # Files('yaml.py') in subd/moz.build *overrides* Files('subdir/**.py')
+        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].inclusive, ['yaml-lint'])
+        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].exclusive, ['android', 'linux', 'macosx', 'windows'])
+
+        self.assertEqual(info['subd/yaml.py']['SCHEDULES'].components,
+                ['android', 'linux', 'macosx', 'windows', 'yaml-lint'])
 
 if __name__ == '__main__':
     main()
