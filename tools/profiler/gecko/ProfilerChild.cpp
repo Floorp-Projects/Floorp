@@ -75,11 +75,10 @@ ProfilerChild::RecvResume()
 }
 
 static nsCString
-CollectProfileOrEmptyString(bool aIsShuttingDown)
+CollectProfileOrEmptyString()
 {
   nsCString profileCString;
-  UniquePtr<char[]> profile =
-    profiler_get_profile(/* aSinceTime */ 0, aIsShuttingDown);
+  UniquePtr<char[]> profile = profiler_get_profile();
   if (profile) {
     profileCString = nsCString(profile.get(), strlen(profile.get()));
   } else {
@@ -91,7 +90,7 @@ CollectProfileOrEmptyString(bool aIsShuttingDown)
 mozilla::ipc::IPCResult
 ProfilerChild::RecvGatherProfile(GatherProfileResolver&& aResolve)
 {
-  aResolve(CollectProfileOrEmptyString(/* aIsShuttingDown */ false));
+  aResolve(CollectProfileOrEmptyString());
   return IPC_OK();
 }
 
@@ -112,7 +111,7 @@ ProfilerChild::Destroy()
 nsCString
 ProfilerChild::GrabShutdownProfile()
 {
-  return CollectProfileOrEmptyString(/* aIsShuttingDown */ true);
+  return CollectProfileOrEmptyString();
 }
 
 } // namespace mozilla
