@@ -1689,36 +1689,3 @@ add_task(async function test_remove_multiple() {
   await PT.clearTransactionsHistory();
   observer.reset();
 });
-
-add_task(async function test_remove_bookmarks_for_urls() {
-  let urls = [new URL("http://test.url.1"), new URL("http://test.url.2")];
-  let guids = [];
-  await PT.batch(async function() {
-    for (let url of urls) {
-      for (let title of ["test title a", "test title b"]) {
-        let txn = PT.NewBookmark({ url, title, parentGuid: rootGuid });
-        guids.push(await txn.transact());
-      }
-    }
-  });
-
-  let originalInfos = [];
-  for (let guid of guids) {
-    originalInfos.push(await PlacesUtils.promiseBookmarksTree(guid));
-  }
-
-  await PT.RemoveBookmarksForUrls(urls).transact();
-  await ensureNonExistent(...guids);
-  await PT.undo();
-  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
-  await PT.redo();
-  await ensureNonExistent(...guids);
-  await PT.undo();
-  await ensureBookmarksTreeRestoredCorrectly(...originalInfos);
-
-  // Cleanup.
-  await PT.redo();
-  await ensureNonExistent(...guids);
-  await PT.clearTransactionsHistory();
-  observer.reset();
-});

@@ -1477,25 +1477,6 @@ PT.Remove.prototype = {
 };
 
 /**
- * Transactions for removing all bookmarks for one or more urls.
- *
- * Required Input Properties: urls.
- */
-PT.RemoveBookmarksForUrls = DefineTransaction(["urls"]);
-PT.RemoveBookmarksForUrls.prototype = {
-  async execute({ urls }) {
-    let guids = [];
-    for (let url of urls) {
-      await PlacesUtils.bookmarks.fetch({ url }, b => guids.push(b.guid));
-    }
-    let removeTxn = TransactionsHistory.getRawTransaction(PT.Remove(guids));
-    await removeTxn.execute();
-    this.undo = removeTxn.undo.bind(removeTxn);
-    this.redo = removeTxn.redo.bind(removeTxn);
-  }
-};
-
-/**
  * Transaction for tagging urls.
  *
  * Required Input Properties: urls, tags.
