@@ -977,14 +977,11 @@ public:
                 MOZ_ASSERT(NS_IsMainThread());
 
                 JNIEnv* const env = jni::GetGeckoThreadEnv();
-                // Make sure LayerViewSupport hasn't been detached from the
-                // Java object since this event was dispatched.
-                if (LayerViewSupport* const lvs = GetNative(
-                        LayerView::Compositor::LocalRef(env, mCompositor))) {
-                    MOZ_CATCH_JNI_EXCEPTION(env);
+                LayerViewSupport* const lvs = GetNative(
+                        LayerView::Compositor::LocalRef(env, mCompositor));
+                MOZ_CATCH_JNI_EXCEPTION(env);
 
-                    lvs->OnResumedCompositor();
-                }
+                lvs->OnResumedCompositor();
             }
         };
 
