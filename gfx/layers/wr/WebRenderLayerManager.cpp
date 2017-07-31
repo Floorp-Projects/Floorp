@@ -237,27 +237,50 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
 
     savedItems.AppendToTop(item);
 
+    bool forceNewLayerData = false;
+    size_t layerCountBeforeRecursing = mLayerScrollData.size();
     if (apzEnabled) {
       // For some types of display items we want to force a new
       // WebRenderLayerScrollData object, to ensure we preserve the APZ-relevant
       // data that is in the display item.
-      bool forceNewLayerData = item->UpdateScrollData(nullptr, nullptr);
+      forceNewLayerData = item->UpdateScrollData(nullptr, nullptr);
 
       // Anytime the ASR changes we also want to force a new layer data because
       // the stack of scroll metadata is going to be different for this
       // display item than previously, so we can't squash the display items
       // into the same "layer".
       const ActiveScrolledRoot* asr = item->GetActiveScrolledRoot();
-      if (forceNewLayerData || asr != lastAsr) {
+      if (asr != lastAsr) {
         lastAsr = asr;
-        mLayerScrollData.emplace_back();
-        mLayerScrollData.back().Initialize(mScrollData, item);
+        forceNewLayerData = true;
+      }
+
+      // If we're going to create a new layer data for this item, stash the
+      // ASR so that if we recurse into a sublist they will know where to stop
+      // walking up their ASR chain when building scroll metadata.
+      if (forceNewLayerData) {
+        mAsrStack.push_back(asr);
       }
     }
 
+    // Note: this call to CreateWebRenderCommands can recurse back into
+    // this function if the |item| is a wrapper for a sublist.
     if (!item->CreateWebRenderCommands(aBuilder, aSc, mParentCommands, this,
                                        aDisplayListBuilder)) {
       PushItemAsImage(item, aBuilder, aSc, aDisplayListBuilder);
+    }
+
+    if (apzEnabled && forceNewLayerData) {
+      // Pop the thing we pushed before the recursion, so the topmost item on
+      // the stack is enclosing display item's ASR (or the stack is empty)
+      mAsrStack.pop_back();
+      const ActiveScrolledRoot* stopAtAsr =
+          mAsrStack.empty() ? nullptr : mAsrStack.back();
+
+      int32_t descendants = mLayerScrollData.size() - layerCountBeforeRecursing;
+
+      mLayerScrollData.emplace_back();
+      mLayerScrollData.back().Initialize(mScrollData, item, descendants, stopAtAsr);
     }
   }
   aDisplayList->AppendToTop(&savedItems);
