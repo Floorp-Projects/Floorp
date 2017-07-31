@@ -115,6 +115,10 @@ class Histogram {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+  bool is_empty() const {
+    return this->sample_.counts(0) == 0 && this->sample_.sum() == 0;
+  }
+
   //----------------------------------------------------------------------------
   // Statistic values, developed over the life of the histogram.
 
