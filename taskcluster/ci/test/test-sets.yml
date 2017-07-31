@@ -262,3 +262,6 @@ windows8-tests:
     - mochitest-clipboard
     - mochitest-chrome
     - xpcshell
+
+devtools-tests:
+    - mochitest-devtools-chrome
