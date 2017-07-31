@@ -65,6 +65,7 @@ public final class TelemetryWrapper {
         private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
         private static final String SHOW = "show";
+        private static final String SHARE_INTENT = "share_intent";
     }
 
     private static class Object {
@@ -102,6 +103,8 @@ public final class TelemetryWrapper {
         private static final String OPEN = "open";
         private static final String DOWNLOAD = "download";
         private static final String CANCEL_DOWNLOAD = "cancel_download";
+        private static final String URL = "url";
+        private static final String SEARCH = "search";
     }
 
     private static class Extra {
@@ -225,6 +228,14 @@ public final class TelemetryWrapper {
 
     public static void browseIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
+    }
+
+    public static void shareIntentEvent(boolean isURL) {
+        if (isURL) {
+            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.URL).queue();
+        } else {
+            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.SEARCH).queue();
+        }
     }
 
     /**

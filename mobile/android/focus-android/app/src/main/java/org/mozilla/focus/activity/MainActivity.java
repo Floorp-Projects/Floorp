@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.WindowManager;
@@ -23,6 +24,7 @@ import org.mozilla.focus.notification.BrowsingNotificationService;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.SafeIntent;
 import org.mozilla.focus.utils.Settings;
+import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.BrowsingSession;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
@@ -78,6 +80,8 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
                 } else {
                     showBrowserScreen(url);
                 }
+            } else if (Intent.ACTION_SEND.equals(intent.getAction())) {
+                setPendingUrlFromShareIntent(intent);
             } else {
                 if (Settings.getInstance(this).shouldShowFirstrun()) {
                     showFirstrun();
@@ -142,6 +146,10 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
             // We can't update our fragment right now because we need to wait until the activity is
             // resumed. So just remember this URL and load it in onResumeFragments().
             pendingUrl = intent.getDataString();
+        }
+
+        if (Intent.ACTION_SEND.equals(intent.getAction())) {
+            setPendingUrlFromShareIntent(intent);
         }
 
         if (ACTION_OPEN.equals(intent.getAction())) {
@@ -291,6 +299,17 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
             pendingUrl = null;
         } else {
             showHomeScreen();
+        }
+    }
+
+    public void setPendingUrlFromShareIntent(SafeIntent shareIntent) {
+        final String dataString = shareIntent.getStringExtra(Intent.EXTRA_TEXT);
+        if (!TextUtils.isEmpty(dataString)) {
+            final boolean isUrl = UrlUtils.isUrl(dataString);
+            TelemetryWrapper.shareIntentEvent(isUrl);
+            // We can't update our fragment right now because we need to wait until the activity is
+            // resumed. So just remember this URL and load it in onResumeFragments().
+            pendingUrl = isUrl ? dataString : UrlUtils.createSearchUrl(this, dataString);
         }
     }
 }
