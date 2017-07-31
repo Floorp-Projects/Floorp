@@ -356,6 +356,7 @@ RenderViewMLGPU::Prepare()
     memcpy(vsConstants.projection, &projection._11, 64);
     vsConstants.targetOffset = Point(mTargetOffset);
     vsConstants.sortIndexOffset = PrepareDepthBuffer();
+    vsConstants.debugFrameNumber = mBuilder->GetManager()->GetDebugFrameNumber();
 
     SharedConstantBuffer* shared = mDevice->GetSharedVSBuffer();
     if (!shared->Allocate(&mWorldConstants, vsConstants)) {

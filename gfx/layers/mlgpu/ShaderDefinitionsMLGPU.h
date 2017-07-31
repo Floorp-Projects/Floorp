@@ -52,7 +52,7 @@ struct WorldConstants
   float projection[4][4];
   gfx::Point targetOffset;
   int sortIndexOffset;
-  float padding;
+  unsigned debugFrameNumber;
 };
 
 struct ClearConstants

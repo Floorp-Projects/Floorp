@@ -13,7 +13,7 @@ cbuffer VSBufSimple : register(b0)
   float4x4 WorldTransform;
   float2 RenderTargetOffset;
   int SortIndexOffset;
-  float padding;
+  uint DebugFrameNumber;
 };
 
 struct Layer {

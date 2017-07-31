@@ -13,6 +13,7 @@
 #include "mozilla/layers/LayerMLGPU.h"
 #include "mozilla/layers/MemoryReportingMLGPU.h"
 #include "mozilla/layers/ShaderDefinitionsMLGPU.h"
+#include "mozilla/layers/UtilityMLGPU.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/WinCompositorWidget.h"
 #include "MLGShaders.h"
