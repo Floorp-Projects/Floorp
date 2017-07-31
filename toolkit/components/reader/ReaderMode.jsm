@@ -34,7 +34,7 @@ XPCOMUtils.defineLazyGetter(this, "Readability", function() {
   let scope = {};
   scope.dump = this.dump;
   Services.scriptloader.loadSubScript("resource://gre/modules/reader/Readability.js", scope);
-  return scope.Readability;
+  return scope["Readability"];
 });
 
 const gIsFirefoxDesktop = Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";

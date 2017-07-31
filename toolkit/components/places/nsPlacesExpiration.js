@@ -802,12 +802,12 @@ nsPlacesExpiration.prototype = {
    *        invoked on success, function (aPagesCount).
    */
   _getPagesStats: function PEX__getPagesStats(aCallback) {
-    if (!this._cachedStatements.LIMIT_COUNT) {
-      this._cachedStatements.LIMIT_COUNT = this._db.createAsyncStatement(
+    if (!this._cachedStatements["LIMIT_COUNT"]) {
+      this._cachedStatements["LIMIT_COUNT"] = this._db.createAsyncStatement(
         `SELECT COUNT(*) FROM moz_places`
       );
     }
-    this._cachedStatements.LIMIT_COUNT.executeAsync({
+    this._cachedStatements["LIMIT_COUNT"].executeAsync({
       _pagesCount: 0,
       handleResult(aResults) {
         let row = aResults.getNextRow();

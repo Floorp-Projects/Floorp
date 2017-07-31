@@ -4333,7 +4333,7 @@ this.XPIProvider = {
         if (!aExtraParams) {
           aExtraParams = {};
         }
-        aExtraParams.instanceID = this.activeAddons.get(aAddon.id).instanceID;
+        aExtraParams["instanceID"] = this.activeAddons.get(aAddon.id).instanceID;
       }
 
       // Nothing to call for locales
@@ -5188,7 +5188,7 @@ AddonWrapper.prototype = {
   },
 
   get aboutURL() {
-    return this.isActive ? addonFor(this).aboutURL : null;
+    return this.isActive ? addonFor(this)["aboutURL"] : null;
   },
 
   get optionsURL() {

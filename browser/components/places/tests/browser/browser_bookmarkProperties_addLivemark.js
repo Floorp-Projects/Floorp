@@ -4,7 +4,7 @@ add_task(async function() {
   info("Add a live bookmark editing its data");
 
   await withSidebarTree("bookmarks", async function(tree) {
-    let itemId = PlacesUIUtils.leftPaneQueries.UnfiledBookmarks;
+    let itemId = PlacesUIUtils.leftPaneQueries["UnfiledBookmarks"];
     tree.selectItems([itemId]);
 
     await withBookmarksDialog(

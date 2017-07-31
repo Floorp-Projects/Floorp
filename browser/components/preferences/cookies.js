@@ -214,8 +214,8 @@ var gCookiesWindow = {
       var cacheIndex = Math.min(this._cacheValid, aIndex);
       if (cacheIndex > 0) {
         var cacheItem = this._cacheItems[cacheIndex];
-        start = cacheItem.start;
-        count = hostIndex = cacheItem.count;
+        start = cacheItem["start"];
+        count = hostIndex = cacheItem["count"];
       }
 
       for (let i = start; i < gCookiesWindow._hostOrder.length; ++i) { // var host in gCookiesWindow._hosts) {

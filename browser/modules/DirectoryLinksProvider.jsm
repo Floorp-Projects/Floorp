@@ -72,8 +72,8 @@ var DirectoryLinksProvider = {
   get _linksURL() {
     if (!this.__linksURL) {
       try {
-        this.__linksURL = Services.prefs.getCharPref(this._observedPrefs.linksURL);
-        this.__linksURLModified = Services.prefs.prefHasUserValue(this._observedPrefs.linksURL);
+        this.__linksURL = Services.prefs.getCharPref(this._observedPrefs["linksURL"]);
+        this.__linksURLModified = Services.prefs.prefHasUserValue(this._observedPrefs["linksURL"]);
       } catch (e) {
         Cu.reportError("Error fetching directory links url from prefs: " + e);
       }

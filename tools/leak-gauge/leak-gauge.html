@@ -99,7 +99,7 @@ function runContents(result, contents) {
                         var doc_info = this.docs[addr];
                         doc_info[uri] = true;
                         if ("nim" in doc_info) {
-                            doc_info.nim[uri] = true;
+                            doc_info["nim"][uri] = true;
                         }
                     }
                 }
@@ -178,11 +178,11 @@ function runContents(result, contents) {
                         var nim_info = this.nims[addr];
                         var doc = m[1];
                         if (doc != "0") {
-                            var doc_info = handlers.DOCUMENT.docs[doc];
+                            var doc_info = handlers["DOCUMENT"].docs[doc];
                             for (var uri in doc_info) {
                                 nim_info[uri] = true;
                             }
-                            doc_info.nim = nim_info;
+                            doc_info["nim"] = nim_info;
                         }
                     }
                 }

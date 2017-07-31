@@ -83,11 +83,11 @@ async function getL10nStrings() {
     crstrings = parseINIStrings(path);
 
     if ("CrashID" in crstrings) {
-      strings.crashid = crstrings.CrashID;
+      strings["crashid"] = crstrings.CrashID;
     }
 
     if ("CrashDetailsURL" in crstrings) {
-      strings.reporturl = crstrings.CrashDetailsURL;
+      strings["reporturl"] = crstrings.CrashDetailsURL;
     }
   }
 

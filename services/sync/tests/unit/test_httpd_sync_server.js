@@ -225,7 +225,7 @@ add_test(function test_storage_request() {
       _("Modified is " + this.response.newModified);
       let parsedBody = JSON.parse(this.response.body);
       do_check_true(parsedBody >= now);
-      do_check_empty(server.users.john.collections);
+      do_check_empty(server.users["john"].collections);
       Utils.nextTick(next);
     });
   }
@@ -234,7 +234,7 @@ add_test(function test_storage_request() {
     let req = localRequest(server, storageURL);
     req.get(function(err) {
       do_check_eq(this.response.status, 405);
-      do_check_eq(this.response.headers.allow, "DELETE");
+      do_check_eq(this.response.headers["allow"], "DELETE");
       Utils.nextTick(next);
     });
   }

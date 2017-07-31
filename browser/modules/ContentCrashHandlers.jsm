@@ -408,7 +408,7 @@ this.TabCrashHandler = {
     // default. In order to make sure we don't send it, we overwrite it
     // with the empty string.
     if (!includeURL) {
-      extraExtraKeyVals.URL = "";
+      extraExtraKeyVals["URL"] = "";
     }
 
     CrashSubmit.submit(dumpID, {

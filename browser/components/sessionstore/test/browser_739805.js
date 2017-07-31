@@ -26,7 +26,7 @@ function test() {
     is(browser.__SS_restoreState, TAB_STATE_NEEDS_RESTORE, "tab needs restoring");
 
     let {formdata} = JSON.parse(ss.getTabState(tab));
-    is(formdata && formdata.id.foo, "bar", "tab state's formdata is valid");
+    is(formdata && formdata.id["foo"], "bar", "tab state's formdata is valid");
 
     promiseTabRestored(tab).then(() => {
       ContentTask.spawn(browser, null, function() {

@@ -46,7 +46,7 @@ var testnum = 1;
 
 var video;
 function loadevent(event) {
-  is(win.testExpando, undefined, "expando shouldn't exist because js is disabled");
+  is(win["testExpando"], undefined, "expando shouldn't exist because js is disabled");
   video = win.document.querySelector("video");
   // Other events expected by the test.
   video.addEventListener("timeupdate", runTest);

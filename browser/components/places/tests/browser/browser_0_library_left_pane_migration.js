@@ -83,7 +83,7 @@ add_task(async function() {
   // Check left pane is populated.
   organizer.PlacesOrganizer.selectLeftPaneQuery("History");
   is(organizer.PlacesOrganizer._places.selectedNode.itemId,
-     PlacesUIUtils.leftPaneQueries.History,
+     PlacesUIUtils.leftPaneQueries["History"],
      "Library left pane is populated and working");
 
   await promiseLibraryClosed(organizer);

@@ -79,7 +79,7 @@ var modules = {
 };
 
 if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
-  modules.healthreport = {
+  modules['healthreport'] = {
     uri: "chrome://browser/content/aboutHealthReport.xhtml",
     privileged: true
   };

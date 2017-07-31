@@ -70,6 +70,9 @@ module.exports = {
     // Enforce dots on the next line with property name.
     "dot-location": ["error", "property"],
 
+    // Encourage the use of dot notation whenever possible.
+    "dot-notation": "error",
+
     // Maximum length of a line.
     // This should be 100 but too many lines were longer than that so set a
     // conservative upper bound for now.
