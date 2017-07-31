@@ -42,13 +42,11 @@ awsy-stylo:
         script: awsy_script.py
         config:
             by-test-platform:
-                # Do not run on Windows until
-                # bug 1385027 (stylo tests on win) is fixed.
-                #windows10-64-stylo/opt:
-                #    - awsy/taskcluster_windows_config.py
-                macosx64-stylo/opt:
+                windows.*:
+                    - awsy/taskcluster_windows_config.py
+                macosx.*:
                     - awsy/macosx_config.py
-                linux64-stylo/opt:
+                linux.*:
                     - awsy/linux_config.py
         extra-options:
             - --enable-stylo
@@ -73,7 +71,7 @@ awsy-stylo-sequential:
         config:
             # Only run on Linux64.
             by-test-platform:
-                linux64-stylo-sequential/opt:
+                linux.*:
                     - awsy/linux_config.py
         extra-options:
             - --enable-stylo
@@ -1235,8 +1233,8 @@ reftest-stylo:
     chunks: 16
     run-on-projects:
         by-test-platform:
-            .*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            default: built-projects
+            windows10.*: []
+            default: ['autoland', 'mozilla-central', 'try']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
