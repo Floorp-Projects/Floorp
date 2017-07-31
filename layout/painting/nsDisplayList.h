@@ -4297,6 +4297,9 @@ public:
     return mAnimatedGeometryRootForScrollMetadata;
   }
 
+  virtual bool UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                                mozilla::layers::WebRenderLayerScrollData* aLayerData) override;
+
 protected:
   // For background-attachment:fixed
   nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
