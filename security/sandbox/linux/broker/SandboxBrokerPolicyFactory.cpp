@@ -250,6 +250,25 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
     policy->AddDir(rdonly, "/");
   }
 
+  // userContent.css sits in the profile, which is normally blocked
+  // and we can't get the profile dir earlier
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDir));
+  if (NS_SUCCEEDED(rv)) {
+      rv = profileDir->AppendNative(NS_LITERAL_CSTRING("chrome"));
+      if (NS_SUCCEEDED(rv)) {
+        rv = profileDir->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString tmpPath;
+          rv = profileDir->GetNativePath(tmpPath);
+          if (NS_SUCCEEDED(rv)) {
+            policy->AddPath(rdonly, tmpPath.get());
+          }
+        }
+    }
+  }
+
   // Return the common policy.
   return policy;
 
