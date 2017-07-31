@@ -2962,7 +2962,6 @@ profiler_unregister_thread()
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
     if (ActivePS::Exists(lock) && info->IsBeingProfiled()) {
-      info->NotifyUnregistered();
       CorePS::DeadThreads(lock).push_back(info);
     } else {
       delete info;
