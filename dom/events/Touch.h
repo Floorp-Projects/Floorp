@@ -74,10 +74,10 @@ public:
   int32_t ClientY() const { return mClientPoint.y; }
   int32_t PageX() const { return mPagePoint.x; }
   int32_t PageY() const { return mPagePoint.y; }
-  int32_t RadiusX() const { return mRadius.x; }
-  int32_t RadiusY() const { return mRadius.y; }
-  float RotationAngle() const { return mRotationAngle; }
-  float Force() const { return mForce; }
+  int32_t RadiusX(CallerType aCallerType) const;
+  int32_t RadiusY(CallerType aCallerType) const;
+  float RotationAngle(CallerType aCallerType) const;
+  float Force(CallerType aCallerType) const;
 
   nsCOMPtr<EventTarget> mTarget;
   LayoutDeviceIntPoint mRefPoint;
