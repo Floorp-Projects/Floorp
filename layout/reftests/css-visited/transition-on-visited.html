@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1381235
+-->
+<head>
+<title>Test for Bug 1381235</title>
+<style>
+a {
+  text-decoration: none;
+  color: rgb(255, 0, 0);
+  transition: color 1000s steps(2, start);
+}
+</style>
+</head>
+<body onload="runTest()">
+<a id="link" href="visited-page.html">Visited Link</a>
+<script type="application/javascript">
+function runTest() {
+  var a = document.getElementById("link");
+  a.style.color = "rgb(0, 0, 255)";
+}
+</script>
+</body>
+</html>

@@ -334,11 +334,6 @@ protected:
 
   nsresult GetTagType(nsPluginTagType *result);
 
-  // check if this is a Java applet and affected by bug 750480
-  void CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
-                                 const char* const* names,
-                                 const char* const* values);
-
   nsresult CreateAudioChannelAgentIfNeeded();
 
   // The structure used to communicate between the plugin instance and
@@ -418,9 +413,6 @@ private:
 
   nsIntSize mCurrentSize;
 #endif
-
-  // is this instance Java and affected by bug 750480?
-  bool mHaveJavaC2PJSObjectQuirk;
 
   static uint32_t gInUnsafePluginCalls;
 

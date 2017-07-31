@@ -100,13 +100,13 @@ HLSResource::~HLSResource()
     mCallbackSupport->Detach();
     mCallbackSupport = nullptr;
   }
-  if (mJavaCallbacks) {
-    HLSResourceCallbacksSupport::DisposeNative(mJavaCallbacks);
-    mJavaCallbacks = nullptr;
-  }
   if (mHLSResourceWrapper) {
     mHLSResourceWrapper->Destroy();
     mHLSResourceWrapper = nullptr;
+  }
+  if (mJavaCallbacks) {
+      HLSResourceCallbacksSupport::DisposeNative(mJavaCallbacks);
+      mJavaCallbacks = nullptr;
   }
 }
 
