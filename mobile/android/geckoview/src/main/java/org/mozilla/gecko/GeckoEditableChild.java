@@ -158,12 +158,14 @@ final class GeckoEditableChild extends JNIObject implements IGeckoEditableChild 
 
     @WrapForJNI(calledFrom = "gecko")
     private void notifyIMEContext(final int state, final String typeHint,
-                                  final String modeHint, final String actionHint) {
+                                  final String modeHint, final String actionHint,
+                                  final boolean inPrivateBrowsing) {
         if (DEBUG) {
             ThreadUtils.assertOnGeckoThread();
             Log.d(LOGTAG, "notifyIMEContext(" + GeckoEditable.getConstantName(
                           GeckoEditableListener.class, "IME_STATE_", state) + ", \"" +
-                          typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\")");
+                          typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\", " +
+                          "inPrivateBrowsing=" + inPrivateBrowsing + ")");
         }
 
         try {
