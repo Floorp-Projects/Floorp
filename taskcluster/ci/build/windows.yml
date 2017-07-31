@@ -184,6 +184,9 @@ win32-devedition/opt:
         config:
             - builds/taskcluster_firefox_windows_32_opt.py
     run-on-projects: ['mozilla-beta', ]
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64-devedition/opt:
     description: "Win64 Dev Edition Opt"
@@ -205,6 +208,9 @@ win64-devedition/opt:
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
     run-on-projects: ['mozilla-beta', ]
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win32-nightly/opt:
     description: "Win32 Nightly"
@@ -430,6 +436,9 @@ win64-asan/opt:
         config:
             - builds/taskcluster_firefox_win64_asan_opt.py
     run-on-projects: []
+    toolchains:
+        - win64-clang-cl
+        - win64-sccache
 
 win32-devedition-nightly/opt:
     description: "Win32 Dev Edition Nightly"
@@ -457,6 +466,9 @@ win32-devedition-nightly/opt:
             - taskcluster_nightly.py
         custom-build-variant-cfg: devedition
     run-on-projects: [ 'mozilla-beta', ]
+    toolchains:
+        - win32-clang-cl
+        - win64-sccache
 
 win64-devedition-nightly/opt:
     description: "Win64 Dev Edition Nightly"
