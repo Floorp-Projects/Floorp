@@ -70,10 +70,16 @@ public:
   void SetReferentId(uint64_t aReferentId) { mReferentId = Some(aReferentId); }
   Maybe<uint64_t> GetReferentId() const { return mReferentId; }
   EventRegionsOverride GetEventRegionsOverride() const { return mEventRegionsOverride; }
+
+  void SetScrollThumbData(const ScrollThumbData& aData) { mScrollThumbData = aData; }
   const ScrollThumbData& GetScrollThumbData() const { return mScrollThumbData; }
+  void SetScrollbarAnimationId(const uint64_t& aId) { mScrollbarAnimationId = aId; }
   const uint64_t& GetScrollbarAnimationId() const { return mScrollbarAnimationId; }
+  void SetScrollbarTargetContainerId(FrameMetrics::ViewID aId) { mScrollbarTargetContainerId = aId; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() const { return mScrollbarTargetContainerId; }
+  void SetIsScrollbarContainer() { mIsScrollbarContainer = true; }
   bool IsScrollbarContainer() const { return mIsScrollbarContainer; }
+
   void SetFixedPositionScrollContainerId(FrameMetrics::ViewID aId) { mFixedPosScrollContainerId = aId; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() const { return mFixedPosScrollContainerId; }
 
