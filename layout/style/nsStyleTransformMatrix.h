@@ -24,6 +24,7 @@ class nsPresContext;
 struct gfxQuaternion;
 struct nsRect;
 namespace mozilla {
+class GeckoStyleContext;
 class RuleNodeCacheConditions;
 } // namespace mozilla
 
@@ -157,7 +158,7 @@ namespace nsStyleTransformMatrix {
   void SetIdentityMatrix(nsCSSValue::Array* aMatrix);
 
   float ProcessTranslatePart(const nsCSSValue& aValue,
-                             nsStyleContext* aContext,
+                             mozilla::GeckoStyleContext* aContext,
                              nsPresContext* aPresContext,
                              mozilla::RuleNodeCacheConditions& aConditions,
                              TransformReferenceBox* aRefBox,
@@ -166,7 +167,7 @@ namespace nsStyleTransformMatrix {
   void
   ProcessInterpolateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                            const nsCSSValue::Array* aData,
-                           nsStyleContext* aContext,
+                           mozilla::GeckoStyleContext* aContext,
                            nsPresContext* aPresContext,
                            mozilla::RuleNodeCacheConditions& aConditions,
                            TransformReferenceBox& aBounds,
@@ -175,7 +176,7 @@ namespace nsStyleTransformMatrix {
   void
   ProcessAccumulateMatrix(mozilla::gfx::Matrix4x4& aMatrix,
                           const nsCSSValue::Array* aData,
-                          nsStyleContext* aContext,
+                          mozilla::GeckoStyleContext* aContext,
                           nsPresContext* aPresContext,
                           mozilla::RuleNodeCacheConditions& aConditions,
                           TransformReferenceBox& aBounds,

@@ -180,6 +180,10 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
     return;
   }
 
+  GeckoStyleContext* contextIfGecko = aContext
+                                      ? aContext->GetAsGecko()
+                                      : nullptr;
+
   for (const nsCSSValueList* curr = aList; curr; curr = curr->mNext) {
     const nsCSSValue& currElem = curr->mValue;
     NS_ASSERTION(currElem.GetUnit() == eCSSUnit_Function,
@@ -257,7 +261,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatex:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), aContext, aPresContext, conditions,
+          array->Item(1), contextIfGecko, aPresContext, conditions,
           &aRefBox, &TransformReferenceBox::Width);
         aFunctions.AppendElement(Translation(x, 0, 0));
         break;
@@ -265,7 +269,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatey:
       {
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), aContext, aPresContext, conditions,
+          array->Item(1), contextIfGecko, aPresContext, conditions,
           &aRefBox, &TransformReferenceBox::Height);
         aFunctions.AppendElement(Translation(0, y, 0));
         break;
@@ -273,7 +277,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translatez:
       {
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), aContext, aPresContext, conditions,
+          array->Item(1), contextIfGecko, aPresContext, conditions,
           nullptr);
         aFunctions.AppendElement(Translation(0, 0, z));
         break;
@@ -281,13 +285,13 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translate:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), aContext, aPresContext, conditions,
+          array->Item(1), contextIfGecko, aPresContext, conditions,
           &aRefBox, &TransformReferenceBox::Width);
         // translate(x) is shorthand for translate(x, 0)
         double y = 0;
         if (array->Count() == 3) {
            y = nsStyleTransformMatrix::ProcessTranslatePart(
-            array->Item(2), aContext, aPresContext, conditions,
+            array->Item(2), contextIfGecko, aPresContext, conditions,
             &aRefBox, &TransformReferenceBox::Height);
         }
         aFunctions.AppendElement(Translation(x, y, 0));
@@ -296,13 +300,13 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
       case eCSSKeyword_translate3d:
       {
         double x = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(1), aContext, aPresContext, conditions,
+          array->Item(1), contextIfGecko, aPresContext, conditions,
           &aRefBox, &TransformReferenceBox::Width);
         double y = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(2), aContext, aPresContext, conditions,
+          array->Item(2), contextIfGecko, aPresContext, conditions,
           &aRefBox, &TransformReferenceBox::Height);
         double z = nsStyleTransformMatrix::ProcessTranslatePart(
-          array->Item(3), aContext, aPresContext, conditions,
+          array->Item(3), contextIfGecko, aPresContext, conditions,
           nullptr);
 
         aFunctions.AppendElement(Translation(x, y, z));
@@ -380,7 +384,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         bool dummy;
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessInterpolateMatrix(matrix, array,
-                                                         aContext,
+                                                         contextIfGecko,
                                                          aPresContext,
                                                          conditions,
                                                          aRefBox,
@@ -393,7 +397,7 @@ static void AddTransformFunctions(const nsCSSValueList* aList,
         bool dummy;
         Matrix4x4 matrix;
         nsStyleTransformMatrix::ProcessAccumulateMatrix(matrix, array,
-                                                        aContext,
+                                                        contextIfGecko,
                                                         aPresContext,
                                                         conditions,
                                                         aRefBox,
