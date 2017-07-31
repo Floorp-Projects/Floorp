@@ -62,6 +62,9 @@
 #ifdef MOZ_PHOTON_THEME
   skin/classic/browser/downloads/download-icons.svg            (../shared/downloads/download-icons.svg)
 #endif
+#ifdef MOZ_PHOTON_ANIMATIONS
+  skin/classic/browser/downloads/notification-start-animation.svg  (../shared/downloads/notification-start-animation.svg)
+#endif
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                   (../shared/fullscreen/secure.svg)
