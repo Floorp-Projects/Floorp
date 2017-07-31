@@ -114,7 +114,7 @@ function createMAR(outMAR, dataDir, files) {
               "-V", "13.0a1", "-c", outMAR.path];
   args = args.concat(files);
 
-  do_print('Running: ' + signmarBin.path);
+  do_print('Running: ' + signmarBin.path + " " + args.join(" "));
   process.init(signmarBin);
   process.run(true, args, args.length);
 
@@ -144,7 +144,7 @@ function extractMAR(mar, dataDir) {
   // Setup the command line arguments to create the MAR.
   let args = ["-C", dataDir.path, "-x", mar.path];
 
-  do_print('Running: ' + signmarBin.path);
+  do_print('Running: ' + signmarBin.path + " " + args.join(" "));
   process.init(signmarBin);
   process.run(true, args, args.length);
 
