@@ -104,6 +104,21 @@ add_task(async function history_only_menu_checking() {
   checkMenuEntries(["+1234567890"], false);
 });
 
+// Display history search result if less than 3 inputs are covered by all saved
+// fields in the storage.
+add_task(async function all_saved_fields_less_than_threshold() {
+  await addAddress({
+    email: "test@test.com",
+  });
+
+  await setInput("#email", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["foo@mozilla.com"], false);
+
+  await cleanUpAddress();
+});
+
 // Form with both history and address storage.
 add_task(async function check_menu_when_both_existed() {
   await setupAddressStorage();
