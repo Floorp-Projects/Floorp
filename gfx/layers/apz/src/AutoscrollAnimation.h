@@ -22,6 +22,7 @@ public:
 
   bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) override;
 
+  void Cancel(CancelAnimationFlags aFlags) override;
 private:
   AsyncPanZoomController& mApzc;
   ScreenPoint mAnchorLocation;
