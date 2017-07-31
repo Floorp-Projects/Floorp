@@ -245,7 +245,7 @@ static bool
 GetPrefValueForDriverVersion(nsCString& aVersion)
 {
   return NS_SUCCEEDED(Preferences::GetCString(SUGGESTED_VERSION_PREF,
-                                              &aVersion));
+                                              aVersion));
 }
 
 static void
