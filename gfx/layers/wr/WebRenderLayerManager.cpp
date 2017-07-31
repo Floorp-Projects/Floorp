@@ -448,9 +448,12 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
     }
   }
 
+  gfx::SurfaceFormat format = aItem->GetType() == nsDisplayItem::TYPE_MASK ?
+                                                    gfx::SurfaceFormat::A8 : gfx::SurfaceFormat::B8G8R8A8;
   if (!geometry || !invalidRegion.IsEmpty() || fallbackData->IsInvalid()) {
     if (gfxPrefs::WebRenderBlobImages()) {
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
+      // TODO: should use 'format' to replace gfx::SurfaceFormat::B8G8R8X8. Currently blob image doesn't support A8 format.
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), gfx::SurfaceFormat::B8G8R8X8);
       RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
@@ -467,7 +470,7 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<ImageContainer> imageContainer = LayerManager::CreateImageContainer();
 
       {
-        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize());
+        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
