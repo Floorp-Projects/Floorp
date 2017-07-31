@@ -216,13 +216,9 @@ Gecko_ServoStyleContext_Init(
     mozilla::CSSPseudoElementType aPseudoType,
     nsIAtom* aPseudoTag)
 {
-  // because it is within an Arc it is unsafe for the Rust side to ever
-  // carry around a mutable non opaque reference to the context, so we
-  // cast it here.
-  auto parent = const_cast<ServoStyleContext*>(aParentContext);
-  auto presContext = const_cast<nsPresContext*>(aPresContext);
+  auto* presContext = const_cast<nsPresContext*>(aPresContext);
   new (KnownNotNull, aContext) ServoStyleContext(
-      parent, presContext, aPseudoTag, aPseudoType,
+      presContext, aPseudoTag, aPseudoType,
       ServoComputedDataForgotten(aValues));
 }
 
@@ -2659,12 +2655,6 @@ void                                                                          \
 Gecko_Destroy_nsStyle##name(nsStyle##name* ptr)                               \
 {                                                                             \
   ptr->~nsStyle##name();                                                      \
-}
-
-void
-Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr)
-{
-  new (ptr) nsStyleVariables();
 }
 
 void
