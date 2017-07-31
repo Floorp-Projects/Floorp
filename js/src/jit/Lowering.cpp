@@ -4391,6 +4391,16 @@ LIRGenerator::visitHasClass(MHasClass* ins)
 }
 
 void
+LIRGenerator::visitObjectClassToString(MObjectClassToString* ins)
+{
+    MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+    MOZ_ASSERT(ins->type() == MIRType::String);
+    auto lir = new(alloc()) LObjectClassToString(useRegisterAtStart(ins->object()));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitWasmAddOffset(MWasmAddOffset* ins)
 {
     MOZ_ASSERT(ins->base()->type() == MIRType::Int32);
