@@ -18,14 +18,16 @@ async function runTests(browser, accDoc) {
   testChildrenIds(select.firstChild, ["a"]);
 
   let onReorders = waitForEvents([
-      [EVENT_REORDER, "div"],
-      [EVENT_REORDER,
-        evt => getAccessibleDOMNodeID(evt.accessible.parent) == "select"]
+    [EVENT_REORDER, "div"],
+    [EVENT_REORDER,
+      evt => getAccessibleDOMNodeID(evt.accessible.parent) == "select"]
   ]);
 
   await ContentTask.spawn(browser, null, async function() {
     document.getElementById("div").removeAttribute("aria-owns");
   });
+
+  await onReorders;
 
   testChildrenIds(div, []);
   testChildrenIds(select.firstChild, ["a", "b"]);
