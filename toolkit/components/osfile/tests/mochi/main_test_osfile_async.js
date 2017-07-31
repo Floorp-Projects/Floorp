@@ -344,10 +344,14 @@ var test_iter = maketest("iter", function iter(test) {
       let exn = null;
       try {
         await iterator.next();
-      } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
-        exn = ex;
-        let exists = await iterator.exists();
-        test.ok(!exists, "After one iteration, iterator detects that the directory doesn't exist");
+      } catch (ex) {
+        if (ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+          exn = ex;
+          let exists = await iterator.exists();
+          test.ok(!exists, "After one iteration, iterator detects that the directory doesn't exist");
+        } else {
+          throw ex;
+        }
       }
       test.ok(exn, "Iterating through a directory that does not exist has failed with becauseNoSuchFile");
     } finally {
@@ -420,5 +424,3 @@ var test_debug_test = maketest("debug_test", function debug_test(test) {
     toggleDebugTest(false, consoleListener);
   })();
 });
-
-
