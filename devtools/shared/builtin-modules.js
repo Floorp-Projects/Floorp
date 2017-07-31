@@ -302,5 +302,7 @@ lazyGlobal("WebSocket", () => {
   return Services.appShell.hiddenDOMWindow.WebSocket;
 });
 lazyGlobal("indexedDB", () => {
-  return require("sdk/indexed-db").indexedDB;
+  let { indexedDB } = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(),
+                 {wantGlobalProperties: ["indexedDB"]});
+  return require("devtools/shared/indexed-db").createDevToolsIndexedDB(indexedDB);
 });
