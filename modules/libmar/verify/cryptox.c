@@ -9,6 +9,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "cryptox.h"
 
 #if defined(MAR_NSS)
@@ -65,7 +66,7 @@ NSS_VerifyBegin(VFYContext **ctx,
   }
 
   *ctx = VFY_CreateContext(*publicKey, NULL, 
-                           SEC_OID_ISO_SHA1_WITH_RSA_SIGNATURE, NULL);
+                           SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION, NULL);
   if (*ctx == NULL) {
     return CryptoX_Error;
   }
@@ -199,23 +200,23 @@ CryptoAPI_InitCryptoContext(HCRYPTPROV *provider)
 {
   if (!CryptAcquireContext(provider, 
                            NULL, 
-                           MS_ENHANCED_PROV, 
-                           PROV_RSA_FULL, 
+                           MS_ENH_RSA_AES_PROV, 
+                           PROV_RSA_AES, 
                            CRYPT_VERIFYCONTEXT)) {
     if (!CryptAcquireContext(provider, 
                              NULL, 
-                             MS_ENHANCED_PROV, 
-                             PROV_RSA_FULL, 
+                             MS_ENH_RSA_AES_PROV, 
+                             PROV_RSA_AES, 
                              CRYPT_NEWKEYSET | CRYPT_VERIFYCONTEXT)) {
       if (!CryptAcquireContext(provider, 
                                NULL, 
                                NULL, 
-                               PROV_RSA_FULL, 
+                               PROV_RSA_AES, 
                                CRYPT_VERIFYCONTEXT)) {
         if (!CryptAcquireContext(provider, 
                                  NULL, 
                                  NULL, 
-                                 PROV_RSA_FULL, 
+                                 PROV_RSA_AES, 
                                  CRYPT_NEWKEYSET | CRYPT_VERIFYCONTEXT)) {
           *provider = CryptoX_InvalidHandleValue;
           return CryptoX_Error;
@@ -242,7 +243,7 @@ CryptoAPI_VerifyBegin(HCRYPTPROV provider, HCRYPTHASH* hash)
   }
 
   *hash = (HCRYPTHASH)NULL;
-  result = CryptCreateHash(provider, CALG_SHA1,
+  result = CryptCreateHash(provider, CALG_SHA_384,
                            0, 0, hash);
   return result ? CryptoX_Success : CryptoX_Error;
 }
@@ -268,6 +269,3 @@ CryptoAPI_VerifyUpdate(HCRYPTHASH* hash, BYTE *buf, DWORD len)
 }
 
 #endif
-
-
-
