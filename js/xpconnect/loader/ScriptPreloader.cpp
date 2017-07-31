@@ -757,6 +757,15 @@ ScriptPreloader::NoteScript(const nsCString& url, const nsCString& cachePath,
                             ProcessType processType, nsTArray<uint8_t>&& xdrData,
                             TimeStamp loadTime)
 {
+    // After data has been prepared, there's no point in noting further scripts,
+    // since the cache either has already been written, or is about to be
+    // written. Any time prior to the data being prepared, we can safely mutate
+    // mScripts without locking. After that point, the save thread is free to
+    // access it, and we can't alter it without locking.
+    if (mDataPrepared) {
+        return;
+    }
+
     auto script = mScripts.LookupOrAdd(cachePath, *this, url, cachePath, nullptr);
 
     if (!script->HasRange()) {
