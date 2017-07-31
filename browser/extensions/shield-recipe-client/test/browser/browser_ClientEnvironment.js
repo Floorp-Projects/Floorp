@@ -1,11 +1,8 @@
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/ClientEnvironment.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
-
 
 add_task(async function testTelemetry() {
   // setup

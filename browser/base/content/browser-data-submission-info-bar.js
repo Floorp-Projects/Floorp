@@ -4,9 +4,6 @@
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "DataNotificationInfoBar::";
-
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
 /**
  * Represents an info bar that shows a data submission notification.
  */
@@ -68,7 +65,7 @@ var gDataNotificationInfoBar = {
         this._actionTaken = true;
         // The advanced subpanes are only supported in the old organization, which will
         // be removed by bug 1349689.
-        if (Preferences.get("browser.preferences.useOldOrganization")) {
+        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
           window.openAdvancedPreferences("dataChoicesTab", {origin: "dataReporting"});
         } else {
           window.openPreferences("privacy-reports", {origin: "dataReporting"});

@@ -327,7 +327,7 @@ var gXPInstallObserver = {
             let notificationElement = [...this.owner.panel.childNodes]
                                       .find(n => n.notification == this);
             if (notificationElement) {
-              if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+              if (Services.prefs.getBoolPref("xpinstall.customConfirmationUI", false)) {
                 notificationElement.setAttribute("mainactiondisabled", "true");
               } else {
                 notificationElement.button.hidden = true;
