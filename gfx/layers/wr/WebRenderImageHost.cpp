@@ -143,13 +143,17 @@ WebRenderImageHost::GetAsTextureHost(IntRect* aPictureRect)
 TextureHost*
 WebRenderImageHost::GetAsTextureHostForComposite()
 {
+  if (!mWrBridge) {
+    return nullptr;
+  }
+
   int imageIndex = ChooseImageIndex();
   if (imageIndex < 0) {
     SetCurrentTextureHost(nullptr);
     return nullptr;
   }
 
-  if (mWrBridge && uint32_t(imageIndex) + 1 < mImages.Length()) {
+  if (uint32_t(imageIndex) + 1 < mImages.Length()) {
     MOZ_ASSERT(mWrBridge->AsyncImageManager());
     mWrBridge->AsyncImageManager()->CompositeUntil(mImages[imageIndex + 1].mTimeStamp + TimeDuration::FromMilliseconds(BIAS_TIME_MS));
   }
@@ -157,10 +161,22 @@ WebRenderImageHost::GetAsTextureHostForComposite()
   TimedImage* img = &mImages[imageIndex];
 
   if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
+    if (mAsyncRef) {
+      ImageCompositeNotificationInfo info;
+      info.mImageBridgeProcessId = mAsyncRef.mProcessId;
+      info.mNotification = ImageCompositeNotification(
+        mAsyncRef.mHandle,
+        img->mTimeStamp, mWrBridge->AsyncImageManager()->GetCompositionTime(),
+        img->mFrameID, img->mProducerID);
+      mWrBridge->AsyncImageManager()->AppendImageCompositeNotification(info);
+    }
     mLastFrameID = img->mFrameID;
     mLastProducerID = img->mProducerID;
   }
   SetCurrentTextureHost(img->mTextureHost);
+
+  // XXX Add UpdateBias()
+
   return mCurrentTextureHost;
 }
 
