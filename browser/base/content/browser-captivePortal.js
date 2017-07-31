@@ -12,7 +12,7 @@ var CaptivePortalWatcher = {
    * and small enough that the delay in opening a tab isn't too noticeable.
    * Please see comments for _delayedCaptivePortalDetected for more details.
    */
-  PORTAL_RECHECK_DELAY_MS: Preferences.get("captivedetect.portalRecheckDelayMS", 500),
+  PORTAL_RECHECK_DELAY_MS: Services.prefs.getIntPref("captivedetect.portalRecheckDelayMS", 500),
 
   // This is the value used to identify the captive portal notification.
   PORTAL_NOTIFICATION_VALUE: "captive-portal-detected",
@@ -68,6 +68,9 @@ var CaptivePortalWatcher = {
       this._delayedRecheckPending = true;
       Services.obs.addObserver(this, "browser-delayed-startup-finished");
     }
+
+    XPCOMUtils.defineLazyPreferenceGetter(this, "PORTAL_RECHECK_DELAY_MS",
+                                          "captivedetect.portalRecheckDelayMS", 500);
   },
 
   uninit() {
