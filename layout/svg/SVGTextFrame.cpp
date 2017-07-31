@@ -3674,7 +3674,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
       ctxSR.EnsureSaved(&aContext);
       // This may change the gfxContext's transform (for non-scaling stroke),
       // in which case this needs to happen before we call SetMatrix() below.
-      nsSVGUtils::SetupCairoStrokeGeometry(frame, &aContext, outerContextPaint);
+      nsSVGUtils::SetupStrokeGeometry(frame, &aContext, outerContextPaint);
     }
 
     // Set up the transform for painting the text frame for the substring
