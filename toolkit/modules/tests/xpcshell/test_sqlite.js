@@ -47,17 +47,18 @@ function getConnection(dbName, extraOptions = {}) {
 }
 
 async function getDummyDatabase(name, extraOptions = {}) {
-  const TABLES = {
-    dirs: "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT",
-    files: "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT",
-  };
-
   let c = await getConnection(name, extraOptions);
   c._initialStatementCount = 0;
 
-  for (let [k, v] of Object.entries(TABLES)) {
-    await c.execute("CREATE TABLE " + k + "(" + v + ")");
-    c._initialStatementCount++;
+  if (!extraOptions.readOnly) {
+    const TABLES = new Map([
+      ["dirs", "id INTEGER PRIMARY KEY AUTOINCREMENT, path TEXT"],
+      ["files", "id INTEGER PRIMARY KEY AUTOINCREMENT, dir_id INTEGER, path TEXT"],
+    ]);
+    for (let [k, v] of TABLES) {
+      await c.execute("CREATE TABLE " + k + "(" + v + ")");
+      c._initialStatementCount++;
+    }
   }
 
   return c;
@@ -1139,4 +1140,17 @@ add_task(async function test_datatypes() {
     }
   }
   await c.close();
+});
+
+add_task(async function test_interrupt() {
+  // Testing the interrupt functionality is left to mozStorage unit tests, here
+  // we'll just test error conditions.
+  let c = await getDummyDatabase("interrupt");
+  Assert.throws(() => c.interrupt(),
+                /NS_ERROR_ILLEGAL_VALUE/,
+                "Sqlite.interrupt() should throw on a writable connection");
+  await c.close();
+  Assert.throws(() => c.interrupt(),
+                /Connection is not open/,
+                "Sqlite.interrupt() should throw on a closed connection");
 });
