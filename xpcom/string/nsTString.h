@@ -775,14 +775,30 @@ public:
 
 
 /**
- * getter_Copies support for use with raw string out params:
+ * getter_Copies support for adopting raw string out params that are
+ * heap-allocated, e.g.:
  *
- *    NS_IMETHOD GetBlah(char**);
- *
- *    void some_function()
+ *    char* gStr;
+ *    void GetBlah(char** aStr)
  *    {
- *      nsXPIDLCString blah;
- *      GetBlah(getter_Copies(blah));
+ *      *aStr = strdup(gStr);
+ *    }
+ *
+ *    // This works, but is clumsy.
+ *    void Inelegant()
+ *    {
+ *      char* buf;
+ *      GetBlah(&buf);
+ *      nsCString str;
+ *      str.Adopt(buf);
+ *      // ...
+ *    }
+ *
+ *    // This is nicer.
+ *    void Elegant()
+ *    {
+ *      nsCString str;
+ *      GetBlah(getter_Copies(str));
  *      // ...
  *    }
  */
@@ -812,6 +828,7 @@ private:
   char_type* mData;
 };
 
+// See the comment above nsTGetterCopies_CharT for how to use this.
 inline nsTGetterCopies_CharT
 getter_Copies(nsTSubstring_CharT& aString)
 {
