@@ -273,6 +273,12 @@ toolbar:-moz-lwtheme {
   }
 }
 
+#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  /* The toolbar buttons that animate are only visible when the #TabsToolbar is not collapsed.
+     The animations use position:absolute and require a positioned #nav-bar. */
+  position: relative;
+}
+
 #PersonalToolbar {
   padding: 0 4px 4px;
 }
