@@ -24,6 +24,7 @@ using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::FontKey from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::PipelineId from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::BuiltDisplayListDescriptor from "mozilla/webrender/webrender_ffi.h";
+using mozilla::wr::IdNamespace from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::layers::WebRenderScrollData from "mozilla/layers/WebRenderScrollData.h";
 
 namespace mozilla {
@@ -56,10 +57,10 @@ parent:
   async DPBegin(IntSize aSize);
   async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
               LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-              WebRenderScrollData aScrollData, uint32_t idNameSpace, TimeStamp fwdTime);
+              WebRenderScrollData aScrollData, IdNamespace aIdNamespace, TimeStamp fwdTime);
   sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
                  LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-                 WebRenderScrollData aScrollData, uint32_t idNameSpace, TimeStamp fwdTime);
+                 WebRenderScrollData aScrollData, IdNamespace aIdNamespace, TimeStamp fwdTime);
   async ParentCommands(WebRenderParentCommand[] commands);
   sync DPGetSnapshot(PTexture texture);
   async AddPipelineIdForAsyncCompositable(PipelineId aImageId, CompositableHandle aHandle);
@@ -88,7 +89,7 @@ parent:
   async Shutdown();
   sync ShutdownSync();
 child:
-  async WrUpdated(uint32_t newIdNameSpace);
+  async WrUpdated(IdNamespace aNewIdNamespace);
   async __delete__();
 };
 

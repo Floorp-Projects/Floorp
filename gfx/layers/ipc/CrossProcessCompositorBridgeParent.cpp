@@ -194,7 +194,7 @@ PWebRenderBridgeParent*
 CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                                 const LayoutDeviceIntSize& aSize,
                                                                 TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                                uint32_t *aIdNamespace)
+                                                                wr::IdNamespace *aIdNamespace)
 {
 #ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -218,7 +218,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     // This was observed during Tab move between different windows.
     NS_WARNING("Created child without a matching parent?");
     parent = WebRenderBridgeParent::CreateDestroyed();
-    *aIdNamespace = parent->GetIdNameSpace();
+    *aIdNamespace = parent->GetIdNamespace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);
     return parent;
   }
@@ -233,7 +233,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   sIndirectLayerTrees[layersId].mCrossProcessParent = this;
   sIndirectLayerTrees[layersId].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
-  *aIdNamespace = parent->GetIdNameSpace();
+  *aIdNamespace = parent->GetIdNamespace();
 
   return parent;
 }

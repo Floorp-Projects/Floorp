@@ -1091,7 +1091,7 @@ PWebRenderBridgeChild*
 CompositorBridgeChild::AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId,
                                                   const LayoutDeviceIntSize&,
                                                   TextureFactoryIdentifier*,
-                                                  uint32_t *aIdNamespace)
+                                                  wr::IdNamespace *aIdNamespace)
 {
   WebRenderBridgeChild* child = new WebRenderBridgeChild(aPipelineId);
   child->AddIPDLReference();

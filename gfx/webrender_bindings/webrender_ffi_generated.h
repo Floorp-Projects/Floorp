@@ -168,6 +168,9 @@ struct IdNamespace {
   bool operator==(const IdNamespace& aOther) const {
     return mHandle == aOther.mHandle;
   }
+  bool operator!=(const IdNamespace& aOther) const {
+    return mHandle != aOther.mHandle;
+  }
   bool operator<(const IdNamespace& aOther) const {
     return mHandle < aOther.mHandle;
   }

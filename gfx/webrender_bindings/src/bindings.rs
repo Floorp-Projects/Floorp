@@ -28,6 +28,7 @@ type WrEpoch = Epoch;
 /// cbindgen:field-names=[mHandle]
 /// cbindgen:derive-lt=true
 /// cbindgen:derive-lte=true
+/// cbindgen:derive-neq=true
 type WrIdNamespace = IdNamespace;
 
 /// cbindgen:field-names=[mNamespace, mHandle]
