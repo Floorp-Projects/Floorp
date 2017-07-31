@@ -4,7 +4,6 @@ this.EXPORTED_SYMBOLS = ["NewTabPrefsProvider"];
 
 const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
@@ -46,16 +45,20 @@ PrefsProvider.prototype = {
       if (gPrefsMap.has(data)) {
         switch (gPrefsMap.get(data)) {
           case "bool":
-            this.emit(data, Preferences.get(data, false));
+            this.emit(data, Services.prefs.getBoolPref(data, false));
             break;
           case "str":
-            this.emit(data, Preferences.get(data, ""));
+            this.emit(data, Services.prefs.getStringPref(data, ""));
             break;
           case "localized":
-            try {
-              this.emit(data, Preferences.get(data, "", Ci.nsIPrefLocalizedString));
-            } catch (e) {
-              this.emit(data, Preferences.get(data, ""));
+            if (Services.prefs.getPrefType(data) == Ci.nsIPrefBranch.PREF_INVALID) {
+              this.emit(data, "");
+            } else {
+              try {
+                this.emit(data, Services.prefs.getComplexValue(data, Ci.nsIPrefLocalizedString));
+              } catch (e) {
+                this.emit(data, Services.prefs.getStringPref(data));
+              }
             }
             break;
           default:
@@ -74,7 +77,25 @@ PrefsProvider.prototype = {
   get newtabPagePrefs() {
     let results = {};
     for (let pref of gNewtabPagePrefs) {
-      results[pref] = Preferences.get(pref, null);
+      results[pref] = null;
+
+      if (Services.prefs.getPrefType(pref) != Ci.nsIPrefBranch.PREF_INVALID) {
+        switch (gPrefsMap.get(pref)) {
+          case "bool":
+            results[pref] = Services.prefs.getBoolPref(pref);
+            break;
+          case "str":
+            results[pref] = Services.prefs.getStringPref(pref);
+            break;
+          case "localized":
+            try {
+              results[pref] = Services.prefs.getComplexValue(pref, Ci.nsIPrefLocalizedString);
+            } catch (e) {
+              results[pref] = Services.prefs.getStringPref(pref);
+            }
+            break;
+        }
+      }
     }
     return results;
   },
