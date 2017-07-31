@@ -1079,9 +1079,11 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
                      skipintoolbarset="true"
                      tooltiptext="&navbarOverflow.label;">
+#ifdef MOZ_PHOTON_ANIMATIONS
         <box class="toolbarbutton-animatable-box">
           <image class="toolbarbutton-animatable-image"/>
         </box>
+#endif
       </toolbarbutton>
 
       <toolbaritem id="PanelUI-button"
