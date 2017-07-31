@@ -74,24 +74,7 @@ WebRenderLayerScrollData::Initialize(WebRenderScrollData& aOwner,
   mDescendantCount = 0;
 
   MOZ_ASSERT(aItem);
-  switch (aItem->GetType()) {
-  case nsDisplayItem::TYPE_SCROLL_INFO_LAYER: {
-    nsDisplayScrollInfoLayer* info = static_cast<nsDisplayScrollInfoLayer*>(aItem);
-    UniquePtr<ScrollMetadata> metadata = info->ComputeScrollMetadata(
-        nullptr, ContainerLayerParameters());
-    MOZ_ASSERT(metadata);
-    MOZ_ASSERT(metadata->GetMetrics().IsScrollInfoLayer());
-    mScrollIds.AppendElement(aOwner.AddMetadata(*metadata));
-    break;
-  }
-  case nsDisplayItem::TYPE_REMOTE: {
-    nsDisplayRemote* remote = static_cast<nsDisplayRemote*>(aItem);
-    mReferentId = Some(remote->GetRemoteLayersId());
-    break;
-  }
-  default:
-    break;
-  }
+  aItem->UpdateScrollData(&aOwner, this);
   for (const ActiveScrolledRoot* asr = aItem->GetActiveScrolledRoot();
        asr;
        asr = asr->mParent) {
@@ -113,6 +96,13 @@ size_t
 WebRenderLayerScrollData::GetScrollMetadataCount() const
 {
   return mScrollIds.Length();
+}
+
+void
+WebRenderLayerScrollData::AppendScrollMetadata(WebRenderScrollData& aOwner,
+                                               const ScrollMetadata& aData)
+{
+  mScrollIds.AppendElement(aOwner.AddMetadata(aData));
 }
 
 const ScrollMetadata&

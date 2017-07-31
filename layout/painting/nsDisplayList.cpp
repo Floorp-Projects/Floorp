@@ -88,10 +88,10 @@
 #include "ClientLayerManager.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
-#include "mozilla/layers/WebRenderDisplayItemLayer.h"
 #include "mozilla/layers/WebRenderMessages.h"
-#include "mozilla/layers/WebRenderDisplayItemLayer.h"
+#include "mozilla/layers/WebRenderScrollData.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -6897,7 +6897,19 @@ nsDisplayScrollInfoLayer::ComputeScrollMetadata(Layer* aLayer,
   return UniquePtr<ScrollMetadata>(new ScrollMetadata(metadata));
 }
 
-
+bool
+nsDisplayScrollInfoLayer::UpdateScrollData(mozilla::layers::WebRenderScrollData* aData,
+                                           mozilla::layers::WebRenderLayerScrollData* aLayerData)
+{
+  if (aLayerData) {
+    UniquePtr<ScrollMetadata> metadata =
+      ComputeScrollMetadata(nullptr, ContainerLayerParameters());
+    MOZ_ASSERT(aData);
+    MOZ_ASSERT(metadata);
+    aLayerData->AppendScrollMetadata(*aData, *metadata);
+  }
+  return true;
+}
 
 void
 nsDisplayScrollInfoLayer::WriteDebugInfo(std::stringstream& aStream)
