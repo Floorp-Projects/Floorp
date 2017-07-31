@@ -488,6 +488,54 @@ GetBuiltinTagSlow(JSContext* cx, HandleObject obj, MutableHandleString builtinTa
     }
 }
 
+static MOZ_ALWAYS_INLINE JSString*
+GetBuiltinTagFast(JSObject* obj, const Class* clasp, JSContext* cx)
+{
+    MOZ_ASSERT(clasp == obj->getClass());
+    MOZ_ASSERT(!clasp->isProxy());
+
+    // Optimize the non-proxy case to bypass GetBuiltinClass.
+    if (clasp == &PlainObject::class_ || clasp == &UnboxedPlainObject::class_) {
+        // This is not handled by GetBuiltinTagSlow, but this case is by far
+        // the most common so we optimize it here.
+        return cx->names().objectObject;
+    }
+
+    if (clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_)
+        return cx->names().objectArray;
+
+    if (clasp == &JSFunction::class_)
+        return cx->names().objectFunction;
+
+    if (clasp == &StringObject::class_)
+        return cx->names().objectString;
+
+    if (clasp == &NumberObject::class_)
+        return cx->names().objectNumber;
+
+    if (clasp == &BooleanObject::class_)
+        return cx->names().objectBoolean;
+
+    if (clasp == &DateObject::class_)
+        return cx->names().objectDate;
+
+    if (clasp == &RegExpObject::class_)
+        return cx->names().objectRegExp;
+
+    if (obj->is<ArgumentsObject>())
+        return cx->names().objectArguments;
+
+    if (obj->is<ErrorObject>())
+        return cx->names().objectError;
+
+    if (obj->isCallable() && !obj->getClass()->isDOMClass()) {
+        // Non-standard: Prevent <object> from showing up as Function.
+        return cx->names().objectFunction;
+    }
+
+    return nullptr;
+}
+
 // ES6 19.1.3.6
 bool
 js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
@@ -517,43 +565,7 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
         if (!GetBuiltinTagSlow(cx, obj, &builtinTag))
             return false;
     } else {
-        // Optimize the non-proxy case to bypass GetBuiltinClass.
-        if (clasp == &PlainObject::class_ || clasp == &UnboxedPlainObject::class_) {
-            // This is not handled by GetBuiltinTagSlow, but this case is by far
-            // the most common so we optimize it here.
-            builtinTag = cx->names().objectObject;
-
-        } else if (clasp == &ArrayObject::class_ || clasp == &UnboxedArrayObject::class_) {
-            builtinTag = cx->names().objectArray;
-
-        } else if (clasp == &JSFunction::class_) {
-            builtinTag = cx->names().objectFunction;
-
-        } else if (clasp == &StringObject::class_) {
-            builtinTag = cx->names().objectString;
-
-        } else if (clasp == &NumberObject::class_) {
-            builtinTag = cx->names().objectNumber;
-
-        } else if (clasp == &BooleanObject::class_) {
-            builtinTag = cx->names().objectBoolean;
-
-        } else if (clasp == &DateObject::class_) {
-            builtinTag = cx->names().objectDate;
-
-        } else if (clasp == &RegExpObject::class_) {
-            builtinTag = cx->names().objectRegExp;
-
-        } else if (obj->is<ArgumentsObject>()) {
-            builtinTag = cx->names().objectArguments;
-
-        } else if (obj->is<ErrorObject>()) {
-            builtinTag = cx->names().objectError;
-
-        } else if (obj->isCallable() && !obj->getClass()->isDOMClass()) {
-            // Non-standard: Prevent <object> from showing up as Function.
-            builtinTag = cx->names().objectFunction;
-        }
+        builtinTag = GetBuiltinTagFast(obj, clasp, cx);
 #ifdef DEBUG
         // Assert this fast path is correct and matches BuiltinTagSlow. The
         // only exception is the PlainObject case: we special-case it here
@@ -608,6 +620,26 @@ js::obj_toString(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setString(str);
     return true;
+}
+
+JSString*
+js::ObjectClassToString(JSContext* cx, HandleObject obj)
+{
+    const Class* clasp = obj->getClass();
+
+    if (JSString* tag = GetBuiltinTagFast(obj, clasp, cx))
+        return tag;
+
+    const char* className = clasp->name;
+    StringBuffer sb(cx);
+    if (!sb.append("[object ") ||
+        !sb.append(className, strlen(className)) ||
+        !sb.append(']'))
+    {
+        return nullptr;
+    }
+
+    return sb.finishAtom();
 }
 
 static bool
@@ -1509,7 +1541,7 @@ static const JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,                0,0),
+    JS_INLINABLE_FN(js_toString_str,   obj_toString,                0,0, ObjectToString),
     JS_SELF_HOSTED_FN(js_toLocaleString_str, "Object_toLocaleString", 0, 0),
     JS_SELF_HOSTED_FN(js_valueOf_str,  "Object_valueOf",            0,0),
 #if JS_HAS_OBJ_WATCHPOINT
