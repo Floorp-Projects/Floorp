@@ -60,10 +60,12 @@ browser.jar:
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
   skin/classic/browser/downloads/download-glow-menuPanel@2x.png (downloads/download-glow-menuPanel@2x.png)
+#ifndef MOZ_PHOTON_ANIMATIONS
   skin/classic/browser/downloads/download-notification-finish.png  (downloads/download-notification-finish.png)
   skin/classic/browser/downloads/download-notification-finish@2x.png  (downloads/download-notification-finish@2x.png)
   skin/classic/browser/downloads/download-notification-start.png  (downloads/download-notification-start.png)
   skin/classic/browser/downloads/download-notification-start@2x.png  (downloads/download-notification-start@2x.png)
+#endif
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
