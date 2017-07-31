@@ -1711,7 +1711,6 @@ var gBrowserInit = {
     window.addEventListener("dragover", MousePosTracker);
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
-    gNavToolbox.addEventListener("customizationchange", CustomizationHandler);
     gNavToolbox.addEventListener("customizationending", CustomizationHandler);
 
     // End startup crash tracking after a delay to catch crashes while restoring
