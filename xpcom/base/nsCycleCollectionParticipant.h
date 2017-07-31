@@ -7,23 +7,17 @@
 #ifndef nsCycleCollectionParticipant_h__
 #define nsCycleCollectionParticipant_h__
 
-#include "mozilla/Assertions.h"
 #include "mozilla/MacroArgs.h"
 #include "mozilla/MacroForEach.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "js/RootingAPI.h"
 
-/**
- * Note: the following two IIDs only differ in one bit in the last byte.  This
- * is a hack and is intentional in order to speed up the comparison inside
- * NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED.
- */
 #define NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID                                 \
 {                                                                              \
-    0xc61eac14,                                                                \
-    0x5f7a,                                                                    \
-    0x4481,                                                                    \
-    { 0x96, 0x5e, 0x7e, 0xaa, 0x6e, 0xff, 0xa8, 0x5e }                         \
+    0x9674489b,                                                                \
+    0x1f6f,                                                                    \
+    0x4550,                                                                    \
+    { 0xa7, 0x30, 0xcc, 0xae, 0xdd, 0x10, 0x4c, 0xf9 }                         \
 }
 
 /**
@@ -299,20 +293,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
     return NS_OK;                                                              \
   } else
 
+#define NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                        \
+  NS_IMPL_QUERY_CYCLE_COLLECTION(_class)
+
 #define NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)              \
   NS_IMPL_QUERY_CYCLE_COLLECTION_ISUPPORTS(_class)
 
 #define NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)                      \
-  if (TopThreeWordsEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant), \
-                                NS_GET_IID(nsCycleCollectionISupports))) {     \
-    if (LowWordEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant))) {  \
-      *aInstancePtr = NS_CYCLE_COLLECTION_PARTICIPANT(_class);                 \
-      return NS_OK;                                                            \
-    }                                                                          \
-    MOZ_ASSERT(LowWordEquals(aIID, NS_GET_IID(nsCycleCollectionISupports)));   \
-    *aInstancePtr = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);       \
-    return NS_OK;                                                              \
-  }
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                              \
+  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)                        \
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
@@ -320,35 +309,20 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(_class)              \
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
-    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
+    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)
 
 #define NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(_class)  \
   if (rv == NS_OK) return rv; \
   nsISupports* foundInterface; \
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
 
-// The IIDs for nsXPCOMCycleCollectionParticipant and nsCycleCollectionISupports
-// are special in that they only differ in their last byte.  This allows for the
-// optimization below where we first check the first three words of the IID and
-// if we find a match we check the last word to decide which case we have to
-// deal with.
-// It would be nice to have a similar optimization for the
-// NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED case above as well, but
-// NS_TableDrivenQI isn't aware of this special case so we don't have an easy
-// option there.
 #define NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(_class)            \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
     NS_PRECONDITION(aInstancePtr, "null out param");                          \
                                                                               \
-    if (TopThreeWordsEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant), \
-                                  NS_GET_IID(nsCycleCollectionISupports))) {  \
-      if (LowWordEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant))) { \
-        *aInstancePtr = NS_CYCLE_COLLECTION_PARTICIPANT(_class);              \
-        return NS_OK;                                                         \
-      }                                                                       \
-      MOZ_ASSERT(LowWordEquals(aIID, NS_GET_IID(nsCycleCollectionISupports)));\
-      *aInstancePtr = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);    \
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
+      *aInstancePtr = NS_CYCLE_COLLECTION_PARTICIPANT(_class);                \
       return NS_OK;                                                           \
     }                                                                         \
     nsresult rv;
@@ -960,32 +934,5 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 #define NS_CYCLE_COLLECTION_NOTE_EDGE_NAME CycleCollectionNoteEdgeName
-
-/**
- * Equivalency of the high three words where two IIDs have the same
- * top three words but not the same low word.
- */
-inline bool TopThreeWordsEquals(const nsID& aID,
-                                const nsID& aOther1,
-                                const nsID& aOther2)
-{
-  MOZ_ASSERT((((uint32_t*)&aOther1.m0)[0] == ((uint32_t*)&aOther2.m0)[0]) &&
-             (((uint32_t*)&aOther1.m0)[1] == ((uint32_t*)&aOther2.m0)[1]) &&
-             (((uint32_t*)&aOther1.m0)[2] == ((uint32_t*)&aOther2.m0)[2]) &&
-             (((uint32_t*)&aOther1.m0)[3] != ((uint32_t*)&aOther2.m0)[3]));
-
-  return ((((uint32_t*)&aID.m0)[0] == ((uint32_t*)&aOther1.m0)[0]) &&
-          (((uint32_t*)&aID.m0)[1] == ((uint32_t*)&aOther1.m0)[1]) &&
-          (((uint32_t*)&aID.m0)[2] == ((uint32_t*)&aOther1.m0)[2]));
-}
-
-/**
- * Equivalency of the fourth word where the two IIDs have the same
- * top three words but not the same low word.
- */
-inline bool LowWordEquals(const nsID& aID, const nsID& aOther)
-{
-  return (((uint32_t*)&aID.m0)[3] == ((uint32_t*)&aOther.m0)[3]);
-}
 
 #endif // nsCycleCollectionParticipant_h__
