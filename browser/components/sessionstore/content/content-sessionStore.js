@@ -24,8 +24,6 @@ function debug(msg) {
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormData",
   "resource://gre/modules/FormData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
@@ -565,7 +563,7 @@ var SessionStorageListener = {
 
     // Don't store any data if we exceed the limit. Wipe any data we previously
     // collected so that we don't confuse websites with partial state.
-    if (usage > Preferences.get(DOM_STORAGE_LIMIT_PREF)) {
+    if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
       MessageQueue.push("storage", () => null);
       return;
     }
