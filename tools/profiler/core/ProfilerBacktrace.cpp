@@ -35,8 +35,6 @@ ProfilerBacktrace::StreamJSON(SpliceableJSONWriter& aWriter,
   double firstSampleTimeIgnored;
   StreamSamplesAndMarkers(mName.get(), mThreadId,
                           *mBuffer.get(), aWriter, aProcessStartTime,
-                          /* aRegisterTime */ TimeStamp(),
-                          /* aUnregisterTime */ TimeStamp(),
                           /* aSinceTime */ 0, &firstSampleTimeIgnored,
                           /* aContext */ nullptr,
                           /* aSavedStreamedSamples */ nullptr,

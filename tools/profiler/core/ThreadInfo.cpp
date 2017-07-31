@@ -22,7 +22,6 @@
 ThreadInfo::ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread,
                        void* aStackTop)
   : mName(strdup(aName))
-  , mRegisterTime(TimeStamp::Now())
   , mThreadId(aThreadId)
   , mIsMainThread(aIsMainThread)
   , mRacyInfo(mozilla::WrapNotNull(new RacyThreadInfo()))
@@ -85,9 +84,7 @@ ThreadInfo::StreamJSON(const ProfileBuffer& aBuffer,
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
     StreamSamplesAndMarkers(Name(), ThreadId(), aBuffer, aWriter,
-                            aProcessStartTime,
-                            mRegisterTime, mUnregisterTime,
-                            aSinceTime, &firstSampleTime,
+                            aProcessStartTime, aSinceTime, &firstSampleTime,
                             mContext,
                             mSavedStreamedSamples.get(),
                             mFirstSavedStreamedSampleTime,
@@ -151,8 +148,6 @@ StreamSamplesAndMarkers(const char* aName,
                         const ProfileBuffer& aBuffer,
                         SpliceableJSONWriter& aWriter,
                         const TimeStamp& aProcessStartTime,
-                        const TimeStamp& aRegisterTime,
-                        const TimeStamp& aUnregisterTime,
                         double aSinceTime,
                         double* aOutFirstSampleTime,
                         JSContext* aContext,
@@ -167,20 +162,6 @@ StreamSamplesAndMarkers(const char* aName,
   aWriter.StringProperty("name", aName);
   aWriter.IntProperty("tid", static_cast<int64_t>(aThreadId));
   aWriter.IntProperty("pid", static_cast<int64_t>(getpid()));
-
-  if (aRegisterTime) {
-    aWriter.DoubleProperty("registerTime",
-      (aRegisterTime - aProcessStartTime).ToMilliseconds());
-  } else {
-    aWriter.NullProperty("registerTime");
-  }
-
-  if (aUnregisterTime) {
-    aWriter.DoubleProperty("unregisterTime",
-      (aUnregisterTime - aProcessStartTime).ToMilliseconds());
-  } else {
-    aWriter.NullProperty("unregisterTime");
-  }
 
   aWriter.StartObjectProperty("samples");
   {
