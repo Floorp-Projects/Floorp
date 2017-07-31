@@ -153,14 +153,20 @@
 #onboarding-tour-list {
   margin: 40px 0 0 0;
   padding: 0;
+  margin-inline-start: 16px;
 }
 
-#onboarding-tour-list > li {
+#onboarding-tour-list .onboarding-tour-item-container {
   list-style: none;
+  outline: none;
+}
+
+#onboarding-tour-list .onboarding-tour-item {
+  pointer-events: none;
+  display: list-item;
   padding-inline-start: 49px;
   padding-top: 14px;
   padding-bottom: 14px;
-  margin-inline-start: 16px;
   margin-bottom: 9px;
   background-repeat: no-repeat;
   background-position: left 17px top 14px;
@@ -169,11 +175,11 @@
   cursor: pointer;
 }
 
-#onboarding-tour-list > li:dir(rtl) {
+#onboarding-tour-list .onboarding-tour-item:dir(rtl) {
   background-position-x: right 17px;
 }
 
-#onboarding-tour-list > li.onboarding-complete::before {
+#onboarding-tour-list .onboarding-tour-item.onboarding-complete::before {
   content: url("img/icons_tour-complete.svg");
   position: relative;
   offset-inline-start: 3px;
@@ -181,12 +187,12 @@
   float: inline-start;
 }
 
-#onboarding-tour-list > li.onboarding-complete {
+#onboarding-tour-list .onboarding-tour-item.onboarding-complete {
   padding-inline-start: 29px;
 }
 
-#onboarding-tour-list > li.onboarding-active,
-#onboarding-tour-list > li:hover {
+#onboarding-tour-list .onboarding-tour-item.onboarding-active,
+#onboarding-tour-list .onboarding-tour-item-container:hover .onboarding-tour-item {
   color: #0A84FF;
   /* With 1px transparent outline, could see a border in the high-constrast mode */
   outline: 1px solid transparent;
@@ -322,7 +328,8 @@
 }
 
 /* Keyboard focus specific outline */
-.onboarding-tour-action-button:-moz-focusring {
+.onboarding-tour-action-button:-moz-focusring,
+#onboarding-tour-list .onboarding-tour-item:focus {
   outline: 2px solid rgba(0,149,221,0.5);
   outline-offset: 1px;
   -moz-outline-radius: 2px;
