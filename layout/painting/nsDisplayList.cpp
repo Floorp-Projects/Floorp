@@ -8867,6 +8867,33 @@ nsDisplayMask::PaintAsLayer(nsDisplayListBuilder* aBuilder,
   nsDisplayMaskGeometry::UpdateDrawResult(this, imgParams.result);
 }
 
+bool
+nsDisplayMask::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder)
+{
+  bool snap;
+  float appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect displayBound = GetBounds(aDisplayListBuilder, &snap);
+  LayerRect bounds = ViewAs<LayerPixel>(LayoutDeviceRect::FromAppUnits(displayBound, appUnitsPerDevPixel),
+                                        PixelCastJustification::WebRenderHasUnitResolution);
+
+  Maybe<wr::WrImageMask> mask = aManager->BuildWrMaskImage(this, aBuilder, aSc, aDisplayListBuilder, bounds);
+  if (mask) {
+    aBuilder.PushClip(aSc.ToRelativeLayoutRect(bounds), mask.ptr());
+  }
+
+  nsDisplaySVGEffects::CreateWebRenderCommands(aBuilder, aSc, aParentCommands, aManager, aDisplayListBuilder);
+
+  if (mask) {
+    aBuilder.PopClip();
+  }
+
+  return true;
+}
+
 #ifdef MOZ_DUMP_PAINTING
 void
 nsDisplayMask::PrintEffects(nsACString& aTo)
