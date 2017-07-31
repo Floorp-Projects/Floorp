@@ -327,10 +327,13 @@ HTMLEditor::DeleteRefToAnonymousNode(nsIContent* aContent,
   // Remove reference from the parent element.
   auto nac = static_cast<mozilla::ManualNAC*>(
       parentContent->GetProperty(nsGkAtoms::manualNACProperty));
-  MOZ_ASSERT(nac);
-  nac->RemoveElement(aContent);
-  if (nac->IsEmpty()) {
-    parentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
+  // nsIDocument::AdoptNode might remove all properties before destroying
+  // editor.  So we have to consider that NAC could be already removed.
+  if (nac) {
+    nac->RemoveElement(aContent);
+    if (nac->IsEmpty()) {
+      parentContent->DeleteProperty(nsGkAtoms::manualNACProperty);
+    }
   }
 
   aContent->UnbindFromTree();
