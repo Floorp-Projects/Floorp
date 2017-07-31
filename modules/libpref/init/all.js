@@ -3835,13 +3835,6 @@ pref("intl.tsf.hack.ms_traditional_chinese.do_not_return_no_layout_error", true)
 // ITfContextView::GetTextExt() if the specified range is the first character
 // of selected clause of composition string.
 pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
-// Whether default IMC should be associated with focused window when MS-IME
-// for Japanese on Win10 is active.  MS-IME for Japanese on Win10 has a crash
-// bug.  While restoring default IMC when MS-IME for Japanese is active,
-// it sometimes crashes after Creators Update.  This pref avoid the crash.
-// Note that making this true causes bug 1379997 and cannot prevent the crash
-// mentioned above.
-pref("intl.tsf.hack.ms_japanese_ime.do_not_associate_imc_on_win10", false);
 // Whether use previous character rect for the result of
 // ITfContextView::GetTextExt() if the specified range is the caret of
 // composition string.
