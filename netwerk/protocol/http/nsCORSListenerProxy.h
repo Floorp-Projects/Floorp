@@ -18,6 +18,8 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 
 class nsIURI;
 class nsIPrincipal;
@@ -53,7 +55,7 @@ public:
                       nsIPrincipal* aRequestingPrincipal,
                       bool aWithCredentials);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -106,7 +108,7 @@ private:
   nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
   bool mWithCredentials;
-  bool mRequestApproved;
+  mozilla::Atomic<bool, mozilla::Relaxed> mRequestApproved;
   // Please note that the member variable mHasBeenCrossSite may rely on the
   // promise that the CSP directive 'upgrade-insecure-requests' upgrades
   // an http: request to https: in nsHttpChannel::Connect() and hence
@@ -119,6 +121,11 @@ private:
 #ifdef DEBUG
   bool mInited;
 #endif
+
+  // only locking mOuterListener, because it can be used on different threads.
+  // We guarantee that OnStartRequest, OnDataAvailable and OnStopReques will be
+  // called in order, but to make tsan happy we will lock mOuterListener.
+  mutable mozilla::Mutex mMutex;
 };
 
 #endif
