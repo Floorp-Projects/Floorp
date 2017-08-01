@@ -680,12 +680,14 @@ void Gecko_ReportUnexpectedCSSError(mozilla::css::ErrorReporter* reporter,
                                     const char* message,
                                     const char* param,
                                     uint32_t paramLen,
+                                    const char* prefix,
+                                    const char* prefixParam,
+                                    uint32_t prefixParamLen,
+                                    const char* suffix,
                                     const char* source,
                                     uint32_t sourceLen,
                                     uint32_t lineNumber,
-                                    uint32_t colNumber,
-                                    nsIURI* aURI,
-                                    const char* followup);
+                                    uint32_t colNumber);
 
 } // extern "C"
 

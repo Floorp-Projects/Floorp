@@ -206,9 +206,9 @@
                       preference="browser.formfill.enable"/>
           </vbox>
           <hbox id="cookiesBox">
-            <checkbox id="acceptCookies" label="&acceptCookies.label;"
+            <checkbox id="acceptCookies" label="&acceptCookies2.label;"
                       preference="network.cookie.cookieBehavior"
-                      accesskey="&acceptCookies.accesskey;"
+                      accesskey="&acceptCookies2.accesskey;"
                       onsyncfrompreference="return gPrivacyPane.readAcceptCookies();"
                       onsynctopreference="return gPrivacyPane.writeAcceptCookies();"/>
             <spacer flex="1" />

@@ -70,7 +70,7 @@ var gSecurityPane = {
 
     var params = this._addonParams;
     if (!params.windowTitle || !params.introText) {
-      params.windowTitle = bundlePrefs.getString("addons_permissions_title");
+      params.windowTitle = bundlePrefs.getString("addons_permissions_title2");
       params.introText = bundlePrefs.getString("addonspermissionstext");
     }
 
@@ -132,7 +132,7 @@ var gSecurityPane = {
       prefilledHost: "",
       permissionType: "login-saving",
       windowTitle: bundlePrefs.getString("savedLoginsExceptions_title"),
-      introText: bundlePrefs.getString("savedLoginsExceptions_desc")
+      introText: bundlePrefs.getString("savedLoginsExceptions_desc2")
     };
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",

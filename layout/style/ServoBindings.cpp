@@ -2730,20 +2730,32 @@ Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
                                const char* message,
                                const char* param,
                                uint32_t paramLen,
+                               const char* prefix,
+                               const char* prefixParam,
+                               uint32_t prefixParamLen,
+                               const char* suffix,
                                const char* source,
                                uint32_t sourceLen,
                                uint32_t lineNumber,
-                               uint32_t colNumber,
-                               nsIURI* uri,
-                               const char* followup)
+                               uint32_t colNumber)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (prefix) {
+    if (prefixParam) {
+      nsDependentCSubstring paramValue(prefixParam, prefixParamLen);
+      nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
+      reporter->ReportUnexpectedUnescaped(prefix, wideParam);
+    } else {
+      reporter->ReportUnexpected(prefix);
+    }
+  }
 
   nsDependentCSubstring paramValue(param, paramLen);
   nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
   reporter->ReportUnexpectedUnescaped(message, wideParam);
-  if (followup) {
-    reporter->ReportUnexpected(followup);
+  if (suffix) {
+    reporter->ReportUnexpected(suffix);
   }
   nsDependentCSubstring sourceValue(source, sourceLen);
   reporter->OutputError(lineNumber, colNumber, sourceValue);

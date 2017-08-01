@@ -62,8 +62,8 @@
 
   <hbox id="addonInstallBox">
     <checkbox id="warnAddonInstall"
-              label="&warnOnAddonInstall.label;"
-              accesskey="&warnOnAddonInstall.accesskey;"
+              label="&warnOnAddonInstall2.label;"
+              accesskey="&warnOnAddonInstall2.accesskey;"
               preference="xpinstall.whitelist.required"
               onsyncfrompreference="return gSecurityPane.readWarnAddonInstall();"/>
     <spacer flex="1"/>
@@ -100,7 +100,7 @@
     <rows id="passwordRows">
       <row id="savePasswordsBox">
         <checkbox id="savePasswords"
-                  label="&rememberLogins.label;" accesskey="&rememberLogins.accesskey;"
+                  label="&rememberLogins2.label;" accesskey="&rememberLogins2.accesskey;"
                   preference="signon.rememberSignons"
                   onsyncfrompreference="return gSecurityPane.readSavePasswords();"/>
         <button id="passwordExceptions"

@@ -854,6 +854,12 @@ NullHttpChannel::SetIsMainDocumentChannel(bool aValue)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::LogBlockedCORSRequest(const nsAString& aMessage)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #define IMPL_TIMING_ATTR(name)                                 \
 NS_IMETHODIMP                                                  \
 NullHttpChannel::Get##name##Time(PRTime* _retval) {            \

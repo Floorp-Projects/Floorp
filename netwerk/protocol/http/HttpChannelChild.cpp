@@ -54,6 +54,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
+#include "nsCORSListenerProxy.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -3596,6 +3597,23 @@ HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy)
   if (aWhy != Deletion) {
     CleanupBackgroundChannel();
   }
+}
+
+mozilla::ipc::IPCResult
+HttpChannelChild::RecvLogBlockedCORSRequest(const nsString& aMessage)
+{
+  Unused << LogBlockedCORSRequest(aMessage);
+  return IPC_OK();
+}
+
+NS_IMETHODIMP
+HttpChannelChild::LogBlockedCORSRequest(const nsAString & aMessage)
+{
+  if (mLoadInfo) {
+    uint64_t innerWindowID = mLoadInfo->GetInnerWindowID();
+    nsCORSListenerProxy::LogBlockedCORSRequest(innerWindowID, aMessage);
+  }
+  return NS_OK;
 }
 
 } // namespace net

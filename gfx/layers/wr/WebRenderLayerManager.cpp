@@ -57,7 +57,7 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
   TextureFactoryIdentifier textureFactoryIdentifier;
-  uint32_t id_namespace;
+  wr::IdNamespace id_namespace;
   PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
                                                                             size,
                                                                             &textureFactoryIdentifier,
