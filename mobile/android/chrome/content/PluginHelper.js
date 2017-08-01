@@ -120,7 +120,7 @@ var PluginHelper = {
   },
 
   // Copied from /browser/base/content/browser.js
-  isTooSmall: function (plugin, overlay) {
+  isTooSmall: function(plugin, overlay) {
     // Is the <object>'s size too small to hold what we want to show?
     let pluginRect = plugin.getBoundingClientRect();
     // XXX bug 446693. The text-shadow on the submitted-report text at
@@ -131,7 +131,7 @@ var PluginHelper = {
     return overflows;
   },
 
-  getPluginMimeType: function (plugin) {
+  getPluginMimeType: function(plugin) {
     var tagMimetype = plugin.actualType;
 
     if (tagMimetype == "") {
@@ -141,7 +141,7 @@ var PluginHelper = {
     return tagMimetype;
   },
 
-  handlePluginBindingAttached: function (aTab, aEvent) {
+  handlePluginBindingAttached: function(aTab, aEvent) {
     let plugin = aEvent.target;
     let doc = plugin.ownerDocument;
     let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");

@@ -90,14 +90,14 @@
             Services.obs.notifyObservers(null, "child-gc-request");
 
             if (schedGC) {
-                schedGC.call(Cu, { callback: function () {
-                    runSoon(function () { cc(); runSoon(minimizeInner); });
+                schedGC.call(Cu, { callback: function() {
+                    runSoon(function() { cc(); runSoon(minimizeInner); });
                 } });
             } else {
                 if (domWindowUtils.garbageCollect) {
                     domWindowUtils.garbageCollect();
                 }
-                runSoon(function () { cc(); runSoon(minimizeInner); });
+                runSoon(function() { cc(); runSoon(minimizeInner); });
             }
         } else {
             runSoon(aCallback);
@@ -211,7 +211,7 @@
         var result = gResults[i];
         logsum += Math.log(result[aProperty]);
     }
-    return Math.round(Math.exp(logsum/gResults.length));
+    return Math.round(Math.exp(logsum / gResults.length));
   }
 
   function finalReport() {
@@ -229,7 +229,7 @@
         perfherder += `{\"name\": \"${result.name}\", \"value\": ${result.resident}}`;
     }
     perfherder += "], "; // end subtests
-    perfherder += "\"value\": "+geomean("resident");
+    perfherder += "\"value\": " + geomean("resident");
     perfherder += "}"; // end Resident Memory suite
     perfherder += "]"; // end suites
     perfherder += "}"; // end PERFHERDER_DATA

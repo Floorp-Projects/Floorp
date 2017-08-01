@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1263589
 
     // Wait until the page has loaded so that we can access the DOM.
     SimpleTest.waitForExplicitFinish();
-    window.onload = function () {
+    window.onload = function() {
       // test options are not incorrectly disabled...
       let isEnabled1 = document.getElementById("is_enabled_1");
       let isEnabled2 = document.getElementById("is_enabled_2");

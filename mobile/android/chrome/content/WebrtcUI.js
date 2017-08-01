@@ -129,7 +129,7 @@ var WebrtcUI = {
 
     contentWindow.navigator.mozGetUserMediaDevices(
       constraints,
-      function (devices) {
+      function(devices) {
         if (!ParentalControls.isAllowed(ParentalControls.CAMERA_MICROPHONE)) {
           Services.obs.notifyObservers(null, "getUserMedia:response:deny", aSubject.callID);
           WebrtcUI.showBlockMessage(devices);
@@ -139,7 +139,7 @@ var WebrtcUI = {
         WebrtcUI.prompt(contentWindow, aSubject.callID, constraints.audio,
                         constraints.video, devices);
       },
-      function (error) {
+      function(error) {
         Cu.reportError(error);
       },
       aSubject.innerWindowID,
@@ -214,7 +214,7 @@ var WebrtcUI = {
           return Strings.browser.GetStringFromName("getUserMedia." + aType + "." + res[1] + "Camera");
 
         if (device.name.startsWith("&") && device.name.endsWith(";"))
-          return Strings.browser.GetStringFromName(device.name.substring(1, device.name.length -1));
+          return Strings.browser.GetStringFromName(device.name.substring(1, device.name.length - 1));
 
         if (device.name.trim() == "") {
           defaultCount++;

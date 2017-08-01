@@ -238,7 +238,7 @@ var Notifications = {
     }
   },
 
-  QueryInterface: function (aIID) {
+  QueryInterface: function(aIID) {
     if (!aIID.equals(Ci.nsISupports) &&
         !aIID.equals(Ci.nsIObserver) &&
         !aIID.equals(Ci.nsISupportsWeakReference))

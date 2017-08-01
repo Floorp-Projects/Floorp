@@ -133,7 +133,7 @@ RemoteMedia.prototype = {
     return this._status;
   },
 
-  onEvent: function (event, message, callback) {
+  onEvent: function(event, message, callback) {
     switch (event) {
       case "MediaPlayer:Playing":
         if (this._status !== "started") {

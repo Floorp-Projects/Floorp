@@ -29,7 +29,7 @@ function FxAccountsPush() {
 }
 
 FxAccountsPush.prototype = {
-  observe: function (subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "android-push-service":
         if (data === "android-fxa-subscribe") {

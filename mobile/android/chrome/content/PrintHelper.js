@@ -7,7 +7,7 @@
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
 var PrintHelper = {
-  onEvent: function (event, data, callback) {
+  onEvent: function(event, data, callback) {
     let browser = BrowserApp.selectedBrowser;
 
     switch (event) {
@@ -58,10 +58,10 @@ var PrintHelper = {
             }
           }
         },
-        onProgressChange: function () {},
-        onLocationChange: function () {},
-        onStatusChange: function () {},
-        onSecurityChange: function () {},
+        onProgressChange: function() {},
+        onLocationChange: function() {},
+        onStatusChange: function() {},
+        onSecurityChange: function() {},
       });
     });
   }

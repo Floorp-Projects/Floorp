@@ -90,7 +90,7 @@ LoginManagerPrompter.prototype = {
    *
    * Internal function for logging debug messages to the Error Console window.
    */
-  log: function (message) {
+  log: function(message) {
     if (!this._debug)
       return;
 
@@ -104,7 +104,7 @@ LoginManagerPrompter.prototype = {
    * init
    *
    */
-  init: function (aWindow, aFactory) {
+  init: function(aWindow, aFactory) {
     this._chromeWindow = this._getChromeWindow(aWindow).wrappedJSObject;
     this._factory = aFactory || null;
     this._browser = null;
@@ -126,7 +126,7 @@ LoginManagerPrompter.prototype = {
    * promptToSavePassword
    *
    */
-  promptToSavePassword: function (aLogin) {
+  promptToSavePassword: function(aLogin) {
     this._showSaveLoginNotification(aLogin);
       Services.telemetry.getHistogramById("PWMGR_PROMPT_REMEMBER_ACTION").add(PROMPT_DISPLAYED);
     Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
@@ -145,7 +145,7 @@ LoginManagerPrompter.prototype = {
    * @param aPassword
    *        Password string used in creating a doorhanger action
    */
-  _showLoginNotification: function (aBody, aButtons, aUsername, aPassword) {
+  _showLoginNotification: function(aBody, aButtons, aUsername, aPassword) {
     let tabID = this._chromeWindow.BrowserApp.getTabForBrowser(this._browser).id;
 
     let actionText = {
@@ -181,7 +181,7 @@ LoginManagerPrompter.prototype = {
    * their login, and only save a login which they know worked.
    *
    */
-  _showSaveLoginNotification: function (aLogin) {
+  _showSaveLoginNotification: function(aLogin) {
     let brandShortName = this._strBundle.brand.GetStringFromName("brandShortName");
     let notificationText  = this._getLocalizedString("saveLogin", [brandShortName]);
 
@@ -226,7 +226,7 @@ LoginManagerPrompter.prototype = {
    * fields.
    *
    */
-  promptToChangePassword: function (aOldLogin, aNewLogin) {
+  promptToChangePassword: function(aOldLogin, aNewLogin) {
     this._showChangeLoginNotification(aOldLogin, aNewLogin.password);
     Services.telemetry.getHistogramById("PWMGR_PROMPT_UPDATE_ACTION").add(PROMPT_DISPLAYED);
     let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
@@ -239,7 +239,7 @@ LoginManagerPrompter.prototype = {
    * Shows the Change Password notification doorhanger.
    *
    */
-  _showChangeLoginNotification: function (aOldLogin, aNewPassword) {
+  _showChangeLoginNotification: function(aOldLogin, aNewPassword) {
     var notificationText;
     if (aOldLogin.username) {
       let displayUser = this._sanitizeUsername(aOldLogin.username);
@@ -290,7 +290,7 @@ LoginManagerPrompter.prototype = {
    *
    * Note; XPCOM stupidity: |count| is just |logins.length|.
    */
-  promptToChangePasswordWithUsernames: function (logins, count, aNewLogin) {
+  promptToChangePasswordWithUsernames: function(logins, count, aNewLogin) {
     const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
     var usernames = logins.map(l => l.username);
@@ -317,7 +317,7 @@ LoginManagerPrompter.prototype = {
   /*
    * _updateLogin
    */
-  _updateLogin: function (login, newPassword) {
+  _updateLogin: function(login, newPassword) {
     var now = Date.now();
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].
       createInstance(Ci.nsIWritablePropertyBag);
@@ -338,7 +338,7 @@ LoginManagerPrompter.prototype = {
    *
    * Given a content DOM window, returns the chrome window it's in.
    */
-  _getChromeWindow: function (aWindow) {
+  _getChromeWindow: function(aWindow) {
     if (aWindow instanceof Ci.nsIDOMChromeWindow)
       return aWindow;
     var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -354,7 +354,7 @@ LoginManagerPrompter.prototype = {
    * Returns the NativeWindow to this prompter, or null if there isn't
    * a NativeWindow available (w/ error sent to logcat).
    */
-  _getNativeWindow: function () {
+  _getNativeWindow: function() {
     let nativeWindow = null;
     try {
       let chromeWin = this._chromeWindow;
@@ -384,7 +384,7 @@ LoginManagerPrompter.prototype = {
    * formatted if required.
    *
    */
-  _getLocalizedString: function (key, formatArgs) {
+  _getLocalizedString: function(key, formatArgs) {
     if (formatArgs)
       return this._strBundle.pwmgr.formatStringFromName(
         key, formatArgs, formatArgs.length);
@@ -399,7 +399,7 @@ LoginManagerPrompter.prototype = {
    * it's too long. This helps prevent an evil site from messing with the
    * "save password?" prompt too much.
    */
-  _sanitizeUsername: function (username) {
+  _sanitizeUsername: function(username) {
     if (username.length > 30) {
       username = username.substring(0, 30);
       username += this._ellipsis;

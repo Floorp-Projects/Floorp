@@ -75,7 +75,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     ok((yield db.tableExists("items")), "items table exists");
 
     // Make sure the correct values for the item ended up in there.
-    let result = yield db.execute("SELECT * FROM items", null, function onRow(row){
+    let result = yield db.execute("SELECT * FROM items", null, function onRow(row) {
       is(row.getResultByName("dataset_id"), TEST_DATASET_ID, "expected dataset ID");
       is(row.getResultByName("url"), TEST_URL, "expected test url");
       is(row.getResultByName("background_url"), TEST_BACKGROUND_URL, "expected background url");
