@@ -373,22 +373,25 @@ TEST_F(ImageSourceBuffer, MinChunkCapacity)
   CheckIteratorIsComplete(iterator, 2, SourceBuffer::MIN_CHUNK_CAPACITY + 1);
 }
 
-TEST_F(ImageSourceBuffer, ExpectLengthDoesNotShrinkBelowMinCapacity)
+TEST_F(ImageSourceBuffer, ExpectLengthAllocatesRequestedCapacity)
 {
   SourceBufferIterator iterator = mSourceBuffer->Iterator();
 
   // Write SourceBuffer::MIN_CHUNK_CAPACITY bytes of test data to the buffer,
   // but call ExpectLength() first to make SourceBuffer expect only a single
-  // byte. We expect this to still result in only one chunk, because
-  // regardless of ExpectLength() we won't allocate a chunk smaller than
-  // MIN_CHUNK_CAPACITY bytes.
+  // byte. We expect this to still result in two chunks, because we trust the
+  // initial guess of ExpectLength() but after that it will only allocate chunks
+  // of at least MIN_CHUNK_CAPACITY bytes.
   EXPECT_TRUE(NS_SUCCEEDED(mSourceBuffer->ExpectLength(1)));
   CheckedAppendToBufferInChunks(10, SourceBuffer::MIN_CHUNK_CAPACITY);
   CheckedCompleteBuffer(iterator, SourceBuffer::MIN_CHUNK_CAPACITY);
 
-  // Verify that the iterator sees a single chunk.
-  CheckedAdvanceIterator(iterator, SourceBuffer::MIN_CHUNK_CAPACITY);
-  CheckIteratorIsComplete(iterator, 1, SourceBuffer::MIN_CHUNK_CAPACITY);
+  // Verify that the iterator sees a first chunk with 1 byte, and a second chunk
+  // with the remaining data.
+  CheckedAdvanceIterator(iterator, 1, 1, 1);
+  CheckedAdvanceIterator(iterator, SourceBuffer::MIN_CHUNK_CAPACITY - 1, 2,
+		                   SourceBuffer::MIN_CHUNK_CAPACITY);
+  CheckIteratorIsComplete(iterator, 2, SourceBuffer::MIN_CHUNK_CAPACITY);
 }
 
 TEST_F(ImageSourceBuffer, ExpectLengthGrowsAboveMinCapacity)

@@ -1379,15 +1379,8 @@ function switchWindowTest(otherWindow, framesetWindow)
 var noRootWindow = null;
 function doWindowNoRootTest()
 {
-  var data = "data:application/vnd.mozilla.xul+xml," + unescape(
-             "<window onfocus='dostuff()' xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'" +
-             "        style='-moz-user-focus: normal;'>" +
-             "<script>function dostuff() { setTimeout(function() { " +
-             "document.documentElement.focus(); document.removeChild(document.documentElement);" +
-             "window.opener.focus(); }, 100); }</script></window>");
-
   addEventListener("focus", doFrameSwitchingTests, true);
-  noRootWindow = window.open(data, "_blank", "chrome,width=100,height=100");
+  noRootWindow = window.open("window_focus_inner.xul", "_blank", "chrome,width=100,height=100");
 }
 
 // these tests check when focus is moved between a tree of frames to ensure
