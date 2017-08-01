@@ -494,7 +494,7 @@ private:
   mutable Mutex mMutex;
 
   /// The data in this SourceBuffer, stored as a series of Chunks.
-  FallibleTArray<Chunk> mChunks;
+  AutoTArray<Chunk, 1> mChunks;
 
   /// Consumers which are waiting to be notified when new data is available.
   nsTArray<RefPtr<IResumable>> mWaitingConsumers;
