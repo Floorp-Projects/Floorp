@@ -312,6 +312,7 @@ enum : size_t
   kPresentSelectionTypeCount = kSelectionTypeCount - 1
 };
 
+// Please include mozilla/dom/Selection.h for the following APIs.
 const char* ToChar(SelectionType aSelectionType);
 inline SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
 inline RawSelectionType ToRawSelectionType(SelectionType aSelectionType);

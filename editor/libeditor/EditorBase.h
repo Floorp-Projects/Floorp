@@ -251,7 +251,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditorBase, nsIEditor)
 
-  bool IsInitialized() const { return !!mDocumentWeak; }
+  bool IsInitialized() const { return !!mDocument; }
   already_AddRefed<nsIDOMDocument> GetDOMDocument();
   already_AddRefed<nsIDocument> GetDocument();
   already_AddRefed<nsIPresShell> GetPresShell();
@@ -1105,9 +1105,7 @@ public:
 
 private:
   nsCOMPtr<nsISelectionController> mSelectionController;
-  // Weak reference to the nsIDocument.
-  // Use GetDocument() to retrieve actual pointer.
-  CachedWeakPtr<nsIDocument> mDocumentWeak;
+  nsCOMPtr<nsIDocument> mDocument;
 
 protected:
   enum Tristate
