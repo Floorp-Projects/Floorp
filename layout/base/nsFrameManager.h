@@ -100,8 +100,8 @@ public:
   /**
    * Change the style context for the display:none content, aContent.
    */
-  void ChangeUndisplayedContent(nsIContent* aContent,
-                                nsStyleContext* aStyleContext)
+  void ChangeRegisteredDisplayNoneStyleFor(nsIContent* aContent,
+                                           nsStyleContext* aStyleContext)
   {
     ChangeStyleContextInMap(mDisplayNoneMap, aContent, aStyleContext);
   }
@@ -109,8 +109,8 @@ public:
   /**
    * Change the style context for the display:contents content, aContent.
    */
-  void ChangeDisplayContents(nsIContent* aContent,
-                             nsStyleContext* aStyleContext)
+  void ChangeRegisteredDisplayContentsStyleFor(nsIContent* aContent,
+                                               nsStyleContext* aStyleContext)
   {
     ChangeStyleContextInMap(mDisplayContentsMap, aContent, aStyleContext);
   }
