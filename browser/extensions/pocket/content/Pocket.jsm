@@ -28,9 +28,18 @@ var Pocket = {
     BrowserUtils.setToolbarButtonHeightProperty(event.target);
   },
 
+  onShownInPhotonPageActionPanel(panel, iframe) {
+    let window = panel.ownerGlobal;
+    window.pktUI.setPhotonPageActionPanelFrame(iframe);
+    Pocket._initPanelView(window);
+  },
+
   onPanelViewShowing(event) {
-    let document = event.target.ownerDocument;
-    let window = document.defaultView;
+    Pocket._initPanelView(event.target.ownerGlobal);
+  },
+
+  _initPanelView(window) {
+    let document = window.document;
     let iframe = window.pktUI.getPanelFrame();
 
     let libraryButton = document.getElementById("library-button");
