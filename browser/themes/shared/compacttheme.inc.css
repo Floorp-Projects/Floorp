@@ -227,6 +227,10 @@ toolbar:-moz-lwtheme-darktext {
   box-shadow: none !important;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels:-moz-lwtheme-brighttext {
+  color: #30e60b;
+}
+
 #identity-icon:-moz-lwtheme-brighttext,
 #tracking-protection-icon:-moz-lwtheme-brighttext,
 #connection-icon:-moz-lwtheme-brighttext,
