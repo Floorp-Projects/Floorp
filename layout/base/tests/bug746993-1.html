@@ -4,7 +4,7 @@
     <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   </head>
   <body onload="start()">
-    <iframe src="data:text/html,<body contenteditable spellcheck=false><br /><div></div></body>"></iframe>
+    <iframe srcdoc="<body contenteditable spellcheck=false><br /><div></div></body>"></iframe>
     <script>
       function start() {
         var iframe = document.querySelector("iframe");

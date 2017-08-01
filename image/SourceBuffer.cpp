@@ -224,30 +224,27 @@ SourceBuffer::Compact()
     return NS_OK;
   }
 
-  Maybe<Chunk> newChunk = CreateChunk(length, /* aRoundUp = */ false);
-  if (MOZ_UNLIKELY(!newChunk || newChunk->AllocationFailed())) {
-    NS_WARNING("Failed to allocate chunk for SourceBuffer compacting - OOM?");
+  Chunk& mergeChunk = mChunks[0];
+  if (MOZ_UNLIKELY(!mergeChunk.SetCapacity(length))) {
+    NS_WARNING("Failed to reallocate chunk for SourceBuffer compacting - OOM?");
     return NS_OK;
   }
 
-  // Copy our old chunks into the new chunk.
-  for (uint32_t i = 0 ; i < mChunks.Length() ; ++i) {
-    size_t offset = newChunk->Length();
-    MOZ_ASSERT(offset < newChunk->Capacity());
-    MOZ_ASSERT(offset + mChunks[i].Length() <= newChunk->Capacity());
+  // Copy our old chunks into the newly reallocated first chunk.
+  for (uint32_t i = 1 ; i < mChunks.Length() ; ++i) {
+    size_t offset = mergeChunk.Length();
+    MOZ_ASSERT(offset < mergeChunk.Capacity());
+    MOZ_ASSERT(offset + mChunks[i].Length() <= mergeChunk.Capacity());
 
-    memcpy(newChunk->Data() + offset, mChunks[i].Data(), mChunks[i].Length());
-    newChunk->AddLength(mChunks[i].Length());
+    memcpy(mergeChunk.Data() + offset, mChunks[i].Data(), mChunks[i].Length());
+    mergeChunk.AddLength(mChunks[i].Length());
   }
 
-  MOZ_ASSERT(newChunk->Length() == newChunk->Capacity(),
+  MOZ_ASSERT(mergeChunk.Length() == mergeChunk.Capacity(),
              "Compacted chunk has slack space");
 
-  // Replace the old chunks with the new, compact chunk.
-  mChunks.Clear();
-  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(Move(newChunk))))) {
-    return HandleError(NS_ERROR_OUT_OF_MEMORY);
-  }
+  // Remove the redundant chunks.
+  mChunks.RemoveElementsAt(1, mChunks.Length() - 1);
   mChunks.Compact();
 
   return NS_OK;
@@ -337,7 +334,7 @@ SourceBuffer::ExpectLength(size_t aExpectedLength)
     return NS_OK;
   }
 
-  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aExpectedLength))))) {
+  if (MOZ_UNLIKELY(NS_FAILED(AppendChunk(CreateChunk(aExpectedLength, /* aRoundUp */ false))))) {
     return HandleError(NS_ERROR_OUT_OF_MEMORY);
   }
 

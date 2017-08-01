@@ -347,16 +347,10 @@ static const FinalizePhase ForegroundObjectFinalizePhase = {
 /*
  * Finalization order for GC things swept incrementally on the active thread.
  */
-static const FinalizePhase IncrementalFinalizePhases[] = {
-    {
-        gcstats::PhaseKind::SWEEP_SCRIPT, {
-            AllocKind::SCRIPT
-        }
-    },
-    {
-        gcstats::PhaseKind::SWEEP_JITCODE, {
-            AllocKind::JITCODE
-        }
+static const FinalizePhase ForegroundNonObjectFinalizePhase = {
+    gcstats::PhaseKind::SWEEP_SCRIPT, {
+        AllocKind::SCRIPT,
+        AllocKind::JITCODE
     }
 };
 
@@ -5357,9 +5351,7 @@ GCRuntime::beginSweepingSweepGroup()
     for (GCSweepGroupIter zone(rt); !zone.done(); zone.next()) {
 
         zone->arenas.queueForForegroundSweep(&fop, ForegroundObjectFinalizePhase);
-        for (unsigned i = 0; i < ArrayLength(IncrementalFinalizePhases); ++i)
-            zone->arenas.queueForForegroundSweep(&fop, IncrementalFinalizePhases[i]);
-
+        zone->arenas.queueForForegroundSweep(&fop, ForegroundNonObjectFinalizePhase);
         for (unsigned i = 0; i < ArrayLength(BackgroundFinalizePhases); ++i)
             zone->arenas.queueForBackgroundSweep(&fop, BackgroundFinalizePhases[i]);
 
@@ -5866,9 +5858,11 @@ struct IncrementalIter
     }
 };
 
+namespace sweepaction {
+
 // Implementation of the SweepAction interface that calls a function.
 template <typename... Args>
-class SweepActionFunc : public SweepAction<Args...>
+class SweepActionFunc final : public SweepAction<Args...>
 {
     using Func = IncrementalProgress (*)(Args...);
 
@@ -5885,7 +5879,7 @@ class SweepActionFunc : public SweepAction<Args...>
 // Implementation of the SweepAction interface that calls a list of actions in
 // sequence.
 template <typename... Args>
-class SweepActionSequence : public SweepAction<Args...>
+class SweepActionSequence final : public SweepAction<Args...>
 {
     using Action = SweepAction<Args...>;
     using ActionVector = Vector<UniquePtr<Action>, 0, SystemAllocPolicy>;
@@ -5919,7 +5913,7 @@ class SweepActionSequence : public SweepAction<Args...>
 };
 
 template <typename Iter, typename Init, typename... Args>
-class SweepActionForEach : public SweepAction<Args...>
+class SweepActionForEach final : public SweepAction<Args...>
 {
     using Elem = decltype(mozilla::DeclVal<Iter>().get());
     using Action = SweepAction<Args..., Elem>;
@@ -5987,13 +5981,13 @@ class RemoveLastTemplateParameter<Target<Args...>>
 
 template <typename... Args>
 static UniquePtr<SweepAction<Args...>>
-SweepFunc(IncrementalProgress (*func)(Args...)) {
+Func(IncrementalProgress (*func)(Args...)) {
     return MakeUnique<SweepActionFunc<Args...>>(func);
 }
 
 template <typename... Args, typename... Rest>
 static UniquePtr<SweepAction<Args...>>
-SweepSequence(UniquePtr<SweepAction<Args...>> first, Rest... rest)
+Sequence(UniquePtr<SweepAction<Args...>> first, Rest... rest)
 {
     UniquePtr<SweepAction<Args...>> actions[] = { Move(first), Move(rest)... };
     auto seq = MakeUnique<SweepActionSequence<Args...>>();
@@ -6005,7 +5999,7 @@ SweepSequence(UniquePtr<SweepAction<Args...>> first, Rest... rest)
 
 template <typename... Args>
 static UniquePtr<typename RemoveLastTemplateParameter<SweepAction<Args...>>::Type>
-SweepForEachZone(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
+ForEachZoneInSweepGroup(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
 {
     if (!action)
         return nullptr;
@@ -6017,7 +6011,7 @@ SweepForEachZone(JSRuntime* rt, UniquePtr<SweepAction<Args...>> action)
 
 template <typename... Args>
 static UniquePtr<typename RemoveLastTemplateParameter<SweepAction<Args...>>::Type>
-SweepForEachAllocKind(AllocKinds kinds, UniquePtr<SweepAction<Args...>> action)
+ForEachAllocKind(AllocKinds kinds, UniquePtr<SweepAction<Args...>> action)
 {
     if (!action)
         return nullptr;
@@ -6027,30 +6021,28 @@ SweepForEachAllocKind(AllocKinds kinds, UniquePtr<SweepAction<Args...>> action)
     return js::MakeUnique<Action>(kinds, Move(action));
 }
 
+} // namespace sweepaction
+
 bool
 GCRuntime::initSweepActions()
 {
-    sweepActions.ref() = SweepSequence(
-        SweepFunc(sweepAtomsTable),
-        SweepFunc(sweepWeakCaches),
-        SweepForEachZone(rt,
-            SweepForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
-                SweepFunc(finalizeAllocKind))),
-        SweepForEachZone(rt,
-            SweepSequence(
-                SweepFunc(sweepTypeInformation),
-                SweepFunc(mergeSweptObjectArenas))),
-        SweepForEachZone(rt,
-            SweepForEachAllocKind(IncrementalFinalizePhases[0].kinds,
-                SweepFunc(finalizeAllocKind))),
-        SweepForEachZone(rt,
-            SweepForEachAllocKind(IncrementalFinalizePhases[1].kinds,
-                SweepFunc(finalizeAllocKind))),
-        SweepForEachZone(rt,
-            SweepFunc(sweepShapeTree)));
+    using namespace sweepaction;
 
-    static_assert(ArrayLength(IncrementalFinalizePhases) == 2,
-                  "We must have a phase for each element in IncrementalFinalizePhases");
+    sweepActions.ref() = Sequence(
+        Func(sweepAtomsTable),
+        Func(sweepWeakCaches),
+        ForEachZoneInSweepGroup(rt,
+            ForEachAllocKind(ForegroundObjectFinalizePhase.kinds,
+                Func(finalizeAllocKind))),
+        ForEachZoneInSweepGroup(rt,
+            Sequence(
+                Func(sweepTypeInformation),
+                Func(mergeSweptObjectArenas))),
+        ForEachZoneInSweepGroup(rt,
+            ForEachAllocKind(ForegroundNonObjectFinalizePhase.kinds,
+                Func(finalizeAllocKind))),
+        ForEachZoneInSweepGroup(rt,
+            Func(sweepShapeTree)));
 
     return sweepActions != nullptr;
 }
@@ -7876,19 +7868,35 @@ js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
 JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx)
   : cx_(maybecx ? maybecx : TlsContext.get())
 {
-    if (cx_)
-        cx_->inUnsafeRegion++;
+    cx_->inUnsafeRegion++;
 }
 
 JS::AutoAssertNoGC::~AutoAssertNoGC()
 {
-    if (cx_) {
-        MOZ_ASSERT(cx_->inUnsafeRegion > 0);
-        cx_->inUnsafeRegion--;
-    }
+    MOZ_ASSERT(cx_->inUnsafeRegion > 0);
+    cx_->inUnsafeRegion--;
 }
 
 #ifdef DEBUG
+JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSContext* cx)
+  : gc(nullptr)
+{
+    disallowAlloc(cx->runtime());
+}
+
+void JS::AutoAssertNoAlloc::disallowAlloc(JSRuntime* rt)
+{
+    MOZ_ASSERT(!gc);
+    gc = &rt->gc;
+    TlsContext.get()->disallowAlloc();
+}
+
+JS::AutoAssertNoAlloc::~AutoAssertNoAlloc()
+{
+    if (gc)
+        TlsContext.get()->allowAlloc();
+}
+
 AutoAssertNoNurseryAlloc::AutoAssertNoNurseryAlloc()
 {
     TlsContext.get()->disallowNurseryAlloc();

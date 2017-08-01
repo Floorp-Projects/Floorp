@@ -1431,21 +1431,21 @@ nsStandardURL::CheckIfHostIsAscii()
 
     mCheckedIfHostA = true;
 
-    // If the hostname doesn't begin with `xn--` we are sure it is ASCII.
-    if (!StringBeginsWith(Host(), NS_LITERAL_CSTRING("xn--"))) {
-        return NS_OK;
-    }
-
     if (!gIDN) {
         return NS_ERROR_NOT_INITIALIZED;
     }
 
+    nsAutoCString displayHost;
     bool isAscii;
-    rv = gIDN->ConvertToDisplayIDN(Host(), &isAscii, mDisplayHost);
+    rv = gIDN->ConvertToDisplayIDN(Host(), &isAscii, displayHost);
     if (NS_FAILED(rv)) {
         mDisplayHost.Truncate();
         mCheckedIfHostA = false;
         return rv;
+    }
+
+    if (!isAscii) {
+        mDisplayHost = displayHost;
     }
 
     return NS_OK;
