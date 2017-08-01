@@ -22,7 +22,7 @@ SharedLibHandle SharedLib_Load( const char *pchPath )
 void *SharedLib_GetFunction( SharedLibHandle lib, const char *pchFunctionName)
 {
 #if defined( _WIN32)
-  return (void*)GetProcAddress( (HMODULE)lib, pchFunctionName );
+	return (void*)GetProcAddress( (HMODULE)lib, pchFunctionName );
 #elif defined(POSIX)
 	return dlsym( lib, pchFunctionName );
 #endif
