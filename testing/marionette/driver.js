@@ -19,7 +19,10 @@ Cu.import("chrome://marionette/content/accessibility.js");
 Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
-Cu.import("chrome://marionette/content/browser.js");
+const {
+  browser,
+  WindowState,
+} = Cu.import("chrome://marionette/content/browser.js", {});
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/cookie.js");
@@ -48,7 +51,7 @@ Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
 Cu.import("chrome://marionette/content/reftest.js");
 Cu.import("chrome://marionette/content/session.js");
-Cu.import("chrome://marionette/content/wait.js");
+const {wait, TimedPromise} = Cu.import("chrome://marionette/content/wait.js", {});
 
 Cu.importGlobalProperties(["URL"]);
 
@@ -2930,7 +2933,7 @@ GeckoDriver.prototype.minimizeWindow = function* (cmd, resp) {
  *
  * Not supported on Fennec.
  *
- * @return {Map.<string, number>}
+ * @return {Object.<string, number>}
  *     Window rect.
  *
  * @throws {UnsupportedOperationError}
@@ -2940,20 +2943,66 @@ GeckoDriver.prototype.minimizeWindow = function* (cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.maximizeWindow = function* (cmd, resp) {
+GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  yield new Promise(resolve => {
-    win.addEventListener("resize", resolve, {once: true});
+  const origSize = {
+    outerWidth: win.outerWidth,
+    outerHeight: win.outerHeight,
+  };
+
+  // Wait for the window size to change.
+  async function windowSizeChange(from) {
+    return wait.until((resolve, reject) => {
+      let curSize = {
+        outerWidth: win.outerWidth,
+        outerHeight: win.outerHeight,
+      };
+      if (curSize.outerWidth != origSize.outerWidth ||
+          curSize.outerHeight != origSize.outerHeight) {
+        resolve();
+      } else {
+        reject();
+      }
+    });
+  }
+
+  let modeChangeEv;
+  await new TimedPromise(resolve => {
+    modeChangeEv = resolve;
+    win.addEventListener("sizemodechange", modeChangeEv, {once: true});
 
     if (win.windowState == win.STATE_MAXIMIZED) {
       win.restore();
     } else {
       win.maximize();
     }
-  });
+  }, {throws: null});
+  win.removeEventListener("sizemodechange", modeChangeEv);
+
+  // Transitioning into a window state is asynchronous on Linux, and we
+  // cannot rely on sizemodechange to accurately tell us when the
+  // transition has completed.
+  //
+  // To counter for this we wait for the window size to change, which
+  // it usually will.  On platforms where the transition is synchronous,
+  // the wait will have the cost of one iteration because the size will
+  // have changed as part of the transition.  Where the platform
+  // is asynchronous, the cost may be greater as we have to poll
+  // continuously until we see a change, but it ensures conformity in
+  // behaviour.
+  //
+  // Certain window managers, however, do not have a concept of maximised
+  // windows and here sizemodechange may never fire.  Indeed, if the
+  // window covers the maximum available screen real estate, the window
+  // size may also not change.  In this circumstance, which admittedly
+  // is a somewhat bizarre edge case, we assume that the timeout of
+  // waiting for sizemodechange to fire is sufficient to give the window
+  // enough time to transition itself into whatever form or shape the
+  // WM is programmed to give it.
+  await windowSizeChange();
 
   return this.curBrowser.rect;
 };
