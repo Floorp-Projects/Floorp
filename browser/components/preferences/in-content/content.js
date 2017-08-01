@@ -144,7 +144,7 @@ var gContentPane = {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible: false, sessionVisible: false, allowVisible: true,
                    prefilledHost: "", permissionType: "popup" }
-    params.windowTitle = bundlePreferences.getString("popuppermissionstitle");
+    params.windowTitle = bundlePreferences.getString("popuppermissionstitle2");
     params.introText = bundlePreferences.getString("popuppermissionstext");
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",

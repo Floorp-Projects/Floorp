@@ -64,7 +64,7 @@
             onkeypress="gTranslationExceptions.onSiteKeyPress(event)"
             onselect="gTranslationExceptions.onSiteSelected();">
         <treecols>
-          <treecol id="siteCol" label="&treehead.siteName.label;" flex="1"/>
+          <treecol id="siteCol" label="&treehead.siteName2.label;" flex="1"/>
         </treecols>
         <treechildren/>
       </tree>

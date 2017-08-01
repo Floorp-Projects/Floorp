@@ -46,8 +46,8 @@
 
 <!ENTITY  suggestionSettings2.label     "Change preferences for search engine suggestions">
 
-<!ENTITY  acceptCookies.label           "Accept cookies from sites">
-<!ENTITY  acceptCookies.accesskey       "A">
+<!ENTITY  acceptCookies2.label          "Accept cookies from websites">
+<!ENTITY  acceptCookies2.accesskey      "A">
 
 <!ENTITY  acceptThirdParty.pre.label      "Accept third-party cookies:">
 <!ENTITY  acceptThirdParty.pre.accesskey  "y">

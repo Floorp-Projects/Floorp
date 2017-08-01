@@ -130,7 +130,7 @@ add_task(async function test_permissions() {
   let perm = OPTIONAL_PERMISSIONS[0];
   result = await call("request", {permissions: [perm]});
   equal(result.status, "error", "request() fails if not called from an event handler");
-  ok(/May only request permissions from a user input handler/.test(result.message),
+  ok(/request may only be called from a user input handler/.test(result.message),
      "error message for calling request() outside an event handler is reasonable");
   result = await call("contains", {permissions: [perm]});
   equal(result, false, "Permission requested outside an event handler was not granted");

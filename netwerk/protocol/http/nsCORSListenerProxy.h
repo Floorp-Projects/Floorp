@@ -70,6 +70,10 @@ public:
 
   void SetInterceptController(nsINetworkInterceptController* aInterceptController);
 
+  // When CORS blocks a request, log the message to the web console, or the
+  // browser console if no valid inner window ID is found.
+  static void LogBlockedCORSRequest(uint64_t aInnerWindowID,
+                                    const nsAString& aMessage);
 private:
   // Only HttpChannelParent can call RemoveFromCorsPreflightCache
   friend class mozilla::net::HttpChannelParent;
@@ -108,6 +112,10 @@ private:
   // an http: request to https: in nsHttpChannel::Connect() and hence
   // a request might not be marked as cross site request based on that promise.
   bool mHasBeenCrossSite;
+  // Under e10s, logging happens in the child process. Keep a reference to the
+  // creator nsIHttpChannel in order to find the way back to the child. Released
+  // in OnStopRequest().
+  nsCOMPtr<nsIHttpChannel> mHttpChannel;
 #ifdef DEBUG
   bool mInited;
 #endif

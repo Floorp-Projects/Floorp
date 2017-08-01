@@ -163,7 +163,7 @@ add_task(async function test_bookmark_repair_integration() {
       value: undefined,
       extra: {
         flowID,
-        numIDs: "1",
+        numIDs: "2",
       },
     }, {
       object: "sendcommand",
@@ -180,7 +180,7 @@ add_task(async function test_bookmark_repair_integration() {
       extra: {
         deviceID: Service.identity.hashedDeviceID(remoteID),
         flowID,
-        numIDs: "1",
+        numIDs: "2",
       },
     }], "Should record telemetry events for repair request");
 
@@ -225,7 +225,7 @@ add_task(async function test_bookmark_repair_integration() {
       value: undefined,
       extra: {
         flowID,
-        numIDs: "1",
+        numIDs: "2",
       },
     }, {
       object: "sendcommand",
@@ -241,7 +241,7 @@ add_task(async function test_bookmark_repair_integration() {
       value: undefined,
       extra: {
         flowID,
-        numIDs: "1",
+        numIDs: "2",
       }
     }], "Should record telemetry events for repair response");
 
@@ -290,7 +290,7 @@ add_task(async function test_bookmark_repair_integration() {
       extra: {
         flowID,
         deviceID: Service.identity.hashedDeviceID(remoteID),
-        numIDs: "1",
+        numIDs: "2",
       },
     }, {
       object: "repair",

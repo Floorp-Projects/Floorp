@@ -658,11 +658,13 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& c
            if (val.isObject() && !JS::ObjectIsMarkedGray(&val.toObject()))
                continue;
         }
-        cb.NoteXPCOMRoot(v);
+        cb.NoteXPCOMRoot(v,
+                         XPCTraceableVariant::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());
     }
 
     for (XPCRootSetElem* e = mWrappedJSRoots; e ; e = e->GetNextRoot()) {
-        cb.NoteXPCOMRoot(ToSupports(static_cast<nsXPCWrappedJS*>(e)));
+        cb.NoteXPCOMRoot(ToSupports(static_cast<nsXPCWrappedJS*>(e)),
+                         nsXPCWrappedJS::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());
     }
 }
 

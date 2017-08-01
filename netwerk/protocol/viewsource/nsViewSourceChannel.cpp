@@ -1044,3 +1044,13 @@ nsViewSourceChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsa
 {
   mHttpChannelInternal->SetCorsPreflightParameters(aUnsafeHeaders);
 }
+
+NS_IMETHODIMP
+nsViewSourceChannel::LogBlockedCORSRequest(const nsAString& aMessage)
+{
+  if (!mHttpChannel) {
+    NS_WARNING("nsViewSourceChannel::LogBlockedCORSRequest mHttpChannel is null");
+    return NS_ERROR_UNEXPECTED;
+  }
+  return mHttpChannel->LogBlockedCORSRequest(aMessage);
+}

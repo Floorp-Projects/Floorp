@@ -416,7 +416,7 @@ HashCompleterRequest.prototype = {
     // with onStopRequest since we implement nsIStreamListener on the
     // channel.
     if (this._channel && this._channel.isPending()) {
-      log("cancelling request to " + this.gethashUrl + "\n");
+      log("cancelling request to " + this.gethashUrl + " (timeout)\n");
       Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").
         add(this.telemetryProvider, 1);
       this._channel.cancel(Cr.NS_BINDING_ABORTED);

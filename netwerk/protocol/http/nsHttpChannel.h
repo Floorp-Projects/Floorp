@@ -43,12 +43,13 @@ namespace mozilla { namespace net {
 class nsChannelClassifier;
 class Http2PushedStream;
 
-class HttpChannelSecurityWarningReporter
+class HttpChannelSecurityWarningReporter : public nsISupports
 {
 public:
   virtual MOZ_MUST_USE nsresult
   ReportSecurityMessage(const nsAString& aMessageTag,
                         const nsAString& aMessageCategory) = 0;
+  virtual nsresult LogBlockedCORSRequest(const nsAString& aMessage) = 0;
 };
 
 //-----------------------------------------------------------------------------
@@ -190,10 +191,10 @@ public:
     MOZ_MUST_USE nsresult
     AddSecurityMessage(const nsAString& aMessageTag,
                        const nsAString& aMessageCategory) override;
+    NS_IMETHOD LogBlockedCORSRequest(const nsAString& aMessage) override;
 
-    void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter)
-      { mWarningReporter = aReporter; }
-
+    void SetWarningReporter(HttpChannelSecurityWarningReporter *aReporter);
+    HttpChannelSecurityWarningReporter* GetWarningReporter();
 public: /* internal necko use only */
 
     using InitLocalBlockListCallback = std::function<void(bool)>;
@@ -672,7 +673,7 @@ private:
     nsCString mUsername;
 
     // If non-null, warnings should be reported to this object.
-    HttpChannelSecurityWarningReporter* mWarningReporter;
+    RefPtr<HttpChannelSecurityWarningReporter> mWarningReporter;
 
     RefPtr<ADivertableParentChannel> mParentChannel;
 

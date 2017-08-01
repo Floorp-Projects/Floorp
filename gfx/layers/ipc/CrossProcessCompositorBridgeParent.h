@@ -148,7 +148,7 @@ public:
   PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                       const LayoutDeviceIntSize& aSize,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                      uint32_t* aIdNamespace) override;
+                                                      wr::IdNamespace* aIdNamespace) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
   void ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive) override;

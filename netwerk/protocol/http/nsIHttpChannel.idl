@@ -478,4 +478,14 @@ interface nsIHttpChannel : nsIChannel
      *       Don't alter it otherwise.
      */
     [must_use] attribute uint64_t topLevelOuterContentWindowId;
+
+    /**
+     * In e10s, the information that the CORS response blocks the load is in the
+     * parent, which doesn't know the true window id of the request, so we may
+     * need to proxy the request to the child.
+     *
+     * @param aMessage
+     *        The message to print in the console.
+     */
+    void logBlockedCORSRequest(in AString aMessage);
 };

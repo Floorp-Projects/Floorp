@@ -1442,11 +1442,12 @@ StreamTaskTracer(PSLockRef aLock, SpliceableJSONWriter& aWriter)
 }
 
 static void
-StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
+StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter,
+                         const TimeStamp& aShutdownTime)
 {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 7);
+  aWriter.IntProperty("version", 8);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -
@@ -1454,6 +1455,15 @@ StreamMetaJSCustomObject(PSLockRef aLock, SpliceableJSONWriter& aWriter)
   TimeDuration delta = TimeStamp::Now() - CorePS::ProcessStartTime();
   aWriter.DoubleProperty(
     "startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
+
+  // Write the shutdownTime field. Unlike startTime, shutdownTime is not an
+  // absolute time stamp: It's relative to startTime. This is consistent with
+  // all other (non-"startTime") times anywhere in the profile JSON.
+  if (aShutdownTime) {
+    aWriter.DoubleProperty("shutdownTime", profiler_time());
+  } else {
+    aWriter.NullProperty("shutdownTime");
+  }
 
   if (!NS_IsMainThread()) {
     // Leave the rest of the properties out if we're not on the main thread.
@@ -1586,11 +1596,16 @@ BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 static TimeStamp
 locked_profiler_stream_json_for_this_process(PSLockRef aLock,
                                              SpliceableJSONWriter& aWriter,
-                                             double aSinceTime)
+                                             double aSinceTime,
+                                             bool aIsShuttingDown)
 {
   LOG("locked_profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
+
+  double collectionStart = profiler_time();
+
+  ProfileBuffer& buffer = ActivePS::Buffer(aLock);
 
   // Put shared library info
   aWriter.StartArrayProperty("libs");
@@ -1600,7 +1615,8 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   // Put meta data
   aWriter.StartObjectProperty("meta");
   {
-    StreamMetaJSCustomObject(aLock, aWriter);
+    StreamMetaJSCustomObject(aLock, aWriter,
+                             aIsShuttingDown ? TimeStamp::Now() : TimeStamp());
   }
   aWriter.EndObject();
 
@@ -1623,7 +1639,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
         continue;
       }
       double thisThreadFirstSampleTime =
-        info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
+        info->StreamJSON(buffer, aWriter,
                          CorePS::ProcessStartTime(), aSinceTime);
       firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
     }
@@ -1633,8 +1649,8 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
       ThreadInfo* info = deadThreads.at(i);
       MOZ_ASSERT(info->IsBeingProfiled());
       double thisThreadFirstSampleTime =
-        info->StreamJSON(ActivePS::Buffer(aLock), aWriter,
-                        CorePS::ProcessStartTime(), aSinceTime);
+        info->StreamJSON(buffer, aWriter,
+                         CorePS::ProcessStartTime(), aSinceTime);
       firstSampleTime = std::min(thisThreadFirstSampleTime, firstSampleTime);
     }
 
@@ -1654,6 +1670,23 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
   }
   aWriter.EndArray();
 
+  aWriter.StartArrayProperty("pausedRanges",
+                             SpliceableJSONWriter::SingleLineStyle);
+  {
+    buffer.StreamPausedRangesToJSON(aWriter, aSinceTime);
+  }
+  aWriter.EndArray();
+
+  double collectionEnd = profiler_time();
+
+  // Record timestamps for the collection into the buffer, so that consumers
+  // know why we didn't collect any samples for its duration.
+  // We put these entries into the buffer after we've collected the profile,
+  // so they'll be visible for the *next* profile collection (if they haven't
+  // been overwritten due to buffer wraparound by then).
+  buffer.AddEntry(ProfileBufferEntry::CollectionStart(collectionStart));
+  buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEnd));
+
   if (firstSampleTime != INFINITY) {
     return CorePS::ProcessStartTime() +
            TimeDuration::FromMilliseconds(firstSampleTime);
@@ -1665,6 +1698,7 @@ locked_profiler_stream_json_for_this_process(PSLockRef aLock,
 bool
 profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
                                       double aSinceTime,
+                                      bool aIsShuttingDown,
                                       TimeStamp* aOutFirstSampleTime)
 {
   LOG("profiler_stream_json_for_this_process");
@@ -1678,7 +1712,8 @@ profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
   }
 
   TimeStamp firstSampleTime =
-    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime);
+    locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
+                                                 aIsShuttingDown);
 
   if (aOutFirstSampleTime) {
     *aOutFirstSampleTime = firstSampleTime;
@@ -2349,7 +2384,8 @@ profiler_init(void* aStackTop)
 }
 
 static void
-locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename);
+locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename,
+                                     bool aIsShuttingDown);
 
 static SamplerThread*
 locked_profiler_stop(PSLockRef aLock);
@@ -2372,7 +2408,8 @@ profiler_shutdown()
     if (ActivePS::Exists(lock)) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename) {
-        locked_profiler_save_profile_to_file(lock, filename);
+        locked_profiler_save_profile_to_file(lock, filename,
+                                             /* aIsShuttingDown */ true);
       }
 
       samplerThread = locked_profiler_stop(lock);
@@ -2399,7 +2436,7 @@ profiler_shutdown()
 }
 
 UniquePtr<char[]>
-profiler_get_profile(double aSinceTime)
+profiler_get_profile(double aSinceTime, bool aIsShuttingDown)
 {
   LOG("profiler_get_profile");
 
@@ -2408,7 +2445,8 @@ profiler_get_profile(double aSinceTime)
   SpliceableChunkedJSONWriter b;
   b.Start(SpliceableJSONWriter::SingleLineStyle);
   {
-    if (!profiler_stream_json_for_this_process(b, aSinceTime)) {
+    if (!profiler_stream_json_for_this_process(b, aSinceTime,
+                                               aIsShuttingDown)) {
       return nullptr;
     }
 
@@ -2509,7 +2547,8 @@ AutoSetProfilerEnvVarsForChildProcess::~AutoSetProfilerEnvVarsForChildProcess()
 }
 
 static void
-locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
+locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename,
+                                     bool aIsShuttingDown = false)
 {
   LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
 
@@ -2521,7 +2560,8 @@ locked_profiler_save_profile_to_file(PSLockRef aLock, const char* aFilename)
     SpliceableJSONWriter w(MakeUnique<OStreamJSONWriteFunc>(stream));
     w.Start(SpliceableJSONWriter::SingleLineStyle);
     {
-      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0);
+      locked_profiler_stream_json_for_this_process(aLock, w, /* sinceTime */ 0,
+                                                   aIsShuttingDown);
 
       // Don't include profiles from other processes because this is a
       // synchronous function.
@@ -2880,6 +2920,7 @@ profiler_pause()
     }
 
     ActivePS::SetIsPaused(lock, true);
+    ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Pause(profiler_time()));
   }
 
   // gPSMutex must be unlocked when we notify, to avoid potential deadlocks.
@@ -2901,6 +2942,7 @@ profiler_resume()
       return;
     }
 
+    ActivePS::Buffer(lock).AddEntry(ProfileBufferEntry::Resume(profiler_time()));
     ActivePS::SetIsPaused(lock, false);
   }
 
@@ -2962,6 +3004,7 @@ profiler_unregister_thread()
   if (info) {
     DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
     if (ActivePS::Exists(lock) && info->IsBeingProfiled()) {
+      info->NotifyUnregistered();
       CorePS::DeadThreads(lock).push_back(info);
     } else {
       delete info;

@@ -23,7 +23,7 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mReadLockSequenceNumber(0)
   , mIsInTransaction(false)
   , mIsInClearCachedResources(false)
-  , mIdNamespace(0)
+  , mIdNamespace{0}
   , mResourceId(0)
   , mPipelineId(aPipelineId)
   , mIPCOpen(false)
@@ -119,7 +119,7 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
 
   if (aIsSync) {
     this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace,fwdTime);
+                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, fwdTime);
   } else {
     this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
                     contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, fwdTime);
@@ -260,7 +260,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
     return key;
   }
 
-  key.mNamespace.mHandle = GetNamespace();
+  key.mNamespace = GetNamespace();
   key.mHandle = GetNextResourceId();
 
   SendAddRawFont(key, data.mFontBuffer, data.mFontIndex);
@@ -452,11 +452,11 @@ WebRenderBridgeChild::InForwarderThread()
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeChild::RecvWrUpdated(const uint32_t& aNewIdNameSpace)
+WebRenderBridgeChild::RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace)
 {
   // Update mIdNamespace to identify obsolete keys and messages by WebRenderBridgeParent.
   // Since usage of invalid keys could cause crash in webrender.
-  mIdNamespace = aNewIdNameSpace;
+  mIdNamespace = aNewIdNamespace;
   // Remove all FontKeys since they are removed by WebRenderBridgeParent
   for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
     SendDeleteFont(iter.Data());

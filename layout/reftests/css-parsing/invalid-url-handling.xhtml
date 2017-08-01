@@ -22,17 +22,16 @@
   #two { background-color: green; }
   </style>
   <style type="text/css">
-  /* not a URI token; the unterminated string ends at end of line, so
-     the brace never matches */
-  #three { background-color: green; }
+  /* not a URI token; bad-url token is consumed until the first closing ) */
   #foo { background: url(foo"bar) }
-  #three { background-color: red; }
+  #three { background-color: green; }
   </style>
   <style type="text/css">
-  /* not a URI token; the unterminated string ends at end of line */
+  /* not a URI token; bad-url token is consumed until the first closing ) */
+  #four { background-color: green; }
   #foo { background: url(foo"bar) }
   ) }
-  #four { background-color: green; }
+  #four { background-color: red; }
   </style>
   <style type="text/css">
   /* not a URI token; the unterminated string ends at end of line, so
@@ -68,18 +67,19 @@
   #eleven { background: url([) green; }
   </style>
   <style type="text/css">
-  /* not a URI token; brace matching should work only after invalid URI token */
-  #twelve { background: url(}{""{)}); background-color: green; }
+  /* not a URI token; bad-url token is consumed until the first closing )
+     so the brace immediately after it closes the declaration block */
+  #twelve { background-color: green; }
+  #twelve { background: url(}{""{)}); background-color: red; }
   </style>
   <style type="text/css">
   /* invalid URI token absorbs the [ */
   #thirteen { background: url([""); background-color: green; }
   </style>
   <style type="text/css">
-  /* not a URI token; the opening ( is never matched */
-  #fourteen { background-color: green; }
+  /* not a URI token; bad-url token is consumed until the first closing ) */
   #foo { background: url(() }
-  #fourteen { background-color: red; }
+  #fourteen { background-color: green; }
   </style>
   <!-- The next three tests test that invalid URI tokens absorb [ and { -->
   <style type="text/css">

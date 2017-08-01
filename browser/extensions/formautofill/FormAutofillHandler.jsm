@@ -155,6 +155,7 @@ FormAutofillHandler.prototype = {
   _cacheValue: {
     allFieldNames: null,
     oneLineStreetAddress: null,
+    matchingSelectOption: null,
   },
 
   get allFieldNames() {
@@ -198,9 +199,48 @@ FormAutofillHandler.prototype = {
     }
   },
 
+  _matchSelectOptions(profile) {
+    if (!this._cacheValue.matchingSelectOption) {
+      this._cacheValue.matchingSelectOption = new WeakMap();
+    }
+
+    for (let fieldName in profile) {
+      let fieldDetail = this.getFieldDetailByName(fieldName);
+      if (!fieldDetail) {
+        continue;
+      }
+
+      let element = fieldDetail.elementWeakRef.get();
+      if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+        continue;
+      }
+
+      let cache = this._cacheValue.matchingSelectOption.get(element) || {};
+      let value = profile[fieldName];
+      if (cache[value] && cache[value].get()) {
+        continue;
+      }
+
+      let option = FormAutofillUtils.findSelectOption(element, profile, fieldName);
+      if (option) {
+        cache[value] = Cu.getWeakReference(option);
+        this._cacheValue.matchingSelectOption.set(element, cache);
+      } else {
+        if (cache[value]) {
+          delete cache[value];
+          this._cacheValue.matchingSelectOption.set(element, cache);
+        }
+        // Delete the field so the phishing hint won't treat it as a "also fill"
+        // field.
+        delete profile[fieldName];
+      }
+    }
+  },
+
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this._addressTransformer(profile);
+      this._matchSelectOptions(profile);
     }
     return originalProfiles;
   },
@@ -237,7 +277,8 @@ FormAutofillHandler.prototype = {
         }
         this.changeFieldState(fieldDetail, "AUTO_FILLED");
       } else if (element instanceof Ci.nsIDOMHTMLSelectElement) {
-        let option = FormAutofillUtils.findSelectOption(element, profile, fieldDetail.fieldName);
+        let cache = this._cacheValue.matchingSelectOption.get(element) || {};
+        let option = cache[value] && cache[value].get();
         if (!option) {
           continue;
         }
@@ -326,17 +367,21 @@ FormAutofillHandler.prototype = {
       if (element instanceof Ci.nsIDOMHTMLSelectElement) {
         // Unlike text input, select element is always previewed even if
         // the option is already selected.
-        let option = FormAutofillUtils.findSelectOption(element, profile, fieldDetail.fieldName);
-        element.previewValue = option ? option.text : "";
-        this.changeFieldState(fieldDetail, option ? "PREVIEW" : "NORMAL");
-      } else {
-        // Skip the field if it already has text entered
-        if (element.value) {
-          continue;
+        if (value) {
+          let cache = this._cacheValue.matchingSelectOption.get(element) || {};
+          let option = cache[value] && cache[value].get();
+          if (option) {
+            value = option.text || "";
+          } else {
+            value = "";
+          }
         }
-        element.previewValue = value;
-        this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
+      } else if (element.value) {
+        // Skip the field if it already has text entered.
+        continue;
       }
+      element.previewValue = value;
+      this.changeFieldState(fieldDetail, value ? "PREVIEW" : "NORMAL");
     }
   },
 

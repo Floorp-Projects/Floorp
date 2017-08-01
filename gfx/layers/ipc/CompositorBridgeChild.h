@@ -210,7 +210,7 @@ public:
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(const wr::PipelineId& aPipelineId,
                                                     const LayoutDeviceIntSize&,
                                                     TextureFactoryIdentifier*,
-                                                    uint32_t*) override;
+                                                    wr::IdNamespace*) override;
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor) override;
 
   uint64_t DeviceResetSequenceNumber() const {

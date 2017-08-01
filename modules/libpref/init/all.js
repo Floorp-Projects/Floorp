@@ -5414,7 +5414,7 @@ pref("browser.safebrowsing.provider.mozilla.nextupdatetime", "1");
 pref("browser.safebrowsing.provider.mozilla.lists.base.name", "mozstdName");
 pref("browser.safebrowsing.provider.mozilla.lists.base.description", "mozstdDesc");
 pref("browser.safebrowsing.provider.mozilla.lists.content.name", "mozfullName");
-pref("browser.safebrowsing.provider.mozilla.lists.content.description", "mozfullDesc");
+pref("browser.safebrowsing.provider.mozilla.lists.content.description", "mozfullDesc2");
 
 pref("urlclassifier.flashAllowTable", "allow-flashallow-digest256");
 pref("urlclassifier.flashAllowExceptTable", "except-flashallow-digest256");
