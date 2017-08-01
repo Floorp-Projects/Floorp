@@ -970,6 +970,9 @@ const CustomizableWidgets = [
       }
     },
     onViewShowing(aEvent) {
+      if (!this._inited) {
+        this.onInit();
+      }
       let document = aEvent.target.ownerDocument;
 
       let autoDetectLabelId = "PanelUI-characterEncodingView-autodetect-label";
@@ -1062,6 +1065,7 @@ const CustomizableWidgets = [
       this.onInit();
     },
     onInit() {
+      this._inited = true;
       if (!this.charsetInfo) {
         this.charsetInfo = CharsetMenu.getData();
       }
