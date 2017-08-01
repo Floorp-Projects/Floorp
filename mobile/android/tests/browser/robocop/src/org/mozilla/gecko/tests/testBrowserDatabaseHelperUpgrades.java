@@ -52,6 +52,12 @@ import java.util.ArrayList;
  * is not forwards compatible. E.g. uploading a DB created on a 6.0 device will cause failures
  * when robocop tests running on 4.3 are unable to load it.
  *
+ * [mcomella] I was unable to find an API 15 device so I created the v37 DB using API 18 (Jelly Bean). According to
+ * https://stackoverflow.com/a/4377116/2219998, API 16-20 share the same version of SQLite so only API 15 devices
+ * may not be able to run the test. We run robocop on 4.3 devices so CI should still pass and it's unlikely that
+ * someone is developing on a 4.0.3 device at this time: I don't think it's worth the time to create an API 15
+ * DB.
+ *
  * Implementation inspired by:
  *   http://riggaroo.co.za/automated-testing-sqlite-database-upgrades-android/
  */
