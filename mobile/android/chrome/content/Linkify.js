@@ -10,7 +10,7 @@ function Linkifier() {
 }
 
 Linkifier.prototype = {
-  _buildAnchor : function(aDoc, aNumberText) {
+  _buildAnchor: function(aDoc, aNumberText) {
     let anchorNode = aDoc.createElement("a");
     let cleanedText = "";
     for (let i = 0; i < aNumberText.length; i++) {
@@ -24,7 +24,7 @@ Linkifier.prototype = {
     return anchorNode;
   },
 
-  _linkifyNodeNumbers : function(aNodeToProcess, aDoc) {
+  _linkifyNodeNumbers: function(aNodeToProcess, aDoc) {
     let parent = aNodeToProcess.parentNode;
     let nodeText = aNodeToProcess.nodeValue;
 
@@ -54,7 +54,7 @@ Linkifier.prototype = {
         parent.insertBefore(anchorNode, nodeToAdd.nextSibling);
 
       // next nodes need to be appended to this node.
-      prevNode = anchorNode; 
+      prevNode = anchorNode;
       startIndex = m.index + m[0].length;
     }
 
@@ -103,6 +103,6 @@ Linkifier.prototype = {
       }
     };
 
-    this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT); 
+    this._linkifyTimer = setTimeout(parseNode, LINKIFY_TIMEOUT);
   }
 };

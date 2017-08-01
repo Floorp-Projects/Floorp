@@ -6,7 +6,7 @@
 // NOTE: All changes to this file should first be pushed to the repo at:
 // https://github.com/cscott/skeleton-addon-fxandroid/tree/jni
 
-var EXPORTED_SYMBOLS = ["JNI","android_log"];
+var EXPORTED_SYMBOLS = ["JNI", "android_log"];
 
 Components.utils.import("resource://gre/modules/ctypes.jsm")
 
@@ -902,7 +902,7 @@ function JNIClassSig(jenv, jcls) {
   name = name.replace(/\./g, '/');
   // special case primitives, arrays
   if (name.charAt(0)==='[') return name;
-  switch(name) {
+  switch (name) {
   case 'void': return 'V';
   case 'boolean': return 'Z';
   case 'byte': return 'B';

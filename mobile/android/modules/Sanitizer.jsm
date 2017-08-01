@@ -58,13 +58,13 @@ Sanitizer.prototype = {
           var cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
           try {
             cache.clear();
-          } catch(er) {}
+          } catch (er) {}
 
           let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                            .getImgCacheForDocument(null);
           try {
             imageCache.clearCache(false); // true=chrome, false=content
-          } catch(er) {}
+          } catch (er) {}
 
           TelemetryStopwatch.finish("FX_SANITIZE_CACHE", refObj);
           resolve();
@@ -145,7 +145,7 @@ Sanitizer.prototype = {
           var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
           try {
             appCacheStorage.asyncEvictStorage(null);
-          } catch(er) {}
+          } catch (er) {}
 
           resolve();
         });

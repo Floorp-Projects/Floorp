@@ -134,7 +134,7 @@ DirectoryProvider.prototype = {
       defLocalePlugins.append(defLocale);
       if (defLocalePlugins.exists())
         array.push(defLocalePlugins);
-    } catch(e) {
+    } catch (e) {
     }
   },
 

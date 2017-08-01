@@ -178,13 +178,13 @@ const metadataRules = {
 
 function getMetadata(doc, url, rules) {
   const metadata = {};
-  const context = {url,doc};
+  const context = {url, doc};
   const ruleSet = rules || metadataRules;
 
   Object.keys(ruleSet).map(metadataKey => {
     const metadataRule = ruleSet[metadataKey];
 
-    if(Array.isArray(metadataRule.rules)) {
+    if (Array.isArray(metadataRule.rules)) {
       const builtRule = buildRuleset(metadataKey, metadataRule.rules, metadataRule.processors);
       metadata[metadataKey] = builtRule(doc, context);
     } else {

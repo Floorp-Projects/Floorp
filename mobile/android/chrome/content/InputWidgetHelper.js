@@ -95,7 +95,7 @@ var InputWidgetHelper = {
     }, 0);
   },
 
-  _isDisabledElement : function(aElement) {
+  _isDisabledElement: function(aElement) {
     let currentElement = aElement;
     while (currentElement) {
       if (currentElement.disabled)

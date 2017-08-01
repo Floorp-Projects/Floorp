@@ -120,7 +120,7 @@ var PluginHelper = {
   },
 
   // Copied from /browser/base/content/browser.js
-  isTooSmall : function (plugin, overlay) {
+  isTooSmall: function (plugin, overlay) {
     // Is the <object>'s size too small to hold what we want to show?
     let pluginRect = plugin.getBoundingClientRect();
     // XXX bug 446693. The text-shadow on the submitted-report text at
@@ -167,7 +167,7 @@ var PluginHelper = {
           return;
         }
 
-        // If the plugin is hidden, or if the overlay is too small, show a 
+        // If the plugin is hidden, or if the overlay is too small, show a
         // doorhanger notification
         if (PluginHelper.isTooSmall(plugin, overlay)) {
           PluginHelper.delayAndShowDoorHanger(aTab);

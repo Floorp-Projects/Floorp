@@ -529,8 +529,8 @@ function pattern_matcher(pattern) {
       for (let [p, m] of matchers) {
         var element_diagnosis = [];
         if (!(p in value && m(value[p], element_diagnosis))) {
-          return explain(diagnosis, { property:p,
-                                      diagnosis:element_diagnosis[0] });
+          return explain(diagnosis, { property: p,
+                                      diagnosis: element_diagnosis[0] });
         }
       }
       return true;

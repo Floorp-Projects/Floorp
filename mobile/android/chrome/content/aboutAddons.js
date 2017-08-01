@@ -243,7 +243,7 @@ var Addons = {
     let optionsURL = aAddon.optionsURL || "";
 
     let blocked = "";
-    switch(aAddon.blocklistState) {
+    switch (aAddon.blocklistState) {
       case Ci.nsIBlocklistService.STATE_BLOCKED:
         blocked = "blocked";
         break;
@@ -281,7 +281,7 @@ var Addons = {
       let list = document.getElementById("addons-list");
       list.innerHTML = "";
 
-      aAddons.sort(function(a,b) {
+      aAddons.sort(function(a, b) {
         return a.name.localeCompare(b.name);
       });
       for (let i=0; i<aAddons.length; i++) {

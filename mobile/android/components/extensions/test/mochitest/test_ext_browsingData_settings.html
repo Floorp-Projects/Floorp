@@ -30,7 +30,7 @@ function testSettingsPreferences(dataToRemove){
   let prefs = SharedPreferences.forProfile().getSetPref(PREF_DOMAIN);
 
   for (let key of Object.keys(dataToRemove)) {
-    switch(key){
+    switch (key){
       case "formData":
         checkPrefs(key, dataToRemove[key], prefs, "formdata");
         break;
