@@ -25,15 +25,13 @@
     var gBrowserWnd = null;
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       var doc = currentTabDocument();
       var docAcc = getAccessible(doc, [nsIAccessibleDocument]);
 
       gQueue = new eventQueue();
 
-      gQueue.onFinish = function onFinish()
-      {
+      gQueue.onFinish = function onFinish() {
         closeBrowserWindow();
       }
 

@@ -20,15 +20,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
   <script type="application/javascript">
     var gParagraphAcc;
 
-    function testLinkIndexAtOffset(aID, aOffset, aIndex)
-    {
+    function testLinkIndexAtOffset(aID, aOffset, aIndex) {
       var htAcc = getAccessible(aID, [nsIAccessibleHyperText]);
       is(htAcc.getLinkIndexAtOffset(aOffset), aIndex,
          "Wrong link index at offset " + aOffset + " for ID " + aID + "!");
     }
 
-    function testThis(aID, aCharIndex, aExpectedLinkIndex, aName)
-    {
+    function testThis(aID, aCharIndex, aExpectedLinkIndex, aName) {
       testLinkIndexAtOffset(gParagraphAcc, aCharIndex, aExpectedLinkIndex);
 
       var linkAcc = gParagraphAcc.getLinkAt(aExpectedLinkIndex);
@@ -42,13 +40,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=428248
     }
 
     // gA11yEventDumpToConsole = true;
-    function doPreTest()
-    {
+    function doPreTest() {
       waitForImageMap("imgmap", doTest);
     }
 
-    function doTest()
-    {
+    function doTest() {
       // Test link count
       gParagraphAcc = getAccessible("testParagraph", [nsIAccessibleHyperText]);
       is(gParagraphAcc.linkCount, 7, "Wrong link count for paragraph!");

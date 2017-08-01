@@ -15,20 +15,17 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
-    function insertBefore(aId, aEl, aTextBefore, aTextAfter, aStartIdx, aEndIdx)
-    {
+    function insertBefore(aId, aEl, aTextBefore, aTextAfter, aStartIdx, aEndIdx) {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, aId)
       ];
 
-      this.invoke = function insertBefore_invoke()
-      {
+      this.invoke = function insertBefore_invoke() {
         testText(aId, 0, -1, aTextBefore);
         getNode(aId).insertBefore(aEl, getNode(aId).firstChild);
       }
 
-      this.finalCheck = function insertBefore_finalCheck()
-      {
+      this.finalCheck = function insertBefore_finalCheck() {
         testText(aId, aStartIdx, aEndIdx, aTextAfter);
       }
 
@@ -37,15 +34,13 @@
       }
     }
 
-    function insertTextBefore(aId, aTextBefore, aText)
-    {
+    function insertTextBefore(aId, aTextBefore, aText) {
       var el = document.createTextNode(aText);
       this.__proto__ = new insertBefore(aId, el, aTextBefore,
                                         aText + aTextBefore, 0, -1)
     }
 
-    function insertImgBefore(aId, aTextBefore)
-    {
+    function insertImgBefore(aId, aTextBefore) {
       var el = document.createElement("img");
       el.setAttribute("src", "../moz.png");
       el.setAttribute("alt", "mozilla");
@@ -54,15 +49,13 @@
                                         kEmbedChar + aTextBefore, 0, -1)
     }
 
-    function insertTextBefore2(aId)
-    {
+    function insertTextBefore2(aId) {
       var el = document.createTextNode("hehe");
       this.__proto__ = new insertBefore(aId, el, "ho", "ho", 4, -1)
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new insertTextBefore("c1", "ho", "ha"));
       gQueue.push(new insertImgBefore("c1", "haho"));

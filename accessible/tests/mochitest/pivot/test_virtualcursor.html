@@ -24,8 +24,7 @@
     var gBrowserWnd = null;
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       var rootAcc = getAccessible(browserDocument(), [nsIAccessibleDocument]);
       ok(rootAcc.virtualCursor,
          "root document does not have virtualCursor");
@@ -40,8 +39,7 @@
 
       gQueue = new eventQueue();
 
-      gQueue.onFinish = function onFinish()
-      {
+      gQueue.onFinish = function onFinish() {
         closeBrowserWindow();
       }
 

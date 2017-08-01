@@ -22,14 +22,12 @@
     // Invokers
     // //////////////////////////////////////////////////////////////////////////
 
-    function prependAppend(aContainer)
-    {
+    function prependAppend(aContainer) {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, aContainer)
       ];
 
-      this.invoke = function prependAppend_invoke()
-      {
+      this.invoke = function prependAppend_invoke() {
         var checkbox = document.createElement("input");
         checkbox.setAttribute("type", "checkbox");
         getNode(aContainer).insertBefore(checkbox, getNode(aContainer).firstChild);
@@ -39,8 +37,7 @@
         getNode(aContainer).appendChild(button);
       }
 
-      this.finalCheck = function prependAppend_finalCheck()
-      {
+      this.finalCheck = function prependAppend_finalCheck() {
         var accTree =
           { SECTION: [ // container
             { CHECKBUTTON: [ ] },
@@ -50,25 +47,21 @@
         testAccessibleTree(aContainer, accTree);
       }
 
-      this.getID = function prependAppend_getID()
-      {
+      this.getID = function prependAppend_getID() {
         return "prepends a child and appends a child";
       }
     }
 
-    function removeRemove(aContainer)
-    {
+    function removeRemove(aContainer) {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, aContainer)
       ];
 
-      this.invoke = function removeRemove_invoke()
-      {
+      this.invoke = function removeRemove_invoke() {
         getNode(aContainer).firstChild.remove();
       }
 
-      this.finalCheck = function removeRemove_finalCheck()
-      {
+      this.finalCheck = function removeRemove_finalCheck() {
         var accTree =
           { SECTION: [ // container
             { PUSHBUTTON: [ ] }
@@ -76,26 +69,22 @@
         testAccessibleTree(aContainer, accTree);
       }
 
-      this.getID = function removeRemove_getID()
-      {
+      this.getID = function removeRemove_getID() {
         return "remove first and second children";
       }
     }
 
-    function insertInaccessibleAccessibleSiblings()
-    {
+    function insertInaccessibleAccessibleSiblings() {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, "c3")
       ];
 
-      this.invoke = function insertInaccessibleAccessibleSiblings_invoke()
-      {
+      this.invoke = function insertInaccessibleAccessibleSiblings_invoke() {
         getNode("c3").appendChild(document.createElement("span"));
         getNode("c3").appendChild(document.createElement("input"));
       }
 
-      this.finalCheck = function insertInaccessibleAccessibleSiblings_finalCheck()
-      {
+      this.finalCheck = function insertInaccessibleAccessibleSiblings_finalCheck() {
         var accTree =
           { SECTION: [ // container
             { PUSHBUTTON: [
@@ -106,8 +95,7 @@
         testAccessibleTree("c3", accTree);
       }
 
-      this.getID = function insertInaccessibleAccessibleSiblings_getID()
-      {
+      this.getID = function insertInaccessibleAccessibleSiblings_getID() {
         return "insert inaccessible and then accessible siblings";
       }
     }
@@ -120,8 +108,7 @@
     // gA11yEventDumpID = "eventdump"; // debug stuff
     // gA11yEventDumpToConsole = true;
 
-    function doTests()
-    {
+    function doTests() {
       gQueue = new eventQueue();
 
       gQueue.push(new prependAppend("c1"));

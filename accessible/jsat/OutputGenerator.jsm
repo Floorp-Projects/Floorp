@@ -671,8 +671,7 @@ this.UtteranceGenerator = {  // jshint ignore:line
       if (itemno.value == 1) {
         // Start of list
         utterance.push({string: "listStart"});
-      }
-      else if (itemno.value == itemof.value) {
+      } else if (itemno.value == itemof.value) {
         // last item
         utterance.push({string: "listEnd"});
       }

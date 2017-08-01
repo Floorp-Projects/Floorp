@@ -19,14 +19,12 @@
     /**
      * Alter list item numbering and change list style type.
      */
-    function bulletUpdate()
-    {
+    function bulletUpdate() {
       this.eventSeq = [
         new invokerChecker(EVENT_REORDER, getNode("list"))
       ];
 
-      this.invoke = function bulletUpdate_invoke()
-      {
+      this.invoke = function bulletUpdate_invoke() {
         testName("li_end", "1. list end");
 
         var li = document.createElement("li");
@@ -35,8 +33,7 @@
         getNode("list").insertBefore(li, getNode("li_end"));
       }
 
-      this.finalCheck = function bulletUpdate_finalCheck()
-      {
+      this.finalCheck = function bulletUpdate_finalCheck() {
         testName("li_start", "1. list start");
         testName("li_end", "2. list end");
 
@@ -49,15 +46,13 @@
         testName("li_end", kDiscBulletText + "list end");
       }
 
-      this.getID = function bulletUpdate_getID()
-      {
+      this.getID = function bulletUpdate_getID() {
         return "Update bullet of list items";
       }
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new bulletUpdate());
       gQueue.invoke(); // SimpleTest.finish();

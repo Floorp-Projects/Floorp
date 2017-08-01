@@ -73,8 +73,7 @@ const kExtraState = 1;
  * @param aTestName          The test name.
  */
 function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
-                    aAbsentExtraState, aTestName)
-{
+                    aAbsentExtraState, aTestName) {
   var [state, extraState] = getStates(aAccOrElmOrID);
   var role = getRole(aAccOrElmOrID);
   var id = prettyName(aAccOrElmOrID) + (aTestName ? " [" + aTestName + "]" : "");
@@ -172,8 +171,7 @@ function testStates(aAccOrElmOrID, aState, aExtraState, aAbsentState,
  * @param aExtraState    The extra state bits that are wanted.
  * @param aAbsentState   State bits that are not wanted.
  */
-function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
-{
+function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState) {
   // test accessible and its subtree for propagated states.
   var acc = getAccessible(aAccOrElmOrID);
   if (!acc)
@@ -202,22 +200,19 @@ function testStatesInSubtree(aAccOrElmOrID, aState, aExtraState, aAbsentState)
 /**
  * Fails if no defunct state on the accessible.
  */
-function testIsDefunct(aAccessible, aTestName)
-{
+function testIsDefunct(aAccessible, aTestName) {
   var id = prettyName(aAccessible) + (aTestName ? " [" + aTestName + "]" : "");
   var [/* state*/, extraState] = getStates(aAccessible);
   isState(extraState & EXT_STATE_DEFUNCT, EXT_STATE_DEFUNCT, true,
           "no defuct state for " + id + "!");
 }
 
-function getStringStates(aAccOrElmOrID)
-{
+function getStringStates(aAccOrElmOrID) {
   var [state, extraState] = getStates(aAccOrElmOrID);
   return statesToString(state, extraState);
 }
 
-function getStates(aAccOrElmOrID)
-{
+function getStates(aAccOrElmOrID) {
   var acc = getAccessible(aAccOrElmOrID);
   if (!acc)
     return [0, 0];
@@ -231,8 +226,7 @@ function getStates(aAccOrElmOrID)
 /**
  * Return true if the accessible has given states.
  */
-function hasState(aAccOrElmOrID, aState, aExtraState)
-{
+function hasState(aAccOrElmOrID, aState, aExtraState) {
   var [state, exstate] = getStates(aAccOrElmOrID);
   return (aState ? state & aState : true) &&
     (aExtraState ? exstate & aExtraState : true);
@@ -244,8 +238,7 @@ function hasState(aAccOrElmOrID, aState, aExtraState)
 /**
  * Analogy of SimpleTest.is function used to compare states.
  */
-function isState(aState1, aState2, aIsExtraStates, aMsg)
-{
+function isState(aState1, aState2, aIsExtraStates, aMsg) {
   if (aState1 == aState2) {
     ok(true, aMsg);
     return;
