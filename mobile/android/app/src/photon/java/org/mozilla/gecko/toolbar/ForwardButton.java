@@ -5,8 +5,11 @@
 package org.mozilla.gecko.toolbar;
 
 import android.content.Context;
-import android.support.v4.view.ViewCompat;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.util.AttributeSet;
+
+import org.mozilla.gecko.R;
 
 public class ForwardButton extends NavButton {
     public ForwardButton(Context context, AttributeSet attrs) {
@@ -17,15 +20,12 @@ public class ForwardButton extends NavButton {
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
-        boolean isLayoutRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
-        mBorderPath.reset();
-        final float startX;
-        if (isLayoutRtl) {
-            startX = 0 + mBorderWidth;
-        } else {
-            startX = width - mBorderWidth;
-        }
-        mBorderPath.moveTo(startX, 0);
-        mBorderPath.lineTo(startX, height);
+        mPath.reset();
+        mPath.setFillType(Path.FillType.INVERSE_EVEN_ODD);
+
+        final RectF rect = new RectF(0, 0, width, height);
+        final int radius = getResources().getDimensionPixelSize(R.dimen.browser_toolbar_menu_radius);
+        mPath.addRoundRect(rect, radius, radius, Path.Direction.CW);
+
     }
 }
