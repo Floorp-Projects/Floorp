@@ -807,7 +807,6 @@ exports['test button click'] = function*(assert) {
 
 exports['test button icon set'] = function(assert) {
   Cu.import("resource://gre/modules/Services.jsm");
-  Services.prefs.setBoolPref("browser.photon.structure.enabled", false);
 
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   let loader = Loader(module);
@@ -860,13 +859,11 @@ exports['test button icon set'] = function(assert) {
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
 
   Cu.import("resource://gre/modules/Services.jsm");
-  Services.prefs.clearUserPref("browser.photon.structure.enabled");
   loader.unload();
 }
 
 exports['test button icon set with only one option'] = function(assert) {
   Cu.import("resource://gre/modules/Services.jsm");
-  Services.prefs.setBoolPref("browser.photon.structure.enabled", false);
 
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   let loader = Loader(module);
@@ -911,7 +908,6 @@ exports['test button icon set with only one option'] = function(assert) {
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
 
   Cu.import("resource://gre/modules/Services.jsm");
-  Services.prefs.clearUserPref("browser.photon.structure.enabled");
   loader.unload();
 }
 
