@@ -253,7 +253,13 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
 
   DWORD payloadSize = 0;
   hr = mEventSink->GetHandlerPayloadSize(WrapNotNull(&payloadSize));
-  *pSize += payloadSize;
+  if (hr == E_NOTIMPL) {
+    return S_OK;
+  }
+
+  if (SUCCEEDED(hr)) {
+    *pSize += payloadSize;
+  }
   return hr;
 }
 
@@ -317,7 +323,12 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   }
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
-  return mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
+  hr = mEventSink->WriteHandlerPayload(WrapNotNull(pStm));
+  if (hr == E_NOTIMPL) {
+    return S_OK;
+  }
+
+  return hr;
 }
 
 HRESULT
