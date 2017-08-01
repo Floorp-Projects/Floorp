@@ -34,12 +34,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 
+Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
+var gFrameTree = new FrameTree(this);
+
 Cu.import("resource:///modules/sessionstore/ContentRestore.jsm", this);
 XPCOMUtils.defineLazyGetter(this, "gContentRestore",
                             () => { return new ContentRestore(this) });
-
-const ssu = Cc["@mozilla.org/browser/sessionstore/utils;1"]
-              .getService(Ci.nsISessionStoreUtils);
 
 // The current epoch.
 var gCurrentEpoch = 0;
@@ -73,105 +73,13 @@ function createLazy(fn) {
 }
 
 /**
- * A function that will recursively call |cb| to collected data for all
- * non-dynamic frames in the current frame/docShell tree.
- */
-function mapFrameTree(cb) {
-  return (function map(frame, cb) {
-    // Collect data for the current frame.
-    let obj = cb(frame) || {};
-    let children = [];
-
-    // Recurse into child frames.
-    ssu.forEachNonDynamicChildFrame(frame, (subframe, index) => {
-      let result = map(subframe, cb);
-      if (result && Object.keys(result).length) {
-        children[index] = result;
-      }
-    });
-
-    if (children.length) {
-      obj.children = children;
-    }
-
-    return Object.keys(obj).length ? obj : null;
-  })(content, cb);
-}
-
-/**
- * Listens for state change notifcations from webProgress and notifies each
- * registered observer for either the start of a page load, or its completion.
- */
-var StateChangeNotifier = {
-
-  init() {
-    this._observers = new Set();
-    let ifreq = docShell.QueryInterface(Ci.nsIInterfaceRequestor);
-    let webProgress = ifreq.getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
-  },
-
-  /**
-   * Adds a given observer |obs| to the set of observers that will be notified
-   * when when a new document starts or finishes loading.
-   *
-   * @param obs (object)
-   */
-  addObserver(obs) {
-    this._observers.add(obs);
-  },
-
-  /**
-   * Notifies all observers that implement the given |method|.
-   *
-   * @param method (string)
-   */
-  notifyObservers(method) {
-    for (let obs of this._observers) {
-      if (obs.hasOwnProperty(method)) {
-        obs[method]();
-      }
-    }
-  },
-
-  /**
-   * @see nsIWebProgressListener.onStateChange
-   */
-  onStateChange(webProgress, request, stateFlags, status) {
-    // Ignore state changes for subframes because we're only interested in the
-    // top-document starting or stopping its load.
-    if (!webProgress.isTopLevel || webProgress.DOMWindow != content) {
-      return;
-    }
-
-    // onStateChange will be fired when loading the initial about:blank URI for
-    // a browser, which we don't actually care about. This is particularly for
-    // the case of unrestored background tabs, where the content has not yet
-    // been restored: we don't want to accidentally send any updates to the
-    // parent when the about:blank placeholder page has loaded.
-    if (!docShell.hasLoadedNonBlankURI) {
-      return;
-    }
-
-    if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-      this.notifyObservers("onPageLoadStarted");
-    } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      this.notifyObservers("onPageLoadCompleted");
-    }
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
-};
-
-/**
  * Listens for and handles content events that we need for the
  * session store service to be notified of state changes in content.
  */
 var EventListener = {
 
   init() {
-    addEventListener("load", ssu.createDynamicFrameEventFilter(this), true);
+    addEventListener("load", this, true);
   },
 
   handleEvent(event) {
@@ -340,10 +248,10 @@ var MessageListener = {
  */
 var SessionHistoryListener = {
   init() {
-    // The state change observer is needed to handle initial subframe loads.
+    // The frame tree observer is needed to handle initial subframe loads.
     // It will redundantly invalidate with the SHistoryListener in some cases
     // but these invalidations are very cheap.
-    StateChangeNotifier.addObserver(this);
+    gFrameTree.addObserver(this);
 
     // By adding the SHistoryListener immediately, we will unfortunately be
     // notified of every history entry as the tab is restored. We don't bother
@@ -421,11 +329,11 @@ var SessionHistoryListener = {
     this.collect();
   },
 
-  onPageLoadCompleted() {
+  onFrameTreeCollected() {
     this.collect();
   },
 
-  onPageLoadStarted() {
+  onFrameTreeReset() {
     this.collect();
   },
 
@@ -494,24 +402,30 @@ var SessionHistoryListener = {
  */
 var ScrollPositionListener = {
   init() {
-    addEventListener("scroll", ssu.createDynamicFrameEventFilter(this));
-    StateChangeNotifier.addObserver(this);
+    addEventListener("scroll", this);
+    gFrameTree.addObserver(this);
   },
 
-  handleEvent() {
+  handleEvent(event) {
+    let frame = event.target.defaultView;
+
+    // Don't collect scroll data for frames created at or after the load event
+    // as SessionStore can't restore scroll data for those.
+    if (gFrameTree.contains(frame)) {
+      MessageQueue.push("scroll", () => this.collect());
+    }
+  },
+
+  onFrameTreeCollected() {
     MessageQueue.push("scroll", () => this.collect());
   },
 
-  onPageLoadCompleted() {
-    MessageQueue.push("scroll", () => this.collect());
-  },
-
-  onPageLoadStarted() {
+  onFrameTreeReset() {
     MessageQueue.push("scroll", () => null);
   },
 
   collect() {
-    return mapFrameTree(ScrollPosition.collect);
+    return gFrameTree.map(ScrollPosition.collect);
   }
 };
 
@@ -534,20 +448,26 @@ var ScrollPositionListener = {
  */
 var FormDataListener = {
   init() {
-    addEventListener("input", ssu.createDynamicFrameEventFilter(this), true);
-    StateChangeNotifier.addObserver(this);
+    addEventListener("input", this, true);
+    gFrameTree.addObserver(this);
   },
 
-  handleEvent() {
-    MessageQueue.push("formdata", () => this.collect());
+  handleEvent(event) {
+    let frame = event.target.ownerGlobal;
+
+    // Don't collect form data for frames created at or after the load event
+    // as SessionStore can't restore form data for those.
+    if (gFrameTree.contains(frame)) {
+      MessageQueue.push("formdata", () => this.collect());
+    }
   },
 
-  onPageLoadStarted() {
+  onFrameTreeReset() {
     MessageQueue.push("formdata", () => null);
   },
 
   collect() {
-    return mapFrameTree(FormData.collect);
+    return gFrameTree.map(FormData.collect);
   }
 };
 
@@ -568,10 +488,13 @@ var DocShellCapabilitiesListener = {
   _latestCapabilities: "",
 
   init() {
-    StateChangeNotifier.addObserver(this);
+    gFrameTree.addObserver(this);
   },
 
-  onPageLoadStarted() {
+  /**
+   * onFrameTreeReset() is called as soon as we start loading a page.
+   */
+  onFrameTreeReset() {
     // The order of docShell capabilities cannot change while we're running
     // so calling join() without sorting before is totally sufficient.
     let caps = DocShellCapabilities.collect(docShell).join(",");
@@ -595,14 +518,19 @@ var DocShellCapabilitiesListener = {
  */
 var SessionStorageListener = {
   init() {
-    let filter = ssu.createDynamicFrameEventFilter(this);
-    addEventListener("MozSessionStorageChanged", filter, true);
+    addEventListener("MozSessionStorageChanged", this, true);
     Services.obs.addObserver(this, "browser:purge-domain-data");
-    StateChangeNotifier.addObserver(this);
+    gFrameTree.addObserver(this);
   },
 
   uninit() {
     Services.obs.removeObserver(this, "browser:purge-domain-data");
+  },
+
+  handleEvent(event) {
+    if (gFrameTree.contains(event.target)) {
+      this.collectFromEvent(event);
+    }
   },
 
   observe() {
@@ -622,7 +550,7 @@ var SessionStorageListener = {
     this._changes = undefined;
   },
 
-  handleEvent(event) {
+  collectFromEvent(event) {
     if (!docShell) {
       return;
     }
@@ -670,14 +598,16 @@ var SessionStorageListener = {
     // messages.
     this.resetChanges();
 
-    MessageQueue.push("storage", () => SessionStorage.collect(content));
+    MessageQueue.push("storage", () => {
+      return SessionStorage.collect(docShell, gFrameTree);
+    });
   },
 
-  onPageLoadCompleted() {
+  onFrameTreeCollected() {
     this.collect();
   },
 
-  onPageLoadStarted() {
+  onFrameTreeReset() {
     this.collect();
   }
 };
@@ -865,7 +795,6 @@ var MessageQueue = {
   },
 };
 
-StateChangeNotifier.init();
 EventListener.init();
 MessageListener.init();
 FormDataListener.init();
@@ -920,7 +849,7 @@ addEventListener("unload", () => {
   // Remove progress listeners.
   gContentRestore.resetRestore();
 
-  // We don't need to take care of any StateChangeNotifier observers as they
+  // We don't need to take care of any gFrameTree observers as the gFrameTree
   // will die with the content script. The same goes for the privacy transition
   // observer that will die with the docShell when the tab is closed.
 });
