@@ -20,6 +20,8 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
+[ptr] native SelectionPtr(mozilla::dom::Selection);
+
 [scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
 {
@@ -68,6 +70,11 @@ interface nsISelectionController : nsISelectionDisplay
    * @param _return will hold the return value
    */
     nsISelection getSelection(in short type);
+
+   /**
+   * Return the selection object corresponding to a selection type.
+   */
+    [noscript,nostdcall,notxpcom] SelectionPtr getDOMSelection(in short aType);
 
    const short SCROLL_SYNCHRONOUS = 1<<1;
    const short SCROLL_FIRST_ANCESTOR_ONLY = 1<<2;
@@ -278,13 +285,6 @@ interface nsISelectionController : nsISelectionDisplay
    */
     boolean checkVisibility(in nsIDOMNode node, in short startOffset, in short endOffset);
     [noscript,nostdcall] boolean checkVisibilityContent(in nsIContent node, in short startOffset, in short endOffset);
-
-%{C++
-    /**
-     * Return the selection object corresponding to a selection type.
-     */
-    NS_IMETHOD_(mozilla::dom::Selection*) GetSelection(int16_t aType) = 0;
-%}
 };
 %{ C++
    #define NS_ISELECTIONCONTROLLER_CID \
