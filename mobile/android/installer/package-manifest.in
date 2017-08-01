@@ -563,3 +563,13 @@
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
+
+; Background Hang Monitor
+@BINPATH@/components/backgroundhangmonitor.xpt
+
+; NOTE: This must match the config checks in
+; /toolkit/components/backgroundhangmonitor/moz.build.
+#if defined(NIGHTLY_BUILD) && !defined(MOZ_DEBUG) && !defined(MOZ_TSAN)
+@BINPATH@/components/BHRTelemetryService.js
+@BINPATH@/components/BHRTelemetryService.manifest
+#endif
