@@ -166,6 +166,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(EditorBase)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionController)
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIMETextNode)
@@ -188,6 +189,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  }
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootElement)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionController)
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTxnMgr)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMETextNode)
@@ -226,7 +228,7 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
   }
 
   // First only set flags, but other stuff shouldn't be initialized now.
-  // Don't move this call after initializing mDocumentWeak.
+  // Don't move this call after initializing mDocument.
   // SetFlags() can check whether it's called during initialization or not by
   // them.  Note that SetFlags() will be called by PostCreate().
 #ifdef DEBUG
@@ -235,8 +237,7 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
   SetFlags(aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(aDOMDocument);
-  mDocumentWeak = document.get();
+  mDocument = do_QueryInterface(aDOMDocument);
   // HTML editors currently don't have their own selection controller,
   // so they'll pass null as aSelCon, and we'll get the selection controller
   // off of the presshell.
@@ -566,14 +567,14 @@ EditorBase::GetIsDocumentEditable(bool* aIsDocumentEditable)
 already_AddRefed<nsIDocument>
 EditorBase::GetDocument()
 {
-  nsCOMPtr<nsIDocument> document = mDocumentWeak.get();
+  nsCOMPtr<nsIDocument> document = mDocument;
   return document.forget();
 }
 
 already_AddRefed<nsIDOMDocument>
 EditorBase::GetDOMDocument()
 {
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocumentWeak);
+  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(mDocument);
   return domDocument.forget();
 }
 
