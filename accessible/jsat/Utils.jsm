@@ -264,12 +264,12 @@ this.Utils = { // jshint ignore:line
       return new State(
         aAccessibleOrEvent.isExtraState ? 0 : aAccessibleOrEvent.state,
         aAccessibleOrEvent.isExtraState ? aAccessibleOrEvent.state : 0);
-    } else {
+    }
       let state = {};
       let extState = {};
       aAccessibleOrEvent.getState(state, extState);
       return new State(state.value, extState.value);
-    }
+
   },
 
   getAttributes: function getAttributes(aAccessible) {

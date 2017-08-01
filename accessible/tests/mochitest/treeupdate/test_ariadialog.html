@@ -22,16 +22,14 @@
     // //////////////////////////////////////////////////////////////////////////
     // Invokers
 
-    function showARIADialog(aID)
-    {
+    function showARIADialog(aID) {
       this.node = getNode(aID);
 
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, this.node)
       ];
 
-      this.invoke = function showARIADialog_invoke()
-      {
+      this.invoke = function showARIADialog_invoke() {
         getNode("dialog").style.display = "block";
         getNode("table").style.visibility = "visible";
         getNode("a").textContent = "link";
@@ -39,8 +37,7 @@
         getNode("input").focus();
       }
 
-      this.finalCheck = function showARIADialog_finalCheck()
-      {
+      this.finalCheck = function showARIADialog_finalCheck() {
         var tree = {
           role: ROLE_DIALOG,
           children: [
@@ -56,8 +53,7 @@
         testAccessibleTree(aID, tree);
       }
 
-      this.getID = function showARIADialog_getID()
-      {
+      this.getID = function showARIADialog_getID() {
         return "show ARIA dialog";
       }
     }
@@ -70,8 +66,7 @@
 
     var gQueue = null;
 
-    function doTest()
-    {
+    function doTest() {
       // enableLogging("tree");
       gQueue = new eventQueue();
 

@@ -21,8 +21,7 @@
           src="../selectable.js"></script>
 
   <script type="application/javascript">
-    function testSelectable(aID, aSelectableChildren)
-    {
+    function testSelectable(aID, aSelectableChildren) {
       var acc = getAccessible(aID, [nsIAccessibleSelectable]);
 
       testSelectableSelection(acc, []);
@@ -34,8 +33,7 @@
       testSelectableSelection(acc, []);
     }
 
-    function doTest()
-    {
+    function doTest() {
       // ////////////////////////////////////////////////////////////////////////
       // role="tablist"
 

@@ -19,59 +19,50 @@
 
     function dummyListener() {}
 
-    function testAddListener()
-    {
+    function testAddListener() {
       this.eventSeq = [
         new invokerChecker(EVENT_SHOW, getNode("parent")),
       ];
 
-      this.invoke = function testAddListener_invoke()
-      {
+      this.invoke = function testAddListener_invoke() {
         is(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that parent is not accessible.");
         is(getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC), null, "Check that child is not accessible.");
         getNode("parent").addEventListener("click", dummyListener);
       }
 
-      this.finalCheck = function testAddListener_finalCheck()
-      {
+      this.finalCheck = function testAddListener_finalCheck() {
         var tree = { TEXT: [] };
         testAccessibleTree("parent", tree);
       }
 
-      this.getID = function testAddListener_getID()
-      {
+      this.getID = function testAddListener_getID() {
         return "Test that show event is sent when click listener is added";
       }
     }
 
-    function testRemoveListener()
-    {
+    function testRemoveListener() {
       this.eventSeq = [
         new unexpectedInvokerChecker(EVENT_HIDE, getNode("parent")),
       ];
 
-      this.invoke = function testRemoveListener_invoke()
-      {
+      this.invoke = function testRemoveListener_invoke() {
         getNode("parent").removeEventListener("click", dummyListener);
       }
 
-      this.finalCheck = function testRemoveListener_finalCheck()
-      {
+      this.finalCheck = function testRemoveListener_finalCheck() {
         ok(getAccessible("parent", null, null, DONOTFAIL_IF_NO_ACC),
            "Parent stays accessible after click event listener is removed");
         ok(!getAccessible("child", null, null, DONOTFAIL_IF_NO_ACC),
            "Child stays inaccessible");
       }
 
-      this.getID = function testRemoveListener_getID()
-      {
+      this.getID = function testRemoveListener_getID() {
         return "Test that hide event is sent when click listener is removed";
       }
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       gQueue = new eventQueue();
       gQueue.push(new testAddListener());
       gQueue.push(new testRemoveListener());

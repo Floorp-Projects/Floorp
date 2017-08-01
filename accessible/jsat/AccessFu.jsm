@@ -773,9 +773,9 @@ var Input = {
             // Don't move forward if caret is not at end of entry.
             // XXX: Fix for rtl
             return;
-          } else {
-            target.blur();
           }
+          target.blur();
+
         }
         this.moveCursor(aEvent.shiftKey ?
           "moveLast" : "moveNext", "Simple", "keyboard");
@@ -786,9 +786,9 @@ var Input = {
             // Don't move backward if caret is not at start of entry.
             // XXX: Fix for rtl
             return;
-          } else {
-            target.blur();
           }
+          target.blur();
+
         }
         this.moveCursor(aEvent.shiftKey ?
           "moveFirst" : "movePrevious", "Simple", "keyboard");
@@ -798,9 +798,9 @@ var Input = {
           if (!this.editState.atStart) {
             // Don't blur content if caret is not at start of text area.
             return;
-          } else {
-            target.blur();
           }
+          target.blur();
+
         }
 
         if (Utils.MozBuildApp == "mobile/android") {

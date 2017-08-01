@@ -26,8 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
 
   <script type="application/javascript">
     function testThis(aID, aAcc, aRole, aAnchors, aName, aValid, aStartIndex,
-                      aEndIndex)
-    {
+                      aEndIndex) {
       testRole(aAcc, aRole);
       is(aAcc.anchorCount, aAnchors, "Wrong number of anchors for ID "
                                       + aID + "!");
@@ -41,8 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
                                    + aID + "!");
     }
 
-    function testAction(aId, aAcc, aActionName)
-    {
+    function testAction(aId, aAcc, aActionName) {
       var actionCount = aActionName ? 1 : 0;
       is(aAcc.actionCount, actionCount,
          "Wrong actions number for ID " + aId);
@@ -58,14 +56,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=418368
     }
 
     // gA11yEventDumpToConsole = true; // debug stuff
-    function doPreTest()
-    {
+    function doPreTest() {
       waitForImageMap("imgmap", doTest);
     }
 
     var gQueue = null;
-    function doTest()
-    {
+    function doTest() {
       // ////////////////////////////////////////////////////////////////////////
       // normal hyperlink
       var normalHyperlinkAcc = getAccessible("NormalHyperlink",

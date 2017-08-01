@@ -47,8 +47,7 @@ BaseTraversalRule.prototype = {
       return aRoles.value.length;
     },
 
-    match: function BaseTraversalRule_match(aAccessible)
-    {
+    match: function BaseTraversalRule_match(aAccessible) {
       let role = aAccessible.role;
       if (role == Roles.INTERNAL_FRAME) {
         return (Utils.getMessageManager(aAccessible.DOMNode)) ?
@@ -194,14 +193,13 @@ this.TraversalRules = { // jshint ignore:line
 
   Anchor: new BaseTraversalRule(
     [Roles.LINK],
-    function Anchor_match(aAccessible)
-    {
+    function Anchor_match(aAccessible) {
       // We want to ignore links, only focus named anchors.
       if (Utils.getState(aAccessible).contains(States.LINKED)) {
         return Filters.IGNORE;
-      } else {
-        return Filters.MATCH;
       }
+      return Filters.MATCH;
+
     }),
 
   Button: new BaseTraversalRule(
@@ -284,14 +282,13 @@ this.TraversalRules = { // jshint ignore:line
 
   Link: new BaseTraversalRule(
     [Roles.LINK],
-    function Link_match(aAccessible)
-    {
+    function Link_match(aAccessible) {
       // We want to ignore anchors, only focus real links.
       if (Utils.getState(aAccessible).contains(States.LINKED)) {
         return Filters.MATCH;
-      } else {
-        return Filters.IGNORE;
       }
+      return Filters.IGNORE;
+
     }),
 
   /* For TalkBack's "Control" granularity. Form conrols and links */
@@ -314,8 +311,7 @@ this.TraversalRules = { // jshint ignore:line
      Roles.SWITCH,
      Roles.LINK,
      Roles.MENUITEM],
-    function Control_match(aAccessible)
-    {
+    function Control_match(aAccessible) {
       // We want to ignore anchors, only focus real links.
       if (aAccessible.role == Roles.LINK &&
           !Utils.getState(aAccessible).contains(States.LINKED)) {
@@ -409,9 +405,9 @@ this.TraversalHelper = {
       }
 
       return moved;
-    } else {
-      return aVirtualCursor[aMethod](rule);
     }
+    return aVirtualCursor[aMethod](rule);
+
   }
 
 };
